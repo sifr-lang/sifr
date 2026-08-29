@@ -54,7 +54,15 @@ editor-query layer implementation:
 - Code actions offer explicit Sifr policy suppression edits for lint diagnostics.
 - Generated Rust preview calls the read-only
   `sifr_compiler_services::compile_source_preview` handoff and returns
-  structured unavailability when compilation fails.
+  structured unavailability when compilation fails. Preview compiles the
+  overlay as synthetic `main.sifr`, reports the complete file as
+  `src/main.rs`, and reports extracted stdlib support as
+  `src/main.rs#stdlib-preamble`. Static specialization output is a pinned
+  prefix before the ordinary generated module. Preview resolves stdlib source
+  and feature needs through the tooling sysroot and returns the structured
+  Rust/Python interop plan, but it does not run Cargo probes, materialize a
+  package workspace, or apply the driver's final display-path mapping. The
+  driver `emit` path retains those package, Cargo, and user-path duties.
 - Parity coverage lives in `verification/areas/developer_tooling/parity_manifest.json`, `verification/areas/developer_tooling/editor_query_snapshots/`, and `verification/areas/developer_tooling/completion_quality/`.
 
 TypeScript-Go architecture transfer process runtime implementation:
@@ -91,7 +99,10 @@ Allowed dependencies:
   orchestration crate `sifr_driver`.
 - `sifr_format` may call `sifr_syntax` and `sifr_diagnostics`.
 - `sifr_lint` may call `sifr_frontend`, `sifr_diagnostics`, and approved read-only syntax/HIR views.
-- `sifr_lsp` may call `sifr_analysis` and protocol conversion helpers only.
+- `sifr_lsp` may call `sifr_analysis` for semantic answers, `sifr_compiler_services`
+  for compiler-owned Python and sysroot services, `sifr_package` for package
+  discovery, `sifr_source` for position conversion, and `sifr_diagnostics` for
+  diagnostic transport. LSP handlers must not reimplement those authorities.
 
 Forbidden dependencies and behavior:
 

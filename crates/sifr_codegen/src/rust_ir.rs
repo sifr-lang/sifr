@@ -9,7 +9,7 @@ use std::panic::Location;
 /// Fields are private so fragments can only be created through the typed
 /// expression/statement constructors, which record their compiler callsite.
 #[derive(Debug, Clone)]
-pub struct CompilerFragment {
+pub(crate) struct CompilerFragment {
     source: String,
     origin: &'static Location<'static>,
 }
@@ -63,12 +63,12 @@ impl PartialEq for CompilerFragment {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct RustFile {
+pub(crate) struct RustFile {
     pub items: Vec<RustItem>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum RustItem {
+pub(crate) enum RustItem {
     Use(Vec<String>),
     UseAlias {
         path: Vec<String>,
@@ -147,7 +147,7 @@ impl RustItem {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum RustStmt {
+pub(crate) enum RustStmt {
     /// A validated compiler-owned Rust fragment used only where the structured
     /// IR cannot yet represent the generated control-flow form. Keeping this
     /// distinct from `Ident` prevents raw syntax from masquerading as a name.
@@ -241,7 +241,7 @@ impl RustStmt {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct RustWithItem {
+pub(crate) struct RustWithItem {
     pub binding: String,
     pub value: RustExpr,
     pub mutable: bool,
@@ -250,7 +250,7 @@ pub struct RustWithItem {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum RustExpr {
+pub(crate) enum RustExpr {
     Literal(RustLiteral),
     /// A syntax-validated compiler-owned Rust expression for forms that the
     /// structured IR does not yet model. Never use `Ident` for raw syntax.
@@ -364,7 +364,7 @@ impl RustExpr {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum RustLiteral {
+pub(crate) enum RustLiteral {
     Int(i64),
     Float(f64),
     Bool(bool),
@@ -375,7 +375,7 @@ pub enum RustLiteral {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum RustType {
+pub(crate) enum RustType {
     I64,
     F64,
     Bool,
@@ -418,7 +418,7 @@ pub enum RustType {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum RustTrait {
+pub(crate) enum RustTrait {
     Named {
         name: String,
         params: Vec<RustType>,
@@ -432,7 +432,7 @@ pub enum RustTrait {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum RustParam {
+pub(crate) enum RustParam {
     SelfParam { mutable: bool },
     SelfParamWithLifetime { mutable: bool, lifetime: String },
     SelfValue,
@@ -442,15 +442,58 @@ pub enum RustParam {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct RustMatchArm {
-    pub pattern: String,
+pub(crate) struct RustMatchArm {
+    pub pattern: RustPattern,
     pub bindings: Vec<String>,
     pub guard: Option<RustExpr>,
     pub body: Vec<RustStmt>,
 }
 
+/// Compiler-owned match-pattern source with one validated construction type.
+///
+/// The final IR boundary parses this source as `syn::Pat`, and import analysis
+/// visits the same parsed pattern before generated source is rendered.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct RustPattern {
+    source: String,
+}
+
+impl RustPattern {
+    pub(crate) fn source(&self) -> &str {
+        &self.source
+    }
+}
+
+impl std::ops::Deref for RustPattern {
+    type Target = str;
+
+    fn deref(&self) -> &Self::Target {
+        self.source()
+    }
+}
+
+impl PartialEq<&str> for RustPattern {
+    fn eq(&self, other: &&str) -> bool {
+        self.source() == *other
+    }
+}
+
+impl From<String> for RustPattern {
+    fn from(source: String) -> Self {
+        Self { source }
+    }
+}
+
+impl From<&str> for RustPattern {
+    fn from(source: &str) -> Self {
+        Self {
+            source: source.to_string(),
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
-pub struct RustEnumVariant {
+pub(crate) struct RustEnumVariant {
     pub name: String,
     pub tuple_fields: Vec<RustType>,
     pub fields: Vec<(String, RustType)>,
@@ -458,13 +501,13 @@ pub struct RustEnumVariant {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct RustTypeParam {
+pub(crate) struct RustTypeParam {
     pub name: String,
     pub bounds: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum Visibility {
+pub(crate) enum Visibility {
     Private,
     Pub,
 }
@@ -589,7 +632,7 @@ mod tests {
             expr: Box::new(RustExpr::Ident("value".to_string())),
             arms: vec![
                 RustMatchArm {
-                    pattern: "0".to_string(),
+                    pattern: "0".into(),
                     bindings: vec![],
                     guard: None,
                     body: vec![RustStmt::Return(Some(RustExpr::Literal(RustLiteral::Str(
@@ -597,7 +640,7 @@ mod tests {
                     ))))],
                 },
                 RustMatchArm {
-                    pattern: "_".to_string(),
+                    pattern: "_".into(),
                     bindings: vec![],
                     guard: None,
                     body: vec![RustStmt::Return(Some(RustExpr::Literal(RustLiteral::Str(

@@ -83,7 +83,8 @@ impl RustEmitter {
                         "{}::{}({member_ident})",
                         carrier.union_enum_name(),
                         member.union_variant_name()
-                    ),
+                    )
+                    .into(),
                     bindings: vec![member_ident.to_string()],
                     guard: None,
                     body,

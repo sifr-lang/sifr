@@ -232,7 +232,7 @@ pub(super) fn lower_find(object: &RustExpr, args: &[RustExpr]) -> Option<RustExp
                         },
                         body: vec![
                             RustStmt::IfLet {
-                                pattern: "Some(__x)".to_string(),
+                                pattern: "Some(__x)".into(),
                                 expr: RustExpr::MethodCall {
                                     receiver: Box::new(bound_receiver()),
                                     method: "get".to_string(),

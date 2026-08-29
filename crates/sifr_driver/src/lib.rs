@@ -48,11 +48,6 @@ pub use sifr_codegen::{
     InteropBuildPlan, LoweringStats, PythonInteropPlan, PythonInteropPlanDeclaration,
     PythonTargetProbe, PythonTargetProbeStatus, interop_build_plan_for_named_modules,
 };
-pub use sifr_compiler_services::{
-    ToolingSysrootDiagnostic, ToolingSysrootProbe, ToolingSysrootStatus,
-    external_defs as stdlib_external_defs, sysroot_probe as stdlib_tooling_sysroot_probe,
-    sysroot_status as stdlib_tooling_sysroot_status, tooling_sources as stdlib_tooling_sources,
-};
 pub use test_runner::run_tests;
 pub use workspace::{SifrWorkspaceConfig, WorkspaceRoot, find_workspace_root};
 

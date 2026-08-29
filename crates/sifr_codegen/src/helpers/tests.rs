@@ -1,36 +1,7 @@
 use super::*;
 use crate::RustExpr;
-use sifr_ir::{HirExceptHandler, HirExpr, HirFunction, HirModule, HirParam, HirStmt, MethodKind};
+use sifr_ir::{HirExceptHandler, HirExpr, HirFunction, HirParam, HirStmt, MethodKind};
 use sifr_type_system::{OwnershipKind, ParamConvention, Type};
-use std::collections::HashMap;
-
-fn mk_function(name: &str, body: Vec<HirStmt>) -> HirFunction {
-    HirFunction {
-        name: name.to_string(),
-        params: vec![],
-        return_type: Type::None,
-        body,
-        is_async: false,
-        method_kind: MethodKind::Regular,
-        receiver: None,
-        decorators: vec![],
-        rust_interop: Vec::new(),
-        python_interop: Vec::new(),
-        compiler_intrinsic: None,
-        type_params: vec![],
-    }
-}
-
-fn mk_module_with_main(body: Vec<HirStmt>) -> HirModule {
-    HirModule {
-        functions: vec![mk_function("main", body)],
-        classes: vec![],
-        imports: vec![],
-        constants: vec![],
-        generic_functions: HashMap::new(),
-        type_param_bounds: HashMap::new(),
-    }
-}
 
 fn test_error_type(name: &str) -> Type {
     Type::Class {

@@ -6,7 +6,7 @@ mod file_access;
 #[cfg(test)]
 mod generated_rust_preview_tests;
 mod implementation;
-pub use implementation::*;
+pub use implementation::AnalysisHost;
 mod overlay_updates;
 mod python_interop;
 pub use python_interop::PythonInteropAnalysisPlan;

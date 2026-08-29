@@ -118,7 +118,7 @@ impl RustEmitter {
     ) -> RustExpr {
         RustExpr::Block {
             stmts: vec![RustStmt::LetElse {
-                pattern: "Some(__indexed_char)".to_string(),
+                pattern: "Some(__indexed_char)".into(),
                 value: self.lower_string_index_option_with_cache(
                     object,
                     lowered_object,
@@ -181,7 +181,7 @@ impl RustEmitter {
         let pushed_arg = Self::clone_owned_append_arg_expr_for_ir(&args[0], lowered_arg);
         Some(RustExpr::Block {
             stmts: vec![RustStmt::IfLet {
-                pattern: "Some(__elem)".to_string(),
+                pattern: "Some(__elem)".into(),
                 expr: RustExpr::MethodCall {
                     receiver: Box::new(lowered_object),
                     method: "get_mut".to_string(),
@@ -465,7 +465,7 @@ impl RustEmitter {
         }
         Some(RustExpr::Block {
             stmts: vec![RustStmt::LetElse {
-                pattern: "Some(__sifr_popped)".to_string(),
+                pattern: "Some(__sifr_popped)".into(),
                 value: option_pop_expr,
                 else_body: vec![RustStmt::Expr(RustExpr::MacroCall {
                     name: "unreachable".to_string(),

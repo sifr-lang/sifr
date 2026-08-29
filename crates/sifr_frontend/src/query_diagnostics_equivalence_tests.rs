@@ -137,7 +137,8 @@ fn semantic_property_incremental_queries_match_full_recomputation() {
 
     for (index, source) in variants.iter().enumerate() {
         if index > 0 {
-            update_module(&mut context, main, source, index as i64 + 1);
+            let version = i64::try_from(index).expect("fixture edit index must fit i64") + 1;
+            update_module(&mut context, main, source, version);
         }
         assert_eq!(
             diagnostics_for_module(&mut context, main),

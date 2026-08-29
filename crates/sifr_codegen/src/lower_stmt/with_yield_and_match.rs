@@ -238,7 +238,7 @@ pub(super) fn try_lower_simple_match_stmt(
                 }
             }
             Some(RustMatchArm {
-                pattern,
+                pattern: pattern.into(),
                 bindings: arm_bindings,
                 guard,
                 body,

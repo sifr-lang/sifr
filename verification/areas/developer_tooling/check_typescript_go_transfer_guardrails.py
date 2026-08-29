@@ -35,7 +35,6 @@ WORKSPACE_SESSION = REPO_ROOT / "crates" / "sifr_frontend" / "src" / "workspace_
 WORKSPACE_RESIDENCY = REPO_ROOT / "crates" / "sifr_frontend" / "src" / "workspace_residency.rs"
 WORKSPACE_TRACE = REPO_ROOT / "crates" / "sifr_frontend" / "src" / "workspace_trace.rs"
 ANALYSIS_DEBUG_STATUS = REPO_ROOT / "crates" / "sifr_analysis" / "src" / "host" / "debug_status.rs"
-ANALYSIS_HANDLES = REPO_ROOT / "crates" / "sifr_analysis" / "src" / "handles.rs"
 ANALYSIS_EDITOR_QUERY_CORPUS_TESTS = REPO_ROOT / "crates" / "sifr_analysis" / "src" / "host" / "editor_query_corpus_tests.rs"
 TRACE_CLI = REPO_ROOT / "crates" / "sifr" / "src" / "trace_cli.rs"
 EDITOR_QUERY_CORPUS = REPO_ROOT / "verification" / "areas" / "developer_tooling" / "editor_query_corpus" / "multi_file"
@@ -60,6 +59,8 @@ COMPILER_TOOLING_CRATES = (
     "sifr_lsp",
     "sifr_package",
     "sifr_syntax",
+    "sifr_stdlib_manifest",
+    "sifr_sysroot",
     "sifr_type_system",
 )
 DIRECT_FS_SCAN_ROOTS = [REPO_ROOT / "crates" / crate / "src" for crate in COMPILER_TOOLING_CRATES]
@@ -170,7 +171,6 @@ REQUIRED_DOC_SNIPPETS = [
     "WorkspaceTracePhase",
     "WorkspaceStatusSnapshot",
     "WorkspaceDebugSnapshot",
-    "SnapshotHandleKind",
     "editor_query_corpus",
     "package_fatal_source_map_no_import_ambiguity",
     "sifr trace",
@@ -236,7 +236,7 @@ def is_production_source(path: Path) -> bool:
     if path == SOURCE_PROVIDER_BOUNDARY:
         return False
     relative_parts = path.relative_to(REPO_ROOT).parts
-    if "tests" in relative_parts or "bin" in relative_parts:
+    if "tests" in relative_parts:
         return False
     name = path.name
     return not (name.endswith("_tests.rs") or name == "tests.rs")
@@ -556,8 +556,7 @@ def validate_trace_status_state(failures: list[str]) -> None:
     )
 
 
-def validate_editor_corpus_and_handles(failures: list[str]) -> None:
-    handles = ANALYSIS_HANDLES.read_text(encoding="utf-8")
+def validate_editor_corpus(failures: list[str]) -> None:
     editor_query_corpus_tests = ANALYSIS_EDITOR_QUERY_CORPUS_TESTS.read_text(encoding="utf-8")
     diagnostic_rules = DIAGNOSTIC_CANONICALIZATION.read_text(encoding="utf-8")
     main_fixture = EDITOR_QUERY_CORPUS / "main.sifr"
@@ -571,20 +570,7 @@ def validate_editor_corpus_and_handles(failures: list[str]) -> None:
         failures,
     )
     require(
-        "SnapshotHandleKind" in handles
-        and "SymbolHandle" in handles
-        and "TypeHandle" in handles
-        and "SignatureHandle" in handles
-        and "DiagnosticHandle" in handles
-        and "SourceSpanHandle" in handles
-        and "ensure_handle_current" in handles
-        and "AnalysisErrorKind::StaleSnapshot" in handles,
-        "editor corpus guard requires internal snapshot-scoped handle types with stale-snapshot rejection",
-        failures,
-    )
-    require(
         "marker_editor_corpus_covers_multifile_queries_and_stale_snapshots" in editor_query_corpus_tests
-        and "snapshot_handles_are_internal_and_reject_wrong_snapshot_resolution" in editor_query_corpus_tests
         and "hover" in editor_query_corpus_tests
         and "completion" in editor_query_corpus_tests
         and "definition" in editor_query_corpus_tests
@@ -655,6 +641,11 @@ def run_self_test() -> None:
             )
     if REPO_ROOT / "crates" / "sifr_lsp" / "src" not in DIRECT_FS_SCAN_ROOTS:
         raise SystemExit("transfer guardrail self-test failed: LSP scan root missing")
+    for crate in ("sifr_stdlib_manifest", "sifr_sysroot"):
+        if REPO_ROOT / "crates" / crate / "src" not in DIRECT_FS_SCAN_ROOTS:
+            raise SystemExit(
+                f"transfer guardrail self-test failed: {crate} scan root missing"
+            )
     print("TypeScript-Go transfer guardrail self-test: PASS")
 
 
@@ -676,7 +667,7 @@ def main() -> int:
     validate_bucket_and_lane_state(failures)
     validate_residency_state(failures)
     validate_trace_status_state(failures)
-    validate_editor_corpus_and_handles(failures)
+    validate_editor_corpus(failures)
     validate_source_dep_guard(failures)
 
     if failures:

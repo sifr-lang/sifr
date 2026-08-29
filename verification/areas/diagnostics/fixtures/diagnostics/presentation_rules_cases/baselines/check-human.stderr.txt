@@ -18,3 +18,6 @@ error[SIFR-INTERNAL-0001]: spanless internal diagnostic
   = location: <unavailable>
   = help: report this compiler bug
   = docs: https://docs.sifr.sh/errors/SIFR-INTERNAL-0001
+error[SIFR-INTERNAL-0003]: code generation failed: assembled Rust source was invalid
+  = location: <unavailable>
+  = docs: https://docs.sifr.sh/errors/SIFR-INTERNAL-0003

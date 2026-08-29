@@ -1,6 +1,6 @@
 use super::{RustItem, RustParam, RustStmt, RustType, Visibility};
 
-pub fn build_task_supervisor_items() -> Vec<RustItem> {
+pub(crate) fn build_task_supervisor_items() -> Vec<RustItem> {
     vec![
         RustItem::Fn {
             name: "__sifr_task_gather".to_string(),

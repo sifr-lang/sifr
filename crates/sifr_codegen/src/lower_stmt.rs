@@ -19,12 +19,13 @@ use sifr_type_system::{FunctionType, Type};
 use std::collections::{HashMap, HashSet};
 
 mod candidate_and_validation;
+#[cfg(not(test))]
+pub(crate) use candidate_and_validation::SimpleStmtLoweringCtx;
 #[cfg(test)]
 use candidate_and_validation::try_lower_simple_stmt_with_scope_result;
 use candidate_and_validation::{SimpleStmtBindings, try_lower_expr_stmt_with_bindings};
-pub use candidate_and_validation::{
-    SimpleStmtLoweringCtx, try_lower_expr_stmt, try_lower_simple_stmt,
-};
+#[cfg(test)]
+use candidate_and_validation::{SimpleStmtLoweringCtx, try_lower_expr_stmt, try_lower_simple_stmt};
 pub(crate) use candidate_and_validation::{
     is_simple_stmt_candidate, try_lower_simple_stmt_with_scope_result_and_bindings,
 };

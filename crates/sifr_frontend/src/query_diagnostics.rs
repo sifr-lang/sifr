@@ -152,7 +152,7 @@ pub(super) fn hir_diagnostic_to_rendered(
     rendered
 }
 
-pub fn collect_module_exports(
+pub(crate) fn collect_module_exports(
     module_name: &str,
     lowering_result: &LoweringResult,
     external_defs: &mut ExternalDefs,

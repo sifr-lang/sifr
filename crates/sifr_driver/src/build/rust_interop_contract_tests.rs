@@ -720,8 +720,10 @@ pub(super) fn symbol_argument(name: &str, value: &str) -> RustInteropArgument {
 pub(super) fn trusted_no_panic_context(
     backend_crates: Vec<BackendCrateMetadata>,
 ) -> PackageRustInteropContext {
-    let mut trust = TrustPolicy::default();
-    trust.rust_no_panic = vec!["native.hash".to_string()];
+    let trust = TrustPolicy {
+        rust_no_panic: vec!["native.hash".to_string()],
+        ..TrustPolicy::default()
+    };
     package_context(trust, backend_crates)
 }
 

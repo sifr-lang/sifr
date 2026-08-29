@@ -1,6 +1,6 @@
 use super::RustItem;
 
-pub fn build_task_cancellation_items(include_current_accessor: bool) -> Vec<RustItem> {
+pub(crate) fn build_task_cancellation_items(include_current_accessor: bool) -> Vec<RustItem> {
     let mut source = r#"tokio::task_local! {
     static __SIFR_TASK_CANCELLATION: ::sifr_runtime::cancellation::CancellationCarrier;
 }

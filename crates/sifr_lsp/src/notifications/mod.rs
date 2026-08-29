@@ -37,9 +37,42 @@ pub(crate) fn handle(
 }
 
 fn initialized(session: &mut Session, connection: &Connection) -> LspResult<()> {
-    session.note_initialized();
+    if session.note_initialized() {
+        register_workspace_watchers(connection)?;
+    }
     publish_tooling_sysroot_diagnostic(connection, sifr_analysis::tooling_sysroot_probe())?;
     Ok(())
+}
+
+fn register_workspace_watchers(connection: &Connection) -> LspResult<()> {
+    connection
+        .sender
+        .send(Message::Request(lsp_server::Request {
+            id: RequestId::from("sifr-workspace-watchers".to_string()),
+            method: "client/registerCapability".to_string(),
+            params: json!({
+                "registrations": [{
+                    "id": "sifr-workspace-watchers",
+                    "method": "workspace/didChangeWatchedFiles",
+                    "registerOptions": {
+                        "watchers": [
+                            {"globPattern": "**/*.sifr"},
+                            {"globPattern": "**/sifr.toml"},
+                            {"globPattern": "**/Cargo.toml"},
+                            {"globPattern": "**/Cargo.lock"},
+                            {"globPattern": "**/pyproject.toml"},
+                            {"globPattern": "**/uv.lock"},
+                            {"globPattern": "**/sifr.python-certifications.json"}
+                        ]
+                    }
+                }]
+            }),
+        }))
+        .map_err(|error| {
+            LspError::internal(format!(
+                "failed to register workspace file watchers: {error}"
+            ))
+        })
 }
 
 fn publish_tooling_sysroot_diagnostic(
@@ -202,3 +235,40 @@ fn text_document_did_close(
 #[cfg(test)]
 #[path = "tests/python_declaration_tests.rs"]
 mod python_declaration_tests;
+
+#[cfg(test)]
+mod watcher_registration_tests {
+    use super::*;
+
+    #[test]
+    fn initialized_registers_workspace_watchers_once() {
+        let (server, client) = Connection::memory();
+        let mut session = Session::new();
+
+        handle(&mut session, &server, "initialized", json!({})).expect("initialized notification");
+        handle(&mut session, &server, "initialized", json!({}))
+            .expect("duplicate initialized notification");
+
+        let registrations = client
+            .receiver
+            .try_iter()
+            .filter_map(|message| match message {
+                Message::Request(request) if request.method == "client/registerCapability" => {
+                    Some(request.params)
+                }
+                _ => None,
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(registrations.len(), 1);
+        assert_eq!(
+            registrations[0].pointer("/registrations/0/method"),
+            Some(&json!("workspace/didChangeWatchedFiles"))
+        );
+        assert!(
+            registrations[0]
+                .pointer("/registrations/0/registerOptions/watchers")
+                .and_then(Value::as_array)
+                .is_some_and(|watchers| watchers.len() >= 7)
+        );
+    }
+}

@@ -33,7 +33,7 @@ pub(crate) fn recoverable_sync_panic_result_expr(
                 successful_call,
             ),
             RustMatchArm {
-                pattern: format!("Err({ORIGINAL_PANIC})"),
+                pattern: format!("Err({ORIGINAL_PANIC})").into(),
                 bindings: vec![ORIGINAL_PANIC.to_string()],
                 guard: None,
                 body: vec![RustStmt::TailExpr(panic_result)],
@@ -151,7 +151,7 @@ fn mapped_panic_result(mapper: &RustTargetPath, error_type: &Type, panic_type: &
                 mapped,
             ),
             RustMatchArm {
-                pattern: "Err(_)".to_string(),
+                pattern: "Err(_)".into(),
                 bindings: Vec::new(),
                 guard: None,
                 body: vec![RustStmt::TailExpr(rust_panic_result(
@@ -218,7 +218,7 @@ fn result_error(error: RustExpr) -> RustExpr {
 
 fn match_arm(pattern: &str, binding: RustExpr, body: RustExpr) -> RustMatchArm {
     RustMatchArm {
-        pattern: pattern.to_string(),
+        pattern: pattern.into(),
         bindings: match binding {
             RustExpr::Ident(name) => vec![name],
             _ => Vec::new(),

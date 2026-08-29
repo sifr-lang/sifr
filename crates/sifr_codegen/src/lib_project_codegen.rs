@@ -400,7 +400,7 @@ pub fn generate_rust_multi_with_metadata(
                 .iter()
                 .map(|class| source_class_rust_name(&class.name))
                 .collect(),
-        );
+        )?;
         let imports = [local_imports, union_imports]
             .into_iter()
             .filter(|source| !source.trim().is_empty())
@@ -481,8 +481,10 @@ edition = "2024"
 "#
     );
 
-    let deps = try_generated_cargo_dependencies(stdlib_modules, required_features)
-        .map_err(|error| CodegenError::new(format!("failed to resolve Sifr sysroot: {error:?}")))?;
+    let deps = map_sysroot_dependency_plan(try_generated_cargo_dependencies(
+        stdlib_modules,
+        required_features,
+    ))?;
 
     if !deps.is_empty() {
         cargo_toml.push_str("\n[dependencies]\n");
@@ -494,6 +496,12 @@ edition = "2024"
 
     let main_rs = generate_rust(module)?;
     Ok((cargo_toml, main_rs))
+}
+
+pub(crate) fn map_sysroot_dependency_plan<T>(
+    result: Result<T, impl std::fmt::Debug>,
+) -> CodegenOutcome<T> {
+    result.map_err(|error| CodegenError::new(format!("failed to resolve Sifr sysroot: {error:?}")))
 }
 
 #[cfg(test)]

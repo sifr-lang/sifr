@@ -338,17 +338,6 @@ where
     TraversalControl::Continue
 }
 
-pub(crate) fn walk_pattern<F>(pattern: &HirPattern, on_expr: &mut F)
-where
-    F: FnMut(&HirExpr),
-{
-    let mut on_expr_continue = |node: &HirExpr| {
-        on_expr(node);
-        TraversalControl::Continue
-    };
-    let _ = walk_pattern_until(pattern, &mut on_expr_continue);
-}
-
 pub(crate) fn walk_stmt_until<FStmt, FExpr>(
     stmt: &HirStmt,
     config: TraversalConfig,
@@ -672,26 +661,6 @@ where
         HirStmt::Pass | HirStmt::Break | HirStmt::Continue => {}
     }
     TraversalControl::Continue
-}
-
-pub(crate) fn walk_stmt<FStmt, FExpr>(
-    stmt: &HirStmt,
-    config: TraversalConfig,
-    on_stmt: &mut FStmt,
-    on_expr: &mut FExpr,
-) where
-    FStmt: FnMut(&HirStmt),
-    FExpr: FnMut(&HirExpr),
-{
-    let mut on_stmt_continue = |node: &HirStmt| {
-        on_stmt(node);
-        TraversalControl::Continue
-    };
-    let mut on_expr_continue = |node: &HirExpr| {
-        on_expr(node);
-        TraversalControl::Continue
-    };
-    let _ = walk_stmt_until(stmt, config, &mut on_stmt_continue, &mut on_expr_continue);
 }
 
 pub(crate) fn walk_stmts_until<FStmt, FExpr>(

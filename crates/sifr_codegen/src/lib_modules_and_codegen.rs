@@ -407,19 +407,19 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
                                 &expanded_imports,
                                 &rust_source.module,
                                 &rust_source.nominal_types,
-                            )
+                            )?
                         }
                     } else {
                         rust_source.rust.clone()
                     };
                 if module_name == "sifr.sync" && sync_channel_runtime_needed(&filtered) {
-                    filtered = replace_sync_channel_runtime_items(&filtered);
+                    filtered = replace_sync_channel_runtime_items(&filtered)?;
                 }
                 if module_name == "sifr.parallel" {
-                    filtered = replace_parallel_runtime_items(&filtered);
+                    filtered = replace_parallel_runtime_items(&filtered)?;
                 }
                 if !filtered.trim().is_empty() {
-                    let prepared = collect_and_strip_shared_prelude(&filtered);
+                    let prepared = collect_and_strip_shared_prelude(&filtered)?;
                     stdlib_needs_file_handles |=
                         prepared.shared_needs.file_handles.needs_file_handles;
                     stdlib_provides_file_handle_struct |= prepared
@@ -430,11 +430,11 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
                         &prepared.stripped_code,
                         &rust_source.module,
                         &rust_source.nominal_types,
-                    );
-                    let stripped = absolutize_external_crate_paths(&stripped);
+                    )?;
+                    let stripped = absolutize_external_crate_paths(&stripped)?;
                     if !stripped.trim().is_empty() {
                         let deduped =
-                            dedup_rust_items(&stripped, &mut emitted_items, &infra_skip_types);
+                            dedup_rust_items(&stripped, &mut emitted_items, &infra_skip_types)?;
                         if !deduped.trim().is_empty() {
                             let _ = writeln!(stdlib_preamble, "// --- stdlib: {module_name} ---");
                             stdlib_preamble.push_str(&deduped);
@@ -448,7 +448,7 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
     }
 
     // Compute broad feature needs first, then refine imports structurally from preamble IR.
-    let needs_file_handles = emitter.runtime_needs.file_handles() || stdlib_needs_file_handles;
+    let needs_file_handles = stdlib_needs_file_handles;
     let uses_task_scope_process = module_uses_task_scope_process(module);
     // Emit built-in error class struct definitions for referenced error types.
     let uses_task_scope = module_uses_task_scope(module);
@@ -748,26 +748,12 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
     let mut file_items: Vec<RustItem> = Vec::new();
     file_items.extend(import_items.clone());
     file_items.extend(assembled_body_items.clone());
-    let file_issues = validate_items(&file_items);
-    if !file_issues.is_empty() {
-        return Err(CodegenError::new(format!(
-            "codegen IR validation failed (assembled file): {}",
-            file_issues
-                .iter()
-                .map(|issue| issue.message.as_str())
-                .collect::<Vec<_>>()
-                .join(" | ")
-        )));
-    }
+    validate_assembled_file_items(&file_items)?;
     let rust_source = if stdlib_preamble.trim().is_empty() {
         let rust_file = RustFile { items: file_items };
         Renderer::new().render_file(&rust_file)
     } else {
-        syn::parse_file(&stdlib_preamble).map_err(|error| {
-            CodegenError::new(format!(
-                "failed to parse stdlib preamble boundary as Rust source: {error}"
-            ))
-        })?;
+        validate_stdlib_preamble_source(&stdlib_preamble)?;
         let mut source = String::new();
         if !import_items.is_empty() {
             let import_source = Renderer::new().render_file(&RustFile {
@@ -858,4 +844,28 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
         constant_mappings: emitter.module_constants,
         lowering_stats: emitter.lowering_stats,
     })
+}
+
+pub(crate) fn validate_assembled_file_items(items: &[RustItem]) -> CodegenOutcome<()> {
+    let issues = validate_items(items);
+    if issues.is_empty() {
+        return Ok(());
+    }
+    Err(CodegenError::new(format!(
+        "codegen IR validation failed (assembled file): {}",
+        issues
+            .iter()
+            .map(|issue| issue.message.as_str())
+            .collect::<Vec<_>>()
+            .join(" | ")
+    )))
+}
+
+pub(crate) fn validate_stdlib_preamble_source(source: &str) -> CodegenOutcome<()> {
+    syn::parse_file(source).map_err(|error| {
+        CodegenError::new(format!(
+            "failed to parse stdlib preamble boundary as Rust source: {error}"
+        ))
+    })?;
+    Ok(())
 }

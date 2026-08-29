@@ -1,5 +1,3 @@
-#![allow(unsafe_code)]
-
 use super::asyncio_entry::AsyncioCallbackEntry;
 use super::execution::{
     CallbackExecutionError, collect_args, execution_error, python_error, result_object,
@@ -125,6 +123,7 @@ where
 struct AsyncioTargetPtr(*const (dyn AsyncioTarget<'static> + 'static));
 
 #[allow(clippy::transmute_ptr_to_ptr)]
+#[allow(unsafe_code)]
 /// Erase the callback target lifetime while the owning callback retains it.
 ///
 /// # Safety
@@ -143,9 +142,11 @@ unsafe fn erase_target_lifetime(target: *const (dyn AsyncioTarget<'_> + '_)) -> 
 
 // SAFETY: access is synchronized by callback admission/ownership. The pointed
 // target is Send + Sync and remains live until all admitted work completes.
+#[allow(unsafe_code)]
 unsafe impl Send for AsyncioTargetPtr {}
 // SAFETY: access is synchronized by callback admission/ownership. The pointed
 // target is Send + Sync and remains live until all admitted work completes.
+#[allow(unsafe_code)]
 unsafe impl Sync for AsyncioTargetPtr {}
 
 /// Erase a prepared future lifetime while its callback target remains owned.
@@ -153,6 +154,7 @@ unsafe impl Sync for AsyncioTargetPtr {}
 /// # Safety
 ///
 /// The future must complete or be cancelled before the callback target drops.
+#[allow(unsafe_code)]
 unsafe fn erase_future_lifetime(future: BoxCallbackFuture<'_>) -> BoxCallbackFuture<'static> {
     // SAFETY: callback admission and close wait for every invocation future;
     // the target and captured values therefore outlive the erased future.
@@ -339,6 +341,7 @@ impl Drop for AsyncioCallback<'_> {
 }
 
 #[allow(clippy::too_many_arguments)]
+#[allow(unsafe_code)]
 pub fn asyncio_callback_scoped_with_owner<'a, A, R, Decode, Handler, Encode, HandlerFuture>(
     owner: CallbackOwnerState,
     _callback_id: u64,

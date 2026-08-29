@@ -637,28 +637,6 @@ fn codegen_payload_identity(ty: &Type) -> (CodegenPayloadIdentity, String) {
     )
 }
 
-#[cfg(test)]
-mod payload_identity_tests {
-    use super::*;
-
-    #[test]
-    fn class_and_builtin_with_same_emitted_name_collide() {
-        let class = Type::Class {
-            identity: None,
-            name: "String".to_string(),
-            type_args: Vec::new(),
-            fields: Vec::new(),
-            methods: Vec::new(),
-            parent_class: None,
-        };
-        let channel = Type::Union(vec![class, Type::Str]);
-        assert_eq!(
-            error_channel_codegen_payload_collision(&channel).as_deref(),
-            Some("String")
-        );
-    }
-}
-
 pub(super) fn contains_python_identity(ty: &Type, ctx: &LowerCtx) -> bool {
     match ty.resolve_alias() {
         Type::Class { name, fields, .. } => {
@@ -706,4 +684,26 @@ pub(super) fn invalid(ctx: &mut LowerCtx, reason: &str, span: TextRange) {
         format!("invalid Python callback declaration: {reason}"),
         span,
     );
+}
+
+#[cfg(test)]
+mod payload_identity_tests {
+    use super::*;
+
+    #[test]
+    fn class_and_builtin_with_same_emitted_name_collide() {
+        let class = Type::Class {
+            identity: None,
+            name: "String".to_string(),
+            type_args: Vec::new(),
+            fields: Vec::new(),
+            methods: Vec::new(),
+            parent_class: None,
+        };
+        let channel = Type::Union(vec![class, Type::Str]);
+        assert_eq!(
+            error_channel_codegen_payload_collision(&channel).as_deref(),
+            Some("String")
+        );
+    }
 }

@@ -18,7 +18,7 @@ use sifr_package::{
 };
 use sifr_stdlib_manifest::StdlibFeature;
 use std::collections::{BTreeMap, HashMap, HashSet};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 #[path = "rust_interop_trust_tests.rs"]
 mod trust_tests;
@@ -526,7 +526,7 @@ fn package_rust_interop_records_lock_and_profile_cache_inputs() {
     let context = package_context_with_root(
         TrustPolicy::default(),
         vec![backend("native", false)],
-        root.clone(),
+        &root,
     );
 
     let generated = apply_package_rust_interop_metadata(generated, Some(context))
@@ -673,13 +673,13 @@ fn package_context(
     trust: TrustPolicy,
     backend_crates: Vec<BackendCrateMetadata>,
 ) -> PackageRustInteropContext {
-    package_context_with_root(trust, backend_crates, PathBuf::from("/ws/app"))
+    package_context_with_root(trust, backend_crates, Path::new("/ws/app"))
 }
 
 fn package_context_with_root(
     trust: TrustPolicy,
     backend_crates: Vec<BackendCrateMetadata>,
-    package_root: PathBuf,
+    package_root: &Path,
 ) -> PackageRustInteropContext {
     let package_id = SifrPackageId("sifr-app@0.1.0#path".to_string());
     let cargo_package_id = CargoPackageId("path+file:///ws/app#sifr-app@0.1.0".to_string());
@@ -689,7 +689,7 @@ fn package_context_with_root(
         cargo_package_name: "sifr-app".to_string(),
         cargo_version: "0.1.0".to_string(),
         cargo_source: None,
-        package_root: package_root.clone(),
+        package_root: package_root.to_path_buf(),
         sifr_manifest: package_root.join("sifr.toml"),
         sifr_name: SifrPackageName("app".to_string()),
         manifest: SifrManifest {

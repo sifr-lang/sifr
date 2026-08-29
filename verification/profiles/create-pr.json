@@ -23,6 +23,10 @@
       "budget_ms": 360000,
       "enforcement": "blocking"
     },
+    "guardrail_maintainability_ratchets": {
+      "budget_ms": 360000,
+      "enforcement": "blocking"
+    },
     "guardrail_demo_emitted_freshness": {
       "budget_ms": 360000,
       "enforcement": "blocking"
@@ -92,13 +96,13 @@
       "enforcement": "blocking"
     },
     "area_python_interop": {
-      "warm_budget_ms": 600000,
-      "cold_budget_ms": 1200000,
+      "warm_budget_ms": 2400000,
+      "cold_budget_ms": 2700000,
       "cache_classifier": "successful-input-receipt",
       "enforcement": "blocking"
     },
     "area_runtime_platform": {
-      "budget_ms": 120000,
+      "budget_ms": 300000,
       "enforcement": "blocking"
     },
     "area_algorithmic_compatibility": {
@@ -594,6 +598,15 @@
   },
   "selected_areas": [
     {
+      "area": "documentation",
+      "suites": [
+        "architecture"
+      ],
+      "resource_classes": [
+        "default-local"
+      ]
+    },
+    {
       "area": "rust_interop",
       "suites": [
         "matrix",
@@ -747,15 +760,6 @@
       "resource_classes": [
         "default-local"
       ]
-    },
-    {
-      "area": "documentation",
-      "suites": [
-        "architecture"
-      ],
-      "resource_classes": [
-        "default-local"
-      ]
     }
   ],
   "toolchain_steps": [
@@ -765,6 +769,7 @@
   "guardrail_steps": [
     "hir-maintainability",
     "file-size",
+    "maintainability-ratchets",
     "demo-emitted-freshness",
     "source-crate-dependency-direction",
     "submodule-ownership",

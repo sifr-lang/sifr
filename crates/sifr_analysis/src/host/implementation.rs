@@ -467,11 +467,14 @@ impl AnalysisHost {
 
     pub fn safe_fix_all_action(&mut self, file: FileId) -> QueryResult<WorkspaceEdit> {
         let source = self.source_text(file)?;
-        let fixed = sifr_lint::fix_source(&source, None, &sifr_lint::LintOptions::default());
+        let options = sifr_lint::LintOptions::default();
+        let diagnostics = self.lint_diagnostics(file)?;
+        let fixes = sifr_lint::collect_fixes(&diagnostics, &sifr_lint::FixOptions::from(&options));
+        let fixed_source = sifr_lint::apply_collected_fixes(&source, fixes);
         Ok(self.result(
             AnalysisQueryKind::CodeActions,
             WorkspaceEdit {
-                edits: fixed_source_edits(file, &source, &fixed.fixed_source),
+                edits: fixed_source_edits(file, &source, &fixed_source),
             },
         ))
     }
@@ -482,10 +485,9 @@ impl AnalysisHost {
         range: TextRange,
         context: &CodeActionContext,
     ) -> Result<Vec<CodeAction>, AnalysisError> {
-        let source = self.source_text(file)?;
-        let lint = sifr_lint::lint_source(&source, None, &sifr_lint::LintOptions::default());
+        let diagnostics = self.lint_diagnostics(file)?;
         let fixes = sifr_lint::collect_fixes(
-            &lint.diagnostics,
+            &diagnostics,
             &sifr_lint::FixOptions::from(&sifr_lint::LintOptions::default()),
         );
         let mut actions = Vec::new();
@@ -564,11 +566,7 @@ impl AnalysisHost {
         Ok(self.result(AnalysisQueryKind::FormatRange, edits))
     }
 
-    pub fn generated_rust_preview(
-        &mut self,
-        file: FileId,
-        range: Option<TextRange>,
-    ) -> QueryResult<GeneratedRustPreview> {
+    pub fn generated_rust_preview(&mut self, file: FileId) -> QueryResult<GeneratedRustPreview> {
         self.module_for_file(file)?;
         let source = self.source_text(file)?;
         let (rust, source_map_files) = match sifr_compiler_services::compile_source_preview(&source)
@@ -579,7 +577,6 @@ impl AnalysisHost {
                     AnalysisQueryKind::GeneratedRustPreview,
                     GeneratedRustPreview {
                         file,
-                        range,
                         rust: None,
                         source_map_files: Vec::new(),
                         unavailable_reason: Some(format!(
@@ -594,7 +591,6 @@ impl AnalysisHost {
             AnalysisQueryKind::GeneratedRustPreview,
             GeneratedRustPreview {
                 file,
-                range,
                 rust,
                 source_map_files,
                 unavailable_reason: None,

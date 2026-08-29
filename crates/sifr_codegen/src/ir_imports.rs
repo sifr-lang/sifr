@@ -219,6 +219,10 @@ fn collect_stmt(stmt: &RustStmt, needs: &mut IrImportNeeds) {
         RustStmt::Match { expr, arms } => {
             collect_expr(expr, needs);
             for arm in arms {
+                if let Ok(pattern) = crate::ir_validate::parse_match_pattern(&arm.pattern) {
+                    let mut collector = SynImportNeedsCollector { needs };
+                    collector.visit_pat(&pattern);
+                }
                 if let Some(guard) = &arm.guard {
                     collect_expr(guard, needs);
                 }
@@ -728,6 +732,31 @@ mod tests {
         );
 
         assert!(!needs.runtime.needs_sifr_int);
+        assert!(needs.runtime.needs_sifr_runtime);
+    }
+
+    #[test]
+    fn collects_runtime_paths_from_structured_match_patterns() {
+        let items = vec![RustItem::Fn {
+            name: "match_runtime_error".to_string(),
+            visibility: Visibility::Private,
+            type_params: vec![],
+            params: vec![],
+            ret: None,
+            body: vec![RustStmt::Match {
+                expr: RustExpr::Ident("error".to_string()),
+                arms: vec![crate::RustMatchArm {
+                    pattern: "sifr_runtime::interop::HandleStateError::Closed".into(),
+                    bindings: vec![],
+                    guard: None,
+                    body: vec![],
+                }],
+            }],
+            is_async: false,
+        }];
+
+        let needs = collect_import_needs_from_items(&items);
+
         assert!(needs.runtime.needs_sifr_runtime);
     }
 

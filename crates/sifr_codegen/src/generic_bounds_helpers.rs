@@ -392,14 +392,6 @@ impl RustEmitter {
         crate::render_type(&self.rust_ir_type_with_generics(ty))
     }
 
-    pub(crate) fn rust_generator_error_type_with_generics(&self, ty: &Type) -> crate::RustType {
-        if matches!(ty.resolve_alias(), Type::Never) {
-            crate::RustType::Named("std::convert::Infallible".to_string())
-        } else {
-            self.rust_ir_type_with_generics(ty)
-        }
-    }
-
     pub(crate) fn type_contains_generic_class(&self, ty: &Type) -> bool {
         match ty {
             Type::Class { name, .. } => self.generic_classes.contains(name),
@@ -426,29 +418,6 @@ impl RustEmitter {
             }
             _ => false,
         }
-    }
-
-    pub(crate) fn render_generic_class_type(&self, name: &str, ty: &Type) -> String {
-        if !self.generic_classes.contains(name) {
-            return name.to_string();
-        }
-
-        if let Some(type_args) = self.infer_generic_class_type_args(name, ty) {
-            return format!(
-                "{name}<{}>",
-                type_args
-                    .iter()
-                    .map(|arg| self.render_rust_type_with_generics(arg))
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            );
-        }
-
-        if let Some(params) = self.generic_class_params.get(name) {
-            return format!("{name}<{}>", params.join(", "));
-        }
-
-        name.to_string()
     }
 
     pub(crate) fn infer_generic_class_type_args(&self, name: &str, ty: &Type) -> Option<Vec<Type>> {

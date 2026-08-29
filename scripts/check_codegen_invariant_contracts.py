@@ -9,7 +9,12 @@ import re
 import sys
 import tempfile
 
-from rust_source_policy import is_test_path, mask_rust_non_code, strip_cfg_test_modules
+from rust_source_policy import (
+    is_test_path,
+    mask_rust_literals,
+    mask_rust_non_code,
+    strip_cfg_test_modules,
+)
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -36,7 +41,7 @@ def validate(root: Path) -> tuple[list[str], int]:
             continue
         production = strip_cfg_test_modules(path.read_text(encoding="utf-8"))
         code = mask_rust_non_code(production)
-        lines = production.splitlines()
+        lines = mask_rust_literals(production).splitlines()
         for match in INVARIANT_MACRO.finditer(code):
             operation_count += 1
             line_number = code.count("\n", 0, match.start()) + 1
@@ -51,7 +56,7 @@ def validate(root: Path) -> tuple[list[str], int]:
 
 
 def run_self_test() -> int:
-    with tempfile.TemporaryDirectory(prefix="codegen-invariant-", dir=REPO_ROOT / "target") as tmp:
+    with tempfile.TemporaryDirectory(prefix="codegen-invariant-") as tmp:
         root = Path(tmp)
         source = root / CODEGEN_ROOT / "probe.rs"
         source.parent.mkdir(parents=True)
@@ -76,6 +81,15 @@ def run_self_test() -> int:
         errors, _ = validate(root)
         if not any("lacks local" in error for error in errors):
             print("codegen invariant self-test missed absent contract", file=sys.stderr)
+            return 1
+        source.write_text(
+            'const FAKE: &str = "// INVARIANT: not a contract";\n'
+            "fn probe() { panic!(); }\n",
+            encoding="utf-8",
+        )
+        errors, _ = validate(root)
+        if not any("lacks local" in error for error in errors):
+            print("codegen invariant self-test accepted a literal contract", file=sys.stderr)
             return 1
     print("codegen invariant contract self-test: PASS")
     return 0

@@ -1,4 +1,5 @@
 mod api;
+mod artifact_cache_lock;
 mod cache_lifecycle;
 mod cargo_invocation_trace;
 mod cargo_manifest;

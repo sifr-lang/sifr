@@ -1,7 +1,14 @@
 use crate::hir_nodes::{HirExpr, HirImport, HirModule};
 
 mod mod_context;
-pub use mod_context::*;
+pub(in crate::lower) use mod_context::{LocalFunctionMetadata, LowerCtx};
+pub use mod_context::{
+    LoweringOptions, LoweringSourceOrigin, PythonBridgeTargetAuthority, PythonTrustPolicy,
+    lower_module, lower_module_sysroot_private_declaration_with_externals,
+    lower_module_sysroot_public_stdlib, lower_module_sysroot_public_stdlib_with_externals,
+    lower_module_with_externals, lower_module_with_externals_and_name,
+    lower_module_with_externals_name_and_options,
+};
 mod adapter_field_plans;
 mod append_growth_shapes;
 mod arithmetic_warnings;

@@ -63,7 +63,7 @@ fn generated_rust_preview(session: &mut Session, arguments: &[Value]) -> LspResu
     })?;
     session.with_document_analysis(uri, |snapshot, host, file, _source| {
         snapshot
-            .generated_rust_preview(host, file, None)
+            .generated_rust_preview(host, file)
             .map_err(|error| LspError::internal(error.message))
             .map(|result| conversion::generated_rust_preview(result.into_value()))
     })

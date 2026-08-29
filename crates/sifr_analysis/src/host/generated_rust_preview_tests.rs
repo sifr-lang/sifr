@@ -17,7 +17,7 @@ fn generated_rust_preview_tracks_compiler_synthetic_source_map_entry() {
     let file = host.files()[0];
 
     let preview = host
-        .generated_rust_preview(file, None)
+        .generated_rust_preview(file)
         .expect("generated Rust preview should query")
         .into_value();
 
@@ -45,7 +45,7 @@ def main():
     let file = host.files()[0];
 
     let preview = host
-        .generated_rust_preview(file, None)
+        .generated_rust_preview(file)
         .expect("generated Rust preview should query")
         .into_value();
 

@@ -63,7 +63,7 @@ impl RustEmitter {
                         right: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Int(0))),
                     },
                     then_body: vec![RustStmt::IfLet {
-                        pattern: "Some(__elem)".to_string(),
+                        pattern: "Some(__elem)".into(),
                         expr: crate::RustExpr::MethodCall {
                             receiver: Box::new(crate::RustExpr::Ident(object.to_string())),
                             method: "get_mut".to_string(),
@@ -132,7 +132,7 @@ impl RustEmitter {
                     ),
                 },
                 RustStmt::IfLet {
-                    pattern: "Some(__elem)".to_string(),
+                    pattern: "Some(__elem)".into(),
                     expr: crate::RustExpr::MethodCall {
                         receiver: Box::new(crate::RustExpr::Ident(object.to_string())),
                         method: "get_mut".to_string(),
@@ -150,7 +150,7 @@ impl RustEmitter {
                     Self::clone_non_copy_name_expr_for_ir(index, lowered_index),
                 );
                 Ok(Some(RustStmt::IfLet {
-                    pattern: "Some(__elem)".to_string(),
+                    pattern: "Some(__elem)".into(),
                     expr: crate::RustExpr::MethodCall {
                         receiver: Box::new(crate::RustExpr::Ident(object.to_string())),
                         method: "get_mut".to_string(),

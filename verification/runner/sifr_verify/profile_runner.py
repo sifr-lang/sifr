@@ -179,6 +179,8 @@ class ProfileRunner:
             self.run_python("scripts/check_hir_maintainability_guardrails.py")
         elif guardrail == "file-size":
             self.run_python("scripts/check_file_size_guardrails.py")
+        elif guardrail == "maintainability-ratchets":
+            self.run_script_with_self_test("scripts/check_maintainability_ratchets.py")
         elif guardrail == "demo-emitted-freshness":
             self.run_python("scripts/check_demo_emitted_freshness.py")
         elif guardrail == "source-crate-dependency-direction":

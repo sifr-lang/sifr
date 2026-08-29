@@ -1,8 +1,8 @@
-# TypeScript-Go Architecture Transfer: First-Class Flow Graph
+# TypeScript-Go Architecture Transfer: Flow-Graph Snapshot
 
-status: flow graph merged
+status: retained snapshot artifact
 
-This work adds a first-class HIR flow graph alongside the existing control-flow graph.
+This work adds an HIR flow graph alongside the existing control-flow graph.
 The CFG remains responsible for structural reachability and return facts. The
 new flow graph records data-flow effects that later cache and query surfaces
 can fingerprint, trace, and reuse without re-deriving them from one-off lowering
@@ -43,10 +43,9 @@ narrowing, marks ownership moves, resets move state, records borrows, or
 invalidates mutation-sensitive facts. `LoweringResult` carries the resulting
 module flow graph next to the lowered HIR module.
 
-The current graph is a companion graph, not a replacement for all narrowing and
-ownership state. flow graph moves the facts onto a stable graph surface while preserving
-the existing lowering semantics; later query/cache surfaces can key and reuse
-those facts through the graph fingerprint and debug trace.
+The graph is a companion graph. It does not replace narrowing or ownership
+state. Lowering records the facts on a stable graph surface. Cache and query
+code can use the graph fingerprint and debug trace.
 
 ## Driver Propagation
 
@@ -54,13 +53,41 @@ Project lowering stores a `FlowGraph` for each lowered module and preserves the
 main module graph when constructing single-entry build plans. This keeps graph
 facts attached to the same HIR snapshot that codegen and analysis inspect.
 
-This work stops at HIR and driver propagation. Analysis/LSP display of the flow graph
-fingerprints and traces is intentionally left to the later tracing and debug
-status surfaces so editor APIs do not expose an unstable graph rules early.
+This work stops at HIR and frontend propagation. Analysis and LSP code do not
+read the graph or show its fingerprint. Editor APIs therefore do not expose the
+graph rules.
+
+## Retention Decision
+
+Decision: **keep the graph as a deterministic snapshot artifact**.
+
+The graph has these current consumers:
+
+- `sifr_ir::ControlFlowFacts` retains the graph and exposes its fingerprint and
+  debug trace.
+- `sifr_lowering` builds statement graphs for CFG facts and builds one module
+  graph from the HIR plus recorded lowering effects.
+- `sifr_frontend::ProjectCompilation` retains one graph for each compiled
+  module.
+- The frontend cache identity includes `FLOW_GRAPH_POLICY_VERSION`. A graph
+  rules change must therefore invalidate the affected cached product.
+
+The graph has no current analysis or LSP consumer. This absence is explicit.
+The decision does not claim future editor use.
+
+Removing the graph would delete deterministic CFG evidence and change the
+canonical project compilation product. Refactoring it into a second semantic
+authority would duplicate narrowing and ownership rules. The retained companion
+model avoids both outcomes. Lowering remains the semantic authority and records
+each narrowing effect once through `LowerCtx::narrow_var_with_flow`.
+
+Revisit this decision only if measurements show that project-level graph
+retention has material cost, or if a consumer needs graph queries that the
+current immutable snapshot cannot supply.
 
 ## Validation
 
-flow graph focused validation so far:
+Initial flow-graph validation:
 
 - `cargo fmt --check`
 - `git diff --check`

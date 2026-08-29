@@ -62,10 +62,10 @@ pub(crate) fn relocate_project_stdlib_nominals(
     plan: &ProjectStdlibNominalPlan,
     crate_root_modules: &HashSet<&str>,
     local_class_rust_names: &HashSet<String>,
-) -> String {
+) -> crate::CodegenOutcome<String> {
     if plan.registry.shared_rust_names.is_empty() && plan.registry.crate_root_rust_names.is_empty()
     {
-        return source.to_string();
+        return Ok(source.to_string());
     }
     let names = plan
         .registry
@@ -74,9 +74,9 @@ pub(crate) fn relocate_project_stdlib_nominals(
         .chain(&plan.registry.crate_root_rust_names)
         .map(String::as_str)
         .collect();
-    let stripped = strip_relocated_rust_items_by_name(source, &names, local_class_rust_names);
+    let stripped = strip_relocated_rust_items_by_name(source, &names, local_class_rust_names)?;
     if crate_root_modules.contains(module_name) {
-        return stripped;
+        return Ok(stripped);
     }
     let mut ordered_names = plan
         .registry
@@ -87,14 +87,14 @@ pub(crate) fn relocate_project_stdlib_nominals(
     ordered_names.sort();
     let mut imports = String::new();
     for name in ordered_names {
-        if !rust_source_references_item_name(&stripped, name) {
+        if !rust_source_references_item_name(&stripped, name)? {
             continue;
         }
         imports.push_str("use crate::");
         imports.push_str(name);
         imports.push_str(";\n");
     }
-    format!("{imports}\n{stripped}")
+    Ok(format!("{imports}\n{stripped}"))
 }
 
 pub(crate) fn project_stdlib_nominal_plan(
@@ -212,9 +212,9 @@ pub(crate) fn project_stdlib_nominal_plan(
         structural_interop_enabled,
     )?;
     let probe_name_refs = probe_names.iter().map(String::as_str).collect();
-    let shared_source = strip_rust_items_by_name(&generated.rust_source, &probe_name_refs);
-    register_emitted_builtin_nominals(&shared_source, &mut registry);
-    register_transitive_stdlib_nominals(&shared_source, stdlib_code, &mut registry);
+    let shared_source = strip_rust_items_by_name(&generated.rust_source, &probe_name_refs)?;
+    register_emitted_builtin_nominals(&shared_source, &mut registry)?;
+    register_transitive_stdlib_nominals(&shared_source, stdlib_code, &mut registry)?;
     let crate_root_candidates = SHARED_MODULE_CRATE_ROOT_NOMINAL_IDENTITIES
         .iter()
         .filter_map(|identity| {
@@ -228,8 +228,8 @@ pub(crate) fn project_stdlib_nominal_plan(
         .map(String::as_str)
         .collect::<HashSet<_>>();
     let (crate_root_source, shared_source) =
-        partition_rust_items_by_name(&shared_source, &crate_root_name_refs);
-    let crate_root_defined_names = rust_source_defined_item_names(&crate_root_source);
+        partition_rust_items_by_name(&shared_source, &crate_root_name_refs)?;
+    let crate_root_defined_names = rust_source_defined_item_names(&crate_root_source)?;
     for identity in SHARED_MODULE_CRATE_ROOT_NOMINAL_IDENTITIES {
         let Some((_, name)) = identity.rsplit_once('.') else {
             continue;
@@ -257,11 +257,12 @@ pub(crate) fn project_stdlib_nominal_plan(
     prelude.push_str("mod ");
     prelude.push_str(SHARED_STDLIB_NOMINAL_MODULE);
     prelude.push_str(" {\n");
-    let mut crate_root_imports = registry
-        .crate_root_rust_names
-        .iter()
-        .filter(|name| rust_source_references_item_name(&shared_source, name))
-        .collect::<Vec<_>>();
+    let mut crate_root_imports = Vec::new();
+    for name in &registry.crate_root_rust_names {
+        if rust_source_references_item_name(&shared_source, name)? {
+            crate_root_imports.push(name);
+        }
+    }
     crate_root_imports.sort();
     for name in crate_root_imports {
         prelude.push_str("    use crate::");
@@ -307,8 +308,8 @@ fn register_transitive_stdlib_nominals(
     shared_source: &str,
     stdlib_code: &StdlibCode,
     registry: &mut ProjectNominalRegistry,
-) {
-    let defined_names = rust_source_defined_item_names(shared_source);
+) -> crate::CodegenOutcome<()> {
+    let defined_names = rust_source_defined_item_names(shared_source)?;
     for (module, source) in &stdlib_code.module_rust_code {
         for name in &source.nominal_types {
             let identity = format!("{module}.{name}");
@@ -321,16 +322,21 @@ fn register_transitive_stdlib_nominals(
             }
         }
     }
+    Ok(())
 }
 
-fn register_emitted_builtin_nominals(shared_source: &str, registry: &mut ProjectNominalRegistry) {
-    let defined_names = rust_source_defined_item_names(shared_source);
+fn register_emitted_builtin_nominals(
+    shared_source: &str,
+    registry: &mut ProjectNominalRegistry,
+) -> crate::CodegenOutcome<()> {
+    let defined_names = rust_source_defined_item_names(shared_source)?;
     for name in crate::BUILTIN_ERROR_CLASSES {
         if sifr_type_system::io_error_kind(name).is_some() || !defined_names.contains(*name) {
             continue;
         }
         registry.register_shared((*name).to_string(), class_rust_name(None, name));
     }
+    Ok(())
 }
 
 fn collect_function_nominals(
@@ -718,7 +724,8 @@ mod tests {
             "__SifrIoTextFileHandle".to_string(),
         );
 
-        register_transitive_stdlib_nominals(shared_source, &stdlib, &mut registry);
+        register_transitive_stdlib_nominals(shared_source, &stdlib, &mut registry)
+            .expect("transitive stdlib source should parse");
 
         assert!(
             registry
@@ -736,7 +743,8 @@ mod tests {
         let shared_source = "pub struct ParseError;\npub struct FileNotFoundError;\n";
         let mut registry = ProjectNominalRegistry::default();
 
-        register_emitted_builtin_nominals(shared_source, &mut registry);
+        register_emitted_builtin_nominals(shared_source, &mut registry)
+            .expect("builtin nominal source should parse");
 
         assert!(registry.shared_rust_names.contains("ParseError"));
         assert_eq!(
@@ -872,7 +880,8 @@ impl From<ChildFormatter> for Formatter {
             &plan,
             &HashSet::from(["main"]),
             &HashSet::from(["ChildFormatter".to_string()]),
-        );
+        )
+        .expect("valid compiler-owned Rust");
 
         assert!(!relocated.contains("struct Formatter"));
         assert!(relocated.contains("struct ChildFormatter"));

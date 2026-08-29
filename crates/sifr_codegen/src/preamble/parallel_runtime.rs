@@ -1,7 +1,7 @@
 use crate::stdlib_filter::strip_rust_items_by_name;
 use std::collections::HashSet;
 
-pub(crate) fn replace_parallel_runtime_items(rust_code: &str) -> String {
+pub(crate) fn replace_parallel_runtime_items(rust_code: &str) -> crate::CodegenOutcome<String> {
     let strip_names = HashSet::from([
         "WorkerRuntimeError",
         "WorkerError",
@@ -10,12 +10,12 @@ pub(crate) fn replace_parallel_runtime_items(rust_code: &str) -> String {
         "map",
         "try_map",
     ]);
-    let mut replaced = strip_rust_items_by_name(rust_code, &strip_names);
+    let mut replaced = strip_rust_items_by_name(rust_code, &strip_names)?;
     if !replaced.trim().is_empty() {
         replaced.push('\n');
     }
     replaced.push_str(parallel_runtime_rust_code());
-    replaced
+    Ok(replaced)
 }
 
 pub(crate) fn parallel_runtime_rust_code() -> &'static str {

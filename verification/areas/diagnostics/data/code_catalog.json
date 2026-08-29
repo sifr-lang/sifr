@@ -945,6 +945,22 @@
       "suggestion_applicability": "none"
     },
     {
+      "code": "SIFR-INTERNAL-0003",
+      "constant": "INTERNAL_CODEGEN_FAILURE",
+      "docs_link": "docs/errors/SIFR-INTERNAL-0003.mdx",
+      "machine_applicable": false,
+      "owner": "compiler/core-language",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_driver/src/tests/panic_boundary.rs::structured_codegen_failure_uses_internal_0003",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
       "code": "SIFR-IO-0801",
       "constant": "IO_TEXT_OPEN_REQUIRES_ENCODING",
       "docs_link": "docs/errors/SIFR-IO-0801.mdx",

@@ -151,7 +151,7 @@ macro_rules! stmt_expr_method_call {
                             let key_arg = Self::build_dict_lookup_key_arg_for_ir(lowered_index);
                             return Ok(Some(crate::RustExpr::Block {
                                 stmts: vec![crate::RustStmt::IfLet {
-                                    pattern: "Some(__elem)".to_string(),
+                                    pattern: "Some(__elem)".into(),
                                     expr: crate::RustExpr::MethodCall {
                                         receiver: Box::new(lowered_object),
                                         method: "get_mut".to_string(),
@@ -216,6 +216,12 @@ macro_rules! stmt_expr_method_call {
                 };
                 lowered_args.push(lowered_arg);
             }
+            $emitter.adapt_collection_method_args_for_ir(
+                &effective_object_ty,
+                method,
+                args,
+                &mut lowered_args,
+            );
             let is_callable_field = match crate::resolve_alias_type_for_plain_call(
                 &effective_object_ty,
             ) {
@@ -281,6 +287,21 @@ macro_rules! stmt_expr_method_call {
                         );
                     }
                 }
+            }
+            if let Some(lowered) = crate::methods::lower_method_with_context(
+                &effective_object_ty,
+                method,
+                &lowered_object,
+                &lowered_args,
+                $emitter.is_deque_data_field(object),
+            ) {
+                return Ok(Some(unwrap_compiler_verified_nonempty_pop_result_for_ir(
+                    &effective_object_ty,
+                    method,
+                    args,
+                    $expr.ty(),
+                    lowered.expr,
+                )));
             }
             let lowered_method = crate::RustExpr::MethodCall {
                 receiver: Box::new(lowered_object),
@@ -441,25 +462,6 @@ macro_rules! stmt_expr_question_mark {
     }};
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn generic_imported_project_calls_use_the_canonical_function_name() {
-        let expression = HirExpr::GenericCall {
-            func: "load::<i64>".to_string(),
-            type_args: vec![Type::Int],
-            args: Vec::new(),
-            mutable_arg_places: Vec::new(),
-            ty: Type::None,
-        };
-        let imported = std::collections::HashSet::from(["load".to_string()]);
-
-        assert!(is_imported_project_call_for_ir(&expression, &imported));
-    }
-}
-
 impl RustEmitter {
     pub(crate) fn lower_stmt_expr_for_ir(
         &mut self,
@@ -499,3 +501,7 @@ impl RustEmitter {
         Ok(None)
     }
 }
+
+#[cfg(test)]
+#[path = "stmt_expr_method_and_question_mark_tests.rs"]
+mod tests;

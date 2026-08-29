@@ -1,6 +1,6 @@
 # Ad Hoc Architecture Correctness And Agent Workflow Closure
 
-status: active
+status: implementation follow-up in progress; closure blocked
 
 ## Objective
 
@@ -43,19 +43,30 @@ The following review claims are explicitly excluded:
 
 | ID | Milestone | Status | PR | Candidate |
 | --- | --- | --- | --- | --- |
-| M1 | Warm-cache lock correctness and serialization failures | implementation complete; merge deferred | [#3553](https://github.com/sifr-lang/sifr/pull/3553) | `1c43fe34847925a269288b4073f5ca7ca7d6063e` |
-| M2 | Canonical test/build materialization | implementation complete; merge deferred | [#3554](https://github.com/sifr-lang/sifr/pull/3554) | `16024325813dbee56e84a838e42679340f0f829a` |
-| M3 | Verification gate integrity | implementation staged; second-review defect deferred | [#3555](https://github.com/sifr-lang/sifr/pull/3555) | `07e3d7d0f5123a89a30a4fcf149e51ebff7d6c7e` |
-| M4 | Architecture documentation accuracy and generated crate map | implementation staged; second-review defect deferred | [#3556](https://github.com/sifr-lang/sifr/pull/3556) | `0cb9720cb80e66bc2be3c73e78206106cd998bd1` |
-| M5 | Structural generated-code safety | implementation staged; final-review residual remediated | [#3557](https://github.com/sifr-lang/sifr/pull/3557) | `5644505a6badeb51b39e38df82b3f8972c545265` |
-| M6 | Structured codegen error propagation | implementation staged; integration deferred | [#3558](https://github.com/sifr-lang/sifr/pull/3558) | `ef46a3eac5f7e54b374f6c648609e49a3dc5f302` |
-| M7 | Canonical frontend project compilation product | implementation staged; integration deferred | [#3559](https://github.com/sifr-lang/sifr/pull/3559) | `30c7ab5e1b5bffc4a9e16f65c061e07498951fae` |
-| M8 | LSP hot paths and compiler-service dependency direction | implementation staged; integration deferred | [#3560](https://github.com/sifr-lang/sifr/pull/3560) | `da39eb709ddffef80d3dc6297cde959f88d85bc5` |
-| M9 | Method-lowering authority and unsafe-code documentation | implementation staged; integration deferred | [#3561](https://github.com/sifr-lang/sifr/pull/3561) | `f6d1f4edaab6a2bfa0952ab89fd1980bec284703` |
-| M10 | Collision-resistant cache identity and cache lifecycle | implementation staged; second-review defect deferred | [#3562](https://github.com/sifr-lang/sifr/pull/3562) | `2e2ad86fb80ee916542738967935039c157fa18e` |
-| M11 | Real fuzz and semantic property targets | implementation staged; create-PR gate defect deferred | [#3563](https://github.com/sifr-lang/sifr/pull/3563) | `7664b902bf4697ca20bc39c683cdb617d26032e2` |
-| M12 | Maintainability ratchets and evidence-based flow decisions | pending | | |
-| M13 | Phase closure and whole-phase review | pending | | |
+| M1 | Warm-cache lock correctness and serialization failures | implementation complete; gate/integration blocked | [#3553](https://github.com/sifr-lang/sifr/pull/3553) | `1c43fe34847925a269288b4073f5ca7ca7d6063e` |
+| M2 | Canonical test/build materialization | implementation complete; integration deferred | [#3554](https://github.com/sifr-lang/sifr/pull/3554) | `16024325813dbee56e84a838e42679340f0f829a` |
+| M3 | Verification gate integrity | implementation complete; integration deferred | [#3555](https://github.com/sifr-lang/sifr/pull/3555) | `07e3d7d0f5123a89a30a4fcf149e51ebff7d6c7e` |
+| M4 | Architecture documentation accuracy and generated crate map | implementation complete; integration deferred | [#3556](https://github.com/sifr-lang/sifr/pull/3556) | `0cb9720cb80e66bc2be3c73e78206106cd998bd1` |
+| M5 | Structural generated-code safety | implementation complete; integration deferred | [#3557](https://github.com/sifr-lang/sifr/pull/3557) | `5644505a6badeb51b39e38df82b3f8972c545265` |
+| M6 | Structured codegen error propagation | implementation complete; integration deferred | [#3558](https://github.com/sifr-lang/sifr/pull/3558) | `ef46a3eac5f7e54b374f6c648609e49a3dc5f302` |
+| M7 | Canonical frontend project compilation product | implementation complete; integration deferred | [#3559](https://github.com/sifr-lang/sifr/pull/3559) | `30c7ab5e1b5bffc4a9e16f65c061e07498951fae` |
+| M8 | LSP hot paths and compiler-service dependency direction | implementation complete; integration deferred | [#3560](https://github.com/sifr-lang/sifr/pull/3560) | `da39eb709ddffef80d3dc6297cde959f88d85bc5` |
+| M9 | Method-lowering authority and unsafe-code documentation | implementation complete; integration deferred | [#3561](https://github.com/sifr-lang/sifr/pull/3561) | `f6d1f4edaab6a2bfa0952ab89fd1980bec284703` |
+| M10 | Collision-resistant cache identity and cache lifecycle | implementation complete; integration deferred | [#3562](https://github.com/sifr-lang/sifr/pull/3562) | `2e2ad86fb80ee916542738967935039c157fa18e` |
+| M11 | Real fuzz and semantic property targets | implementation complete; integration deferred | [#3563](https://github.com/sifr-lang/sifr/pull/3563) | `7664b902bf4697ca20bc39c683cdb617d26032e2` |
+| M12 | Maintainability ratchets and evidence-based flow decisions | implementation complete; integration deferred | [#3564](https://github.com/sifr-lang/sifr/pull/3564) | `17d7ac63eae4a9417a2d60415c06d7de7016ce6c` |
+| M12A | Process-group deadlines and terminal signal propagation | merged into M12 branch; integration deferred | [#3565](https://github.com/sifr-lang/sifr/pull/3565) | `2b0820dabf890dc19850289273ade09d8b048cd5` |
+| M12B | Restore canonical list-method lowering on structured fallback paths | merged into M12 branch; integration deferred | [#3566](https://github.com/sifr-lang/sifr/pull/3566) | `c4a23973f80d8eb796e4b9c984c89a248b58ac88` |
+| M12C | Terminal-signal escalation and remaining hardening command lifecycle | merged into M12 branch; integration deferred | [#3567](https://github.com/sifr-lang/sifr/pull/3567) | `9442b51faa8a15c1466919ad797d0cfcd9d0e8ef` |
+| M12D | Documentation mutation-registry consistency | merged into M12 branch; integration deferred | [#3568](https://github.com/sifr-lang/sifr/pull/3568) | `e97e7332e6ef537738ebd6b6f9fad60384ba1f2f` |
+| M12E | Atomic repeated-terminal-signal escalation entry | merged into M12 branch; integration deferred | [#3569](https://github.com/sifr-lang/sifr/pull/3569) | `2a8adc32dfed16933dcb22b4d77f989d97c80734` |
+| M12F | Restore generated demo freshness after compiler corrections | merged into M12 branch; integration deferred | [#3570](https://github.com/sifr-lang/sifr/pull/3570) | `4f33183b7244456fc21b0b7b95b2aa85ed586bc6` |
+| M12G | Register consolidated lowering intrinsic transport ownership | merged into M12 branch; integration deferred | [#3572](https://github.com/sifr-lang/sifr/pull/3572) | `7dc83924abd25bd15e5adfdf1d1df77da79ee3c4` |
+| M12H | Remove delivery-plan taxonomy from retained flow-graph architecture | merged into M12 branch; integration deferred | [#3573](https://github.com/sifr-lang/sifr/pull/3573) | `5094e412fbeb253edcfdd41a39079ecea72f9b1d` |
+| M12I | Restore authoritative Python-interop gate budget integrity | merged into M12 branch; integration deferred | [#3576](https://github.com/sifr-lang/sifr/pull/3576) | `e653b4ca92ba135bf01859dd35c6f43cab98fe77` |
+| M12J | Restore create-PR runtime-platform gate budget integrity | merged into M12 branch; integration deferred | [#3577](https://github.com/sifr-lang/sifr/pull/3577) | `8f011fb61cb232b4d65763f49378e28066c421bd` |
+| M12K | Refresh the governed performance trend reference | externally blocked on controlled-host admission | | |
+| M13 | Phase closure and whole-phase review | whole-phase review satisfied; merged into M12 branch; closure blocked | [#3571](https://github.com/sifr-lang/sifr/pull/3571) | `5b4005c8cabc910f1c7c959e6518fe3079135fb4` |
 
 ## M1 Warm-Cache Lock Correctness And Serialization Failures
 
@@ -482,11 +493,270 @@ Deferred M10 review and gate follow-ups:
   ownership boundary can serve compiler, package, driver, LSP, CLI, build
   script, and test code without adding an upward dependency.
 
+## M12A Process-Group Deadlines And Terminal Signal Propagation
+
+Close the mechanism omission found by M12's second and final review without
+running a third M12 review.
+
+Scope and acceptance criteria:
+
+- Route determinism-scale external commands and reproduction-command targets
+  through the shared process-group deadline primitive.
+- Forward terminal `SIGINT` and `SIGTERM` from the gate entrypoint to every
+  live detached child process group before exit.
+- Extend the same primitive to the two coverage-fuzz call sites identified by
+  the review so the known duplicate mechanism does not remain open.
+- Add focused negative tests proving timeout cleanup and terminal-signal
+  forwarding reach descendants rather than only the immediate child.
+- Preserve existing output-tail, timeout, and failure-classification behavior.
+- Run one exact-SHA Opus review for M12A. Do not revisit or run a third review
+  for M12.
+
+## M12B Restore Canonical List-Method Lowering On Structured Fallback Paths
+
+Close the compiler regression exposed by M12A's real determinism-scale run and
+already anticipated by M9's deferred strict-registry-decline reproduction.
+
+Scope and acceptance criteria:
+
+- Route locally recovered list receiver types through the canonical method
+  authority after strict registry lowering declines.
+- Ensure Sifr `list.append(value)` emits Rust `Vec::push(value)` on normal,
+  exception-handler, and other structured statement paths. Do not restore an
+  independent name-only fallback.
+- Add a focused compiler reproduction for the strict-registry-decline path and
+  compile the affected process fixtures that previously emitted
+  `Vec::append(bool)`.
+- Preserve ownership-aware argument adaptation for non-copy list elements.
+- Run one exact-SHA Opus review, with at most one remediation review.
+
+Deferred M12J review follow-ups:
+
+- Measure the larger merge/nightly/release runtime-platform selections before
+  replacing their currently sufficient default step budgets with explicit
+  policy. No broader-profile failure was observed or claimed in M12J.
+- Gather multi-host variance before changing the measured 300-second
+  create-PR limit, and make the profile-budget test helpers symmetric if later
+  work extends their scope.
+
+## M12K Refresh The Governed Performance Trend Reference
+
+Close the stale approved-reference artifact exposed by the next authorized
+create-PR gate after M12J.
+
+Scope and acceptance criteria:
+
+- Do not patch only `manifest_sha256` or bind old measurements to the changed
+  benchmark manifest.
+- From a clean exact commit and idle host, run the documented complete-manifest
+  approved-reference capture with controlled-host admission, manifest sample
+  counts, latency mode, and `compiler/performance` approval.
+- Accept only the atomic successful output that binds the exact source commit,
+  current manifest hash, invocation/run ids, controlled-host policy, and raw
+  evidence digest. Do not retain partial output from a failed capture.
+- Pass trend policy and self-test, the pre-v1 regression-closure guard and
+  self-test, the relevant performance verification, file-size, and whitespace
+  checks.
+- Run one exact-SHA Opus review, with at most one remediation review.
+
+Deferred M12I review follow-ups:
+
+- Consolidate the verification runner's two area-to-suite lookup helpers and add
+  a direct cache-path normalization assertion if that test-ownership cleanup is
+  taken up. The current deterministic suite-binding test and direct validation
+  already cover M12I's acceptance criterion.
+- Reconcile the pre-existing unread `SIFR_PYTHON_INTEROP_CACHE_STATE` export and
+  display-only profile wall-time targets in verification-runner follow-up work.
+  The displayed targets are not enforced budgets and do not invalidate the
+  corrected blocking step budgets.
+- Gather multi-host variance before changing the 2,400-second create-PR warm
+  limit. The measured local run leaves about 18% headroom; this infrastructure
+  observation does not justify an unmeasured policy change in M12I.
+
+## M12J Restore Create-PR Runtime-Platform Gate Budget Integrity
+
+Close the reproducible runtime-platform step-budget defect exposed by the next
+authorized create-PR gate after M12I.
+
+Scope and acceptance criteria:
+
+- Reuse the complete uncontended execution of the exact three create-PR
+  runtime-platform suites as performance evidence; do not rerun the unchanged
+  workload merely to repeat evidence.
+- Keep `platform-golden`, `platform-support-matrix`, and `platform-evidence`
+  selected and blocking.
+- Replace the impossible 120-second create-PR step budget with a finite
+  300-second blocking budget, giving bounded headroom over the measured
+  188.69-second workload.
+- Pin the exact policy in a deterministic profile self-test, then pass runner
+  and profile checks, the changed profile plan, maintainability, file-size, and
+  whitespace checks.
+- Run one exact-SHA Opus review, with at most one remediation review.
+
+## M12C Terminal-Signal Escalation And Remaining Hardening Command Lifecycle
+
+Close the new mechanism gap reported by M12A's final allowed review and the
+remaining hardening command lifecycle omissions without running a third M12A
+review.
+
+Scope and acceptance criteria:
+
+- After forwarding terminal `SIGINT` or `SIGTERM`, ensure a descendant that
+  ignores the signal cannot outlive the verification runner. Use bounded
+  group-liveness escalation without re-entering an interrupted `Popen.wait`.
+- Extend the terminal-signal self-test with a descendant that ignores the
+  forwarded signal.
+- Give the remaining Cargo property command a finite, process-group-aware
+  lifecycle instead of a bare unbounded `subprocess.run`.
+- Preserve an explicit timeout bit through variant and determinism wrappers if
+  either path gains timeout-specific classification; do not infer a deadline
+  from native exit code 124.
+- Run one exact-SHA Opus review, with at most one remediation review.
+
+## M12D Documentation Mutation-Registry Consistency
+
+Close the M4/M12 registry drift exposed by the record-only documentation check.
+
+Scope and acceptance criteria:
+
+- Make `docs_inventory.json` exactly match every executable architecture
+  mutation case, including generated-marker, qualified-crate, `/root`, and
+  Windows-path cases.
+- Keep the structure checker as the binding between executable mutation
+  registries and the committed inventory.
+- Prove the positive documentation structure check and its mutation self-tests
+  pass from a clean checkout state.
+- Run one exact-SHA Opus review, with at most one remediation review.
+
+## M12E Atomic Repeated-Terminal-Signal Escalation Entry
+
+Close the new mechanism gap reported by M12C's final allowed review without
+running a third M12C review.
+
+Scope and acceptance criteria:
+
+- Remove the bytecode-scale window between marking terminal-signal handling
+  active and disabling subsequent `SIGINT`/`SIGTERM` delivery.
+- Ensure a repeated terminal signal cannot take the re-entrant `SystemExit`
+  branch before the process-group escalation worker starts.
+- Preserve the first signal's `128 + signum` exit contract and bounded
+  process-group escalation.
+- Add a deterministic self-test for repeated-signal entry rather than relying
+  on timing-sensitive external delivery.
+- Run one exact-SHA Opus review, with at most one remediation review.
+
+## M12F Restore Generated Demo Freshness After Compiler Corrections
+
+Close the checked-in generated-companion drift exposed by the phase's single
+create-PR gate.
+
+Scope and acceptance criteria:
+
+- Regenerate `demos/decimal_verification/emitted.rs` with the exact compiler
+  built from the completed implementation stack.
+- Confirm the only changes are the two BigDecimal rounding expressions emitted
+  by the corrected canonical method-lowering path.
+- Prove the generated-demo freshness guard and the decimal verification demo
+  pass without rerunning the consumed create-PR gate.
+- Run one exact-SHA Opus review, with at most one remediation review.
+
+## M12G Register Consolidated Lowering Intrinsic Transport Ownership
+
+Close the intrinsic-allowlist ownership drift exposed by the user-authorized
+fresh create-PR gate after M12F.
+
+Scope and acceptance criteria:
+
+- Register `crates/sifr_lowering/src/lib.rs` under the existing
+  `typed-intrinsic-dispatch-core` lowering transport surface.
+- Preserve M12's explicit HIR re-export consolidation; do not restore the old
+  wildcard shim or weaken the intrinsic scanner.
+- Prove the allowlist guard, its self-test, manifest schema, and relevant
+  documentation checks pass.
+- Run one exact-SHA Opus review, with at most one remediation review.
+
+## M12H Remove Delivery-Plan Taxonomy From Retained Flow-Graph Architecture
+
+Close the durable-document taxonomy defect exposed by the next user-authorized
+fresh create-PR gate after M12G.
+
+Scope and acceptance criteria:
+
+- Remove the M12 delivery identifier from the retained flow-graph architecture
+  heading while preserving the actual retention decision and current-state
+  architecture.
+- Do not weaken, exclude, or special-case the verification taxonomy guard.
+- Prove the taxonomy guard and self-test, the full documentation area,
+  file-size guardrail, and whitespace check pass.
+- Run one exact-SHA Opus review, with at most one remediation review.
+
+## M12I Restore Authoritative Python-Interop Gate Budget Integrity
+
+Close the reproducible Python-interop step-budget defect exposed by the clean,
+uncontended create-PR gate after M12H.
+
+Scope and acceptance criteria:
+
+- Measure the complete required create-PR and merge Python-interop workloads on
+  the declared local host; do not use the first cold/cache-contended run as
+  performance evidence.
+- Keep all compiled-evidence suites required by the Python-interop capability
+  matrix in create-PR, merge, nightly, and release profiles. Do not make the
+  gate pass by dropping certification coverage or weakening blocking
+  enforcement.
+- Set explicit cache-aware Python-interop step budgets from the measured
+  workloads with bounded headroom for the authoritative delivery profiles.
+- Bind the cache fingerprint to the actual selected Python-interop suite list;
+  `area_python_interop` must not fingerprint an empty suite list.
+- Add deterministic self-tests for the suite binding and budget policy, then
+  pass runner/profile self-tests, all changed profile plans, file-size, and
+  whitespace checks.
+- Run one exact-SHA Opus review, with at most one remediation review.
+
 ## M13 Phase Closure And Whole-Phase Review
 
 Reconcile every milestone record, deferred finding, architecture/roadmap status,
 and reused validation artifact. Run documentation checks and one exact-SHA
 whole-phase Opus review without repeating unchanged implementation validation.
+
+### Closure Reconciliation
+
+- All 22 reviewed implementation candidates from M1 through M12J are ancestors
+  of the M12 stack head. PRs #3565-#3573 and #3576-#3577 are merged into M12;
+  stacked PRs #3553-#3564 remain open drafts for deferred integration.
+- All in-scope second-review and original gate findings were assigned and
+  closed by the later implementation items recorded here. In particular,
+  M12/M12A-M12I
+  close the M3-M11 deferred mechanisms, process lifecycle, structured fallback
+  regression, documentation registry drift, repeated-signal race, and generated
+  demo freshness defect, the later intrinsic-allowlist ownership omission, and
+  the durable flow-graph document's delivery-plan heading, plus the
+  Python-interop step-budget and suite-identity defect, plus the later
+  runtime-platform step-budget defect. The next gate assigned the stale
+  governed trend reference to pending M12K; no blocking finding is unassigned.
+- Item-level targeted validation and exact-SHA Opus evidence are reused because
+  M13 changes records only. `internal_docs/architecture.md` already contains
+  the reviewed current architecture from M4/M12 and its positive/mutation
+  checks pass; M13 makes no architecture change.
+- The compatibility-removal issue's deleted driver compile-order evidence path
+  is replaced with the canonical frontend project-compilation owner. The
+  roadmap status is changed from `active` to implementation-complete/blocked;
+  this ad hoc phase does not change the roadmap's phase sequencing.
+- Authorized create-PR attempts exposed and assigned M12F-M12I. The first
+  Python-interop timeout was host-contended; the next uncontended run proved
+  that the required selection could not fit its blocking step budget. Every
+  assigned implementation defect through M12J is merged. M12K remains pending,
+  and no merge gate has run on the corrected stack yet.
+- Full closure and archive are therefore blocked on a clean exact-SHA gate
+  sequence already covered by the user's authorization for all remaining work.
+  Stacked integration also remains blocked on the separately owned
+  distinct-human-reviewer restoration issue; the expired waiver is not
+  extended or weakened.
+- Exact next actions: retry M12K only after the host satisfies the unchanged
+  latency-mode controlled-host policy, then close M12K and run the authorized
+  clean create-PR/merge gate sequence for the resulting final stack SHA.
+  Restore the distinct human reviewer before stacked integration and archival.
+  Until then the phase is not represented as gate-passing or closed.
 
 ## Evidence Ledger
 
@@ -499,7 +769,8 @@ tree and are keyed by candidate SHA.
 - Draft PR: [#3553](https://github.com/sifr-lang/sifr/pull/3553)
 - Implementation candidate: `1c43fe34847925a269288b4073f5ca7ca7d6063e`
 - Opus review: `SATISFIED`, no blocking findings; published in the PR and
-  preserved outside the Git tree under the candidate SHA.
+  preserved outside the Git tree at
+  `.codex/review-evidence/sifr/1c43fe34847925a269288b4073f5ca7ca7d6063e/m1-opus.md`.
 - Targeted validation: `cargo test -p sifr_package` (143 passed), driver
   cache-identity tests (7 passed), binary-key tests (4 passed), Cargo-resolution
   tests (9 passed), affected production checks, workspace Clippy, formatting,
@@ -855,3 +1126,467 @@ tree and are keyed by candidate SHA.
   related follow-ups are recorded under M12 above.
 - Integration remains deferred with the stacked chain and the human reviewer
   remains skipped under the user's current instruction.
+
+### M12 Deferred Integration Handoff
+
+- Branch: `codex/architecture-audit-closure-m12`.
+- Stacked draft PR: [#3564](https://github.com/sifr-lang/sifr/pull/3564), based
+  on the M11 branch.
+- Initial candidate:
+  `13e7e9159f8a63810c6ff43cd9786381cd55d90a`. The initial exact-SHA Opus
+  review returned `NOT SATISFIED` with seven blockers covering tooling docs,
+  structured stdlib parse failures, canonical-HIR lint fixes, LSP watcher and
+  external invalidation behavior, active cache coordination, structured match
+  patterns, and stale phase-29 names.
+- Final M12 candidate:
+  `17d7ac63eae4a9417a2d60415c06d7de7016ce6c`. It remediates all seven initial
+  blockers and the M3-M11 follow-ups implemented in its reviewed diff.
+- The second and final M12 review returned `NOT SATISFIED` because the already
+  recorded M3 process-group deadline and terminal-signal follow-up remained
+  open. Under the review limit, no third M12 review will run. The mechanism is
+  now the bounded M12A item above. Review evidence is preserved outside Git at
+  `.codex/review-evidence/architecture-closure/m12-17d7ac63eae4a9417a2d60415c06d7de7016ce6c-remediation.md`.
+- Validation on the final candidate: workspace and fuzz-project Clippy passed
+  with warnings denied; formatting and whitespace checks passed; codegen,
+  package, diagnostics, runtime, lint, analysis, and compiler-service library
+  suites passed; focused active-cache, same-key cross-process, watcher,
+  external-invalidation, and codegen-boundary tests passed. Method-dispatch,
+  unsafe-ABI, codegen-invariant, maintainability, HIR, architecture,
+  TypeScript-Go transfer, diagnostic-doc, fuzz-lock, and 900-line guards all
+  passed, including applicable self-tests.
+- The single create-PR and merge gates remain reserved for the final compiler
+  candidate after the later implementation items. Integration and the human reviewer remain deferred
+  under the user's current instruction.
+
+### M12A Merged Handoff
+
+- Branch: `codex/architecture-audit-closure-m12a`.
+- Stacked PR: [#3565](https://github.com/sifr-lang/sifr/pull/3565), merged into
+  the M12 branch as `15b8c063957154d8e6e691f28ce1c63bfa372cd7`.
+- Initial candidate: `d858b12aac1763e850ccb10f6ba37d4f6e7b4995`.
+  Its exact-SHA Opus review returned `SATISFIED` with no blockers. Three
+  candidate-level suggestions were accepted for the single remediation batch:
+  the non-reentrant signal-registry lock, the prematurely reset signal guard,
+  and native exit-code 124 timeout ambiguity.
+- Final candidate: `2b0820dabf890dc19850289273ade09d8b048cd5`.
+  The one permitted remediation review returned `SATISFIED` with no blockers.
+  It reported a new terminal-forwarding escalation gap, recorded as M12C; no
+  third M12A review will run.
+- Validation: touched Python Ruff and compilation, whitespace, both runner
+  self-test layers, maintainability, file-size, HIR, driver, and method-dispatch
+  guardrails passed. Self-tests cover SIGTERM-ignoring deadline descendants,
+  terminal forwarding, signal delivery while the registry lock is held, and a
+  native exit code 124 that is not a timeout.
+- The real merge-profile determinism-scale suite reached nested E2E compilation
+  and failed both commands with exit code 1. Generated Rust contained
+  `actual.append(bool)` where the canonical Sifr list method must emit
+  `actual.push(bool)`. The source trace points to M9's removed direct fallback
+  after strict registry decline; this compiler defect is M12B. The unchanged
+  failing suite was not repeated.
+- Review evidence is outside Git under both exact candidate SHAs in
+  `.codex/review-evidence/architecture-closure/`.
+- M12A changed no compiler files, so it did not run or consume the reserved
+  Sifr create-PR or merge gate.
+- The record-only documentation check then reported architecture mutation-case
+  registration drift: the executable registry has 12 cases while the inventory
+  retains 8. This pre-existing M4/M12 closure defect is M12D; it is not absorbed
+  into the M12A handoff commit.
+
+### M12B Merged Handoff
+
+- Branch: `codex/architecture-audit-closure-m12b`.
+- Stacked PR: [#3566](https://github.com/sifr-lang/sifr/pull/3566), merged into
+  the M12 branch as `054bbe1c5277c50fb0d609fc953be4349f942e16`.
+- Exact implementation candidate:
+  `c4a23973f80d8eb796e4b9c984c89a248b58ac88`.
+- The one exact-SHA Opus review returned `SATISFIED` with no blockers. It
+  verified extraction equivalence for collection argument conversion,
+  TypeVar/non-copy ownership preservation, absence of double conversion, and
+  canonical authority dispatch without new user-method interception. No
+  remediation review was needed.
+- Validation: the focused strict-registry-decline reproduction passed; six
+  no-cache process fixtures from the failing determinism batch compiled and ran
+  6/6 across two generated groups; all 1,163 codegen tests and workspace Clippy
+  with warnings denied passed. Formatting, codegen invariant, maintainability,
+  HIR, method-dispatch, file-size, and whitespace guards passed.
+- Review evidence is outside Git at
+  `.codex/review-evidence/architecture-closure/m12b-c4a23973f80d8eb796e4b9c984c89a248b58ac88.md`.
+- M12B changes compiler files. Under the phase rule, it did not run a per-item
+  Sifr gate; the single create-PR and merge gates remain reserved for the final
+  implementation SHA after M12C, M12D, and M12E.
+
+### M12C Merged Handoff
+
+- Branch: `codex/architecture-audit-closure-m12c`.
+- Stacked PR: [#3567](https://github.com/sifr-lang/sifr/pull/3567), merged into
+  the M12 branch as `c77485c27f489e63a5d6f8c178a02a57234ad23d`.
+- Initial candidate: `a99e1128c1dfccbefbc45a95bcf593db5cf84252`.
+  Its exact-SHA Opus review returned `SATISFIED` with no blockers. The accepted
+  remediation prevents a later terminal signal from interrupting the
+  non-daemon escalation worker's interpreter-shutdown join and adds SIGINT
+  coverage.
+- Final candidate: `9442b51faa8a15c1466919ad797d0cfcd9d0e8ef`.
+  The one permitted remediation review returned `SATISFIED` with no blockers.
+  It reported a new bytecode-scale repeated-signal entry race, recorded as
+  M12E; no third M12C review will run.
+- Validation: touched Python Ruff and compilation, both runner self-test
+  layers, the real 19-variant property suite, maintainability, file-size, HIR,
+  driver, whitespace, and manifest JSON checks passed. The self-tests cover
+  SIGTERM- and SIGINT-ignoring descendants and explicit native-124 versus
+  timeout classification.
+- Review evidence is outside Git under both exact candidate SHAs in
+  `.codex/review-evidence/architecture-closure/`.
+- M12C changed no compiler files, so it did not run or consume the reserved
+  Sifr create-PR or merge gate.
+
+### M12D Merged Handoff
+
+- Branch: `codex/architecture-audit-closure-m12d`.
+- Stacked PR: [#3568](https://github.com/sifr-lang/sifr/pull/3568), merged into
+  the M12 branch as `23551f57b74f1ac4fe0fcade553773d8761dd48d`.
+- Exact implementation candidate:
+  `e97e7332e6ef537738ebd6b6f9fad60384ba1f2f`.
+- The one exact-SHA Opus review returned `SATISFIED` with no blockers or
+  remediation. It verified exact ordered equality between the committed
+  inventory and all 12 executable architecture mutation cases, plus the
+  reciprocal structure-checker binding.
+- The parent inventory reproducibly failed with `architecture mutation case
+  registration drifted`. On the clean candidate, JSON parsing, the structure
+  and GA mutation harnesses, all 12 architecture mutation cases, the positive
+  architecture check, file-size, and whitespace checks passed.
+- Review evidence is outside Git at
+  `.codex/review-evidence/architecture-closure/m12d-e97e7332e6ef537738ebd6b6f9fad60384ba1f2f.md`.
+- M12D changed no compiler files, so it did not run or consume the reserved
+  Sifr create-PR or merge gate.
+
+### M12E Merged Handoff
+
+- Branch: `codex/architecture-audit-closure-m12e`.
+- Stacked PR: [#3569](https://github.com/sifr-lang/sifr/pull/3569), merged into
+  the M12 branch as `da98972128607699b9598f6c1fda89b19cce0d38`.
+- Exact implementation candidate:
+  `2a8adc32dfed16933dcb22b4d77f989d97c80734`.
+- The one exact-SHA Opus review returned `SATISFIED` with no blockers or
+  remediation. It verified that repeated entry returns to the in-progress
+  first handler, preserving first-signal forwarding, worker startup, bounded
+  escalation, and the first signal's exit status.
+- Validation: touched Python Ruff and compilation, the full runner self-test,
+  maintainability, file-size, and whitespace checks passed. Opus also ran the
+  deterministic helper against both revisions: the parent exited 130 from the
+  nested SIGINT, while the candidate resumed the outer SIGTERM and exited 143.
+- Review evidence is outside Git at
+  `.codex/review-evidence/architecture-closure/m12e-2a8adc32dfed16933dcb22b4d77f989d97c80734.md`.
+- M12E changed no compiler files, so it did not run or consume the reserved
+  Sifr create-PR or merge gate.
+
+### Final Create-PR Gate Attempt
+
+- Exact stack SHA: `7cb37df1571e0a785b41116cb208713d3bdcd782`.
+- Before the long gate, the worktree's private target was 25 GiB and unused;
+  the required local `cargo clean` removed 30.7 GiB.
+- The one permitted create-PR gate ran once and exited 1. Cargo setup, HIR
+  maintainability, file-size, and maintainability-ratchet steps passed. The
+  generated-demo freshness guard then reported only
+  `demos/decimal_verification/emitted.rs` as stale and stopped the lane.
+- The emitted diff is limited to two BigDecimal rounding expressions. This
+  in-scope generated companion defect is M12F. The create-PR gate will not be
+  rerun.
+- Machine evidence is retained under
+  `target/validation_lane_reports/create-pr.latest.json` and its referenced
+  log/time artifacts for this worktree.
+
+### M12F Merged Handoff
+
+- Branch: `codex/architecture-audit-closure-m12f`.
+- Stacked PR: [#3570](https://github.com/sifr-lang/sifr/pull/3570), merged into
+  the M12 branch as `f914a1339191deeb59f945c816a7a086b4c9a0f7`.
+- Exact implementation candidate:
+  `4f33183b7244456fc21b0b7b95b2aa85ed586bc6`.
+- The one exact-SHA Opus review returned `SATISFIED` with no blockers or
+  remediation. It independently re-ran byte-for-byte freshness across every
+  generated demo companion and the decimal verification runtime.
+- The diff is exactly two generated BigDecimal rounding expressions for the
+  two source `.round(6)` calls. Both now use canonical explicit `HalfEven`
+  lowering; no compiler source, other demo, suppression, shim, or hand-authored
+  workaround changed.
+- Validation: all generated demo companions were fresh, the decimal demo built
+  and printed its determinism-success marker, and whitespace and file-size
+  checks passed.
+- Review evidence is outside Git at
+  `.codex/review-evidence/architecture-closure/m12f-4f33183b7244456fc21b0b7b95b2aa85ed586bc6.md`.
+- M12F changed only a generated companion, so it did not rerun the consumed
+  create-PR gate or run a Sifr merge gate on a different SHA.
+
+### M13 Closure Handoff
+
+- Branch: `codex/architecture-audit-closure-m13`.
+- Stacked PR: [#3571](https://github.com/sifr-lang/sifr/pull/3571), merged into
+  the M12 branch as `f0622695886a61e57617767e21f55da8580ef547`.
+- Exact record candidate: `5b4005c8cabc910f1c7c959e6518fe3079135fb4`.
+- The single whole-phase exact-SHA Opus review returned `SATISFIED` with no
+  blocking findings. It verified ancestry for all 18 reviewed implementation
+  candidates, spot-checked the deferred mechanisms in the current tree,
+  confirmed no unassigned in-scope finding, and approved the architecture,
+  roadmap, compatibility-record, gate, and blocker reconciliation.
+- M13 validation reused unchanged item evidence and ran the full documentation
+  area: architecture, structure, and GA-release suites passed 3/3. File-size
+  and whitespace checks also passed.
+- Whole-phase review evidence is outside Git at
+  `.codex/review-evidence/architecture-closure/m13-5b4005c8cabc910f1c7c959e6518fe3079135fb4-whole-phase.md`.
+- The implementation was complete at the reviewed M13 candidate, but the later
+  user-authorized gate exposed M12G. M12G is now merged and its exact delta has
+  its own satisfied item review, so the single whole-phase review is not
+  repeated. The phase remains active and closure-blocked. No green compiler
+  gate, merged main stack, archive, or full closure is claimed. The exact next
+  actions now include M12I, the authorized fresh exact-SHA gate sequence,
+  distinct reviewer restoration, stacked integration, and archival recorded in
+  the closure reconciliation above. M12H is merged and its exact delta has its
+  own satisfied item review, so the single whole-phase review is not repeated.
+
+### User-Authorized Create-PR Gate Attempt
+
+- On 2026-08-29 the user explicitly authorized a fresh exact-SHA gate sequence
+  after the earlier one-run rule had blocked further progress.
+- Exact stack SHA: `3d8a43bca5c1e99b3fde0c69cb43dfd46ab3ea78`.
+- The create-PR gate ran once and exited 1. Cargo setup, HIR maintainability,
+  file-size, maintainability ratchets, generated-demo freshness, dependency
+  direction, submodule ownership, method authority, unsafe ABI, codegen
+  invariants, and sysroot resource certification passed.
+- The next guard reported one ownership omission:
+  `lowering_files missing allowlist entries: crates/sifr_lowering/src/lib.rs`.
+  M12's explicit HIR re-export consolidation exposed the pre-existing
+  `CompilerIntrinsicId` transport to the scanner. This in-scope policy defect
+  is M12G; the consumed gate is not rerun.
+- No merge gate ran after the create-PR failure.
+
+### M12G Merged Handoff
+
+- Branch: `codex/architecture-audit-closure-m12g`.
+- Stacked PR: [#3572](https://github.com/sifr-lang/sifr/pull/3572), merged into
+  the M12 branch as `a8c706bbccefe3cccfa4875f5a7fdd576ca470eb`.
+- Exact implementation candidate:
+  `7dc83924abd25bd15e5adfdf1d1df77da79ee3c4`.
+- The one exact-SHA Opus review returned `SATISFIED` with no blockers or
+  remediation. It verified that the candidate registers only the consolidated
+  lowering facade under the existing typed intrinsic transport surface, adds
+  no new intrinsic authority, preserves the explicit HIR re-export, and does
+  not weaken the scanner.
+- Validation: the intrinsic allowlist guard and self-test, manifest schema and
+  self-test, full documentation area, file-size guardrail, and whitespace check
+  passed. The scanner's ten discovered lowering paths exactly equal the ten
+  owned manifest paths.
+- Review evidence is outside Git at
+  `.codex/review-evidence/architecture-closure/m12g-7dc83924abd25bd15e5adfdf1d1df77da79ee3c4.md`.
+- M12G changed only the retained-intrinsic manifest. It did not rerun the
+  consumed create-PR gate or run a merge gate on a different SHA.
+
+### Second User-Authorized Create-PR Gate Attempt
+
+- On 2026-08-29 the user explicitly authorized all remaining work, including a
+  fresh exact-SHA gate sequence after M12G.
+- Exact stack SHA: `fb53af520bfbe03a94ac1ac7015d1e7683804794`.
+- The create-PR gate ran once and exited 1. Cargo setup, HIR maintainability,
+  file-size, maintainability ratchets, generated-demo freshness, all compiler
+  architecture guards, verification-runner foundations, documentation
+  architecture, and all ten Rust interop variants passed.
+- Coverage taxonomy then reported one M12-owned durable-document defect:
+  `internal_docs/typescript_go_architecture_transfer_first_class_flow_graph.md:60`
+  contains the delivery-plan heading `## M12 Retention Decision`. The bounded
+  correction is M12H; the guard is not weakened or bypassed.
+- No merge gate ran after the create-PR failure.
+- Gate evidence is outside Git at
+  `.codex/review-evidence/architecture-closure/authorized-create-pr-fb53af520bfbe03a94ac1ac7015d1e7683804794.md`.
+
+### M12H Merged Handoff
+
+- Branch: `codex/architecture-audit-closure-m12h`.
+- Stacked PR: [#3573](https://github.com/sifr-lang/sifr/pull/3573), merged into
+  the M12 branch as `31005847622790cf491d042991afede7f245b0a3`.
+- Exact implementation candidate:
+  `5094e412fbeb253edcfdd41a39079ecea72f9b1d`.
+- The one exact-SHA Opus review returned `SATISFIED` with no blockers or
+  remediation. It verified the single heading-only correction, unchanged
+  retention architecture, unchanged guard and exclusions, and absence of a
+  stale external anchor.
+- Validation: the taxonomy guard and self-test, all four coverage-readiness
+  variants, all three documentation suites, the TypeScript-Go transfer guard
+  and self-test, file-size guardrail, and whitespace check passed.
+- Review evidence is outside Git at
+  `.codex/review-evidence/architecture-closure/m12h-5094e412fbeb253edcfdd41a39079ecea72f9b1d.md`.
+- M12H changed only a durable architecture heading. It did not rerun the
+  consumed create-PR gate or run a merge gate on a different SHA.
+
+### Host-Contended Create-PR Gate Attempt
+
+- Exact stack SHA: `47b32ddf2ff54a15e9a55ed30d49ec108aec1fea`.
+- The create-PR gate passed every step through diagnostics, including all four
+  coverage-readiness variants and the corrected taxonomy case. The cold
+  Python-interop area then failed: `readonly-check-doctor` hit a 300-second
+  subprocess timeout, and the area hit its 1,200-second deadline.
+- Another worktree started `cargo test --locked -p sifr -- --skip
+  test_e2e_pass` after this gate began and overlapped the slow area for about
+  eleven minutes. Binding authoring still passed in 187.771 seconds and LSP
+  declaration authoring passed in 159.375 seconds, both abnormally slow.
+- After the competing process ended, the exact failed
+  `readonly_check_doctor.py` case passed on the unchanged candidate with
+  `deferred=1 resolved=3 parity=5 mutations=0`. It used 325.8 MiB maximum RSS,
+  reported no swaps, and completed in 791.14 seconds. The originally timed-out
+  Sifr check completed within its per-command limit.
+- The gate exited 124; it is not represented as passing, and no merge gate ran.
+  The first cold/cache-contended run is not used as host-sensitive performance
+  evidence. A clean warmed exact-SHA sequence remains authorized.
+- A CLI help probe accidentally began another profile invocation because the
+  top-level runner ignores `--help` after `--profile`. It was terminated after
+  roughly 40 seconds during initial guardrails and is not treated as gate or
+  validation evidence.
+- Gate and isolated-case evidence is outside Git at
+  `.codex/review-evidence/architecture-closure/authorized-create-pr-47b32ddf2ff54a15e9a55ed30d49ec108aec1fea.md`.
+
+### Uncontended Create-PR Budget Failure
+
+- Exact stack SHA: `1cdae7167cbedb4b65789223dc6db75781706fb3`.
+- The create-PR gate ran on an idle host and passed every step before Python
+  interop. The cold Python-interop area then exhausted its 1,200-second blocking
+  deadline after legitimate passing cases consumed about 1,181.5 seconds:
+  read-only check/doctor `496.239s`, binding authoring `27.454s`, LSP declaration
+  authoring `8.531s`, callback examples `250.912s`, and buffer examples
+  `398.353s`.
+- Required Arrow, DLPack, runtime, async, and cloud suites had not yet run. The
+  current budget therefore cannot cover the required profile selection even on
+  an uncontended host. The profile also fingerprints an empty suite list for
+  the `area_python_interop` step instead of its actual selection.
+- This mechanism defect is M12I. Required certification suites and blocking
+  enforcement remain in scope and must not be removed or weakened.
+- The gate exited 124; no merge gate ran.
+- Gate evidence is outside Git at
+  `.codex/review-evidence/architecture-closure/final-create-pr-1cdae7167cbedb4b65789223dc6db75781706fb3.md`.
+
+### M12I Merged Handoff
+
+- Branch: `codex/architecture-audit-closure-m12i`.
+- Stacked PR: [#3576](https://github.com/sifr-lang/sifr/pull/3576), merged into
+  the M12 branch as `a14eada0a3b2cc3804a7e2d21c17b9247628d7bb`.
+- Exact implementation candidate:
+  `e653b4ca92ba135bf01859dd35c6f43cab98fe77`.
+- Complete uncontended workload measurements passed with zero swaps. The
+  create-PR selection passed 24/24 variants in 2,026.34 seconds; its result and
+  log SHA-256 digests are `1e1699ab851b4de0bbc53e91b24f012fff81d19c65be0dabd72bb2c81ba8074a`
+  and `d0306b8d7beb759a1d693fc252b13142c2d61a2d0203242b20a5634b0c09fda7`.
+  The merge selection passed 30/30 variants in 1,792.99 seconds; its result and
+  log digests are `966ac70e2bacf80282856e58d640e4918f4401770b2e4f4499636ca71b449617`
+  and `29a9166bbaee2f4be7502efc3cda40442f79202a9412e970032a0d5aa21fb047`.
+  The required merge-only `library-examples` suite consumed 960.906 seconds.
+- The corrected policy keeps all 24/30/30/30 selected suites blocking. It sets
+  create-PR warm/cold budgets to 2,400/2,700 seconds and merge, nightly, and
+  release warm/cold budgets to 2,400/4,500 seconds. The broader cold limit
+  composes the measured create workload with measured merge-only work and
+  bounded headroom.
+- `area_python_interop` now normalizes to the selected `python_interop` area for
+  suite fingerprinting, required cache paths, and cache-state export. Its
+  fingerprint therefore carries the actual selected suites instead of an empty
+  list.
+- Validation passed: the full verification-runner self-test, profile schema
+  check, canonical plans for all four changed profiles, maintainability
+  ratchets, file-size guardrail, direct suite/cache-path inspection, and
+  whitespace check.
+- The exact-SHA Opus review returned `SATISFIED` with no blockers. The first
+  response identified an incorrect full base-SHA suffix in the request; the one
+  permitted follow-up reviewed the unchanged candidate against exact base
+  `dd159c3949ced9e20f49eda618d3f2902bd1af9e` and confirmed the verdict.
+  Final review evidence is outside Git at
+  `.codex/review-evidence/architecture-closure/m12i-e653b4ca92ba135bf01859dd35c6f43cab98fe77.md`.
+- M12I changed verification policy and runner files but no compiler files, so it
+  did not run or consume a Sifr create-PR or merge gate. The authorized
+  phase-wide exact-SHA gate sequence remains next.
+
+### Post-M12I Create-PR Gate Attempt
+
+- Exact stack SHA: `b179fab2455a9177e1f5aa0f67524095cd5b380a`.
+- The host was idle with 356 GiB free and a 7.9 GiB private target. The one
+  create-PR gate ran for 880.56 seconds with zero swaps and exited 124.
+- Every guard and area through Python interop passed. In particular, the
+  corrected cold Python-interop step bound the actual selected suites, passed
+  24/24 variants in 524.776 seconds, and passed its 2,700-second blocking
+  budget.
+- The next `area_runtime_platform` command hit its 120-second deadline at
+  120.038 seconds. A direct uncontended run of the unchanged three selected
+  suites then passed 28/28 variants with one declared skip in 188.69 seconds
+  and zero swaps. Its first valid golden case alone passed in 125.950 seconds,
+  proving the configured budget cannot contain the required selection.
+- This mechanism defect is assigned to M12J. No merge gate ran, and the failed
+  create-PR gate is not represented as passing.
+- Gate evidence is outside Git at
+  `.codex/review-evidence/architecture-closure/final-create-pr-b179fab2455a9177e1f5aa0f67524095cd5b380a.md`.
+  The direct result/log SHA-256 digests are
+  `52a6f0a825c9018f22134dbc2a060b0e7dfb434089e4ceaaec67e1119b00ca04`
+  and `9f66461b6f288bd73006c9133c6709daa8ab449649596d77ed090ca1221b4942`.
+
+### M12J Merged Handoff
+
+- Branch: `codex/architecture-audit-closure-m12j`.
+- Stacked PR: [#3577](https://github.com/sifr-lang/sifr/pull/3577), merged into
+  the M12 branch as `37189b0390d3b3c358f0bf4b8d69b0ffeb73f2a4`.
+- Exact implementation candidate:
+  `8f011fb61cb232b4d65763f49378e28066c421bd`.
+- The candidate changes only the create-PR runtime-platform blocking budget
+  from 120 to 300 seconds and its exact deterministic policy assertion. The
+  three selected suites and blocking enforcement are unchanged.
+- Validation passed: the full verification-runner self-test, profile schema
+  check, canonical create-PR plan, maintainability ratchets, file-size
+  guardrail, and whitespace check. The unchanged 28/28 direct workload result
+  from the assigned gate failure is reused.
+- The one exact-SHA Opus review returned `SATISFIED` with no blockers. It
+  verified exact suite preservation, blocking enforcement, the policy pin, and
+  about 59% bounded headroom over the 188.69-second measurement. Review
+  evidence is outside Git at
+  `.codex/review-evidence/architecture-closure/m12j-8f011fb61cb232b4d65763f49378e28066c421bd.md`.
+- M12J changed verification policy/test files but no compiler files, so it did
+  not run or consume a Sifr create-PR or merge gate. The authorized phase-wide
+  exact-SHA gate sequence remains next.
+
+### Post-M12J Create-PR Gate Attempt
+
+- Exact stack SHA: `7cd1124485ab00fcfef42b9c0bbe3054e5770ea3`.
+- The create-PR gate ran on an idle host for 691.21 seconds with zero swaps and
+  exited 1. Every guard and area through runtime platform passed, including
+  Python interop 24/24 in 283.314 seconds under its cold budget and runtime
+  platform 28/28 with one declared skip in 67.978 seconds under its corrected
+  300-second budget.
+- Developer tooling then reported only that
+  `verification/areas/performance/data/trend/current.json` has a stale
+  `manifest_sha256`. The committed trend artifact records
+  `d6994b8c7343310e33d980a84a1a843aedaf6326d11fde0dbfdc819006ed64a2`,
+  while the current benchmark manifest hashes to
+  `e3a44d95a5b3e177eb04ef7976ec193186c09af360d0aa943c88dbbf2d45ca74`.
+- The manifest changed after the approved reference was captured, including LSP
+  project roots and minimum-project-module requirements. M12K therefore runs a
+  governed fresh capture rather than relabeling old measurements.
+- No merge gate ran. Gate evidence is outside Git at
+  `.codex/review-evidence/architecture-closure/final-create-pr-7cd1124485ab00fcfef42b9c0bbe3054e5770ea3.md`.
+
+### M12K Controlled-Capture Blocker
+
+- Clean exact source commit:
+  `5242d9872053600fea18566cd2f5ed29301811f9`.
+- The documented complete-manifest approved-reference command ran with
+  `SIFR_VALIDATION_PROFILE=approved-reference`,
+  `SIFR_THERMAL_POLICY=controlled-host`, controlled-host latency mode, and
+  `compiler/performance` approval. It made no repository change.
+- The first admission attempt used the documented 180-second default and was
+  rejected for a competing build plus external CPU pressure. The competing
+  worktree then finished its generated-code-quality workload.
+- A second attempt preserved every admission threshold and only extended the
+  wait to 600 seconds. It was rejected solely for external CPU pressure. A
+  post-attempt snapshot remained at 310.3% external CPU against the 50% limit,
+  with nominal thermal state, AC power, acceptable normalized load, and no
+  competing build. Endpoint security, WindowServer, GitKraken, osquery, and Git
+  activity owned the pressure outside this worktree.
+- The governed producer did not write `trend/current.json`; the worktree stayed
+  clean. No benchmark result, candidate SHA, PR, review, or gate pass is claimed
+  for M12K.
+- The exact retry condition is an unchanged clean source commit with three
+  admitted quiet snapshots under the existing latency-mode policy. Do not
+  weaken the 50% pressure threshold, switch to work mode, or patch only the
+  recorded manifest hash.
+- Admission evidence is outside Git at
+  `.codex/review-evidence/architecture-closure/m12k-controlled-capture-blocker-5242d9872053600fea18566cd2f5ed29301811f9.md`.

@@ -33,7 +33,7 @@ pub(super) fn try_lower_simple_index_expr(
                 // Keep runtime behavior explicit while avoiding Optional leakage in emitted Rust types.
                 Some(RustExpr::Block {
                     stmts: vec![RustStmt::LetElse {
-                        pattern: "Some(__sifr_proven_dict_value)".to_string(),
+                        pattern: "Some(__sifr_proven_dict_value)".into(),
                         value: projected,
                         else_body: vec![RustStmt::Expr(RustExpr::FnCall {
                             func: Box::new(RustExpr::Path(vec![

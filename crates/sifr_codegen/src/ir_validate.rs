@@ -1,8 +1,9 @@
 #[cfg(test)]
 use crate::generated_source_validate::validate_generated_source;
 use crate::generated_source_validate::{forbidden_expr_issues, forbidden_file_issues};
-use crate::{RustExpr, RustItem, RustParam, RustStmt, RustType};
+use crate::{RustExpr, RustItem, RustParam, RustPattern, RustStmt, RustType};
 use std::collections::HashSet;
+use syn::parse::Parser as _;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum IrValidationKind {
@@ -17,6 +18,8 @@ pub(crate) enum IrValidationKind {
     ForbiddenGeneratedSource,
     ForbiddenStructuredConstruct,
     InvalidIdentifier,
+    InvalidMatchPattern,
+    MissingContextManagerMetadata,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -242,6 +245,15 @@ fn validate_stmt(stmt: &RustStmt, issues: &mut Vec<IrValidationIssue>, in_functi
         RustStmt::Match { expr, arms } => {
             validate_expr(expr, issues, in_function);
             for arm in arms {
+                if let Err(error) = parse_match_pattern(&arm.pattern) {
+                    issues.push(IrValidationIssue {
+                        kind: IrValidationKind::InvalidMatchPattern,
+                        message: format!(
+                            "compiler-owned Rust match pattern is invalid ({error}): {}",
+                            arm.pattern.source()
+                        ),
+                    });
+                }
                 if let Some(guard) = &arm.guard {
                     validate_expr(guard, issues, in_function);
                 }
@@ -259,6 +271,15 @@ fn validate_stmt(stmt: &RustStmt, issues: &mut Vec<IrValidationIssue>, in_functi
         RustStmt::With { items, body } => {
             for item in items {
                 validate_expr(&item.value, issues, in_function);
+                if item.has_cm && item.class_name.is_none() {
+                    issues.push(IrValidationIssue {
+                        kind: IrValidationKind::MissingContextManagerMetadata,
+                        message: format!(
+                            "context-manager with-item `{}` is missing its Rust class name",
+                            item.binding
+                        ),
+                    });
+                }
             }
             for stmt in body {
                 validate_stmt(stmt, issues, in_function);
@@ -292,6 +313,11 @@ fn validate_stmt(stmt: &RustStmt, issues: &mut Vec<IrValidationIssue>, in_functi
         }
         RustStmt::Break | RustStmt::Continue => {}
     }
+}
+
+pub(crate) fn parse_match_pattern(pattern: &RustPattern) -> syn::Result<syn::Pat> {
+    let rendered = crate::Renderer::render_pattern_string(pattern.source());
+    syn::Pat::parse_multi_with_leading_vert.parse_str(&rendered)
 }
 
 fn validate_expr(expr: &RustExpr, issues: &mut Vec<IrValidationIssue>, in_function: bool) {
@@ -639,6 +665,62 @@ mod tests {
         assert!(issues.iter().any(|issue| {
             issue.kind == IrValidationKind::InvalidIdentifier
                 && issue.message.contains("std::cmp::max(1, 2)")
+        }));
+    }
+
+    #[test]
+    fn rejects_invalid_match_patterns_at_the_ir_boundary() {
+        let items = vec![RustItem::Fn {
+            name: "broken_match".to_string(),
+            visibility: Visibility::Private,
+            type_params: vec![],
+            params: vec![],
+            ret: None,
+            body: vec![RustStmt::Match {
+                expr: RustExpr::Ident("value".to_string()),
+                arms: vec![crate::RustMatchArm {
+                    pattern: "Some(".into(),
+                    bindings: vec![],
+                    guard: None,
+                    body: vec![],
+                }],
+            }],
+            is_async: false,
+        }];
+
+        let issues = validate_items(&items);
+
+        assert!(issues.iter().any(|issue| {
+            issue.kind == IrValidationKind::InvalidMatchPattern && issue.message.contains("Some(")
+        }));
+    }
+
+    #[test]
+    fn rejects_missing_context_manager_metadata_at_the_ir_boundary() {
+        let items = vec![RustItem::Fn {
+            name: "broken_with".to_string(),
+            visibility: Visibility::Private,
+            type_params: vec![],
+            params: vec![],
+            ret: None,
+            body: vec![RustStmt::With {
+                items: vec![crate::RustWithItem {
+                    binding: "value".to_string(),
+                    value: RustExpr::Ident("manager".to_string()),
+                    mutable: false,
+                    has_cm: true,
+                    class_name: None,
+                }],
+                body: vec![],
+            }],
+            is_async: false,
+        }];
+
+        let issues = validate_items(&items);
+
+        assert!(issues.iter().any(|issue| {
+            issue.kind == IrValidationKind::MissingContextManagerMetadata
+                && issue.message.contains("value")
         }));
     }
 

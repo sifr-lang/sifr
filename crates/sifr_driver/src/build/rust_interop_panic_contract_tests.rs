@@ -356,8 +356,10 @@ fn package_rust_interop_abort_policy_requires_abort_strategy_after_trust() {
         )],
         vec![signature_contract(Vec::new(), string_contract())],
     );
-    let mut trust = TrustPolicy::default();
-    trust.rust_panic_abort = vec!["bridge.hash.digest".to_string()];
+    let trust = TrustPolicy {
+        rust_panic_abort: vec!["bridge.hash.digest".to_string()],
+        ..TrustPolicy::default()
+    };
     let mut context = bridge_context(trust);
     let package_root = temp_package_root("rust_interop_panic_unwind_profile");
     std::fs::create_dir_all(&package_root).expect("create package root");
@@ -389,8 +391,10 @@ fn package_rust_interop_abort_policy_accepts_trust_and_abort_strategy() {
         )],
         vec![signature_contract(Vec::new(), string_contract())],
     );
-    let mut trust = TrustPolicy::default();
-    trust.rust_panic_abort = vec!["bridge.hash.digest".to_string()];
+    let trust = TrustPolicy {
+        rust_panic_abort: vec!["bridge.hash.digest".to_string()],
+        ..TrustPolicy::default()
+    };
     let mut context = bridge_context(trust);
     let package_root = temp_package_root("rust_interop_panic_abort_profile");
     std::fs::create_dir_all(package_root.join("src")).expect("create package source root");

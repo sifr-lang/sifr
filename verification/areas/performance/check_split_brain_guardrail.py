@@ -46,10 +46,13 @@ FORBIDDEN_PATTERNS = (
     "lower_frontend_module",
 )
 SYNTAX_PARSE_IMPORT_PATTERN = re.compile(
-    r"\buse\s+sifr_syntax(?:::\{[^;]*\bparse_module\b[^;]*\}|::parse_module\b)",
+    r"\buse\s+sifr_syntax(?:::\{[^;]*\bparse_module\b(?:\s+as\s+\w+)?[^;]*\}|::parse_module\b)",
     re.DOTALL,
 )
 SYNTAX_PARSE_IMPORT_LABEL = "sifr_syntax parse_module import"
+SYNTAX_WILDCARD_IMPORT_PATTERN = re.compile(r"\buse\s+sifr_syntax::\*\s*;")
+SYNTAX_WILDCARD_IMPORT_LABEL = "sifr_syntax wildcard import"
+SYNTAX_CRATE_ALIAS_PATTERN = re.compile(r"\buse\s+sifr_syntax\s+as\s+(\w+)\s*;")
 
 
 def is_approved(path: Path) -> bool:
@@ -78,6 +81,14 @@ def violations(paths: list[Path]) -> list[str]:
             (pattern, re.compile(re.escape(pattern))) for pattern in FORBIDDEN_PATTERNS
         ]
         rules.append((SYNTAX_PARSE_IMPORT_LABEL, SYNTAX_PARSE_IMPORT_PATTERN))
+        rules.append((SYNTAX_WILDCARD_IMPORT_LABEL, SYNTAX_WILDCARD_IMPORT_PATTERN))
+        for alias in SYNTAX_CRATE_ALIAS_PATTERN.findall(text):
+            rules.append(
+                (
+                    f"sifr_syntax alias-qualified parse_module ({alias})",
+                    re.compile(rf"\b{re.escape(alias)}::parse_module\s*\("),
+                )
+            )
         for pattern, regex in rules:
             if is_classified_syntax_only(path, pattern):
                 continue
@@ -124,6 +135,35 @@ def run_self_test() -> None:
         seeded.unlink()
         raise SystemExit(
             "split-brain guardrail self-test failed: seeded syntax import passed"
+        )
+    seeded.write_text(
+        "use sifr_syntax as syntax;\n"
+        "fn bypass() { let _ = syntax::parse_module(source, None); }\n",
+        encoding="utf-8",
+    )
+    if not violations([seeded]):
+        seeded.unlink()
+        raise SystemExit(
+            "split-brain guardrail self-test failed: seeded syntax crate alias passed"
+        )
+    seeded.write_text(
+        "use sifr_syntax::*;\nfn bypass() { let _ = parse_module(source, None); }\n",
+        encoding="utf-8",
+    )
+    if not violations([seeded]):
+        seeded.unlink()
+        raise SystemExit(
+            "split-brain guardrail self-test failed: seeded syntax wildcard passed"
+        )
+    seeded.write_text(
+        "use sifr_syntax::{parse_module as parse};\n"
+        "fn bypass() { let _ = parse(source, None); }\n",
+        encoding="utf-8",
+    )
+    if not violations([seeded]):
+        seeded.unlink()
+        raise SystemExit(
+            "split-brain guardrail self-test failed: seeded syntax item alias passed"
         )
     seeded.write_text(
         "#[cfg(test)]\nmod tests {\n"

@@ -125,6 +125,14 @@ pub fn collect_fixes(diagnostics: &[RenderedDiagnostic], options: &FixOptions) -
     fixes
 }
 
+/// Apply fixes that were collected from an existing lint result.
+///
+/// Analysis clients use this entrypoint to preserve the canonical frontend HIR
+/// that produced the diagnostics instead of starting another frontend run.
+pub fn apply_collected_fixes(source: &str, fixes: Vec<LintFix>) -> String {
+    apply_fixes(source, fixes).fixed_source
+}
+
 pub fn fix_rule_allowed(rule_id: &str, options: &LintOptions) -> bool {
     fix_rule_allowed_by_options(rule_id, &FixOptions::from(options))
 }

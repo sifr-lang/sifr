@@ -117,9 +117,9 @@ fn unmapped_project_file_does_not_create_standalone_project_fallback() {
     );
     assert!(
         session.close_document(
-            &url::Url::from_file_path(&main_path)
+            url::Url::from_file_path(&main_path)
                 .expect("main file uri")
-                .to_string()
+                .as_ref()
         )
     );
     session

@@ -22,11 +22,10 @@ fn errors<T>(result: Result<T, Vec<crate::HirDiagnostic>>) -> Vec<crate::HirDiag
 }
 
 fn source_range(source: &str, needle: &str) -> TextRange {
-    let start = source.find(needle).expect("needle should exist") as u32;
-    TextRange::new(
-        TextSize::new(start),
-        TextSize::new(start + needle.len() as u32),
-    )
+    let start = u32::try_from(source.find(needle).expect("needle should exist"))
+        .expect("fixture offset must fit u32");
+    let needle_len = u32::try_from(needle.len()).expect("fixture length must fit u32");
+    TextRange::new(TextSize::new(start), TextSize::new(start + needle_len))
 }
 
 fn assert_structured_rejection(errors: &[crate::HirDiagnostic], needle: &str) {

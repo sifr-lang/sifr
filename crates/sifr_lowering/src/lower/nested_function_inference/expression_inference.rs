@@ -690,8 +690,21 @@ pub(super) fn infer_binop_type(
         Operator::MatMult => return Type::Unknown,
     };
 
-    type_check_binary_op(&left_ty, op_str, &right_ty)
-        .unwrap_or_else(|_| infer_numeric_result_type(&left_ty, &right_ty, op))
+    match type_check_binary_op(&left_ty, op_str, &right_ty) {
+        Ok(result) => result,
+        Err(error) => {
+            let fallback = infer_numeric_result_type(&left_ty, &right_ty, op);
+            ctx.record_nested_inference_divergence(sifr_ir::NestedInferenceDivergence {
+                function: current_function.map(str::to_owned),
+                operator: op_str.to_owned(),
+                left_type: left_ty.to_string(),
+                right_type: right_ty.to_string(),
+                fallback_type: fallback.to_string(),
+                checker_error: format!("{}: {}", error.0.code(), error.1),
+            });
+            fallback
+        }
+    }
 }
 
 pub(super) fn infer_numeric_result_type(left_ty: &Type, right_ty: &Type, op: Operator) -> Type {

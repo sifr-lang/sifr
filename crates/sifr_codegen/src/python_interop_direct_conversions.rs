@@ -32,13 +32,13 @@ pub(crate) fn input_conversion(
             expr: Box::new(match_value),
             arms: vec![
                 RustMatchArm {
-                    pattern: "Some(__sifr_python_optional_value)".to_string(),
+                    pattern: "Some(__sifr_python_optional_value)".into(),
                     bindings: vec!["__sifr_python_optional_value".to_string()],
                     guard: None,
                     body: vec![RustStmt::TailExpr(present)],
                 },
                 RustMatchArm {
-                    pattern: "None".to_string(),
+                    pattern: "None".into(),
                     bindings: Vec::new(),
                     guard: None,
                     body: vec![RustStmt::TailExpr(runtime_call("from_none", Vec::new()))],

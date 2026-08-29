@@ -653,6 +653,54 @@ pub(super) fn registry_nested_zip_field_expr(
     }
 }
 
+pub(super) fn registry_zip_iter_expr(
+    emitter: &mut RustEmitter,
+    args: &[HirExpr],
+) -> Option<RustExpr> {
+    let mut iter = args.iter();
+    let mut acc = registry_iterable_to_owned_iter_expr(emitter, iter.next()?)?;
+    for arg in iter {
+        let next_iter = registry_iterable_to_owned_iter_expr(emitter, arg)?;
+        acc = RustExpr::MethodCall {
+            receiver: Box::new(acc),
+            method: "zip".to_string(),
+            args: vec![next_iter],
+        };
+    }
+    Some(acc)
+}
+
+pub(super) fn registry_can_construct_error_from_message(ty_name: &str) -> bool {
+    matches!(
+        ty_name,
+        "Error"
+            | "ValueError"
+            | "TypeError"
+            | "NameError"
+            | "ParseError"
+            | "OverflowError"
+            | "ZeroDivisionError"
+            | "LookupError"
+            | "IndexError"
+            | "KeyError"
+            | "RuntimeError"
+            | "AssertionError"
+            | "ImportError"
+            | "IOError"
+            | "RegexError"
+            | "JsonIntegerRangeError"
+            | "JsonLimitError"
+            | "HashlibError"
+            | "DecimalConversionError"
+            | "TimeoutError"
+    )
+}
+
+pub(super) fn registry_is_box_new_ctor(expr: &RustExpr) -> bool {
+    matches!(expr, RustExpr::Path(path) if path.len() == 2 && path[0] == "Box" && path[1] == "new")
+        || matches!(expr, RustExpr::Ident(name) if name == "Box::new")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -755,52 +803,4 @@ mod tests {
             "{rendered}"
         );
     }
-}
-
-pub(super) fn registry_zip_iter_expr(
-    emitter: &mut RustEmitter,
-    args: &[HirExpr],
-) -> Option<RustExpr> {
-    let mut iter = args.iter();
-    let mut acc = registry_iterable_to_owned_iter_expr(emitter, iter.next()?)?;
-    for arg in iter {
-        let next_iter = registry_iterable_to_owned_iter_expr(emitter, arg)?;
-        acc = RustExpr::MethodCall {
-            receiver: Box::new(acc),
-            method: "zip".to_string(),
-            args: vec![next_iter],
-        };
-    }
-    Some(acc)
-}
-
-pub(super) fn registry_can_construct_error_from_message(ty_name: &str) -> bool {
-    matches!(
-        ty_name,
-        "Error"
-            | "ValueError"
-            | "TypeError"
-            | "NameError"
-            | "ParseError"
-            | "OverflowError"
-            | "ZeroDivisionError"
-            | "LookupError"
-            | "IndexError"
-            | "KeyError"
-            | "RuntimeError"
-            | "AssertionError"
-            | "ImportError"
-            | "IOError"
-            | "RegexError"
-            | "JsonIntegerRangeError"
-            | "JsonLimitError"
-            | "HashlibError"
-            | "DecimalConversionError"
-            | "TimeoutError"
-    )
-}
-
-pub(super) fn registry_is_box_new_ctor(expr: &RustExpr) -> bool {
-    matches!(expr, RustExpr::Path(path) if path.len() == 2 && path[0] == "Box" && path[1] == "new")
-        || matches!(expr, RustExpr::Ident(name) if name == "Box::new")
 }

@@ -4,7 +4,7 @@ use super::{
     file_handle_write_bytes_method,
 };
 use crate::RustTypeParam;
-pub fn build_io_error_items() -> Vec<RustItem> {
+pub(crate) fn build_io_error_items() -> Vec<RustItem> {
     let mut items = build_error_type_items(
         "IOError",
         &[("kind".to_string(), RustType::String_)],
@@ -100,7 +100,7 @@ fn io_error_kind_expr() -> RustExpr {
     let mut arms = cases
         .into_iter()
         .map(|(kind, label)| crate::RustMatchArm {
-            pattern: format!("Some(::std::io::ErrorKind::{kind})"),
+            pattern: format!("Some(::std::io::ErrorKind::{kind})").into(),
             bindings: vec![],
             guard: None,
             body: vec![RustStmt::TailExpr(RustExpr::Literal(
@@ -109,7 +109,7 @@ fn io_error_kind_expr() -> RustExpr {
         })
         .collect::<Vec<_>>();
     arms.push(crate::RustMatchArm {
-        pattern: "_".to_string(),
+        pattern: "_".into(),
         bindings: vec![],
         guard: None,
         body: vec![RustStmt::TailExpr(RustExpr::Literal(
@@ -130,7 +130,7 @@ fn io_error_kind_expr() -> RustExpr {
     }
 }
 
-pub fn build_file_handle_infra_items() -> Vec<RustItem> {
+pub(crate) fn build_file_handle_infra_items() -> Vec<RustItem> {
     vec![
         RustItem::Enum {
             name: "SifrFileHandle".to_string(),
@@ -249,7 +249,7 @@ pub fn build_file_handle_infra_items() -> Vec<RustItem> {
     ]
 }
 
-pub fn build_file_handle_struct_items() -> Vec<RustItem> {
+pub(crate) fn build_file_handle_struct_items() -> Vec<RustItem> {
     vec![
         RustItem::Struct {
             name: "__SifrIoFileHandle".to_string(),
@@ -415,7 +415,7 @@ pub(crate) fn file_handle_read_method() -> RustItem {
                 },
                 arms: vec![
                     RustMatchArm {
-                        pattern: "Some(SifrFileHandle::TextRead(ref mut __r))".to_string(),
+                        pattern: "Some(SifrFileHandle::TextRead(ref mut __r))".into(),
                         bindings: vec![],
                         guard: None,
                         body: vec![
@@ -457,7 +457,7 @@ pub(crate) fn file_handle_read_method() -> RustItem {
                         ],
                     },
                     RustMatchArm {
-                        pattern: "_".to_string(),
+                        pattern: "_".into(),
                         bindings: vec![],
                         guard: None,
                         body: vec![RustStmt::Return(Some(RustExpr::FnCall {
@@ -534,7 +534,7 @@ pub(crate) fn file_handle_write_method() -> RustItem {
                 },
                 arms: vec![
                     RustMatchArm {
-                        pattern: "Some(SifrFileHandle::TextWrite(ref mut __w))".to_string(),
+                        pattern: "Some(SifrFileHandle::TextWrite(ref mut __w))".into(),
                         bindings: vec![],
                         guard: None,
                         body: vec![
@@ -565,7 +565,7 @@ pub(crate) fn file_handle_write_method() -> RustItem {
                         ],
                     },
                     RustMatchArm {
-                        pattern: "_".to_string(),
+                        pattern: "_".into(),
                         bindings: vec![],
                         guard: None,
                         body: vec![RustStmt::Return(Some(RustExpr::FnCall {
@@ -633,7 +633,7 @@ pub(crate) fn file_handle_readline_method() -> RustItem {
                 },
                 arms: vec![
                     RustMatchArm {
-                        pattern: "Some(SifrFileHandle::TextRead(ref mut __r))".to_string(),
+                        pattern: "Some(SifrFileHandle::TextRead(ref mut __r))".into(),
                         bindings: vec![],
                         guard: None,
                         body: vec![
@@ -731,7 +731,7 @@ pub(crate) fn file_handle_readline_method() -> RustItem {
                         ],
                     },
                     RustMatchArm {
-                        pattern: "_".to_string(),
+                        pattern: "_".into(),
                         bindings: vec![],
                         guard: None,
                         body: vec![RustStmt::Return(Some(RustExpr::FnCall {

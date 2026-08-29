@@ -220,7 +220,7 @@ fn analysis_snapshot_carries_workspace_state_and_query_metadata() {
             .expect("snapshot formatting should run")
             .metadata(),
         snapshot
-            .generated_rust_preview(&mut host, file, None)
+            .generated_rust_preview(&mut host, file)
             .expect("snapshot generated Rust preview should run")
             .metadata(),
     ] {
@@ -535,7 +535,7 @@ fn all_editor_query_methods_expose_current_revision_metadata() {
         AnalysisQueryKind::FoldingRanges
     );
     assert_eq!(
-        host.selection_ranges(file, &[position.clone()])
+        host.selection_ranges(file, std::slice::from_ref(&position))
             .expect("query should run")
             .metadata()
             .query,
@@ -584,7 +584,7 @@ fn all_editor_query_methods_expose_current_revision_metadata() {
         AnalysisQueryKind::FormatRange
     );
     assert_eq!(
-        host.generated_rust_preview(file, None)
+        host.generated_rust_preview(file)
             .expect("query should run")
             .metadata()
             .query,
@@ -703,7 +703,7 @@ def main():
     );
     assert!(
         !host
-            .selection_ranges(file, &[value_position.clone()])
+            .selection_ranges(file, std::slice::from_ref(&value_position))
             .expect("selection ranges should query")
             .into_value()
             .is_empty(),
@@ -719,7 +719,7 @@ def main():
     );
 
     let preview = host
-        .generated_rust_preview(file, None)
+        .generated_rust_preview(file)
         .expect("generated Rust preview should query")
         .into_value();
     assert!(

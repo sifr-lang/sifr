@@ -13,7 +13,7 @@ fuzz_target!(|data: &[u8]| {
     let mut args = BTreeMap::new();
     args.insert("input".to_string(), DiagnosticArg::String(text.clone()));
     let diagnostic = RenderedDiagnostic {
-        code: "SIFR-TYPE-0001".to_string(),
+        code: "SIFR-TYPE-0002".to_string(),
         severity: match data.first().copied().unwrap_or_default() % 3 {
             0 => Severity::Error,
             1 => Severity::Warning,
@@ -22,7 +22,7 @@ fuzz_target!(|data: &[u8]| {
         message: text.clone(),
         message_template: "{input}".to_string(),
         args,
-        url: "https://sifr.dev/diagnostics/SIFR-TYPE-0001".to_string(),
+        url: "https://docs.sifr.sh/errors/SIFR-TYPE-0002".to_string(),
         spans: vec![DiagnosticSpan {
             file: Some("fuzz/input.sifr".to_string()),
             byte_start: 0,

@@ -170,6 +170,19 @@ fn stderr_reports_unsatisfied_view_obligation(stderr: &str) -> bool {
         || stderr.contains("the trait `Sync` is not implemented")
 }
 
+pub(super) fn stderr_reports_non_send_future(stderr: &str) -> bool {
+    stderr.contains("future cannot be sent")
+        || (stderr.contains("future") && stderr.contains("cannot be sent between threads safely"))
+        || stderr.contains("future is not `Send`")
+}
+
+pub(super) fn stderr_reports_resolution_failure(stderr: &str) -> bool {
+    stderr.contains("cannot find")
+        || stderr.contains("failed to resolve")
+        || stderr.contains("unresolved")
+        || stderr.contains("not found")
+}
+
 #[cfg(test)]
 mod tests {
     use super::stderr_reports_sqlx_offline_metadata_failure;
@@ -197,17 +210,4 @@ mod tests {
             "note: error originates in sqlx_macros::expand_query: type mismatch"
         ));
     }
-}
-
-pub(super) fn stderr_reports_non_send_future(stderr: &str) -> bool {
-    stderr.contains("future cannot be sent")
-        || (stderr.contains("future") && stderr.contains("cannot be sent between threads safely"))
-        || stderr.contains("future is not `Send`")
-}
-
-pub(super) fn stderr_reports_resolution_failure(stderr: &str) -> bool {
-    stderr.contains("cannot find")
-        || stderr.contains("failed to resolve")
-        || stderr.contains("unresolved")
-        || stderr.contains("not found")
 }

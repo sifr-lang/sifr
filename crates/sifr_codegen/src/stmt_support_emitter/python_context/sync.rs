@@ -224,14 +224,14 @@ impl RustEmitter {
         };
 
         let mut outcome_arms = vec![RustMatchArm {
-            pattern: "Ok(Ok(None))".to_string(),
+            pattern: "Ok(Ok(None))".into(),
             bindings: vec![],
             guard: None,
             body: normal_exit(),
         }];
         if self.try_closure_depth > 0 {
             outcome_arms.push(RustMatchArm {
-                pattern: "Ok(Ok(Some(__sifr_context_return)))".to_string(),
+                pattern: "Ok(Ok(Some(__sifr_context_return)))".into(),
                 bindings: vec!["__sifr_context_return".to_string()],
                 guard: None,
                 body: {
@@ -244,7 +244,7 @@ impl RustEmitter {
             });
         } else {
             outcome_arms.push(RustMatchArm {
-                pattern: "Ok(Ok(Some(_)))".to_string(),
+                pattern: "Ok(Ok(Some(_)))".into(),
                 bindings: vec![],
                 guard: None,
                 body: vec![RustStmt::Expr(RustExpr::FormatMacro {
@@ -258,7 +258,7 @@ impl RustEmitter {
         if can_break_or_continue {
             outcome_arms.extend([
                 RustMatchArm {
-                    pattern: "Ok(Err(false))".to_string(),
+                    pattern: "Ok(Err(false))".into(),
                     bindings: vec![],
                     guard: None,
                     body: {
@@ -268,7 +268,7 @@ impl RustEmitter {
                     },
                 },
                 RustMatchArm {
-                    pattern: "Ok(Err(true))".to_string(),
+                    pattern: "Ok(Err(true))".into(),
                     bindings: vec![],
                     guard: None,
                     body: {
@@ -280,7 +280,7 @@ impl RustEmitter {
             ]);
         } else {
             outcome_arms.push(RustMatchArm {
-                pattern: "Ok(Err(_))".to_string(),
+                pattern: "Ok(Err(_))".into(),
                 bindings: vec![],
                 guard: None,
                 body: vec![RustStmt::Expr(RustExpr::FormatMacro {
@@ -291,7 +291,7 @@ impl RustEmitter {
             });
         }
         outcome_arms.push(RustMatchArm {
-            pattern: format!("Err(mut {error})"),
+            pattern: format!("Err(mut {error})").into(),
             bindings: vec![error.clone()],
             guard: None,
             body: active_error_body,
@@ -332,7 +332,7 @@ impl RustEmitter {
                 expr: RustExpr::Ident(conversion),
                 arms: vec![
                     RustMatchArm {
-                        pattern: "Ok(__sifr_entered_value)".to_string(),
+                        pattern: "Ok(__sifr_entered_value)".into(),
                         bindings: vec!["__sifr_entered_value".to_string()],
                         guard: None,
                         body: vec![RustStmt::Assign {
@@ -344,7 +344,7 @@ impl RustEmitter {
                         }],
                     },
                     RustMatchArm {
-                        pattern: format!("Err(mut {error})"),
+                        pattern: format!("Err(mut {error})").into(),
                         bindings: vec![error.clone()],
                         guard: None,
                         body: conversion_error_body,
@@ -451,7 +451,7 @@ impl RustEmitter {
         )));
         if !owner_retained_errors.is_empty() {
             body.push(RustStmt::IfLet {
-                pattern: "Some(__sifr_python_context_callback_owner_value)".to_string(),
+                pattern: "Some(__sifr_python_context_callback_owner_value)".into(),
                 expr: RustExpr::Ident(owner),
                 then_body: owner_retained_errors
                     .iter()
@@ -481,7 +481,7 @@ impl RustEmitter {
         primary_type: &str,
     ) -> Vec<RustStmt> {
         vec![RustStmt::IfLet {
-            pattern: "Some(__sifr_python_replay)".to_string(),
+            pattern: "Some(__sifr_python_replay)".into(),
             expr: method(field(error, "__sifr_python_error"), "as_ref", vec![]),
             then_body: vec![RustStmt::Match {
                 expr: runtime_call(
@@ -502,12 +502,12 @@ impl RustEmitter {
                         vec![return_error(error)],
                     ),
                     RustMatchArm {
-                        pattern: format!("Err({cleanup})"),
+                        pattern: format!("Err({cleanup})").into(),
                         bindings: vec![cleanup.to_string()],
                         guard: None,
                         body: vec![
                             RustStmt::IfLet {
-                                pattern: "Some(__sifr_python_primary)".to_string(),
+                                pattern: "Some(__sifr_python_primary)".into(),
                                 expr: method(field(error, "__sifr_python_error"), "as_mut", vec![]),
                                 then_body: vec![
                                     RustStmt::Expr(runtime_call(
@@ -622,7 +622,7 @@ impl RustEmitter {
                         vec![],
                     ),
                     RustMatchArm {
-                        pattern: format!("Err({cleanup})"),
+                        pattern: format!("Err({cleanup})").into(),
                         bindings: vec![cleanup.to_string()],
                         guard: None,
                         body: vec![RustStmt::Expr(runtime_call(
@@ -791,7 +791,7 @@ fn return_error(name: &str) -> RustStmt {
 
 fn simple_arm(pattern: &str, body: Vec<RustStmt>) -> RustMatchArm {
     RustMatchArm {
-        pattern: pattern.to_string(),
+        pattern: pattern.into(),
         bindings: vec![],
         guard: None,
         body,

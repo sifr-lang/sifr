@@ -103,6 +103,48 @@ def mask_rust_non_code(text: str) -> str:
     return "".join(output)
 
 
+def mask_rust_literals(text: str) -> str:
+    """Mask Rust literals while retaining comments and code.
+
+    Character literals are recognized only when a closing quote proves the
+    token shape. A lifetime or loop label therefore remains visible as code.
+    """
+    output = list(text)
+    index = 0
+    while index < len(text):
+        char_end = _char_literal_end(text, index)
+        if char_end is not None:
+            _blank(output, index, char_end)
+            index = char_end
+            continue
+        raw = RAW_STRING_START.match(text, index)
+        if raw:
+            terminator = '"' + raw.group("hashes")
+            end = text.find(terminator, raw.end())
+            end = len(text) if end < 0 else end + len(terminator)
+            _blank(output, index, end)
+            index = end
+            continue
+        quote_index = index
+        if text[index] in {"b", "c"} and index + 1 < len(text) and text[index + 1] == '"':
+            quote_index += 1
+        if text[quote_index] == '"':
+            end = quote_index + 1
+            while end < len(text):
+                if text[end] == "\\":
+                    end += 2
+                elif text[end] == '"':
+                    end += 1
+                    break
+                else:
+                    end += 1
+            _blank(output, index, end)
+            index = end
+            continue
+        index += 1
+    return "".join(output)
+
+
 def mask_rust_comments(text: str) -> str:
     """Mask line and nested block comments while preserving string literals."""
     output = list(text)

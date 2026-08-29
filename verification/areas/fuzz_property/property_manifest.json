@@ -136,6 +136,7 @@
       "diagnostic_format": "none",
       "expect_exit_code": 0,
       "repeat_runs": 1,
+      "timeout_seconds": 600,
       "assert_no_panic": true,
       "reproduction_command": [
         "cargo",
@@ -160,6 +161,7 @@
       "diagnostic_format": "none",
       "expect_exit_code": 0,
       "repeat_runs": 1,
+      "timeout_seconds": 600,
       "assert_no_panic": true,
       "reproduction_command": [
         "cargo",
@@ -185,6 +187,7 @@
       "diagnostic_format": "none",
       "expect_exit_code": 0,
       "repeat_runs": 1,
+      "timeout_seconds": 600,
       "assert_no_panic": true,
       "reproduction_command": [
         "cargo",
@@ -209,6 +212,7 @@
       "diagnostic_format": "none",
       "expect_exit_code": 0,
       "repeat_runs": 1,
+      "timeout_seconds": 600,
       "assert_no_panic": true,
       "reproduction_command": [
         "cargo",
@@ -219,6 +223,36 @@
         "semantic_property_codegen_is_deterministic"
       ],
       "note": "Repeated code generation for the same valid source must produce identical Rust."
+    },
+    {
+      "id": "PROP-SEM-0005",
+      "entry": "verification/areas/fuzz_property/seeds/valid_control_flow_seed.sifr",
+      "target_ids": [
+        "codegen_entrypoint"
+      ],
+      "program_class": "valid-only",
+      "command": "emit",
+      "diagnostic_format": "json",
+      "expect_exit_code": 0,
+      "repeat_runs": 2,
+      "assert_no_panic": true,
+      "reproduction_command": [
+        "uv",
+        "run",
+        "--project",
+        "verification",
+        "--locked",
+        "python",
+        "-m",
+        "sifr_verify",
+        "areas",
+        "run",
+        "--area",
+        "fuzz_property",
+        "--suite",
+        "property"
+      ],
+      "note": "Separate compiler processes must emit byte-identical Rust for the same source."
     }
   ]
 }

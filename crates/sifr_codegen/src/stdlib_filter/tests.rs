@@ -30,7 +30,8 @@ impl From<LocalChild> for Parent {
         code,
         &relocated,
         &HashSet::from(["LocalChild".to_string()]),
-    );
+    )
+    .expect("valid compiler-owned Rust");
 
     assert!(!stripped.contains("struct Parent"));
     assert!(!stripped.contains("struct RelocatedChild"));
@@ -55,7 +56,8 @@ impl !From<LocalChild> for Parent {}
         code,
         &relocated,
         &HashSet::from(["LocalChild".to_string()]),
-    );
+    )
+    .expect("valid compiler-owned Rust");
 
     assert!(stripped.contains("struct LocalChild"));
     assert!(!stripped.contains("impl !From<LocalChild> for Parent"));
@@ -79,7 +81,7 @@ fn leaf() {}
 fn unused() {}
 "#;
     let imported = HashSet::from(["root".to_string()]);
-    let filtered = filter_stdlib_ir_to_needed(code, &imported);
+    let filtered = filter_stdlib_ir_to_needed(code, &imported).expect("valid compiler-owned Rust");
 
     assert!(filtered.contains("use std::collections::HashMap;"));
     assert!(filtered.contains("fn root()"));
@@ -100,7 +102,7 @@ fn root() {
 fn helper() {}
 "#;
     let imported = HashSet::from(["root".to_string()]);
-    let filtered = filter_stdlib_ir_to_needed(code, &imported);
+    let filtered = filter_stdlib_ir_to_needed(code, &imported).expect("valid compiler-owned Rust");
 
     assert!(filtered.contains("fn root()"));
     assert!(!filtered.contains("fn helper()"));
@@ -116,7 +118,7 @@ fn root() -> Node {
 }
 "#;
     let imported = HashSet::from(["root".to_string()]);
-    let filtered = filter_stdlib_ir_to_needed(code, &imported);
+    let filtered = filter_stdlib_ir_to_needed(code, &imported).expect("valid compiler-owned Rust");
 
     assert!(filtered.contains("fn root()"));
     assert!(filtered.contains("struct Node {}"));
@@ -143,7 +145,8 @@ fn root(value: &{datetime}, tz: &{timezone}) -> {datetime} {{
         &HashSet::from(["root".to_string()]),
         "sifr.datetime",
         &HashSet::from(["timezone".to_string(), "datetime".to_string()]),
-    );
+    )
+    .expect("valid compiler-owned Rust");
 
     assert!(filtered.contains("struct timezone"));
     assert!(filtered.contains("struct datetime"));
@@ -176,7 +179,7 @@ pub fn root() -> Box<dyn Worker> {
 }
 "#;
     let imported = HashSet::from(["root".to_string()]);
-    let filtered = filter_stdlib_ir_to_needed(code, &imported);
+    let filtered = filter_stdlib_ir_to_needed(code, &imported).expect("valid compiler-owned Rust");
 
     assert!(filtered.contains("pub fn root()"));
     assert!(filtered.contains("pub enum Mode"));
@@ -204,7 +207,7 @@ pub async fn root() -> i64 {
 }
 "#;
     let imported = HashSet::from(["root".to_string()]);
-    let filtered = filter_stdlib_ir_to_needed(code, &imported);
+    let filtered = filter_stdlib_ir_to_needed(code, &imported).expect("valid compiler-owned Rust");
 
     assert!(filtered.contains("pub async fn root()"));
     assert!(filtered.contains("pub unsafe fn tick()"));
@@ -225,7 +228,7 @@ pub fn root() -> UsedAlias {
 }
 "#;
     let imported = HashSet::from(["root".to_string()]);
-    let filtered = filter_stdlib_ir_to_needed(code, &imported);
+    let filtered = filter_stdlib_ir_to_needed(code, &imported).expect("valid compiler-owned Rust");
 
     assert!(filtered.contains("pub fn root() -> UsedAlias"));
     assert!(filtered.contains("pub type UsedAlias = Node;"));
@@ -246,7 +249,7 @@ pub fn helper() -> i64 {
 }
 "#;
     let imported = HashSet::from(["root".to_string()]);
-    let filtered = filter_stdlib_ir_to_needed(code, &imported);
+    let filtered = filter_stdlib_ir_to_needed(code, &imported).expect("valid compiler-owned Rust");
     assert!(filtered.contains("pub fn root()"));
     assert!(!filtered.contains("pub fn helper()"));
 }
@@ -269,7 +272,7 @@ fn leaf() -> String {
 fn unused() {}
 "#;
     let imported = HashSet::from(["root".to_string()]);
-    let filtered = filter_stdlib_ir_to_needed(code, &imported);
+    let filtered = filter_stdlib_ir_to_needed(code, &imported).expect("valid compiler-owned Rust");
 
     assert!(filtered.contains("fn root()"));
     assert!(filtered.contains("fn helper()"));
@@ -293,7 +296,7 @@ pub fn root() -> Builder {
 }
 "#;
     let imported = HashSet::from(["root".to_string()]);
-    let filtered = filter_stdlib_ir_to_needed(code, &imported);
+    let filtered = filter_stdlib_ir_to_needed(code, &imported).expect("valid compiler-owned Rust");
 
     assert!(filtered.contains("pub fn root() -> Builder"));
     assert!(filtered.contains("pub struct Builder {}"));
@@ -319,8 +322,10 @@ impl std::fmt::Display for Item {
 "#;
     let mut emitted = HashSet::new();
     let skip_types = HashSet::new();
-    let once = dedup_rust_items(code, &mut emitted, &skip_types);
-    let twice = dedup_rust_items(code, &mut emitted, &skip_types);
+    let once =
+        dedup_rust_items(code, &mut emitted, &skip_types).expect("valid compiler-owned Rust");
+    let twice =
+        dedup_rust_items(code, &mut emitted, &skip_types).expect("valid compiler-owned Rust");
 
     assert!(once.contains("struct Item {}"));
     assert_eq!(once.matches("impl Item").count(), 2);
@@ -341,7 +346,8 @@ impl !Marker for Item {}
 "#;
     let mut emitted = HashSet::new();
 
-    let deduplicated = dedup_rust_items(code, &mut emitted, &HashSet::new());
+    let deduplicated =
+        dedup_rust_items(code, &mut emitted, &HashSet::new()).expect("valid compiler-owned Rust");
 
     assert!(deduplicated.contains("impl Marker for Item"));
     assert!(deduplicated.contains("impl !Marker for Item"));
@@ -375,7 +381,7 @@ fn keep_me() {
     let _ = __SIFR_FILE_HANDLES.get();
 }
 "#;
-    let prepared = collect_and_strip_shared_prelude(input);
+    let prepared = collect_and_strip_shared_prelude(input).expect("valid compiler-owned Rust");
     assert!(prepared.shared_needs.collections.needs_hashmap);
     assert!(prepared.shared_needs.collections.needs_hashset);
     assert!(prepared.shared_needs.collections.needs_vecdeque);
@@ -416,7 +422,7 @@ fn shared_prelude_needs_ignore_comment_mentions() {
 // HashMap HashSet VecDeque __SIFR_FILE_HANDLES
 fn keep_me() {}
 "#;
-    let prepared = collect_and_strip_shared_prelude(input);
+    let prepared = collect_and_strip_shared_prelude(input).expect("valid compiler-owned Rust");
     assert!(!prepared.shared_needs.collections.needs_hashmap);
     assert!(!prepared.shared_needs.collections.needs_hashset);
     assert!(!prepared.shared_needs.collections.needs_vecdeque);
@@ -431,7 +437,7 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use std::sync::Mutex;
 fn keep_me() {}
 "#;
-    let prepared = collect_and_strip_shared_prelude(input);
+    let prepared = collect_and_strip_shared_prelude(input).expect("valid compiler-owned Rust");
     assert!(
         !prepared
             .stripped_code
@@ -449,7 +455,7 @@ use rust_decimal::Decimal;
 use bigdecimal::BigDecimal;
 fn keep_me(value: Decimal) -> (BigInt, BigDecimal) { todo!() }
 "#;
-    let prepared = collect_and_strip_shared_prelude(input);
+    let prepared = collect_and_strip_shared_prelude(input).expect("valid compiler-owned Rust");
     assert!(!prepared.stripped_code.contains("use num_bigint::BigInt;"));
     assert!(
         !prepared
@@ -482,7 +488,8 @@ fn open() -> FileHandle { FileHandle {} }
             "BinaryFileHandle".to_string(),
             "TextFileHandle".to_string(),
         ]),
-    );
+    )
+    .expect("valid compiler-owned Rust");
 
     assert!(sealed.contains("struct __SifrIoFileHandle"));
     assert!(sealed.contains("struct __SifrIoBinaryFileHandle"));
@@ -495,7 +502,8 @@ fn open() -> FileHandle { FileHandle {} }
         "struct NativeFileHandle {}",
         "_sifr.fs",
         &HashSet::from(["NativeFileHandle".to_string()]),
-    );
+    )
+    .expect("valid compiler-owned Rust");
     assert!(native.contains("struct __SifrIoNativeFileHandle"));
 }
 
@@ -510,7 +518,8 @@ impl JsonValue { fn parse() -> Result<JsonValue, JSONDecodeError> { todo!() } }
         input,
         "sifr.json",
         &HashSet::from(["JsonValue".to_string(), "JSONDecodeError".to_string()]),
-    );
+    )
+    .expect("valid compiler-owned Rust");
     let canonical = sifr_type_system::stdlib_class_rust_name("sifr.json", "JsonValue");
     let canonical_error = sifr_type_system::stdlib_class_rust_name("sifr.json", "JSONDecodeError");
 
@@ -523,12 +532,14 @@ impl JsonValue { fn parse() -> Result<JsonValue, JSONDecodeError> { todo!() } }
         "struct Error {}",
         "sifr.csv",
         &HashSet::from(["Error".to_string()]),
-    );
+    )
+    .expect("valid compiler-owned Rust");
     let config = seal_canonical_stdlib_names(
         "struct Error {}",
         "sifr.configparser",
         &HashSet::from(["Error".to_string()]),
-    );
+    )
+    .expect("valid compiler-owned Rust");
     let csv_error = sifr_type_system::stdlib_class_rust_name("sifr.csv", "Error");
     let config_error = sifr_type_system::stdlib_class_rust_name("sifr.configparser", "Error");
     assert_ne!(csv_error, config_error);
@@ -539,7 +550,8 @@ impl JsonValue { fn parse() -> Result<JsonValue, JSONDecodeError> { todo!() } }
         "struct WorkerError {}",
         "sifr.parallel",
         &HashSet::from(["WorkerError".to_string()]),
-    );
+    )
+    .expect("valid compiler-owned Rust");
     assert!(global.contains("struct WorkerError"));
 }
 
@@ -551,7 +563,8 @@ fn local() -> Notify { Notify {} }
 fn external() -> tokio::sync::Notify { tokio::sync::Notify::new() }
 "#;
     let sealed =
-        seal_canonical_stdlib_names(input, "sifr.sync", &HashSet::from(["Notify".to_string()]));
+        seal_canonical_stdlib_names(input, "sifr.sync", &HashSet::from(["Notify".to_string()]))
+            .expect("valid compiler-owned Rust");
     let canonical = sifr_type_system::stdlib_class_rust_name("sifr.sync", "Notify");
 
     assert!(sealed.contains(&format!("struct {canonical}")));
@@ -569,7 +582,7 @@ impl sifr_runtime::python::PythonResourceIdentity for Resource {}
 fn value() -> SifrInt { sifr_runtime::SifrInt::from_i64(1) }
 "#;
 
-    let absolute = absolutize_external_crate_paths(input);
+    let absolute = absolutize_external_crate_paths(input).expect("valid compiler-owned Rust");
 
     assert!(absolute.contains("use ::sifr_runtime::SifrInt"));
     assert!(absolute.contains("type Resource = ::sifr_runtime::python::PythonResourceIdentity"));
@@ -585,11 +598,14 @@ struct Holder { value: __SifrIoNativeFileHandle }
 fn label() -> &'static str { "TimeoutError" }
 "#;
 
-    assert!(rust_source_references_item_name(
-        source,
-        "__SifrIoNativeFileHandle"
-    ));
-    assert!(!rust_source_references_item_name(source, "TimeoutError"));
+    assert!(
+        rust_source_references_item_name(source, "__SifrIoNativeFileHandle")
+            .expect("valid compiler-owned Rust")
+    );
+    assert!(
+        !rust_source_references_item_name(source, "TimeoutError")
+            .expect("valid compiler-owned Rust")
+    );
 }
 
 #[test]
@@ -601,7 +617,8 @@ struct Holder { value: __SifrIoNativeFileHandle }
 "#;
     let names = HashSet::from(["__SifrIoNativeFileHandle"]);
 
-    let (selected, remaining) = partition_rust_items_by_name(source, &names);
+    let (selected, remaining) =
+        partition_rust_items_by_name(source, &names).expect("valid compiler-owned Rust");
 
     assert!(selected.contains("struct __SifrIoNativeFileHandle"));
     assert!(selected.contains("impl __SifrIoNativeFileHandle"));
@@ -613,4 +630,30 @@ struct Holder { value: __SifrIoNativeFileHandle }
         "__SifrIoNativeFileHandle"
     ));
     assert!(!rust_source_defines_item_name(&selected, "Holder"));
+}
+
+#[test]
+fn stdlib_filter_parse_failures_are_structured_codegen_errors() {
+    let error = filter_stdlib_ir_to_needed("fn broken(", &HashSet::new())
+        .expect_err("invalid compiler-owned Rust must fail");
+
+    assert!(error.message.contains("stdlib IR filter input"));
+    assert!(
+        error
+            .message
+            .contains("failed to parse compiler-owned Rust")
+    );
+}
+
+#[test]
+fn stdlib_relocation_parse_failures_are_structured_codegen_errors() {
+    let error = strip_relocated_rust_items_by_name("fn broken(", &HashSet::new(), &HashSet::new())
+        .expect_err("invalid compiler-owned Rust must fail");
+
+    assert!(error.message.contains("stdlib nominal relocation"));
+    assert!(
+        error
+            .message
+            .contains("failed to parse compiler-owned Rust")
+    );
 }

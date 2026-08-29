@@ -51,8 +51,12 @@ Minimum suite kinds:
   - known unresolved compiler crashes or sentinel failures kept visible until fixed
 - `property`
   - invariant-based generator tests for compiler internals
-- `fuzz-smoke`
-  - deterministic local fuzz smoke gate over curated corpora
+- `cargo-smoke`
+  - bounded cargo-fuzz smoke gate over curated corpora
+- `mutation-smoke`
+  - deterministic mutation smoke gate over curated corpora
+- `sustained-fuzz`
+  - sustained libFuzzer release-evidence lane
 - `oss-curated`
   - small pinned representative real-world project gate that blocks merges
 - `ecosystem-broader`
@@ -65,7 +69,8 @@ Minimum suite kinds:
   - `fixedbugs` issue-link format and required metadata
   - `crashes` sentinel format and promotion-to-regression rules
   - `oss-curated` corpus manifest format, including pinned revisions and command metadata
-  - `property` and `fuzz-smoke` manifest/corpus metadata
+  - `property`, `cargo-smoke`, `mutation-smoke`, and `sustained-fuzz`
+    manifest/corpus metadata
   - baseline artifact naming and storage conventions
 - Diagnostic suites must define one canonical way to represent expected codes, messages, spans, and renderer output.
 - If diagnostics include structured suggestions, the conventions must distinguish between suggestion rendering validation and suggestion-application validation.

@@ -12,7 +12,9 @@ Source-provider update: `crates/sifr_frontend/src/source_provider.rs` is now the
 filesystem boundary implementation and is excluded from the direct-read
 inventory scan. Direct `std::fs` calls or physical `Path` probes outside that
 boundary remain inventory-controlled until they are migrated or explicitly
-classified as non-semantic exceptions.
+classified as non-semantic exceptions. Production `src/bin` targets are part
+of the inventory: a benchmark, generator, or diagnostic harness is tooling
+code even when it is not linked into the compiler library.
 
 ## Locked Terms
 
@@ -44,6 +46,9 @@ without treating probes as source content reads.
 
 | Area | Current site | Current behavior | Source-provider expectation |
 | --- | --- | --- | --- |
+| Frontend query benchmark inputs | `crates/sifr_frontend/src/bin/frontend_query_bench.rs` | The benchmark reads its explicit entrypoint before cold and warm compiler-service iterations. | Non-semantic benchmark input; keep inventoried so benchmark setup cannot become an untracked compiler-service read. |
+| Diagnostic documentation generator inputs | `crates/sifr_diagnostics/src/bin/gen-error-docs.rs` | The generator enumerates error documentation and reads the governed diagnostic metadata it renders. | Non-semantic documentation tooling input; keep inventoried as a production tool effect. |
+| Diagnostic rendering harness inputs | `crates/sifr_driver/src/bin/diagnostic_rendering_harness.rs` | The harness reads an explicit fixture tree for diagnostic presentation evidence. | Non-semantic verification tooling input; keep inventoried as a production tool effect. |
 | Frontend project entrypoint read | `crates/sifr_frontend/src/graph_cache_and_queries.rs:312` | `FrontendContext::load_project` reads the entrypoint from disk. | Provider-tracked file read. |
 | Frontend project directory read | `crates/sifr_frontend/src/graph_cache_and_queries.rs:322` | `load_project` enumerates sibling `.sifr` files directly. | Provider-tracked directory read. |
 | Frontend project module read | `crates/sifr_frontend/src/graph_cache_and_queries.rs:359` | `load_project` reads non-entry modules directly. | Provider-tracked file read. |
@@ -51,7 +56,7 @@ without treating probes as source content reads.
 | Driver project discovery | `crates/sifr_driver/src/project/discovery.rs:332`, `crates/sifr_driver/src/project/discovery.rs:574` | Project discovery enumerates `.sifr` files and reads selected modules. | Provider-tracked directory and file reads. |
 | Driver workspace manifest discovery | `crates/sifr_driver/src/workspace/mod.rs:32`, `crates/sifr_driver/src/workspace/mod.rs:49`, `crates/sifr_driver/src/workspace/mod.rs:156` | Workspace root discovery probes `sifr.toml`, reads it, and checks the configured source root. | Provider-tracked config reads and directory probes. |
 | Driver package module materialization | `crates/sifr_driver/src/project/package_discovery.rs:53` | Package build/check reads resolved package module source directly. | Provider-tracked package file read. |
-| LSP project and Python declaration discovery | `crates/sifr_lsp/src/analysis_workspace.rs`, `crates/sifr_lsp/src/python_declarations.rs` | The LSP probes project manifests and Python binding/certification files, enumerates declaration directories, and reads declaration artifacts. | Project probes and declaration inputs must remain inventoried until the workspace snapshot and package-aware provider own them. |
+| LSP project and Python declaration discovery | `crates/sifr_lsp/src/analysis_workspace.rs`, `crates/sifr_lsp/src/python_declarations.rs`, `crates/sifr_lsp/src/python_declarations/environment.rs` | The LSP probes project manifests and Python binding/certification files, enumerates declaration directories, and reads declaration artifacts. | Project probes and declaration inputs must remain inventoried until the workspace snapshot and package-aware provider own them. |
 | Test-runner materialized source copy | `crates/sifr_driver/src/test_runner/execution.rs` | `sifr test` copies already materialized generated source modules into an invocation-owned execution directory. | Non-semantic generated-output operation; keep inventoried while test execution owns this copy boundary. |
 | Linter standalone input | `crates/sifr_lint/src/engine.rs:134` | Lint engine reads each target file directly. | Short-lived provider with shared source-map authority. |
 | Linter config and discovery | `crates/sifr_lint/src/config.rs:48`, `crates/sifr_lint/src/config.rs:72`, `crates/sifr_lint/src/discovery.rs:29`, `crates/sifr_lint/src/discovery.rs:33`, `crates/sifr_lint/src/discovery.rs:79` | Linter config lookup and target discovery probe files/directories and read `sifr.toml`. | Short-lived provider with tracked config and discovery reads. |
@@ -215,13 +220,21 @@ type hierarchy, code actions, formatting, and generated Rust preview
   service stage traces, bounded status counters, side-effect-free index
   readiness, `sifr/debugTrace`, and `sifr trace` CLI output for local
   debugging.
-- Editor corpus updated the handle preparation surface: `SnapshotHandleKind`
-  stays internal to `sifr_analysis`, marker fixtures live under
-  `verification/areas/developer_tooling/editor_query_corpus`, and runtime package fixtures
-  include `package_fatal_source_map_no_import_ambiguity` to prove fatal
-  package-map diagnostics do not duplicate source import ambiguity.
+- The editor corpus uses marker fixtures under
+  `verification/areas/developer_tooling/editor_query_corpus`. Runtime package
+  fixtures include `package_fatal_source_map_no_import_ambiguity`. This case
+  proves that fatal package-map diagnostics do not duplicate source import
+  ambiguity. The unused snapshot-handle preparation surface was removed.
 
 ### Future Rule Update Obligations
+
+The direct-read inventory includes the manifest and sysroot ownership roots:
+
+- `crates/sifr_stdlib_manifest/src/sources.rs`
+- `crates/sifr_sysroot/src/digest.rs`
+- `crates/sifr_sysroot/src/layout.rs`
+- `crates/sifr_sysroot/src/manifest.rs`
+- `crates/sifr_sysroot/src/resolve.rs`
 
 - The source-provider rule must either route every non-exempt inventory row through `SourceProvider`
   or update this inventory with a reviewed exception before acceptance.

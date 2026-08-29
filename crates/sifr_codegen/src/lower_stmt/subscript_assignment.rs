@@ -44,7 +44,7 @@ pub(super) fn build_list_get_mut_block_stmt(
                 right: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
             },
             then_body: vec![RustStmt::IfLet {
-                pattern: "Some(__elem)".to_string(),
+                pattern: "Some(__elem)".into(),
                 expr: RustExpr::MethodCall {
                     receiver: Box::new(receiver),
                     method: "get_mut".to_string(),
@@ -256,7 +256,7 @@ pub(super) fn try_lower_simple_nested_subscript_assign_stmt(
     let assign_elem_stmt =
         if is_option_like_type(value.ty()) && !target_elem_is_option && !option_value_adapted {
             RustStmt::IfLet {
-                pattern: "Some(__nested_assign_value)".to_string(),
+                pattern: "Some(__nested_assign_value)".into(),
                 expr: lowered_value,
                 then_body: vec![RustStmt::Assign {
                     target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
@@ -287,7 +287,7 @@ pub(super) fn try_lower_simple_nested_subscript_assign_stmt(
             right: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
         },
         then_body: vec![RustStmt::IfLet {
-            pattern: "Some(__elem)".to_string(),
+            pattern: "Some(__elem)".into(),
             expr: RustExpr::MethodCall {
                 receiver: Box::new(RustExpr::Ident("__row".to_string())),
                 method: "get_mut".to_string(),
@@ -310,7 +310,7 @@ pub(super) fn try_lower_simple_nested_subscript_assign_stmt(
                 value: lowered_inner_index,
             },
             RustStmt::IfLet {
-                pattern: "Some(__ii_raw)".to_string(),
+                pattern: "Some(__ii_raw)".into(),
                 expr: RustExpr::Ident("__ii_raw_opt".to_string()),
                 then_body: inner_then_body,
                 else_body: None,
@@ -343,7 +343,7 @@ pub(super) fn try_lower_simple_nested_subscript_assign_stmt(
             right: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
         },
         then_body: vec![RustStmt::IfLet {
-            pattern: "Some(__row)".to_string(),
+            pattern: "Some(__row)".into(),
             expr: RustExpr::MethodCall {
                 receiver: Box::new(RustExpr::Ident(object.to_string())),
                 method: "get_mut".to_string(),
@@ -367,7 +367,7 @@ pub(super) fn try_lower_simple_nested_subscript_assign_stmt(
                 value: lowered_outer_index,
             },
             RustStmt::IfLet {
-                pattern: "Some(__oi_raw)".to_string(),
+                pattern: "Some(__oi_raw)".into(),
                 expr: RustExpr::Ident("__oi_raw_opt".to_string()),
                 then_body: outer_then_body,
                 else_body: None,
@@ -453,7 +453,7 @@ pub(super) fn try_lower_simple_attribute_nested_subscript_assign_stmt(
     let assign_elem_stmt =
         if is_option_like_type(value.ty()) && !target_elem_is_option && !option_value_adapted {
             RustStmt::IfLet {
-                pattern: "Some(__nested_assign_value)".to_string(),
+                pattern: "Some(__nested_assign_value)".into(),
                 expr: lowered_value,
                 then_body: vec![RustStmt::Assign {
                     target: RustExpr::Deref(Box::new(RustExpr::Ident("__elem".to_string()))),
@@ -488,7 +488,7 @@ pub(super) fn try_lower_simple_attribute_nested_subscript_assign_stmt(
             right: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
         },
         then_body: vec![RustStmt::IfLet {
-            pattern: "Some(__elem)".to_string(),
+            pattern: "Some(__elem)".into(),
             expr: RustExpr::MethodCall {
                 receiver: Box::new(RustExpr::Ident("__row".to_string())),
                 method: "get_mut".to_string(),
@@ -511,7 +511,7 @@ pub(super) fn try_lower_simple_attribute_nested_subscript_assign_stmt(
                 value: lowered_inner_index,
             },
             RustStmt::IfLet {
-                pattern: "Some(__ii_raw)".to_string(),
+                pattern: "Some(__ii_raw)".into(),
                 expr: RustExpr::Ident("__ii_raw_opt".to_string()),
                 then_body: inner_then_body,
                 else_body: None,
@@ -541,7 +541,7 @@ pub(super) fn try_lower_simple_attribute_nested_subscript_assign_stmt(
             right: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
         },
         then_body: vec![RustStmt::IfLet {
-            pattern: "Some(__row)".to_string(),
+            pattern: "Some(__row)".into(),
             expr: RustExpr::MethodCall {
                 receiver: Box::new(receiver()),
                 method: "get_mut".to_string(),
@@ -565,7 +565,7 @@ pub(super) fn try_lower_simple_attribute_nested_subscript_assign_stmt(
                 value: lowered_outer_index,
             },
             RustStmt::IfLet {
-                pattern: "Some(__oi_raw)".to_string(),
+                pattern: "Some(__oi_raw)".into(),
                 expr: RustExpr::Ident("__oi_raw_opt".to_string()),
                 then_body: outer_then_body,
                 else_body: None,
@@ -668,7 +668,7 @@ pub(super) fn try_lower_simple_subscript_augassign_stmt(
             lowered_body_stmt,
         )]),
         Type::Dict(_, _) => Some(vec![RustStmt::IfLet {
-            pattern: "Some(__elem)".to_string(),
+            pattern: "Some(__elem)".into(),
             expr: RustExpr::MethodCall {
                 receiver: Box::new(RustExpr::Ident(object.to_string())),
                 method: "get_mut".to_string(),

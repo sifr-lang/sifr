@@ -44,7 +44,10 @@ pub(super) fn is_allowed_plain_call(func: &str) -> bool {
     ALLOWED_PLAIN_CALLS.with(|calls| calls.borrow().iter().any(|name| name == func))
 }
 
-pub fn fixed_width_literal_expr_for_target(target_ty: &Type, value: &HirExpr) -> Option<RustExpr> {
+pub(crate) fn fixed_width_literal_expr_for_target(
+    target_ty: &Type,
+    value: &HirExpr,
+) -> Option<RustExpr> {
     let Type::FixedInt(fixed) = crate::resolve_alias_type_for_plain_call(target_ty) else {
         return None;
     };
@@ -80,7 +83,7 @@ pub(super) fn iterator_op_func_name(op: &HirIteratorOp) -> &'static str {
     }
 }
 
-pub fn try_lower_leaf_expr_result(expr: &HirExpr) -> Result<Option<RustExpr>, CodegenError> {
+pub(crate) fn try_lower_leaf_expr_result(expr: &HirExpr) -> Result<Option<RustExpr>, CodegenError> {
     validate_leaf_expr_shape(expr)?;
     Ok(try_lower_leaf_expr(expr))
 }
@@ -136,7 +139,7 @@ pub(crate) fn is_leaf_expr_candidate(expr: &HirExpr) -> bool {
 /// Lowers leaf expressions that don't require emitter state.
 /// This is the first incremental IR rollout from `emit_expr` string writes
 /// to IR + renderer output.
-pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
+pub(crate) fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
     match expr {
         HirExpr::IntLiteral(v) => Some(RustExpr::Cast {
             expr: Box::new(RustExpr::Literal(RustLiteral::Int(*v))),

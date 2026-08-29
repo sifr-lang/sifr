@@ -143,7 +143,7 @@ fn success_expr() -> RustExpr {
 
 fn open_text_arm(pattern: &str, binary_mode: &str) -> RustMatchArm {
     RustMatchArm {
-        pattern: pattern.to_string(),
+        pattern: pattern.into(),
         bindings: vec![],
         guard: None,
         body: vec![
@@ -176,7 +176,7 @@ fn build_open_text_match() -> RustStmt {
             open_text_arm("\"w\" | \"wt\"", "wb"),
             open_text_arm("\"a\" | \"at\"", "ab"),
             RustMatchArm {
-                pattern: "_".to_string(),
+                pattern: "_".into(),
                 bindings: vec![],
                 guard: None,
                 body: vec![RustStmt::Return(Some(invalid_mode_error_expr()))],

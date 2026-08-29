@@ -159,16 +159,14 @@ fn test_project_and_test_discovery_parity_reports_reachable_parse_errors() {
         DiscoveryDiagnosticStyle::ModuleName,
         &mut DiskSourceProvider::new(),
     )
-    .err()
-    .expect("project closure should fail on reachable parse error");
+    .expect_err("project closure should fail on reachable parse error");
     let test_errors = parse_import_closure_modules(
         &resolver,
         &test_roots,
         DiscoveryDiagnosticStyle::ModuleName,
         &mut DiskSourceProvider::new(),
     )
-    .err()
-    .expect("test closure should fail on reachable parse error");
+    .expect_err("test closure should fail on reachable parse error");
 
     assert!(project_errors.iter().any(|e| {
         e.children

@@ -29,6 +29,27 @@ pub(crate) fn canonical_value(value: &ConstValue) -> String {
     }
 }
 
+fn canonical_bytes(value: &[u8]) -> String {
+    const HEX: &[u8; 16] = b"0123456789abcdef";
+    let mut encoded = String::with_capacity(value.len() * 2);
+    for byte in value {
+        encoded.push(char::from(HEX[usize::from(byte >> 4)]));
+        encoded.push(char::from(HEX[usize::from(byte & 0x0f)]));
+    }
+    encoded
+}
+
+fn canonical_values(kind: &str, values: &[ConstValue]) -> String {
+    format!(
+        "{kind}[{}]",
+        values
+            .iter()
+            .map(canonical_value)
+            .collect::<Vec<_>>()
+            .join(",")
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -60,25 +81,4 @@ mod tests {
         assert_eq!(identity.symbol, "accept");
         assert_eq!(identity.generic_arguments, vec!["str"]);
     }
-}
-
-fn canonical_bytes(value: &[u8]) -> String {
-    const HEX: &[u8; 16] = b"0123456789abcdef";
-    let mut encoded = String::with_capacity(value.len() * 2);
-    for byte in value {
-        encoded.push(char::from(HEX[usize::from(byte >> 4)]));
-        encoded.push(char::from(HEX[usize::from(byte & 0x0f)]));
-    }
-    encoded
-}
-
-fn canonical_values(kind: &str, values: &[ConstValue]) -> String {
-    format!(
-        "{kind}[{}]",
-        values
-            .iter()
-            .map(canonical_value)
-            .collect::<Vec<_>>()
-            .join(",")
-    )
 }

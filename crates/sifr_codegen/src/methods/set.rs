@@ -177,7 +177,7 @@ pub(super) fn lower_pop(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr
                 },
             },
             RustStmt::IfLet {
-                pattern: "Some(ref __val)".to_string(),
+                pattern: "Some(ref __val)".into(),
                 expr: RustExpr::Ident("__v".to_string()),
                 then_body: vec![RustStmt::Expr(RustExpr::MethodCall {
                     receiver: Box::new(object.clone()),

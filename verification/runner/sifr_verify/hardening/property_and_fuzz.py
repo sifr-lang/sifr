@@ -4,7 +4,6 @@ import hashlib
 import json
 import os
 import random
-import subprocess
 import time
 from pathlib import Path
 from typing import Any
@@ -16,6 +15,7 @@ from .core import (
     canonicalize_output,
     load_index,
     required_missing,
+    run_captured_command,
     run_variant,
     write_text,
 )
@@ -94,23 +94,22 @@ def run_property_suite(
         repeat_runs = entry.get("repeat_runs", 2)
         assert_no_panic = bool(entry.get("assert_no_panic", True))
 
-        if command_name not in {"check", "run", "build", "test", "cargo-test"}:
+        if command_name not in {"check", "run", "build", "emit", "test", "cargo-test"}:
             mismatches.append("command")
         if not isinstance(expected_exit, int):
             mismatches.append("expect_exit_code")
         minimum_runs = 1 if command_name == "cargo-test" else 2
         if not isinstance(repeat_runs, int) or repeat_runs < minimum_runs:
             mismatches.append("repeat_runs")
+        if command_name == "cargo-test" and repeat_runs != 1:
+            mismatches.append("cargo-test-repeat-contract")
         entry_path = repo_root / str(entry_path_raw) if isinstance(entry_path_raw, str) else None
         if entry_path is None or not entry_path.is_file():
             mismatches.append("entry")
         if not isinstance(diagnostic_format, str) or not diagnostic_format:
             mismatches.append("diagnostic_format")
         if command_name == "cargo-test":
-            if not isinstance(entry.get("cargo_package"), str) or not entry["cargo_package"]:
-                mismatches.append("cargo_package")
-            if not isinstance(entry.get("test_filter"), str) or not entry["test_filter"]:
-                mismatches.append("test_filter")
+            mismatches.extend(validate_cargo_property_metadata(entry))
 
         if mismatches:
             result["total_variants"] += 1
@@ -211,6 +210,17 @@ def run_property_suite(
     return result
 
 
+def validate_cargo_property_metadata(entry: dict[str, Any]) -> list[str]:
+    mismatches: list[str] = []
+    if not isinstance(entry.get("cargo_package"), str) or not entry["cargo_package"]:
+        mismatches.append("cargo_package")
+    if not isinstance(entry.get("test_filter"), str) or not entry["test_filter"]:
+        mismatches.append("test_filter")
+    if not isinstance(entry.get("timeout_seconds"), int) or entry["timeout_seconds"] < 1:
+        mismatches.append("timeout_seconds")
+    return mismatches
+
+
 def run_cargo_property(*, entry: dict[str, Any], repo_root: Path) -> dict[str, Any]:
     argv = [
         "cargo",
@@ -223,28 +233,26 @@ def run_cargo_property(*, entry: dict[str, Any], repo_root: Path) -> dict[str, A
         "--nocapture",
     ]
     started = time.perf_counter()
-    proc = subprocess.run(
-        argv,
+    exit_code, stdout, stderr, timed_out = run_captured_command(
+        args=argv,
         cwd=repo_root,
         env={**os.environ, "CARGO_NET_OFFLINE": "true"},
-        text=True,
-        capture_output=True,
-        check=False,
+        timeout_secs=int(entry["timeout_seconds"]),
     )
     elapsed_ms = (time.perf_counter() - started) * 1000.0
     mismatches: list[str] = []
-    if proc.returncode != int(entry["expect_exit_code"]):
+    if timed_out:
+        mismatches.append("timeout")
+    elif exit_code != int(entry["expect_exit_code"]):
         mismatches.append("unexpected-exit")
-    if bool(entry.get("assert_no_panic", True)) and contains_internal_panic(
-        proc.stdout + proc.stderr
-    ):
+    if bool(entry.get("assert_no_panic", True)) and contains_internal_panic(stdout + stderr):
         mismatches.append("panic-signal")
     return {
         "label": "cargo-test",
         "status": "pass" if not mismatches else "fail",
         "mismatches": mismatches,
         "expected_exit_code": int(entry["expect_exit_code"]),
-        "actual_exit_code": proc.returncode,
+        "actual_exit_code": exit_code,
         "duration_ms": round(elapsed_ms, 3),
         "argv": argv,
     }
@@ -256,7 +264,7 @@ def deterministic_mutations(seed_source: str, iterations: int, random_seed: int)
     corpus: list[str] = []
     for _ in range(iterations):
         if not lines:
-            lines = ["print(\"seed\")"]
+            lines = ['print("seed")']
         candidate = list(lines)
         op = rng.randint(0, 8)
         if op == 0:
@@ -267,7 +275,7 @@ def deterministic_mutations(seed_source: str, iterations: int, random_seed: int)
                     "if x > 0:",
                     "    print(str(x))",
                     "from missing_mutation_module import bad",
-                    "value: int = \"bad\"",
+                    'value: int = "bad"',
                 ]
             )
             idx = rng.randint(0, len(candidate))
@@ -317,20 +325,14 @@ def deterministic_mutations(seed_source: str, iterations: int, random_seed: int)
                 ]
             )
             if candidate:
-                signature_indices = [
-                    idx for idx, line in enumerate(candidate) if FUNCTION_SIGNATURE_PATTERN.search(line)
-                ]
+                signature_indices = [idx for idx, line in enumerate(candidate) if FUNCTION_SIGNATURE_PATTERN.search(line)]
                 if signature_indices:
                     idx = rng.choice(signature_indices)
                     replacement = signature.replace("fuzz_helper", f"fuzz_helper_{rng.randint(0, 9)}")
                     candidate[idx] = replacement
                 else:
                     insert_at = rng.randint(0, len(candidate))
-                    body = (
-                        "    return value + 1"
-                        if "-> int" in signature
-                        else '    return value + "_mut"'
-                    )
+                    body = "    return value + 1" if "-> int" in signature else '    return value + "_mut"'
                     candidate[insert_at:insert_at] = [signature, body]
             else:
                 candidate.extend([signature, "    return value"])
@@ -603,23 +605,12 @@ def run_reproduction_command_target(*, target: dict[str, Any], repo_root: Path) 
     argv = list(target["reproduction_command"])
     timeout_seconds = int(target["timeout_seconds"])
     started = time.perf_counter()
-    try:
-        proc = subprocess.run(
-            argv,
-            cwd=repo_root,
-            env={**os.environ, "CARGO_NET_OFFLINE": "true"},
-            text=True,
-            capture_output=True,
-            check=False,
-            timeout=timeout_seconds,
-        )
-        exit_code = proc.returncode
-        stdout = proc.stdout
-        stderr = proc.stderr
-    except subprocess.TimeoutExpired as timeout_error:
-        exit_code = 124
-        stdout = timeout_error.stdout or ""
-        stderr = (timeout_error.stderr or "") + f"\ncommand timed out after {timeout_seconds} seconds"
+    exit_code, stdout, stderr, timed_out = run_captured_command(
+        args=argv,
+        cwd=repo_root,
+        env={**os.environ, "CARGO_NET_OFFLINE": "true"},
+        timeout_secs=timeout_seconds,
+    )
     elapsed_ms = (time.perf_counter() - started) * 1000.0
 
     stdout_norm = canonicalize_output(
@@ -635,7 +626,7 @@ def run_reproduction_command_target(*, target: dict[str, Any], repo_root: Path) 
         stream="stderr",
     )
     mismatches: list[str] = []
-    if exit_code == 124:
+    if timed_out:
         mismatches.append("timeout")
     elif exit_code != int(target["expect_exit_code"]):
         mismatches.append("unexpected-exit")
@@ -703,9 +694,7 @@ def load_known_targets(repo_root: Path) -> dict[str, dict[str, Any]]:
     payload = json.loads(manifest_path.read_text(encoding="utf-8"))
     mismatches = validate_fuzz_target_rules(payload, repo_root)
     if mismatches:
-        raise SystemExit(
-            "fuzz target rules invalid: " + ", ".join(sorted(set(mismatches)))
-        )
+        raise SystemExit("fuzz target rules invalid: " + ", ".join(sorted(set(mismatches))))
     targets = payload.get("targets", [])
     return {str(target["id"]): target for target in targets}
 
@@ -804,9 +793,7 @@ def validate_target_execution_fields(target_id: object, target: dict[str, Any]) 
         if not isinstance(target.get("min_unique_cases"), int) or int(target["min_unique_cases"]) < 1:
             mismatches.append(f"{target_id}.min_unique_cases")
         allow_exit_codes = target.get("allow_exit_codes")
-        if not isinstance(allow_exit_codes, list) or not all(
-            isinstance(code, int) for code in allow_exit_codes
-        ):
+        if not isinstance(allow_exit_codes, list) or not all(isinstance(code, int) for code in allow_exit_codes):
             mismatches.append(f"{target_id}.allow_exit_codes")
         if not isinstance(target.get("assert_no_panic"), bool):
             mismatches.append(f"{target_id}.assert_no_panic")
@@ -843,9 +830,7 @@ def program_class_is_compatible(*, property_class: object, target_class: object)
 
 
 def command_list(value: object) -> bool:
-    return isinstance(value, list) and bool(value) and all(
-        isinstance(part, str) and bool(part) for part in value
-    )
+    return isinstance(value, list) and bool(value) and all(isinstance(part, str) and bool(part) for part in value)
 
 
 def validate_command_paths(target_id: object, command: object, repo_root: Path) -> list[str]:

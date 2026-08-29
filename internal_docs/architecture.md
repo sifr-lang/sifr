@@ -435,6 +435,16 @@ Generated artifact cache work moved `run`/`test` away from invocation-scoped tem
   `sifr cache clean` requires `--all`, `--max-age-days`, or `--max-size-mib`.
   Policy cleanup does not continue after a partial scan. Large caches can use
   `--scan-node-limit` to select a larger bound.
+- Cache consumers hold a shared advisory lease beside the owned cache root for
+  the lifetime of a cached binary, test execution workspace, or shared Rust
+  interop probe target. Cleanup takes the exclusive lease without waiting and
+  reports the active-user conflict instead of removing in-use artifacts.
+- SHA-256 lowercase encoding stays local to its existing ownership layers.
+  `sifr_sysroot`, `sifr_package`, driver build identity, CLI formatter identity,
+  and test/build utilities do not have one downward dependency owner in
+  common. A new shared crate or an upward dependency would cost more than the
+  small pure helper duplication; consolidation requires a future common
+  low-level owner already needed by all consumers.
 
 ---
 
@@ -551,16 +561,6 @@ Sifr uses **borrow-by-default** semantics for function parameters. Move-type arg
 - **No lifetime annotations in user code:** Sifr does not expose Rust's `'a` lifetime syntax. The compiler infers lifetimes using the rules above. If inference fails, the compiler emits a clear error suggesting `.clone()` or restructuring.
 - **Shared mutable state requires explicit opt-in:** the compiler does NOT auto-wrap shared data in `RefCell` or `Mutex`. If multiple variables reference the same mutable data, the programmer must use explicit sharing primitives (deferred to post-protocols). Default behavior is borrow-by-default with explicit `mut`, `own`, and `own mut` parameter rules rather than hidden runtime borrowing. This keeps ownership rules predictable and avoids hidden runtime borrow panics.
 - **Return semantics follow ownership, not mutability:** returning a Move-type parameter by value is only valid when the callee owns that parameter (`own` / `own mut`). Borrowed parameters, including `mut` borrows, cannot escape by return or store unless the programmer clones explicitly.
-
-**Implementation responsibilities:**
-
-- classes: preserve explicit method receiver conventions (`&self` / `&mut self` / `self` / `mut self`)
-- borrow_default: implement borrow-by-default parameter conventions and codegen
-- borrow_hardening: implement exclusivity checking and error diagnostics
-- own-mut-parameter-convention: extend parameter conventions so owned mutable parameters are first-class and lower canonically to Rust `mut x: T`
-- generics: implement closure capture inference
-- task/thread boundary ownership: implement task/thread boundary ownership and Send/Sync capture rules.
-- Post-protocols: evaluate explicit shared mutable abstractions (e.g., `Shared[T]` mapping to `Rc<RefCell<T>>`)
 
 ### 3. Error Semantics
 
@@ -979,6 +979,13 @@ equivalence, and deterministic code generation. Current validation commands
 and profile composition are defined in the Test And Validation Architecture
 section below.
 
+All four validation profiles also run the maintainability ratchet. Its
+committed baseline prevents unreviewed growth in complex files and functions,
+near-limit source concentration, public Rust API items, public glob exports,
+crate-level dead-code allowances, and direct Cargo dependency fan-out. A
+baseline update is an explicit policy change. The 900-line file-size guard
+remains a separate hard limit.
+
 ### 6. Slice and Collection Semantics
 
 Sifr uses Python-like slicing syntax, but must define whether slicing copies or creates a view. This affects performance expectations and ownership behavior.
@@ -1071,16 +1078,6 @@ Sifr must define which types can cross thread/task boundaries. async/runtime arc
 - **Task composition semantics:** `task.timeout` accepts task handles in v1, returns the inner result when the inner task completes before the deadline, timeout expiry cancels and awaits inner cleanup, same-tick completion wins over timeout, and outer cancellation cancels the inner task. `task.gather` is fail-fast with deterministic success ordering; first observed failure cancels unfinished children and cleanup/sibling failures become secondary evidence. `task.select` and `task.race` consume their input handles and cancel losing tasks by default. `BlockingTask[T, E]` is separate from cooperative `Task[T, E]` because blocking cancellation may only abandon the result.
 - **Single-threaded by default:** code that does not use `async` or `spawn` has no concurrency overhead. `Rc` and `RefCell` are used internally only when appropriate for single-threaded code.
 
-**Implementation responsibilities:**
-
-- `async architecture import`: copy the complete async/concurrency type, task, cancellation, and runtime rules from `internal_docs/async_concurrency_model.md` into the architecture rules.
-- `async HIR/type substrate`: add async HIR/type substrate (`Coroutine`, `Task`, `TaskResult`, `Awaitable`, `AsyncFunction`, `await`, async calls).
-- `task/thread boundary ownership`: implement Send/Sync and borrow-boundary checking at spawn boundaries.
-- `shared synchronization primitives`: provide `sifr.sync.Shared`, `Lock`, `RwLock`, and `Channel` for explicit cross-task sharing.
-- `blocking offload diagnostics` (completed): provide workload annotations and async-context diagnostics, explicit blocking offload through `task.spawn_blocking`, and `BlockingTask[T, E]` result-abandonment cancellation semantics. The later production concurrency/runtime substrate removed public `sifr.concurrent` and `sifr.threading` compatibility surfaces in favor of native `sifr.task`, `sifr.sync`, `sifr.runtime`, and `sifr.parallel` APIs.
-- `async context-manager and iterator surface`: implement user-defined async context managers, `AsyncIterator[T, E]`, and `async for` over protocol-conforming streams.
-- `async generator surface`: implement `AsyncGenerator[T, E]`, async generator lifecycle/cleanup, and list/set/dict async comprehensions.
-
 **production runtime readiness:** the terminal architecture audit for the production concurrency/runtime substrate lives in [structured_runtime_work_model.md](./structured_runtime_work_model.md#runtime-substrate-audit). It locks the task/process/channel/offload/runtime boundaries, typed IPC policy, blocking/offload policy, sendability/shareability rules, task/request context model, diagnostics/signal global-state policy, and rejected CPython-shaped surface index without reopening the async/runtime architecture async syntax rules.
 
 ### 9. Destruction and Cleanup Semantics
@@ -1095,13 +1092,6 @@ Sifr compiles to Rust, which has deterministic destruction (RAII). This rules de
 - **User-defined destructors deferred:** Sifr does NOT expose `__del__` or custom destructors in MVP. The compiler auto-generates `Drop` for types that hold resources (file handles, connections) via stdlib wrappers.
 - **Explicit cleanup via `with`:** for resource management (files, connections), use `with` blocks that map to Rust's scoped resource patterns. The resource is cleaned up when the `with` block exits. The `with` statement calls `__enter__()` at scope start and `__exit__()` at scope end, with compile-time enforcement of the `ContextManager` protocol.
 - **Destructor failure:** auto-generated destructors do not fail. If an underlying Rust `Drop` implementation panics (only possible via FFI-wrapped types), the program aborts. This is a system-level failure, not a Sifr-level concern -- Sifr user code cannot trigger destructor panics.
-
-**Implementation responsibilities:**
-
-- generators: define initial `with` block syntax (scoped block desugaring)
-- compiler hardening work (stdlib parity architecture: Stdlib Parity): complete the `with` statement with full `ContextManager` protocol enforcement (`__enter__`/`__exit__` calls, multiple context managers, compile-time protocol checking)
-- classes: implement scope-end destruction for class instances
-- core_stdlib: implement `with` blocks for file handles and other stdlib resources
 
 ### 10. Auto-Derived Traits
 
@@ -1276,14 +1266,9 @@ Sifr compiles to Rust source code, which is then compiled by `rustc`. This creat
 - **No split-brain rule:** `sifr_driver`, future editor integrations, and automation-facing adapters must consume diagnostics through the canonical frontend API. They may render or transport diagnostics differently, but they may not reimplement parse/lower/type-check logic or semantic diagnostic derivation.
 - **Canonical frontend API minimum surface:** the shared frontend/query API established in frontend query architecture must expose one canonical project/context handle plus reusable entrypoints for: parse, lower, type-check, collect diagnostics, inspect project/module graph state, and request per-module/per-project analysis results. CLI, editor, and automation adapters may wrap this API, but they must not bypass it for semantic analysis.
 
-**Implementation responsibilities:**
-
-- core_language-type_system: basic span tracking (single-file, Sifr-native errors only)
-- import semantics work: multi-file span tracking (import errors reference both files)
-- diagnostic architecture diagnostics rules: structured diagnostic schema, stable renderers, and recovery policy
-- frontend query architecture shared analysis/query architecture: canonical query/database-backed frontend API consumed by CLI and future tooling
-- ffi: FFI-related `rustc` error translation (extern crate mismatches)
-- developer-tooling work (developer tooling surface): editor/LSP parity validation and thin tooling adapter boundaries on top of `sifr_frontend`
+**Future**. Expand structured translation for FFI-specific `rustc` failures that
+cannot yet be rejected at the Sifr semantic boundary. The active phase plan,
+not this architecture document, owns delivery order and status.
 
 ### 12. Standard Protocol Primitives
 
@@ -1310,21 +1295,6 @@ Sifr defines a set of built-in protocols (traits) that are used across multiple 
 - **Pre-generics usage:** Before generics, protocols are used for operator overloading and dynamic dispatch (`&dyn Trait`). After generics, they become usable as generic bounds (`T: Comparable`).
 - **Primitive types:** `int`, fixed-width integer types, `float`, `str`, and `bool` implement applicable protocols from the start. Under the integer-model amendment, `Addable` must model the operator output type; fixed-width scalar `+` returns exact `int`, so fixed-width types do not satisfy a generic `T + T -> T` rules through ordinary arithmetic. `float` does NOT implement `Comparable` (because `NaN` violates total ordering) -- this is a compile-time error, matching Rust's `f64` not implementing `Ord`.
 - **Protocol composition:** a function can require multiple protocols via intersection bounds (generics): `def process[T: Comparable & Display](item: T)`.
-
-**Implementation responsibilities:**
-
-- classes: auto-derive `Display` and `Hashable` for classes with eligible fields
-- protocols: define `Comparable`, `Addable`, `Display` as explicit protocols; enable operator overloading via protocol impl
-- generics: enable protocols as generic bounds (`T: Comparable`)
-- generators: define initial `with` block syntax (scoped block desugaring)
-- first-class lazy iterator work: introduces first-class `Iterable[T]` / `Iterator[T]` typing and protocol execution plan (`iter`, `next`, generator rewrite, lazy builtin conversion)
-- parity-extension waiver-reduction work: finalizes iterator-returning builtin/stdlib surfaces (`map` parity, approved `itertools` combinators, `re.finditer`, `glob.iglob`, `Path.iterdir/glob/rglob`) and retires broad lazy-waiver claims to narrow residual governance entries
-- canonical iteration continuation work: freezes/implements capability-aware canonical iteration semantics across type system, HIR, codegen, generators, builtins, and stdlib adapters
-- structured-data/class-surface parity-expansion work: locks bounded rules for `json`, `configparser`, `csv`, `collections`, `argparse`, `uuid`, `datetime`, `textwrap`, and `html` while keeping explicit permanent diffs (`json` dynamic hooks, timezone-db/tzinfo ecosystems, `Counter(**kwargs)`, dynamic csv registry mutation, argparse formatter ecosystems, package-wide html expansion)
-- compiler hardening work (stdlib parity architecture: Stdlib Parity): define `ContextManager` protocol; enforce `with` statement compliance with `__enter__`/`__exit__` calls and compile-time protocol checking; fix `Callable`-as-struct-field (`Box<dyn Fn>`)
-- generic type-system work (type-system architecture: Type System Completion): complete generic class field/method substitution; protocol bounds on type parameters (`T: Comparable & Display`)
-- pattern-matching work (type-system architecture: Type System Completion): `match`/`case` syntax with exhaustiveness checking on union types, literal unions, optional types, class unions, and enum types
-- enum type-system work (type-system architecture: Type System Completion): simple enum types with exhaustive pattern matching; enum values implement `Eq`, `Hash`, `Clone`, `Debug`
 
 ### Ecosystem Strategy (Current And Future)
 
@@ -1431,8 +1401,8 @@ are data, not shell-script policy.
 <!-- BEGIN GENERATED VALIDATION PROFILE MAP -->
 | Profile | Manifest | Selected area suites |
 | --- | --- | --- |
-| `create-pr` | `verification/profiles/create-pr.json` | `rust_interop:matrix+tiers+compatibility-matrix+stale-drafts+stable-candidate`<br>`coverage_matrix:readiness`<br>`diagnostics:rules`<br>`python_interop:self-test+scaffold+env+dependency-versions+minor-train-features+crypto-abi-features+redis-service-features+numeric-dataframe-features+readonly-check-doctor+binding-authoring+lsp-declaration-authoring+tier1+callbacks+callback-examples+dataframes+buffer-examples+arrow-examples+dlpack-examples+arrow-runtime+dlpack-runtime+buffer-runtime+async-declaration-examples+async-context-examples+cloud-boto3`<br>`runtime_platform:platform-golden+platform-support-matrix+platform-evidence`<br>`algorithmic_compatibility:profile-manifest`<br>`developer_tooling:static+lsp-smoke+typescript-go-transfer+diagnostic-rules`<br>`generated_code_quality:smoke`<br>`performance:smoke+frontend-syntax-guardrails`<br>`stdlib_parity:module-merge-check+audit-fixtures+complexity-resource+module-inventory`<br>`core_language:audit-fixtures`<br>`project_workspace:audit-fixtures`<br>`package_management:guardrails+offline-merge-smoke`<br>`documentation:architecture` |
-| `merge` | `verification/profiles/merge.json` | `rust_interop:matrix+tiers+compatibility-matrix+stale-drafts+stable-candidate`<br>`coverage_matrix:readiness`<br>`core_language:integer_dtype_rules+hir_analysis_behaviors+cfg_flow_behaviors+syntax_parser_lexer_matrix+audit-fixtures`<br>`cpython_differential:policy+hand_seeded_merge`<br>`python_interop:self-test+scaffold+env+dependency-versions+minor-train-features+crypto-abi-features+redis-service-features+numeric-dataframe-features+readonly-check-doctor+binding-authoring+lsp-declaration-authoring+tier1+tier2+tier3+tier4+callbacks+callback-examples+dataframes+dataframe-examples+buffer-examples+arrow-examples+dlpack-examples+arrow-runtime+dlpack-runtime+buffer-runtime+ml+libraries+async-declaration-examples+async-context-examples+cloud-boto3`<br>`diagnostics:rules+baselines`<br>`runtime_platform:platform-golden+platform-support-matrix+platform-evidence+sanitizer-smoke`<br>`algorithmic_compatibility:representative-subset`<br>`developer_tooling:static+formatter+analysis+lsp-smoke+typescript-go-transfer+diagnostic-rules`<br>`generated_code_quality:representative`<br>`performance:representative+frontend-syntax-guardrails`<br>`distribution_release:representative+qualification+incident-governance+epoch-bootstrap+protected-drill+stable-prepare+stable-publish-primitives+stable-publication`<br>`sysroot_release:host-installed-smoke+boundary-equivalence`<br>`project_workspace:frontend_mode_parity+project_graph_isolation+baselines+audit-fixtures`<br>`package_management:offline-merge-smoke+guardrails`<br>`stdlib_parity:module-merge-check+audit-fixtures+complexity-resource+module-inventory`<br>`regression:fixedbugs+crashes`<br>`fuzz_property:mutation-smoke`<br>`ecosystem_compatibility:oss-curated`<br>`documentation:architecture` |
+| `create-pr` | `verification/profiles/create-pr.json` | `documentation:architecture`<br>`rust_interop:matrix+tiers+compatibility-matrix+stale-drafts+stable-candidate`<br>`coverage_matrix:readiness`<br>`diagnostics:rules`<br>`python_interop:self-test+scaffold+env+dependency-versions+minor-train-features+crypto-abi-features+redis-service-features+numeric-dataframe-features+readonly-check-doctor+binding-authoring+lsp-declaration-authoring+tier1+callbacks+callback-examples+dataframes+buffer-examples+arrow-examples+dlpack-examples+arrow-runtime+dlpack-runtime+buffer-runtime+async-declaration-examples+async-context-examples+cloud-boto3`<br>`runtime_platform:platform-golden+platform-support-matrix+platform-evidence`<br>`algorithmic_compatibility:profile-manifest`<br>`developer_tooling:static+lsp-smoke+typescript-go-transfer+diagnostic-rules`<br>`generated_code_quality:smoke`<br>`performance:smoke+frontend-syntax-guardrails`<br>`stdlib_parity:module-merge-check+audit-fixtures+complexity-resource+module-inventory`<br>`core_language:audit-fixtures`<br>`project_workspace:audit-fixtures`<br>`package_management:guardrails+offline-merge-smoke` |
+| `merge` | `verification/profiles/merge.json` | `documentation:architecture`<br>`rust_interop:matrix+tiers+compatibility-matrix+stale-drafts+stable-candidate`<br>`coverage_matrix:readiness`<br>`core_language:integer_dtype_rules+hir_analysis_behaviors+cfg_flow_behaviors+syntax_parser_lexer_matrix+audit-fixtures`<br>`cpython_differential:policy+hand_seeded_merge`<br>`python_interop:self-test+scaffold+env+dependency-versions+minor-train-features+crypto-abi-features+redis-service-features+numeric-dataframe-features+readonly-check-doctor+binding-authoring+lsp-declaration-authoring+tier1+tier2+tier3+tier4+callbacks+callback-examples+dataframes+dataframe-examples+buffer-examples+arrow-examples+dlpack-examples+arrow-runtime+dlpack-runtime+buffer-runtime+ml+libraries+async-declaration-examples+async-context-examples+cloud-boto3`<br>`diagnostics:rules+baselines`<br>`runtime_platform:platform-golden+platform-support-matrix+platform-evidence+sanitizer-smoke`<br>`algorithmic_compatibility:representative-subset`<br>`developer_tooling:static+formatter+analysis+lsp-smoke+typescript-go-transfer+diagnostic-rules`<br>`generated_code_quality:representative`<br>`performance:representative+frontend-syntax-guardrails`<br>`distribution_release:representative+qualification+incident-governance+epoch-bootstrap+protected-drill+stable-prepare+stable-publish-primitives+stable-publication`<br>`sysroot_release:host-installed-smoke+boundary-equivalence`<br>`project_workspace:frontend_mode_parity+project_graph_isolation+baselines+audit-fixtures`<br>`package_management:offline-merge-smoke+guardrails`<br>`stdlib_parity:module-merge-check+audit-fixtures+complexity-resource+module-inventory`<br>`regression:fixedbugs+crashes`<br>`fuzz_property:mutation-smoke`<br>`ecosystem_compatibility:oss-curated` |
 | `nightly` | `verification/profiles/nightly.json` | `rust_interop:matrix+tiers+compatibility-matrix+stale-drafts+stable-candidate`<br>`coverage_matrix:readiness`<br>`core_language:integer_dtype_rules+hir_analysis_behaviors+cfg_flow_behaviors+syntax_parser_lexer_matrix+audit-fixtures`<br>`diagnostics:rules+baselines`<br>`cpython_differential:policy+hand_seeded_merge+generated_broader`<br>`python_interop:self-test+scaffold+env+dependency-versions+minor-train-features+crypto-abi-features+redis-service-features+numeric-dataframe-features+readonly-check-doctor+binding-authoring+lsp-declaration-authoring+tier1+tier2+tier3+tier4+callbacks+callback-examples+dataframes+dataframe-examples+buffer-examples+arrow-examples+dlpack-examples+arrow-runtime+dlpack-runtime+buffer-runtime+ml+libraries+async-declaration-examples+async-context-examples+cloud-boto3`<br>`runtime_platform:platform-golden+platform-support-matrix+platform-evidence+sanitizer-full`<br>`algorithmic_compatibility:leetcode-full+taxonomy-smoke`<br>`developer_tooling:full+typescript-go-transfer+diagnostic-rules`<br>`generated_code_quality:full`<br>`performance:full+frontend-syntax-guardrails`<br>`distribution_release:full+qualification+incident-governance+epoch-bootstrap+protected-drill+stable-prepare+stable-publish-primitives+stable-publication`<br>`sysroot_release:host-installed-smoke+host-installed-stdlib-heavy`<br>`project_workspace:frontend_mode_parity+project_graph_isolation+baselines+audit-fixtures`<br>`package_management:offline-integration+guardrails+offline-merge-smoke`<br>`stdlib_parity:module-merge-check+module-full-check+audit-fixtures+complexity-resource+module-inventory`<br>`regression:fixedbugs+crashes`<br>`fuzz_property:property+mutation-smoke+sustained-fuzz`<br>`ecosystem_compatibility:oss-curated+ecosystem-broader` |
 | `python-interop-live` | `verification/profiles/python-interop-live.json` | `python_interop:live-policy+live-examples` |
 | `release` | `verification/profiles/release.json` | `rust_interop:matrix+tiers+compatibility-matrix+stale-drafts+stable-candidate`<br>`coverage_matrix:readiness`<br>`core_language:integer_dtype_rules+hir_analysis_behaviors+cfg_flow_behaviors+syntax_parser_lexer_matrix+audit-fixtures`<br>`diagnostics:rules+baselines`<br>`cpython_differential:policy+hand_seeded_merge+generated_broader`<br>`python_interop:self-test+scaffold+env+dependency-versions+minor-train-features+crypto-abi-features+redis-service-features+numeric-dataframe-features+readonly-check-doctor+binding-authoring+lsp-declaration-authoring+tier1+tier2+tier3+tier4+callbacks+callback-examples+dataframes+dataframe-examples+buffer-examples+arrow-examples+dlpack-examples+arrow-runtime+dlpack-runtime+buffer-runtime+ml+libraries+async-declaration-examples+async-context-examples+cloud-boto3`<br>`runtime_platform:platform-golden+platform-support-matrix+platform-evidence+sanitizer-full`<br>`algorithmic_compatibility:leetcode-full+taxonomy-smoke`<br>`developer_tooling:full+typescript-go-transfer+diagnostic-rules`<br>`generated_code_quality:full`<br>`performance:full+frontend-syntax-guardrails`<br>`distribution_release:full+qualification+evidence-custody+incident-governance+epoch-bootstrap+protected-drill+stable-prepare+stable-publish-primitives+stable-publication`<br>`documentation:architecture+structure+ga-release`<br>`sysroot_release:host-installed-smoke+host-installed-stdlib-heavy`<br>`project_workspace:frontend_mode_parity+project_graph_isolation+baselines+audit-fixtures`<br>`package_management:offline-integration+guardrails+offline-merge-smoke`<br>`stdlib_parity:module-merge-check+module-full-check+audit-fixtures+complexity-resource+module-inventory`<br>`regression:fixedbugs+crashes`<br>`fuzz_property:property+mutation-smoke+sustained-fuzz`<br>`ecosystem_compatibility:oss-curated+ecosystem-broader` |

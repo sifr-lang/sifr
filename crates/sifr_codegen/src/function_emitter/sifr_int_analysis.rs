@@ -2,6 +2,7 @@ use super::{
     HashMap, HashSet, HirExpr, HirFunction, HirStmt, RustType, TraversalConfig, Type,
     collect_locally_defined_vars, collect_referenced_vars_with_types, traversal,
 };
+#[cfg(test)]
 pub(super) fn hir_function_returns_sifr_int(
     func: &HirFunction,
     module_sifr_int_bindings: &HashSet<String>,
@@ -146,18 +147,6 @@ pub(super) fn collect_nested_sifr_int_result_function_returns(
         }
     }
     nested_returns
-}
-
-pub(super) fn collect_sifr_int_result_local_bindings(
-    body: &[HirStmt],
-    result_function_returns: &HashSet<String>,
-) -> HashSet<String> {
-    collect_sifr_int_result_local_bindings_with_initial(
-        body,
-        result_function_returns,
-        &HashSet::new(),
-        HashSet::new(),
-    )
 }
 
 pub(super) fn collect_sifr_int_result_local_bindings_with_initial(

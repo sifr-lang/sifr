@@ -9,16 +9,29 @@ fn lower_source(source: &str) -> Result<HirModule, Vec<HirDiagnostic>> {
     lower_module(parsed.suite()).map(|result| result.module)
 }
 
+#[test]
+fn nested_inference_records_checker_fallback_divergence() {
+    let parsed = parse_module(
+        "def outer(value: int) -> int:\n    def helper(item):\n        return item + 1\n    return helper(value)\n",
+    )
+    .expect("parse failed");
+    let result = lower_module(parsed.suite()).expect("inference should converge");
+
+    assert!(result.nested_inference_divergences.iter().any(|event| {
+        event.function.as_deref() == Some("helper")
+            && event.operator == "+"
+            && event.fallback_type == "int"
+    }));
+}
+
 fn range_for_after(source: &str, after: &str, needle: &str) -> TextRange {
     let after_start = source.find(after).expect("anchor should exist");
     let relative_start = source[after_start..]
         .find(needle)
         .expect("needle should exist after anchor");
-    let start = (after_start + relative_start) as u32;
-    TextRange::new(
-        TextSize::new(start),
-        TextSize::new(start + needle.len() as u32),
-    )
+    let start = u32::try_from(after_start + relative_start).expect("fixture offset must fit u32");
+    let needle_len = u32::try_from(needle.len()).expect("fixture length must fit u32");
+    TextRange::new(TextSize::new(start), TextSize::new(start + needle_len))
 }
 
 #[test]

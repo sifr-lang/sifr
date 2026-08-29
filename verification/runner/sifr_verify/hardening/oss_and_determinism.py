@@ -8,10 +8,12 @@ from pathlib import Path
 from typing import Any
 
 from .core import (
+    DEFAULT_VARIANT_TIMEOUT_SECS,
     LOCAL_PINNED_REVISION_PATTERN,
     load_index,
     normalize_string,
     required_missing,
+    run_captured_command,
     run_variant,
 )
 from .fixedbugs_and_crashes import contains_internal_panic
@@ -156,7 +158,7 @@ def run_oss_suite(
                     "status": "fail",
                     "mismatches": ["pinned_revision_mismatch"],
                     "expected_pinned_revision": pinned_revision_raw,
-                    "latest_project_revision": f"local-main@{latest_sha[:len(expected_sha)]}",
+                    "latest_project_revision": f"local-main@{latest_sha[: len(expected_sha)]}",
                 }
             )
             result["cases"].append(case_result)
@@ -168,8 +170,8 @@ def run_oss_suite(
                 "status": "pass",
                 "mismatches": [],
                 "expected_pinned_revision": pinned_revision_raw,
-                "latest_project_revision": f"local-main@{latest_sha[:len(expected_sha)]}",
-                "matched_project_revision": f"local-main@{matched_sha[:len(expected_sha)]}",
+                "latest_project_revision": f"local-main@{latest_sha[: len(expected_sha)]}",
+                "matched_project_revision": f"local-main@{matched_sha[: len(expected_sha)]}",
             }
         )
 
@@ -323,22 +325,11 @@ def run_external_command(
     timeout_secs: int | None,
 ) -> tuple[int, str, str, float]:
     started = time.perf_counter()
-    try:
-        proc = subprocess.run(
-            argv,
-            cwd=repo_root,
-            text=True,
-            capture_output=True,
-            check=False,
-            timeout=timeout_secs,
-        )
-        exit_code = proc.returncode
-        stdout = proc.stdout
-        stderr = proc.stderr
-    except subprocess.TimeoutExpired as timeout_error:
-        exit_code = 124
-        stdout = timeout_error.stdout or ""
-        stderr = (timeout_error.stderr or "") + f"\ncommand timed out after {timeout_secs} seconds"
+    exit_code, stdout, stderr, _timed_out = run_captured_command(
+        args=argv,
+        cwd=repo_root,
+        timeout_secs=timeout_secs or DEFAULT_VARIANT_TIMEOUT_SECS,
+    )
     elapsed_ms = (time.perf_counter() - started) * 1000.0
     return exit_code, stdout, stderr, elapsed_ms
 
@@ -385,9 +376,7 @@ def run_determinism_scale_suite(
 
         if not isinstance(description, str) or not description:
             mismatches.append("description")
-        if not isinstance(command_raw, list) or not command_raw or not all(
-            isinstance(token, str) and token for token in command_raw
-        ):
+        if not isinstance(command_raw, list) or not command_raw or not all(isinstance(token, str) and token for token in command_raw):
             mismatches.append("command")
         if not isinstance(expected_exit, int):
             mismatches.append("expect_exit_code")
@@ -487,13 +476,9 @@ def load_quarantine_metadata(path: Path, suites: list[dict[str, Any]]) -> list[d
             ),
         )
         if missing:
-            raise SystemExit(
-                f"invalid quarantine entry in '{path}': missing fields {', '.join(sorted(set(missing)))}"
-            )
+            raise SystemExit(f"invalid quarantine entry in '{path}': missing fields {', '.join(sorted(set(missing)))}")
         if entry.get("suite") not in suite_names:
-            raise SystemExit(
-                f"invalid quarantine entry in '{path}': unknown suite '{entry.get('suite')}'"
-            )
+            raise SystemExit(f"invalid quarantine entry in '{path}': unknown suite '{entry.get('suite')}'")
         validated.append(entry)
     return validated
 

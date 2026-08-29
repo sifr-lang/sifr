@@ -170,7 +170,7 @@ pub(crate) fn owner_outcome_with_evidence(outcome: RustExpr, errors: &[Type]) ->
         }),
         arms: vec![
             RustMatchArm {
-                pattern: "Some(__sifr_callback_owner_evidence_value)".to_string(),
+                pattern: "Some(__sifr_callback_owner_evidence_value)".into(),
                 bindings: Vec::new(),
                 guard: None,
                 body: vec![RustStmt::Expr(runtime_call(
@@ -187,7 +187,7 @@ pub(crate) fn owner_outcome_with_evidence(outcome: RustExpr, errors: &[Type]) ->
                 ))],
             },
             RustMatchArm {
-                pattern: "None".to_string(),
+                pattern: "None".into(),
                 bindings: Vec::new(),
                 guard: None,
                 body: vec![RustStmt::Expr(outcome)],
@@ -312,30 +312,6 @@ pub(crate) fn callback_owner_expr(setup: &CallbackSetup) -> RustExpr {
     }
 }
 
-pub(crate) fn callback_outcome_with_evidence(
-    outcome: RustExpr,
-    callbacks: &[CallbackSetup],
-) -> RustExpr {
-    runtime_call(
-        "attach_callback_failure_evidence",
-        vec![
-            outcome,
-            RustExpr::Ref {
-                mutable: false,
-                expr: Box::new(RustExpr::Array(
-                    callbacks
-                        .iter()
-                        .map(|callback| RustExpr::Ref {
-                            mutable: false,
-                            expr: Box::new(callback_owner_expr(callback)),
-                        })
-                        .collect(),
-                )),
-            },
-        ],
-    )
-}
-
 pub(crate) fn callback_outcome_after_cleanup(
     outcome: RustExpr,
     callbacks: &[CallbackSetup],
@@ -402,7 +378,7 @@ pub(crate) fn append_owner_failure_evidence(body: &mut Vec<RustStmt>, errors: &[
         return;
     }
     body.push(RustStmt::IfLet {
-        pattern: "Some(ref __sifr_callback_owner_for_later_failure_value)".to_string(),
+        pattern: "Some(ref __sifr_callback_owner_for_later_failure_value)".into(),
         expr: RustExpr::Ident("__sifr_callback_owner_for_later_failure".to_string()),
         then_body: vec![RustStmt::Assign {
             target: RustExpr::Ident("__sifr_python_outcome".to_string()),
@@ -435,7 +411,7 @@ pub(crate) fn append_owner_failure_reconciliation(
         return;
     }
     body.push(RustStmt::IfLet {
-        pattern: "Some(ref __sifr_callback_owner_for_later_failure_value)".to_string(),
+        pattern: "Some(ref __sifr_callback_owner_for_later_failure_value)".into(),
         expr: RustExpr::Ident("__sifr_callback_owner_for_later_failure".to_string()),
         then_body: errors
             .iter()
@@ -505,7 +481,7 @@ pub(crate) fn failure_reconciliation_stmt(
     owner: RustExpr,
 ) -> RustStmt {
     RustStmt::IfLet {
-        pattern: "Some(__sifr_callback_handler_error)".to_string(),
+        pattern: "Some(__sifr_callback_handler_error)".into(),
         expr: RustExpr::MethodCall {
             receiver: Box::new(RustExpr::Ident(slot.to_string())),
             method: "take_if_owner_first".to_string(),

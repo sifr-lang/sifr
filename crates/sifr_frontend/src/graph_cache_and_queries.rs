@@ -251,7 +251,8 @@ pub fn parse_source_module(
     sifr_syntax::parse_module(source, context)
 }
 
-pub fn compile_module_hir(
+#[cfg(test)]
+pub(crate) fn compile_module_hir(
     module_name: &str,
     stmts: &[Stmt],
     external_defs: &ExternalDefs,
@@ -260,7 +261,7 @@ pub fn compile_module_hir(
     compile_module_hir_with_source(module_name, stmts, external_defs, diagnostic_style, None)
 }
 
-pub fn compile_module_hir_with_source(
+pub(crate) fn compile_module_hir_with_source(
     module_name: &str,
     stmts: &[Stmt],
     external_defs: &ExternalDefs,
@@ -277,7 +278,7 @@ pub fn compile_module_hir_with_source(
     )
 }
 
-pub fn compile_module_hir_with_source_and_options(
+pub(crate) fn compile_module_hir_with_source_and_options(
     module_name: &str,
     stmts: &[Stmt],
     external_defs: &ExternalDefs,

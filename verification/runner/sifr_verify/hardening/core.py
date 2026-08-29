@@ -11,7 +11,11 @@ import time
 from pathlib import Path
 from typing import Any
 
-from ..profile_commands import terminate_process_group
+from ..profile_commands import (
+    register_process_group,
+    terminate_process_group,
+    unregister_process_group,
+)
 
 TMP_PATTERNS = (
     re.compile(r"/private/var/folders/[^\s\"']+"),
@@ -93,11 +97,7 @@ def normalize_string(value: str, repo_root: Path) -> str:
     normalized = normalized.replace(str(repo_root), "<WORKSPACE>")
     for pattern in TMP_PATTERNS:
         normalized = pattern.sub("<TMP>", normalized)
-    normalized = "\n".join(
-        line.rstrip()
-        for line in normalized.split("\n")
-        if not ARTIFACT_CACHE_LINE_PATTERN.fullmatch(line.strip())
-    )
+    normalized = "\n".join(line.rstrip() for line in normalized.split("\n") if not ARTIFACT_CACHE_LINE_PATTERN.fullmatch(line.strip()))
     if normalized and not normalized.endswith("\n"):
         normalized += "\n"
     return normalized
@@ -105,12 +105,15 @@ def normalize_string(value: str, repo_root: Path) -> str:
 
 def normalize_json_text(value: str, repo_root: Path) -> str:
     parsed = json.loads(value)
-    return json.dumps(
-        normalize_json_value(parsed, repo_root),
-        indent=2,
-        sort_keys=True,
-        ensure_ascii=False,
-    ) + "\n"
+    return (
+        json.dumps(
+            normalize_json_value(parsed, repo_root),
+            indent=2,
+            sort_keys=True,
+            ensure_ascii=False,
+        )
+        + "\n"
+    )
 
 
 def normalize_json_value(value: Any, repo_root: Path) -> Any:
@@ -158,7 +161,7 @@ def run_variant(
     args.extend([command_name, str(entry)])
 
     started = time.perf_counter()
-    exit_code, stdout, stderr = run_captured_command(
+    exit_code, stdout, stderr, _timed_out = run_captured_command(
         args=args,
         cwd=repo_root,
         timeout_secs=timeout_secs,
@@ -168,23 +171,35 @@ def run_variant(
 
 
 def run_captured_command(
-    *, args: list[str], cwd: Path, timeout_secs: float
-) -> tuple[int, str, str]:
-    proc = subprocess.Popen(
-        args,
-        cwd=cwd,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        start_new_session=True,
-    )
+    *,
+    args: list[str],
+    cwd: Path,
+    timeout_secs: float,
+    env: dict[str, str] | None = None,
+) -> tuple[int, str, str, bool]:
     try:
-        stdout, stderr = proc.communicate(timeout=timeout_secs)
-        return proc.returncode, stdout, stderr
-    except subprocess.TimeoutExpired:
-        terminate_process_group(proc)
-        stdout, stderr = proc.communicate()
-        return 124, stdout, stderr + f"\ncommand timed out after {timeout_secs} seconds"
+        proc = subprocess.Popen(
+            args,
+            cwd=cwd,
+            env=env,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            start_new_session=True,
+        )
+    except FileNotFoundError as error:
+        return 127, "", str(error), False
+    register_process_group(proc)
+    try:
+        try:
+            stdout, stderr = proc.communicate(timeout=timeout_secs)
+            return proc.returncode, stdout, stderr, False
+        except subprocess.TimeoutExpired:
+            terminate_process_group(proc)
+            stdout, stderr = proc.communicate()
+            return 124, stdout, stderr + f"\ncommand timed out after {timeout_secs} seconds", True
+    finally:
+        unregister_process_group(proc)
 
 
 def canonicalize_output(
@@ -220,10 +235,7 @@ def validate_unique_diagnostic_formats(
     for diagnostic_format in formats:
         if diagnostic_format in seen:
             display = "default" if diagnostic_format is None else diagnostic_format
-            raise SystemExit(
-                f"suite '{suite_name}' case '{case_id}' lists diagnostic_format "
-                f"'{display}' more than once"
-            )
+            raise SystemExit(f"suite '{suite_name}' case '{case_id}' lists diagnostic_format '{display}' more than once")
         seen.add(diagnostic_format)
 
 
@@ -289,9 +301,7 @@ def baseline_case_metadata(
     if Path(case_entry).is_absolute():
         raise SystemExit(f"suite '{suite_name}' case '{case_id}' entry must be repo-relative")
     if command_name not in BASELINE_COMMANDS:
-        raise SystemExit(
-            f"suite '{suite_name}' case '{case_id}' has unsupported command '{command_name}'"
-        )
+        raise SystemExit(f"suite '{suite_name}' case '{case_id}' has unsupported command '{command_name}'")
     formats = parse_formats(diagnostic_formats)
     if not formats:
         raise SystemExit(f"suite '{suite_name}' case '{case_id}' has invalid diagnostic_formats")
@@ -305,9 +315,7 @@ def baseline_case_metadata(
     try:
         entry_path.relative_to(repo_root)
     except ValueError as error:
-        raise SystemExit(
-            f"suite '{suite_name}' case '{case_id}' entry must stay under repo root"
-        ) from error
+        raise SystemExit(f"suite '{suite_name}' case '{case_id}' entry must stay under repo root") from error
     return case_id, entry_path, command_name, formats
 
 
@@ -332,10 +340,7 @@ def validate_unique_baseline_artifact_paths(
                 owner = f"{case_id}:{label}"
                 if previous is not None:
                     rel = format_repo_relative_path(key, repo_root)
-                    raise SystemExit(
-                        f"suite '{suite_name}' baseline artifact path collision for {rel}: "
-                        f"{previous} and {owner}"
-                    )
+                    raise SystemExit(f"suite '{suite_name}' baseline artifact path collision for {rel}: {previous} and {owner}")
                 seen[key] = owner
 
 
@@ -345,8 +350,6 @@ def assert_self_test_failure(description: str, expected: str, callback: Any) -> 
     except SystemExit as error:
         message = str(error)
         if expected not in message:
-            raise AssertionError(
-                f"{description}: expected failure containing {expected!r}, got {message!r}"
-            ) from error
+            raise AssertionError(f"{description}: expected failure containing {expected!r}, got {message!r}") from error
         return
     raise AssertionError(f"{description}: expected SystemExit")

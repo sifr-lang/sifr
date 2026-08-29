@@ -39,6 +39,7 @@ pub(super) fn bridge_composite_to_sifr_expr(value: &RustExpr, ty: &Type) -> Rust
     RustExpr::compiler_fragment(bridge_value_to_sifr_expr(&value, ty, 0))
 }
 
+#[cfg(test)]
 pub(super) fn hash_map_to_bridge_index_map_expr(
     name: &str,
     item_type: &Type,
@@ -52,6 +53,7 @@ pub(super) fn hash_map_to_bridge_index_map_expr(
     )
 }
 
+#[cfg(test)]
 pub(super) fn bridge_index_map_to_hash_map_expr(value: &RustExpr, item_type: &Type) -> RustExpr {
     bridge_composite_to_sifr_expr(
         value,

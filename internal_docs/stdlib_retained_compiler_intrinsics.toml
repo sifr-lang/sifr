@@ -140,6 +140,7 @@ issue = "stdlib-native-boundary-completion"
 evidence_links = ["stdlib-native-boundary-completion"]
 reason = "Typed compiler identity transport and dispatch are shared language glue; these files may carry CompilerIntrinsicId but may not infer identity from callable names."
 lowering_files = [
+  "crates/sifr_lowering/src/lib.rs",
   "crates/sifr_lowering/src/lower/compiler_intrinsics.rs",
   "crates/sifr_lowering/src/lower/external_defs.rs",
   "crates/sifr_lowering/src/lower/imported_defaults.rs",

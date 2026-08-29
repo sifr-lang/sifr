@@ -1,6 +1,7 @@
 use super::*;
 use crate::{HirExpr, HirStmt, lower_module};
 use sifr_python_parser::parse_module;
+use sifr_type_system::Type;
 
 fn lower_source(source: &str) -> crate::LoweringResult {
     let parsed = parse_module(source).expect("source should parse");

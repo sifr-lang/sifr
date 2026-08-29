@@ -41,49 +41,6 @@ pub(crate) fn generic_call_target_for_ir(func: &str, type_args: &[Type]) -> Rust
     RustExpr::compiler_fragment(format!("{func}::<{type_args}>"))
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn plain_call_targets_split_namespaced_functions_into_paths() {
-        assert!(matches!(
-            plain_call_target_for_ir("Point::origin"),
-            RustExpr::Path(parts) if parts == ["Point", "origin"]
-        ));
-        assert!(matches!(
-            plain_call_target_for_ir("compute"),
-            RustExpr::Ident(name) if name == "compute"
-        ));
-    }
-
-    #[test]
-    fn user_callable_safety_collisions_are_raw_identifiers() {
-        assert!(matches!(
-            plain_call_target_for_ir("expect"),
-            RustExpr::Ident(name) if name == "r#expect"
-        ));
-        assert!(matches!(
-            plain_call_target_for_ir("helpers::unwrap"),
-            RustExpr::Path(path) if path == ["helpers", "r#unwrap"]
-        ));
-    }
-
-    #[test]
-    fn constructor_names_leave_nominal_type_arguments_to_rust_inference() {
-        let ty = Type::Class {
-            identity: None,
-            name: "Channel".to_string(),
-            type_args: vec![Type::Any],
-            fields: Default::default(),
-            methods: Default::default(),
-            parent_class: None,
-        };
-
-        assert_eq!(canonical_constructor_class_name("Channel", &ty), "Channel");
-    }
-}
-
 pub(crate) fn supports_nonempty_pop_narrowing_type_for_ir(object_ty: &Type) -> bool {
     match crate::resolve_alias_type_for_plain_call(object_ty) {
         Type::List(_) => true,
@@ -125,7 +82,7 @@ pub(crate) fn unwrap_compiler_verified_nonempty_pop_result_for_ir(
     }
     RustExpr::Block {
         stmts: vec![RustStmt::LetElse {
-            pattern: "Some(__sifr_nonempty_pop_value)".to_string(),
+            pattern: "Some(__sifr_nonempty_pop_value)".into(),
             value: lowered_expr,
             else_body: vec![RustStmt::Expr(RustExpr::MacroCall {
                 name: "unreachable".to_string(),
@@ -265,5 +222,48 @@ pub(crate) fn type_contains_any_or_unknown(ty: &Type) -> bool {
                 || type_contains_any_or_unknown(&ft.return_type)
         }
         _ => false,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn plain_call_targets_split_namespaced_functions_into_paths() {
+        assert!(matches!(
+            plain_call_target_for_ir("Point::origin"),
+            RustExpr::Path(parts) if parts == ["Point", "origin"]
+        ));
+        assert!(matches!(
+            plain_call_target_for_ir("compute"),
+            RustExpr::Ident(name) if name == "compute"
+        ));
+    }
+
+    #[test]
+    fn user_callable_safety_collisions_are_raw_identifiers() {
+        assert!(matches!(
+            plain_call_target_for_ir("expect"),
+            RustExpr::Ident(name) if name == "r#expect"
+        ));
+        assert!(matches!(
+            plain_call_target_for_ir("helpers::unwrap"),
+            RustExpr::Path(path) if path == ["helpers", "r#unwrap"]
+        ));
+    }
+
+    #[test]
+    fn constructor_names_leave_nominal_type_arguments_to_rust_inference() {
+        let ty = Type::Class {
+            identity: None,
+            name: "Channel".to_string(),
+            type_args: vec![Type::Any],
+            fields: Default::default(),
+            methods: Default::default(),
+            parent_class: None,
+        };
+
+        assert_eq!(canonical_constructor_class_name("Channel", &ty), "Channel");
     }
 }

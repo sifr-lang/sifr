@@ -31,12 +31,16 @@ NON_CRATE_SIFR_SYMBOLS = {
 ARCHITECTURE_MUTATION_CASES = (
     "crate-map",
     "profile-map",
+    "missing-generated-markers",
     "unknown-crate-path",
     "unknown-bare-crate",
+    "unknown-qualified-crate",
     "missing-in-crate-path",
     "broken-link",
     "machine-path",
     "machine-home-path",
+    "machine-root-path",
+    "machine-windows-path",
 )
 
 
@@ -196,6 +200,7 @@ def validation_failures(
     crate_paths = {str(row["path"]) for row in crates}
     crate_names = {str(row["name"]) for row in crates}
     for code in INLINE_CODE.findall(text):
+        qualified_crate = code.split("::", 1)[0]
         if code.startswith("crates/"):
             root = "/".join(code.rstrip("/").split("/")[:2])
             if root not in crate_paths:
@@ -208,6 +213,13 @@ def validation_failures(
             and code not in NON_CRATE_SIFR_SYMBOLS
         ):
             failures.append(f"unknown-bare-first-party-crate: {code}")
+        elif (
+            "::" in code
+            and re.fullmatch(r"sifr_[a-z0-9_]+", qualified_crate)
+            and qualified_crate not in crate_names
+            and qualified_crate not in NON_CRATE_SIFR_SYMBOLS
+        ):
+            failures.append(f"unknown-qualified-first-party-crate: {qualified_crate}")
     prose = re.sub(r"`[^`\n]*`", "", text)
     for target in MARKDOWN_LINK.findall(prose):
         target = target.split("#", 1)[0]
@@ -226,25 +238,33 @@ def run_self_test(crates: list[dict[str, Any]], profiles: list[dict[str, Any]]) 
     cases = {
         "crate-map": source.replace(CRATE_BEGIN, CRATE_BEGIN + "\ncorrupt", 1),
         "profile-map": source.replace(PROFILE_BEGIN, PROFILE_BEGIN + "\ncorrupt", 1),
+        "missing-generated-markers": source.replace(CRATE_BEGIN, "", 1),
         "unknown-crate-path": source + "\n`crates/sifr_missing/src/lib.rs`\n",
         "unknown-bare-crate": source + "\n`sifr_test_utils`\n",
+        "unknown-qualified-crate": source + "\n`sifr_phantom::Compiler`\n",
         "missing-in-crate-path": source
         + "\n`crates/sifr_frontend/src/does_not_exist.rs`\n",
         "broken-link": source + "\n[missing](./missing-architecture-file.md)\n",
         "machine-path": source + "\n`/Users/example/work/sifr`\n",
         "machine-home-path": source + "\n`/home/example/work/sifr`\n",
+        "machine-root-path": source + "\n`/root/work/sifr`\n",
+        "machine-windows-path": source + "\n`C:\\Users\\example\\work\\sifr`\n",
     }
     if tuple(cases) != ARCHITECTURE_MUTATION_CASES:
         raise SystemExit("architecture guard mutation registration drifted")
     expected = {
         "crate-map": "crate-map-drift",
         "profile-map": "profile-map-drift",
+        "missing-generated-markers": "crate-map-markers",
         "unknown-crate-path": "unknown-first-party-crate",
         "unknown-bare-crate": "unknown-bare-first-party-crate",
+        "unknown-qualified-crate": "unknown-qualified-first-party-crate",
         "missing-in-crate-path": "missing-first-party-path",
         "broken-link": "broken-relative-link",
         "machine-path": "machine-local-path",
         "machine-home-path": "machine-local-path",
+        "machine-root-path": "machine-local-path",
+        "machine-windows-path": "machine-local-path",
     }
     for name, mutated in cases.items():
         failures = validation_failures(mutated, crates, profiles)

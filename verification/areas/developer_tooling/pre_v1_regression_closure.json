@@ -60,7 +60,7 @@
       },
       {
         "area": "fuzz_property",
-        "id": "fuzz-smoke/metadata",
+        "id": "mutation-smoke/metadata",
         "mechanism": "canonical missing-import seed path",
         "owner": "item-3"
       },

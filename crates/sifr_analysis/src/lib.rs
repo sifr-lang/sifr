@@ -7,7 +7,6 @@
 
 mod completion;
 mod editor;
-mod handles;
 mod host;
 mod queries;
 mod snapshot;

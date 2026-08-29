@@ -142,7 +142,7 @@ fn package_rust_interop_rejects_untrusted_unsafe_bridge_file() {
         "bridge.hash",
         RustInteropDecoratorKind::Function,
     )]);
-    let mut context = package_context_with_root(TrustPolicy::default(), Vec::new(), root.clone());
+    let mut context = package_context_with_root(TrustPolicy::default(), Vec::new(), &root);
     set_bridge_roots(&mut context, vec![PathBuf::from("src/bridges")]);
 
     let diagnostics = interop_errors(

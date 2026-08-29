@@ -57,30 +57,29 @@ pub(crate) fn seal_canonical_stdlib_names(
     rust_code: &str,
     module: &str,
     nominal_types: &HashSet<String>,
-) -> String {
+) -> crate::CodegenOutcome<String> {
     let replacements = nominal_types
         .iter()
         .filter(|name| !is_global_rust_nominal_identity(&format!("{module}.{name}")))
         .map(|name| (name.clone(), stdlib_class_rust_name(module, name)))
         .collect::<HashMap<_, _>>();
-    let Ok(tokens) = rust_code.parse::<TokenStream>() else {
-        return rust_code.to_string();
-    };
+    let tokens = rust_code
+        .parse::<TokenStream>()
+        .map_err(|error| stdlib_parse_error("canonical stdlib token rewrite input", error))?;
     let rewritten = rewrite_canonical_stdlib_tokens(tokens, &replacements, false);
-    let Ok(parsed) = syn::parse_file(&rewritten.to_string()) else {
-        return rust_code.to_string();
-    };
-    render_items(&parsed.items)
+    let parsed = parse_stdlib_file(
+        &rewritten.to_string(),
+        "canonical stdlib token rewrite output",
+    )?;
+    Ok(render_items(&parsed.items))
 }
 
 /// Make generated stdlib references to external runtime crates immune to
 /// source declarations with the same Rust identifier.
-pub(crate) fn absolutize_external_crate_paths(rust_code: &str) -> String {
-    let Ok(mut parsed) = syn::parse_file(rust_code) else {
-        return rust_code.to_string();
-    };
+pub(crate) fn absolutize_external_crate_paths(rust_code: &str) -> crate::CodegenOutcome<String> {
+    let mut parsed = parse_stdlib_file(rust_code, "external crate path rewrite input")?;
     ExternalCratePathAbsolutizer.visit_file_mut(&mut parsed);
-    render_items(&parsed.items)
+    Ok(render_items(&parsed.items))
 }
 
 struct ExternalCratePathAbsolutizer;
@@ -208,13 +207,10 @@ const GLOBAL_INFRA_TYPES: &[&str] = &[
 ];
 
 /// Strip per-module shared imports/infrastructure and return dependency flags.
-pub(crate) fn collect_and_strip_shared_prelude(filtered: &str) -> PreparedStdlibModule {
-    let Ok(parsed) = syn::parse_file(filtered) else {
-        return PreparedStdlibModule {
-            stripped_code: filtered.to_string(),
-            shared_needs: derive_shared_needs_text_scan(filtered),
-        };
-    };
+pub(crate) fn collect_and_strip_shared_prelude(
+    filtered: &str,
+) -> crate::CodegenOutcome<PreparedStdlibModule> {
+    let parsed = parse_stdlib_file(filtered, "shared stdlib prelude input")?;
 
     let shared_needs = derive_shared_needs(&parsed.items);
     let kept_items: Vec<Item> = parsed
@@ -223,23 +219,21 @@ pub(crate) fn collect_and_strip_shared_prelude(filtered: &str) -> PreparedStdlib
         .filter(|item| !is_shared_prelude_item(item))
         .collect();
 
-    PreparedStdlibModule {
+    Ok(PreparedStdlibModule {
         stripped_code: render_items(&kept_items),
         shared_needs,
-    }
+    })
 }
 
 /// Run stdlib IR DCE over compiled Rust source and keep only transitively-needed items.
 pub(crate) fn filter_stdlib_ir_to_needed(
     rust_code: &str,
     imported_names: &HashSet<String>,
-) -> String {
-    let Some(ir) = parse_stdlib_ir_file(rust_code) else {
-        return rust_code.to_string();
-    };
+) -> crate::CodegenOutcome<String> {
+    let ir = parse_stdlib_ir_file(rust_code)?;
     let deps = deps_by_item_name(&ir);
     let needed = transitive_needed_items(imported_names, &deps);
-    render_needed_ir_items(&ir, &needed)
+    Ok(render_needed_ir_items(&ir, &needed))
 }
 
 /// Run stdlib DCE after restoring identity-owned type references to the source
@@ -254,15 +248,15 @@ pub(crate) fn filter_canonical_stdlib_ir_to_needed(
     imported_names: &HashSet<String>,
     module: &str,
     nominal_types: &HashSet<String>,
-) -> String {
+) -> crate::CodegenOutcome<String> {
     let replacements = nominal_types
         .iter()
         .filter(|name| !is_global_rust_nominal_identity(&format!("{module}.{name}")))
         .map(|name| (stdlib_class_rust_name(module, name), name.clone()))
         .collect::<HashMap<_, _>>();
-    let Ok(tokens) = rust_code.parse::<TokenStream>() else {
-        return filter_stdlib_ir_to_needed(rust_code, imported_names);
-    };
+    let tokens = rust_code
+        .parse::<TokenStream>()
+        .map_err(|error| stdlib_parse_error("canonical stdlib filter token input", error))?;
     let restored = rewrite_canonical_stdlib_tokens(tokens, &replacements, true).to_string();
     filter_stdlib_ir_to_needed(&restored, imported_names)
 }
@@ -281,10 +275,8 @@ pub(crate) fn dedup_rust_items(
     rust_code: &str,
     emitted_items: &mut HashSet<String>,
     skip_types: &HashSet<String>,
-) -> String {
-    let Ok(parsed) = syn::parse_file(rust_code) else {
-        return rust_code.to_string();
-    };
+) -> crate::CodegenOutcome<String> {
+    let parsed = parse_stdlib_file(rust_code, "stdlib item deduplication input")?;
 
     let mut kept_items: Vec<Item> = Vec::new();
     for item in parsed.items {
@@ -303,13 +295,14 @@ pub(crate) fn dedup_rust_items(
         kept_items.push(item);
     }
 
-    render_items(&kept_items)
+    Ok(render_items(&kept_items))
 }
 
-pub(crate) fn strip_rust_items_by_name(rust_code: &str, names: &HashSet<&str>) -> String {
-    let Ok(parsed) = syn::parse_file(rust_code) else {
-        return rust_code.to_string();
-    };
+pub(crate) fn strip_rust_items_by_name(
+    rust_code: &str,
+    names: &HashSet<&str>,
+) -> crate::CodegenOutcome<String> {
+    let parsed = parse_stdlib_file(rust_code, "stdlib item stripping input")?;
 
     let kept_items: Vec<Item> = parsed
         .items
@@ -321,37 +314,37 @@ pub(crate) fn strip_rust_items_by_name(rust_code: &str, names: &HashSet<&str>) -
         })
         .collect();
 
-    render_items(&kept_items)
+    Ok(render_items(&kept_items))
 }
 
 pub(crate) fn partition_rust_items_by_name(
     rust_code: &str,
     names: &HashSet<&str>,
-) -> (String, String) {
-    let Ok(parsed) = syn::parse_file(rust_code) else {
-        return (String::new(), rust_code.to_string());
-    };
+) -> crate::CodegenOutcome<(String, String)> {
+    let parsed = parse_stdlib_file(rust_code, "stdlib item partition input")?;
     let (selected, remaining): (Vec<_>, Vec<_>) = parsed.items.into_iter().partition(|item| {
         parse_item_name(item)
             .as_deref()
             .is_some_and(|name| names.contains(name))
     });
-    (render_items(&selected), render_items(&remaining))
+    Ok((render_items(&selected), render_items(&remaining)))
 }
 
-pub(crate) fn rust_source_references_item_name(rust_code: &str, name: &str) -> bool {
-    let Ok(parsed) = syn::parse_file(rust_code) else {
-        return false;
-    };
+pub(crate) fn rust_source_references_item_name(
+    rust_code: &str,
+    name: &str,
+) -> crate::CodegenOutcome<bool> {
+    let parsed = parse_stdlib_file(rust_code, "stdlib reference analysis input")?;
     let item_names = HashSet::from([name.to_string()]);
     let global_types = HashSet::new();
-    parsed.items.iter().any(|item| {
+    Ok(parsed.items.iter().any(|item| {
         let current_name = parse_item_name(item).unwrap_or_default();
         referenced_item_names_via_ast(item, &item_names, &current_name, &global_types)
             .contains(name)
-    })
+    }))
 }
 
+#[cfg(test)]
 pub(crate) fn rust_source_defines_item_name(rust_code: &str, name: &str) -> bool {
     syn::parse_file(rust_code).is_ok_and(|parsed| {
         parsed
@@ -361,17 +354,15 @@ pub(crate) fn rust_source_defines_item_name(rust_code: &str, name: &str) -> bool
     })
 }
 
-pub(crate) fn rust_source_defined_item_names(rust_code: &str) -> HashSet<String> {
-    syn::parse_file(rust_code).map_or_else(
-        |_| HashSet::new(),
-        |parsed| parsed.items.iter().filter_map(parse_item_name).collect(),
-    )
+pub(crate) fn rust_source_defined_item_names(
+    rust_code: &str,
+) -> crate::CodegenOutcome<HashSet<String>> {
+    let parsed = parse_stdlib_file(rust_code, "stdlib definition analysis input")?;
+    Ok(parsed.items.iter().filter_map(parse_item_name).collect())
 }
 
-fn parse_stdlib_ir_file(rust_code: &str) -> Option<StdlibIrFile> {
-    let Ok(parsed) = syn::parse_file(rust_code) else {
-        return None;
-    };
+fn parse_stdlib_ir_file(rust_code: &str) -> crate::CodegenOutcome<StdlibIrFile> {
+    let parsed = parse_stdlib_file(rust_code, "stdlib IR filter input")?;
 
     let item_names: HashSet<String> = parsed.items.iter().filter_map(parse_item_name).collect();
     let global_types: HashSet<String> = GLOBAL_INFRA_TYPES
@@ -392,7 +383,17 @@ fn parse_stdlib_ir_file(rust_code: &str) -> Option<StdlibIrFile> {
         })
         .collect();
 
-    Some(StdlibIrFile { entries })
+    Ok(StdlibIrFile { entries })
+}
+
+fn parse_stdlib_file(rust_code: &str, stage: &str) -> crate::CodegenOutcome<syn::File> {
+    syn::parse_file(rust_code).map_err(|error| stdlib_parse_error(stage, error))
+}
+
+fn stdlib_parse_error(stage: &str, error: impl std::fmt::Display) -> crate::CodegenError {
+    crate::CodegenError::new(format!(
+        "failed to parse compiler-owned Rust during {stage}: {error}"
+    ))
 }
 
 fn deps_by_item_name(ir: &StdlibIrFile) -> HashMap<String, HashSet<String>> {
@@ -472,22 +473,6 @@ pub(super) fn derive_shared_needs(items: &[Item]) -> SharedPreludeNeeds {
         collector.visit_item(item);
     }
     collector.shared_needs
-}
-
-pub(super) fn derive_shared_needs_text_scan(code: &str) -> SharedPreludeNeeds {
-    SharedPreludeNeeds {
-        collections: SharedPreludeCollectionNeeds {
-            needs_hashmap: code.contains("HashMap"),
-            needs_hashset: code.contains("HashSet"),
-            needs_vecdeque: code.contains("VecDeque"),
-        },
-        file_handles: SharedPreludeFileHandleNeeds {
-            needs_file_handles: code.contains("__SIFR_FILE_HANDLES")
-                || code.contains("__SIFR_NEXT_FILE_HANDLE_ID")
-                || code.contains("__sifr_next_file_handle_id"),
-            provides_file_handle_struct: code.contains("struct FileHandle"),
-        },
-    }
 }
 
 #[derive(Debug, Default)]

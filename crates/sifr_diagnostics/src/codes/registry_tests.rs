@@ -135,6 +135,83 @@ fn active_diagnostic_docs_pages_exist_with_exact_casing() {
     }
 }
 
+#[test]
+fn active_diagnostic_owners_and_fixtures_resolve_to_first_party_sources() {
+    let repo_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(|path| path.parent())
+        .expect("crate must live under workspace crates directory")
+        .to_path_buf();
+
+    for entry in active_registry_entries() {
+        let owner = entry.owner_module.expect("active owner was checked");
+        for owner_module in owner.split(" / ") {
+            assert!(
+                owner_source_path(&repo_root, owner_module).is_some(),
+                "active diagnostic {} has relocated or unknown owner module {owner_module}",
+                entry.id
+            );
+        }
+        let fixture = entry
+            .representative_fixture_path
+            .expect("active fixture was checked");
+        let fixture_parts = fixture.split("::").collect::<Vec<_>>();
+        let fixture_path = fixture_parts.first().copied().unwrap_or_default();
+        let fixture_source = repo_root.join(fixture_path);
+        assert!(
+            fixture_source.exists(),
+            "active diagnostic {} has missing fixture path {fixture_path}",
+            entry.id
+        );
+        if let Some(symbol) = fixture_parts.get(1..).and_then(|parts| parts.last()) {
+            let source = fs::read_to_string(&fixture_source).unwrap_or_else(|error| {
+                panic!(
+                    "active diagnostic {} fixture source {} is unreadable: {error}",
+                    entry.id, fixture_path
+                )
+            });
+            assert!(
+                source.contains(&format!("fn {symbol}"))
+                    || source.contains(&format!("mod {symbol}")),
+                "active diagnostic {} has relocated fixture symbol {fixture}",
+                entry.id
+            );
+        }
+    }
+
+    assert!(
+        owner_source_path(&repo_root, "sifr_driver::relocated::owner").is_none(),
+        "relocated owner negative seed must not resolve"
+    );
+    let relocated_symbol = ["relo", "cated"].concat();
+    let relocated_fixture =
+        format!("crates/sifr_diagnostics/src/codes/registry_tests.rs::{relocated_symbol}");
+    let source = fs::read_to_string(
+        repo_root.join(relocated_fixture.split("::").next().unwrap_or_default()),
+    )
+    .expect("negative fixture source must be readable");
+    assert!(!source.contains(&format!("fn {relocated_symbol}(")));
+}
+
+fn owner_source_path(repo_root: &std::path::Path, owner: &str) -> Option<PathBuf> {
+    let mut parts = owner.split("::");
+    let crate_name = parts.next()?;
+    if crate_name != "sifr" && !crate_name.starts_with("sifr_") {
+        return None;
+    }
+    let source_root = repo_root.join("crates").join(crate_name).join("src");
+    let module_parts = parts.collect::<Vec<_>>();
+    let candidates = if module_parts.is_empty() {
+        vec![source_root.join("lib.rs")]
+    } else {
+        let module_path = module_parts
+            .iter()
+            .fold(source_root, |path, part| path.join(part));
+        vec![module_path.with_extension("rs"), module_path.join("mod.rs")]
+    };
+    candidates.into_iter().find(|path| path.is_file())
+}
+
 fn registry_entry_for(id: &str) -> &'static super::DiagnosticRegistryEntry {
     super::registry_entry(id).unwrap_or_else(|| panic!("missing registry entry for {id}"))
 }

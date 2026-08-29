@@ -21,8 +21,8 @@ pub use config::effective_lint_config;
 pub use discovery::{collect_sifr_files, collect_sifr_files_for_targets};
 pub use engine::{LintPhase, LintRun, LintRunner, PhaseExecution};
 pub use fixes::{
-    FixOptions, FixedSource, LintFix, SourceEdit, UnsafeFixPolicy, collect_fixes, fix_rule_allowed,
-    fix_source,
+    FixOptions, FixedSource, LintFix, SourceEdit, UnsafeFixPolicy, apply_collected_fixes,
+    collect_fixes, fix_rule_allowed, fix_source,
 };
 pub use suppression::ParserAwareSuppressions;
 

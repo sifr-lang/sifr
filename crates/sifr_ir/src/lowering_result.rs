@@ -9,11 +9,26 @@ use num_bigint::BigInt;
 use sifr_type_system::Type;
 use std::collections::HashMap;
 
+/// A nested-function inference site where the type checker rejected an
+/// operation and the inference-only heuristic supplied a provisional type.
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct NestedInferenceDivergence {
+    pub function: Option<String>,
+    pub operator: String,
+    pub left_type: String,
+    pub right_type: String,
+    pub fallback_type: String,
+    pub checker_error: String,
+}
+
 /// Result of lowering, including the HIR module and any diagnostics.
 #[derive(Clone)]
 pub struct LoweringResult {
     pub module: HirModule,
     pub flow_graph: FlowGraph,
+    /// Deterministic evidence for inference/checker disagreements encountered
+    /// while reaching nested-function fixed points.
+    pub nested_inference_divergences: Vec<NestedInferenceDivergence>,
     /// Class declaration defaults keyed by class name and declaration-order field index.
     ///
     /// This is distinct from constructor defaults: it records whether a declared field is

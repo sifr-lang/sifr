@@ -3,13 +3,7 @@
 use sifr_type_system::Type;
 
 #[derive(Debug, Clone, Default)]
-pub struct CodegenContext {
-    pub pub_mode: bool,
-    pub test_mode: bool,
-}
-
-#[derive(Debug, Clone, Default)]
-pub struct ScopeContext {
+pub(crate) struct ScopeContext {
     pub function_return_type: Option<Type>,
     pub in_generator_closure: bool,
     pub in_display_impl: bool,
@@ -18,7 +12,7 @@ pub struct ScopeContext {
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
-pub enum ClassScope {
+pub(crate) enum ClassScope {
     #[default]
     Outside,
     Inside,
@@ -74,7 +68,7 @@ impl std::fmt::Display for CodegenError {
 
 impl std::error::Error for CodegenError {}
 
-pub type CodegenOutcome<T> = Result<T, CodegenError>;
+pub(crate) type CodegenOutcome<T> = Result<T, CodegenError>;
 
 #[cfg(test)]
 mod tests {

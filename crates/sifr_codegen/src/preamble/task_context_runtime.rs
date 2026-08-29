@@ -1,14 +1,14 @@
 use super::{RustExpr, RustItem, RustParam, RustStmt, RustType, Visibility};
 use crate::RustLiteral;
 
-pub fn task_context_label_field() -> (String, RustType) {
+pub(crate) fn task_context_label_field() -> (String, RustType) {
     (
         "context_label".to_string(),
         RustType::Option(Box::new(RustType::Named("String".to_string()))),
     )
 }
 
-pub fn task_context_label_capture_stmt() -> RustStmt {
+pub(crate) fn task_context_label_capture_stmt() -> RustStmt {
     RustStmt::Let {
         mutable: false,
         name: "child_context_label".to_string(),
@@ -17,7 +17,7 @@ pub fn task_context_label_capture_stmt() -> RustStmt {
     }
 }
 
-pub fn build_task_context_scope_extension_items(include_task_local: bool) -> Vec<RustItem> {
+pub(crate) fn build_task_context_scope_extension_items(include_task_local: bool) -> Vec<RustItem> {
     let mut items = Vec::new();
     if include_task_local {
         items.push(RustItem::compiler_fragment(
@@ -53,7 +53,7 @@ pub fn build_task_context_scope_extension_items(include_task_local: bool) -> Vec
     items
 }
 
-pub fn build_task_current_context_items(include_task_local: bool) -> Vec<RustItem> {
+pub(crate) fn build_task_current_context_items(include_task_local: bool) -> Vec<RustItem> {
     let context_type = sifr_type_system::stdlib_class_rust_name("sifr.task", "Context");
     let mut items = Vec::new();
     if include_task_local {

@@ -336,14 +336,16 @@ impl Session {
         self.shutdown_requested
     }
 
-    pub(crate) fn note_initialized(&mut self) {
+    pub(crate) fn note_initialized(&mut self) -> bool {
         if self.initialized {
             self.trace(
                 WorkspaceTracePhase::LspTiming,
                 "ignored duplicate initialized notification",
             );
+            return false;
         }
         self.initialized = true;
+        true
     }
 
     pub(crate) fn note_exit_notification(&mut self) {

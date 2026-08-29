@@ -92,7 +92,7 @@ def prepare_step_budget(
         required_cache_paths=required_paths,
     )
     env["SIFR_VERIFY_STEP_CACHE_STATE"] = state
-    if name == "python_interop":
+    if area_name_for_step(name) == "python_interop":
         env["SIFR_PYTHON_INTEROP_CACHE_STATE"] = state
     print(
         f"[sifr-lane-step-cache] name={name} state={state} reason={reason} fingerprint={fingerprint[:16]}"
@@ -203,9 +203,8 @@ def input_fingerprint(
         "python": sys.version,
         "sifr_binary_sha256": binary_digest,
     }
-    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
     return (
-        hashlib.sha256(encoded).hexdigest(),
+        fingerprint_digest(payload),
         eligible,
         "eligible"
         if eligible
@@ -215,8 +214,17 @@ def input_fingerprint(
     )
 
 
+def fingerprint_digest(payload: dict[str, Any]) -> str:
+    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def area_name_for_step(step_name: str) -> str:
+    return step_name.removeprefix("area_")
+
+
 def selected_suites(profile: dict[str, Any], step_name: str) -> list[str]:
-    area = "python_interop" if step_name == "python_interop" else step_name
+    area = area_name_for_step(step_name)
     return [
         str(suite)
         for selection in profile.get("selected_areas", [])
@@ -228,7 +236,7 @@ def selected_suites(profile: dict[str, Any], step_name: str) -> list[str]:
 def required_cache_paths(
     repo_root: Path, step_name: str, binary: Path
 ) -> tuple[Path, ...]:
-    if step_name == "python_interop":
+    if area_name_for_step(step_name) == "python_interop":
         return (binary, repo_root / "target" / "python" / "debug")
     return (binary,)
 
@@ -341,22 +349,60 @@ def run_self_test() -> None:
             overrun_status = enforce_step_budget(context, 1_200_001)
         if overrun_status != 124:
             raise AssertionError("cold blocking budget did not reject an overrun")
-        from .reports import parse_log
+        report_cache_classification_self_test(root)
+        suite_fingerprint_self_test()
 
-        log = root / "lane.log"
-        log.write_text(
-            "[sifr-lane-step-cache] name=python_interop state=cold "
-            "reason=receipt-missing fingerprint=aaaaaaaaaaaaaaaa\n"
-            "[sifr-lane-step] name=python_interop elapsed_ms=900000 status=pass\n"
-            "[sifr-lane-step-budget] name=python_interop elapsed_ms=900000 "
-            "budget_ms=1200000 enforcement=blocking status=pass\n",
-            encoding="utf-8",
+
+def report_cache_classification_self_test(root: Path) -> None:
+    from .reports import parse_log
+
+    log = root / "lane.log"
+    log.write_text(
+        "[sifr-lane-step-cache] name=python_interop state=cold "
+        "reason=receipt-missing fingerprint=aaaaaaaaaaaaaaaa\n"
+        "[sifr-lane-step] name=python_interop elapsed_ms=900000 status=pass\n"
+        "[sifr-lane-step-budget] name=python_interop elapsed_ms=900000 "
+        "budget_ms=1200000 enforcement=blocking status=pass\n",
+        encoding="utf-8",
+    )
+    parsed = parse_log(log)
+    expected_cache = {
+        "state": "cold",
+        "reason": "receipt-missing",
+        "fingerprint": "aaaaaaaaaaaaaaaa",
+    }
+    if parsed["lane_step_cache"].get("python_interop") != expected_cache:
+        raise AssertionError("lane report lost the cache classification")
+
+
+def suite_fingerprint_self_test() -> None:
+    profile = {
+        "selected_areas": [
+            {
+                "area": "python_interop",
+                "suites": ["self-test", "callback-examples"],
+            }
+        ]
+    }
+    suites = selected_suites(profile, "area_python_interop")
+    if suites != ["self-test", "callback-examples"]:
+        raise AssertionError("area Python interop step did not bind its selected suites")
+    fingerprint_inputs = {
+        "profile": "create-pr",
+        "step": "area_python_interop",
+        "source_commit": "candidate",
+        "tracked_state": "",
+        "suites": suites,
+        "cargo_lock_sha256": "lock",
+        "rustc": "rustc",
+        "python": "python",
+        "sifr_binary_sha256": "binary",
+    }
+    original_fingerprint = fingerprint_digest(fingerprint_inputs)
+    changed_fingerprint = fingerprint_digest(
+        {**fingerprint_inputs, "suites": [*suites, "buffer-examples"]}
+    )
+    if original_fingerprint == changed_fingerprint:
+        raise AssertionError(
+            "changed Python interop suite selection did not change the fingerprint"
         )
-        parsed = parse_log(log)
-        expected_cache = {
-            "state": "cold",
-            "reason": "receipt-missing",
-            "fingerprint": "aaaaaaaaaaaaaaaa",
-        }
-        if parsed["lane_step_cache"].get("python_interop") != expected_cache:
-            raise AssertionError("lane report lost the cache classification")

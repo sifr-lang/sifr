@@ -252,9 +252,8 @@ impl AnalysisSnapshot {
         &self,
         host: &mut AnalysisHost,
         file: FileId,
-        range: Option<TextRange>,
     ) -> QueryResult<GeneratedRustPreview> {
-        self.run(host, |host| host.generated_rust_preview(file, range))
+        self.run(host, |host| host.generated_rust_preview(file))
     }
 
     pub fn explain_diagnostic(

@@ -10,8 +10,9 @@ use crate::rust_interop_panic::{
 };
 use crate::{RustExpr, RustLiteral, RustMatchArm, RustParam, RustStmt, RustType};
 
-const BRIDGE_ROOT: &str = "bridge";
 const SELF_ROOT: &str = "Self";
+#[cfg(test)]
+const BRIDGE_ROOT: &str = "bridge";
 const OPAQUE_INNER: &str = "__sifr_opaque_inner";
 
 pub(crate) fn rust_interop_function_body(func: &HirFunction) -> Option<Vec<RustStmt>> {
@@ -180,7 +181,7 @@ fn opaque_self_receiver(declaration: &RustInteropDeclaration, error_type: &Type)
                 expr: Box::new(RustExpr::Ident("__sifr_handle_error".to_string())),
                 arms: vec![
                     RustMatchArm {
-                        pattern: "sifr_runtime::interop::HandleStateError::Closed".to_string(),
+                        pattern: "sifr_runtime::interop::HandleStateError::Closed".into(),
                         bindings: Vec::new(),
                         guard: None,
                         body: vec![RustStmt::TailExpr(closed)],
@@ -188,7 +189,8 @@ fn opaque_self_receiver(declaration: &RustInteropDeclaration, error_type: &Type)
                     RustMatchArm {
                         pattern: format!(
                             "sifr_runtime::interop::HandleStateError::Poisoned({panic_name})"
-                        ),
+                        )
+                        .into(),
                         bindings: vec![panic_name.to_string()],
                         guard: None,
                         body: vec![RustStmt::TailExpr(poisoned)],
@@ -472,7 +474,7 @@ mod tests {
         };
 
         assert_eq!(
-            render_expr(&expr),
+            render_expr(expr),
             "fixture_bridge::roundtrip_ints(items.into_iter().map(::sifr_runtime::interop::SifrIntBridge::from).collect::<Vec<_>>()).into_iter().map(|__sifr_bridge_value| __sifr_bridge_value.to_i64_saturating()).collect()"
         );
     }
@@ -510,7 +512,7 @@ mod tests {
         };
 
         assert_eq!(
-            render_expr(&expr),
+            render_expr(expr),
             "fixture_bridge::count_ints(&items.iter().copied().map(::sifr_runtime::interop::SifrIntBridge::from).collect::<Vec<_>>()).to_i64_saturating()"
         );
     }
@@ -548,7 +550,7 @@ mod tests {
         };
 
         assert_eq!(
-            render_expr(&expr),
+            render_expr(expr),
             "::sifr_stdlib::calendar::calendar_weekday(::sifr_runtime::interop::SifrIntBridge::from(year)).to_i64_saturating()"
         );
     }
@@ -595,7 +597,7 @@ mod tests {
         };
 
         assert_eq!(
-            render_expr(&expr),
+            render_expr(expr),
             "::sifr_stdlib::url::url_build_parts(query.clone(), port.map(::sifr_runtime::interop::SifrIntBridge::from))"
         );
     }
@@ -633,7 +635,7 @@ mod tests {
         };
 
         assert_eq!(
-            render_expr(&expr),
+            render_expr(expr),
             "::sifr_stdlib::calendar::calendar_monthrange(::sifr_runtime::interop::SifrIntBridge::from(month)).into_iter().map(|__sifr_bridge_value| __sifr_bridge_value.to_i64_saturating()).collect()"
         );
     }
@@ -672,7 +674,7 @@ mod tests {
         };
 
         assert_eq!(
-            render_expr(&expr),
+            render_expr(expr),
             "::sifr_stdlib::base64::base64_decode(s).map(|__sifr_bridge_ok| __sifr_bridge_ok).map_err(|__sifr_bridge_error| ParseError { message: __sifr_bridge_error.to_string() })"
         );
     }
@@ -711,7 +713,7 @@ mod tests {
         };
 
         assert_eq!(
-            render_expr(&expr),
+            render_expr(expr),
             "::sifr_stdlib::fs::read_text(path).map(|__sifr_bridge_ok| __sifr_bridge_ok).map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))"
         );
     }
@@ -753,7 +755,7 @@ mod tests {
         };
 
         assert_eq!(
-            render_expr(&expr),
+            render_expr(expr),
             "::sifr_stdlib::regex::re_match(pattern).map(|__sifr_bridge_ok| __sifr_bridge_ok).map_err(|__sifr_bridge_error| RegexError { message: __sifr_bridge_error.to_string(), detail: __sifr_bridge_error.to_string() })"
         );
     }
@@ -802,7 +804,7 @@ mod tests {
         };
 
         assert_eq!(
-            render_expr(&expr),
+            render_expr(expr),
             "::sifr_stdlib::json::json_load_tokens(text).map(|__sifr_bridge_ok| __sifr_bridge_ok).map_err(|__sifr_bridge_error| JSONDecodeError { message: __sifr_bridge_error.message().to_string(), line: __sifr_bridge_error.line() as i64, column: __sifr_bridge_error.column() as i64 })"
         );
     }
