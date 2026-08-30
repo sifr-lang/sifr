@@ -276,7 +276,7 @@ verification inventory. This phase does not reimplement those capabilities.
 | Milestone | Status | Name | Required outcome |
 |---:|---|---|---|
 | 0 | completed | Architecture and dependency lock | The final architecture, language dependencies, ownership map, capability matrix, verification inventory, and phase gates are authoritative and machine validated. |
-| 1 | in progress | Template-string language foundation | Template strings preserve static segments, typed holes, evaluation order, and exact source maps through the full compiler pipeline. |
+| 1 | completed | Template-string language foundation | Template strings preserve static segments, typed holes, evaluation order, and exact source maps through the full compiler pipeline. |
 | 2 | pending | Structural record type system | Immutable records have order-independent canonical identity, width subtyping, deterministic diagnostics, and interned Rust layouts. |
 | 3 | pending | Compiler component platform | Resolved packages can provide deterministic sandboxed embedded-language analysis through one closed, versioned, cacheable protocol. |
 | 4 | pending | Schema profiles and canonical `SchemaIR` | Configuration sources produce exact provider-owned schema graphs, nominal profile types, fingerprints, dependency slices, diffs, and runtime contracts. |
@@ -1250,7 +1250,7 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 | Milestone | Status | Pull request | Merge commit | Validation | Review | Notes |
 | ---: | --- | --- | --- | --- | --- | --- |
 | 0 | completed | [#3582](https://github.com/sifr-lang/sifr/pull/3582) | `1a1cef93dc` | SQL 4/4; docs 1/1; dependency and runner checks pass | Opus `SATISFIED` on `7f3f6bc2c` | Architecture and dependency lock |
-| 1 | in progress | — | — | focused compiler, native, property, fuzz, and SQL contract checks pass; exact gates pending | Opus `NOT SATISFIED` on `78bd3e50b`; remediation pending | Template-string foundation; corrects the Milestone 0 lock-package metadata namespace |
+| 1 | completed | [#3585](https://github.com/sifr-lang/sifr/pull/3585) | `1173cd9e20` | type system 140/140; focused template 13/13; property 15/15; fuzz 26/26; SQL and repository checks pass | Opus remediation `SATISFIED` on `56f131e1b` | Typed template strings; also corrects the Milestone 0 verification integration |
 | 2 | pending | — | — | — | — | Structural record type system |
 | 3 | pending | — | — | — | — | Compiler component platform |
 | 4 | pending | — | — | — | — | Schema profiles and canonical `SchemaIR` |
@@ -1295,8 +1295,9 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
   ownership map, artifact topology, capability matrix, verification inventory,
   verification area, root lock package, and external async prerequisite are
   authoritative.
-- SQL validation: four variants passed with no failure. The contract checker
-  covers 19 milestones, three providers, six domains, and 30 invariants.
+- SQL validation: four variants passed with no failure. The permanent checker
+  covers 19 platform parts, three providers, six domains, and 30 invariants.
+  The plan-local checker covers all 19 milestones and both status tables.
 - Dependency validation: all 14 crates and six `libpg_query` sources match their
   release authorities. The all-feature qualification package and HTTP-enabled
   shared runtime compile with the locked graph.
@@ -1318,6 +1319,56 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
   their implementation owners.
 - Unrelated failures: none.
 - Next action: implement Milestone 1 from the merged and recorded mainline.
+
+### Milestone 1 closure record
+
+- Status: completed and merged.
+- Starting commit: `f428c0d2c62a7f7914ebc6424e32ad4ba79fbf36`.
+- Initial reviewed candidate: `78bd3e50b103fa71dc2dacbc0daa25c3ad587d5f`.
+- Remediation candidate: `56f131e1bd8593527c0425fd6a67508683a861dd`.
+- Final candidate: `ae4f04c4153ec4e3c861d893d0484c3ba4e9aa38`.
+- Pull request: [#3585](https://github.com/sifr-lang/sifr/pull/3585).
+- Merge commit: `1173cd9e20ef68480deb1fa0ed459615e10120d5`.
+- Acceptance disposition: all six Milestone 1 criteria are satisfied.
+- Owned result: the compiler preserves PEP 750 template segments, typed holes,
+  conversions, recursive format specifications, evaluation order, and source
+  mappings. The formatter and frontend preserve the same structure. Generated
+  Rust uses one private, move-only carrier and evaluates each hole one time.
+- Compiler validation: all 140 type-system tests passed on the current-main
+  integration. The focused template suites passed 3 lowering, 3 codegen, 3
+  frontend, 1 formatter, and 3 syntax tests.
+- Native validation: the evaluation-order fixture built and ran. The equality
+  fixture failed with `SIFR-TYPE-0002`, as required.
+- Hardening validation: all 15 property variants passed, including both template
+  runs. All 26 fuzz-smoke variants passed. The two template HIR snapshots have
+  active lowering-inventory rows.
+- SQL integration: the permanent SQL checker, its 11 mutations, all 8 dependency
+  mutations, the coverage matrix, the verification taxonomy check, and both
+  plan-record checks passed. The file-size and HIR guardrails also passed.
+- Create-PR gate: the one allowed run stopped because the template runtime was
+  absent from the retained-preamble allowlist. The specific allowlist guard and
+  its self-test passed after the correction. The full gate did not run again.
+- Merge gate: the one allowed run stopped on M0 SQL coverage metadata and
+  generated-code taxonomy debt. M1 corrected all SQL-owned findings. The
+  generated-code owner corrected its findings on `main`. The full gate did not
+  run again.
+- Review round 1: Opus returned `NOT SATISFIED` on
+  `78bd3e50b103fa71dc2dacbc0daa25c3ad587d5f`. It found discarded recursive
+  format metadata, incomplete snapshot and source-map evidence, and a bad
+  negative-fixture marker.
+- Remediation: one batch retained recursive metadata and added the required
+  snapshot, every-offset, and negative-fixture evidence.
+- Review round 2: Opus returned `SATISFIED` with no blocking or follow-up finding
+  on `56f131e1bd8593527c0425fd6a67508683a861dd`. The [published review](https://github.com/sifr-lang/sifr/pull/3585#issuecomment-5466254530)
+  records both rounds. No third review ran.
+- Base integration: current `main` changed exact-integer compiler paths after
+  the review. The merge kept both architectures, and all affected focused tests
+  passed. The review and gate limits prohibited more rounds.
+- Unrelated failure: the pre-existing
+  `method_receiver_conventions_and_source_ranges` snapshot lacks a
+  core-language inventory row. The receiver-semantics owner records this defect
+  in `ad-hoc-pre-v1-compatibility-removal.md`.
+- Next action: implement Milestone 2 from the merged and recorded mainline.
 
 ## Closure evidence template
 
@@ -1350,5 +1401,5 @@ Complete this section after Milestone 18 merges:
 - Final capability and verification inventory: pending.
 - Deferred out-of-scope work: pending.
 - Archive destination: `plans/issues/archive/ad-hoc-schema-first-sql-platform.md`.
-- Exact next action: implement Milestone 1 in a new session from current
+- Exact next action: implement Milestone 2 in a new session from current
   `origin/main`.
