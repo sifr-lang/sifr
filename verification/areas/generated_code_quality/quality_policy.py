@@ -155,6 +155,14 @@ def rust_code_lines(source: str) -> list[str]:
     return "".join(output).splitlines()
 
 
+def pattern_matches(policy: PatternPolicy, code: str) -> bool:
+    for match in policy.pattern.finditer(code):
+        if policy.id == "direct-index" and re.fullmatch(r"let\s*\[[^\n]+", match.group(0)):
+            continue
+        return True
+    return False
+
+
 def scan_files(paths: Iterable[Path], root: Path) -> list[Violation]:
     violations: list[Violation] = []
     for path in paths:
@@ -167,7 +175,7 @@ def scan_files(paths: Iterable[Path], root: Path) -> list[Violation]:
             start=1,
         ):
             for policy in PATTERN_POLICIES:
-                if policy.pattern.search(code):
+                if pattern_matches(policy, code):
                     violations.append(Violation(policy.id, relative, line_number, line.strip()))
     return violations
 
@@ -487,8 +495,15 @@ def run_debt_self_test(debt: dict[str, Any]) -> None:
     validate_debt_owners(debt)
 
     lexical_fixture = "// panic!()\nlet text = \"values[0] as usize\";\n/* unsafe {} */\n"
-    if any(policy.pattern.search(line) for line in rust_code_lines(lexical_fixture) for policy in PATTERN_POLICIES):
+    if any(
+        pattern_matches(policy, line)
+        for line in rust_code_lines(lexical_fixture)
+        for policy in PATTERN_POLICIES
+    ):
         raise AssertionError("Rust lexical scanner inspected comments or string contents")
+    slice_pattern = "let [head, middle @ .., tail] = values.as_slice() else { return; };"
+    if pattern_matches(PATTERN_BY_ID["direct-index"], slice_pattern):
+        raise AssertionError("direct-index scanner rejected a refutable slice pattern")
 
     missing_category = copy.deepcopy(debt)
     missing_category.pop("freshness")

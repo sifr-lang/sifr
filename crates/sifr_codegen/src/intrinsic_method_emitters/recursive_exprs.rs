@@ -191,10 +191,6 @@ impl RustEmitter {
                                     args: vec![],
                                 };
                             }
-                            adjusted = Self::force_unwrap_option_expr_for_ir(
-                                adjusted,
-                                "compiler-verified list append element should be Some",
-                            );
                         }
                         arg_exprs[0] = Self::clone_owned_append_arg_expr_for_ir(&args[0], adjusted);
                     }
@@ -306,6 +302,9 @@ impl RustEmitter {
             HirExpr::Index {
                 object, index, ty, ..
             } => {
+                if let Some(witness) = self.checked_place_read_witness(object, index, ty) {
+                    return Some(witness);
+                }
                 if matches!(
                     crate::resolve_alias_type_for_plain_call(object.ty()),
                     Type::Str | Type::LiteralStr(_)
@@ -320,11 +319,7 @@ impl RustEmitter {
                     if crate::helpers::is_option_type(ty) {
                         return Some(option_expr);
                     }
-                    return Some(Self::lower_proven_index_option_expr_for_ir(
-                        option_expr,
-                        "__indexed_char",
-                        "compiler-verified string index should be in range",
-                    ));
+                    return None;
                 }
                 if let Some(lowered) = self.try_lower_nested_list_element_expr(expr) {
                     return Some(lowered);
@@ -679,6 +674,11 @@ impl RustEmitter {
             }
             HirExpr::TemplateString(template) => {
                 self.try_lower_template_string_expr_for_ir(template)
+            }
+            HirExpr::BoolOp { ty, .. }
+                if matches!(crate::resolve_alias_type_for_plain_call(ty), Type::Bool) =>
+            {
+                self.lower_condition_expr_for_ir(expr).ok().flatten()
             }
             HirExpr::BoolOp { op, values, .. } if !values.is_empty() => {
                 let lowered_op = match op.as_str() {

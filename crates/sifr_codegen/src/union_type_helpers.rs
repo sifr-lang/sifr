@@ -124,6 +124,7 @@ impl RustEmitter {
             for ty in crate::hir_analysis::queries::collect_let_declared_types(&func.body) {
                 self.register_union_type(&ty);
             }
+            self.register_expression_union_types(&func.body);
             for ty in crate::hir_analysis::queries::collect_try_error_carriers(&func.body) {
                 self.register_try_error_carrier(&ty);
             }
@@ -163,6 +164,7 @@ impl RustEmitter {
                 for ty in crate::hir_analysis::queries::collect_let_declared_types(&method.body) {
                     self.register_union_type(&ty);
                 }
+                self.register_expression_union_types(&method.body);
                 for ty in crate::hir_analysis::queries::collect_try_error_carriers(&method.body) {
                     self.register_try_error_carrier(&ty);
                 }
@@ -190,6 +192,19 @@ impl RustEmitter {
                     ),
                 );
             }
+        }
+    }
+
+    fn register_expression_union_types(&mut self, body: &[crate::HirStmt]) {
+        let mut types = Vec::new();
+        crate::hir_analysis::traversal::walk_stmts(
+            body,
+            crate::hir_analysis::traversal::TraversalConfig::INCLUDE_NESTED_FUNCTIONS,
+            &mut |_| {},
+            &mut |expr| types.push(expr.ty().clone()),
+        );
+        for ty in types {
+            self.register_union_type(&ty);
         }
     }
 

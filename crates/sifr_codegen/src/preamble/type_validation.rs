@@ -144,8 +144,13 @@ fn validate_stmt_types(stmt: &HirStmt) -> Result<(), crate::CodegenError> {
             after,
             ..
         } => {
-            for (_, ty) in before.iter().chain(std::iter::once(star)).chain(after) {
-                validate_codegen_type(ty)?;
+            for target in before.iter().chain(std::iter::once(star)).chain(after) {
+                if !matches!(target.binding, sifr_ir::HirTupleTargetBinding::Name(_)) {
+                    return Err(crate::CodegenError::new(
+                        "star unpack target must be a local name binding",
+                    ));
+                }
+                validate_codegen_type(&target.ty)?;
             }
         }
         HirStmt::TryExcept {
@@ -171,21 +176,55 @@ fn validate_stmt_types(stmt: &HirStmt) -> Result<(), crate::CodegenError> {
             validate_codegen_type(field_ty)?;
             validate_codegen_type(nested_field_ty)?;
         }
-        HirStmt::SubscriptAssign { object_ty, .. }
-        | HirStmt::NestedSubscriptAssign { object_ty, .. } => {
+        HirStmt::SubscriptAssign {
+            object_ty, failure, ..
+        } => {
             validate_codegen_type(object_ty)?;
+            if let Some(failure) = failure {
+                validate_codegen_type(failure)?;
+            }
         }
-        HirStmt::AttributeNestedSubscriptAssign { field_ty, .. }
-        | HirStmt::AttributeSubscriptAssign { field_ty, .. } => {
-            validate_codegen_type(field_ty)?;
-        }
-        HirStmt::SubscriptAugAssign {
+        HirStmt::NestedSubscriptAssign {
             object_ty,
-            missing_key_error,
+            outer_failure,
+            inner_failure,
             ..
         } => {
             validate_codegen_type(object_ty)?;
-            if let Some(error) = missing_key_error {
+            if let Some(failure) = outer_failure {
+                validate_codegen_type(failure)?;
+            }
+            if let Some(failure) = inner_failure {
+                validate_codegen_type(failure)?;
+            }
+        }
+        HirStmt::AttributeNestedSubscriptAssign {
+            field_ty,
+            outer_failure,
+            inner_failure,
+            ..
+        } => {
+            validate_codegen_type(field_ty)?;
+            if let Some(failure) = outer_failure {
+                validate_codegen_type(failure)?;
+            }
+            if let Some(failure) = inner_failure {
+                validate_codegen_type(failure)?;
+            }
+        }
+        HirStmt::AttributeSubscriptAssign {
+            field_ty, failure, ..
+        } => {
+            validate_codegen_type(field_ty)?;
+            if let Some(failure) = failure {
+                validate_codegen_type(failure)?;
+            }
+        }
+        HirStmt::SubscriptAugAssign {
+            object_ty, failure, ..
+        } => {
+            validate_codegen_type(object_ty)?;
+            if let Some(error) = failure {
                 validate_codegen_type(error)?;
             }
         }

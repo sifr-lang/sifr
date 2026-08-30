@@ -412,17 +412,6 @@ fn project_f_string_part(part: &HirFStringPart) -> Value {
     }
 }
 
-pub(super) fn project_named_types(items: &[(String, Type)]) -> Vec<Value> {
-    items.iter().map(project_named_type).collect()
-}
-
-pub(super) fn project_named_type((name, ty): &(String, Type)) -> Value {
-    json!({
-        "name": name,
-        "ty": type_name(ty),
-    })
-}
-
 pub(super) fn type_name(ty: &Type) -> String {
     ty.display_name()
 }

@@ -103,11 +103,10 @@ class Counter[T: Hashable]:
             if count is not None:
                 entry: tuple[T, int] = (key, count)
                 result.append(entry)
-        sz: int = len(result)
         i: int = 0
-        while i < sz:
+        while 0 <= i and i < len(result):
             j: int = i + 1
-            while j < sz:
+            while 0 <= j and j < len(result):
                 left: tuple[T, int] | None = result[i]
                 right: tuple[T, int] | None = result[j]
                 if left is not None:
@@ -134,11 +133,10 @@ class Counter[T: Hashable]:
 
     def keys(self) -> list[T]:
         result: list[T] = self.counts.keys()
-        sz: int = len(result)
         i: int = 0
-        while i < sz:
+        while 0 <= i and i < len(result):
             j: int = i + 1
-            while j < sz:
+            while 0 <= j and j < len(result):
                 left: T | None = result[i]
                 right: T | None = result[j]
                 if left is not None:

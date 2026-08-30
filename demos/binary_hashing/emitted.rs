@@ -1023,7 +1023,7 @@ fn _build_hash(
     data: &Vec<u8>,
 ) -> __SifrStdlib_sifr_x2ehashlib_x2eHashObject {
     let alg: String = algorithm.to_lowercase();
-    if alg == "md5" {
+    if (alg == "md5") {
         return __SifrStdlib_sifr_x2ehashlib_x2eHashObject::new(
             alg,
             (data.clone()).clone(),
@@ -1032,7 +1032,7 @@ fn _build_hash(
             SifrInt::from_i64(64),
         );
     } else {
-        if alg == "sha1" {
+        if (alg == "sha1") {
             return __SifrStdlib_sifr_x2ehashlib_x2eHashObject::new(
                 alg,
                 (data.clone()).clone(),
@@ -1041,7 +1041,7 @@ fn _build_hash(
                 SifrInt::from_i64(64),
             );
         } else {
-            if alg == "sha224" {
+            if (alg == "sha224") {
                 return __SifrStdlib_sifr_x2ehashlib_x2eHashObject::new(
                     alg,
                     (data.clone()).clone(),
@@ -1050,7 +1050,7 @@ fn _build_hash(
                     SifrInt::from_i64(64),
                 );
             } else {
-                if alg == "sha256" {
+                if (alg == "sha256") {
                     return __SifrStdlib_sifr_x2ehashlib_x2eHashObject::new(
                         alg,
                         (data.clone()).clone(),
@@ -1059,7 +1059,7 @@ fn _build_hash(
                         SifrInt::from_i64(64),
                     );
                 } else {
-                    if alg == "sha384" {
+                    if (alg == "sha384") {
                         return __SifrStdlib_sifr_x2ehashlib_x2eHashObject::new(
                             alg,
                             (data.clone()).clone(),
@@ -1068,7 +1068,7 @@ fn _build_hash(
                             SifrInt::from_i64(128),
                         );
                     } else {
-                        if alg == "sha512" {
+                        if (alg == "sha512") {
                             return __SifrStdlib_sifr_x2ehashlib_x2eHashObject::new(
                                 alg,
                                 (data.clone()).clone(),
@@ -1077,7 +1077,7 @@ fn _build_hash(
                                 SifrInt::from_i64(128),
                             );
                         } else {
-                            if alg == "blake2b" {
+                            if (alg == "blake2b") {
                                 return __SifrStdlib_sifr_x2ehashlib_x2eHashObject::new(
                                     alg,
                                     (data.clone()).clone(),
@@ -1086,7 +1086,7 @@ fn _build_hash(
                                     SifrInt::from_i64(128),
                                 );
                             } else {
-                                if alg == "blake2s" {
+                                if (alg == "blake2s") {
                                     return __SifrStdlib_sifr_x2ehashlib_x2eHashObject::new(
                                         alg,
                                         (data.clone()).clone(),
@@ -1168,7 +1168,7 @@ fn new(
     name: &String,
     data: &Vec<u8>,
 ) -> Result<__SifrStdlib_sifr_x2ehashlib_x2eHashObject, ValueError> {
-    if !(_is_supported_algorithm(name)) {
+    if !_is_supported_algorithm(name) {
         return Err(
             ValueError::new({
                 let mut __sifr_concat: String = String::with_capacity(

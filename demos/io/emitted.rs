@@ -1370,7 +1370,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.readable()) {
+            if !self.readable() {
                 return Err(IOError::new("stream is not readable".to_string()));
             }
             file_read_bytes(&self._handle)
@@ -1381,7 +1381,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.writable()) {
+            if !self.writable() {
                 return Err(IOError::new("stream is not writable".to_string()));
             }
             file_write_bytes(&self._handle, data)
@@ -2907,8 +2907,14 @@ fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
     let mut i: SifrInt = SifrInt::from_i64(0);
     while &i < &SifrInt::from(actual.len()) {
         assert!(
-            Some(actual[::sifr_runtime::to_usize_proven(& (i))]) == expected
-            .get(::sifr_runtime::to_usize_proven(& (i))).copied()
+            ({ let __sifr_condition_list = & actual; let __sifr_condition_index = i
+            .clone(); let __sifr_condition_normalized = __sifr_condition_index
+            .normalize_index_or_len(__sifr_condition_list.len()); __sifr_condition_list
+            .get(__sifr_condition_normalized).copied() }) == ({ let __sifr_condition_list
+            = & expected; let __sifr_condition_index = i.clone(); let
+            __sifr_condition_normalized = __sifr_condition_index
+            .normalize_index_or_len(__sifr_condition_list.len()); __sifr_condition_list
+            .get(__sifr_condition_normalized).copied() })
         );
         i = &i + &SifrInt::from_i64(1);
     }
@@ -2943,7 +2949,7 @@ fn collect_io_roundtrip_actual() -> Vec<bool> {
         let _w: () = write_text(&path, &"hello".to_string())?;
         let _a: () = append_text(&path, &"\nworld".to_string())?;
         let content: String = read_text(&path)?;
-        text_roundtrip_ok = content == "hello\nworld";
+        text_roundtrip_ok = (content == "hello\nworld");
         Ok(())
     })();
     if let Err(__sifr_try_err) = __sifr_try_res {

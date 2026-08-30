@@ -120,11 +120,11 @@ mod __sifr_project_nominals {
             let mut end: SifrInt = SifrInt::from(self._data.len());
             if let Some(size) = size.as_ref() {
                 let requested_size: SifrInt = size.clone();
-                if &requested_size < &SifrInt::from_i64(0) {
+                if (&requested_size < &SifrInt::from_i64(0)) {
                     end = SifrInt::from(self._data.len());
                 } else {
                     let requested_end: SifrInt = &self._cursor.clone() + &requested_size;
-                    if &requested_end < &end {
+                    if (&requested_end < &end) {
                         end = requested_end;
                     }
                 }
@@ -187,7 +187,7 @@ mod __sifr_project_nominals {
     }
     impl __SifrStdlib_sifr_x2ezipfile_x2eZipFile {
         pub fn write(&self, name: &String, content: &String) -> Result<(), IOError> {
-            if !(self._writable_mode()) {
+            if !self._writable_mode() {
                 return Err(IOError::new(_zip_read_only_error()));
             }
             zip_add_file(&self.path, name, content)
@@ -195,7 +195,7 @@ mod __sifr_project_nominals {
     }
     impl __SifrStdlib_sifr_x2ezipfile_x2eZipFile {
         pub fn write_bytes(&self, name: &String, content: &Vec<u8>) -> Result<(), IOError> {
-            if !(self._writable_mode()) {
+            if !self._writable_mode() {
                 return Err(IOError::new(_zip_read_only_error()));
             }
             zip_add_file_bytes(&self.path, name, content)
@@ -1836,15 +1836,16 @@ fn mktemp_path(prefix: &String) -> String {
         root = "/tmp".to_string();
         __sifr_chars_root = root.chars().collect::<Vec<char>>();
     } else {
-        let last: Option<String> = __sifr_chars_root
-            .get(
-                ::sifr_runtime::to_usize_proven(
-                    &(SifrInt::from(root.chars().count()) - SifrInt::from_i64(1)),
-                ),
-            )
+        let last: Option<String> = ({
+            let __sifr_string_index = SifrInt::from(root.chars().count())
+                - SifrInt::from_i64(1);
+            let __sifr_string_index_normalized = __sifr_string_index
+                .normalize_index_or_len(__sifr_chars_root.len());
+            __sifr_chars_root.get(__sifr_string_index_normalized)
+        })
             .map(|c| c.to_string());
         if let Some(last) = last {
-            if last == "/" {
+            if (last == "/") {
                 return {
                     let mut __sifr_concat: String = String::with_capacity(
                         (root.len() + prefix.len()) + suffix.len(),
@@ -1887,7 +1888,7 @@ fn _collision_message(kind: &String, attempts: SifrInt) -> String {
 fn mkstemp(prefix: &String) -> Result<String, IOError> {
     let mut attempts: SifrInt = SifrInt::from_i64(0);
     let max_attempts: SifrInt = SifrInt::from_i64(64);
-    while &attempts < &max_attempts {
+    while (&attempts < &max_attempts) {
         let path: String = _next_candidate(prefix);
         let path_for_check: String = {
             let mut __sifr_concat: String = String::with_capacity(path.len() + 0usize);
@@ -1922,7 +1923,7 @@ fn mkstemp(prefix: &String) -> Result<String, IOError> {
 fn mkdtemp(prefix: &String) -> Result<String, IOError> {
     let mut attempts: SifrInt = SifrInt::from_i64(0);
     let max_attempts: SifrInt = SifrInt::from_i64(64);
-    while &attempts < &max_attempts {
+    while (&attempts < &max_attempts) {
         let path: String = _next_candidate(prefix);
         let path_for_check: String = {
             let mut __sifr_concat: String = String::with_capacity(path.len() + 0usize);
@@ -2157,8 +2158,18 @@ fn main() {
         let names: Vec<String> = archive.namelist()?;
         let content: String = archive.read(&"entry.txt".to_string())?;
         zip_ok = ((((&SifrInt::from(names.len()) == &SifrInt::from_i64(1)))
-            && ((names[::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(0)))].clone()
-                == "entry.txt"))) && (content == "payload"));
+            && (({
+                let __sifr_checked_read_collection = &names;
+                let __sifr_checked_read_index = SifrInt::from_i64(0);
+                let __sifr_checked_read_normalized = __sifr_checked_read_index
+                    .normalize_index_or_len(__sifr_checked_read_collection.len());
+                __sifr_checked_read_collection
+                    .get(__sifr_checked_read_normalized)
+                    .cloned()
+            })
+                .is_some_and(|__sifr_checked_value_0| {
+                    (__sifr_checked_value_0.clone() == "entry.txt")
+                }))) && ((content == "payload")));
         Ok(())
     })();
     if let Err(__sifr_try_err) = __sifr_try_res {
@@ -2182,11 +2193,11 @@ fn main() {
             let _rm_dir: () = rmdir(&temp_dir)?;
         }
         cleanup_ok = ((((&SifrInt::from(temp_file.chars().count())
-            == &SifrInt::from_i64(0)) || !(exists(&temp_file)))
+            == &SifrInt::from_i64(0)) || !exists(&temp_file))
             && ((&SifrInt::from(temp_dir.chars().count()) == &SifrInt::from_i64(0))
-                || !(exists(&temp_dir))))
+                || !exists(&temp_dir)))
             && ((&SifrInt::from(zip_path.chars().count()) == &SifrInt::from_i64(0))
-                || !(exists(&zip_path))));
+                || !exists(&zip_path)));
         Ok(())
     })();
     if let Err(__sifr_try_err) = __sifr_try_res {

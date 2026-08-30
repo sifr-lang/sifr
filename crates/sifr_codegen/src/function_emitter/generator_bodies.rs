@@ -270,6 +270,10 @@ impl RustEmitter {
         let saved_current_sifr_int_result_return = self.current_sifr_int_result_return.get();
         let saved_python_context_counter = self.python_context_counter;
         let saved_python_context_envelope_depth = self.python_context_envelope_depth;
+        let saved_checked_place_read_witnesses =
+            std::mem::take(&mut self.checked_place_read_witnesses);
+        let saved_nonempty_list_bindings = std::mem::take(&mut self.nonempty_list_bindings);
+        let saved_option_unwrapped_vars = std::mem::take(&mut self.option_unwrapped_vars);
 
         self.current_return_type = Some(func.return_type.clone());
         self.mutated_vars = collect_mutated_vars_with_sigs(&func.body, &self.func_signatures);
@@ -439,6 +443,9 @@ impl RustEmitter {
         self.none_widened_local_bindings = saved_none_widened_local_bindings;
         self.python_context_counter = saved_python_context_counter;
         self.python_context_envelope_depth = saved_python_context_envelope_depth;
+        self.checked_place_read_witnesses = saved_checked_place_read_witnesses;
+        self.nonempty_list_bindings = saved_nonempty_list_bindings;
+        self.option_unwrapped_vars = saved_option_unwrapped_vars;
         *self.sifr_int_local_bindings.borrow_mut() = saved_sifr_int_local_bindings;
         *self.sifr_int_forced_local_bindings.borrow_mut() = saved_sifr_int_forced_local_bindings;
         *self.sifr_int_result_local_bindings.borrow_mut() = saved_sifr_int_result_local_bindings;

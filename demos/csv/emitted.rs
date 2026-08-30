@@ -1484,7 +1484,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.readable()) {
+            if !self.readable() {
                 return Err(IOError::new("stream is not readable".to_string()));
             }
             file_read(&self._handle)
@@ -1495,7 +1495,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.writable()) {
+            if !self.writable() {
                 return Err(IOError::new("stream is not writable".to_string()));
             }
             file_write(&self._handle, data)
@@ -1506,7 +1506,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.readable()) {
+            if !self.readable() {
                 return Err(IOError::new("stream is not readable".to_string()));
             }
             file_readline(&self._handle)
@@ -1517,7 +1517,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.readable()) {
+            if !self.readable() {
                 return Err(IOError::new("stream is not readable".to_string()));
             }
             file_readlines(&self._handle)
@@ -1528,7 +1528,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.readable()) {
+            if !self.readable() {
                 return Err(IOError::new("stream is not readable".to_string()));
             }
             file_read_bytes(&self._handle)
@@ -1539,7 +1539,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.writable()) {
+            if !self.writable() {
                 return Err(IOError::new("stream is not writable".to_string()));
             }
             file_write_bytes(&self._handle, data)
@@ -1636,7 +1636,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.readable()) {
+            if !self.readable() {
                 return Err(IOError::new("stream is not readable".to_string()));
             }
             file_read_bytes(&self._handle)
@@ -1647,7 +1647,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.writable()) {
+            if !self.writable() {
                 return Err(IOError::new("stream is not writable".to_string()));
             }
             file_write_bytes(&self._handle, data)
@@ -2042,9 +2042,9 @@ mod __sifr_project_nominals {
             let mut end: SifrInt = SifrInt::from(self._buffer.chars().count());
             if let Some(size) = size.as_ref() {
                 let maybe_size: SifrInt = size.clone();
-                if &maybe_size >= &SifrInt::from_i64(0) {
+                if (&maybe_size >= &SifrInt::from_i64(0)) {
                     let requested: SifrInt = &start + &maybe_size;
-                    if &requested < &end {
+                    if (&requested < &end) {
                         end = requested;
                     }
                 }
@@ -2143,7 +2143,7 @@ mod __sifr_project_nominals {
                 }
             }
             let mut next_pos: SifrInt = &origin + offset;
-            if &next_pos < &SifrInt::from_i64(0) {
+            if (&next_pos < &SifrInt::from_i64(0)) {
                 return Err(IOError::new(_negative_seek_error((next_pos).clone())));
             }
             let end: SifrInt = SifrInt::from(self._buffer.chars().count());
@@ -2230,9 +2230,9 @@ mod __sifr_project_nominals {
             let mut end: SifrInt = SifrInt::from(self._buffer.len());
             if let Some(size) = size.as_ref() {
                 let maybe_size: SifrInt = size.clone();
-                if &maybe_size >= &SifrInt::from_i64(0) {
+                if (&maybe_size >= &SifrInt::from_i64(0)) {
                     let requested: SifrInt = &start + &maybe_size;
-                    if &requested < &end {
+                    if (&requested < &end) {
                         end = requested;
                     }
                 }
@@ -2346,7 +2346,7 @@ mod __sifr_project_nominals {
                 }
             }
             let mut next_pos: SifrInt = &origin + offset;
-            if &next_pos < &SifrInt::from_i64(0) {
+            if (&next_pos < &SifrInt::from_i64(0)) {
                 return Err(IOError::new(_negative_seek_error((next_pos).clone())));
             }
             let end: SifrInt = SifrInt::from(self._buffer.len());
@@ -2479,7 +2479,7 @@ mod __sifr_project_nominals {
         path: &String,
         mode: &String,
     ) -> Result<__SifrIoBinaryFileHandle, IOError> {
-        if !(mode.contains(&"b".to_string())) {
+        if !mode.contains(&"b".to_string()) {
             return Err(IOError::new("open_binary requires binary mode".to_string()));
         }
         let __sifr_try_res: Result<Result<__SifrIoBinaryFileHandle, IOError>, IOError> = (|| {
@@ -2572,10 +2572,10 @@ mod __sifr_project_nominals {
         ) -> Self {
             let mut resolved_quoting: SifrInt = quoting.clone();
             _validate_char(&"delimiter".to_string(), &delimiter);
-            if quotechar != "" {
+            if (quotechar != "") {
                 _validate_char(&"quotechar".to_string(), &quotechar);
             }
-            if escapechar != "" {
+            if (escapechar != "") {
                 _validate_char(&"escapechar".to_string(), &escapechar);
             }
             if (quotechar == "") && (&resolved_quoting != &__const_QUOTE_NONE()) {
@@ -2663,11 +2663,11 @@ mod __sifr_project_nominals {
                 return None;
             }
             let row: Option<Vec<String>> = {
-                let __sifr_index_list = &self._rows;
-                let __sifr_index_i = self._pos.clone();
-                let __sifr_index_norm = __sifr_index_i
-                    .normalize_index_or_len(__sifr_index_list.len());
-                __sifr_index_list.get(__sifr_index_norm).cloned()
+                let __sifr_checked_read_collection = &self._rows;
+                let __sifr_checked_read_index = self._pos.clone();
+                let __sifr_checked_read_normalized = __sifr_checked_read_index
+                    .normalize_index_or_len(__sifr_checked_read_collection.len());
+                __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
             };
             self._pos = &self._pos.clone() + &SifrInt::from_i64(1);
             let Some(row) = row else {
@@ -2832,12 +2832,13 @@ mod __sifr_project_nominals {
         {
             return "".to_string();
         }
-        let ch: Option<String> = Some({
-            let __indexed_char_option = __sifr_chars_text
-                .get(::sifr_runtime::to_usize_proven(&(index)))
-                .map(|c| c.to_string());
-            __indexed_char_option.as_slice()[0_usize].clone()
-        });
+        let ch: Option<String> = ({
+            let __sifr_string_index = index.clone();
+            let __sifr_string_index_normalized = __sifr_string_index
+                .normalize_index_or_len(__sifr_chars_text.len());
+            __sifr_chars_text.get(__sifr_string_index_normalized)
+        })
+            .map(|c| c.to_string());
         let Some(ch) = ch else {
             return "".to_string();
         };
@@ -2946,7 +2947,7 @@ mod __sifr_project_nominals {
                 && (resolved.quotechar.clone() != "")
             {
                 let quotechar2: String = _quotechar_value(&resolved);
-                if ch_value == quotechar2 {
+                if (ch_value == quotechar2) {
                     in_quotes = true;
                     field_started = true;
                     i = &i + &SifrInt::from_i64(1);
@@ -3028,10 +3029,10 @@ mod __sifr_project_nominals {
         if (&SifrInt::from(__sifr_chars_field.len()) > &SifrInt::from_i64(0)) {
             let first: String = _first_char(field);
             let last: String = _last_char(field);
-            if first == " " {
+            if (first == " ") {
                 return true;
             }
-            if last == " " {
+            if (last == " ") {
                 return true;
             }
         }
@@ -4384,7 +4385,7 @@ fn open_binary(
     path: &String,
     mode: &String,
 ) -> Result<__SifrIoBinaryFileHandle, IOError> {
-    if !(mode.contains(&"b".to_string())) {
+    if !mode.contains(&"b".to_string()) {
         return Err(IOError::new("open_binary requires binary mode".to_string()));
     }
     let __sifr_try_res: Result<Result<__SifrIoBinaryFileHandle, IOError>, IOError> = (|| {
@@ -4520,12 +4521,13 @@ fn _char_at(text: &String, index: SifrInt) -> String {
     {
         return "".to_string();
     }
-    let ch: Option<String> = Some({
-        let __indexed_char_option = __sifr_chars_text
-            .get(::sifr_runtime::to_usize_proven(&(index)))
-            .map(|c| c.to_string());
-        __indexed_char_option.as_slice()[0_usize].clone()
-    });
+    let ch: Option<String> = ({
+        let __sifr_string_index = index.clone();
+        let __sifr_string_index_normalized = __sifr_string_index
+            .normalize_index_or_len(__sifr_chars_text.len());
+        __sifr_chars_text.get(__sifr_string_index_normalized)
+    })
+        .map(|c| c.to_string());
     let Some(ch) = ch else {
         return "".to_string();
     };
@@ -4568,7 +4570,7 @@ fn parse_row(
             .enumerate()
             .map(|__pair| (SifrInt::from(__pair.0) + SifrInt::from_i64(0), __pair.1)),
     ) {
-        if &index == &SifrInt::from_i64(0) {
+        if (&index == &SifrInt::from_i64(0)) {
             let mut copied: Vec<String> = vec![];
             for field in row.iter().cloned() {
                 copied.push(format!("{}{}", field, ""));
@@ -4674,7 +4676,7 @@ fn parse_csv(
             && (resolved.quotechar.clone() != "")
         {
             let quotechar2: String = _quotechar_value(&resolved);
-            if ch_value == quotechar2 {
+            if (ch_value == quotechar2) {
                 in_quotes = true;
                 field_started = true;
                 i = &i + &SifrInt::from_i64(1);
@@ -4753,10 +4755,10 @@ fn _needs_quote(field: &String, dialect: &__SifrStdlib_sifr_x2ecsv_x2eDialect) -
     if (&SifrInt::from(__sifr_chars_field.len()) > &SifrInt::from_i64(0)) {
         let first: String = _first_char(field);
         let last: String = _last_char(field);
-        if first == " " {
+        if (first == " ") {
             return true;
         }
-        if last == " " {
+        if (last == " ") {
             return true;
         }
     }
@@ -5018,8 +5020,14 @@ fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
     let mut i: SifrInt = SifrInt::from_i64(0);
     while &i < &SifrInt::from(actual.len()) {
         assert!(
-            Some(actual[::sifr_runtime::to_usize_proven(& (i))]) == expected
-            .get(::sifr_runtime::to_usize_proven(& (i))).copied()
+            ({ let __sifr_condition_list = & actual; let __sifr_condition_index = i
+            .clone(); let __sifr_condition_normalized = __sifr_condition_index
+            .normalize_index_or_len(__sifr_condition_list.len()); __sifr_condition_list
+            .get(__sifr_condition_normalized).copied() }) == ({ let __sifr_condition_list
+            = & expected; let __sifr_condition_index = i.clone(); let
+            __sifr_condition_normalized = __sifr_condition_index
+            .normalize_index_or_len(__sifr_condition_list.len()); __sifr_condition_list
+            .get(__sifr_condition_normalized).copied() })
         );
         i = &i + &SifrInt::from_i64(1);
     }

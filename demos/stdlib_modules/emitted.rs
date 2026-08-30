@@ -1723,7 +1723,7 @@ impl __SifrIoFileHandle {
         if self._closed {
             return Err(IOError::new(_closed_stream_error()));
         }
-        if !(self.readable()) {
+        if !self.readable() {
             return Err(IOError::new("stream is not readable".to_string()));
         }
         file_read(&self._handle)
@@ -1734,7 +1734,7 @@ impl __SifrIoFileHandle {
         if self._closed {
             return Err(IOError::new(_closed_stream_error()));
         }
-        if !(self.writable()) {
+        if !self.writable() {
             return Err(IOError::new("stream is not writable".to_string()));
         }
         file_write(&self._handle, data)
@@ -1745,7 +1745,7 @@ impl __SifrIoFileHandle {
         if self._closed {
             return Err(IOError::new(_closed_stream_error()));
         }
-        if !(self.readable()) {
+        if !self.readable() {
             return Err(IOError::new("stream is not readable".to_string()));
         }
         file_readline(&self._handle)
@@ -1756,7 +1756,7 @@ impl __SifrIoFileHandle {
         if self._closed {
             return Err(IOError::new(_closed_stream_error()));
         }
-        if !(self.readable()) {
+        if !self.readable() {
             return Err(IOError::new("stream is not readable".to_string()));
         }
         file_readlines(&self._handle)
@@ -1767,7 +1767,7 @@ impl __SifrIoFileHandle {
         if self._closed {
             return Err(IOError::new(_closed_stream_error()));
         }
-        if !(self.readable()) {
+        if !self.readable() {
             return Err(IOError::new("stream is not readable".to_string()));
         }
         file_read_bytes(&self._handle)
@@ -1778,7 +1778,7 @@ impl __SifrIoFileHandle {
         if self._closed {
             return Err(IOError::new(_closed_stream_error()));
         }
-        if !(self.writable()) {
+        if !self.writable() {
             return Err(IOError::new("stream is not writable".to_string()));
         }
         file_write_bytes(&self._handle, data)
@@ -1875,7 +1875,7 @@ impl __SifrIoBinaryFileHandle {
         if self._closed {
             return Err(IOError::new(_closed_stream_error()));
         }
-        if !(self.readable()) {
+        if !self.readable() {
             return Err(IOError::new("stream is not readable".to_string()));
         }
         file_read_bytes(&self._handle)
@@ -1886,7 +1886,7 @@ impl __SifrIoBinaryFileHandle {
         if self._closed {
             return Err(IOError::new(_closed_stream_error()));
         }
-        if !(self.writable()) {
+        if !self.writable() {
             return Err(IOError::new("stream is not writable".to_string()));
         }
         file_write_bytes(&self._handle, data)
@@ -2281,9 +2281,9 @@ impl __SifrStdlib_sifr_x2eio_x2eStringIO {
         let mut end: SifrInt = SifrInt::from(self._buffer.chars().count());
         if let Some(size) = size.as_ref() {
             let maybe_size: SifrInt = size.clone();
-            if &maybe_size >= &SifrInt::from_i64(0) {
+            if (&maybe_size >= &SifrInt::from_i64(0)) {
                 let requested: SifrInt = &start + &maybe_size;
-                if &requested < &end {
+                if (&requested < &end) {
                     end = requested;
                 }
             }
@@ -2378,7 +2378,7 @@ impl __SifrStdlib_sifr_x2eio_x2eStringIO {
             }
         }
         let mut next_pos: SifrInt = &origin + offset;
-        if &next_pos < &SifrInt::from_i64(0) {
+        if (&next_pos < &SifrInt::from_i64(0)) {
             return Err(IOError::new(_negative_seek_error((next_pos).clone())));
         }
         let end: SifrInt = SifrInt::from(self._buffer.chars().count());
@@ -2465,9 +2465,9 @@ impl __SifrStdlib_sifr_x2eio_x2eBytesIO {
         let mut end: SifrInt = SifrInt::from(self._buffer.len());
         if let Some(size) = size.as_ref() {
             let maybe_size: SifrInt = size.clone();
-            if &maybe_size >= &SifrInt::from_i64(0) {
+            if (&maybe_size >= &SifrInt::from_i64(0)) {
                 let requested: SifrInt = &start + &maybe_size;
-                if &requested < &end {
+                if (&requested < &end) {
                     end = requested;
                 }
             }
@@ -2577,7 +2577,7 @@ impl __SifrStdlib_sifr_x2eio_x2eBytesIO {
             }
         }
         let mut next_pos: SifrInt = &origin + offset;
-        if &next_pos < &SifrInt::from_i64(0) {
+        if (&next_pos < &SifrInt::from_i64(0)) {
             return Err(IOError::new(_negative_seek_error((next_pos).clone())));
         }
         let end: SifrInt = SifrInt::from(self._buffer.len());
@@ -2710,7 +2710,7 @@ fn open_binary(
     path: &String,
     mode: &String,
 ) -> Result<__SifrIoBinaryFileHandle, IOError> {
-    if !(mode.contains(&"b".to_string())) {
+    if !mode.contains(&"b".to_string()) {
         return Err(IOError::new("open_binary requires binary mode".to_string()));
     }
     let __sifr_try_res: Result<Result<__SifrIoBinaryFileHandle, IOError>, IOError> = (|| {
@@ -2915,7 +2915,7 @@ impl __SifrStdlib_sifr_x2ejson_x2eJsonValue {
 }
 impl __SifrStdlib_sifr_x2ejson_x2eJsonValue {
     fn as_array(&self) -> Option<Vec<__SifrStdlib_sifr_x2ejson_x2eJsonValue>> {
-        if !(self.is_array()) {
+        if !self.is_array() {
             return None;
         }
         let mut result: Vec<__SifrStdlib_sifr_x2ejson_x2eJsonValue> = vec![];
@@ -2929,7 +2929,7 @@ impl __SifrStdlib_sifr_x2ejson_x2eJsonValue {
     fn as_object(
         &self,
     ) -> Option<Vec<(String, __SifrStdlib_sifr_x2ejson_x2eJsonValue)>> {
-        if !(self.is_object()) {
+        if !self.is_object() {
             return None;
         }
         let mut result: Vec<(String, __SifrStdlib_sifr_x2ejson_x2eJsonValue)> = vec![];
@@ -2941,7 +2941,7 @@ impl __SifrStdlib_sifr_x2ejson_x2eJsonValue {
 }
 impl __SifrStdlib_sifr_x2ejson_x2eJsonValue {
     fn at(&self, index: &SifrInt) -> Option<__SifrStdlib_sifr_x2ejson_x2eJsonValue> {
-        if !(self.is_array()) {
+        if !self.is_array() {
             return None;
         }
         if (&index.clone() < &SifrInt::from_i64(0))
@@ -2949,18 +2949,19 @@ impl __SifrStdlib_sifr_x2ejson_x2eJsonValue {
         {
             return None;
         }
-        let value: Option<__SifrStdlib_sifr_x2ejson_x2eJsonValue> = Some(
-            (self.array_items)
-                .as_ref()
-                .clone()[::sifr_runtime::to_usize_proven(&(index))]
-                .clone(),
-        );
+        let value: Option<__SifrStdlib_sifr_x2ejson_x2eJsonValue> = {
+            let __sifr_checked_read_collection = &self.array_items;
+            let __sifr_checked_read_index = index.clone();
+            let __sifr_checked_read_normalized = __sifr_checked_read_index
+                .normalize_index_or_len(__sifr_checked_read_collection.len());
+            __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+        };
         value
     }
 }
 impl __SifrStdlib_sifr_x2ejson_x2eJsonValue {
     fn get(&self, key: &String) -> Option<__SifrStdlib_sifr_x2ejson_x2eJsonValue> {
-        if !(self.is_object()) {
+        if !self.is_object() {
             return None;
         }
         for (item_key, item_value) in (self.object_items)
@@ -2979,7 +2980,7 @@ impl __SifrStdlib_sifr_x2ejson_x2eJsonValue {
 impl __SifrStdlib_sifr_x2ejson_x2eJsonValue {
     fn keys(&self) -> Vec<String> {
         let mut result: Vec<String> = vec![];
-        if !(self.is_object()) {
+        if !self.is_object() {
             return result;
         }
         for (item_key, _item_value) in (self.object_items)
@@ -2996,7 +2997,7 @@ impl __SifrStdlib_sifr_x2ejson_x2eJsonValue {
 impl __SifrStdlib_sifr_x2ejson_x2eJsonValue {
     fn values(&self) -> Vec<__SifrStdlib_sifr_x2ejson_x2eJsonValue> {
         let mut result: Vec<__SifrStdlib_sifr_x2ejson_x2eJsonValue> = vec![];
-        if !(self.is_object()) {
+        if !self.is_object() {
             return result;
         }
         for (_item_key, item_value) in (self.object_items)
@@ -3012,7 +3013,7 @@ impl __SifrStdlib_sifr_x2ejson_x2eJsonValue {
 }
 impl __SifrStdlib_sifr_x2ejson_x2eJsonValue {
     fn items(&self) -> Vec<(String, __SifrStdlib_sifr_x2ejson_x2eJsonValue)> {
-        if !(self.is_object()) {
+        if !self.is_object() {
             return vec![];
         }
         let mut result: Vec<(String, __SifrStdlib_sifr_x2ejson_x2eJsonValue)> = vec![];
@@ -3083,7 +3084,7 @@ fn _json_append_tokens(
     tokens.push(format!("{}{}", value.kind.clone(), ""));
     if (value.kind.clone() == "bool") {
         let bool_value: Option<bool> = value.bool_value;
-        if bool_value.is_none() {
+        if (bool_value == None) {
             tokens.push("false".to_string());
         } else {
             if let Some(bool_value) = bool_value {
@@ -3093,7 +3094,7 @@ fn _json_append_tokens(
     } else {
         if (value.kind.clone() == "int") {
             let int_value: Option<SifrInt> = value.int_value.clone();
-            if int_value.is_none() {
+            if (int_value == None) {
                 tokens.push("0".to_string());
             } else {
                 if let Some(int_value) = int_value.clone() {
@@ -3103,7 +3104,7 @@ fn _json_append_tokens(
         } else {
             if (value.kind.clone() == "float") {
                 let float_value: Option<f64> = value.float_value;
-                if float_value.is_none() {
+                if (float_value == None) {
                     tokens.push("0.0".to_string());
                 } else {
                     if let Some(float_value) = float_value {
@@ -3113,7 +3114,7 @@ fn _json_append_tokens(
             } else {
                 if (value.kind.clone() == "str") {
                     let str_value: Option<String> = value.as_str();
-                    if str_value.is_none() {
+                    if (str_value == None) {
                         tokens.push("".to_string());
                     } else {
                         if let Some(str_value) = str_value {

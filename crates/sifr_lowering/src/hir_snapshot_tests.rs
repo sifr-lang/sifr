@@ -1,9 +1,8 @@
 use crate::hir_snapshot_expr_projection::{
-    async_with_kind_name, pattern_kind_name, project_expr, project_named_type, project_named_types,
-    tuple_target_binding_name, type_name,
+    async_with_kind_name, pattern_kind_name, project_expr, tuple_target_binding_name, type_name,
 };
 use crate::{
-    ExternalDefs, HirModule, HirStmt, HirWithItemKind, LoweringOptions,
+    ExternalDefs, HirModule, HirStmt, HirTupleTarget, HirWithItemKind, LoweringOptions,
     lower_module_with_externals_name_and_options,
 };
 use serde_json::{Value, json};
@@ -210,11 +209,12 @@ fn project_stmt(stmt: &HirStmt) -> Value {
             star,
             after,
             value,
+            ..
         } => json!({
             "kind": "StarUnpack",
-            "before": project_named_types(before),
-            "star": project_named_type(star),
-            "after": project_named_types(after),
+            "before": before.iter().map(project_unpack_target).collect::<Vec<_>>(),
+            "star": project_unpack_target(star),
+            "after": after.iter().map(project_unpack_target).collect::<Vec<_>>(),
             "value": project_expr(value),
         }),
         HirStmt::Pass => json!({"kind": "Pass"}),
@@ -288,6 +288,7 @@ fn project_stmt(stmt: &HirStmt) -> Value {
             index,
             value,
             object_ty,
+            ..
         } => json!({
             "kind": "SubscriptAssign",
             "object": object,
@@ -301,6 +302,7 @@ fn project_stmt(stmt: &HirStmt) -> Value {
             inner_index,
             value,
             object_ty,
+            ..
         } => json!({
             "kind": "NestedSubscriptAssign",
             "object": object,
@@ -316,6 +318,7 @@ fn project_stmt(stmt: &HirStmt) -> Value {
             inner_index,
             value,
             field_ty,
+            ..
         } => json!({
             "kind": "AttributeNestedSubscriptAssign",
             "object": object,
@@ -331,7 +334,7 @@ fn project_stmt(stmt: &HirStmt) -> Value {
             op,
             value,
             object_ty,
-            missing_key_error,
+            failure,
         } => json!({
             "kind": "SubscriptAugAssign",
             "object": object,
@@ -339,7 +342,7 @@ fn project_stmt(stmt: &HirStmt) -> Value {
             "op": op,
             "value": project_expr(value),
             "object_ty": type_name(object_ty),
-            "missing_key_error": missing_key_error.as_ref().map(type_name),
+            "failure": failure.as_ref().map(type_name),
         }),
         HirStmt::AttributeAugAssign {
             object,
@@ -359,6 +362,7 @@ fn project_stmt(stmt: &HirStmt) -> Value {
             index,
             value,
             field_ty,
+            ..
         } => json!({
             "kind": "AttributeSubscriptAssign",
             "object": object,
@@ -367,7 +371,7 @@ fn project_stmt(stmt: &HirStmt) -> Value {
             "value": project_expr(value),
             "field_ty": type_name(field_ty),
         }),
-        HirStmt::Delete { object, index } => json!({
+        HirStmt::Delete { object, index, .. } => json!({
             "kind": "Delete",
             "object": project_expr(object),
             "index": project_expr(index),
@@ -442,4 +446,12 @@ fn project_stmt(stmt: &HirStmt) -> Value {
                 .collect::<Vec<_>>(),
         }),
     }
+}
+
+fn project_unpack_target(target: &HirTupleTarget) -> Value {
+    json!({
+        "binding": tuple_target_binding_name(&target.binding),
+        "ty": type_name(&target.ty),
+        "rebind_existing": target.rebind_existing,
+    })
 }

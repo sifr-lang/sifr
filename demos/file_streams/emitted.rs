@@ -1305,7 +1305,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.readable()) {
+            if !self.readable() {
                 return Err(IOError::new("stream is not readable".to_string()));
             }
             file_read(&self._handle)
@@ -1316,7 +1316,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.writable()) {
+            if !self.writable() {
                 return Err(IOError::new("stream is not writable".to_string()));
             }
             file_write(&self._handle, data)
@@ -1327,7 +1327,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.readable()) {
+            if !self.readable() {
                 return Err(IOError::new("stream is not readable".to_string()));
             }
             file_readline(&self._handle)
@@ -1338,7 +1338,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.readable()) {
+            if !self.readable() {
                 return Err(IOError::new("stream is not readable".to_string()));
             }
             file_readlines(&self._handle)
@@ -1349,7 +1349,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.readable()) {
+            if !self.readable() {
                 return Err(IOError::new("stream is not readable".to_string()));
             }
             file_read_bytes(&self._handle)
@@ -1360,7 +1360,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.writable()) {
+            if !self.writable() {
                 return Err(IOError::new("stream is not writable".to_string()));
             }
             file_write_bytes(&self._handle, data)
@@ -2698,10 +2698,30 @@ fn main() {
         let _w: () = write_text(&path, &"alpha\nbeta".to_string())?;
         let lines: Vec<String> = read_lines(&path)?;
         text_ok = ((((&SifrInt::from(lines.len()) == &SifrInt::from_i64(2)))
-            && ((lines[::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(0)))].clone()
-                == "alpha")))
-            && ((lines[::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(1)))].clone()
-                == "beta")));
+            && (({
+                let __sifr_checked_read_collection = &lines;
+                let __sifr_checked_read_index = SifrInt::from_i64(0);
+                let __sifr_checked_read_normalized = __sifr_checked_read_index
+                    .normalize_index_or_len(__sifr_checked_read_collection.len());
+                __sifr_checked_read_collection
+                    .get(__sifr_checked_read_normalized)
+                    .cloned()
+            })
+                .is_some_and(|__sifr_checked_value_0| {
+                    (__sifr_checked_value_0.clone() == "alpha")
+                })))
+            && (({
+                let __sifr_checked_read_collection = &lines;
+                let __sifr_checked_read_index = SifrInt::from_i64(1);
+                let __sifr_checked_read_normalized = __sifr_checked_read_index
+                    .normalize_index_or_len(__sifr_checked_read_collection.len());
+                __sifr_checked_read_collection
+                    .get(__sifr_checked_read_normalized)
+                    .cloned()
+            })
+                .is_some_and(|__sifr_checked_value_1| {
+                    (__sifr_checked_value_1.clone() == "beta")
+                })));
         let mut wb: __SifrIoFileHandle = (|| {
             let __path = path.to_string();
             let __mode = "wb".to_string().to_string();

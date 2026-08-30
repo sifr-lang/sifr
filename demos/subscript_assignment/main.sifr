@@ -12,9 +12,12 @@
 def main():
     # Matrix operations
     matrix: list[list[int]] = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
-    matrix[0][0] = 1
-    matrix[1][1] = 1
-    matrix[2][2] = 1
+    try:
+        matrix[0][0] = 1
+        matrix[1][1] = 1
+        matrix[2][2] = 1
+    except IndexError:
+        return
     # Print identity matrix diagonal
     print(matrix[0][0])
     print(matrix[1][1])
@@ -22,9 +25,12 @@ def main():
 
     # --- 2. Augmented subscript assignment ---
     scores: list[int] = [10, 20, 30]
-    scores[0] += 5
-    scores[1] -= 3
-    scores[2] *= 2
+    try:
+        scores[0] += 5
+        scores[1] -= 3
+        scores[2] *= 2
+    except IndexError:
+        return
     s0: int | None = scores[0]
     s1: int | None = scores[1]
     s2: int | None = scores[2]

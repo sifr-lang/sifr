@@ -30,15 +30,21 @@ def main():
         assert False
 
     # Star-unpack must not clone the whole source container first.
-    first, *middle, last = nums
-    assert first == 10
-    assert str(middle) == "[20, 30]"
-    assert last == 40
+    try:
+        first, *middle, last = nums
+        assert first == 10
+        assert str(middle) == "[20, 30]"
+        assert last == 40
+    except ValueError:
+        assert False
     assert len(nums) == 4
 
-    head, *tail = [1, 2, 3]
-    assert head == 1
-    assert str(tail) == "[2, 3]"
+    try:
+        head, *tail = [1, 2, 3]
+        assert head == 1
+        assert str(tail) == "[2, 3]"
+    except ValueError:
+        assert False
 
     # Slicing remains element-scoped and preserves source usage.
     evens: list[int] = nums[::2]

@@ -68,6 +68,71 @@ fn lower_tuple_target(elt: &Expr, ctx: &mut LowerCtx) -> Option<TupleAssignTarge
     }
 }
 
+fn lower_name_unpack_target(
+    name: String,
+    range: TextRange,
+    ty: sifr_type_system::Type,
+    tuple_range: TextRange,
+    ctx: &mut LowerCtx,
+) -> Option<HirTupleTarget> {
+    if name == "_" {
+        return Some(HirTupleTarget {
+            binding: HirTupleTargetBinding::Name(name),
+            ty,
+            rebind_existing: false,
+        });
+    }
+    if ctx.is_declared_nonlocal(&name) {
+        super::flow_diagnostics::tuple_unpack_nonlocal_rebind(ctx, tuple_range);
+        return None;
+    }
+    let rebind_existing = if ctx.current_function_frame_start().is_some() {
+        super::nonlocal_support::should_rebind_simple_name(ctx, &name)
+    } else {
+        ctx.scope.lookup(&name).is_some()
+    };
+
+    if rebind_existing {
+        let Some(info) = ctx.scope.lookup(&name) else {
+            name_diagnostics::undefined_variable(ctx, &name, range);
+            return None;
+        };
+        if info.is_parameter_binding() && !info.is_mutable_binding() {
+            super::ownership_diagnostics::immutable_parameter_reassignment(ctx, &name, range);
+            return None;
+        }
+        let info_ty = info.ty.clone();
+        let can_widen = info.is_inferred_local_binding();
+        if !reconcile_optional_reassignment(ctx, &name, &info_ty, &ty, can_widen) {
+            ctx.error_with_code_at(
+                DiagnosticCode::TYPE_MISMATCH,
+                format!(
+                    "type mismatch: cannot assign '{}' to variable '{}' of type '{}'",
+                    ty.display_name(),
+                    name,
+                    info_ty.display_name()
+                ),
+                range,
+            );
+        }
+        ctx.scope.mark_rebound_local(&name);
+        ctx.reset_moved_with_flow(&name);
+        ctx.clear_narrowing_with_flow(&name);
+        ctx.clear_sequence_guards_for_binding(&name);
+    } else {
+        ctx.scope.define(name.clone(), ty.clone());
+    }
+    ctx.clear_sequence_shape_fact(&name);
+    ctx.empty_dict_specializations.remove(&name);
+    ctx.pending_container_specialization_patches.remove(&name);
+
+    Some(HirTupleTarget {
+        binding: HirTupleTargetBinding::Name(name),
+        ty,
+        rebind_existing,
+    })
+}
+
 pub(in crate::lower) fn lower_tuple_unpack_assign(
     tuple: &ExprTuple,
     value: &Expr,
@@ -142,57 +207,13 @@ pub(in crate::lower) fn lower_tuple_unpack_assign(
     for (target, ty) in targets.into_iter().zip(elem_types) {
         match target {
             TupleAssignTarget::Name { name, range } => {
-                if ctx.is_declared_nonlocal(&name) {
-                    super::flow_diagnostics::tuple_unpack_nonlocal_rebind(ctx, tuple.range());
-                    return None;
-                }
-                let rebind_existing = if ctx.current_function_frame_start().is_some() {
-                    super::nonlocal_support::should_rebind_simple_name(ctx, &name)
-                } else {
-                    ctx.scope.lookup(&name).is_some()
-                };
-
-                if rebind_existing {
-                    let Some(info) = ctx.scope.lookup(&name) else {
-                        name_diagnostics::undefined_variable(ctx, &name, range);
-                        return None;
-                    };
-                    if info.is_parameter_binding() && !info.is_mutable_binding() {
-                        super::ownership_diagnostics::immutable_parameter_reassignment(
-                            ctx, &name, range,
-                        );
-                        return None;
-                    }
-                    let info_ty = info.ty.clone();
-                    let can_widen = info.is_inferred_local_binding();
-                    if !reconcile_optional_reassignment(ctx, &name, &info_ty, &ty, can_widen) {
-                        ctx.error_with_code_at(
-                            DiagnosticCode::TYPE_MISMATCH,
-                            format!(
-                                "type mismatch: cannot assign '{}' to variable '{}' of type '{}'",
-                                ty.display_name(),
-                                name,
-                                info_ty.display_name()
-                            ),
-                            range,
-                        );
-                    }
-                    ctx.scope.mark_rebound_local(&name);
-                    ctx.reset_moved_with_flow(&name);
-                    ctx.clear_narrowing_with_flow(&name);
-                    ctx.clear_sequence_guards_for_binding(&name);
-                } else {
-                    ctx.scope.define(name.clone(), ty.clone());
-                }
-                ctx.clear_sequence_shape_fact(&name);
-                ctx.empty_dict_specializations.remove(&name);
-                ctx.pending_container_specialization_patches.remove(&name);
-
-                lowered_targets.push(HirTupleTarget {
-                    binding: HirTupleTargetBinding::Name(name),
+                lowered_targets.push(lower_name_unpack_target(
+                    name,
+                    range,
                     ty,
-                    rebind_existing,
-                });
+                    tuple.range(),
+                    ctx,
+                )?);
             }
             TupleAssignTarget::Field { object, field } => {
                 lowered_targets.push(HirTupleTarget {
@@ -251,7 +272,7 @@ pub(in crate::lower) fn lower_star_unpack_assign(
     }
 
     let mut before = Vec::new();
-    let mut star: Option<(String, sifr_type_system::Type)> = None;
+    let mut star: Option<HirTupleTarget> = None;
     let mut after = Vec::new();
 
     for elt in &tuple.elts {
@@ -268,8 +289,13 @@ pub(in crate::lower) fn lower_star_unpack_assign(
                 if let Expr::Name(n) = starred.value.as_ref() {
                     let name = n.id.to_string();
                     let star_ty = sifr_type_system::Type::List(Box::new(elem_ty.clone()));
-                    ctx.scope.define(name.clone(), star_ty.clone());
-                    star = Some((name, star_ty));
+                    star = Some(lower_name_unpack_target(
+                        name,
+                        n.range(),
+                        star_ty,
+                        tuple.range(),
+                        ctx,
+                    )?);
                 } else {
                     ctx.error_with_code_at(
                         DiagnosticCode::TYPE_UNPACK_SHAPE_MISMATCH,
@@ -281,11 +307,12 @@ pub(in crate::lower) fn lower_star_unpack_assign(
             }
             Expr::Name(n) => {
                 let name = n.id.to_string();
-                ctx.scope.define(name.clone(), elem_ty.clone());
+                let target =
+                    lower_name_unpack_target(name, n.range(), elem_ty.clone(), tuple.range(), ctx)?;
                 if star.is_none() {
-                    before.push((name, elem_ty.clone()));
+                    before.push(target);
                 } else {
-                    after.push((name, elem_ty.clone()));
+                    after.push(target);
                 }
             }
             _ => {
@@ -308,10 +335,18 @@ pub(in crate::lower) fn lower_star_unpack_assign(
         return None;
     };
 
+    let failure = Some(super::statements::checked_place_failure(
+        ctx,
+        "ValueError",
+        "star unpacking",
+        tuple.range(),
+    ));
+
     Some(HirStmt::StarUnpack {
         before,
         star,
         after,
         value: value_expr,
+        failure,
     })
 }

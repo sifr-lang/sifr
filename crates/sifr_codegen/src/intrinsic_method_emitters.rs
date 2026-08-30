@@ -12,6 +12,7 @@ mod collection_type_resolution;
 mod defaultdict_iterable_mutations;
 mod literal_and_intrinsic_exprs;
 mod narrowing_helpers;
+pub(crate) use narrowing_helpers::supports_nonempty_pop_narrowing_type_for_codegen;
 mod plain_call_args;
 mod recursive_exprs;
 mod recursive_method_calls;

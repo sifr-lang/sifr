@@ -198,11 +198,14 @@ pub(super) fn try_lower_simple_match_stmt(
                 };
             let mut lowered_guard = arm.guard.as_ref().and_then(try_lower_leaf_or_name_expr);
             if subject_is_borrowed_name {
-                let copy_captures = collect_copy_capture_names(&arm.pattern);
-                if !copy_captures.is_empty() {
-                    lowered_guard =
-                        lowered_guard.map(|guard| deref_guard_copy_captures(guard, &copy_captures));
+                let guard_deref_captures = collect_guard_deref_capture_names(&arm.pattern);
+                if !guard_deref_captures.is_empty() {
+                    lowered_guard = lowered_guard
+                        .map(|guard| deref_guard_copy_captures(guard, &guard_deref_captures));
                 }
+                let borrowed_captures = collect_all_capture_names(&arm.pattern);
+                lowered_guard = lowered_guard
+                    .map(|guard| remove_redundant_guard_capture_refs(guard, &borrowed_captures));
             }
             let guard = match (auto_guard, lowered_guard) {
                 (Some(left), Some(right)) => Some(RustExpr::BinOp {
@@ -448,10 +451,8 @@ fn try_lower_typed_match_pattern(
                     rendered_fields.push(format!("{field_name}: {field_rendered}"));
                     bindings.extend(field_bindings);
                 }
-                let rust_name = format!(
-                    "crate::{}",
-                    crate::structural_identity_codegen::structural_record_layout_rust_name(record)
-                );
+                let rust_name =
+                    crate::structural_identity_codegen::structural_record_layout_rust_name(record);
                 return Some((
                     format!("{rust_name} {{ {}, .. }}", rendered_fields.join(", ")),
                     bindings,
@@ -557,6 +558,77 @@ pub(super) fn collect_copy_capture_names(pattern: &HirPattern) -> HashSet<String
     let mut names = HashSet::new();
     collect_copy_capture_names_inner(pattern, &mut names);
     names
+}
+
+fn collect_all_capture_names(pattern: &HirPattern) -> HashSet<String> {
+    let mut captures = Vec::new();
+    collect_capture_types(pattern, &mut captures);
+    captures.into_iter().map(|(name, _)| name).collect()
+}
+
+fn collect_guard_deref_capture_names(pattern: &HirPattern) -> HashSet<String> {
+    let mut captures = Vec::new();
+    collect_capture_types(pattern, &mut captures);
+    captures
+        .into_iter()
+        .filter_map(|(name, ty)| {
+            (is_copy_capture_type(&ty) || crate::helpers::is_logically_copy_rust_move_type(&ty))
+                .then_some(name)
+        })
+        .collect()
+}
+
+fn remove_redundant_guard_capture_refs(expr: RustExpr, captures: &HashSet<String>) -> RustExpr {
+    match expr {
+        RustExpr::Ref {
+            mutable: false,
+            expr,
+        } if guard_capture_ref_target(&expr).is_some_and(|name| captures.contains(name)) => *expr,
+        RustExpr::BinOp { left, op, right } => RustExpr::BinOp {
+            left: Box::new(remove_redundant_guard_capture_refs(*left, captures)),
+            op,
+            right: Box::new(remove_redundant_guard_capture_refs(*right, captures)),
+        },
+        RustExpr::UnaryOp { op, operand } => RustExpr::UnaryOp {
+            op,
+            operand: Box::new(remove_redundant_guard_capture_refs(*operand, captures)),
+        },
+        RustExpr::Paren(inner) => RustExpr::Paren(Box::new(remove_redundant_guard_capture_refs(
+            *inner, captures,
+        ))),
+        RustExpr::Cast { expr, ty } => RustExpr::Cast {
+            expr: Box::new(remove_redundant_guard_capture_refs(*expr, captures)),
+            ty,
+        },
+        RustExpr::FnCall { func, args } => RustExpr::FnCall {
+            func: Box::new(remove_redundant_guard_capture_refs(*func, captures)),
+            args: args
+                .into_iter()
+                .map(|arg| remove_redundant_guard_capture_refs(arg, captures))
+                .collect(),
+        },
+        RustExpr::MethodCall {
+            receiver,
+            method,
+            args,
+        } => RustExpr::MethodCall {
+            receiver: Box::new(remove_redundant_guard_capture_refs(*receiver, captures)),
+            method,
+            args: args
+                .into_iter()
+                .map(|arg| remove_redundant_guard_capture_refs(arg, captures))
+                .collect(),
+        },
+        other => other,
+    }
+}
+
+fn guard_capture_ref_target(expr: &RustExpr) -> Option<&str> {
+    match expr {
+        RustExpr::Ident(name) => Some(name),
+        RustExpr::Paren(inner) => guard_capture_ref_target(inner),
+        _ => None,
+    }
 }
 
 pub(super) fn collect_copy_capture_names_inner(pattern: &HirPattern, out: &mut HashSet<String>) {

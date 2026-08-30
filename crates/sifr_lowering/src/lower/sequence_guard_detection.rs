@@ -7,6 +7,8 @@ use sifr_python_ast::{
 };
 use sifr_type_system::Type;
 
+mod nonnegative_guards;
+
 pub(in crate::lower) fn detect_while_sequence_guards(
     while_stmt: &StmtWhile,
     ctx: &LowerCtx,
@@ -47,6 +49,9 @@ pub(in crate::lower) fn detect_true_sequence_guards(
             })
             .unwrap_or_default(),
         Expr::Compare(cmp) if cmp.ops.len() == 1 && cmp.comparators.len() == 1 => {
+            if let Some(guards) = nonnegative_guards::detect_true_guards(cmp, ctx) {
+                return guards;
+            }
             match &cmp.ops[0] {
                 CmpOp::Lt => {
                     if let (Some((index_var, max_offset)), Some(sequence_name)) = (
@@ -87,22 +92,7 @@ pub(in crate::lower) fn detect_true_sequence_guards(
                     }
                     Vec::new()
                 }
-                CmpOp::GtE => {
-                    if let (Expr::Name(index_name), Some(0)) =
-                        (cmp.left.as_ref(), literal_int(&cmp.comparators[0]))
-                    {
-                        if let Some(sequence_name) =
-                            ctx.end_pointer_sequence(index_name.id.as_str())
-                        {
-                            return vec![SequenceGuard::IndexVarInRange {
-                                sequence: sequence_name,
-                                index_var: index_name.id.to_string(),
-                                max_offset: 0,
-                            }];
-                        }
-                    }
-                    Vec::new()
-                }
+                CmpOp::GtE | CmpOp::LtE => Vec::new(),
                 CmpOp::IsNot => subscript_present_guard_from_non_none_compare(
                     cmp.left.as_ref(),
                     &cmp.comparators[0],
@@ -144,6 +134,9 @@ pub(in crate::lower) fn detect_false_exit_sequence_guards(
             min_len: 1,
         }],
         Expr::Compare(cmp) if cmp.ops.len() == 1 && cmp.comparators.len() == 1 => {
+            if let Some(guard) = nonnegative_guards::detect_false_exit_guard(cmp) {
+                return vec![guard];
+            }
             match &cmp.ops[0] {
                 CmpOp::Eq => {
                     if let (Expr::Name(index_name), Some(sequence_name)) =
@@ -308,11 +301,16 @@ pub(in crate::lower) fn detect_range_sequence_guards(
     let Some((sequence, max_offset)) = range_sequence_shape(for_stmt.iter.as_ref(), ctx) else {
         return Vec::new();
     };
-    let mut guards = vec![SequenceGuard::IndexVarInRange {
-        sequence: sequence.clone(),
-        index_var: target_name.to_string(),
-        max_offset,
-    }];
+    let mut guards = vec![
+        SequenceGuard::IndexVarInRange {
+            sequence: sequence.clone(),
+            index_var: target_name.to_string(),
+            max_offset,
+        },
+        SequenceGuard::IndexVarNonNegative {
+            index_var: target_name.to_string(),
+        },
+    ];
     guards.extend(detect_sliding_window_pointer_guards(
         &for_stmt.body,
         target_name,
@@ -401,10 +399,17 @@ fn detect_sliding_window_pointer_guards(
                 )
         })
         .filter(|left_var| loop_body_preserves_sliding_window_pointer(stmts, sequence, left_var))
-        .map(|left_var| SequenceGuard::IndexVarInRange {
-            sequence: sequence.to_string(),
-            index_var: left_var,
-            max_offset: 0,
+        .flat_map(|left_var| {
+            [
+                SequenceGuard::IndexVarInRange {
+                    sequence: sequence.to_string(),
+                    index_var: left_var.clone(),
+                    max_offset: 0,
+                },
+                SequenceGuard::IndexVarNonNegative {
+                    index_var: left_var,
+                },
+            ]
         })
         .collect()
 }
@@ -750,6 +755,12 @@ fn detect_two_pointer_while_guards(while_stmt: &StmtWhile, ctx: &LowerCtx) -> Ve
             sequence,
             index_var: right_name.id.to_string(),
             max_offset: 0,
+        },
+        SequenceGuard::IndexVarNonNegative {
+            index_var: left_name.id.to_string(),
+        },
+        SequenceGuard::IndexVarNonNegative {
+            index_var: right_name.id.to_string(),
         },
     ]
 }

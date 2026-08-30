@@ -37,7 +37,7 @@ def collect_prefixes(nums: list[int]) -> list[list[int]]:
     subset = []
 
     def dfs(i):
-        if i >= len(nums):
+        if i < 0 or i >= len(nums):
             res.append(subset.copy())
             return
         subset.append(nums[i])
@@ -56,7 +56,7 @@ def collect_value_groups(items: list[int], limit: int) -> list[list[int]]:
         if total == limit:
             res.append(cur.copy())
             return
-        if i >= len(items) or total > limit:
+        if i < 0 or i >= len(items) or total > limit:
             return
         cur.append(items[i])
         dfs(i, cur, total + items[i])

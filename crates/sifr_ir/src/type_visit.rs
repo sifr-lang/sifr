@@ -535,12 +535,16 @@ where
             star,
             after,
             value,
+            failure,
         } => {
-            for (_, ty) in before.iter_mut().chain(after.iter_mut()) {
-                transform_type(ty, transform);
+            for target in before.iter_mut().chain(after.iter_mut()) {
+                transform_type(&mut target.ty, transform);
             }
-            transform_type(&mut star.1, transform);
+            transform_type(&mut star.ty, transform);
             transform_expr(value, transform, visit);
+            if let Some(failure) = failure {
+                transform_type(failure, transform);
+            }
         }
         HirStmt::Assert { test, msg } => {
             transform_expr(test, transform, visit);
@@ -588,9 +592,13 @@ where
             index,
             value,
             object_ty,
+            failure,
             ..
         } => {
             transform_type(object_ty, transform);
+            if let Some(failure) = failure {
+                transform_type(failure, transform);
+            }
             transform_expr(index, transform, visit);
             transform_expr(value, transform, visit);
         }
@@ -598,11 +606,11 @@ where
             index,
             value,
             object_ty,
-            missing_key_error,
+            failure,
             ..
         } => {
             transform_type(object_ty, transform);
-            if let Some(error_ty) = missing_key_error {
+            if let Some(error_ty) = failure {
                 transform_type(error_ty, transform);
             }
             transform_expr(index, transform, visit);
@@ -613,9 +621,17 @@ where
             inner_index,
             value,
             object_ty,
+            outer_failure,
+            inner_failure,
             ..
         } => {
             transform_type(object_ty, transform);
+            if let Some(failure) = outer_failure {
+                transform_type(failure, transform);
+            }
+            if let Some(failure) = inner_failure {
+                transform_type(failure, transform);
+            }
             transform_expr(outer_index, transform, visit);
             transform_expr(inner_index, transform, visit);
             transform_expr(value, transform, visit);
@@ -625,9 +641,17 @@ where
             inner_index,
             value,
             field_ty,
+            outer_failure,
+            inner_failure,
             ..
         } => {
             transform_type(field_ty, transform);
+            if let Some(failure) = outer_failure {
+                transform_type(failure, transform);
+            }
+            if let Some(failure) = inner_failure {
+                transform_type(failure, transform);
+            }
             transform_expr(outer_index, transform, visit);
             transform_expr(inner_index, transform, visit);
             transform_expr(value, transform, visit);
@@ -636,15 +660,26 @@ where
             index,
             value,
             field_ty,
+            failure,
             ..
         } => {
             transform_type(field_ty, transform);
+            if let Some(failure) = failure {
+                transform_type(failure, transform);
+            }
             transform_expr(index, transform, visit);
             transform_expr(value, transform, visit);
         }
-        HirStmt::Delete { object, index } => {
+        HirStmt::Delete {
+            object,
+            index,
+            failure,
+        } => {
             transform_expr(object, transform, visit);
             transform_expr(index, transform, visit);
+            if let Some(failure) = failure {
+                transform_type(failure, transform);
+            }
         }
         HirStmt::With { items, body } => {
             for item in items {

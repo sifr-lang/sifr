@@ -209,10 +209,6 @@ impl RustEmitter {
                         args: vec![],
                     };
                 }
-                lowered_arg = Self::force_unwrap_option_expr_for_ir(
-                    lowered_arg,
-                    "compiler-verified option argument should be Some",
-                );
             }
 
             if matches!(

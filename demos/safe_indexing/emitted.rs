@@ -9,19 +9,19 @@ fn main() {
     println!("=== Safe List Indexing ===");
     let nums: Vec<SifrInt> = vec![SifrInt::from_i64(10), SifrInt::from_i64(20), SifrInt::from_i64(30)];
     let val: Option<SifrInt> = {
-    let __sifr_index_list = &nums;
-    let __sifr_index_i = SifrInt::from_i64(1);
-    let __sifr_index_norm = __sifr_index_i.normalize_index_or_len(__sifr_index_list.len());
-    __sifr_index_list.get(__sifr_index_norm).cloned()
+    let __sifr_checked_read_collection = &nums;
+    let __sifr_checked_read_index = SifrInt::from_i64(1);
+    let __sifr_checked_read_normalized = __sifr_checked_read_index.normalize_index_or_len(__sifr_checked_read_collection.len());
+    __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
 };
     if let Some(val) = val.clone() {
         println!("nums[1] = {}", val);
     }
     let oob: Option<SifrInt> = {
-    let __sifr_index_list = &nums;
-    let __sifr_index_i = SifrInt::from_i64(99);
-    let __sifr_index_norm = __sifr_index_i.normalize_index_or_len(__sifr_index_list.len());
-    __sifr_index_list.get(__sifr_index_norm).cloned()
+    let __sifr_checked_read_collection = &nums;
+    let __sifr_checked_read_index = SifrInt::from_i64(99);
+    let __sifr_checked_read_normalized = __sifr_checked_read_index.normalize_index_or_len(__sifr_checked_read_collection.len());
+    __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
 };
     if let Some(oob) = oob.clone() {
         println!("nums[99] = {}", oob);
@@ -42,21 +42,21 @@ fn main() {
     }
     println!("=== Safe String Indexing ===");
     let s: String = "hello".to_string();
-    let ch: Option<String> = {
-    let __sifr_index_str = &s;
-    let __sifr_index_i = SifrInt::from_i64(0);
-    let __sifr_index_norm = __sifr_index_i.normalize_index_or_len(__sifr_index_str.chars().count());
-    __sifr_index_str.chars().nth(__sifr_index_norm).map(|c| c.to_string())
-};
+    let ch: Option<String> = ({
+    let __sifr_string_source = &s;
+    let __sifr_string_index = SifrInt::from_i64(0);
+    let __sifr_string_index_normalized = __sifr_string_index.normalize_index_or_len(__sifr_string_source.chars().count());
+    __sifr_string_source.chars().nth(__sifr_string_index_normalized)
+}).map(|c| c.to_string());
     if let Some(ch) = ch {
         println!("s[0] = {}", ch);
     }
-    let oob_ch: Option<String> = {
-    let __sifr_index_str = &s;
-    let __sifr_index_i = SifrInt::from_i64(99);
-    let __sifr_index_norm = __sifr_index_i.normalize_index_or_len(__sifr_index_str.chars().count());
-    __sifr_index_str.chars().nth(__sifr_index_norm).map(|c| c.to_string())
-};
+    let oob_ch: Option<String> = ({
+    let __sifr_string_source = &s;
+    let __sifr_string_index = SifrInt::from_i64(99);
+    let __sifr_string_index_normalized = __sifr_string_index.normalize_index_or_len(__sifr_string_source.chars().count());
+    __sifr_string_source.chars().nth(__sifr_string_index_normalized)
+}).map(|c| c.to_string());
     if let Some(oob_ch) = oob_ch {
         println!("s[99] = {}", oob_ch);
     } else {
@@ -65,20 +65,20 @@ fn main() {
     println!("=== Negative Indexing ===");
     let items: Vec<SifrInt> = vec![SifrInt::from_i64(1), SifrInt::from_i64(2), SifrInt::from_i64(3), SifrInt::from_i64(4), SifrInt::from_i64(5)];
     let last: Option<SifrInt> = {
-    let __sifr_index_list = &items;
-    let __sifr_index_i = -&SifrInt::from_i64(1);
-    let __sifr_index_norm = __sifr_index_i.normalize_index_or_len(__sifr_index_list.len());
-    __sifr_index_list.get(__sifr_index_norm).cloned()
+    let __sifr_checked_read_collection = &items;
+    let __sifr_checked_read_index = -(SifrInt::from_i64(1));
+    let __sifr_checked_read_normalized = __sifr_checked_read_index.normalize_index_or_len(__sifr_checked_read_collection.len());
+    __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
 };
     if let Some(last) = last.clone() {
         println!("last item: {}", last);
     }
-    let last_ch: Option<String> = {
-    let __sifr_index_str = &s;
-    let __sifr_index_i = -&SifrInt::from_i64(1);
-    let __sifr_index_norm = __sifr_index_i.normalize_index_or_len(__sifr_index_str.chars().count());
-    __sifr_index_str.chars().nth(__sifr_index_norm).map(|c| c.to_string())
-};
+    let last_ch: Option<String> = ({
+    let __sifr_string_source = &s;
+    let __sifr_string_index = -(SifrInt::from_i64(1));
+    let __sifr_string_index_normalized = __sifr_string_index.normalize_index_or_len(__sifr_string_source.chars().count());
+    __sifr_string_source.chars().nth(__sifr_string_index_normalized)
+}).map(|c| c.to_string());
     if let Some(last_ch) = last_ch {
         println!("last char: {}", last_ch);
     }
@@ -127,7 +127,10 @@ fn main() {
     println!("=== Del Statement ===");
     let mut config: HashMap<String, SifrInt> = HashMap::from([("a".to_string(), SifrInt::from_i64(1)), ("b".to_string(), SifrInt::from_i64(2)), ("c".to_string(), SifrInt::from_i64(3))]);
     println!("before del: {}", SifrInt::from(config.len()));
-    let _ = config.remove(&"b".to_string());
+    if config.contains_key(&"b".to_string()) {
+        if let Some(_) = config.remove(&"b".to_string()) {
+        }
+    }
     println!("after del: {}", SifrInt::from(config.len()));
     println!("demo complete!");
 }

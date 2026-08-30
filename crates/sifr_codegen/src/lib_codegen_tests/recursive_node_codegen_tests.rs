@@ -97,7 +97,7 @@ def walk(own root: TreeNode | None) -> list[int]:
     );
 
     assert!(
-        rust_code.contains("let mut node: TreeNode ="),
+        rust_code.contains("if let Some(mut node) ="),
         "local recursive class binding must be mutable so child reads can use .take():\n{rust_code}"
     );
     assert!(

@@ -159,7 +159,7 @@ fn simple_return_declines_non_optional_string_index_to_allow_structured_lowering
 }
 
 #[test]
-fn simple_compare_condition_wraps_proven_list_index_without_double_option() {
+fn simple_compare_condition_uses_checked_option_projections() {
     let expr = HirExpr::Compare {
         left: Box::new(HirExpr::Index {
             object: Box::new(HirExpr::Name {
@@ -194,22 +194,9 @@ fn simple_compare_condition_wraps_proven_list_index_without_double_option() {
     let lowered = try_lower_simple_condition_test_expr(&expr, &HashSet::new())
         .expect("compare condition should lower");
 
-    assert!(matches!(
-        lowered,
-        RustExpr::BinOp { left, right, .. }
-            if matches!(
-                left.as_ref(),
-                RustExpr::FnCall { func, args }
-                    if matches!(func.as_ref(), RustExpr::Path(path) if path == &vec!["Some".to_string()])
-                        && matches!(
-                            args.as_slice(),
-                            [RustExpr::Index { .. }]
-                        )
-            ) && matches!(
-                right.as_ref(),
-                RustExpr::MethodCall { method, .. } if method == "copied"
-            )
-    ));
+    let rendered = crate::render_expr(&lowered);
+    assert!(rendered.contains(".get("), "{rendered}");
+    assert!(!rendered.contains("as_slice()["), "{rendered}");
 }
 
 #[test]

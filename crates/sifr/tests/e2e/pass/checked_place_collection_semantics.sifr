@@ -1,0 +1,175 @@
+def list_exit_guard_refreshes_after_assignment() -> int:
+    values: list[int] = [1, 2]
+    if len(values) == 0:
+        return -1
+    values[0] = 5
+    return values[0]
+
+
+def list_exit_guard_refreshes_after_augmented_assignment() -> int:
+    values: list[int] = [1, 2]
+    if len(values) == 0:
+        return -1
+    values[0] += 4
+    return values[0]
+
+
+def positive_list_guard_refreshes_after_assignment() -> int:
+    values: list[int] = [1, 2]
+    if values:
+        values[0] = 7
+        return values[0]
+    return -1
+
+
+def dict_exit_guard_refreshes_after_assignment() -> int:
+    mapping: dict[str, int] = {"key": 1}
+    key: str = "key"
+    if key not in mapping:
+        return -1
+    mapping[key] = 99
+    return mapping[key]
+
+
+def positive_dict_guard_refreshes_after_assignment() -> int:
+    mapping: dict[str, int] = {"key": 1}
+    key: str = "key"
+    if key in mapping:
+        mapping[key] = 99
+        return mapping[key]
+    return -1
+
+
+def replace_first(mut values: list[int]) -> None:
+    if len(values) == 0:
+        return
+    values[0] = 42
+
+
+def list_exit_guard_refreshes_after_mut_borrow_call() -> int:
+    values: list[int] = [1, 2]
+    if len(values) == 0:
+        return -1
+    replace_first(values)
+    return values[0]
+
+
+def main():
+    assert list_exit_guard_refreshes_after_assignment() == 5
+    assert list_exit_guard_refreshes_after_augmented_assignment() == 5
+    assert positive_list_guard_refreshes_after_assignment() == 7
+    assert dict_exit_guard_refreshes_after_assignment() == 99
+    assert positive_dict_guard_refreshes_after_assignment() == 99
+    assert list_exit_guard_refreshes_after_mut_borrow_call() == 42
+
+    short: list[int] = [1]
+    assert not (len(short) > 3 and short[3] != 0)
+    assert len(short) <= 3 or short[3] != 0
+
+    condition_mapping: dict[str, int] = {"ready": 1}
+    assert "ready" in condition_mapping and condition_mapping["ready"] == 1
+    assert "missing" not in condition_mapping or condition_mapping["missing"] == 1
+
+    values: list[int] = [10, 20, 30]
+    try:
+        values[-1] = 99
+    except IndexError:
+        assert False
+    assert values == [10, 20, 99]
+
+    write_oob = False
+    try:
+        values[-4] = 7
+    except IndexError as error:
+        assert error.message == "collection index out of range"
+        write_oob = True
+    assert write_oob
+    assert values == [10, 20, 99]
+
+    try:
+        del values[-2]
+    except IndexError:
+        assert False
+    assert values == [10, 99]
+
+    delete_oob = False
+    try:
+        del values[8]
+    except IndexError:
+        delete_oob = True
+    assert delete_oob
+    assert values == [10, 99]
+
+    mapping: dict[str, int] = {"present": 1}
+    missing_delete = False
+    try:
+        del mapping["missing"]
+    except KeyError as error:
+        assert error.message == "key not found"
+        missing_delete = True
+    assert missing_delete
+    assert len(mapping) == 1
+    assert "missing" not in mapping
+    assert len(mapping) == 1
+
+    dict_rows: dict[str, list[int]] = {"row": [1, 2]}
+    try:
+        dict_rows["row"][-1] = 8
+    except KeyError:
+        assert False
+    except IndexError:
+        assert False
+    assert dict_rows["row"] == [1, 8]
+
+    missing_row = False
+    try:
+        dict_rows["absent"][0] = 4
+    except KeyError:
+        missing_row = True
+    except IndexError:
+        assert False
+    assert missing_row
+
+    missing_column = False
+    try:
+        dict_rows["row"][5] += 1
+    except KeyError:
+        assert False
+    except IndexError:
+        missing_column = True
+    assert missing_column
+
+    list_rows: list[dict[str, int]] = [{"count": 2}]
+    try:
+        list_rows[0]["created"] = 3
+    except IndexError:
+        assert False
+    assert list_rows[0]["created"] == 3
+
+    missing_key = False
+    try:
+        list_rows[0]["absent"] += 1
+    except IndexError:
+        assert False
+    except KeyError:
+        missing_key = True
+    assert missing_key
+    assert "absent" not in list_rows[0]
+
+    try:
+        first, *middle, last = [1, 2, 3, 4]
+        assert first == 1
+        assert middle == [2, 3]
+        assert last == 4
+    except ValueError:
+        assert False
+
+    unpack_short = False
+    try:
+        short_first, *short_middle, short_last = [1]
+    except ValueError as error:
+        assert error.message == "not enough values to unpack"
+        unpack_short = True
+    assert unpack_short
+
+    print("checked_place_collection_semantics: pass")

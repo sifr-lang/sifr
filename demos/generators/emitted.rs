@@ -60,7 +60,7 @@ fn evens(limit: SifrInt) -> Box<dyn Iterator<Item = SifrInt>> {
     if !__sifr_generator_initialized {
         let mut _yields: Vec<SifrInt> = Vec::new();
         let mut i: SifrInt = SifrInt::from_i64(0);
-        while &i < &limit {
+        while (&i < &limit) {
             if (&i.floor_mod_known_nonzero(&SifrInt::from_i64(2)) == &SifrInt::from_i64(0)) {
                 _yields.push(i.clone());
             }

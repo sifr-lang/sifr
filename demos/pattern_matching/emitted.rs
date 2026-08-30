@@ -1533,12 +1533,12 @@ fn classify_quadrant(p: &Point) -> String {
         Point { x: SifrInt::Small(0), y: SifrInt::Small(0), .. } => {
             return "origin".to_string();
         },
-        Point { x: px, y: py, .. } if (&px > &SifrInt::from_i64(0)) && (&py > &SifrInt::from_i64(0)) => {
+        Point { x: px, y: py, .. } if (&*px > &SifrInt::from_i64(0)) && (&*py > &SifrInt::from_i64(0)) => {
             let px = px.clone();
             let py = py.clone();
             return "Q1".to_string();
         },
-        Point { x: px, y: py, .. } if (&px < &SifrInt::from_i64(0)) && (&py > &SifrInt::from_i64(0)) => {
+        Point { x: px, y: py, .. } if (&*px < &SifrInt::from_i64(0)) && (&*py > &SifrInt::from_i64(0)) => {
             let px = px.clone();
             let py = py.clone();
             return "Q2".to_string();

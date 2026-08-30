@@ -15,7 +15,13 @@ impl RustEmitter {
             self.lowering_stats.stmt_candidate_total += 1;
         }
         match self.try_lower_structured_stmt_with_following(stmt, following_stmts) {
-            Ok(true) => {}
+            Ok(true) => {
+                for refresh in
+                    self.refresh_checked_place_witnesses_after_emitted_stmt(stmt, following_stmts)
+                {
+                    self.push_captured_stmt(&refresh);
+                }
+            }
             Ok(false) => {
                 self.lowering_stats.stmt_lowering_errors += 1;
                 self.push_captured_stmt(&RustStmt::Expr(RustExpr::MacroCall {

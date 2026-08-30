@@ -429,6 +429,20 @@ impl RustEmitter {
         self.string_char_cache_vars = speculative_string_char_cache_vars;
 
         if elif_clauses.is_empty()
+            && let Some(condition_is_true) = self.unwrapped_none_compare_truth_for_ir(condition)
+        {
+            let selected_body = if condition_is_true {
+                then_body
+            } else {
+                else_body.unwrap_or_default()
+            };
+            let Some(lowered) = self.try_lower_scoped_stmt_block_for_ir(selected_body)? else {
+                return Ok(None);
+            };
+            return Ok(Some(RustStmt::Block(lowered)));
+        }
+
+        if elif_clauses.is_empty()
             && else_body.is_none()
             && crate::helpers::codegen_body_always_exits(then_body)
         {
@@ -451,6 +465,7 @@ impl RustEmitter {
                         .map(|option_var| self.option_binding_value_expr_for_ir(option_var))
                         .collect(),
                 );
+                self.option_unwrapped_vars.extend(option_vars);
                 return Ok(Some(RustStmt::LetElse {
                     pattern,
                     value,
@@ -460,6 +475,7 @@ impl RustEmitter {
             if let Some(option_var) = crate::helpers::detect_is_none_var(condition)
                 .or_else(|| crate::helpers::detect_not_option_truthiness(condition))
             {
+                self.option_unwrapped_vars.insert(option_var.clone());
                 return Ok(Some(RustStmt::LetElse {
                     pattern: self.option_binding_pattern_for_ir(&option_var),
                     value: self.option_binding_value_expr_for_ir(&option_var),
@@ -483,6 +499,7 @@ impl RustEmitter {
                         .map(|option_var| self.option_binding_value_expr_for_ir(option_var))
                         .collect(),
                 );
+                self.option_unwrapped_vars.extend(option_vars);
                 return Ok(Some(RustStmt::LetElse {
                     pattern,
                     value,
@@ -512,13 +529,53 @@ impl RustEmitter {
         self.try_lower_if_clause_for_ir(condition, then_body, nested_else)
     }
 
+    fn unwrapped_none_compare_truth_for_ir(&self, condition: &HirExpr) -> Option<bool> {
+        let HirExpr::Compare {
+            left,
+            ops,
+            comparators,
+            ..
+        } = condition
+        else {
+            return None;
+        };
+        if ops.len() != 1
+            || comparators.len() != 1
+            || !matches!(comparators[0], HirExpr::NoneLiteral)
+        {
+            return None;
+        }
+        let HirExpr::Name { name, ty, .. } = left.as_ref() else {
+            return None;
+        };
+        if crate::helpers::is_option_type(ty) || !self.option_unwrapped_vars.contains(name) {
+            return None;
+        }
+        match ops[0].as_str() {
+            "is not" | "!=" => Some(true),
+            "is" | "==" => Some(false),
+            _ => None,
+        }
+    }
+
     pub(crate) fn try_lower_if_clause_for_ir(
         &mut self,
         condition: &HirExpr,
         then_body: &[HirStmt],
         nested_else: Option<Vec<RustStmt>>,
     ) -> Result<Option<RustStmt>, crate::CodegenError> {
-        let Some(lowered_then_body) = self.try_lower_if_branch_for_ir(then_body)? else {
+        let narrowed_then_vars = crate::helpers::detect_is_not_none_var(condition)
+            .into_iter()
+            .chain(crate::helpers::detect_option_truthiness(condition))
+            .chain(
+                crate::helpers::detect_and_not_none_vars(condition)
+                    .into_iter()
+                    .flatten(),
+            )
+            .collect::<Vec<_>>();
+        let Some(lowered_then_body) =
+            self.try_lower_option_narrowed_branch_for_ir(then_body, &narrowed_then_vars)?
+        else {
             return Ok(None);
         };
 
@@ -593,6 +650,18 @@ impl RustEmitter {
         body: &[HirStmt],
     ) -> Result<Option<Vec<RustStmt>>, crate::CodegenError> {
         self.try_lower_scoped_stmt_block_for_ir(body)
+    }
+
+    fn try_lower_option_narrowed_branch_for_ir(
+        &mut self,
+        body: &[HirStmt],
+        names: &[String],
+    ) -> Result<Option<Vec<RustStmt>>, crate::CodegenError> {
+        let previous = self.option_unwrapped_vars.clone();
+        self.option_unwrapped_vars.extend(names.iter().cloned());
+        let lowered = self.try_lower_scoped_stmt_block_for_ir(body);
+        self.option_unwrapped_vars = previous;
+        lowered
     }
 
     pub(crate) fn detect_or_is_none_vars_with_bindings_for_ir(

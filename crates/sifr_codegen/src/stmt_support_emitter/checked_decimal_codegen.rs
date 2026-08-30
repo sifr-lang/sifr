@@ -141,7 +141,7 @@ fn bigdecimal_operand(
 }
 
 pub(crate) fn lower_checked_bigdecimal_arithmetic(
-    emitter: &RustEmitter,
+    emitter: &mut RustEmitter,
     left: RustExpr,
     left_ty: &Type,
     op: &str,
@@ -155,6 +155,7 @@ pub(crate) fn lower_checked_bigdecimal_arithmetic(
     if !matches!(ok_ty.resolve_alias(), Type::BigDecimal) {
         return Ok(None);
     }
+    emitter.register_union_type(result_ty);
 
     let lowered_left = bigdecimal_operand(emitter, left, left_ty)?;
     if op == "**" {
@@ -679,7 +680,7 @@ fn decimal_checked_operation(op: &str, result_ty: &Type) -> Result<Option<RustEx
 }
 
 pub(crate) fn lower_checked_decimal_arithmetic(
-    emitter: &RustEmitter,
+    emitter: &mut RustEmitter,
     left: RustExpr,
     left_ty: &Type,
     op: &str,
@@ -699,6 +700,7 @@ pub(crate) fn lower_checked_decimal_arithmetic(
             error_ty.display_name()
         )));
     }
+    emitter.register_union_type(result_ty);
 
     if op == "**" {
         if !matches!(left_ty.resolve_alias(), Type::Decimal) {

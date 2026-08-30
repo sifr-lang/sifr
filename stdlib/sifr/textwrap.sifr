@@ -285,7 +285,8 @@ def _apply_max_lines(
             base = _trim_line(base[0:available])
         if drop_whitespace:
             base = _trim_line(base)
-        result[last_index] = base + effective_placeholder
+        if 0 <= last_index and last_index < len(result):
+            result[last_index] = base + effective_placeholder
     return result
 
 

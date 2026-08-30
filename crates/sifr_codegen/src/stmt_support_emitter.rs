@@ -8,9 +8,9 @@ mod expr_call_and_literal_helpers;
 mod expr_call_metadata;
 pub(crate) use expr_call_metadata::{
     call_expr_parts, canonical_constructor_class_name, canonical_plain_call_name_for_ir,
-    generic_call_target_for_ir, plain_call_target_for_ir, should_force_mutable_binding,
-    should_omit_local_type_annotation, type_contains_any_or_unknown,
-    unwrap_compiler_verified_nonempty_pop_result_for_ir,
+    compiler_verified_pop_lowers_as_option_for_ir, generic_call_target_for_ir,
+    plain_call_target_for_ir, should_force_mutable_binding, should_omit_local_type_annotation,
+    type_contains_any_or_unknown, unwrap_compiler_verified_nonempty_pop_result_for_ir,
 };
 #[macro_use]
 mod stmt_expr_stepped_slice;
@@ -40,7 +40,6 @@ mod field_assignment;
 mod if_condition_lowering;
 mod iterator_lowering;
 mod loops_try_finally;
-mod nested_subscript_assignment;
 mod nested_subscript_assignment_helpers;
 pub(crate) mod performance_lowering_gate;
 mod print_calls;

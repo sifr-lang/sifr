@@ -249,7 +249,7 @@ fn main() {
                 &"strict".to_string(),
             )
             .map_err(|__message| ParseError { message: __message })?;
-        decode_ok = decoded == "sifr-bytes";
+        decode_ok = (decoded == "sifr-bytes");
         Ok(())
     })();
     if let Err(__sifr_try_err) = __sifr_try_res {
@@ -302,7 +302,7 @@ fn main() {
                 &"strict".to_string(),
             )
             .map_err(|__message| ParseError { message: __message })?;
-        hex_ok = decoded_hex == "sifr";
+        hex_ok = (decoded_hex == "sifr");
         Ok(())
     })();
     if let Err(__sifr_try_err) = __sifr_try_res {

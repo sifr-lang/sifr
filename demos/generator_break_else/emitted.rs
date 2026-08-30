@@ -8,7 +8,7 @@ fn r#gen(flag: bool) -> Box<dyn Iterator<Item = SifrInt>> {
     if !__sifr_generator_initialized {
         let mut _yields: Vec<SifrInt> = Vec::new();
         let mut i: SifrInt = SifrInt::from_i64(0);
-        while &i < &SifrInt::from_i64(2) {
+        while (&i < &SifrInt::from_i64(2)) {
             if flag && (&i == &SifrInt::from_i64(0)) {
                 break;
             }

@@ -1523,7 +1523,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.readable()) {
+            if !self.readable() {
                 return Err(IOError::new("stream is not readable".to_string()));
             }
             file_read(&self._handle)
@@ -1534,7 +1534,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.writable()) {
+            if !self.writable() {
                 return Err(IOError::new("stream is not writable".to_string()));
             }
             file_write(&self._handle, data)
@@ -1545,7 +1545,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.readable()) {
+            if !self.readable() {
                 return Err(IOError::new("stream is not readable".to_string()));
             }
             file_readline(&self._handle)
@@ -1556,7 +1556,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.readable()) {
+            if !self.readable() {
                 return Err(IOError::new("stream is not readable".to_string()));
             }
             file_readlines(&self._handle)
@@ -1567,7 +1567,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.readable()) {
+            if !self.readable() {
                 return Err(IOError::new("stream is not readable".to_string()));
             }
             file_read_bytes(&self._handle)
@@ -1578,7 +1578,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.writable()) {
+            if !self.writable() {
                 return Err(IOError::new("stream is not writable".to_string()));
             }
             file_write_bytes(&self._handle, data)
@@ -1675,7 +1675,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.readable()) {
+            if !self.readable() {
                 return Err(IOError::new("stream is not readable".to_string()));
             }
             file_read_bytes(&self._handle)
@@ -1686,7 +1686,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.writable()) {
+            if !self.writable() {
                 return Err(IOError::new("stream is not writable".to_string()));
             }
             file_write_bytes(&self._handle, data)
@@ -2081,9 +2081,9 @@ mod __sifr_project_nominals {
             let mut end: SifrInt = SifrInt::from(self._buffer.chars().count());
             if let Some(size) = size.as_ref() {
                 let maybe_size: SifrInt = size.clone();
-                if &maybe_size >= &SifrInt::from_i64(0) {
+                if (&maybe_size >= &SifrInt::from_i64(0)) {
                     let requested: SifrInt = &start + &maybe_size;
-                    if &requested < &end {
+                    if (&requested < &end) {
                         end = requested;
                     }
                 }
@@ -2182,7 +2182,7 @@ mod __sifr_project_nominals {
                 }
             }
             let mut next_pos: SifrInt = &origin + offset;
-            if &next_pos < &SifrInt::from_i64(0) {
+            if (&next_pos < &SifrInt::from_i64(0)) {
                 return Err(IOError::new(_negative_seek_error((next_pos).clone())));
             }
             let end: SifrInt = SifrInt::from(self._buffer.chars().count());
@@ -2269,9 +2269,9 @@ mod __sifr_project_nominals {
             let mut end: SifrInt = SifrInt::from(self._buffer.len());
             if let Some(size) = size.as_ref() {
                 let maybe_size: SifrInt = size.clone();
-                if &maybe_size >= &SifrInt::from_i64(0) {
+                if (&maybe_size >= &SifrInt::from_i64(0)) {
                     let requested: SifrInt = &start + &maybe_size;
-                    if &requested < &end {
+                    if (&requested < &end) {
                         end = requested;
                     }
                 }
@@ -2385,7 +2385,7 @@ mod __sifr_project_nominals {
                 }
             }
             let mut next_pos: SifrInt = &origin + offset;
-            if &next_pos < &SifrInt::from_i64(0) {
+            if (&next_pos < &SifrInt::from_i64(0)) {
                 return Err(IOError::new(_negative_seek_error((next_pos).clone())));
             }
             let end: SifrInt = SifrInt::from(self._buffer.len());
@@ -2518,7 +2518,7 @@ mod __sifr_project_nominals {
         path: &String,
         mode: &String,
     ) -> Result<__SifrIoBinaryFileHandle, IOError> {
-        if !(mode.contains(&"b".to_string())) {
+        if !mode.contains(&"b".to_string()) {
             return Err(IOError::new("open_binary requires binary mode".to_string()));
         }
         let __sifr_try_res: Result<Result<__SifrIoBinaryFileHandle, IOError>, IOError> = (|| {
@@ -2723,7 +2723,7 @@ mod __sifr_project_nominals {
     }
     impl __SifrStdlib_sifr_x2ejson_x2eJsonValue {
         pub fn as_array(&self) -> Option<Vec<__SifrStdlib_sifr_x2ejson_x2eJsonValue>> {
-            if !(self.is_array()) {
+            if !self.is_array() {
                 return None;
             }
             let mut result: Vec<__SifrStdlib_sifr_x2ejson_x2eJsonValue> = vec![];
@@ -2737,7 +2737,7 @@ mod __sifr_project_nominals {
         pub fn as_object(
             &self,
         ) -> Option<Vec<(String, __SifrStdlib_sifr_x2ejson_x2eJsonValue)>> {
-            if !(self.is_object()) {
+            if !self.is_object() {
                 return None;
             }
             let mut result: Vec<(String, __SifrStdlib_sifr_x2ejson_x2eJsonValue)> = vec![];
@@ -2749,7 +2749,7 @@ mod __sifr_project_nominals {
     }
     impl __SifrStdlib_sifr_x2ejson_x2eJsonValue {
         pub fn at(&self, index: &SifrInt) -> Option<__SifrStdlib_sifr_x2ejson_x2eJsonValue> {
-            if !(self.is_array()) {
+            if !self.is_array() {
                 return None;
             }
             if (&index.clone() < &SifrInt::from_i64(0))
@@ -2757,18 +2757,19 @@ mod __sifr_project_nominals {
             {
                 return None;
             }
-            let value: Option<__SifrStdlib_sifr_x2ejson_x2eJsonValue> = Some(
-                (self.array_items)
-                    .as_ref()
-                    .clone()[::sifr_runtime::to_usize_proven(&(index))]
-                    .clone(),
-            );
+            let value: Option<__SifrStdlib_sifr_x2ejson_x2eJsonValue> = {
+                let __sifr_checked_read_collection = &self.array_items;
+                let __sifr_checked_read_index = index.clone();
+                let __sifr_checked_read_normalized = __sifr_checked_read_index
+                    .normalize_index_or_len(__sifr_checked_read_collection.len());
+                __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+            };
             value
         }
     }
     impl __SifrStdlib_sifr_x2ejson_x2eJsonValue {
         pub fn get(&self, key: &String) -> Option<__SifrStdlib_sifr_x2ejson_x2eJsonValue> {
-            if !(self.is_object()) {
+            if !self.is_object() {
                 return None;
             }
             for (item_key, item_value) in (self.object_items)
@@ -2787,7 +2788,7 @@ mod __sifr_project_nominals {
     impl __SifrStdlib_sifr_x2ejson_x2eJsonValue {
         pub fn keys(&self) -> Vec<String> {
             let mut result: Vec<String> = vec![];
-            if !(self.is_object()) {
+            if !self.is_object() {
                 return result;
             }
             for (item_key, _item_value) in (self.object_items)
@@ -2804,7 +2805,7 @@ mod __sifr_project_nominals {
     impl __SifrStdlib_sifr_x2ejson_x2eJsonValue {
         pub fn values(&self) -> Vec<__SifrStdlib_sifr_x2ejson_x2eJsonValue> {
             let mut result: Vec<__SifrStdlib_sifr_x2ejson_x2eJsonValue> = vec![];
-            if !(self.is_object()) {
+            if !self.is_object() {
                 return result;
             }
             for (_item_key, item_value) in (self.object_items)
@@ -2820,7 +2821,7 @@ mod __sifr_project_nominals {
     }
     impl __SifrStdlib_sifr_x2ejson_x2eJsonValue {
         pub fn items(&self) -> Vec<(String, __SifrStdlib_sifr_x2ejson_x2eJsonValue)> {
-            if !(self.is_object()) {
+            if !self.is_object() {
                 return vec![];
             }
             let mut result: Vec<(String, __SifrStdlib_sifr_x2ejson_x2eJsonValue)> = vec![];
@@ -2891,7 +2892,7 @@ mod __sifr_project_nominals {
         tokens.push(format!("{}{}", value.kind.clone(), ""));
         if (value.kind.clone() == "bool") {
             let bool_value: Option<bool> = value.bool_value;
-            if bool_value.is_none() {
+            if (bool_value == None) {
                 tokens.push("false".to_string());
             } else {
                 if let Some(bool_value) = bool_value {
@@ -2901,7 +2902,7 @@ mod __sifr_project_nominals {
         } else {
             if (value.kind.clone() == "int") {
                 let int_value: Option<SifrInt> = value.int_value.clone();
-                if int_value.is_none() {
+                if (int_value == None) {
                     tokens.push("0".to_string());
                 } else {
                     if let Some(int_value) = int_value.clone() {
@@ -2911,7 +2912,7 @@ mod __sifr_project_nominals {
             } else {
                 if (value.kind.clone() == "float") {
                     let float_value: Option<f64> = value.float_value;
-                    if float_value.is_none() {
+                    if (float_value == None) {
                         tokens.push("0.0".to_string());
                     } else {
                         if let Some(float_value) = float_value {
@@ -2921,7 +2922,7 @@ mod __sifr_project_nominals {
                 } else {
                     if (value.kind.clone() == "str") {
                         let str_value: Option<String> = value.as_str();
-                        if str_value.is_none() {
+                        if (str_value == None) {
                             tokens.push("".to_string());
                         } else {
                             if let Some(str_value) = str_value {
@@ -3164,6 +3165,21 @@ mod __sifr_project_nominals {
         }
     }
     impl ::std::error::Error for RegexError {}
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct IndexError {
+        pub message: String,
+    }
+    impl IndexError {
+        pub fn new(message: String) -> Self {
+            Self { message }
+        }
+    }
+    impl ::std::fmt::Display for IndexError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for IndexError {}
     impl From<IOError> for Error {
         fn from(err: IOError) -> Self {
             Self::new(err.message)
@@ -3199,9 +3215,15 @@ mod __sifr_project_nominals {
             Self::new(err.message)
         }
     }
+    impl From<IndexError> for Error {
+        fn from(err: IndexError) -> Self {
+            Self::new(err.message)
+        }
+    }
 }
 pub use __sifr_project_nominals::Error;
 pub use __sifr_project_nominals::IOError;
+pub use __sifr_project_nominals::IndexError;
 pub use __sifr_project_nominals::JSONDecodeError;
 pub use __sifr_project_nominals::JsonIntegerRangeError;
 pub use __sifr_project_nominals::JsonLimitError;
@@ -3260,49 +3282,68 @@ fn topological_sort(
     let mut result: Vec<SifrInt> = vec![];
     let mut visited: Vec<SifrInt> = vec![];
     let mut i: SifrInt = SifrInt::from_i64(0);
-    while &i < &num_nodes {
+    while (&i < &num_nodes) {
         visited.push(SifrInt::from_i64(0));
         i = &i + &SifrInt::from_i64(1);
     }
     let mut processed: SifrInt = SifrInt::from_i64(0);
-    while &processed < &num_nodes {
+    while (&processed < &num_nodes) {
         let mut found_any: bool = false;
         let mut node: SifrInt = SifrInt::from_i64(0);
-        while &node < &num_nodes {
+        while (&SifrInt::from_i64(0) <= &node) && (&node < &SifrInt::from(visited.len()))
+        {
             let v: Option<SifrInt> = {
-                let __sifr_index_list = &visited;
-                let __sifr_index_i = node.clone();
-                let __sifr_index_norm = __sifr_index_i
-                    .normalize_index_or_len(__sifr_index_list.len());
-                __sifr_index_list.get(__sifr_index_norm).cloned()
+                let __sifr_checked_read_collection = &visited;
+                let __sifr_checked_read_index = node.clone();
+                let __sifr_checked_read_normalized = __sifr_checked_read_index
+                    .normalize_index_or_len(__sifr_checked_read_collection.len());
+                __sifr_checked_read_collection
+                    .get(__sifr_checked_read_normalized)
+                    .cloned()
             };
             if let Some(v) = v.clone() {
-                if &v == &SifrInt::from_i64(0) {
+                if (&v == &SifrInt::from_i64(0)) {
                     let mut has_dep: bool = false;
                     let mut j: SifrInt = SifrInt::from_i64(0);
                     while (&j < &SifrInt::from(to_nodes.len())) {
-                        let to_val: Option<SifrInt> = Some(
-                            to_nodes[::sifr_runtime::to_usize_proven(&(j))].clone(),
-                        );
+                        let to_val: Option<SifrInt> = {
+                            let __sifr_checked_read_collection = &to_nodes;
+                            let __sifr_checked_read_index = j.clone();
+                            let __sifr_checked_read_normalized = __sifr_checked_read_index
+                                .normalize_index_or_len(
+                                    __sifr_checked_read_collection.len(),
+                                );
+                            __sifr_checked_read_collection
+                                .get(__sifr_checked_read_normalized)
+                                .cloned()
+                        };
                         let from_val: Option<SifrInt> = {
-                            let __sifr_index_list = &from_nodes;
-                            let __sifr_index_i = j.clone();
-                            let __sifr_index_norm = __sifr_index_i
-                                .normalize_index_or_len(__sifr_index_list.len());
-                            __sifr_index_list.get(__sifr_index_norm).cloned()
+                            let __sifr_checked_read_collection = &from_nodes;
+                            let __sifr_checked_read_index = j.clone();
+                            let __sifr_checked_read_normalized = __sifr_checked_read_index
+                                .normalize_index_or_len(
+                                    __sifr_checked_read_collection.len(),
+                                );
+                            __sifr_checked_read_collection
+                                .get(__sifr_checked_read_normalized)
+                                .cloned()
                         };
                         if let Some(to_val) = to_val.clone() {
                             if let Some(from_val) = from_val.clone() {
-                                if &to_val == &node {
+                                if (&to_val == &node) {
                                     let dep_v: Option<SifrInt> = {
-                                        let __sifr_index_list = &visited;
-                                        let __sifr_index_i = from_val.clone();
-                                        let __sifr_index_norm = __sifr_index_i
-                                            .normalize_index_or_len(__sifr_index_list.len());
-                                        __sifr_index_list.get(__sifr_index_norm).cloned()
+                                        let __sifr_checked_read_collection = &visited;
+                                        let __sifr_checked_read_index = from_val.clone();
+                                        let __sifr_checked_read_normalized = __sifr_checked_read_index
+                                            .normalize_index_or_len(
+                                                __sifr_checked_read_collection.len(),
+                                            );
+                                        __sifr_checked_read_collection
+                                            .get(__sifr_checked_read_normalized)
+                                            .cloned()
                                     };
                                     if let Some(dep_v) = dep_v.clone() {
-                                        if &dep_v == &SifrInt::from_i64(0) {
+                                        if (&dep_v == &SifrInt::from_i64(0)) {
                                             has_dep = true;
                                         }
                                     }
@@ -3314,11 +3355,14 @@ fn topological_sort(
                     if !has_dep {
                         result.push(node.clone());
                         {
-                            let __idx_raw = node.clone();
-                            let __idx_norm = __idx_raw
-                                .normalize_index_or_len(visited.len());
-                            if let Some(__elem) = visited.get_mut(__idx_norm) {
-                                *__elem = SifrInt::from_i64(1);
+                            let __assign_value = SifrInt::from_i64(1);
+                            {
+                                let __index_raw = node.clone();
+                                let __index_normalized = __index_raw
+                                    .normalize_index_or_len(visited.len());
+                                if let Some(__elem) = visited.get_mut(__index_normalized) {
+                                    *__elem = __assign_value;
+                                }
                             }
                         }
                         processed = &processed + &SifrInt::from_i64(1);
@@ -4391,7 +4435,7 @@ fn open_binary(
     path: &String,
     mode: &String,
 ) -> Result<__SifrIoBinaryFileHandle, IOError> {
-    if !(mode.contains(&"b".to_string())) {
+    if !mode.contains(&"b".to_string()) {
         return Err(IOError::new("open_binary requires binary mode".to_string()));
     }
     let __sifr_try_res: Result<Result<__SifrIoBinaryFileHandle, IOError>, IOError> = (|| {
@@ -4457,28 +4501,35 @@ fn is_valid_ipv4(addr: &String) -> bool {
     }
     for part in parts.iter().cloned() {
         let __sifr_chars_part: Vec<char> = part.chars().collect::<Vec<char>>();
-        if (&SifrInt::from(__sifr_chars_part.len()) == &SifrInt::from_i64(0)) {
+        let Some(__sifr_checked_value_0) = ({
+            let __sifr_string_index = SifrInt::from_i64(0);
+            let __sifr_string_index_normalized = __sifr_string_index
+                .normalize_index_or_len(__sifr_chars_part.len());
+            __sifr_chars_part.get(__sifr_string_index_normalized)
+        })
+            .map(|c| c.to_string()) else {
             return false;
-        }
+        };
         if (&SifrInt::from(__sifr_chars_part.len()) > &SifrInt::from_i64(3)) {
             return false;
         }
         if (&SifrInt::from(__sifr_chars_part.len()) > &SifrInt::from_i64(1)) {
-            let first_digit: Option<String> = Some({
-                let __indexed_char_option = __sifr_chars_part
-                    .get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(0))))
-                    .map(|c| c.to_string());
-                __indexed_char_option.as_slice()[0_usize].clone()
-            });
-            if first_digit.is_some() && (first_digit == Some("0".to_string())) {
+            let first_digit: Option<String> = ({
+                let __sifr_string_index = SifrInt::from_i64(0);
+                let __sifr_string_index_normalized = __sifr_string_index
+                    .normalize_index_or_len(__sifr_chars_part.len());
+                __sifr_chars_part.get(__sifr_string_index_normalized)
+            })
+                .map(|c| c.to_string());
+            if (first_digit != None) && (first_digit == Some("0".to_string())) {
                 return false;
             }
         }
         let val: SifrInt = _parse_int(&part);
-        if &val < &SifrInt::from_i64(0) {
+        if (&val < &SifrInt::from_i64(0)) {
             return false;
         }
-        if &val > &SifrInt::from_i64(255) {
+        if (&val > &SifrInt::from_i64(255)) {
             return false;
         }
     }
@@ -4489,48 +4540,49 @@ fn _parse_int(s: &String) -> SifrInt {
     let mut result: SifrInt = SifrInt::from_i64(0);
     let mut i: SifrInt = SifrInt::from_i64(0);
     while (&i < &SifrInt::from(__sifr_chars_s.len())) {
-        let ch: Option<String> = Some({
-            let __indexed_char_option = __sifr_chars_s
-                .get(::sifr_runtime::to_usize_proven(&(i)))
-                .map(|c| c.to_string());
-            __indexed_char_option.as_slice()[0_usize].clone()
-        });
+        let ch: Option<String> = ({
+            let __sifr_string_index = i.clone();
+            let __sifr_string_index_normalized = __sifr_string_index
+                .normalize_index_or_len(__sifr_chars_s.len());
+            __sifr_chars_s.get(__sifr_string_index_normalized)
+        })
+            .map(|c| c.to_string());
         if let Some(ch) = ch {
-            if ch == "0" {
+            if (ch == "0") {
                 result = &result * &SifrInt::from_i64(10);
             } else {
-                if ch == "1" {
+                if (ch == "1") {
                     result = &(&result * &SifrInt::from_i64(10)) + &SifrInt::from_i64(1);
                 } else {
-                    if ch == "2" {
+                    if (ch == "2") {
                         result = &(&result * &SifrInt::from_i64(10))
                             + &SifrInt::from_i64(2);
                     } else {
-                        if ch == "3" {
+                        if (ch == "3") {
                             result = &(&result * &SifrInt::from_i64(10))
                                 + &SifrInt::from_i64(3);
                         } else {
-                            if ch == "4" {
+                            if (ch == "4") {
                                 result = &(&result * &SifrInt::from_i64(10))
                                     + &SifrInt::from_i64(4);
                             } else {
-                                if ch == "5" {
+                                if (ch == "5") {
                                     result = &(&result * &SifrInt::from_i64(10))
                                         + &SifrInt::from_i64(5);
                                 } else {
-                                    if ch == "6" {
+                                    if (ch == "6") {
                                         result = &(&result * &SifrInt::from_i64(10))
                                             + &SifrInt::from_i64(6);
                                     } else {
-                                        if ch == "7" {
+                                        if (ch == "7") {
                                             result = &(&result * &SifrInt::from_i64(10))
                                                 + &SifrInt::from_i64(7);
                                         } else {
-                                            if ch == "8" {
+                                            if (ch == "8") {
                                                 result = &(&result * &SifrInt::from_i64(10))
                                                     + &SifrInt::from_i64(8);
                                             } else {
-                                                if ch == "9" {
+                                                if (ch == "9") {
                                                     result = &(&result * &SifrInt::from_i64(10))
                                                         + &SifrInt::from_i64(9);
                                                 } else {
@@ -4563,7 +4615,7 @@ fn _ip_to_int_raw(addr: &String) -> SifrInt {
     result.clone()
 }
 fn ip_to_int(addr: &String) -> Result<SifrInt, ValueError> {
-    if !(is_valid_ipv4(addr)) {
+    if !is_valid_ipv4(addr) {
         return Err(ValueError::new("invalid IPv4 address".to_string()));
     }
     Ok(_ip_to_int_raw(addr))
@@ -4737,11 +4789,11 @@ fn _json_token_at(
     index: SifrInt,
 ) -> Result<String, JSONDecodeError> {
     let value: Option<String> = {
-        let __sifr_index_list = &tokens;
-        let __sifr_index_i = index.clone();
-        let __sifr_index_norm = __sifr_index_i
-            .normalize_index_or_len(__sifr_index_list.len());
-        __sifr_index_list.get(__sifr_index_norm).cloned()
+        let __sifr_checked_read_collection = &tokens;
+        let __sifr_checked_read_index = index.clone();
+        let __sifr_checked_read_normalized = __sifr_checked_read_index
+            .normalize_index_or_len(__sifr_checked_read_collection.len());
+        __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
     };
     let Some(value) = value else {
         return Err(
@@ -4875,7 +4927,7 @@ fn _json_decode_value_at(
     > = (|| {
         let tag: String = _json_token_at(tokens, (index).clone())?;
         let payload_index: SifrInt = &index + &SifrInt::from_i64(1);
-        if tag == "null" {
+        if (tag == "null") {
             return Ok(
                 Ok((
                     __SifrStdlib_sifr_x2ejson_x2eJsonValue::new(
@@ -4889,7 +4941,7 @@ fn _json_decode_value_at(
                 )),
             );
         }
-        if tag == "bool" {
+        if (tag == "bool") {
             let bool_token: String = _json_token_at(tokens, (payload_index).clone())?;
             let bool_value: bool = _json_decode_bool_token(&bool_token)?;
             return Ok(
@@ -4905,7 +4957,7 @@ fn _json_decode_value_at(
                 )),
             );
         }
-        if tag == "int" {
+        if (tag == "int") {
             let int_value: SifrInt = _json_token_int(tokens, (payload_index).clone())?;
             return Ok(
                 Ok((
@@ -4920,7 +4972,7 @@ fn _json_decode_value_at(
                 )),
             );
         }
-        if tag == "float" {
+        if (tag == "float") {
             let float_value: f64 = _json_token_float(tokens, (payload_index).clone())?;
             return Ok(
                 Ok((
@@ -4935,7 +4987,7 @@ fn _json_decode_value_at(
                 )),
             );
         }
-        if tag == "str" {
+        if (tag == "str") {
             let str_value: String = _json_token_at(tokens, (payload_index).clone())?;
             return Ok(
                 Ok((
@@ -4950,9 +5002,9 @@ fn _json_decode_value_at(
                 )),
             );
         }
-        if tag == "array" {
+        if (tag == "array") {
             let array_count: SifrInt = _json_token_int(tokens, (payload_index).clone())?;
-            if &array_count < &SifrInt::from_i64(0) {
+            if (&array_count < &SifrInt::from_i64(0)) {
                 return Err(
                     JSONDecodeError::new(
                         "JSON bridge payload has invalid array length".to_string(),
@@ -4968,7 +5020,7 @@ fn _json_decode_value_at(
             );
             let mut next_index: SifrInt = &payload_index + &SifrInt::from_i64(1);
             let mut consumed: SifrInt = SifrInt::from_i64(0);
-            while &consumed < &array_count {
+            while (&consumed < &array_count) {
                 let item_result: (__SifrStdlib_sifr_x2ejson_x2eJsonValue, SifrInt) = _json_decode_value_at(
                     tokens,
                     (next_index).clone(),
@@ -4979,12 +5031,12 @@ fn _json_decode_value_at(
             }
             return Ok(Ok((array_value, next_index.clone())));
         }
-        if tag == "object" {
+        if (tag == "object") {
             let object_count: SifrInt = _json_token_int(
                 tokens,
                 (payload_index).clone(),
             )?;
-            if &object_count < &SifrInt::from_i64(0) {
+            if (&object_count < &SifrInt::from_i64(0)) {
                 return Err(
                     JSONDecodeError::new(
                         "JSON bridge payload has invalid object length".to_string(),
@@ -5000,7 +5052,7 @@ fn _json_decode_value_at(
             );
             let mut next_index: SifrInt = &payload_index + &SifrInt::from_i64(1);
             let mut consumed: SifrInt = SifrInt::from_i64(0);
-            while &consumed < &object_count {
+            while (&consumed < &object_count) {
                 let key: String = _json_token_at(tokens, (next_index).clone())?;
                 let item_result: (__SifrStdlib_sifr_x2ejson_x2eJsonValue, SifrInt) = _json_decode_value_at(
                     tokens,
@@ -5068,7 +5120,7 @@ fn _json_append_tokens(
     tokens.push(format!("{}{}", value.kind.clone(), ""));
     if (value.kind.clone() == "bool") {
         let bool_value: Option<bool> = value.bool_value;
-        if bool_value.is_none() {
+        if (bool_value == None) {
             tokens.push("false".to_string());
         } else {
             if let Some(bool_value) = bool_value {
@@ -5078,7 +5130,7 @@ fn _json_append_tokens(
     } else {
         if (value.kind.clone() == "int") {
             let int_value: Option<SifrInt> = value.int_value.clone();
-            if int_value.is_none() {
+            if (int_value == None) {
                 tokens.push("0".to_string());
             } else {
                 if let Some(int_value) = int_value.clone() {
@@ -5088,7 +5140,7 @@ fn _json_append_tokens(
         } else {
             if (value.kind.clone() == "float") {
                 let float_value: Option<f64> = value.float_value;
-                if float_value.is_none() {
+                if (float_value == None) {
                     tokens.push("0.0".to_string());
                 } else {
                     if let Some(float_value) = float_value {
@@ -5098,7 +5150,7 @@ fn _json_append_tokens(
             } else {
                 if (value.kind.clone() == "str") {
                     let str_value: Option<String> = value.as_str();
-                    if str_value.is_none() {
+                    if (str_value == None) {
                         tokens.push("".to_string());
                     } else {
                         if let Some(str_value) = str_value {
@@ -5578,7 +5630,7 @@ fn gcd(a: SifrInt, b: SifrInt) -> SifrInt {
     if &y < &SifrInt::from_i64(0) {
         y = &SifrInt::from_i64(0) - &y;
     }
-    while &y != &SifrInt::from_i64(0) {
+    while (&y != &SifrInt::from_i64(0)) {
         let temp: SifrInt = y.clone();
         y = x.floor_mod_known_nonzero(&y);
         x = temp;
@@ -5625,10 +5677,10 @@ fn comb(n: SifrInt, k: SifrInt) -> SifrInt {
     }
     let mut result: SifrInt = SifrInt::from_i64(1);
     let mut i: SifrInt = SifrInt::from_i64(0);
-    while &i < &r {
+    while (&i < &r) {
         result = &result * &(&n - &i);
         let divisor: SifrInt = &i + &SifrInt::from_i64(1);
-        if &divisor == &SifrInt::from_i64(0) {
+        if (&divisor == &SifrInt::from_i64(0)) {
             return SifrInt::from_i64(0);
         }
         result = result.floor_div_known_nonzero(&divisor);
@@ -5718,11 +5770,11 @@ fn sumprod(p: &Vec<f64>, q: &Vec<f64>) -> f64 {
 fn frexp_mantissa(x: f64) -> f64 {
     let parts: Vec<f64> = frexp(x);
     let m: Option<f64> = {
-        let __sifr_index_list = &parts;
-        let __sifr_index_i = SifrInt::from_i64(0);
-        let __sifr_index_norm = __sifr_index_i
-            .normalize_index_or_len(__sifr_index_list.len());
-        __sifr_index_list.get(__sifr_index_norm).copied()
+        let __sifr_checked_read_collection = &parts;
+        let __sifr_checked_read_index = SifrInt::from_i64(0);
+        let __sifr_checked_read_normalized = __sifr_checked_read_index
+            .normalize_index_or_len(__sifr_checked_read_collection.len());
+        __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
     };
     let Some(m) = m else {
         return NAN;
@@ -5732,11 +5784,11 @@ fn frexp_mantissa(x: f64) -> f64 {
 fn frexp_exponent(x: f64) -> SifrInt {
     let parts: Vec<f64> = frexp(x);
     let exp_val: Option<f64> = {
-        let __sifr_index_list = &parts;
-        let __sifr_index_i = SifrInt::from_i64(1);
-        let __sifr_index_norm = __sifr_index_i
-            .normalize_index_or_len(__sifr_index_list.len());
-        __sifr_index_list.get(__sifr_index_norm).copied()
+        let __sifr_checked_read_collection = &parts;
+        let __sifr_checked_read_index = SifrInt::from_i64(1);
+        let __sifr_checked_read_normalized = __sifr_checked_read_index
+            .normalize_index_or_len(__sifr_checked_read_collection.len());
+        __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
     };
     let Some(exp_val) = exp_val else {
         return SifrInt::from_i64(0);
@@ -5746,11 +5798,11 @@ fn frexp_exponent(x: f64) -> SifrInt {
 fn modf_fractional(x: f64) -> f64 {
     let parts: Vec<f64> = modf(x);
     let f: Option<f64> = {
-        let __sifr_index_list = &parts;
-        let __sifr_index_i = SifrInt::from_i64(0);
-        let __sifr_index_norm = __sifr_index_i
-            .normalize_index_or_len(__sifr_index_list.len());
-        __sifr_index_list.get(__sifr_index_norm).copied()
+        let __sifr_checked_read_collection = &parts;
+        let __sifr_checked_read_index = SifrInt::from_i64(0);
+        let __sifr_checked_read_normalized = __sifr_checked_read_index
+            .normalize_index_or_len(__sifr_checked_read_collection.len());
+        __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
     };
     let Some(f) = f else {
         return NAN;
@@ -5760,11 +5812,11 @@ fn modf_fractional(x: f64) -> f64 {
 fn modf_integral(x: f64) -> f64 {
     let parts: Vec<f64> = modf(x);
     let i: Option<f64> = {
-        let __sifr_index_list = &parts;
-        let __sifr_index_i = SifrInt::from_i64(1);
-        let __sifr_index_norm = __sifr_index_i
-            .normalize_index_or_len(__sifr_index_list.len());
-        __sifr_index_list.get(__sifr_index_norm).copied()
+        let __sifr_checked_read_collection = &parts;
+        let __sifr_checked_read_index = SifrInt::from_i64(1);
+        let __sifr_checked_read_normalized = __sifr_checked_read_index
+            .normalize_index_or_len(__sifr_checked_read_collection.len());
+        __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
     };
     let Some(i) = i else {
         return NAN;
@@ -5856,7 +5908,9 @@ impl __SifrStdlib_sifr_x2erandom_x2eRandom {
 impl __SifrStdlib_sifr_x2erandom_x2eRandom {
     fn _twist(&mut self) {
         let mut i: SifrInt = SifrInt::from_i64(0);
-        while &i < &__const__MT_N() {
+        while (&SifrInt::from_i64(0) <= &i)
+            && (&i < &SifrInt::from(self._state_words.len()))
+        {
             let y: SifrInt = &(&_state_word_at(&self._state_words, (i).clone())
                 & &__const__MT_UPPER_MASK())
                 + &(&_state_word_at(
@@ -5875,11 +5929,14 @@ impl __SifrStdlib_sifr_x2erandom_x2eRandom {
                 (&i + &__const__MT_M()).floor_mod_known_nonzero(&__const__MT_N()),
             ) ^ &x_a;
             {
-                let __idx_raw = i.clone();
-                let __idx_norm = __idx_raw
-                    .normalize_index_or_len(self._state_words.len());
-                if let Some(__elem) = self._state_words.get_mut(__idx_norm) {
-                    *__elem = &new_word & &__const__MT_WORD_MASK();
+                let __assign_value = &new_word & &__const__MT_WORD_MASK();
+                {
+                    let __index_raw = i.clone();
+                    let __index_normalized = __index_raw
+                        .normalize_index_or_len(self._state_words.len());
+                    if let Some(__elem) = self._state_words.get_mut(__index_normalized) {
+                        *__elem = __assign_value;
+                    }
                 }
             }
             i = &i + &SifrInt::from_i64(1);
@@ -5932,11 +5989,11 @@ impl __SifrStdlib_sifr_x2erandom_x2eRandom {
         }
         let width: SifrInt = &actual_stop - &actual_start;
         if (&step.clone() > &SifrInt::from_i64(0)) {
-            if &width <= &SifrInt::from_i64(0) {
+            if (&width <= &SifrInt::from_i64(0)) {
                 return Err(ValueError::new("randrange: empty range".to_string()));
             }
         } else {
-            if &width >= &SifrInt::from_i64(0) {
+            if (&width >= &SifrInt::from_i64(0)) {
                 return Err(ValueError::new("randrange: empty range".to_string()));
             }
         }
@@ -5948,15 +6005,15 @@ impl __SifrStdlib_sifr_x2erandom_x2eRandom {
         if &abs_step < &SifrInt::from_i64(0) {
             abs_step = &SifrInt::from_i64(0) - &abs_step;
         }
-        if &abs_step == &SifrInt::from_i64(0) {
+        if (&abs_step == &SifrInt::from_i64(0)) {
             return Err(ValueError::new("randrange: step must not be zero".to_string()));
         }
         let count: SifrInt = (&(&abs_width + &abs_step) - &SifrInt::from_i64(1))
             .floor_div_known_nonzero(&abs_step);
-        if &count <= &SifrInt::from_i64(0) {
+        if (&count <= &SifrInt::from_i64(0)) {
             return Err(ValueError::new("randrange: empty range".to_string()));
         }
-        if &count == &SifrInt::from_i64(0) {
+        if (&count == &SifrInt::from_i64(0)) {
             return Err(ValueError::new("randrange: empty range".to_string()));
         }
         let pick: SifrInt = self._next_u32().floor_mod_known_nonzero(&count);
@@ -5988,16 +6045,16 @@ impl __SifrStdlib_sifr_x2erandom_x2eRandom {
         }
         let mut result: SifrInt = SifrInt::from_i64(0);
         let mut bits_left: SifrInt = k.clone();
-        while &bits_left > &SifrInt::from_i64(0) {
+        while (&bits_left > &SifrInt::from_i64(0)) {
             let word: SifrInt = self._next_u32();
             let mut take: SifrInt = SifrInt::from_i64(32);
-            if &bits_left < &SifrInt::from_i64(32) {
+            if (&bits_left < &SifrInt::from_i64(32)) {
                 take = bits_left.clone();
             }
             let mut mask: SifrInt = SifrInt::from_i64(0);
             let mut shifted_result: SifrInt = result;
             let mut shift_index: SifrInt = SifrInt::from_i64(0);
-            while &shift_index < &take {
+            while (&shift_index < &take) {
                 mask = &(&mask * &SifrInt::from_i64(2)) + &SifrInt::from_i64(1);
                 shifted_result = &shifted_result * &SifrInt::from_i64(2);
                 shift_index = &shift_index + &SifrInt::from_i64(1);
@@ -6106,11 +6163,11 @@ impl __SifrStdlib_sifr_x2erandom_x2eRandom {
 }
 fn _state_word_at(words: &Vec<SifrInt>, index: SifrInt) -> SifrInt {
     let value: Option<SifrInt> = {
-        let __sifr_index_list = &words;
-        let __sifr_index_i = index.clone();
-        let __sifr_index_norm = __sifr_index_i
-            .normalize_index_or_len(__sifr_index_list.len());
-        __sifr_index_list.get(__sifr_index_norm).cloned()
+        let __sifr_checked_read_collection = &words;
+        let __sifr_checked_read_index = index.clone();
+        let __sifr_checked_read_normalized = __sifr_checked_read_index
+            .normalize_index_or_len(__sifr_checked_read_collection.len());
+        __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
     };
     if let Some(value) = value.clone() {
         return value;
@@ -6134,7 +6191,7 @@ fn _seed_words_from_seed(seed_value: SifrInt) -> Vec<SifrInt> {
     let mut words: Vec<SifrInt> = vec![];
     words.push(&seed_value & &__const__MT_WORD_MASK());
     let mut i: SifrInt = SifrInt::from_i64(1);
-    while &i < &__const__MT_N() {
+    while (&i < &__const__MT_N()) {
         let prev: SifrInt = _state_word_at(&words, &i - &SifrInt::from_i64(1));
         let next_word: SifrInt = &(&(&__const__MT_F()
             * &(&prev ^ &prev.floor_div_known_nonzero(&SifrInt::from_i64(1073741824))))
@@ -6453,29 +6510,30 @@ fn _expand_tabs_impl(text: &String, tabsize: SifrInt) -> String {
     if &effective_tabsize <= &SifrInt::from_i64(0) {
         effective_tabsize = SifrInt::from_i64(1);
     }
-    if &effective_tabsize == &SifrInt::from_i64(0) {
+    if (&effective_tabsize == &SifrInt::from_i64(0)) {
         return text.clone();
     }
     let mut result: String = "".to_string();
     let mut column: SifrInt = SifrInt::from_i64(0);
     let mut i: SifrInt = SifrInt::from_i64(0);
     while (&i < &SifrInt::from(__sifr_chars_text.len())) {
-        let ch_opt: Option<String> = Some({
-            let __indexed_char_option = __sifr_chars_text
-                .get(::sifr_runtime::to_usize_proven(&(i)))
-                .map(|c| c.to_string());
-            __indexed_char_option.as_slice()[0_usize].clone()
-        });
+        let ch_opt: Option<String> = ({
+            let __sifr_string_index = i.clone();
+            let __sifr_string_index_normalized = __sifr_string_index
+                .normalize_index_or_len(__sifr_chars_text.len());
+            __sifr_chars_text.get(__sifr_string_index_normalized)
+        })
+            .map(|c| c.to_string());
         if let Some(ch_opt) = ch_opt {
             let ch: String = ch_opt;
-            if ch == "\t" {
+            if (ch == "\t") {
                 let mut spaces: SifrInt = &effective_tabsize
                     - &column.floor_mod_known_nonzero(&effective_tabsize);
-                if &spaces <= &SifrInt::from_i64(0) {
+                if (&spaces <= &SifrInt::from_i64(0)) {
                     spaces = effective_tabsize.clone();
                 }
                 let mut j: SifrInt = SifrInt::from_i64(0);
-                while &j < &spaces {
+                while (&j < &spaces) {
                     result.push(' ');
                     j = &j + &SifrInt::from_i64(1);
                 }
@@ -6564,19 +6622,27 @@ fn _trim_line(line: &String) -> String {
     let __sifr_chars_line: Vec<char> = line.chars().collect::<Vec<char>>();
     let mut start: SifrInt = SifrInt::from_i64(0);
     while (&start < &SifrInt::from(__sifr_chars_line.len()))
-        && (({
-            let __indexed_char_option = __sifr_chars_line
-                .get(::sifr_runtime::to_usize_proven(&(start)))
-                .map(|c| c.to_string());
-            __indexed_char_option.as_slice()[0_usize].clone()
-        }) == " ")
+        && ({
+            let __sifr_string_index = start.clone();
+            let __sifr_string_index_normalized = __sifr_string_index
+                .normalize_index_or_len(__sifr_chars_line.len());
+            __sifr_chars_line.get(__sifr_string_index_normalized)
+        })
+            .map(|c| c.to_string())
+            .is_some_and(|__sifr_checked_value_2| {
+                (__sifr_checked_value_2.clone() == " ")
+            })
     {
         start = &start + &SifrInt::from_i64(1);
     }
     let mut end: SifrInt = SifrInt::from(__sifr_chars_line.len());
     while (&end > &start)
-        && (__sifr_chars_line
-            .get(::sifr_runtime::to_usize_proven(&(&end - &SifrInt::from_i64(1))))
+        && (({
+            let __sifr_string_index = &end - &SifrInt::from_i64(1);
+            let __sifr_string_index_normalized = __sifr_string_index
+                .normalize_index_or_len(__sifr_chars_line.len());
+            __sifr_chars_line.get(__sifr_string_index_normalized)
+        })
             .map(|c| c.to_string()) == Some(" ".to_string()))
     {
         end = &end - &SifrInt::from_i64(1);
@@ -6729,7 +6795,7 @@ fn _wrap_with_indents(
     result
 }
 fn wrap(text: &String, width: SifrInt) -> Result<Vec<String>, ValueError> {
-    if &width <= &SifrInt::from_i64(0) {
+    if (&width <= &SifrInt::from_i64(0)) {
         return Err(ValueError::new("wrap: width must be > 0".to_string()));
     }
     Ok(_wrap_impl(text, (width).clone()))
@@ -6905,25 +6971,40 @@ fn main() {
         SifrInt::from_i64(10), SifrInt::from_i64(20), SifrInt::from_i64(30)
     ];
     let oob_val: Option<SifrInt> = {
-        let __sifr_index_list = &nums;
-        let __sifr_index_i = SifrInt::from_i64(99);
-        let __sifr_index_norm = __sifr_index_i
-            .normalize_index_or_len(__sifr_index_list.len());
-        __sifr_index_list.get(__sifr_index_norm).cloned()
+        let __sifr_checked_read_collection = &nums;
+        let __sifr_checked_read_index = SifrInt::from_i64(99);
+        let __sifr_checked_read_normalized = __sifr_checked_read_index
+            .normalize_index_or_len(__sifr_checked_read_collection.len());
+        __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
     };
     if let Some(oob_val) = oob_val.clone() {
         println!("Value at index 99: {}", oob_val);
     } else {
         println!("nums[99] -> None (bounds-checked)");
     }
-    {
-        let __idx_raw = SifrInt::from_i64(99);
-        let __idx_norm = __idx_raw.normalize_index_or_len(nums.len());
-        if let Some(__elem) = nums.get_mut(__idx_norm) {
-            *__elem = SifrInt::from_i64(42);
+    let __sifr_try_res: Result<(), IndexError> = (|| {
+        {
+            let __assign_value = SifrInt::from_i64(42);
+            {
+                let __index_raw = SifrInt::from_i64(99);
+                let __index_normalized = __index_raw.normalize_index_or_len(nums.len());
+                if let Some(__elem) = nums.get_mut(__index_normalized) {
+                    *__elem = __assign_value;
+                } else {
+                    return Err(
+                        IndexError::new("collection index out of range".to_string()),
+                    );
+                }
+            }
         }
+        Ok(())
+    })();
+    if let Err(__sifr_try_err) = __sifr_try_res {
+        let _e = __sifr_try_err.clone();
+        println!(
+            "nums[99] = 42 -> IndexError, list len still {}", SifrInt::from(nums.len())
+        );
     }
-    println!("nums[99] = 42 -> no-op, list len still {}", SifrInt::from(nums.len()));
     println!();
     println!("=== All operations completed without panicking! ===");
     println!("=== Zero Panic Gate: PASSED ===");

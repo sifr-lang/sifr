@@ -123,14 +123,23 @@ macro_rules! stmt_expr_stepped_slice {
                     }
                     _ => false,
                 };
-                let indexed = crate::RustExpr::Index {
-                    expr: Box::new(crate::RustExpr::Ident("_v".to_string())),
-                    index: Box::new(crate::RustExpr::Ident("_i".to_string())),
+                let accessed = crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::Ident("_v".to_string())),
+                    method: "get".to_string(),
+                    args: vec![crate::RustExpr::Ident("_i".to_string())],
                 };
                 let yielded = if copy_elements {
-                    indexed
+                    crate::RustExpr::MethodCall {
+                        receiver: Box::new(accessed),
+                        method: "copied".to_string(),
+                        args: vec![],
+                    }
                 } else {
-                    crate::RustExpr::Clone(Box::new(indexed))
+                    crate::RustExpr::MethodCall {
+                        receiver: Box::new(accessed),
+                        method: "cloned".to_string(),
+                        args: vec![],
+                    }
                 };
                 Ok(Some(crate::RustExpr::Block {
                     stmts: vec![
@@ -157,7 +166,7 @@ macro_rules! stmt_expr_stepped_slice {
                     expr: Some(Box::new(crate::RustExpr::MethodCall {
                         receiver: Box::new(crate::RustExpr::MethodCall {
                             receiver: Box::new(indices_expr("_len")),
-                            method: "map".to_string(),
+                            method: "filter_map".to_string(),
                             args: vec![crate::RustExpr::Closure {
                                 params: vec![crate::RustParam::Named {
                                     name: "_i".to_string(),
@@ -210,14 +219,15 @@ macro_rules! stmt_expr_stepped_slice {
                                 name: "_i".to_string(),
                                 ty: crate::RustType::Named("_".to_string()),
                             }],
-                            body: Box::new(crate::RustExpr::Index {
-                                expr: Box::new(crate::RustExpr::Ident("_chars".to_string())),
-                                index: Box::new(crate::RustExpr::Ident("_i".to_string())),
+                            body: Box::new(crate::RustExpr::MethodCall {
+                                receiver: Box::new(crate::RustExpr::Ident("_chars".to_string())),
+                                method: "get".to_string(),
+                                args: vec![crate::RustExpr::Ident("_i".to_string())],
                             }),
                             is_move: false,
                         }],
                     }),
-                    method: "collect::<String>".to_string(),
+                    method: "copied().collect::<String>".to_string(),
                     args: vec![],
                 })),
             })),

@@ -448,14 +448,19 @@ impl RustEmitter {
                 object,
                 index,
                 value,
-                ..
-            } => Some(vec![RustStmt::Assign {
-                target: RustExpr::Index {
-                    expr: Box::new(RustExpr::Ident(object.clone())),
-                    index: Box::new(self.lower_operator_expr_ir(index)?),
-                },
-                value: self.lower_operator_expr_ir(value)?,
-            }]),
+                object_ty,
+                failure,
+            } => self
+                .lower_subscript_assign_stmt_for_ir(
+                    object,
+                    index,
+                    value,
+                    object_ty,
+                    failure.as_ref(),
+                )
+                .ok()
+                .flatten()
+                .map(|stmt| vec![stmt]),
             HirStmt::AugAssign { name, op, value } => Some(vec![RustStmt::AugAssign {
                 target: RustExpr::Ident(name.clone()),
                 op: op.clone(),
@@ -466,15 +471,20 @@ impl RustEmitter {
                 index,
                 op,
                 value,
-                ..
-            } => Some(vec![RustStmt::AugAssign {
-                target: RustExpr::Index {
-                    expr: Box::new(RustExpr::Ident(object.clone())),
-                    index: Box::new(self.lower_operator_expr_ir(index)?),
-                },
-                op: op.clone(),
-                value: self.lower_operator_expr_ir(value)?,
-            }]),
+                object_ty,
+                failure,
+            } => self
+                .lower_subscript_augassign_stmt_for_ir(
+                    object,
+                    index,
+                    op,
+                    value,
+                    object_ty,
+                    failure.as_ref(),
+                )
+                .ok()
+                .flatten()
+                .map(|stmt| vec![stmt]),
             _ => None,
         }
     }
@@ -492,6 +502,10 @@ impl RustEmitter {
         };
         let mut lowered = Vec::new();
         for stmt in body {
+            if let Some(checked_place) = self.lower_checked_place_mutation_stmt_for_ir(stmt).ok()? {
+                lowered.extend(checked_place);
+                continue;
+            }
             match try_lower_simple_stmt_with_scope_result_and_bindings(
                 stmt,
                 &self.mutated_vars,
@@ -715,10 +729,7 @@ impl RustEmitter {
                     .map(|arg| self.lower_operator_expr_ir(arg))
                     .collect::<Option<Vec<_>>>()?,
             }),
-            HirExpr::Index { object, index, .. } => Some(RustExpr::Index {
-                expr: Box::new(self.lower_operator_expr_ir(object)?),
-                index: Box::new(self.lower_operator_expr_ir(index)?),
-            }),
+            HirExpr::Index { .. } => None,
             HirExpr::BinOp {
                 left, op, right, ..
             } => Some(RustExpr::BinOp {

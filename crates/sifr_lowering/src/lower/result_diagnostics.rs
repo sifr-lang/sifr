@@ -66,11 +66,15 @@ pub(in crate::lower) fn invalid_except_type(ctx: &mut LowerCtx, reason: &str, ra
     );
 }
 
-pub(in crate::lower) fn unhandled_dict_augassign_key_error(ctx: &mut LowerCtx, range: TextRange) {
+pub(in crate::lower) fn unhandled_checked_place_error(
+    ctx: &mut LowerCtx,
+    operation: &str,
+    error_name: &str,
+    range: TextRange,
+) {
     ctx.error_with_code_at(
         DiagnosticCode::RESULT_UNUSED_VALUE,
-        "plain dict augmented subscript assignment may fail with 'KeyError'; handle it inside try/except"
-            .to_string(),
+        format!("{operation} may fail with '{error_name}'; handle it inside try/except"),
         range,
     );
 }

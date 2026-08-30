@@ -5,12 +5,20 @@ use ::sifr_runtime::SifrRange;
 
 fn increment_all(mut values: Vec<SifrInt>) -> Vec<SifrInt> {
     for i in SifrRange::new_known_nonzero(SifrInt::from_i64(0), SifrInt::from(values.len()), SifrInt::from_i64(1)) {
+        let Some(__sifr_checked_value_0) = ({
+    let __sifr_checked_read_collection = &values;
+    let __sifr_checked_read_index = i.clone();
+    let __sifr_checked_read_normalized = __sifr_checked_read_index.normalize_index_or_len(__sifr_checked_read_collection.len());
+    __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+}) else {
+            continue;
+        };
         {
-            let __assign_value = &values[::sifr_runtime::to_usize_proven(&(i))].clone() + &SifrInt::from_i64(1);
+            let __assign_value = &__sifr_checked_value_0.clone() + &SifrInt::from_i64(1);
             {
-                let __idx_raw = i.clone();
-                let __idx_norm = __idx_raw.normalize_index_or_len(values.len());
-                if let Some(__elem) = values.get_mut(__idx_norm) {
+                let __index_raw = i.clone();
+                let __index_normalized = __index_raw.normalize_index_or_len(values.len());
+                if let Some(__elem) = values.get_mut(__index_normalized) {
                     *__elem = __assign_value;
                 }
             }
@@ -22,10 +30,13 @@ fn increment_all(mut values: Vec<SifrInt>) -> Vec<SifrInt> {
 fn clear_all(mut values: Vec<SifrInt>) -> Vec<SifrInt> {
     for i in SifrRange::new_known_nonzero(SifrInt::from_i64(0), SifrInt::from(values.len()), SifrInt::from_i64(1)) {
         {
-            let __idx_raw = i.clone();
-            let __idx_norm = __idx_raw.normalize_index_or_len(values.len());
-            if let Some(__elem) = values.get_mut(__idx_norm) {
-                *__elem = SifrInt::from_i64(0);
+            let __assign_value = SifrInt::from_i64(0);
+            {
+                let __index_raw = i.clone();
+                let __index_normalized = __index_raw.normalize_index_or_len(values.len());
+                if let Some(__elem) = values.get_mut(__index_normalized) {
+                    *__elem = __assign_value;
+                }
             }
         }
     }

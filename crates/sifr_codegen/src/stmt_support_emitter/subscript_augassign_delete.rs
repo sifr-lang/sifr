@@ -7,7 +7,7 @@ impl RustEmitter {
         op: &str,
         value: &HirExpr,
         object_ty: &Type,
-        missing_key_error: Option<&Type>,
+        failure: Option<&Type>,
     ) -> Result<Option<RustStmt>, crate::CodegenError> {
         if !matches!(
             op,
@@ -15,94 +15,24 @@ impl RustEmitter {
         ) {
             return Ok(None);
         }
-        let Some(lowered_index) = self.lower_stmt_expr_for_ir(index)? else {
-            return Ok(None);
-        };
-        let Some(lowered_value) = self.lower_stmt_expr_for_ir(value)? else {
-            return Ok(None);
-        };
-        let exact_integer = matches!(
-            object_ty,
-            Type::Alias { name, .. } if name == "__sifr_defaultdict_int"
-        ) || matches!(
-            Self::resolve_alias_type_for_loop_iter(object_ty),
-            Type::List(element_ty) | Type::Dict(_, element_ty)
-                if matches!(
-                    crate::resolve_alias_type_for_plain_call(element_ty.as_ref()),
-                    Type::Int | Type::LiteralInt(_)
-                )
-        );
-        if op == "+="
-            && matches!(
-                Self::resolve_alias_type_for_loop_iter(object_ty),
-                Type::List(elem_ty)
-                    if matches!(
-                        crate::resolve_alias_type_for_plain_call(elem_ty.as_ref()),
-                        Type::Str | Type::LiteralStr(_)
-                    )
-            )
-        {
-            let push_arg = if let HirExpr::StringLiteral(val) = value {
-                crate::RustExpr::Verbatim(format!("{val:?}"))
-            } else {
-                crate::RustExpr::MethodCall {
-                    receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_value))),
-                    method: "as_str".to_string(),
-                    args: vec![],
-                }
-            };
-            return Ok(Some(RustStmt::Block(vec![
-                RustStmt::Let {
-                    mutable: false,
-                    name: "__idx_raw".to_string(),
-                    ty: None,
-                    value: lowered_index,
-                },
-                RustStmt::Let {
-                    mutable: false,
-                    name: "__idx_norm".to_string(),
-                    ty: None,
-                    value: crate::build_normalized_list_index_i64_expr(
-                        crate::RustExpr::Ident(object.to_string()),
-                        "__idx_raw",
-                    ),
-                },
-                RustStmt::IfLet {
-                    pattern: "Some(__elem)".to_string(),
-                    expr: crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::Ident(object.to_string())),
-                        method: "get_mut".to_string(),
-                        args: vec![crate::RustExpr::Ident("__idx_norm".to_string())],
-                    },
-                    then_body: vec![RustStmt::Expr(crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::Ident("__elem".to_string())),
-                        method: "push_str".to_string(),
-                        args: vec![push_arg],
-                    })],
-                    else_body: None,
-                },
-            ])));
-        }
-        let lowered_value = Self::clone_non_copy_name_expr_for_ir(value, lowered_value);
-        let lowered_value = if exact_integer {
-            self.coerce_typed_expr_to_sifr_int_value(lowered_value, value.ty())
-        } else {
-            lowered_value
-        };
-        let Some(lowered_body_stmt) = Self::build_subscript_augassign_elem_stmt_for_ir(
-            op,
-            value,
-            lowered_value,
-            exact_integer,
-        ) else {
-            return Ok(None);
-        };
-
         if matches!(
             object_ty,
             Type::Alias { name: alias_name, .. } if alias_name == "__sifr_defaultdict_int"
         ) {
+            let Some(lowered_index) = self.lower_stmt_expr_for_ir(index)? else {
+                return Ok(None);
+            };
+            let Some(lowered_value) = self.lower_stmt_expr_for_ir(value)? else {
+                return Ok(None);
+            };
             let lowered_index = self.clone_field_storage_name_expr_for_ir(index, lowered_index);
+            let lowered_value = Self::clone_non_copy_name_expr_for_ir(value, lowered_value);
+            let lowered_value = self.coerce_typed_expr_to_sifr_int_value(lowered_value, value.ty());
+            let Some(lowered_body_stmt) =
+                Self::build_subscript_augassign_elem_stmt_for_ir(op, value, lowered_value, true)
+            else {
+                return Ok(None);
+            };
             return Ok(Some(RustStmt::Block(vec![
                 RustStmt::Let {
                     mutable: false,
@@ -127,77 +57,21 @@ impl RustEmitter {
                 lowered_body_stmt,
             ])));
         }
-
-        match Self::resolve_alias_type_for_loop_iter(object_ty) {
-            Type::List(_) => Ok(Some(RustStmt::Block(vec![
-                RustStmt::Let {
-                    mutable: false,
-                    name: "__idx_raw".to_string(),
-                    ty: None,
-                    value: lowered_index,
-                },
-                RustStmt::Let {
-                    mutable: false,
-                    name: "__idx_norm".to_string(),
-                    ty: None,
-                    value: crate::build_normalized_list_index_i64_expr(
-                        crate::RustExpr::Ident(object.to_string()),
-                        "__idx_raw",
-                    ),
-                },
-                RustStmt::IfLet {
-                    pattern: "Some(__elem)".to_string(),
-                    expr: crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::Ident(object.to_string())),
-                        method: "get_mut".to_string(),
-                        args: vec![crate::RustExpr::Ident("__idx_norm".to_string())],
-                    },
-                    then_body: vec![lowered_body_stmt],
-                    else_body: None,
-                },
-            ]))),
-            Type::Dict(_, _) => {
-                let key_arg = Self::build_dict_lookup_key_arg_for_ir(
-                    Self::clone_non_copy_name_expr_for_ir(index, lowered_index),
-                );
-                Ok(Some(RustStmt::IfLet {
-                    pattern: "Some(__elem)".to_string(),
-                    expr: crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::Ident(object.to_string())),
-                        method: "get_mut".to_string(),
-                        args: vec![key_arg],
-                    },
-                    then_body: vec![lowered_body_stmt],
-                    else_body: missing_key_error.map(|error_ty| {
-                        let error = crate::RustExpr::FnCall {
-                            func: Box::new(crate::RustExpr::Path(vec![
-                                "KeyError".to_string(),
-                                "new".to_string(),
-                            ])),
-                            args: vec![crate::RustExpr::MethodCall {
-                                receiver: Box::new(crate::RustExpr::Literal(
-                                    crate::RustLiteral::Str("key not found".to_string()),
-                                )),
-                                method: "to_string".to_string(),
-                                args: Vec::new(),
-                            }],
-                        };
-                        let error = self.coerce_error_type_for_ir(error_ty, error);
-                        vec![RustStmt::Return(Some(crate::RustExpr::FnCall {
-                            func: Box::new(crate::RustExpr::Path(vec!["Err".to_string()])),
-                            args: vec![error],
-                        }))]
-                    }),
-                }))
-            }
-            _ => Ok(None),
-        }
+        self.lower_checked_single_mutation_for_ir(
+            crate::RustExpr::Ident(object.to_string()),
+            object_ty,
+            index,
+            value,
+            &sifr_ir::HirCollectionMutation::AugAssign(op.to_string()),
+            failure,
+        )
     }
 
     pub(crate) fn lower_delete_stmt_for_ir(
         &mut self,
         object: &HirExpr,
         index: &HirExpr,
+        failure: Option<&Type>,
     ) -> Result<Option<RustStmt>, crate::CodegenError> {
         let lowered_object = if matches!(object, HirExpr::FieldAccess { .. }) {
             self.emit_storage_path(object)
@@ -260,18 +134,28 @@ impl RustEmitter {
                             args: vec![crate::RustExpr::Ident("__idx_norm".to_string())],
                         },
                     }],
-                    else_body: None,
+                    else_body: failure.map(|failure| {
+                        vec![self.checked_place_failure_return(
+                            failure,
+                            crate::checked_place::CheckedPlaceFailureKind::Index,
+                        )]
+                    }),
                 },
             ]))),
-            Type::Dict(_, _) => Ok(Some(RustStmt::Let {
-                mutable: false,
-                name: "_".to_string(),
-                ty: None,
-                value: crate::RustExpr::MethodCall {
+            Type::Dict(_, _) => Ok(Some(RustStmt::IfLet {
+                pattern: "Some(_)".to_string(),
+                expr: crate::RustExpr::MethodCall {
                     receiver: Box::new(lowered_object),
                     method: "remove".to_string(),
                     args: vec![self.build_dict_lookup_key_arg_for_hir(index, lowered_index)],
                 },
+                then_body: Vec::new(),
+                else_body: failure.map(|failure| {
+                    vec![self.checked_place_failure_return(
+                        failure,
+                        crate::checked_place::CheckedPlaceFailureKind::Key,
+                    )]
+                }),
             })),
             _ => Ok(None),
         }
@@ -286,13 +170,19 @@ impl RustEmitter {
             index,
             value,
             object_ty,
+            failure,
         } = stmt
         else {
             return Ok(false);
         };
 
-        let Some(lowered) =
-            self.lower_subscript_assign_stmt_for_ir(object, index, value, object_ty)?
+        let Some(lowered) = self.lower_subscript_assign_stmt_for_ir(
+            object,
+            index,
+            value,
+            object_ty,
+            failure.as_ref(),
+        )?
         else {
             return Ok(false);
         };
@@ -311,33 +201,26 @@ impl RustEmitter {
             inner_index,
             value,
             object_ty,
+            outer_failure,
+            inner_failure,
+            operation,
         } = stmt
         else {
             return Ok(false);
         };
 
-        let Type::List(inner) = Self::resolve_alias_type_for_loop_iter(object_ty) else {
-            return Ok(false);
-        };
-        let lowered = match Self::resolve_alias_type_for_loop_iter(inner) {
-            Type::List(elem) => self.lower_structured_nested_list_subscript_assign_stmt_for_ir(
-                object,
+        let lowered = self.lower_checked_nested_mutation_for_ir(
+            crate::checked_place_mutation::CheckedNestedMutationPlan {
+                root: crate::RustExpr::Ident(object.clone()),
+                root_ty: object_ty,
                 outer_index,
                 inner_index,
                 value,
-                elem,
-            )?,
-            Type::Dict(key_ty, elem) => self
-                .lower_structured_nested_list_dict_subscript_assign_stmt_for_ir(
-                    object,
-                    outer_index,
-                    inner_index,
-                    value,
-                    key_ty,
-                    elem,
-                )?,
-            _ => return Ok(false),
-        };
+                operation,
+                outer_failure: outer_failure.as_ref(),
+                inner_failure: inner_failure.as_ref(),
+            },
+        )?;
         let Some(lowered) = lowered else {
             return Ok(false);
         };
@@ -355,7 +238,7 @@ impl RustEmitter {
             op,
             value,
             object_ty,
-            missing_key_error,
+            failure,
         } = stmt
         else {
             return Ok(false);
@@ -366,7 +249,7 @@ impl RustEmitter {
             op,
             value,
             object_ty,
-            missing_key_error.as_ref(),
+            failure.as_ref(),
         )?
         else {
             return Ok(false);
@@ -379,10 +262,15 @@ impl RustEmitter {
         &mut self,
         stmt: &HirStmt,
     ) -> Result<bool, crate::CodegenError> {
-        let HirStmt::Delete { object, index } = stmt else {
+        let HirStmt::Delete {
+            object,
+            index,
+            failure,
+        } = stmt
+        else {
             return Ok(false);
         };
-        let Some(lowered) = self.lower_delete_stmt_for_ir(object, index)? else {
+        let Some(lowered) = self.lower_delete_stmt_for_ir(object, index, failure.as_ref())? else {
             return Ok(false);
         };
         self.emit_lowered_stmts(std::slice::from_ref(&lowered));

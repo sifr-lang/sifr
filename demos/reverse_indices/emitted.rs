@@ -6,15 +6,15 @@ use ::sifr_runtime::SifrRange;
 fn reversed_values(values: &Vec<SifrInt>) -> Vec<SifrInt> {
     let mut out: Vec<SifrInt> = vec![];
     for i in SifrRange::new_known_nonzero(&SifrInt::from(values.len()) - &SifrInt::from_i64(1), -(SifrInt::from_i64(1)), -(SifrInt::from_i64(1))) {
-        out.push({
-    let __sifr_index_value_option = {
-    let __sifr_index_list = &values;
-    let __sifr_index_i = i.clone();
-    let __sifr_index_norm = __sifr_index_i.normalize_index_or_len(__sifr_index_list.len());
-    __sifr_index_list.get(__sifr_index_norm).cloned()
-};
-    __sifr_index_value_option.as_slice()[0_usize].clone()
-});
+        let Some(__sifr_checked_value_0) = ({
+    let __sifr_checked_read_collection = &values;
+    let __sifr_checked_read_index = i.clone();
+    let __sifr_checked_read_normalized = __sifr_checked_read_index.normalize_index_or_len(__sifr_checked_read_collection.len());
+    __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+}) else {
+            break;
+        };
+        out.push(__sifr_checked_value_0.clone());
     }
     out
 }

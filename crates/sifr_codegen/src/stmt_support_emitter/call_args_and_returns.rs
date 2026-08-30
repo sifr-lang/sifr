@@ -38,7 +38,11 @@ impl RustEmitter {
             }
             let resolved_param = crate::resolve_alias_type_for_plain_call(param_ty);
             let effective_arg_ty = if let HirExpr::Name { name, ty, .. } = hir_arg {
-                if self.none_widened_local_bindings.contains(name) {
+                if self.option_unwrapped_vars.contains(name)
+                    && let Some(inner) = ty.optional_member_type()
+                {
+                    inner
+                } else if self.none_widened_local_bindings.contains(name) {
                     self.local_binding_types
                         .get(name)
                         .cloned()
@@ -143,10 +147,6 @@ impl RustEmitter {
                         args: vec![],
                     };
                 }
-                lowered_arg = Self::force_unwrap_option_expr_for_ir(
-                    lowered_arg,
-                    "compiler-verified option argument should be Some",
-                );
             }
 
             if self.function_param_lowers_to_sifr_int(func, idx) {
@@ -390,21 +390,40 @@ impl RustEmitter {
         object: &HirExpr,
         index: &HirExpr,
     ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
-        let object_ty = crate::resolve_alias_type_for_plain_call(object.ty());
-        if !matches!(
-            object_ty,
-            Type::Tuple(_) | Type::List(_) | Type::Bytes | Type::Str
+        if let Some(witness) = self.checked_place_read_witness(
+            object,
+            index,
+            &object
+                .ty()
+                .index_result_type(index.ty())
+                .and_then(|ty| ty.optional_member_type())
+                .unwrap_or(Type::Unknown),
         ) {
+            return Ok(Some(witness));
+        }
+        let witnessed_object_ty = match object {
+            HirExpr::Index {
+                object: parent,
+                index: parent_index,
+                ..
+            } if self
+                .checked_place_read_borrow_witness(parent, parent_index)
+                .is_some() =>
+            {
+                object.ty().optional_member_type()
+            }
+            _ => None,
+        };
+        let object_ty = crate::resolve_alias_type_for_plain_call(
+            witnessed_object_ty.as_ref().unwrap_or_else(|| object.ty()),
+        );
+        if !matches!(object_ty, Type::Tuple(_)) {
             return Ok(None);
         }
 
         let Some(lowered_object) = self.lower_stmt_expr_for_ir(object)? else {
             return Ok(None);
         };
-        let Some(lowered_index) = self.lower_stmt_expr_for_ir(index)? else {
-            return Ok(None);
-        };
-
         let lowered = match object_ty {
             Type::Tuple(elements) => {
                 let HirExpr::IntLiteral(raw_idx) = index else {
@@ -428,33 +447,6 @@ impl RustEmitter {
                     crate::RustExpr::Clone(Box::new(field_expr))
                 }
             }
-            Type::List(element_ty) => {
-                let indexed_expr = crate::RustExpr::Index {
-                    expr: Box::new(lowered_object),
-                    index: Box::new(crate::RustExpr::Cast {
-                        expr: Box::new(lowered_index),
-                        ty: crate::RustType::Named("usize".to_string()),
-                    }),
-                };
-                if crate::helpers::is_copy_type_for_codegen(element_ty.as_ref()) {
-                    indexed_expr
-                } else {
-                    crate::RustExpr::Clone(Box::new(indexed_expr))
-                }
-            }
-            Type::Bytes => crate::RustExpr::Cast {
-                expr: Box::new(crate::RustExpr::Index {
-                    expr: Box::new(lowered_object),
-                    index: Box::new(crate::RustExpr::Cast {
-                        expr: Box::new(lowered_index),
-                        ty: crate::RustType::Named("usize".to_string()),
-                    }),
-                }),
-                ty: crate::RustType::Named("u8".to_string()),
-            },
-            Type::Str => {
-                self.lower_string_index_unwrapped_with_cache(object, lowered_object, lowered_index)
-            }
             _ => return Ok(None),
         };
         Ok(Some(lowered))
@@ -465,6 +457,12 @@ impl RustEmitter {
         value: &HirExpr,
         return_ty: Option<&Type>,
     ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
+        if let Some(return_ty) = return_ty
+            && let Some(lowered) =
+                self.lower_checked_place_option_value_for_target(return_ty, value)?
+        {
+            return Ok(Some(lowered));
+        }
         let coerce_return = |this: &mut Self,
                              lowered: crate::RustExpr|
          -> Result<crate::RustExpr, crate::CodegenError> {
@@ -526,15 +524,24 @@ impl RustEmitter {
         if return_ty.is_some_and(|ty| !crate::helpers::is_option_type(ty))
             && matches!(value, HirExpr::Index { .. })
         {
-            let HirExpr::Index { object, index, .. } = value else {
+            let HirExpr::Index {
+                object, index, ty, ..
+            } = value
+            else {
                 unreachable!();
             };
+            if let Some(witness) = self.checked_place_read_witness(object, index, ty) {
+                return Ok(Some(coerce_return(self, witness)?));
+            }
             if let Some(lowered) = self.lower_non_option_index_expr_for_ir(object, index)? {
                 return Ok(Some(lowered));
             }
         }
 
-        if !matches!(value, HirExpr::OkWrap { .. } | HirExpr::ErrWrap { .. }) {
+        if !matches!(
+            value,
+            HirExpr::OkWrap { .. } | HirExpr::ErrWrap { .. } | HirExpr::Compare { .. }
+        ) {
             if let Some(lowered_leaf) = crate::try_lower_leaf_or_name_expr_result(value)? {
                 return Ok(Some(coerce_return(self, lowered_leaf)?));
             }
@@ -564,12 +571,17 @@ impl RustEmitter {
         } = expr
         {
             if !crate::helpers::is_option_type(ty) {
+                if let Some(witness) = self.checked_place_read_witness(object, index, ty) {
+                    return Ok(Some(witness));
+                }
                 if let Some(lowered) = self.lower_non_option_index_expr_for_ir(object, index)? {
                     return Ok(Some(lowered));
                 }
             }
         }
-        if let Some(lowered_leaf) = crate::try_lower_leaf_or_name_expr_result(expr)? {
+        if !matches!(expr, HirExpr::Compare { .. })
+            && let Some(lowered_leaf) = crate::try_lower_leaf_or_name_expr_result(expr)?
+        {
             return Ok(Some(lowered_leaf));
         }
         if let Some(lowered_expr) = self.lower_stmt_expr_for_ir(expr)? {

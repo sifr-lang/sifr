@@ -32,17 +32,16 @@ mod __sifr_project_nominals {
             let mut result: String = "".to_string();
             let mut i: SifrInt = SifrInt::from_i64(0);
             while (&i < &SifrInt::from(self._hex.chars().count())) {
-                let ch: Option<String> = Some({
-                    let __indexed_char_option = self
-                        ._hex
-                        .clone()
-                        .chars()
-                        .nth(::sifr_runtime::to_usize_proven(&(i)))
-                        .map(|c| c.to_string());
-                    __indexed_char_option.as_slice()[0_usize].clone()
-                });
+                let ch: Option<String> = ({
+                    let __sifr_string_source = &self._hex;
+                    let __sifr_string_index = i.clone();
+                    let __sifr_string_index_normalized = __sifr_string_index
+                        .normalize_index_or_len(__sifr_string_source.chars().count());
+                    __sifr_string_source.chars().nth(__sifr_string_index_normalized)
+                })
+                    .map(|c| c.to_string());
                 if let Some(ch) = ch {
-                    if ch != "-" {
+                    if (ch != "-") {
                         result.push_str((ch).as_str());
                     }
                 }
@@ -73,13 +72,14 @@ mod __sifr_project_nominals {
     }
     impl __SifrStdlib_sifr_x2euuid_x2eUUID {
         pub fn version(&self) -> SifrInt {
-            let marker: Option<String> = {
-                let __sifr_index_str = &self._hex;
-                let __sifr_index_i = SifrInt::from_i64(14);
-                let __sifr_index_norm = __sifr_index_i
-                    .normalize_index_or_len(__sifr_index_str.chars().count());
-                __sifr_index_str.chars().nth(__sifr_index_norm).map(|c| c.to_string())
-            };
+            let marker: Option<String> = ({
+                let __sifr_string_source = &self._hex;
+                let __sifr_string_index = SifrInt::from_i64(14);
+                let __sifr_string_index_normalized = __sifr_string_index
+                    .normalize_index_or_len(__sifr_string_source.chars().count());
+                __sifr_string_source.chars().nth(__sifr_string_index_normalized)
+            })
+                .map(|c| c.to_string());
             let Some(marker) = marker else {
                 return -&SifrInt::from_i64(1);
             };
@@ -166,8 +166,14 @@ fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
     let mut i: SifrInt = SifrInt::from_i64(0);
     while &i < &SifrInt::from(actual.len()) {
         assert!(
-            Some(actual[::sifr_runtime::to_usize_proven(& (i))]) == expected
-            .get(::sifr_runtime::to_usize_proven(& (i))).copied()
+            ({ let __sifr_condition_list = & actual; let __sifr_condition_index = i
+            .clone(); let __sifr_condition_normalized = __sifr_condition_index
+            .normalize_index_or_len(__sifr_condition_list.len()); __sifr_condition_list
+            .get(__sifr_condition_normalized).copied() }) == ({ let __sifr_condition_list
+            = & expected; let __sifr_condition_index = i.clone(); let
+            __sifr_condition_normalized = __sifr_condition_index
+            .normalize_index_or_len(__sifr_condition_list.len()); __sifr_condition_list
+            .get(__sifr_condition_normalized).copied() })
         );
         i = &i + &SifrInt::from_i64(1);
     }
@@ -331,9 +337,13 @@ fn _substring(value: &String, start: SifrInt, end: SifrInt) -> String {
     let __sifr_chars_value: Vec<char> = value.chars().collect::<Vec<char>>();
     let mut result: String = "".to_string();
     let mut i: SifrInt = start.clone();
-    while &i < &end {
-        let ch: Option<String> = __sifr_chars_value
-            .get(::sifr_runtime::to_usize_proven(&(i.clone())))
+    while (&i < &end) {
+        let ch: Option<String> = ({
+            let __sifr_string_index = i.clone();
+            let __sifr_string_index_normalized = __sifr_string_index
+                .normalize_index_or_len(__sifr_chars_value.len());
+            __sifr_chars_value.get(__sifr_string_index_normalized)
+        })
             .map(|c| c.to_string());
         if let Some(ch) = ch {
             result.push_str((ch).as_str());
@@ -352,15 +362,20 @@ fn _starts_with(value: &String, prefix: &String) -> bool {
     }
     let mut i: SifrInt = SifrInt::from_i64(0);
     while (&i < &SifrInt::from(__sifr_chars_prefix.len())) {
-        let left: Option<String> = __sifr_chars_value
-            .get(::sifr_runtime::to_usize_proven(&(i.clone())))
+        let left: Option<String> = ({
+            let __sifr_string_index = i.clone();
+            let __sifr_string_index_normalized = __sifr_string_index
+                .normalize_index_or_len(__sifr_chars_value.len());
+            __sifr_chars_value.get(__sifr_string_index_normalized)
+        })
             .map(|c| c.to_string());
-        let right: Option<String> = Some({
-            let __indexed_char_option = __sifr_chars_prefix
-                .get(::sifr_runtime::to_usize_proven(&(i)))
-                .map(|c| c.to_string());
-            __indexed_char_option.as_slice()[0_usize].clone()
-        });
+        let right: Option<String> = ({
+            let __sifr_string_index = i.clone();
+            let __sifr_string_index_normalized = __sifr_string_index
+                .normalize_index_or_len(__sifr_chars_prefix.len());
+            __sifr_chars_prefix.get(__sifr_string_index_normalized)
+        })
+            .map(|c| c.to_string());
         if (left != right) {
             return false;
         }
@@ -383,13 +398,14 @@ fn _canonical_uuid_text(input_text: &String) -> Result<String, ValueError> {
         );
     }
     if (&SifrInt::from(normalized_input.chars().count()) >= &SifrInt::from_i64(2)) {
-        let first: Option<String> = {
-            let __sifr_index_str = &normalized_input;
-            let __sifr_index_i = SifrInt::from_i64(0);
-            let __sifr_index_norm = __sifr_index_i
-                .normalize_index_or_len(__sifr_index_str.chars().count());
-            __sifr_index_str.chars().nth(__sifr_index_norm).map(|c| c.to_string())
-        };
+        let first: Option<String> = ({
+            let __sifr_string_source = &normalized_input;
+            let __sifr_string_index = SifrInt::from_i64(0);
+            let __sifr_string_index_normalized = __sifr_string_index
+                .normalize_index_or_len(__sifr_string_source.chars().count());
+            __sifr_string_source.chars().nth(__sifr_string_index_normalized)
+        })
+            .map(|c| c.to_string());
         let last: Option<String> = {
             let __sifr_index_str = &normalized_input;
             let __sifr_index_i = SifrInt::from(normalized_input.chars().count())
@@ -409,18 +425,19 @@ fn _canonical_uuid_text(input_text: &String) -> Result<String, ValueError> {
     let input_len: SifrInt = SifrInt::from(normalized_input.chars().count());
     let mut hex_only: String = "".to_string();
     let mut i: SifrInt = SifrInt::from_i64(0);
-    while &i < &input_len {
-        let ch_opt: Option<String> = Some({
-            let __indexed_char_option = normalized_input
-                .chars()
-                .nth(::sifr_runtime::to_usize_proven(&(i)))
-                .map(|c| c.to_string());
-            __indexed_char_option.as_slice()[0_usize].clone()
-        });
+    while (&i < &input_len) {
+        let ch_opt: Option<String> = ({
+            let __sifr_string_source = &normalized_input;
+            let __sifr_string_index = i.clone();
+            let __sifr_string_index_normalized = __sifr_string_index
+                .normalize_index_or_len(__sifr_string_source.chars().count());
+            __sifr_string_source.chars().nth(__sifr_string_index_normalized)
+        })
+            .map(|c| c.to_string());
         if let Some(ch_opt) = ch_opt {
             let ch: String = ch_opt;
-            if ch == "-" {} else {
-                if !(_is_hex_char(&ch)) {
+            if (ch == "-") {} else {
+                if !_is_hex_char(&ch) {
                     return Err(ValueError::new("invalid UUID hex string".to_string()));
                 }
                 hex_only.push_str((_to_lower_hex_char(&ch)).as_str());
@@ -433,42 +450,46 @@ fn _canonical_uuid_text(input_text: &String) -> Result<String, ValueError> {
             ValueError::new("UUID hex string must be 32 hex characters".to_string()),
         );
     }
-    if &input_len == &SifrInt::from_i64(36) {
-        let h1: Option<String> = Some({
-            let __indexed_char_option = normalized_input
-                .chars()
-                .nth(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(8))))
-                .map(|c| c.to_string());
-            __indexed_char_option.as_slice()[0_usize].clone()
-        });
-        let h2: Option<String> = Some({
-            let __indexed_char_option = normalized_input
-                .chars()
-                .nth(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(13))))
-                .map(|c| c.to_string());
-            __indexed_char_option.as_slice()[0_usize].clone()
-        });
-        let h3: Option<String> = Some({
-            let __indexed_char_option = normalized_input
-                .chars()
-                .nth(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(18))))
-                .map(|c| c.to_string());
-            __indexed_char_option.as_slice()[0_usize].clone()
-        });
-        let h4: Option<String> = Some({
-            let __indexed_char_option = normalized_input
-                .chars()
-                .nth(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(23))))
-                .map(|c| c.to_string());
-            __indexed_char_option.as_slice()[0_usize].clone()
-        });
+    if (&input_len == &SifrInt::from_i64(36)) {
+        let h1: Option<String> = ({
+            let __sifr_string_source = &normalized_input;
+            let __sifr_string_index = SifrInt::from_i64(8);
+            let __sifr_string_index_normalized = __sifr_string_index
+                .normalize_index_or_len(__sifr_string_source.chars().count());
+            __sifr_string_source.chars().nth(__sifr_string_index_normalized)
+        })
+            .map(|c| c.to_string());
+        let h2: Option<String> = ({
+            let __sifr_string_source = &normalized_input;
+            let __sifr_string_index = SifrInt::from_i64(13);
+            let __sifr_string_index_normalized = __sifr_string_index
+                .normalize_index_or_len(__sifr_string_source.chars().count());
+            __sifr_string_source.chars().nth(__sifr_string_index_normalized)
+        })
+            .map(|c| c.to_string());
+        let h3: Option<String> = ({
+            let __sifr_string_source = &normalized_input;
+            let __sifr_string_index = SifrInt::from_i64(18);
+            let __sifr_string_index_normalized = __sifr_string_index
+                .normalize_index_or_len(__sifr_string_source.chars().count());
+            __sifr_string_source.chars().nth(__sifr_string_index_normalized)
+        })
+            .map(|c| c.to_string());
+        let h4: Option<String> = ({
+            let __sifr_string_source = &normalized_input;
+            let __sifr_string_index = SifrInt::from_i64(23);
+            let __sifr_string_index_normalized = __sifr_string_index
+                .normalize_index_or_len(__sifr_string_source.chars().count());
+            __sifr_string_source.chars().nth(__sifr_string_index_normalized)
+        })
+            .map(|c| c.to_string());
         if (((h1 != Some("-".to_string())) || (h2 != Some("-".to_string())))
             || (h3 != Some("-".to_string()))) || (h4 != Some("-".to_string()))
         {
             return Err(ValueError::new("invalid UUID hex string".to_string()));
         }
     } else {
-        if &input_len != &SifrInt::from_i64(32) {
+        if (&input_len != &SifrInt::from_i64(32)) {
             return Err(ValueError::new("invalid UUID hex string".to_string()));
         }
     }
@@ -480,13 +501,14 @@ fn _canonical_uuid_text(input_text: &String) -> Result<String, ValueError> {
         {
             canonical.push('-');
         }
-        let part: Option<String> = Some({
-            let __indexed_char_option = hex_only
-                .chars()
-                .nth(::sifr_runtime::to_usize_proven(&(j)))
-                .map(|c| c.to_string());
-            __indexed_char_option.as_slice()[0_usize].clone()
-        });
+        let part: Option<String> = ({
+            let __sifr_string_source = &hex_only;
+            let __sifr_string_index = j.clone();
+            let __sifr_string_index_normalized = __sifr_string_index
+                .normalize_index_or_len(__sifr_string_source.chars().count());
+            __sifr_string_source.chars().nth(__sifr_string_index_normalized)
+        })
+            .map(|c| c.to_string());
         if let Some(part) = part {
             canonical.push_str((part).as_str());
         }
@@ -539,17 +561,33 @@ fn is_canonical_shape(value: &String) -> bool {
     if (&SifrInt::from(__sifr_chars_value.len()) != &SifrInt::from_i64(36)) {
         return false;
     }
-    let h1: Option<String> = __sifr_chars_value
-        .get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(8))))
+    let h1: Option<String> = ({
+        let __sifr_string_index = SifrInt::from_i64(8);
+        let __sifr_string_index_normalized = __sifr_string_index
+            .normalize_index_or_len(__sifr_chars_value.len());
+        __sifr_chars_value.get(__sifr_string_index_normalized)
+    })
         .map(|c| c.to_string());
-    let h2: Option<String> = __sifr_chars_value
-        .get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(13))))
+    let h2: Option<String> = ({
+        let __sifr_string_index = SifrInt::from_i64(13);
+        let __sifr_string_index_normalized = __sifr_string_index
+            .normalize_index_or_len(__sifr_chars_value.len());
+        __sifr_chars_value.get(__sifr_string_index_normalized)
+    })
         .map(|c| c.to_string());
-    let h3: Option<String> = __sifr_chars_value
-        .get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(18))))
+    let h3: Option<String> = ({
+        let __sifr_string_index = SifrInt::from_i64(18);
+        let __sifr_string_index_normalized = __sifr_string_index
+            .normalize_index_or_len(__sifr_chars_value.len());
+        __sifr_chars_value.get(__sifr_string_index_normalized)
+    })
         .map(|c| c.to_string());
-    let h4: Option<String> = __sifr_chars_value
-        .get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(23))))
+    let h4: Option<String> = ({
+        let __sifr_string_index = SifrInt::from_i64(23);
+        let __sifr_string_index_normalized = __sifr_string_index
+            .normalize_index_or_len(__sifr_chars_value.len());
+        __sifr_chars_value.get(__sifr_string_index_normalized)
+    })
         .map(|c| c.to_string());
     (((((h1 == Some("-".to_string()))) && ((h2 == Some("-".to_string()))))
         && ((h3 == Some("-".to_string())))) && ((h4 == Some("-".to_string()))))
@@ -561,8 +599,12 @@ fn collect_generated_actual() -> Vec<bool> {
     actual.push(is_canonical_shape(&id_text));
     actual
         .push(
-            __sifr_chars_id_text
-                .get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(14))))
+            ({
+                let __sifr_string_index = SifrInt::from_i64(14);
+                let __sifr_string_index_normalized = __sifr_string_index
+                    .normalize_index_or_len(__sifr_chars_id_text.len());
+                __sifr_chars_id_text.get(__sifr_string_index_normalized)
+            })
                 .map(|c| c.to_string()) == Some("4".to_string()),
         );
     let obj: __SifrStdlib_sifr_x2euuid_x2eUUID = uuid4_obj();

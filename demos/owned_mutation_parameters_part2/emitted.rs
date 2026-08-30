@@ -2,29 +2,42 @@
 use ::sifr_runtime::SifrInt;
 
 fn mutate_and_return(mut items: Vec<SifrInt>) -> Vec<SifrInt> {
-    {
-        let __idx_raw = SifrInt::from_i64(0);
-        let __idx_norm = __idx_raw.normalize_index_or_len(items.len());
-        if let Some(__elem) = items.get_mut(__idx_norm) {
-            *__elem = SifrInt::from_i64(9);
+    if (&SifrInt::from(items.len()) > &SifrInt::from_i64(1)) {
+        {
+            let __assign_value = SifrInt::from_i64(9);
+            {
+                let __index_raw = SifrInt::from_i64(0);
+                let __index_normalized = __index_raw.normalize_index_or_len(items.len());
+                if let Some(__elem) = items.get_mut(__index_normalized) {
+                    *__elem = __assign_value;
+                }
+            }
         }
-    }
-    {
-        let __idx_raw = SifrInt::from_i64(1);
-        let __idx_norm = __idx_raw.normalize_index_or_len(items.len());
-        if let Some(__elem) = items.get_mut(__idx_norm) {
-            *__elem = SifrInt::from_i64(10);
+        {
+            let __assign_value = SifrInt::from_i64(10);
+            {
+                let __index_raw = SifrInt::from_i64(1);
+                let __index_normalized = __index_raw.normalize_index_or_len(items.len());
+                if let Some(__elem) = items.get_mut(__index_normalized) {
+                    *__elem = __assign_value;
+                }
+            }
         }
     }
     items
 }
 
 fn mutate_borrowed(items: &mut Vec<SifrInt>) -> SifrInt {
-    {
-        let __idx_raw = SifrInt::from_i64(0);
-        let __idx_norm = __idx_raw.normalize_index_or_len(items.len());
-        if let Some(__elem) = items.get_mut(__idx_norm) {
-            *__elem = SifrInt::from_i64(14);
+    if (&SifrInt::from(items.len()) > &SifrInt::from_i64(0)) {
+        {
+            let __assign_value = SifrInt::from_i64(14);
+            {
+                let __index_raw = SifrInt::from_i64(0);
+                let __index_normalized = __index_raw.normalize_index_or_len(items.len());
+                if let Some(__elem) = items.get_mut(__index_normalized) {
+                    *__elem = __assign_value;
+                }
+            }
         }
     }
     SifrInt::from(items.len())

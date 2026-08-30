@@ -110,7 +110,8 @@ def main():
     print("=== Del Statement ===")
     config: dict[str, int] = {"a": 1, "b": 2, "c": 3}
     print(f"before del: {len(config)}")
-    del config["b"]
+    if "b" in config:
+        del config["b"]
     print(f"after del: {len(config)}")
 
     print("demo complete!")

@@ -202,8 +202,9 @@ def main():
     if val_out is None:
         subscript_checks = subscript_checks + 1
 
-    nums[99] = 999
-    if len(nums) == 3:
+    try:
+        nums[99] = 999
+    except IndexError as e:
         subscript_checks = subscript_checks + 1
 
     if subscript_checks == 2:

@@ -1,11 +1,15 @@
 # Test: own mut parameters can be mutated locally and returned by value.
 
 def mutate_and_return(own mut items: list[int]) -> list[int]:
+    if len(items) < 2:
+        return items
     items[0] = 9
     items[1] = 10
     return items
 
 def mutate_borrowed(mut items: list[int]) -> int:
+    if len(items) == 0:
+        return 0
     items[0] = 14
     return len(items)
 

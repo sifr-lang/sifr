@@ -207,7 +207,7 @@ fn gcd(a: SifrInt, b: SifrInt) -> SifrInt {
     if &y < &SifrInt::from_i64(0) {
         y = &SifrInt::from_i64(0) - &y;
     }
-    while &y != &SifrInt::from_i64(0) {
+    while (&y != &SifrInt::from_i64(0)) {
         let temp: SifrInt = y.clone();
         y = x.floor_mod_known_nonzero(&y);
         x = temp;
@@ -254,10 +254,10 @@ fn comb(n: SifrInt, k: SifrInt) -> SifrInt {
     }
     let mut result: SifrInt = SifrInt::from_i64(1);
     let mut i: SifrInt = SifrInt::from_i64(0);
-    while &i < &r {
+    while (&i < &r) {
         result = &result * &(&n - &i);
         let divisor: SifrInt = &i + &SifrInt::from_i64(1);
-        if &divisor == &SifrInt::from_i64(0) {
+        if (&divisor == &SifrInt::from_i64(0)) {
             return SifrInt::from_i64(0);
         }
         result = result.floor_div_known_nonzero(&divisor);
@@ -347,11 +347,11 @@ fn sumprod(p: &Vec<f64>, q: &Vec<f64>) -> f64 {
 fn frexp_mantissa(x: f64) -> f64 {
     let parts: Vec<f64> = frexp(x);
     let m: Option<f64> = {
-        let __sifr_index_list = &parts;
-        let __sifr_index_i = SifrInt::from_i64(0);
-        let __sifr_index_norm = __sifr_index_i
-            .normalize_index_or_len(__sifr_index_list.len());
-        __sifr_index_list.get(__sifr_index_norm).copied()
+        let __sifr_checked_read_collection = &parts;
+        let __sifr_checked_read_index = SifrInt::from_i64(0);
+        let __sifr_checked_read_normalized = __sifr_checked_read_index
+            .normalize_index_or_len(__sifr_checked_read_collection.len());
+        __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
     };
     let Some(m) = m else {
         return NAN;
@@ -361,11 +361,11 @@ fn frexp_mantissa(x: f64) -> f64 {
 fn frexp_exponent(x: f64) -> SifrInt {
     let parts: Vec<f64> = frexp(x);
     let exp_val: Option<f64> = {
-        let __sifr_index_list = &parts;
-        let __sifr_index_i = SifrInt::from_i64(1);
-        let __sifr_index_norm = __sifr_index_i
-            .normalize_index_or_len(__sifr_index_list.len());
-        __sifr_index_list.get(__sifr_index_norm).copied()
+        let __sifr_checked_read_collection = &parts;
+        let __sifr_checked_read_index = SifrInt::from_i64(1);
+        let __sifr_checked_read_normalized = __sifr_checked_read_index
+            .normalize_index_or_len(__sifr_checked_read_collection.len());
+        __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
     };
     let Some(exp_val) = exp_val else {
         return SifrInt::from_i64(0);
@@ -375,11 +375,11 @@ fn frexp_exponent(x: f64) -> SifrInt {
 fn modf_fractional(x: f64) -> f64 {
     let parts: Vec<f64> = modf(x);
     let f: Option<f64> = {
-        let __sifr_index_list = &parts;
-        let __sifr_index_i = SifrInt::from_i64(0);
-        let __sifr_index_norm = __sifr_index_i
-            .normalize_index_or_len(__sifr_index_list.len());
-        __sifr_index_list.get(__sifr_index_norm).copied()
+        let __sifr_checked_read_collection = &parts;
+        let __sifr_checked_read_index = SifrInt::from_i64(0);
+        let __sifr_checked_read_normalized = __sifr_checked_read_index
+            .normalize_index_or_len(__sifr_checked_read_collection.len());
+        __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
     };
     let Some(f) = f else {
         return NAN;
@@ -389,11 +389,11 @@ fn modf_fractional(x: f64) -> f64 {
 fn modf_integral(x: f64) -> f64 {
     let parts: Vec<f64> = modf(x);
     let i: Option<f64> = {
-        let __sifr_index_list = &parts;
-        let __sifr_index_i = SifrInt::from_i64(1);
-        let __sifr_index_norm = __sifr_index_i
-            .normalize_index_or_len(__sifr_index_list.len());
-        __sifr_index_list.get(__sifr_index_norm).copied()
+        let __sifr_checked_read_collection = &parts;
+        let __sifr_checked_read_index = SifrInt::from_i64(1);
+        let __sifr_checked_read_normalized = __sifr_checked_read_index
+            .normalize_index_or_len(__sifr_checked_read_collection.len());
+        __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
     };
     let Some(i) = i else {
         return NAN;
@@ -553,7 +553,7 @@ fn mean(
     data: &Vec<f64>,
 ) -> Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
     let count: SifrInt = SifrInt::from(data.len());
-    if &count == &SifrInt::from_i64(0) {
+    if (&count == &SifrInt::from_i64(0)) {
         return Err(
             __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
                 "mean requires at least one data point".to_string(),
@@ -567,7 +567,7 @@ fn median(
     data: &Vec<f64>,
 ) -> Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
     let n: SifrInt = SifrInt::from(data.len());
-    if &n == &SifrInt::from_i64(0) {
+    if (&n == &SifrInt::from_i64(0)) {
         return Err(
             __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
                 "median requires at least one data point".to_string(),
@@ -582,18 +582,18 @@ fn median(
     let mid: SifrInt = n.floor_div_known_nonzero(&SifrInt::from_i64(2));
     if (&n.floor_mod_known_nonzero(&SifrInt::from_i64(2)) == &SifrInt::from_i64(0)) {
         let a: Option<f64> = {
-            let __sifr_index_list = &sorted_data;
-            let __sifr_index_i = &mid - &SifrInt::from_i64(1);
-            let __sifr_index_norm = __sifr_index_i
-                .normalize_index_or_len(__sifr_index_list.len());
-            __sifr_index_list.get(__sifr_index_norm).copied()
+            let __sifr_checked_read_collection = &sorted_data;
+            let __sifr_checked_read_index = &mid - &SifrInt::from_i64(1);
+            let __sifr_checked_read_normalized = __sifr_checked_read_index
+                .normalize_index_or_len(__sifr_checked_read_collection.len());
+            __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
         };
         let b: Option<f64> = {
-            let __sifr_index_list = &sorted_data;
-            let __sifr_index_i = mid.clone();
-            let __sifr_index_norm = __sifr_index_i
-                .normalize_index_or_len(__sifr_index_list.len());
-            __sifr_index_list.get(__sifr_index_norm).copied()
+            let __sifr_checked_read_collection = &sorted_data;
+            let __sifr_checked_read_index = mid.clone();
+            let __sifr_checked_read_normalized = __sifr_checked_read_index
+                .normalize_index_or_len(__sifr_checked_read_collection.len());
+            __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
         };
         if let Some(a) = a {
             if let Some(b) = b {
@@ -607,11 +607,11 @@ fn median(
         );
     } else {
         let val: Option<f64> = {
-            let __sifr_index_list = &sorted_data;
-            let __sifr_index_i = mid.clone();
-            let __sifr_index_norm = __sifr_index_i
-                .normalize_index_or_len(__sifr_index_list.len());
-            __sifr_index_list.get(__sifr_index_norm).copied()
+            let __sifr_checked_read_collection = &sorted_data;
+            let __sifr_checked_read_index = mid.clone();
+            let __sifr_checked_read_normalized = __sifr_checked_read_index
+                .normalize_index_or_len(__sifr_checked_read_collection.len());
+            __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
         };
         if let Some(val) = val {
             return Ok(val);
@@ -627,7 +627,7 @@ fn variance(
     data: &Vec<f64>,
 ) -> Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
     let n: SifrInt = SifrInt::from(data.len());
-    if &n < &SifrInt::from_i64(2) {
+    if (&n < &SifrInt::from_i64(2)) {
         return Err(
             __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
                 "variance requires at least two data points".to_string(),
@@ -663,7 +663,7 @@ fn stdev(
     data: &Vec<f64>,
 ) -> Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
     let n: SifrInt = SifrInt::from(data.len());
-    if &n < &SifrInt::from_i64(2) {
+    if (&n < &SifrInt::from_i64(2)) {
         return Err(
             __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
                 "stdev requires at least two data points".to_string(),
@@ -717,7 +717,7 @@ fn harmonic_mean(
     data: &Vec<f64>,
 ) -> Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
     let n: SifrInt = SifrInt::from(data.len());
-    if &n == &SifrInt::from_i64(0) {
+    if (&n == &SifrInt::from_i64(0)) {
         return Err(
             __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
                 "harmonic_mean requires at least one data point".to_string(),
@@ -726,7 +726,7 @@ fn harmonic_mean(
     }
     let mut total: f64 = 0.0_f64;
     for val in data.iter().copied() {
-        if val <= (0.0_f64) {
+        if (val <= (0.0_f64)) {
             return Err(
                 __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
                     "harmonic_mean requires positive values".to_string(),
@@ -760,7 +760,7 @@ fn geometric_mean(
     data: &Vec<f64>,
 ) -> Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
     let n: SifrInt = SifrInt::from(data.len());
-    if &n == &SifrInt::from_i64(0) {
+    if (&n == &SifrInt::from_i64(0)) {
         return Err(
             __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
                 "geometric_mean requires at least one data point".to_string(),
@@ -769,7 +769,7 @@ fn geometric_mean(
     }
     let mut log_sum: f64 = 0.0_f64;
     for val in data.iter().copied() {
-        if val <= (0.0_f64) {
+        if (val <= (0.0_f64)) {
             return Err(
                 __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
                     "geometric_mean requires positive values".to_string(),
@@ -813,9 +813,21 @@ fn mode(
     for val in data.iter().cloned() {
         let existing: Option<SifrInt> = counts.get(&val).cloned();
         if let Some(existing) = existing.clone() {
-            counts.insert(val.clone(), &existing + &SifrInt::from_i64(1));
+            {
+                let __assign_value = &existing + &SifrInt::from_i64(1);
+                {
+                    let __assign_key = val.clone();
+                    counts.insert(__assign_key, __assign_value);
+                }
+            }
         } else {
-            counts.insert(val.clone(), SifrInt::from_i64(1));
+            {
+                let __assign_value = SifrInt::from_i64(1);
+                {
+                    let __assign_key = val.clone();
+                    counts.insert(__assign_key, __assign_value);
+                }
+            }
         }
     }
     let mut best: SifrInt = SifrInt::from_i64(0);
@@ -827,7 +839,7 @@ fn mode(
         if let Some(count2) = count2.clone() {
             count2_val = count2;
         }
-        if &count2_val > &best_count {
+        if (&count2_val > &best_count) {
             best_count = count2_val;
             best = val2;
             best_set = true;
@@ -856,9 +868,21 @@ fn multimode(
     for val in data.iter().cloned() {
         let existing: Option<SifrInt> = counts.get(&val).cloned();
         if let Some(existing) = existing.clone() {
-            counts.insert(val.clone(), &existing + &SifrInt::from_i64(1));
+            {
+                let __assign_value = &existing + &SifrInt::from_i64(1);
+                {
+                    let __assign_key = val.clone();
+                    counts.insert(__assign_key, __assign_value);
+                }
+            }
         } else {
-            counts.insert(val.clone(), SifrInt::from_i64(1));
+            {
+                let __assign_value = SifrInt::from_i64(1);
+                {
+                    let __assign_key = val.clone();
+                    counts.insert(__assign_key, __assign_value);
+                }
+            }
         }
     }
     let mut max_count: SifrInt = SifrInt::from_i64(0);
@@ -868,14 +892,14 @@ fn multimode(
         if let Some(count2) = count2.clone() {
             count2_val = count2;
         }
-        if &count2_val > &max_count {
+        if (&count2_val > &max_count) {
             max_count = count2_val;
         }
     }
     let mut result: Vec<SifrInt> = vec![];
     let mut seen: HashMap<SifrInt, bool> = HashMap::from([]);
     for val3 in data.iter().cloned() {
-        let already_opt: Option<bool> = seen.get(&val3).copied();
+        let already_opt: Option<bool> = seen.get(&val3).cloned();
         let mut already: bool = false;
         if let Some(already_opt) = already_opt {
             already = already_opt;
@@ -886,10 +910,16 @@ fn multimode(
             if let Some(count3) = count3.clone() {
                 count3_val = count3;
             }
-            if &count3_val == &max_count {
+            if (&count3_val == &max_count) {
                 result.push(val3.clone());
             }
-            seen.insert(val3.clone(), true);
+            {
+                let __assign_value = true;
+                {
+                    let __assign_key = val3.clone();
+                    seen.insert(__assign_key, __assign_value);
+                }
+            }
         }
     }
     Ok(result)
@@ -905,7 +935,7 @@ fn quantiles(
             ),
         );
     }
-    if &n < &SifrInt::from_i64(1) {
+    if (&n < &SifrInt::from_i64(1)) {
         return Err(
             __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
                 "quantiles: n must be at least 1".to_string(),
@@ -920,7 +950,7 @@ fn quantiles(
     let m: SifrInt = SifrInt::from(sorted_data.len());
     let mut result: Vec<f64> = vec![];
     let mut i: SifrInt = SifrInt::from_i64(1);
-    while &i < &n {
+    while (&i < &n) {
         let __sifr_try_res: Result<
             (f64, f64, f64),
             __SifrStdlib_sifr_x2estatistics_x2eStatisticsError,
@@ -978,29 +1008,35 @@ fn quantiles(
             }
         };
         let frac: f64 = idx_f - idx_float;
-        if &idx >= &m {
+        if (&idx >= &m) {
             idx = &m - &SifrInt::from_i64(1);
         }
-        if &idx < &SifrInt::from_i64(0) {
+        if (&idx < &SifrInt::from_i64(0)) {
             idx = SifrInt::from_i64(0);
         }
         let lo: Option<f64> = {
-            let __sifr_index_list = &sorted_data;
-            let __sifr_index_i = idx.clone();
-            let __sifr_index_norm = __sifr_index_i
-                .normalize_index_or_len(__sifr_index_list.len());
-            __sifr_index_list.get(__sifr_index_norm).copied()
+            let __sifr_checked_read_collection = &sorted_data;
+            let __sifr_checked_read_index = idx.clone();
+            let __sifr_checked_read_normalized = __sifr_checked_read_index
+                .normalize_index_or_len(__sifr_checked_read_collection.len());
+            __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
         };
         let mut lo_val: f64 = 0.0_f64;
         if let Some(lo) = lo {
             lo_val = lo;
         }
-        if frac > (0.0_f64) {
+        if (frac > (0.0_f64)) {
             let hi_idx: SifrInt = &idx + &SifrInt::from_i64(1);
-            if &hi_idx < &m {
-                let hi: Option<f64> = Some(
-                    sorted_data[::sifr_runtime::to_usize_proven(&(hi_idx))],
-                );
+            if (&hi_idx < &m) {
+                let hi: Option<f64> = {
+                    let __sifr_checked_read_collection = &sorted_data;
+                    let __sifr_checked_read_index = hi_idx.clone();
+                    let __sifr_checked_read_normalized = __sifr_checked_read_index
+                        .normalize_index_or_len(__sifr_checked_read_collection.len());
+                    __sifr_checked_read_collection
+                        .get(__sifr_checked_read_normalized)
+                        .cloned()
+                };
                 if let Some(hi) = hi {
                     lo_val += frac * (hi - lo_val);
                 }
@@ -1016,7 +1052,7 @@ fn covariance(
     y: &Vec<f64>,
 ) -> Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
     let n: SifrInt = SifrInt::from(x.len());
-    if &n < &SifrInt::from_i64(2) {
+    if (&n < &SifrInt::from_i64(2)) {
         return Err(
             __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
                 "covariance requires at least two data points".to_string(),
@@ -1051,14 +1087,20 @@ fn covariance(
     };
     let mut total: f64 = 0.0_f64;
     let mut i: SifrInt = SifrInt::from_i64(0);
-    while &i < &n {
-        let xi: Option<f64> = Some(x[::sifr_runtime::to_usize_proven(&(i))]);
+    while (&i < &n) {
+        let xi: Option<f64> = {
+            let __sifr_checked_read_collection = &x;
+            let __sifr_checked_read_index = i.clone();
+            let __sifr_checked_read_normalized = __sifr_checked_read_index
+                .normalize_index_or_len(__sifr_checked_read_collection.len());
+            __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+        };
         let yi: Option<f64> = {
-            let __sifr_index_list = &y;
-            let __sifr_index_i = i.clone();
-            let __sifr_index_norm = __sifr_index_i
-                .normalize_index_or_len(__sifr_index_list.len());
-            __sifr_index_list.get(__sifr_index_norm).copied()
+            let __sifr_checked_read_collection = &y;
+            let __sifr_checked_read_index = i.clone();
+            let __sifr_checked_read_normalized = __sifr_checked_read_index
+                .normalize_index_or_len(__sifr_checked_read_collection.len());
+            __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
         };
         if let Some(xi) = xi {
             if let Some(yi) = yi {
@@ -1074,7 +1116,7 @@ fn correlation(
     y: &Vec<f64>,
 ) -> Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
     let n: SifrInt = SifrInt::from(x.len());
-    if &n < &SifrInt::from_i64(2) {
+    if (&n < &SifrInt::from_i64(2)) {
         return Err(
             __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
                 "correlation requires at least two data points".to_string(),
@@ -1111,14 +1153,20 @@ fn correlation(
     let mut sx_num: f64 = 0.0_f64;
     let mut sy_num: f64 = 0.0_f64;
     let mut i: SifrInt = SifrInt::from_i64(0);
-    while &i < &n {
-        let xi: Option<f64> = Some(x[::sifr_runtime::to_usize_proven(&(i))]);
+    while (&i < &n) {
+        let xi: Option<f64> = {
+            let __sifr_checked_read_collection = &x;
+            let __sifr_checked_read_index = i.clone();
+            let __sifr_checked_read_normalized = __sifr_checked_read_index
+                .normalize_index_or_len(__sifr_checked_read_collection.len());
+            __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+        };
         let yi: Option<f64> = {
-            let __sifr_index_list = &y;
-            let __sifr_index_i = i.clone();
-            let __sifr_index_norm = __sifr_index_i
-                .normalize_index_or_len(__sifr_index_list.len());
-            __sifr_index_list.get(__sifr_index_norm).copied()
+            let __sifr_checked_read_collection = &y;
+            let __sifr_checked_read_index = i.clone();
+            let __sifr_checked_read_normalized = __sifr_checked_read_index
+                .normalize_index_or_len(__sifr_checked_read_collection.len());
+            __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
         };
         if let Some(xi) = xi {
             if let Some(yi) = yi {
@@ -1150,14 +1198,14 @@ fn correlation(
             );
         }
     };
-    if sx == (0.0_f64) {
+    if (sx == (0.0_f64)) {
         return Err(
             __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
                 "correlation: x has zero variance".to_string(),
             ),
         );
     }
-    if sy == (0.0_f64) {
+    if (sy == (0.0_f64)) {
         return Err(
             __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
                 "correlation: y has zero variance".to_string(),
@@ -1190,7 +1238,7 @@ fn linear_regression(
     y: &Vec<f64>,
 ) -> Result<Vec<f64>, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
     let n: SifrInt = SifrInt::from(x.len());
-    if &n < &SifrInt::from_i64(2) {
+    if (&n < &SifrInt::from_i64(2)) {
         return Err(
             __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
                 "linear_regression requires at least two data points".to_string(),
@@ -1226,14 +1274,20 @@ fn linear_regression(
     let mut num: f64 = 0.0_f64;
     let mut den: f64 = 0.0_f64;
     let mut i: SifrInt = SifrInt::from_i64(0);
-    while &i < &n {
-        let xi: Option<f64> = Some(x[::sifr_runtime::to_usize_proven(&(i))]);
+    while (&i < &n) {
+        let xi: Option<f64> = {
+            let __sifr_checked_read_collection = &x;
+            let __sifr_checked_read_index = i.clone();
+            let __sifr_checked_read_normalized = __sifr_checked_read_index
+                .normalize_index_or_len(__sifr_checked_read_collection.len());
+            __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+        };
         let yi: Option<f64> = {
-            let __sifr_index_list = &y;
-            let __sifr_index_i = i.clone();
-            let __sifr_index_norm = __sifr_index_i
-                .normalize_index_or_len(__sifr_index_list.len());
-            __sifr_index_list.get(__sifr_index_norm).copied()
+            let __sifr_checked_read_collection = &y;
+            let __sifr_checked_read_index = i.clone();
+            let __sifr_checked_read_normalized = __sifr_checked_read_index
+                .normalize_index_or_len(__sifr_checked_read_collection.len());
+            __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
         };
         if let Some(xi) = xi {
             if let Some(yi) = yi {
@@ -1243,7 +1297,7 @@ fn linear_regression(
         }
         i = &i + &SifrInt::from_i64(1);
     }
-    if den == (0.0_f64) {
+    if (den == (0.0_f64)) {
         return Err(
             __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
                 "linear_regression: x has zero variance".to_string(),
@@ -1264,8 +1318,14 @@ fn assert_vector_eq(actual: &Vec<String>, expected: &Vec<String>) {
     let mut i: SifrInt = SifrInt::from_i64(0);
     while &i < &SifrInt::from(actual.len()) {
         assert!(
-            Some(actual[::sifr_runtime::to_usize_proven(& (i))].clone()) == expected
-            .get(::sifr_runtime::to_usize_proven(& (i))).cloned()
+            ({ let __sifr_condition_list = & actual; let __sifr_condition_index = i
+            .clone(); let __sifr_condition_normalized = __sifr_condition_index
+            .normalize_index_or_len(__sifr_condition_list.len()); __sifr_condition_list
+            .get(__sifr_condition_normalized).cloned() }) == ({ let __sifr_condition_list
+            = & expected; let __sifr_condition_index = i.clone(); let
+            __sifr_condition_normalized = __sifr_condition_index
+            .normalize_index_or_len(__sifr_condition_list.len()); __sifr_condition_list
+            .get(__sifr_condition_normalized).cloned() })
         );
         i = &i + &SifrInt::from_i64(1);
     }
@@ -1275,8 +1335,14 @@ fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
     let mut i: SifrInt = SifrInt::from_i64(0);
     while &i < &SifrInt::from(actual.len()) {
         assert!(
-            Some(actual[::sifr_runtime::to_usize_proven(& (i))]) == expected
-            .get(::sifr_runtime::to_usize_proven(& (i))).copied()
+            ({ let __sifr_condition_list = & actual; let __sifr_condition_index = i
+            .clone(); let __sifr_condition_normalized = __sifr_condition_index
+            .normalize_index_or_len(__sifr_condition_list.len()); __sifr_condition_list
+            .get(__sifr_condition_normalized).copied() }) == ({ let __sifr_condition_list
+            = & expected; let __sifr_condition_index = i.clone(); let
+            __sifr_condition_normalized = __sifr_condition_index
+            .normalize_index_or_len(__sifr_condition_list.len()); __sifr_condition_list
+            .get(__sifr_condition_normalized).copied() })
         );
         i = &i + &SifrInt::from_i64(1);
     }
@@ -1519,16 +1585,16 @@ fn collect_positive_actual() -> Vec<String> {
     let mut lr_intercept_ok: bool = false;
     if lr_ok {
         let lr_slope: Option<f64> = {
-    let __sifr_index_list = &lr_v;
-    let __sifr_index_i = SifrInt::from_i64(0);
-    let __sifr_index_norm = __sifr_index_i.normalize_index_or_len(__sifr_index_list.len());
-    __sifr_index_list.get(__sifr_index_norm).copied()
+    let __sifr_checked_read_collection = &lr_v;
+    let __sifr_checked_read_index = SifrInt::from_i64(0);
+    let __sifr_checked_read_normalized = __sifr_checked_read_index.normalize_index_or_len(__sifr_checked_read_collection.len());
+    __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
 };
         let lr_intercept: Option<f64> = {
-    let __sifr_index_list = &lr_v;
-    let __sifr_index_i = SifrInt::from_i64(1);
-    let __sifr_index_norm = __sifr_index_i.normalize_index_or_len(__sifr_index_list.len());
-    __sifr_index_list.get(__sifr_index_norm).copied()
+    let __sifr_checked_read_collection = &lr_v;
+    let __sifr_checked_read_index = SifrInt::from_i64(1);
+    let __sifr_checked_read_normalized = __sifr_checked_read_index.normalize_index_or_len(__sifr_checked_read_collection.len());
+    __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
 };
         if let Some(lr_slope) = lr_slope {
             lr_slope_ok = near(lr_slope, 2.0_f64, 0.0001_f64);

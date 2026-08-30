@@ -136,12 +136,13 @@ fn main() {
     assert_ok(
         ({
             let __sifr_ord_chars = (ok_text).chars().collect::<Vec<char>>();
-            if __sifr_ord_chars.len() == 1 {
-                Ok(SifrInt::from(__sifr_ord_chars[0] as u32))
-            } else {
-                Err(ValueError {
-                    message: "ord() expected a string of length 1".to_string(),
-                })
+            match __sifr_ord_chars.as_slice() {
+                [__sifr_ord_char] => Ok(SifrInt::from(*__sifr_ord_char as u32)),
+                _ => {
+                    Err(ValueError {
+                        message: "ord() expected a string of length 1".to_string(),
+                    })
+                }
             }
         })
             .map_err(|__sifr_error_value| ::std::convert::Into::<
@@ -151,12 +152,13 @@ fn main() {
     assert_err(
         ({
             let __sifr_ord_chars = (bad_text).chars().collect::<Vec<char>>();
-            if __sifr_ord_chars.len() == 1 {
-                Ok(SifrInt::from(__sifr_ord_chars[0] as u32))
-            } else {
-                Err(ValueError {
-                    message: "ord() expected a string of length 1".to_string(),
-                })
+            match __sifr_ord_chars.as_slice() {
+                [__sifr_ord_char] => Ok(SifrInt::from(*__sifr_ord_char as u32)),
+                _ => {
+                    Err(ValueError {
+                        message: "ord() expected a string of length 1".to_string(),
+                    })
+                }
             }
         })
             .map_err(|__sifr_error_value| ::std::convert::Into::<

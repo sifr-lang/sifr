@@ -63,6 +63,8 @@ use sifr_type_system::{FunctionType, NarrowingCondition, Type, make_union};
 mod statement_dispatch;
 pub(in crate::lower) use statement_dispatch::*;
 mod binding_hint_adoption;
+mod collection_assignment;
+mod collection_delete;
 pub(in crate::lower) use binding_hint_adoption::*;
 mod function_body;
 mod nested_function_state;
@@ -86,6 +88,72 @@ pub(in crate::lower) fn record_try_error_types(ctx: &mut LowerCtx, error_type: &
             }
         }
         _ => {}
+    }
+}
+
+pub(in crate::lower) fn checked_place_failure(
+    ctx: &mut LowerCtx,
+    error_name: &str,
+    operation: &str,
+    range: ruff_text_size::TextRange,
+) -> Type {
+    let failure = ctx
+        .class_types
+        .get(error_name)
+        .cloned()
+        .unwrap_or_else(|| super::fallback_error_type(error_name));
+    if ctx.in_try_block {
+        record_try_error_types(ctx, &failure);
+    } else {
+        super::result_diagnostics::unhandled_checked_place_error(ctx, operation, error_name, range);
+    }
+    failure
+}
+
+pub(in crate::lower) fn checked_place_projection_failure(
+    ctx: &mut LowerCtx,
+    container_ty: &Type,
+    requires_existing: bool,
+    statically_present: bool,
+    operation: &str,
+    range: ruff_text_size::TextRange,
+) -> Option<Type> {
+    if statically_present {
+        return None;
+    }
+    let error_name = match container_ty.resolve_alias() {
+        Type::List(_) => "IndexError",
+        Type::Dict(_, _) if requires_existing => "KeyError",
+        Type::Dict(_, _) => return None,
+        _ => return None,
+    };
+    Some(checked_place_failure(ctx, error_name, operation, range))
+}
+
+pub(in crate::lower) fn checked_place_subscript_failure(
+    ctx: &mut LowerCtx,
+    container_ty: &Type,
+    requires_existing: bool,
+    operation: &str,
+    subscript: &sifr_python_ast::ExprSubscript,
+) -> Option<Type> {
+    let statically_present =
+        super::guarded_index::guarded_sequence_index_result_type(subscript, container_ty, ctx)
+            .is_some();
+    checked_place_projection_failure(
+        ctx,
+        container_ty,
+        requires_existing,
+        statically_present,
+        operation,
+        subscript.range(),
+    )
+}
+
+pub(in crate::lower) fn checked_place_value_type(container_ty: &Type) -> Option<Type> {
+    match container_ty.resolve_alias() {
+        Type::List(value_ty) | Type::Dict(_, value_ty) => Some(*value_ty.clone()),
+        _ => None,
     }
 }
 

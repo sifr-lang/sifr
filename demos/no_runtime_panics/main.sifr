@@ -110,8 +110,10 @@ def main():
     else:
         print("nums[99] -> None (bounds-checked)")
 
-    nums[99] = 42
-    print(f"nums[99] = 42 -> no-op, list len still {len(nums)}")
+    try:
+        nums[99] = 42
+    except IndexError:
+        print(f"nums[99] = 42 -> IndexError, list len still {len(nums)}")
     print("")
 
     print("=== All operations completed without panicking! ===")

@@ -6,10 +6,10 @@ use ::sifr_runtime::SifrRange;
 fn compute(limit: SifrInt) -> SifrInt {
     let mut total: SifrInt = SifrInt::from_i64(0);
     for n in SifrRange::new_known_nonzero(SifrInt::from_i64(0), limit.clone(), SifrInt::from_i64(1)) {
-        if &n == &SifrInt::from_i64(2) {
+        if (&n == &SifrInt::from_i64(2)) {
             continue;
         }
-        if &n == &SifrInt::from_i64(4) {
+        if (&n == &SifrInt::from_i64(4)) {
             break;
         }
         total = &total + &n;

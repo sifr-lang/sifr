@@ -217,6 +217,29 @@ pub(super) fn test_star_unpack_requires_list_has_primary_range() {
 }
 
 #[test]
+pub(super) fn test_star_unpack_records_existing_target_rebindings() {
+    let module = lower_source(
+        "def main():\n    first = 0\n    middle: list[int] = []\n    last = 0\n    try:\n        first, *middle, last = [1, 2, 3]\n    except ValueError:\n        pass\n",
+    )
+    .expect("star unpack should lower");
+    let HirStmt::TryExcept { body, .. } = &module.functions[0].body[3] else {
+        panic!("expected try/except HIR");
+    };
+    let HirStmt::StarUnpack {
+        before,
+        star,
+        after,
+        ..
+    } = &body[0]
+    else {
+        panic!("expected star unpack HIR");
+    };
+    assert!(before[0].rebind_existing);
+    assert!(star.rebind_existing);
+    assert!(after[0].rebind_existing);
+}
+
+#[test]
 pub(super) fn test_tuple_unpack_allows_attribute_targets() {
     let module = lower_source(
         "class Pair:\n    x: int\n    y: int\n    def __init__(self):\n        self.x = 1\n        self.y = 2\n    def swap(mut self):\n        self.x, self.y = self.y, self.x\n",

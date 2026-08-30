@@ -29,11 +29,11 @@ fn bisect_left<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
         left = SifrInt::from_i64(0);
     }
     let mut right: SifrInt = SifrInt::from(a.len());
-    if hi.is_none() {
+    if (hi == None) {
         right = SifrInt::from(a.len());
     } else {
         if let Some(hi) = hi.clone() {
-            if &hi < &SifrInt::from_i64(0) {
+            if (&hi < &SifrInt::from_i64(0)) {
                 right = SifrInt::from_i64(0);
             } else {
                 if (&hi > &SifrInt::from(a.len())) {
@@ -44,15 +44,15 @@ fn bisect_left<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
             }
         }
     }
-    while &left < &right {
+    while (&left < &right) {
         let mid: SifrInt = (&left + &right)
             .floor_div_known_nonzero(&SifrInt::from_i64(2));
         let val: Option<T> = {
-            let __sifr_index_list = &a;
-            let __sifr_index_i = mid.clone();
-            let __sifr_index_norm = __sifr_index_i
-                .normalize_index_or_len(__sifr_index_list.len());
-            __sifr_index_list.get(__sifr_index_norm).cloned()
+            let __sifr_checked_read_collection = &a;
+            let __sifr_checked_read_index = mid.clone();
+            let __sifr_checked_read_normalized = __sifr_checked_read_index
+                .normalize_index_or_len(__sifr_checked_read_collection.len());
+            __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
         };
         if let Some(val) = val {
             if val < *x {
@@ -74,20 +74,29 @@ fn pairwise<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     for value in data.iter().cloned() {
         if (&SifrInt::from(prev_values.len()) > &SifrInt::from_i64(0)) {
             let mut pair: Vec<T> = vec![];
-            let prev: Option<T> = Some(
-                prev_values[::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(0)))]
-                    .clone(),
-            );
+            let prev: Option<T> = {
+                let __sifr_checked_read_collection = &prev_values;
+                let __sifr_checked_read_index = SifrInt::from_i64(0);
+                let __sifr_checked_read_normalized = __sifr_checked_read_index
+                    .normalize_index_or_len(__sifr_checked_read_collection.len());
+                __sifr_checked_read_collection
+                    .get(__sifr_checked_read_normalized)
+                    .cloned()
+            };
             if let Some(prev) = prev {
                 pair.push(prev.clone());
             }
             pair.push(value.clone());
             result.push(pair.clone());
             {
-                let __idx_raw = SifrInt::from_i64(0);
-                let __idx_norm = __idx_raw.normalize_index_or_len(prev_values.len());
-                if let Some(__elem) = prev_values.get_mut(__idx_norm) {
-                    *__elem = value.clone();
+                let __assign_value = value.clone();
+                {
+                    let __index_raw = SifrInt::from_i64(0);
+                    let __index_normalized = __index_raw
+                        .normalize_index_or_len(prev_values.len());
+                    if let Some(__elem) = prev_values.get_mut(__index_normalized) {
+                        *__elem = __assign_value;
+                    }
                 }
             }
         } else {
@@ -100,7 +109,7 @@ fn batched<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     data: &Vec<T>,
     n: SifrInt,
 ) -> Result<Vec<Vec<T>>, ValueError> {
-    if &n <= &SifrInt::from_i64(0) {
+    if (&n <= &SifrInt::from_i64(0)) {
         return Err(ValueError::new("batched: n must be > 0".to_string()));
     }
     let mut result: Vec<Vec<T>> = vec![];
@@ -318,7 +327,7 @@ fn gcd(a: SifrInt, b: SifrInt) -> SifrInt {
     if &y < &SifrInt::from_i64(0) {
         y = &SifrInt::from_i64(0) - &y;
     }
-    while &y != &SifrInt::from_i64(0) {
+    while (&y != &SifrInt::from_i64(0)) {
         let temp: SifrInt = y.clone();
         y = x.floor_mod_known_nonzero(&y);
         x = temp;
@@ -365,10 +374,10 @@ fn comb(n: SifrInt, k: SifrInt) -> SifrInt {
     }
     let mut result: SifrInt = SifrInt::from_i64(1);
     let mut i: SifrInt = SifrInt::from_i64(0);
-    while &i < &r {
+    while (&i < &r) {
         result = &result * &(&n - &i);
         let divisor: SifrInt = &i + &SifrInt::from_i64(1);
-        if &divisor == &SifrInt::from_i64(0) {
+        if (&divisor == &SifrInt::from_i64(0)) {
             return SifrInt::from_i64(0);
         }
         result = result.floor_div_known_nonzero(&divisor);
@@ -458,11 +467,11 @@ fn sumprod(p: &Vec<f64>, q: &Vec<f64>) -> f64 {
 fn frexp_mantissa(x: f64) -> f64 {
     let parts: Vec<f64> = frexp(x);
     let m: Option<f64> = {
-        let __sifr_index_list = &parts;
-        let __sifr_index_i = SifrInt::from_i64(0);
-        let __sifr_index_norm = __sifr_index_i
-            .normalize_index_or_len(__sifr_index_list.len());
-        __sifr_index_list.get(__sifr_index_norm).copied()
+        let __sifr_checked_read_collection = &parts;
+        let __sifr_checked_read_index = SifrInt::from_i64(0);
+        let __sifr_checked_read_normalized = __sifr_checked_read_index
+            .normalize_index_or_len(__sifr_checked_read_collection.len());
+        __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
     };
     let Some(m) = m else {
         return NAN;
@@ -472,11 +481,11 @@ fn frexp_mantissa(x: f64) -> f64 {
 fn frexp_exponent(x: f64) -> SifrInt {
     let parts: Vec<f64> = frexp(x);
     let exp_val: Option<f64> = {
-        let __sifr_index_list = &parts;
-        let __sifr_index_i = SifrInt::from_i64(1);
-        let __sifr_index_norm = __sifr_index_i
-            .normalize_index_or_len(__sifr_index_list.len());
-        __sifr_index_list.get(__sifr_index_norm).copied()
+        let __sifr_checked_read_collection = &parts;
+        let __sifr_checked_read_index = SifrInt::from_i64(1);
+        let __sifr_checked_read_normalized = __sifr_checked_read_index
+            .normalize_index_or_len(__sifr_checked_read_collection.len());
+        __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
     };
     let Some(exp_val) = exp_val else {
         return SifrInt::from_i64(0);
@@ -486,11 +495,11 @@ fn frexp_exponent(x: f64) -> SifrInt {
 fn modf_fractional(x: f64) -> f64 {
     let parts: Vec<f64> = modf(x);
     let f: Option<f64> = {
-        let __sifr_index_list = &parts;
-        let __sifr_index_i = SifrInt::from_i64(0);
-        let __sifr_index_norm = __sifr_index_i
-            .normalize_index_or_len(__sifr_index_list.len());
-        __sifr_index_list.get(__sifr_index_norm).copied()
+        let __sifr_checked_read_collection = &parts;
+        let __sifr_checked_read_index = SifrInt::from_i64(0);
+        let __sifr_checked_read_normalized = __sifr_checked_read_index
+            .normalize_index_or_len(__sifr_checked_read_collection.len());
+        __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
     };
     let Some(f) = f else {
         return NAN;
@@ -500,11 +509,11 @@ fn modf_fractional(x: f64) -> f64 {
 fn modf_integral(x: f64) -> f64 {
     let parts: Vec<f64> = modf(x);
     let i: Option<f64> = {
-        let __sifr_index_list = &parts;
-        let __sifr_index_i = SifrInt::from_i64(1);
-        let __sifr_index_norm = __sifr_index_i
-            .normalize_index_or_len(__sifr_index_list.len());
-        __sifr_index_list.get(__sifr_index_norm).copied()
+        let __sifr_checked_read_collection = &parts;
+        let __sifr_checked_read_index = SifrInt::from_i64(1);
+        let __sifr_checked_read_normalized = __sifr_checked_read_index
+            .normalize_index_or_len(__sifr_checked_read_collection.len());
+        __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
     };
     let Some(i) = i else {
         return NAN;
@@ -733,15 +742,16 @@ fn rglob_pattern(dir: &String, pattern: &String) -> Result<Vec<String>, IOError>
 fn basename(path: &String) -> String {
     let __sifr_chars_path: Vec<char> = path.chars().collect::<Vec<char>>();
     let mut i: SifrInt = &SifrInt::from(__sifr_chars_path.len()) - &SifrInt::from_i64(1);
-    while &i >= &SifrInt::from_i64(0) {
-        let ch: Option<String> = Some({
-            let __indexed_char_option = __sifr_chars_path
-                .get(::sifr_runtime::to_usize_proven(&(i)))
-                .map(|c| c.to_string());
-            __indexed_char_option.as_slice()[0_usize].clone()
-        });
+    while (&i >= &SifrInt::from_i64(0)) {
+        let ch: Option<String> = ({
+            let __sifr_string_index = i.clone();
+            let __sifr_string_index_normalized = __sifr_string_index
+                .normalize_index_or_len(__sifr_chars_path.len());
+            __sifr_chars_path.get(__sifr_string_index_normalized)
+        })
+            .map(|c| c.to_string());
         if let Some(ch) = ch {
-            if ch == "/" {
+            if (ch == "/") {
                 return {
                     let _slice_src = &__sifr_chars_path;
                     let _slice_len = _slice_src.len();
@@ -771,15 +781,16 @@ fn stem(path: &String) -> String {
     let base: String = basename(path);
     let __sifr_chars_base: Vec<char> = base.chars().collect::<Vec<char>>();
     let mut i: SifrInt = &SifrInt::from(__sifr_chars_base.len()) - &SifrInt::from_i64(1);
-    while &i > &SifrInt::from_i64(0) {
-        let ch: Option<String> = Some({
-            let __indexed_char_option = __sifr_chars_base
-                .get(::sifr_runtime::to_usize_proven(&(i)))
-                .map(|c| c.to_string());
-            __indexed_char_option.as_slice()[0_usize].clone()
-        });
+    while (&i > &SifrInt::from_i64(0)) {
+        let ch: Option<String> = ({
+            let __sifr_string_index = i.clone();
+            let __sifr_string_index_normalized = __sifr_string_index
+                .normalize_index_or_len(__sifr_chars_base.len());
+            __sifr_chars_base.get(__sifr_string_index_normalized)
+        })
+            .map(|c| c.to_string());
         if let Some(ch) = ch {
-            if ch == "." {
+            if (ch == ".") {
                 return {
                     let _slice_src = &__sifr_chars_base;
                     let _slice_len = _slice_src.len();
@@ -810,11 +821,19 @@ fn is_absolute(path: &String) -> bool {
         return false;
     }
     if (&SifrInt::from(__sifr_chars_path.len()) >= &SifrInt::from_i64(3)) {
-        let colon: Option<String> = __sifr_chars_path
-            .get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(1))))
+        let colon: Option<String> = ({
+            let __sifr_string_index = SifrInt::from_i64(1);
+            let __sifr_string_index_normalized = __sifr_string_index
+                .normalize_index_or_len(__sifr_chars_path.len());
+            __sifr_chars_path.get(__sifr_string_index_normalized)
+        })
             .map(|c| c.to_string());
-        let sep: Option<String> = __sifr_chars_path
-            .get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(2))))
+        let sep: Option<String> = ({
+            let __sifr_string_index = SifrInt::from_i64(2);
+            let __sifr_string_index_normalized = __sifr_string_index
+                .normalize_index_or_len(__sifr_chars_path.len());
+            __sifr_chars_path.get(__sifr_string_index_normalized)
+        })
             .map(|c| c.to_string());
         if let Some(colon) = colon {
             if let Some(sep) = sep {
@@ -824,12 +843,13 @@ fn is_absolute(path: &String) -> bool {
             }
         }
     }
-    let first: Option<String> = Some({
-        let __indexed_char_option = __sifr_chars_path
-            .get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(0))))
-            .map(|c| c.to_string());
-        __indexed_char_option.as_slice()[0_usize].clone()
-    });
+    let first: Option<String> = ({
+        let __sifr_string_index = SifrInt::from_i64(0);
+        let __sifr_string_index_normalized = __sifr_string_index
+            .normalize_index_or_len(__sifr_chars_path.len());
+        __sifr_chars_path.get(__sifr_string_index_normalized)
+    })
+        .map(|c| c.to_string());
     if let Some(first) = first {
         if (first == "/") || (first == "\\") {
             return true;
@@ -953,7 +973,7 @@ fn harmonic_mean(
     data: &Vec<f64>,
 ) -> Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
     let n: SifrInt = SifrInt::from(data.len());
-    if &n == &SifrInt::from_i64(0) {
+    if (&n == &SifrInt::from_i64(0)) {
         return Err(
             __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
                 "harmonic_mean requires at least one data point".to_string(),
@@ -962,7 +982,7 @@ fn harmonic_mean(
     }
     let mut total: f64 = 0.0_f64;
     for val in data.iter().copied() {
-        if val <= (0.0_f64) {
+        if (val <= (0.0_f64)) {
             return Err(
                 __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
                     "harmonic_mean requires positive values".to_string(),
@@ -996,7 +1016,7 @@ fn median_low(
     data: &Vec<f64>,
 ) -> Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
     let n: SifrInt = SifrInt::from(data.len());
-    if &n == &SifrInt::from_i64(0) {
+    if (&n == &SifrInt::from_i64(0)) {
         return Err(
             __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
                 "median_low requires at least one data point".to_string(),
@@ -1011,11 +1031,11 @@ fn median_low(
     let mid: SifrInt = n.floor_div_known_nonzero(&SifrInt::from_i64(2));
     if (&n.floor_mod_known_nonzero(&SifrInt::from_i64(2)) == &SifrInt::from_i64(0)) {
         let val: Option<f64> = {
-            let __sifr_index_list = &sorted_data;
-            let __sifr_index_i = &mid - &SifrInt::from_i64(1);
-            let __sifr_index_norm = __sifr_index_i
-                .normalize_index_or_len(__sifr_index_list.len());
-            __sifr_index_list.get(__sifr_index_norm).copied()
+            let __sifr_checked_read_collection = &sorted_data;
+            let __sifr_checked_read_index = &mid - &SifrInt::from_i64(1);
+            let __sifr_checked_read_normalized = __sifr_checked_read_index
+                .normalize_index_or_len(__sifr_checked_read_collection.len());
+            __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
         };
         if let Some(val) = val {
             return Ok(val);
@@ -1027,11 +1047,11 @@ fn median_low(
         );
     } else {
         let val2: Option<f64> = {
-            let __sifr_index_list = &sorted_data;
-            let __sifr_index_i = mid.clone();
-            let __sifr_index_norm = __sifr_index_i
-                .normalize_index_or_len(__sifr_index_list.len());
-            __sifr_index_list.get(__sifr_index_norm).copied()
+            let __sifr_checked_read_collection = &sorted_data;
+            let __sifr_checked_read_index = mid.clone();
+            let __sifr_checked_read_normalized = __sifr_checked_read_index
+                .normalize_index_or_len(__sifr_checked_read_collection.len());
+            __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
         };
         if let Some(val2) = val2 {
             return Ok(val2);
@@ -1047,7 +1067,7 @@ fn median_high(
     data: &Vec<f64>,
 ) -> Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
     let n: SifrInt = SifrInt::from(data.len());
-    if &n == &SifrInt::from_i64(0) {
+    if (&n == &SifrInt::from_i64(0)) {
         return Err(
             __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
                 "median_high requires at least one data point".to_string(),
@@ -1061,11 +1081,11 @@ fn median_high(
     };
     let mid: SifrInt = n.floor_div_known_nonzero(&SifrInt::from_i64(2));
     let val: Option<f64> = {
-        let __sifr_index_list = &sorted_data;
-        let __sifr_index_i = mid.clone();
-        let __sifr_index_norm = __sifr_index_i
-            .normalize_index_or_len(__sifr_index_list.len());
-        __sifr_index_list.get(__sifr_index_norm).copied()
+        let __sifr_checked_read_collection = &sorted_data;
+        let __sifr_checked_read_index = mid.clone();
+        let __sifr_checked_read_normalized = __sifr_checked_read_index
+            .normalize_index_or_len(__sifr_checked_read_collection.len());
+        __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
     };
     if let Some(val) = val {
         return Ok(val);

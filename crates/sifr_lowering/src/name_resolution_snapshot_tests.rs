@@ -277,7 +277,7 @@ fn collect_stmt(stmt: &HirStmt, path: &str, facts: &mut NameFacts) {
             collect_expr(inner_index, &format!("{path}/inner_index"), facts);
             collect_expr(value, path, facts);
         }
-        HirStmt::Delete { object, index } => {
+        HirStmt::Delete { object, index, .. } => {
             collect_expr(object, &format!("{path}/object"), facts);
             collect_expr(index, &format!("{path}/index"), facts);
         }

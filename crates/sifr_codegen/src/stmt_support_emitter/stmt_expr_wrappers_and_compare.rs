@@ -41,6 +41,13 @@ macro_rules! stmt_expr_wrappers_range_index {
             ..
         } = $expr
         {
+            if let Some(lowered) = $emitter.lower_checked_if_expr_for_ir(
+                condition,
+                then_expr,
+                else_expr,
+            )? {
+                return Ok(Some(lowered));
+            }
             let Some(lowered_condition) = $emitter.lower_stmt_expr_for_ir(condition)? else {
                 return Ok(None);
             };
@@ -66,6 +73,14 @@ macro_rules! stmt_expr_wrappers_range_index {
             object, index, ty, ..
         } = $expr
         {
+            if let Some(lowered) =
+                $emitter.lower_proven_nonempty_head_read_for_ir(object, index, ty)
+            {
+                return Ok(Some(lowered));
+            }
+            if let Some(witness) = $emitter.checked_place_read_witness(object, index, ty) {
+                return Ok(Some(witness));
+            }
             if let Some(lowered) = $emitter.try_lower_nested_list_element_expr($expr) {
                 return Ok(Some(lowered));
             }
@@ -76,9 +91,7 @@ macro_rules! stmt_expr_wrappers_range_index {
                 return Ok(Some(lowered));
             }
             if !crate::helpers::is_option_type(ty) {
-                if let Some(lowered) = $emitter.lower_non_option_index_expr_for_ir(object, index)? {
-                    return Ok(Some(lowered));
-                }
+                return $emitter.lower_non_option_index_expr_for_ir(object, index);
             }
             if let Some(lowered) = $emitter.try_lower_structured_index_expr(object, index, ty)? {
                 return Ok(Some(lowered));
@@ -237,17 +250,7 @@ macro_rules! stmt_expr_wrappers_range_index {
                             args: vec![],
                         }));
                     }
-                    let indexed_expr = crate::RustExpr::Index {
-                        expr: Box::new(lowered_object),
-                        index: Box::new(key_arg),
-                    };
-                    return Ok(Some(
-                        if crate::helpers::is_copy_type_for_codegen(value_ty.as_ref()) {
-                            indexed_expr
-                        } else {
-                            crate::RustExpr::Clone(Box::new(indexed_expr))
-                        },
-                    ));
+                    return Ok(None);
                 }
                 Type::List(element_ty) => {
                     let list_index = crate::RustExpr::Cast {
@@ -269,17 +272,7 @@ macro_rules! stmt_expr_wrappers_range_index {
                             args: vec![],
                         }));
                     }
-                    let indexed_expr = crate::RustExpr::Index {
-                        expr: Box::new(lowered_object),
-                        index: Box::new(list_index),
-                    };
-                    return Ok(Some(
-                        if crate::helpers::is_copy_type_for_codegen(element_ty.as_ref()) {
-                            indexed_expr
-                        } else {
-                            crate::RustExpr::Clone(Box::new(indexed_expr))
-                        },
-                    ));
+                    return Ok(None);
                 }
                 Type::Bytes => {
                     let list_index = crate::RustExpr::Cast {
@@ -309,13 +302,7 @@ macro_rules! stmt_expr_wrappers_range_index {
                             }],
                         }));
                     }
-                    return Ok(Some(crate::RustExpr::Cast {
-                        expr: Box::new(crate::RustExpr::Index {
-                            expr: Box::new(lowered_object),
-                            index: Box::new(list_index),
-                        }),
-                        ty: crate::RustType::Named("u8".to_string()),
-                    }));
+                    return Ok(None);
                 }
                 Type::Str => {
                     let nth_expr = crate::RustExpr::MethodCall {
@@ -672,8 +659,32 @@ macro_rules! stmt_expr_contains_unary_compare_bool {
                     } else {
                         lowered_right
                     };
-                    let left_is_option = crate::helpers::is_option_type(lhs_expr.ty());
-                    let right_is_option = crate::helpers::is_option_type(rhs_expr.ty());
+                    let left_witness_ty = match lhs_expr {
+                        HirExpr::Index {
+                            object, index, ty, ..
+                        } if $emitter.has_checked_place_read_witness(object, index) => {
+                            ty.optional_member_type()
+                        }
+                        _ => None,
+                    };
+                    let right_witness_ty = match rhs_expr {
+                        HirExpr::Index {
+                            object, index, ty, ..
+                        } if $emitter.has_checked_place_read_witness(object, index) => {
+                            ty.optional_member_type()
+                        }
+                        _ => None,
+                    };
+                    let left_is_option = (crate::helpers::is_option_type(lhs_expr.ty())
+                        && left_witness_ty.is_none())
+                        || crate::stmt_support_emitter::compiler_verified_pop_lowers_as_option_for_ir(
+                            lhs_expr,
+                        );
+                    let right_is_option = (crate::helpers::is_option_type(rhs_expr.ty())
+                        && right_witness_ty.is_none())
+                        || crate::stmt_support_emitter::compiler_verified_pop_lowers_as_option_for_ir(
+                            rhs_expr,
+                        );
                     let left_none_like = matches!(lhs_expr, HirExpr::NoneLiteral)
                         || matches!(
                             crate::resolve_alias_type_for_plain_call(lhs_expr.ty()),
@@ -684,8 +695,12 @@ macro_rules! stmt_expr_contains_unary_compare_bool {
                             crate::resolve_alias_type_for_plain_call(rhs_expr.ty()),
                             Type::None
                         );
-                    let left_ty = crate::resolve_alias_type_for_plain_call(lhs_expr.ty());
-                    let right_ty = crate::resolve_alias_type_for_plain_call(rhs_expr.ty());
+                    let left_ty = crate::resolve_alias_type_for_plain_call(
+                        left_witness_ty.as_ref().unwrap_or_else(|| lhs_expr.ty()),
+                    );
+                    let right_ty = crate::resolve_alias_type_for_plain_call(
+                        right_witness_ty.as_ref().unwrap_or_else(|| rhs_expr.ty()),
+                    );
                     let (mut lowered_left, mut lowered_right) =
                         if left_is_option && !right_is_option && !right_none_like {
                             (

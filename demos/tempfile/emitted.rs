@@ -1344,15 +1344,16 @@ fn os_name() -> String {
 fn basename(path: &String) -> String {
     let __sifr_chars_path: Vec<char> = path.chars().collect::<Vec<char>>();
     let mut i: SifrInt = &SifrInt::from(__sifr_chars_path.len()) - &SifrInt::from_i64(1);
-    while &i >= &SifrInt::from_i64(0) {
-        let ch: Option<String> = Some({
-            let __indexed_char_option = __sifr_chars_path
-                .get(::sifr_runtime::to_usize_proven(&(i)))
-                .map(|c| c.to_string());
-            __indexed_char_option.as_slice()[0_usize].clone()
-        });
+    while (&i >= &SifrInt::from_i64(0)) {
+        let ch: Option<String> = ({
+            let __sifr_string_index = i.clone();
+            let __sifr_string_index_normalized = __sifr_string_index
+                .normalize_index_or_len(__sifr_chars_path.len());
+            __sifr_chars_path.get(__sifr_string_index_normalized)
+        })
+            .map(|c| c.to_string());
         if let Some(ch) = ch {
-            if ch == "/" {
+            if (ch == "/") {
                 return {
                     let _slice_src = &__sifr_chars_path;
                     let _slice_len = _slice_src.len();
@@ -1381,15 +1382,16 @@ fn basename(path: &String) -> String {
 fn dirname(path: &String) -> String {
     let __sifr_chars_path: Vec<char> = path.chars().collect::<Vec<char>>();
     let mut i: SifrInt = &SifrInt::from(__sifr_chars_path.len()) - &SifrInt::from_i64(1);
-    while &i >= &SifrInt::from_i64(0) {
-        let ch: Option<String> = Some({
-            let __indexed_char_option = __sifr_chars_path
-                .get(::sifr_runtime::to_usize_proven(&(i)))
-                .map(|c| c.to_string());
-            __indexed_char_option.as_slice()[0_usize].clone()
-        });
+    while (&i >= &SifrInt::from_i64(0)) {
+        let ch: Option<String> = ({
+            let __sifr_string_index = i.clone();
+            let __sifr_string_index_normalized = __sifr_string_index
+                .normalize_index_or_len(__sifr_chars_path.len());
+            __sifr_chars_path.get(__sifr_string_index_normalized)
+        })
+            .map(|c| c.to_string());
         if let Some(ch) = ch {
-            if ch == "/" {
+            if (ch == "/") {
                 return {
                     let _slice_src = &__sifr_chars_path;
                     let _slice_len = _slice_src.len();
@@ -1602,15 +1604,16 @@ fn mktemp_path(prefix: &String) -> String {
         root = "/tmp".to_string();
         __sifr_chars_root = root.chars().collect::<Vec<char>>();
     } else {
-        let last: Option<String> = __sifr_chars_root
-            .get(
-                ::sifr_runtime::to_usize_proven(
-                    &(SifrInt::from(root.chars().count()) - SifrInt::from_i64(1)),
-                ),
-            )
+        let last: Option<String> = ({
+            let __sifr_string_index = SifrInt::from(root.chars().count())
+                - SifrInt::from_i64(1);
+            let __sifr_string_index_normalized = __sifr_string_index
+                .normalize_index_or_len(__sifr_chars_root.len());
+            __sifr_chars_root.get(__sifr_string_index_normalized)
+        })
             .map(|c| c.to_string());
         if let Some(last) = last {
-            if last == "/" {
+            if (last == "/") {
                 return {
                     let mut __sifr_concat: String = String::with_capacity(
                         (root.len() + prefix.len()) + suffix.len(),
@@ -1653,7 +1656,7 @@ fn _collision_message(kind: &String, attempts: SifrInt) -> String {
 fn mkstemp(prefix: &String) -> Result<String, IOError> {
     let mut attempts: SifrInt = SifrInt::from_i64(0);
     let max_attempts: SifrInt = SifrInt::from_i64(64);
-    while &attempts < &max_attempts {
+    while (&attempts < &max_attempts) {
         let path: String = _next_candidate(prefix);
         let path_for_check: String = {
             let mut __sifr_concat: String = String::with_capacity(path.len() + 0usize);
@@ -1688,7 +1691,7 @@ fn mkstemp(prefix: &String) -> Result<String, IOError> {
 fn mkdtemp(prefix: &String) -> Result<String, IOError> {
     let mut attempts: SifrInt = SifrInt::from_i64(0);
     let max_attempts: SifrInt = SifrInt::from_i64(64);
-    while &attempts < &max_attempts {
+    while (&attempts < &max_attempts) {
         let path: String = _next_candidate(prefix);
         let path_for_check: String = {
             let mut __sifr_concat: String = String::with_capacity(path.len() + 0usize);
@@ -1725,8 +1728,14 @@ fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
     let mut i: SifrInt = SifrInt::from_i64(0);
     while &i < &SifrInt::from(actual.len()) {
         assert!(
-            Some(actual[::sifr_runtime::to_usize_proven(& (i))]) == expected
-            .get(::sifr_runtime::to_usize_proven(& (i))).copied()
+            ({ let __sifr_condition_list = & actual; let __sifr_condition_index = i
+            .clone(); let __sifr_condition_normalized = __sifr_condition_index
+            .normalize_index_or_len(__sifr_condition_list.len()); __sifr_condition_list
+            .get(__sifr_condition_normalized).copied() }) == ({ let __sifr_condition_list
+            = & expected; let __sifr_condition_index = i.clone(); let
+            __sifr_condition_normalized = __sifr_condition_index
+            .normalize_index_or_len(__sifr_condition_list.len()); __sifr_condition_list
+            .get(__sifr_condition_normalized).copied() })
         );
         i = &i + &SifrInt::from_i64(1);
     }
@@ -1924,7 +1933,7 @@ fn collect_tempfile_actual() -> Vec<bool> {
         let _c1: String = run_command(&format!("{}{}", "rm -f ", file_path))?;
         let _c2: String = run_command(&format!("{}{}", "rm -rf ", dir_path))?;
         let _c3: String = run_command(&format!("{}{}", "rm -rf ", missing_parent_path))?;
-        let cleaned: bool = ((!(exists(&file_path))) && (!(exists(&dir_path))));
+        let cleaned: bool = ((!exists(&file_path)) && (!exists(&dir_path)));
         actual.push(cleaned);
         let next_path: String = mkstemp(&"sifr_tempfile_tmp_".to_string())?;
         actual.push(next_path != file_path);

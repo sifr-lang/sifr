@@ -255,9 +255,10 @@ fn test_generate_rust_guarded_list_pop_unwraps_compiler_verified_nonempty() {
     );
 
     assert!(
-        rust_code.contains("values.remove(values.len() - (1_usize))"),
+        rust_code.contains("if let Some(_) = values.pop()"),
         "{rust_code}"
     );
+    assert!(!rust_code.contains("values.remove(values.len()"));
     assert!(!rust_code.contains("unreachable!"));
 }
 
@@ -267,7 +268,10 @@ fn test_generate_rust_guarded_list_pop_zero_unwraps_compiler_verified_nonempty()
         "def main():\n    values: list[int] = [1, 2]\n    while values:\n        _: int = values.pop(0)\n",
     );
 
-    assert!(rust_code.contains("values.remove(0"));
+    assert!(
+        rust_code.contains("Some(values.remove(__index))"),
+        "{rust_code}"
+    );
     assert!(!rust_code.contains("unreachable!"));
 }
 
@@ -508,7 +512,7 @@ fn test_generate_rust_recursive_generic_node_preserves_instantiated_type_argumen
 #[test]
 fn test_generate_rust_own_mut_param_emits_mut_binding_without_shadow() {
     let rust_code = generate_rust_from_source(
-        "def replace_elements(own mut arr: list[int]) -> list[int]:\n    arr[0] = 8\n    return arr\n\ndef touch(mut arr: list[int]) -> int:\n    arr[0] = 7\n    return len(arr)\n",
+        "def replace_elements(own mut arr: list[int]) -> list[int]:\n    try:\n        arr[0] = 8\n    except IndexError:\n        pass\n    return arr\n\ndef touch(mut arr: list[int]) -> int:\n    try:\n        arr[0] = 7\n    except IndexError:\n        pass\n    return len(arr)\n",
     );
 
     assert!(rust_code.contains("fn replace_elements(mut arr: Vec<SifrInt>) -> Vec<SifrInt>"));

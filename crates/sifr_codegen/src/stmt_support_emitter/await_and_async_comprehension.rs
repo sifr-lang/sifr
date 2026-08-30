@@ -197,35 +197,6 @@ impl RustEmitter {
         Ok(lowered_value)
     }
 
-    pub(crate) fn force_unwrap_option_expr_for_ir(
-        value_expr: crate::RustExpr,
-        _guard_message: &str,
-    ) -> crate::RustExpr {
-        crate::RustExpr::Block {
-            stmts: vec![crate::RustStmt::Let {
-                mutable: false,
-                name: "__sifr_proven_option".to_string(),
-                ty: None,
-                value: value_expr,
-            }],
-            expr: Some(Box::new(crate::RustExpr::Clone(Box::new(
-                crate::RustExpr::Index {
-                    expr: Box::new(crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::Ident(
-                            "__sifr_proven_option".to_string(),
-                        )),
-                        method: "as_slice".to_string(),
-                        args: vec![],
-                    }),
-                    index: Box::new(crate::RustExpr::Cast {
-                        expr: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Int(0))),
-                        ty: crate::RustType::Named("usize".to_string()),
-                    }),
-                },
-            )))),
-        }
-    }
-
     pub(crate) fn uses_debug_display_format_for_ir(ty: &Type) -> bool {
         match crate::resolve_alias_type_for_plain_call(ty) {
             Type::Int

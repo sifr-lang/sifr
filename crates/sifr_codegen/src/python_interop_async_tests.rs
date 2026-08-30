@@ -515,7 +515,7 @@ fn receiver_asyncio_registration_has_terminal_provisional_rollback() {
     );
     for required in [
         "let mut __sifr_provisional_callback_0 = None",
-        "__sifr_provisional_callback_0 = Some(",
+        "__sifr_provisional_callback_0.insert(",
         "rollback_provisional().await",
         "receiver-callback-registration",
         "retained_callback_finalization_scope",

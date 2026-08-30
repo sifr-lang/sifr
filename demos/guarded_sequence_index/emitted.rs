@@ -8,10 +8,14 @@ fn collect_vowels(text: &String) -> String {
     let mut result: String = "".to_string();
     let mut i: SifrInt = SifrInt::from_i64(0);
     while (&i < &SifrInt::from(__sifr_chars_text.len())) {
-        let ch: String = {
-    let __indexed_char_option = __sifr_chars_text.get(::sifr_runtime::to_usize_proven(&(i))).map(|c| c.to_string());
-    __indexed_char_option.as_slice()[0_usize].clone()
-};
+        let Some(__sifr_checked_value_0) = ({
+    let __sifr_string_index = i.clone();
+    let __sifr_string_index_normalized = __sifr_string_index.normalize_index_or_len(__sifr_chars_text.len());
+    __sifr_chars_text.get(__sifr_string_index_normalized)
+}).map(|c| c.to_string()) else {
+            break;
+        };
+        let ch: String = __sifr_checked_value_0.clone();
         if "aeiou".to_string().contains(&ch) {
             result.push_str((ch).as_str());
         }
@@ -23,16 +27,29 @@ fn collect_vowels(text: &String) -> String {
 fn sum_all(values: &Vec<SifrInt>) -> SifrInt {
     let mut total: SifrInt = SifrInt::from_i64(0);
     for i in SifrRange::new_known_nonzero(SifrInt::from_i64(0), SifrInt::from(values.len()), SifrInt::from_i64(1)) {
-        total = &total + &values[::sifr_runtime::to_usize_proven(&(i))].clone();
+        let Some(__sifr_checked_value_1) = ({
+    let __sifr_checked_read_collection = &values;
+    let __sifr_checked_read_index = i.clone();
+    let __sifr_checked_read_normalized = __sifr_checked_read_index.normalize_index_or_len(__sifr_checked_read_collection.len());
+    __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+}) else {
+            continue;
+        };
+        total = &total + &__sifr_checked_value_1.clone();
     }
     total.clone()
 }
 
 fn head_or_zero(values: &Vec<SifrInt>) -> SifrInt {
-    if &SifrInt::from(values.len()) == &SifrInt::from_i64(0) {
+    let Some(__sifr_checked_value_2) = ({
+    let __sifr_checked_read_collection = &values;
+    let __sifr_checked_read_index = SifrInt::from_i64(0);
+    let __sifr_checked_read_normalized = __sifr_checked_read_index.normalize_index_or_len(__sifr_checked_read_collection.len());
+    __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+}) else {
         return SifrInt::from_i64(0);
-    }
-    let first: SifrInt = values[::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(0)))].clone();
+    };
+    let first: SifrInt = __sifr_checked_value_2.clone();
     first.clone()
 }
 

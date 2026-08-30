@@ -299,7 +299,7 @@ fn main() {
                 &"strict".to_string(),
             )
             .map_err(|__message| ParseError { message: __message })?;
-        conversion_ok = text == "binary-sample";
+        conversion_ok = (text == "binary-sample");
         Ok(())
     })();
     if let Err(__sifr_try_err) = __sifr_try_res {

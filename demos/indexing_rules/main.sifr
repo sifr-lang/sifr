@@ -6,10 +6,13 @@
 
 def main():
     items: list[int] = [1, 2, 3]
-    items[-1] = 9
-    items[-2] += 5
-    del items[-1]
-    del items[-5]
+    try:
+        items[-1] = 9
+        items[-2] += 5
+        del items[-1]
+        del items[-5]
+    except IndexError:
+        pass
 
     print("indexing_rules indexing and semantics parity fixes demo:")
     print(items)

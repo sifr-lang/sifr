@@ -57,20 +57,29 @@ fn pairwise<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     for value in data.iter().cloned() {
         if (&SifrInt::from(prev_values.len()) > &SifrInt::from_i64(0)) {
             let mut pair: Vec<T> = vec![];
-            let prev: Option<T> = Some(
-                prev_values[::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(0)))]
-                    .clone(),
-            );
+            let prev: Option<T> = {
+                let __sifr_checked_read_collection = &prev_values;
+                let __sifr_checked_read_index = SifrInt::from_i64(0);
+                let __sifr_checked_read_normalized = __sifr_checked_read_index
+                    .normalize_index_or_len(__sifr_checked_read_collection.len());
+                __sifr_checked_read_collection
+                    .get(__sifr_checked_read_normalized)
+                    .cloned()
+            };
             if let Some(prev) = prev {
                 pair.push(prev.clone());
             }
             pair.push(value.clone());
             result.push(pair.clone());
             {
-                let __idx_raw = SifrInt::from_i64(0);
-                let __idx_norm = __idx_raw.normalize_index_or_len(prev_values.len());
-                if let Some(__elem) = prev_values.get_mut(__idx_norm) {
-                    *__elem = value.clone();
+                let __assign_value = value.clone();
+                {
+                    let __index_raw = SifrInt::from_i64(0);
+                    let __index_normalized = __index_raw
+                        .normalize_index_or_len(prev_values.len());
+                    if let Some(__elem) = prev_values.get_mut(__index_normalized) {
+                        *__elem = __assign_value;
+                    }
                 }
             }
         } else {
@@ -83,7 +92,7 @@ fn batched<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     data: &Vec<T>,
     n: SifrInt,
 ) -> Result<Vec<Vec<T>>, ValueError> {
-    if &n <= &SifrInt::from_i64(0) {
+    if (&n <= &SifrInt::from_i64(0)) {
         return Err(ValueError::new("batched: n must be > 0".to_string()));
     }
     let mut result: Vec<Vec<T>> = vec![];
@@ -135,16 +144,18 @@ fn cycle<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     );
     let mut result: Vec<T> = vec![];
     let size: SifrInt = SifrInt::from(materialized.len());
-    if &size > &SifrInt::from_i64(0) {
+    if (&size > &SifrInt::from_i64(0)) {
         let mut i: SifrInt = SifrInt::from_i64(0);
-        while &i < &n {
+        while (&i < &n) {
             let idx: SifrInt = i.floor_mod_known_nonzero(&size);
             let val: Option<T> = {
-                let __sifr_index_list = &materialized;
-                let __sifr_index_i = idx.clone();
-                let __sifr_index_norm = __sifr_index_i
-                    .normalize_index_or_len(__sifr_index_list.len());
-                __sifr_index_list.get(__sifr_index_norm).cloned()
+                let __sifr_checked_read_collection = &materialized;
+                let __sifr_checked_read_index = idx.clone();
+                let __sifr_checked_read_normalized = __sifr_checked_read_index
+                    .normalize_index_or_len(__sifr_checked_read_collection.len());
+                __sifr_checked_read_collection
+                    .get(__sifr_checked_read_normalized)
+                    .cloned()
             };
             if let Some(val) = val {
                 result.push(val.clone());
@@ -159,8 +170,14 @@ fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
     let mut i: SifrInt = SifrInt::from_i64(0);
     while &i < &SifrInt::from(actual.len()) {
         assert!(
-            Some(actual[::sifr_runtime::to_usize_proven(& (i))]) == expected
-            .get(::sifr_runtime::to_usize_proven(& (i))).copied()
+            ({ let __sifr_condition_list = & actual; let __sifr_condition_index = i
+            .clone(); let __sifr_condition_normalized = __sifr_condition_index
+            .normalize_index_or_len(__sifr_condition_list.len()); __sifr_condition_list
+            .get(__sifr_condition_normalized).copied() }) == ({ let __sifr_condition_list
+            = & expected; let __sifr_condition_index = i.clone(); let
+            __sifr_condition_normalized = __sifr_condition_index
+            .normalize_index_or_len(__sifr_condition_list.len()); __sifr_condition_list
+            .get(__sifr_condition_normalized).copied() })
         );
         i = &i + &SifrInt::from_i64(1);
     }
