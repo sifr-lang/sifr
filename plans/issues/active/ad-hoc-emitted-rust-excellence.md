@@ -298,6 +298,7 @@ It does not broaden the active item.
 | Item 1 remediation review | ERQ-025 still describes the fifteen legacy demo `main.rs` files removed by Item 1. | Item 8 | Close the already-discharged row when Item 8 reconciles stale snapshots and generated ceremony. |
 | Item 1 remediation review | The exact discovery inventory is broader than the 91-project executable quality corpus. | Item 12 | State and verify the intended qualification relationship, and ensure final full-corpus closure cannot leave an inventoried entrypoint class unexercised. |
 | Item 1 remediation review | Checked-in emitted companions receive freshness and safety scans but are not individually governed by rustfmt and Clippy. | Item 8 | Regenerate or remove the remaining producer debt and make authoritative checked-in output satisfy the canonical formatting/lint contract. |
+| SQL template-string merge gate on candidate `3f4cca3a985b95bdace728e21b32e3f7c8e14a8e` | The repository verification-taxonomy check rejects 13 delivery-record references in `verification/areas/generated_code_quality/check_emitted_rust_audit_inventory.py` and `emitted_rust_audit_inventory.json`. These files were unchanged by the SQL item. | Item 2 | Replace the active-plan fields and archived-plan evidence paths with stable compiler/codebase identities before the next generated-code-quality merge gate. |
 
 New out-of-scope findings must name a concrete active owner before the current
 item can close.
