@@ -547,7 +547,7 @@
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": "e2e_exact_int_negative_power_requires_handling",
+      "baseline_fixture_id": "e2e_exact_int_slice_step_requires_handling",
       "code": "SIFR-INT-0005",
       "deferral": null,
       "multi_error_recovery_fixture": null,
@@ -557,13 +557,16 @@
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": "e2e_exact_int_true_division_requires_handling",
+      "baseline_fixture_id": null,
       "code": "SIFR-INT-0006",
-      "deferral": null,
+      "deferral": {
+        "issue": "emitted-rust-excellence-item-3-retire-int0006",
+        "owner": "compiler/core-language",
+        "reason": "exact integer true division now lowers to a typed Result and source-level misuse renders SIFR-TYPE-0002; SIFR-INT-0006 remains only in the lower-level type-system API",
+        "removal_target": "Item 3 must retire the unreachable diagnostic registry, renderer, tests, and documentation or restore a source-reachable typed-failure use with a rendered baseline"
+      },
       "multi_error_recovery_fixture": null,
-      "renderer_formats": [
-        "compact"
-      ],
+      "renderer_formats": [],
       "suggestion_rendering_fixture": null
     },
     {
@@ -2034,13 +2037,16 @@
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": "semantic_arithmetic_overflow_warning",
+      "baseline_fixture_id": null,
       "code": "SIFR-TYPE-0901",
-      "deferral": null,
+      "deferral": {
+        "issue": "emitted-rust-excellence-item-8-retire-type0901",
+        "owner": "compiler/core-language",
+        "reason": "the exact-integer architecture removed the final arithmetic-overflow warning producer; only the dead warning IR and rendering path remain",
+        "removal_target": "Item 8 must remove the dead warning IR variant, registry entry, renderer, generated catalog and documentation"
+      },
       "multi_error_recovery_fixture": null,
-      "renderer_formats": [
-        "compact"
-      ],
+      "renderer_formats": [],
       "suggestion_rendering_fixture": null
     },
     {

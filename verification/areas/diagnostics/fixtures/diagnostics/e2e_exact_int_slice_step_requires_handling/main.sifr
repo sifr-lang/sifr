@@ -1,0 +1,4 @@
+# expect-error: SIFR-INT-0005
+
+def slice_with_step(values: list[int], step: int) -> list[int]:
+    return values[::step]

@@ -1,0 +1,2 @@
+1 error, 0 warnings, 0 notes
+E SIFR-INT-0005 verification/areas/diagnostics/fixtures/diagnostics/e2e_exact_int_slice_step_requires_handling/main.sifr:4:21 integer division, modulo, exponentiation, shift, range step, or slice step requires handling a typed integer failure unless the compiler can prove this operation is safe

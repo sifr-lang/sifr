@@ -1532,7 +1532,22 @@
       ],
       "owner": "compiler/core-language",
       "renderer": "compact",
-      "source_hash": "sha256:299bd52f53a16b2772fd157953e77e634fbbca97bd7dc111ec6227df2b6b00bf",
+      "source_hash": "sha256:1a4a497d4fc8b3d7da323e924258772478b71fbcd4f29031235e73beb539d753",
+      "suite": "baselines"
+    },
+    {
+      "bless_reason": "Compact diagnostic baseline coverage for exact-integer slice step handling.",
+      "bless_reference": "https://github.com/sifr-lang/sifr/pull/3580",
+      "fixture_id": "e2e_exact_int_slice_step_requires_handling",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/core-language",
+      "renderer": "compact",
+      "source_hash": "sha256:27809c9db4db39fb0bae56f38fcaed9dfa24e987b6b132a2aa480d3d3422a570",
       "suite": "baselines"
     },
     {
@@ -1547,7 +1562,7 @@
       ],
       "owner": "compiler/core-language",
       "renderer": "compact",
-      "source_hash": "sha256:0a10abb63fe107a07496ef314b49fc1af9c0553760fb0fc675846ca2dad82c83",
+      "source_hash": "sha256:37de8474c33991dc0ed1b48695e3ab9472eb7a94646c943ff574e8dc669b2713",
       "suite": "baselines"
     },
     {
@@ -2198,7 +2213,7 @@
     {
       "bless_reason": "Compact diagnostic baseline coverage for semantic warning, note, and result straggler diagnostics.",
       "bless_reference": "https://github.com/sifr-lang/sifr/pull/2576",
-      "fixture_id": "semantic_arithmetic_overflow_warning",
+      "fixture_id": "semantic_exact_int_arithmetic_has_no_overflow_warning",
       "normalizers": [
         "workspace-path",
         "tmp-path",
