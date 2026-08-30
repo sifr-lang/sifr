@@ -76,6 +76,22 @@
       },
 
       {
+        "id": "sifr_sql_postgresql",
+        "package": "sifr_sql_postgresql",
+        "command": [
+          "test",
+          "-p",
+          "sifr_sql_postgresql"
+        ],
+        "modes": [
+          "smoke",
+          "full"
+        ],
+        "status": "blocking",
+        "executed_in_merge": true
+      },
+
+      {
         "id": "sifr_diagnostics",
         "package": "sifr_diagnostics",
         "command": [
@@ -739,6 +755,7 @@
         "common-sql",
         "contracts",
         "dependency-baseline",
+        "postgresql-compiler",
         "query-fragments",
         "schema-profiles",
         "mutation"

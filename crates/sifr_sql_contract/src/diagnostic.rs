@@ -71,6 +71,7 @@ impl CommonSqlDiagnostic {
             ProviderAnalysisError::UnsupportedDatabaseType(_) => Self::DatabaseType,
             ProviderAnalysisError::InvalidBind { .. } => Self::BindCompatibility,
             ProviderAnalysisError::InvalidResultField { .. }
+            | ProviderAnalysisError::Diagnostic(_)
             | ProviderAnalysisError::InvalidDialectSemantics => Self::ProviderContract,
         }
     }

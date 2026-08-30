@@ -51,6 +51,7 @@ PROFILE_SUITES = {
     "contracts",
     "dependency-baseline",
     "mutation",
+    "postgresql-compiler",
     "query-fragments",
     "schema-profiles",
 }
@@ -256,6 +257,18 @@ def validate_qualification(payload: dict[str, Any], baseline: dict[str, Any], ar
         rules = row.get("rules")
         require(isinstance(rules, list) and rules, f"dependency constraint {row['id']} has no enforceable rules")
         require(all(nonempty(rule) for rule in rules), f"dependency constraint {row['id']} has an empty rule")
+    tools = unique_rows(payload.get("tools"), "name", "dependency tool qualification")
+    baseline_tools = unique_rows(baseline.get("tool"), "name", "dependency baseline tools")
+    require(len(tools) == 1 and tools[0]["name"] == "wasi-virt", "tool qualification must own WASI-Virt")
+    require(len(baseline_tools) == 1 and baseline_tools[0]["name"] == "wasi-virt", "tool baseline must own WASI-Virt")
+    tool = tools[0]
+    baseline_tool = baseline_tools[0]
+    for field in ("version", "commit", "source_content_sha256", "license"):
+        require(tool.get(field) == baseline_tool.get(field), f"WASI-Virt qualification has baseline {field} drift")
+    require(set(tool.get("artifacts", [])).issubset(artifacts), "WASI-Virt names an unknown artifact")
+    require(tool.get("targets") == ["wasm32-wasip2"], "WASI-Virt target has drifted")
+    require(tool.get("platform_part") == "postgresql_compiler", "WASI-Virt owner has drifted")
+    require(nonempty(tool.get("audit_owner")), "WASI-Virt has no audit owner")
     rows = unique_rows(payload.get("dependencies"), "crate", "dependency qualification")
     baseline_rows = unique_rows(baseline.get("crate"), "name", "dependency baseline crates")
     by_name = {str(row["name"]): row for row in baseline_rows}

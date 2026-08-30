@@ -51,6 +51,17 @@ SOURCE_FIELDS = (
     "api_authority",
     "license",
 )
+TOOL_FIELDS = (
+    "name",
+    "display_name",
+    "version",
+    "policy",
+    "commit",
+    "source_content_sha256",
+    "release_authority",
+    "api_authority",
+    "license",
+)
 
 
 class BaselineError(ValueError):
@@ -93,6 +104,11 @@ def validate_baseline(payload: dict[str, Any]) -> None:
     release_groups: dict[str, str] = {}
     for row in crates:
         validate_crate(row, seen_crates, release_groups)
+
+    tools = payload.get("tool")
+    if not isinstance(tools, list) or len(tools) != 1:
+        raise BaselineError("dependency baseline must contain one build tool")
+    validate_tool(tools[0])
 
     sources = payload.get("source")
     if not isinstance(sources, list) or not sources:
@@ -159,6 +175,31 @@ def validate_crate(row: object, seen: set[str], groups: dict[str, str]) -> None:
         previous = groups.setdefault(group, version)
         if previous != version:
             raise BaselineError(f"release group {group} has version drift")
+
+
+def validate_tool(row: object) -> None:
+    if not isinstance(row, dict) or row.get("name") != "wasi-virt":
+        raise BaselineError("build tool must be WASI-Virt")
+    if row.get("display_name") != "WASI-Virt":
+        raise BaselineError("WASI-Virt display name has drifted")
+    version = row.get("version")
+    if not isinstance(version, str):
+        raise BaselineError("WASI-Virt has no exact version")
+    SemVer.parse_stable(version)
+    if version != "0.2.0" or row.get("policy") != "latest-stable-source":
+        raise BaselineError("WASI-Virt stable source pin has drifted")
+    commit = row.get("commit")
+    checksum = row.get("source_content_sha256")
+    if not isinstance(commit, str) or HEX40.fullmatch(commit) is None:
+        raise BaselineError("WASI-Virt has no exact source commit")
+    if not isinstance(checksum, str) or HEX64.fullmatch(checksum) is None:
+        raise BaselineError("WASI-Virt has no tracked-content checksum")
+    if row.get("release_authority") != f"https://github.com/bytecodealliance/WASI-Virt/tree/{commit}":
+        raise BaselineError("WASI-Virt release authority has drifted")
+    if row.get("api_authority") != f"https://api.github.com/repos/bytecodealliance/WASI-Virt/commits/{commit}":
+        raise BaselineError("WASI-Virt API authority has drifted")
+    if row.get("license") != "Apache-2.0 WITH LLVM-exception":
+        raise BaselineError("WASI-Virt license has drifted")
 
 
 def validate_source(
@@ -298,7 +339,7 @@ def render_toml(payload: dict[str, Any]) -> str:
     lines = []
     for field in ("schema_version", "verified_at", "generated_by", "root_lock_package", "rust_version", "sqlite_amalgamation"):
         lines.append(render_assignment(field, payload[field]))
-    for table, fields in (("crate", CRATE_FIELDS), ("source", SOURCE_FIELDS)):
+    for table, fields in (("tool", TOOL_FIELDS), ("crate", CRATE_FIELDS), ("source", SOURCE_FIELDS)):
         for row in payload[table]:
             lines.extend(("", f"[[{table}]]"))
             for field in fields:

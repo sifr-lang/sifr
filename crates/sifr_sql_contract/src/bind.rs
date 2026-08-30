@@ -92,6 +92,9 @@ fn special_compatibility(
     target: &DatabaseType,
     codecs: &CodecRegistry,
 ) -> Option<BindCompatibility> {
+    if let DatabaseType::Named { canonical, .. } = target {
+        return special_compatibility(input, canonical, codecs);
+    }
     match (input, target) {
         (SifrType::ExactInteger, DatabaseType::Integer { .. }) => {
             Some(BindCompatibility::Fallible(EncodeCheck::ExactIntegerRange))
@@ -311,6 +314,9 @@ fn split_nested_nullability(input: &SifrType) -> (SifrType, Nullability) {
 }
 
 fn constrained_exact(database: &DatabaseType) -> BindCompatibility {
+    if let DatabaseType::Named { canonical, .. } = database {
+        return constrained_exact(canonical);
+    }
     match database {
         DatabaseType::Decimal {
             precision: Some(_), ..

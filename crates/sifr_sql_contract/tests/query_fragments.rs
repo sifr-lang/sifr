@@ -4,15 +4,16 @@ use semver::Version;
 use sifr_sql_contract::{
     Cardinality, CodecContract, CodecIdentity, CodecRegistry, DialectIdentity, EffectContract,
     EffectTransformation, FragmentCategory, FragmentDraft, NullCodecBehavior, Nullability,
-    ObjectId, PanicContainment, PoolingMode, PredicateContext, ProfileModuleRegistry,
-    ProviderAnalysis, ProviderIdentity, ProviderParameter, ProviderResultField,
-    QueryContractErrorKind, QueryDefinitionScope, QueryEffect, QueryOrigin, QuerySignatureRegistry,
-    QuerySymbol, QuerySymbolKind, QueryTemplateContract, QueryTemplateDraft, ResultTransformation,
-    SchemaDocument, SchemaDocumentKind, SchemaEvidence, SchemaProfile, SchemaStrictness,
-    SessionContract, SifrType, SqlFragment, SqlPrecedence, StaticFragmentOrigin, UnsafeSyntaxGrant,
-    UnsafeSyntaxLint, WireFormatIdentity, all_predicates, any_predicates, build_profile_authority,
-    decode_generated_identifier, decode_generated_path, encode_generated_identifier,
-    encode_generated_path, generate_profile_module, normalize_schema, not_predicate,
+    ObjectId, PackageCapabilityResolver, PanicContainment, PoolingMode, PredicateContext,
+    ProfileModuleRegistry, ProviderAnalysis, ProviderIdentity, ProviderParameter,
+    ProviderResultField, QueryContractErrorKind, QueryDefinitionScope, QueryEffect, QueryOrigin,
+    QuerySignatureRegistry, QuerySymbol, QuerySymbolKind, QueryTemplateContract,
+    QueryTemplateDraft, ResultTransformation, SchemaDocument, SchemaDocumentKind, SchemaEvidence,
+    SchemaProfile, SchemaStrictness, SessionContract, SifrType, SqlFragment, SqlPrecedence,
+    StaticFragmentOrigin, UnsafeSyntaxGrant, UnsafeSyntaxLint, WireFormatIdentity, all_predicates,
+    any_predicates, build_profile_authority, decode_generated_identifier, decode_generated_path,
+    encode_generated_identifier, encode_generated_path, generate_profile_module, normalize_schema,
+    not_predicate,
 };
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -218,18 +219,31 @@ fn ordinary_runtime_text_has_no_fragment_path_and_unsafe_syntax_is_audited() {
         dialect: query.dialect,
         scope: BTreeSet::new(),
     };
+    let denied = TestCapabilities::default();
     assert!(
-        UnsafeSyntaxGrant::from_verified_capability(
+        UnsafeSyntaxGrant::from_package_resolver(
+            &denied,
             "app@1.0.0",
-            "sql.unsafe-syntax",
+            UnsafeSyntaxLint::Warn,
+            "operator-selected maintenance statement",
+        )
+        .is_err()
+    );
+    let allowed = TestCapabilities {
+        unsafe_syntax: true,
+    };
+    assert!(
+        UnsafeSyntaxGrant::from_package_resolver(
+            &allowed,
+            "app@1.0.0",
             UnsafeSyntaxLint::Deny,
             "operator-selected maintenance statement",
         )
         .is_err()
     );
-    let grant = UnsafeSyntaxGrant::from_verified_capability(
+    let grant = UnsafeSyntaxGrant::from_package_resolver(
+        &allowed,
         "app@1.0.0",
-        "sql.unsafe-syntax",
         UnsafeSyntaxLint::Warn,
         "operator-selected maintenance statement",
     )
@@ -243,6 +257,17 @@ fn ordinary_runtime_text_has_no_fragment_path_and_unsafe_syntax_is_audited() {
         fragment.unsafe_audit.unwrap().capability,
         "sql.unsafe-syntax"
     );
+}
+
+#[derive(Default)]
+struct TestCapabilities {
+    unsafe_syntax: bool,
+}
+
+impl PackageCapabilityResolver for TestCapabilities {
+    fn allows(&self, package_identity: &str, capability: &str) -> bool {
+        self.unsafe_syntax && package_identity == "app@1.0.0" && capability == "sql.unsafe-syntax"
+    }
 }
 
 fn registry_and_codecs() -> (ProfileModuleRegistry, CodecRegistry) {

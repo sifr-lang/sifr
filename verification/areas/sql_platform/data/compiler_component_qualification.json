@@ -5,7 +5,7 @@
     "crate": "wasmtime",
     "version": "48.0.1",
     "default_features": false,
-    "features": ["component-model", "cranelift", "runtime", "std"]
+    "features": ["component-model", "cranelift", "gc-null", "runtime", "std"]
   },
   "wit": "crates/sifr_compiler_component/wit/compiler-component.wit",
   "host_targets": [
@@ -38,10 +38,13 @@
     "diagnostics",
     "fuel",
     "input-bytes",
+    "instances",
     "memory",
+    "memories",
     "operation-depth",
     "output-bytes",
     "stack",
+    "tables",
     "type-depth"
   ],
   "fixture": {

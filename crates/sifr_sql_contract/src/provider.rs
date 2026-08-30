@@ -38,11 +38,31 @@ pub struct ProviderAnalysis {
     pub semantic_flags: BTreeSet<String>,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ProviderDiagnosticSpan {
+    pub kind: String,
+    pub document: String,
+    pub start: u32,
+    pub end: u32,
+    pub label: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ProviderSemanticDiagnostic {
+    pub code: String,
+    pub message: String,
+    pub primary: ProviderDiagnosticSpan,
+    pub related: Vec<ProviderDiagnosticSpan>,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ProviderAnalysisError {
     UnsupportedDatabaseType(ObjectId),
     InvalidBind { slot: u32 },
     InvalidResultField { field: String },
+    Diagnostic(Box<ProviderSemanticDiagnostic>),
     InvalidDialectSemantics,
 }
 
@@ -152,6 +172,9 @@ impl fmt::Display for ProviderAnalysisError {
                     formatter,
                     "result field '{field}' has an invalid type contract"
                 )
+            }
+            Self::Diagnostic(diagnostic) => {
+                write!(formatter, "{}: {}", diagnostic.code, diagnostic.message)
             }
             Self::InvalidDialectSemantics => {
                 formatter.write_str("provider returned invalid dialect semantics")

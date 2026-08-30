@@ -183,21 +183,26 @@ pub struct UnsafeSyntaxGrant {
     audit: UnsafeSyntaxAudit,
 }
 
+pub trait PackageCapabilityResolver {
+    fn allows(&self, package_identity: &str, capability: &str) -> bool;
+}
+
 impl UnsafeSyntaxGrant {
-    pub fn from_verified_capability(
+    pub fn from_package_resolver(
+        resolver: &impl PackageCapabilityResolver,
         package_identity: impl Into<String>,
-        capability: &str,
         lint: UnsafeSyntaxLint,
         reason: impl Into<String>,
     ) -> Result<Self, QueryContractError> {
+        let package_identity = package_identity.into();
         let audit = UnsafeSyntaxAudit {
-            package_identity: package_identity.into(),
-            capability: capability.to_string(),
+            package_identity: package_identity.clone(),
+            capability: "sql.unsafe-syntax".to_string(),
             lint,
             reason: reason.into(),
         };
         if audit.package_identity.is_empty()
-            || audit.capability != "sql.unsafe-syntax"
+            || !resolver.allows(&package_identity, "sql.unsafe-syntax")
             || audit.reason.trim().is_empty()
             || audit.lint == UnsafeSyntaxLint::Deny
         {

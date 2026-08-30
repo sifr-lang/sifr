@@ -65,7 +65,13 @@ def validate(payload: object, *, host_source_override: str | None = None) -> Non
         raise QualificationError("qualification must pin Wasmtime 48.0.1")
     if engine.get("default_features") is not False:
         raise QualificationError("Wasmtime default features must be disabled")
-    if engine.get("features") != ["component-model", "cranelift", "runtime", "std"]:
+    if engine.get("features") != [
+        "component-model",
+        "cranelift",
+        "gc-null",
+        "runtime",
+        "std",
+    ]:
         raise QualificationError("Wasmtime feature selection is not exact")
     cargo = tomllib.loads((REPO_ROOT / "Cargo.toml").read_text(encoding="utf-8"))
     wasmtime = cargo["workspace"]["dependencies"].get("wasmtime")
@@ -101,10 +107,14 @@ def validate(payload: object, *, host_source_override: str | None = None) -> Non
     required_host_controls = {
         "config.consume_fuel(true)",
         "config.cranelift_nan_canonicalization(true)",
+        "config.wasm_exceptions(true)",
         "config.wasm_relaxed_simd(false)",
         "config.wasm_memory64(false)",
-        "config.wasm_multi_memory(false)",
+        "config.wasm_multi_memory(true)",
         "StoreLimitsBuilder::new()",
+        ".instances(self.limits.max_instances)",
+        ".memories(self.limits.max_memories)",
+        ".tables(self.limits.max_tables)",
         "Linker::<HostState>::new(&self.engine)",
     }
     if any(control not in host_source for control in required_host_controls):

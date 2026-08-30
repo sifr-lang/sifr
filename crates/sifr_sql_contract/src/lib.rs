@@ -42,9 +42,9 @@ pub use error::{SchemaContractError, SchemaContractErrorKind};
 pub use fingerprint::{SchemaFingerprint, schema_fingerprint};
 pub use fragment::{
     AliasIdentity, EffectTransformation, FragmentCategory, FragmentDraft, FragmentIdentity,
-    PredicateContext, QueryDefinitionScope, RelationAlias, ResultTransformation, SqlFragment,
-    SqlPrecedence, StaticFragmentOrigin, UnsafeSyntaxAudit, UnsafeSyntaxGrant, UnsafeSyntaxLint,
-    all_predicates, any_predicates, not_predicate,
+    PackageCapabilityResolver, PredicateContext, QueryDefinitionScope, RelationAlias,
+    ResultTransformation, SqlFragment, SqlPrecedence, StaticFragmentOrigin, UnsafeSyntaxAudit,
+    UnsafeSyntaxGrant, UnsafeSyntaxLint, all_predicates, any_predicates, not_predicate,
 };
 pub use generated::{
     COMPILER_KNOWN_PROFILE_EXPORTS, GeneratedProfileModule, GeneratedSchemaType,
@@ -62,8 +62,8 @@ pub use profile::{
 };
 pub use profile_registry::{ProfileModuleRegistry, RegisteredProfileModule};
 pub use provider::{
-    DialectSemantics, ProviderAnalysis, ProviderAnalysisError, ProviderParameter,
-    ProviderResultField,
+    DialectSemantics, ProviderAnalysis, ProviderAnalysisError, ProviderDiagnosticSpan,
+    ProviderParameter, ProviderResultField, ProviderSemanticDiagnostic,
 };
 pub use query::{
     QueryAdapter, QueryContractError, QueryContractErrorKind, QueryOrigin, QueryParameterSlot,

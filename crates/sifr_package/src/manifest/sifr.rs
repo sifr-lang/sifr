@@ -32,6 +32,7 @@ pub struct ImportRoot(pub String);
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct TrustPolicy {
+    pub security_capabilities: Vec<String>,
     pub native: Vec<String>,
     pub build_scripts: Vec<String>,
     pub proc_macros: Vec<String>,

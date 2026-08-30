@@ -11,6 +11,7 @@ mod projection_bridge;
 mod projection_rust_keywords;
 pub mod python;
 pub mod source;
+mod sql_capabilities;
 mod sql_profiles;
 
 pub use crate::cargo::commands::{
@@ -114,6 +115,7 @@ pub use crate::python::{
     write_python_certifications,
 };
 pub use crate::source::layout::{MarkerValidation, validate_pure_marker_source};
+pub use crate::sql_capabilities::{PackageCapabilityResolutionError, ResolvedPackageCapabilities};
 pub use crate::sql_profiles::{ResolvedSqlProfile, resolve_sql_profiles};
 
 #[cfg(test)]
@@ -138,6 +140,8 @@ mod package_source_map_tests;
 mod package_verification_matrix_tests;
 #[cfg(test)]
 mod package_workspace_query_tests;
+#[cfg(test)]
+mod sql_capabilities_tests;
 #[cfg(test)]
 mod sql_profile_tests;
 
