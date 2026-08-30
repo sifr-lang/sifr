@@ -40,6 +40,7 @@ independent from database rows.
 | template string | A Python `t"..."` value with static text and typed expression holes. |
 | template processor | A package function that asks a compiler component to analyze a template string. |
 | schema profile | A named database contract with a dialect, server profile, schema source, and stable identity. |
+| profile witness | A compile-time `SqlSchema[P]` value that specializes a schema-polymorphic query for profile `P`. |
 | schema IR | The normalized, dialect-aware compiler description of database objects and SQL semantics. |
 | query template | A static SQL plan with parameter slots and a result contract. |
 | bound query | A query template with owned runtime parameter values. |
@@ -85,11 +86,15 @@ from sifr.sql.schemas import app, analytics
 ```
 
 Each profile namespace owns one nominal zero-sized schema type. `app` is a
-compile-time namespace, not a runtime value. Its `sql`, `query`, `connect`, and
-schema-symbol operations are compiler-known namespace exports.
+compile-time namespace, not a runtime value. Its `sql`, `query`, `connect`,
+`schema`, and schema-symbol exports are compiler-known.
 
 Type positions use `app.Schema`. For example, a verified pool has type
 `Pool[app.Schema, Verified]`.
+
+`app.schema` has type `SqlSchema[app.Schema]`. It is a compile-time profile
+witness with no runtime representation. Code uses this witness only to
+specialize generic query construction for one concrete profile.
 
 The module does not contain generated table classes or database models. It can
 contain generated enum, domain, and composite types from the SQL schema.
@@ -886,9 +891,10 @@ explicit because it can change atomicity, lock duration, and returned row order.
 
 ## Runtime architecture
 
-The SQL runtime exposes these principal types:
+The SQL architecture exposes these principal types:
 
 ```text
+SqlSchema[Profile]                                      compile-time only
 Pool[Profile, State]
 Connection[Profile, State]
 Transaction[Profile, State]
@@ -897,6 +903,9 @@ BoundQuery[Profile, Row, Cardinality, Effect]
 RowStream[Profile, Row]
 ExecutionResult[Metadata]
 ```
+
+`SqlSchema[Profile]` constructs queries during compilation. The compiler erases
+it after specialization. All other types in this list have runtime values.
 
 `State` is `Unverified` or `Verified`. Query execution requires a verified pool,
 connection, or transaction.
@@ -1264,8 +1273,8 @@ The compiler generates a nominal requirement type:
 ```sifr
 from sifr.sql.requirements import has_users
 
-def by_email[S: has_users.Schema](db: SqlSchema[S], email: str):
-    return db.sql(t"""
+def by_email[S: has_users.Schema](schema: SqlSchema[S], email: str):
+    return schema.sql(t"""
         SELECT id, email
         FROM users
         WHERE email = {email}
@@ -1274,6 +1283,21 @@ def by_email[S: has_users.Schema](db: SqlSchema[S], email: str):
 
 A requirement is a structural contract over normalized database objects. The
 compiler proves the `SchemaIR` subset relation before specialization.
+
+A call supplies the witness from one configured profile:
+
+```sifr
+query = by_email(app.schema, email)
+rows = try await db.fetch_all(query, max_rows=100)
+```
+
+The compiler proves that `app.Schema` satisfies `has_users.Schema`. It then sets
+`S` to `app.Schema` and analyzes the SQL against the `app` profile. The result
+has profile parameter `app.Schema` and has no runtime witness argument.
+
+Only `Pool[app.Schema, Verified]`, or a verified connection or transaction with
+that profile, can execute the specialized query. A different profile is a
+compile-time type error, even when its schema also satisfies the requirement.
 
 A portable requirement supplies one DDL artifact for each declared provider. Each
 provider normalizes and validates its own artifact.
@@ -1608,6 +1632,8 @@ Existing crates keep their current responsibilities:
 | `sifr_ir` and `sifr_lowering` | Carry validated closed plans and ownership without dialect logic. |
 | `sifr_codegen` | Emit provider runtime calls, static metadata, codecs, and record layouts. |
 | `sifr_driver` | Load checked inputs, host components, assemble builds, and enforce reproducibility. |
+| `sifr_format` | Preserve template holes and route embedded formatting through frontend-owned provider results. |
+| `sifr_lint` | Own SQL policy severity, suppression, and fixes without replacing compiler hard diagnostics. |
 | `sifr_lsp` | Present frontend results through embedded virtual documents. |
 | `sifr_runtime` | Own package-neutral async, resource, cancellation, and panic-safety substrate. |
 | `sifr` | Dispatch built-in and package-provided command namespaces. |

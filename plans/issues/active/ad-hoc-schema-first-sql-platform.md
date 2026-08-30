@@ -229,6 +229,21 @@ The most likely shared surfaces are:
 An SQL milestone extends these shared contracts only for its approved architecture.
 It cannot absorb unrelated cleanup or change another feature family.
 
+## External prerequisites
+
+The SQL runtime depends on the accepted async context-manager and iterator
+contracts. Their implementation track remains outside this phase.
+
+Before Milestone 9 starts, that track must merge these capabilities:
+
+- abnormal body-exit cleanup for `async with`
+- cancellation-specific `AsyncExitCause` values
+- secondary cleanup evidence, including cleanup timeout
+- `AsyncClosable.aclose()` on early `async for` exit
+
+Milestone 0 must record the owning issue, owner, and merged evidence in the
+verification inventory. This phase does not reimplement those capabilities.
+
 ## Execution rules
 
 1. Execute one milestone at a time in the exact order below.
@@ -303,6 +318,9 @@ Acceptance criteria:
 - [ ] Structural records, fixed-width integers, canonical temporal types, network
   address value types, replay-safe callbacks, bounded cancellation cleanup, and
   diagnostic registries have approved language contracts before SQL work begins.
+- [ ] The verification inventory names the external issue, owner, and merge
+  evidence for abnormal async cleanup and iterator close behavior before
+  Milestone 9 starts.
 - [ ] A machine-readable ownership map assigns each architecture surface to one
   milestone and one repository owner.
 - [ ] A dependency qualification manifest locks parser sources, runtime crates,
@@ -684,8 +702,11 @@ Acceptance criteria:
 - [ ] Deadlines, cancellation, backpressure, row-byte bounds, row-count bounds,
   statement-cache bounds, and connection bounds return structured errors.
 - [ ] `ExecutionResult` has exact rows-affected and provider-metadata contracts.
-- [ ] Application tests use the exact provider in an ephemeral environment and
-  rollback test transactions. No fake database API exists.
+- [ ] Runtime qualification provisions the exact PostgreSQL provider through its
+  harness and rolls back test transactions. It does not depend on the later
+  public tool namespace. No fake database API exists.
+- [ ] The external async prerequisite is merged. Transactions and streams pass
+  abnormal-exit, cancellation-cause, secondary-cleanup, and early-close tests.
 - [ ] Malformed protocol and database data cannot reach a user-triggered panic.
 
 Focused validation:
@@ -745,6 +766,7 @@ Owned scope:
 
 - tools workspace resolution and locked entry-point metadata
 - direct command namespaces and explicit host capabilities
+- `sifr sql test provision` routing and its structured connection manifest
 - host-target graph separation and cross-compilation behavior
 
 Acceptance criteria:
@@ -755,6 +777,9 @@ Acceptance criteria:
   exact tool packages, selected entry points, hashes, and capabilities.
 - [ ] `sifr <tool-namespace>` executes only the selected package entry point.
 - [ ] Built-in namespaces are reserved. Duplicate namespaces are hard errors.
+- [ ] `sifr sql test provision --profile <name>` invokes the selected provider
+  tool, provisions its canonical schema fingerprint, and returns the common
+  structured connection manifest.
 - [ ] File, network, environment, credential-helper, and subprocess capabilities
   require explicit grants.
 - [ ] Tool code and dependencies never enter target HIR, generated Rust, linker
@@ -901,20 +926,25 @@ Acceptance criteria:
 - [ ] Requirement artifacts describe tables, columns, keys, types, nullability,
   and required provider capabilities.
 - [ ] A concrete profile must prove every requirement before specialization.
+- [ ] Each profile namespace exports one compile-time `SqlSchema[Profile]`
+  witness. Specialization erases the witness and gives the query the proving
+  profile parameter.
+- [ ] Only a verified pool, connection, or transaction with the proving profile
+  can execute the specialized query.
 - [ ] Specialized queries cannot reach undeclared schema objects or provider
   behavior.
 - [ ] Portable code declares provider capability constraints explicitly.
-- [ ] Each declared provider parses, analyzes, specializes, and validates portable
-  SQL independently.
+- [ ] The provider-neutral specialization harness and PostgreSQL implementation
+  pass in this milestone. Milestones 16 and 17 own the MySQL and SQLite evidence.
 - [ ] There is no silent lowest-common-denominator rewrite or runtime provider
   dispatch for a statically known profile.
 
 Focused validation:
 
 - requirement normalization and subset property tests
-- positive and negative specialization fixtures
+- positive and negative witness, specialization, and execution-binding fixtures
 - undeclared-object and missing-capability diagnostics
-- cross-provider portable examples with independent analysis evidence
+- PostgreSQL portable examples and the reusable provider-neutral harness
 
 ### Milestone 16: MySQL provider completion
 
@@ -946,6 +976,8 @@ Acceptance criteria:
   streaming, statement-cache, cancellation, bound, error, and panic-safety
   contracts.
 - [ ] Schema tools and migration reflection cover the MySQL capability matrix.
+- [ ] MySQL independently normalizes, proves, specializes, and validates portable
+  schema requirements through the Milestone 15 harness.
 - [ ] Language-server features use MySQL semantics and documentation.
 - [ ] Differential, conformance, migration, recovery, fuzz, property, and performance
   suites pass on every supported MySQL version.
@@ -955,6 +987,7 @@ Focused validation:
 - MySQL parser and semantic differential suites
 - live runtime, cancellation, session, and statement-cache tests
 - schema tool and migration matrices for every supported version
+- portable-requirement specialization and capability diagnostics
 - editor snapshots, protocol fuzzing, panic scans, and performance budgets
 
 ### Milestone 17: SQLite provider completion
@@ -987,6 +1020,8 @@ Acceptance criteria:
   contracts.
 - [ ] Schema tools and migration reflection cover the SQLite capability matrix,
   including table-rebuild plans.
+- [ ] SQLite independently normalizes, proves, specializes, and validates portable
+  schema requirements through the Milestone 15 harness.
 - [ ] Language-server features use SQLite semantics and documentation.
 - [ ] Conformance, migration, recovery, fuzz, property, corruption, locking, and
   performance suites pass on every supported SQLite version.
@@ -996,6 +1031,7 @@ Focused validation:
 - SQLite grammar and semantic conformance suites
 - bundled-runtime, worker, interrupt, lock, and statement-cache tests
 - schema tools and table-rebuild migration matrices
+- portable-requirement specialization and capability diagnostics
 - corruption, fuzz, panic, editor, and performance suites
 
 ### Milestone 18: Integrated qualification and phase closure
