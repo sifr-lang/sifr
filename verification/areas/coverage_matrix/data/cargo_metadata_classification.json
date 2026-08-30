@@ -29,6 +29,12 @@
       "features": []
     },
     {
+      "name": "sifr_compiler_component",
+      "classification": "first_party_compiler",
+      "targets": [{"name": "sifr_compiler_component", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}],
+      "features": []
+    },
+    {
       "name": "sifr_diagnostics",
       "classification": "first_party_compiler",
       "targets": [
@@ -192,6 +198,7 @@
       ],
       "features": [
         {"name": "all", "profile_assignment": "internal", "classification": "internal_codegen_tool"},
+        {"name": "components", "profile_assignment": "internal", "classification": "internal_codegen_tool"},
         {"name": "default", "profile_assignment": "internal", "classification": "internal_codegen_tool"},
         {"name": "mysql", "profile_assignment": "internal", "classification": "internal_codegen_tool"},
         {"name": "postgresql", "profile_assignment": "internal", "classification": "internal_codegen_tool"},

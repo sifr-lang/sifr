@@ -44,6 +44,22 @@
   "crate_test_membership": {
     "suites": [
       {
+        "id": "sifr_compiler_component",
+        "package": "sifr_compiler_component",
+        "command": [
+          "test",
+          "-p",
+          "sifr_compiler_component"
+        ],
+        "modes": [
+          "smoke",
+          "full"
+        ],
+        "status": "blocking",
+        "executed_in_merge": true
+      },
+
+      {
         "id": "sifr_diagnostics",
         "package": "sifr_diagnostics",
         "command": [
