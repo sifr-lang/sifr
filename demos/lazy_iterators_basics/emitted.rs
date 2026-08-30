@@ -65,7 +65,10 @@ fn main() {
     assert!((it.next() == Some(SifrInt::from_i64(1))));
     assert!((it.next() == Some(SifrInt::from_i64(2))));
     assert!((format!("{:?}", Box::new(nums.iter().cloned().map(|__sifr_map_item| square(__sifr_map_item))).collect::<Vec<_>>()) == "[1, 4, 9, 16]"));
-    assert!((format!("{:?}", Box::new((nums).iter().cloned().filter(move |__filter_item| (|x| (&x.floor_mod_known_nonzero(&SifrInt::from_i64(2)) == &SifrInt::from_i64(0)))(__filter_item.clone()))).collect::<Vec<_>>()) == "[2, 4]"));
+    assert!((format!("{:?}", Box::new((nums).iter().cloned().filter(move |__filter_item| {
+    let x = __filter_item.clone();
+    (&x.floor_mod_known_nonzero(&SifrInt::from_i64(2)) == &SifrInt::from_i64(0))
+})).collect::<Vec<_>>()) == "[2, 4]"));
     assert!((format!("{:?}", Box::new((nums).iter().cloned().zip((vec!["a".to_string(), "b".to_string(), "c".to_string(), "d".to_string()]).into_iter()).map(|__zip_item| (__zip_item.0, __zip_item.1))).collect::<Vec<_>>()) == "[(1, \"a\"), (2, \"b\"), (3, \"c\"), (4, \"d\")]"));
     assert!((format!("{:?}", Box::new((vec!["x".to_string(), "y".to_string()]).into_iter().enumerate().map(|__pair| (SifrInt::from(__pair.0) + SifrInt::from_i64(10), __pair.1))).collect::<Vec<_>>()) == "[(10, \"x\"), (11, \"y\")]"));
     assert!((format!("{:?}", Box::new((nums).iter().cloned().rev()).collect::<Vec<_>>()) == "[4, 3, 2, 1]"));

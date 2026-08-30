@@ -703,62 +703,31 @@ macro_rules! stmt_expr_literals_and_calls {
             }
             if func == "float"
                 && args.len() == 1
-                && matches!(crate::resolve_alias_type_for_plain_call($expr.ty()), Type::Float)
+                && matches!(
+                    crate::resolve_alias_type_for_plain_call($expr.ty()),
+                    Type::Float
+                )
             {
                 let Some(lowered_arg) = $emitter.lower_stmt_expr_for_ir(&args[0])? else {
                     return Ok(None);
                 };
-                return Ok(Some(match crate::resolve_alias_type_for_plain_call(args[0].ty()) {
-                    Type::Int | Type::LiteralInt(_) => crate::RustExpr::MethodCall {
-                        receiver: Box::new(lowered_arg),
-                        method: "to_f64_proven_exact".to_string(),
-                        args: vec![],
+                return Ok(Some(
+                    match crate::resolve_alias_type_for_plain_call(args[0].ty()) {
+                        Type::Int | Type::LiteralInt(_) => crate::RustExpr::MethodCall {
+                            receiver: Box::new(lowered_arg),
+                            method: "to_f64_proven_exact".to_string(),
+                            args: vec![],
+                        },
+                        Type::FixedInt(_) => crate::RustExpr::Cast {
+                            expr: Box::new(lowered_arg),
+                            ty: crate::RustType::F64,
+                        },
+                        _ => lowered_arg,
                     },
-                    Type::FixedInt(_) => crate::RustExpr::Cast {
-                        expr: Box::new(lowered_arg),
-                        ty: crate::RustType::F64,
-                    },
-                    _ => lowered_arg,
-                }));
+                ));
             }
             if func == "filter" && args.len() == 2 {
-                let Some(predicate) = $emitter.lower_stmt_expr_for_ir(&args[0])? else {
-                    return Ok(None);
-                };
-                let Some(iterable) = $emitter.lower_stmt_expr_for_ir(&args[1])? else {
-                    return Ok(None);
-                };
-                let Some(iter) = crate::intrinsic_method_emitters::registry_iterable_to_owned_iter_expr_from_lowered(
-                    &args[1],
-                    None,
-                    iterable,
-                ) else {
-                    return Ok(None);
-                };
-                let filtered = crate::RustExpr::MethodCall {
-                    receiver: Box::new(iter),
-                    method: "filter".to_string(),
-                    args: vec![crate::RustExpr::Closure {
-                        params: vec![crate::RustParam::Named {
-                            name: "__filter_item".to_string(),
-                            ty: crate::RustType::Named("_".to_string()),
-                        }],
-                        body: Box::new(crate::RustExpr::FnCall {
-                            func: Box::new(predicate),
-                            args: vec![crate::RustExpr::MethodCall {
-                                receiver: Box::new(crate::RustExpr::Ident(
-                                    "__filter_item".to_string(),
-                                )),
-                                method: "clone".to_string(),
-                                args: vec![],
-                            }],
-                        }),
-                        is_move: true,
-                    }],
-                };
-                return Ok(Some(
-                    crate::intrinsic_method_emitters::registry_box_iterator_expr(filtered),
-                ));
+                return $emitter.try_lower_filter_call_for_ir(args);
             }
             if func == "list" && args.len() == 1 {
                 let Some(iterable) = $emitter.lower_stmt_expr_for_ir(&args[0])? else {

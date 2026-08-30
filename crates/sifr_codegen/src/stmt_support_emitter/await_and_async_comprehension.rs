@@ -705,6 +705,8 @@ impl RustEmitter {
         let Some(mut lowered_key) = self.lower_stmt_expr_for_ir(key_expr)? else {
             return Ok(None);
         };
+        lowered_key =
+            crate::helpers::clone_dict_key_for_reused_value(key_expr, val_expr, lowered_key);
         let Some(mut lowered_value) = self.lower_stmt_expr_for_ir(val_expr)? else {
             return Ok(None);
         };

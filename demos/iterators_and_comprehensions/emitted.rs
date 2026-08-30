@@ -5,7 +5,10 @@ fn main() {
     let nums: Vec<SifrInt> = vec![SifrInt::from_i64(1), SifrInt::from_i64(2), SifrInt::from_i64(3), SifrInt::from_i64(4), SifrInt::from_i64(5)];
     let doubled: Vec<SifrInt> = Box::new(nums.iter().cloned().map(|__sifr_map_item| (|x| &x * &SifrInt::from_i64(2))(__sifr_map_item))).collect::<Vec<_>>();
     println!("{:?}", doubled);
-    let evens: Vec<SifrInt> = Box::new((nums).iter().cloned().filter(move |__filter_item| (|x| (&x.floor_mod_known_nonzero(&SifrInt::from_i64(2)) == &SifrInt::from_i64(0)))(__filter_item.clone()))).collect::<Vec<_>>();
+    let evens: Vec<SifrInt> = Box::new((nums).iter().cloned().filter(move |__filter_item| {
+    let x = __filter_item.clone();
+    (&x.floor_mod_known_nonzero(&SifrInt::from_i64(2)) == &SifrInt::from_i64(0))
+})).collect::<Vec<_>>();
     println!("{:?}", evens);
     let squares: Vec<SifrInt> = {
     let mut __sifr_list_comp = vec![];

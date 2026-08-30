@@ -112,6 +112,19 @@ fn test_async_generator_codegen_uses_lazy_materialization() {
     assert!(!rust_code.contains("AsyncGenerator::new(_yields)"));
 }
 
+#[test]
+fn async_dict_comprehension_clones_a_non_copy_key_reused_by_its_value() {
+    let rust_code = generate_rust_from_source(
+        "async def readings() -> AsyncGenerator[int, GeneratorCloseError]:\n    yield 4\n\nasync def main() -> Result[None, GeneratorCloseError]:\n    labeled: dict[int, int] = {value: value + 100 async for value in readings()}\n    return None\n",
+    );
+
+    assert!(
+        rust_code.contains(".insert(value.clone(), &value + &SifrInt::from_i64(100));"),
+        "{rust_code}"
+    );
+    syn::parse_file(&rust_code).expect("async dictionary comprehension Rust should parse");
+}
+
 pub(crate) fn empty_module() -> HirModule {
     HirModule {
         functions: vec![],

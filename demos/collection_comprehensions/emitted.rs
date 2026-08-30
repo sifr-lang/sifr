@@ -19,7 +19,7 @@ fn main() {
     let square_map: HashMap<SifrInt, SifrInt> = {
     let mut __sifr_dict_comp = HashMap::new();
     for x in SifrRange::new_known_nonzero(SifrInt::from_i64(0), SifrInt::from_i64(4), SifrInt::from_i64(1)) {
-        __sifr_dict_comp.insert(x, &x * &x);
+        __sifr_dict_comp.insert(x.clone(), &x * &x);
     }
     __sifr_dict_comp
 };

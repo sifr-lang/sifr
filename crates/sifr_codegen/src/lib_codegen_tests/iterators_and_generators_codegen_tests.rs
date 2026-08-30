@@ -220,6 +220,14 @@ fn test_generate_rust_filter_over_list_lowers_to_lazy_boxed_iterator() {
         rust_code.contains("iter().cloned().filter(move |__filter_item|"),
         "{rust_code}"
     );
+    assert!(
+        rust_code.contains("let x = __filter_item.clone();"),
+        "{rust_code}"
+    );
+    assert!(
+        !rust_code.contains("filter(move |__filter_item| (|x|"),
+        "{rust_code}"
+    );
 }
 
 #[test]

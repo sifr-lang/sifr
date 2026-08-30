@@ -79,7 +79,10 @@ fn main() {
     if let Some(hi) = hi.clone() {
         println!("{}", hi);
     }
-    let evens: Vec<SifrInt> = Box::new((nums).iter().cloned().filter(move |__filter_item| (|x| (&x.floor_mod_known_nonzero(&SifrInt::from_i64(2)) == &SifrInt::from_i64(0)))(__filter_item.clone()))).collect::<Vec<_>>();
+    let evens: Vec<SifrInt> = Box::new((nums).iter().cloned().filter(move |__filter_item| {
+    let x = __filter_item.clone();
+    (&x.floor_mod_known_nonzero(&SifrInt::from_i64(2)) == &SifrInt::from_i64(0))
+})).collect::<Vec<_>>();
     println!("{:?}", evens);
     let big: Vec<SifrInt> = {
     let mut __sifr_list_comp = vec![];

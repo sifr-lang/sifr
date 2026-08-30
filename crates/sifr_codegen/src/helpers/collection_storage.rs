@@ -4,6 +4,40 @@ use sifr_type_system::Type;
 
 use super::flatten_option_value_for_target;
 
+fn dict_key_place_root_name(expr: &HirExpr) -> Option<&str> {
+    match expr {
+        HirExpr::Name { name, .. } => Some(name),
+        HirExpr::FieldAccess { object, .. } | HirExpr::Index { object, .. } => {
+            dict_key_place_root_name(object)
+        }
+        _ => None,
+    }
+}
+
+/// Preserve a dictionary-comprehension key place when its value expression reuses that place.
+///
+/// Rust evaluates `HashMap::insert` arguments from left to right. Moving a non-`Copy` key place
+/// directly into the first argument would therefore make a later value expression that references
+/// the same place invalid. Clone only in that reuse case; computed keys and keys that are dead
+/// after insertion retain their normal move behavior.
+pub(crate) fn clone_dict_key_for_reused_value(
+    key_expr: &HirExpr,
+    value_expr: &HirExpr,
+    lowered_key: RustExpr,
+) -> RustExpr {
+    let Some(root_name) = dict_key_place_root_name(key_expr) else {
+        return lowered_key;
+    };
+    if key_expr.ty().contains_affine_resource()
+        || crate::helpers::is_copy_type_for_codegen(key_expr.ty())
+        || !crate::hir_analysis::queries::expr_references_var(value_expr, root_name)
+        || !crate::RustEmitter::rust_expr_is_reusable_place_for_ir(&lowered_key)
+    {
+        return lowered_key;
+    }
+    RustExpr::Clone(Box::new(lowered_key))
+}
+
 /// Adapt a collection operation whose HIR type was contextually narrowed to its target.
 ///
 /// Safe reads still produce a representation-significant outer `Option` at runtime. Collection
