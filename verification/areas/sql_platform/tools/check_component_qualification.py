@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+import hashlib
 import json
 import tomllib
 from pathlib import Path
@@ -122,12 +123,46 @@ def validate(payload: object, *, host_source_override: str | None = None) -> Non
         raise QualificationError("qualification requires a non-SQL fixture")
     if fixture.get("processor") != "fixture.words":
         raise QualificationError("non-SQL fixture processor identity is invalid")
+    source_path = REPO_ROOT / str(fixture.get("source", ""))
+    artifact_path = REPO_ROOT / str(fixture.get("artifact", ""))
+    if not source_path.is_file() or not artifact_path.is_file():
+        raise QualificationError("non-SQL fixture source or component artifact is absent")
+    artifact_digest = hashlib.sha256(artifact_path.read_bytes()).hexdigest()
+    if fixture.get("artifact_sha256") != artifact_digest:
+        raise QualificationError("non-SQL fixture component artifact digest drifted")
+    if fixture.get("build_tooling") != {
+        "rust_target": "wasm32-unknown-unknown",
+        "wit_bindgen": "0.57.1",
+        "wit_component": "0.254.0",
+    }:
+        raise QualificationError("non-SQL fixture build tooling is not exact")
+    fixture_manifest = tomllib.loads(
+        source_path.parent.parent.joinpath("Cargo.toml").read_text(encoding="utf-8")
+    )
+    fixture_dependencies = fixture_manifest.get("dependencies", {})
+    if fixture_dependencies.get("wit-bindgen") != "=0.57.1":
+        raise QualificationError("non-SQL fixture wit-bindgen dependency drifted")
+    wit_component = fixture_dependencies.get("wit-component")
+    if not isinstance(wit_component, dict) or wit_component.get("version") != "=0.254.0":
+        raise QualificationError("non-SQL fixture wit-component dependency drifted")
+    fixture_source = source_path.read_text(encoding="utf-8")
+    required_fixture_mechanisms = {
+        "serde_json::from_slice(request)",
+        "ty: hole.ty.clone()",
+        "Sha256::digest(text.as_bytes())",
+        "source_map: vec![SourceMapEntry",
+        "plan.stable_fingerprint = hex_digest",
+    }
+    if any(mechanism not in fixture_source for mechanism in required_fixture_mechanisms):
+        raise QualificationError("non-SQL fixture does not derive a complete plan in the guest")
     contracts = fixture.get("contracts")
     if not isinstance(contracts, dict) or set(contracts) != EXPECTED_CONTRACTS:
         raise QualificationError("non-SQL fixture contract coverage is incomplete")
     tests = (REPO_ROOT / "crates/sifr_compiler_component/src/tests.rs").read_text(
         encoding="utf-8"
     )
+    if str(fixture.get("artifact", "")).rsplit("/", maxsplit=1)[-1] not in tests:
+        raise QualificationError("non-SQL fixture test does not execute the qualified artifact")
     for contract, evidence_path in contracts.items():
         if not isinstance(evidence_path, str):
             raise QualificationError(f"non-SQL fixture evidence for {contract} is invalid")

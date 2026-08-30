@@ -3,7 +3,6 @@ use crate::*;
 use semver::Version;
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
-use std::fmt::Write as _;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 static TEMP_SEQUENCE: AtomicU64 = AtomicU64::new(0);
@@ -138,10 +137,7 @@ fn non_sql_component_parses_typed_requests_and_is_cacheless_deterministic() {
     *text = "world ".to_string();
     second_request.holes[0].ty = ClosedType::Int;
     let second_response = response_for_request(&second_request);
-    let bytes = routed_fixture_component(&[
-        (first_request.clone(), first_response.clone()),
-        (second_request.clone(), second_response.clone()),
-    ]);
+    let bytes = include_bytes!("../fixtures/words_component/words_component.wasm").to_vec();
     let identity = identity(&bytes);
     let mut first_request = first_request;
     first_request.component = identity.clone();
@@ -671,170 +667,6 @@ fn fixture_component(output: &[u8], infinite: bool) -> Vec<u8> {
             (export "analyze" (func $lifted)))"#
     );
     wat::parse_str(source).expect("fixture component WAT should parse")
-}
-
-fn routed_fixture_component(
-    routes: &[(EmbeddedAnalysisRequest, EmbeddedAnalysisResponse)],
-) -> Vec<u8> {
-    struct RouteLayout {
-        expected: usize,
-        mask: usize,
-        output: usize,
-        input_len: usize,
-        output_len: usize,
-    }
-
-    let mut cursor = 64_usize;
-    let mut data_segments = String::new();
-    let mut layouts = Vec::new();
-    for (request, response) in routes {
-        let expected = serde_json::to_vec(request).expect("fixture request should serialize");
-        let output = serde_json::to_vec(response).expect("fixture response should serialize");
-        let mut mask = vec![1_u8; expected.len()];
-        let marker = b"\"sha256\":\"";
-        let hash_start = expected
-            .windows(marker.len())
-            .position(|window| window == marker)
-            .map(|position| position + marker.len())
-            .expect("fixture request must contain the component hash");
-        mask[hash_start..hash_start + 64].fill(0);
-
-        let expected_offset = append_fixture_data(&mut data_segments, &mut cursor, &expected);
-        let mask_offset = append_fixture_data(&mut data_segments, &mut cursor, &mask);
-        let output_offset = append_fixture_data(&mut data_segments, &mut cursor, &output);
-        layouts.push(RouteLayout {
-            expected: expected_offset,
-            mask: mask_offset,
-            output: output_offset,
-            input_len: expected.len(),
-            output_len: output.len(),
-        });
-    }
-    let fallback = append_fixture_data(&mut data_segments, &mut cursor, b"not-json");
-    let heap_start = cursor.next_multiple_of(16);
-    let memory_pages = heap_start.div_ceil(65_536) + 1;
-    let route_body = layouts
-        .iter()
-        .map(|route| {
-            format!(
-                r#"local.get $request
-                    local.get $request-len
-                    i32.const {expected}
-                    i32.const {mask}
-                    i32.const {input_len}
-                    call $matches
-                    if
-                        i32.const 0
-                        i32.const {output}
-                        i32.store
-                        i32.const 0
-                        i32.const {output_len}
-                        i32.store offset=4
-                        i32.const 0
-                        return
-                    end"#,
-                expected = route.expected,
-                mask = route.mask,
-                input_len = route.input_len,
-                output = route.output,
-                output_len = route.output_len,
-            )
-        })
-        .collect::<Vec<_>>()
-        .join("\n");
-    let source = format!(
-        r#"(component
-            (type $analyze-type (func (param "request" (list u8)) (result (list u8))))
-            (core module $module
-                (memory (export "memory") {memory_pages})
-                {data_segments}
-                (global $next (mut i32) (i32.const {heap_start}))
-                (func (export "cabi_realloc")
-                    (param $old i32) (param $old-size i32) (param $align i32) (param $new-size i32)
-                    (result i32)
-                    (local $result i32)
-                    global.get $next
-                    local.tee $result
-                    local.get $new-size
-                    i32.add
-                    global.set $next
-                    local.get $result)
-                (func $matches
-                    (param $request i32) (param $request-len i32)
-                    (param $expected i32) (param $mask i32) (param $expected-len i32)
-                    (result i32)
-                    (local $index i32)
-                    local.get $request-len
-                    local.get $expected-len
-                    i32.ne
-                    if
-                        i32.const 0
-                        return
-                    end
-                    block $complete
-                        loop $compare
-                            local.get $index
-                            local.get $request-len
-                            i32.ge_u
-                            br_if $complete
-                            local.get $mask
-                            local.get $index
-                            i32.add
-                            i32.load8_u
-                            if
-                                local.get $request
-                                local.get $index
-                                i32.add
-                                i32.load8_u
-                                local.get $expected
-                                local.get $index
-                                i32.add
-                                i32.load8_u
-                                i32.ne
-                                if
-                                    i32.const 0
-                                    return
-                                end
-                            end
-                            local.get $index
-                            i32.const 1
-                            i32.add
-                            local.set $index
-                            br $compare
-                        end
-                    end
-                    i32.const 1)
-                (func (export "analyze")
-                    (param $request i32) (param $request-len i32) (result i32)
-                    {route_body}
-                    i32.const 0
-                    i32.const {fallback}
-                    i32.store
-                    i32.const 0
-                    i32.const 8
-                    i32.store offset=4
-                    i32.const 0))
-            (core instance $instance (instantiate $module))
-            (alias core export $instance "memory" (core memory $memory))
-            (alias core export $instance "cabi_realloc" (core func $realloc))
-            (alias core export $instance "analyze" (core func $analyze))
-            (func $lifted (type $analyze-type)
-                (canon lift (core func $analyze) (memory $memory) (realloc $realloc)))
-            (export "analyze" (func $lifted)))"#
-    );
-    wat::parse_str(source).expect("routed fixture component WAT should parse")
-}
-
-fn append_fixture_data(output: &mut String, cursor: &mut usize, bytes: &[u8]) -> usize {
-    let offset = *cursor;
-    let escaped = bytes
-        .iter()
-        .map(|byte| format!("\\{byte:02x}"))
-        .collect::<String>();
-    writeln!(output, "(data (i32.const {offset}) \"{escaped}\")")
-        .expect("writing fixture WAT to a string cannot fail");
-    *cursor += bytes.len();
-    offset
 }
 
 fn temp_root(label: &str) -> std::path::PathBuf {

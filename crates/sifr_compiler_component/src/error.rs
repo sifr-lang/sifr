@@ -27,18 +27,25 @@ impl ComponentErrorKind {
     ];
 
     #[must_use]
-    pub const fn code(self) -> &'static str {
+    pub const fn diagnostic_code(self) -> sifr_diagnostics::DiagnosticCode {
         match self {
-            Self::Registration => "SIFR-COMPONENT-0001",
-            Self::Integrity => "SIFR-COMPONENT-0002",
-            Self::ProtocolVersion => "SIFR-COMPONENT-0003",
-            Self::ProtocolEnvelope => "SIFR-COMPONENT-0004",
-            Self::Capability => "SIFR-COMPONENT-0005",
-            Self::ResourceLimit => "SIFR-COMPONENT-0006",
-            Self::Execution => "SIFR-COMPONENT-0007",
-            Self::Cache => "SIFR-COMPONENT-0008",
-            Self::DiagnosticRegistry => "SIFR-COMPONENT-0009",
+            Self::Registration => sifr_diagnostics::DiagnosticCode::COMPONENT_REGISTRATION,
+            Self::Integrity => sifr_diagnostics::DiagnosticCode::COMPONENT_INTEGRITY,
+            Self::ProtocolVersion => sifr_diagnostics::DiagnosticCode::COMPONENT_PROTOCOL_VERSION,
+            Self::ProtocolEnvelope => sifr_diagnostics::DiagnosticCode::COMPONENT_PROTOCOL_ENVELOPE,
+            Self::Capability => sifr_diagnostics::DiagnosticCode::COMPONENT_CAPABILITY,
+            Self::ResourceLimit => sifr_diagnostics::DiagnosticCode::COMPONENT_RESOURCE_LIMIT,
+            Self::Execution => sifr_diagnostics::DiagnosticCode::COMPONENT_EXECUTION,
+            Self::Cache => sifr_diagnostics::DiagnosticCode::COMPONENT_CACHE,
+            Self::DiagnosticRegistry => {
+                sifr_diagnostics::DiagnosticCode::COMPONENT_DIAGNOSTIC_REGISTRY
+            }
         }
+    }
+
+    #[must_use]
+    pub const fn code(self) -> &'static str {
+        self.diagnostic_code().code()
     }
 }
 
