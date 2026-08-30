@@ -1478,7 +1478,7 @@ not change the architecture, but it requires provider qualification.
 | Surface | Selected foundation | Ownership rule |
 | --- | --- | --- |
 | Async executor and I/O | Workspace `tokio` | `sifr_runtime` owns task and cancellation integration. |
-| TLS | Workspace `rustls`, `tokio-rustls`, and `rustls-platform-verifier` | Sifr owns certificate policy, identity checks, and secret-safe errors. |
+| TLS | Workspace `rustls`, `tokio-rustls`, and `rustls-platform-verifier` with AWS-LC-RS | Sifr owns the shared crypto provider, certificate policy, identity checks, and secret-safe errors. |
 | PostgreSQL strict parser | [`libpg_query`](https://github.com/pganalyze/libpg_query) | The component embeds one tagged parser source for each supported PostgreSQL major version. |
 | PostgreSQL runtime protocol | [`tokio-postgres`](https://docs.rs/tokio-postgres/) and `postgres-types` | The provider wraps raw clients and codecs. It does not expose their public Rust types. |
 | PostgreSQL TLS adapter | [`tokio-postgres-rustls`](https://docs.rs/tokio-postgres-rustls/) | The adapter uses the workspace Rustls provider and Sifr TLS policy. |
@@ -1634,7 +1634,7 @@ interrupt.
 All external Rust dependencies disable default features when the crate supports
 that configuration. Provider crates enable only the audited protocol, TLS,
 codec, and build features in the qualification manifest.
-The MySQL runtime uses `minimal-rust`, `rustls-tls`, and the workspace-selected
+The MySQL runtime uses `minimal-rust`, `rustls-tls`, and the shared AWS-LC-RS
 Rustls crypto provider. SQLite enables only `bundled` and qualified optional
 features such as limits, hooks, or unlock notification.
 

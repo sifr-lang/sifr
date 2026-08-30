@@ -286,7 +286,7 @@ def validate_qualification(payload: dict[str, Any], baseline: dict[str, Any], ar
     expected_constraints = {
         "syntaqlite-source-and-fork-readiness",
         "single-sqlite-link-identity",
-        "shared-tls-ring",
+        "shared-tls-dependency-ring",
     }
     require({row["id"] for row in constraints} == expected_constraints, "dependency constraints are incomplete")
     for row in constraints:
@@ -360,9 +360,14 @@ def validate_architecture_baseline(baseline: dict[str, Any]) -> None:
     require(str(baseline.get("verified_at")) in text, "SQL architecture does not contain the baseline verification date")
     require(str(baseline.get("sqlite_amalgamation")) in text, "SQL architecture has SQLite amalgamation drift")
     for row in baseline.get("crate", []):
-        require(f"`{row['version']}`" in text, f"SQL architecture omits {row['name']} {row['version']}")
+        matching_row = any(
+            str(row["display_name"]).lower() in line.lower() and f"`{row['version']}`" in line
+            for line in text.splitlines()
+        )
+        require(matching_row, f"SQL architecture has baseline row drift for {row['name']} {row['version']}")
     for row in baseline.get("source", []):
-        require(f"`{row['tag']}`" in text, f"SQL architecture omits libpg_query {row['tag']}")
+        expected_row = f"| {row['server_major']} | `{row['tag']}` |"
+        require(expected_row in text, f"SQL architecture has libpg_query row drift for {row['tag']}")
 
 
 def validate_profiles(overrides: dict[str, Any] | None = None) -> None:
@@ -429,7 +434,7 @@ def self_test() -> None:
         (
             "missing-profile-suite",
             "profiles",
-            lambda value: value["create-pr"]["selected_areas"][-1]["suites"].pop(),
+            remove_sql_profile_suite,
         ),
     ]
     accepted: list[str] = []
@@ -446,6 +451,12 @@ def self_test() -> None:
         accepted.append(label)
     require(not accepted, f"contract mutations were accepted: {', '.join(accepted)}")
     print(f"SQL platform contract self-test ok: mutations={len(mutations)}")
+
+
+def remove_sql_profile_suite(profiles: dict[str, Any]) -> None:
+    selections = profiles["create-pr"]["selected_areas"]
+    sql_selection = next(row for row in selections if row.get("area") == "sql_platform")
+    sql_selection["suites"].pop()
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:

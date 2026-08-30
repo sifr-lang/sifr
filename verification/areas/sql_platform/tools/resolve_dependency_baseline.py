@@ -235,28 +235,52 @@ def refresh(payload: dict[str, Any]) -> dict[str, Any]:
         row["published_at"] = selected["created_at"]
         row["yanked"] = False
 
-    releases = fetch_json("https://api.github.com/repos/pganalyze/libpg_query/releases?per_page=100")
+    releases = fetch_github_releases()
     for row in refreshed["source"]:
         major = row["server_major"]
         prefixes = (f"{major}.", f"{major}-")
-        release = next(
-            (
-                item
-                for item in releases
-                if not item.get("draft")
-                and not item.get("prerelease")
-                and str(item.get("tag_name", "")).startswith(prefixes)
-            ),
-            None,
-        )
-        if release is None:
+        candidates = [
+            item
+            for item in releases
+            if not item.get("draft")
+            and not item.get("prerelease")
+            and str(item.get("tag_name", "")).startswith(prefixes)
+            and release_tag_key(str(item.get("tag_name", "")), major) is not None
+        ]
+        if not candidates:
             raise BaselineError(f"release authority has no libpg_query tag for PostgreSQL {major}")
+        release = max(candidates, key=lambda item: release_tag_key(str(item["tag_name"]), major) or ())
         tag = str(release["tag_name"])
         row["tag"] = tag
         row["commit"] = resolve_github_tag(tag)
         row["release_authority"] = f"https://github.com/pganalyze/libpg_query/releases/tag/{tag}"
     validate_baseline(refreshed)
     return refreshed
+
+
+def fetch_github_releases() -> list[dict[str, Any]]:
+    releases: list[dict[str, Any]] = []
+    page = 1
+    while True:
+        batch = fetch_json(
+            "https://api.github.com/repos/pganalyze/libpg_query/releases"
+            f"?per_page=100&page={page}"
+        )
+        if not isinstance(batch, list):
+            raise BaselineError("libpg_query release authority returned an invalid response")
+        releases.extend(item for item in batch if isinstance(item, dict))
+        if len(batch) < 100:
+            return releases
+        page += 1
+
+
+def release_tag_key(tag: str, major: int) -> tuple[int, ...] | None:
+    if re.fullmatch(r"[0-9]+(?:[.-][0-9]+)+", tag) is None:
+        return None
+    numbers = tuple(int(item) for item in re.findall(r"[0-9]+", tag))
+    if not numbers or numbers[0] != major:
+        return None
+    return numbers[1:]
 
 
 def resolve_github_tag(tag: str) -> str:
@@ -298,14 +322,18 @@ def render_assignment(name: str, value: object) -> str:
 def self_test() -> None:
     payload = load_baseline()
     validate_baseline(payload)
+    release_tags = ["17-6.1.9", "17-6.2.2", "17-5.9.9"]
+    latest_tag = max(release_tags, key=lambda tag: release_tag_key(tag, 17) or ())
+    if latest_tag != "17-6.2.2" or release_tag_key("17-6.3.0-rc1", 17) is not None:
+        raise AssertionError("libpg_query stable release ordering is invalid")
     mutations = [
         ("prerelease", lambda data: data["crate"][0].__setitem__("version", "1.53.2-rc.1")),
         ("yanked", lambda data: data["crate"][0].__setitem__("yanked", True)),
         ("broad-range", lambda data: data["crate"][0].__setitem__("version", "1")),
-        ("incompatible-family", lambda data: data["crate"][10].__setitem__("version", "0.38.2")),
+        ("incompatible-family", lambda data: mutate_crate(data, "mysql_common", "version", "0.38.2")),
         ("unlocked-source", lambda data: data["source"][0].__setitem__("tag", "main")),
         ("missing-commit", lambda data: data["source"][0].__setitem__("commit", "pending")),
-        ("missing-source-authority", lambda data: data["crate"][11].pop("source_authority")),
+        ("missing-source-authority", lambda data: find_crate(data, "syntaqlite").pop("source_authority")),
         ("duplicate-crate", lambda data: data["crate"].append(copy.deepcopy(data["crate"][0]))),
     ]
     for label, mutate in mutations:
@@ -317,6 +345,14 @@ def self_test() -> None:
             continue
         raise AssertionError(f"baseline mutation was accepted: {label}")
     print(f"dependency baseline self-test ok: mutations={len(mutations)}")
+
+
+def find_crate(payload: dict[str, Any], name: str) -> dict[str, Any]:
+    return next(row for row in payload["crate"] if row.get("name") == name)
+
+
+def mutate_crate(payload: dict[str, Any], name: str, field: str, value: object) -> None:
+    find_crate(payload, name)[field] = value
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:

@@ -36,12 +36,13 @@
       ]
     },
     {
-      "id": "shared-tls-ring",
+      "id": "shared-tls-dependency-ring",
       "owner_milestone": "sql_5_common_contracts",
       "audit_owner": "sifr_runtime/tls",
       "rules": [
-        "Tokio, Rustls, Tokio Rustls, and the platform verifier remain shared Ring 4 substrate.",
-        "Each provider TLS adapter is an explicit Ring 4 edge with the qualified Ring provider."
+        "Tokio, Rustls, Tokio Rustls, and the platform verifier remain shared dependency Ring 4 substrate.",
+        "AWS-LC-RS is the shared Rustls crypto provider.",
+        "Each provider TLS adapter is an explicit dependency Ring 4 edge with AWS-LC-RS."
       ]
     }
   ],
@@ -64,7 +65,7 @@
       "checksum": "0283386ce02abc0151e1761d08802dfe86c173b0b494af5cbc086574e453da06",
       "license": "Apache-2.0 OR ISC OR MIT",
       "default_features": false,
-      "features": ["ring", "std", "tls12"],
+      "features": ["aws_lc_rs", "logging", "prefer-post-quantum", "std", "tls12"],
       "artifacts": ["postgresql-runtime", "mysql-runtime"],
       "targets": ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu"],
       "owner_milestone": "sql_5_common_contracts",
@@ -76,7 +77,7 @@
       "checksum": "1729aa945f29d91ba541258c8df89027d5792d85a8841fb65e8bf0f4ede4ef61",
       "license": "MIT OR Apache-2.0",
       "default_features": false,
-      "features": ["ring", "tls12"],
+      "features": ["aws_lc_rs", "logging", "tls12"],
       "artifacts": ["postgresql-runtime", "mysql-runtime"],
       "targets": ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu"],
       "owner_milestone": "sql_5_common_contracts",
@@ -124,7 +125,7 @@
       "checksum": "4c2ad44aa0ae96db89c4742212ed41645b2f597311ff6e1945542a4d9fadc2fb",
       "license": "MIT",
       "default_features": false,
-      "features": ["ring"],
+      "features": ["aws-lc-rs"],
       "artifacts": ["postgresql-runtime"],
       "targets": ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu"],
       "owner_milestone": "sql_9_postgresql_runtime",
@@ -160,7 +161,7 @@
       "checksum": "3519e91b0d254ac1ffa495bc42053286cb2172ad7241d5b3b1b9f8a891f21ee2",
       "license": "MIT OR Apache-2.0",
       "default_features": false,
-      "features": ["minimal-rust", "ring", "rustls-tls", "tls12"],
+      "features": ["aws-lc-rs", "minimal-rust", "rustls-tls", "tls12"],
       "artifacts": ["mysql-runtime"],
       "targets": ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu"],
       "owner_milestone": "sql_16_mysql_provider",
