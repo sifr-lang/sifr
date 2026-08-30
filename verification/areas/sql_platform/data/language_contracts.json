@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "contracts": [
+    {
+      "id": "structural-records",
+      "document": "internal_docs/sql_architecture.md",
+      "anchor": "## Structural record types",
+      "status": "accepted",
+      "implementation_owner": "sql_2_structural_records"
+    },
+    {
+      "id": "fixed-width-integers",
+      "document": "internal_docs/integer_model.md",
+      "anchor": "## Source Types",
+      "status": "accepted",
+      "implementation_owner": "core-language/integer-model"
+    },
+    {
+      "id": "canonical-temporal-values",
+      "document": "internal_docs/sql_architecture.md",
+      "anchor": "### Canonical temporal values",
+      "status": "accepted",
+      "implementation_owner": "sql_5_common_contracts"
+    },
+    {
+      "id": "network-address-values",
+      "document": "internal_docs/sql_architecture.md",
+      "anchor": "### Network address values",
+      "status": "accepted",
+      "implementation_owner": "sql_5_common_contracts"
+    },
+    {
+      "id": "replay-safe-callbacks",
+      "document": "internal_docs/async_concurrency_model.md",
+      "anchor": "### Replay-Safe Callbacks",
+      "status": "accepted",
+      "implementation_owner": "core-language/async-runtime"
+    },
+    {
+      "id": "bounded-cancellation-cleanup",
+      "document": "internal_docs/async_concurrency_model.md",
+      "anchor": "### Bounded Cleanup After Cancellation",
+      "status": "accepted",
+      "implementation_owner": "core-language/async-runtime"
+    },
+    {
+      "id": "diagnostic-registry",
+      "document": "internal_docs/diagnostic_codes.md",
+      "anchor": "# Diagnostic Code Registry",
+      "status": "accepted",
+      "implementation_owner": "sifr_diagnostics"
+    }
+  ]
+}

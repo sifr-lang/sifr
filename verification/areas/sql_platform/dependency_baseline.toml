@@ -1,0 +1,246 @@
+schema_version = 1
+verified_at = "2026-08-30"
+generated_by = "verification/areas/sql_platform/tools/resolve_dependency_baseline.py"
+root_lock_package = "sifr_sql_dependency_lock"
+rust_version = "1.98"
+sqlite_amalgamation = "3.53.2"
+
+[[crate]]
+name = "tokio"
+display_name = "Tokio"
+version = "1.53.1"
+policy = "latest-stable"
+release_authority = "https://crates.io/crates/tokio/1.53.1"
+api_authority = "https://crates.io/api/v1/crates/tokio"
+checksum = "202caea871b69668250d242070849eb495be178ed697a3e98aebce5bc81a0bed"
+license = "MIT"
+published_at = "2026-07-20T17:06:09.996426Z"
+yanked = false
+
+[[crate]]
+name = "rustls"
+display_name = "Rustls"
+version = "0.23.43"
+policy = "latest-stable"
+release_authority = "https://crates.io/crates/rustls/0.23.43"
+api_authority = "https://crates.io/api/v1/crates/rustls"
+checksum = "0283386ce02abc0151e1761d08802dfe86c173b0b494af5cbc086574e453da06"
+license = "Apache-2.0 OR ISC OR MIT"
+published_at = "2026-07-29T16:14:13.433091Z"
+yanked = false
+
+[[crate]]
+name = "tokio-rustls"
+display_name = "Tokio Rustls"
+version = "0.26.4"
+policy = "latest-stable"
+release_authority = "https://crates.io/crates/tokio-rustls/0.26.4"
+api_authority = "https://crates.io/api/v1/crates/tokio-rustls"
+checksum = "1729aa945f29d91ba541258c8df89027d5792d85a8841fb65e8bf0f4ede4ef61"
+license = "MIT OR Apache-2.0"
+published_at = "2025-09-26T15:31:04.364599Z"
+yanked = false
+
+[[crate]]
+name = "rustls-platform-verifier"
+display_name = "Rustls platform verifier"
+version = "0.7.0"
+policy = "latest-stable"
+release_authority = "https://crates.io/crates/rustls-platform-verifier/0.7.0"
+api_authority = "https://crates.io/api/v1/crates/rustls-platform-verifier"
+checksum = "26d1e2536ce4f35f4846aa13bff16bd0ff40157cdb14cc056c7b14ba41233ba0"
+license = "MIT OR Apache-2.0"
+published_at = "2026-04-12T09:27:15.687200Z"
+yanked = false
+
+[[crate]]
+name = "tokio-postgres"
+display_name = "Tokio PostgreSQL"
+version = "0.7.18"
+policy = "latest-stable"
+release_authority = "https://crates.io/crates/tokio-postgres/0.7.18"
+api_authority = "https://crates.io/api/v1/crates/tokio-postgres"
+checksum = "a528f7d280f6d5b9cd149635c8705b0dd049754bc67d81d31fa25169a93809d3"
+license = "MIT OR Apache-2.0"
+published_at = "2026-06-12T15:39:21.848936Z"
+yanked = false
+
+[[crate]]
+name = "postgres-types"
+display_name = "PostgreSQL types"
+version = "0.2.14"
+policy = "latest-stable"
+release_authority = "https://crates.io/crates/postgres-types/0.2.14"
+api_authority = "https://crates.io/api/v1/crates/postgres-types"
+checksum = "851ca9db4932932d69f3ea811b1abe63087a0f740a47692619dd40d4899b68be"
+license = "MIT OR Apache-2.0"
+published_at = "2026-06-12T15:37:04.335602Z"
+yanked = false
+
+[[crate]]
+name = "tokio-postgres-rustls"
+display_name = "Tokio PostgreSQL Rustls"
+version = "0.14.0"
+policy = "latest-stable"
+release_authority = "https://crates.io/crates/tokio-postgres-rustls/0.14.0"
+api_authority = "https://crates.io/api/v1/crates/tokio-postgres-rustls"
+checksum = "4c2ad44aa0ae96db89c4742212ed41645b2f597311ff6e1945542a4d9fadc2fb"
+license = "MIT"
+published_at = "2026-05-21T12:17:59.310120Z"
+yanked = false
+
+[[crate]]
+name = "lalrpop"
+display_name = "LALRPOP"
+version = "0.23.1"
+policy = "latest-stable"
+release_group = "lalrpop"
+release_authority = "https://crates.io/crates/lalrpop/0.23.1"
+api_authority = "https://crates.io/api/v1/crates/lalrpop"
+checksum = "98a80a963123205c7157323c99611bc4abb65dcbd62ef46dc4bac74a3941bc75"
+license = "Apache-2.0 OR MIT"
+published_at = "2026-03-11T12:51:30.241422Z"
+yanked = false
+
+[[crate]]
+name = "lalrpop-util"
+display_name = "LALRPOP utility"
+version = "0.23.1"
+policy = "latest-stable"
+release_group = "lalrpop"
+release_authority = "https://crates.io/crates/lalrpop-util/0.23.1"
+api_authority = "https://crates.io/api/v1/crates/lalrpop-util"
+checksum = "884f3e747ed2dcee867cda1b0c31a048f9e20de2d916a248949319921a2e666e"
+license = "Apache-2.0 OR MIT"
+published_at = "2026-03-11T12:50:54.981064Z"
+yanked = false
+
+[[crate]]
+name = "mysql_async"
+display_name = "MySQL async client"
+version = "0.37.0"
+policy = "latest-stable"
+release_authority = "https://crates.io/crates/mysql_async/0.37.0"
+api_authority = "https://crates.io/api/v1/crates/mysql_async"
+checksum = "3519e91b0d254ac1ffa495bc42053286cb2172ad7241d5b3b1b9f8a891f21ee2"
+license = "MIT OR Apache-2.0"
+published_at = "2026-05-25T15:00:45.500490Z"
+yanked = false
+
+[[crate]]
+name = "mysql_common"
+display_name = "MySQL protocol primitives"
+version = "0.37.3"
+policy = "latest-compatible"
+compatible_min = "0.37.1"
+compatible_max = "0.38.0"
+compatibility_owner = "mysql_async@0.37.0"
+release_authority = "https://crates.io/crates/mysql_common/0.37.3"
+api_authority = "https://crates.io/api/v1/crates/mysql_common"
+checksum = "0f27695f286b461da077b8c2f72f47feaa04ce3c3f9c0976257410e90e21208a"
+license = "MIT OR Apache-2.0"
+published_at = "2026-06-17T09:22:13.781763Z"
+yanked = false
+
+[[crate]]
+name = "syntaqlite"
+display_name = "Syntaqlite"
+version = "0.9.0"
+policy = "latest-stable"
+release_authority = "https://crates.io/crates/syntaqlite/0.9.0"
+api_authority = "https://crates.io/api/v1/crates/syntaqlite"
+source_authority = "https://github.com/LalitMaganti/syntaqlite"
+checksum = "89cadf7716f0ffb55450910b05310e5275991ae11f9e4492f1b93677760a8c7b"
+license = "Apache-2.0"
+published_at = "2026-08-18T00:18:20.879290Z"
+yanked = false
+
+[[crate]]
+name = "rusqlite"
+display_name = "Rusqlite"
+version = "0.40.2"
+policy = "latest-stable"
+release_authority = "https://crates.io/crates/rusqlite/0.40.2"
+api_authority = "https://crates.io/api/v1/crates/rusqlite"
+checksum = "23f2a97da3e3873c73cb2a2e71b35c40ff95e0b1eefa8d72d8499a6928c3b5b3"
+license = "MIT"
+published_at = "2026-08-08T14:21:52.570893Z"
+yanked = false
+
+[[crate]]
+name = "libsqlite3-sys"
+display_name = "SQLite system bindings"
+version = "0.38.2"
+policy = "latest-stable"
+release_authority = "https://crates.io/crates/libsqlite3-sys/0.38.2"
+api_authority = "https://crates.io/api/v1/crates/libsqlite3-sys"
+checksum = "f1d20bef17f513b9b3004532233187769cd072d790971f4e4da0e346eb6401e8"
+license = "MIT"
+published_at = "2026-08-08T14:21:30.774453Z"
+yanked = false
+
+[[source]]
+name = "libpg_query"
+provider = "postgresql"
+server_major = 18
+tag = "18.0.0"
+commit = "204fbdbd3ed5f8691ab358e49f1fc5397b4679e2"
+policy = "latest-stable-for-major"
+release_authority = "https://github.com/pganalyze/libpg_query/releases/tag/18.0.0"
+api_authority = "https://api.github.com/repos/pganalyze/libpg_query/releases"
+license = "BSD-3-Clause"
+
+[[source]]
+name = "libpg_query"
+provider = "postgresql"
+server_major = 17
+tag = "17-6.2.2"
+commit = "7be1aed1f1f968a36cf541319f71e845850f0381"
+policy = "latest-stable-for-major"
+release_authority = "https://github.com/pganalyze/libpg_query/releases/tag/17-6.2.2"
+api_authority = "https://api.github.com/repos/pganalyze/libpg_query/releases"
+license = "BSD-3-Clause"
+
+[[source]]
+name = "libpg_query"
+provider = "postgresql"
+server_major = 16
+tag = "16-5.2.0"
+commit = "fce106abf41205e5d0db47bea7de44ad1e36f7a5"
+policy = "latest-stable-for-major"
+release_authority = "https://github.com/pganalyze/libpg_query/releases/tag/16-5.2.0"
+api_authority = "https://api.github.com/repos/pganalyze/libpg_query/releases"
+license = "BSD-3-Clause"
+
+[[source]]
+name = "libpg_query"
+provider = "postgresql"
+server_major = 15
+tag = "15-4.2.4"
+commit = "db39825bc7c1ddd45962ec6a626d740b7f8f027a"
+policy = "latest-stable-for-major"
+release_authority = "https://github.com/pganalyze/libpg_query/releases/tag/15-4.2.4"
+api_authority = "https://api.github.com/repos/pganalyze/libpg_query/releases"
+license = "BSD-3-Clause"
+
+[[source]]
+name = "libpg_query"
+provider = "postgresql"
+server_major = 14
+tag = "14-3.0.0"
+commit = "397cbb9c1b188b8a5c6e1a9633461b2d01903abc"
+policy = "latest-stable-for-major"
+release_authority = "https://github.com/pganalyze/libpg_query/releases/tag/14-3.0.0"
+api_authority = "https://api.github.com/repos/pganalyze/libpg_query/releases"
+license = "BSD-3-Clause"
+
+[[source]]
+name = "libpg_query"
+provider = "postgresql"
+server_major = 13
+tag = "13-2.2.0"
+commit = "1097b2c33e54a37c0d2c0f2d498c7d1cf967eae9"
+policy = "latest-stable-for-major"
+release_authority = "https://github.com/pganalyze/libpg_query/releases/tag/13-2.2.0"
+api_authority = "https://api.github.com/repos/pganalyze/libpg_query/releases"
+license = "BSD-3-Clause"

@@ -535,6 +535,53 @@ Each provider maps its database types to these canonical Sifr types:
 | IP network | `sifr.net.IpNetwork` | Preserves the prefix. |
 | MAC address | `sifr.net.MacAddress` | Exact address bytes. |
 
+### Canonical temporal values
+
+The SQL packages use one final temporal model. Provider APIs cannot expose
+driver-specific temporal values.
+
+| Type | Canonical value |
+| --- | --- |
+| `Date` | A proleptic Gregorian year, month, and day. |
+| `LocalTime` | Nanoseconds from midnight, without an offset or time zone. |
+| `OffsetTime` | A `LocalTime` and a signed offset in seconds. |
+| `LocalDateTime` | A `Date` and `LocalTime`, without an inferred time zone. |
+| `Instant` | Signed Unix seconds and a nanosecond fraction from `0` through `999_999_999`. |
+| `CalendarInterval` | Exact signed months, days, and sub-day nanoseconds. |
+
+Constructors validate calendar fields, offset limits, and leap-year rules.
+They return typed errors for invalid values. Leap seconds are not valid values.
+
+`Instant` equality and ordering compare the absolute instant. `OffsetTime`
+preserves its offset, so equal local fields with different offsets remain distinct.
+
+Providers preserve all source precision on decode. Encoding rejects a value
+when the target storage cannot preserve its precision or range. A provider does
+not round or infer a time zone.
+
+`CalendarInterval` never converts months to days. Its constructor carries whole
+days out of the nanosecond field and preserves the remaining signed fraction.
+
+### Network address values
+
+The SQL packages use value types from `sifr.net`. They do not use socket-address
+strings as database values.
+
+| Type | Canonical value |
+| --- | --- |
+| `IpAddress` | Either four IPv4 bytes or sixteen IPv6 bytes. |
+| `IpNetwork` | An `IpAddress` and a valid family-specific prefix length. |
+| `MacAddress` | Either six EUI-48 bytes or eight EUI-64 bytes. |
+
+Text constructors parse one address and return a typed error. They never perform
+DNS resolution. Binary constructors validate the byte length and prefix.
+
+`IpNetwork` preserves host bits because PostgreSQL `inet` can contain them.
+A provider that requires a canonical network address validates zero host bits.
+
+Equality and hashing use the address family, exact bytes, and prefix. String
+formatting uses one canonical representation and never changes the stored value.
+
 The language provides every canonical temporal and SQL container type in this
 table. A provider cannot collapse two rows into one weaker type.
 
@@ -1461,6 +1508,11 @@ The following versions are the latest stable compatible set verified on
 | Rusqlite | `0.40.2` | [`rusqlite` releases](https://crates.io/crates/rusqlite/0.40.2) |
 | SQLite system bindings | `0.38.2` with SQLite `3.53.2` | [`libsqlite3-sys` releases](https://crates.io/crates/libsqlite3-sys/0.38.2) |
 
+Crates.io is the Syntaqlite release authority. Its
+[`LalitMaganti/syntaqlite`](https://github.com/LalitMaganti/syntaqlite) repository
+is the source authority. The provider-owned AST adapter is the maintained fork
+boundary if the pre-1.0 upstream source becomes unsuitable.
+
 `mysql_common` `0.38.2` is newer, but `mysql_async` `0.37.0` does not accept
 that release family. The baseline uses `0.37.3`, which is the latest stable
 release in the compatible `0.37` family.
@@ -1485,9 +1537,25 @@ The SQLite component enables syntaqlite `pin-version` and `pin-cflags`. Its
 parser target must match SQLite `3.53.2` and the qualified amalgamation flags.
 Milestone 0 updates these values as one compatible unit.
 
+The component build sets `SYNTAQLITE_SQLITE_VERSION=3053002`. It selects no
+grammar-changing `SYNTAQLITE_CFLAG_*` value for the default bundled SQLite
+configuration. The qualification record owns both build inputs.
+
 Milestone 0 must query each release authority again. It must replace a stale
 entry with the latest stable mutually compatible release. It must record the
 result in `verification/areas/sql_platform/dependency_baseline.toml`.
+
+These machine-readable records lock the complete decision:
+
+- `verification/areas/sql_platform/dependency_baseline.toml`
+- `verification/areas/sql_platform/data/dependency_qualification.json`
+- `verification/areas/sql_platform/data/artifact_topology.json`
+- `verification/areas/sql_platform/data/ownership_map.json`
+- `verification/areas/sql_platform/data/capability_matrix.json`
+- `verification/areas/sql_platform/data/verification_inventory.json`
+
+The `sifr_sql_dependency_lock` workspace package resolves every selected crate
+in the root lockfile. It has no runtime API and no application artifact.
 
 The Milestone 0 record becomes binding for all later milestones. Later work
 cannot float to a new release or select a broad version range. An upgrade needs

@@ -1,0 +1,73 @@
+{
+  "schema_version": 2,
+  "name": "sql_platform",
+  "owner": "compiler/sql-platform",
+  "description": "Schema-first SQL architecture, dependency, ownership, topology, capability, and verification contracts.",
+  "parallel_safe": true,
+  "resource_classes": [
+    "default-local"
+  ],
+  "timeout_seconds": 300,
+  "suites": [
+    {
+      "name": "contracts",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "sql-platform-contracts",
+          "entry": "verification/areas/sql_platform/tools/check_contracts.py",
+          "command": "sql-platform-contracts",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "dependency-baseline",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "sql-dependency-baseline",
+          "entry": "verification/areas/sql_platform/dependency_baseline.toml",
+          "command": "sql-dependency-baseline",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "mutation",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "sql-platform-contract-mutations",
+          "entry": "verification/areas/sql_platform/tools/check_contracts.py",
+          "command": "sql-platform-contract-mutations",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-dependency-baseline-mutations",
+          "entry": "verification/areas/sql_platform/tools/resolve_dependency_baseline.py",
+          "command": "sql-dependency-baseline-mutations",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    }
+  ],
+  "network_mode": "offline",
+  "pinned_corpus": {
+    "required": false,
+    "revision": "not-applicable",
+    "checksum": "not-applicable"
+  },
+  "skip_policy": {
+    "allowed": false,
+    "requires_reason": true
+  },
+  "baseline_metadata_rules": {
+    "required": true,
+    "source": "verification/areas/sql_platform/dependency_baseline.toml"
+  }
+}
