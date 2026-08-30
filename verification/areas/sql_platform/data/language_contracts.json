@@ -6,7 +6,7 @@
       "document": "internal_docs/sql_architecture.md",
       "anchor": "## Structural record types",
       "status": "accepted",
-      "implementation_owner": "sql_2_structural_records"
+      "implementation_owner": "structural_records"
     },
     {
       "id": "fixed-width-integers",
@@ -20,14 +20,14 @@
       "document": "internal_docs/sql_architecture.md",
       "anchor": "### Canonical temporal values",
       "status": "accepted",
-      "implementation_owner": "sql_5_common_contracts"
+      "implementation_owner": "common_sql"
     },
     {
       "id": "network-address-values",
       "document": "internal_docs/sql_architecture.md",
       "anchor": "### Network address values",
       "status": "accepted",
-      "implementation_owner": "sql_5_common_contracts"
+      "implementation_owner": "common_sql"
     },
     {
       "id": "replay-safe-callbacks",

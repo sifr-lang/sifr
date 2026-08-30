@@ -557,6 +557,23 @@ mod tests {
     }
 
     #[test]
+    fn formatter_preserves_template_holes_escapes_and_multiline_indentation() {
+        let source = "def query(user_id: int) -> Template:\n    return t\"\"\"\n        SELECT  id\n        FROM users\n        WHERE id = { user_id } AND note = '\\\\n'\n    \"\"\"\n";
+        let first = format_source(source, None, FormatOptions::default())
+            .expect("template should format")
+            .formatted;
+        let second = format_source(&first, None, FormatOptions::default())
+            .expect("formatted template should format")
+            .formatted;
+        assert_eq!(first, second);
+        assert!(first.contains("t\"\"\""));
+        assert!(first.contains("{user_id}"));
+        assert!(first.contains("SELECT  id"));
+        assert!(first.contains("\\\\n"));
+        parse_module(&first, None).expect("formatted template should parse");
+    }
+
+    #[test]
     fn range_formatting_returns_minimal_text_edit() {
         let source = "def main():\n    x=1\n    y = 2\n";
         let range = TextRange::new(TextSize::new(16), TextSize::new(19));

@@ -483,6 +483,9 @@ fn equality_comparable(left: &Type, right: &Type) -> bool {
     let left = left.resolve_alias();
     let right = right.resolve_alias();
 
+    if matches!(left, Type::Template(_)) || matches!(right, Type::Template(_)) {
+        return false;
+    }
     if left == right {
         return true;
     }
@@ -539,6 +542,7 @@ pub fn type_check_unary_op(op: &str, operand: &Type) -> TypeCheckResult {
                 | Type::Dict(_, _)
                 | Type::Set(_)
                 | Type::Tuple(_)
+                | Type::Template(_)
                 | Type::Str
                 | Type::Class { .. }
                 | Type::Protocol { .. } => {
@@ -587,6 +591,7 @@ pub fn type_check_bool_op(left: &Type, op: &str, right: &Type) -> TypeCheckResul
                 | Type::Dict(_, _)
                 | Type::Set(_)
                 | Type::Tuple(_)
+                | Type::Template(_)
                 | Type::Str
                 | Type::Class { .. }
                 | Type::Protocol { .. }

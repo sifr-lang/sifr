@@ -343,6 +343,17 @@ fn strip_expr_locations(expression: &mut HirExpr) {
                 }
             }
         }
+        HirExpr::TemplateString(template) => {
+            template.for_each_value_mut(&mut strip_expr_locations);
+            template.source_range = ruff_text_size::TextRange::default();
+            for segment in &mut template.segments {
+                segment.mappings.clear();
+            }
+            for interpolation in &mut template.interpolations {
+                interpolation.source_range = ruff_text_size::TextRange::default();
+                interpolation.expression_range = ruff_text_size::TextRange::default();
+            }
+        }
         HirExpr::Slice {
             object,
             start,

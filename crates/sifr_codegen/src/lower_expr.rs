@@ -30,6 +30,7 @@ use collections_and_comprehensions::{
     try_lower_simple_set_literal_expr, try_lower_simple_slice_expr,
 };
 mod scalar_operands;
+mod template_strings;
 use scalar_operands::{
     try_lower_mixed_float_operand_expr, try_lower_promoted_integer_operand_expr,
     try_lower_simple_binop_operand_expr, try_lower_simple_range_operand_expr,

@@ -269,6 +269,9 @@ fn collect_python_callback_bound_names_expr(
                 }
             }
         }
+        HirExpr::TemplateString(template) => template.for_each_value(&mut |value| {
+            collect_python_callback_bound_names_expr(value, callable_params, names);
+        }),
         HirExpr::Slice {
             object,
             start,
@@ -451,6 +454,9 @@ fn collect_callable_param_name_refs(
                 }
             }
         }
+        HirExpr::TemplateString(template) => template.for_each_value(&mut |value| {
+            collect_callable_param_name_refs(value, callable_params, names);
+        }),
         HirExpr::Slice {
             object,
             start,

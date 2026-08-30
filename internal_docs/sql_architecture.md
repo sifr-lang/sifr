@@ -142,6 +142,59 @@ app.sql(t"SELECT {value:10}")
 These forms have no safe bound-parameter meaning. A bare template string is
 inert and cannot execute as SQL.
 
+### Template-string language contract
+
+Sifr follows the syntax and evaluation rules in
+[PEP 750](https://peps.python.org/pep-0750/). A `t` or `T` prefix creates a
+`Template` value. An `rt` or `tr` prefix creates a raw template value.
+
+The parser retains decoded static strings and interpolation nodes. It does not
+convert a template into string concatenation. Implicitly adjacent templates
+produce one ordered template value.
+
+Each interpolation retains these facts:
+
+- its typed Sifr value
+- the exact expression text when source text is available
+- its complete Sifr source range
+- its expression source range
+- its embedded-document range
+- its conversion flag
+- its structured format specification
+
+Sifr evaluates interpolation values from left to right. It evaluates each value
+once. It then evaluates that interpolation's nested format-spec values from left
+to right. Template construction owns the retained values. It copies a borrowed
+move value only when template construction must retain that value.
+
+`Template` is a shape-erased source annotation for processor APIs. A literal
+also carries its ordered hole types inside compiler HIR. Any typed template can
+flow to a `Template` parameter. Templates use move ownership and identity
+semantics. They do not support value equality, hashing, ordering, or implicit
+string conversion.
+
+The frontend creates one virtual document for each template. It writes decoded
+static text directly. It writes U+FFFC OBJECT REPLACEMENT CHARACTER for each
+interpolation. Each placeholder has one exact mapping to its Sifr hole. Each
+static source token maps to its complete decoded segment range. This range model
+keeps escapes and multiline strings unambiguous without inventing byte offsets.
+
+Generated Rust uses one private `__SifrTemplate` carrier. It stores ordered
+strings and ordered interpolation records. Each record stores its owned value,
+source metadata, conversion, format specification, and Sifr type name. The
+format specification remains a recursive literal/interpolation tree, so nested
+conversions and specifications cannot be flattened or discarded. The carrier
+erases runtime value types behind `Box<dyn Any>`. The compiler never
+downcasts these values during ordinary execution.
+
+Compiler processors consume typed HIR before ordinary runtime code generation.
+The opaque runtime carrier keeps an inert template valid when code retains or
+passes it through an ordinary function. It does not create a runtime SQL path.
+
+The formatter uses the Sifr Ruff fork's template-string nodes. It can change
+outer layout and expression spacing. It must preserve prefixes, quote meaning,
+escapes, static text, interpolation boundaries, and evaluation order.
+
 ### Reusable queries
 
 The query decorator defines a reusable typed template:
@@ -1521,7 +1574,7 @@ release in the compatible `0.37` family.
 baseline. The provider uses `0.23.43` until Rustls publishes and qualifies a
 stable `0.24` release.
 
-`libpg_query` follows PostgreSQL major versions. The phase uses the latest
+`libpg_query` follows PostgreSQL major versions. The baseline uses the latest
 stable parser tag for every PostgreSQL major that the capability matrix supports:
 
 | PostgreSQL major | `libpg_query` baseline | Release authority |
@@ -1535,15 +1588,16 @@ stable parser tag for every PostgreSQL major that the capability matrix supports
 
 The SQLite component enables syntaqlite `pin-version` and `pin-cflags`. Its
 parser target must match SQLite `3.53.2` and the qualified amalgamation flags.
-Milestone 0 updates these values as one compatible unit.
+The dependency qualification process updates these values as one compatible unit.
 
 The component build sets `SYNTAQLITE_SQLITE_VERSION=3053002`. It selects no
 grammar-changing `SYNTAQLITE_CFLAG_*` value for the default bundled SQLite
 configuration. The qualification record owns both build inputs.
 
-Milestone 0 must query each release authority again. It must replace a stale
-entry with the latest stable mutually compatible release. It must record the
-result in `verification/areas/sql_platform/dependency_baseline.toml`.
+The dependency qualification process must query each release authority again.
+It must replace a stale entry with the latest stable mutually compatible
+release. It must record the result in
+`verification/areas/sql_platform/dependency_baseline.toml`.
 
 These machine-readable records lock the complete decision:
 
@@ -1557,9 +1611,10 @@ These machine-readable records lock the complete decision:
 The `sifr_sql_dependency_lock` workspace package resolves every selected crate
 in the root lockfile. It has no runtime API and no application artifact.
 
-The Milestone 0 record becomes binding for all later milestones. Later work
-cannot float to a new release or select a broad version range. An upgrade needs
-an updated dependency decision, lockfile, qualification record, and provider suite.
+The checked-in baseline is binding for every SQL platform implementation.
+Implementations cannot float to a new release or select a broad version range.
+An upgrade needs an updated dependency decision, lockfile, qualification
+record, and provider suite.
 
 The PostgreSQL component builds the selected `libpg_query` source into its
 sandboxed WebAssembly artifact. A small Rust adapter converts its raw parse tree

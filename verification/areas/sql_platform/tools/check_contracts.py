@@ -6,7 +6,6 @@ from __future__ import annotations
 import argparse
 import copy
 import json
-import re
 import sys
 import tomllib
 from pathlib import Path
@@ -15,35 +14,32 @@ from typing import Any, Callable
 REPO_ROOT = Path(__file__).resolve().parents[4]
 AREA_ROOT = REPO_ROOT / "verification" / "areas" / "sql_platform"
 DATA_ROOT = AREA_ROOT / "data"
-PHASE_PATH = REPO_ROOT / "plans" / "issues" / "active" / "ad-hoc-schema-first-sql-platform.md"
 ARCHITECTURE_PATH = REPO_ROOT / "internal_docs" / "sql_architecture.md"
-REPOSITORY_ARCHITECTURE_PATH = REPO_ROOT / "internal_docs" / "architecture.md"
-ROADMAP_PATH = REPO_ROOT / "plans" / "roadmap.md"
 BASELINE_PATH = AREA_ROOT / "dependency_baseline.toml"
 ROOT_MANIFEST_PATH = REPO_ROOT / "Cargo.toml"
 LOCK_MANIFEST_PATH = REPO_ROOT / "crates" / "sifr_sql_dependency_lock" / "Cargo.toml"
 LOCKFILE_PATH = REPO_ROOT / "Cargo.lock"
 
-MILESTONES = [
-    "sql_0_contract_lock",
-    "sql_1_template_strings",
-    "sql_2_structural_records",
-    "sql_3_compiler_components",
-    "sql_4_schema_profiles",
-    "sql_5_common_contracts",
-    "sql_6_queries_fragments",
-    "sql_7_postgresql_compiler",
-    "sql_8_postgresql_semantics",
-    "sql_9_postgresql_runtime",
-    "sql_10_incremental_editor",
-    "sql_11_host_tools",
-    "sql_12_schema_tools",
-    "sql_13_migration_engine",
-    "sql_14_postgresql_migrations",
-    "sql_15_schema_polymorphism",
-    "sql_16_mysql_provider",
-    "sql_17_sqlite_provider",
-    "sql_18_closure",
+PLATFORM_PARTS = [
+    "platform_contract",
+    "template_strings",
+    "structural_records",
+    "compiler_components",
+    "schema_profiles",
+    "common_sql",
+    "query_composition",
+    "postgresql_compiler",
+    "postgresql_semantics",
+    "postgresql_runtime",
+    "incremental_editor",
+    "host_tools",
+    "schema_tools",
+    "migration_engine",
+    "postgresql_migrations",
+    "schema_polymorphism",
+    "mysql_provider",
+    "sqlite_provider",
+    "integrated_qualification",
 ]
 PROVIDERS = {"postgresql", "mysql", "sqlite"}
 DOMAINS = {"grammar", "schema", "runtime", "tool", "migration", "editor"}
@@ -87,49 +83,6 @@ def unique_rows(rows: object, identity: str, label: str) -> list[dict[str, Any]]
     return typed
 
 
-def validate_phase(text: str) -> None:
-    headers = list(re.finditer(r"^### Milestone (\d+): .+$", text, re.MULTILINE))
-    require([int(item.group(1)) for item in headers] == list(range(19)), "phase milestone headers must be 0 through 18")
-    found_ids: list[str] = []
-    for index, header in enumerate(headers):
-        end = headers[index + 1].start() if index + 1 < len(headers) else text.find("\n## Dependency sequence", header.start())
-        chunk = text[header.start() : end]
-        identifier = re.search(r"^ID: `([^`]+)`$", chunk, re.MULTILINE)
-        require(identifier is not None, f"milestone {index} has no ID")
-        found_ids.append(identifier.group(1))
-        require(re.search(r"^Purpose: .+", chunk, re.MULTILINE) is not None, f"milestone {index} has no purpose")
-        require("\nOwned scope:\n" in chunk, f"milestone {index} has no owned scope")
-        require("\nAcceptance criteria:\n" in chunk, f"milestone {index} has no acceptance list")
-        require("- [ ] " in chunk, f"milestone {index} has an empty acceptance list")
-        validation_label = "Closure validation:" if index == 18 else "Focused validation:"
-        require(f"\n{validation_label}\n" in chunk, f"milestone {index} has no {validation_label.lower()}")
-    require(found_ids == MILESTONES, "phase milestone IDs do not match the locked sequence")
-
-    tables = re.findall(
-        r"\| Milestone \| Status \|[^\n]+\n\|[^\n]+\n((?:\|[^\n]+\n){19})",
-        text,
-    )
-    require(len(tables) >= 2, "phase must contain the milestone status table and progress ledger")
-    parsed = []
-    for table in (tables[0], tables[-1]):
-        rows = []
-        for line in table.splitlines():
-            cells = [cell.strip() for cell in line.strip("|").split("|")]
-            require(len(cells) >= 2 and cells[0].isdigit(), "phase contains an invalid milestone progress row")
-            rows.append((int(cells[0]), cells[1].lower()))
-        parsed.append(rows)
-    require(parsed[0] == parsed[1], "milestone status table and progress ledger are not synchronized")
-
-    required_links = (
-        (REPOSITORY_ARCHITECTURE_PATH, "ad-hoc-schema-first-sql-platform.md"),
-        (REPOSITORY_ARCHITECTURE_PATH, "sql_architecture.md"),
-        (ROADMAP_PATH, "ad-hoc-schema-first-sql-platform.md"),
-        (ROADMAP_PATH, "sql_architecture.md"),
-    )
-    for path, link in required_links:
-        require(link in path.read_text(encoding="utf-8"), f"{path.relative_to(REPO_ROOT)} does not link {link}")
-
-
 def validate_language_contracts(payload: dict[str, Any]) -> None:
     require(payload.get("schema_version") == 1, "language contract schema_version must be 1")
     rows = unique_rows(payload.get("contracts"), "id", "language contracts")
@@ -157,12 +110,12 @@ def validate_ownership(payload: dict[str, Any]) -> None:
     rows = unique_rows(payload.get("surfaces"), "id", "ownership map")
     covered: set[str] = set()
     for row in rows:
-        milestone = row.get("milestone")
-        require(milestone in MILESTONES, f"ownership row {row['id']} has an invalid milestone")
-        covered.add(str(milestone))
+        platform_part = row.get("platform_part")
+        require(platform_part in PLATFORM_PARTS, f"ownership row {row['id']} has an invalid platform part")
+        covered.add(str(platform_part))
         require(nonempty(row.get("repository_owner")), f"ownership row {row['id']} has no repository owner")
         require(nonempty(row.get("acceptance")), f"ownership row {row['id']} has no acceptance mapping")
-    require(covered == set(MILESTONES), "ownership map does not cover every milestone")
+    require(covered == set(PLATFORM_PARTS), "ownership map does not cover every platform part")
 
 
 def validate_topology(payload: dict[str, Any]) -> set[str]:
@@ -183,7 +136,7 @@ def validate_topology(payload: dict[str, Any]) -> set[str]:
     for row in rows:
         identity = str(row["id"])
         require(row.get("role") in allowed_roles, f"artifact {identity} has an invalid role")
-        require(row.get("owner_milestone") in MILESTONES, f"artifact {identity} has an invalid milestone")
+        require(row.get("platform_part") in PLATFORM_PARTS, f"artifact {identity} has an invalid platform part")
         require(nonempty(row.get("repository_owner")), f"artifact {identity} has no owner")
         require(isinstance(row.get("included_in_application"), bool), f"artifact {identity} has no application policy")
         dependencies = row.get("depends_on")
@@ -228,7 +181,7 @@ def validate_capabilities(payload: dict[str, Any]) -> None:
         require(identity == f"{provider}.{domain}", f"capability {identity} has inconsistent identity")
         require((provider, domain) in expected, f"capability {identity} is an unsupported provider claim")
         actual.add((str(provider), str(domain)))
-        require(row.get("owner_milestone") in MILESTONES, f"capability {identity} has an invalid milestone")
+        require(row.get("platform_part") in PLATFORM_PARTS, f"capability {identity} has an invalid platform part")
         require(nonempty(row.get("acceptance")), f"capability {identity} has no acceptance mapping")
         require(isinstance(row.get("behaviors"), list) and row["behaviors"], f"capability {identity} has no behaviors")
         evidence = row.get("required_evidence")
@@ -245,11 +198,11 @@ def validate_inventory(payload: dict[str, Any]) -> None:
     require(len(rows) == 30, "verification inventory must contain 12 permanent and 18 delivery invariants")
     actual = {(row.get("source"), row.get("source_index")) for row in rows}
     expected = {("sql-architecture-permanent-rule", index) for index in range(1, 13)}
-    expected.update({("phase-locked-delivery-contract", index) for index in range(1, 19)})
+    expected.update({("sql-architecture-platform-rule", index) for index in range(1, 19)})
     require(actual == expected, "verification inventory invariant indices are incomplete")
     for row in rows:
         identity = str(row["id"])
-        require(row.get("owner_milestone") in MILESTONES, f"invariant {identity} has an invalid milestone")
+        require(row.get("platform_part") in PLATFORM_PARTS, f"invariant {identity} has an invalid platform part")
         require(nonempty(row.get("acceptance")), f"invariant {identity} has no acceptance mapping")
         require(nonempty(row.get("evidence_owner")), f"invariant {identity} has no evidence owner")
         evidence = row.get("evidence_types")
@@ -259,10 +212,9 @@ def validate_inventory(payload: dict[str, Any]) -> None:
     prerequisites = unique_rows(payload.get("external_prerequisites"), "id", "external prerequisites")
     require(len(prerequisites) == 1, "verification inventory must name one async cleanup prerequisite")
     row = prerequisites[0]
-    issue = REPO_ROOT / str(row.get("issue", ""))
-    require(issue.is_file(), "async cleanup prerequisite issue does not exist")
+    require(row.get("issue") == "async-cleanup-completion", "async cleanup prerequisite has the wrong identity")
     require(nonempty(row.get("owner")), "async cleanup prerequisite has no owner")
-    require(row.get("required_before") == "sql_9_postgresql_runtime", "async cleanup prerequisite has the wrong deadline")
+    require(row.get("required_before") == "postgresql_runtime", "async cleanup prerequisite has the wrong deadline")
     require(nonempty(row.get("merge_evidence")), "async cleanup prerequisite has no merge evidence contract")
     require(isinstance(row.get("capabilities"), list) and len(row["capabilities"]) == 4, "async cleanup prerequisite is incomplete")
 
@@ -290,7 +242,7 @@ def validate_qualification(payload: dict[str, Any], baseline: dict[str, Any], ar
     }
     require({row["id"] for row in constraints} == expected_constraints, "dependency constraints are incomplete")
     for row in constraints:
-        require(row.get("owner_milestone") in MILESTONES, f"dependency constraint {row['id']} has an invalid milestone")
+        require(row.get("platform_part") in PLATFORM_PARTS, f"dependency constraint {row['id']} has an invalid platform part")
         require(nonempty(row.get("audit_owner")), f"dependency constraint {row['id']} has no audit owner")
         rules = row.get("rules")
         require(isinstance(rules, list) and rules, f"dependency constraint {row['id']} has no enforceable rules")
@@ -309,7 +261,7 @@ def validate_qualification(payload: dict[str, Any], baseline: dict[str, Any], ar
         require(isinstance(row.get("targets"), list) and row["targets"], f"qualification for {name} has no targets")
         require(isinstance(row.get("artifacts"), list) and row["artifacts"], f"qualification for {name} has no artifacts")
         require(set(row["artifacts"]).issubset(artifacts), f"qualification for {name} names an unknown artifact")
-        require(row.get("owner_milestone") in MILESTONES, f"qualification for {name} has an invalid milestone")
+        require(row.get("platform_part") in PLATFORM_PARTS, f"qualification for {name} has an invalid platform part")
         require(nonempty(row.get("audit_owner")), f"qualification for {name} has no audit owner")
     source_rows = unique_rows(payload.get("sources"), "name", "dependency source qualification")
     require(len(source_rows) == 1 and source_rows[0]["name"] == "libpg_query", "source qualification must own libpg_query")
@@ -341,7 +293,7 @@ def validate_cargo(baseline: dict[str, Any], qualification: dict[str, Any]) -> N
         member_features = set(lock_dependency.get("features", []))
         require(root_features.union(member_features) == expected_features, f"Cargo features for {name} differ from qualification")
 
-    metadata = lock_manifest.get("package", {}).get("metadata", {}).get("sifr", {})
+    metadata = lock_manifest.get("package", {}).get("metadata", {}).get("sifr_sql", {})
     require(metadata.get("artifact-role") == "qualification-only", "lock package has the wrong artifact role")
     require(metadata.get("contract") == "verification/areas/sql_platform/data/artifact_topology.json", "lock package has no topology contract")
     all_feature = set(lock_manifest.get("features", {}).get("all", []))
@@ -384,7 +336,6 @@ def validate_profiles(overrides: dict[str, Any] | None = None) -> None:
 
 def validate_all(overrides: dict[str, Any] | None = None) -> None:
     values = overrides or {}
-    phase = values.get("phase", PHASE_PATH.read_text(encoding="utf-8"))
     baseline = values.get("baseline", read_toml(BASELINE_PATH))
     language = values.get("language", read_json(DATA_ROOT / "language_contracts.json"))
     ownership = values.get("ownership", read_json(DATA_ROOT / "ownership_map.json"))
@@ -392,7 +343,6 @@ def validate_all(overrides: dict[str, Any] | None = None) -> None:
     capabilities = values.get("capabilities", read_json(DATA_ROOT / "capability_matrix.json"))
     inventory = values.get("inventory", read_json(DATA_ROOT / "verification_inventory.json"))
     qualification = values.get("qualification", read_json(DATA_ROOT / "dependency_qualification.json"))
-    validate_phase(phase)
     validate_language_contracts(language)
     validate_ownership(ownership)
     artifacts = validate_topology(topology)
@@ -408,7 +358,6 @@ def self_test() -> None:
     baseline = read_toml(BASELINE_PATH)
     validate_all({"baseline": baseline})
     payloads = {
-        "phase": PHASE_PATH.read_text(encoding="utf-8"),
         "ownership": read_json(DATA_ROOT / "ownership_map.json"),
         "topology": read_json(DATA_ROOT / "artifact_topology.json"),
         "capabilities": read_json(DATA_ROOT / "capability_matrix.json"),
@@ -420,9 +369,8 @@ def self_test() -> None:
         },
     }
     mutations: list[tuple[str, str, Callable[[Any], None]]] = [
-        ("missing-milestone-id", "phase", lambda value: None),
         ("missing-owner", "ownership", lambda value: value["surfaces"][0].__setitem__("repository_owner", "")),
-        ("invalid-milestone", "ownership", lambda value: value["surfaces"][0].__setitem__("milestone", "sql_99")),
+        ("invalid-platform-part", "ownership", lambda value: value["surfaces"][0].__setitem__("platform_part", "unknown")),
         ("duplicate-identity", "ownership", lambda value: value["surfaces"].append(copy.deepcopy(value["surfaces"][0]))),
         ("topology-leak", "topology", lambda value: value["artifacts"][0].__setitem__("included_in_application", True)),
         ("missing-capability", "capabilities", lambda value: value["capabilities"].pop()),
@@ -440,10 +388,7 @@ def self_test() -> None:
     accepted: list[str] = []
     for label, key, mutate in mutations:
         candidate = copy.deepcopy(payloads[key])
-        if label == "missing-milestone-id":
-            candidate = candidate.replace("ID: `sql_0_contract_lock`", "ID: missing", 1)
-        else:
-            mutate(candidate)
+        mutate(candidate)
         try:
             validate_all({key: candidate, "baseline": baseline})
         except ContractError:
@@ -471,7 +416,7 @@ def main(argv: list[str] | None = None) -> int:
         self_test()
         return 0
     validate_all()
-    print("SQL platform contracts ok: milestones=19 providers=3 domains=6 invariants=30")
+    print("SQL platform contracts ok: platform parts=19 providers=3 domains=6 invariants=30")
     return 0
 
 

@@ -572,6 +572,7 @@ pub(super) fn is_owned_temporary(expr: &HirExpr) -> bool {
         | HirExpr::DictLiteral { .. }
         | HirExpr::TupleLiteral { .. }
         | HirExpr::FString { .. }
+        | HirExpr::TemplateString(_)
         | HirExpr::QuestionMark { .. }
         | HirExpr::OkWrap { .. }
         | HirExpr::ErrWrap { .. }

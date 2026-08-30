@@ -277,6 +277,15 @@ pub(in crate::lower) fn python_context_borrow_reference(
             HirFStringPart::Literal(_) => None,
             HirFStringPart::Expr(expression) => python_context_borrow_reference(expression, ctx),
         }),
+        HirExpr::TemplateString(template) => {
+            let mut found = None;
+            template.for_each_value(&mut |value| {
+                if found.is_none() {
+                    found = python_context_borrow_reference(value, ctx);
+                }
+            });
+            found
+        }
         HirExpr::Slice {
             object,
             start,

@@ -86,7 +86,8 @@ fn extract_ipc_schema_type_inner(ty: &Type) -> IpcSchemaType {
         | Type::Unknown
         | Type::TypeVar(_)
         | Type::Protocol { .. }
-        | Type::Intersection(_) => unsupported_schema_type(ty),
+        | Type::Intersection(_)
+        | Type::Template(_) => unsupported_schema_type(ty),
     }
 }
 

@@ -122,6 +122,38 @@
         "property"
       ],
       "note": "Fixed-width helper overflow-policy behavior must remain deterministic and panic-free."
+    },
+    {
+      "id": "PROP-TEMPLATE-0001",
+      "entry": "verification/areas/fuzz_property/seeds/template_strings_seed.sifr",
+      "target_ids": [
+        "parse_check_entrypoint",
+        "hir_type_ownership_entrypoint",
+        "codegen_entrypoint"
+      ],
+      "program_class": "valid-only",
+      "command": "run",
+      "diagnostic_format": "json",
+      "expect_exit_code": 0,
+      "repeat_runs": 2,
+      "assert_no_panic": true,
+      "reproduction_command": [
+        "uv",
+        "run",
+        "--project",
+        "verification",
+        "--locked",
+        "python",
+        "-m",
+        "sifr_verify",
+        "areas",
+        "run",
+        "--area",
+        "fuzz_property",
+        "--suite",
+        "property"
+      ],
+      "note": "Template parsing, typed lowering, format-spec evaluation, and generated execution must remain deterministic and panic-free."
     }
   ]
 }

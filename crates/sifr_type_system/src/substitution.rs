@@ -39,6 +39,7 @@ where
         Type::PythonDlpackTensor(value) => Type::PythonDlpackTensor(Box::new(recurse(value))),
         Type::Dict(key, value) => Type::Dict(Box::new(recurse(key)), Box::new(recurse(value))),
         Type::Tuple(values) => Type::Tuple(values.iter().map(recurse).collect()),
+        Type::Template(values) => Type::Template(values.iter().map(recurse).collect()),
         Type::Union(values) => make_union(values.iter().map(recurse).collect()),
         Type::Callable(params, conventions, result) => Type::Callable(
             params.iter().map(recurse).collect(),
@@ -213,7 +214,7 @@ where
         | Type::AsyncGenerator(key, value)
         | Type::JoinSet(key, value) => recurse(key) && recurse(value),
         Type::TimeoutResult(value) => recurse(value),
-        Type::Tuple(values) => values.iter().all(&mut recurse),
+        Type::Tuple(values) | Type::Template(values) => values.iter().all(&mut recurse),
         Type::Union(values) => {
             let substituted = values
                 .iter()

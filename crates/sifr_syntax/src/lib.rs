@@ -5,6 +5,9 @@
 //! parser APIs.
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 
+#[cfg(test)]
+mod template_string_tests;
+
 use ruff_text_size::{Ranged as _, TextRange};
 use sifr_diagnostics::{
     ChildSeverity, DiagnosticArg, DiagnosticBuilder, DiagnosticCode, DiagnosticSink,

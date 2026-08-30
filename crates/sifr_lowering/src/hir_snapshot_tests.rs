@@ -2,7 +2,10 @@ use crate::hir_snapshot_expr_projection::{
     async_with_kind_name, pattern_kind_name, project_expr, project_named_type, project_named_types,
     tuple_target_binding_name, type_name,
 };
-use crate::{HirModule, HirStmt, HirWithItemKind, lower_module};
+use crate::{
+    ExternalDefs, HirModule, HirStmt, HirWithItemKind, LoweringOptions,
+    lower_module_with_externals_name_and_options,
+};
 use serde_json::{Value, json};
 use sifr_python_parser::parse_module;
 use sifr_type_system::Type;
@@ -50,9 +53,17 @@ fn matrix_path() -> PathBuf {
 
 fn lower_source(source: &str) -> HirModule {
     let parsed = parse_module(source).expect("source must parse");
-    lower_module(parsed.suite())
-        .map(|result| result.module)
-        .expect("source must lower")
+    lower_module_with_externals_name_and_options(
+        "snapshot",
+        parsed.suite(),
+        &ExternalDefs::default(),
+        LoweringOptions {
+            source_text: Some(source.to_string()),
+            ..LoweringOptions::default()
+        },
+    )
+    .map(|result| result.module)
+    .expect("source must lower")
 }
 
 fn project_module(module: &HirModule) -> Value {

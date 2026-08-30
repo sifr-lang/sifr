@@ -254,6 +254,7 @@ fn expr_contains_await(expr: &crate::hir_nodes::HirExpr) -> bool {
             crate::hir_nodes::HirFStringPart::Literal(_) => false,
             crate::hir_nodes::HirFStringPart::Expr(expr) => expr_contains_await(expr),
         }),
+        HirExpr::TemplateString(template) => template.any_value(expr_contains_await),
         HirExpr::MethodCall { object, args, .. } => {
             expr_contains_await(object) || args.iter().any(expr_contains_await)
         }
@@ -375,6 +376,7 @@ fn expr_contains_task_spawn(expr: &crate::hir_nodes::HirExpr) -> bool {
             crate::hir_nodes::HirFStringPart::Literal(_) => false,
             crate::hir_nodes::HirFStringPart::Expr(expr) => expr_contains_task_spawn(expr),
         }),
+        HirExpr::TemplateString(template) => template.any_value(expr_contains_task_spawn),
         HirExpr::MethodCall { object, args, .. } => {
             expr_contains_task_spawn(object) || args.iter().any(expr_contains_task_spawn)
         }

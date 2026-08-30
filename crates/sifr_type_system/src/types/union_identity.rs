@@ -58,6 +58,7 @@ impl Type {
             Self::Dict(key, value) => binary("dict", key, value),
             Self::Set(element) => unary("set", element),
             Self::Tuple(elements) => sequence("tuple", elements),
+            Self::Template(elements) => sequence("template", elements),
             Self::Range => atom("range"),
             Self::Iterable(element) => unary("iterable", element),
             Self::Iterator(element) => unary("iterator", element),

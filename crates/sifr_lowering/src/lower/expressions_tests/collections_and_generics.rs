@@ -683,6 +683,13 @@ pub(super) fn test_iterator_builtins_lower_to_canonical_iterator_call_nodes() {
             HirExpr::FString { parts, .. } => parts.iter().any(|part| {
                 matches!(part, crate::hir_nodes::HirFStringPart::Expr(expr) if call_uses_legacy_iterator_builtin(expr))
             }),
+            HirExpr::TemplateString(template) => {
+                let mut found = false;
+                template.for_each_value(&mut |value| {
+                    found |= call_uses_legacy_iterator_builtin(value);
+                });
+                found
+            }
             HirExpr::EnumVariant { .. }
             | HirExpr::Name { .. }
             | HirExpr::IntLiteral(_)

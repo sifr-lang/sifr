@@ -177,6 +177,31 @@ pub(super) fn project_expr(expr: &HirExpr) -> Value {
             "ty": expr_type_name(expr),
             "parts": parts.iter().map(project_f_string_part).collect::<Vec<_>>(),
         }),
+        HirExpr::TemplateString(template) => json!({
+            "kind": "TemplateString",
+            "ty": expr_type_name(expr),
+            "source_range": project_range(template.source_range),
+            "virtual_source": template.virtual_source,
+            "segments": template.segments.iter().map(|segment| json!({
+                "value": segment.value,
+                "mappings": segment.mappings.iter().map(|mapping| json!({
+                    "source_range": project_range(mapping.source_range),
+                    "virtual_range": project_range(mapping.virtual_range),
+                })).collect::<Vec<_>>(),
+                "virtual_range": project_range(segment.virtual_range),
+            })).collect::<Vec<_>>(),
+            "interpolations": template.interpolations.iter().map(|interpolation| json!({
+                "value": project_expr(&interpolation.value),
+                "clone_from_borrow": interpolation.clone_from_borrow,
+                "value_type": interpolation.value_type.display_name(),
+                "source_range": project_range(interpolation.source_range),
+                "expression_range": project_range(interpolation.expression_range),
+                "expression_source": interpolation.expression_source,
+                "virtual_range": project_range(interpolation.virtual_range),
+                "conversion": interpolation.conversion,
+                "format_spec": interpolation.format_spec.as_ref().map(project_template_format_spec),
+            })).collect::<Vec<_>>(),
+        }),
         HirExpr::Slice {
             object,
             start,
@@ -297,6 +322,36 @@ pub(super) fn project_expr(expr: &HirExpr) -> Value {
             "variant": variant,
         }),
     }
+}
+
+fn project_range(range: ruff_text_size::TextRange) -> [u32; 2] {
+    [range.start().to_u32(), range.end().to_u32()]
+}
+
+fn project_template_format_spec(spec: &sifr_ir::HirTemplateFormatSpec) -> Value {
+    json!({
+        "range": project_range(spec.range),
+        "parts": spec.parts.iter().map(|part| match part {
+            sifr_ir::HirTemplateFormatSpecPart::Literal(value) => json!({
+                "kind": "Literal",
+                "value": value,
+            }),
+            sifr_ir::HirTemplateFormatSpecPart::Interpolation {
+                value,
+                clone_from_borrow,
+                source_range,
+                conversion,
+                format_spec,
+            } => json!({
+                "kind": "Interpolation",
+                "value": project_expr(value),
+                "clone_from_borrow": clone_from_borrow,
+                "source_range": project_range(*source_range),
+                "conversion": conversion,
+                "format_spec": format_spec.as_deref().map(project_template_format_spec),
+            }),
+        }).collect::<Vec<_>>(),
+    })
 }
 
 fn scalar_expr(kind: &str, expr: &HirExpr) -> Value {

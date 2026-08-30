@@ -247,7 +247,10 @@ pub(super) fn validate_codegen_type(ty: &Type) -> Result<(), crate::CodegenError
             validate_codegen_type(left)?;
             validate_codegen_type(right)
         }
-        Type::Tuple(items) | Type::Union(items) | Type::Intersection(items) => {
+        Type::Tuple(items)
+        | Type::Union(items)
+        | Type::Intersection(items)
+        | Type::Template(items) => {
             for item in items {
                 validate_codegen_type(item)?;
             }

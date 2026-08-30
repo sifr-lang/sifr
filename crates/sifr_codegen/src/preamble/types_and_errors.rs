@@ -29,6 +29,7 @@ pub fn sifr_type_to_rust_type(ty: &Type) -> RustType {
                 RustType::Tuple(items.iter().map(sifr_type_to_rust_type).collect())
             }
         }
+        Type::Template(_) => RustType::Named("__SifrTemplate".to_string()),
         Type::Range => RustType::Named("SifrRange".to_string()),
         Type::Iterable(inner) => RustType::Vec(Box::new(sifr_type_to_rust_type(inner))),
         Type::Iterator(inner) => RustType::Boxed(Box::new(RustType::DynTrait {

@@ -453,6 +453,9 @@ fn expr_effects(expr: &HirExpr, effects: &mut Vec<FlowEffect>) {
                 }
             }
         }
+        HirExpr::TemplateString(template) => {
+            template.for_each_value(&mut |expr| expr_effects(expr, effects));
+        }
         HirExpr::Slice {
             object,
             start,

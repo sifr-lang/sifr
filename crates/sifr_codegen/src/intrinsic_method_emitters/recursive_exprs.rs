@@ -677,6 +677,9 @@ impl RustEmitter {
                     args: lowered_args,
                 })
             }
+            HirExpr::TemplateString(template) => {
+                self.try_lower_template_string_expr_for_ir(template)
+            }
             HirExpr::BoolOp { op, values, .. } if !values.is_empty() => {
                 let lowered_op = match op.as_str() {
                     "and" => "&&",

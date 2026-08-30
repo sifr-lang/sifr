@@ -5,7 +5,7 @@
       "id": "sql-dependency-lock",
       "role": "qualification-only",
       "repository_owner": "sifr_sql_dependency_lock",
-      "owner_milestone": "sql_0_contract_lock",
+      "platform_part": "platform_contract",
       "target": "host",
       "included_in_application": false,
       "depends_on": []
@@ -14,7 +14,7 @@
       "id": "compiler-component-host",
       "role": "compiler-host",
       "repository_owner": "sifr_compiler_component",
-      "owner_milestone": "sql_3_compiler_components",
+      "platform_part": "compiler_components",
       "target": "host",
       "included_in_application": false,
       "depends_on": []
@@ -23,7 +23,7 @@
       "id": "sql-contract",
       "role": "compiler-contract",
       "repository_owner": "sifr_sql_contract",
-      "owner_milestone": "sql_5_common_contracts",
+      "platform_part": "common_sql",
       "target": "shared",
       "included_in_application": false,
       "depends_on": ["compiler-component-host"]
@@ -32,7 +32,7 @@
       "id": "sql-public-api",
       "role": "public-api",
       "repository_owner": "sifr-sql-core",
-      "owner_milestone": "sql_5_common_contracts",
+      "platform_part": "common_sql",
       "target": "application",
       "included_in_application": true,
       "depends_on": []
@@ -41,7 +41,7 @@
       "id": "sql-runtime",
       "role": "runtime",
       "repository_owner": "sifr_sql_runtime",
-      "owner_milestone": "sql_5_common_contracts",
+      "platform_part": "common_sql",
       "target": "application",
       "included_in_application": true,
       "depends_on": []
@@ -50,7 +50,7 @@
       "id": "postgresql-component",
       "role": "provider-component",
       "repository_owner": "sifr-sql-postgresql/component",
-      "owner_milestone": "sql_7_postgresql_compiler",
+      "platform_part": "postgresql_compiler",
       "target": "wasm32-wasip2",
       "included_in_application": false,
       "depends_on": ["sql-contract"]
@@ -59,7 +59,7 @@
       "id": "postgresql-runtime",
       "role": "provider-runtime",
       "repository_owner": "sifr-sql-postgresql/runtime",
-      "owner_milestone": "sql_9_postgresql_runtime",
+      "platform_part": "postgresql_runtime",
       "target": "application",
       "included_in_application": true,
       "depends_on": ["sql-runtime", "sql-public-api"]
@@ -68,7 +68,7 @@
       "id": "postgresql-tools",
       "role": "provider-tool",
       "repository_owner": "sifr-sql-postgresql/tools",
-      "owner_milestone": "sql_11_host_tools",
+      "platform_part": "host_tools",
       "target": "host",
       "included_in_application": false,
       "depends_on": ["postgresql-component", "postgresql-runtime"]
@@ -77,7 +77,7 @@
       "id": "mysql-component",
       "role": "provider-component",
       "repository_owner": "sifr-sql-mysql/component",
-      "owner_milestone": "sql_16_mysql_provider",
+      "platform_part": "mysql_provider",
       "target": "wasm32-wasip2",
       "included_in_application": false,
       "depends_on": ["sql-contract"]
@@ -86,7 +86,7 @@
       "id": "mysql-runtime",
       "role": "provider-runtime",
       "repository_owner": "sifr-sql-mysql/runtime",
-      "owner_milestone": "sql_16_mysql_provider",
+      "platform_part": "mysql_provider",
       "target": "application",
       "included_in_application": true,
       "depends_on": ["sql-runtime", "sql-public-api"]
@@ -95,7 +95,7 @@
       "id": "mysql-tools",
       "role": "provider-tool",
       "repository_owner": "sifr-sql-mysql/tools",
-      "owner_milestone": "sql_16_mysql_provider",
+      "platform_part": "mysql_provider",
       "target": "host",
       "included_in_application": false,
       "depends_on": ["mysql-component", "mysql-runtime"]
@@ -104,7 +104,7 @@
       "id": "sqlite-component",
       "role": "provider-component",
       "repository_owner": "sifr-sql-sqlite/component",
-      "owner_milestone": "sql_17_sqlite_provider",
+      "platform_part": "sqlite_provider",
       "target": "wasm32-wasip2",
       "included_in_application": false,
       "depends_on": ["sql-contract"]
@@ -113,7 +113,7 @@
       "id": "sqlite-runtime",
       "role": "provider-runtime",
       "repository_owner": "sifr-sql-sqlite/runtime",
-      "owner_milestone": "sql_17_sqlite_provider",
+      "platform_part": "sqlite_provider",
       "target": "application",
       "included_in_application": true,
       "depends_on": ["sql-runtime", "sql-public-api"]
@@ -122,7 +122,7 @@
       "id": "sqlite-tools",
       "role": "provider-tool",
       "repository_owner": "sifr-sql-sqlite/tools",
-      "owner_milestone": "sql_17_sqlite_provider",
+      "platform_part": "sqlite_provider",
       "target": "host",
       "included_in_application": false,
       "depends_on": ["sqlite-component", "sqlite-runtime"]
