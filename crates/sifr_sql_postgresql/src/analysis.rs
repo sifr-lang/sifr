@@ -1,13 +1,14 @@
 pub use crate::analysis_types::PostgresAnalysisError;
 pub(crate) use crate::analysis_types::{
-    AnalysisContext, AnalyzedStatement, ResultFact, ScopeBinding, ScopeFrame, TypeFact,
+    AnalysisContext, AnalyzedStatement, ResultFact, ScopeBinding, ScopeFrame, StarExpansion,
+    TypeFact,
 };
 use crate::ast::{Expression, ExpressionKind, FromItem, JoinKind, SelectStatement, SetOperator};
 use crate::cardinality_analysis::{
     apply_limit_and_offset, group_expression_functionally_dependent, group_expression_valid,
     make_frame_nullable, set_cardinality, unique_predicate_cardinality,
 };
-use crate::catalog::{CatalogColumn, PostgresCatalog};
+use crate::catalog::CatalogColumn;
 use crate::diagnostic::PostgresDiagnosticCode;
 use crate::locking_analysis::validate_locking;
 use crate::nullability_analysis::refine_for_null_test;
@@ -20,34 +21,9 @@ use crate::window_analysis::{
     reject_window_expression, validate_named_windows, validate_window_references,
 };
 use sifr_sql_contract::{Cardinality, DatabaseType, Nullability, ObjectId, QueryEffect};
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
 
-impl<'a> AnalysisContext<'a> {
-    pub(crate) fn new(catalog: &'a PostgresCatalog) -> Self {
-        Self {
-            catalog,
-            parameters: BTreeMap::new(),
-            referenced: BTreeSet::new(),
-        }
-    }
-
-    pub(crate) fn finish_parameters(
-        self,
-    ) -> Result<Vec<(u32, DatabaseType)>, PostgresAnalysisError> {
-        let mut output = Vec::with_capacity(self.parameters.len());
-        for (index, (number, ty)) in self.parameters.into_iter().enumerate() {
-            let expected = u32::try_from(index).unwrap_or(u32::MAX).saturating_add(1);
-            if number != expected {
-                return Err(PostgresAnalysisError::at_start(
-                    PostgresDiagnosticCode::InvalidParameter,
-                    "PostgreSQL parameters must form the contiguous sequence $1, $2, ...",
-                ));
-            }
-            output.push((number - 1, ty));
-        }
-        Ok(output)
-    }
-
+impl AnalysisContext<'_> {
     pub(crate) fn analyze_select(
         &mut self,
         select: &SelectStatement,
@@ -105,12 +81,16 @@ impl<'a> AnalysisContext<'a> {
             if let Some(offset) = &select.offset {
                 self.infer(offset, &[], Some(&integer64_type()))?;
             }
-            let mut flags = BTreeSet::from([match set.operator {
-                SetOperator::Union => "set-union",
-                SetOperator::Intersect => "set-intersect",
-                SetOperator::Except => "set-except",
-            }
-            .to_string()]);
+            let mut flags = left.flags;
+            flags.extend(right.flags);
+            flags.insert(
+                match set.operator {
+                    SetOperator::Union => "set-union",
+                    SetOperator::Intersect => "set-intersect",
+                    SetOperator::Except => "set-except",
+                }
+                .to_string(),
+            );
             if !select.order_by.is_empty() {
                 flags.insert("deterministic-order".to_string());
             }

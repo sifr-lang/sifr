@@ -1,13 +1,14 @@
 #![allow(clippy::expect_used, clippy::unwrap_used)]
 
-use semver::Version;
+mod support;
+
 use sifr_compiler_component::{
     AnalysisContext, COMPONENT_PROTOCOL_MAJOR, ComponentHost, ComponentHostLimits, ContextArtifact,
     EmbeddedAnalysisRequest, PlanKind, SourceSpan, TemplatePart,
 };
 use sifr_sql_contract::{
-    Cardinality, DatabaseType, ProviderIdentity, QueryEffect, SchemaDocument, SchemaDocumentKind,
-    SchemaObject, SchemaObjectKind, SemanticValue, normalize_schema,
+    Cardinality, DatabaseType, QueryEffect, SchemaDocument, SchemaDocumentKind, SchemaObject,
+    SchemaObjectKind, SemanticValue, normalize_schema,
 };
 use sifr_sql_postgresql::{
     LibpgQueryParser, POSTGRESQL_QUERY_OPERATION, POSTGRESQL_SCHEMA_ARTIFACT_KIND,
@@ -16,6 +17,7 @@ use sifr_sql_postgresql::{
     component_registration, embedded_sources, into_embedded_response, rewrite_parameter_slots,
 };
 use std::collections::{BTreeMap, BTreeSet};
+use support::{provider, schema_for_semantics, schema_for_writes};
 
 #[test]
 fn exact_libpg_query_sources_and_registration_cover_every_supported_major() {
@@ -641,6 +643,38 @@ fn cardinality_star_and_default_policies_close_regressions() {
         }
     }
     for source in [
+        "SELECT * FROM users UNION ALL SELECT * FROM users",
+        "WITH selected AS (SELECT * FROM users) SELECT id FROM selected",
+        "SELECT nested.id FROM (SELECT * FROM users) AS nested",
+    ] {
+        let response = component.execute(PostgresComponentRequest::AnalyzeQuery {
+            schema: schema.clone(),
+            source: source.to_string(),
+            sifr_document: "src/nested-star.sifr".to_string(),
+            sifr_start: 0,
+            sifr_end: u32::try_from(source.len()).unwrap(),
+        });
+        let PostgresComponentResponse::Query(analysis) = response else {
+            panic!("nested private star must analyze: {response:?}");
+        };
+        assert!(analysis.semantic_flags.contains("expanded-select-star"));
+        assert!(!analysis.normalized_statement.contains('*'));
+    }
+
+    let source = "VALUES ('1'::bigint), ('1'::bigint) UNION (SELECT id FROM users LIMIT 0)";
+    let response = component.execute(PostgresComponentRequest::AnalyzeQuery {
+        schema: schema.clone(),
+        source: source.to_string(),
+        sifr_document: "src/distinct-cardinality.sifr".to_string(),
+        sifr_start: 0,
+        sifr_end: u32::try_from(source.len()).unwrap(),
+    });
+    let PostgresComponentResponse::Query(analysis) = response else {
+        panic!("distinct set cardinality must analyze: {response:?}");
+    };
+    assert_eq!(analysis.cardinality, Cardinality::new(1, Some(2)).unwrap());
+
+    for source in [
         "INSERT INTO users(id, name) VALUES (1, DEFAULT)",
         "UPDATE users SET name = DEFAULT WHERE id = 1",
     ] {
@@ -823,66 +857,4 @@ fn arrays_ranges_composites_and_json_are_schema_checked() {
             ..
         }
     ));
-}
-
-fn schema_for_writes(
-    component: &PostgresCompilerComponent<LibpgQueryParser>,
-    server_major: u16,
-) -> sifr_sql_contract::SchemaIr {
-    let response = component.execute(PostgresComponentRequest::NormalizeSchema {
-        provider: provider(),
-        server_major,
-        documents: vec![(
-            "db/write.sql".to_string(),
-            "CREATE TABLE public.users (\
-               id bigint PRIMARY KEY,\
-               name text NOT NULL,\
-               nickname text,\
-               generated text GENERATED ALWAYS AS (name || id::text) STORED\
-             );"
-            .to_string(),
-        )],
-    });
-    let PostgresComponentResponse::Schema(output) = response else {
-        panic!("write schema must normalize: {response:?}");
-    };
-    normalize_schema(provider(), output.dialect, output.documents).unwrap()
-}
-
-fn schema_for_semantics(
-    component: &PostgresCompilerComponent<LibpgQueryParser>,
-    server_major: u16,
-) -> sifr_sql_contract::SchemaIr {
-    let response = component.execute(PostgresComponentRequest::NormalizeSchema {
-        provider: provider(),
-        server_major,
-        documents: vec![(
-            "db/semantic.sql".to_string(),
-            "CREATE TABLE public.teams (id integer PRIMARY KEY, name text NOT NULL);\
-             CREATE TABLE public.users (\
-               id bigint PRIMARY KEY,\
-               name text NOT NULL,\
-               team_id integer NOT NULL REFERENCES public.teams(id),\
-               nickname text\
-             );"
-            .to_string(),
-        )],
-    });
-    let PostgresComponentResponse::Schema(output) = response else {
-        panic!("semantic schema must normalize: {response:?}");
-    };
-    normalize_schema(provider(), output.dialect, output.documents).unwrap()
-}
-
-fn provider() -> ProviderIdentity {
-    ProviderIdentity {
-        package_id: "sifr-sql-postgresql@0.0.0#workspace".to_string(),
-        package_version: Version::new(0, 0, 0),
-        package_source: "workspace:crates/sifr_sql_postgresql".to_string(),
-        package_graph_digest: "b".repeat(64),
-        compiler_components: BTreeMap::from([(
-            "sifr.sql.postgresql.sql".to_string(),
-            "c".repeat(64),
-        )]),
-    }
 }

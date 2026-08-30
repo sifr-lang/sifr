@@ -1,4 +1,4 @@
-use crate::analysis::{AnalysisContext, PostgresAnalysisError, type_error};
+use crate::analysis::{AnalysisContext, PostgresAnalysisError, StarExpansion, type_error};
 use crate::ast::StatementKind;
 use crate::catalog::PostgresCatalog;
 use crate::diagnostic::PostgresDiagnostic;
@@ -46,7 +46,7 @@ impl<P: PostgresParser> PostgresAnalyzer<P> {
         }
         let statement = &statements[0];
         let mut context = AnalysisContext::new(&self.catalog);
-        let analyzed = match &statement.kind {
+        let mut analyzed = match &statement.kind {
             StatementKind::Select(select) => context.analyze_select(select, Vec::new())?,
             StatementKind::Insert(insert) => context.analyze_insert(insert)?,
             StatementKind::Update(update) => context.analyze_update(update)?,
@@ -58,10 +58,10 @@ impl<P: PostgresParser> PostgresAnalyzer<P> {
                 ));
             }
         };
-        let explicit_source = match &statement.kind {
-            StatementKind::Select(select) => expand_private_star(source, select, &analyzed.fields)?,
-            _ => source.to_string(),
-        };
+        let explicit_source = expand_private_stars(source, context.star_expansions.values())?;
+        if !context.star_expansions.is_empty() {
+            analyzed.flags.insert("expanded-select-star".to_string());
+        }
         let parameter_types = context.finish_parameters()?;
         let used_types = parameter_types
             .iter()
@@ -138,72 +138,44 @@ impl<P: PostgresParser> PostgresAnalyzer<P> {
     }
 }
 
-fn expand_private_star(
+fn expand_private_stars<'a>(
     source: &str,
-    select: &crate::ast::SelectStatement,
-    fields: &[crate::analysis::ResultFact],
+    expansions: impl IntoIterator<Item = &'a StarExpansion>,
 ) -> Result<String, PostgresAnalysisError> {
-    let stars = select
-        .targets
-        .iter()
-        .enumerate()
-        .filter_map(|(index, target)| {
-            matches!(
-                target.expression.kind,
-                crate::ast::ExpressionKind::Star { .. }
-            )
-            .then_some((index, target))
-        })
-        .collect::<Vec<_>>();
-    if stars.is_empty() {
-        return Ok(source.to_string());
-    }
-    if stars.len() != 1 {
-        return Err(PostgresAnalysisError::at_start(
-            crate::PostgresDiagnosticCode::InvalidResult,
-            "a private query with more than one SELECT * item needs explicit columns",
-        ));
-    }
-    let (target_index, target) = stars[0];
-    let star_width = fields
-        .len()
-        .checked_sub(select.targets.len() - 1)
-        .ok_or_else(|| {
-            PostgresAnalysisError::at_start(
+    let mut expansions = expansions.into_iter().collect::<Vec<_>>();
+    expansions.sort_by_key(|expansion| std::cmp::Reverse((expansion.start, expansion.end)));
+    let mut output = source.to_string();
+    let mut prior_start = source.len();
+    for expansion in expansions {
+        let start = usize::try_from(expansion.start).unwrap_or(usize::MAX);
+        let end = usize::try_from(expansion.end).unwrap_or(usize::MAX);
+        if start >= end
+            || end > prior_start
+            || end > output.len()
+            || !output.is_char_boundary(start)
+            || !output.is_char_boundary(end)
+            || expansion.columns.is_empty()
+        {
+            return Err(PostgresAnalysisError::at_start(
                 crate::PostgresDiagnosticCode::InvalidResult,
-                "SELECT * expansion has an invalid result width",
-            )
-        })?;
-    let qualifier = match &target.expression.kind {
-        crate::ast::ExpressionKind::Star { qualifier } => qualifier
-            .last()
+                "SELECT * source span cannot be expanded safely",
+            ));
+        }
+        let qualifier = expansion
+            .qualifier
+            .as_ref()
             .map(|value| format!("{}.", quote_identifier(value)))
-            .unwrap_or_default(),
-        _ => String::new(),
-    };
-    let replacement = fields[target_index..target_index + star_width]
-        .iter()
-        .map(|field| format!("{qualifier}{}", quote_identifier(&field.name)))
-        .collect::<Vec<_>>()
-        .join(", ");
-    let start = usize::try_from(target.expression.span.start).unwrap_or(usize::MAX);
-    let end = usize::try_from(target.expression.span.end).unwrap_or(usize::MAX);
-    if start >= end
-        || end > source.len()
-        || !source.is_char_boundary(start)
-        || !source.is_char_boundary(end)
-    {
-        return Err(PostgresAnalysisError::at_start(
-            crate::PostgresDiagnosticCode::InvalidResult,
-            "SELECT * source span cannot be expanded safely",
-        ));
+            .unwrap_or_default();
+        let replacement = expansion
+            .columns
+            .iter()
+            .map(|column| format!("{qualifier}{}", quote_identifier(column)))
+            .collect::<Vec<_>>()
+            .join(", ");
+        output.replace_range(start..end, &replacement);
+        prior_start = start;
     }
-    Ok(format!(
-        "{}{}{}",
-        &source[..start],
-        replacement,
-        &source[end..]
-    ))
+    Ok(output)
 }
 
 fn quote_identifier(value: &str) -> String {

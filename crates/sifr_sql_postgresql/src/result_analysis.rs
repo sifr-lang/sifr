@@ -1,4 +1,6 @@
-use crate::analysis::{AnalysisContext, PostgresAnalysisError, ResultFact, ScopeFrame};
+use crate::analysis::{
+    AnalysisContext, PostgresAnalysisError, ResultFact, ScopeFrame, StarExpansion,
+};
 use crate::ast::{Expression, ExpressionKind, SelectItem};
 use crate::diagnostic::PostgresDiagnosticCode;
 use sifr_sql_contract::DatabaseType;
@@ -31,7 +33,20 @@ impl AnalysisContext<'_> {
         let mut output = Vec::new();
         for target in targets {
             if let ExpressionKind::Star { qualifier } = &target.expression.kind {
+                let first = output.len();
                 expand_star(target, qualifier, frames, &mut output)?;
+                let expansion = StarExpansion {
+                    start: target.expression.span.start,
+                    end: target.expression.span.end,
+                    qualifier: qualifier.last().cloned(),
+                    columns: output[first..]
+                        .iter()
+                        .map(|field| field.name.clone())
+                        .collect(),
+                };
+                self.star_expansions
+                    .entry((expansion.start, expansion.end))
+                    .or_insert(expansion);
                 continue;
             }
             let index = output.len();

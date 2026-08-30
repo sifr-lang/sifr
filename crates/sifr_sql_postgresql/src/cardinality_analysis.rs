@@ -21,9 +21,9 @@ pub(crate) fn set_cardinality(
         return add_cardinalities(left, right);
     }
     match operator {
-        SetOperator::Union if left == Cardinality::ZERO => right,
-        SetOperator::Union if right == Cardinality::ZERO => left,
-        SetOperator::Union => Cardinality::MANY,
+        SetOperator::Union if left == Cardinality::ZERO => distinct_cardinality(right),
+        SetOperator::Union if right == Cardinality::ZERO => distinct_cardinality(left),
+        SetOperator::Union => distinct_cardinality(add_cardinalities(left, right)),
         SetOperator::Intersect if left == Cardinality::ZERO || right == Cardinality::ZERO => {
             Cardinality::ZERO
         }
@@ -35,6 +35,15 @@ pub(crate) fn set_cardinality(
                 Cardinality::new(0, maximum).unwrap_or(Cardinality::MANY)
             }
         },
+    }
+}
+
+fn distinct_cardinality(cardinality: Cardinality) -> Cardinality {
+    match cardinality {
+        Cardinality::Empty => Cardinality::BOTTOM,
+        Cardinality::Interval { minimum, maximum } => {
+            Cardinality::new(minimum.min(1), maximum).unwrap_or(Cardinality::MANY)
+        }
     }
 }
 

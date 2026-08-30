@@ -125,8 +125,45 @@ pub(crate) struct AnalyzedStatement {
     pub(crate) flags: BTreeSet<String>,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct StarExpansion {
+    pub(crate) start: u32,
+    pub(crate) end: u32,
+    pub(crate) qualifier: Option<String>,
+    pub(crate) columns: Vec<String>,
+}
+
 pub(crate) struct AnalysisContext<'a> {
     pub(crate) catalog: &'a PostgresCatalog,
     pub(crate) parameters: BTreeMap<u32, DatabaseType>,
     pub(crate) referenced: BTreeSet<ObjectId>,
+    pub(crate) star_expansions: BTreeMap<(u32, u32), StarExpansion>,
+}
+
+impl<'a> AnalysisContext<'a> {
+    pub(crate) fn new(catalog: &'a PostgresCatalog) -> Self {
+        Self {
+            catalog,
+            parameters: BTreeMap::new(),
+            referenced: BTreeSet::new(),
+            star_expansions: BTreeMap::new(),
+        }
+    }
+
+    pub(crate) fn finish_parameters(
+        self,
+    ) -> Result<Vec<(u32, DatabaseType)>, PostgresAnalysisError> {
+        let mut output = Vec::with_capacity(self.parameters.len());
+        for (index, (number, ty)) in self.parameters.into_iter().enumerate() {
+            let expected = u32::try_from(index).unwrap_or(u32::MAX).saturating_add(1);
+            if number != expected {
+                return Err(PostgresAnalysisError::at_start(
+                    PostgresDiagnosticCode::InvalidParameter,
+                    "PostgreSQL parameters must form the contiguous sequence $1, $2, ...",
+                ));
+            }
+            output.push((number - 1, ty));
+        }
+        Ok(output)
+    }
 }
