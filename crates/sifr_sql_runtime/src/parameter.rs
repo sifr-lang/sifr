@@ -87,6 +87,7 @@ pub struct BoundParameters {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ParameterError {
     DuplicateSlot,
+    NonContiguousSlot,
     InvalidExactInteger,
     InvalidTypeIdentity,
 }
@@ -96,6 +97,13 @@ impl BoundParameters {
         values.sort_by_key(|value| value.slot);
         if values.windows(2).any(|pair| pair[0].slot == pair[1].slot) {
             return Err(ParameterError::DuplicateSlot);
+        }
+        if values
+            .iter()
+            .enumerate()
+            .any(|(index, value)| usize::try_from(value.slot) != Ok(index))
+        {
+            return Err(ParameterError::NonContiguousSlot);
         }
         for parameter in &values {
             validate_value(&parameter.value)?;
@@ -151,6 +159,7 @@ impl fmt::Display for ParameterError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter.write_str(match self {
             Self::DuplicateSlot => "bound SQL parameters contain a duplicate slot",
+            Self::NonContiguousSlot => "bound SQL parameter slots are not contiguous from zero",
             Self::InvalidExactInteger => "bound exact integer is not canonical decimal text",
             Self::InvalidTypeIdentity => "encoded SQL parameter type identity is invalid",
         })

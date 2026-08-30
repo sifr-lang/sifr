@@ -9,6 +9,7 @@ members = [
     "crates/sifr_sql_contract",
     "crates/sifr_sql_runtime",
     "crates/sifr_sql_postgresql",
+    "crates/sifr_sql_postgresql_runtime",
     "crates/sifr_stdlib",
     "crates/sifr_type_system",
     "crates/sifr_ipc",
@@ -66,6 +67,7 @@ sifr_compiler_component = { path = "crates/sifr_compiler_component" }
 sifr_sql_contract = { path = "crates/sifr_sql_contract" }
 sifr_sql_runtime = { path = "crates/sifr_sql_runtime" }
 sifr_sql_postgresql = { path = "crates/sifr_sql_postgresql" }
+sifr_sql_postgresql_runtime = { path = "crates/sifr_sql_postgresql_runtime" }
 sifr_stdlib = { path = "crates/sifr_stdlib" }
 sifr_type_system = { path = "crates/sifr_type_system" }
 sifr_ipc = { path = "crates/sifr_ipc" }
@@ -97,6 +99,7 @@ cc = { version = "=1.4.4", default-features = false }
 chrono = { version = "0.4.45" }
 encoding_rs = { version = "0.8.35" }
 flate2 = { version = "1.1.9" }
+futures-core = { version = "0.3.34", default-features = false, features = ["std"] }
 globset = { version = "0.4.20" }
 h2 = { version = "0.4.19" }
 http-body = { version = "1.1.0" }

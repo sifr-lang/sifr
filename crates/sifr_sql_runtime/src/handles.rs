@@ -11,8 +11,9 @@ pub struct Verified;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct VerificationEvidence {
-    profile_fingerprint: String,
-    schema_fingerprint: String,
+    profile: String,
+    schema: String,
+    observed_schema: String,
 }
 
 impl VerificationEvidence {
@@ -20,12 +21,27 @@ impl VerificationEvidence {
         profile_fingerprint: impl Into<String>,
         schema_fingerprint: impl Into<String>,
     ) -> Result<Self, SqlError> {
+        let schema_fingerprint = schema_fingerprint.into();
+        Self::with_observation(
+            profile_fingerprint,
+            schema_fingerprint.clone(),
+            schema_fingerprint,
+        )
+    }
+
+    pub fn with_observation(
+        profile_fingerprint: impl Into<String>,
+        schema_fingerprint: impl Into<String>,
+        observed_schema_fingerprint: impl Into<String>,
+    ) -> Result<Self, SqlError> {
         let evidence = Self {
-            profile_fingerprint: profile_fingerprint.into(),
-            schema_fingerprint: schema_fingerprint.into(),
+            profile: profile_fingerprint.into(),
+            schema: schema_fingerprint.into(),
+            observed_schema: observed_schema_fingerprint.into(),
         };
-        if !valid_fingerprint(&evidence.profile_fingerprint)
-            || !valid_fingerprint(&evidence.schema_fingerprint)
+        if !valid_fingerprint(&evidence.profile)
+            || !valid_fingerprint(&evidence.schema)
+            || !valid_fingerprint(&evidence.observed_schema)
         {
             return Err(SqlError::new(SqlErrorKind::SchemaContract));
         }
@@ -34,12 +50,17 @@ impl VerificationEvidence {
 
     #[must_use]
     pub fn profile_fingerprint(&self) -> &str {
-        &self.profile_fingerprint
+        &self.profile
     }
 
     #[must_use]
     pub fn schema_fingerprint(&self) -> &str {
-        &self.schema_fingerprint
+        &self.schema
+    }
+
+    #[must_use]
+    pub fn observed_schema_fingerprint(&self) -> &str {
+        &self.observed_schema
     }
 }
 
@@ -98,13 +119,13 @@ impl<P> Pool<P, Unverified> {
     }
 
     pub fn verify(self, evidence: VerificationEvidence) -> Result<Pool<P, Verified>, SqlError> {
-        if self.identity.profile_fingerprint != evidence.profile_fingerprint {
+        if self.identity.profile_fingerprint != evidence.profile {
             return Err(SqlError::new(SqlErrorKind::SchemaContract));
         }
         Ok(Pool {
             identity: Arc::new(PoolIdentity {
-                profile_fingerprint: evidence.profile_fingerprint,
-                schema_fingerprint: Some(evidence.schema_fingerprint),
+                profile_fingerprint: evidence.profile,
+                schema_fingerprint: Some(evidence.schema),
             }),
             marker: PhantomData,
         })

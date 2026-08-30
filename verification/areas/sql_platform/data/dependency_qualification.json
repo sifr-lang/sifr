@@ -142,7 +142,7 @@
       "artifacts": ["postgresql-runtime"],
       "targets": ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu"],
       "platform_part": "postgresql_runtime",
-      "audit_owner": "sifr-sql-postgresql/runtime"
+      "audit_owner": "sifr_sql_postgresql_runtime"
     },
     {
       "crate": "postgres-types",
@@ -154,7 +154,7 @@
       "artifacts": ["postgresql-runtime"],
       "targets": ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu"],
       "platform_part": "postgresql_runtime",
-      "audit_owner": "sifr-sql-postgresql/runtime"
+      "audit_owner": "sifr_sql_postgresql_runtime"
     },
     {
       "crate": "tokio-postgres-rustls",
@@ -166,7 +166,7 @@
       "artifacts": ["postgresql-runtime"],
       "targets": ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu"],
       "platform_part": "postgresql_runtime",
-      "audit_owner": "sifr-sql-postgresql/runtime"
+      "audit_owner": "sifr_sql_postgresql_runtime"
     },
     {
       "crate": "lalrpop",

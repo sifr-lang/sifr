@@ -764,6 +764,7 @@
         "contracts",
         "dependency-baseline",
         "postgresql-compiler",
+        "postgresql-runtime",
         "query-fragments",
         "schema-profiles",
         "mutation"

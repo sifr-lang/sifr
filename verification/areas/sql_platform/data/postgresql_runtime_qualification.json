@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "runtime_crate": "sifr_sql_postgresql_runtime",
+  "common_crate": "sifr_sql_runtime",
+  "supported_server_majors": [13, 14, 15, 16, 17, 18],
+  "driver_dependencies": {
+    "postgres-types": ["derive"],
+    "tokio-postgres": ["runtime"],
+    "tokio-postgres-rustls": ["aws-lc-rs"]
+  },
+  "execution_methods": [
+    "execute",
+    "fetch-one",
+    "fetch-optional",
+    "bounded-fetch-all",
+    "stream",
+    "scalar",
+    "warm"
+  ],
+  "runtime_guarantees": [
+    "bounded-cleanup",
+    "bounded-connections",
+    "bounded-decoded-rows",
+    "bounded-parameters",
+    "bounded-statement-cache",
+    "compatible-absence-facts",
+    "consuming-transaction-terminals",
+    "fresh-transaction-retry",
+    "panic-safe-codecs",
+    "redacted-errors-and-debug",
+    "session-reapply-and-reset",
+    "task-local-connections-transactions-streams",
+    "typed-schema-verification",
+    "verified-execution-only"
+  ],
+  "live_test": "crates/sifr_sql_postgresql_runtime/tests/live_runtime.rs"
+}

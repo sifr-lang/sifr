@@ -95,6 +95,19 @@ COMMANDS = {
         "cargo", "test", "--locked", "-p", "sifr_sql_postgresql", "--test",
         "postgresql_compiler", "advanced_postgresql_semantics_are_owned_and_exact",
     ],
+    "sql-postgresql-runtime-qualification": [
+        sys.executable,
+        str(AREA_ROOT / "tools" / "check_postgresql_runtime.py"),
+    ],
+    "sql-postgresql-runtime-qualification-mutations": [
+        sys.executable,
+        str(AREA_ROOT / "tools" / "check_postgresql_runtime.py"),
+        "--self-test",
+    ],
+    "sql-postgresql-runtime-tests": [
+        "cargo", "test", "--locked", "-p", "sifr_sql_postgresql_runtime",
+        "--lib", "--test", "runtime_types",
+    ],
     "sql-query-signature-and-fragment-semantics": [
         "cargo", "test", "--locked", "-p", "sifr_sql_contract", "--test",
         "semantic_completion",
@@ -102,6 +115,10 @@ COMMANDS = {
     "sql-postgresql-live-differential": [
         sys.executable,
         str(AREA_ROOT / "tools" / "run_postgresql_server_matrix.py"),
+    ],
+    "sql-postgresql-live-runtime": [
+        sys.executable,
+        str(AREA_ROOT / "tools" / "run_postgresql_runtime_matrix.py"),
     ],
 }
 

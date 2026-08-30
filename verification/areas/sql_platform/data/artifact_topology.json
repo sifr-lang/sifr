@@ -58,7 +58,7 @@
     {
       "id": "postgresql-runtime",
       "role": "provider-runtime",
-      "repository_owner": "sifr-sql-postgresql/runtime",
+      "repository_owner": "sifr_sql_postgresql_runtime",
       "platform_part": "postgresql_runtime",
       "target": "application",
       "included_in_application": true,
