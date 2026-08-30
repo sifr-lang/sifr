@@ -86,6 +86,48 @@
       "replacement": null
     },
     {
+      "id": "hir_lowering.template_single_line_conversion_and_format_spec",
+      "compiler_layer": "hir_lowering",
+      "owner": "compiler/hir",
+      "rules_id": "lowering_layer.hir_lowering.shape.template_single_line_conversion_and_format_spec",
+      "source_fixture": "verification/areas/core_language/data/hir_lowering_snapshot_matrix.json#hir_snapshots/template_single_line_conversion_and_format_spec",
+      "snapshot_id": "hir_lowering_snapshot_matrix.hir_snapshots.template_single_line_conversion_and_format_spec",
+      "snapshot_kind": "hir_module_shape",
+      "normalizers": [
+        "hir-kind-only",
+        "type-display-name",
+        "source-order",
+        "no-byte-spans"
+      ],
+      "profile_assignment": [
+        "create-pr",
+        "merge"
+      ],
+      "status": "active",
+      "replacement": null
+    },
+    {
+      "id": "hir_lowering.template_multiline_unicode_and_escape",
+      "compiler_layer": "hir_lowering",
+      "owner": "compiler/hir",
+      "rules_id": "lowering_layer.hir_lowering.shape.template_multiline_unicode_and_escape",
+      "source_fixture": "verification/areas/core_language/data/hir_lowering_snapshot_matrix.json#hir_snapshots/template_multiline_unicode_and_escape",
+      "snapshot_id": "hir_lowering_snapshot_matrix.hir_snapshots.template_multiline_unicode_and_escape",
+      "snapshot_kind": "hir_module_shape",
+      "normalizers": [
+        "hir-kind-only",
+        "type-display-name",
+        "source-order",
+        "no-byte-spans"
+      ],
+      "profile_assignment": [
+        "create-pr",
+        "merge"
+      ],
+      "status": "active",
+      "replacement": null
+    },
+    {
       "id": "name_resolution.parameter_shadows_module_constant",
       "compiler_layer": "name_resolution",
       "owner": "compiler/hir",
