@@ -72,6 +72,10 @@ fn non_ipc_serializable_reason_inner(ty: &Type, visiting: &mut HashSet<String>) 
         Type::Tuple(elems) => elems
             .iter()
             .find_map(|elem| non_ipc_serializable_reason_inner(elem.resolve_alias(), visiting)),
+        Type::StructuralRecord(record) => record.fields().iter().find_map(|field| {
+            non_ipc_serializable_reason_inner(field.ty().resolve_alias(), visiting)
+                .map(|reason| format!("field `{}` is not IPC-serializable: {reason}", field.name()))
+        }),
         Type::Union(_) => {
             if let Some(non_none) = ty.optional_member_type() {
                 non_ipc_serializable_reason_inner(non_none.resolve_alias(), visiting)

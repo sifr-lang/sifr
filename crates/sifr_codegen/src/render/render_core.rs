@@ -54,8 +54,14 @@ impl Renderer {
                 ));
                 self.indent();
                 for (field_name, field_ty) in fields {
+                    let field_visibility = if name.starts_with("__SifrRecord_") {
+                        "pub(crate) "
+                    } else {
+                        ""
+                    };
                     self.emit_line(&format!(
-                        "{}: {},",
+                        "{}{}: {},",
+                        field_visibility,
                         Self::render_identifier(field_name),
                         Self::render_type_string(field_ty)
                     ));

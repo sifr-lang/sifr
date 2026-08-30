@@ -1,4 +1,6 @@
 use crate::hir_nodes::{HirExpr, HirStmt};
+use ruff_text_size::TextRange;
+use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{Expr, Stmt, StmtIf};
 use sifr_type_system::{Type, make_union};
 
@@ -105,6 +107,7 @@ pub(in crate::lower) fn seed_exhaustive_if_bindings(
     then_body: &[HirStmt],
     elif_clauses: &[(HirExpr, Vec<HirStmt>)],
     else_body: Option<&Vec<HirStmt>>,
+    range: TextRange,
 ) {
     let Some(else_body) = else_body else {
         return;
@@ -128,7 +131,11 @@ pub(in crate::lower) fn seed_exhaustive_if_bindings(
 
     let first_keys: Vec<String> = branch_bindings[0].keys().cloned().collect();
     for name in first_keys {
-        if ctx.scope.lookup(&name).is_some() {
+        if ctx
+            .scope
+            .lookup(&name)
+            .is_some_and(|existing| !matches!(existing.ty.resolve_alias(), Type::Unknown))
+        {
             continue;
         }
         let mut ty_candidates = Vec::new();
@@ -144,6 +151,16 @@ pub(in crate::lower) fn seed_exhaustive_if_bindings(
             continue;
         }
         if let Some(merged_ty) = merge_binding_types(ty_candidates.into_iter()) {
+            if merged_ty.has_width_related_structural_records() {
+                ctx.error_with_code_at(
+                    DiagnosticCode::TYPE_MISMATCH,
+                    format!(
+                        "branches cannot infer '{name}' as a union of width-related record shapes; project to one shape or add a tag field"
+                    ),
+                    range,
+                );
+                continue;
+            }
             ctx.scope.define(name, merged_ty);
         }
     }

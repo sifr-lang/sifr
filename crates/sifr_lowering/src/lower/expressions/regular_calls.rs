@@ -5,9 +5,10 @@ use super::{
     decode_typevar_constraint, expression_diagnostics, infer_type_var_bindings,
     is_compatible_with_unresolved_typevars, is_poisoned_binding_expr, lower_expr,
     lower_function_call_args, lower_name, lower_python_function_call_args,
-    lower_signature_call_args, name_diagnostics, ownership_diagnostics, protocol_diagnostics,
-    refine_constructor_return_type_from_args, substitute_type_vars, tsc, type_param_argument_range,
-    type_satisfies_bound, type_satisfies_constraint,
+    lower_signature_call_args, lower_structural_record_constructor, name_diagnostics,
+    ownership_diagnostics, protocol_diagnostics, refine_constructor_return_type_from_args,
+    substitute_type_vars, tsc, type_param_argument_range, type_satisfies_bound,
+    type_satisfies_constraint, validate_borrowed_structural_coercion,
 };
 use crate::lower::type_bounds::supports_print_formatting;
 use crate::lower::{ipc_payload_calls, parallel_calls, python_interop};
@@ -17,6 +18,11 @@ pub(super) fn lower_regular_call(
     call: &ExprCall,
     ctx: &mut LowerCtx,
 ) -> Option<HirExpr> {
+    if let Some(alias_ty) = ctx.scope.lookup_type_alias(&func_name).cloned()
+        && matches!(alias_ty.resolve_alias(), Type::StructuralRecord(_))
+    {
+        return lower_structural_record_constructor(&func_name, alias_ty, call, ctx);
+    }
     if ctx.adapter_marker_bindings.contains_key(&func_name) {
         ctx.error_with_code_at(
             DiagnosticCode::META_MALFORMED_DECLARATION,
@@ -178,7 +184,11 @@ pub(super) fn lower_regular_call(
                 .copied()
                 .flatten()
                 .unwrap_or_else(|| call.func.range());
-            if !arg.ty().is_assignable_to(param_ty) {
+            let convention = conventions
+                .get(i)
+                .copied()
+                .unwrap_or(ParamConvention::borrow());
+            if !argument_is_assignable(arg.ty(), param_ty, convention) {
                 expression_diagnostics::type_mismatch(
                     ctx,
                     format!(
@@ -192,10 +202,6 @@ pub(super) fn lower_regular_call(
                 );
             }
             // Apply move tracking based on convention
-            let convention = conventions
-                .get(i)
-                .copied()
-                .unwrap_or(ParamConvention::borrow());
             validate_borrowed_structural_coercion(arg.ty(), param_ty, convention, arg_range, ctx);
             if convention.is_owned() {
                 // Own convention transfers every affine candidate contained in
@@ -495,7 +501,7 @@ pub(super) fn lower_regular_call(
                 .copied()
                 .flatten()
                 .unwrap_or_else(|| call.range());
-            if arg.ty().is_assignable_to(param_ty) {
+            if argument_is_assignable(arg.ty(), param_ty, *convention) {
                 validate_borrowed_structural_coercion(
                     arg.ty(),
                     param_ty,
@@ -610,7 +616,7 @@ pub(super) fn lower_regular_call(
                     }
                     continue;
                 }
-                if arg.ty().is_assignable_to(&concrete_param_ty) {
+                if argument_is_assignable(arg.ty(), &concrete_param_ty, *convention) {
                     let primary_range = arg_ranges
                         .get(i)
                         .copied()
@@ -762,41 +768,11 @@ pub(super) fn lower_regular_call(
     }
 }
 
-fn validate_borrowed_structural_coercion(
-    source_ty: &Type,
-    target_ty: &Type,
-    convention: ParamConvention,
-    range: ruff_text_size::TextRange,
-    ctx: &mut LowerCtx,
-) {
-    let source = source_ty.resolve_alias();
-    let target = target_ty.resolve_alias();
-    if source == target
-        || !source_ty.is_assignable_to(target_ty)
-        || !matches!(target, Type::Union(_) | Type::Result(_, _))
-    {
-        return;
-    }
-    if convention.is_mut_borrow() {
-        ctx.error_with_code_at(
-            DiagnosticCode::TYPE_MISMATCH,
-            format!(
-                "mutable borrow cannot change the generated representation from '{}' to '{}'",
-                source_ty.display_name(),
-                target_ty.display_name()
-            ),
-            range,
-        );
-    } else if convention.is_shared_borrow() && !source_ty.supports_derived_clone() {
-        ctx.error_with_code_at(
-            DiagnosticCode::TYPE_MISMATCH,
-            format!(
-                "borrowed conversion from '{}' to '{}' requires a cloneable source representation",
-                source_ty.display_name(),
-                target_ty.display_name()
-            ),
-            range,
-        );
+fn argument_is_assignable(source: &Type, target: &Type, convention: ParamConvention) -> bool {
+    if convention.is_shared_borrow() {
+        source.is_shared_borrow_assignable_to(target)
+    } else {
+        source.is_assignable_to(target)
     }
 }
 

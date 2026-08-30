@@ -101,6 +101,8 @@ mod structural_impl_demand_codegen_tests;
 #[cfg(test)]
 mod structural_inheritance_codegen_tests;
 #[cfg(test)]
+mod structural_record_codegen_tests;
+#[cfg(test)]
 mod structural_stdlib_impl_codegen_tests;
 #[cfg(test)]
 mod structured_condition_codegen_tests;

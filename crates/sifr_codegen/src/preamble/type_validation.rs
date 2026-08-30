@@ -256,6 +256,12 @@ pub(super) fn validate_codegen_type(ty: &Type) -> Result<(), crate::CodegenError
             }
             Ok(())
         }
+        Type::StructuralRecord(record) => {
+            for field in record.fields() {
+                validate_codegen_type(field.ty())?;
+            }
+            Ok(())
+        }
         Type::Class {
             type_args,
             fields,

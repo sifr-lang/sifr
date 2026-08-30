@@ -85,6 +85,11 @@ mod call_shadowable_builtins;
 use call_shadowable_builtins::lower_shadowable_builtin_call;
 mod regular_calls;
 use regular_calls::lower_regular_call;
+mod structural_record_calls;
+use structural_record_calls::{
+    lower_structural_record_constructor, lower_structural_record_field_access,
+    try_lower_structural_record_subscript_call, validate_borrowed_structural_coercion,
+};
 mod attached_api_calls;
 mod method_call_arguments;
 mod method_calls;

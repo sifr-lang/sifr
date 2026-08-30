@@ -213,13 +213,65 @@ pub(in crate::lower) fn lower_pattern(
             }
             Some(HirPattern::Tuple { elements })
         }
-        Pattern::MatchMapping(_) => {
-            match_diagnostics::invalid_pattern_form(
-                ctx,
-                "mapping patterns are not yet supported",
-                pattern.range(),
-            );
-            None
+        Pattern::MatchMapping(mapping) => {
+            let Type::StructuralRecord(record) = subject_ty.resolve_alias() else {
+                match_diagnostics::invalid_pattern_form(
+                    ctx,
+                    &format!(
+                        "named record pattern requires a structural record subject, got '{}'",
+                        subject_ty.display_name()
+                    ),
+                    mapping.range(),
+                );
+                return None;
+            };
+            if mapping.rest.is_some() {
+                match_diagnostics::invalid_pattern_form(
+                    ctx,
+                    "record patterns must name fields explicitly and do not support **rest",
+                    mapping.range(),
+                );
+                return None;
+            }
+            let mut fields = Vec::with_capacity(mapping.keys.len());
+            let mut seen = std::collections::HashSet::new();
+            for (key, field_pattern) in mapping.keys.iter().zip(&mapping.patterns) {
+                let Expr::StringLiteral(key) = key else {
+                    match_diagnostics::invalid_pattern_form(
+                        ctx,
+                        "record pattern keys must be string field names",
+                        key.range(),
+                    );
+                    return None;
+                };
+                let field_name = key.value.to_str().to_string();
+                if !seen.insert(field_name.clone()) {
+                    match_diagnostics::invalid_pattern_form(
+                        ctx,
+                        &format!("record pattern repeats field '{field_name}'"),
+                        key.range(),
+                    );
+                    return None;
+                }
+                let Some(field) = record.field(&field_name) else {
+                    match_diagnostics::invalid_pattern_form(
+                        ctx,
+                        &format!(
+                            "record type '{}' has no field '{}'",
+                            subject_ty.display_name(),
+                            field_name
+                        ),
+                        key.range(),
+                    );
+                    return None;
+                };
+                fields.push((field_name, lower_pattern(field_pattern, field.ty(), ctx)?));
+            }
+            Some(HirPattern::Class {
+                class_name: subject_ty.display_name(),
+                class_type: subject_ty.clone(),
+                fields,
+            })
         }
         Pattern::MatchStar(_) => {
             match_diagnostics::invalid_pattern_form(

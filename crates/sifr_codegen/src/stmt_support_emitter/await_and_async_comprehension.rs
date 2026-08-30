@@ -271,6 +271,7 @@ impl RustEmitter {
             | Type::Never
             | Type::Template(_) => true,
             Type::Alias { body, .. } => Self::uses_debug_display_format_for_ir(body),
+            Type::StructuralRecord(_) => !ty.supports_display_formatting(),
         }
     }
 

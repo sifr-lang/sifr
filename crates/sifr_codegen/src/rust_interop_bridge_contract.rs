@@ -757,6 +757,10 @@ pub(crate) fn bridge_type_contract(
             ty,
             "type is outside the initial Rust bridge-compatible contract",
         ),
+        Type::StructuralRecord(_) => unsupported_type(
+            ty,
+            "structural records use compiler-generated layouts rather than the explicit Rust bridge contract",
+        ),
         Type::Alias { .. } => unreachable!("resolved aliases must not remain aliases"),
     }
 }

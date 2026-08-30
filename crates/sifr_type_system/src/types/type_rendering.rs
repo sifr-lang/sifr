@@ -88,6 +88,27 @@ impl Type {
         })
     }
 
+    /// Whether this union contains distinct width-related structural records.
+    /// Such a union would make branch and representation selection ambiguous.
+    #[must_use]
+    pub fn has_width_related_structural_records(&self) -> bool {
+        let Self::Union(members) = self.resolve_alias() else {
+            return false;
+        };
+        members.iter().enumerate().any(|(index, left)| {
+            members[index + 1..].iter().any(|right| {
+                let (Self::StructuralRecord(left_record), Self::StructuralRecord(right_record)) =
+                    (left.resolve_alias(), right.resolve_alias())
+                else {
+                    return false;
+                };
+                left_record != right_record
+                    && (left_record.is_width_subtype_of(right_record)
+                        || right_record.is_width_subtype_of(left_record))
+            })
+        })
+    }
+
     /// Check if this type is a numeric type.
     pub fn is_numeric(&self) -> bool {
         matches!(
@@ -764,6 +785,18 @@ impl Type {
                 },
             ) => a_identity.as_deref().unwrap_or(a) == b_identity.as_deref().unwrap_or(b),
             _ => false,
+        }
+    }
+
+    /// Assignment relation used for a shared-borrow call argument. Immutable
+    /// structural records alone gain width subtyping in this scoped relation.
+    #[must_use]
+    pub fn is_shared_borrow_assignable_to(&self, target: &Type) -> bool {
+        match (self.resolve_alias(), target.resolve_alias()) {
+            (Self::StructuralRecord(source), Self::StructuralRecord(target)) => {
+                source.is_width_subtype_of(target)
+            }
+            _ => self.is_assignable_to(target),
         }
     }
 }

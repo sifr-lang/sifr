@@ -440,14 +440,23 @@ Structural records extend the existing `ShapeIdentity` authority in
 
 ### Rust representation
 
-Code generation interns each concrete shape by a stable fingerprint. Generated
-Rust uses a hidden struct for each demanded shape.
+Code generation maps each canonical identity to one exact Rust layout
+instantiation. A hidden layout family is identified by its canonical field-name
+set. The exact field types are Rust type parameters. Thus, `{value: T}` and
+`{value: int}` use the same layout family, and the concrete type arguments stay
+exact.
+
+Generated view traits use the same field-name families. A wider family
+implements a narrower view by linking each requested field type to the matching
+source field type. This link supports generic functions without a clone or a
+temporary record.
 
 The SQL decoder uses a separate projection plan. It maps column ordinal to
 field identity without changing record identity.
 
-Generated equality, ordering, hashing, display, sendability, and clone support
-depend on the capabilities of all fields.
+Rust derives and bounded implementations expose equality, ordering, hashing,
+display, and clone support only when all field types support them. The Sifr type
+system applies the same capability rules before code generation.
 
 ### Naming inferred records
 

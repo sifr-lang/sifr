@@ -87,6 +87,13 @@ pub(in crate::lower) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx)
                     binop.range(),
                 );
                 Type::Any
+            } else if union.has_width_related_structural_records() {
+                invalid_type_annotation(
+                    ctx,
+                    "a union cannot contain width-related record shapes; project to one shape or add a tag field",
+                    binop.range(),
+                );
+                Type::Any
             } else {
                 union
             }
@@ -117,6 +124,44 @@ pub(in crate::lower) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx)
         }
         // Literal bool in type position: True | False
         Expr::BooleanLiteral(b) => Type::LiteralBool(b.value),
+        Expr::Dict(dict) => {
+            let mut fields = Vec::with_capacity(dict.items.len());
+            let mut names = std::collections::HashSet::new();
+            for item in &dict.items {
+                let Some(Expr::Name(name)) = item.key.as_ref() else {
+                    invalid_type_annotation(
+                        ctx,
+                        "record field names must be simple identifiers",
+                        item.key
+                            .as_ref()
+                            .map_or_else(|| item.value.range(), Ranged::range),
+                    );
+                    return Type::Any;
+                };
+                if !names.insert(name.id.to_string()) {
+                    invalid_type_annotation(
+                        ctx,
+                        &format!("duplicate record field '{}'", name.id),
+                        name.range(),
+                    );
+                    return Type::Any;
+                }
+                fields.push((
+                    name.id.to_string(),
+                    resolve_annotation_expr(&item.value, ctx),
+                ));
+            }
+            if fields.is_empty() {
+                invalid_type_annotation(
+                    ctx,
+                    "a record type must have at least one field",
+                    dict.range(),
+                );
+                Type::Any
+            } else {
+                Type::StructuralRecord(sifr_type_system::StructuralRecordType::new(fields))
+            }
+        }
         Expr::Subscript(sub) => {
             // Handle generic type annotations: list[int], dict[str, int], tuple[int, str]
             let base_name = match sub.value.as_ref() {

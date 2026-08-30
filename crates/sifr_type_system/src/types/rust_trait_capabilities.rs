@@ -2,6 +2,33 @@ use super::{Type, type_queries::parent_chain_contains};
 use std::collections::HashSet;
 
 impl Type {
+    /// Whether the generated representation implements Rust's total ordering
+    /// traits. Structural records require every field to have total order.
+    #[must_use]
+    pub fn supports_total_order(&self) -> bool {
+        match self.resolve_alias() {
+            Self::Int
+            | Self::FixedInt(_)
+            | Self::Bool
+            | Self::Str
+            | Self::Bytes
+            | Self::None
+            | Self::Range
+            | Self::LiteralInt(_)
+            | Self::LiteralStr(_)
+            | Self::LiteralBool(_)
+            | Self::Decimal
+            | Self::BigDecimal => true,
+            Self::List(element) => element.supports_total_order(),
+            Self::Tuple(elements) => elements.iter().all(Self::supports_total_order),
+            Self::StructuralRecord(record) => record
+                .fields()
+                .iter()
+                .all(|field| field.ty().supports_total_order()),
+            _ => false,
+        }
+    }
+
     /// Whether Rust aggregate generation may derive conditional `Eq + Hash`.
     ///
     /// Type variables are accepted because the generated implementation adds
@@ -21,6 +48,10 @@ impl Type {
             Self::Tuple(elements) | Self::Union(elements) => elements
                 .iter()
                 .all(|element| element.supports_derived_hash_inner(visiting_classes)),
+            Self::StructuralRecord(record) => record
+                .fields()
+                .iter()
+                .all(|field| field.ty().supports_derived_hash_inner(visiting_classes)),
             Self::Result(ok, error) => {
                 ok.supports_derived_hash_inner(visiting_classes)
                     && error.supports_derived_hash_inner(visiting_classes)
@@ -81,6 +112,10 @@ impl Type {
             Self::Tuple(elements) | Self::Union(elements) => elements
                 .iter()
                 .all(|element| element.supports_hash_key_inner(visiting_classes)),
+            Self::StructuralRecord(record) => record
+                .fields()
+                .iter()
+                .all(|field| field.ty().supports_hash_key_inner(visiting_classes)),
             Self::Result(ok, error) => {
                 ok.supports_hash_key_inner(visiting_classes)
                     && error.supports_hash_key_inner(visiting_classes)
@@ -168,6 +203,10 @@ impl Type {
             Self::Tuple(elements) | Self::Union(elements) => elements
                 .iter()
                 .all(|element| element.supports_debug_formatting_inner(visiting_classes)),
+            Self::StructuralRecord(record) => record
+                .fields()
+                .iter()
+                .all(|field| field.ty().supports_debug_formatting_inner(visiting_classes)),
             Self::Class {
                 fields,
                 parent_class,
@@ -235,6 +274,11 @@ impl Type {
                             || element.supports_debug_formatting_inner(visiting_classes)
                     })
             }
+            Self::StructuralRecord(record) => record.fields().iter().all(|field| {
+                field
+                    .ty()
+                    .supports_display_formatting_inner(visiting_classes)
+            }),
             Self::Class {
                 name,
                 fields,

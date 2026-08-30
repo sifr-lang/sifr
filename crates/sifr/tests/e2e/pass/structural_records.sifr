@@ -1,0 +1,41 @@
+# Immutable structural records have named construction and canonical layouts.
+
+type User = {active: bool, email: str, id: int}
+type UserSummary = {email: str, id: int}
+type Boxed[T] = {value: T}
+type ReorderedUser = {id: int, email: str, active: bool}
+
+
+def read_id(user: UserSummary) -> int:
+    return user.id
+
+
+def unwrap[T](box: Boxed[T]) -> T:
+    return box.value
+
+
+def wrap[T](own value: T) -> Boxed[T]:
+    return Boxed[T](value=value)
+
+
+def main():
+    user: User = User(id=7, email="dev@sifr.dev", active=True)
+    assert user.id == 7
+    assert user.email == "dev@sifr.dev"
+    assert read_id(user) == 7
+
+    branch_user: User = User(id=7, email="branch@sifr.dev", active=True)
+    reordered: ReorderedUser = ReorderedUser(active=True, id=8, email="other@sifr.dev")
+    selected = branch_user if True else reordered
+    assert selected.id == 7
+
+    box: Boxed[int] = Boxed[int](value=9)
+    assert unwrap(box) == 9
+    wrapped: Boxed[int] = wrap(10)
+    assert unwrap(wrapped) == 10
+
+    projected: UserSummary = user.project[UserSummary]()
+    assert projected.id == 7
+    match projected:
+        case {"id": projected_id}:
+            assert projected_id == 7

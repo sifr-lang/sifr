@@ -12,6 +12,8 @@ pub struct RustEmitter {
     pub(crate) runtime_needs: RuntimeNeeds,
     /// Track union enum types that need to be defined (name -> member types)
     pub(crate) union_enums: HashMap<String, Vec<Type>>,
+    /// Canonical immutable structural-record layouts used by this module.
+    pub(crate) structural_record_types: HashMap<String, sifr_type_system::StructuralRecordType>,
     /// Union enums used as exact try/except error carriers.
     pub(crate) try_error_carrier_enums: HashSet<String>,
     /// Union enums also used as ordinary source-level values.
@@ -226,6 +228,7 @@ impl RustEmitter {
             collection_needs: CollectionNeeds::default(),
             runtime_needs: RuntimeNeeds::default(),
             union_enums: HashMap::new(),
+            structural_record_types: HashMap::new(),
             try_error_carrier_enums: HashSet::new(),
             ordinary_union_enums: HashSet::new(),
             structural_union_enums: HashSet::new(),

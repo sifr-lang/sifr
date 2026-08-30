@@ -47,6 +47,17 @@ fn extract_ipc_schema_type_inner(ty: &Type) -> IpcSchemaType {
                 })
                 .collect::<Vec<_>>(),
         },
+        Type::StructuralRecord(record) => IpcSchemaType::Record {
+            name: ty.display_name(),
+            fields: record
+                .fields()
+                .iter()
+                .map(|field| IpcSchemaField {
+                    name: field.name().to_string(),
+                    ty: extract_ipc_schema_type(field.ty()),
+                })
+                .collect(),
+        },
         Type::Enum { name, variants, .. } => IpcSchemaType::Enum {
             name: name.clone(),
             variants: variants
@@ -110,7 +121,31 @@ mod tests {
     use sifr_ipc::{
         IpcSchemaDescriptor, IpcSchemaType, IpcWireSchema, canonical_schema_descriptor,
     };
-    use sifr_type_system::{FunctionType, Type};
+    use sifr_type_system::{FunctionType, StructuralRecordType, Type};
+
+    #[test]
+    fn extracts_nested_structural_records_in_canonical_field_order() {
+        let nested = Type::StructuralRecord(StructuralRecordType::new(vec![
+            ("label".to_string(), Type::Str),
+            ("active".to_string(), Type::Bool),
+        ]));
+        let record = Type::StructuralRecord(StructuralRecordType::new(vec![
+            ("nested".to_string(), nested),
+            ("id".to_string(), Type::Int),
+        ]));
+
+        let IpcSchemaType::Record { fields, .. } = extract_ipc_schema_type(&record) else {
+            panic!("a structural record must produce an IPC record schema");
+        };
+        assert_eq!(
+            fields
+                .iter()
+                .map(|field| field.name.as_str())
+                .collect::<Vec<_>>(),
+            vec!["id", "nested"]
+        );
+        assert!(matches!(fields[1].ty, IpcSchemaType::Record { .. }));
+    }
 
     fn generated_echo_descriptor() -> IpcSchemaDescriptor {
         let request = Type::Class {

@@ -636,7 +636,13 @@ pub(in crate::lower) fn lower_if(
         }
     }
 
-    seed_exhaustive_if_bindings(ctx, &then_body, &elif_clauses, else_body.as_ref());
+    seed_exhaustive_if_bindings(
+        ctx,
+        &then_body,
+        &elif_clauses,
+        else_body.as_ref(),
+        if_stmt.range(),
+    );
     merge_exhaustive_branch_sequence_guards(ctx, else_body.is_some(), &branch_sequence_states);
 
     // Early-return narrowing: if the then-body always exits (return/break/continue/raise),

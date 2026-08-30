@@ -105,7 +105,7 @@ pub(in crate::lower) fn infer_function_return_type(
     mut report_error: impl FnMut(String),
 ) -> Type {
     let yielded_types = collect_yield_types(body);
-    if !yielded_types.is_empty() {
+    let inferred = if !yielded_types.is_empty() {
         let yielded_type = normalize_generator_yield_type(collapse_types(yielded_types, Type::Any));
         if is_async {
             if let Type::Union(members) = yielded_type.resolve_alias() {
@@ -180,6 +180,14 @@ pub(in crate::lower) fn infer_function_return_type(
         }
     } else {
         declared_return_type.clone()
+    };
+    if inferred.has_width_related_structural_records() {
+        report_error(format!(
+            "function '{function_name}' cannot infer a union of width-related record shapes; project to one shape or add a tag field"
+        ));
+        Type::Any
+    } else {
+        inferred
     }
 }
 

@@ -59,6 +59,14 @@ pub(crate) fn type_identity(ty: &Type) -> String {
         Type::Set(item) => unary("set", item),
         Type::Tuple(items) => format!("tuple[{}]", types(items)),
         Type::Template(items) => format!("template[{}]", types(items)),
+        Type::StructuralRecord(record) => format!(
+            "record[{}]",
+            sequence(record.fields().iter().map(|field| format!(
+                "{}:{}",
+                atom(field.name()),
+                atom(&type_identity(field.ty()))
+            )))
+        ),
         Type::Range => "range".to_string(),
         Type::Iterable(item) => unary("iterable", item),
         Type::Iterator(item) => unary("iterator", item),

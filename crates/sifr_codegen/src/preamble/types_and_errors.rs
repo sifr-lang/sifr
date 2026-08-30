@@ -30,6 +30,7 @@ pub fn sifr_type_to_rust_type(ty: &Type) -> RustType {
             }
         }
         Type::Template(_) => RustType::Named("__SifrTemplate".to_string()),
+        Type::StructuralRecord(record) => crate::structural_record_rust_type(record),
         Type::Range => RustType::Named("SifrRange".to_string()),
         Type::Iterable(inner) => RustType::Vec(Box::new(sifr_type_to_rust_type(inner))),
         Type::Iterator(inner) => RustType::Boxed(Box::new(RustType::DynTrait {

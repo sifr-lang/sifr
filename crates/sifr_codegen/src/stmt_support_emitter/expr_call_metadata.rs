@@ -12,6 +12,10 @@ pub(crate) fn canonical_constructor_class_name(class_name: &str, ty: &Type) -> S
                 other => crate::render_type(&other),
             }
         }
+        Type::StructuralRecord(record) => format!(
+            "crate::{}",
+            crate::structural_identity_codegen::structural_record_layout_rust_name(record)
+        ),
         _ => sifr_type_system::source_class_rust_name(class_name),
     }
 }

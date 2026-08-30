@@ -716,6 +716,27 @@ impl RustEmitter {
         ty: &Type,
         convention: ParamConvention,
     ) -> RustType {
+        if convention.is_shared_borrow()
+            && let Type::StructuralRecord(record) = ty.resolve_alias()
+        {
+            return RustType::Ref {
+                mutable: false,
+                inner: Box::new(RustType::ImplTrait {
+                    trait_: crate::RustTrait::Named {
+                        name: crate::structural_identity_codegen::structural_record_view_trait_name(
+                            record,
+                        ),
+                        params: record
+                            .fields()
+                            .iter()
+                            .map(|field| crate::sifr_type_to_rust_type(field.ty()))
+                            .collect(),
+                        associated_types: Vec::new(),
+                    },
+                    auto_traits: Vec::new(),
+                }),
+            };
+        }
         let base = self.rust_ir_type_with_generics(ty);
         if convention.is_borrowed()
             && (!crate::helpers::is_copy_type_for_codegen(ty)
