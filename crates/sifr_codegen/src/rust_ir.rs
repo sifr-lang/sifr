@@ -285,6 +285,7 @@ pub enum RustLiteral {
     Int(i64),
     Float(f64),
     Bool(bool),
+    StaticStr(String),
     Str(String),
     Char(char),
     Unit,

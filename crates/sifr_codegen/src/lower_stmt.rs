@@ -50,9 +50,9 @@ use condition_lowering::{try_lower_simple_condition_test_expr, try_lower_simple_
 mod condition_type_and_expr_helpers;
 use condition_type_and_expr_helpers::{
     detect_option_truthiness_alias, is_alias_equivalent_type, is_none_type, is_okwrap_none_expr,
-    is_option_like_type, lower_if_not_none_chain, option_binding_pattern, resolve_alias_type,
-    try_lower_attribute_dict_insert_key_expr, try_lower_leaf_or_name_expr,
-    try_lower_name_ident_expr,
+    is_option_like_type, lower_if_not_none_chain, option_binding_pattern,
+    option_binding_value_expr, resolve_alias_type, try_lower_attribute_dict_insert_key_expr,
+    try_lower_leaf_or_name_expr, try_lower_name_ident_expr,
 };
 mod return_and_assignment_values;
 use return_and_assignment_values::{
@@ -62,7 +62,7 @@ use return_and_assignment_values::{
 mod subscript_assignment;
 pub(crate) use subscript_assignment::{
     build_dict_subscript_assign_stmt, build_list_subscript_assign_stmt,
-    build_normalized_list_index_i64_expr,
+    build_normalized_index_expr, build_normalized_list_index_i64_expr,
 };
 use subscript_assignment::{
     try_lower_simple_attribute_nested_subscript_assign_stmt,

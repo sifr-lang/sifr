@@ -43,6 +43,7 @@ mod __sifr_project_nominals {
     }
 }
 pub use __sifr_project_nominals::IOError;
+use ::sifr_runtime::SifrInt;
 fn _encoding_is_supported_impl(label: &String) -> bool {
     ::sifr_stdlib::encoding::encoding_is_supported(label)
 }
@@ -304,15 +305,15 @@ fn chdir(path: &String) -> Result<(), IOError> {
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn stat_size(path: &String) -> Result<i64, IOError> {
+fn stat_size(path: &String) -> Result<SifrInt, IOError> {
     ::sifr_stdlib::fs::stat_size(path)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok.to_i64_saturating())
+        .map(|__sifr_bridge_ok| __sifr_bridge_ok.into_sifr_int())
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn disk_usage(path: &String) -> Vec<i64> {
+fn disk_usage(path: &String) -> Vec<SifrInt> {
     ::sifr_stdlib::fs::disk_usage(path)
         .into_iter()
-        .map(|__sifr_bridge_value| __sifr_bridge_value.to_i64_saturating())
+        .map(|__sifr_bridge_value| __sifr_bridge_value.into_sifr_int())
         .collect()
 }
 fn is_file(path: &String) -> bool {
@@ -637,7 +638,10 @@ impl __SifrStdlib_sifr_x2eencoding_x2eDecoder {
             &errors,
         );
         let __sifr_field_init_2: bool = false;
-        let __sifr_field_init_3: Vec<u8> = vec![];
+        let __sifr_field_init_3: Vec<u8> = {
+            let __sifr_empty_bytes_literal: Vec<u8> = vec![];
+            __sifr_empty_bytes_literal
+        };
         Self {
             _encoding: __sifr_field_init_0,
             _errors: __sifr_field_init_1,
@@ -684,7 +688,10 @@ impl __SifrStdlib_sifr_x2eencoding_x2eDecoder {
             )?;
             self._pending = next_pending;
             if r#final {
-                self._pending = vec![];
+                self._pending = {
+                    let __sifr_empty_bytes_literal: Vec<u8> = vec![];
+                    __sifr_empty_bytes_literal
+                };
                 self._exhausted = true;
             }
             return Ok(Ok(outcome));
@@ -1071,7 +1078,7 @@ fn _encoding_encode_outcome(
     }
 }
 fn encoding(label: &String) -> __SifrStdlib_sifr_x2eencoding_x2eEncoding {
-    __SifrStdlib_sifr_x2eencoding_x2eEncoding::new((label).clone())
+    __SifrStdlib_sifr_x2eencoding_x2eEncoding::new((label.clone()).clone())
 }
 fn utf8() -> __SifrStdlib_sifr_x2eencoding_x2eEncoding {
     __SifrStdlib_sifr_x2eencoding_x2eEncoding::new(__const_ENCODING_UTF8())
@@ -1330,7 +1337,7 @@ fn env_items() -> Vec<String> {
 fn get_args() -> Vec<String> {
     ::sifr_stdlib::sys::get_args()
 }
-fn sys_exit(code: i64) {
+fn sys_exit(code: SifrInt) {
     ::sifr_stdlib::sys::sys_exit(::sifr_runtime::interop::SifrIntBridge::from(code));
 }
 fn sys_version() -> String {
@@ -1339,14 +1346,14 @@ fn sys_version() -> String {
 fn sys_platform() -> String {
     ::sifr_stdlib::sys::sys_platform()
 }
-fn sys_maxsize() -> i64 {
-    ::sifr_stdlib::sys::sys_maxsize().to_i64_saturating()
+fn sys_maxsize() -> SifrInt {
+    ::sifr_stdlib::sys::sys_maxsize().into_sifr_int()
 }
-fn getpid() -> i64 {
-    ::sifr_stdlib::sys::getpid().to_i64_saturating()
+fn getpid() -> SifrInt {
+    ::sifr_stdlib::sys::getpid().into_sifr_int()
 }
-fn cpu_count() -> i64 {
-    ::sifr_stdlib::sys::cpu_count().to_i64_saturating()
+fn cpu_count() -> SifrInt {
+    ::sifr_stdlib::sys::cpu_count().into_sifr_int()
 }
 fn which(name: &String) -> Option<String> {
     ::sifr_stdlib::sys::which(name)
@@ -1362,11 +1369,11 @@ fn os_name() -> String {
 }
 fn basename(path: &String) -> String {
     let __sifr_chars_path: Vec<char> = path.chars().collect::<Vec<char>>();
-    let mut i: i64 = (__sifr_chars_path.len() as i64) - (1_i64);
-    while i >= (0_i64) {
+    let mut i: SifrInt = &SifrInt::from(__sifr_chars_path.len()) - &SifrInt::from_i64(1);
+    while &i >= &SifrInt::from_i64(0) {
         let ch: Option<String> = Some({
             let Some(__indexed_char) = __sifr_chars_path
-                .get(i as usize)
+                .get(::sifr_runtime::to_usize_proven(&(i)))
                 .map(|c| c.to_string()) else {
                 unreachable!("compiler-verified string index should be in range");
             };
@@ -1376,24 +1383,21 @@ fn basename(path: &String) -> String {
             if ch == "/" {
                 return {
                     let _slice_src = &__sifr_chars_path;
-                    let _slice_len_i64 = _slice_src.len() as i64;
-                    let _slice_start_i64 = if (i + (1_i64)) < 0 {
-                        (_slice_len_i64 + (i + (1_i64))).max(0)
-                    } else {
-                        (i + (1_i64)).min(_slice_len_i64)
-                    };
-                    let _slice_stop_i64 = _slice_len_i64;
+                    let _slice_len = _slice_src.len();
+                    let _slice_start = (&i + &SifrInt::from_i64(1))
+                        .clamp_slice_bound(_slice_len);
+                    let _slice_stop = _slice_len;
                     String::from_iter(
                         _slice_src
                             .iter()
-                            .skip(_slice_start_i64 as usize)
-                            .take((_slice_stop_i64 - _slice_start_i64).max(0) as usize)
+                            .skip(_slice_start)
+                            .take(_slice_stop.saturating_sub(_slice_start))
                             .copied(),
                     )
                 };
             }
         }
-        i -= 1_i64;
+        i = &i - &SifrInt::from_i64(1);
     }
     {
         let mut __sifr_concat: String = String::with_capacity(path.len() + 0usize);
@@ -1404,11 +1408,11 @@ fn basename(path: &String) -> String {
 }
 fn dirname(path: &String) -> String {
     let __sifr_chars_path: Vec<char> = path.chars().collect::<Vec<char>>();
-    let mut i: i64 = (__sifr_chars_path.len() as i64) - (1_i64);
-    while i >= (0_i64) {
+    let mut i: SifrInt = &SifrInt::from(__sifr_chars_path.len()) - &SifrInt::from_i64(1);
+    while &i >= &SifrInt::from_i64(0) {
         let ch: Option<String> = Some({
             let Some(__indexed_char) = __sifr_chars_path
-                .get(i as usize)
+                .get(::sifr_runtime::to_usize_proven(&(i)))
                 .map(|c| c.to_string()) else {
                 unreachable!("compiler-verified string index should be in range");
             };
@@ -1418,47 +1422,50 @@ fn dirname(path: &String) -> String {
             if ch == "/" {
                 return {
                     let _slice_src = &__sifr_chars_path;
-                    let _slice_len_i64 = _slice_src.len() as i64;
-                    let _slice_start_i64 = 0;
-                    let _slice_stop_i64 = if i < 0 {
-                        (_slice_len_i64 + i).max(0)
-                    } else {
-                        i.min(_slice_len_i64)
-                    };
+                    let _slice_len = _slice_src.len();
+                    let _slice_start = 0;
+                    let _slice_stop = i.clamp_slice_bound(_slice_len);
                     String::from_iter(
                         _slice_src
                             .iter()
-                            .skip(_slice_start_i64 as usize)
-                            .take((_slice_stop_i64 - _slice_start_i64).max(0) as usize)
+                            .skip(_slice_start)
+                            .take(_slice_stop.saturating_sub(_slice_start))
                             .copied(),
                     )
                 };
             }
         }
-        i -= 1_i64;
+        i = &i - &SifrInt::from_i64(1);
     }
     "".to_string()
 }
-fn random_int(min: i64, max: i64) -> i64 {
+fn random_int(min: SifrInt, max: SifrInt) -> SifrInt {
     ::sifr_stdlib::random::random_int(
             ::sifr_runtime::interop::SifrIntBridge::from(min),
             ::sifr_runtime::interop::SifrIntBridge::from(max),
         )
-        .to_i64_saturating()
+        .into_sifr_int()
 }
 fn random_float() -> f64 {
     ::sifr_stdlib::random::random_float()
 }
+fn random_seed() -> SifrInt {
+    ::sifr_stdlib::random::random_seed().into_sifr_int()
+}
 fn random_uniform(min: f64, max: f64) -> f64 {
     ::sifr_stdlib::random::random_uniform(min, max)
 }
-fn random_randrange(start: i64, stop: i64, step: i64) -> Result<i64, ValueError> {
+fn random_randrange(
+    start: SifrInt,
+    stop: SifrInt,
+    step: SifrInt,
+) -> Result<SifrInt, ValueError> {
     ::sifr_stdlib::random::random_randrange(
             ::sifr_runtime::interop::SifrIntBridge::from(start),
             ::sifr_runtime::interop::SifrIntBridge::from(stop),
             ::sifr_runtime::interop::SifrIntBridge::from(step),
         )
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok.to_i64_saturating())
+        .map(|__sifr_bridge_ok| __sifr_bridge_ok.into_sifr_int())
         .map_err(|__sifr_bridge_error| ValueError {
             message: __sifr_bridge_error.to_string(),
         })
@@ -1466,27 +1473,27 @@ fn random_randrange(start: i64, stop: i64, step: i64) -> Result<i64, ValueError>
 fn random_gauss(mu: f64, sigma: f64) -> f64 {
     ::sifr_stdlib::random::random_gauss(mu, sigma)
 }
-fn random_module_state_words() -> Vec<i64> {
+fn random_module_state_words() -> Vec<SifrInt> {
     ::sifr_stdlib::random::random_module_state_words()
         .into_iter()
-        .map(|__sifr_bridge_value| __sifr_bridge_value.to_i64_saturating())
+        .map(|__sifr_bridge_value| __sifr_bridge_value.into_sifr_int())
         .collect()
 }
-fn random_module_state_index() -> i64 {
-    ::sifr_stdlib::random::random_module_state_index().to_i64_saturating()
+fn random_module_state_index() -> SifrInt {
+    ::sifr_stdlib::random::random_module_state_index().into_sifr_int()
 }
 fn random_module_state_gauss_next() -> Option<f64> {
     ::sifr_stdlib::random::random_module_state_gauss_next()
 }
 fn random_module_set_state(
-    words: &Vec<i64>,
-    index: i64,
+    words: &Vec<SifrInt>,
+    index: SifrInt,
     gauss_next: Option<f64>,
 ) -> Result<(), ValueError> {
     ::sifr_stdlib::random::random_module_set_state(
             &words
                 .iter()
-                .copied()
+                .cloned()
                 .map(::sifr_runtime::interop::SifrIntBridge::from)
                 .collect::<Vec<_>>(),
             ::sifr_runtime::interop::SifrIntBridge::from(index),
@@ -1520,7 +1527,7 @@ fn base64_decode_bytes(data: &Vec<u8>) -> Result<Vec<u8>, ParseError> {
 fn base64_encode_opts(
     s: &String,
     altchars: &String,
-    wrapcol: i64,
+    wrapcol: SifrInt,
 ) -> Result<String, ParseError> {
     ::sifr_stdlib::base64::base64_encode_opts(
             s,
@@ -1609,19 +1616,23 @@ fn blake2s_bytes(data: &Vec<u8>) -> Vec<u8> {
     ::sifr_stdlib::hash::blake2s_bytes(data)
 }
 fn _random_suffix() -> String {
-    let n: i64 = random_int(100000_i64, 999999_i64);
+    let n: SifrInt = random_int(SifrInt::from_i64(100000), SifrInt::from_i64(999999));
     format!("{}", n)
 }
 fn mktemp_path(prefix: &String) -> String {
     let suffix: String = _random_suffix();
     let mut root: String = gettempdir();
     let mut __sifr_chars_root: Vec<char> = root.chars().collect::<Vec<char>>();
-    if ((__sifr_chars_root.len() as i64) == (0_i64)) {
+    if (&SifrInt::from(__sifr_chars_root.len()) == &SifrInt::from_i64(0)) {
         root = "/tmp".to_string();
         __sifr_chars_root = root.chars().collect::<Vec<char>>();
     } else {
         let last: Option<String> = __sifr_chars_root
-            .get(((root.chars().count() as i64) - (1_i64)) as usize)
+            .get(
+                ::sifr_runtime::to_usize_proven(
+                    &(SifrInt::from(root.chars().count()) - SifrInt::from_i64(1)),
+                ),
+            )
             .map(|c| c.to_string());
         if let Some(last) = last {
             if last == "/" {
@@ -1651,7 +1662,7 @@ fn mktemp_path(prefix: &String) -> String {
 fn _next_candidate(prefix: &String) -> String {
     mktemp_path(prefix)
 }
-fn _collision_message(kind: &String, attempts: i64) -> String {
+fn _collision_message(kind: &String, attempts: SifrInt) -> String {
     {
         let mut __sifr_concat: String = String::with_capacity(
             (((9usize + kind.len()) + 37usize) + 0usize) + 9usize,
@@ -1665,9 +1676,9 @@ fn _collision_message(kind: &String, attempts: i64) -> String {
     }
 }
 fn mkstemp(prefix: &String) -> Result<String, IOError> {
-    let mut attempts: i64 = 0_i64;
-    let max_attempts: i64 = 64_i64;
-    while attempts < max_attempts {
+    let mut attempts: SifrInt = SifrInt::from_i64(0);
+    let max_attempts: SifrInt = SifrInt::from_i64(64);
+    while &attempts < &max_attempts {
         let path: String = _next_candidate(prefix);
         let path_for_check: String = {
             let mut __sifr_concat: String = String::with_capacity(path.len() + 0usize);
@@ -1676,7 +1687,7 @@ fn mkstemp(prefix: &String) -> Result<String, IOError> {
             __sifr_concat
         };
         if exists(&path) {
-            attempts += 1_i64;
+            attempts = &attempts + &SifrInt::from_i64(1);
             continue;
         }
         let __sifr_try_res: Result<Result<String, IOError>, IOError> = (|| {
@@ -1691,19 +1702,19 @@ fn mkstemp(prefix: &String) -> Result<String, IOError> {
             Err(__sifr_try_err) => {
                 let e = __sifr_try_err.clone();
                 if exists(&path_for_check) {
-                    attempts += 1_i64;
+                    attempts = &attempts + &SifrInt::from_i64(1);
                     continue;
                 }
                 return Err(IOError::new(e.message.clone()));
             }
         }
     }
-    Err(IOError::new(_collision_message(&"mkstemp".to_string(), max_attempts)))
+    Err(IOError::new(_collision_message(&"mkstemp".to_string(), (max_attempts).clone())))
 }
 fn mkdtemp(prefix: &String) -> Result<String, IOError> {
-    let mut attempts: i64 = 0_i64;
-    let max_attempts: i64 = 64_i64;
-    while attempts < max_attempts {
+    let mut attempts: SifrInt = SifrInt::from_i64(0);
+    let max_attempts: SifrInt = SifrInt::from_i64(64);
+    while &attempts < &max_attempts {
         let path: String = _next_candidate(prefix);
         let path_for_check: String = {
             let mut __sifr_concat: String = String::with_capacity(path.len() + 0usize);
@@ -1712,7 +1723,7 @@ fn mkdtemp(prefix: &String) -> Result<String, IOError> {
             __sifr_concat
         };
         if exists(&path) {
-            attempts += 1_i64;
+            attempts = &attempts + &SifrInt::from_i64(1);
             continue;
         }
         let __sifr_try_res: Result<Result<String, IOError>, IOError> = (|| {
@@ -1727,21 +1738,24 @@ fn mkdtemp(prefix: &String) -> Result<String, IOError> {
             Err(__sifr_try_err) => {
                 let e = __sifr_try_err.clone();
                 if exists(&path_for_check) {
-                    attempts += 1_i64;
+                    attempts = &attempts + &SifrInt::from_i64(1);
                     continue;
                 }
                 return Err(IOError::new(e.message.clone()));
             }
         }
     }
-    Err(IOError::new(_collision_message(&"mkdtemp".to_string(), max_attempts)))
+    Err(IOError::new(_collision_message(&"mkdtemp".to_string(), (max_attempts).clone())))
 }
 fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
-    assert_eq!(actual.len() as i64, expected.len() as i64);
-    let mut i: i64 = 0_i64;
-    while i < (actual.len() as i64) {
-        assert!(Some(actual[i as usize]) == expected.get(i as usize).copied());
-        i += 1_i64;
+    assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
+    let mut i: SifrInt = SifrInt::from_i64(0);
+    while &i < &SifrInt::from(actual.len()) {
+        assert!(
+            Some(actual[::sifr_runtime::to_usize_proven(& (i))]) == expected
+            .get(::sifr_runtime::to_usize_proven(& (i))).copied()
+        );
+        i = &i + &SifrInt::from_i64(1);
     }
 }
 fn __io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
@@ -1842,93 +1856,57 @@ fn collect_tempfile_actual() -> Vec<bool> {
         let __sifr_chars_file_name: Vec<char> = file_name.chars().collect::<Vec<char>>();
         let dir_name: String = basename(&dir_path);
         let __sifr_chars_dir_name: Vec<char> = dir_name.chars().collect::<Vec<char>>();
-        let preview_has_prefix: bool = ((((__sifr_chars_preview_name.len() as i64)
-            > ("sifr_tempfile_preview_".to_string().chars().count() as i64)))
+        let preview_has_prefix: bool = (((&SifrInt::from(__sifr_chars_preview_name.len())
+            > &SifrInt::from("sifr_tempfile_preview_".to_string().chars().count())))
             && ((({
                 let _slice_src = &__sifr_chars_preview_name;
-                let _slice_len_i64 = _slice_src.len() as i64;
-                let _slice_start_i64 = if (0_i64) < 0 {
-                    (_slice_len_i64 + (0_i64)).max(0)
-                } else {
-                    (0_i64).min(_slice_len_i64)
-                };
-                let _slice_stop_i64 = if ("sifr_tempfile_preview_"
-                    .to_string()
-                    .chars()
-                    .count() as i64) < 0
-                {
-                    (_slice_len_i64
-                        + ("sifr_tempfile_preview_".to_string().chars().count() as i64))
-                        .max(0)
-                } else {
-                    ("sifr_tempfile_preview_".to_string().chars().count() as i64)
-                        .min(_slice_len_i64)
-                };
+                let _slice_len = _slice_src.len();
+                let _slice_start = SifrInt::from_i64(0).clamp_slice_bound(_slice_len);
+                let _slice_stop = SifrInt::from(
+                        "sifr_tempfile_preview_".to_string().chars().count(),
+                    )
+                    .clamp_slice_bound(_slice_len);
                 String::from_iter(
                     _slice_src
                         .iter()
-                        .skip(_slice_start_i64 as usize)
-                        .take((_slice_stop_i64 - _slice_start_i64).max(0) as usize)
+                        .skip(_slice_start)
+                        .take(_slice_stop.saturating_sub(_slice_start))
                         .copied(),
                 )
             }) == "sifr_tempfile_preview_")));
-        let file_has_prefix: bool = ((((__sifr_chars_file_name.len() as i64)
-            > ("sifr_tempfile_tmp_".to_string().chars().count() as i64)))
+        let file_has_prefix: bool = (((&SifrInt::from(__sifr_chars_file_name.len())
+            > &SifrInt::from("sifr_tempfile_tmp_".to_string().chars().count())))
             && ((({
                 let _slice_src = &__sifr_chars_file_name;
-                let _slice_len_i64 = _slice_src.len() as i64;
-                let _slice_start_i64 = if (0_i64) < 0 {
-                    (_slice_len_i64 + (0_i64)).max(0)
-                } else {
-                    (0_i64).min(_slice_len_i64)
-                };
-                let _slice_stop_i64 = if ("sifr_tempfile_tmp_"
-                    .to_string()
-                    .chars()
-                    .count() as i64) < 0
-                {
-                    (_slice_len_i64
-                        + ("sifr_tempfile_tmp_".to_string().chars().count() as i64))
-                        .max(0)
-                } else {
-                    ("sifr_tempfile_tmp_".to_string().chars().count() as i64)
-                        .min(_slice_len_i64)
-                };
+                let _slice_len = _slice_src.len();
+                let _slice_start = SifrInt::from_i64(0).clamp_slice_bound(_slice_len);
+                let _slice_stop = SifrInt::from(
+                        "sifr_tempfile_tmp_".to_string().chars().count(),
+                    )
+                    .clamp_slice_bound(_slice_len);
                 String::from_iter(
                     _slice_src
                         .iter()
-                        .skip(_slice_start_i64 as usize)
-                        .take((_slice_stop_i64 - _slice_start_i64).max(0) as usize)
+                        .skip(_slice_start)
+                        .take(_slice_stop.saturating_sub(_slice_start))
                         .copied(),
                 )
             }) == "sifr_tempfile_tmp_")));
-        let dir_has_prefix: bool = ((((__sifr_chars_dir_name.len() as i64)
-            > ("sifr_tempfile_tmpd_".to_string().chars().count() as i64)))
+        let dir_has_prefix: bool = (((&SifrInt::from(__sifr_chars_dir_name.len())
+            > &SifrInt::from("sifr_tempfile_tmpd_".to_string().chars().count())))
             && ((({
                 let _slice_src = &__sifr_chars_dir_name;
-                let _slice_len_i64 = _slice_src.len() as i64;
-                let _slice_start_i64 = if (0_i64) < 0 {
-                    (_slice_len_i64 + (0_i64)).max(0)
-                } else {
-                    (0_i64).min(_slice_len_i64)
-                };
-                let _slice_stop_i64 = if ("sifr_tempfile_tmpd_"
-                    .to_string()
-                    .chars()
-                    .count() as i64) < 0
-                {
-                    (_slice_len_i64
-                        + ("sifr_tempfile_tmpd_".to_string().chars().count() as i64))
-                        .max(0)
-                } else {
-                    ("sifr_tempfile_tmpd_".to_string().chars().count() as i64)
-                        .min(_slice_len_i64)
-                };
+                let _slice_len = _slice_src.len();
+                let _slice_start = SifrInt::from_i64(0).clamp_slice_bound(_slice_len);
+                let _slice_stop = SifrInt::from(
+                        "sifr_tempfile_tmpd_".to_string().chars().count(),
+                    )
+                    .clamp_slice_bound(_slice_len);
                 String::from_iter(
                     _slice_src
                         .iter()
-                        .skip(_slice_start_i64 as usize)
-                        .take((_slice_stop_i64 - _slice_start_i64).max(0) as usize)
+                        .skip(_slice_start)
+                        .take(_slice_stop.saturating_sub(_slice_start))
                         .copied(),
                 )
             }) == "sifr_tempfile_tmpd_")));

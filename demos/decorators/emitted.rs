@@ -1,4 +1,6 @@
 // src/main.rs
+use ::sifr_runtime::SifrInt;
+
 // @log
 fn greet(name: &String) -> String {
     {
@@ -12,44 +14,44 @@ fn greet(name: &String) -> String {
 
 // @validate
 // @log
-fn process(x: i64) -> i64 {
-    x * (2_i64)
+fn process(x: SifrInt) -> SifrInt {
+    &x * &SifrInt::from_i64(2)
 }
 
-fn sum_all(nums: &Vec<i64>) -> i64 {
-    let mut total: i64 = 0_i64;
-    for n in nums.iter().copied() {
-        total += n;
+fn sum_all(nums: &Vec<SifrInt>) -> SifrInt {
+    let mut total: SifrInt = SifrInt::from_i64(0);
+    for n in nums.iter().cloned() {
+        total = &total + &n;
     }
-    total
+    total.clone()
 }
 
-fn max_of(values: &Vec<i64>) -> i64 {
-    let result: Option<i64> = (values).iter().copied().max();
-    if let Some(result) = result {
+fn max_of(values: &Vec<SifrInt>) -> SifrInt {
+    let result: Option<SifrInt> = (values).iter().cloned().max();
+    if let Some(result) = result.clone() {
         return result;
     }
-    0_i64
+    SifrInt::from_i64(0)
 }
 
 fn join_strings(sep: &String, parts: &Vec<String>) -> String {
     let mut result: String = "".to_string();
-    let mut i: i64 = 0_i64;
+    let mut i: SifrInt = SifrInt::from_i64(0);
     for p in parts.iter().cloned() {
-        if i > (0_i64) {
+        if &i > &SifrInt::from_i64(0) {
             result.push_str((sep).as_str());
         }
         result.push_str((p).as_str());
-        i += 1_i64;
+        i = &i + &SifrInt::from_i64(1);
     }
     result
 }
 
 fn main() {
     println!("{}", greet(&"World".to_string()));
-    println!("{}", process(21_i64));
-    println!("{}", sum_all(&vec![1_i64, 2_i64, 3_i64, 4_i64, 5_i64]));
-    println!("{}", sum_all(&vec![10_i64, 20_i64]));
-    println!("{}", max_of(&vec![3_i64, 7_i64, 2_i64, 9_i64, 1_i64]));
+    println!("{}", process(SifrInt::from_i64(21)));
+    println!("{}", sum_all(&vec![SifrInt::from_i64(1), SifrInt::from_i64(2), SifrInt::from_i64(3), SifrInt::from_i64(4), SifrInt::from_i64(5)]));
+    println!("{}", sum_all(&vec![SifrInt::from_i64(10), SifrInt::from_i64(20)]));
+    println!("{}", max_of(&vec![SifrInt::from_i64(3), SifrInt::from_i64(7), SifrInt::from_i64(2), SifrInt::from_i64(9), SifrInt::from_i64(1)]));
     println!("{}", join_strings(&", ".to_string(), &vec!["Alice".to_string(), "Bob".to_string(), "Charlie".to_string()]));
 }

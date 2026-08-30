@@ -59,17 +59,24 @@ impl RustEmitter {
         lowered_object: RustExpr,
     ) -> RustExpr {
         if let Some(cache_name) = self.string_char_cache_for_expr(object) {
-            return RustExpr::Cast {
-                expr: Box::new(RustExpr::MethodCall {
+            return RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    "SifrInt".to_string(),
+                    "from".to_string(),
+                ])),
+                args: vec![RustExpr::MethodCall {
                     receiver: Box::new(RustExpr::Ident(cache_name)),
                     method: "len".to_string(),
                     args: vec![],
-                }),
-                ty: RustType::I64,
+                }],
             };
         }
-        RustExpr::Cast {
-            expr: Box::new(RustExpr::MethodCall {
+        RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec![
+                "SifrInt".to_string(),
+                "from".to_string(),
+            ])),
+            args: vec![RustExpr::MethodCall {
                 receiver: Box::new(RustExpr::MethodCall {
                     receiver: Box::new(lowered_object),
                     method: "chars".to_string(),
@@ -77,8 +84,7 @@ impl RustEmitter {
                 }),
                 method: "count".to_string(),
                 args: vec![],
-            }),
-            ty: RustType::I64,
+            }],
         }
     }
 
@@ -255,40 +261,29 @@ impl RustEmitter {
                     ),
                 },
             ],
-            expr: Some(Box::new(RustExpr::If {
-                cond: Box::new(RustExpr::BinOp {
-                    left: Box::new(RustExpr::Ident("__idx_norm".to_string())),
-                    op: ">=".to_string(),
-                    right: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
-                }),
-                then_expr: Box::new(RustExpr::MethodCall {
+            expr: Some(Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
                     receiver: Box::new(RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::MethodCall {
-                            receiver: Box::new(lowered_object),
-                            method: "get".to_string(),
-                            args: vec![RustExpr::Cast {
-                                expr: Box::new(RustExpr::Ident("__idx_norm".to_string())),
-                                ty: RustType::Named("usize".to_string()),
-                            }],
-                        }),
-                        method: "and_then".to_string(),
-                        args: vec![RustExpr::Closure {
-                            params: vec![crate::RustParam::Named {
-                                name: "__bucket".to_string(),
-                                ty: RustType::Named("_".to_string()),
-                            }],
-                            body: Box::new(RustExpr::MethodCall {
-                                receiver: Box::new(RustExpr::Ident("__bucket".to_string())),
-                                method: "get".to_string(),
-                                args: vec![key_arg],
-                            }),
-                            is_move: false,
-                        }],
+                        receiver: Box::new(lowered_object),
+                        method: "get".to_string(),
+                        args: vec![RustExpr::Ident("__idx_norm".to_string())],
                     }),
-                    method: projection_method.to_string(),
-                    args: vec![],
+                    method: "and_then".to_string(),
+                    args: vec![RustExpr::Closure {
+                        params: vec![crate::RustParam::Named {
+                            name: "__bucket".to_string(),
+                            ty: RustType::Named("_".to_string()),
+                        }],
+                        body: Box::new(RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Ident("__bucket".to_string())),
+                            method: "get".to_string(),
+                            args: vec![key_arg],
+                        }),
+                        is_move: false,
+                    }],
                 }),
-                else_expr: Some(Box::new(RustExpr::Literal(RustLiteral::None))),
+                method: projection_method.to_string(),
+                args: vec![],
             })),
         })
     }
@@ -340,39 +335,28 @@ impl RustEmitter {
                     ),
                 },
             ],
-            expr: Some(Box::new(RustExpr::BinOp {
-                left: Box::new(RustExpr::BinOp {
-                    left: Box::new(RustExpr::Ident("__idx_norm".to_string())),
-                    op: ">=".to_string(),
-                    right: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+            expr: Some(Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(lowered_object),
+                    method: "get".to_string(),
+                    args: vec![RustExpr::Ident("__idx_norm".to_string())],
                 }),
-                op: "&&".to_string(),
-                right: Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::MethodCall {
-                        receiver: Box::new(lowered_object),
-                        method: "get".to_string(),
-                        args: vec![RustExpr::Cast {
-                            expr: Box::new(RustExpr::Ident("__idx_norm".to_string())),
-                            ty: RustType::Named("usize".to_string()),
+                method: "map_or".to_string(),
+                args: vec![
+                    RustExpr::Literal(RustLiteral::Bool(false)),
+                    RustExpr::Closure {
+                        params: vec![crate::RustParam::Named {
+                            name: "__bucket".to_string(),
+                            ty: RustType::Named("_".to_string()),
                         }],
-                    }),
-                    method: "map_or".to_string(),
-                    args: vec![
-                        RustExpr::Literal(RustLiteral::Bool(false)),
-                        RustExpr::Closure {
-                            params: vec![crate::RustParam::Named {
-                                name: "__bucket".to_string(),
-                                ty: RustType::Named("_".to_string()),
-                            }],
-                            body: Box::new(RustExpr::MethodCall {
-                                receiver: Box::new(RustExpr::Ident("__bucket".to_string())),
-                                method: "contains_key".to_string(),
-                                args: vec![key_arg],
-                            }),
-                            is_move: false,
-                        },
-                    ],
-                }),
+                        body: Box::new(RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Ident("__bucket".to_string())),
+                            method: "contains_key".to_string(),
+                            args: vec![key_arg],
+                        }),
+                        is_move: false,
+                    },
+                ],
             })),
         })
     }
@@ -524,21 +508,34 @@ impl RustEmitter {
                 method: "get".to_string(),
                 args: vec![key_arg],
             }),
-            method: "map_or".to_string(),
+            method: "map_or_else".to_string(),
             args: vec![
-                RustExpr::Literal(RustLiteral::Int(0)),
+                RustExpr::Closure {
+                    params: vec![],
+                    body: Box::new(RustExpr::FnCall {
+                        func: Box::new(RustExpr::Path(vec![
+                            "SifrInt".to_string(),
+                            "from_i64".to_string(),
+                        ])),
+                        args: vec![RustExpr::Literal(RustLiteral::Int(0))],
+                    }),
+                    is_move: false,
+                },
                 RustExpr::Closure {
                     params: vec![crate::RustParam::Named {
                         name: "__sifr_bucket".to_string(),
                         ty: RustType::Named("_".to_string()),
                     }],
-                    body: Box::new(RustExpr::Cast {
-                        expr: Box::new(RustExpr::MethodCall {
+                    body: Box::new(RustExpr::FnCall {
+                        func: Box::new(RustExpr::Path(vec![
+                            "SifrInt".to_string(),
+                            "from".to_string(),
+                        ])),
+                        args: vec![RustExpr::MethodCall {
                             receiver: Box::new(RustExpr::Ident("__sifr_bucket".to_string())),
                             method: "len".to_string(),
                             args: vec![],
-                        }),
-                        ty: RustType::I64,
+                        }],
                     }),
                     is_move: false,
                 },
@@ -604,34 +601,14 @@ impl RustEmitter {
                         mutable: false,
                         name: "__sifr_index_norm".to_string(),
                         ty: None,
-                        value: RustExpr::If {
-                            cond: Box::new(RustExpr::BinOp {
-                                left: Box::new(RustExpr::Ident("__sifr_index_i".to_string())),
-                                op: "<".to_string(),
-                                right: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
-                            }),
-                            then_expr: Box::new(RustExpr::Cast {
-                                expr: Box::new(RustExpr::Paren(Box::new(RustExpr::BinOp {
-                                    left: Box::new(RustExpr::Cast {
-                                        expr: Box::new(RustExpr::MethodCall {
-                                            receiver: Box::new(RustExpr::Ident(
-                                                "__sifr_bucket".to_string(),
-                                            )),
-                                            method: "len".to_string(),
-                                            args: vec![],
-                                        }),
-                                        ty: RustType::I64,
-                                    }),
-                                    op: "+".to_string(),
-                                    right: Box::new(RustExpr::Ident("__sifr_index_i".to_string())),
-                                }))),
-                                ty: RustType::Named("usize".to_string()),
-                            }),
-                            else_expr: Some(Box::new(RustExpr::Cast {
-                                expr: Box::new(RustExpr::Ident("__sifr_index_i".to_string())),
-                                ty: RustType::Named("usize".to_string()),
-                            })),
-                        },
+                        value: crate::build_normalized_index_expr(
+                            "__sifr_index_i",
+                            RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::Ident("__sifr_bucket".to_string())),
+                                method: "len".to_string(),
+                                args: vec![],
+                            },
+                        ),
                     },
                     RustStmt::Return(Some(RustExpr::MethodCall {
                         receiver: Box::new(RustExpr::MethodCall {

@@ -140,7 +140,10 @@ impl RustEmitter {
                 None => Ok(None),
             };
         }
-        self.lower_stmt_expr_for_ir(argument)
+        let lowered = self.lower_stmt_expr_for_ir(argument)?;
+        Ok(lowered.map(|expr| {
+            self.clone_borrowed_argument_for_owned_convention(argument, convention, expr)
+        }))
     }
 
     pub(crate) fn lower_call_argument_for_stmt(
@@ -200,7 +203,25 @@ impl RustEmitter {
                 None => None,
             };
         }
-        self.try_lower_registry_expr_strict(argument)
+        let lowered = self.try_lower_registry_expr_strict(argument)?;
+        Some(self.clone_borrowed_argument_for_owned_convention(argument, convention, lowered))
+    }
+
+    fn clone_borrowed_argument_for_owned_convention(
+        &self,
+        argument: &HirExpr,
+        convention: ParamConvention,
+        lowered: RustExpr,
+    ) -> RustExpr {
+        if convention.is_owned()
+            && matches!(argument, HirExpr::Name { name, ty, .. }
+                if (self.borrowed_params.contains(name) || self.mut_borrowed_params.contains(name))
+                    && !crate::helpers::is_copy_type_for_codegen(ty))
+        {
+            RustExpr::Clone(Box::new(lowered))
+        } else {
+            lowered
+        }
     }
 
     pub(crate) fn lower_field_storage_access(

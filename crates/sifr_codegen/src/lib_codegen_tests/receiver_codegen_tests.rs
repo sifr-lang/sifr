@@ -108,7 +108,10 @@ class Bucket:
         rust_code.contains("helper(&mut self.values)"),
         "{rust_code}"
     );
-    assert!(rust_code.contains("fn size(&self) -> i64"), "{rust_code}");
+    assert!(
+        rust_code.contains("fn size(&self) -> SifrInt"),
+        "{rust_code}"
+    );
     assert!(rust_code.contains("helper(&self.values)"), "{rust_code}");
 }
 
@@ -144,10 +147,10 @@ class MutableConsumable:
 "#,
     );
 
-    assert!(rust_code.contains("fn read(&self) -> i64"));
+    assert!(rust_code.contains("fn read(&self) -> SifrInt"));
     assert!(rust_code.contains("fn bump(&mut self)"));
     assert!(rust_code.contains("fn close(self)"));
-    assert!(rust_code.contains("fn take(mut self) -> i64"));
+    assert!(rust_code.contains("fn take(mut self) -> SifrInt"));
 }
 
 #[test]
@@ -237,7 +240,7 @@ class Child(Base):
         "{rust_code}"
     );
     assert!(
-        rust_code.contains("__sifr_self.items.push(1_i64)"),
+        rust_code.contains("__sifr_self.items.push(SifrInt::from_i64(1))"),
         "{rust_code}"
     );
     assert!(
@@ -279,19 +282,21 @@ class Owner:
         .find("let mut __sifr_self = Self {")
         .expect("constructor should materialize its instance");
     let nested_assignment = rust_code
-        .find("__sifr_self.helper.value = 7_i64")
+        .find("__sifr_self.helper.value = SifrInt::from_i64(7)")
         .expect("nested assignment should use the synthetic receiver");
     let branch = rust_code
         .find("if flag")
         .expect("self-dependent branch should be emitted");
     let local_assert = rust_code
-        .find("assert!(n == (1_i64))")
-        .expect("self-free statement after the branch should retain its order");
+        .find("assert!(&n == &SifrInt::from_i64(1))")
+        .unwrap_or_else(|| {
+            panic!("self-free statement after the branch should retain its order:\n{rust_code}")
+        });
     let reverse_dependency = rust_code
-        .find("let doubled: i64 = __sifr_self.count * (2_i64)")
+        .find("let doubled: SifrInt = &__sifr_self.count.clone() * &SifrInt::from_i64(2)")
         .expect("self-dependent local should use the synthetic receiver");
     let dependency_assert = rust_code
-        .find("assert!(doubled == (2_i64))")
+        .find("assert!(&doubled == &SifrInt::from_i64(2))")
         .expect("dependent statement should follow its binding");
 
     assert!(

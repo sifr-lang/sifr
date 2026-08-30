@@ -74,7 +74,7 @@ fn test_task_gather_lowers_to_private_gather_helper() {
     assert!(
         result
             .rust_source
-            .contains("let result: __SifrTaskResult<Vec<i64>, ::std::convert::Infallible>")
+            .contains("let result: __SifrTaskResult<Vec<SifrInt>, ::std::convert::Infallible>")
     );
     assert!(
         result
@@ -112,7 +112,7 @@ fn test_scope_spawn_fallible_coroutine_lowers_to_result_spawn_helper() {
     assert!(
         result
             .rust_source
-            .contains("let handle: __SifrTask<i64, ValueError>")
+            .contains("let handle: __SifrTask<SifrInt, ValueError>")
     );
     assert!(!result.rust_source.contains("let handle: Task<"));
     assert!(
@@ -123,7 +123,7 @@ fn test_scope_spawn_fallible_coroutine_lowers_to_result_spawn_helper() {
     assert!(
         result
             .rust_source
-            .contains("let result: __SifrTaskResult<i64, ValueError>")
+            .contains("let result: __SifrTaskResult<SifrInt, ValueError>")
     );
     assert!(
         result
@@ -168,7 +168,7 @@ fn test_task_gather_fallible_tasks_keeps_error_parameter_unwrapped() {
     assert!(
         result
             .rust_source
-            .contains("let result: __SifrTaskResult<Vec<i64>, ValueError>")
+            .contains("let result: __SifrTaskResult<Vec<SifrInt>, ValueError>")
     );
 }
 
@@ -202,7 +202,7 @@ fn test_task_race_lowers_to_private_race_helper() {
     assert!(
         result
             .rust_source
-            .contains("let result: __SifrTaskResult<i64, ::std::convert::Infallible>")
+            .contains("let result: __SifrTaskResult<SifrInt, ::std::convert::Infallible>")
     );
     assert!(
         result
@@ -241,7 +241,7 @@ fn test_task_race_fallible_tasks_keeps_error_parameter_unwrapped() {
     assert!(
         result
             .rust_source
-            .contains("let result: __SifrTaskResult<i64, ValueError>")
+            .contains("let result: __SifrTaskResult<SifrInt, ValueError>")
     );
 }
 
@@ -297,7 +297,7 @@ fn test_task_select_lowers_to_private_select_helper() {
             .contains("first_observed.store(false, ::std::sync::atomic::Ordering::SeqCst)")
     );
     assert!(result.rust_source.contains(
-        "let result: __SifrSelect2<__SifrTaskResult<i64, ::std::convert::Infallible>, __SifrTaskResult<String, ::std::convert::Infallible>>"
+        "let result: __SifrSelect2<__SifrTaskResult<SifrInt, ::std::convert::Infallible>, __SifrTaskResult<String, ::std::convert::Infallible>>"
     ));
     assert!(
         result
@@ -324,7 +324,7 @@ fn test_task_select_fallible_tasks_preserves_distinct_error_parameters() {
     assert!(result.rust_source.contains("__SifrTaskResult<B, EB>"));
     assert!(result.rust_source.contains("Err(__SifrFailure<E>)"));
     assert!(result.rust_source.contains(
-        "let result: __SifrSelect2<__SifrTaskResult<i64, ValueError>, __SifrTaskResult<String, IOError>>"
+        "let result: __SifrSelect2<__SifrTaskResult<SifrInt, ValueError>, __SifrTaskResult<String, IOError>>"
     ));
 }
 
@@ -354,7 +354,7 @@ fn test_task_handle_join_lowers_to_task_result_observation() {
     assert!(
         result
             .rust_source
-            .contains("let result: __SifrTaskResult<i64, ::std::convert::Infallible>")
+            .contains("let result: __SifrTaskResult<SifrInt, ::std::convert::Infallible>")
     );
 }
 
@@ -376,7 +376,7 @@ fn test_await_task_handle_desugars_to_join_observation() {
     assert!(
         result
             .rust_source
-            .contains("let result: __SifrTaskResult<i64, ::std::convert::Infallible>")
+            .contains("let result: __SifrTaskResult<SifrInt, ::std::convert::Infallible>")
     );
 }
 
@@ -527,7 +527,7 @@ fn test_task_timeout_handle_lowers_to_private_timeout_result() {
             .contains("Ok(__SifrTaskResult::Ok(value)) => __SifrTaskResult::Ok(value)")
     );
     assert!(result.rust_source.contains(
-        "let result: __SifrTaskResult<i64, __SifrTimeoutResult<::std::convert::Infallible>>"
+        "let result: __SifrTaskResult<SifrInt, __SifrTimeoutResult<::std::convert::Infallible>>"
     ));
 }
 

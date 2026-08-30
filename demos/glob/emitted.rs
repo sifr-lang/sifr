@@ -43,6 +43,7 @@ mod __sifr_project_nominals {
     }
 }
 pub use __sifr_project_nominals::IOError;
+use ::sifr_runtime::SifrInt;
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct __SifrIoNativeFileHandle {
     _id: String,
@@ -195,15 +196,15 @@ fn chdir(path: &String) -> Result<(), IOError> {
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn stat_size(path: &String) -> Result<i64, IOError> {
+fn stat_size(path: &String) -> Result<SifrInt, IOError> {
     ::sifr_stdlib::fs::stat_size(path)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok.to_i64_saturating())
+        .map(|__sifr_bridge_ok| __sifr_bridge_ok.into_sifr_int())
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn disk_usage(path: &String) -> Vec<i64> {
+fn disk_usage(path: &String) -> Vec<SifrInt> {
     ::sifr_stdlib::fs::disk_usage(path)
         .into_iter()
-        .map(|__sifr_bridge_value| __sifr_bridge_value.to_i64_saturating())
+        .map(|__sifr_bridge_value| __sifr_bridge_value.into_sifr_int())
         .collect()
 }
 fn is_file(path: &String) -> bool {
@@ -261,14 +262,14 @@ fn rglob_pattern(dir: &String, pattern: &String) -> Result<Vec<String>, IOError>
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
 fn fnmatch(name: &String, pattern: &String) -> bool {
-    _match(name, 0_i64, pattern, 0_i64)
+    _match(name, SifrInt::from_i64(0), pattern, SifrInt::from_i64(0))
 }
-fn _match(name: &String, mut ni: i64, pattern: &String, mut pi: i64) -> bool {
-    while (pi < (pattern.chars().count() as i64)) {
+fn _match(name: &String, mut ni: SifrInt, pattern: &String, mut pi: SifrInt) -> bool {
+    while (&pi < &SifrInt::from(pattern.chars().count())) {
         let pc: Option<String> = Some({
             let Some(__indexed_char) = pattern
                 .chars()
-                .nth(pi as usize)
+                .nth(::sifr_runtime::to_usize_proven(&(pi)))
                 .map(|c| c.to_string()) else {
                 unreachable!("compiler-verified string index should be in range");
             };
@@ -276,33 +277,33 @@ fn _match(name: &String, mut ni: i64, pattern: &String, mut pi: i64) -> bool {
         });
         if let Some(pc) = pc {
             if pc == "*" {
-                pi += 1_i64;
-                if (pi == (pattern.chars().count() as i64)) {
+                pi = &pi + &SifrInt::from_i64(1);
+                if (&pi == &SifrInt::from(pattern.chars().count())) {
                     return true;
                 }
-                let mut j: i64 = ni;
-                while (j <= (name.chars().count() as i64)) {
-                    if _match(name, j, pattern, pi) {
+                let mut j: SifrInt = ni.clone();
+                while (&j <= &SifrInt::from(name.chars().count())) {
+                    if _match(name, (j).clone(), pattern, (pi).clone()) {
                         return true;
                     }
-                    j += 1_i64;
+                    j = &j + &SifrInt::from_i64(1);
                 }
                 return false;
             } else {
                 if pc == "?" {
-                    if (ni >= (name.chars().count() as i64)) {
+                    if (&ni >= &SifrInt::from(name.chars().count())) {
                         return false;
                     }
-                    ni += 1_i64;
-                    pi += 1_i64;
+                    ni = &ni + &SifrInt::from_i64(1);
+                    pi = &pi + &SifrInt::from_i64(1);
                 } else {
-                    if (ni >= (name.chars().count() as i64)) {
+                    if (&ni >= &SifrInt::from(name.chars().count())) {
                         return false;
                     }
                     let nc: Option<String> = Some({
                         let Some(__indexed_char) = name
                             .chars()
-                            .nth(ni as usize)
+                            .nth(::sifr_runtime::to_usize_proven(&(ni)))
                             .map(|c| c.to_string()) else {
                             unreachable!(
                                 "compiler-verified string index should be in range"
@@ -317,15 +318,15 @@ fn _match(name: &String, mut ni: i64, pattern: &String, mut pi: i64) -> bool {
                     } else {
                         return false;
                     }
-                    ni += 1_i64;
-                    pi += 1_i64;
+                    ni = &ni + &SifrInt::from_i64(1);
+                    pi = &pi + &SifrInt::from_i64(1);
                 }
             }
         } else {
             return false;
         }
     }
-    (ni == (name.chars().count() as i64))
+    (&ni == &SifrInt::from(name.chars().count()))
 }
 fn filterfalse(names: &Vec<String>, pattern: &String) -> Vec<String> {
     let mut result: Vec<String> = vec![];
@@ -383,11 +384,11 @@ fn _translate_literal(ch: &String) -> String {
 fn translate(pattern: &String) -> String {
     let __sifr_chars_pattern: Vec<char> = pattern.chars().collect::<Vec<char>>();
     let mut body: String = "".to_string();
-    let mut i: i64 = 0_i64;
-    while (i < (__sifr_chars_pattern.len() as i64)) {
+    let mut i: SifrInt = SifrInt::from_i64(0);
+    while (&i < &SifrInt::from(__sifr_chars_pattern.len())) {
         let ch: Option<String> = Some({
             let Some(__indexed_char) = __sifr_chars_pattern
-                .get(i as usize)
+                .get(::sifr_runtime::to_usize_proven(&(i)))
                 .map(|c| c.to_string()) else {
                 unreachable!("compiler-verified string index should be in range");
             };
@@ -404,7 +405,7 @@ fn translate(pattern: &String) -> String {
                 }
             }
         }
-        i += 1_i64;
+        i = &i + &SifrInt::from_i64(1);
     }
     {
         let mut __sifr_concat: String = String::with_capacity(
@@ -427,10 +428,11 @@ fn filter(names: &Vec<String>, pattern: &String) -> Vec<String> {
 }
 fn glob(directory: &String, pattern: &String) -> Vec<String> {
     let __sifr_chars_pattern: Vec<char> = pattern.chars().collect::<Vec<char>>();
-    let include_hidden: bool = ((((__sifr_chars_pattern.len() as i64) > (0_i64)))
+    let include_hidden: bool = (((&SifrInt::from(__sifr_chars_pattern.len())
+        > &SifrInt::from_i64(0)))
         && ((({
             let Some(__indexed_char) = __sifr_chars_pattern
-                .get((0_i64) as usize)
+                .get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(0))))
                 .map(|c| c.to_string()) else {
                 unreachable!("compiler-verified string index should be in range");
             };
@@ -441,13 +443,13 @@ fn glob(directory: &String, pattern: &String) -> Vec<String> {
         let entries: Vec<String> = listdir(directory)?;
         for entry in entries.iter().cloned() {
             let __sifr_chars_entry: Vec<char> = entry.chars().collect::<Vec<char>>();
-            if ((__sifr_chars_entry.len() as i64) == (0_i64)) {
+            if (&SifrInt::from(__sifr_chars_entry.len()) == &SifrInt::from_i64(0)) {
                 continue;
             }
             if !include_hidden
                 && (({
                     let Some(__indexed_char) = __sifr_chars_entry
-                        .get((0_i64) as usize)
+                        .get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(0))))
                         .map(|c| c.to_string()) else {
                         unreachable!(
                             "compiler-verified string index should be in range"
@@ -852,7 +854,10 @@ impl __SifrStdlib_sifr_x2eencoding_x2eDecoder {
             &errors,
         );
         let __sifr_field_init_2: bool = false;
-        let __sifr_field_init_3: Vec<u8> = vec![];
+        let __sifr_field_init_3: Vec<u8> = {
+            let __sifr_empty_bytes_literal: Vec<u8> = vec![];
+            __sifr_empty_bytes_literal
+        };
         Self {
             _encoding: __sifr_field_init_0,
             _errors: __sifr_field_init_1,
@@ -899,7 +904,10 @@ impl __SifrStdlib_sifr_x2eencoding_x2eDecoder {
             )?;
             self._pending = next_pending;
             if r#final {
-                self._pending = vec![];
+                self._pending = {
+                    let __sifr_empty_bytes_literal: Vec<u8> = vec![];
+                    __sifr_empty_bytes_literal
+                };
                 self._exhausted = true;
             }
             return Ok(Ok(outcome));
@@ -1286,7 +1294,7 @@ fn _encoding_encode_outcome(
     }
 }
 fn encoding(label: &String) -> __SifrStdlib_sifr_x2eencoding_x2eEncoding {
-    __SifrStdlib_sifr_x2eencoding_x2eEncoding::new((label).clone())
+    __SifrStdlib_sifr_x2eencoding_x2eEncoding::new((label.clone()).clone())
 }
 fn utf8() -> __SifrStdlib_sifr_x2eencoding_x2eEncoding {
     __SifrStdlib_sifr_x2eencoding_x2eEncoding::new(__const_ENCODING_UTF8())
@@ -1545,7 +1553,7 @@ fn env_items() -> Vec<String> {
 fn get_args() -> Vec<String> {
     ::sifr_stdlib::sys::get_args()
 }
-fn sys_exit(code: i64) {
+fn sys_exit(code: SifrInt) {
     ::sifr_stdlib::sys::sys_exit(::sifr_runtime::interop::SifrIntBridge::from(code));
 }
 fn sys_version() -> String {
@@ -1554,14 +1562,14 @@ fn sys_version() -> String {
 fn sys_platform() -> String {
     ::sifr_stdlib::sys::sys_platform()
 }
-fn sys_maxsize() -> i64 {
-    ::sifr_stdlib::sys::sys_maxsize().to_i64_saturating()
+fn sys_maxsize() -> SifrInt {
+    ::sifr_stdlib::sys::sys_maxsize().into_sifr_int()
 }
-fn getpid() -> i64 {
-    ::sifr_stdlib::sys::getpid().to_i64_saturating()
+fn getpid() -> SifrInt {
+    ::sifr_stdlib::sys::getpid().into_sifr_int()
 }
-fn cpu_count() -> i64 {
-    ::sifr_stdlib::sys::cpu_count().to_i64_saturating()
+fn cpu_count() -> SifrInt {
+    ::sifr_stdlib::sys::cpu_count().into_sifr_int()
 }
 fn which(name: &String) -> Option<String> {
     ::sifr_stdlib::sys::which(name)
@@ -1576,11 +1584,14 @@ fn os_name() -> String {
     ::sifr_stdlib::sys::os_name()
 }
 fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
-    assert_eq!(actual.len() as i64, expected.len() as i64);
-    let mut i: i64 = 0_i64;
-    while i < (actual.len() as i64) {
-        assert!(Some(actual[i as usize]) == expected.get(i as usize).copied());
-        i += 1_i64;
+    assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
+    let mut i: SifrInt = SifrInt::from_i64(0);
+    while &i < &SifrInt::from(actual.len()) {
+        assert!(
+            Some(actual[::sifr_runtime::to_usize_proven(& (i))]) == expected
+            .get(::sifr_runtime::to_usize_proven(& (i))).copied()
+        );
+        i = &i + &SifrInt::from_i64(1);
     }
 }
 fn __io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
@@ -1662,26 +1673,32 @@ fn collect_glob_actual() -> Vec<bool> {
             &"h".to_string(),
         )?;
         let txt: Vec<String> = glob(&base, &"*.txt".to_string());
-        let txt_ok: bool = (((((txt.len() as i64) == (2_i64)))
-            && ((txt[(0_i64) as usize].clone() == "a.txt")))
-            && ((txt[(1_i64) as usize].clone() == "b.txt")));
+        let txt_ok: bool = ((((&SifrInt::from(txt.len()) == &SifrInt::from_i64(2)))
+            && ((txt[::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(0)))].clone()
+                == "a.txt")))
+            && ((txt[::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(1)))].clone()
+                == "b.txt")));
         actual.push(txt_ok);
         let hidden: Vec<String> = glob(&base, &".*.txt".to_string());
-        let hidden_ok: bool = ((((hidden.len() as i64) == (1_i64)))
-            && ((hidden[(0_i64) as usize].clone() == ".hidden.txt")));
+        let hidden_ok: bool = (((&SifrInt::from(hidden.len()) == &SifrInt::from_i64(1)))
+            && ((hidden[::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(0)))].clone()
+                == ".hidden.txt")));
         actual.push(hidden_ok);
         let wildcard_q: Vec<String> = glob(&base, &"?.txt".to_string());
-        let wildcard_q_ok: bool = (((((wildcard_q.len() as i64) == (2_i64)))
-            && ((wildcard_q[(0_i64) as usize].clone() == "a.txt")))
-            && ((wildcard_q[(1_i64) as usize].clone() == "b.txt")));
+        let wildcard_q_ok: bool = ((((&SifrInt::from(wildcard_q.len())
+            == &SifrInt::from_i64(2)))
+            && ((wildcard_q[::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(0)))]
+                .clone() == "a.txt")))
+            && ((wildcard_q[::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(1)))]
+                .clone() == "b.txt")));
         actual.push(wildcard_q_ok);
         let none: Vec<String> = glob(&base, &"*.csv".to_string());
-        actual.push((none.len() as i64) == (0_i64));
+        actual.push(SifrInt::from(none.len()) == SifrInt::from_i64(0));
         let missing: Vec<String> = glob(
             &format!("{}{}", base, "_missing"),
             &"*.txt".to_string(),
         );
-        actual.push((missing.len() as i64) == (0_i64));
+        actual.push(SifrInt::from(missing.len()) == SifrInt::from_i64(0));
         Ok(())
     })();
     if let Err(__sifr_try_err) = __sifr_try_res {

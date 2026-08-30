@@ -1,7 +1,9 @@
 // src/main.rs
-fn shadow_parameter(mut value: i64) -> i64 {
-    value += 2_i64;
-    value
+use ::sifr_runtime::SifrInt;
+
+fn shadow_parameter(mut value: SifrInt) -> SifrInt {
+    value = &value + &SifrInt::from_i64(2);
+    value.clone()
 }
 
 fn choose_label(flag: bool) -> String {
@@ -13,7 +15,7 @@ fn choose_label(flag: bool) -> String {
 }
 
 fn main() {
-    assert!((shadow_parameter(5_i64) == (7_i64)));
+    assert!((&shadow_parameter(SifrInt::from_i64(5)) == &SifrInt::from_i64(7)));
     assert!((choose_label(true) == "warm"));
     assert!((choose_label(false) == "cold"));
     println!("local_shadowing: ok");

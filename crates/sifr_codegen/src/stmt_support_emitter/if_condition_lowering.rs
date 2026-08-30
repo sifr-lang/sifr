@@ -122,10 +122,7 @@ impl RustEmitter {
         );
 
         if left_is_option && !right_is_option && !right_none_like {
-            if right_borrowed
-                && crate::resolve_alias_type_for_plain_call(&right_ty).ownership()
-                    != sifr_type_system::OwnershipKind::Copy
-            {
+            if right_borrowed && !crate::helpers::is_copy_type_for_codegen(&right_ty) {
                 lowered_right = crate::RustExpr::MethodCall {
                     receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_right))),
                     method: "clone".to_string(),
@@ -137,10 +134,7 @@ impl RustEmitter {
                 args: vec![lowered_right],
             };
         } else if !left_is_option && right_is_option && !left_none_like {
-            if left_borrowed
-                && crate::resolve_alias_type_for_plain_call(&left_ty).ownership()
-                    != sifr_type_system::OwnershipKind::Copy
-            {
+            if left_borrowed && !crate::helpers::is_copy_type_for_codegen(&left_ty) {
                 lowered_left = crate::RustExpr::MethodCall {
                     receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_left))),
                     method: "clone".to_string(),

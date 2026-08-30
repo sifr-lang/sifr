@@ -559,8 +559,9 @@ impl RustEmitter {
                     ..
                 } if self.generic_classes.contains(class_name) && type_args.is_empty()
             );
-            let lowered_value = if effective_ty.ownership() == sifr_type_system::OwnershipKind::Move
-            {
+            let lowered_value = if crate::helpers::is_copy_type_for_codegen(&effective_ty) {
+                None
+            } else {
                 if let HirExpr::Name {
                     name: value_name, ..
                 } = value
@@ -577,8 +578,6 @@ impl RustEmitter {
                 } else {
                     None
                 }
-            } else {
-                None
             };
             let borrowed_dict_get = None;
             let lowered_value = if let Some(lowered) = borrowed_dict_get.clone() {
@@ -742,6 +741,7 @@ impl RustEmitter {
             } else {
                 return Ok(false);
             };
+            let lowered_value = Self::clone_non_copy_name_expr_for_ir(value, lowered_value);
             self.push_captured_stmt(&RustStmt::Expr(RustExpr::MethodCall {
                 receiver: Box::new(RustExpr::Ident("_yields".to_string())),
                 method: "push".to_string(),

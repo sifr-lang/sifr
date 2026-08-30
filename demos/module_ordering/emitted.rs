@@ -11,11 +11,13 @@ fn main() {
 
 // src/consumer.rs
 pub use crate::provider::provided;
-pub fn value() -> i64 {
+pub use ::sifr_runtime::SifrInt;
+pub fn value() -> SifrInt {
     provided()
 }
 
 // src/provider.rs
-pub fn provided() -> i64 {
-    19_i64
+pub use ::sifr_runtime::SifrInt;
+pub fn provided() -> SifrInt {
+    SifrInt::from_i64(19)
 }

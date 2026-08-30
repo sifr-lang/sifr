@@ -1,3 +1,4 @@
+use super::sifr_int_parse_helpers::sifr_int_from_i64_expr;
 use super::*;
 use crate::{RustExpr, RustLiteral, RustStmt, RustType};
 
@@ -210,7 +211,7 @@ fn rewrites_large_int_module_const_arithmetic_to_sifr_int_operands() {
         right.as_ref(),
         RustExpr::FnCall { func, args }
             if args.len() == 1
-                && matches!(func.as_ref(), RustExpr::Path(path) if path.as_slice() == ["SifrInt", "from_i64"])
+                && matches!(func.as_ref(), RustExpr::Path(path) if path.as_slice() == ["SifrInt", "from"])
     ));
 }
 
@@ -224,10 +225,9 @@ fn rewrites_large_int_floor_division_by_nonzero_literal_to_checked_runtime_call(
         value: RustExpr::BinOp {
             left: Box::new(RustExpr::Ident("BIG_LIMIT".to_string())),
             op: "/".to_string(),
-            right: Box::new(RustExpr::Cast {
-                expr: Box::new(RustExpr::Literal(RustLiteral::Int(3))),
-                ty: RustType::I64,
-            }),
+            right: Box::new(sifr_int_from_i64_expr(RustExpr::Literal(RustLiteral::Int(
+                3,
+            )))),
         },
     });
 
@@ -261,7 +261,7 @@ fn rewrites_large_int_floor_division_by_nonzero_literal_to_checked_runtime_call(
             expr.as_ref(),
             RustExpr::FnCall { func, args }
                 if args.len() == 1
-                    && matches!(func.as_ref(), RustExpr::Path(path) if path.as_slice() == ["SifrInt", "from_i64"])
+                    && matches!(func.as_ref(), RustExpr::Path(path) if path.as_slice() == ["SifrInt", "from"])
         )
     ));
 }
@@ -276,10 +276,9 @@ fn rewrites_large_int_modulo_by_nonzero_literal_to_checked_runtime_call() {
         value: RustExpr::BinOp {
             left: Box::new(RustExpr::Ident("BIG_LIMIT".to_string())),
             op: "%".to_string(),
-            right: Box::new(RustExpr::Cast {
-                expr: Box::new(RustExpr::Literal(RustLiteral::Int(3))),
-                ty: RustType::I64,
-            }),
+            right: Box::new(sifr_int_from_i64_expr(RustExpr::Literal(RustLiteral::Int(
+                3,
+            )))),
         },
     });
 
@@ -358,7 +357,7 @@ fn rewrites_registered_sifr_int_local_arithmetic_to_sifr_int_operands() {
         right.as_ref(),
         RustExpr::FnCall { func, args }
             if args.len() == 1
-                && matches!(func.as_ref(), RustExpr::Path(path) if path.as_slice() == ["SifrInt", "from_i64"])
+                && matches!(func.as_ref(), RustExpr::Path(path) if path.as_slice() == ["SifrInt", "from"])
     ));
 }
 
@@ -395,7 +394,7 @@ fn rewrites_large_int_module_const_comparison_to_sifr_int_operands() {
                 expr.as_ref(),
                 RustExpr::FnCall { func, args }
                     if args.len() == 1
-                        && matches!(func.as_ref(), RustExpr::Path(path) if path.as_slice() == ["SifrInt", "from_i64"])
+                        && matches!(func.as_ref(), RustExpr::Path(path) if path.as_slice() == ["SifrInt", "from"])
             )
     ));
 }
@@ -479,7 +478,7 @@ fn rewrites_forced_sifr_int_assignment_target_storage() {
             value: RustExpr::FnCall { func, args },
         } if name == "total"
             && args.len() == 1
-            && matches!(func.as_ref(), RustExpr::Path(path) if path.as_slice() == ["SifrInt", "from_i64"])
+            && matches!(func.as_ref(), RustExpr::Path(path) if path.as_slice() == ["SifrInt", "from"])
     ));
 }
 
@@ -559,7 +558,7 @@ fn rewrites_forced_sifr_int_augassign_to_assignment() {
                     right.as_ref(),
                     RustExpr::FnCall { func, args }
                         if args.len() == 1
-                            && matches!(func.as_ref(), RustExpr::Path(path) if path.as_slice() == ["SifrInt", "from_i64"])
+                            && matches!(func.as_ref(), RustExpr::Path(path) if path.as_slice() == ["SifrInt", "from"])
                 )
     ));
 }
@@ -667,7 +666,7 @@ fn rewrites_sifr_int_floor_mod_augassign_by_nonzero_literal_to_assignment() {
                         expr.as_ref(),
                         RustExpr::FnCall { func, args }
                             if args.len() == 1
-                                && matches!(func.as_ref(), RustExpr::Path(path) if path.as_slice() == ["SifrInt", "from_i64"])
+                                && matches!(func.as_ref(), RustExpr::Path(path) if path.as_slice() == ["SifrInt", "from"])
                     )
                 )
         ));
@@ -712,7 +711,7 @@ fn rewrites_sifr_int_returning_function_call_named_i64_let_type() {
     let rewritten = emitter.rewrite_stdlib_constant_idents_in_stmt(RustStmt::Let {
         mutable: false,
         name: "value".to_string(),
-        ty: Some(RustType::Named("i64".to_string())),
+        ty: Some(RustType::Named("SifrInt".to_string())),
         value: RustExpr::FnCall {
             func: Box::new(RustExpr::Ident("make_big".to_string())),
             args: vec![],
@@ -739,7 +738,7 @@ fn rewrites_sifr_int_returning_function_call_with_args_let_type() {
     let rewritten = emitter.rewrite_stdlib_constant_idents_in_stmt(RustStmt::Let {
         mutable: false,
         name: "value".to_string(),
-        ty: Some(RustType::Named("i64".to_string())),
+        ty: Some(RustType::Named("SifrInt".to_string())),
         value: RustExpr::FnCall {
             func: Box::new(RustExpr::Ident("make_big_with_arg".to_string())),
             args: vec![RustExpr::Cast {

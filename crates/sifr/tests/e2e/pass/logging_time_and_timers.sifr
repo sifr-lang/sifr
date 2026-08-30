@@ -88,7 +88,12 @@ def main() -> None:
     localtime_ok = local.tm_year > 0 and local.tm_mon >= 1 and local.tm_mon <= 12 and local.tm_mday >= 1 and local.tm_mday <= 31 and local.tm_yday >= 1 and local.tm_yday <= 366
 
     epoch_tm: struct_time = struct_time(1970, 1, 1, 0, 0, 0, 3, 1, 0)
-    mktime_ok = mktime(epoch_tm) == 0.0
+    mktime_ok = False
+    try:
+        epoch_stamp: float = mktime(epoch_tm)
+        mktime_ok = epoch_stamp == 0.0
+    except Error:
+        mktime_ok = False
 
     timezone_constants_ok = TIMEZONE == 0 and ALTZONE == 0 and DAYLIGHT == 0 and TZNAME[0] == "UTC" and TZNAME[1] == "UTC"
 

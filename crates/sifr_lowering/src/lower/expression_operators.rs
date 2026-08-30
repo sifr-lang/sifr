@@ -1,5 +1,4 @@
 use super::LowerCtx;
-use super::arithmetic_warnings::check_int_overflow_risk;
 use super::contextual_list_literal_specialization::specialize_empty_list_literal;
 use super::empty_collection_refinement::{
     refine_empty_dict_index_comparison_expr, refine_empty_dict_membership_expr,
@@ -7,17 +6,27 @@ use super::empty_collection_refinement::{
 };
 use super::expression_diagnostics;
 use super::expressions::lower_expr;
-use super::integer_failure_diagnostics::exact_int_division_requires_handling;
+use super::integer_float_semantics::mixed_float_integer_arithmetic_result_type;
 use super::numeric_sentinels::{
     lower_sentinel_expr_for_name_domain, maybe_resolve_numeric_sentinel_name_from_type,
     retag_numeric_sentinel_name_expr,
 };
 use super::type_bounds::{supports_hash_key_in_context, supports_structural_equality_in_context};
 use crate::hir_nodes::HirExpr;
-use num_bigint::BigInt;
 use ruff_text_size::Ranged;
 use sifr_python_ast::{CmpOp, ExprBinOp, ExprCompare, ExprUnaryOp, Operator, UnaryOp};
 use sifr_type_system::{Type, type_check_binary_op, type_check_comparison, type_check_unary_op};
+
+mod integer_semantics;
+pub(in crate::lower) use integer_semantics::{
+    bounded_integer_arithmetic_result_type, builtin_error_type,
+    exact_integer_expr_is_proven_float_representable, is_exact_or_fixed_int_like,
+    proven_exact_integer_value, statically_safe_bounded_integer_augassign,
+};
+use integer_semantics::{
+    decimal_integer_arithmetic_result_type, exact_int_floor_result_type,
+    exact_int_true_division_result_type,
+};
 
 fn is_none_identity_comparison(left: &Type, right: &Type) -> bool {
     matches!(left.resolve_alias(), Type::None) || matches!(right.resolve_alias(), Type::None)
@@ -154,13 +163,26 @@ pub(in crate::lower) fn lower_binop(binop: &ExprBinOp, ctx: &mut LowerCtx) -> Op
         );
     }
 
-    if exact_int_division_requires_handling(&left, op_str, &right, ctx, binop.range()) {
-        return None;
-    }
     if generic_addition_requires_addable_bound(&left, op_str, &right, ctx, binop.range()) {
         return None;
     }
+    if let Some(result_ty) = decimal_integer_arithmetic_result_type(&left, op_str, &right, ctx) {
+        return Some(HirExpr::BinOp {
+            left: Box::new(left),
+            op: op_str.to_string(),
+            right: Box::new(right),
+            ty: result_ty,
+        });
+    }
     if let Some(result_ty) = exact_int_floor_result_type(&left, op_str, &right, ctx) {
+        return Some(HirExpr::BinOp {
+            left: Box::new(left),
+            op: op_str.to_string(),
+            right: Box::new(right),
+            ty: result_ty,
+        });
+    }
+    if let Some(result_ty) = bounded_integer_arithmetic_result_type(&left, op_str, &right, ctx) {
         return Some(HirExpr::BinOp {
             left: Box::new(left),
             op: op_str.to_string(),
@@ -176,19 +198,23 @@ pub(in crate::lower) fn lower_binop(binop: &ExprBinOp, ctx: &mut LowerCtx) -> Op
             ty: result_ty,
         });
     }
+    if let Some(result_ty) = mixed_float_integer_arithmetic_result_type(&left, op_str, &right, ctx)
+    {
+        return Some(HirExpr::BinOp {
+            left: Box::new(left),
+            op: op_str.to_string(),
+            right: Box::new(right),
+            ty: result_ty,
+        });
+    }
 
     match type_check_binary_op(left.ty(), op_str, right.ty()) {
-        Ok(result_ty) => {
-            if result_ty == Type::Int {
-                check_int_overflow_risk(op_str, &left, &right, ctx, binop.range());
-            }
-            Some(HirExpr::BinOp {
-                left: Box::new(left),
-                op: op_str.to_string(),
-                right: Box::new(right),
-                ty: result_ty,
-            })
-        }
+        Ok(result_ty) => Some(HirExpr::BinOp {
+            left: Box::new(left),
+            op: op_str.to_string(),
+            right: Box::new(right),
+            ty: result_ty,
+        }),
         Err((code, message)) => {
             if let Type::Class { methods, .. } = left.ty() {
                 if let Some(dunder) = op_to_dunder(op_str) {
@@ -214,104 +240,6 @@ pub(in crate::lower) fn lower_binop(binop: &ExprBinOp, ctx: &mut LowerCtx) -> Op
             ctx.error_with_code_at(code, message, binop.range());
             None
         }
-    }
-}
-
-fn exact_int_floor_result_type(
-    left: &HirExpr,
-    op: &str,
-    right: &HirExpr,
-    ctx: &LowerCtx,
-) -> Option<Type> {
-    if ctx.is_stdlib_lowering() {
-        return None;
-    }
-    if !matches!(op, "//" | "%") {
-        return None;
-    }
-    if !is_exact_int_like(left.ty()) || !is_exact_int_like(right.ty()) {
-        return None;
-    }
-    if is_proven_nonzero_integer_expr(right, ctx) {
-        return None;
-    }
-    Some(Type::Result(
-        Box::new(Type::Int),
-        Box::new(division_error_type(ctx)),
-    ))
-}
-
-fn division_error_type(ctx: &LowerCtx) -> Type {
-    ctx.class_types
-        .get("DivisionError")
-        .cloned()
-        .unwrap_or(Type::Class {
-            identity: None,
-            type_args: Vec::new(),
-            name: "DivisionError".to_string(),
-            fields: vec![("message".to_string(), Type::Str)],
-            methods: vec![],
-            parent_class: Some("Error".to_string()),
-        })
-}
-
-fn exact_int_true_division_result_type(
-    left: &HirExpr,
-    op: &str,
-    right: &HirExpr,
-    ctx: &LowerCtx,
-) -> Option<Type> {
-    if ctx.is_stdlib_lowering() || op != "/" {
-        return None;
-    }
-    if !is_exact_int_like(left.ty()) || !is_exact_int_like(right.ty()) {
-        return None;
-    }
-    let left_value = proven_exact_integer_value(left, ctx)?;
-    let right_value = proven_exact_integer_value(right, ctx)?;
-    if right_value == BigInt::ZERO {
-        return None;
-    }
-    (is_exactly_representable_as_float(&left_value)
-        && is_exactly_representable_as_float(&right_value))
-    .then_some(Type::Float)
-}
-
-fn is_exact_int_like(ty: &Type) -> bool {
-    matches!(ty, Type::Int | Type::LiteralInt(_))
-}
-
-fn proven_exact_integer_value(expr: &HirExpr, ctx: &LowerCtx) -> Option<BigInt> {
-    match expr {
-        HirExpr::IntLiteral(value) => Some(BigInt::from(*value)),
-        HirExpr::LargeIntLiteral(value) => value.parse::<BigInt>().ok(),
-        HirExpr::UnaryOp { op, operand, .. } if op == "-" => {
-            proven_exact_integer_value(operand, ctx).map(|value| -value)
-        }
-        HirExpr::Name { name, .. } => ctx
-            .scope
-            .const_integer_value(name)
-            .or_else(|| ctx.const_integer_values.get(name))
-            .cloned(),
-        _ => None,
-    }
-}
-
-fn is_exactly_representable_as_float(value: &BigInt) -> bool {
-    let max_exact = BigInt::from(9_007_199_254_740_992_i64);
-    let min_exact = -max_exact.clone();
-    value >= &min_exact && value <= &max_exact
-}
-
-fn is_proven_nonzero_integer_expr(expr: &HirExpr, ctx: &LowerCtx) -> bool {
-    match expr {
-        HirExpr::IntLiteral(value) => *value != 0,
-        HirExpr::LargeIntLiteral(value) => value != "0",
-        HirExpr::UnaryOp { op, operand, .. } if op == "-" => {
-            is_proven_nonzero_integer_expr(operand, ctx)
-        }
-        HirExpr::Name { name, .. } => ctx.is_proven_nonzero_integer_binding(name),
-        _ => false,
     }
 }
 

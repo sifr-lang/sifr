@@ -1,32 +1,33 @@
 // src/main.rs
 mod __sifr_project_nominals {
     pub use ::std::collections::HashMap;
+    pub use ::sifr_runtime::SifrInt;
     #[derive(Debug, Clone, PartialEq)]
     pub struct __SifrStdlib_sifr_x2ecollections_x2eCounter<T: std::hash::Hash + Eq> {
-        pub counts: HashMap<T, i64>,
+        pub counts: HashMap<T, SifrInt>,
     }
     impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
-        pub fn new(source: Option<HashMap<T, i64>>, iterable: Option<Vec<T>>) -> Self {
-            let mut counts: HashMap<T, i64> = HashMap::from([]);
+        pub fn new(source: Option<HashMap<T, SifrInt>>, iterable: Option<Vec<T>>) -> Self {
+            let mut counts: HashMap<T, SifrInt> = HashMap::from([]);
             if let Some(source) = source {
                 for key in source.keys().cloned().collect::<Vec<_>>() {
-                    let value: Option<i64> = source.get(&key).copied();
-                    if let Some(value) = value {
-                        counts.insert(key.clone(), value);
+                    let value: Option<SifrInt> = source.get(&key).cloned();
+                    if let Some(value) = value.clone() {
+                        counts.insert(key.clone(), value.clone());
                     }
                 }
             }
             if let Some(iterable) = iterable {
                 for item in iterable.iter().cloned() {
-                    let value2: Option<i64> = counts.get(&item).copied();
-                    if let Some(value2) = value2 {
-                        counts.insert(item.clone(), value2 + (1_i64));
+                    let value2: Option<SifrInt> = counts.get(&item).cloned();
+                    if let Some(value2) = value2.clone() {
+                        counts.insert(item.clone(), &value2 + &SifrInt::from_i64(1));
                     } else {
-                        counts.insert(item.clone(), 1_i64);
+                        counts.insert(item.clone(), SifrInt::from_i64(1));
                     }
                 }
             }
-            let __sifr_field_init_0: HashMap<T, i64> = counts;
+            let __sifr_field_init_0: HashMap<T, SifrInt> = counts;
             Self {
                 counts: __sifr_field_init_0,
             }
@@ -38,113 +39,109 @@ mod __sifr_project_nominals {
                 .collect::<Vec<_>>()
         }
     }
-    impl<T: ::std::hash::Hash + Eq> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
-        pub fn __getitem__(&self, key: &T) -> i64 {
-            let val: Option<i64> = self.counts.get(&key).copied();
-            if let Some(val) = val {
+    impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
+        pub fn __getitem__(&self, key: &T) -> SifrInt {
+            let val: Option<SifrInt> = self.counts.get(&key).cloned();
+            if let Some(val) = val.clone() {
                 return val;
             }
-            0_i64
+            SifrInt::from_i64(0)
         }
     }
-    impl<T: ::std::hash::Hash + Eq> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
-        pub fn get(&self, key: &T, default: i64) -> i64 {
-            let val: Option<i64> = self.counts.get(&key).copied();
-            if let Some(val) = val {
+    impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
+        pub fn get(&self, key: &T, default: &SifrInt) -> SifrInt {
+            let val: Option<SifrInt> = self.counts.get(&key).cloned();
+            if let Some(val) = val.clone() {
                 return val;
             }
-            default
+            default.clone()
         }
     }
     impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
         pub fn increment(&mut self, key: &T) {
-            let val: Option<i64> = self.counts.get(&key).copied();
-            if let Some(val) = val {
-                self.counts.insert(key.clone(), val + (1_i64));
+            let val: Option<SifrInt> = self.counts.get(&key).cloned();
+            if let Some(val) = val.clone() {
+                self.counts.insert(key.clone(), &val + &SifrInt::from_i64(1));
             } else {
-                self.counts.insert(key.clone(), 1_i64);
+                self.counts.insert(key.clone(), SifrInt::from_i64(1));
             }
         }
     }
     impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
-        pub fn total(&self) -> i64 {
-            let mut total: i64 = 0_i64;
+        pub fn total(&self) -> SifrInt {
+            let mut total: SifrInt = SifrInt::from_i64(0);
             for count in self.counts.values().cloned().collect::<Vec<_>>() {
-                total += count;
+                total = &total + &count;
             }
             total
         }
     }
     impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
-        pub fn most_common(&self, n: Option<i64>) -> Vec<(T, i64)> {
-            let mut result: Vec<(T, i64)> = vec![];
+        pub fn most_common(&self, n: &Option<SifrInt>) -> Vec<(T, SifrInt)> {
+            let mut result: Vec<(T, SifrInt)> = vec![];
             for key in self.counts.keys().cloned().collect::<Vec<_>>() {
-                let count: Option<i64> = self.counts.get(&key).copied();
-                if let Some(count) = count {
-                    let entry: (T, i64) = (key.clone(), count);
+                let count: Option<SifrInt> = self.counts.get(&key).cloned();
+                if let Some(count) = count.clone() {
+                    let entry: (T, SifrInt) = (key, count.clone());
                     result.push(entry.clone());
                 }
             }
-            let sz: i64 = result.len() as i64;
-            let mut i: i64 = 0_i64;
-            while i < sz {
-                let mut j: i64 = i + (1_i64);
-                while j < sz {
-                    let left: Option<(T, i64)> = Some(result[i as usize].clone());
-                    let right: Option<(T, i64)> = Some(result[j as usize].clone());
+            let sz: SifrInt = SifrInt::from(result.len());
+            let mut i: SifrInt = SifrInt::from_i64(0);
+            while &i < &sz {
+                let mut j: SifrInt = &i + &SifrInt::from_i64(1);
+                while &j < &sz {
+                    let left: Option<(T, SifrInt)> = Some(
+                        result[::sifr_runtime::to_usize_proven(&(i))].clone(),
+                    );
+                    let right: Option<(T, SifrInt)> = Some(
+                        result[::sifr_runtime::to_usize_proven(&(j))].clone(),
+                    );
                     if let Some(left) = left {
                         if let Some(right) = right {
-                            if ((right).1 > (left).1) {
+                            if ((right).1.clone() > (left).1.clone()) {
                                 {
-                                    let __idx_raw = i;
-                                    let __idx_norm = if __idx_raw < 0 {
-                                        (result.len() as i64) + __idx_raw
-                                    } else {
-                                        __idx_raw
-                                    };
-                                    if __idx_norm >= 0 {
-                                        if let Some(__elem) = result.get_mut(__idx_norm as usize) {
-                                            *__elem = right.clone();
-                                        }
+                                    let __idx_raw = i.clone();
+                                    let __idx_norm = __idx_raw
+                                        .normalize_index_or_len(result.len());
+                                    if let Some(__elem) = result.get_mut(__idx_norm) {
+                                        *__elem = right.clone();
                                     }
                                 }
                                 {
-                                    let __idx_raw = j;
-                                    let __idx_norm = if __idx_raw < 0 {
-                                        (result.len() as i64) + __idx_raw
-                                    } else {
-                                        __idx_raw
-                                    };
-                                    if __idx_norm >= 0 {
-                                        if let Some(__elem) = result.get_mut(__idx_norm as usize) {
-                                            *__elem = left.clone();
-                                        }
+                                    let __idx_raw = j.clone();
+                                    let __idx_norm = __idx_raw
+                                        .normalize_index_or_len(result.len());
+                                    if let Some(__elem) = result.get_mut(__idx_norm) {
+                                        *__elem = left.clone();
                                     }
                                 }
                             }
                         }
                     }
-                    j += 1_i64;
+                    j = &j + &SifrInt::from_i64(1);
                 }
-                i += 1_i64;
+                i = &i + &SifrInt::from_i64(1);
             }
-            let Some(n) = n else {
+            let Some(n) = n.as_ref() else {
                 return result;
             };
-            if n <= (0_i64) {
+            if (&n.clone() <= &SifrInt::from_i64(0)) {
                 return vec![];
             }
-            let mut top: Vec<(T, i64)> = vec![];
-            let mut index: i64 = 0_i64;
-            while index < n {
-                if (index >= (result.len() as i64)) {
+            let mut top: Vec<(T, SifrInt)> = vec![];
+            let mut index: SifrInt = SifrInt::from_i64(0);
+            while index < *n {
+                if (&index >= &SifrInt::from(result.len())) {
                     return top;
                 }
-                let value: Option<(T, i64)> = Some(result[index as usize].clone());
+                let value: Option<(T, SifrInt)> = Some(
+                    result[::sifr_runtime::to_usize_proven(&(index))].clone(),
+                );
                 if let Some(value) = value {
                     top.push(value.clone());
                 }
-                index += 1_i64;
+                index = &index + &SifrInt::from_i64(1);
             }
             top
         }
@@ -154,59 +151,53 @@ mod __sifr_project_nominals {
     > __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
         pub fn keys(&self) -> Vec<T> {
             let mut result: Vec<T> = self.counts.keys().cloned().collect::<Vec<_>>();
-            let sz: i64 = result.len() as i64;
-            let mut i: i64 = 0_i64;
-            while i < sz {
-                let mut j: i64 = i + (1_i64);
-                while j < sz {
-                    let left: Option<T> = Some(result[i as usize].clone());
-                    let right: Option<T> = Some(result[j as usize].clone());
+            let sz: SifrInt = SifrInt::from(result.len());
+            let mut i: SifrInt = SifrInt::from_i64(0);
+            while &i < &sz {
+                let mut j: SifrInt = &i + &SifrInt::from_i64(1);
+                while &j < &sz {
+                    let left: Option<T> = Some(
+                        result[::sifr_runtime::to_usize_proven(&(i))].clone(),
+                    );
+                    let right: Option<T> = Some(
+                        result[::sifr_runtime::to_usize_proven(&(j))].clone(),
+                    );
                     if let Some(left) = left {
                         if let Some(right) = right {
                             if right < left {
                                 {
-                                    let __idx_raw = i;
-                                    let __idx_norm = if __idx_raw < 0 {
-                                        (result.len() as i64) + __idx_raw
-                                    } else {
-                                        __idx_raw
-                                    };
-                                    if __idx_norm >= 0 {
-                                        if let Some(__elem) = result.get_mut(__idx_norm as usize) {
-                                            *__elem = right.clone();
-                                        }
+                                    let __idx_raw = i.clone();
+                                    let __idx_norm = __idx_raw
+                                        .normalize_index_or_len(result.len());
+                                    if let Some(__elem) = result.get_mut(__idx_norm) {
+                                        *__elem = right.clone();
                                     }
                                 }
                                 {
-                                    let __idx_raw = j;
-                                    let __idx_norm = if __idx_raw < 0 {
-                                        (result.len() as i64) + __idx_raw
-                                    } else {
-                                        __idx_raw
-                                    };
-                                    if __idx_norm >= 0 {
-                                        if let Some(__elem) = result.get_mut(__idx_norm as usize) {
-                                            *__elem = left.clone();
-                                        }
+                                    let __idx_raw = j.clone();
+                                    let __idx_norm = __idx_raw
+                                        .normalize_index_or_len(result.len());
+                                    if let Some(__elem) = result.get_mut(__idx_norm) {
+                                        *__elem = left.clone();
                                     }
                                 }
                             }
                         }
                     }
-                    j += 1_i64;
+                    j = &j + &SifrInt::from_i64(1);
                 }
-                i += 1_i64;
+                i = &i + &SifrInt::from_i64(1);
             }
             result
         }
     }
     impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
-        pub fn items(&self) -> Vec<(T, i64)> {
-            let mut result: Vec<(T, i64)> = vec![];
+        pub fn items(&self) -> Vec<(T, SifrInt)> {
+            let mut result: Vec<(T, SifrInt)> = vec![];
             for key in self.counts.keys().cloned().collect::<Vec<_>>() {
-                let value: Option<i64> = self.counts.get(&key).copied();
-                if let Some(value) = value {
-                    let entry: (T, i64) = (key.clone(), value);
+                let value: Option<SifrInt> = self.counts.get(&key).cloned();
+                if let Some(value) = value.clone() {
+                    let entry: (T, SifrInt) = (key, value.clone());
                     result.push(entry.clone());
                 }
             }
@@ -214,7 +205,7 @@ mod __sifr_project_nominals {
         }
     }
     impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
-        pub fn values(&self) -> Vec<i64> {
+        pub fn values(&self) -> Vec<SifrInt> {
             self.counts.values().cloned().collect::<Vec<_>>()
         }
     }
@@ -231,11 +222,11 @@ mod __sifr_project_nominals {
     impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
         pub fn update(&mut self, other: &__SifrStdlib_sifr_x2ecollections_x2eCounter<T>) {
             for key in other.counts.keys().cloned().collect::<Vec<_>>() {
-                let other_val: Option<i64> = other.counts.get(&key).copied();
-                if let Some(other_val) = other_val {
-                    let existing: Option<i64> = self.counts.get(&key).copied();
-                    if let Some(existing) = existing {
-                        self.counts.insert(key, existing + other_val);
+                let other_val: Option<SifrInt> = other.counts.get(&key).cloned();
+                if let Some(other_val) = other_val.clone() {
+                    let existing: Option<SifrInt> = self.counts.get(&key).cloned();
+                    if let Some(existing) = existing.clone() {
+                        self.counts.insert(key, &existing + &other_val);
                     } else {
                         self.counts.insert(key, other_val);
                     }
@@ -246,13 +237,13 @@ mod __sifr_project_nominals {
     impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
         pub fn subtract(&mut self, other: &__SifrStdlib_sifr_x2ecollections_x2eCounter<T>) {
             for key in other.counts.keys().cloned().collect::<Vec<_>>() {
-                let other_val: Option<i64> = other.counts.get(&key).copied();
-                if let Some(other_val) = other_val {
-                    let existing: Option<i64> = self.counts.get(&key).copied();
-                    if let Some(existing) = existing {
-                        self.counts.insert(key, existing - other_val);
+                let other_val: Option<SifrInt> = other.counts.get(&key).cloned();
+                if let Some(other_val) = other_val.clone() {
+                    let existing: Option<SifrInt> = self.counts.get(&key).cloned();
+                    if let Some(existing) = existing.clone() {
+                        self.counts.insert(key, &existing - &other_val);
                     } else {
-                        self.counts.insert(key, (0_i64) - other_val);
+                        self.counts.insert(key, &SifrInt::from_i64(0) - &other_val);
                     }
                 }
             }
@@ -262,23 +253,27 @@ mod __sifr_project_nominals {
         pub fn elements(&self) -> Vec<T> {
             let mut result: Vec<T> = vec![];
             let all_keys: Vec<T> = self.counts.keys().cloned().collect::<Vec<_>>();
-            let mut ki: i64 = 0_i64;
-            while (ki < (all_keys.len() as i64)) {
-                let key_opt: Option<T> = Some(all_keys[ki as usize].clone());
+            let mut ki: SifrInt = SifrInt::from_i64(0);
+            while (&ki < &SifrInt::from(all_keys.len())) {
+                let key_opt: Option<T> = Some(
+                    all_keys[::sifr_runtime::to_usize_proven(&(ki))].clone(),
+                );
                 if let Some(key_opt) = key_opt {
-                    let cnt: Option<i64> = self.counts.get(&key_opt).copied();
-                    if let Some(cnt) = cnt {
-                        let mut i: i64 = 0_i64;
-                        while i < cnt {
-                            let key_copy: Option<T> = Some(all_keys[ki as usize].clone());
+                    let cnt: Option<SifrInt> = self.counts.get(&key_opt).cloned();
+                    if let Some(cnt) = cnt.clone() {
+                        let mut i: SifrInt = SifrInt::from_i64(0);
+                        while &i < &cnt {
+                            let key_copy: Option<T> = Some(
+                                all_keys[::sifr_runtime::to_usize_proven(&(ki))].clone(),
+                            );
                             if let Some(key_copy) = key_copy {
-                                result.push(key_copy.clone().clone());
+                                result.push(key_copy.clone());
                             }
-                            i += 1_i64;
+                            i = &i + &SifrInt::from_i64(1);
                         }
                     }
                 }
-                ki += 1_i64;
+                ki = &ki + &SifrInt::from_i64(1);
             }
             result
         }
@@ -292,32 +287,32 @@ mod __sifr_project_nominals {
             self,
             other: &__SifrStdlib_sifr_x2ecollections_x2eCounter<T>,
         ) -> Self::Output {
-            let mut new_counts: HashMap<T, i64> = HashMap::from([]);
+            let mut new_counts: HashMap<T, SifrInt> = HashMap::from([]);
             for key in Box::new(
                 (self.counts.keys().cloned().collect::<Vec<_>>()).into_iter(),
             ) {
-                let a_val: Option<i64> = self.counts.get(&key).copied();
+                let a_val: Option<SifrInt> = self.counts.get(&key).cloned();
                 if let Some(a_val) = a_val {
-                    let b_val: Option<i64> = other.counts.get(&key).copied();
-                    let mut b_count: i64 = 0_i64;
-                    if let Some(b_val) = b_val {
+                    let b_val: Option<SifrInt> = other.counts.get(&key).cloned();
+                    let mut b_count: SifrInt = SifrInt::from_i64(0);
+                    if let Some(b_val) = b_val.clone() {
                         b_count = b_val;
                     }
-                    let total: i64 = a_val + b_count;
-                    if total > (0_i64) {
-                        new_counts.insert(key.clone(), total);
+                    let total: SifrInt = &a_val + &b_count;
+                    if &total > &SifrInt::from_i64(0) {
+                        new_counts.insert(key.clone(), total.clone());
                     }
                 }
             }
             for key2 in Box::new(
                 (other.counts.keys().cloned().collect::<Vec<_>>()).into_iter(),
             ) {
-                let already: Option<i64> = new_counts.get(&key2).copied();
+                let already: Option<SifrInt> = new_counts.get(&key2).cloned();
                 if already.is_none() {
-                    let b_val2: Option<i64> = other.counts.get(&key2).copied();
-                    if let Some(b_val2) = b_val2 {
-                        if b_val2 > (0_i64) {
-                            new_counts.insert(key2.clone(), b_val2);
+                    let b_val2: Option<SifrInt> = other.counts.get(&key2).cloned();
+                    if let Some(b_val2) = b_val2.clone() {
+                        if &b_val2 > &SifrInt::from_i64(0) {
+                            new_counts.insert(key2.clone(), b_val2.clone());
                         }
                     }
                 }
@@ -334,20 +329,20 @@ mod __sifr_project_nominals {
             self,
             other: &__SifrStdlib_sifr_x2ecollections_x2eCounter<T>,
         ) -> Self::Output {
-            let mut new_counts: HashMap<T, i64> = HashMap::from([]);
+            let mut new_counts: HashMap<T, SifrInt> = HashMap::from([]);
             for key in Box::new(
                 (self.counts.keys().cloned().collect::<Vec<_>>()).into_iter(),
             ) {
-                let a_val: Option<i64> = self.counts.get(&key).copied();
+                let a_val: Option<SifrInt> = self.counts.get(&key).cloned();
                 if let Some(a_val) = a_val {
-                    let b_val: Option<i64> = other.counts.get(&key).copied();
-                    let mut b_count: i64 = 0_i64;
-                    if let Some(b_val) = b_val {
+                    let b_val: Option<SifrInt> = other.counts.get(&key).cloned();
+                    let mut b_count: SifrInt = SifrInt::from_i64(0);
+                    if let Some(b_val) = b_val.clone() {
                         b_count = b_val;
                     }
-                    let diff: i64 = a_val - b_count;
-                    if diff > (0_i64) {
-                        new_counts.insert(key.clone(), diff);
+                    let diff: SifrInt = &a_val - &b_count;
+                    if &diff > &SifrInt::from_i64(0) {
+                        new_counts.insert(key.clone(), diff.clone());
                     }
                 }
             }
@@ -428,15 +423,15 @@ mod __sifr_project_nominals {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct JSONDecodeError {
         pub message: String,
-        pub line: i64,
-        pub column: i64,
+        pub line: SifrInt,
+        pub column: SifrInt,
     }
     impl JSONDecodeError {
         pub fn new(message: String) -> Self {
             Self {
                 message,
-                line: 0,
-                column: 0,
+                line: SifrInt::from_i64(0),
+                column: SifrInt::from_i64(0),
             }
         }
     }
@@ -470,11 +465,14 @@ mod __sifr_project_nominals {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct JsonLimitError {
         pub message: String,
-        pub limit: i64,
+        pub limit: SifrInt,
     }
     impl JsonLimitError {
         pub fn new(message: String) -> Self {
-            Self { message, limit: 0 }
+            Self {
+                message,
+                limit: SifrInt::from_i64(0),
+            }
         }
     }
     impl ::std::fmt::Display for JsonLimitError {
@@ -486,15 +484,15 @@ mod __sifr_project_nominals {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TOMLDecodeError {
         pub message: String,
-        pub line: i64,
-        pub column: i64,
+        pub line: SifrInt,
+        pub column: SifrInt,
     }
     impl TOMLDecodeError {
         pub fn new(message: String) -> Self {
             Self {
                 message,
-                line: 0,
-                column: 0,
+                line: SifrInt::from_i64(0),
+                column: SifrInt::from_i64(0),
             }
         }
     }
@@ -567,16 +565,17 @@ pub use __sifr_project_nominals::ValueError;
 pub use __sifr_project_nominals::__SifrStdlib_sifr_x2ecollections_x2eCounter;
 use ::std::collections::HashMap;
 use ::std::collections::HashSet;
+use ::sifr_runtime::SifrInt;
 fn from_list<
     T: Clone + ::std::fmt::Display + PartialOrd + ::std::hash::Hash + Eq + 'static,
 >(items: &Vec<T>) -> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
-    let mut counts: HashMap<T, i64> = HashMap::from([]);
+    let mut counts: HashMap<T, SifrInt> = HashMap::from([]);
     for item in items.iter().cloned() {
-        let val: Option<i64> = counts.get(&item).copied();
-        if let Some(val) = val {
-            counts.insert(item.clone(), val + (1_i64));
+        let val: Option<SifrInt> = counts.get(&item).cloned();
+        if let Some(val) = val.clone() {
+            counts.insert(item.clone(), &val + &SifrInt::from_i64(1));
         } else {
-            counts.insert(item.clone(), 1_i64);
+            counts.insert(item.clone(), SifrInt::from_i64(1));
         }
     }
     __SifrStdlib_sifr_x2ecollections_x2eCounter::new(Some(counts), None)
@@ -605,27 +604,34 @@ fn __io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
 }
 fn main() {
     println!("=== Set Operations ===");
-    let mut values: HashSet<i64> = (vec![1_i64, 2_i64, 2_i64, 3_i64, 3_i64])
+    let mut values: HashSet<SifrInt> = (vec![
+        SifrInt::from_i64(1), SifrInt::from_i64(2), SifrInt::from_i64(2),
+        SifrInt::from_i64(3), SifrInt::from_i64(3)
+    ])
         .into_iter()
         .collect::<std::collections::HashSet<_>>();
-    println!("Set from [1,2,2,3,3]: length = {}", values.len() as i64);
-    values.insert(4_i64);
-    println!("After adding 4: length = {}", values.len() as i64);
-    println!("Contains 2: {}", values.contains(& (2_i64)));
-    println!("Contains 5: {}", values.contains(& (5_i64)));
-    let left: HashSet<i64> = (vec![1_i64, 2_i64, 3_i64])
+    println!("Set from [1,2,2,3,3]: length = {}", SifrInt::from(values.len()));
+    values.insert(SifrInt::from_i64(4));
+    println!("After adding 4: length = {}", SifrInt::from(values.len()));
+    println!("Contains 2: {}", values.contains(& SifrInt::from_i64(2)));
+    println!("Contains 5: {}", values.contains(& SifrInt::from_i64(5)));
+    let left: HashSet<SifrInt> = (vec![
+        SifrInt::from_i64(1), SifrInt::from_i64(2), SifrInt::from_i64(3)
+    ])
         .into_iter()
         .collect::<std::collections::HashSet<_>>();
-    let right: HashSet<i64> = (vec![3_i64, 4_i64, 5_i64])
+    let right: HashSet<SifrInt> = (vec![
+        SifrInt::from_i64(3), SifrInt::from_i64(4), SifrInt::from_i64(5)
+    ])
         .into_iter()
         .collect::<std::collections::HashSet<_>>();
     println!(
-        "Union [1,2,3] | [3,4,5]: length = {}", left.union(& right).cloned().collect::<
-        std::collections::HashSet < _ >> ().len() as i64
+        "Union [1,2,3] | [3,4,5]: length = {}", SifrInt::from(left.union(& right)
+        .cloned().collect::< std::collections::HashSet < _ >> ().len())
     );
     println!(
-        "Intersection [1,2,3] & [3,4,5]: length = {}", left.intersection(& right)
-        .cloned().collect::< std::collections::HashSet < _ >> ().len() as i64
+        "Intersection [1,2,3] & [3,4,5]: length = {}", SifrInt::from(left.intersection(&
+        right).cloned().collect::< std::collections::HashSet < _ >> ().len())
     );
     println!("=== Counter ===");
     let fruits: Vec<String> = vec![
@@ -635,17 +641,26 @@ fn main() {
     let fruit_counter: __SifrStdlib_sifr_x2ecollections_x2eCounter<String> = from_list(
         &fruits,
     );
-    println!("apple count: {}", fruit_counter.get(& "apple".to_string(), 0_i64));
-    println!("banana count: {}", fruit_counter.get(& "banana".to_string(), 0_i64));
-    println!("cherry count: {}", fruit_counter.get(& "cherry".to_string(), 0_i64));
+    println!(
+        "apple count: {}", fruit_counter.get(& "apple".to_string(), &
+        SifrInt::from_i64(0))
+    );
+    println!(
+        "banana count: {}", fruit_counter.get(& "banana".to_string(), &
+        SifrInt::from_i64(0))
+    );
+    println!(
+        "cherry count: {}", fruit_counter.get(& "cherry".to_string(), &
+        SifrInt::from_i64(0))
+    );
     println!("=== Bytes ===");
     println!(
-        "\'hello\' encoded: {} bytes", vec![(104_i64) as u8, (101_i64) as u8, (108_i64)
-        as u8, (108_i64) as u8, (111_i64) as u8] .len() as i64
+        "\'hello\' encoded: {} bytes", SifrInt::from(vec![104u8, 101u8, 108u8, 108u8,
+        111u8] .len())
     );
     let __sifr_try_res: Result<(), ParseError> = (|| {
         let roundtrip: String = ::sifr_runtime::encoding::decode_text(
-                &vec![(83_i64) as u8, (105_i64) as u8, (102_i64) as u8, (114_i64) as u8],
+                &vec![83u8, 105u8, 102u8, 114u8],
                 &"utf-8".to_string(),
                 &"strict".to_string(),
             )
@@ -659,12 +674,9 @@ fn main() {
     }
     let __sifr_try_res: Result<(), ParseError> = (|| {
         let hex_hello: String = {
-            let __bytes_receiver = &vec![
-                (104_i64) as u8, (101_i64) as u8, (108_i64) as u8, (108_i64) as u8,
-                (111_i64) as u8
-            ];
+            let __bytes_receiver = &vec![104u8, 101u8, 108u8, 108u8, 111u8];
             let mut __hex = String::with_capacity(
-                __bytes_receiver.len().saturating_mul(2),
+                __bytes_receiver.len().saturating_mul(2_usize),
             );
             for __byte in __bytes_receiver.iter() {
                 __hex.push_str(&format!("{:02x}", * __byte));

@@ -128,7 +128,7 @@ macro_rules! stmt_expr_constructor {
                                     name: "__sifr_counter_chars".to_string(),
                                     ty: Some(crate::RustType::HashMap(
                                         Box::new(crate::RustType::Named("char".to_string())),
-                                        Box::new(crate::RustType::I64),
+                                        Box::new(crate::RustType::Named("usize".to_string())),
                                     )),
                                     value: crate::RustExpr::FnCall {
                                         func: Box::new(crate::RustExpr::Path(vec![
@@ -172,7 +172,9 @@ macro_rules! stmt_expr_constructor {
                                     name: "__sifr_counter_counts".to_string(),
                                     ty: Some(crate::RustType::HashMap(
                                         Box::new(crate::RustType::String_),
-                                        Box::new(crate::RustType::I64),
+                                        Box::new(crate::RustType::Named(
+                                            "SifrInt".to_string(),
+                                        )),
                                     )),
                                     value: crate::RustExpr::FnCall {
                                         func: Box::new(crate::RustExpr::Path(vec![
@@ -201,9 +203,15 @@ macro_rules! stmt_expr_constructor {
                                                 method: "to_string".to_string(),
                                                 args: vec![],
                                             },
-                                            crate::RustExpr::Ident(
-                                                "__sifr_counter_count".to_string(),
-                                            ),
+                                            crate::RustExpr::FnCall {
+                                                func: Box::new(crate::RustExpr::Path(vec![
+                                                    "SifrInt".to_string(),
+                                                    "from".to_string(),
+                                                ])),
+                                                args: vec![crate::RustExpr::Ident(
+                                                    "__sifr_counter_count".to_string(),
+                                                )],
+                                            },
                                         ],
                                     })],
                                 },
@@ -281,7 +289,7 @@ macro_rules! stmt_expr_constructor {
                 let adapted_arg = if let HirExpr::Name { name, ty, .. } = arg {
                     if ($emitter.borrowed_params.contains(name)
                         || $emitter.mut_borrowed_params.contains(name))
-                        && ty.ownership() != sifr_type_system::OwnershipKind::Copy
+                        && !crate::helpers::is_copy_type_for_codegen(ty)
                     {
                         crate::RustExpr::Clone(Box::new(lowered_arg))
                     } else {
@@ -334,6 +342,7 @@ macro_rules! stmt_expr_constructor {
                                 effective_arg_ty: args[idx].ty(),
                                 convention: *convention,
                                 borrowed_name_arg: false,
+                                borrowed_name_materialized: false,
                             },
                             lowered_arg.clone(),
                         )
@@ -400,7 +409,7 @@ macro_rules! stmt_expr_literals_and_calls {
                 };
                 if !element.ty().contains_affine_resource() {
                     lowered_element =
-                        Self::clone_non_copy_name_expr_for_ir(element, lowered_element);
+                        $emitter.clone_field_storage_name_expr_for_ir(element, lowered_element);
                 }
                 if let Type::List(element_ty) = list_ty {
                     lowered_element = crate::helpers::adapt_collection_value_for_target(
@@ -506,7 +515,7 @@ macro_rules! stmt_expr_literals_and_calls {
                 lowered_elements.push(if element.ty().contains_affine_resource() {
                     lowered_element
                 } else {
-                    Self::clone_non_copy_name_expr_for_ir(element, lowered_element)
+                    $emitter.clone_field_storage_name_expr_for_ir(element, lowered_element)
                 });
             }
             if crate::homogeneous_large_tuple_backing_array(ty).is_some() {
@@ -538,6 +547,8 @@ macro_rules! stmt_expr_literals_and_calls {
                 let Some(mut lowered_value) = $emitter.lower_stmt_expr_for_ir(value)? else {
                     return Ok(None);
                 };
+                lowered_key = $emitter.clone_field_storage_name_expr_for_ir(key, lowered_key);
+                lowered_value = $emitter.clone_field_storage_name_expr_for_ir(value, lowered_value);
                 if let Type::Dict(key_ty, value_ty) = crate::resolve_alias_type_for_plain_call(ty) {
                     lowered_key = crate::helpers::adapt_collection_value_for_target(
                         key_ty.as_ref(),
@@ -579,6 +590,8 @@ macro_rules! stmt_expr_literals_and_calls {
                 let Some(mut lowered_element) = $emitter.lower_stmt_expr_for_ir(element)? else {
                     return Ok(None);
                 };
+                lowered_element =
+                    $emitter.clone_field_storage_name_expr_for_ir(element, lowered_element);
                 if let Type::Set(element_ty) = crate::resolve_alias_type_for_plain_call(ty) {
                     lowered_element = crate::helpers::adapt_collection_value_for_target(
                         element_ty.as_ref(),
@@ -688,6 +701,44 @@ macro_rules! stmt_expr_literals_and_calls {
                 return Ok(Some(crate::RustExpr::MethodCall {
                     receiver: Box::new(lowered_iterator),
                     method: "anext".to_string(),
+                    args: vec![],
+                }));
+            }
+            if func == "float"
+                && args.len() == 1
+                && matches!(
+                    crate::resolve_alias_type_for_plain_call($expr.ty()),
+                    Type::Float
+                )
+            {
+                let Some(lowered_arg) = $emitter.lower_stmt_expr_for_ir(&args[0])? else {
+                    return Ok(None);
+                };
+                return Ok(Some(
+                    match crate::resolve_alias_type_for_plain_call(args[0].ty()) {
+                        Type::Int | Type::LiteralInt(_) => crate::RustExpr::MethodCall {
+                            receiver: Box::new(lowered_arg),
+                            method: "to_f64_proven_exact".to_string(),
+                            args: vec![],
+                        },
+                        Type::FixedInt(_) => crate::RustExpr::Cast {
+                            expr: Box::new(lowered_arg),
+                            ty: crate::RustType::F64,
+                        },
+                        _ => lowered_arg,
+                    },
+                ));
+            }
+            if func == "filter" && args.len() == 2 {
+                return $emitter.try_lower_filter_call_for_ir(args);
+            }
+            if func == "list" && args.len() == 1 {
+                let Some(iterable) = $emitter.lower_stmt_expr_for_ir(&args[0])? else {
+                    return Ok(None);
+                };
+                return Ok(Some(crate::RustExpr::MethodCall {
+                    receiver: Box::new(iterable),
+                    method: "collect::<Vec<_>>".to_string(),
                     args: vec![],
                 }));
             }

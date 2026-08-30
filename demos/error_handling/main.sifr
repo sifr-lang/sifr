@@ -66,10 +66,13 @@ def main():
     except ValidationError as e:
         print(f"error handled: {e.message}")
 
-    # --- Infallible Conversions ---
-    print("=== Infallible Conversions ===")
-    x1: int = int(3.7)
-    print(f"int(3.7) = {x1}")
+    # --- Explicit Conversions ---
+    print("=== Explicit Conversions ===")
+    try:
+        x1: int = int(3.7)
+        print(f"int(3.7) = {x1}")
+    except ValueError as e:
+        print(f"conversion error: {e.message}")
     x2: float = float(5)
     print(f"float(5) = {x2}")
     x3: str = str(42)

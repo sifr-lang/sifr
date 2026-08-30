@@ -106,7 +106,7 @@ fn test_generate_rust_multi_requires_runtime_for_absolute_private_stdlib_bridge_
             source_path: "stdlib/_sifr/math.sifr".to_string(),
             source_sha256: "test".to_string(),
             nominal_types: HashSet::new(),
-            rust: "fn isqrt(n: i64) -> i64 { ::sifr_runtime::interop::SifrIntBridge::from(n).to_i64_saturating() }\n".to_string(),
+            rust: "fn isqrt(n: SifrInt) -> SifrInt { ::sifr_runtime::interop::SifrIntBridge::from(n).to_i64_saturating() }\n".to_string(),
         },
     );
 

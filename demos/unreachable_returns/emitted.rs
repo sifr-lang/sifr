@@ -1,13 +1,15 @@
 // src/main.rs
-fn inferred(flag: bool) -> i64 {
+use ::sifr_runtime::SifrInt;
+
+fn inferred(flag: bool) -> SifrInt {
     if flag {
-        return 1_i64;
+        return SifrInt::from_i64(1);
     }
-    2_i64
+    SifrInt::from_i64(2)
 }
 
-fn consume(n: i64) -> i64 {
-    n + (1_i64)
+fn consume(n: SifrInt) -> SifrInt {
+    &n + &SifrInt::from_i64(1)
 }
 
 fn main() {

@@ -565,7 +565,7 @@ impl RustEmitter {
         effective_ty: &Type,
         value: &HirExpr,
     ) -> Option<crate::RustExpr> {
-        if effective_ty.ownership() != sifr_type_system::OwnershipKind::Move {
+        if crate::helpers::is_copy_type_for_codegen(effective_ty) {
             return None;
         }
         let HirExpr::Name { name, .. } = value else {

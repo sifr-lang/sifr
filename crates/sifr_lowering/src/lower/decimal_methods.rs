@@ -174,7 +174,11 @@ pub(in crate::lower) fn lower_decimal_constructor_call(
             }
             Type::Decimal
         }
-        Type::Int | Type::LiteralInt(_) | Type::Decimal => Type::Decimal,
+        Type::Int | Type::LiteralInt(_) => Type::Result(
+            Box::new(Type::Decimal),
+            Box::new(decimal_conversion_error_type(ctx)),
+        ),
+        Type::FixedInt(_) | Type::Decimal => Type::Decimal,
         Type::BigDecimal => Type::Result(
             Box::new(Type::Decimal),
             Box::new(decimal_conversion_error_type(ctx)),
@@ -247,7 +251,7 @@ pub(in crate::lower) fn lower_bigdecimal_constructor_call(
                 return None;
             }
         }
-        Type::Int | Type::LiteralInt(_) | Type::Decimal | Type::BigDecimal => {}
+        Type::Int | Type::LiteralInt(_) | Type::FixedInt(_) | Type::Decimal | Type::BigDecimal => {}
         Type::Float => {
             ctx.error_with_code_at(
                 DiagnosticCode::DECIMAL_BIGDECIMAL_FLOAT_CONSTRUCTION_FORBIDDEN,

@@ -1,4 +1,6 @@
 // src/main.rs
+use ::sifr_runtime::SifrInt;
+
 // --- stdlib: _sifr.sys ---
 fn run_command(cmd: &String) -> Result<String, IOError> {
     ::sifr_stdlib::sys::run_command(cmd)
@@ -20,7 +22,7 @@ fn env_items() -> Vec<String> {
 fn get_args() -> Vec<String> {
     ::sifr_stdlib::sys::get_args()
 }
-fn sys_exit(code: i64) {
+fn sys_exit(code: SifrInt) {
     ::sifr_stdlib::sys::sys_exit(::sifr_runtime::interop::SifrIntBridge::from(code));
 }
 fn sys_version() -> String {
@@ -29,14 +31,14 @@ fn sys_version() -> String {
 fn sys_platform() -> String {
     ::sifr_stdlib::sys::sys_platform()
 }
-fn sys_maxsize() -> i64 {
-    ::sifr_stdlib::sys::sys_maxsize().to_i64_saturating()
+fn sys_maxsize() -> SifrInt {
+    ::sifr_stdlib::sys::sys_maxsize().into_sifr_int()
 }
-fn getpid() -> i64 {
-    ::sifr_stdlib::sys::getpid().to_i64_saturating()
+fn getpid() -> SifrInt {
+    ::sifr_stdlib::sys::getpid().into_sifr_int()
 }
-fn cpu_count() -> i64 {
-    ::sifr_stdlib::sys::cpu_count().to_i64_saturating()
+fn cpu_count() -> SifrInt {
+    ::sifr_stdlib::sys::cpu_count().into_sifr_int()
 }
 fn which(name: &String) -> Option<String> {
     ::sifr_stdlib::sys::which(name)
@@ -81,11 +83,14 @@ fn items() -> Vec<String> {
 
 // --- stdlib: sifr.test ---
 fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
-    assert_eq!(actual.len() as i64, expected.len() as i64);
-    let mut i: i64 = 0_i64;
-    while i < (actual.len() as i64) {
-        assert!(Some(actual[i as usize]) == expected.get(i as usize).copied());
-        i += 1_i64;
+    assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
+    let mut i: SifrInt = SifrInt::from_i64(0);
+    while &i < &SifrInt::from(actual.len()) {
+        assert!(
+            Some(actual[::sifr_runtime::to_usize_proven(& (i))]) == expected
+            .get(::sifr_runtime::to_usize_proven(& (i))).copied()
+        );
+        i = &i + &SifrInt::from_i64(1);
     }
 }
 // --- end stdlib ---
@@ -153,7 +158,7 @@ fn main() {
     invalid_actual_lookup_found.push(getenv_opt(&"".to_string()) != None);
     invalid_actual_lookup_found.push(getenv_opt(&"A=B".to_string()) != None);
     assert_bool_vector_eq(&invalid_actual_lookup_found, &invalid_expected_lookup_found);
-    assert!((format!("{}", (keys().len() as i64) == (values().len() as i64)) == "true"));
-    assert!((format!("{}", (keys().len() as i64) == (items().len() as i64)) == "true"));
+    assert!((format!("{}", &SifrInt::from(keys().len()) == &SifrInt::from(values().len())) == "true"));
+    assert!((format!("{}", &SifrInt::from(keys().len()) == &SifrInt::from(items().len())) == "true"));
     println!("env read-only access demo: pass");
 }

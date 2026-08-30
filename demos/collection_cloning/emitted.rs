@@ -1,23 +1,25 @@
 // src/main.rs
-fn double(n: i64) -> i64 {
-    n * (2_i64)
+use ::sifr_runtime::SifrInt;
+
+fn double(n: SifrInt) -> SifrInt {
+    &n * &SifrInt::from_i64(2)
 }
 
-fn is_even(n: i64) -> bool {
-    (n % (2_i64)) == (0_i64)
+fn is_even(n: SifrInt) -> bool {
+    (&n.floor_mod_known_nonzero(&SifrInt::from_i64(2)) == &SifrInt::from_i64(0))
 }
 
 fn main() {
-    let nums: Vec<i64> = vec![1_i64, 2_i64, 3_i64, 4_i64];
-    let mapped: Vec<i64> = Box::new(nums.iter().copied().map(|__sifr_map_item| double(__sifr_map_item))).collect::<Vec<_>>();
-    let filtered: Vec<i64> = Box::new(nums.iter().copied().filter(|__filter_item| {
-    let __filter_value = *__filter_item;
+    let nums: Vec<SifrInt> = vec![SifrInt::from_i64(1), SifrInt::from_i64(2), SifrInt::from_i64(3), SifrInt::from_i64(4)];
+    let mapped: Vec<SifrInt> = Box::new(nums.iter().cloned().map(|__sifr_map_item| double(__sifr_map_item))).collect::<Vec<_>>();
+    let filtered: Vec<SifrInt> = Box::new(nums.iter().cloned().filter(|__filter_item| {
+    let __filter_value = __filter_item.clone();
     is_even(__filter_value)
 })).collect::<Vec<_>>();
-    let first: i64 = 0_i64;
-    let rest: Vec<i64> = vec![];
+    let first: SifrInt = SifrInt::from_i64(0);
+    let rest: Vec<SifrInt> = vec![];
     let _star_tmp = &nums;
-    let first = _star_tmp[0];
+    let first = _star_tmp[0].clone();
     let rest = _star_tmp[1.._star_tmp.len()].to_vec();
     println!("{}", format!("{:?}", mapped));
     println!("{}", format!("{:?}", filtered));

@@ -162,6 +162,7 @@ pub(in crate::lower) struct SubscriptAugAssignTarget<'a> {
     pub(in crate::lower) object_ty: Type,
     pub(in crate::lower) index_ty: &'a Type,
     pub(in crate::lower) rhs_ty: &'a Type,
+    pub(in crate::lower) rhs_expr: &'a HirExpr,
     pub(in crate::lower) op: &'a str,
     pub(in crate::lower) target_range: TextRange,
     pub(in crate::lower) rhs_range: TextRange,
@@ -175,6 +176,7 @@ pub(in crate::lower) fn validate_subscript_augassign_target(
     let object_ty = target.object_ty;
     let index_ty = target.index_ty;
     let rhs_ty = target.rhs_ty;
+    let rhs_expr = target.rhs_expr;
     let op = target.op;
     let target_range = target.target_range;
     let rhs_range = target.rhs_range;
@@ -191,6 +193,15 @@ pub(in crate::lower) fn validate_subscript_augassign_target(
                     ),
                     target_range,
                 );
+            }
+            if super::integer_failure_diagnostics::exact_int_augassign_requires_handling(
+                elem_ty.as_ref(),
+                base_op,
+                rhs_expr,
+                ctx,
+                rhs_range,
+            ) {
+                return Type::List(elem_ty);
             }
             if let Err((code, message)) = type_check_binary_op(elem_ty.as_ref(), base_op, rhs_ty) {
                 ctx.error_with_code_at(code, message, rhs_range);
@@ -221,6 +232,15 @@ pub(in crate::lower) fn validate_subscript_augassign_target(
                     ),
                     target_range,
                 );
+            }
+            if super::integer_failure_diagnostics::exact_int_augassign_requires_handling(
+                value_ty_expected.as_ref(),
+                base_op,
+                rhs_expr,
+                ctx,
+                rhs_range,
+            ) {
+                return Type::Dict(key_ty, value_ty_expected);
             }
             if let Err((code, message)) =
                 type_check_binary_op(value_ty_expected.as_ref(), base_op, rhs_ty)

@@ -1,0 +1,21 @@
+def main():
+    start: int = 9223372036854775808
+    stop: int = 9223372036854775814
+    values: list[int] = []
+    for value in range(start, stop, 2):
+        values.append(value)
+
+    assert values == [
+        9223372036854775808,
+        9223372036854775810,
+        9223372036854775812,
+    ]
+
+    reversed_values: list[int] = []
+    for value in reversed(range(start, stop, 2)):
+        reversed_values.append(value)
+    assert reversed_values == [
+        9223372036854775812,
+        9223372036854775810,
+        9223372036854775808,
+    ]

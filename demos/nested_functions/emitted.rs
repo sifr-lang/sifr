@@ -1,38 +1,40 @@
 // src/main.rs
-fn pattern_basic() -> i64 {
-    let add = |a: i64, b: i64| {
-    a + b
+use ::sifr_runtime::SifrInt;
+
+fn pattern_basic() -> SifrInt {
+    let add = |a: SifrInt, b: SifrInt| {
+    &a + &b
 };
-    add(3_i64, 7_i64)
+    add(SifrInt::from_i64(3), SifrInt::from_i64(7))
 }
 
-fn pattern_closure() -> i64 {
-    let multiplier: i64 = 3_i64;
-    let multiply = |x: i64| {
-    x * multiplier
+fn pattern_closure() -> SifrInt {
+    let multiplier: SifrInt = SifrInt::from_i64(3);
+    let multiply = |x: SifrInt| {
+    &x * &multiplier
 };
-    multiply(5_i64)
+    multiply(SifrInt::from_i64(5))
 }
 
-fn pattern_recursive() -> i64 {
-    fn factorial(n: i64) -> i64 {
-        if n <= (1_i64) {
-            return 1_i64;
+fn pattern_recursive() -> SifrInt {
+    fn factorial(n: SifrInt) -> SifrInt {
+        if &n <= &SifrInt::from_i64(1) {
+            return SifrInt::from_i64(1);
         }
-        return n * factorial(n - (1_i64));
+        return &n * &factorial(&n - &SifrInt::from_i64(1));
     }
-    factorial(6_i64)
+    factorial(SifrInt::from_i64(6))
 }
 
-fn pattern_recursive_capture() -> i64 {
-    let limit: i64 = 100_i64;
-    fn sum_up(i: i64, acc: i64, limit: i64) -> i64 {
-        if i > limit {
-            return acc;
+fn pattern_recursive_capture() -> SifrInt {
+    let limit: SifrInt = SifrInt::from_i64(100);
+    fn sum_up(i: SifrInt, acc: SifrInt, limit: SifrInt) -> SifrInt {
+        if &i > &limit {
+            return acc.clone();
         }
-        return sum_up(i + (1_i64), acc + i, limit);
+        return sum_up(&i + &SifrInt::from_i64(1), &acc + &i, limit.clone());
     }
-    sum_up(1_i64, 0_i64, limit)
+    sum_up(SifrInt::from_i64(1), SifrInt::from_i64(0), limit.clone())
 }
 
 fn pattern_multiple() -> String {
@@ -55,16 +57,16 @@ fn pattern_multiple() -> String {
     exclaim(&greet(&"Sifr".to_string()))
 }
 
-fn pattern_params() -> i64 {
-    fn power(base: i64, exp: i64) -> i64 {
-        if exp <= (0_i64) {
-            return 1_i64;
+fn pattern_params() -> SifrInt {
+    fn power(base: SifrInt, exp: SifrInt) -> SifrInt {
+        if &exp <= &SifrInt::from_i64(0) {
+            return SifrInt::from_i64(1);
         }
-        return base * power(base, exp - (1_i64));
+        return &base * &power((base).clone(), &exp - &SifrInt::from_i64(1));
     }
-    let a: i64 = power(2_i64, 10_i64);
-    let b: i64 = power(3_i64, 4_i64);
-    a + b
+    let a: SifrInt = power(SifrInt::from_i64(2), SifrInt::from_i64(10));
+    let b: SifrInt = power(SifrInt::from_i64(3), SifrInt::from_i64(4));
+    &a + &b
 }
 
 fn main() {

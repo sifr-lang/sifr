@@ -176,6 +176,9 @@ impl RustEmitter {
                         effective_arg_ty: &effective_arg_ty,
                         convention: *convention,
                         borrowed_name_arg,
+                        borrowed_name_materialized: borrowed_name_arg
+                            && convention.is_owned()
+                            && !crate::helpers::is_copy_type_for_codegen(&effective_arg_ty),
                     },
                     lowered_arg.clone(),
                 ) {
@@ -272,9 +275,15 @@ impl RustEmitter {
             }
 
             if convention.is_owned()
-                && borrowed_name_arg
                 && !recursive_option_adapted
                 && !consuming_value_adapted
+                && (borrowed_name_arg
+                    || (crate::helpers::is_logically_copy_rust_move_type(&effective_arg_ty)
+                        && matches!(
+                            crate::helpers::classify_value_category(arg),
+                            crate::helpers::ValueCategory::Place
+                        )
+                        && Self::rust_expr_is_reusable_place_for_ir(&lowered_arg)))
             {
                 lowered_arg = crate::RustExpr::MethodCall {
                     receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_arg))),
@@ -284,13 +293,13 @@ impl RustEmitter {
             }
 
             let requires_shared_borrow = convention.is_shared_borrow()
-                && (param_ty.ownership() != sifr_type_system::OwnershipKind::Copy
+                && (!crate::helpers::is_copy_type_for_codegen(param_ty)
                     || matches!(
                         resolved_param,
                         Type::TypeVar(_) | Type::Any | Type::Callable(..) | Type::AsyncCallable(..)
                     ));
             let requires_mut_borrow = convention.is_mut_borrow()
-                && (param_ty.ownership() != sifr_type_system::OwnershipKind::Copy
+                && (!crate::helpers::is_copy_type_for_codegen(param_ty)
                     || matches!(resolved_param, Type::TypeVar(_) | Type::Any));
 
             if (requires_shared_borrow || requires_mut_borrow)
@@ -459,7 +468,12 @@ impl RustEmitter {
         object_ty: &Type,
         method: &str,
     ) -> Option<Vec<(Type, ParamConvention)>> {
-        let Type::Class { name, methods, .. } = crate::resolve_alias_type_for_plain_call(object_ty)
+        let Type::Class {
+            name,
+            fields,
+            methods,
+            ..
+        } = crate::resolve_alias_type_for_plain_call(object_ty)
         else {
             return None;
         };
@@ -475,6 +489,31 @@ impl RustEmitter {
                             .iter()
                             .map(|(_, ty, conv)| (ty.clone(), *conv))
                             .collect::<Vec<_>>()
+                    })
+            })
+            .or_else(|| {
+                fields
+                    .iter()
+                    .find(|(field_name, _)| field_name == method)
+                    .and_then(|(_, field_ty)| match field_ty.resolve_alias() {
+                        Type::Callable(params, conventions, _)
+                        | Type::AsyncCallable(params, conventions, _) => Some(
+                            params
+                                .iter()
+                                .cloned()
+                                .enumerate()
+                                .map(|(index, param)| {
+                                    (
+                                        param,
+                                        conventions
+                                            .get(index)
+                                            .copied()
+                                            .unwrap_or_else(ParamConvention::own),
+                                    )
+                                })
+                                .collect(),
+                        ),
+                        _ => None,
                     })
             })
     }

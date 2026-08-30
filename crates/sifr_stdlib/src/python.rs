@@ -14,18 +14,27 @@ use sifr_runtime::{
 
 type ResourceIdentity = Handle<python::PythonResourceIdentity>;
 type CallbackRaw = (ResourceIdentity, PythonObject, String);
-type BufferRaw = (ResourceIdentity, i64, i64, bool, i64, bool, bool, String);
+type BufferRaw = (
+    ResourceIdentity,
+    SifrIntBridge,
+    SifrIntBridge,
+    bool,
+    SifrIntBridge,
+    bool,
+    bool,
+    String,
+);
 type ArrowRaw = (ResourceIdentity, String, String, String, bool);
 type DlpackRaw = (
     ResourceIdentity,
-    i64,
-    i64,
-    i64,
+    SifrIntBridge,
+    SifrIntBridge,
+    SifrIntBridge,
     String,
-    i64,
-    i64,
-    i64,
-    i64,
+    SifrIntBridge,
+    SifrIntBridge,
+    SifrIntBridge,
+    SifrIntBridge,
     bool,
     bool,
 );
@@ -60,12 +69,13 @@ fn take_resource(
     })
 }
 
-pub fn py_resource_diagnostics() -> Result<(bool, i64, i64), python::PythonError> {
+pub fn py_resource_diagnostics() -> Result<(bool, SifrIntBridge, SifrIntBridge), python::PythonError>
+{
     python::resource_diagnostics().map(|diagnostics| {
         (
             diagnostics.initialized,
-            diagnostics.live_objects,
-            diagnostics.leaked_objects,
+            diagnostics.live_objects.into(),
+            diagnostics.leaked_objects.into(),
         )
     })
 }
@@ -233,10 +243,10 @@ fn buffer_raw(metadata: python::PythonBufferMetadata) -> BufferRaw {
             metadata.handle,
             metadata.token,
         ))),
-        metadata.len_bytes,
-        metadata.item_size,
+        metadata.len_bytes.into(),
+        metadata.item_size.into(),
         metadata.readonly,
-        metadata.dimensions,
+        metadata.dimensions.into(),
         metadata.c_contiguous,
         metadata.f_contiguous,
         metadata.format,
@@ -262,14 +272,14 @@ fn dlpack_raw(metadata: python::PythonDlpackTensorMetadata) -> DlpackRaw {
             metadata.handle,
             metadata.token,
         ))),
-        metadata.dtype_code,
-        metadata.dtype_bits,
-        metadata.dtype_lanes,
+        metadata.dtype_code.into(),
+        metadata.dtype_bits.into(),
+        metadata.dtype_lanes.into(),
         metadata.dtype,
-        metadata.device_type,
-        metadata.device_id,
-        metadata.dimensions,
-        metadata.byte_offset,
+        metadata.device_type.into(),
+        metadata.device_id.into(),
+        metadata.dimensions.into(),
+        metadata.byte_offset.into(),
         metadata.has_deleter,
         metadata.stream_sync_required,
     )

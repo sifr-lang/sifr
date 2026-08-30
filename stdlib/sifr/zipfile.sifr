@@ -63,7 +63,7 @@ class ZipReadHandle:
 
         end: int = len(self._data)
         if size is not None:
-            requested_size: int = size
+            requested_size: int = size.clone()
             if requested_size < 0:
                 end = len(self._data)
             else:

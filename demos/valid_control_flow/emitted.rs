@@ -1,19 +1,23 @@
 // src/main.rs
-fn compute(limit: i64) -> i64 {
-    let mut total: i64 = 0_i64;
-    for n in 0_i64..limit {
-        if n == (2_i64) {
+use ::sifr_runtime::SifrInt;
+
+use ::sifr_runtime::SifrRange;
+
+fn compute(limit: SifrInt) -> SifrInt {
+    let mut total: SifrInt = SifrInt::from_i64(0);
+    for n in SifrRange::new_known_nonzero(SifrInt::from_i64(0), limit.clone(), SifrInt::from_i64(1)) {
+        if &n == &SifrInt::from_i64(2) {
             continue;
         }
-        if n == (4_i64) {
+        if &n == &SifrInt::from_i64(4) {
             break;
         }
-        total += n;
+        total = &total + &n;
     }
-    total
+    total.clone()
 }
 
 fn main() {
     println!("valid_control_flow cfg validity invariants demo:");
-    println!("{}", compute(8_i64));
+    println!("{}", compute(SifrInt::from_i64(8)));
 }

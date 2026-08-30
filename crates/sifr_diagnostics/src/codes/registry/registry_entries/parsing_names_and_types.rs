@@ -608,10 +608,10 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
     active_entry!(
         "SIFR-INT-0005",
         "INT",
-        "Integer division, modulo, or exponentiation requires handling a typed failure.",
+        "Integer division, modulo, exponentiation, shift, or range step requires handling a typed failure.",
         Severity::Error,
         "crates/sifr/tests/e2e/fail/exact_int_division_requires_handling.sifr",
-        "integer division, modulo, or exponentiation requires handling a typed integer failure unless the compiler can prove this operation is safe",
+        "integer division, modulo, exponentiation, shift, or range step requires handling a typed integer failure unless the compiler can prove this operation is safe",
         "sifr_lowering::lower::integer_failure_diagnostics",
         [],
         []

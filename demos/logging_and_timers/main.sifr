@@ -30,14 +30,15 @@ def main() -> None:
 
         gmt: struct_time = gmtime_struct(0.0)
         epoch_tm: struct_time = struct_time(1970, 1, 1, 0, 0, 0, 3, 1, 0)
-        epoch_ok: bool = mktime(epoch_tm) == 0.0
+        epoch_stamp: float = mktime(epoch_tm)
+        epoch_ok: bool = epoch_stamp == 0.0
 
         timer: Timer = Timer()
         elapsed: float = timer(workload, 4)
 
         content: str = read_text(log_path)
         demo_ok = content == "INFO:logging_and_timers-demo:hello\n" and gmt.tm_year == 1970 and epoch_ok and elapsed >= 0.0 and TIMEZONE == 0 and TZNAME[0] == "UTC"
-    except IOError as e:
+    except Error as e:
         _ = e.message
 
     try:

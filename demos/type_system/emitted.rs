@@ -1,8 +1,9 @@
 // src/main.rs
 mod __sifr_project_unions {
+    use ::sifr_runtime::SifrInt;
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub enum __SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr {
-        __SifrUnionVariant_4_x3aatom3_x3aint(i64),
+        __SifrUnionVariant_4_x3aatom3_x3aint(SifrInt),
         __SifrUnionVariant_4_x3aatom3_x3astr(String),
     }
     impl ::std::fmt::Display
@@ -24,8 +25,10 @@ mod __sifr_project_unions {
     }
 }
 pub use __sifr_project_unions::__SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr;
-fn create_user(id: i64, name: &String) -> i64 {
-    id
+use ::sifr_runtime::SifrInt;
+
+fn create_user(id: SifrInt, name: &String) -> SifrInt {
+    id.clone()
 }
 
 fn handle_command(cmd: &String) -> String {
@@ -38,7 +41,7 @@ fn handle_command(cmd: &String) -> String {
 
 fn describe(x: &__SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr) -> String {
     if let __SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr::__SifrUnionVariant_4_x3aatom3_x3aint(x) = x {
-        return format!("number: {}", x + (1_i64));
+        return format!("number: {}", x + &SifrInt::from_i64(1));
     } else {
         if let __SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr::__SifrUnionVariant_4_x3aatom3_x3astr(x) = x {
             return format!("text: {}", x);
@@ -56,11 +59,11 @@ fn find_user(name: &String) -> Option<String> {
 }
 
 fn main() {
-    let uid: i64 = create_user(42_i64, &"alice".to_string());
+    let uid: SifrInt = create_user(SifrInt::from_i64(42), &"alice".to_string());
     println!("{}", uid);
     println!("{}", handle_command(&"start".to_string()));
     println!("{}", handle_command(&"stop".to_string()));
-    println!("{}", describe(&__SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr::__SifrUnionVariant_4_x3aatom3_x3aint(42_i64)));
+    println!("{}", describe(&__SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr::__SifrUnionVariant_4_x3aatom3_x3aint((SifrInt::from_i64(42)).clone())));
     println!("{}", describe(&__SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr::__SifrUnionVariant_4_x3aatom3_x3astr(("hello".to_string()).clone())));
     let user: Option<String> = find_user(&"alice".to_string());
     if let Some(user) = user {

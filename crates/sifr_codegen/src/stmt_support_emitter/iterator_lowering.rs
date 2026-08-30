@@ -1,5 +1,74 @@
 use super::{HirExpr, HirIteratorOp, RustEmitter, RustStmt, Type};
 impl RustEmitter {
+    pub(crate) fn try_lower_filter_call_for_ir(
+        &mut self,
+        args: &[HirExpr],
+    ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
+        let [predicate, iterable] = args else {
+            return Ok(None);
+        };
+        let predicate_body = if let HirExpr::Lambda { params, body, .. } = predicate {
+            let [param] = params.as_slice() else {
+                return Ok(None);
+            };
+            let Some(lowered_body) = self.lower_stmt_expr_for_ir(body)? else {
+                return Ok(None);
+            };
+            crate::RustExpr::Block {
+                stmts: vec![crate::RustStmt::Let {
+                    mutable: false,
+                    name: param.name.clone(),
+                    ty: None,
+                    value: crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::Ident("__filter_item".to_string())),
+                        method: "clone".to_string(),
+                        args: vec![],
+                    },
+                }],
+                expr: Some(Box::new(lowered_body)),
+            }
+        } else {
+            let Some(lowered_predicate) = self.lower_stmt_expr_for_ir(predicate)? else {
+                return Ok(None);
+            };
+            crate::RustExpr::FnCall {
+                func: Box::new(lowered_predicate),
+                args: vec![crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::Ident("__filter_item".to_string())),
+                    method: "clone".to_string(),
+                    args: vec![],
+                }],
+            }
+        };
+        let Some(lowered_iterable) = self.lower_stmt_expr_for_ir(iterable)? else {
+            return Ok(None);
+        };
+        let Some(iter) =
+            crate::intrinsic_method_emitters::registry_iterable_to_owned_iter_expr_from_lowered(
+                iterable,
+                None,
+                lowered_iterable,
+            )
+        else {
+            return Ok(None);
+        };
+        let filtered = crate::RustExpr::MethodCall {
+            receiver: Box::new(iter),
+            method: "filter".to_string(),
+            args: vec![crate::RustExpr::Closure {
+                params: vec![crate::RustParam::Named {
+                    name: "__filter_item".to_string(),
+                    ty: crate::RustType::Named("_".to_string()),
+                }],
+                body: Box::new(predicate_body),
+                is_move: true,
+            }],
+        };
+        Ok(Some(
+            crate::intrinsic_method_emitters::registry_box_iterator_expr(filtered),
+        ))
+    }
+
     pub(crate) fn try_lower_for_iter_expr_for_ir(
         &mut self,
         iter: &HirExpr,
@@ -40,9 +109,12 @@ impl RustEmitter {
                     ty: crate::RustType::Named("_".to_string()),
                 }],
                 body: Box::new(crate::RustExpr::Tuple(vec![
-                    crate::RustExpr::Cast {
-                        expr: Box::new(crate::RustExpr::Ident("i".to_string())),
-                        ty: crate::RustType::I64,
+                    crate::RustExpr::FnCall {
+                        func: Box::new(crate::RustExpr::Path(vec![
+                            "SifrInt".to_string(),
+                            "from".to_string(),
+                        ])),
+                        args: vec![crate::RustExpr::Ident("i".to_string())],
                     },
                     crate::RustExpr::Ident("v".to_string()),
                 ])),

@@ -145,6 +145,16 @@ impl RustEmitter {
                     )?;
                 let method_params =
                     self.resolve_registry_method_params(&effective_object_ty, method);
+                if matches!(
+                    crate::resolve_alias_type_for_plain_call(&effective_object_ty),
+                    Type::Decimal | Type::BigDecimal
+                ) && matches!(method.as_str(), "quantize" | "round")
+                    && args.len() == 1
+                {
+                    let scale = crate::integer_literal_decimal(&args[0])
+                        .and_then(|value| value.parse::<i64>().ok())?;
+                    arg_exprs[0] = crate::RustExpr::Literal(crate::RustLiteral::Int(scale));
+                }
                 if let Type::List(element_ty) =
                     crate::resolve_alias_type_for_plain_call(&effective_object_ty)
                 {
@@ -715,14 +725,7 @@ impl RustEmitter {
                 let left_expr = self.try_lower_registry_expr_strict(left)?;
                 let right_expr = self.try_lower_registry_expr_strict(right)?;
                 match crate::resolve_alias_type_for_plain_call(ty) {
-                    Type::Int | Type::LiteralInt(_) => Some(crate::RustExpr::MethodCall {
-                        receiver: Box::new(left_expr),
-                        method: "pow".to_string(),
-                        args: vec![crate::RustExpr::Cast {
-                            expr: Box::new(right_expr),
-                            ty: crate::RustType::Named("u32".to_string()),
-                        }],
-                    }),
+                    Type::Int | Type::LiteralInt(_) => None,
                     Type::Float => Some(crate::RustExpr::MethodCall {
                         receiver: Box::new(crate::RustExpr::Cast {
                             expr: Box::new(left_expr),
@@ -760,6 +763,18 @@ impl RustEmitter {
             } if matches!(op.as_str(), "+" | "-" | "*" | "/" | "//" | "%")
                 && matches!(ty, Type::Float | Type::Int | Type::LiteralInt(_)) =>
             {
+                if matches!(op.as_str(), "/" | "//" | "%")
+                    && matches!(
+                        crate::resolve_alias_type_for_plain_call(left.ty()),
+                        Type::Int | Type::LiteralInt(_)
+                    )
+                    && matches!(
+                        crate::resolve_alias_type_for_plain_call(right.ty()),
+                        Type::Int | Type::LiteralInt(_)
+                    )
+                {
+                    return None;
+                }
                 let left_expr = self.try_lower_registry_expr_strict(left)?;
                 let right_expr = self.try_lower_registry_expr_strict(right)?;
                 Some(crate::RustExpr::BinOp {

@@ -1,13 +1,16 @@
 use super::*;
 use crate::{RustExpr, RustItem, RustStmt, RustType, Visibility};
 use sifr_ir::HirExpr;
-use sifr_type_system::Type;
+use sifr_type_system::{FixedIntType, Type};
 
 #[test]
 fn dispatcher_lowers_simple_module_constant_item() {
-    let (item, rust_name) =
-        try_lower_simple_module_constant_item("answer", &Type::Int, &HirExpr::IntLiteral(42))
-            .expect("dispatcher should lower simple constant");
+    let (item, rust_name) = try_lower_simple_module_constant_item(
+        "answer",
+        &Type::FixedInt(FixedIntType::I64),
+        &HirExpr::IntLiteral(42),
+    )
+    .expect("dispatcher should lower simple constant");
     assert_eq!(rust_name, "ANSWER");
     assert!(matches!(item, RustItem::Const { .. }));
 }
@@ -16,7 +19,7 @@ fn dispatcher_lowers_simple_module_constant_item() {
 fn dispatcher_result_lowers_simple_module_constant_item() {
     let lowered = try_lower_simple_module_constant_item_result(
         "answer",
-        &Type::Int,
+        &Type::FixedInt(FixedIntType::I64),
         &HirExpr::IntLiteral(42),
     )
     .expect("result dispatcher should validate and lower")
@@ -63,7 +66,7 @@ fn dispatcher_result_reports_invalid_module_constant_name() {
 fn dispatcher_result_propagates_leaf_lowering_errors() {
     let err = try_lower_simple_module_constant_item_result(
         "answer",
-        &Type::Int,
+        &Type::Bool,
         &HirExpr::Compare {
             left: Box::new(HirExpr::IntLiteral(1)),
             ops: vec!["==".to_string()],
@@ -76,20 +79,11 @@ fn dispatcher_result_propagates_leaf_lowering_errors() {
 }
 
 #[test]
-fn lowers_simple_module_int_const_item() {
-    let (item, rust_name) =
+fn exact_module_int_const_uses_stateful_helper_lowering() {
+    assert!(
         try_lower_simple_module_const_item("answer", &Type::Int, &HirExpr::IntLiteral(42))
-            .expect("simple const should lower");
-    assert_eq!(rust_name, "ANSWER");
-    assert!(matches!(
-        item,
-        RustItem::Const {
-            name,
-            visibility: Visibility::Private,
-            ty: crate::RustType::I64,
-            ..
-        } if name == "ANSWER"
-    ));
+            .is_none()
+    );
 }
 
 #[test]
@@ -123,27 +117,19 @@ fn dispatcher_result_lowers_large_module_int_const_as_sifr_int_helper() {
 }
 
 #[test]
-fn lowers_simple_module_name_const_item() {
-    let (item, rust_name) = try_lower_simple_module_const_item(
-        "answer",
-        &Type::Int,
-        &HirExpr::Name {
-            name: "x".to_string(),
-            binding_id: None,
-            ty: Type::Int,
-        },
-    )
-    .expect("simple name const should lower");
-    assert_eq!(rust_name, "ANSWER");
-    assert!(matches!(
-        item,
-        RustItem::Const {
-            name,
-            visibility: Visibility::Private,
-            ty: crate::RustType::I64,
-            value: RustExpr::Ident(ident),
-        } if name == "ANSWER" && ident == "x"
-    ));
+fn exact_module_name_const_uses_stateful_helper_lowering() {
+    assert!(
+        try_lower_simple_module_const_item(
+            "answer",
+            &Type::Int,
+            &HirExpr::Name {
+                name: "x".to_string(),
+                binding_id: None,
+                ty: Type::Int,
+            },
+        )
+        .is_none()
+    );
 }
 
 #[test]
@@ -176,23 +162,15 @@ fn does_not_lower_non_leaf_module_const_item() {
 }
 
 #[test]
-fn lowers_simple_module_literal_int_const_item() {
-    let (item, rust_name) = try_lower_simple_module_const_item(
-        "answer",
-        &Type::LiteralInt(42),
-        &HirExpr::IntLiteral(42),
-    )
-    .expect("literal int const should lower");
-    assert_eq!(rust_name, "ANSWER");
-    assert!(matches!(
-        item,
-        RustItem::Const {
-            name,
-            visibility: Visibility::Private,
-            ty: crate::RustType::I64,
-            ..
-        } if name == "ANSWER"
-    ));
+fn exact_literal_int_const_uses_stateful_helper_lowering() {
+    assert!(
+        try_lower_simple_module_const_item(
+            "answer",
+            &Type::LiteralInt(42),
+            &HirExpr::IntLiteral(42),
+        )
+        .is_none()
+    );
 }
 
 #[test]
@@ -216,20 +194,12 @@ fn lowers_simple_module_literal_bool_const_item() {
 }
 
 #[test]
-fn lowers_simple_module_alias_int_const_item() {
+fn exact_alias_int_const_uses_stateful_helper_lowering() {
     let alias_int = Type::alias("Meters", Type::Int);
-    let (item, rust_name) =
+    assert!(
         try_lower_simple_module_const_item("answer", &alias_int, &HirExpr::IntLiteral(42))
-            .expect("alias int const should lower");
-    assert_eq!(rust_name, "ANSWER");
-    assert!(matches!(
-        item,
-        RustItem::Const {
-            name,
-            visibility: Visibility::Private,
-            ..
-        } if name == "ANSWER"
-    ));
+            .is_none()
+    );
 }
 
 #[test]

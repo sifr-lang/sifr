@@ -3,19 +3,23 @@ use ::std::collections::HashMap;
 
 use ::std::collections::HashSet;
 
+use ::sifr_runtime::SifrInt;
+
+use ::sifr_runtime::SifrRange;
+
 static __SIFR_HOISTED_DICT_0: ::std::sync::LazyLock<HashMap<String, Vec<String>>> = ::std::sync::LazyLock::new(|| HashMap::from([("L".to_string(), vec!["a".to_string(), "b".to_string(), "c".to_string()]), ("R".to_string(), vec!["d".to_string(), "e".to_string(), "f".to_string()])]));
 
 fn expand_keyed_strings(keys: &String) -> Vec<String> {
     let __sifr_chars_keys: Vec<char> = keys.chars().collect::<Vec<char>>();
     let mut res: Vec<String> = vec![];
     let key_to_suffixes = &*__SIFR_HOISTED_DICT_0;
-    fn backtrack(i: i64, cur: &String, key_to_suffixes: &HashMap<String, Vec<String>>, keys: &String, res: &mut Vec<String>) {
-        if (i >= (keys.chars().count() as i64)) {
+    fn backtrack(i: SifrInt, cur: &String, key_to_suffixes: &HashMap<String, Vec<String>>, keys: &String, res: &mut Vec<String>) {
+        if (&i >= &SifrInt::from(keys.chars().count())) {
             res.push(format!("{}", cur));
             return;
         }
         let key: String = {
-    let Some(__indexed_char) = keys.chars().nth(i as usize).map(|c| c.to_string()) else {
+    let Some(__indexed_char) = keys.chars().nth(::sifr_runtime::to_usize_proven(&(i))).map(|c| c.to_string()) else {
         unreachable!("compiler-verified string index should be in range");
     };
     __indexed_char
@@ -29,99 +33,91 @@ fn expand_keyed_strings(keys: &String) -> Vec<String> {
     };
     __sifr_dict_iter_source.iter().cloned()
 } {
-            backtrack(i + (1_i64), &format!("{}{}", cur, suffix), key_to_suffixes, keys, res);
+            backtrack(&i + &SifrInt::from_i64(1), &format!("{}{}", cur, suffix), key_to_suffixes, keys, res);
         }
     }
-    if ((__sifr_chars_keys.len() as i64) > (0_i64)) {
-        backtrack(0_i64, &"".to_string(), &key_to_suffixes, keys, &mut res);
+    if (&SifrInt::from(__sifr_chars_keys.len()) > &SifrInt::from_i64(0)) {
+        backtrack(SifrInt::from_i64(0), &"".to_string(), &key_to_suffixes, keys, &mut res);
     }
     res
 }
 
-fn count_configurations(n: i64) -> i64 {
-    fn backtrack(i: i64, cols: &mut HashSet<i64>, posdiag: &mut HashSet<i64>, negdiag: &mut HashSet<i64>, n: i64) -> i64 {
-        if i == n {
-            return 1_i64;
+fn count_configurations(n: SifrInt) -> SifrInt {
+    fn backtrack(i: SifrInt, cols: &mut HashSet<SifrInt>, posdiag: &mut HashSet<SifrInt>, negdiag: &mut HashSet<SifrInt>, n: SifrInt) -> SifrInt {
+        if &i == &n {
+            return SifrInt::from_i64(1);
         }
-        let mut count: i64 = 0_i64;
-        for j in 0_i64..n {
-            if (cols.contains(&j) || posdiag.contains(&(i + j))) || negdiag.contains(&(i - j)) {
+        let mut count: SifrInt = SifrInt::from_i64(0);
+        for j in SifrRange::new_known_nonzero(SifrInt::from_i64(0), n.clone(), SifrInt::from_i64(1)) {
+            if (cols.contains(&j) || posdiag.contains(&(&i + &j))) || negdiag.contains(&(&i - &j)) {
                 continue;
             }
             cols.insert((j).clone());
-            posdiag.insert(i + j);
-            negdiag.insert(i - j);
-            count += backtrack(i + (1_i64), cols, posdiag, negdiag, n);
+            posdiag.insert(&i + &j);
+            negdiag.insert(&i - &j);
+            count = &count + &backtrack(&i + &SifrInt::from_i64(1), cols, posdiag, negdiag, n.clone());
             cols.remove(&j);
-            posdiag.remove(&(i + j));
-            negdiag.remove(&(i - j));
+            posdiag.remove(&(&i + &j));
+            negdiag.remove(&(&i - &j));
         }
-        return count;
+        return count.clone();
     }
-    backtrack(0_i64, &mut HashSet::new(), &mut HashSet::new(), &mut HashSet::new(), n)
+    backtrack(SifrInt::from_i64(0), &mut HashSet::new(), &mut HashSet::new(), &mut HashSet::new(), n.clone())
 }
 
-fn find_root(n: i64, par: &Vec<i64>) -> i64 {
-    if (n < (0_i64)) || (n >= (par.len() as i64)) {
-        return 0_i64;
+fn find_root(n: SifrInt, par: &Vec<SifrInt>) -> SifrInt {
+    if (&n < &SifrInt::from_i64(0)) || (&n >= &SifrInt::from(par.len())) {
+        return SifrInt::from_i64(0);
     }
-    let mut p: i64 = n;
-    while ((p >= (0_i64)) && (p < (par.len() as i64))) && (par[p as usize] != p) {
-        p = par[p as usize];
+    let mut p: SifrInt = n.clone();
+    while ((&p >= &SifrInt::from_i64(0)) && (&p < &SifrInt::from(par.len()))) && (&par[::sifr_runtime::to_usize_proven(&(p))].clone() != &p) {
+        p = par[::sifr_runtime::to_usize_proven(&(p))].clone();
     }
-    p
+    p.clone()
 }
 
-fn union_nodes(n1: i64, n2: i64, par: &mut Vec<i64>, rank: &mut Vec<i64>) -> bool {
-    let p1: i64 = find_root(n1, par);
-    let p2: i64 = find_root(n2, par);
-    if (((p1 < (0_i64)) || (p1 >= (rank.len() as i64))) || (p2 < (0_i64))) || (p2 >= (rank.len() as i64)) {
+fn union_nodes(n1: SifrInt, n2: SifrInt, par: &mut Vec<SifrInt>, rank: &mut Vec<SifrInt>) -> bool {
+    let p1: SifrInt = find_root((n1).clone(), par);
+    let p2: SifrInt = find_root((n2).clone(), par);
+    if (((&p1 < &SifrInt::from_i64(0)) || (&p1 >= &SifrInt::from(rank.len()))) || (&p2 < &SifrInt::from_i64(0))) || (&p2 >= &SifrInt::from(rank.len())) {
         return false;
     }
-    if p1 == p2 {
+    if &p1 == &p2 {
         return false;
     }
-    if (rank[p1 as usize] > rank[p2 as usize]) {
+    if (rank[::sifr_runtime::to_usize_proven(&(p1))].clone() > rank[::sifr_runtime::to_usize_proven(&(p2))].clone()) {
         {
-            let __idx_raw = p2;
-            let __idx_norm = if __idx_raw < 0 { (par.len() as i64) + __idx_raw } else { __idx_raw };
-            if __idx_norm >= 0 {
-                if let Some(__elem) = par.get_mut(__idx_norm as usize) {
-                    *__elem = p1;
-                }
+            let __idx_raw = p2.clone();
+            let __idx_norm = __idx_raw.normalize_index_or_len(par.len());
+            if let Some(__elem) = par.get_mut(__idx_norm) {
+                *__elem = p1.clone();
             }
         }
         {
-            let __assign_value = rank[p1 as usize] + rank[p2 as usize];
+            let __assign_value = &rank[::sifr_runtime::to_usize_proven(&(p1))].clone() + &rank[::sifr_runtime::to_usize_proven(&(p2))].clone();
             {
-                let __idx_raw = p1;
-                let __idx_norm = if __idx_raw < 0 { (rank.len() as i64) + __idx_raw } else { __idx_raw };
-                if __idx_norm >= 0 {
-                    if let Some(__elem) = rank.get_mut(__idx_norm as usize) {
-                        *__elem = __assign_value;
-                    }
+                let __idx_raw = p1.clone();
+                let __idx_norm = __idx_raw.normalize_index_or_len(rank.len());
+                if let Some(__elem) = rank.get_mut(__idx_norm) {
+                    *__elem = __assign_value;
                 }
             }
         }
     } else {
         {
-            let __idx_raw = p1;
-            let __idx_norm = if __idx_raw < 0 { (par.len() as i64) + __idx_raw } else { __idx_raw };
-            if __idx_norm >= 0 {
-                if let Some(__elem) = par.get_mut(__idx_norm as usize) {
-                    *__elem = p2;
-                }
+            let __idx_raw = p1.clone();
+            let __idx_norm = __idx_raw.normalize_index_or_len(par.len());
+            if let Some(__elem) = par.get_mut(__idx_norm) {
+                *__elem = p2.clone();
             }
         }
         {
-            let __assign_value = rank[p2 as usize] + rank[p1 as usize];
+            let __assign_value = &rank[::sifr_runtime::to_usize_proven(&(p2))].clone() + &rank[::sifr_runtime::to_usize_proven(&(p1))].clone();
             {
-                let __idx_raw = p2;
-                let __idx_norm = if __idx_raw < 0 { (rank.len() as i64) + __idx_raw } else { __idx_raw };
-                if __idx_norm >= 0 {
-                    if let Some(__elem) = rank.get_mut(__idx_norm as usize) {
-                        *__elem = __assign_value;
-                    }
+                let __idx_raw = p2.clone();
+                let __idx_norm = __idx_raw.normalize_index_or_len(rank.len());
+                if let Some(__elem) = rank.get_mut(__idx_norm) {
+                    *__elem = __assign_value;
                 }
             }
         }
@@ -129,24 +125,24 @@ fn union_nodes(n1: i64, n2: i64, par: &mut Vec<i64>, rank: &mut Vec<i64>) -> boo
     true
 }
 
-fn detect_first_cycle(edges: &Vec<(i64, i64)>) -> Vec<i64> {
-    let mut par: Vec<i64> = {
+fn detect_first_cycle(edges: &Vec<(SifrInt, SifrInt)>) -> Vec<SifrInt> {
+    let mut par: Vec<SifrInt> = {
     let mut __sifr_list_comp = vec![];
-    for i in 0_i64..(edges.len() as i64) + (1_i64) {
+    for i in SifrRange::new_known_nonzero(SifrInt::from_i64(0), &SifrInt::from(edges.len()) + &SifrInt::from_i64(1), SifrInt::from_i64(1)) {
         __sifr_list_comp.push(i);
     }
     __sifr_list_comp
 };
-    let mut rank: Vec<i64> = {
+    let mut rank: Vec<SifrInt> = {
     let mut __sifr_list_comp = vec![];
-    for _ in 0_i64..(edges.len() as i64) + (1_i64) {
-        __sifr_list_comp.push(1_i64);
+    for _ in SifrRange::new_known_nonzero(SifrInt::from_i64(0), &SifrInt::from(edges.len()) + &SifrInt::from_i64(1), SifrInt::from_i64(1)) {
+        __sifr_list_comp.push(SifrInt::from_i64(1));
     }
     __sifr_list_comp
 };
-    for (n1, n2) in edges.iter().copied() {
-        if !(union_nodes(n1, n2, &mut par, &mut rank)) {
-            return vec![n1, n2];
+    for (n1, n2) in edges.iter().cloned() {
+        if !(union_nodes((n1).clone(), (n2).clone(), &mut par, &mut rank)) {
+            return vec![n1.clone(), n2.clone()];
         }
     }
     vec![]
@@ -154,6 +150,6 @@ fn detect_first_cycle(edges: &Vec<(i64, i64)>) -> Vec<i64> {
 
 fn main() {
     assert!((format!("{:?}", expand_keyed_strings(&"LR".to_string())) == "[\"ad\", \"ae\", \"af\", \"bd\", \"be\", \"bf\", \"cd\", \"ce\", \"cf\"]"));
-    assert!((count_configurations(4_i64) == (2_i64)));
-    assert!((detect_first_cycle(&vec![(1_i64, 2_i64), (1_i64, 3_i64), (2_i64, 3_i64)]) == vec![2_i64, 3_i64]));
+    assert!((&count_configurations(SifrInt::from_i64(4)) == &SifrInt::from_i64(2)));
+    assert!((detect_first_cycle(&vec![(SifrInt::from_i64(1), SifrInt::from_i64(2)), (SifrInt::from_i64(1), SifrInt::from_i64(3)), (SifrInt::from_i64(2), SifrInt::from_i64(3))]) == vec![SifrInt::from_i64(2), SifrInt::from_i64(3)]));
 }

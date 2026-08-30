@@ -18,6 +18,7 @@ pub(crate) struct IrCollectionImportNeeds {
 pub(crate) struct IrRuntimeImportNeeds {
     pub(crate) needs_mutex: bool,
     pub(crate) needs_sifr_int: bool,
+    pub(crate) needs_sifr_range: bool,
     pub(crate) needs_sifr_runtime: bool,
     pub(crate) numeric: IrNumericImportNeeds,
 }
@@ -505,6 +506,10 @@ fn mark_symbol(symbol: &str, needs: &mut IrImportNeeds) {
         "Mutex" => needs.runtime.needs_mutex = true,
         "SifrInt" => {
             needs.runtime.needs_sifr_int = true;
+            needs.runtime.needs_sifr_runtime = true;
+        }
+        "SifrRange" => {
+            needs.runtime.needs_sifr_range = true;
             needs.runtime.needs_sifr_runtime = true;
         }
         "sifr_runtime" => needs.runtime.needs_sifr_runtime = true,

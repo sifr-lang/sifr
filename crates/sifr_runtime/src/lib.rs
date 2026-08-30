@@ -2,6 +2,7 @@
 #![cfg_attr(test, allow(clippy::expect_used))]
 
 pub mod cancellation;
+mod conversion;
 pub mod encoding;
 #[cfg(feature = "http")]
 pub mod http;
@@ -15,6 +16,8 @@ pub mod json;
 pub mod net;
 #[cfg(feature = "python")]
 pub mod python;
+mod range;
+mod slice;
 #[cfg(any(feature = "net", feature = "tls", feature = "http", test))]
 mod timeouts;
 #[cfg(feature = "tls")]
@@ -24,7 +27,11 @@ pub mod unicode;
 #[cfg(feature = "unicode")]
 mod unicode_data;
 
+pub use conversion::{ProvenUsize, to_usize_proven};
 pub use int::{
-    DEFAULT_MAX_INTEGER_DIGITS, IntegerParseError, IntegerRangeError, NormalizedIntegerHash,
-    SifrInt,
+    DEFAULT_MAX_INTEGER_DIGITS, DEFAULT_MAX_INTEGER_OUTPUT_BITS, IntegerArithmeticError,
+    IntegerDivisionError, IntegerFloatConversionError, IntegerParseError, IntegerRangeError,
+    NormalizedIntegerHash, SifrInt,
 };
+pub use range::SifrRange;
+pub use slice::SifrSliceIndices;

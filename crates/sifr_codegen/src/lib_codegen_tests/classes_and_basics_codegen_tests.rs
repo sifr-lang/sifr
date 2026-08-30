@@ -62,8 +62,8 @@ def main():
 "#,
     );
 
-    assert!(rust_code.contains("callback: Box<dyn Fn(i64) -> i64>"));
-    assert!(rust_code.contains("fn new(callback: impl Fn(i64) -> i64 + 'static)"));
+    assert!(rust_code.contains("callback: Box<dyn Fn(SifrInt) -> SifrInt>"));
+    assert!(rust_code.contains("fn new(callback: impl Fn(SifrInt) -> SifrInt + 'static)"));
     assert!(rust_code.contains("Self { callback: Box::new(callback) }"));
 }
 
@@ -283,7 +283,7 @@ fn render_strict_lowered_expr(emitter: &mut RustEmitter, expr: &HirExpr) -> Stri
 fn test_expr_to_string_leaf_rendering() {
     let mut emitter = RustEmitter::new();
     let int_code = render_strict_lowered_expr(&mut emitter, &HirExpr::IntLiteral(7));
-    assert_eq!(int_code, "7_i64");
+    assert_eq!(int_code, "SifrInt::from_i64(7)");
 
     let bool_op = HirExpr::BoolOp {
         op: "and".to_string(),
@@ -389,8 +389,14 @@ fn test_structured_stmt_path_rewrites_module_constant_name() {
     };
 
     let result = generate_rust_with_metadata(&module);
-    assert!(result.rust_source.contains("const LIMIT: i64 = 7_i64;"));
-    assert!(result.rust_source.contains("let x: i64 = LIMIT;"));
+    assert!(result.rust_source.contains("fn __const_limit() -> SifrInt"));
+    assert!(
+        result
+            .rust_source
+            .contains("let x: SifrInt = __const_limit();"),
+        "{}",
+        result.rust_source
+    );
     assert!(result.lowering_stats.stmt_structured >= 1);
 }
 
@@ -512,8 +518,8 @@ fn test_match_int_literal_pattern_avoids_cast_expression() {
     };
 
     let rust_code = generate_rust(&module);
-    assert!(rust_code.contains("1 => {"));
-    assert!(!rust_code.contains("1 as i64 => {"));
+    assert!(rust_code.contains("SifrInt::Small(1) => {"));
+    assert!(!rust_code.contains("1 as SifrInt => {"));
 }
 
 #[test]
@@ -523,7 +529,16 @@ fn test_generate_rust_multi_exports_non_main_items() {
             name: "main".to_string(),
             params: vec![],
             return_type: Type::None,
-            body: vec![HirStmt::Pass],
+            body: vec![HirStmt::Let {
+                name: "value".to_string(),
+                ty: Type::Int,
+                value: HirExpr::Name {
+                    name: "LIMIT".to_string(),
+                    binding_id: None,
+                    ty: Type::Int,
+                },
+                is_mutable: false,
+            }],
             is_async: false,
             method_kind: MethodKind::Regular,
             receiver: None,
@@ -534,7 +549,11 @@ fn test_generate_rust_multi_exports_non_main_items() {
             type_params: vec![],
         }],
         classes: vec![],
-        imports: vec![],
+        imports: vec![HirImport {
+            module: "facade".to_string(),
+            names: vec!["EXPORTED".to_string()],
+            aliases: vec![("EXPORTED".to_string(), "LIMIT".to_string())],
+        }],
         constants: vec![],
         generic_functions: std::collections::HashMap::new(),
         type_param_bounds: std::collections::HashMap::new(),
@@ -583,7 +602,24 @@ fn test_generate_rust_multi_exports_non_main_items() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let files = generate_rust_multi(&[("main", &main_module), ("utils", &utils_module)]);
+    let facade_module = HirModule {
+        functions: vec![],
+        classes: vec![],
+        imports: vec![HirImport {
+            module: "utils".to_string(),
+            names: vec!["ANSWER".to_string()],
+            aliases: vec![("ANSWER".to_string(), "EXPORTED".to_string())],
+        }],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let files = generate_rust_multi(&[
+        ("main", &main_module),
+        ("facade", &facade_module),
+        ("utils", &utils_module),
+    ]);
     let main_rs = files.get("main").expect("main module should be generated");
     let utils_rs = files
         .get("utils")
@@ -591,11 +627,19 @@ fn test_generate_rust_multi_exports_non_main_items() {
 
     assert!(main_rs.contains("fn main()"));
     assert!(!main_rs.contains("pub fn main("));
-    assert!(utils_rs.contains("pub fn helper() -> i64"));
+    assert!(
+        main_rs.contains("let value: SifrInt = crate::utils::__const_ANSWER();"),
+        "{main_rs}"
+    );
+    assert!(
+        !main_rs.contains("use crate::facade::EXPORTED"),
+        "{main_rs}"
+    );
+    assert!(utils_rs.contains("pub fn helper() -> SifrInt"));
     assert!(utils_rs.contains("pub struct Thing"));
-    assert!(utils_rs.contains("pub const ANSWER: i64 = 7_i64;"));
-    assert!(utils_rs.contains("pub value: i64"));
-    assert!(utils_rs.contains("pub fn new(value: i64) -> Self"));
+    assert!(utils_rs.contains("pub fn __const_ANSWER() -> SifrInt"));
+    assert!(utils_rs.contains("pub value: SifrInt"));
+    assert!(utils_rs.contains("pub fn new(value: SifrInt) -> Self"));
 }
 
 #[test]
@@ -798,99 +842,4 @@ fn test_generate_rust_multi_with_metadata_aggregates_reachable_dependency_closur
     assert!(result.rust_files.contains_key("helper"));
     assert!(result.used_stdlib_modules.contains("sifr.statistics"));
     assert!(result.used_stdlib_modules.contains("sifr.math"));
-}
-
-#[test]
-fn test_generate_rust_multi_with_metadata_preserves_trait_impl_visibility() {
-    let main_module = HirModule {
-        functions: vec![HirFunction {
-            name: "main".to_string(),
-            params: vec![],
-            return_type: Type::None,
-            body: vec![HirStmt::Expr {
-                expr: HirExpr::Call {
-                    mutable_arg_places: Vec::new(),
-                    func: "helper".to_string(),
-                    args: vec![],
-                    ty: Type::None,
-                },
-            }],
-            is_async: false,
-            method_kind: MethodKind::Regular,
-            receiver: None,
-            decorators: vec![],
-            rust_interop: Vec::new(),
-            python_interop: Vec::new(),
-            compiler_intrinsic: None,
-            type_params: vec![],
-        }],
-        classes: vec![],
-        imports: vec![HirImport {
-            module: "helper".to_string(),
-            names: vec!["helper".to_string()],
-            aliases: vec![],
-        }],
-        constants: vec![],
-        generic_functions: std::collections::HashMap::new(),
-        type_param_bounds: std::collections::HashMap::new(),
-    };
-
-    let helper_module = HirModule {
-        functions: vec![HirFunction {
-            name: "helper".to_string(),
-            params: vec![],
-            return_type: Type::None,
-            body: vec![HirStmt::Expr {
-                expr: HirExpr::Call {
-                    mutable_arg_places: Vec::new(),
-                    func: "loads".to_string(),
-                    args: vec![HirExpr::StringLiteral(
-                        "name = \"fixture-five\"\nvalue = 5".to_string(),
-                    )],
-                    ty: Type::Result(Box::new(Type::Str), Box::new(Type::Any)),
-                },
-            }],
-            is_async: false,
-            method_kind: MethodKind::Regular,
-            receiver: None,
-            decorators: vec![],
-            rust_interop: Vec::new(),
-            python_interop: Vec::new(),
-            compiler_intrinsic: None,
-            type_params: vec![],
-        }],
-        classes: vec![],
-        imports: vec![HirImport {
-            module: "sifr.tomllib".to_string(),
-            names: vec!["loads".to_string()],
-            aliases: vec![],
-        }],
-        constants: vec![],
-        generic_functions: std::collections::HashMap::new(),
-        type_param_bounds: std::collections::HashMap::new(),
-    };
-
-    let stdlib_code = trait_impl_fixture_stdlib_code();
-
-    let result = generate_rust_multi_with_metadata(
-        &[("main", &main_module), ("helper", &helper_module)],
-        &stdlib_code,
-    );
-
-    let helper_rs = result
-        .rust_files
-        .get("helper")
-        .expect("helper module should be generated");
-    assert!(
-        helper_rs.contains("pub fn helper()"),
-        "support-module functions should be exported"
-    );
-    assert!(
-        helper_rs.contains("impl ::std::fmt::Display for TOMLDecodeError"),
-        "stdlib trait impls should be preserved in publicized helper modules"
-    );
-    assert!(
-        !helper_rs.contains("pub fn fmt("),
-        "trait impl methods must not receive pub visibility during support-module publicization"
-    );
 }

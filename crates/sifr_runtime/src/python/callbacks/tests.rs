@@ -55,8 +55,9 @@ fn current_callback_keeps_non_send_capture_on_creator_thread_and_checks_shape() 
             to_int(&args[0])
         },
         move |_, value| {
+            let value = value.try_to_i64().expect("fixture integer fits i64");
             handler_capture.set(handler_capture.get() + value);
-            Ok(value + 1)
+            Ok(crate::SifrInt::from(value + 1))
         },
         |value| {
             assert_eq!(unsafe { pyo3::ffi::PyGILState_Check() }, 1);
@@ -134,7 +135,8 @@ fn call_scoped_callbacks_accept_borrowed_handler_state() {
             1,
             |args| to_int(&args[0]),
             |_, value| {
-                current_total.set(current_total.get() + value);
+                let increment = value.try_to_i64().expect("fixture integer fits i64");
+                current_total.set(current_total.get() + increment);
                 Ok(value)
             },
             from_int,
@@ -154,7 +156,8 @@ fn call_scoped_callbacks_accept_borrowed_handler_state() {
             ForeignCallbackConcurrency::Parallel,
             |args| to_int(&args[0]),
             |_, value| {
-                foreign_total.fetch_add(usize::try_from(value).unwrap_or(0), Ordering::SeqCst);
+                let increment = value.try_to_usize().expect("fixture integer fits usize");
+                foreign_total.fetch_add(increment, Ordering::SeqCst);
                 Ok(value)
             },
             from_int,
@@ -386,7 +389,7 @@ fn foreign_parallel_overlaps_and_serial_reentrancy_fails_before_handler_lock() {
                 .expect("callback slot")
                 .clone()
                 .expect("callback should be installed");
-            let arg = from_int(value)?;
+            let arg = from_int(value.clone())?;
             call_object_owned(&callback, &[arg], &[])
                 .map(|_| value)
                 .map_err(CallbackExecutionError::from)

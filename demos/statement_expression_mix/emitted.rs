@@ -1,30 +1,36 @@
 // src/main.rs
+use ::sifr_runtime::SifrInt;
+
 fn main() {
-    let mut acc: i64 = 0_i64;
-    let nums: Vec<i64> = vec![1_i64, 2_i64, 3_i64];
-    let _broke = false;
-    for n in nums.iter().copied() {
-        acc += n;
+    let mut acc: SifrInt = SifrInt::from_i64(0);
+    let nums: Vec<SifrInt> = vec![SifrInt::from_i64(1), SifrInt::from_i64(2), SifrInt::from_i64(3)];
+    {
+        let _broke: bool = false;
+        for n in nums.iter().cloned() {
+            acc = &acc + &n;
+        }
+        if !(_broke) {
+            acc = &acc + &SifrInt::from_i64(1);
+        }
     }
-    if !_broke {
-        acc += 1_i64;
-    }
-    let mut i: i64 = 0_i64;
-    let _broke = false;
-    while i < (3_i64) {
-        acc += i;
-        i += 1_i64;
-    }
-    if !_broke {
-        acc += 2_i64;
+    let mut i: SifrInt = SifrInt::from_i64(0);
+    {
+        let _broke: bool = false;
+        while &i < &SifrInt::from_i64(3) {
+            acc = &acc + &i;
+            i = &i + &SifrInt::from_i64(1);
+        }
+        if !(_broke) {
+            acc = &acc + &SifrInt::from_i64(2);
+        }
     }
     let ready: bool = true;
     if ready {
-        acc += 10_i64;
+        acc = &acc + &SifrInt::from_i64(10);
     } else {
-        acc += 100_i64;
+        acc = &acc + &SifrInt::from_i64(100);
     }
-    assert!(acc > (0_i64));
+    assert!(&acc > &SifrInt::from_i64(0));
     println!("acc = {}", acc);
     assert!((format!("{}", format!("acc = {}", acc)) == "acc = 22"));
 }

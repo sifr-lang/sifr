@@ -43,6 +43,7 @@ pub(crate) fn generate_rust_test_with_project_policy(
     emitter.project_structural_identity_expressions =
         project_structural_identity_expressions.cloned();
     emitter.structural_identity_module_name = Some(module_name.to_string());
+    crate::project_constants::register_imported_constants(&mut emitter, module, project_code);
 
     // First pass: collect all union types used in the module
     emitter.collect_union_types(module);
@@ -74,6 +75,8 @@ pub(crate) fn generate_rust_test_with_project_policy(
 
     // Second pass: emit the actual code
     emitter.emit_named_module(module, false, true, Some(module_name));
+    // Expression lowering can introduce canonical intermediate error unions.
+    emitter.generate_enum_definitions();
 
     let mut module_import_items: Vec<RustItem> = Vec::new();
     for import in &module.imports {
@@ -84,6 +87,13 @@ pub(crate) fn generate_rust_test_with_project_policy(
         let mut module_path = vec!["crate".to_string()];
         module_path.extend(import.module.split('.').map(str::to_string));
         for name in &import.names {
+            if project_code
+                .module_constants
+                .get(&import.module)
+                .is_some_and(|constants| constants.contains_key(name))
+            {
+                continue;
+            }
             if let Some((_, alias)) = import.aliases.iter().find(|(orig, _)| orig == name) {
                 let mut alias_path = module_path.clone();
                 alias_path.push(name.clone());
@@ -200,6 +210,13 @@ pub(crate) fn generate_rust_test_with_project_policy(
             String::new(),
             "sifr_runtime".to_string(),
             "SifrInt".to_string(),
+        ]));
+    }
+    if import_needs.runtime.needs_sifr_range {
+        import_items.push(RustItem::Use(vec![
+            String::new(),
+            "sifr_runtime".to_string(),
+            "SifrRange".to_string(),
         ]));
     }
 

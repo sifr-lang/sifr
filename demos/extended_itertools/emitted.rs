@@ -1,26 +1,25 @@
 // src/main.rs
+use ::sifr_runtime::SifrInt;
+
 // --- stdlib: sifr.itertools ---
 fn _prepend<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     head: T,
     tails: &Vec<Vec<T>>,
 ) -> Vec<Vec<T>> {
     let mut result: Vec<Vec<T>> = vec![];
-    let head_holder: Vec<T> = vec![head.clone()];
+    let head_holder: Vec<T> = vec![head];
     for tail in tails.iter().cloned() {
         let current: Option<T> = {
             let __sifr_index_list = &head_holder;
-            let __sifr_index_i = 0_i64;
-            let __sifr_index_norm = if __sifr_index_i < 0 {
-                ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
-            } else {
-                __sifr_index_i as usize
-            };
+            let __sifr_index_i = SifrInt::from_i64(0);
+            let __sifr_index_norm = __sifr_index_i
+                .normalize_index_or_len(__sifr_index_list.len());
             __sifr_index_list.get(__sifr_index_norm).cloned()
         };
         if let Some(current) = current {
-            let mut item: Vec<T> = vec![current.clone()];
+            let mut item: Vec<T> = vec![current];
             for value in tail.iter().cloned() {
-                item.push(value.clone().clone());
+                item.push(value.clone());
             }
             result.push(item.clone());
         }
@@ -29,122 +28,138 @@ fn _prepend<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
 }
 fn _product_impl<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     pools: &Vec<Vec<T>>,
-    index: i64,
+    index: SifrInt,
 ) -> Vec<Vec<T>> {
-    if index >= (pools.len() as i64) {
+    if &index >= &SifrInt::from(pools.len()) {
         return vec![vec![]];
     }
-    let suffixes: Vec<Vec<T>> = _product_impl(pools, index + (1_i64));
+    let suffixes: Vec<Vec<T>> = _product_impl(pools, &index + &SifrInt::from_i64(1));
     let mut result: Vec<Vec<T>> = vec![];
-    let current_pool: Option<Vec<T>> = Some(pools[index as usize].clone());
+    let current_pool: Option<Vec<T>> = Some(
+        pools[::sifr_runtime::to_usize_proven(&(index))].clone(),
+    );
     let Some(current_pool) = current_pool else {
         return result;
     };
-    let mut i: i64 = 0_i64;
-    while (i < (current_pool.len() as i64)) {
-        let mut j: i64 = 0_i64;
-        while (j < (suffixes.len() as i64)) {
-            let value: Option<T> = Some(current_pool[i as usize].clone());
-            let suffix: Option<Vec<T>> = Some(suffixes[j as usize].clone());
+    let mut i: SifrInt = SifrInt::from_i64(0);
+    while (&i < &SifrInt::from(current_pool.len())) {
+        let mut j: SifrInt = SifrInt::from_i64(0);
+        while (&j < &SifrInt::from(suffixes.len())) {
+            let value: Option<T> = Some(
+                current_pool[::sifr_runtime::to_usize_proven(&(i))].clone(),
+            );
+            let suffix: Option<Vec<T>> = Some(
+                suffixes[::sifr_runtime::to_usize_proven(&(j))].clone(),
+            );
             if let Some(value) = value {
                 if let Some(suffix) = suffix {
-                    let mut entry: Vec<T> = vec![value.clone()];
+                    let mut entry: Vec<T> = vec![value];
                     for suffix_value in suffix.iter().cloned() {
-                        entry.push(suffix_value.clone().clone());
+                        entry.push(suffix_value.clone());
                     }
                     result.push(entry.clone());
                 }
             }
-            j += 1_i64;
+            j = &j + &SifrInt::from_i64(1);
         }
-        i += 1_i64;
+        i = &i + &SifrInt::from_i64(1);
     }
     result
 }
 fn _permutations_impl<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     data: &Vec<T>,
-    target: i64,
+    target: SifrInt,
 ) -> Vec<Vec<T>> {
-    if target == (0_i64) {
+    if &target == &SifrInt::from_i64(0) {
         return vec![vec![]];
     }
     let mut result: Vec<Vec<T>> = vec![];
-    let mut i: i64 = 0_i64;
-    while (i < (data.len() as i64)) {
-        let current: Option<T> = Some(data[i as usize].clone());
+    let mut i: SifrInt = SifrInt::from_i64(0);
+    while (&i < &SifrInt::from(data.len())) {
+        let current: Option<T> = Some(
+            data[::sifr_runtime::to_usize_proven(&(i))].clone(),
+        );
         if let Some(current) = current {
             let mut rest: Vec<T> = vec![];
-            let mut j: i64 = 0_i64;
-            while (j < (data.len() as i64)) {
-                if j != i {
-                    let item: Option<T> = Some(data[j as usize].clone());
+            let mut j: SifrInt = SifrInt::from_i64(0);
+            while (&j < &SifrInt::from(data.len())) {
+                if &j != &i {
+                    let item: Option<T> = Some(
+                        data[::sifr_runtime::to_usize_proven(&(j))].clone(),
+                    );
                     if let Some(item) = item {
-                        rest.push(item.clone().clone());
+                        rest.push(item.clone());
                     }
                 }
-                j += 1_i64;
+                j = &j + &SifrInt::from_i64(1);
             }
-            let tails: Vec<Vec<T>> = _permutations_impl(&rest, target - (1_i64));
-            for entry in _prepend(current, &tails).into_iter() {
-                result.push(entry.clone());
-            }
-        }
-        i += 1_i64;
-    }
-    result
-}
-fn _combinations_impl<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    data: &Vec<T>,
-    start: i64,
-    r: i64,
-) -> Vec<Vec<T>> {
-    if r == (0_i64) {
-        return vec![vec![]];
-    }
-    let mut result: Vec<Vec<T>> = vec![];
-    let mut i: i64 = start;
-    while (i <= ((data.len() as i64) - r)) {
-        let current: Option<T> = {
-            let __sifr_index_list = &data;
-            let __sifr_index_i = i;
-            let __sifr_index_norm = if __sifr_index_i < 0 {
-                ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
-            } else {
-                __sifr_index_i as usize
-            };
-            __sifr_index_list.get(__sifr_index_norm).cloned()
-        };
-        if let Some(current) = current {
-            let tails: Vec<Vec<T>> = _combinations_impl(data, i + (1_i64), r - (1_i64));
-            for entry in _prepend(current, &tails).into_iter() {
-                result.push(entry.clone());
-            }
-        }
-        i += 1_i64;
-    }
-    result
-}
-fn _combinations_with_replacement_impl<
-    T: Clone + ::std::fmt::Display + PartialOrd + 'static,
->(data: &Vec<T>, start: i64, r: i64) -> Vec<Vec<T>> {
-    if r == (0_i64) {
-        return vec![vec![]];
-    }
-    let mut result: Vec<Vec<T>> = vec![];
-    let mut i: i64 = start;
-    while (i < (data.len() as i64)) {
-        let current: Option<T> = Some(data[i as usize].clone());
-        if let Some(current) = current {
-            let tails: Vec<Vec<T>> = _combinations_with_replacement_impl(
-                data,
-                i,
-                r - (1_i64),
+            let tails: Vec<Vec<T>> = _permutations_impl(
+                &rest,
+                &target - &SifrInt::from_i64(1),
             );
             for entry in _prepend(current, &tails).into_iter() {
                 result.push(entry.clone());
             }
         }
-        i += 1_i64;
+        i = &i + &SifrInt::from_i64(1);
+    }
+    result
+}
+fn _combinations_impl<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
+    data: &Vec<T>,
+    start: SifrInt,
+    r: SifrInt,
+) -> Vec<Vec<T>> {
+    if &r == &SifrInt::from_i64(0) {
+        return vec![vec![]];
+    }
+    let mut result: Vec<Vec<T>> = vec![];
+    let mut i: SifrInt = start.clone();
+    while (&i <= &(&SifrInt::from(data.len()) - &r)) {
+        let current: Option<T> = {
+            let __sifr_index_list = &data;
+            let __sifr_index_i = i.clone();
+            let __sifr_index_norm = __sifr_index_i
+                .normalize_index_or_len(__sifr_index_list.len());
+            __sifr_index_list.get(__sifr_index_norm).cloned()
+        };
+        if let Some(current) = current {
+            let tails: Vec<Vec<T>> = _combinations_impl(
+                data,
+                &i + &SifrInt::from_i64(1),
+                &r - &SifrInt::from_i64(1),
+            );
+            for entry in _prepend(current, &tails).into_iter() {
+                result.push(entry.clone());
+            }
+        }
+        i = &i + &SifrInt::from_i64(1);
+    }
+    result
+}
+fn _combinations_with_replacement_impl<
+    T: Clone + ::std::fmt::Display + PartialOrd + 'static,
+>(data: &Vec<T>, start: SifrInt, r: SifrInt) -> Vec<Vec<T>> {
+    if &r == &SifrInt::from_i64(0) {
+        return vec![vec![]];
+    }
+    let mut result: Vec<Vec<T>> = vec![];
+    let mut i: SifrInt = start.clone();
+    while (&i < &SifrInt::from(data.len())) {
+        let current: Option<T> = Some(
+            data[::sifr_runtime::to_usize_proven(&(i))].clone(),
+        );
+        if let Some(current) = current {
+            let tails: Vec<Vec<T>> = _combinations_with_replacement_impl(
+                data,
+                (i).clone(),
+                &r - &SifrInt::from_i64(1),
+            );
+            for entry in _prepend(current, &tails).into_iter() {
+                result.push(entry.clone());
+            }
+        }
+        i = &i + &SifrInt::from_i64(1);
     }
     result
 }
@@ -153,30 +168,29 @@ fn _compress_impl<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     selectors: &Vec<bool>,
 ) -> Vec<T> {
     let mut result: Vec<T> = vec![];
-    let mut i: i64 = 0_i64;
-    while (i < (data.len() as i64)) {
-        if (i >= (selectors.len() as i64)) {
-            i = data.len() as i64;
+    let mut i: SifrInt = SifrInt::from_i64(0);
+    while (&i < &SifrInt::from(data.len())) {
+        if (&i >= &SifrInt::from(selectors.len())) {
+            i = SifrInt::from(data.len());
         } else {
             let sel: Option<bool> = {
                 let __sifr_index_list = &selectors;
-                let __sifr_index_i = i;
-                let __sifr_index_norm = if __sifr_index_i < 0 {
-                    ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
-                } else {
-                    __sifr_index_i as usize
-                };
+                let __sifr_index_i = i.clone();
+                let __sifr_index_norm = __sifr_index_i
+                    .normalize_index_or_len(__sifr_index_list.len());
                 __sifr_index_list.get(__sifr_index_norm).copied()
             };
-            let val: Option<T> = Some(data[i as usize].clone());
+            let val: Option<T> = Some(
+                data[::sifr_runtime::to_usize_proven(&(i))].clone(),
+            );
             if let Some(sel) = sel {
                 if let Some(val) = val {
                     if sel {
-                        result.push(val.clone().clone());
+                        result.push(val.clone());
                     }
                 }
             }
-            i += 1_i64;
+            i = &i + &SifrInt::from_i64(1);
         }
     }
     result
@@ -186,17 +200,17 @@ fn _takewhile_impl<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     data: &Vec<T>,
 ) -> Vec<T> {
     let mut result: Vec<T> = vec![];
-    let mut i: i64 = 0_i64;
-    while (i < (data.len() as i64)) {
-        let val: Option<T> = Some(data[i as usize].clone());
+    let mut i: SifrInt = SifrInt::from_i64(0);
+    while (&i < &SifrInt::from(data.len())) {
+        let val: Option<T> = Some(data[::sifr_runtime::to_usize_proven(&(i))].clone());
         if let Some(val) = val {
             if pred(&val) {
-                result.push(val.clone().clone());
+                result.push(val.clone());
             } else {
-                i = data.len() as i64;
+                i = SifrInt::from(data.len());
             }
         }
-        i += 1_i64;
+        i = &i + &SifrInt::from_i64(1);
     }
     result
 }
@@ -206,37 +220,37 @@ fn _zip_longest_impl<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     fill: &T,
 ) -> Vec<Vec<T>> {
     let mut result: Vec<Vec<T>> = vec![];
-    let len_a: i64 = a.len() as i64;
-    let len_b: i64 = b.len() as i64;
-    let mut max_len: i64 = len_a;
-    if len_b > max_len {
-        max_len = len_b;
+    let len_a: SifrInt = SifrInt::from(a.len());
+    let len_b: SifrInt = SifrInt::from(b.len());
+    let mut max_len: SifrInt = len_a.clone();
+    if &len_b > &max_len {
+        max_len = len_b.clone();
     }
-    let mut i: i64 = 0_i64;
-    while i < max_len {
+    let mut i: SifrInt = SifrInt::from_i64(0);
+    while &i < &max_len {
         let mut pair: Vec<T> = vec![];
-        if i < len_a {
-            let va: Option<T> = Some(a[i as usize].clone());
+        if &i < &len_a {
+            let va: Option<T> = Some(a[::sifr_runtime::to_usize_proven(&(i))].clone());
             if let Some(va) = va {
-                pair.push(va.clone().clone());
+                pair.push(va.clone());
             } else {
-                pair.push(fill.clone().clone());
+                pair.push(fill.clone());
             }
         } else {
-            pair.push(fill.clone().clone());
+            pair.push(fill.clone());
         }
-        if i < len_b {
-            let vb: Option<T> = Some(b[i as usize].clone());
+        if &i < &len_b {
+            let vb: Option<T> = Some(b[::sifr_runtime::to_usize_proven(&(i))].clone());
             if let Some(vb) = vb {
-                pair.push(vb.clone().clone());
+                pair.push(vb.clone());
             } else {
-                pair.push(fill.clone().clone());
+                pair.push(fill.clone());
             }
         } else {
-            pair.push(fill.clone().clone());
+            pair.push(fill.clone());
         }
         result.push(pair.clone());
-        i += 1_i64;
+        i = &i + &SifrInt::from_i64(1);
     }
     result
 }
@@ -245,13 +259,13 @@ fn _collect_iterable<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
 ) -> Vec<T> {
     let mut collected: Vec<T> = vec![];
     for item in data.iter().cloned() {
-        collected.push(item.clone().clone());
+        collected.push(item.clone());
     }
     collected
 }
 fn product<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     iterables: &Vec<Vec<T>>,
-    repeat: i64,
+    repeat: SifrInt,
 ) -> Box<dyn Iterator<Item = Vec<T>>> {
     let iterables = iterables.clone();
     let mut __sifr_generator_initialized: bool = false;
@@ -261,7 +275,7 @@ fn product<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
             if !__sifr_generator_initialized {
                 let mut _yields: Vec<Vec<T>> = Vec::new();
                 let mut result: Vec<Vec<T>> = vec![];
-                if repeat >= (0_i64) {
+                if &repeat >= &SifrInt::from_i64(0) {
                     let mut base_pools: Vec<Vec<T>> = vec![];
                     for iterable in iterables.iter().cloned() {
                         base_pools
@@ -272,23 +286,23 @@ fn product<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
                             );
                     }
                     let mut pools: Vec<Vec<T>> = vec![];
-                    let mut i: i64 = 0_i64;
-                    while i < repeat {
+                    let mut i: SifrInt = SifrInt::from_i64(0);
+                    while &i < &repeat {
                         for pool in base_pools.iter().cloned() {
                             pools.push(pool.clone());
                         }
-                        i += 1_i64;
+                        i = &i + &SifrInt::from_i64(1);
                     }
-                    if ((pools.len() as i64) == (0_i64)) {
+                    if (&SifrInt::from(pools.len()) == &SifrInt::from_i64(0)) {
                         result = vec![vec![]];
                     } else {
-                        result = _product_impl(&pools, 0_i64);
+                        result = _product_impl(&pools, SifrInt::from_i64(0));
                     }
                 }
-                let mut i: i64 = 0_i64;
-                while (i < (result.len() as i64)) {
-                    _yields.push(result[i as usize].clone());
-                    i += 1_i64;
+                let mut i: SifrInt = SifrInt::from_i64(0);
+                while (&i < &SifrInt::from(result.len())) {
+                    _yields.push(result[::sifr_runtime::to_usize_proven(&(i))].clone());
+                    i = &i + &SifrInt::from_i64(1);
                 }
                 __sifr_generator_iter = _yields.into_iter();
                 __sifr_generator_initialized = true;
@@ -299,7 +313,7 @@ fn product<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
 }
 fn permutations<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     data: &Vec<T>,
-    r: Option<i64>,
+    r: Option<SifrInt>,
 ) -> Box<dyn Iterator<Item = Vec<T>>> {
     let data = data.clone();
     let mut __sifr_generator_initialized: bool = false;
@@ -312,21 +326,23 @@ fn permutations<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
                     (data).iter().cloned().collect::<Vec<_>>(),
                 );
                 let mut result: Vec<Vec<T>> = vec![];
-                let mut target: i64 = materialized.len() as i64;
-                if let Some(r) = r {
+                let mut target: SifrInt = SifrInt::from(materialized.len());
+                if let Some(r) = r.clone() {
                     target = r;
                 }
-                if (target >= (0_i64)) && (target <= (materialized.len() as i64)) {
-                    if target == (0_i64) {
+                if (&target >= &SifrInt::from_i64(0))
+                    && (&target <= &SifrInt::from(materialized.len()))
+                {
+                    if &target == &SifrInt::from_i64(0) {
                         result = vec![vec![]];
                     } else {
-                        result = _permutations_impl(&materialized, target);
+                        result = _permutations_impl(&materialized, (target).clone());
                     }
                 }
-                let mut i: i64 = 0_i64;
-                while (i < (result.len() as i64)) {
-                    _yields.push(result[i as usize].clone());
-                    i += 1_i64;
+                let mut i: SifrInt = SifrInt::from_i64(0);
+                while (&i < &SifrInt::from(result.len())) {
+                    _yields.push(result[::sifr_runtime::to_usize_proven(&(i))].clone());
+                    i = &i + &SifrInt::from_i64(1);
                 }
                 __sifr_generator_iter = _yields.into_iter();
                 __sifr_generator_initialized = true;
@@ -337,7 +353,7 @@ fn permutations<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
 }
 fn combinations<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     data: &Vec<T>,
-    r: i64,
+    r: SifrInt,
 ) -> Box<dyn Iterator<Item = Vec<T>>> {
     let data = data.clone();
     let mut __sifr_generator_initialized: bool = false;
@@ -350,17 +366,23 @@ fn combinations<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
                     (data).iter().cloned().collect::<Vec<_>>(),
                 );
                 let mut result: Vec<Vec<T>> = vec![];
-                if (r >= (0_i64)) && (r <= (materialized.len() as i64)) {
-                    if r == (0_i64) {
+                if (&r >= &SifrInt::from_i64(0))
+                    && (&r <= &SifrInt::from(materialized.len()))
+                {
+                    if &r == &SifrInt::from_i64(0) {
                         result = vec![vec![]];
                     } else {
-                        result = _combinations_impl(&materialized, 0_i64, r);
+                        result = _combinations_impl(
+                            &materialized,
+                            SifrInt::from_i64(0),
+                            (r).clone(),
+                        );
                     }
                 }
-                let mut i: i64 = 0_i64;
-                while (i < (result.len() as i64)) {
-                    _yields.push(result[i as usize].clone());
-                    i += 1_i64;
+                let mut i: SifrInt = SifrInt::from_i64(0);
+                while (&i < &SifrInt::from(result.len())) {
+                    _yields.push(result[::sifr_runtime::to_usize_proven(&(i))].clone());
+                    i = &i + &SifrInt::from_i64(1);
                 }
                 __sifr_generator_iter = _yields.into_iter();
                 __sifr_generator_initialized = true;
@@ -371,7 +393,7 @@ fn combinations<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
 }
 fn combinations_with_replacement<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     data: &Vec<T>,
-    r: i64,
+    r: SifrInt,
 ) -> Box<dyn Iterator<Item = Vec<T>>> {
     let data = data.clone();
     let mut __sifr_generator_initialized: bool = false;
@@ -384,23 +406,23 @@ fn combinations_with_replacement<T: Clone + ::std::fmt::Display + PartialOrd + '
                     (data).iter().cloned().collect::<Vec<_>>(),
                 );
                 let mut result: Vec<Vec<T>> = vec![];
-                if r >= (0_i64) {
-                    if r == (0_i64) {
+                if &r >= &SifrInt::from_i64(0) {
+                    if &r == &SifrInt::from_i64(0) {
                         result = vec![vec![]];
                     } else {
-                        if ((materialized.len() as i64) > (0_i64)) {
+                        if (&SifrInt::from(materialized.len()) > &SifrInt::from_i64(0)) {
                             result = _combinations_with_replacement_impl(
                                 &materialized,
-                                0_i64,
-                                r,
+                                SifrInt::from_i64(0),
+                                (r).clone(),
                             );
                         }
                     }
                 }
-                let mut i: i64 = 0_i64;
-                while (i < (result.len() as i64)) {
-                    _yields.push(result[i as usize].clone());
-                    i += 1_i64;
+                let mut i: SifrInt = SifrInt::from_i64(0);
+                while (&i < &SifrInt::from(result.len())) {
+                    _yields.push(result[::sifr_runtime::to_usize_proven(&(i))].clone());
+                    i = &i + &SifrInt::from_i64(1);
                 }
                 __sifr_generator_iter = _yields.into_iter();
                 __sifr_generator_initialized = true;
@@ -425,25 +447,22 @@ fn accumulate<
 >(data: &Vec<T>, initial: Option<T>) -> Box<dyn Iterator<Item = T>> {
     let mut result: Vec<T> = vec![];
     if let Some(initial) = initial {
-        result.push(initial.clone().clone());
+        result.push(initial.clone());
     }
     for item in data.iter().cloned() {
-        if ((result.len() as i64) == (0_i64)) {
-            result.push(item.clone().clone());
+        if (&SifrInt::from(result.len()) == &SifrInt::from_i64(0)) {
+            result.push(item.clone());
         } else {
             let prev: Option<T> = {
                 let __sifr_index_list = &result;
-                let __sifr_index_i = (result.len() as i64) - (1_i64);
-                let __sifr_index_norm = if __sifr_index_i < 0 {
-                    ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
-                } else {
-                    __sifr_index_i as usize
-                };
+                let __sifr_index_i = SifrInt::from(result.len()) - SifrInt::from_i64(1);
+                let __sifr_index_norm = __sifr_index_i
+                    .normalize_index_or_len(__sifr_index_list.len());
                 __sifr_index_list.get(__sifr_index_norm).cloned()
             };
             if let Some(prev) = prev {
                 let next_val: T = prev + item;
-                result.push(next_val.clone().clone());
+                result.push(next_val.clone());
             }
         }
     }
@@ -473,10 +492,10 @@ fn dropwhile<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
         if dropping {
             if !(pred(&val)) {
                 dropping = false;
-                result.push(val.clone().clone());
+                result.push(val.clone());
             }
         } else {
-            result.push(val.clone().clone());
+            result.push(val.clone());
         }
     }
     Box::new(result.into_iter())
@@ -498,7 +517,7 @@ fn filterfalse<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     let mut result: Vec<T> = vec![];
     for val in data.iter().cloned() {
         if !(pred(&val)) {
-            result.push(val.clone().clone());
+            result.push(val.clone());
         }
     }
     Box::new(result.into_iter())
@@ -519,61 +538,59 @@ fn zip_longest<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
 }
 fn cycle<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     data: &Vec<T>,
-    n: i64,
+    n: SifrInt,
 ) -> Box<dyn Iterator<Item = T>> {
     let materialized: Vec<T> = _collect_iterable(
         ((data).iter().cloned().collect::<Vec<_>>()).clone(),
     );
     let mut result: Vec<T> = vec![];
-    if ((materialized.len() as i64) > (0_i64)) {
-        let mut i: i64 = 0_i64;
-        while i < n {
-            let idx: i64 = i % (materialized.len() as i64);
+    let size: SifrInt = SifrInt::from(materialized.len());
+    if &size > &SifrInt::from_i64(0) {
+        let mut i: SifrInt = SifrInt::from_i64(0);
+        while &i < &n {
+            let idx: SifrInt = i.floor_mod_known_nonzero(&size);
             let val: Option<T> = {
                 let __sifr_index_list = &materialized;
-                let __sifr_index_i = idx;
-                let __sifr_index_norm = if __sifr_index_i < 0 {
-                    ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
-                } else {
-                    __sifr_index_i as usize
-                };
+                let __sifr_index_i = idx.clone();
+                let __sifr_index_norm = __sifr_index_i
+                    .normalize_index_or_len(__sifr_index_list.len());
                 __sifr_index_list.get(__sifr_index_norm).cloned()
             };
             if let Some(val) = val {
-                result.push(val.clone().clone());
+                result.push(val.clone());
             }
-            i += 1_i64;
+            i = &i + &SifrInt::from_i64(1);
         }
     }
     Box::new(result.into_iter())
 }
 // --- end stdlib ---
 
-fn lt3(x: i64) -> bool {
-    x < (3_i64)
+fn lt3(x: SifrInt) -> bool {
+    &x < &SifrInt::from_i64(3)
 }
 
-fn add2(a: i64, b: i64) -> i64 {
-    a + b
+fn add2(a: SifrInt, b: SifrInt) -> SifrInt {
+    &a + &b
 }
 
 fn main() {
-    let mut acc_it: Box<dyn Iterator<Item = i64>> = accumulate(&(vec![1_i64, 2_i64, 3_i64, 4_i64]).into_iter().collect::<Vec<_>>(), None);
-    assert!((acc_it.next() == Some(1_i64)));
+    let mut acc_it: Box<dyn Iterator<Item = SifrInt>> = accumulate(&(vec![SifrInt::from_i64(1), SifrInt::from_i64(2), SifrInt::from_i64(3), SifrInt::from_i64(4)]).into_iter().collect::<Vec<_>>(), None);
+    assert!((acc_it.next() == Some(SifrInt::from_i64(1))));
     assert!((format!("{:?}", acc_it.collect::<Vec<_>>()) == "[3, 6, 10]"));
-    assert!((format!("{:?}", compress(&(vec![1_i64, 2_i64, 3_i64, 4_i64]).into_iter().collect::<Vec<_>>(), &(vec![true, false, true, false]).into_iter().collect::<Vec<_>>()).collect::<Vec<_>>()) == "[1, 3]"));
-    assert!((format!("{:?}", dropwhile(|__arg0| lt3((__arg0).clone()), &(vec![1_i64, 2_i64, 3_i64, 1_i64]).into_iter().collect::<Vec<_>>()).collect::<Vec<_>>()) == "[3, 1]"));
-    assert!((format!("{:?}", takewhile(|__arg0| lt3((__arg0).clone()), &(vec![1_i64, 2_i64, 3_i64, 1_i64]).into_iter().collect::<Vec<_>>()).collect::<Vec<_>>()) == "[1, 2]"));
-    assert!((format!("{:?}", filterfalse(|__arg0| lt3((__arg0).clone()), &(vec![1_i64, 2_i64, 3_i64, 1_i64]).into_iter().collect::<Vec<_>>()).collect::<Vec<_>>()) == "[3]"));
-    assert!((format!("{:?}", zip_longest(&(vec![1_i64, 2_i64]).into_iter().collect::<Vec<_>>(), &(vec![9_i64]).into_iter().collect::<Vec<_>>(), &(0_i64)).collect::<Vec<_>>()) == "[[1, 9], [2, 0]]"));
-    let mut cyc: Box<dyn Iterator<Item = i64>> = cycle(&(vec![1_i64, 2_i64, 3_i64]).into_iter().collect::<Vec<_>>(), 5_i64);
-    assert!((cyc.next() == Some(1_i64)));
+    assert!((format!("{:?}", compress(&(vec![SifrInt::from_i64(1), SifrInt::from_i64(2), SifrInt::from_i64(3), SifrInt::from_i64(4)]).into_iter().collect::<Vec<_>>(), &(vec![true, false, true, false]).into_iter().collect::<Vec<_>>()).collect::<Vec<_>>()) == "[1, 3]"));
+    assert!((format!("{:?}", dropwhile(|__arg0| lt3((__arg0).clone()), &(vec![SifrInt::from_i64(1), SifrInt::from_i64(2), SifrInt::from_i64(3), SifrInt::from_i64(1)]).into_iter().collect::<Vec<_>>()).collect::<Vec<_>>()) == "[3, 1]"));
+    assert!((format!("{:?}", takewhile(|__arg0| lt3((__arg0).clone()), &(vec![SifrInt::from_i64(1), SifrInt::from_i64(2), SifrInt::from_i64(3), SifrInt::from_i64(1)]).into_iter().collect::<Vec<_>>()).collect::<Vec<_>>()) == "[1, 2]"));
+    assert!((format!("{:?}", filterfalse(|__arg0| lt3((__arg0).clone()), &(vec![SifrInt::from_i64(1), SifrInt::from_i64(2), SifrInt::from_i64(3), SifrInt::from_i64(1)]).into_iter().collect::<Vec<_>>()).collect::<Vec<_>>()) == "[3]"));
+    assert!((format!("{:?}", zip_longest(&(vec![SifrInt::from_i64(1), SifrInt::from_i64(2)]).into_iter().collect::<Vec<_>>(), &(vec![SifrInt::from_i64(9)]).into_iter().collect::<Vec<_>>(), &SifrInt::from_i64(0)).collect::<Vec<_>>()) == "[[1, 9], [2, 0]]"));
+    let mut cyc: Box<dyn Iterator<Item = SifrInt>> = cycle(&(vec![SifrInt::from_i64(1), SifrInt::from_i64(2), SifrInt::from_i64(3)]).into_iter().collect::<Vec<_>>(), SifrInt::from_i64(5));
+    assert!((cyc.next() == Some(SifrInt::from_i64(1))));
     assert!((format!("{:?}", cyc.collect::<Vec<_>>()) == "[2, 3, 1, 2]"));
-    assert!((format!("{:?}", starmap(|__arg0, __arg1| add2((__arg0).clone(), (__arg1).clone()), &(vec![(2_i64, 3_i64), (4_i64, 5_i64)]).into_iter().collect::<Vec<_>>()).collect::<Vec<_>>()) == "[5, 9]"));
-    assert!((format!("{:?}", product(&vec![vec![1_i64, 2_i64]], 2_i64).collect::<Vec<_>>()) == "[[1, 1], [1, 2], [2, 1], [2, 2]]"));
-    assert!((format!("{:?}", product(&vec![vec![1_i64, 2_i64]], -(1_i64)).collect::<Vec<_>>()) == "[]"));
-    assert!((format!("{:?}", permutations(&(vec![1_i64, 2_i64, 3_i64]).into_iter().collect::<Vec<_>>(), Some(2_i64)).collect::<Vec<_>>()) == "[[1, 2], [1, 3], [2, 1], [2, 3], [3, 1], [3, 2]]"));
-    assert!((format!("{:?}", combinations(&(vec![1_i64, 2_i64, 3_i64]).into_iter().collect::<Vec<_>>(), 2_i64).collect::<Vec<_>>()) == "[[1, 2], [1, 3], [2, 3]]"));
-    assert!((format!("{:?}", combinations_with_replacement(&(vec![1_i64, 2_i64]).into_iter().collect::<Vec<_>>(), 2_i64).collect::<Vec<_>>()) == "[[1, 1], [1, 2], [2, 2]]"));
+    assert!((format!("{:?}", starmap(|__arg0, __arg1| add2((__arg0).clone(), (__arg1).clone()), &(vec![(SifrInt::from_i64(2), SifrInt::from_i64(3)), (SifrInt::from_i64(4), SifrInt::from_i64(5))]).into_iter().collect::<Vec<_>>()).collect::<Vec<_>>()) == "[5, 9]"));
+    assert!((format!("{:?}", product(&vec![vec![SifrInt::from_i64(1), SifrInt::from_i64(2)]], SifrInt::from_i64(2)).collect::<Vec<_>>()) == "[[1, 1], [1, 2], [2, 1], [2, 2]]"));
+    assert!((format!("{:?}", product(&vec![vec![SifrInt::from_i64(1), SifrInt::from_i64(2)]], -&SifrInt::from_i64(1)).collect::<Vec<_>>()) == "[]"));
+    assert!((format!("{:?}", permutations(&(vec![SifrInt::from_i64(1), SifrInt::from_i64(2), SifrInt::from_i64(3)]).into_iter().collect::<Vec<_>>(), Some(SifrInt::from_i64(2))).collect::<Vec<_>>()) == "[[1, 2], [1, 3], [2, 1], [2, 3], [3, 1], [3, 2]]"));
+    assert!((format!("{:?}", combinations(&(vec![SifrInt::from_i64(1), SifrInt::from_i64(2), SifrInt::from_i64(3)]).into_iter().collect::<Vec<_>>(), SifrInt::from_i64(2)).collect::<Vec<_>>()) == "[[1, 2], [1, 3], [2, 3]]"));
+    assert!((format!("{:?}", combinations_with_replacement(&(vec![SifrInt::from_i64(1), SifrInt::from_i64(2)]).into_iter().collect::<Vec<_>>(), SifrInt::from_i64(2)).collect::<Vec<_>>()) == "[[1, 1], [1, 2], [2, 2]]"));
     println!("parity_ext_extended_itertools_lazy_surface_demo: ok");
 }

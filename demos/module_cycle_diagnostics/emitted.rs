@@ -11,11 +11,13 @@ fn main() {
 
 // src/a_consumer.rs
 pub use crate::z_provider::value;
-pub fn fetch() -> i64 {
-    value() + (1_i64)
+pub use ::sifr_runtime::SifrInt;
+pub fn fetch() -> SifrInt {
+    &value() + &SifrInt::from_i64(1)
 }
 
 // src/z_provider.rs
-pub fn value() -> i64 {
-    41_i64
+pub use ::sifr_runtime::SifrInt;
+pub fn value() -> SifrInt {
+    SifrInt::from_i64(41)
 }

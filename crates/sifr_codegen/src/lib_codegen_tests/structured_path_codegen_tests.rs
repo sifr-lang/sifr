@@ -159,16 +159,10 @@ def main():
     );
 
     assert!(generated.contains(
-        "fn dfs(i: i64, res: &mut Vec<Vec<i64>>, subset: &mut Vec<i64>, values: &Vec<i64>)"
+        "fn dfs(i: SifrInt, res: &mut Vec<Vec<SifrInt>>, subset: &mut Vec<SifrInt>, values: &Vec<SifrInt>)"
     ));
-    assert!(
-        generated.contains("dfs(0_i64, &mut res, &mut subset, &values);")
-            || generated.contains("dfs(0 as i64, &mut res, &mut subset, &values);")
-    );
-    assert!(
-        generated.contains("dfs(i + (1_i64), res, subset, values);")
-            || generated.contains("dfs((i + 1 as i64), res, subset, values);")
-    );
+    assert!(generated.contains("dfs(SifrInt::from_i64(0), &mut res, &mut subset, &values);"));
+    assert!(generated.contains("dfs(&i + &SifrInt::from_i64(1), res, subset, values);"));
 }
 
 #[test]

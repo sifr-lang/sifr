@@ -1,6 +1,5 @@
-from _sifr.crypto import random_float as _random_float_impl, random_gauss as _random_gauss_impl, random_int as _random_int_impl, random_randrange as _random_randrange_impl, random_uniform as _random_uniform_impl
+from _sifr.crypto import random_float as _random_float_impl, random_gauss as _random_gauss_impl, random_int as _random_int_impl, random_randrange as _random_randrange_impl, random_seed as _random_seed_impl, random_uniform as _random_uniform_impl
 from _sifr.crypto import random_module_state_words as _module_state_words_impl, random_module_state_index as _module_state_index_impl, random_module_state_gauss_next as _module_state_gauss_next_impl, random_module_set_state as _module_set_state_impl
-from _sifr.time import time_now as _time_impl
 from sifr.math import cos, log, pi, sin, sqrt
 
 T = TypeVar("T")
@@ -30,8 +29,8 @@ def _clone_words(words: list[int]) -> list[int]:
 
 def _normalize_seed_input(seed_value: int | None) -> int:
     if seed_value is not None:
-        return seed_value
-    return int(_time_impl() * 1000000.0)
+        return seed_value.clone()
+    return _random_seed_impl()
 
 
 def _seed_words_from_seed(seed_value: int) -> list[int]:
@@ -41,7 +40,7 @@ def _seed_words_from_seed(seed_value: int) -> list[int]:
     i: int = 1
     while i < _MT_N:
         prev: int = _state_word_at(words, i - 1)
-        next_word: int = (_MT_F * (prev ^ (prev >> 30)) + i) & _MT_WORD_MASK
+        next_word: int = (_MT_F * (prev ^ (prev // 1073741824)) + i) & _MT_WORD_MASK
         words.append(next_word)
         i = i + 1
 
@@ -111,7 +110,7 @@ class Random:
                 (_state_word_at(self._state_words, i) & _MT_UPPER_MASK)
                 + (_state_word_at(self._state_words, (i + 1) % _MT_N) & _MT_LOWER_MASK)
             )
-            x_a: int = y >> 1
+            x_a: int = y // 2
             if y % 2 != 0:
                 x_a = x_a ^ _MT_MATRIX_A
 
@@ -128,14 +127,14 @@ class Random:
         y: int = _state_word_at(self._state_words, self._index)
         self._index = self._index + 1
 
-        y = y ^ (y >> 11)
-        y = y ^ ((y << 7) & 2636928640)
-        y = y ^ ((y << 15) & 4022730752)
-        y = y ^ (y >> 18)
+        y = y ^ (y // 2048)
+        y = y ^ ((y * 128) & 2636928640)
+        y = y ^ ((y * 32768) & 4022730752)
+        y = y ^ (y // 262144)
         return y & _MT_WORD_MASK
 
     def random(mut self) -> float:
-        return float(self._next_u32()) / 4294967296.0
+        return float(self._next_u32() & _MT_WORD_MASK) / 4294967296.0
 
     def uniform(mut self, minimum: float, maximum: float) -> float:
         return minimum + (maximum - minimum) * self.random()
@@ -144,12 +143,12 @@ class Random:
         if step == 0:
             raise ValueError("randrange: step must not be zero")
 
-        actual_start: int = start
-        actual_stop: int = start
+        actual_start: int = start.clone()
+        actual_stop: int = start.clone()
         if stop is None:
             actual_start = 0
         else:
-            actual_stop = stop
+            actual_stop = stop.clone()
 
         width: int = actual_stop - actual_start
         if step > 0:
@@ -162,12 +161,16 @@ class Random:
         abs_width: int = width
         if abs_width < 0:
             abs_width = 0 - abs_width
-        abs_step: int = step
+        abs_step: int = step.clone()
         if abs_step < 0:
             abs_step = 0 - abs_step
+        if abs_step == 0:
+            raise ValueError("randrange: step must not be zero")
 
         count: int = (abs_width + abs_step - 1) // abs_step
         if count <= 0:
+            raise ValueError("randrange: empty range")
+        if count == 0:
             raise ValueError("randrange: empty range")
 
         pick: int = self._next_u32() % count
@@ -183,15 +186,21 @@ class Random:
             raise ValueError("getrandbits: number of bits must be >= 0")
 
         result: int = 0
-        bits_left: int = k
+        bits_left: int = k.clone()
         while bits_left > 0:
             word: int = self._next_u32()
             take: int = 32
             if bits_left < 32:
-                take = bits_left
+                take = bits_left.clone()
 
-            mask: int = (1 << take) - 1
-            result = (result << take) | (word & mask)
+            mask: int = 0
+            shifted_result: int = result
+            shift_index: int = 0
+            while shift_index < take:
+                mask = mask * 2 + 1
+                shifted_result = shifted_result * 2
+                shift_index = shift_index + 1
+            result = shifted_result | (word & mask)
             bits_left = bits_left - take
         return result
 
@@ -269,12 +278,12 @@ class SystemRandom:
         return _random_uniform_impl(minimum, maximum)
 
     def randrange(self, start: int, stop: int | None = None, step: int = 1) -> Result[int, ValueError]:
-        actual_start: int = start
-        actual_stop: int = start
+        actual_start: int = start.clone()
+        actual_stop: int = start.clone()
         if stop is None:
             actual_start = 0
         else:
-            actual_stop = stop
+            actual_stop = stop.clone()
         return _random_randrange_impl(actual_start, actual_stop, step)
 
     def randint(self, minimum: int, maximum: int) -> Result[int, ValueError]:
@@ -305,9 +314,7 @@ class SystemRandom:
         values: list[int] = []
         i: int = 0
         while i < n:
-            value: int = int(_random_float_impl() * 256.0)
-            if value > 255:
-                value = 255
+            value: int = _random_int_impl(0, 255)
             values.append(value)
             i = i + 1
         return bytes.from_ints(values)
@@ -388,11 +395,12 @@ def gauss(mu: float, sigma: float) -> float:
 
 
 def choice[T](items: list[T]) -> Result[T, ValueError]:
-    if len(items) == 0:
+    item_count: int = len(items)
+    if item_count == 0:
         raise ValueError("choice: items must not be empty")
 
     generator: Random = _module_random()
-    index: int = generator._next_u32() % len(items)
+    index: int = generator._next_u32() % item_count
     picked: T | None = items[index]
     _sync_module_random(generator)
 
@@ -404,14 +412,15 @@ def choice[T](items: list[T]) -> Result[T, ValueError]:
 def choices[T](items: list[T], k: int = 1) -> Result[list[T], ValueError]:
     if k <= 0:
         return []
-    if len(items) == 0:
+    item_count: int = len(items)
+    if item_count == 0:
         raise ValueError("choices: items must not be empty")
 
     generator: Random = _module_random()
     result: list[T] = []
     i: int = 0
     while i < k:
-        index: int = generator._next_u32() % len(items)
+        index: int = generator._next_u32() % item_count
         picked: T | None = items[index]
         if picked is not None:
             result.append(picked)
@@ -438,6 +447,8 @@ def sample[T](items: list[T], k: int) -> Result[list[T], ValueError]:
     remaining: int = len(pool)
     i: int = 0
     while i < k:
+        if remaining == 0:
+            raise ValueError("sample larger than population")
         pick_index: int = generator._next_u32() % remaining
         picked: T | None = pool[pick_index]
         if picked is not None:
@@ -460,7 +471,10 @@ def shuffle[T](mut items: list[T]) -> None:
     if n > 1:
         i: int = n - 1
         while i > 0:
-            j: int = generator._next_u32() % (i + 1)
+            divisor: int = i + 1
+            if divisor == 0:
+                return
+            j: int = generator._next_u32() % divisor
             left: T | None = items[i]
             right: T | None = items[j]
             if left is not None:

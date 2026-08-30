@@ -82,7 +82,7 @@ fn middle_with_inner_returning_name(name: &str) -> HirFunction {
 }
 
 #[test]
-fn shadowed_module_const_local_does_not_promote_return_to_sifr_int() {
+fn shadowed_module_const_local_still_uses_canonical_sifr_int_return() {
     let func = regular_int_function(
         vec![],
         vec![
@@ -99,7 +99,7 @@ fn shadowed_module_const_local_does_not_promote_return_to_sifr_int() {
     );
     let module_sifr_int_bindings = HashSet::from(["BIG_LIMIT".to_string()]);
 
-    assert!(!hir_function_returns_sifr_int(
+    assert!(hir_function_returns_sifr_int(
         &func,
         &module_sifr_int_bindings,
         &HashSet::new(),
@@ -107,7 +107,7 @@ fn shadowed_module_const_local_does_not_promote_return_to_sifr_int() {
 }
 
 #[test]
-fn shadowed_module_const_param_does_not_promote_return_to_sifr_int() {
+fn shadowed_module_const_param_still_uses_canonical_sifr_int_return() {
     let func = regular_int_function(
         vec![HirParam {
             name: "BIG_LIMIT".to_string(),
@@ -122,7 +122,7 @@ fn shadowed_module_const_param_does_not_promote_return_to_sifr_int() {
     );
     let module_sifr_int_bindings = HashSet::from(["BIG_LIMIT".to_string()]);
 
-    assert!(!hir_function_returns_sifr_int(
+    assert!(hir_function_returns_sifr_int(
         &func,
         &module_sifr_int_bindings,
         &HashSet::new(),
@@ -130,7 +130,7 @@ fn shadowed_module_const_param_does_not_promote_return_to_sifr_int() {
 }
 
 #[test]
-fn nested_helper_captures_outer_shadow_without_promoting_return_to_sifr_int() {
+fn nested_helper_captures_outer_shadow_with_canonical_sifr_int_return() {
     let func = regular_int_function(
         vec![],
         vec![
@@ -157,7 +157,7 @@ fn nested_helper_captures_outer_shadow_without_promoting_return_to_sifr_int() {
     );
     let module_sifr_int_bindings = HashSet::from(["BIG_LIMIT".to_string()]);
 
-    assert!(!hir_function_returns_sifr_int(
+    assert!(hir_function_returns_sifr_int(
         &func,
         &module_sifr_int_bindings,
         &HashSet::new(),
@@ -165,7 +165,7 @@ fn nested_helper_captures_outer_shadow_without_promoting_return_to_sifr_int() {
 }
 
 #[test]
-fn multilevel_nested_helper_captures_outer_shadow_without_promoting_return_to_sifr_int() {
+fn multilevel_nested_helper_captures_outer_shadow_with_canonical_sifr_int_return() {
     let func = regular_int_function(
         vec![],
         vec![
@@ -192,7 +192,7 @@ fn multilevel_nested_helper_captures_outer_shadow_without_promoting_return_to_si
     );
     let module_sifr_int_bindings = HashSet::from(["BIG_LIMIT".to_string()]);
 
-    assert!(!hir_function_returns_sifr_int(
+    assert!(hir_function_returns_sifr_int(
         &func,
         &module_sifr_int_bindings,
         &HashSet::new(),
@@ -237,7 +237,7 @@ fn unshadowed_module_const_still_promotes_return_to_sifr_int() {
 fn generic_call_uses_canonical_sifr_int_parameter_metadata() {
     let body = vec![HirStmt::Expr {
         expr: HirExpr::GenericCall {
-            func: "consume::<i64>".to_string(),
+            func: "consume::<SifrInt>".to_string(),
             type_args: vec![Type::Int],
             args: vec![HirExpr::LargeIntLiteral(
                 "100000000000000000000".to_string(),
@@ -263,7 +263,7 @@ fn generic_call_uses_canonical_sifr_int_parameter_metadata() {
 #[test]
 fn generic_call_uses_canonical_sifr_int_return_metadata() {
     let expression = HirExpr::GenericCall {
-        func: "produce::<i64>".to_string(),
+        func: "produce::<SifrInt>".to_string(),
         type_args: vec![Type::Int],
         args: Vec::new(),
         mutable_arg_places: Vec::new(),
@@ -284,10 +284,10 @@ fn generic_result_call_uses_canonical_sifr_int_metadata() {
     let result_ty = Type::Result(Box::new(Type::Int), Box::new(Type::Str));
     let body = vec![HirStmt::Expr {
         expr: HirExpr::GenericCall {
-            func: "consume_result::<i64>".to_string(),
+            func: "consume_result::<SifrInt>".to_string(),
             type_args: vec![Type::Int],
             args: vec![HirExpr::GenericCall {
-                func: "produce_result::<i64>".to_string(),
+                func: "produce_result::<SifrInt>".to_string(),
                 type_args: vec![Type::Int],
                 args: Vec::new(),
                 mutable_arg_places: Vec::new(),

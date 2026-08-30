@@ -1,10 +1,12 @@
 // src/main.rs
-fn identity(x: i64) -> i64 {
-    x
+use ::sifr_runtime::SifrInt;
+
+fn identity(x: SifrInt) -> SifrInt {
+    x.clone()
 }
 
 fn main() {
-    let value: i64 = identity(17_i64);
+    let value: SifrInt = identity(SifrInt::from_i64(17));
     println!("type_checking frontend-only check path demo:");
     println!("{}", value);
 }

@@ -11,10 +11,13 @@ def main():
 
     # Verify sifr.math resolves with functions and constants
     result: float = sqrt(4.0)
-    assert_eq(int(result), 2)
+    try:
+        result_int: int = int(result)
+        assert_eq(result_int, 2)
+    except ValueError:
+        assert False
 
     # Verify sifr.string resolves with module-level constants
     assert_eq(len(ascii_lowercase), 26)
 
     assert str("stdlib imports resolved successfully") == 'stdlib imports resolved successfully'
-

@@ -33,7 +33,7 @@ pub(super) fn is_simple_module_none_const_type(ty: &Type) -> bool {
 }
 
 pub(super) fn is_exact_module_int_type(ty: &Type) -> bool {
-    matches!(resolve_alias_type(ty), Type::Int)
+    matches!(resolve_alias_type(ty), Type::Int | Type::LiteralInt(_))
 }
 
 pub fn try_lower_simple_module_constant_item_result(
@@ -43,6 +43,19 @@ pub fn try_lower_simple_module_constant_item_result(
 ) -> Result<Option<(RustItem, String)>, CodegenError> {
     validate_module_constant_shape(name)?;
     try_lower_simple_module_constant_item_result_impl(name, ty, value)
+}
+
+pub(crate) fn module_constant_rust_reference(
+    name: &str,
+    ty: &Type,
+    value: &HirExpr,
+) -> Result<String, CodegenError> {
+    Ok(
+        match try_lower_simple_module_constant_item_result(name, ty, value)? {
+            Some((_, rust_reference)) => rust_reference,
+            None => format!("__const_{name}()"),
+        },
+    )
 }
 
 pub(super) fn validate_module_constant_shape(name: &str) -> Result<(), CodegenError> {
@@ -89,6 +102,13 @@ pub(super) fn try_lower_simple_module_constant_item_result_impl(
 ) -> Result<Option<(RustItem, String)>, CodegenError> {
     if let Some(decimal_text) = large_module_int_literal_decimal(ty, value) {
         return Ok(Some(lower_large_module_int_const_item(name, &decimal_text)));
+    }
+
+    if is_exact_module_int_type(ty) {
+        // SifrInt is not Copy and exact constant expressions are not generally const-evaluable
+        // by Rust. Defer them to the stateful helper-function path, which can also rewrite
+        // dependencies on earlier Sifr module constants.
+        return Ok(None);
     }
 
     if is_simple_module_primitive_const_type(ty) {
@@ -222,6 +242,9 @@ pub fn try_lower_simple_module_constant_item(
     if let Some(decimal_text) = large_module_int_literal_decimal(ty, value) {
         return Some(lower_large_module_int_const_item(name, &decimal_text));
     }
+    if is_exact_module_int_type(ty) {
+        return None;
+    }
     try_lower_simple_module_const_item(name, ty, value)
         .or_else(|| try_lower_simple_module_string_const_item(name, ty, value))
         .or_else(|| try_lower_simple_module_none_const_item(name, ty, value))
@@ -276,7 +299,7 @@ pub fn try_lower_simple_module_const_item(
     ty: &Type,
     value: &HirExpr,
 ) -> Option<(RustItem, String)> {
-    if !is_simple_module_primitive_const_type(ty) {
+    if is_exact_module_int_type(ty) || !is_simple_module_primitive_const_type(ty) {
         return None;
     }
     let rust_name = name.to_uppercase();

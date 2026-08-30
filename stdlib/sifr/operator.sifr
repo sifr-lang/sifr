@@ -13,11 +13,11 @@ def mul(a: int, b: int) -> int:
     return a * b
 
 
-def floordiv(a: int, b: int) -> int:
+def floordiv(a: int, b: int) -> Result[int, DivisionError]:
     return a // b
 
 
-def mod_val(a: int, b: int) -> int:
+def mod_val(a: int, b: int) -> Result[int, DivisionError]:
     return a % b
 
 

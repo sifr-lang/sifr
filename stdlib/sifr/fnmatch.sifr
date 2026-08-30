@@ -13,7 +13,7 @@ def _match(name: str, mut ni: int, pattern: str, mut pi: int) -> bool:
                 pi = pi + 1
                 if pi == len(pattern):
                     return True
-                j: int = ni
+                j: int = ni.clone()
                 while j <= len(name):
                     if _match(name, j, pattern, pi):
                         return True

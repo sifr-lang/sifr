@@ -122,12 +122,18 @@ impl RustEmitter {
                 visibility: Visibility::Private,
                 type_params: Vec::new(),
                 params: vec![RustParam::SelfParam { mutable: false }],
-                ret: Some(RustType::I64),
-                body: vec![RustStmt::Return(Some(RustExpr::Cast {
-                    expr: Box::new(RustExpr::Deref(Box::new(RustExpr::Ident(
-                        "self".to_string(),
-                    )))),
-                    ty: RustType::I64,
+                ret: Some(RustType::Named("SifrInt".to_string())),
+                body: vec![RustStmt::Return(Some(RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec![
+                        "SifrInt".to_string(),
+                        "from_i64".to_string(),
+                    ])),
+                    args: vec![RustExpr::Cast {
+                        expr: Box::new(RustExpr::Deref(Box::new(RustExpr::Ident(
+                            "self".to_string(),
+                        )))),
+                        ty: RustType::I64,
+                    }],
                 }))],
                 is_async: false,
             },
@@ -203,7 +209,7 @@ impl RustEmitter {
                 params: vec![RustParam::SelfParam { mutable: false }],
                 ret: Some(crate::sifr_type_to_rust_type(inner)),
                 body: vec![RustStmt::Return(Some(
-                    if inner.ownership() == sifr_type_system::OwnershipKind::Copy {
+                    if crate::helpers::is_copy_type_for_codegen(inner) {
                         RustExpr::Field {
                             expr: Box::new(RustExpr::Ident("self".to_string())),
                             field: "0".to_string(),
@@ -282,7 +288,7 @@ impl RustEmitter {
         }
         for param in &method.params {
             let mut ty = crate::sifr_type_to_rust_type(&param.ty);
-            if param.ty.ownership() != sifr_type_system::OwnershipKind::Copy
+            if !crate::helpers::is_copy_type_for_codegen(&param.ty)
                 && param.convention.is_borrowed()
             {
                 ty = RustType::Ref {

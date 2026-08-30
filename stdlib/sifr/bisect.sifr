@@ -8,7 +8,7 @@
 #   insort_left(mut a, x)    -- insert x into sorted list a in-place (left variant)
 #   insort_right(mut a, x)   -- insert x into sorted list a in-place (right variant)
 def bisect_left[T: Comparable](a: list[T], x: T, lo: int = 0, hi: int | None = None) -> int:
-    left: int = lo
+    left: int = lo.clone()
     if left < 0:
         left = 0
     right: int = len(a)
@@ -33,7 +33,7 @@ def bisect_left[T: Comparable](a: list[T], x: T, lo: int = 0, hi: int | None = N
     return left
 
 def bisect_right[T: Comparable](a: list[T], x: T, lo: int = 0, hi: int | None = None) -> int:
-    left: int = lo
+    left: int = lo.clone()
     if left < 0:
         left = 0
     right: int = len(a)

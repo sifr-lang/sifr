@@ -6,7 +6,9 @@ fn read_before_write_defaultdict_set_has_concrete_declaration_codegen() {
         "from sifr.collections import defaultdict\n\ndef solve(cells: list[tuple[int, str]]) -> bool:\n    rows = defaultdict(set)\n    for row, cell in cells:\n        if cell in rows[row]:\n            return False\n        rows[row].add(cell)\n    return True\n",
     );
 
-    assert!(rust_code.contains("let mut rows: HashMap<i64, HashSet<String>> = HashMap::new();"));
+    assert!(
+        rust_code.contains("let mut rows: HashMap<SifrInt, HashSet<String>> = HashMap::new();")
+    );
 }
 
 #[test]
@@ -15,10 +17,9 @@ fn tuple_key_defaultdict_set_has_concrete_declaration_codegen() {
         "from sifr.collections import defaultdict\n\ndef solve(cell: str) -> int:\n    squares = defaultdict(set)\n    square = (1, 2)\n    if cell in squares[square]:\n        return 0\n    squares[square].add(cell)\n    return len(squares)\n",
     );
 
-    assert!(
-        rust_code
-            .contains("let mut squares: HashMap<(i64, i64), HashSet<String>> = HashMap::new();")
-    );
+    assert!(rust_code.contains(
+        "let mut squares: HashMap<(SifrInt, SifrInt), HashSet<String>> = HashMap::new();"
+    ));
 }
 
 #[test]
@@ -27,7 +28,7 @@ fn list_slice_append_uses_defaultdict_entry_insertion() {
         "from sifr.collections import defaultdict\n\ndef solve(values: list[int]) -> int:\n    groups = defaultdict(list)\n    groups[1].append(values[0:2])\n    return len(groups[1])\n",
     );
 
-    assert!(rust_code.contains(".entry(1_i64).or_insert(Vec::new()).push("));
+    assert!(rust_code.contains(".entry(SifrInt::from_i64(1)).or_insert(Vec::new()).push("));
     assert!(!rust_code.contains("groups.get_mut("));
 }
 
@@ -37,7 +38,7 @@ fn string_slice_append_uses_defaultdict_entry_insertion() {
         "from sifr.collections import defaultdict\n\ndef solve(text: str) -> int:\n    groups = defaultdict(list)\n    groups[1].append(text[0:2])\n    return len(groups[1])\n",
     );
 
-    assert!(rust_code.contains(".entry(1_i64).or_insert(Vec::new()).push("));
+    assert!(rust_code.contains(".entry(SifrInt::from_i64(1)).or_insert(Vec::new()).push("));
     assert!(!rust_code.contains("groups.get_mut("));
 }
 
@@ -58,7 +59,10 @@ fn borrowed_string_iterable_literals_store_owned_values() {
         "from sifr.collections import defaultdict\n\ndef solve(text: str) -> int:\n    chunk = [text]\n    lists = defaultdict(list)\n    lists[1].extend(chunk)\n    lists[2].append(\"later\")\n    sets = defaultdict(set)\n    sets[1].update({text})\n    sets[2].add(\"later\")\n    return len(lists[1]) + len(sets[1])\n",
     );
 
-    assert!(rust_code.contains("let chunk: Vec<String> = vec![text.clone()];"));
+    assert!(
+        rust_code.contains("let chunk: Vec<String> = vec![text.clone()];"),
+        "{rust_code}"
+    );
     assert!(rust_code.contains("HashSet::from([text.clone()])"));
     assert!(rust_code.contains("(chunk).iter().cloned().collect::<Vec<_>>()"));
 }
@@ -132,7 +136,7 @@ fn variadic_set_bucket_updates_never_fall_back_to_cloned_receivers() {
     );
 
     let key_binding = rust_code
-        .find("let __sifr_defaultdict_key = 1_i64;")
+        .find("let __sifr_defaultdict_key = SifrInt::from_i64(1);")
         .expect("set update key should be evaluated into a temporary");
     let preinsert = rust_code
         .find("groups.entry(__sifr_defaultdict_key.clone()).or_insert(HashSet::new());")
@@ -162,8 +166,10 @@ fn iterable_mutation_evaluates_key_before_arguments_and_bucket_borrow() {
     );
 
     let key_binding = rust_code
-        .find("let __sifr_defaultdict_key = key(&mut log).clone();")
-        .expect("key expression should be evaluated into a temporary");
+        .find("let __sifr_defaultdict_key = key(&mut log);")
+        .unwrap_or_else(|| {
+            panic!("key expression should be evaluated into a temporary:\n{rust_code}")
+        });
     let preinsert = rust_code
         .find("groups.entry(__sifr_defaultdict_key.clone()).or_insert(Vec::new());")
         .expect("default bucket should be inserted before arguments are evaluated");

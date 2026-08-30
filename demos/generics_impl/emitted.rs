@@ -1,4 +1,6 @@
 // src/main.rs
+use ::sifr_runtime::SifrInt;
+
 fn identity<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(x: &T) -> T {
     x.clone()
 }
@@ -6,42 +8,42 @@ fn identity<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(x: &T) -> T {
 fn first<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(items: &Vec<T>) -> Option<T> {
     {
     let __sifr_index_list = &items;
-    let __sifr_index_i = 0_i64;
-    let __sifr_index_norm = if __sifr_index_i < 0 { ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize } else { __sifr_index_i as usize };
+    let __sifr_index_i = SifrInt::from_i64(0);
+    let __sifr_index_norm = __sifr_index_i.normalize_index_or_len(__sifr_index_list.len());
     __sifr_index_list.get(__sifr_index_norm).cloned()
 }
 }
 
-fn apply(f: impl Fn(i64) -> i64, x: i64) -> i64 {
-    f(x)
+fn apply(f: impl Fn(SifrInt) -> SifrInt, x: SifrInt) -> SifrInt {
+    f((x).clone())
 }
 
-fn apply_twice(f: impl Fn(i64) -> i64, x: i64) -> i64 {
-    f(f(x))
+fn apply_twice(f: impl Fn(SifrInt) -> SifrInt, x: SifrInt) -> SifrInt {
+    f(f((x).clone()))
 }
 
-fn double(x: i64) -> i64 {
-    x * (2_i64)
+fn double(x: SifrInt) -> SifrInt {
+    &x * &SifrInt::from_i64(2)
 }
 
-fn add_one(x: i64) -> i64 {
-    x + (1_i64)
+fn add_one(x: SifrInt) -> SifrInt {
+    &x + &SifrInt::from_i64(1)
 }
 
-fn square(x: i64) -> i64 {
-    x * x
+fn square(x: SifrInt) -> SifrInt {
+    &x * &x
 }
 
 fn main() {
-    let a: i64 = identity(&(42_i64));
+    let a: SifrInt = identity(&SifrInt::from_i64(42));
     let b: String = identity(&"hello".to_string());
     println!("{}", a);
     println!("{}", b);
-    let nums: Vec<i64> = vec![10_i64, 20_i64, 30_i64];
+    let nums: Vec<SifrInt> = vec![SifrInt::from_i64(10), SifrInt::from_i64(20), SifrInt::from_i64(30)];
     let words: Vec<String> = vec!["alpha".to_string(), "beta".to_string(), "gamma".to_string()];
     let empty_words: Vec<String> = vec![];
-    let first_num: Option<i64> = first(&nums);
-    if let Some(first_num) = first_num {
+    let first_num: Option<SifrInt> = first(&nums);
+    if let Some(first_num) = first_num.clone() {
         println!("{}", first_num);
     }
     let first_word: Option<String> = first(&words);
@@ -56,8 +58,8 @@ fn main() {
             println!("{}", missing_word);
         }
     }
-    println!("{}", apply(double, 5_i64));
-    println!("{}", apply(add_one, 99_i64));
-    println!("{}", apply_twice(add_one, 5_i64));
-    println!("{}", apply_twice(square, 3_i64));
+    println!("{}", apply(double, SifrInt::from_i64(5)));
+    println!("{}", apply(add_one, SifrInt::from_i64(99)));
+    println!("{}", apply_twice(add_one, SifrInt::from_i64(5)));
+    println!("{}", apply_twice(square, SifrInt::from_i64(3)));
 }

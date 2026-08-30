@@ -1,15 +1,18 @@
+use super::task_calls::{
+    await_call_needs_convention_aware_lowering, try_lower_task_sleep_call_expr,
+};
 use super::{
     detect_is_some_guard_name, is_bool_like_simple, is_enum_like_simple, is_int_like_simple,
     is_mixed_simple_float_binop, is_mixed_simple_float_floor_division_binop, is_numeric_simple,
-    is_option_like_simple, is_promoted_fixed_width_integer_binop, is_reserved_builtin_call_func,
-    is_safe_simple_binop, is_safe_simple_compare, is_simple_int_true_division_binop,
-    is_string_like_simple, normalize_binop_op, normalize_compare_op, resolve_alias_type,
+    is_option_like_simple, is_promoted_fixed_width_integer_binop, is_safe_simple_binop,
+    is_safe_simple_compare, is_simple_int_true_division_binop, is_string_like_simple,
+    normalize_binop_op, normalize_compare_op, resolve_alias_type,
     try_lower_guarded_option_compare_expr, try_lower_mixed_float_operand_expr,
     try_lower_none_identity_compare_expr, try_lower_option_none_compare_expr,
     try_lower_promoted_integer_operand_expr, try_lower_simple_binop_operand_expr,
-    try_lower_simple_compare_operand_expr, try_lower_simple_constructor_call_expr,
-    try_lower_simple_dict_comp_expr, try_lower_simple_dict_literal_expr,
-    try_lower_simple_divmod_call_expr, try_lower_simple_filter_call_expr,
+    try_lower_simple_call_expr, try_lower_simple_compare_operand_expr,
+    try_lower_simple_constructor_call_expr, try_lower_simple_dict_comp_expr,
+    try_lower_simple_dict_literal_expr, try_lower_simple_filter_call_expr,
     try_lower_simple_fstring_expr, try_lower_simple_generator_expr, try_lower_simple_index_expr,
     try_lower_simple_lambda_expr, try_lower_simple_list_comp_expr, try_lower_simple_map_call_expr,
     try_lower_simple_method_call_expr, try_lower_simple_range_operand_expr,
@@ -55,7 +58,7 @@ pub fn fixed_width_literal_expr_for_target(target_ty: &Type, value: &HirExpr) ->
     )))
 }
 
-pub(super) fn integer_literal_decimal(value: &HirExpr) -> Option<String> {
+pub(crate) fn integer_literal_decimal(value: &HirExpr) -> Option<String> {
     match value {
         HirExpr::IntLiteral(value) => Some(value.to_string()),
         HirExpr::LargeIntLiteral(value) => Some(value.clone()),
@@ -102,6 +105,7 @@ pub(super) fn validate_leaf_expr_shape(expr: &HirExpr) -> Result<(), CodegenErro
 pub(crate) fn is_leaf_expr_candidate(expr: &HirExpr) -> bool {
     match expr {
         HirExpr::IntLiteral(_)
+        | HirExpr::LargeIntLiteral(_)
         | HirExpr::FloatLiteral(_)
         | HirExpr::StringLiteral(_)
         | HirExpr::BoolLiteral(_)
@@ -138,9 +142,19 @@ pub(crate) fn is_leaf_expr_candidate(expr: &HirExpr) -> bool {
 /// to IR + renderer output.
 pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
     match expr {
-        HirExpr::IntLiteral(v) => Some(RustExpr::Cast {
-            expr: Box::new(RustExpr::Literal(RustLiteral::Int(*v))),
-            ty: RustType::I64,
+        HirExpr::IntLiteral(v) => Some(RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec![
+                "SifrInt".to_string(),
+                "from_i64".to_string(),
+            ])),
+            args: vec![RustExpr::Literal(RustLiteral::Int(*v))],
+        }),
+        HirExpr::LargeIntLiteral(value) => Some(RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec![
+                "SifrInt".to_string(),
+                "from_decimal_literal".to_string(),
+            ])),
+            args: vec![RustExpr::Literal(RustLiteral::StaticStr(value.clone()))],
         }),
         HirExpr::FloatLiteral(v) if v.is_finite() => Some(RustExpr::Cast {
             expr: Box::new(RustExpr::Literal(RustLiteral::Float(*v))),
@@ -165,10 +179,21 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
             variant.clone(),
         ])),
         HirExpr::UnaryOp { op, operand, .. } => match op.as_str() {
-            "-" => Some(RustExpr::UnaryOp {
-                op: "-".to_string(),
-                operand: Box::new(try_lower_leaf_expr(operand)?),
-            }),
+            "-" => {
+                let lowered = try_lower_leaf_expr(operand)?;
+                let lowered = if is_int_like_simple(operand.ty()) {
+                    RustExpr::Ref {
+                        mutable: false,
+                        expr: Box::new(lowered),
+                    }
+                } else {
+                    lowered
+                };
+                Some(RustExpr::UnaryOp {
+                    op: "-".to_string(),
+                    operand: Box::new(lowered),
+                })
+            }
             "+" => Some(try_lower_leaf_expr(operand)?),
             "~" if is_int_like_simple(operand.ty()) => {
                 let lowered_operand = try_lower_leaf_expr(operand).or_else(|| {
@@ -220,6 +245,24 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
             if !is_safe_simple_binop(op, left.ty(), right.ty(), ty) {
                 return None;
             }
+            if matches!(op.as_str(), "/" | "//" | "%")
+                && is_int_like_simple(left.ty())
+                && is_int_like_simple(right.ty())
+                && is_int_like_simple(ty)
+            {
+                // Exact floor division and modulo require proof-aware runtime methods.
+                // Leave them to the stateful statement-expression lowering path.
+                return None;
+            }
+            if matches!(op.as_str(), "**" | "<<" | ">>")
+                && is_int_like_simple(left.ty())
+                && is_int_like_simple(right.ty())
+                && is_int_like_simple(ty)
+            {
+                // Proof-aware exact integer power and shifts use runtime methods whose
+                // argument is itself exact, rather than Rust's fixed-width operator APIs.
+                return None;
+            }
             if is_mixed_simple_float_binop(op, left.ty(), right.ty(), ty)
                 || is_mixed_simple_float_floor_division_binop(op, left.ty(), right.ty(), ty)
                 || is_simple_int_true_division_binop(op, left.ty(), right.ty(), ty)
@@ -235,6 +278,22 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
                     left: Box::new(try_lower_promoted_integer_operand_expr(left)?),
                     op: normalize_binop_op(op).to_string(),
                     right: Box::new(try_lower_promoted_integer_operand_expr(right)?),
+                });
+            }
+            if is_int_like_simple(left.ty())
+                && is_int_like_simple(right.ty())
+                && is_int_like_simple(ty)
+            {
+                return Some(RustExpr::BinOp {
+                    left: Box::new(RustExpr::Ref {
+                        mutable: false,
+                        expr: Box::new(try_lower_simple_binop_operand_expr(left)?),
+                    }),
+                    op: normalize_binop_op(op).to_string(),
+                    right: Box::new(RustExpr::Ref {
+                        mutable: false,
+                        expr: Box::new(try_lower_simple_binop_operand_expr(right)?),
+                    }),
                 });
             }
             Some(RustExpr::BinOp {
@@ -269,11 +328,30 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
                     return None;
                 }
 
-                let cmp = RustExpr::BinOp {
-                    left: Box::new(try_lower_simple_compare_operand_expr(lhs_expr)?),
+                let mut lowered_left = try_lower_simple_compare_operand_expr(lhs_expr)?;
+                let mut lowered_right = try_lower_simple_compare_operand_expr(rhs_expr)?;
+                if is_int_like_simple(lhs_expr.ty()) && is_int_like_simple(rhs_expr.ty()) {
+                    lowered_left = RustExpr::Ref {
+                        mutable: false,
+                        expr: Box::new(lowered_left),
+                    };
+                    lowered_right = RustExpr::Ref {
+                        mutable: false,
+                        expr: Box::new(lowered_right),
+                    };
+                }
+                let cmp = crate::lower_exact_integer_float_compare(
+                    lhs_expr.ty(),
+                    rhs_expr.ty(),
+                    normalized_op,
+                    lowered_left.clone(),
+                    lowered_right.clone(),
+                )
+                .unwrap_or(RustExpr::BinOp {
+                    left: Box::new(lowered_left),
                     op: normalized_op.to_string(),
-                    right: Box::new(try_lower_simple_compare_operand_expr(rhs_expr)?),
-                };
+                    right: Box::new(lowered_right),
+                });
 
                 lowered_chain = Some(if let Some(existing) = lowered_chain {
                     RustExpr::BinOp {
@@ -334,7 +412,18 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
         HirExpr::TupleLiteral { elements, ty } => {
             let lowered = elements
                 .iter()
-                .map(try_lower_leaf_expr)
+                .map(|element| {
+                    let lowered = try_lower_leaf_expr(element)?;
+                    Some(
+                        if crate::helpers::is_logically_copy_rust_move_type(element.ty())
+                            && matches!(lowered, RustExpr::Ident(_))
+                        {
+                            RustExpr::Clone(Box::new(lowered))
+                        } else {
+                            lowered
+                        },
+                    )
+                })
                 .collect::<Option<Vec<_>>>()?;
             if crate::homogeneous_large_tuple_backing_array(ty).is_some() {
                 Some(RustExpr::Array(lowered))
@@ -368,36 +457,41 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
                 })
                 .collect::<Option<Vec<_>>>()?;
             if matches!(list_ty, Type::Bytes) {
-                lowered = lowered
-                    .into_iter()
-                    .map(|element| RustExpr::Cast {
-                        expr: Box::new(element),
-                        ty: RustType::Named("u8".to_string()),
+                lowered = elements
+                    .iter()
+                    .map(|element| {
+                        integer_literal_decimal(element)
+                            .map(|literal| RustExpr::Verbatim(format!("{literal}u8")))
                     })
-                    .collect();
+                    .collect::<Option<Vec<_>>>()?;
             }
             Some(RustExpr::Vec(lowered))
         }
         HirExpr::RangeLiteral {
             start, end, step, ..
         } => {
-            let lowered_range = RustExpr::Range {
-                start: Box::new(try_lower_simple_range_operand_expr(start)?),
-                end: Box::new(try_lower_simple_range_operand_expr(end)?),
-            };
-
-            if let Some(step_expr) = step.as_ref() {
-                Some(RustExpr::MethodCall {
-                    receiver: Box::new(lowered_range),
-                    method: "step_by".to_string(),
-                    args: vec![RustExpr::Cast {
-                        expr: Box::new(try_lower_simple_range_operand_expr(step_expr)?),
-                        ty: RustType::Named("usize".to_string()),
-                    }],
-                })
+            let lowered_step = if let Some(step) = step.as_deref() {
+                try_lower_simple_range_operand_expr(step)?
             } else {
-                Some(lowered_range)
-            }
+                RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec![
+                        "SifrInt".to_string(),
+                        "from_i64".to_string(),
+                    ])),
+                    args: vec![RustExpr::Literal(RustLiteral::Int(1))],
+                }
+            };
+            Some(RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    "SifrRange".to_string(),
+                    "new_known_nonzero".to_string(),
+                ])),
+                args: vec![
+                    try_lower_simple_range_operand_expr(start)?,
+                    try_lower_simple_range_operand_expr(end)?,
+                    lowered_step,
+                ],
+            })
         }
         HirExpr::FieldAccess { .. } => None,
         HirExpr::ContainsOp {
@@ -604,288 +698,4 @@ pub(crate) fn try_lower_leaf_or_name_expr(expr: &HirExpr) -> Option<RustExpr> {
         return Some(RustExpr::Ident(name.clone()));
     }
     None
-}
-
-pub(super) fn try_lower_simple_call_expr(func: &str, args: &[HirExpr]) -> Option<RustExpr> {
-    if func == "__sifr_python_omitted_argument" && args.is_empty() {
-        return Some(RustExpr::Literal(RustLiteral::None));
-    }
-    if func == "__sifr_python_present_argument" {
-        let [value] = args else {
-            return None;
-        };
-        return Some(RustExpr::FnCall {
-            func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
-            args: vec![try_lower_leaf_or_name_expr(value)?],
-        });
-    }
-    if func == "__sifr_task_sleep" {
-        return try_lower_task_sleep_call_expr(args);
-    }
-    if args.iter().any(|arg| {
-        matches!(
-            resolve_alias_type(arg.ty()),
-            Type::Class {
-                parent_class: Some(_),
-                ..
-            }
-        )
-    }) {
-        return None;
-    }
-    if func == "__sifr_task_gather" {
-        let [handles] = args else {
-            return None;
-        };
-        return Some(RustExpr::FnCall {
-            func: Box::new(RustExpr::Ident(func.to_string())),
-            args: vec![try_lower_leaf_or_name_expr(handles)?],
-        });
-    }
-    if func == "__sifr_task_race" {
-        let [handles] = args else {
-            return None;
-        };
-        return Some(RustExpr::FnCall {
-            func: Box::new(RustExpr::Ident(func.to_string())),
-            args: vec![try_lower_leaf_or_name_expr(handles)?],
-        });
-    }
-    if func == "__sifr_task_select" {
-        let [first, second] = args else {
-            return None;
-        };
-        return Some(RustExpr::FnCall {
-            func: Box::new(RustExpr::Ident(func.to_string())),
-            args: vec![
-                try_lower_leaf_or_name_expr(first)?,
-                try_lower_leaf_or_name_expr(second)?,
-            ],
-        });
-    }
-    if func == "__sifr_join_set_new" {
-        if !args.is_empty() {
-            return None;
-        }
-        return Some(RustExpr::FnCall {
-            func: Box::new(RustExpr::Ident(func.to_string())),
-            args: vec![],
-        });
-    }
-    if func == "__sifr_spawn_blocking_infallible"
-        || func == "__sifr_spawn_blocking_result"
-        || func == "__sifr_spawn_cpu_infallible"
-        || func == "__sifr_spawn_cpu_result"
-    {
-        let [worker] = args else {
-            return None;
-        };
-        return Some(RustExpr::FnCall {
-            func: Box::new(RustExpr::Ident(func.to_string())),
-            args: vec![try_lower_leaf_or_name_expr(worker)?],
-        });
-    }
-    if func == "__sifr_parallel_map" || func == "__sifr_parallel_try_map" {
-        let [items, worker] = args else {
-            return None;
-        };
-        return Some(RustExpr::FnCall {
-            func: Box::new(RustExpr::Ident(func.to_string())),
-            args: vec![
-                try_lower_leaf_or_name_expr(items)?,
-                try_lower_leaf_or_name_expr(worker)?,
-            ],
-        });
-    }
-    if func == "__sifr_pool_map" || func == "__sifr_pool_try_map" {
-        let [pool, items, worker] = args else {
-            return None;
-        };
-        return Some(RustExpr::FnCall {
-            func: Box::new(RustExpr::Ident(func.to_string())),
-            args: vec![
-                RustExpr::Ref {
-                    mutable: false,
-                    expr: Box::new(try_lower_leaf_or_name_expr(pool)?),
-                },
-                try_lower_leaf_or_name_expr(items)?,
-                try_lower_leaf_or_name_expr(worker)?,
-            ],
-        });
-    }
-    if func == "anext" {
-        let [iterator] = args else {
-            return None;
-        };
-        return Some(RustExpr::MethodCall {
-            receiver: Box::new(try_lower_leaf_or_name_expr(iterator)?),
-            method: "anext".to_string(),
-            args: vec![],
-        });
-    }
-    if func == "hash" {
-        return try_lower_simple_hash_call_expr(args);
-    }
-    if func == "divmod" {
-        return try_lower_simple_divmod_call_expr(args);
-    }
-    if is_reserved_builtin_call_func(func) {
-        return None;
-    }
-    // Keep namespaced calls on the structured emitter path so ownership/convention
-    // handling can use full signature metadata.
-    if func.contains("::") {
-        return None;
-    }
-    if !is_allowed_plain_call(func) {
-        return None;
-    }
-    // Result-typed arguments frequently need target-parameter error coercion.
-    if args
-        .iter()
-        .any(|arg| matches!(resolve_alias_type(arg.ty()), Type::Result(_, _)))
-    {
-        return None;
-    }
-
-    let lowered_args = args
-        .iter()
-        .map(try_lower_leaf_or_name_expr)
-        .collect::<Option<Vec<_>>>()?;
-
-    Some(RustExpr::FnCall {
-        func: Box::new(RustExpr::Ident(func.to_string())),
-        args: lowered_args,
-    })
-}
-
-fn await_call_needs_convention_aware_lowering(args: &[HirExpr]) -> bool {
-    args.iter().any(|arg| {
-        !crate::helpers::is_copy_type_for_codegen(arg.ty())
-            || matches!(
-                arg.ty().resolve_alias(),
-                Type::Function(_) | Type::AsyncFunction(_) | Type::AsyncCallable(..)
-            )
-    })
-}
-
-pub(super) fn try_lower_task_sleep_call_expr(args: &[HirExpr]) -> Option<RustExpr> {
-    let [duration] = args else {
-        return None;
-    };
-    let duration_expr = try_lower_task_duration_expr(duration, "__sifr_task_sleep_seconds")?;
-    Some(RustExpr::FnCall {
-        func: Box::new(RustExpr::Path(vec![
-            "tokio".to_string(),
-            "time".to_string(),
-            "sleep".to_string(),
-        ])),
-        args: vec![duration_expr],
-    })
-}
-
-pub(crate) fn try_lower_task_duration_expr(
-    duration: &HirExpr,
-    seconds_name: &str,
-) -> Option<RustExpr> {
-    let seconds = RustExpr::Cast {
-        expr: Box::new(try_lower_leaf_or_name_expr(duration)?),
-        ty: RustType::F64,
-    };
-    let seconds_name = seconds_name.to_string();
-    let finite_positive = RustExpr::BinOp {
-        left: Box::new(RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::Ident(seconds_name.clone())),
-            method: "is_finite".to_string(),
-            args: vec![],
-        }),
-        op: "&&".to_string(),
-        right: Box::new(RustExpr::BinOp {
-            left: Box::new(RustExpr::Ident(seconds_name.clone())),
-            op: ">".to_string(),
-            right: Box::new(RustExpr::Literal(RustLiteral::Float(0.0))),
-        }),
-    };
-    Some(RustExpr::Block {
-        stmts: vec![RustStmt::Let {
-            mutable: false,
-            name: seconds_name.clone(),
-            ty: Some(RustType::F64),
-            value: seconds,
-        }],
-        expr: Some(Box::new(RustExpr::FnCall {
-            func: Box::new(RustExpr::Path(vec![
-                "std".to_string(),
-                "time".to_string(),
-                "Duration".to_string(),
-                "from_secs_f64".to_string(),
-            ])),
-            args: vec![RustExpr::If {
-                cond: Box::new(finite_positive),
-                then_expr: Box::new(RustExpr::Ident(seconds_name)),
-                else_expr: Some(Box::new(RustExpr::Literal(RustLiteral::Float(0.0)))),
-            }],
-        })),
-    })
-}
-
-pub(super) fn try_lower_simple_hash_call_expr(args: &[HirExpr]) -> Option<RustExpr> {
-    let [arg] = args else {
-        return None;
-    };
-    let lowered_arg = try_lower_leaf_or_name_expr(arg)?;
-    let hasher_ident = "__sifr_hash".to_string();
-
-    Some(RustExpr::Block {
-        stmts: vec![
-            RustStmt::Let {
-                mutable: true,
-                name: hasher_ident.clone(),
-                ty: None,
-                value: RustExpr::FnCall {
-                    func: Box::new(RustExpr::Path(vec![
-                        "std".to_string(),
-                        "collections".to_string(),
-                        "hash_map".to_string(),
-                        "DefaultHasher".to_string(),
-                        "new".to_string(),
-                    ])),
-                    args: vec![],
-                },
-            },
-            RustStmt::Expr(RustExpr::FnCall {
-                func: Box::new(RustExpr::Path(vec![
-                    "std".to_string(),
-                    "hash".to_string(),
-                    "Hash".to_string(),
-                    "hash".to_string(),
-                ])),
-                args: vec![
-                    RustExpr::Ref {
-                        mutable: false,
-                        expr: Box::new(lowered_arg),
-                    },
-                    RustExpr::Ref {
-                        mutable: true,
-                        expr: Box::new(RustExpr::Ident(hasher_ident.clone())),
-                    },
-                ],
-            }),
-        ],
-        expr: Some(Box::new(RustExpr::Cast {
-            expr: Box::new(RustExpr::FnCall {
-                func: Box::new(RustExpr::Path(vec![
-                    "std".to_string(),
-                    "hash".to_string(),
-                    "Hasher".to_string(),
-                    "finish".to_string(),
-                ])),
-                args: vec![RustExpr::Ref {
-                    mutable: false,
-                    expr: Box::new(RustExpr::Ident(hasher_ident)),
-                }],
-            }),
-            ty: RustType::I64,
-        })),
-    })
 }

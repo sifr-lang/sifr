@@ -4,25 +4,40 @@ from sifr.difflib import SequenceMatcher, get_close_matches
 
 def main():
     matcher: SequenceMatcher = SequenceMatcher("abcd", "abed")
-    ratio1: float = matcher.ratio()
+    try:
+        ratio1: float = matcher.ratio()
+    except Error:
+        assert False
+        return
     assert ratio1 == 0.75
 
     blocks: list[tuple[int, int, int]] = matcher.get_matching_blocks()
     assert str(blocks) == "[(0, 0, 2), (3, 3, 1), (4, 4, 0)]"
 
     matcher.set_seqs("kitten", "sitting")
-    ratio2: float = matcher.ratio()
+    try:
+        ratio2: float = matcher.ratio()
+    except Error:
+        assert False
+        return
     assert ratio2 > 0.61 and ratio2 < 0.62
     blocks2: list[tuple[int, int, int]] = matcher.get_matching_blocks()
     assert str(blocks2) == "[(1, 1, 3), (5, 5, 1), (6, 7, 0)]"
 
     matcher.set_seq1("alpha")
     matcher.set_seq2("alpha")
-    assert matcher.ratio() == 1.0
+    try:
+        ratio3: float = matcher.ratio()
+        assert ratio3 == 1.0
+    except Error:
+        assert False
     assert str(matcher.get_matching_blocks()) == "[(0, 0, 5), (5, 5, 0)]"
 
     words: list[str] = ["apple", "banana", "apply", "ape"]
-    matches: list[str] = get_close_matches("appel", words, 2, 0.3)
-    assert len(matches) == 2
+    try:
+        matches: list[str] = get_close_matches("appel", words, 2, 0.3)
+        assert len(matches) == 2
+    except Error:
+        assert False
 
     assert str("cpython_difflib_subset: pass") == "cpython_difflib_subset: pass"

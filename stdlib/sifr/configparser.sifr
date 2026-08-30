@@ -403,12 +403,12 @@ class ConfigParser:
     def getint(self, section: str, option: str, fallback: int | None = None) -> int | None:
         raw: str | None = self.get(section, option)
         if raw is None:
-            return fallback
+            return fallback.clone()
         try:
             parsed: int = int(raw)
             return parsed
         except ParseError:
-            return fallback
+            return fallback.clone()
 
     def getfloat(self, section: str, option: str, fallback: float | None = None) -> float | None:
         raw: str | None = self.get(section, option)

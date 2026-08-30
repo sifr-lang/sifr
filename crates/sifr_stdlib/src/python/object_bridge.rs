@@ -45,7 +45,7 @@ pub fn py_from_bool(value: bool) -> Result<PythonObject, PythonError> {
 }
 
 pub fn py_from_int(value: SifrIntBridge) -> Result<PythonObject, PythonError> {
-    wrap(python::from_int(value.to_i64_saturating()))
+    wrap(python::from_int(value.into_sifr_int()))
 }
 
 pub fn py_from_float(value: f64) -> Result<PythonObject, PythonError> {

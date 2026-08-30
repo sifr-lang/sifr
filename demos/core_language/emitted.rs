@@ -1,19 +1,21 @@
 // src/main.rs
-fn factorial(n: i64) -> i64 {
-    if n <= (1_i64) {
-        return 1_i64;
+use ::sifr_runtime::SifrInt;
+
+fn factorial(n: SifrInt) -> SifrInt {
+    if &n <= &SifrInt::from_i64(1) {
+        return SifrInt::from_i64(1);
     }
-    n * factorial(n - (1_i64))
+    &n * &factorial(&n - &SifrInt::from_i64(1))
 }
 
-fn fibonacci(n: i64) -> i64 {
-    if n <= (0_i64) {
-        return 0_i64;
+fn fibonacci(n: SifrInt) -> SifrInt {
+    if &n <= &SifrInt::from_i64(0) {
+        return SifrInt::from_i64(0);
     }
-    if n == (1_i64) {
-        return 1_i64;
+    if &n == &SifrInt::from_i64(1) {
+        return SifrInt::from_i64(1);
     }
-    fibonacci(n - (1_i64)) + fibonacci(n - (2_i64))
+    &fibonacci(&n - &SifrInt::from_i64(1)) + &fibonacci(&n - &SifrInt::from_i64(2))
 }
 
 fn greet(name: &String) -> String {
@@ -26,52 +28,52 @@ fn greet(name: &String) -> String {
 }
 }
 
-fn classify(x: i64) -> String {
-    if x > (0_i64) {
+fn classify(x: SifrInt) -> String {
+    if &x > &SifrInt::from_i64(0) {
         return "positive".to_string();
     }
-    if x < (0_i64) {
+    if &x < &SifrInt::from_i64(0) {
         return "negative".to_string();
     }
     "zero".to_string()
 }
 
-fn double(n: i64) -> i64 {
-    n * (2_i64)
+fn double(n: SifrInt) -> SifrInt {
+    &n * &SifrInt::from_i64(2)
 }
 
-fn is_even(n: i64) -> bool {
-    if n == (0_i64) {
+fn is_even(n: SifrInt) -> bool {
+    if &n == &SifrInt::from_i64(0) {
         return true;
     }
-    if n == (1_i64) {
+    if &n == &SifrInt::from_i64(1) {
         return false;
     }
-    is_even(n - (2_i64))
+    is_even(&n - &SifrInt::from_i64(2))
 }
 
 fn main() {
-    let x: i64 = 42_i64;
+    let x: SifrInt = SifrInt::from_i64(42);
     let pi: f64 = 3.14_f64;
     let flag: bool = true;
     let name: String = "Sifr".to_string();
-    let sum: i64 = x + (8_i64);
-    let product: i64 = double(sum);
+    let sum: SifrInt = &x + &SifrInt::from_i64(8);
+    let product: SifrInt = double((sum).clone());
     println!("{}", product);
-    let fact: i64 = factorial(5_i64);
+    let fact: SifrInt = factorial(SifrInt::from_i64(5));
     println!("{}", fact);
-    let fib: i64 = fibonacci(10_i64);
+    let fib: SifrInt = fibonacci(SifrInt::from_i64(10));
     println!("{}", fib);
     let msg: String = greet(&name);
     println!("{}", msg);
-    let label: String = classify(x);
+    let label: String = classify((x).clone());
     println!("{}", label);
-    let neg_label: String = classify(-(7_i64));
+    let neg_label: String = classify(-&SifrInt::from_i64(7));
     println!("{}", neg_label);
-    let zero_label: String = classify(0_i64);
+    let zero_label: String = classify(SifrInt::from_i64(0));
     println!("{}", zero_label);
-    let even: bool = is_even(4_i64);
+    let even: bool = is_even(SifrInt::from_i64(4));
     println!("{}", even);
-    let odd: bool = is_even(7_i64);
+    let odd: bool = is_even(SifrInt::from_i64(7));
     println!("{}", odd);
 }

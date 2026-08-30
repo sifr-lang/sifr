@@ -8,9 +8,11 @@ def _replace_whitespace_chars(text: str, replace_tabs: bool) -> str:
 
 
 def _expand_tabs_impl(text: str, tabsize: int) -> str:
-    effective_tabsize: int = tabsize
+    effective_tabsize: int = tabsize.clone()
     if effective_tabsize <= 0:
         effective_tabsize = 1
+    if effective_tabsize == 0:
+        return text.clone()
 
     result: str = ""
     column: int = 0
@@ -22,7 +24,7 @@ def _expand_tabs_impl(text: str, tabsize: int) -> str:
             if ch == "\t":
                 spaces: int = effective_tabsize - (column % effective_tabsize)
                 if spaces <= 0:
-                    spaces = effective_tabsize
+                    spaces = effective_tabsize.clone()
                 j: int = 0
                 while j < spaces:
                     result = result + " "
@@ -249,7 +251,7 @@ def _apply_max_lines(
     if max_lines is None:
         return _clone_lines(lines)
 
-    limit: int = max_lines
+    limit: int = max_lines.clone()
     if limit <= 0:
         return []
     if len(lines) <= limit:
@@ -318,7 +320,7 @@ class TextWrapper:
         self.initial_indent = initial_indent + ""
         self.subsequent_indent = subsequent_indent + ""
         self.expand_tabs = expand_tabs
-        safe_tabsize: int = tabsize
+        safe_tabsize: int = tabsize.clone()
         if safe_tabsize <= 0:
             safe_tabsize = 1
         self.tabsize = safe_tabsize

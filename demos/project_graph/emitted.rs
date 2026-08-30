@@ -9,14 +9,17 @@ fn main() {
 }
 
 // src/consumer.rs
-pub use crate::provider::BASE;
 pub use crate::provider::answer;
-pub fn describe() -> i64 {
-    (answer() + BASE) - (40_i64)
+pub use ::sifr_runtime::SifrInt;
+pub fn describe() -> SifrInt {
+    &(&answer() + &crate::provider::__const_BASE()) - &SifrInt::from_i64(40)
 }
 
 // src/provider.rs
-pub const BASE: i64 = 41_i64;
-pub fn answer() -> i64 {
-    BASE
+pub use ::sifr_runtime::SifrInt;
+pub fn __const_BASE() -> SifrInt {
+    SifrInt::from_i64(41)
+}
+pub fn answer() -> SifrInt {
+    __const_BASE()
 }

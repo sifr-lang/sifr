@@ -355,6 +355,14 @@ pub(in crate::lower) fn lower_range_call(call: &ExprCall, ctx: &mut LowerCtx) ->
             );
             return None;
         }
+        if !super::super::integer_failure_diagnostics::is_proven_nonzero_integer_expr(&lowered, ctx)
+        {
+            super::super::integer_failure_diagnostics::emit_exact_int_requires_handling(
+                ctx,
+                raw.range(),
+            );
+            return None;
+        }
         Some(Box::new(lowered))
     } else {
         None

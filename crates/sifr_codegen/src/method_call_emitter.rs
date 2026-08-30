@@ -20,9 +20,7 @@ impl RustEmitter {
         // Copy types are passed by value regardless of convention unless the
         // parameter is generic (TypeVar).
         let borrow_decision_ty = param_ty.unwrap_or(arg_ty);
-        if !is_generic_param
-            && borrow_decision_ty.ownership() == sifr_type_system::OwnershipKind::Copy
-        {
+        if !is_generic_param && crate::helpers::is_copy_type_for_codegen(borrow_decision_ty) {
             return None;
         }
         // Avoid borrowing an already borrowed parameter again.

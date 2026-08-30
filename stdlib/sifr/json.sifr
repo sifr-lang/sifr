@@ -181,7 +181,7 @@ def from_bool(value: bool) -> JsonValue:
 
 
 def from_int(value: int) -> JsonValue:
-    int_value: int | None = value
+    int_value: int | None = value.clone()
     return JsonValue("int", int_value=int_value)
 
 

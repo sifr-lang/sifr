@@ -1,14 +1,16 @@
 // src/main.rs
+use ::sifr_runtime::SifrInt;
+
 // --- stdlib: sifr.fnmatch ---
 fn fnmatch(name: &String, pattern: &String) -> bool {
-    _match(name, 0_i64, pattern, 0_i64)
+    _match(name, SifrInt::from_i64(0), pattern, SifrInt::from_i64(0))
 }
-fn _match(name: &String, mut ni: i64, pattern: &String, mut pi: i64) -> bool {
-    while (pi < (pattern.chars().count() as i64)) {
+fn _match(name: &String, mut ni: SifrInt, pattern: &String, mut pi: SifrInt) -> bool {
+    while (&pi < &SifrInt::from(pattern.chars().count())) {
         let pc: Option<String> = Some({
             let Some(__indexed_char) = pattern
                 .chars()
-                .nth(pi as usize)
+                .nth(::sifr_runtime::to_usize_proven(&(pi)))
                 .map(|c| c.to_string()) else {
                 unreachable!("compiler-verified string index should be in range");
             };
@@ -16,33 +18,33 @@ fn _match(name: &String, mut ni: i64, pattern: &String, mut pi: i64) -> bool {
         });
         if let Some(pc) = pc {
             if pc == "*" {
-                pi += 1_i64;
-                if (pi == (pattern.chars().count() as i64)) {
+                pi = &pi + &SifrInt::from_i64(1);
+                if (&pi == &SifrInt::from(pattern.chars().count())) {
                     return true;
                 }
-                let mut j: i64 = ni;
-                while (j <= (name.chars().count() as i64)) {
-                    if _match(name, j, pattern, pi) {
+                let mut j: SifrInt = ni.clone();
+                while (&j <= &SifrInt::from(name.chars().count())) {
+                    if _match(name, (j).clone(), pattern, (pi).clone()) {
                         return true;
                     }
-                    j += 1_i64;
+                    j = &j + &SifrInt::from_i64(1);
                 }
                 return false;
             } else {
                 if pc == "?" {
-                    if (ni >= (name.chars().count() as i64)) {
+                    if (&ni >= &SifrInt::from(name.chars().count())) {
                         return false;
                     }
-                    ni += 1_i64;
-                    pi += 1_i64;
+                    ni = &ni + &SifrInt::from_i64(1);
+                    pi = &pi + &SifrInt::from_i64(1);
                 } else {
-                    if (ni >= (name.chars().count() as i64)) {
+                    if (&ni >= &SifrInt::from(name.chars().count())) {
                         return false;
                     }
                     let nc: Option<String> = Some({
                         let Some(__indexed_char) = name
                             .chars()
-                            .nth(ni as usize)
+                            .nth(::sifr_runtime::to_usize_proven(&(ni)))
                             .map(|c| c.to_string()) else {
                             unreachable!(
                                 "compiler-verified string index should be in range"
@@ -57,15 +59,15 @@ fn _match(name: &String, mut ni: i64, pattern: &String, mut pi: i64) -> bool {
                     } else {
                         return false;
                     }
-                    ni += 1_i64;
-                    pi += 1_i64;
+                    ni = &ni + &SifrInt::from_i64(1);
+                    pi = &pi + &SifrInt::from_i64(1);
                 }
             }
         } else {
             return false;
         }
     }
-    (ni == (name.chars().count() as i64))
+    (&ni == &SifrInt::from(name.chars().count()))
 }
 fn filter(names: &Vec<String>, pattern: &String) -> Vec<String> {
     let mut result: Vec<String> = vec![];
@@ -79,11 +81,14 @@ fn filter(names: &Vec<String>, pattern: &String) -> Vec<String> {
 
 // --- stdlib: sifr.test ---
 fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
-    assert_eq!(actual.len() as i64, expected.len() as i64);
-    let mut i: i64 = 0_i64;
-    while i < (actual.len() as i64) {
-        assert!(Some(actual[i as usize]) == expected.get(i as usize).copied());
-        i += 1_i64;
+    assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
+    let mut i: SifrInt = SifrInt::from_i64(0);
+    while &i < &SifrInt::from(actual.len()) {
+        assert!(
+            Some(actual[::sifr_runtime::to_usize_proven(& (i))]) == expected
+            .get(::sifr_runtime::to_usize_proven(& (i))).copied()
+        );
+        i = &i + &SifrInt::from_i64(1);
     }
 }
 // --- end stdlib ---

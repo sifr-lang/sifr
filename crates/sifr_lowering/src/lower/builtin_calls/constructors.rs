@@ -869,7 +869,7 @@ pub(super) fn parse_error_type(ctx: &LowerCtx) -> Type {
         })
 }
 
-pub(super) fn value_error_type(ctx: &LowerCtx) -> Type {
+pub(in crate::lower) fn value_error_type(ctx: &LowerCtx) -> Type {
     ctx.class_types
         .get("ValueError")
         .cloned()

@@ -32,14 +32,14 @@ class Dialect:
         lineterminator: str = "\n",
         quoting: int = 0,
     ) -> None:
-        resolved_quoting: int = quoting
+        resolved_quoting: int = quoting.clone()
         _validate_char("delimiter", delimiter)
         if quotechar != "":
             _validate_char("quotechar", quotechar)
         if escapechar != "":
             _validate_char("escapechar", escapechar)
         if quotechar == "" and resolved_quoting != QUOTE_NONE:
-            resolved_quoting = QUOTE_NONE
+            resolved_quoting = QUOTE_NONE.clone()
         self.delimiter = delimiter
         self.quotechar = quotechar
         self.escapechar = escapechar

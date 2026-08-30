@@ -1,4 +1,4 @@
-# expect-error: SIFR-INT-0005
+# expect-error: SIFR-TYPE-0002
 
 def main() -> None:
     value: int = 2 ** -1

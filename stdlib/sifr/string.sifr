@@ -180,14 +180,14 @@ def _template_substitute_impl(
         if mapped_value2 is None:
             if safe:
                 result = result + "$" + name2
-                i = j2
+                i = j2.clone()
                 continue
             raise ValueError("missing template value for key: " + name2)
         else:
             mapped_value2_text = mapped_value2
 
         result = result + mapped_value2_text
-        i = j2
+        i = j2.clone()
 
     return result
 

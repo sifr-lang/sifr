@@ -16,70 +16,32 @@ macro_rules! stmt_expr_unit_slice {
         } else {
             None
         };
-        let normalize_bound_i64 =
-            |raw_opt: Option<crate::RustExpr>, default_value: crate::RustExpr| {
-                let Some(raw) = raw_opt else {
-                    return default_value;
-                };
-                crate::RustExpr::If {
-                    cond: Box::new(crate::RustExpr::BinOp {
-                        left: Box::new(raw.clone()),
-                        op: "<".to_string(),
-                        right: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Int(0))),
-                    }),
-                    then_expr: Box::new(crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::Paren(Box::new(
-                            crate::RustExpr::BinOp {
-                                left: Box::new(crate::RustExpr::Ident(
-                                    "_slice_len_i64".to_string(),
-                                )),
-                                op: "+".to_string(),
-                                right: Box::new(raw.clone()),
-                            },
-                        ))),
-                        method: "max".to_string(),
-                        args: vec![crate::RustExpr::Literal(crate::RustLiteral::Int(0))],
-                    }),
-                    else_expr: Some(Box::new(crate::RustExpr::MethodCall {
-                        receiver: Box::new(raw),
-                        method: "min".to_string(),
-                        args: vec![crate::RustExpr::Ident("_slice_len_i64".to_string())],
-                    })),
-                }
+        let normalize_bound = |raw_opt: Option<crate::RustExpr>, default_value: crate::RustExpr| {
+            let Some(raw) = raw_opt else {
+                return default_value;
             };
+            crate::RustExpr::MethodCall {
+                receiver: Box::new(raw),
+                method: "clamp_slice_bound".to_string(),
+                args: vec![crate::RustExpr::Ident("_slice_len".to_string())],
+            }
+        };
 
         match crate::resolve_alias_type_for_plain_call($object.ty()) {
             Type::Str => {
                 let cached_chars = $emitter.string_char_cache_for_expr($object);
-                let start_i64 = normalize_bound_i64(
+                let start_bound = normalize_bound(
                     lowered_start_raw,
                     crate::RustExpr::Literal(crate::RustLiteral::Int(0)),
                 );
-                let stop_i64 = normalize_bound_i64(
+                let stop_bound = normalize_bound(
                     lowered_stop_raw,
-                    crate::RustExpr::Ident("_slice_len_i64".to_string()),
+                    crate::RustExpr::Ident("_slice_len".to_string()),
                 );
-                let start_usize = crate::RustExpr::Cast {
-                    expr: Box::new(crate::RustExpr::Ident("_slice_start_i64".to_string())),
-                    ty: crate::RustType::Named("usize".to_string()),
-                };
-                let take_count = crate::RustExpr::Cast {
-                    expr: Box::new(crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::Paren(Box::new(
-                            crate::RustExpr::BinOp {
-                                left: Box::new(crate::RustExpr::Ident(
-                                    "_slice_stop_i64".to_string(),
-                                )),
-                                op: "-".to_string(),
-                                right: Box::new(crate::RustExpr::Ident(
-                                    "_slice_start_i64".to_string(),
-                                )),
-                            },
-                        ))),
-                        method: "max".to_string(),
-                        args: vec![crate::RustExpr::Literal(crate::RustLiteral::Int(0))],
-                    }),
-                    ty: crate::RustType::Named("usize".to_string()),
+                let take_count = crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::Ident("_slice_stop".to_string())),
+                    method: "saturating_sub".to_string(),
+                    args: vec![crate::RustExpr::Ident("_slice_start".to_string())],
                 };
                 let slice_src_value = if let Some(cache_name) = cached_chars.as_ref() {
                     crate::RustExpr::Ref {
@@ -93,28 +55,20 @@ macro_rules! stmt_expr_unit_slice {
                     }
                 };
                 let slice_len_value = if cached_chars.is_some() {
-                    crate::RustExpr::Cast {
-                        expr: Box::new(crate::RustExpr::MethodCall {
-                            receiver: Box::new(crate::RustExpr::Ident("_slice_src".to_string())),
-                            method: "len".to_string(),
-                            args: vec![],
-                        }),
-                        ty: crate::RustType::I64,
+                    crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::Ident("_slice_src".to_string())),
+                        method: "len".to_string(),
+                        args: vec![],
                     }
                 } else {
-                    crate::RustExpr::Cast {
-                        expr: Box::new(crate::RustExpr::MethodCall {
-                            receiver: Box::new(crate::RustExpr::MethodCall {
-                                receiver: Box::new(crate::RustExpr::Ident(
-                                    "_slice_src".to_string(),
-                                )),
-                                method: "chars".to_string(),
-                                args: vec![],
-                            }),
-                            method: "count".to_string(),
+                    crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::MethodCall {
+                            receiver: Box::new(crate::RustExpr::Ident("_slice_src".to_string())),
+                            method: "chars".to_string(),
                             args: vec![],
                         }),
-                        ty: crate::RustType::I64,
+                        method: "count".to_string(),
+                        args: vec![],
                     }
                 };
                 let slice_iter_source = if cached_chars.is_some() {
@@ -134,7 +88,7 @@ macro_rules! stmt_expr_unit_slice {
                     receiver: Box::new(crate::RustExpr::MethodCall {
                         receiver: Box::new(slice_iter_source),
                         method: "skip".to_string(),
-                        args: vec![start_usize],
+                        args: vec![crate::RustExpr::Ident("_slice_start".to_string())],
                     }),
                     method: "take".to_string(),
                     args: vec![take_count],
@@ -165,56 +119,39 @@ macro_rules! stmt_expr_unit_slice {
                         },
                         crate::RustStmt::Let {
                             mutable: false,
-                            name: "_slice_len_i64".to_string(),
+                            name: "_slice_len".to_string(),
                             ty: None,
                             value: slice_len_value,
                         },
                         crate::RustStmt::Let {
                             mutable: false,
-                            name: "_slice_start_i64".to_string(),
+                            name: "_slice_start".to_string(),
                             ty: None,
-                            value: start_i64,
+                            value: start_bound,
                         },
                         crate::RustStmt::Let {
                             mutable: false,
-                            name: "_slice_stop_i64".to_string(),
+                            name: "_slice_stop".to_string(),
                             ty: None,
-                            value: stop_i64,
+                            value: stop_bound,
                         },
                     ],
                     expr: Some(Box::new(slice_expr)),
                 }));
             }
             Type::List(_) | Type::Bytes => {
-                let start_i64 = normalize_bound_i64(
+                let start_bound = normalize_bound(
                     lowered_start_raw,
                     crate::RustExpr::Literal(crate::RustLiteral::Int(0)),
                 );
-                let stop_i64 = normalize_bound_i64(
+                let stop_bound = normalize_bound(
                     lowered_stop_raw,
-                    crate::RustExpr::Ident("_slice_len_i64".to_string()),
+                    crate::RustExpr::Ident("_slice_len".to_string()),
                 );
-                let start_usize = crate::RustExpr::Cast {
-                    expr: Box::new(crate::RustExpr::Ident("_slice_start_i64".to_string())),
-                    ty: crate::RustType::Named("usize".to_string()),
-                };
-                let take_count = crate::RustExpr::Cast {
-                    expr: Box::new(crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::Paren(Box::new(
-                            crate::RustExpr::BinOp {
-                                left: Box::new(crate::RustExpr::Ident(
-                                    "_slice_stop_i64".to_string(),
-                                )),
-                                op: "-".to_string(),
-                                right: Box::new(crate::RustExpr::Ident(
-                                    "_slice_start_i64".to_string(),
-                                )),
-                            },
-                        ))),
-                        method: "max".to_string(),
-                        args: vec![crate::RustExpr::Literal(crate::RustLiteral::Int(0))],
-                    }),
-                    ty: crate::RustType::Named("usize".to_string()),
+                let take_count = crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::Ident("_slice_stop".to_string())),
+                    method: "saturating_sub".to_string(),
+                    args: vec![crate::RustExpr::Ident("_slice_start".to_string())],
                 };
                 let iter = crate::RustExpr::MethodCall {
                     receiver: Box::new(crate::RustExpr::MethodCall {
@@ -227,7 +164,7 @@ macro_rules! stmt_expr_unit_slice {
                                 args: vec![],
                             }),
                             method: "skip".to_string(),
-                            args: vec![start_usize],
+                            args: vec![crate::RustExpr::Ident("_slice_start".to_string())],
                         }),
                         method: "take".to_string(),
                         args: vec![take_count],
@@ -255,30 +192,27 @@ macro_rules! stmt_expr_unit_slice {
                         },
                         crate::RustStmt::Let {
                             mutable: false,
-                            name: "_slice_len_i64".to_string(),
+                            name: "_slice_len".to_string(),
                             ty: None,
-                            value: crate::RustExpr::Cast {
-                                expr: Box::new(crate::RustExpr::MethodCall {
-                                    receiver: Box::new(crate::RustExpr::Ident(
-                                        "_slice_src".to_string(),
-                                    )),
-                                    method: "len".to_string(),
-                                    args: vec![],
-                                }),
-                                ty: crate::RustType::I64,
+                            value: crate::RustExpr::MethodCall {
+                                receiver: Box::new(crate::RustExpr::Ident(
+                                    "_slice_src".to_string(),
+                                )),
+                                method: "len".to_string(),
+                                args: vec![],
                             },
                         },
                         crate::RustStmt::Let {
                             mutable: false,
-                            name: "_slice_start_i64".to_string(),
+                            name: "_slice_start".to_string(),
                             ty: None,
-                            value: start_i64,
+                            value: start_bound,
                         },
                         crate::RustStmt::Let {
                             mutable: false,
-                            name: "_slice_stop_i64".to_string(),
+                            name: "_slice_stop".to_string(),
                             ty: None,
-                            value: stop_i64,
+                            value: stop_bound,
                         },
                     ],
                     expr: Some(Box::new(slice_expr)),

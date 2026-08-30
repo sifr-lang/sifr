@@ -24,6 +24,8 @@ mod __sifr_project_unions {
     }
 }
 pub use __sifr_project_unions::__SifrUnion_8_x3asequence5_x3aunion1_x3a224_x3a5_x3aclass11_x3amain_x2eCircle1_x3a024_x3a5_x3aclass11_x3amain_x2eSquare1_x3a0;
+use ::sifr_runtime::SifrInt;
+
 pub trait Printable {
     fn describe(&self) -> String;
 }
@@ -134,14 +136,14 @@ impl Printable for Square {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct Port(i64);
+struct Port(SifrInt);
 
 impl Port {
-    fn new(value: i64) -> Self {
+    fn new(value: SifrInt) -> Self {
         Self(value)
     }
-    fn value(&self) -> i64 {
-        self.0
+    fn value(&self) -> SifrInt {
+        self.0.clone()
     }
 }
 
@@ -192,7 +194,7 @@ fn main() {
     let square: Square = Square::new(4.0_f64);
     println!("{}", area(&__SifrUnion_8_x3asequence5_x3aunion1_x3a224_x3a5_x3aclass11_x3amain_x2eCircle1_x3a024_x3a5_x3aclass11_x3amain_x2eSquare1_x3a0::__SifrUnionVariant_5_x3aclass11_x3amain_x2eCircle1_x3a0((circle).clone())));
     println!("{}", area(&__SifrUnion_8_x3asequence5_x3aunion1_x3a224_x3a5_x3aclass11_x3amain_x2eCircle1_x3a024_x3a5_x3aclass11_x3amain_x2eSquare1_x3a0::__SifrUnionVariant_5_x3aclass11_x3amain_x2eSquare1_x3a0((square).clone())));
-    let port: Port = Port::new(8080_i64);
+    let port: Port = Port::new(SifrInt::from_i64(8080));
     println!("{}", port);
     println!("{}", port.value());
     let email: Email = Email::new("user@example.com".to_string());

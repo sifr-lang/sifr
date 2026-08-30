@@ -146,6 +146,12 @@ impl RustEmitter {
         }
         if matches!(
             crate::resolve_alias_type_for_plain_call(target_ty),
+            Type::Int | Type::LiteralInt(_)
+        ) {
+            return Ok(self.coerce_typed_expr_to_sifr_int_value(lowered_value, value_ty));
+        }
+        if matches!(
+            crate::resolve_alias_type_for_plain_call(target_ty),
             Type::Awaitable(_)
         ) && matches!(
             crate::resolve_alias_type_for_plain_call(value_ty),
@@ -394,21 +400,13 @@ impl RustEmitter {
         }
     }
 
-    pub(crate) fn int_i64_literal_expr(value: i64) -> RustExpr {
-        RustExpr::Cast {
-            expr: Box::new(RustExpr::Literal(crate::RustLiteral::Int(value))),
-            ty: crate::RustType::I64,
-        }
-    }
-
-    pub(crate) fn negative_range_step_magnitude(step_expr: &HirExpr) -> Option<i64> {
-        match step_expr {
-            HirExpr::IntLiteral(value) if *value < 0 => value.checked_abs(),
-            HirExpr::UnaryOp { op, operand, .. } if op == "-" => match operand.as_ref() {
-                HirExpr::IntLiteral(value) if *value > 0 => Some(*value),
-                _ => None,
-            },
-            _ => None,
+    pub(crate) fn int_sifr_literal_expr(value: i64) -> RustExpr {
+        RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec![
+                "SifrInt".to_string(),
+                "from_i64".to_string(),
+            ])),
+            args: vec![RustExpr::Literal(crate::RustLiteral::Int(value))],
         }
     }
 
@@ -418,45 +416,28 @@ impl RustEmitter {
         end: &HirExpr,
         step: Option<&HirExpr>,
     ) -> Result<Option<RustExpr>, crate::CodegenError> {
-        let Some(step_expr) = step else {
-            return Ok(None);
-        };
-        let Some(step_magnitude) = Self::negative_range_step_magnitude(step_expr) else {
-            return Ok(None);
-        };
         let Some(lowered_start) = self.lower_stmt_expr_for_ir(start)? else {
             return Ok(None);
         };
+        let lowered_start = Self::clone_non_copy_name_expr_for_ir(start, lowered_start);
         let Some(lowered_end) = self.lower_stmt_expr_for_ir(end)? else {
             return Ok(None);
         };
-
-        let reversed_iter = RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::Range {
-                start: Box::new(RustExpr::BinOp {
-                    left: Box::new(lowered_end),
-                    op: "+".to_string(),
-                    right: Box::new(Self::int_i64_literal_expr(1)),
-                }),
-                end: Box::new(RustExpr::BinOp {
-                    left: Box::new(lowered_start),
-                    op: "+".to_string(),
-                    right: Box::new(Self::int_i64_literal_expr(1)),
-                }),
-            }),
-            method: "rev".to_string(),
-            args: vec![],
+        let lowered_end = Self::clone_non_copy_name_expr_for_ir(end, lowered_end);
+        let lowered_step = if let Some(step) = step {
+            let Some(lowered) = self.lower_stmt_expr_for_ir(step)? else {
+                return Ok(None);
+            };
+            Self::clone_non_copy_name_expr_for_ir(step, lowered)
+        } else {
+            Self::int_sifr_literal_expr(1)
         };
-        if step_magnitude == 1 {
-            return Ok(Some(reversed_iter));
-        }
-        Ok(Some(RustExpr::MethodCall {
-            receiver: Box::new(reversed_iter),
-            method: "step_by".to_string(),
-            args: vec![RustExpr::Cast {
-                expr: Box::new(Self::int_i64_literal_expr(step_magnitude)),
-                ty: crate::RustType::Named("usize".to_string()),
-            }],
+        Ok(Some(RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec![
+                "SifrRange".to_string(),
+                "new_known_nonzero".to_string(),
+            ])),
+            args: vec![lowered_start, lowered_end, lowered_step],
         }))
     }
 
@@ -725,6 +706,8 @@ impl RustEmitter {
         let Some(mut lowered_key) = self.lower_stmt_expr_for_ir(key_expr)? else {
             return Ok(None);
         };
+        lowered_key =
+            crate::helpers::clone_dict_key_for_reused_value(key_expr, val_expr, lowered_key);
         let Some(mut lowered_value) = self.lower_stmt_expr_for_ir(val_expr)? else {
             return Ok(None);
         };

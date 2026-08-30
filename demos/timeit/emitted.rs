@@ -1,11 +1,16 @@
 // src/main.rs
+use ::sifr_runtime::SifrInt;
+
 // --- stdlib: sifr.test ---
 fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
-    assert_eq!(actual.len() as i64, expected.len() as i64);
-    let mut i: i64 = 0_i64;
-    while i < (actual.len() as i64) {
-        assert!(Some(actual[i as usize]) == expected.get(i as usize).copied());
-        i += 1_i64;
+    assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
+    let mut i: SifrInt = SifrInt::from_i64(0);
+    while &i < &SifrInt::from(actual.len()) {
+        assert!(
+            Some(actual[::sifr_runtime::to_usize_proven(& (i))]) == expected
+            .get(::sifr_runtime::to_usize_proven(& (i))).copied()
+        );
+        i = &i + &SifrInt::from_i64(1);
     }
 }
 
@@ -51,28 +56,28 @@ fn localtime(epoch: f64) -> String {
 fn _localtime_intrinsic(epoch: f64) -> String {
     ::sifr_stdlib::time::localtime(epoch)
 }
-fn time_strptime(s: &String, fmt: &String) -> Result<Vec<i64>, ValueError> {
+fn time_strptime(s: &String, fmt: &String) -> Result<Vec<SifrInt>, ValueError> {
     ::sifr_stdlib::time::time_strptime(s, fmt)
         .map(|__sifr_bridge_ok| {
             __sifr_bridge_ok
                 .into_iter()
-                .map(|__sifr_bridge_value| __sifr_bridge_value.to_i64_saturating())
+                .map(|__sifr_bridge_value| __sifr_bridge_value.into_sifr_int())
                 .collect()
         })
         .map_err(|__sifr_bridge_error| ValueError {
             message: __sifr_bridge_error.to_string(),
         })
 }
-fn time_gmtime() -> Vec<i64> {
+fn time_gmtime() -> Vec<SifrInt> {
     ::sifr_stdlib::time::time_gmtime()
         .into_iter()
-        .map(|__sifr_bridge_value| __sifr_bridge_value.to_i64_saturating())
+        .map(|__sifr_bridge_value| __sifr_bridge_value.into_sifr_int())
         .collect()
 }
-fn time_localtime() -> Vec<i64> {
+fn time_localtime() -> Vec<SifrInt> {
     ::sifr_stdlib::time::time_localtime()
         .into_iter()
-        .map(|__sifr_bridge_value| __sifr_bridge_value.to_i64_saturating())
+        .map(|__sifr_bridge_value| __sifr_bridge_value.into_sifr_int())
         .collect()
 }
 
@@ -87,30 +92,30 @@ fn _elapsed_non_negative(start: f64, end: f64) -> f64 {
     }
     elapsed
 }
-fn timeit(stmt: impl Fn(), number: i64) -> f64 {
+fn timeit(stmt: impl Fn(), number: SifrInt) -> f64 {
     let start: f64 = perf_counter();
-    let mut i: i64 = 0_i64;
-    while i < number {
+    let mut i: SifrInt = SifrInt::from_i64(0);
+    while &i < &number {
         stmt();
-        i += 1_i64;
+        i = &i + &SifrInt::from_i64(1);
     }
     let end: f64 = perf_counter();
     _elapsed_non_negative(start, end)
 }
-fn repeat(stmt: impl Fn(), count: i64, number: i64) -> Vec<f64> {
+fn repeat(stmt: impl Fn(), count: SifrInt, number: SifrInt) -> Vec<f64> {
     let mut results: Vec<f64> = vec![];
-    let mut r: i64 = 0_i64;
-    while r < count {
+    let mut r: SifrInt = SifrInt::from_i64(0);
+    while &r < &count {
         let start: f64 = perf_counter();
-        let mut i: i64 = 0_i64;
-        while i < number {
+        let mut i: SifrInt = SifrInt::from_i64(0);
+        while &i < &number {
             stmt();
-            i += 1_i64;
+            i = &i + &SifrInt::from_i64(1);
         }
         let end: f64 = perf_counter();
         let elapsed: f64 = _elapsed_non_negative(start, end);
         results.push(elapsed);
-        r += 1_i64;
+        r = &r + &SifrInt::from_i64(1);
     }
     results
 }
@@ -137,25 +142,25 @@ impl ::std::error::Error for ValueError {
 }
 
 fn workload() {
-    let mut total: i64 = 0_i64;
-    let mut i: i64 = 0_i64;
-    while i < (100_i64) {
-        total += i;
-        i += 1_i64;
+    let mut total: SifrInt = SifrInt::from_i64(0);
+    let mut i: SifrInt = SifrInt::from_i64(0);
+    while &i < &SifrInt::from_i64(100) {
+        total = &total + &i;
+        i = &i + &SifrInt::from_i64(1);
     }
 }
 
 fn all_non_negative(values: &Vec<f64>) -> bool {
-    let mut i: i64 = 0_i64;
-    while (i < (values.len() as i64)) {
-        let current: Option<f64> = Some(values[i as usize]);
+    let mut i: SifrInt = SifrInt::from_i64(0);
+    while (&i < &SifrInt::from(values.len())) {
+        let current: Option<f64> = Some(values[::sifr_runtime::to_usize_proven(&(i))]);
         let Some(current) = current else {
             return false;
         };
         if current < (0.0_f64) {
             return false;
         }
-        i += 1_i64;
+        i = &i + &SifrInt::from_i64(1);
     }
     true
 }
@@ -171,19 +176,19 @@ fn collect_timer_actual() -> Vec<bool> {
 
 fn collect_repeat_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![];
-    let elapsed: f64 = timeit(workload, 10_i64);
+    let elapsed: f64 = timeit(workload, SifrInt::from_i64(10));
     actual.push(elapsed >= (0.0_f64));
-    let repeated: Vec<f64> = repeat(workload, 3_i64, 10_i64);
-    actual.push((repeated.len() as i64) == (3_i64));
+    let repeated: Vec<f64> = repeat(workload, SifrInt::from_i64(3), SifrInt::from_i64(10));
+    actual.push(&SifrInt::from(repeated.len()) == &SifrInt::from_i64(3));
     actual.push(all_non_negative(&repeated));
     actual
 }
 
 fn collect_edge_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![];
-    actual.push((repeat(workload, 0_i64, 5_i64).len() as i64) == (0_i64));
-    actual.push(timeit(workload, 0_i64) >= (0.0_f64));
-    actual.push((repeat(workload, 2_i64, 0_i64).len() as i64) == (2_i64));
+    actual.push(&SifrInt::from(repeat(workload, SifrInt::from_i64(0), SifrInt::from_i64(5)).len()) == &SifrInt::from_i64(0));
+    actual.push(timeit(workload, SifrInt::from_i64(0)) >= (0.0_f64));
+    actual.push(&SifrInt::from(repeat(workload, SifrInt::from_i64(2), SifrInt::from_i64(0)).len()) == &SifrInt::from_i64(2));
     actual
 }
 

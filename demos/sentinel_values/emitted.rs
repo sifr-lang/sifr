@@ -1,16 +1,18 @@
 // src/main.rs
-fn smallest_or_zero(values: &Vec<i64>) -> i64 {
-    let mut best: i64 = 9223372036854775807_i64;
-    for value in values.iter().copied() {
-        if value < best {
-            best = value;
+use ::sifr_runtime::SifrInt;
+
+fn smallest_or_zero(values: &Vec<SifrInt>) -> SifrInt {
+    let mut best: SifrInt = SifrInt::from_i64(9223372036854775807);
+    for value in values.iter().cloned() {
+        if &value < &best {
+            best = value.clone();
         }
     }
-    if best != (9223372036854775807_i64) { best } else { 0_i64 }
+    if &best != &SifrInt::from_i64(9223372036854775807) { best } else { SifrInt::from_i64(0) }
 }
 
 fn main() {
-    assert!((smallest_or_zero(&vec![8_i64, 3_i64, 7_i64]) == (3_i64)));
-    assert!((smallest_or_zero(&vec![]) == (0_i64)));
+    assert!((&smallest_or_zero(&vec![SifrInt::from_i64(8), SifrInt::from_i64(3), SifrInt::from_i64(7)]) == &SifrInt::from_i64(3)));
+    assert!((&smallest_or_zero(&vec![]) == &SifrInt::from_i64(0)));
     println!("sentinel_values: ok");
 }

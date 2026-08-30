@@ -669,14 +669,17 @@ mod tests {
 
     #[test]
     fn maps_types_to_structured_rust_types() {
-        assert_eq!(sifr_type_to_rust_type(&Type::Int), RustType::I64);
+        assert_eq!(
+            sifr_type_to_rust_type(&Type::Int),
+            RustType::Named("SifrInt".to_string())
+        );
         assert_eq!(
             sifr_type_to_rust_type(&Type::List(Box::new(Type::Str))),
             RustType::Vec(Box::new(RustType::String_))
         );
         assert_eq!(
             sifr_type_to_rust_type(&Type::Union(vec![Type::Int, Type::None])),
-            RustType::Option(Box::new(RustType::I64))
+            RustType::Option(Box::new(RustType::Named("SifrInt".to_string())))
         );
     }
 

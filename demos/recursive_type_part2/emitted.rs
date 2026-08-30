@@ -1,9 +1,11 @@
 // src/main.rs
-fn payload_size(data: &Vec<i64>) -> i64 {
-    data.len() as i64
+use ::sifr_runtime::SifrInt;
+
+fn payload_size(data: &Vec<SifrInt>) -> SifrInt {
+    SifrInt::from(data.len())
 }
 
 fn main() {
-    println!("{}", payload_size(&vec![1_i64, 2_i64, 3_i64]));
+    println!("{}", payload_size(&vec![SifrInt::from_i64(1), SifrInt::from_i64(2), SifrInt::from_i64(3)]));
     println!("well-formed recursive aliases accepted");
 }

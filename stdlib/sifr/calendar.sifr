@@ -71,7 +71,7 @@ def monthrange(year: int, month: int) -> list[int]:
 
 def leapdays(y1: int, y2: int) -> int:
     count: int = 0
-    year: int = y1
+    year: int = y1.clone()
     while year < y2:
         if isleap(year):
             count = count + 1

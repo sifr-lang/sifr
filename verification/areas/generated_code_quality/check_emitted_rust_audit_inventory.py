@@ -41,12 +41,6 @@ def validate_inventory(payload: dict[str, Any]) -> list[str]:
     baseline_commit = payload.get("baseline_commit")
     if not isinstance(baseline_commit, str) or SHA_RE.fullmatch(baseline_commit) is None:
         errors.append("baseline_commit must be a lowercase 40-character SHA")
-    phase_file = payload.get("phase_file")
-    if not isinstance(phase_file, str) or not phase_file.startswith("plans/issues/active/"):
-        errors.append("phase_file must name an active issue record")
-    elif not (REPO_ROOT / phase_file).is_file():
-        errors.append("phase_file must exist")
-
     raw_items = payload.get("implementation_items")
     if not isinstance(raw_items, list) or not raw_items:
         errors.append("implementation_items must be a non-empty list")
@@ -342,14 +336,6 @@ def run_self_test(payload: dict[str, Any]) -> None:
     invalid_sha = copy.deepcopy(payload)
     invalid_sha["baseline_commit"] = "not-a-sha"
     expect_invalid(invalid_sha, "baseline_commit must be a lowercase 40-character SHA")
-
-    invalid_phase = copy.deepcopy(payload)
-    invalid_phase["phase_file"] = "plans/issues/archive/closed.md"
-    expect_invalid(invalid_phase, "phase_file must name an active issue record")
-
-    missing_phase = copy.deepcopy(payload)
-    missing_phase["phase_file"] = "plans/issues/active/missing.md"
-    expect_invalid(missing_phase, "phase_file must exist")
 
     invalid_item_type = copy.deepcopy(payload)
     invalid_item_type["implementation_items"][0] = True

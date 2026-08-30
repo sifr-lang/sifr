@@ -34,10 +34,10 @@ def plus_one(x: int) -> int:
     std::fs::write(
         test_dir.join("test_imports.sifr"),
         r#"
-from helper import BASE, plus_one
+from helper import BASE as LIMIT, plus_one
 
 def test_import_parity():
-    assert plus_one(BASE) == 10
+    assert plus_one(LIMIT) == 10
 "#,
     )
     .expect("test module should be written");

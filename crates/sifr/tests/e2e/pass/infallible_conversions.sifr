@@ -1,8 +1,11 @@
 
 def main():
-    # int(float) -> int (truncation)
-    x: int = int(3.7)
-    assert str(x) == '3'
+    # int(float) truncates finite values and rejects non-finite values.
+    try:
+        x: int = int(3.7)
+        assert str(x) == '3'
+    except ValueError:
+        assert False
 
     # float(int) -> float
     y: float = float(42)

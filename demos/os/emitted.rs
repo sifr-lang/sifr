@@ -43,6 +43,7 @@ mod __sifr_project_nominals {
     }
 }
 pub use __sifr_project_nominals::IOError;
+use ::sifr_runtime::SifrInt;
 fn _encoding_is_supported_impl(label: &String) -> bool {
     ::sifr_stdlib::encoding::encoding_is_supported(label)
 }
@@ -304,15 +305,15 @@ fn chdir(path: &String) -> Result<(), IOError> {
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn stat_size(path: &String) -> Result<i64, IOError> {
+fn stat_size(path: &String) -> Result<SifrInt, IOError> {
     ::sifr_stdlib::fs::stat_size(path)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok.to_i64_saturating())
+        .map(|__sifr_bridge_ok| __sifr_bridge_ok.into_sifr_int())
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn disk_usage(path: &String) -> Vec<i64> {
+fn disk_usage(path: &String) -> Vec<SifrInt> {
     ::sifr_stdlib::fs::disk_usage(path)
         .into_iter()
-        .map(|__sifr_bridge_value| __sifr_bridge_value.to_i64_saturating())
+        .map(|__sifr_bridge_value| __sifr_bridge_value.into_sifr_int())
         .collect()
 }
 fn is_file(path: &String) -> bool {
@@ -637,7 +638,10 @@ impl __SifrStdlib_sifr_x2eencoding_x2eDecoder {
             &errors,
         );
         let __sifr_field_init_2: bool = false;
-        let __sifr_field_init_3: Vec<u8> = vec![];
+        let __sifr_field_init_3: Vec<u8> = {
+            let __sifr_empty_bytes_literal: Vec<u8> = vec![];
+            __sifr_empty_bytes_literal
+        };
         Self {
             _encoding: __sifr_field_init_0,
             _errors: __sifr_field_init_1,
@@ -684,7 +688,10 @@ impl __SifrStdlib_sifr_x2eencoding_x2eDecoder {
             )?;
             self._pending = next_pending;
             if r#final {
-                self._pending = vec![];
+                self._pending = {
+                    let __sifr_empty_bytes_literal: Vec<u8> = vec![];
+                    __sifr_empty_bytes_literal
+                };
                 self._exhausted = true;
             }
             return Ok(Ok(outcome));
@@ -1071,7 +1078,7 @@ fn _encoding_encode_outcome(
     }
 }
 fn encoding(label: &String) -> __SifrStdlib_sifr_x2eencoding_x2eEncoding {
-    __SifrStdlib_sifr_x2eencoding_x2eEncoding::new((label).clone())
+    __SifrStdlib_sifr_x2eencoding_x2eEncoding::new((label.clone()).clone())
 }
 fn utf8() -> __SifrStdlib_sifr_x2eencoding_x2eEncoding {
     __SifrStdlib_sifr_x2eencoding_x2eEncoding::new(__const_ENCODING_UTF8())
@@ -1330,7 +1337,7 @@ fn env_items() -> Vec<String> {
 fn get_args() -> Vec<String> {
     ::sifr_stdlib::sys::get_args()
 }
-fn sys_exit(code: i64) {
+fn sys_exit(code: SifrInt) {
     ::sifr_stdlib::sys::sys_exit(::sifr_runtime::interop::SifrIntBridge::from(code));
 }
 fn sys_version() -> String {
@@ -1339,14 +1346,14 @@ fn sys_version() -> String {
 fn sys_platform() -> String {
     ::sifr_stdlib::sys::sys_platform()
 }
-fn sys_maxsize() -> i64 {
-    ::sifr_stdlib::sys::sys_maxsize().to_i64_saturating()
+fn sys_maxsize() -> SifrInt {
+    ::sifr_stdlib::sys::sys_maxsize().into_sifr_int()
 }
-fn getpid() -> i64 {
-    ::sifr_stdlib::sys::getpid().to_i64_saturating()
+fn getpid() -> SifrInt {
+    ::sifr_stdlib::sys::getpid().into_sifr_int()
 }
-fn cpu_count() -> i64 {
-    ::sifr_stdlib::sys::cpu_count().to_i64_saturating()
+fn cpu_count() -> SifrInt {
+    ::sifr_stdlib::sys::cpu_count().into_sifr_int()
 }
 fn which(name: &String) -> Option<String> {
     ::sifr_stdlib::sys::which(name)
@@ -1360,15 +1367,18 @@ fn os_linesep() -> String {
 fn os_name() -> String {
     ::sifr_stdlib::sys::os_name()
 }
-fn stat(path: &String) -> Result<i64, IOError> {
+fn stat(path: &String) -> Result<SifrInt, IOError> {
     stat_size(path)
 }
 fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
-    assert_eq!(actual.len() as i64, expected.len() as i64);
-    let mut i: i64 = 0_i64;
-    while i < (actual.len() as i64) {
-        assert!(Some(actual[i as usize]) == expected.get(i as usize).copied());
-        i += 1_i64;
+    assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
+    let mut i: SifrInt = SifrInt::from_i64(0);
+    while &i < &SifrInt::from(actual.len()) {
+        assert!(
+            Some(actual[::sifr_runtime::to_usize_proven(& (i))]) == expected
+            .get(::sifr_runtime::to_usize_proven(& (i))).copied()
+        );
+        i = &i + &SifrInt::from_i64(1);
     }
 }
 fn __io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
@@ -1471,9 +1481,9 @@ fn collect_filesystem_actual() -> Vec<bool> {
         let _w: () = write_text(&file_path, &"demo".to_string())?;
         os_flow_ok = ((is_dir(&base)) && (is_file(&file_path)));
         let entries: Vec<String> = listdir(&base)?;
-        list_ok = ((entries.len() as i64) >= (1_i64));
-        let size: i64 = stat(&file_path)?;
-        stat_ok = size > (0_i64);
+        list_ok = (&SifrInt::from(entries.len()) >= &SifrInt::from_i64(1));
+        let size: SifrInt = stat(&file_path)?;
+        stat_ok = &size > &SifrInt::from_i64(0);
         let _rm: () = remove_file(&file_path)?;
         let _rd: () = rmdir(&base)?;
         cleanup_ok = !(is_dir(&base));

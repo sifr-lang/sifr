@@ -109,6 +109,7 @@
       "classification": "first_party_runtime",
       "targets": [
         {"name": "sifr_runtime", "kind": "lib", "classification": "first_party_runtime", "profile_assignment": "merge"},
+        {"name": "exact_integer_architecture", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "http_transport_loopback_fixture", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"}
       ],
       "features": [

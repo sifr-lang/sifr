@@ -400,7 +400,7 @@ class ArgumentParser:
         self, args: list[str], start: int, spec: ArgumentSpec, force_positional: bool
     ) -> tuple[list[str], int]:
         values: list[str] = []
-        i: int = start
+        i: int = start.clone()
 
         if spec.nargs == "?":
             if i >= len(args):
@@ -453,7 +453,7 @@ class ArgumentParser:
         self, args: list[str], start: int, spec: ArgumentSpec, force_positional: bool
     ) -> tuple[list[str], int]:
         values: list[str] = []
-        i: int = start
+        i: int = start.clone()
 
         if i >= len(args):
             return (values, i)

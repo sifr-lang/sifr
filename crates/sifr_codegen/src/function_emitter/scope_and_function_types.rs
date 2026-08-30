@@ -42,11 +42,10 @@ impl RustEmitter {
         ty: &Type,
         convention: ParamConvention,
     ) {
-        if convention.is_shared_borrow() && ty.ownership() != sifr_type_system::OwnershipKind::Copy
-        {
+        if convention.is_shared_borrow() && !crate::helpers::is_copy_type_for_codegen(ty) {
             self.borrowed_params.insert(name.to_string());
         }
-        if convention.is_mut_borrow() && ty.ownership() != sifr_type_system::OwnershipKind::Copy {
+        if convention.is_mut_borrow() && !crate::helpers::is_copy_type_for_codegen(ty) {
             self.mut_borrowed_params.insert(name.to_string());
         }
         if let Type::Callable(param_types, conventions, _)
@@ -667,7 +666,7 @@ impl RustEmitter {
             })
             .map(|param| {
                 let value = if param.convention.is_borrowed()
-                    && param.ty.ownership() != OwnershipKind::Copy
+                    && !crate::helpers::is_copy_type_for_codegen(&param.ty)
                 {
                     RustExpr::Clone(Box::new(RustExpr::Ident(param.name.clone())))
                 } else {
@@ -719,7 +718,7 @@ impl RustEmitter {
     ) -> RustType {
         let base = self.rust_ir_type_with_generics(ty);
         if convention.is_borrowed()
-            && (ty.ownership() != sifr_type_system::OwnershipKind::Copy
+            && (!crate::helpers::is_copy_type_for_codegen(ty)
                 || matches!(
                     ty.resolve_alias(),
                     Type::Callable(..) | Type::AsyncCallable(..)
@@ -755,7 +754,7 @@ impl RustEmitter {
                 auto_traits.push("'static".to_string());
             }
         }
-        if ty.ownership() != sifr_type_system::OwnershipKind::Copy && convention.is_borrowed() {
+        if !crate::helpers::is_copy_type_for_codegen(ty) && convention.is_borrowed() {
             RustType::Ref {
                 mutable: convention.is_mut_borrow(),
                 inner: Box::new(bounded),
@@ -782,7 +781,7 @@ impl RustEmitter {
                 Type::Int
             )
         {
-            return RustType::Named("SifrInt".to_string());
+            return self.lower_function_param_type(&param.ty, param.convention);
         }
         if self.function_param_lowers_to_sifr_int_result(func_name, param_idx)
             && is_result_int_type(&param.ty)

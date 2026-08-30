@@ -4,7 +4,7 @@ use std::sync::{LazyLock, Mutex, MutexGuard};
 
 use rand::RngExt as _;
 use rand_distr::Distribution as _;
-use sifr_runtime::interop::SifrIntBridge;
+use sifr_runtime::{SifrInt, interop::SifrIntBridge};
 
 static RANDOM_MODULE_STATE: LazyLock<Mutex<RandomModuleState>> =
     LazyLock::new(|| Mutex::new(RandomModuleState::default()));
@@ -44,6 +44,11 @@ pub fn random_int(min: SifrIntBridge, max: SifrIntBridge) -> SifrIntBridge {
 #[must_use]
 pub fn random_float() -> f64 {
     rand::random::<f64>()
+}
+
+#[must_use]
+pub fn random_seed() -> SifrIntBridge {
+    SifrIntBridge::from(SifrInt::from(rand::random::<u64>()))
 }
 
 #[must_use]

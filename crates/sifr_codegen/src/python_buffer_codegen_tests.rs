@@ -33,10 +33,16 @@ fn source_buffer_declaration_and_methods_generate_parseable_rust() {
         rust.contains("::sifr_runtime::interop::Handle::new(__sifr_python_result)"),
         "{rust}"
     );
-    assert!(rust.contains("view.read(0_i64).map_err("), "{rust}");
-    assert!(rust.contains("view.write(0_i64, value).map_err("), "{rust}");
     assert!(
-        rust.contains("view.copy_slice(0_i64, view.length())"),
+        rust.contains("view.read(SifrInt::from_i64(0)).map_err("),
+        "{rust}"
+    );
+    assert!(
+        rust.contains("view.write(SifrInt::from_i64(0), value).map_err("),
+        "{rust}"
+    );
+    assert!(
+        rust.contains("view.copy_slice(SifrInt::from_i64(0), view.length())"),
         "{rust}"
     );
     syn::parse_file(&rust).expect("generated buffer Rust should parse");

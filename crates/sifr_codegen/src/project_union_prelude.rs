@@ -65,6 +65,10 @@ pub(crate) fn render_project_union_prelude(
         import_needs.runtime.needs_sifr_int,
         &["", "sifr_runtime", "SifrInt"],
     );
+    add_import(
+        import_needs.runtime.needs_sifr_range,
+        &["", "sifr_runtime", "SifrRange"],
+    );
     add_import(import_needs.runtime.needs_mutex, &["std", "sync", "Mutex"]);
 
     let import_source = Renderer::new().render_file(&RustFile { items: imports });

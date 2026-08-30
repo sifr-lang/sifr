@@ -223,7 +223,9 @@ fn interop_build_plan_accepts_tuple_result_with_error_class_flag() {
     assert_eq!(signature.return_type.kind, RustBridgeTypeKind::Result);
     assert_eq!(
         signature.return_type.rust_return_type.as_deref(),
-        Some("Result<(i64, i64), crate::__sifr_bridge::_sifr_python::PythonErrorBridge>")
+        Some(
+            "Result<(::sifr_runtime::interop::SifrIntBridge, ::sifr_runtime::interop::SifrIntBridge), crate::__sifr_bridge::_sifr_python::PythonErrorBridge>"
+        )
     );
     let python_error_bridge = plan
         .rust

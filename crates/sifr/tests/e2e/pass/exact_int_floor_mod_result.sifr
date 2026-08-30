@@ -1,3 +1,7 @@
+def dynamic_modulo(value: int, divisor: int) -> Result[int, DivisionError]:
+    return value % divisor
+
+
 def main():
     divisor: int = 0
     try:
@@ -6,6 +10,5 @@ def main():
     except DivisionError as e:
         assert str(e.message) == 'division by zero'
 
-    mod_divisor: int = 3
-    remainder: Result[int, DivisionError] = 10 % mod_divisor
+    remainder: Result[int, DivisionError] = dynamic_modulo(10, 3)
     _ = remainder

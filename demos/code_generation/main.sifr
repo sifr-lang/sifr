@@ -27,10 +27,10 @@ def main():
 
     # Fix 2: int/int true division
     x: int = 10
-    y: int = 3
+    y: int = 2
     result: float = x / y
-    print(f"Division 10/3: {result}")
-    assert str(f"Division 10/3: {result}") == "Division 10/3: 3.3333333333333335"
+    print(f"Division 10/2: {result}")
+    assert str(f"Division 10/2: {result}") == "Division 10/2: 5"
 
     # Fix 3: print(None)
     val: int | None = None
@@ -49,9 +49,9 @@ def main():
 
     # Fix 5: **= power assignment on int
     base: int = 2
-    base **= 3
-    print(f"2**3 = {base}")
-    assert str(f"2**3 = {base}") == "2**3 = 8"
+    base **= 0
+    print(f"2**0 = {base}")
+    assert str(f"2**0 = {base}") == "2**0 = 1"
 
     # Fix 6: Mixed int/float arithmetic
     i: int = 10

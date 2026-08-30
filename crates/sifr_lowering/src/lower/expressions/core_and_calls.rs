@@ -618,7 +618,7 @@ pub(in crate::lower) fn lower_subscript(
             None
         };
         let step = if let Some(ref s) = slice_expr.step {
-            Some(Box::new(lower_expr(s, ctx)?))
+            super::slice_validation::lower_proven_nonzero_slice_step(s, ctx)
         } else {
             None
         };

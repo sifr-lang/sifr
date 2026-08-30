@@ -1,12 +1,14 @@
 // src/main.rs
+use ::sifr_runtime::SifrInt;
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Entity {
-    id: i64,
+    id: SifrInt,
 }
 
 impl Entity {
-    fn new(id: i64) -> Self {
-        let __sifr_field_init_0: i64 = id;
+    fn new(id: SifrInt) -> Self {
+        let __sifr_field_init_0: SifrInt = id.clone();
         Self { id: __sifr_field_init_0 }
     }
 }
@@ -46,7 +48,7 @@ impl ::std::convert::From<Person> for Entity {
 }
 
 impl Person {
-    fn new(id: i64, name: String) -> Self {
+    fn new(id: SifrInt, name: String) -> Self {
         let __sifr_parent = Entity::new(id);
         let __sifr_field_init_0: String = name;
         Self { entity: __sifr_parent, name: __sifr_field_init_0 }
@@ -65,7 +67,7 @@ impl ::std::fmt::Display for Person {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Employee {
     person: Person,
-    level: i64,
+    level: SifrInt,
 }
 
 impl ::std::ops::Deref for Employee {
@@ -88,9 +90,9 @@ impl ::std::convert::From<Employee> for Person {
 }
 
 impl Employee {
-    fn new(id: i64, name: String, level: i64) -> Self {
+    fn new(id: SifrInt, name: String, level: SifrInt) -> Self {
         let __sifr_parent = Person::new(id, name);
-        let __sifr_field_init_0: i64 = level;
+        let __sifr_field_init_0: SifrInt = level.clone();
         Self { person: __sifr_parent, level: __sifr_field_init_0 }
     }
 }
@@ -104,17 +106,17 @@ impl ::std::fmt::Display for Employee {
     }
 }
 
-fn sum_items(values: &Vec<i64>) -> i64 {
-    let mut total: i64 = 0_i64;
-    for value in values.iter().copied() {
-        total += value;
+fn sum_items(values: &Vec<SifrInt>) -> SifrInt {
+    let mut total: SifrInt = SifrInt::from_i64(0);
+    for value in values.iter().cloned() {
+        total = &total + &value;
     }
-    total
+    total.clone()
 }
 
 fn main() {
     println!("variance_rules inheritance and variance corrections demo:");
-    let emp: Employee = Employee::new(11_i64, "Lin".to_string(), 4_i64);
+    let emp: Employee = Employee::new(SifrInt::from_i64(11), "Lin".to_string(), SifrInt::from_i64(4));
     println!("{}", emp.person.name.clone());
-    println!("{}", sum_items(&vec![1_i64, 2_i64, 3_i64]));
+    println!("{}", sum_items(&vec![SifrInt::from_i64(1), SifrInt::from_i64(2), SifrInt::from_i64(3)]));
 }

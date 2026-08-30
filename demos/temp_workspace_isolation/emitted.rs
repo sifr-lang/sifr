@@ -9,6 +9,7 @@ fn main() {
 }
 
 // src/helper.rs
-pub fn value() -> i64 {
-    44_i64
+pub use ::sifr_runtime::SifrInt;
+pub fn value() -> SifrInt {
+    SifrInt::from_i64(44)
 }

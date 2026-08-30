@@ -1,5 +1,9 @@
 use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
 
+use super::common::exact_int_to_usize_expr;
+
+mod search;
+
 fn lower_zero_arg_method(object: &RustExpr, args: &[RustExpr], method: &str) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
@@ -298,18 +302,15 @@ pub(super) fn lower_split(object: &RustExpr, args: &[RustExpr]) -> Option<RustEx
                                     receiver: Box::new(object.clone()),
                                     method: "splitn".to_string(),
                                     args: vec![
-                                        RustExpr::Cast {
-                                            expr: Box::new(RustExpr::Paren(Box::new(
-                                                RustExpr::BinOp {
-                                                    left: Box::new(maxsplit),
-                                                    op: "+".to_string(),
-                                                    right: Box::new(RustExpr::Literal(
-                                                        RustLiteral::Int(1),
-                                                    )),
-                                                },
-                                            ))),
-                                            ty: RustType::Named("usize".to_string()),
-                                        },
+                                        exact_int_to_usize_expr(RustExpr::Paren(Box::new(
+                                            RustExpr::BinOp {
+                                                left: Box::new(maxsplit),
+                                                op: "+".to_string(),
+                                                right: Box::new(RustExpr::Literal(
+                                                    RustLiteral::Int(1),
+                                                )),
+                                            },
+                                        ))),
                                         RustExpr::Closure {
                                             params: vec![RustParam::Named {
                                                 name: "c".to_string(),
@@ -367,18 +368,13 @@ pub(super) fn lower_split(object: &RustExpr, args: &[RustExpr]) -> Option<RustEx
                                 receiver: Box::new(object.clone()),
                                 method: "splitn".to_string(),
                                 args: vec![
-                                    RustExpr::Cast {
-                                        expr: Box::new(RustExpr::Paren(Box::new(
-                                            RustExpr::BinOp {
-                                                left: Box::new(args[1].clone()),
-                                                op: "+".to_string(),
-                                                right: Box::new(RustExpr::Literal(
-                                                    RustLiteral::Int(1),
-                                                )),
-                                            },
-                                        ))),
-                                        ty: RustType::Named("usize".to_string()),
-                                    },
+                                    exact_int_to_usize_expr(RustExpr::Paren(Box::new(
+                                        RustExpr::BinOp {
+                                            left: Box::new(args[1].clone()),
+                                            op: "+".to_string(),
+                                            right: Box::new(RustExpr::Literal(RustLiteral::Int(1))),
+                                        },
+                                    ))),
                                     string_pattern_arg(&args[0]),
                                 ],
                             }),
@@ -430,10 +426,7 @@ pub(super) fn lower_replace(object: &RustExpr, args: &[RustExpr]) -> Option<Rust
                 args: vec![
                     string_pattern_arg(old),
                     render_borrowed_arg_expr(new),
-                    RustExpr::Cast {
-                        expr: Box::new(count.clone()),
-                        ty: RustType::Named("usize".to_string()),
-                    },
+                    exact_int_to_usize_expr(count.clone()),
                 ],
             })),
         }),
@@ -442,36 +435,11 @@ pub(super) fn lower_replace(object: &RustExpr, args: &[RustExpr]) -> Option<Rust
 }
 
 pub(super) fn lower_find(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
-    lower_find_like(object, args, "find")
+    search::lower_find_like(object, args, "find")
 }
 
 pub(super) fn lower_rfind(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
-    lower_find_like(object, args, "rfind")
-}
-
-fn lower_find_like(object: &RustExpr, args: &[RustExpr], rust_method: &str) -> Option<RustExpr> {
-    if args.len() != 1 {
-        return None;
-    }
-    Some(RustExpr::MethodCall {
-        receiver: Box::new(RustExpr::MethodCall {
-            receiver: Box::new(object.clone()),
-            method: rust_method.to_string(),
-            args: vec![render_borrowed_arg_expr(&args[0])],
-        }),
-        method: "map".to_string(),
-        args: vec![RustExpr::Closure {
-            params: vec![RustParam::Named {
-                name: "i".to_string(),
-                ty: RustType::Named("_".to_string()),
-            }],
-            body: Box::new(RustExpr::Cast {
-                expr: Box::new(RustExpr::Ident("i".to_string())),
-                ty: RustType::I64,
-            }),
-            is_move: false,
-        }],
-    })
+    search::lower_find_like(object, args, "rfind")
 }
 
 pub(super) fn lower_lstrip(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
@@ -486,8 +454,12 @@ pub(super) fn lower_count(object: &RustExpr, args: &[RustExpr]) -> Option<RustEx
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::Cast {
-        expr: Box::new(RustExpr::MethodCall {
+    Some(RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec![
+            "SifrInt".to_string(),
+            "from".to_string(),
+        ])),
+        args: vec![RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {
                 receiver: Box::new(object.clone()),
                 method: "matches".to_string(),
@@ -495,8 +467,7 @@ pub(super) fn lower_count(object: &RustExpr, args: &[RustExpr]) -> Option<RustEx
             }),
             method: "count".to_string(),
             args: vec![],
-        }),
-        ty: RustType::I64,
+        }],
     })
 }
 
@@ -761,10 +732,7 @@ pub(super) fn lower_center(object: &RustExpr, args: &[RustExpr]) -> Option<RustE
                 mutable: false,
                 name: "_w".to_string(),
                 ty: None,
-                value: RustExpr::Cast {
-                    expr: Box::new(args[0].clone()),
-                    ty: RustType::Named("usize".to_string()),
-                },
+                value: exact_int_to_usize_expr(args[0].clone()),
             },
             RustStmt::Let {
                 mutable: false,
@@ -854,13 +822,7 @@ pub(super) fn lower_ljust(object: &RustExpr, args: &[RustExpr]) -> Option<RustEx
     Some(RustExpr::FormatMacro {
         name: "format".to_string(),
         format_str: "{:<1$}".to_string(),
-        args: vec![
-            object.clone(),
-            RustExpr::Cast {
-                expr: Box::new(args[0].clone()),
-                ty: RustType::Named("usize".to_string()),
-            },
-        ],
+        args: vec![object.clone(), exact_int_to_usize_expr(args[0].clone())],
     })
 }
 
@@ -871,13 +833,7 @@ pub(super) fn lower_rjust(object: &RustExpr, args: &[RustExpr]) -> Option<RustEx
     Some(RustExpr::FormatMacro {
         name: "format".to_string(),
         format_str: "{:>1$}".to_string(),
-        args: vec![
-            object.clone(),
-            RustExpr::Cast {
-                expr: Box::new(args[0].clone()),
-                ty: RustType::Named("usize".to_string()),
-            },
-        ],
+        args: vec![object.clone(), exact_int_to_usize_expr(args[0].clone())],
     })
 }
 
@@ -888,12 +844,6 @@ pub(super) fn lower_zfill(object: &RustExpr, args: &[RustExpr]) -> Option<RustEx
     Some(RustExpr::FormatMacro {
         name: "format".to_string(),
         format_str: "{:0>1$}".to_string(),
-        args: vec![
-            object.clone(),
-            RustExpr::Cast {
-                expr: Box::new(args[0].clone()),
-                ty: RustType::Named("usize".to_string()),
-            },
-        ],
+        args: vec![object.clone(), exact_int_to_usize_expr(args[0].clone())],
     })
 }

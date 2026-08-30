@@ -1,4 +1,6 @@
 // src/main.rs
+use ::sifr_runtime::SifrInt;
+
 // --- stdlib: _sifr.math ---
 const PI: f64 = 3.141592653589793_f64;
 const E: f64 = 2.718281828459045_f64;
@@ -8,11 +10,11 @@ const NAN: f64 = f64::NAN;
 fn sqrt(x: f64) -> f64 {
     ::sifr_stdlib::math::sqrt(x)
 }
-fn floor(x: f64) -> i64 {
-    ::sifr_stdlib::math::floor(x).to_i64_saturating()
+fn floor(x: f64) -> SifrInt {
+    ::sifr_stdlib::math::floor(x).into_sifr_int()
 }
-fn ceil(x: f64) -> i64 {
-    ::sifr_stdlib::math::ceil(x).to_i64_saturating()
+fn ceil(x: f64) -> SifrInt {
+    ::sifr_stdlib::math::ceil(x).into_sifr_int()
 }
 fn log(x: f64) -> f64 {
     ::sifr_stdlib::math::log(x)
@@ -38,8 +40,8 @@ fn min_val(a: f64, b: f64) -> f64 {
 fn max_val(a: f64, b: f64) -> f64 {
     ::sifr_stdlib::math::max_val(a, b)
 }
-fn round_val(x: f64) -> i64 {
-    ::sifr_stdlib::math::round_val(x).to_i64_saturating()
+fn round_val(x: f64) -> SifrInt {
+    ::sifr_stdlib::math::round_val(x).into_sifr_int()
 }
 fn asin(x: f64) -> f64 {
     ::sifr_stdlib::math::asin(x)
@@ -83,8 +85,8 @@ fn isnan(x: f64) -> bool {
 fn isinf(x: f64) -> bool {
     ::sifr_stdlib::math::isinf(x)
 }
-fn trunc(x: f64) -> i64 {
-    ::sifr_stdlib::math::trunc(x).to_i64_saturating()
+fn trunc(x: f64) -> SifrInt {
+    ::sifr_stdlib::math::trunc(x).into_sifr_int()
 }
 fn copysign(x: f64, y: f64) -> f64 {
     ::sifr_stdlib::math::copysign(x, y)
@@ -140,9 +142,9 @@ fn asinh(x: f64) -> f64 {
 fn atanh(x: f64) -> f64 {
     ::sifr_stdlib::math::atanh(x)
 }
-fn isqrt(n: i64) -> i64 {
+fn isqrt(n: SifrInt) -> SifrInt {
     ::sifr_stdlib::math::isqrt(::sifr_runtime::interop::SifrIntBridge::from(n))
-        .to_i64_saturating()
+        .into_sifr_int()
 }
 fn dist_impl(p: Vec<f64>, q: Vec<f64>) -> f64 {
     ::sifr_stdlib::math::dist(p, q)
@@ -168,7 +170,7 @@ fn lgamma(x: f64) -> f64 {
 fn frexp(x: f64) -> Vec<f64> {
     ::sifr_stdlib::math::frexp(x)
 }
-fn ldexp(m: f64, e: i64) -> f64 {
+fn ldexp(m: f64, e: SifrInt) -> f64 {
     ::sifr_stdlib::math::ldexp(m, ::sifr_runtime::interop::SifrIntBridge::from(e))
 }
 fn modf(x: f64) -> Vec<f64> {

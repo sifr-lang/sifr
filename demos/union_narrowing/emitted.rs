@@ -30,6 +30,8 @@ mod __sifr_project_unions {
     }
 }
 pub use __sifr_project_unions::__SifrUnion_8_x3asequence5_x3aunion1_x3a320_x3a5_x3aclass8_x3amain_x2eCat1_x3a020_x3a5_x3aclass8_x3amain_x2eDog1_x3a021_x3a5_x3aclass9_x3amain_x2eBird1_x3a0;
+use ::sifr_runtime::SifrInt;
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Dog {
     name: String,
@@ -124,15 +126,15 @@ fn describe_pet(pet: &__SifrUnion_8_x3asequence5_x3aunion1_x3a320_x3a5_x3aclass8
     }
 }
 
-fn find_value(x: Option<i64>, target: i64) -> String {
+fn find_value(x: Option<SifrInt>, target: SifrInt) -> String {
     if x == Some(target) {
         return "found".to_string();
     }
     "not found".to_string()
 }
 
-fn is_positive(x: Option<i64>) -> bool {
-    if x > Some(0_i64) {
+fn is_positive(x: Option<SifrInt>) -> bool {
+    if x > Some(SifrInt::from_i64(0)) {
         return true;
     }
     false
@@ -142,7 +144,7 @@ fn summarize(items: &Vec<String>) -> String {
     if items.is_empty() {
         return "no items".to_string();
     }
-    format!("{} items", items.len() as i64)
+    format!("{} items", SifrInt::from(items.len()))
 }
 
 fn main() {
@@ -153,10 +155,10 @@ fn main() {
     println!("{}", describe_pet(&__SifrUnion_8_x3asequence5_x3aunion1_x3a320_x3a5_x3aclass8_x3amain_x2eCat1_x3a020_x3a5_x3aclass8_x3amain_x2eDog1_x3a021_x3a5_x3aclass9_x3amain_x2eBird1_x3a0::__SifrUnionVariant_5_x3aclass8_x3amain_x2eDog1_x3a0((Dog::new("Rex".to_string(), "Labrador".to_string())).clone())));
     println!("{}", describe_pet(&__SifrUnion_8_x3asequence5_x3aunion1_x3a320_x3a5_x3aclass8_x3amain_x2eCat1_x3a020_x3a5_x3aclass8_x3amain_x2eDog1_x3a021_x3a5_x3aclass9_x3amain_x2eBird1_x3a0::__SifrUnionVariant_5_x3aclass8_x3amain_x2eCat1_x3a0((Cat::new("Whiskers".to_string(), "orange".to_string())).clone())));
     println!("{}", describe_pet(&__SifrUnion_8_x3asequence5_x3aunion1_x3a320_x3a5_x3aclass8_x3amain_x2eCat1_x3a020_x3a5_x3aclass8_x3amain_x2eDog1_x3a021_x3a5_x3aclass9_x3amain_x2eBird1_x3a0::__SifrUnionVariant_5_x3aclass9_x3amain_x2eBird1_x3a0((Bird::new("Tweety".to_string(), 0.3_f64)).clone())));
-    let v: Option<i64> = Some(42_i64);
-    println!("{}", find_value(v, 42_i64));
-    println!("{}", find_value(v, 99_i64));
-    println!("{}", is_positive(v));
+    let v: Option<SifrInt> = Some(SifrInt::from_i64(42));
+    println!("{}", find_value((v).clone(), SifrInt::from_i64(42)));
+    println!("{}", find_value((v).clone(), SifrInt::from_i64(99)));
+    println!("{}", is_positive((v).clone()));
     let empty: Vec<String> = vec![];
     println!("{}", summarize(&empty));
     let full: Vec<String> = vec!["a".to_string(), "b".to_string(), "c".to_string()];

@@ -1,4 +1,6 @@
 // src/main.rs
+use ::sifr_runtime::SifrInt;
+
 // --- stdlib: _sifr.platform ---
 fn platform_system() -> String {
     ::sifr_stdlib::platform::platform_system()
@@ -41,11 +43,14 @@ fn processor() -> String {
 
 // --- stdlib: sifr.test ---
 fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
-    assert_eq!(actual.len() as i64, expected.len() as i64);
-    let mut i: i64 = 0_i64;
-    while i < (actual.len() as i64) {
-        assert!(Some(actual[i as usize]) == expected.get(i as usize).copied());
-        i += 1_i64;
+    assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
+    let mut i: SifrInt = SifrInt::from_i64(0);
+    while &i < &SifrInt::from(actual.len()) {
+        assert!(
+            Some(actual[::sifr_runtime::to_usize_proven(& (i))]) == expected
+            .get(::sifr_runtime::to_usize_proven(& (i))).copied()
+        );
+        i = &i + &SifrInt::from_i64(1);
     }
 }
 // --- end stdlib ---
@@ -54,17 +59,17 @@ fn collect_core_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![];
     let sys_name: String = system();
     let __sifr_chars_sys_name: Vec<char> = sys_name.chars().collect::<Vec<char>>();
-    actual.push(((((sys_name.chars().count() as i64) > (0_i64)) && (sys_name != "linux")) && (sys_name != "macos")) && (sys_name != "windows"));
-    actual.push((machine().chars().count() as i64) > (0_i64));
-    actual.push((processor().chars().count() as i64) > (0_i64));
+    actual.push((((&SifrInt::from(sys_name.chars().count()) > &SifrInt::from_i64(0)) && (sys_name != "linux")) && (sys_name != "macos")) && (sys_name != "windows"));
+    actual.push(&SifrInt::from(machine().chars().count()) > &SifrInt::from_i64(0));
+    actual.push(&SifrInt::from(processor().chars().count()) > &SifrInt::from_i64(0));
     actual
 }
 
 fn collect_host_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![];
-    actual.push((node().chars().count() as i64) > (0_i64));
-    actual.push((release().chars().count() as i64) > (0_i64));
-    actual.push((version().chars().count() as i64) > (0_i64));
+    actual.push(&SifrInt::from(node().chars().count()) > &SifrInt::from_i64(0));
+    actual.push(&SifrInt::from(release().chars().count()) > &SifrInt::from_i64(0));
+    actual.push(&SifrInt::from(version().chars().count()) > &SifrInt::from_i64(0));
     actual
 }
 

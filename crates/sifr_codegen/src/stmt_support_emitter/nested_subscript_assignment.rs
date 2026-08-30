@@ -96,25 +96,14 @@ impl RustEmitter {
                 "__ii_raw",
             ),
         }];
-        inner_then_body.push(RustStmt::If {
-            cond: RustExpr::BinOp {
-                left: Box::new(RustExpr::Ident("__ii_norm".to_string())),
-                op: ">=".to_string(),
-                right: Box::new(RustExpr::Literal(crate::RustLiteral::Int(0))),
+        inner_then_body.push(RustStmt::IfLet {
+            pattern: "Some(__elem)".to_string(),
+            expr: RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("__row".to_string())),
+                method: "get_mut".to_string(),
+                args: vec![RustExpr::Ident("__ii_norm".to_string())],
             },
-            then_body: vec![RustStmt::IfLet {
-                pattern: "Some(__elem)".to_string(),
-                expr: RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::Ident("__row".to_string())),
-                    method: "get_mut".to_string(),
-                    args: vec![RustExpr::Cast {
-                        expr: Box::new(RustExpr::Ident("__ii_norm".to_string())),
-                        ty: crate::RustType::Named("usize".to_string()),
-                    }],
-                },
-                then_body: vec![assign_into_elem],
-                else_body: None,
-            }],
+            then_body: vec![assign_into_elem],
             else_body: None,
         });
         let inner_body = if inner_index_is_option {
@@ -152,25 +141,14 @@ impl RustEmitter {
                 "__oi_raw",
             ),
         }];
-        outer_then_body.push(RustStmt::If {
-            cond: RustExpr::BinOp {
-                left: Box::new(RustExpr::Ident("__oi_norm".to_string())),
-                op: ">=".to_string(),
-                right: Box::new(RustExpr::Literal(crate::RustLiteral::Int(0))),
+        outer_then_body.push(RustStmt::IfLet {
+            pattern: "Some(__row)".to_string(),
+            expr: RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident(object.to_string())),
+                method: "get_mut".to_string(),
+                args: vec![RustExpr::Ident("__oi_norm".to_string())],
             },
-            then_body: vec![RustStmt::IfLet {
-                pattern: "Some(__row)".to_string(),
-                expr: RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::Ident(object.to_string())),
-                    method: "get_mut".to_string(),
-                    args: vec![RustExpr::Cast {
-                        expr: Box::new(RustExpr::Ident("__oi_norm".to_string())),
-                        ty: crate::RustType::Named("usize".to_string()),
-                    }],
-                },
-                then_body: inner_body,
-                else_body: None,
-            }],
+            then_body: inner_body,
             else_body: None,
         });
 
@@ -292,25 +270,14 @@ impl RustEmitter {
                 "__oi_raw",
             ),
         }];
-        outer_then_body.push(RustStmt::If {
-            cond: RustExpr::BinOp {
-                left: Box::new(RustExpr::Ident("__oi_norm".to_string())),
-                op: ">=".to_string(),
-                right: Box::new(RustExpr::Literal(crate::RustLiteral::Int(0))),
+        outer_then_body.push(RustStmt::IfLet {
+            pattern: "Some(__row)".to_string(),
+            expr: RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident(object.to_string())),
+                method: "get_mut".to_string(),
+                args: vec![RustExpr::Ident("__oi_norm".to_string())],
             },
-            then_body: vec![RustStmt::IfLet {
-                pattern: "Some(__row)".to_string(),
-                expr: RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::Ident(object.to_string())),
-                    method: "get_mut".to_string(),
-                    args: vec![RustExpr::Cast {
-                        expr: Box::new(RustExpr::Ident("__oi_norm".to_string())),
-                        ty: crate::RustType::Named("usize".to_string()),
-                    }],
-                },
-                then_body: row_body,
-                else_body: None,
-            }],
+            then_body: row_body,
             else_body: None,
         });
 
@@ -471,25 +438,14 @@ impl RustEmitter {
                 "__ii_raw",
             ),
         }];
-        inner_then_body.push(RustStmt::If {
-            cond: RustExpr::BinOp {
-                left: Box::new(RustExpr::Ident("__ii_norm".to_string())),
-                op: ">=".to_string(),
-                right: Box::new(RustExpr::Literal(crate::RustLiteral::Int(0))),
+        inner_then_body.push(RustStmt::IfLet {
+            pattern: "Some(__elem)".to_string(),
+            expr: RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("__row".to_string())),
+                method: "get_mut".to_string(),
+                args: vec![RustExpr::Ident("__ii_norm".to_string())],
             },
-            then_body: vec![RustStmt::IfLet {
-                pattern: "Some(__elem)".to_string(),
-                expr: RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::Ident("__row".to_string())),
-                    method: "get_mut".to_string(),
-                    args: vec![RustExpr::Cast {
-                        expr: Box::new(RustExpr::Ident("__ii_norm".to_string())),
-                        ty: crate::RustType::Named("usize".to_string()),
-                    }],
-                },
-                then_body: vec![assign_into_elem],
-                else_body: None,
-            }],
+            then_body: vec![assign_into_elem],
             else_body: None,
         });
         let inner_body = if inner_index_is_option {
@@ -524,25 +480,14 @@ impl RustEmitter {
             ty: None,
             value: crate::build_normalized_list_index_i64_expr(field_receiver(), "__oi_raw"),
         }];
-        outer_then_body.push(RustStmt::If {
-            cond: RustExpr::BinOp {
-                left: Box::new(RustExpr::Ident("__oi_norm".to_string())),
-                op: ">=".to_string(),
-                right: Box::new(RustExpr::Literal(crate::RustLiteral::Int(0))),
+        outer_then_body.push(RustStmt::IfLet {
+            pattern: "Some(__row)".to_string(),
+            expr: RustExpr::MethodCall {
+                receiver: Box::new(field_receiver()),
+                method: "get_mut".to_string(),
+                args: vec![RustExpr::Ident("__oi_norm".to_string())],
             },
-            then_body: vec![RustStmt::IfLet {
-                pattern: "Some(__row)".to_string(),
-                expr: RustExpr::MethodCall {
-                    receiver: Box::new(field_receiver()),
-                    method: "get_mut".to_string(),
-                    args: vec![RustExpr::Cast {
-                        expr: Box::new(RustExpr::Ident("__oi_norm".to_string())),
-                        ty: crate::RustType::Named("usize".to_string()),
-                    }],
-                },
-                then_body: inner_body,
-                else_body: None,
-            }],
+            then_body: inner_body,
             else_body: None,
         });
 
@@ -669,25 +614,14 @@ impl RustEmitter {
             ty: None,
             value: crate::build_normalized_list_index_i64_expr(field_receiver(), "__oi_raw"),
         }];
-        outer_then_body.push(RustStmt::If {
-            cond: RustExpr::BinOp {
-                left: Box::new(RustExpr::Ident("__oi_norm".to_string())),
-                op: ">=".to_string(),
-                right: Box::new(RustExpr::Literal(crate::RustLiteral::Int(0))),
+        outer_then_body.push(RustStmt::IfLet {
+            pattern: "Some(__row)".to_string(),
+            expr: RustExpr::MethodCall {
+                receiver: Box::new(field_receiver()),
+                method: "get_mut".to_string(),
+                args: vec![RustExpr::Ident("__oi_norm".to_string())],
             },
-            then_body: vec![RustStmt::IfLet {
-                pattern: "Some(__row)".to_string(),
-                expr: RustExpr::MethodCall {
-                    receiver: Box::new(field_receiver()),
-                    method: "get_mut".to_string(),
-                    args: vec![RustExpr::Cast {
-                        expr: Box::new(RustExpr::Ident("__oi_norm".to_string())),
-                        ty: crate::RustType::Named("usize".to_string()),
-                    }],
-                },
-                then_body: row_body,
-                else_body: None,
-            }],
+            then_body: row_body,
             else_body: None,
         });
 
@@ -777,7 +711,7 @@ impl RustEmitter {
                 },
                 crate::build_list_subscript_assign_stmt(
                     RustExpr::Ident(object.to_string()),
-                    lowered_index,
+                    clone_non_copy_name(index, lowered_index),
                     RustExpr::Ident("__assign_value".to_string()),
                 ),
             ]))),

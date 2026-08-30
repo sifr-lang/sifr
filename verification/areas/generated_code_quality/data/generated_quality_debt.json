@@ -7,15 +7,13 @@
     "owner_items": [3, 4, 11],
     "entries": {
       "checked-demo-snapshots": {
-        "direct-index": {"count": 276, "signature_sha256": "dceec6beb9dd12e65da2b7a4da6aa368fe1c83f536b0552313b232f830cd9354"},
-        "process-abort": {"count": 5, "signature_sha256": "658ba8cf04b2a97971acc15015cdbde115a2c15c5f2b7e107895c7611b729e9a"},
-        "process-exit": {"count": 8, "signature_sha256": "a40a38e10a5759ccfec9f156a0bbcc92ecaba87dbab4e22b160bab70c71f8b62"},
-        "signed-to-usize": {"count": 2297, "signature_sha256": "78ac6945ef8d8ec337025f85531da57d87edc3c37ccd7e7cda34a42e2ac313ae"},
-        "unreachable": {"count": 2094, "signature_sha256": "255e0c0a815deec0f9d4a61c91efd8240c509e9297a0658c124e8f8578436651"}
+        "direct-index": {"count": 268, "signature_sha256": "00bbd9bff54d774bf959cd7d722732055bc210ff7312de62669fabff67bbdc35"},
+        "process-abort": {"count": 5, "signature_sha256": "84b9239f3656562f0522615534dc311948d76f128c0ea9e8ccf78976cc246a94"},
+        "process-exit": {"count": 8, "signature_sha256": "f99b0b8650e2d9b9dcd5d7d19b807ee62494a62ef63b887925100cbb9458fabd"},
+        "unreachable": {"count": 2122, "signature_sha256": "80461fb7813f33d6ce7a5bdf1107dfcf71bf9859ce1ae7a013e7697594662855"}
       },
       "selection-8e91c9f5f5bb2334": {
-        "signed-to-usize": {"count": 18, "signature_sha256": "469dff91688615a4947ce209afa057456e1cef16078f79328a5e13b6877dfd12"},
-        "unreachable": {"count": 20, "signature_sha256": "3558126d4510723fc4f4ce51e4d6cc45a2f9826cd4b6f96656525484e39b7484"}
+        "unreachable": {"count": 20, "signature_sha256": "fc46cd006c8b082847a51e3145c2a2d2d20ee2bf6f0587c5fedb5e2bb3c2503a"}
       },
       "selection-7cddd09acf851f35": {
         "direct-index": {"count": 21, "signature_sha256": "416362a71b2838f1c90556362d0d40580bb0242141b7efa7856339a4be9d1f06"},
@@ -32,7 +30,7 @@
   "rustfmt": {
     "owner_items": [8],
     "entries": {
-      "selection-8e91c9f5f5bb2334": {"count": 2, "signature_sha256": "468bb21933c7876ec256a1f2e0a00014bbe57d0062698e67e44497a1467d4ba6"},
+      "selection-8e91c9f5f5bb2334": {"count": 2, "signature_sha256": "0654d199bdab6a90389339cf6be5d542a74df90406459e52d584d47abb8d3b44"},
       "selection-7cddd09acf851f35": {"count": 12, "signature_sha256": "700bc4b03b393ed1c768cda3a3df2ff326d0bf91df361dd11782179e9f30a22b"},
       "selection-0902166e369de295": {"count": 91, "signature_sha256": "1c44f20eca46d1aa085155d2f734c86a87660f5a501823fc8139df8b7d085905"}
     }

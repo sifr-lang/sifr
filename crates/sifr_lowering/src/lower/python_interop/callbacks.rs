@@ -617,7 +617,7 @@ fn codegen_payload_identity(ty: &Type) -> (CodegenPayloadIdentity, String) {
         Type::Newtype { identity, name, .. } => {
             Some(sifr_type_system::class_rust_name(identity.as_deref(), name))
         }
-        Type::Int | Type::LiteralInt(_) => Some("i64".to_string()),
+        Type::Int | Type::LiteralInt(_) => Some("SifrInt".to_string()),
         Type::FixedInt(fixed) => Some(fixed.rust_name().to_string()),
         Type::Float => Some("f64".to_string()),
         Type::Bool | Type::LiteralBool(_) => Some("bool".to_string()),
@@ -655,6 +655,23 @@ mod payload_identity_tests {
         assert_eq!(
             error_channel_codegen_payload_collision(&channel).as_deref(),
             Some("String")
+        );
+    }
+
+    #[test]
+    fn exact_integer_uses_its_canonical_codegen_payload_identity() {
+        let class = Type::Class {
+            identity: None,
+            name: "SifrInt".to_string(),
+            type_args: Vec::new(),
+            fields: Vec::new(),
+            methods: Vec::new(),
+            parent_class: None,
+        };
+        let channel = Type::Union(vec![class, Type::Int]);
+        assert_eq!(
+            error_channel_codegen_payload_collision(&channel).as_deref(),
+            Some("SifrInt")
         );
     }
 }

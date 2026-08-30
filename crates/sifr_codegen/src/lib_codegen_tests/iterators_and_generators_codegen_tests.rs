@@ -84,7 +84,7 @@ fn test_generate_rust_while_else_with_borrowed_condition_uses_broke_marker() {
     };
 
     let rust_code = generate_rust(&module);
-    assert!(rust_code.contains("fn iterate(xs: &Vec<i64>)"));
+    assert!(rust_code.contains("fn iterate(xs: &Vec<SifrInt>)"));
     assert!(rust_code.contains("let mut _broke: bool = false;"));
     assert!(rust_code.contains("_broke = true;"));
     assert!(rust_code.contains("if !(_broke) {"));
@@ -169,8 +169,8 @@ fn test_generate_rust_generator_try_except_materializes_without_shape_panic() {
     assert!(rust_code.contains("fn r#gen()"));
     assert!(rust_code.contains("r#gen()"));
     assert!(rust_code.contains("if !__sifr_generator_initialized {"));
-    assert!(rust_code.contains("_yields.push(1_i64);"));
-    assert!(rust_code.contains("_yields.push(2_i64);"));
+    assert!(rust_code.contains("_yields.push(SifrInt::from_i64(1));"));
+    assert!(rust_code.contains("_yields.push(SifrInt::from_i64(2));"));
     assert!(rust_code.contains("__sifr_generator_iter.next()"));
 }
 
@@ -181,17 +181,20 @@ fn test_generate_rust_generator_conditional_yield_preserves_else_branch() {
     );
 
     let cond_idx = rust_code
-        .find("if i < (3_i64) {")
+        .find("if &i < &SifrInt::from_i64(3) {")
         .expect("generator conditional branch should be emitted");
     let cond_region = &rust_code[cond_idx..];
 
-    assert!(cond_region.contains("_yields.push(i);"));
+    assert!(
+        cond_region.contains("_yields.push(i.clone());"),
+        "{rust_code}"
+    );
     assert!(
         cond_region.contains("} else {"),
         "generator else branch should be preserved"
     );
     assert!(
-        cond_region.contains("i += 1_i64;"),
+        cond_region.contains("i = &i + &SifrInt::from_i64(1);"),
         "generator else branch body should be preserved"
     );
 }
@@ -202,8 +205,8 @@ fn test_generate_rust_generator_expression_without_filter_lowers_to_map_chain() 
         "def main():\n    xs: list[int] = [1, 2, 3]\n    squares: Iterator[int] = (x * x for x in xs)\n    print(list(squares))\n",
     );
 
-    assert!(rust_code.contains("let squares: Box<dyn Iterator<Item = i64>>"));
-    assert!(rust_code.contains("iter().copied().map(|x| x * x)"));
+    assert!(rust_code.contains("let squares: Box<dyn Iterator<Item = SifrInt>>"));
+    assert!(rust_code.contains("iter().cloned().map(|x| &x * &x)"));
 }
 
 #[test]
@@ -212,9 +215,19 @@ fn test_generate_rust_filter_over_list_lowers_to_lazy_boxed_iterator() {
         "def main():\n    nums: list[int] = [1, 2, 3, 4]\n    evens: Iterator[int] = filter(lambda x: x % 2 == 0, nums)\n    print(list(evens))\n",
     );
 
-    assert!(rust_code.contains("let evens: Box<dyn Iterator<Item = i64>>"));
-    assert!(rust_code.contains("Box::new("));
-    assert!(rust_code.contains(".iter().copied().filter("));
+    assert!(rust_code.contains("let evens: Box<dyn Iterator<Item = SifrInt>>"));
+    assert!(
+        rust_code.contains("iter().cloned().filter(move |__filter_item|"),
+        "{rust_code}"
+    );
+    assert!(
+        rust_code.contains("let x = __filter_item.clone();"),
+        "{rust_code}"
+    );
+    assert!(
+        !rust_code.contains("filter(move |__filter_item| (|x|"),
+        "{rust_code}"
+    );
 }
 
 #[test]
@@ -223,7 +236,7 @@ fn test_generate_rust_iterable_binding_from_iterator_materializes_once() {
         "def main():\n    base: list[int] = [1, 2, 3]\n    it: Iterator[int] = iter(base)\n    xs: Iterable[int] = it\n    print(list(xs))\n",
     );
 
-    assert!(rust_code.contains("let xs: Vec<i64> = it.collect::<Vec<_>>();"));
+    assert!(rust_code.contains("let xs: Vec<SifrInt> = it.collect::<Vec<_>>();"));
 }
 
 #[test]
@@ -232,7 +245,9 @@ fn test_generate_rust_iterable_return_from_iterator_materializes_for_signature()
         "def adapt(own it: Iterator[int]) -> Iterable[int]:\n    return it\n\ndef main():\n    base: list[int] = [1, 2]\n    it: Iterator[int] = iter(base)\n    xs: Iterable[int] = adapt(it)\n    print(list(xs))\n",
     );
 
-    assert!(rust_code.contains("fn adapt(it: Box<dyn Iterator<Item = i64>>) -> Vec<i64> {"));
+    assert!(
+        rust_code.contains("fn adapt(it: Box<dyn Iterator<Item = SifrInt>>) -> Vec<SifrInt> {")
+    );
     assert!(rust_code.contains("it.collect::<Vec<_>>()"));
 }
 
@@ -242,7 +257,7 @@ fn test_generate_rust_iterator_return_consumes_local_list_binding() {
         "def build() -> Iterator[int]:\n    result: list[int] = [1, 2, 3]\n    return iter(result)\n\ndef main():\n    print(list(build()))\n",
     );
 
-    assert!(rust_code.contains("fn build() -> Box<dyn Iterator<Item = i64>> {"));
+    assert!(rust_code.contains("fn build() -> Box<dyn Iterator<Item = SifrInt>> {"));
     assert!(rust_code.contains("Box::new(result.into_iter())"));
 }
 
@@ -252,7 +267,9 @@ fn test_generate_rust_iterator_return_consumes_owned_param_binding() {
         "def adapt(own items: list[int]) -> Iterator[int]:\n    return iter(items)\n\ndef main():\n    print(list(adapt([1, 2, 3])))\n",
     );
 
-    assert!(rust_code.contains("fn adapt(items: Vec<i64>) -> Box<dyn Iterator<Item = i64>> {"));
+    assert!(
+        rust_code.contains("fn adapt(items: Vec<SifrInt>) -> Box<dyn Iterator<Item = SifrInt>> {")
+    );
     assert!(rust_code.contains("Box::new(items.into_iter())"));
 }
 
@@ -329,8 +346,8 @@ fn test_generate_rust_recursive_constructor_argument_wraps_optional_box_field() 
     );
 
     assert!(rust_code.contains(
-        "let long: Entry = Entry::new(4_i64, Some(Box::new(Entry::new(5_i64, Some(Box::new(Entry::new(6_i64, None)))))));"
-    ));
+        "let long: Entry = Entry::new(SifrInt::from_i64(4), Some(Box::new(Entry::new(SifrInt::from_i64(5), Some(Box::new(Entry::new(SifrInt::from_i64(6), None)))))));"
+    ), "{rust_code}");
 }
 
 #[test]
@@ -339,9 +356,11 @@ fn test_generate_rust_defaultdict_int_augassign_uses_entry_default() {
         "from sifr.collections import defaultdict\n\ndef main():\n    counts = defaultdict(int)\n    counts[\"steps\"] += 1\n    counts[\"steps\"] += 2\n    assert counts[\"steps\"] == 3\n",
     );
 
-    assert!(rust_code.contains("let __elem = counts.entry(\"steps\".to_string()).or_insert(0);"));
-    assert!(rust_code.contains("*__elem += 1_i64;"));
-    assert!(rust_code.contains("*__elem += 2_i64;"));
+    assert!(rust_code.contains(
+        "let __elem = counts.entry(\"steps\".to_string()).or_insert(SifrInt::from_i64(0));"
+    ));
+    assert!(rust_code.contains("*__elem += SifrInt::from_i64(1);"));
+    assert!(rust_code.contains("*__elem += SifrInt::from_i64(2);"));
 }
 
 #[test]
@@ -386,7 +405,7 @@ fn test_generate_rust_tuple_field_assignment_emits_mutable_self_receiver() {
         "class RunningBounds:\n    left: int\n    right: int\n\n    def __init__(self, left: int, right: int):\n        self.left = left\n        self.right = right\n\n    def rotate(mut self, next_value: int) -> None:\n        self.left, self.right = self.right, next_value\n",
     );
 
-    assert!(rust_code.contains("fn rotate(&mut self, next_value: i64)"));
+    assert!(rust_code.contains("fn rotate(&mut self, next_value: &SifrInt)"));
 }
 
 #[test]
@@ -527,7 +546,7 @@ fn test_generate_rust_test_collects_imports_from_emitted_code() {
             .rust_source
             .contains("use ::std::collections::HashSet;")
     );
-    assert!(!result.rust_source.contains("use ::sifr_runtime::SifrInt;"));
+    assert!(result.rust_source.contains("use ::sifr_runtime::SifrInt;"));
     assert!(
         !result
             .required_features
@@ -767,14 +786,14 @@ fn test_checked_field_mutation_is_explicit_and_non_sticky() {
 
     let rust_code = generate_rust(&module);
     assert!(
-        rust_code.contains("self.items.push(x);")
-            || rust_code.contains("(self.items).push(x);")
+        rust_code.contains("self.items.push(x.clone());")
+            || rust_code.contains("(self.items).push(x.clone());")
             || rust_code.contains("self.items.extend(")
             || rust_code.contains("(self.items).extend("),
         "{rust_code}"
     );
     assert!(!rust_code.contains("self.items.clone().push(x)"));
-    assert!(rust_code.contains("self.table.get(\"k\").copied()"));
+    assert!(rust_code.contains("self.table.get(\"k\").cloned()"));
     assert!(!rust_code.contains("self.table.clone().get(\"k\")"));
     assert!(rust_code.contains("self.label.clone()"), "{rust_code}");
 }
@@ -810,7 +829,7 @@ fn test_codegen_structured_lowering_applies_to_simple_stmt() {
 
     let generated = generate_rust_with_metadata(&module);
 
-    assert!(generated.rust_source.contains("1_i64"));
+    assert!(generated.rust_source.contains("SifrInt::from_i64(1)"));
     assert!(generated.lowering_stats.stmt_structured > 0);
 }
 
@@ -869,7 +888,11 @@ fn test_structured_aug_assign_uses_string_and_list_methods() {
 
     let generated = generate_rust_with_metadata(&module);
     assert!(generated.rust_source.contains("s.push_str("));
-    assert!(generated.rust_source.contains("items.extend(vec![2_i64])"));
+    assert!(
+        generated
+            .rust_source
+            .contains("items.extend(vec![SifrInt::from_i64(2)])")
+    );
     assert!(!generated.rust_source.contains("s += "));
     assert!(!generated.rust_source.contains("items += "));
 }

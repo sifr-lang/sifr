@@ -1,8 +1,21 @@
 from sifr.math import fmod
 
-def reverse_last_digit(x: int) -> int:
-    return int(fmod(float(x), 10.0))
+def reverse_last_digit(x: int) -> Result[int, ValueError | FloatOverflowError | FloatPrecisionLossError]:
+    try:
+        x_float: float = float(x)
+        return int(fmod(x_float, 10.0))
+    except ValueError as error:
+        raise ValueError(error.message)
+    except FloatOverflowError as error:
+        raise FloatOverflowError(error.message)
+    except FloatPrecisionLossError as error:
+        raise FloatPrecisionLossError(error.message)
 
 def main():
-    assert str(reverse_last_digit(123)) == "3"
-    assert str(reverse_last_digit(-123)) == "-3"
+    try:
+        positive: int = reverse_last_digit(123)
+        negative: int = reverse_last_digit(-123)
+        assert str(positive) == "3"
+        assert str(negative) == "-3"
+    except Error:
+        assert False

@@ -956,6 +956,15 @@
           ]
         },
         {
+          "id": "e2e_exact_int_slice_step_requires_handling",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_exact_int_slice_step_requires_handling/main.sifr",
+          "command": "check",
+          "expect_exit_code": 1,
+          "diagnostic_formats": [
+            "compact"
+          ]
+        },
+        {
           "id": "e2e_exact_int_true_division_requires_handling",
           "entry": "verification/areas/diagnostics/fixtures/diagnostics/e2e_exact_int_true_division_requires_handling/main.sifr",
           "command": "check",
@@ -1325,8 +1334,8 @@
           ]
         },
         {
-          "id": "semantic_arithmetic_overflow_warning",
-          "entry": "verification/areas/diagnostics/fixtures/diagnostics/semantic_arithmetic_overflow_warning/main.sifr",
+          "id": "semantic_exact_int_arithmetic_has_no_overflow_warning",
+          "entry": "verification/areas/diagnostics/fixtures/diagnostics/semantic_exact_int_arithmetic_has_no_overflow_warning/main.sifr",
           "command": "check",
           "expect_exit_code": 0,
           "diagnostic_formats": [

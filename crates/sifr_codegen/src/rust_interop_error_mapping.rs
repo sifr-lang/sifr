@@ -1,6 +1,6 @@
 use sifr_type_system::Type;
 
-use crate::{RustExpr, RustType};
+use crate::RustExpr;
 
 fn rust_type_name(ty: &Type) -> String {
     crate::render_type(&crate::sifr_type_to_rust_type(ty))
@@ -147,11 +147,11 @@ fn json_decode_error_expr(name: &str, value: RustExpr) -> RustExpr {
             ),
             (
                 "line".to_string(),
-                bridge_error_method_i64(value.clone(), "line"),
+                bridge_error_method_int(value.clone(), "line"),
             ),
             (
                 "column".to_string(),
-                bridge_error_method_i64(value, "column"),
+                bridge_error_method_int(value, "column"),
             ),
         ],
     }
@@ -165,7 +165,7 @@ fn json_limit_error_expr(name: &str, value: RustExpr) -> RustExpr {
                 "message".to_string(),
                 bridge_error_method_string(value.clone(), "message"),
             ),
-            ("limit".to_string(), bridge_error_method_i64(value, "limit")),
+            ("limit".to_string(), bridge_error_method_int(value, "limit")),
         ],
     }
 }
@@ -248,14 +248,17 @@ fn bridge_error_method_string(value: RustExpr, method: &str) -> RustExpr {
     })
 }
 
-fn bridge_error_method_i64(value: RustExpr, method: &str) -> RustExpr {
-    RustExpr::Cast {
-        expr: Box::new(RustExpr::MethodCall {
+fn bridge_error_method_int(value: RustExpr, method: &str) -> RustExpr {
+    RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec![
+            "SifrInt".to_string(),
+            "from".to_string(),
+        ])),
+        args: vec![RustExpr::MethodCall {
             receiver: Box::new(value),
             method: method.to_string(),
             args: Vec::new(),
-        }),
-        ty: RustType::I64,
+        }],
     }
 }
 

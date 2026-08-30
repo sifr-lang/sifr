@@ -32,7 +32,7 @@ def _days_in_month(year: int, month: int) -> int:
 
 def _substring(value: str, start: int, end: int) -> str:
     result: str = ""
-    i: int = start
+    i: int = start.clone()
     while i < end:
         ch: str | None = value[i]
         if ch is not None:
@@ -78,7 +78,7 @@ def _parse_decimal(text: str) -> int | None:
         digit_opt: int | None = _digit_value(ch)
         if digit_opt is None:
             return None
-        digit: int = digit_opt
+        digit: int = digit_opt.clone()
         out = out * 10 + digit
         i = i + 1
     return out
@@ -87,7 +87,7 @@ def _parse_decimal(text: str) -> int | None:
 def _int_or_negative_one(value: int | None) -> int:
     if value is None:
         return -1
-    return value
+    return value.clone()
 
 
 def _day_of_year(year: int, month: int, day: int) -> int:
@@ -266,9 +266,9 @@ def localtime_struct(epoch: float) -> struct_time:
     return _to_struct_time(rendered)
 
 
-def mktime(t: struct_time) -> float:
+def mktime(t: struct_time) -> Result[float, ValueError | FloatOverflowError | FloatPrecisionLossError]:
     if not _valid_date(t.tm_year, t.tm_mon, t.tm_mday):
-        return 0.0
+        raise ValueError("mktime() received an invalid calendar date")
 
     days: int = 0
     if t.tm_year >= 1970:

@@ -1,8 +1,8 @@
 use super::object_ops::*;
 use super::{
-    PythonRuntimeDiagnostics, initialize_runtime, list_items, record_field,
-    reset_runtime_state_for_tests, semantic_close, shutdown_diagnostics, test_config, test_guard,
-    tuple_items_exact,
+    PythonRuntimeDiagnostics, copy_dict_str_int, copy_list_int, from_int, initialize_runtime,
+    list_items, record_field, reset_runtime_state_for_tests, semantic_close, shutdown_diagnostics,
+    test_config, test_guard, to_int, tuple_items_exact,
 };
 
 #[test]
@@ -58,6 +58,25 @@ fn primitive_conversion_round_trips_and_rejects_fixed_width_overflow() {
 }
 
 #[test]
+fn python_integer_roundtrip_preserves_values_beyond_i64() {
+    let _guard = test_guard();
+    reset_runtime_state_for_tests();
+    initialize_runtime(test_config("exact-integer-conversion")).expect("init should succeed");
+    let exact = crate::SifrInt::parse_decimal(
+        "1234567890123456789012345678901234567890",
+        crate::DEFAULT_MAX_INTEGER_DIGITS,
+    )
+    .expect("test integer should parse");
+    let object = from_int(exact.clone()).expect("exact int should cross into Python");
+
+    assert_eq!(
+        to_int(&object).expect("exact int should cross back from Python"),
+        exact
+    );
+    close_object(object).expect("int object should close");
+}
+
+#[test]
 fn explicit_container_copy_conversions_preserve_nested_paths() {
     let _guard = test_guard();
     reset_runtime_state_for_tests();
@@ -86,8 +105,8 @@ fn explicit_container_copy_conversions_preserve_nested_paths() {
     let dict = from_dict_str(&[("first", first.clone()), ("second", second.clone())])
         .expect("dict should be stored");
     let copied = copy_dict_str_int(&dict).expect("dict should copy");
-    assert_eq!(copied.get("first"), Some(&1));
-    assert_eq!(copied.get("second"), Some(&2));
+    assert_eq!(copied.get("first"), Some(&crate::SifrInt::from(1)));
+    assert_eq!(copied.get("second"), Some(&crate::SifrInt::from(2)));
 
     let record = from_record(&[("answer", second.clone())]).expect("record should be stored");
     let mut fields = copy_record_fields(&record, &["answer"]).expect("record should copy fields");

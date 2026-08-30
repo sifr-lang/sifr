@@ -1,34 +1,30 @@
 // src/main.rs
+use ::sifr_runtime::SifrInt;
+
 // --- stdlib: sifr.heapq ---
 fn _sift_down<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     data: &mut Vec<T>,
-    mut pos: i64,
-    n: i64,
+    mut pos: SifrInt,
+    n: SifrInt,
 ) {
     let mut done: bool = false;
     while !done {
-        let mut smallest: i64 = pos;
-        let left: i64 = ((2_i64) * pos) + (1_i64);
-        let right: i64 = ((2_i64) * pos) + (2_i64);
-        if left < n {
+        let mut smallest: SifrInt = pos.clone();
+        let left: SifrInt = &(&SifrInt::from_i64(2) * &pos) + &SifrInt::from_i64(1);
+        let right: SifrInt = &(&SifrInt::from_i64(2) * &pos) + &SifrInt::from_i64(2);
+        if &left < &n {
             let s_val: Option<T> = {
                 let __sifr_index_list = &data;
-                let __sifr_index_i = smallest;
-                let __sifr_index_norm = if __sifr_index_i < 0 {
-                    ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
-                } else {
-                    __sifr_index_i as usize
-                };
+                let __sifr_index_i = smallest.clone();
+                let __sifr_index_norm = __sifr_index_i
+                    .normalize_index_or_len(__sifr_index_list.len());
                 __sifr_index_list.get(__sifr_index_norm).cloned()
             };
             let l_val: Option<T> = {
                 let __sifr_index_list = &data;
-                let __sifr_index_i = left;
-                let __sifr_index_norm = if __sifr_index_i < 0 {
-                    ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
-                } else {
-                    __sifr_index_i as usize
-                };
+                let __sifr_index_i = left.clone();
+                let __sifr_index_norm = __sifr_index_i
+                    .normalize_index_or_len(__sifr_index_list.len());
                 __sifr_index_list.get(__sifr_index_norm).cloned()
             };
             if let Some(s_val) = s_val {
@@ -39,25 +35,19 @@ fn _sift_down<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
                 }
             }
         }
-        if right < n {
+        if &right < &n {
             let s_val2: Option<T> = {
                 let __sifr_index_list = &data;
-                let __sifr_index_i = smallest;
-                let __sifr_index_norm = if __sifr_index_i < 0 {
-                    ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
-                } else {
-                    __sifr_index_i as usize
-                };
+                let __sifr_index_i = smallest.clone();
+                let __sifr_index_norm = __sifr_index_i
+                    .normalize_index_or_len(__sifr_index_list.len());
                 __sifr_index_list.get(__sifr_index_norm).cloned()
             };
             let r_val: Option<T> = {
                 let __sifr_index_list = &data;
-                let __sifr_index_i = right;
-                let __sifr_index_norm = if __sifr_index_i < 0 {
-                    ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
-                } else {
-                    __sifr_index_i as usize
-                };
+                let __sifr_index_i = right.clone();
+                let __sifr_index_norm = __sifr_index_i
+                    .normalize_index_or_len(__sifr_index_list.len());
                 __sifr_index_list.get(__sifr_index_norm).cloned()
             };
             if let Some(s_val2) = s_val2 {
@@ -68,55 +58,37 @@ fn _sift_down<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
                 }
             }
         }
-        if smallest == pos {
+        if &smallest == &pos {
             done = true;
         } else {
             let tmp_pos: Option<T> = {
                 let __sifr_index_list = &data;
-                let __sifr_index_i = pos;
-                let __sifr_index_norm = if __sifr_index_i < 0 {
-                    ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
-                } else {
-                    __sifr_index_i as usize
-                };
+                let __sifr_index_i = pos.clone();
+                let __sifr_index_norm = __sifr_index_i
+                    .normalize_index_or_len(__sifr_index_list.len());
                 __sifr_index_list.get(__sifr_index_norm).cloned()
             };
             let tmp_sm: Option<T> = {
                 let __sifr_index_list = &data;
-                let __sifr_index_i = smallest;
-                let __sifr_index_norm = if __sifr_index_i < 0 {
-                    ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
-                } else {
-                    __sifr_index_i as usize
-                };
+                let __sifr_index_i = smallest.clone();
+                let __sifr_index_norm = __sifr_index_i
+                    .normalize_index_or_len(__sifr_index_list.len());
                 __sifr_index_list.get(__sifr_index_norm).cloned()
             };
             if let Some(tmp_pos) = tmp_pos {
                 if let Some(tmp_sm) = tmp_sm {
                     {
-                        let __idx_raw = pos;
-                        let __idx_norm = if __idx_raw < 0 {
-                            (data.len() as i64) + __idx_raw
-                        } else {
-                            __idx_raw
-                        };
-                        if __idx_norm >= 0 {
-                            if let Some(__elem) = data.get_mut(__idx_norm as usize) {
-                                *__elem = tmp_sm.clone();
-                            }
+                        let __idx_raw = pos.clone();
+                        let __idx_norm = __idx_raw.normalize_index_or_len(data.len());
+                        if let Some(__elem) = data.get_mut(__idx_norm) {
+                            *__elem = tmp_sm.clone();
                         }
                     }
                     {
-                        let __idx_raw = smallest;
-                        let __idx_norm = if __idx_raw < 0 {
-                            (data.len() as i64) + __idx_raw
-                        } else {
-                            __idx_raw
-                        };
-                        if __idx_norm >= 0 {
-                            if let Some(__elem) = data.get_mut(__idx_norm as usize) {
-                                *__elem = tmp_pos.clone();
-                            }
+                        let __idx_raw = smallest.clone();
+                        let __idx_norm = __idx_raw.normalize_index_or_len(data.len());
+                        if let Some(__elem) = data.get_mut(__idx_norm) {
+                            *__elem = tmp_pos.clone();
                         }
                     }
                 }
@@ -127,61 +99,46 @@ fn _sift_down<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
 }
 fn _sift_up<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     heap: &mut Vec<T>,
-    mut pos: i64,
+    mut pos: SifrInt,
 ) {
     let mut done: bool = false;
     while !done {
-        if pos <= (0_i64) {
+        if &pos <= &SifrInt::from_i64(0) {
             done = true;
         } else {
-            let parent: i64 = (pos - (1_i64)) / (2_i64);
+            let parent: SifrInt = (&pos - &SifrInt::from_i64(1))
+                .floor_div_known_nonzero(&SifrInt::from_i64(2));
             let p_val: Option<T> = {
                 let __sifr_index_list = &heap;
-                let __sifr_index_i = parent;
-                let __sifr_index_norm = if __sifr_index_i < 0 {
-                    ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
-                } else {
-                    __sifr_index_i as usize
-                };
+                let __sifr_index_i = parent.clone();
+                let __sifr_index_norm = __sifr_index_i
+                    .normalize_index_or_len(__sifr_index_list.len());
                 __sifr_index_list.get(__sifr_index_norm).cloned()
             };
             let c_val: Option<T> = {
                 let __sifr_index_list = &heap;
-                let __sifr_index_i = pos;
-                let __sifr_index_norm = if __sifr_index_i < 0 {
-                    ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
-                } else {
-                    __sifr_index_i as usize
-                };
+                let __sifr_index_i = pos.clone();
+                let __sifr_index_norm = __sifr_index_i
+                    .normalize_index_or_len(__sifr_index_list.len());
                 __sifr_index_list.get(__sifr_index_norm).cloned()
             };
             if let Some(p_val) = p_val {
                 if let Some(c_val) = c_val {
                     if c_val < p_val {
                         {
-                            let __idx_raw = parent;
-                            let __idx_norm = if __idx_raw < 0 {
-                                (heap.len() as i64) + __idx_raw
-                            } else {
-                                __idx_raw
-                            };
-                            if __idx_norm >= 0 {
-                                if let Some(__elem) = heap.get_mut(__idx_norm as usize) {
-                                    *__elem = c_val.clone();
-                                }
+                            let __idx_raw = parent.clone();
+                            let __idx_norm = __idx_raw
+                                .normalize_index_or_len(heap.len());
+                            if let Some(__elem) = heap.get_mut(__idx_norm) {
+                                *__elem = c_val.clone();
                             }
                         }
                         {
-                            let __idx_raw = pos;
-                            let __idx_norm = if __idx_raw < 0 {
-                                (heap.len() as i64) + __idx_raw
-                            } else {
-                                __idx_raw
-                            };
-                            if __idx_norm >= 0 {
-                                if let Some(__elem) = heap.get_mut(__idx_norm as usize) {
-                                    *__elem = p_val.clone();
-                                }
+                            let __idx_raw = pos.clone();
+                            let __idx_norm = __idx_raw
+                                .normalize_index_or_len(heap.len());
+                            if let Some(__elem) = heap.get_mut(__idx_norm) {
+                                *__elem = p_val.clone();
                             }
                         }
                         pos = parent;
@@ -199,11 +156,12 @@ fn _sift_up<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
 }
 fn heapify<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(data: &mut Vec<T>) {
     "Convert list to a min-heap in-place. O(n) time.".to_string();
-    let n: i64 = data.len() as i64;
-    let mut i: i64 = (n / (2_i64)) - (1_i64);
-    while i >= (0_i64) {
-        _sift_down(data, i, n);
-        i -= 1_i64;
+    let n: SifrInt = SifrInt::from(data.len());
+    let mut i: SifrInt = &n.floor_div_known_nonzero(&SifrInt::from_i64(2))
+        - &SifrInt::from_i64(1);
+    while &i >= &SifrInt::from_i64(0) {
+        _sift_down(data, (i).clone(), (n).clone());
+        i = &i - &SifrInt::from_i64(1);
     }
 }
 fn heappush<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
@@ -211,28 +169,27 @@ fn heappush<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     item: &T,
 ) {
     "Push item onto the heap in-place. O(log n) time.".to_string();
-    heap.push(item.clone().clone());
-    let pos: i64 = (heap.len() as i64) - (1_i64);
-    _sift_up(heap, pos);
+    heap.push(item.clone());
+    let pos: SifrInt = &SifrInt::from(heap.len()) - &SifrInt::from_i64(1);
+    _sift_up(heap, (pos).clone());
 }
 fn heappop<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     heap: &mut Vec<T>,
 ) -> Option<T> {
     "Pop and return the smallest item. Heap is modified in-place. O(log n) time.\n    Returns None if the heap is empty."
         .to_string();
-    let n: i64 = heap.len() as i64;
-    if n == (0_i64) {
+    let n: SifrInt = SifrInt::from(heap.len());
+    if &n == &SifrInt::from_i64(0) {
         return None;
     }
-    let top: Option<T> = Some(heap[(0_i64) as usize].clone());
+    let top: Option<T> = Some(
+        heap[::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(0)))].clone(),
+    );
     let last: Option<T> = {
         let __sifr_index_list = &heap;
-        let __sifr_index_i = n - (1_i64);
-        let __sifr_index_norm = if __sifr_index_i < 0 {
-            ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
-        } else {
-            __sifr_index_i as usize
-        };
+        let __sifr_index_i = &n - &SifrInt::from_i64(1);
+        let __sifr_index_norm = __sifr_index_i
+            .normalize_index_or_len(__sifr_index_list.len());
         __sifr_index_list.get(__sifr_index_norm).cloned()
     };
     {
@@ -241,125 +198,119 @@ fn heappop<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
         };
         __sifr_nonempty_pop_value
     };
-    let n2: i64 = heap.len() as i64;
-    if n2 > (0_i64) {
+    let n2: SifrInt = SifrInt::from(heap.len());
+    if &n2 > &SifrInt::from_i64(0) {
         if let Some(last) = last {
             {
-                let __idx_raw = 0_i64;
-                let __idx_norm = if __idx_raw < 0 {
-                    (heap.len() as i64) + __idx_raw
-                } else {
-                    __idx_raw
-                };
-                if __idx_norm >= 0 {
-                    if let Some(__elem) = heap.get_mut(__idx_norm as usize) {
-                        *__elem = last.clone();
-                    }
+                let __idx_raw = SifrInt::from_i64(0);
+                let __idx_norm = __idx_raw.normalize_index_or_len(heap.len());
+                if let Some(__elem) = heap.get_mut(__idx_norm) {
+                    *__elem = last.clone();
                 }
             }
         }
-        _sift_down(heap, 0_i64, n2);
+        _sift_down(heap, SifrInt::from_i64(0), (n2).clone());
     }
     top
 }
 fn nsmallest<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    n: i64,
+    n: SifrInt,
     data: &Vec<T>,
 ) -> Vec<T> {
     let mut heap: Vec<T> = data.clone();
     heapify(&mut heap);
     let mut result: Vec<T> = vec![];
-    let mut count: i64 = 0_i64;
-    while count < n {
-        if ((heap.len() as i64) == (0_i64)) {
+    let mut count: SifrInt = SifrInt::from_i64(0);
+    while &count < &n {
+        if (&SifrInt::from(heap.len()) == &SifrInt::from_i64(0)) {
             return result;
         }
         let val: Option<T> = heappop(&mut heap);
         if let Some(val) = val {
-            result.push(val.clone().clone());
+            result.push(val.clone());
         }
-        count += 1_i64;
+        count = &count + &SifrInt::from_i64(1);
     }
     result
 }
 fn nlargest<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    n: i64,
+    n: SifrInt,
     data: &Vec<T>,
 ) -> Vec<T> {
-    if n <= (0_i64) {
+    if &n <= &SifrInt::from_i64(0) {
         return vec![];
     }
-    if (n >= (data.len() as i64)) {
+    if (&n >= &SifrInt::from(data.len())) {
         let mut result: Vec<T> = vec![];
         for val in data.iter().cloned() {
-            result.push(val.clone().clone());
+            result.push(val.clone());
         }
         return result;
     }
     let mut heap: Vec<T> = data.clone();
     heapify(&mut heap);
     let mut all_sorted: Vec<T> = vec![];
-    while ((heap.len() as i64) > (0_i64)) {
+    while (&SifrInt::from(heap.len()) > &SifrInt::from_i64(0)) {
         let val2: Option<T> = heappop(&mut heap);
         if let Some(val2) = val2 {
-            all_sorted.push(val2.clone().clone());
+            all_sorted.push(val2.clone());
         }
     }
     let mut result2: Vec<T> = vec![];
-    let mut i: i64 = (all_sorted.len() as i64) - (1_i64);
-    let mut count: i64 = 0_i64;
-    while count < n {
-        if i < (0_i64) {
+    let mut i: SifrInt = &SifrInt::from(all_sorted.len()) - &SifrInt::from_i64(1);
+    let mut count: SifrInt = SifrInt::from_i64(0);
+    while &count < &n {
+        if &i < &SifrInt::from_i64(0) {
             return result2;
         }
         let v: Option<T> = {
             let __sifr_index_list = &all_sorted;
-            let __sifr_index_i = i;
-            let __sifr_index_norm = if __sifr_index_i < 0 {
-                ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
-            } else {
-                __sifr_index_i as usize
-            };
+            let __sifr_index_i = i.clone();
+            let __sifr_index_norm = __sifr_index_i
+                .normalize_index_or_len(__sifr_index_list.len());
             __sifr_index_list.get(__sifr_index_norm).cloned()
         };
         if let Some(v) = v {
-            result2.push(v.clone().clone());
+            result2.push(v.clone());
         }
-        i -= 1_i64;
-        count += 1_i64;
+        i = &i - &SifrInt::from_i64(1);
+        count = &count + &SifrInt::from_i64(1);
     }
     result2
 }
 
 // --- stdlib: sifr.test ---
 fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
-    assert_eq!(actual.len() as i64, expected.len() as i64);
-    let mut i: i64 = 0_i64;
-    while i < (actual.len() as i64) {
-        assert!(Some(actual[i as usize]) == expected.get(i as usize).copied());
-        i += 1_i64;
+    assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
+    let mut i: SifrInt = SifrInt::from_i64(0);
+    while &i < &SifrInt::from(actual.len()) {
+        assert!(
+            Some(actual[::sifr_runtime::to_usize_proven(& (i))]) == expected
+            .get(::sifr_runtime::to_usize_proven(& (i))).copied()
+        );
+        i = &i + &SifrInt::from_i64(1);
     }
 }
 // --- end stdlib ---
 
 fn collect_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![];
-    let mut heap: Vec<i64> = vec![];
-    heappush(&mut heap, &(5_i64));
-    heappush(&mut heap, &(1_i64));
-    heappush(&mut heap, &(3_i64));
-    let first: Option<i64> = heappop(&mut heap);
-    let second: Option<i64> = heappop(&mut heap);
-    actual.push(first.is_some() && (first == Some(1_i64)));
-    actual.push(second.is_some() && (second == Some(3_i64)));
-    let mut data: Vec<i64> = vec![4_i64, 2_i64, 7_i64, 1_i64, 5_i64];
+    let mut heap: Vec<SifrInt> = vec![];
+    heappush(&mut heap, &SifrInt::from_i64(5));
+    heappush(&mut heap, &SifrInt::from_i64(1));
+    heappush(&mut heap, &SifrInt::from_i64(3));
+    let first: Option<SifrInt> = heappop(&mut heap);
+    let second: Option<SifrInt> = heappop(&mut heap);
+    actual.push(first.is_some() && (first == Some((SifrInt::from_i64(1)).clone())));
+    actual.push(second.is_some() && (second == Some((SifrInt::from_i64(3)).clone())));
+    let mut data: Vec<SifrInt> = vec![SifrInt::from_i64(4), SifrInt::from_i64(2), SifrInt::from_i64(7), SifrInt::from_i64(1), SifrInt::from_i64(5)];
     heapify(&mut data);
-    let top: Option<i64> = heappop(&mut data);
-    actual.push(top.is_some() && (top == Some(1_i64)));
-    let items: Vec<i64> = vec![9_i64, 3_i64, 7_i64, 1_i64, 5_i64];
-    actual.push((format!("{:?}", nsmallest(3_i64, &items))).as_str() == ("[1, 3, 5]".to_string()).as_str());
-    actual.push((format!("{:?}", nlargest(2_i64, &items))).as_str() == ("[9, 7]".to_string()).as_str());
-    let mut empty_heap: Vec<i64> = vec![];
+    let top: Option<SifrInt> = heappop(&mut data);
+    actual.push(top.is_some() && (top == Some((SifrInt::from_i64(1)).clone())));
+    let items: Vec<SifrInt> = vec![SifrInt::from_i64(9), SifrInt::from_i64(3), SifrInt::from_i64(7), SifrInt::from_i64(1), SifrInt::from_i64(5)];
+    actual.push((format!("{:?}", nsmallest(SifrInt::from_i64(3), &items))).as_str() == ("[1, 3, 5]".to_string()).as_str());
+    actual.push((format!("{:?}", nlargest(SifrInt::from_i64(2), &items))).as_str() == ("[9, 7]".to_string()).as_str());
+    let mut empty_heap: Vec<SifrInt> = vec![];
     actual.push(heappop(&mut empty_heap) == None);
     actual.push((format!("{:?}", items)).as_str() == ("[9, 3, 7, 1, 5]".to_string()).as_str());
     actual

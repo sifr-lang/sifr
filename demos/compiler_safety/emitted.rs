@@ -1,4 +1,6 @@
 // src/main.rs
+use ::sifr_runtime::SifrInt;
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct FileResource {
     path: String,
@@ -58,14 +60,14 @@ impl ::std::fmt::Display for DBConnection {
 }
 
 struct Config {
-    value: i64,
-    callback: Box<dyn Fn(i64) -> i64>,
+    value: SifrInt,
+    callback: Box<dyn Fn(SifrInt) -> SifrInt>,
 }
 
 impl Config {
-    fn new(value: i64, callback: impl Fn(i64) -> i64 + 'static) -> Self {
-        let __sifr_field_init_0: i64 = value;
-        let __sifr_field_init_1: Box<dyn Fn(i64) -> i64> = Box::new(callback);
+    fn new(value: SifrInt, callback: impl Fn(SifrInt) -> SifrInt + 'static) -> Self {
+        let __sifr_field_init_0: SifrInt = value.clone();
+        let __sifr_field_init_1: Box<dyn Fn(SifrInt) -> SifrInt> = Box::new(callback);
         Self { value: __sifr_field_init_0, callback: __sifr_field_init_1 }
     }
 }
@@ -73,8 +75,8 @@ impl Config {
 impl Config {
 }
 
-fn double(x: i64) -> i64 {
-    x * (2_i64)
+fn double(x: SifrInt) -> SifrInt {
+    &x * &SifrInt::from_i64(2)
 }
 
 fn demo_early_return() -> Vec<String> {
@@ -116,8 +118,8 @@ fn main() {
         events.push(item.clone());
     }
     events.push("=== Context Manager: Break in Loop ===".to_string());
-    let mut i: i64 = 0_i64;
-    while i < (3_i64) {
+    let mut i: SifrInt = SifrInt::from_i64(0);
+    while &i < &SifrInt::from_i64(3) {
         events.push("Connecting: db".to_string());
         let mut should_break: bool = false;
         {
@@ -128,7 +130,7 @@ fn main() {
             }
             let mut __guard_0 = __WithGuard0 { ctx: __ctx_0 };
             let conn = __guard_0.ctx.__enter__();
-            if i == (1_i64) {
+            if &i == &SifrInt::from_i64(1) {
                 should_break = true;
             } else {
                 events.push(format!("{}{}", "Query on: ", conn.name.clone()));
@@ -138,7 +140,7 @@ fn main() {
         if should_break {
             break;
         }
-        i += 1_i64;
+        i = &i + &SifrInt::from_i64(1);
     }
     events.push("=== Multiple Context Managers ===".to_string());
     events.push("Opening: input.txt".to_string());
@@ -163,8 +165,8 @@ fn main() {
     events.push("Disconnecting: postgres".to_string());
     events.push("Closing: input.txt".to_string());
     events.push("=== Callable Struct Field ===".to_string());
-    let c: Config = Config::new(21_i64, double);
-    events.push(format!("{}", c.value));
+    let c: Config = Config::new(SifrInt::from_i64(21), double);
+    events.push(format!("{}", c.value.clone()));
     events.push("=== Compiler Hardening Demo Complete ===".to_string());
     assert!(events == vec!["=== Context Manager: Normal Exit ===".to_string(), "Opening: config.json".to_string(), "Using: config.json".to_string(), "Closing: config.json".to_string(), "=== Context Manager: Early Return ===".to_string(), "Opening: data.csv".to_string(), "Reading: data.csv".to_string(), "Closing: data.csv".to_string(), "42".to_string(), "=== Context Manager: Break in Loop ===".to_string(), "Connecting: db".to_string(), "Query on: db".to_string(), "Disconnecting: db".to_string(), "Connecting: db".to_string(), "Disconnecting: db".to_string(), "=== Multiple Context Managers ===".to_string(), "Opening: input.txt".to_string(), "Connecting: postgres".to_string(), "Processing with: input.txt and postgres".to_string(), "Disconnecting: postgres".to_string(), "Closing: input.txt".to_string(), "=== Callable Struct Field ===".to_string(), "21".to_string(), "=== Compiler Hardening Demo Complete ===".to_string()]);
     println!("Compiler hardening demo trace:");

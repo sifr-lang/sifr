@@ -75,11 +75,11 @@ fn fs_private_declarations_codegen_through_sifr_stdlib() {
             .contains("kind: __sifr_bridge_error.to_string()")
     );
     assert!(private_code.rust.contains(
-        "::sifr_stdlib::fs::stat_size(path).map(|__sifr_bridge_ok| __sifr_bridge_ok.to_i64_saturating())"
-    ));
+        "::sifr_stdlib::fs::stat_size(path).map(|__sifr_bridge_ok| __sifr_bridge_ok.into_sifr_int())"
+    ), "{}", private_code.rust);
     assert!(private_code.rust.contains(
-        "::sifr_stdlib::fs::disk_usage(path).into_iter().map(|__sifr_bridge_value| __sifr_bridge_value.to_i64_saturating()).collect()"
-    ));
+        "::sifr_stdlib::fs::disk_usage(path).into_iter().map(|__sifr_bridge_value| __sifr_bridge_value.into_sifr_int()).collect()"
+    ), "{}", private_code.rust);
     assert!(
         compiled
             .code

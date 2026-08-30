@@ -48,8 +48,11 @@ def main() -> None:
     # fnmatch + difflib + calendar class surfaces
     assert fnmatch("report.txt", "*.txt")
     assert translate("*.txt") == "(?s:.*\\.txt)\\z"
-    ratio: float = SequenceMatcher("abcd", "abed").ratio()
-    assert ratio > 0.4
+    try:
+        ratio: float = SequenceMatcher("abcd", "abed").ratio()
+        assert ratio > 0.4
+    except Error:
+        assert False
     month_label_ok: bool = False
     try:
         month_label: str = TextCalendar().formatmonthname(2024, 2, 0)

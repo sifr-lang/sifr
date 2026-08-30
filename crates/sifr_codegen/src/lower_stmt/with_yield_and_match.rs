@@ -148,7 +148,10 @@ pub(super) fn try_lower_simple_yield_stmt(
     value: &HirExpr,
     ctx: SimpleStmtLoweringCtx<'_>,
 ) -> Option<Vec<RustStmt>> {
-    let lowered_value = try_lower_leaf_or_name_expr(value)?;
+    let lowered_value = crate::RustEmitter::clone_non_copy_name_expr_for_ir(
+        value,
+        try_lower_leaf_or_name_expr(value)?,
+    );
     if ctx.in_generator_closure {
         return Some(vec![RustStmt::Return(Some(RustExpr::FnCall {
             func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
@@ -391,6 +394,15 @@ fn try_lower_typed_match_pattern(
     subject_ty: &Type,
 ) -> Option<(String, Vec<String>)> {
     match pattern {
+        HirPattern::Literal {
+            value: HirExpr::IntLiteral(value),
+        } if matches!(
+            resolve_alias_type(subject_ty),
+            Type::Int | Type::LiteralInt(_)
+        ) =>
+        {
+            Some((format!("SifrInt::Small({value})"), Vec::new()))
+        }
         HirPattern::Or { patterns } => {
             let mut rendered = Vec::new();
             for pattern in patterns {
@@ -516,15 +528,7 @@ pub(super) fn try_lower_union_class_match_pattern(
 }
 
 pub(super) fn is_copy_capture_type(ty: &Type) -> bool {
-    matches!(
-        resolve_alias_type(ty),
-        Type::Int
-            | Type::LiteralInt(_)
-            | Type::Float
-            | Type::Bool
-            | Type::LiteralBool(_)
-            | Type::Decimal
-    )
+    crate::helpers::is_copy_type_for_codegen(ty)
 }
 
 pub(super) fn collect_copy_capture_names(pattern: &HirPattern) -> HashSet<String> {

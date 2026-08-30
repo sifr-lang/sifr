@@ -1,18 +1,20 @@
 // src/main.rs
+use ::sifr_runtime::SifrInt;
+
 fn main() {
-    fn recurse(n: i64) -> i64 {
+    fn recurse(n: SifrInt) -> SifrInt {
         {
             let _broke: bool = false;
-            for i in vec![1_i64].into_iter() {
+            for i in vec![SifrInt::from_i64(1)].into_iter() {
             }
             if !(_broke) {
-                if n > (0_i64) {
-                    return recurse(n - (1_i64));
+                if &n > &SifrInt::from_i64(0) {
+                    return recurse(&n - &SifrInt::from_i64(1));
                 }
             }
         }
-        return 0_i64;
+        return SifrInt::from_i64(0);
     }
     println!("recursive_calls semantic query layer standardization demo:");
-    println!("{}", recurse(4_i64));
+    println!("{}", recurse(SifrInt::from_i64(4)));
 }

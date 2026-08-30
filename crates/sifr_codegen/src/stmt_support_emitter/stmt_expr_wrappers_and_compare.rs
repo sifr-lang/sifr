@@ -60,30 +60,7 @@ macro_rules! stmt_expr_wrappers_range_index {
             start, end, step, ..
         } = $expr
         {
-            let Some(lowered_start) = $emitter.lower_stmt_expr_for_ir(start)? else {
-                return Ok(None);
-            };
-            let Some(lowered_end) = $emitter.lower_stmt_expr_for_ir(end)? else {
-                return Ok(None);
-            };
-            let lowered_range = crate::RustExpr::Range {
-                start: Box::new(lowered_start),
-                end: Box::new(lowered_end),
-            };
-            if let Some(step_expr) = step {
-                let Some(lowered_step) = $emitter.lower_stmt_expr_for_ir(step_expr)? else {
-                    return Ok(None);
-                };
-                return Ok(Some(crate::RustExpr::MethodCall {
-                    receiver: Box::new(lowered_range),
-                    method: "step_by".to_string(),
-                    args: vec![crate::RustExpr::Cast {
-                        expr: Box::new(lowered_step),
-                        ty: crate::RustType::Named("usize".to_string()),
-                    }],
-                }));
-            }
-            return Ok(Some(lowered_range));
+            return $emitter.try_lower_range_iter_expr_for_ir(start, end, step.as_deref());
         }
         if let HirExpr::Index {
             object, index, ty, ..
@@ -681,7 +658,7 @@ macro_rules! stmt_expr_contains_unary_compare_bool {
                     };
                     let lowered_left = if matches!(lhs_expr, HirExpr::Name { name, ty, .. }
                         if ($emitter.borrowed_params.contains(name) || $emitter.mut_borrowed_params.contains(name))
-                            && ty.ownership() != sifr_type_system::OwnershipKind::Copy)
+                            && !crate::helpers::is_copy_type_for_codegen(ty))
                     {
                         crate::RustExpr::Clone(Box::new(lowered_left))
                     } else {
@@ -689,7 +666,7 @@ macro_rules! stmt_expr_contains_unary_compare_bool {
                     };
                     let lowered_right = if matches!(rhs_expr, HirExpr::Name { name, ty, .. }
                         if ($emitter.borrowed_params.contains(name) || $emitter.mut_borrowed_params.contains(name))
-                            && ty.ownership() != sifr_type_system::OwnershipKind::Copy)
+                            && !crate::helpers::is_copy_type_for_codegen(ty))
                     {
                         crate::RustExpr::Clone(Box::new(lowered_right))
                     } else {
@@ -744,24 +721,48 @@ macro_rules! stmt_expr_contains_unary_compare_bool {
                             lowered_left = wrapped;
                         }
                     }
-                    if !left_is_option
-                        && !right_is_option
-                        && matches!(left_ty, Type::Float)
-                        && matches!(right_ty, Type::Int | Type::LiteralInt(_))
-                    {
-                        lowered_right = crate::RustExpr::Cast {
-                            expr: Box::new(crate::RustExpr::Paren(Box::new(lowered_right))),
-                            ty: crate::RustType::F64,
-                        };
-                    } else if !left_is_option
-                        && !right_is_option
-                        && matches!(right_ty, Type::Float)
-                        && matches!(left_ty, Type::Int | Type::LiteralInt(_))
-                    {
-                        lowered_left = crate::RustExpr::Cast {
-                            expr: Box::new(crate::RustExpr::Paren(Box::new(lowered_left))),
-                            ty: crate::RustType::F64,
-                        };
+                    if let Some(lowered_cmp) = crate::lower_exact_integer_float_compare(
+                        left_ty,
+                        right_ty,
+                        &lowered_op,
+                        lowered_left.clone(),
+                        lowered_right.clone(),
+                    ) {
+                        lowered_chain = Some(if let Some(existing) = lowered_chain {
+                            crate::RustExpr::BinOp {
+                                left: Box::new(existing),
+                                op: "&&".to_string(),
+                                right: Box::new(lowered_cmp),
+                            }
+                        } else {
+                            lowered_cmp
+                        });
+                        lhs_expr = rhs_expr;
+                        continue;
+                    }
+                    if !left_is_option && !right_is_option {
+                        if crate::fixed_width_int_type(left_ty)
+                            && !$emitter.is_sifr_int_expr(&lowered_left)
+                        {
+                            lowered_left = crate::RustExpr::FnCall {
+                                func: Box::new(crate::RustExpr::Path(vec![
+                                    "SifrInt".to_string(),
+                                    "from".to_string(),
+                                ])),
+                                args: vec![lowered_left],
+                            };
+                        }
+                        if crate::fixed_width_int_type(right_ty)
+                            && !$emitter.is_sifr_int_expr(&lowered_right)
+                        {
+                            lowered_right = crate::RustExpr::FnCall {
+                                func: Box::new(crate::RustExpr::Path(vec![
+                                    "SifrInt".to_string(),
+                                    "from".to_string(),
+                                ])),
+                                args: vec![lowered_right],
+                            };
+                        }
                     }
                     let lowered_cmp = crate::RustExpr::BinOp {
                         left: Box::new(lowered_left),

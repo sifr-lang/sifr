@@ -1,29 +1,31 @@
 // src/main.rs
+use ::sifr_runtime::SifrInt;
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct CountdownIter {
-    current: i64,
+    current: SifrInt,
 }
 
 impl CountdownIter {
-    fn new(start: i64) -> Self {
-        let __sifr_field_init_0: i64 = start;
+    fn new(start: SifrInt) -> Self {
+        let __sifr_field_init_0: SifrInt = start.clone();
         Self { current: __sifr_field_init_0 }
     }
 }
 
 impl CountdownIter {
-    fn __iter__(&self) -> Box<dyn Iterator<Item = i64>> {
-        Box::new(vec![self.current].into_iter())
+    fn __iter__(&self) -> Box<dyn Iterator<Item = SifrInt>> {
+        Box::new(vec![self.current.clone()].into_iter())
     }
 }
 
 impl CountdownIter {
-    fn __next__(&mut self) -> Option<i64> {
-        if (self.current <= (0_i64)) {
+    fn __next__(&mut self) -> Option<SifrInt> {
+        if (&self.current.clone() <= &SifrInt::from_i64(0)) {
             return None;
         }
-        let value: i64 = self.current;
-        self.current -= 1_i64;
+        let value: SifrInt = self.current.clone();
+        self.current = &self.current.clone() - &SifrInt::from_i64(1);
         Some(value)
     }
 }
@@ -36,35 +38,35 @@ impl ::std::fmt::Display for CountdownIter {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Countdown {
-    start: i64,
+    start: SifrInt,
 }
 
 impl Countdown {
-    fn new(start: i64) -> Self {
-        let __sifr_field_init_0: i64 = start;
+    fn new(start: SifrInt) -> Self {
+        let __sifr_field_init_0: SifrInt = start.clone();
         Self { start: __sifr_field_init_0 }
     }
 }
 
 impl Countdown {
-    fn __iter__(&self) -> Box<dyn Iterator<Item = i64>> {
-        let mut values: Vec<i64> = vec![];
-        let mut i: i64 = self.start;
-        while i > (0_i64) {
-            values.push(i);
-            i -= 1_i64;
+    fn __iter__(&self) -> Box<dyn Iterator<Item = SifrInt>> {
+        let mut values: Vec<SifrInt> = vec![];
+        let mut i: SifrInt = self.start.clone();
+        while &i > &SifrInt::from_i64(0) {
+            values.push(i.clone());
+            i = &i - &SifrInt::from_i64(1);
         }
         Box::new(values.into_iter())
     }
 }
 
 impl Countdown {
-    fn __reversed__(&self) -> Box<dyn Iterator<Item = i64>> {
-        let mut values: Vec<i64> = vec![];
-        let mut i: i64 = 1_i64;
-        while (i <= self.start) {
-            values.push(i);
-            i += 1_i64;
+    fn __reversed__(&self) -> Box<dyn Iterator<Item = SifrInt>> {
+        let mut values: Vec<SifrInt> = vec![];
+        let mut i: SifrInt = SifrInt::from_i64(1);
+        while (&i <= &self.start.clone()) {
+            values.push(i.clone());
+            i = &i + &SifrInt::from_i64(1);
         }
         Box::new(values.into_iter())
     }
@@ -77,15 +79,15 @@ impl ::std::fmt::Display for Countdown {
 }
 
 fn main() {
-    let countdown: Countdown = Countdown::new(4_i64);
+    let countdown: Countdown = Countdown::new(SifrInt::from_i64(4));
     println!("{:?}", (countdown).clone().__iter__().collect::<Vec<_>>());
     println!("{:?}", Box::new((countdown).clone().__reversed__().into_iter()).collect::<Vec<_>>());
-    let mut running_total: i64 = 0_i64;
-    for value in Countdown::new(4_i64).__iter__() {
-        running_total += value;
+    let mut running_total: SifrInt = SifrInt::from_i64(0);
+    for value in Countdown::new(SifrInt::from_i64(4)).__iter__() {
+        running_total = &running_total + &value;
     }
     println!("{}", running_total);
-    let mut it: CountdownIter = CountdownIter::new(2_i64);
+    let mut it: CountdownIter = CountdownIter::new(SifrInt::from_i64(2));
     println!("{}", (it.__next__()).map_or("None".to_string().to_string(), |__v| format!("{}", __v)));
     println!("{}", (it.__next__()).map_or("None".to_string().to_string(), |__v| format!("{}", __v)));
     println!("{}", (it.__next__()).map_or("None".to_string().to_string(), |__v| format!("{}", __v)));

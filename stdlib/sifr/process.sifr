@@ -431,7 +431,7 @@ def _status_from_fields(code: int, signal: int | None, timed_out: bool) -> Statu
     if signal is not None:
         status: Status = Status(code, "signal")
         status.success = False
-        observed_signal: int | None = signal
+        observed_signal: int | None = signal.clone()
         status.signal = observed_signal
         return status
     return _status(code)

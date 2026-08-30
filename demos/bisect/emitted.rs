@@ -1,151 +1,152 @@
 // src/main.rs
+use ::sifr_runtime::SifrInt;
+
 // --- stdlib: sifr.bisect ---
 fn bisect_left<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     a: &Vec<T>,
     x: &T,
-    lo: i64,
-    hi: Option<i64>,
-) -> i64 {
-    let mut left: i64 = lo;
-    if left < (0_i64) {
-        left = 0_i64;
+    lo: SifrInt,
+    hi: Option<SifrInt>,
+) -> SifrInt {
+    let mut left: SifrInt = lo.clone();
+    if &left < &SifrInt::from_i64(0) {
+        left = SifrInt::from_i64(0);
     }
-    let mut right: i64 = a.len() as i64;
+    let mut right: SifrInt = SifrInt::from(a.len());
     if hi.is_none() {
-        right = a.len() as i64;
+        right = SifrInt::from(a.len());
     } else {
-        if let Some(hi) = hi {
-            if hi < (0_i64) {
-                right = 0_i64;
+        if let Some(hi) = hi.clone() {
+            if &hi < &SifrInt::from_i64(0) {
+                right = SifrInt::from_i64(0);
             } else {
-                if (hi > (a.len() as i64)) {
-                    right = a.len() as i64;
+                if (&hi > &SifrInt::from(a.len())) {
+                    right = SifrInt::from(a.len());
                 } else {
                     right = hi;
                 }
             }
         }
     }
-    while left < right {
-        let mid: i64 = (left + right) / (2_i64);
+    while &left < &right {
+        let mid: SifrInt = (&left + &right)
+            .floor_div_known_nonzero(&SifrInt::from_i64(2));
         let val: Option<T> = {
             let __sifr_index_list = &a;
-            let __sifr_index_i = mid;
-            let __sifr_index_norm = if __sifr_index_i < 0 {
-                ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
-            } else {
-                __sifr_index_i as usize
-            };
+            let __sifr_index_i = mid.clone();
+            let __sifr_index_norm = __sifr_index_i
+                .normalize_index_or_len(__sifr_index_list.len());
             __sifr_index_list.get(__sifr_index_norm).cloned()
         };
         if let Some(val) = val {
             if val < *x {
-                left = mid + (1_i64);
+                left = &mid + &SifrInt::from_i64(1);
             } else {
                 right = mid;
             }
         } else {
-            left = mid + (1_i64);
+            left = &mid + &SifrInt::from_i64(1);
         }
     }
-    left
+    left.clone()
 }
 fn bisect_right<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     a: &Vec<T>,
     x: &T,
-    lo: i64,
-    hi: Option<i64>,
-) -> i64 {
-    let mut left: i64 = lo;
-    if left < (0_i64) {
-        left = 0_i64;
+    lo: SifrInt,
+    hi: Option<SifrInt>,
+) -> SifrInt {
+    let mut left: SifrInt = lo.clone();
+    if &left < &SifrInt::from_i64(0) {
+        left = SifrInt::from_i64(0);
     }
-    let mut right: i64 = a.len() as i64;
+    let mut right: SifrInt = SifrInt::from(a.len());
     if hi.is_none() {
-        right = a.len() as i64;
+        right = SifrInt::from(a.len());
     } else {
-        if let Some(hi) = hi {
-            if hi < (0_i64) {
-                right = 0_i64;
+        if let Some(hi) = hi.clone() {
+            if &hi < &SifrInt::from_i64(0) {
+                right = SifrInt::from_i64(0);
             } else {
-                if (hi > (a.len() as i64)) {
-                    right = a.len() as i64;
+                if (&hi > &SifrInt::from(a.len())) {
+                    right = SifrInt::from(a.len());
                 } else {
                     right = hi;
                 }
             }
         }
     }
-    while left < right {
-        let mid: i64 = (left + right) / (2_i64);
+    while &left < &right {
+        let mid: SifrInt = (&left + &right)
+            .floor_div_known_nonzero(&SifrInt::from_i64(2));
         let val: Option<T> = {
             let __sifr_index_list = &a;
-            let __sifr_index_i = mid;
-            let __sifr_index_norm = if __sifr_index_i < 0 {
-                ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize
-            } else {
-                __sifr_index_i as usize
-            };
+            let __sifr_index_i = mid.clone();
+            let __sifr_index_norm = __sifr_index_i
+                .normalize_index_or_len(__sifr_index_list.len());
             __sifr_index_list.get(__sifr_index_norm).cloned()
         };
         if let Some(val) = val {
             if *x < val {
                 right = mid;
             } else {
-                left = mid + (1_i64);
+                left = &mid + &SifrInt::from_i64(1);
             }
         } else {
-            left = mid + (1_i64);
+            left = &mid + &SifrInt::from_i64(1);
         }
     }
-    left
+    left.clone()
 }
 fn insort_left<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     a: &mut Vec<T>,
     x: &T,
-    lo: i64,
-    hi: Option<i64>,
+    lo: SifrInt,
+    hi: Option<SifrInt>,
 ) {
-    let pos: i64 = bisect_left(a, x, lo, hi);
-    a.insert(pos as usize, x.clone());
+    let pos: SifrInt = bisect_left(a, x, (lo).clone(), (hi).clone());
+    a.insert(::sifr_runtime::to_usize_proven(&pos), x.clone());
 }
 fn insort_right<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     a: &mut Vec<T>,
     x: &T,
-    lo: i64,
-    hi: Option<i64>,
+    lo: SifrInt,
+    hi: Option<SifrInt>,
 ) {
-    let pos: i64 = bisect_right(a, x, lo, hi);
-    a.insert(pos as usize, x.clone());
+    let pos: SifrInt = bisect_right(a, x, (lo).clone(), (hi).clone());
+    a.insert(::sifr_runtime::to_usize_proven(&pos), x.clone());
 }
 
 // --- stdlib: sifr.test ---
 fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
-    assert_eq!(actual.len() as i64, expected.len() as i64);
-    let mut i: i64 = 0_i64;
-    while i < (actual.len() as i64) {
-        assert!(Some(actual[i as usize]) == expected.get(i as usize).copied());
-        i += 1_i64;
+    assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
+    let mut i: SifrInt = SifrInt::from_i64(0);
+    while &i < &SifrInt::from(actual.len()) {
+        assert!(
+            Some(actual[::sifr_runtime::to_usize_proven(& (i))]) == expected
+            .get(::sifr_runtime::to_usize_proven(& (i))).copied()
+        );
+        i = &i + &SifrInt::from_i64(1);
     }
 }
 // --- end stdlib ---
 
 fn collect_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![];
-    let data: Vec<i64> = vec![1_i64, 2_i64, 2_i64, 3_i64, 5_i64];
-    actual.push(bisect_left(&data, &(2_i64), 0_i64, None) == (1_i64));
-    actual.push(bisect_right(&data, &(2_i64), 0_i64, None) == (3_i64));
-    actual.push(bisect_left(&data, &(4_i64), 0_i64, None) == (4_i64));
-    actual.push(bisect_right(&data, &(4_i64), 0_i64, None) == (4_i64));
-    let mut left_mut: Vec<i64> = vec![1_i64, 3_i64, 3_i64, 5_i64];
-    insort_left(&mut left_mut, &(3_i64), 0_i64, None);
+    let data: Vec<SifrInt> = vec![SifrInt::from_i64(1), SifrInt::from_i64(2), SifrInt::from_i64(2), SifrInt::from_i64(3), SifrInt::from_i64(5)];
+    actual.push(&bisect_left(&data, &SifrInt::from_i64(2), SifrInt::from_i64(0), None) == &SifrInt::from_i64(1));
+    actual.push(&bisect_right(&data, &SifrInt::from_i64(2), SifrInt::from_i64(0), None) == &SifrInt::from_i64(3));
+    actual.push(&bisect_left(&data, &SifrInt::from_i64(4), SifrInt::from_i64(0), None) == &SifrInt::from_i64(4));
+    actual.push(&bisect_right(&data, &SifrInt::from_i64(4), SifrInt::from_i64(0), None) == &SifrInt::from_i64(4));
+    let mut left_mut: Vec<SifrInt> = vec![SifrInt::from_i64(1), SifrInt::from_i64(3), SifrInt::from_i64(3), SifrInt::from_i64(5)];
+    insort_left(&mut left_mut, &SifrInt::from_i64(3), SifrInt::from_i64(0), None);
     actual.push((format!("{:?}", left_mut)).as_str() == ("[1, 3, 3, 3, 5]".to_string()).as_str());
-    let mut right_mut: Vec<i64> = vec![1_i64, 3_i64, 3_i64, 5_i64];
-    insort_right(&mut right_mut, &(3_i64), 0_i64, None);
+    let mut right_mut: Vec<SifrInt> = vec![SifrInt::from_i64(1), SifrInt::from_i64(3), SifrInt::from_i64(3), SifrInt::from_i64(5)];
+    insort_right(&mut right_mut, &SifrInt::from_i64(3), SifrInt::from_i64(0), None);
     actual.push((format!("{:?}", right_mut)).as_str() == ("[1, 3, 3, 3, 5]".to_string()).as_str());
-    let mut empty: Vec<i64> = vec![];
-    actual.push(bisect_left(&empty, &(10_i64), 0_i64, None) == (0_i64));
-    insort_right(&mut empty, &(10_i64), 0_i64, None);
+    let mut empty: Vec<SifrInt> = vec![];
+    actual.push(&bisect_left(&empty, &SifrInt::from_i64(10), SifrInt::from_i64(0), None) == &SifrInt::from_i64(0));
+    insort_right(&mut empty, &SifrInt::from_i64(10), SifrInt::from_i64(0), None);
     actual.push((format!("{:?}", empty)).as_str() == ("[10]".to_string()).as_str());
     actual
 }

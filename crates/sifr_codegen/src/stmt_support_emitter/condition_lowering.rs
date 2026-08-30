@@ -123,7 +123,9 @@ impl RustEmitter {
                 return Ok(Some(self.rewrite_stdlib_constant_idents_in_expr(lowered)));
             }
         }
-        self.lower_rendered_expr_for_ir(condition)
+        Ok(self
+            .lower_rendered_expr_for_ir(condition)?
+            .map(|lowered| self.rewrite_stdlib_constant_idents_in_expr(lowered)))
     }
 
     pub(crate) fn option_binding_value_expr_for_ir(&self, option_var: &str) -> crate::RustExpr {
@@ -136,6 +138,12 @@ impl RustEmitter {
                 method: "as_ref".to_string(),
                 args: vec![],
             }
+        } else if self
+            .local_binding_types
+            .get(option_var)
+            .is_some_and(crate::helpers::is_logically_copy_rust_move_type)
+        {
+            crate::RustExpr::Clone(Box::new(base))
         } else {
             base
         }
@@ -215,13 +223,16 @@ impl RustEmitter {
                 let HirExpr::Name { name, .. } = object.as_ref() else {
                     return None;
                 };
-                let lhs = crate::RustExpr::Cast {
-                    expr: Box::new(crate::RustExpr::MethodCall {
+                let lhs = crate::RustExpr::FnCall {
+                    func: Box::new(crate::RustExpr::Path(vec![
+                        "SifrInt".to_string(),
+                        "from".to_string(),
+                    ])),
+                    args: vec![crate::RustExpr::MethodCall {
                         receiver: Box::new(crate::RustExpr::Ident(name.clone())),
                         method: "len".to_string(),
                         args: vec![],
-                    }),
-                    ty: crate::RustType::I64,
+                    }],
                 };
                 Some(crate::RustExpr::BinOp {
                     left: Box::new(lhs),
@@ -245,13 +256,16 @@ impl RustEmitter {
                     let HirExpr::Name { name, .. } = object.as_ref() else {
                         return None;
                     };
-                    let lhs = crate::RustExpr::Cast {
-                        expr: Box::new(crate::RustExpr::MethodCall {
+                    let lhs = crate::RustExpr::FnCall {
+                        func: Box::new(crate::RustExpr::Path(vec![
+                            "SifrInt".to_string(),
+                            "from".to_string(),
+                        ])),
+                        args: vec![crate::RustExpr::MethodCall {
                             receiver: Box::new(crate::RustExpr::Ident(name.clone())),
                             method: "len".to_string(),
                             args: vec![],
-                        }),
-                        ty: crate::RustType::I64,
+                        }],
                     };
                     Some(crate::RustExpr::BinOp {
                         left: Box::new(lhs),
@@ -269,9 +283,12 @@ impl RustEmitter {
         ty: &Type,
     ) -> Option<crate::RustExpr> {
         match crate::resolve_alias_type_for_plain_call(ty) {
-            Type::Int | Type::LiteralInt(_) => Some(crate::RustExpr::Cast {
-                expr: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Int(0))),
-                ty: crate::RustType::I64,
+            Type::Int | Type::LiteralInt(_) => Some(crate::RustExpr::FnCall {
+                func: Box::new(crate::RustExpr::Path(vec![
+                    "SifrInt".to_string(),
+                    "from_i64".to_string(),
+                ])),
+                args: vec![crate::RustExpr::Literal(crate::RustLiteral::Int(0))],
             }),
             Type::Float => Some(crate::RustExpr::Cast {
                 expr: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Float(0.0))),

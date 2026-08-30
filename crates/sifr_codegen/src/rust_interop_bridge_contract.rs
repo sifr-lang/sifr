@@ -496,7 +496,9 @@ pub(crate) fn bridge_type_contract(
         ),
         Type::Int => RustBridgeTypeContract {
             sifr_type: "int".to_string(),
-            rust_borrowed_type: Some("&::sifr_runtime::interop::SifrIntBridge".to_string()),
+            // A borrowed Sifr parameter is cloned into an owned bridge value at the ABI boundary.
+            // Native functions therefore receive one stable exact-integer representation by value.
+            rust_borrowed_type: Some("::sifr_runtime::interop::SifrIntBridge".to_string()),
             rust_owned_type: Some("::sifr_runtime::interop::SifrIntBridge".to_string()),
             rust_return_type: Some("::sifr_runtime::interop::SifrIntBridge".to_string()),
             kind: RustBridgeTypeKind::ExactInt,

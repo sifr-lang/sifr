@@ -1,20 +1,22 @@
 // src/main.rs
-fn write_indices(size: i64) -> Vec<i64> {
-    let mut out: Vec<i64> = {
+use ::sifr_runtime::SifrInt;
+
+use ::sifr_runtime::SifrRange;
+
+fn write_indices(size: SifrInt) -> Vec<SifrInt> {
+    let mut out: Vec<SifrInt> = {
     let mut __sifr_list_comp = vec![];
-    for i in 0_i64..size {
-        __sifr_list_comp.push(0_i64);
+    for i in SifrRange::new_known_nonzero(SifrInt::from_i64(0), size.clone(), SifrInt::from_i64(1)) {
+        __sifr_list_comp.push(SifrInt::from_i64(0));
     }
     __sifr_list_comp
 };
-    for i in 0_i64..out.len() as i64 {
+    for i in SifrRange::new_known_nonzero(SifrInt::from_i64(0), SifrInt::from(out.len()), SifrInt::from_i64(1)) {
         {
-            let __idx_raw = i;
-            let __idx_norm = if __idx_raw < 0 { (out.len() as i64) + __idx_raw } else { __idx_raw };
-            if __idx_norm >= 0 {
-                if let Some(__elem) = out.get_mut(__idx_norm as usize) {
-                    *__elem = i + (1_i64);
-                }
+            let __idx_raw = i.clone();
+            let __idx_norm = __idx_raw.normalize_index_or_len(out.len());
+            if let Some(__elem) = out.get_mut(__idx_norm) {
+                *__elem = &i + &SifrInt::from_i64(1);
             }
         }
     }
@@ -22,7 +24,7 @@ fn write_indices(size: i64) -> Vec<i64> {
 }
 
 fn main() {
-    assert!((format!("{:?}", write_indices(4_i64)) == "[1, 2, 3, 4]"));
-    assert!((format!("{:?}", write_indices(0_i64)) == "[]"));
+    assert!((format!("{:?}", write_indices(SifrInt::from_i64(4))) == "[1, 2, 3, 4]"));
+    assert!((format!("{:?}", write_indices(SifrInt::from_i64(0))) == "[]"));
     println!("indexed_tables: ok");
 }
