@@ -24,15 +24,13 @@ impl RustEmitter {
         used
     }
 
-    fn checked_place_witnesses_affected_by_stmt(
+    fn checked_place_witnesses_affected_by_stmts(
         &self,
-        stmt: &crate::HirStmt,
+        stmts: &[crate::HirStmt],
         require_missing_body: bool,
     ) -> Vec<(String, super::CheckedPlaceReadWitness)> {
-        let mutated = crate::hir_analysis::queries::collect_mutated_vars(
-            std::slice::from_ref(stmt),
-            Some(&self.func_signatures),
-        );
+        let mutated =
+            crate::hir_analysis::queries::collect_mutated_vars(stmts, Some(&self.func_signatures));
         let mut affected = self
             .checked_place_read_witnesses
             .iter()
@@ -47,6 +45,74 @@ impl RustEmitter {
             .collect::<Vec<_>>();
         affected.sort_by_key(|(_, witness)| witness.order);
         affected
+    }
+
+    fn checked_place_witnesses_affected_by_stmt(
+        &self,
+        stmt: &crate::HirStmt,
+        require_missing_body: bool,
+    ) -> Vec<(String, super::CheckedPlaceReadWitness)> {
+        self.checked_place_witnesses_affected_by_stmts(
+            std::slice::from_ref(stmt),
+            require_missing_body,
+        )
+    }
+
+    pub(crate) fn checked_place_loop_condition_refreshes_for_ir(
+        &self,
+        condition: &crate::HirExpr,
+        body: &[crate::HirStmt],
+    ) -> (Vec<String>, Vec<RustStmt>) {
+        let condition_reads =
+            crate::hir_analysis::queries::collection_reads_in_condition(condition)
+                .into_iter()
+                .filter_map(|read| {
+                    let crate::HirExpr::Index { object, index, .. } = read else {
+                        return None;
+                    };
+                    checked_place_read_key(&object, &index)
+                })
+                .collect::<std::collections::BTreeSet<_>>();
+        let refreshed = self
+            .checked_place_witnesses_affected_by_stmts(body, false)
+            .into_iter()
+            .filter(|(key, _)| condition_reads.contains(key))
+            .collect::<Vec<_>>();
+        let keys = refreshed.iter().map(|(key, _)| key.clone()).collect();
+        let guards = refreshed
+            .into_iter()
+            .map(|(_, witness)| RustStmt::LetElse {
+                pattern: format!("Some({})", witness.binding),
+                value: witness.option,
+                else_body: witness.missing.unwrap_or_else(|| vec![RustStmt::Break]),
+            })
+            .collect();
+        (keys, guards)
+    }
+
+    pub(crate) fn checked_place_while_stmt_for_ir(
+        condition: crate::RustExpr,
+        body: Vec<RustStmt>,
+        mut condition_refreshes: Vec<RustStmt>,
+    ) -> RustStmt {
+        if condition_refreshes.is_empty() {
+            return RustStmt::While {
+                cond: condition,
+                body,
+            };
+        }
+        condition_refreshes.push(RustStmt::If {
+            cond: crate::RustExpr::UnaryOp {
+                op: "!".to_string(),
+                operand: Box::new(crate::RustExpr::Paren(Box::new(condition))),
+            },
+            then_body: vec![RustStmt::Break],
+            else_body: None,
+        });
+        condition_refreshes.extend(body);
+        RustStmt::Loop {
+            body: condition_refreshes,
+        }
     }
 
     pub(crate) fn refresh_checked_place_witnesses_after_emitted_stmt(
@@ -335,7 +401,21 @@ impl RustEmitter {
         body: &[crate::HirStmt],
         guards: &[CheckedDictReadGuard],
         missing: &RustStmt,
+        already_refreshed: &[String],
     ) -> Result<Option<Vec<RustStmt>>, crate::CodegenError> {
+        let guard_keys = guards
+            .iter()
+            .map(|guard| guard.key.as_str())
+            .collect::<std::collections::BTreeSet<_>>();
+        let loop_carried_candidates = self
+            .checked_place_witnesses_affected_by_stmts(body, false)
+            .into_iter()
+            .filter(|(key, _)| {
+                !guard_keys.contains(key.as_str())
+                    && !already_refreshed.contains(key)
+                    && Self::checked_place_read_is_used(key, body)
+            })
+            .collect::<Vec<_>>();
         let previous = guards
             .iter()
             .map(|guard| {
@@ -348,7 +428,14 @@ impl RustEmitter {
                 )
             })
             .collect::<Vec<_>>();
+        let parent_witness_uses = self
+            .checked_place_read_witness_uses
+            .replace(Some(std::collections::HashSet::new()));
         let lowered = self.try_lower_scoped_stmt_block_for_ir(body);
+        let local_witness_uses = self
+            .checked_place_read_witness_uses
+            .replace(parent_witness_uses)
+            .unwrap_or_default();
         for (key, previous_binding) in previous {
             if let Some(binding) = previous_binding {
                 self.checked_place_read_witnesses.insert(key, binding);
@@ -359,7 +446,52 @@ impl RustEmitter {
         let Some(mut lowered) = lowered? else {
             return Ok(None);
         };
-        for guard in guards.iter().rev() {
+        let loop_carried = loop_carried_candidates
+            .into_iter()
+            .filter(|(key, _)| local_witness_uses.contains(key))
+            .collect::<Vec<_>>();
+        let used_guard_keys = guards
+            .iter()
+            .filter(|guard| local_witness_uses.contains(&guard.key))
+            .map(|guard| guard.key.as_str())
+            .collect::<std::collections::BTreeSet<_>>();
+        let locally_satisfied = loop_carried
+            .iter()
+            .map(|(key, _)| key.as_str())
+            .chain(used_guard_keys.iter().copied())
+            .collect::<std::collections::BTreeSet<_>>();
+        if let Some(parent_uses) = self.checked_place_read_witness_uses.borrow_mut().as_mut() {
+            parent_uses.extend(
+                local_witness_uses
+                    .iter()
+                    .filter(|key| !locally_satisfied.contains(key.as_str()))
+                    .cloned(),
+            );
+        }
+        drop(locally_satisfied);
+        for (_, witness) in loop_carried.into_iter().rev() {
+            lowered = if let Some(missing) = witness.missing {
+                let mut guarded = vec![RustStmt::LetElse {
+                    pattern: format!("Some({})", witness.binding),
+                    value: witness.option,
+                    else_body: missing,
+                }];
+                guarded.extend(lowered);
+                guarded
+            } else {
+                vec![RustStmt::IfLet {
+                    pattern: format!("Some({})", witness.binding),
+                    expr: witness.option,
+                    then_body: lowered,
+                    else_body: None,
+                }]
+            };
+        }
+        for guard in guards
+            .iter()
+            .filter(|guard| used_guard_keys.contains(guard.key.as_str()))
+            .rev()
+        {
             lowered.insert(
                 0,
                 RustStmt::LetElse {

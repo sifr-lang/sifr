@@ -591,6 +591,9 @@ impl RustEmitter {
     ) -> Option<RustExpr> {
         let key = checked_place_read_key(object, index)?;
         let witness = self.checked_place_read_witnesses.get(&key)?.clone();
+        if let Some(uses) = self.checked_place_read_witness_uses.borrow_mut().as_mut() {
+            uses.insert(key);
+        }
         let value = RustExpr::Ident(witness.binding);
         let value = if witness.borrowed {
             RustExpr::Deref(Box::new(value))
@@ -631,6 +634,9 @@ impl RustEmitter {
     ) -> Option<RustExpr> {
         let key = checked_place_read_key(object, index)?;
         let witness = self.checked_place_read_witnesses.get(&key)?.clone();
+        if let Some(uses) = self.checked_place_read_witness_uses.borrow_mut().as_mut() {
+            uses.insert(key);
+        }
         let value = RustExpr::Ident(witness.binding);
         Some(if witness.borrowed {
             value

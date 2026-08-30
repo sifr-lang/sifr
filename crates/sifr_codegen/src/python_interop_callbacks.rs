@@ -531,13 +531,27 @@ fn decoder(
         .enumerate()
         .map(|(index, _)| format!("__sifr_callback_arg_{index}"))
         .collect::<Vec<_>>();
-    body.push(RustStmt::LetElse {
-        pattern: format!("Ok([{}])", handles.join(", ")),
+    body.push(RustStmt::Let {
+        mutable: false,
+        name: "__sifr_callback_args_array".to_string(),
+        ty: Some(RustType::Result(
+            Box::new(RustType::Array {
+                element: Box::new(RustType::Named(
+                    "::sifr_runtime::python::ForeignObject".to_string(),
+                )),
+                len: handles.len(),
+            }),
+            Box::new(RustType::Named("_".to_string())),
+        )),
         value: RustExpr::MethodCall {
             receiver: Box::new(RustExpr::Ident("__sifr_callback_args".to_string())),
             method: "try_into".to_string(),
             args: Vec::new(),
         },
+    });
+    body.push(RustStmt::LetElse {
+        pattern: format!("Ok([{}])", handles.join(", ")),
+        value: RustExpr::Ident("__sifr_callback_args_array".to_string()),
         else_body: vec![RustStmt::Return(Some(RustExpr::FnCall {
             func: Box::new(RustExpr::Path(vec!["Err".to_string()])),
             args: vec![RustExpr::FnCall {

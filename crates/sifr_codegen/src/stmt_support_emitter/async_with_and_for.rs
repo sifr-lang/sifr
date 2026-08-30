@@ -265,7 +265,9 @@ impl RustEmitter {
         close_error_ty: Option<&Type>,
         body: &[HirStmt],
     ) -> Result<Option<RustStmt>, crate::CodegenError> {
-        let Some(lowered_body) = self.try_lower_scoped_stmt_block_for_ir(body)? else {
+        let Some(lowered_body) =
+            self.lower_checked_sequence_loop_body_for_ir(body, &[], &RustStmt::Continue, &[])?
+        else {
             return Ok(None);
         };
         let target_pattern = if queries::stmts_reference_var(body, target) {

@@ -35,7 +35,7 @@ use super::ownership_diagnostics;
 use super::protocol_diagnostics;
 use super::sequence_guard_detection::{
     detect_false_exit_sequence_guards, detect_range_sequence_guards, detect_true_sequence_guards,
-    detect_while_sequence_guards,
+    detect_while_sequence_guards, loop_invalidated_sequence_targets,
 };
 use super::sequence_guard_updates::{
     maybe_record_dict_assignment_guard, merge_exhaustive_branch_sequence_guards,
