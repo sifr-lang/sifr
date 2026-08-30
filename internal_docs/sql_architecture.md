@@ -96,6 +96,24 @@ Type positions use `app.Schema`. For example, a verified pool has type
 witness with no runtime representation. Code uses this witness only to
 specialize generic query construction for one concrete profile.
 
+A witness can occur as a direct `profile.schema` argument or as a constrained
+`SqlSchema[P]` parameter. Code cannot store it in a runtime local, field, or
+container. Code also cannot return it as runtime data, capture it, or select it
+through runtime control flow. A generic function can forward its constrained
+witness to another specialization site.
+
+Profile namespaces reserve `Schema`, `schema`, `sql`, `query`, `connect`,
+`open_pool`, `symbol`, `all`, `any`, `not_`, `enums`, `domains`, and `composites`.
+A database object with the same name cannot shadow an export. A static qualified
+lookup keeps the object accessible:
+
+```sifr
+relation = app.symbol("public.sql")
+```
+
+`symbol` accepts only a compile-time name that resolves uniquely in `SchemaIR`.
+A runtime `str`, an unknown name, or an ambiguous unqualified name is an error.
+
 The module does not contain generated table classes or database models. It can
 contain generated enum, domain, and composite types from the SQL schema.
 
@@ -1393,7 +1411,7 @@ The SQL package family uses these internal layers:
 | `sifr_sql_runtime` | Package-neutral SQL pool machinery, verified leases, session reset, statement-cache policy, cancellation budgets, and resource accounting. |
 | Provider compiler component | Dialect parser, semantic analyzer, schema normalizer, formatter support, and source maps. |
 | Provider runtime bridge | Driver adaptation, codecs, protocol errors, cancellation, and provider-specific connection reset. |
-| Provider tool crate | Schema pull, validation, migration execution, and direct command handlers. |
+| Provider tool crate | Schema pull, validation, test provisioning, migration execution, and direct command handlers. |
 | Public Sifr package | `sifr.sql` protocols and the selected provider API. |
 
 `sifr_sql_runtime` builds on `sifr_runtime`. It does not contain a database

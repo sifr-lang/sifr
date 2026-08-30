@@ -486,6 +486,8 @@ Acceptance criteria:
   semantic drift.
 - [ ] Generated Sifr modules expose profile namespaces, nominal profile types,
   schema identities, and metadata without an ORM or runtime profile value.
+- [ ] Compiler-known profile exports cannot collide with generated schema symbols.
+  Static `profile.symbol("qualified.name")` lookup reaches a colliding object.
 - [ ] Object-level semantic diffs and minimum referenced schema slices are exact.
 - [ ] Credentials and live connections are absent from normal compilation.
 
@@ -494,6 +496,7 @@ Focused validation:
 - profile parsing and package-resolution tests
 - canonical fingerprint and irrelevant-order properties
 - provider schema snapshot and semantic-diff tests
+- reserved-export collision and static-symbol lookup fixtures
 - offline-build and credential-leakage negative tests
 
 ### Milestone 5: Common SQL contracts
@@ -929,6 +932,8 @@ Acceptance criteria:
 - [ ] Each profile namespace exports one compile-time `SqlSchema[Profile]`
   witness. Specialization erases the witness and gives the query the proving
   profile parameter.
+- [ ] A witness can occur only as a direct namespace export or a constrained
+  generic parameter. Runtime storage, return, capture, and selection are errors.
 - [ ] Only a verified pool, connection, or transaction with the proving profile
   can execute the specialized query.
 - [ ] Specialized queries cannot reach undeclared schema objects or provider
@@ -942,7 +947,8 @@ Acceptance criteria:
 Focused validation:
 
 - requirement normalization and subset property tests
-- positive and negative witness, specialization, and execution-binding fixtures
+- positive and negative witness, forwarding, specialization, and execution-binding
+  fixtures, including every prohibited runtime use
 - undeclared-object and missing-capability diagnostics
 - PostgreSQL portable examples and the reusable provider-neutral harness
 
@@ -976,6 +982,8 @@ Acceptance criteria:
   streaming, statement-cache, cancellation, bound, error, and panic-safety
   contracts.
 - [ ] Schema tools and migration reflection cover the MySQL capability matrix.
+- [ ] The MySQL provider tool implements `sifr sql test provision` with the
+  common connection-manifest contract.
 - [ ] MySQL independently normalizes, proves, specializes, and validates portable
   schema requirements through the Milestone 15 harness.
 - [ ] Language-server features use MySQL semantics and documentation.
@@ -987,6 +995,7 @@ Focused validation:
 - MySQL parser and semantic differential suites
 - live runtime, cancellation, session, and statement-cache tests
 - schema tool and migration matrices for every supported version
+- test-provision command and connection-manifest tests
 - portable-requirement specialization and capability diagnostics
 - editor snapshots, protocol fuzzing, panic scans, and performance budgets
 
@@ -1020,6 +1029,8 @@ Acceptance criteria:
   contracts.
 - [ ] Schema tools and migration reflection cover the SQLite capability matrix,
   including table-rebuild plans.
+- [ ] The SQLite provider tool implements `sifr sql test provision` with the
+  common connection-manifest contract.
 - [ ] SQLite independently normalizes, proves, specializes, and validates portable
   schema requirements through the Milestone 15 harness.
 - [ ] Language-server features use SQLite semantics and documentation.
@@ -1031,6 +1042,7 @@ Focused validation:
 - SQLite grammar and semantic conformance suites
 - bundled-runtime, worker, interrupt, lock, and statement-cache tests
 - schema tools and table-rebuild migration matrices
+- test-provision command and connection-manifest tests
 - portable-requirement specialization and capability diagnostics
 - corruption, fuzz, panic, editor, and performance suites
 
@@ -1134,7 +1146,7 @@ harnesses. They cannot fork those contracts to simplify one provider.
 | Schema lifecycle tools | Command tests, catalog round trips, semantic diffs, deterministic outputs, redaction, and authority conflicts |
 | Migration compiler | DAG and state typing, intermediate schemas, assertions, recovery simulation, fuzzing, and graph properties |
 | Provider migrations | Live fresh, upgrade, merge, interruption, resume, drift, locking, import, and rollback matrices |
-| Schema requirements and portable constraints | Subset proofs, specialization fixtures, declared-provider matrices, and undeclared-object and missing-capability diagnostics |
+| Schema requirements and portable constraints | Subset proofs, specialization fixtures, per-provider matrices completed in Milestones 15–17, and undeclared-object and missing-capability diagnostics |
 | Dependency metadata | Baseline resolver, checksums, feature allowlist, licenses, advisory audit, compatibility, and mutation self-tests |
 | Documentation only | Documentation checks, local links, `git diff --check`, and the file-size guardrail |
 
