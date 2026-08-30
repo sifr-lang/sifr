@@ -2007,7 +2007,7 @@ tools-package = "project-tools"
 name = "project-tools"
 
 [dependencies]
-sifr-sql-postgresql-tools = "..."
+sifr-sql-postgresql-tools = { path = "../postgresql-tools" }
 
 [package.metadata.sifr]
 manifest = "sifr.toml"
@@ -2022,17 +2022,20 @@ entrypoint = "sql"
 capabilities = ["network", "credentials", "project-write"]
 ```
 
-The tools member is not an application dependency. Sifr resolves and builds it for
-the explicit Sifr build target through the workspace `Cargo.lock`. This target is
-the host that runs Sifr. A workspace cross-compilation default cannot redirect
-the tool build to the application target.
+The selected executable package is a direct, normal dependency and an exact
+workspace member. External provider tools use a reviewed workspace wrapper.
+Sifr records the resolved graph in committed `sifr-tools.lock.json`. The tools
+member is not an application dependency. Sifr builds it for the explicit Sifr
+host target through the workspace `Cargo.lock`, then directly executes the
+produced binary. A Cargo runner or workspace cross-compilation default cannot
+redirect execution to the application target.
 
 Application builds select only the target application package. Tool code does not
 enter target HIR, generated Rust, linker input, or application artifacts.
 
-Tools receive an explicit capability set. Network, environment variables, file
-paths, credential helpers, and subprocess access require grants from the command or
-project configuration.
+Tools receive an explicit capability set. The native host sandbox enforces
+network, environment, project-read, project-write, credential, and subprocess
+grants. Missing sandbox support fails closed. Tool output has a fixed bound.
 
 Built-in command namespaces are reserved. A tool cannot shadow a built-in command.
 Duplicate tool namespaces are hard errors.

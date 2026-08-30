@@ -15,14 +15,44 @@ fn direct_sql_namespace_runs_locked_host_tool_and_validates_manifest() {
         String::from_utf8_lossy(&lock.stderr)
     );
 
-    let output = Command::new(env!("CARGO_BIN_EXE_sifr"))
+    let missing_lock = Command::new(env!("CARGO_BIN_EXE_sifr"))
         .args(["sql", "test", "provision", "--profile", "app"])
+        .current_dir(workspace.path())
+        .output()
+        .expect("reject missing host-tool lock");
+    assert_eq!(missing_lock.status.code(), Some(2));
+    assert!(
+        String::from_utf8_lossy(&missing_lock.stderr).contains("sifr tools lock"),
+        "{}",
+        String::from_utf8_lossy(&missing_lock.stderr)
+    );
+
+    let tool_lock = Command::new(env!("CARGO_BIN_EXE_sifr"))
+        .args(["tools", "lock"])
+        .current_dir(workspace.path())
+        .output()
+        .expect("write host-tool lock");
+    assert!(
+        tool_lock.status.success(),
+        "{}",
+        String::from_utf8_lossy(&tool_lock.stderr)
+    );
+    let lock_check = Command::new(env!("CARGO_BIN_EXE_sifr"))
+        .args(["tools", "lock", "--check"])
+        .current_dir(workspace.path())
+        .output()
+        .expect("verify host-tool lock");
+    assert!(lock_check.status.success());
+
+    let output = Command::new(env!("CARGO_BIN_EXE_sifr"))
+        .args(["sql", "test", "provision", "--profile=app"])
         .current_dir(workspace.path())
         .output()
         .expect("run tool namespace");
     assert!(
         output.status.success(),
-        "stdout={} stderr={}",
+        "status={:?} stdout={} stderr={}",
+        output.status,
         String::from_utf8_lossy(&output.stdout),
         String::from_utf8_lossy(&output.stderr)
     );
@@ -32,6 +62,33 @@ fn direct_sql_namespace_runs_locked_host_tool_and_validates_manifest() {
     .expect("canonical connection manifest");
     assert_eq!(manifest.profile, "app");
     assert_eq!(manifest.cleanup.tool_namespace, "sql");
+    assert_eq!(
+        manifest.cleanup.command_arguments(),
+        ["test", "cleanup", "--resource-id", "fixture-1"]
+    );
+
+    let probe = Command::new(env!("CARGO_BIN_EXE_sifr"))
+        .arg("probe")
+        .current_dir(workspace.path())
+        .env("SIFR_TEST_SECRET_TOKEN", "must-not-leak")
+        .output()
+        .expect("run confined probe");
+    assert!(
+        probe.status.success(),
+        "status={:?} stdout={} stderr={}",
+        probe.status,
+        String::from_utf8_lossy(&probe.stdout),
+        String::from_utf8_lossy(&probe.stderr)
+    );
+    assert_eq!(String::from_utf8_lossy(&probe.stdout).trim(), "confined");
+
+    let bounded = Command::new(env!("CARGO_BIN_EXE_sifr"))
+        .args(["probe", "flood"])
+        .current_dir(workspace.path())
+        .output()
+        .expect("bound combined tool output");
+    assert!(!bounded.status.success());
+    assert!(String::from_utf8_lossy(&bounded.stderr).contains("10 MiB limit"));
 
     let unknown = Command::new(env!("CARGO_BIN_EXE_sifr"))
         .arg("unknown-tool")
@@ -40,6 +97,27 @@ fn direct_sql_namespace_runs_locked_host_tool_and_validates_manifest() {
         .expect("run unknown namespace");
     assert_eq!(unknown.status.code(), Some(2));
     assert!(String::from_utf8_lossy(&unknown.stderr).contains("unknown tool namespace"));
+
+    let typo = Command::new(env!("CARGO_BIN_EXE_sifr"))
+        .arg("biuld")
+        .current_dir(workspace.path().join("provider"))
+        .output()
+        .expect("diagnose built-in typo");
+    assert_eq!(typo.status.code(), Some(2));
+    assert!(String::from_utf8_lossy(&typo.stderr).contains("did you mean 'build'"));
+
+    std::fs::write(
+        workspace.path().join("provider/src/drift.rs"),
+        "pub const DRIFT: u8 = 1;\n",
+    )
+    .expect("mutate tool source");
+    let drift = Command::new(env!("CARGO_BIN_EXE_sifr"))
+        .arg("probe")
+        .current_dir(workspace.path())
+        .output()
+        .expect("detect persisted tool drift");
+    assert_eq!(drift.status.code(), Some(2));
+    assert!(String::from_utf8_lossy(&drift.stderr).contains("does not match"));
 }
 
 fn write_fixture(root: &std::path::Path) {
@@ -58,12 +136,12 @@ fn write_fixture(root: &std::path::Path) {
     std::fs::write(root.join("tools/src/lib.rs"), "pub fn marker() {}\n").expect("tools marker");
     std::fs::write(
         root.join("tools/sifr.toml"),
-        "[tools.sql]\npackage = \"provider-tools\"\nentrypoint = \"sql-tool\"\ncapabilities = [\"credentials\", \"network\", \"project-write\"]\n",
+        "[tools.sql]\npackage = \"provider-tools\"\nentrypoint = \"sql-tool\"\ncapabilities = [\"credentials\", \"network\", \"project-write\"]\n\n[tools.probe]\npackage = \"provider-tools\"\nentrypoint = \"probe-tool\"\ncapabilities = []\n",
     )
     .expect("tools Sifr manifest");
     std::fs::write(
         root.join("provider/Cargo.toml"),
-        "[package]\nname = \"provider-tools\"\nversion = \"0.1.0\"\nedition = \"2024\"\n\n[[bin]]\nname = \"sql-tool\"\npath = \"src/main.rs\"\n",
+        "[package]\nname = \"provider-tools\"\nversion = \"0.1.0\"\nedition = \"2024\"\n\n[[bin]]\nname = \"sql-tool\"\npath = \"src/main.rs\"\n\n[[bin]]\nname = \"probe-tool\"\npath = \"src/probe.rs\"\n",
     )
     .expect("provider manifest");
     std::fs::write(
@@ -83,4 +161,31 @@ fn write_fixture(root: &std::path::Path) {
 "##,
     )
     .expect("provider source");
+    let workspace_secret = root.join("workspace-secret.txt");
+    std::fs::write(&workspace_secret, "secret\n").expect("workspace secret");
+    std::fs::write(
+        root.join("provider/src/probe.rs"),
+        format!(
+            r#"fn main() {{
+    let mode = std::env::args().nth(1);
+    if mode.as_deref() == Some("child") {{ return; }}
+    if mode.as_deref() == Some("flood") {{
+        use std::io::Write as _;
+        let bytes = vec![b'x'; 6 * 1024 * 1024];
+        std::io::stdout().write_all(&bytes).unwrap();
+        std::io::stderr().write_all(&bytes).unwrap();
+        return;
+    }}
+    if std::env::var_os("SIFR_TEST_SECRET_TOKEN").is_some() {{ std::process::exit(10); }}
+    if std::fs::read_to_string({workspace_secret:?}).is_ok() {{ std::process::exit(11); }}
+    if std::process::Command::new("/usr/bin/true").status().is_ok() {{ std::process::exit(12); }}
+    if std::net::TcpListener::bind("127.0.0.1:0").is_ok() {{ std::process::exit(13); }}
+    if std::env::current_exe().ok().and_then(|path| std::process::Command::new(path).arg("child").status().ok()).is_some() {{ std::process::exit(14); }}
+    println!("confined");
+}}
+"#,
+            workspace_secret = workspace_secret,
+        ),
+    )
+    .expect("probe source");
 }

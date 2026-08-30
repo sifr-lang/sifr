@@ -1,8 +1,8 @@
 use crate::{
-    CargoPackage, CargoPackageId, CargoResolveEdge, CargoSifrMetadata, CargoTarget,
-    CargoWorkspaceSifrMetadata, HostToolGraph, NormalizedCargoMetadata, PackageClassification,
-    PackageGraphSnapshot, PackageSourceMap, SifrPackageGraph, resolve_host_tool_graph,
-    verify_host_tool_graph,
+    CargoDependency, CargoPackage, CargoPackageId, CargoResolveEdge, CargoSifrMetadata,
+    CargoTarget, CargoWorkspaceSifrMetadata, HostToolGraph, NormalizedCargoMetadata,
+    PackageClassification, PackageGraphSnapshot, PackageSourceMap, SifrPackageGraph,
+    load_host_tool_lock, resolve_host_tool_graph, verify_host_tool_graph, write_host_tool_lock,
 };
 use sifr_frontend::DiskSourceProvider;
 use std::collections::{BTreeMap, BTreeSet};
@@ -18,20 +18,17 @@ fn host_tool_graph_resolves_locked_host_entrypoint() {
     assert_eq!(entry.entrypoint, "sql-tool");
     assert_eq!(entry.capabilities.len(), 3);
     let plan = graph
-        .command_plan(
-            "sql",
-            "aarch64-apple-darwin",
-            &["schema".to_string(), "build".to_string()],
-        )
+        .build_plan("sql", "aarch64-apple-darwin")
         .expect("command should plan");
-    assert_eq!(plan.program, "cargo");
+    assert_eq!(plan.args[0], "build");
     assert!(plan.args.iter().any(|arg| arg == "--locked"));
     assert!(
         plan.args
             .windows(2)
             .any(|pair| { pair == ["--target".to_string(), "aarch64-apple-darwin".to_string()] })
     );
-    assert_eq!(&plan.args[plan.args.len() - 2..], ["schema", "build"]);
+    assert!(!plan.args.iter().any(|arg| arg == "--"));
+    assert!(graph.build_plan("missing", "aarch64-apple-darwin").is_err());
 }
 
 #[test]
@@ -51,6 +48,15 @@ fn host_tool_graph_rejects_reserved_namespaces_and_unknown_capabilities() {
     let errors = resolve_host_tool_graph(&unknown.snapshot(false), &mut DiskSourceProvider::new())
         .expect_err("unknown capability must fail");
     assert!(errors[0].message.contains("unknown capability"));
+
+    let duplicate = ToolFixture::new("duplicate_namespace");
+    duplicate.write_manifest(
+        "[tools.sql]\npackage = \"provider-tools\"\nentrypoint = \"sql-tool\"\ncapabilities = []\n\n[tools.sql]\npackage = \"provider-tools\"\nentrypoint = \"sql-tool\"\ncapabilities = []\n",
+    );
+    let errors =
+        resolve_host_tool_graph(&duplicate.snapshot(false), &mut DiskSourceProvider::new())
+            .expect_err("duplicate namespace must fail TOML parsing");
+    assert!(errors[0].message.contains("cannot parse tools manifest"));
 }
 
 #[test]
@@ -58,6 +64,22 @@ fn host_tool_graph_rejects_application_contamination() {
     let fixture = ToolFixture::new("contamination");
     let errors = resolve_host_tool_graph(&fixture.snapshot(true), &mut DiskSourceProvider::new())
         .expect_err("application dependency on a tool must fail");
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.message.contains("reaches host-only tool package"))
+    );
+}
+
+#[test]
+fn application_graph_derivation_rejects_host_tool_contamination_before_source_loading() {
+    let fixture = ToolFixture::new("derivation_contamination");
+    let snapshot = fixture.snapshot(true);
+    let errors = crate::graph::derive::derive_package_graph_from_normalized(
+        &snapshot.metadata,
+        &mut DiskSourceProvider::new(),
+    )
+    .expect_err("application graph derivation must reject host tools");
     assert!(
         errors
             .iter()
@@ -75,6 +97,53 @@ fn host_tool_graph_detects_lockfile_hash_drift() {
     let error = verify_host_tool_graph(&graph, &mut DiskSourceProvider::new())
         .expect_err("hash drift must fail");
     assert!(error.message.contains("hash drifted"));
+}
+
+#[test]
+fn committed_host_tool_lock_detects_manifest_and_path_source_drift() {
+    let fixture = ToolFixture::new("persisted_drift");
+    let graph = resolve_host_tool_graph(&fixture.snapshot(false), &mut DiskSourceProvider::new())
+        .expect("resolve");
+    write_host_tool_lock(&graph).expect("write host-tool lock");
+    load_host_tool_lock(&graph, &mut DiskSourceProvider::new()).expect("verify lock");
+
+    std::fs::write(
+        fixture.root.join("provider/src/added.rs"),
+        "pub const DRIFT: u8 = 1;\n",
+    )
+    .expect("mutate provider");
+    let observed =
+        resolve_host_tool_graph(&fixture.snapshot(false), &mut DiskSourceProvider::new())
+            .expect("resolve drifted graph");
+    let error = load_host_tool_lock(&observed, &mut DiskSourceProvider::new())
+        .expect_err("persisted lock must detect drift");
+    assert!(error.message.contains("does not match"));
+}
+
+#[test]
+fn host_tool_graph_rejects_missing_entrypoint_and_non_normal_dependency() {
+    let missing = ToolFixture::new("missing_entry");
+    missing.write_manifest(
+        "[tools.sql]\npackage = \"provider-tools\"\nentrypoint = \"missing\"\ncapabilities = []\n",
+    );
+    assert!(
+        resolve_host_tool_graph(&missing.snapshot(false), &mut DiskSourceProvider::new())
+            .expect_err("missing entrypoint")
+            .iter()
+            .any(|error| error.message.contains("missing binary"))
+    );
+
+    let dev_only = ToolFixture::new("dev_only");
+    let errors = resolve_host_tool_graph(
+        &dev_only.snapshot_with_dependency_kind(Some("dev")),
+        &mut DiskSourceProvider::new(),
+    )
+    .expect_err("dev dependency is not a tool declaration edge");
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.message.contains("normal workspace-member"))
+    );
 }
 
 struct ToolFixture {
@@ -118,6 +187,14 @@ impl ToolFixture {
     }
 
     fn snapshot(&self, contaminated: bool) -> PackageGraphSnapshot {
+        self.snapshot_inner(contaminated, None)
+    }
+
+    fn snapshot_with_dependency_kind(&self, kind: Option<&str>) -> PackageGraphSnapshot {
+        self.snapshot_inner(false, kind)
+    }
+
+    fn snapshot_inner(&self, contaminated: bool, kind: Option<&str>) -> PackageGraphSnapshot {
         let tools = CargoPackage {
             id: self.tools_id.clone(),
             name: "project-tools".to_string(),
@@ -125,7 +202,14 @@ impl ToolFixture {
             source: None,
             links: None,
             manifest_path: self.root.join("tools/Cargo.toml"),
-            dependencies: Vec::new(),
+            dependencies: vec![CargoDependency {
+                name: "provider-tools".to_string(),
+                package: None,
+                req: "*".to_string(),
+                kind: kind.map(str::to_string),
+                target: None,
+                uses_workspace: false,
+            }],
             targets: Vec::new(),
             features: BTreeMap::new(),
             sifr_metadata: Some(CargoSifrMetadata {
@@ -160,7 +244,10 @@ impl ToolFixture {
             dependencies: Vec::new(),
             targets: Vec::new(),
             features: BTreeMap::new(),
-            sifr_metadata: None,
+            sifr_metadata: contaminated.then(|| CargoSifrMetadata {
+                manifest: PathBuf::from("sifr.toml"),
+                aliases: BTreeMap::new(),
+            }),
         };
         let mut resolve_edges = vec![CargoResolveEdge {
             from: self.tools_id.clone(),
@@ -182,7 +269,11 @@ impl ToolFixture {
                     (self.app_id.clone(), app),
                 ]),
                 resolve_edges,
-                workspace_members: BTreeSet::from([self.tools_id.clone(), self.app_id.clone()]),
+                workspace_members: BTreeSet::from([
+                    self.tools_id.clone(),
+                    self.provider_id.clone(),
+                    self.app_id.clone(),
+                ]),
                 workspace_default_members: BTreeSet::from([self.app_id.clone()]),
                 target_directory: self.root.join("target"),
                 workspace_root: self.root.clone(),

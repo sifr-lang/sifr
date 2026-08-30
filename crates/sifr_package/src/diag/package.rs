@@ -110,6 +110,23 @@ impl PackageDiagnostic {
     }
 
     #[must_use]
+    pub fn selected_host_tools(cargo_package_id: &CargoPackageId, package_name: &str) -> Self {
+        Self {
+            code: DiagnosticCode::PACKAGE_SELECTED_RUST_ONLY,
+            message: format!(
+                "Cargo package '{package_name}' is host-only tooling and cannot be selected as a Sifr application package"
+            ),
+            origin: Box::new(PackageDiagnosticOrigin::CargoMetadata {
+                cargo_package_id: Some(cargo_package_id.clone()),
+            }),
+            help: Some(
+                "invoke its declared tool namespace, or select a Sifr application package"
+                    .to_string(),
+            ),
+        }
+    }
+
+    #[must_use]
     pub fn rust_only_depends_on_sifr(from: &CargoPackageId, to: &CargoPackageId) -> Self {
         Self {
             code: DiagnosticCode::PACKAGE_RUST_ONLY_DEPENDS_ON_SIFR,

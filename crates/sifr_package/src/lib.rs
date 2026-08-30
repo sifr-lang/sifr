@@ -65,8 +65,10 @@ pub use crate::graph::workspace::{
     selected_workspace_members,
 };
 pub use crate::host_tools::{
-    HOST_TOOL_CAPABILITIES, HostToolCommandPlan, HostToolEntrypoint, HostToolGraph,
-    RESERVED_TOOL_NAMESPACES, resolve_host_tool_graph, verify_host_tool_graph,
+    HOST_TOOL_CAPABILITIES, HOST_TOOL_LOCK_FILE, HOST_TOOL_LOCK_VERSION, HostToolBuildPlan,
+    HostToolEntrypoint, HostToolGraph, HostToolLockArtifact, LockedHostToolEntrypoint,
+    RESERVED_TOOL_NAMESPACES, load_host_tool_lock, resolve_host_tool_graph,
+    validate_host_tool_application_isolation, verify_host_tool_graph, write_host_tool_lock,
 };
 pub use crate::imports::source_map::{
     DottedModulePath, PackageImportAmbiguity, PackageImportOrigin, PackageImportResolution,

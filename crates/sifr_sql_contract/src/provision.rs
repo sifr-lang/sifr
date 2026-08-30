@@ -35,8 +35,13 @@ pub enum ProvisionedConnection {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "source", rename_all = "kebab-case")]
 pub enum ProvisionedCredential {
-    Environment { variable: String },
-    Helper { command: String },
+    Environment {
+        variable: String,
+    },
+    Helper {
+        executable: String,
+        args: Vec<String>,
+    },
     None,
 }
 
@@ -45,6 +50,18 @@ pub enum ProvisionedCredential {
 pub struct ProvisionedCleanup {
     pub tool_namespace: String,
     pub resource_id: String,
+}
+
+impl ProvisionedCleanup {
+    #[must_use]
+    pub fn command_arguments(&self) -> Vec<String> {
+        vec![
+            "test".to_string(),
+            "cleanup".to_string(),
+            "--resource-id".to_string(),
+            self.resource_id.clone(),
+        ]
+    }
 }
 
 impl TestConnectionManifest {
@@ -104,8 +121,16 @@ impl TestConnectionManifest {
                             )));
                         }
                     }
-                    ProvisionedCredential::Helper { command } => {
-                        require_text("credential helper command", command)?;
+                    ProvisionedCredential::Helper { executable, args } => {
+                        require_text("credential helper executable", executable)?;
+                        if executable.chars().any(char::is_whitespace) {
+                            return Err(invalid(
+                                "credential helper executable must be one path, without shell syntax",
+                            ));
+                        }
+                        for arg in args {
+                            require_text("credential helper argument", arg)?;
+                        }
                     }
                     ProvisionedCredential::None => {}
                 }

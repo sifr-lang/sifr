@@ -78,12 +78,30 @@ pub fn derive_package_graph_from_normalized(
     metadata: &NormalizedCargoMetadata,
     provider: &mut impl SourceProvider,
 ) -> Result<SifrPackageGraph, Vec<PackageDiagnostic>> {
+    crate::host_tools::validate_host_tool_application_isolation(metadata, provider)?;
     let mut diagnostics = Vec::new();
     let mut packages = BTreeMap::new();
     let mut classifications = BTreeMap::new();
 
+    let tools_package_id = metadata
+        .workspace_sifr
+        .tools_package
+        .as_deref()
+        .and_then(|name| {
+            let matches = metadata
+                .workspace_members
+                .iter()
+                .filter(|id| {
+                    metadata
+                        .packages
+                        .get(*id)
+                        .is_some_and(|package| package.name == name)
+                })
+                .collect::<Vec<_>>();
+            (matches.len() == 1).then(|| matches[0].clone())
+        });
     for package in metadata.packages.values() {
-        if metadata.workspace_sifr.tools_package.as_deref() == Some(package.name.as_str()) {
+        if tools_package_id.as_ref() == Some(&package.id) {
             classifications.insert(package.id.clone(), PackageClassification::HostTools);
             continue;
         }

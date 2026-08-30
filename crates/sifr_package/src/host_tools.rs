@@ -3,10 +3,15 @@ use crate::{
     CargoPackage, CargoPackageId, NormalizedCargoMetadata, PackageClassification,
     PackageDiagnostic, PackageGraphSnapshot,
 };
+use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use sifr_frontend::SourceProvider;
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
+use std::io::Write as _;
 use std::path::{Path, PathBuf};
+
+pub const HOST_TOOL_LOCK_FILE: &str = "sifr-tools.lock.json";
+pub const HOST_TOOL_LOCK_VERSION: u32 = 1;
 
 pub const HOST_TOOL_CAPABILITIES: &[&str] = &[
     "credentials",
@@ -20,7 +25,7 @@ pub const HOST_TOOL_CAPABILITIES: &[&str] = &[
 pub const RESERVED_TOOL_NAMESPACES: &[&str] = &[
     "bridge", "build", "check", "doctor", "emit", "fetch", "fmt", "help", "init", "lint", "lsp",
     "package", "publish", "python", "repair", "run", "self", "test", "trace", "tree", "vendor",
-    "version",
+    "tools", "version",
 ];
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -39,6 +44,7 @@ pub struct HostToolEntrypoint {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct HostToolGraph {
     pub workspace_root: PathBuf,
+    pub target_directory: PathBuf,
     pub tools_package_id: CargoPackageId,
     pub tools_package_name: String,
     pub tools_manifest: PathBuf,
@@ -49,23 +55,41 @@ pub struct HostToolGraph {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct HostToolCommandPlan {
-    pub program: String,
+pub struct HostToolBuildPlan {
     pub args: Vec<String>,
     pub current_dir: PathBuf,
     pub namespace: String,
     pub package_id: CargoPackageId,
     pub package_checksum: String,
     pub capabilities: BTreeSet<String>,
+    pub entrypoint: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub struct HostToolLockArtifact {
+    pub schema_version: u32,
+    pub tools_package: String,
+    pub tools_manifest_fingerprint: String,
+    pub cargo_lock_fingerprint: String,
+    pub entries: BTreeMap<String, LockedHostToolEntrypoint>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub struct LockedHostToolEntrypoint {
+    pub package_identity: String,
+    pub package_checksum: String,
+    pub entrypoint: String,
+    pub capabilities: BTreeSet<String>,
 }
 
 impl HostToolGraph {
-    pub fn command_plan(
+    pub fn build_plan(
         &self,
         namespace: &str,
         host_triple: &str,
-        forwarded: &[String],
-    ) -> Result<HostToolCommandPlan, PackageDiagnostic> {
+    ) -> Result<HostToolBuildPlan, PackageDiagnostic> {
         if host_triple.is_empty() || host_triple.starts_with('-') {
             return Err(host_tool_diagnostic("host tool target triple is invalid"));
         }
@@ -74,10 +98,9 @@ impl HostToolGraph {
                 "unknown tool namespace '{namespace}'; configure it in the tools package sifr.toml"
             ))
         })?;
-        Ok(HostToolCommandPlan {
-            program: "cargo".to_string(),
+        Ok(HostToolBuildPlan {
             args: vec![
-                "run".to_string(),
+                "build".to_string(),
                 "--locked".to_string(),
                 "--package".to_string(),
                 entry.package_name.clone(),
@@ -85,17 +108,72 @@ impl HostToolGraph {
                 entry.entrypoint.clone(),
                 "--target".to_string(),
                 host_triple.to_string(),
-                "--".to_string(),
             ]
             .into_iter()
-            .chain(forwarded.iter().cloned())
             .collect(),
             current_dir: self.workspace_root.clone(),
             namespace: namespace.to_string(),
             package_id: entry.package_id.clone(),
             package_checksum: entry.package_checksum.clone(),
             capabilities: entry.capabilities.clone(),
+            entrypoint: entry.entrypoint.clone(),
         })
+    }
+}
+
+impl HostToolLockArtifact {
+    #[must_use]
+    pub fn from_graph(graph: &HostToolGraph) -> Self {
+        Self {
+            schema_version: HOST_TOOL_LOCK_VERSION,
+            tools_package: graph.tools_package_name.clone(),
+            tools_manifest_fingerprint: graph.tools_manifest_fingerprint.clone(),
+            cargo_lock_fingerprint: graph.lockfile_fingerprint.clone(),
+            entries: graph
+                .entries
+                .iter()
+                .map(|(namespace, entry)| {
+                    (
+                        namespace.clone(),
+                        LockedHostToolEntrypoint {
+                            package_identity: normalized_package_identity(entry),
+                            package_checksum: entry.package_checksum.clone(),
+                            entrypoint: entry.entrypoint.clone(),
+                            capabilities: entry.capabilities.clone(),
+                        },
+                    )
+                })
+                .collect(),
+        }
+    }
+
+    pub fn from_json(source: &str) -> Result<Self, PackageDiagnostic> {
+        let artifact: Self = serde_json::from_str(source).map_err(|error| {
+            host_tool_diagnostic(format!("cannot parse {HOST_TOOL_LOCK_FILE}: {error}"))
+        })?;
+        if artifact.schema_version != HOST_TOOL_LOCK_VERSION {
+            return Err(host_tool_diagnostic(format!(
+                "unsupported {HOST_TOOL_LOCK_FILE} version {}",
+                artifact.schema_version
+            )));
+        }
+        Ok(artifact)
+    }
+
+    pub fn to_canonical_json(&self) -> Result<String, PackageDiagnostic> {
+        serde_json::to_string_pretty(self).map_err(|error| {
+            host_tool_diagnostic(format!("cannot serialize {HOST_TOOL_LOCK_FILE}: {error}"))
+        })
+    }
+
+    pub fn verify_graph(&self, graph: &HostToolGraph) -> Result<(), PackageDiagnostic> {
+        let observed = Self::from_graph(graph);
+        if self != &observed {
+            return Err(host_tool_diagnostic(format!(
+                "{HOST_TOOL_LOCK_FILE} does not match the resolved tool graph; run `sifr tools lock` and review the change"
+            )));
+        }
+        Ok(())
     }
 }
 
@@ -147,7 +225,7 @@ pub fn resolve_host_tool_graph(
     })?;
     let lockfile_fingerprint = sha256(lock_source.as_str().as_bytes());
     let lock_packages = parse_lock_packages(lock_source.as_str())?;
-    let direct = direct_dependencies(metadata, &tools_package.id);
+    let direct = direct_normal_dependencies(metadata, tools_package);
     let mut entries = BTreeMap::new();
     let mut diagnostics = Vec::new();
     for (namespace, declaration) in declarations {
@@ -155,10 +233,11 @@ pub fn resolve_host_tool_graph(
             .iter()
             .filter_map(|id| metadata.packages.get(*id))
             .filter(|package| package.name == declaration.package)
+            .filter(|package| metadata.workspace_members.contains(&package.id))
             .collect::<Vec<_>>();
         if matches.len() != 1 {
             diagnostics.push(host_tool_diagnostic(format!(
-                "tool namespace '{namespace}' selects package '{}' but the tools member has {} exact direct matches",
+                "tool namespace '{namespace}' selects package '{}' but the tools member has {} exact normal workspace-member matches",
                 declaration.package,
                 matches.len()
             )));
@@ -176,7 +255,7 @@ pub fn resolve_host_tool_graph(
             )));
             continue;
         }
-        let package_checksum = match exact_package_checksum(package, &lock_packages) {
+        let package_checksum = match exact_package_checksum(package, &lock_packages, metadata) {
             Ok(checksum) => checksum,
             Err(error) => {
                 diagnostics.push(error);
@@ -209,6 +288,7 @@ pub fn resolve_host_tool_graph(
     }
     Ok(HostToolGraph {
         workspace_root: metadata.workspace_root.clone(),
+        target_directory: metadata.target_directory.clone(),
         tools_package_id: tools_package.id.clone(),
         tools_package_name: tools_package.name.clone(),
         tools_manifest,
@@ -217,6 +297,82 @@ pub fn resolve_host_tool_graph(
         lockfile_fingerprint,
         entries,
     })
+}
+
+pub fn validate_host_tool_application_isolation(
+    metadata: &NormalizedCargoMetadata,
+    provider: &mut impl SourceProvider,
+) -> Result<(), Vec<PackageDiagnostic>> {
+    let Some(tools_package_name) = metadata.workspace_sifr.tools_package.as_deref() else {
+        return Ok(());
+    };
+    let tools_matches = metadata
+        .workspace_members
+        .iter()
+        .filter_map(|id| metadata.packages.get(id))
+        .filter(|package| package.name == tools_package_name)
+        .collect::<Vec<_>>();
+    if tools_matches.len() != 1 {
+        return Err(vec![host_tool_diagnostic(format!(
+            "tools package '{tools_package_name}' must name exactly one workspace member; found {}",
+            tools_matches.len()
+        ))]);
+    }
+    let tools_package = tools_matches[0];
+    let Some(discovery) = tools_package.sifr_metadata.as_ref() else {
+        return Err(vec![host_tool_diagnostic(format!(
+            "tools package '{}' requires [package.metadata.sifr].manifest",
+            tools_package.name
+        ))]);
+    };
+    let manifest_path = package_root(tools_package).join(&discovery.manifest);
+    let source = provider.read_file(&manifest_path).map_err(|error| {
+        vec![host_tool_diagnostic(format!(
+            "cannot read tools manifest '{}': {error}",
+            manifest_path.display()
+        ))]
+    })?;
+    let declarations = parse_tool_declarations(&manifest_path, source.as_str())?;
+    let direct = direct_normal_dependencies(metadata, tools_package);
+    let mut diagnostics = Vec::new();
+    let mut tool_roots = BTreeSet::from([tools_package.id.clone()]);
+    for (namespace, declaration) in declarations {
+        let matches = direct
+            .iter()
+            .filter_map(|id| metadata.packages.get(*id))
+            .filter(|package| package.name == declaration.package)
+            .filter(|package| metadata.workspace_members.contains(&package.id))
+            .collect::<Vec<_>>();
+        if matches.len() == 1 {
+            tool_roots.insert(matches[0].id.clone());
+        } else {
+            diagnostics.push(host_tool_diagnostic(format!(
+                "tool namespace '{namespace}' requires one exact normal workspace-member package '{}'; found {}",
+                declaration.package,
+                matches.len()
+            )));
+        }
+    }
+    for application in metadata.workspace_members.iter().filter(|id| {
+        !tool_roots.contains(*id)
+            && metadata
+                .packages
+                .get(*id)
+                .is_some_and(|package| package.sifr_metadata.is_some())
+    }) {
+        let closure = dependency_closure(metadata, application);
+        for contaminated in closure.intersection(&tool_roots) {
+            diagnostics.push(host_tool_diagnostic(format!(
+                "application package '{}' reaches host-only tool package '{}'",
+                application.0, contaminated.0
+            )));
+        }
+    }
+    if diagnostics.is_empty() {
+        Ok(())
+    } else {
+        Err(diagnostics)
+    }
 }
 
 pub fn verify_host_tool_graph(
@@ -251,7 +407,7 @@ pub fn verify_host_tool_graph(
     }
     for entry in graph.entries.values() {
         if let Some(expected) = entry.package_checksum.strip_prefix("path-sha256:") {
-            let observed = hash_path_package(&entry.package_root)?;
+            let observed = hash_path_package(&entry.package_root, &path_hash_exclusions(graph))?;
             if observed != expected {
                 return Err(host_tool_diagnostic(format!(
                     "host-tool path package hash drifted for '{}': expected {expected}, observed {observed}",
@@ -261,6 +417,66 @@ pub fn verify_host_tool_graph(
         }
     }
     Ok(())
+}
+
+pub fn load_host_tool_lock(
+    graph: &HostToolGraph,
+    provider: &mut impl SourceProvider,
+) -> Result<HostToolLockArtifact, PackageDiagnostic> {
+    let path = graph.workspace_root.join(HOST_TOOL_LOCK_FILE);
+    let source = provider.read_file(&path).map_err(|error| {
+        host_tool_diagnostic(format!(
+            "cannot read required host-tool lock '{}': {error}; run `sifr tools lock`",
+            path.display()
+        ))
+    })?;
+    let artifact = HostToolLockArtifact::from_json(source.as_str())?;
+    artifact.verify_graph(graph)?;
+    Ok(artifact)
+}
+
+pub fn write_host_tool_lock(graph: &HostToolGraph) -> Result<PathBuf, PackageDiagnostic> {
+    let artifact = HostToolLockArtifact::from_graph(graph);
+    let mut source = artifact.to_canonical_json()?;
+    source.push('\n');
+    let destination = graph.workspace_root.join(HOST_TOOL_LOCK_FILE);
+    let nonce = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_err(|error| host_tool_diagnostic(format!("cannot identify lock write: {error}")))?
+        .as_nanos();
+    let temporary = graph.workspace_root.join(format!(
+        ".{HOST_TOOL_LOCK_FILE}.{}.{nonce}.tmp",
+        std::process::id(),
+    ));
+    let mut file = std::fs::OpenOptions::new()
+        .create_new(true)
+        .write(true)
+        .open(&temporary)
+        .map_err(|error| {
+            host_tool_diagnostic(format!(
+                "cannot create host-tool lock temporary file '{}': {error}",
+                temporary.display()
+            ))
+        })?;
+    file.write_all(source.as_bytes()).map_err(|error| {
+        host_tool_diagnostic(format!(
+            "cannot write host-tool lock temporary file '{}': {error}",
+            temporary.display()
+        ))
+    })?;
+    file.sync_all().map_err(|error| {
+        host_tool_diagnostic(format!(
+            "cannot sync host-tool lock temporary file '{}': {error}",
+            temporary.display()
+        ))
+    })?;
+    std::fs::rename(&temporary, &destination).map_err(|error| {
+        host_tool_diagnostic(format!(
+            "cannot replace host-tool lock '{}': {error}",
+            destination.display()
+        ))
+    })?;
+    Ok(destination)
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -451,6 +667,7 @@ fn parse_lock_packages(source: &str) -> Result<Vec<LockPackage>, Vec<PackageDiag
 fn exact_package_checksum(
     package: &CargoPackage,
     lock_packages: &[LockPackage],
+    metadata: &NormalizedCargoMetadata,
 ) -> Result<String, PackageDiagnostic> {
     let matches = lock_packages
         .iter()
@@ -470,11 +687,29 @@ fn exact_package_checksum(
     }
     match &matches[0].checksum {
         Some(checksum) => Ok(checksum.clone()),
-        None => hash_path_package(&package_root(package)).map(|hash| format!("path-sha256:{hash}")),
+        None => hash_path_package(
+            &package_root(package),
+            &[
+                metadata.target_directory.clone(),
+                metadata.workspace_root.join(".git"),
+                metadata.workspace_root.join("Cargo.lock"),
+                metadata.workspace_root.join(HOST_TOOL_LOCK_FILE),
+            ],
+        )
+        .map(|hash| format!("path-sha256:{hash}")),
     }
 }
 
-fn hash_path_package(root: &Path) -> Result<String, PackageDiagnostic> {
+fn path_hash_exclusions(graph: &HostToolGraph) -> [PathBuf; 4] {
+    [
+        graph.target_directory.clone(),
+        graph.workspace_root.join(".git"),
+        graph.workspace_root.join("Cargo.lock"),
+        graph.workspace_root.join(HOST_TOOL_LOCK_FILE),
+    ]
+}
+
+fn hash_path_package(root: &Path, exclusions: &[PathBuf]) -> Result<String, PackageDiagnostic> {
     const MAX_FILES: usize = 10_000;
     const MAX_BYTES: u64 = 256 * 1024 * 1024;
     let mut pending = VecDeque::from([root.to_path_buf()]);
@@ -492,8 +727,7 @@ fn hash_path_package(root: &Path) -> Result<String, PackageDiagnostic> {
                 host_tool_diagnostic(format!("cannot read host-tool package entry: {error}"))
             })?;
             let path = entry.path();
-            let name = entry.file_name();
-            if name == ".git" || name == "target" {
+            if exclusions.iter().any(|excluded| excluded == &path) {
                 continue;
             }
             let metadata = std::fs::symlink_metadata(&path).map_err(|error| {
@@ -543,7 +777,7 @@ fn hash_path_package(root: &Path) -> Result<String, PackageDiagnostic> {
                 path.display()
             ))
         })?;
-        digest.update(relative.to_string_lossy().as_bytes());
+        digest.update(relative.as_os_str().as_encoded_bytes());
         digest.update([0]);
         digest.update((bytes.len() as u64).to_le_bytes());
         digest.update(&bytes);
@@ -551,14 +785,27 @@ fn hash_path_package(root: &Path) -> Result<String, PackageDiagnostic> {
     Ok(lower_hex(&digest.finalize()))
 }
 
-fn direct_dependencies<'a>(
+fn direct_normal_dependencies<'a>(
     metadata: &'a NormalizedCargoMetadata,
-    from: &CargoPackageId,
+    from: &CargoPackage,
 ) -> Vec<&'a CargoPackageId> {
     metadata
         .resolve_edges
         .iter()
-        .filter(|edge| &edge.from == from)
+        .filter(|edge| edge.from == from.id)
+        .filter(|edge| {
+            let Some(target) = metadata.packages.get(&edge.to) else {
+                return false;
+            };
+            from.dependencies.iter().any(|dependency| {
+                dependency.kind.is_none()
+                    && dependency
+                        .package
+                        .as_deref()
+                        .unwrap_or(dependency.name.as_str())
+                        == target.name
+            })
+        })
         .map(|edge| &edge.to)
         .collect()
 }
@@ -623,6 +870,15 @@ fn package_root(package: &CargoPackage) -> PathBuf {
         .parent()
         .map(Path::to_path_buf)
         .unwrap_or_else(|| PathBuf::from("."))
+}
+
+fn normalized_package_identity(entry: &HostToolEntrypoint) -> String {
+    format!(
+        "{}@{}#{}",
+        entry.package_name,
+        entry.package_version,
+        entry.package_source.as_deref().unwrap_or("path")
+    )
 }
 
 fn sha256(bytes: &[u8]) -> String {
