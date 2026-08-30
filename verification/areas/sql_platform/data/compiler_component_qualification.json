@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "protocol_major": 1,
+  "engine": {
+    "crate": "wasmtime",
+    "version": "48.0.1",
+    "default_features": false,
+    "features": ["component-model", "cranelift", "runtime", "std"]
+  },
+  "wit": "crates/sifr_compiler_component/wit/compiler-component.wit",
+  "host_targets": [
+    "aarch64-apple-darwin",
+    "aarch64-unknown-linux-gnu",
+    "x86_64-pc-windows-msvc",
+    "x86_64-unknown-linux-gnu"
+  ],
+  "denied_capabilities": [
+    "clock",
+    "environment",
+    "filesystem",
+    "linker",
+    "native-library",
+    "network",
+    "process",
+    "random",
+    "rust-source",
+    "shared-memory",
+    "thread",
+    "wasi"
+  ],
+  "limits": [
+    "diagnostics",
+    "fuel",
+    "input-bytes",
+    "memory",
+    "operation-depth",
+    "output-bytes",
+    "stack",
+    "type-depth"
+  ],
+  "fixture": {
+    "name": "words",
+    "sql": false,
+    "processor": "fixture.words",
+    "evidence": "sifr_compiler_component::tests::non_sql_component_round_trip_is_validated_cached_and_deterministic",
+    "contracts": [
+      "cache",
+      "dependencies",
+      "determinism",
+      "diagnostics",
+      "malformed-output",
+      "parsing",
+      "source-maps",
+      "typed-holes"
+    ]
+  }
+}

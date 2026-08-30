@@ -6,6 +6,18 @@ rust_version = "1.98"
 sqlite_amalgamation = "3.53.2"
 
 [[crate]]
+name = "wasmtime"
+display_name = "Wasmtime"
+version = "48.0.1"
+policy = "latest-stable"
+release_authority = "https://crates.io/crates/wasmtime/48.0.1"
+api_authority = "https://crates.io/api/v1/crates/wasmtime"
+checksum = "1bd39f78fe9bc82cee4025ec9d52118269e9a1498016cc60119b14f2e1d86a8d"
+license = "Apache-2.0 WITH LLVM-exception"
+published_at = "2026-08-24T19:59:18Z"
+yanked = false
+
+[[crate]]
 name = "tokio"
 display_name = "Tokio"
 version = "1.53.1"

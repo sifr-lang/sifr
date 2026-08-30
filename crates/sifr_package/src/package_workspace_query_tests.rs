@@ -321,6 +321,7 @@ fn package(
             scripts: BTreeMap::new(),
             dependencies: BTreeMap::new(),
             dev_dependencies: BTreeMap::new(),
+            compiler_components: BTreeMap::new(),
             trust: TrustPolicy::default(),
             python: PythonConfig::default(),
             rust: RustInteropConfig::default(),

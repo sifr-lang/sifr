@@ -6,7 +6,7 @@ use super::{
     SourceFileView, SourceMapCacheKey, SourceMapView, SourceOrigin, SourceText, SymbolBucketScope,
     SymbolBucketsCacheKey, module_signature,
 };
-use crate::cache_keys::stable_cache_fingerprint;
+use crate::cache_fingerprint::stable_cache_fingerprint;
 use crate::{CacheKeyFingerprint, FrontendCacheEntryIdentity, FrontendReuseStats};
 use crate::{QueryPolicyFingerprint, empty_hir_module};
 #[cfg(test)]

@@ -146,6 +146,7 @@ fn manifest() -> SifrManifest {
         scripts: BTreeMap::new(),
         dependencies: BTreeMap::new(),
         dev_dependencies: BTreeMap::new(),
+        compiler_components: BTreeMap::new(),
         trust: TrustPolicy::default(),
         python: crate::manifest::sifr::PythonConfig::default(),
         rust: RustInteropConfig {

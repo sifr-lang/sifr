@@ -21,6 +21,15 @@ COMMANDS = {
     "sql-dependency-baseline": [sys.executable, str(BASELINE_RESOLVER), "--check"],
     "sql-platform-contract-mutations": [sys.executable, str(PLATFORM_CHECKER), "--self-test"],
     "sql-dependency-baseline-mutations": [sys.executable, str(BASELINE_RESOLVER), "--self-test"],
+    "sql-component-qualification": [
+        sys.executable,
+        str(AREA_ROOT / "tools" / "check_component_qualification.py"),
+    ],
+    "sql-component-qualification-mutations": [
+        sys.executable,
+        str(AREA_ROOT / "tools" / "check_component_qualification.py"),
+        "--self-test",
+    ],
 }
 
 

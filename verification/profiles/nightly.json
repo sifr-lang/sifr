@@ -711,6 +711,7 @@
     {
       "area": "sql_platform",
       "suites": [
+        "compiler-components",
         "contracts",
         "dependency-baseline",
         "mutation"

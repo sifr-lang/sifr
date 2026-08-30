@@ -16,6 +16,16 @@
   ],
   "constraints": [
     {
+      "id": "compiler-component-sandbox",
+      "platform_part": "compiler_components",
+      "audit_owner": "sifr_compiler_component",
+      "rules": [
+        "The host enables the WebAssembly Component Model without WASI.",
+        "The host links no ambient file, network, clock, random, environment, process, thread, or native-library interface.",
+        "Fuel, memory, stack, input, output, and protocol limits fail with SIFR-COMPONENT diagnostics."
+      ]
+    },
+    {
       "id": "syntaqlite-source-and-fork-readiness",
       "platform_part": "sqlite_provider",
       "audit_owner": "sifr-sql-sqlite/component",
@@ -47,6 +57,18 @@
     }
   ],
   "dependencies": [
+    {
+      "crate": "wasmtime",
+      "version": "48.0.1",
+      "checksum": "1bd39f78fe9bc82cee4025ec9d52118269e9a1498016cc60119b14f2e1d86a8d",
+      "license": "Apache-2.0 WITH LLVM-exception",
+      "default_features": false,
+      "features": ["component-model", "cranelift", "runtime", "std"],
+      "artifacts": ["compiler-component-host"],
+      "targets": ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu"],
+      "platform_part": "compiler_components",
+      "audit_owner": "sifr_compiler_component"
+    },
     {
       "crate": "tokio",
       "version": "1.53.1",

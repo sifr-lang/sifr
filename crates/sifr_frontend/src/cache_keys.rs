@@ -2,6 +2,7 @@ use super::{
     FrontendDiagnosticStyle, FrontendMode, ProjectRoot, SourceHash, SourcePath,
     WorkspaceCompilerOptions, WorkspacePackageConfigIdentity, WorkspaceSessionTarget,
 };
+use crate::cache_fingerprint::{CacheKeyFingerprint, FingerprintBuilder};
 
 const CACHE_KEY_SCHEMA_VERSION: &str = "frontend-cache-key-v1";
 const SOURCE_HASH_SCHEMA_VERSION: &str = "source-text-fnv1a64-v1";
@@ -42,27 +43,6 @@ impl CompilerFingerprint {
     pub fn as_str(&self) -> &str {
         &self.0
     }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct CacheKeyFingerprint(String);
-
-impl CacheKeyFingerprint {
-    #[must_use]
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
-}
-
-pub(crate) fn stable_cache_fingerprint(
-    domain: &str,
-    fields: impl IntoIterator<Item = (&'static str, String)>,
-) -> CacheKeyFingerprint {
-    let mut builder = FingerprintBuilder::new(domain);
-    for (name, value) in fields {
-        builder.field(name, value);
-    }
-    CacheKeyFingerprint(builder.finish_hex())
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -156,6 +136,7 @@ pub enum CacheFamily {
     PackageGraph,
     SymbolBuckets,
     FlowGraph,
+    EmbeddedAnalysis,
 }
 
 impl CacheFamily {
@@ -170,6 +151,7 @@ impl CacheFamily {
             Self::PackageGraph => "package-graph",
             Self::SymbolBuckets => "symbol-buckets",
             Self::FlowGraph => "flow-graph",
+            Self::EmbeddedAnalysis => "embedded-analysis",
         }
     }
 
@@ -184,6 +166,7 @@ impl CacheFamily {
             Self::PackageGraph => PACKAGE_GRAPH_POLICY_VERSION,
             Self::SymbolBuckets => SYMBOL_BUCKET_POLICY_VERSION,
             Self::FlowGraph => FLOW_GRAPH_POLICY_VERSION,
+            Self::EmbeddedAnalysis => "sifr-component-protocol-v1",
         }
     }
 }
@@ -526,65 +509,18 @@ impl CacheKeyBuilder {
     }
 }
 
-struct FingerprintBuilder {
-    hash: u64,
-}
-
-impl FingerprintBuilder {
-    fn new(domain: &str) -> Self {
-        let mut builder = Self {
-            hash: 0xcbf2_9ce4_8422_2325_u64,
-        };
-        builder.field("domain", domain);
-        builder
-    }
-
-    fn field(&mut self, name: &str, value: impl AsRef<str>) {
-        let value = value.as_ref();
-        self.write(name.as_bytes());
-        self.write(&[0]);
-        self.write(value.len().to_string().as_bytes());
-        self.write(&[0]);
-        self.write(value.as_bytes());
-        self.write(&[0xff]);
-    }
-
-    fn path_field(&mut self, name: &str, path: &SourcePath) {
-        self.field(name, path.as_path().display().to_string());
-    }
-
-    fn optional_path_field(&mut self, name: &str, path: Option<&SourcePath>) {
-        if let Some(path) = path {
-            self.path_field(name, path);
-        } else {
-            self.field(name, "<none>");
-        }
-    }
-
-    fn finish_hex(self) -> String {
-        format!("{:016x}", self.hash)
-    }
-
-    fn write(&mut self, bytes: &[u8]) {
-        for byte in bytes {
-            self.hash ^= u64::from(*byte);
-            self.hash = self.hash.wrapping_mul(0x0000_0100_0000_01b3);
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::{
-        CacheFamily, CacheKeyContext, CacheKeyFingerprint, CompilerFingerprint,
-        DiagnosticsCacheKey, FlowGraphCacheKey, FormatCacheKey, HirLoweringCacheKey, LintCacheKey,
-        PackageContextFingerprint, PackageGraphCacheKey, ParseCacheKey, QueryPolicyFingerprint,
-        SourceMapCacheKey, SymbolBucketScope, SymbolBucketsCacheKey, WorkspaceContextFingerprint,
+        CacheFamily, CacheKeyContext, CompilerFingerprint, DiagnosticsCacheKey, FlowGraphCacheKey,
+        FormatCacheKey, HirLoweringCacheKey, LintCacheKey, PackageContextFingerprint,
+        PackageGraphCacheKey, ParseCacheKey, QueryPolicyFingerprint, SourceMapCacheKey,
+        SymbolBucketScope, SymbolBucketsCacheKey, WorkspaceContextFingerprint,
     };
     use crate::{
-        DocumentVersion, FileId, FrontendDiagnosticStyle, FrontendMode, SourceHash, SourcePath,
-        WorkspaceCompilerOptions, WorkspacePackageConfigIdentity, WorkspaceSessionTarget,
-        WorkspaceSingleFileTarget,
+        CacheKeyFingerprint, DocumentVersion, FileId, FrontendDiagnosticStyle, FrontendMode,
+        SourceHash, SourcePath, WorkspaceCompilerOptions, WorkspacePackageConfigIdentity,
+        WorkspaceSessionTarget, WorkspaceSingleFileTarget,
     };
 
     fn source(value: &str) -> SourceHash {
