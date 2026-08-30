@@ -37,6 +37,8 @@ def return_from_transaction() -> Result[int, PythonError]:
             return changes + 7
     except PythonError as error:
         raise error
+    # A declared Python context may suppress a body error before the return.
+    return 7
 
 
 def break_from_transaction() -> Result[int, PythonError]:

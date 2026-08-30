@@ -313,6 +313,7 @@ pub enum HirAsyncWithKind {
         exit_error_type: Type,
         entered_is_opaque_borrow: bool,
         active_error_type: Type,
+        body_may_raise: bool,
     },
 }
 
@@ -327,6 +328,7 @@ pub enum HirWithItemKind {
         enter_error_type: Type,
         exit_error_type: Type,
         entered_is_opaque_borrow: bool,
+        body_may_raise: bool,
     },
 }
 

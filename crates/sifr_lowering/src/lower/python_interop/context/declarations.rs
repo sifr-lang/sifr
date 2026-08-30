@@ -62,6 +62,7 @@ pub(in crate::lower) fn python_context_item_kind(
         enter_error_type: enter_error_type.as_ref().clone(),
         exit_error_type: exit_error_type.as_ref().clone(),
         entered_is_opaque_borrow,
+        body_may_raise: false,
     })
 }
 

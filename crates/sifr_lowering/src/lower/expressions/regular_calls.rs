@@ -238,6 +238,13 @@ pub(super) fn lower_regular_call(
                 &func_name,
                 ctx,
             );
+        if function_binding_id.is_some() {
+            super::super::integer_const_facts::invalidate_nested_function_call_const_integer_facts(
+                ctx, &func_name,
+            );
+        } else {
+            super::super::integer_const_facts::invalidate_aliased_nested_function_call_const_integer_facts(ctx);
+        }
         return Some(HirExpr::Call {
             mutable_arg_places,
             func: func_name,

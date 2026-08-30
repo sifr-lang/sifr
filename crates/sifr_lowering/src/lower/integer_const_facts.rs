@@ -1,7 +1,9 @@
 use crate::hir_nodes::HirExpr;
 use crate::scope::ConstIntegerSnapshot;
 use num_bigint::BigInt;
-use sifr_python_ast::Stmt;
+use sifr_python_ast::visitor::{self, Visitor};
+use sifr_python_ast::{Expr, Stmt};
+use sifr_type_system::Type;
 use std::collections::HashSet;
 
 use super::LowerCtx;
@@ -38,8 +40,91 @@ pub(in crate::lower) fn invalidate_loop_body_const_integer_facts(
         body,
         &mut assigned_names,
     );
+    assigned_names
+        .extend(super::nested_function_inference::collect_nested_function_mutated_nonlocals(body));
     for name in assigned_names {
         ctx.scope.clear_const_integer_value(&name);
+    }
+
+    let mut calls = NestedFunctionCallCollector::default();
+    for stmt in body {
+        calls.visit_stmt(stmt);
+    }
+    let may_call_aliased_nested_function = calls.called.iter().any(|function| {
+        !ctx.nested_function_mutated_captures.contains_key(function)
+            && ctx.scope.lookup(function).is_some_and(|binding| {
+                matches!(
+                    binding.effective_type().resolve_alias(),
+                    Type::Callable(..) | Type::AsyncCallable(..)
+                )
+            })
+    });
+    let mutated_captures = if may_call_aliased_nested_function {
+        all_nested_function_mutated_captures(ctx)
+    } else {
+        calls
+            .called
+            .iter()
+            .filter_map(|function| ctx.nested_function_mutated_captures.get(function))
+            .flatten()
+            .cloned()
+            .collect()
+    };
+    for name in mutated_captures {
+        ctx.scope.clear_const_integer_value(&name);
+    }
+}
+
+pub(in crate::lower) fn invalidate_aliased_nested_function_call_const_integer_facts(
+    ctx: &mut LowerCtx,
+) {
+    for name in all_nested_function_mutated_captures(ctx) {
+        ctx.scope.clear_const_integer_value(&name);
+    }
+}
+
+fn all_nested_function_mutated_captures(ctx: &LowerCtx) -> HashSet<String> {
+    ctx.nested_function_mutated_captures
+        .values()
+        .flatten()
+        .cloned()
+        .collect()
+}
+
+pub(in crate::lower) fn invalidate_nested_function_call_const_integer_facts(
+    ctx: &mut LowerCtx,
+    function: &str,
+) {
+    let mutated_captures = ctx
+        .nested_function_mutated_captures
+        .get(function)
+        .cloned()
+        .unwrap_or_default();
+    for name in mutated_captures {
+        ctx.scope.clear_const_integer_value(&name);
+    }
+}
+
+#[derive(Default)]
+struct NestedFunctionCallCollector {
+    called: HashSet<String>,
+}
+
+impl<'ast> Visitor<'ast> for NestedFunctionCallCollector {
+    fn visit_stmt(&mut self, stmt: &'ast Stmt) {
+        if matches!(stmt, Stmt::FunctionDef(_)) {
+            return;
+        }
+        visitor::walk_stmt(self, stmt);
+    }
+
+    fn visit_expr(&mut self, expr: &'ast Expr) {
+        if let Expr::Call(call) = expr
+            && let Expr::Name(function) = call.func.as_ref()
+        {
+            self.called.insert(function.id.to_string());
+        }
+        visitor::walk_expr(self, expr);
     }
 }
 

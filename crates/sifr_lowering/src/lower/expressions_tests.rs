@@ -6,7 +6,7 @@ pub(crate) use sifr_python_ast::{
 };
 pub(crate) use sifr_type_system::{FixedIntType, FunctionType, Type};
 pub(crate) use support::{
-    function_let_value, function_nested_let_value, lower_source,
+    function_let_value, function_nested_let_value, lower_source, lower_source_with_externals,
     lower_source_with_stdlib_collections, range_for, range_for_after, range_for_after_anchor,
 };
 

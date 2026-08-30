@@ -5,6 +5,7 @@ use super::{
 use crate::lower::mutating_methods::{
     is_collection_mutating_method, is_potential_collection_mutating_method,
 };
+use sifr_python_ast::visitor::{self, Visitor};
 use sifr_python_ast::{
     ExceptHandler, Expr, InterpolatedStringElement, Parameters, Stmt, StmtFunctionDef,
 };
@@ -26,6 +27,39 @@ pub(super) fn collect_mutated_binding_names(
         collect_mutated_binding_names_in_stmt(stmt, candidate_names, &mut mutated);
     }
     mutated
+}
+
+pub(in crate::lower) fn collect_nested_function_mutated_nonlocals(
+    stmts: &[Stmt],
+) -> HashSet<String> {
+    let mut collector = NestedFunctionNonlocalMutationCollector::default();
+    for stmt in stmts {
+        collector.visit_stmt(stmt);
+    }
+    collector.mutated
+}
+
+#[derive(Default)]
+struct NestedFunctionNonlocalMutationCollector {
+    mutated: HashSet<String>,
+}
+
+impl<'ast> Visitor<'ast> for NestedFunctionNonlocalMutationCollector {
+    fn visit_stmt(&mut self, stmt: &'ast Stmt) {
+        let Stmt::FunctionDef(func) = stmt else {
+            visitor::walk_stmt(self, stmt);
+            return;
+        };
+
+        let mut nonlocal_names = HashSet::new();
+        collect_nonlocal_names(&func.body, &mut nonlocal_names);
+        let candidates = nonlocal_names
+            .into_iter()
+            .map(|name| (name, MutationCandidate::InferFromUsage))
+            .collect();
+        self.mutated
+            .extend(collect_mutated_binding_names(&func.body, &candidates));
+    }
 }
 
 fn collect_mutated_binding_names_in_stmt(

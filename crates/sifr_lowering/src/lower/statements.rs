@@ -88,3 +88,21 @@ pub(in crate::lower) fn record_try_error_types(ctx: &mut LowerCtx, error_type: &
         _ => {}
     }
 }
+
+pub(in crate::lower) fn lower_python_context_body(
+    stmts: &[sifr_python_ast::Stmt],
+    func_type: &FunctionType,
+    ctx: &mut LowerCtx,
+) -> (Vec<HirStmt>, bool) {
+    let enclosing_errors = std::mem::take(&mut ctx.try_block_error_types);
+    let body = lower_stmts(stmts, func_type, ctx);
+    let propagated_errors = std::mem::take(&mut ctx.try_block_error_types);
+
+    let mut explicit_errors = std::collections::HashSet::new();
+    diagnostics::collect_raise_error_types(&body, &mut explicit_errors);
+    let body_may_raise = !propagated_errors.is_empty() || !explicit_errors.is_empty();
+
+    ctx.try_block_error_types = enclosing_errors;
+    ctx.try_block_error_types.extend(propagated_errors);
+    (body, body_may_raise)
+}

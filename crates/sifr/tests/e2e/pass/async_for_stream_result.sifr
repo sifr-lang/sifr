@@ -31,4 +31,18 @@ async def main() -> Result[None, StreamError]:
     assert total == 6
     assert count == 4
     assert stream.current == 4
+
+    dynamic: list[float] = []
+    seed: int = 0
+    second_stream: CounterStream = CounterStream(0, 3)
+    async for _value in second_stream:
+        try:
+            converted: float = float(seed)
+            dynamic.append(converted)
+        except FloatOverflowError as error:
+            assert False, str(error)
+        except FloatPrecisionLossError as error:
+            assert False, str(error)
+        seed = seed + 1
+    assert dynamic == [0.0, 1.0, 2.0]
     return None

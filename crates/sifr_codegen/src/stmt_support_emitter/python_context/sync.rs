@@ -178,10 +178,12 @@ impl RustEmitter {
         } else {
             RustExpr::Tuple(Vec::new())
         };
-        closure_body.push(RustStmt::Return(Some(call(
-            "Ok",
-            call("Ok", normal_outcome),
-        ))));
+        if !rust_stmts_always_exit(&closure_body) {
+            closure_body.push(RustStmt::Return(Some(call(
+                "Ok",
+                call("Ok", normal_outcome),
+            ))));
+        }
         let normal_outcome_type = if can_return {
             format!(
                 "Option<{}>",
@@ -705,6 +707,33 @@ pub(super) fn rewrite_context_control_flow(
             other => other,
         })
         .collect()
+}
+
+pub(super) fn rust_stmts_always_exit(stmts: &[RustStmt]) -> bool {
+    stmts.last().is_some_and(rust_stmt_always_exits)
+}
+
+fn rust_stmt_always_exits(stmt: &RustStmt) -> bool {
+    match stmt {
+        RustStmt::Return(_) => true,
+        RustStmt::If {
+            then_body,
+            else_body: Some(else_body),
+            ..
+        }
+        | RustStmt::IfLet {
+            then_body,
+            else_body: Some(else_body),
+            ..
+        } => rust_stmts_always_exit(then_body) && rust_stmts_always_exit(else_body),
+        RustStmt::Match { arms, .. } => {
+            !arms.is_empty() && arms.iter().all(|arm| rust_stmts_always_exit(&arm.body))
+        }
+        RustStmt::Block(body) => rust_stmts_always_exit(body),
+        RustStmt::TailExpr(RustExpr::Match { arms, .. })
+        | RustStmt::Expr(RustExpr::Match { arms, .. }) => arms.is_empty(),
+        _ => false,
+    }
 }
 
 fn is_error_return(expr: &RustExpr) -> bool {

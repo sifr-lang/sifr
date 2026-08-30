@@ -326,11 +326,13 @@ pub(in crate::lower) fn proven_exact_integer_value(
         HirExpr::UnaryOp { op, operand, .. } if op == "-" => {
             proven_exact_integer_value(operand, ctx).map(|value| -value)
         }
-        HirExpr::Name { name, .. } => ctx
-            .scope
-            .const_integer_value(name)
-            .or_else(|| ctx.const_integer_values.get(name))
-            .cloned(),
+        HirExpr::Name { name, .. } => ctx.scope.const_integer_value(name).cloned().or_else(|| {
+            if ctx.scope.resolves_to_module_binding(name) {
+                ctx.const_integer_values.get(name).cloned()
+            } else {
+                None
+            }
+        }),
         _ => None,
     }
 }

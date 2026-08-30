@@ -454,7 +454,19 @@ pub(in crate::lower) fn lower_stmt(
                         },
                     });
                 }
-                let body = lower_stmts(&with_stmt.body, func_type, ctx);
+                let (body, body_may_raise) =
+                    super::lower_python_context_body(&with_stmt.body, func_type, ctx);
+                let mut later_python_enter_may_raise = false;
+                for item in items.iter_mut().rev() {
+                    if let HirWithItemKind::Python {
+                        body_may_raise: item_body_may_raise,
+                        ..
+                    } = &mut item.kind
+                    {
+                        *item_body_may_raise = body_may_raise || later_python_enter_may_raise;
+                        later_python_enter_may_raise = true;
+                    }
+                }
                 for (name, previous) in previous_context_borrows.into_iter().rev() {
                     if let Some(range) = previous {
                         ctx.python_context_borrows.insert(name, range);

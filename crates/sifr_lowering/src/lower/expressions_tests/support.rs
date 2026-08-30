@@ -10,6 +10,14 @@ pub(crate) fn lower_source(source: &str) -> Result<HirModule, Vec<HirDiagnostic>
     lower_module(parsed.suite()).map(|r| r.module)
 }
 
+pub(crate) fn lower_source_with_externals(
+    source: &str,
+    externals: &ExternalDefs,
+) -> Result<HirModule, Vec<HirDiagnostic>> {
+    let parsed = parse_module(source).expect("parse failed");
+    lower_module_with_externals(parsed.suite(), externals).map(|r| r.module)
+}
+
 pub(crate) fn lower_source_with_stdlib_collections(
     source: &str,
 ) -> Result<HirModule, Vec<HirDiagnostic>> {

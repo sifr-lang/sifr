@@ -5,7 +5,7 @@ use sifr_ir::{
 };
 use sifr_python_parser::parse_module;
 
-fn lower_ok(source: &str) -> HirModule {
+pub(super) fn lower_ok(source: &str) -> HirModule {
     let parsed = parse_module(source).expect("source should parse");
     lower_module(parsed.suite())
         .map(|result| result.module)
@@ -374,6 +374,7 @@ fn python_with_retains_dedicated_hir_and_scoped_opaque_borrow() {
         enter_error_type,
         exit_error_type,
         entered_is_opaque_borrow,
+        body_may_raise,
     } = &items[0].kind
     else {
         panic!("item should use dedicated Python context HIR");
@@ -382,6 +383,7 @@ fn python_with_retains_dedicated_hir_and_scoped_opaque_borrow() {
     assert_eq!(enter_error_type.display_name(), "PythonError");
     assert_eq!(exit_error_type.display_name(), "PythonError");
     assert!(*entered_is_opaque_borrow);
+    assert!(!body_may_raise);
 }
 
 #[test]
@@ -415,59 +417,17 @@ fn python_with_supports_multiple_context_items_with_distinct_borrows() {
             ..
         }
     )));
-}
-
-#[test]
-fn python_with_nonopaque_entered_value_is_ordinary_owned_data() {
-    let source = r#"
-class PythonError(Error):
-    message: str
-    kind: str
-    exception_type: str
-    traceback: str
-    context: str
-
-class ExitCause:
-    pass
-
-class ExitDecision:
-    pass
-
-@python.opaque(type=pkg.Counter, cleanup=context)
-class Counter:
-    @python.context.enter(Self.__enter__)
-    def __enter__(self) -> Result[int, PythonError]: ...
-
-    @python.context.exit(Self.__exit__)
-    def __exit__(own self, cause: ExitCause) -> Result[ExitDecision, PythonError]: ...
-
-@python(pkg.Counter)
-def make_counter() -> Result[Counter, PythonError]: ...
-
-def use_counter() -> Result[int, PythonError]:
-    try:
-        with make_counter() as value:
-            copied: int = value
-            return copied
-    except PythonError as error:
-        raise error
-"#;
-    let module = lower_ok(source);
-    let function = module
-        .functions
-        .iter()
-        .find(|function| function.name == "use_counter")
-        .expect("function");
-    let HirStmt::TryExcept { body, .. } = &function.body[0] else {
-        panic!("function should retain try body");
-    };
-    let HirStmt::With { items, .. } = &body[0] else {
-        panic!("body should retain with statement");
-    };
     assert!(matches!(
-        items[0].kind,
+        &items[0].kind,
         HirWithItemKind::Python {
-            entered_is_opaque_borrow: false,
+            body_may_raise: true,
+            ..
+        }
+    ));
+    assert!(matches!(
+        &items[1].kind,
+        HirWithItemKind::Python {
+            body_may_raise: false,
             ..
         }
     ));

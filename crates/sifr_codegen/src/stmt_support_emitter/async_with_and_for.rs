@@ -76,6 +76,7 @@ impl RustEmitter {
             exit_error_type,
             entered_is_opaque_borrow,
             active_error_type,
+            ..
         } = kind
         {
             return self.try_lower_python_async_context_for_ir(

@@ -213,7 +213,8 @@ fn lower_python_async_with(
             ));
         }
     }
-    let body = crate::lower::statements::lower_stmts(&with_stmt.body, func_type, ctx);
+    let (body, body_may_raise) =
+        crate::lower::statements::lower_python_context_body(&with_stmt.body, func_type, ctx);
     if let Some((name, previous)) = previous_borrow {
         if let Some(range) = previous {
             ctx.python_context_borrows.insert(name, range);
@@ -230,6 +231,7 @@ fn lower_python_async_with(
             exit_error_type: metadata.exit_error_type,
             entered_is_opaque_borrow: metadata.entered_is_opaque_borrow,
             active_error_type: active_error_type.as_ref().clone(),
+            body_may_raise,
         },
         target,
         body,

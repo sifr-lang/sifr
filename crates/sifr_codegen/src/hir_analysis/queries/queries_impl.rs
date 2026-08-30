@@ -157,23 +157,6 @@ pub(crate) fn collect_mutated_vars(
     stmts: &[HirStmt],
     func_signatures: Option<&ModuleFuncSignatures>,
 ) -> HashSet<String> {
-    fn collect_nested_assign_targets(stmts: &[HirStmt]) -> HashSet<String> {
-        let mut assigned = HashSet::new();
-        let mut on_stmt = |stmt: &HirStmt| {
-            if let HirStmt::Assign { name, .. } = stmt {
-                assigned.insert(name.clone());
-            }
-        };
-        let mut on_expr = |_expr: &HirExpr| {};
-        traversal::walk_stmts(
-            stmts,
-            TraversalConfig::LOCAL_SCOPE_ONLY,
-            &mut on_stmt,
-            &mut on_expr,
-        );
-        assigned
-    }
-
     fn canonical_mutating_call_name(func: &str) -> &str {
         let func = crate::stmt_support_emitter::canonical_plain_call_name_for_ir(func);
         func.rsplit('.').next().unwrap_or(func)
@@ -257,14 +240,9 @@ pub(crate) fn collect_mutated_vars(
                 .map(|param| param.name.clone())
                 .collect::<HashSet<_>>();
             let locally_defined = collect_locally_defined_vars(&func.body);
-            let assigned_in_nested = collect_nested_assign_targets(&func.body);
             let captured_mutated = collect_mutated_vars(&func.body, func_signatures)
                 .into_iter()
-                .filter(|name| {
-                    !param_names.contains(name)
-                        && !locally_defined.contains(name)
-                        && !assigned_in_nested.contains(name)
-                })
+                .filter(|name| !param_names.contains(name) && !locally_defined.contains(name))
                 .collect::<Vec<_>>();
             mutated.borrow_mut().extend(captured_mutated);
         }

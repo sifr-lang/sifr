@@ -70,6 +70,7 @@ fn kind(active_error_type: Type) -> sifr_ir::HirAsyncWithKind {
         exit_error_type: class_type("PythonError"),
         entered_is_opaque_borrow: false,
         active_error_type,
+        body_may_raise: false,
     }
 }
 
