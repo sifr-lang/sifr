@@ -125,6 +125,13 @@ fn build_output_default_is_phase_aware_and_stderr_only() {
     assert!(capture.stderr.contains("Size:   "));
     assert!(!capture.stderr.contains("compiled successfully"));
     assert!(!capture.stderr.contains("Compiling sifr_output"));
+    let signatures = output_dir.join(sifr_driver::QUERY_SIGNATURE_ARTIFACT_NAME);
+    let artifact: serde_json::Value = serde_json::from_slice(
+        &std::fs::read(&signatures).expect("application build should emit query signatures"),
+    )
+    .expect("query signature artifact should use the canonical schema");
+    assert_eq!(artifact["package_identity"], "__sifr_single_file__");
+    assert_eq!(artifact["entries"], serde_json::json!({}));
 }
 
 #[test]

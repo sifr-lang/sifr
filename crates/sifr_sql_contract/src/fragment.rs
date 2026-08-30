@@ -492,6 +492,35 @@ fn validate_draft(draft: &FragmentDraft) -> Result<(), QueryContractError> {
             .validate()
             .map_err(|error| fragment_error(QueryContractErrorKind::Effect, error.to_string()))?;
     }
+    match draft.category {
+        FragmentCategory::Join
+            if draft.introduced_aliases.is_empty()
+                || draft.output_scope == draft.input_scope
+                || !matches!(draft.result, ResultTransformation::Replace { .. }) =>
+        {
+            return Err(fragment_error(
+                QueryContractErrorKind::FragmentScope,
+                "a join fragment must introduce relation scope and an exact result transformation",
+            ));
+        }
+        FragmentCategory::SelectList | FragmentCategory::ReturningList
+            if !matches!(draft.result, ResultTransformation::Replace { .. }) =>
+        {
+            return Err(fragment_error(
+                QueryContractErrorKind::FragmentCategory,
+                "a select-list or returning-list fragment must declare its exact result record",
+            ));
+        }
+        FragmentCategory::AssignmentList | FragmentCategory::Values
+            if !matches!(draft.result, ResultTransformation::Preserve) =>
+        {
+            return Err(fragment_error(
+                QueryContractErrorKind::FragmentCategory,
+                "assignment and values fragments preserve the query result record",
+            ));
+        }
+        _ => {}
+    }
     Ok(())
 }
 

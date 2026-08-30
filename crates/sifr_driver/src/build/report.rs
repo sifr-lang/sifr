@@ -97,6 +97,7 @@ pub struct BuildReport {
     stages: Vec<BuildStageReport>,
     frontend_diagnostics: Vec<RenderedDiagnostic>,
     cache_hit: bool,
+    query_signature_artifact_path: Option<PathBuf>,
 }
 
 #[derive(Clone, Debug)]
@@ -109,6 +110,7 @@ pub struct BuildReportInput {
     pub stages: Vec<BuildStageReport>,
     pub frontend_diagnostics: Vec<RenderedDiagnostic>,
     pub cache_hit: bool,
+    pub query_signature_artifact_path: Option<PathBuf>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -163,6 +165,7 @@ impl BuildReport {
             stages,
             frontend_diagnostics,
             cache_hit,
+            query_signature_artifact_path,
         } = input;
         Self {
             entrypoint_path,
@@ -175,6 +178,7 @@ impl BuildReport {
             stages,
             frontend_diagnostics,
             cache_hit,
+            query_signature_artifact_path,
         }
     }
 
@@ -216,6 +220,10 @@ impl BuildReport {
 
     pub const fn cache_hit(&self) -> bool {
         self.cache_hit
+    }
+
+    pub fn query_signature_artifact_path(&self) -> Option<&Path> {
+        self.query_signature_artifact_path.as_deref()
     }
 }
 

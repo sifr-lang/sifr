@@ -91,6 +91,14 @@ COMMANDS = {
         sys.executable,
         str(AREA_ROOT / "tools" / "run_postgresql_parser_matrix.py"),
     ],
+    "sql-postgresql-semantic-completion": [
+        "cargo", "test", "--locked", "-p", "sifr_sql_postgresql", "--test",
+        "postgresql_compiler", "advanced_postgresql_semantics_are_owned_and_exact",
+    ],
+    "sql-query-signature-and-fragment-semantics": [
+        "cargo", "test", "--locked", "-p", "sifr_sql_contract", "--test",
+        "semantic_completion",
+    ],
     "sql-postgresql-live-differential": [
         sys.executable,
         str(AREA_ROOT / "tools" / "run_postgresql_server_matrix.py"),

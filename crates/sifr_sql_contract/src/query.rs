@@ -89,6 +89,7 @@ pub struct QueryTemplateContract {
     pub cardinality: Cardinality,
     pub effects: EffectContract,
     pub deterministic_order: bool,
+    pub semantic_flags: BTreeSet<String>,
     pub fragment_identities: Vec<String>,
     pub adapters: Vec<QueryAdapter>,
 }
@@ -116,6 +117,7 @@ impl QueryTemplateContract {
             deterministic_order,
             fragment_identities,
         } = draft;
+        let semantic_flags = analysis.semantic_flags.clone();
         let profile = registry.profile(profile_name).map_err(|error| {
             QueryContractError::new(QueryContractErrorKind::ProfileMismatch, error.message)
         })?;
@@ -164,6 +166,7 @@ impl QueryTemplateContract {
             cardinality: analysis.cardinality,
             effects: analysis.effects,
             deterministic_order,
+            semantic_flags,
             fragment_identities,
             adapters: Vec::new(),
         };
@@ -266,6 +269,17 @@ pub struct QuerySignatureRegistry {
 
 impl QuerySignatureRegistry {
     pub fn register(&mut self, symbol: QuerySymbol) -> Result<(), QueryContractError> {
+        if symbol.exported
+            && symbol
+                .template
+                .semantic_flags
+                .contains("expanded-select-star")
+        {
+            return Err(QueryContractError::new(
+                QueryContractErrorKind::InvalidTemplate,
+                "an exported query cannot use SELECT *; replace it with the explicit projected columns",
+            ));
+        }
         if symbol.kind != QuerySymbolKind::TopLevelReusable
             || symbol.module != symbol.template.origin.module
             || symbol.name != symbol.template.origin.symbol
@@ -282,6 +296,40 @@ impl QuerySignatureRegistry {
         self.symbols
             .insert((symbol.module.clone(), symbol.name.clone()), symbol);
         Ok(())
+    }
+
+    pub fn register_with_projection(
+        &mut self,
+        symbol: QuerySymbol,
+        projection: crate::ProjectionStability,
+    ) -> Result<Vec<String>, QueryContractError> {
+        let emitted = projection
+            .validate(if symbol.exported {
+                crate::ProjectionPolicy::Exported
+            } else {
+                crate::ProjectionPolicy::Private
+            })
+            .map_err(|error| {
+                let message = error.machine_fix.map_or(error.message.clone(), |fix| {
+                    format!("{}; fix: {fix}", error.message)
+                });
+                QueryContractError::new(QueryContractErrorKind::InvalidTemplate, message)
+            })?;
+        self.register(symbol)?;
+        Ok(emitted)
+    }
+
+    pub fn exported_artifact(
+        &self,
+        package_identity: impl Into<String>,
+    ) -> Result<crate::QuerySignatureArtifact, crate::QuerySignatureError> {
+        crate::QuerySignatureArtifact::build(
+            package_identity,
+            self.symbols
+                .values()
+                .filter(|symbol| symbol.exported)
+                .map(|symbol| crate::QuerySignatureEntry::from_contract(&symbol.template)),
+        )
     }
 
     pub fn row_of(

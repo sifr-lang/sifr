@@ -45,6 +45,15 @@ impl AnalysisContext<'_> {
             }
             for (expression, column_name) in row.iter().zip(&target_columns) {
                 let column = writable_column(&relation, column_name)?;
+                if matches!(expression.kind, ExpressionKind::Default)
+                    && !column.has_default
+                    && !column.nullable
+                {
+                    return Err(write_error(format!(
+                        "DEFAULT cannot supply required column '{}.{}'",
+                        relation.identity, column.name
+                    )));
+                }
                 let fact = self.infer(expression, &[], Some(&column.database_type))?;
                 if fact.nullable && !column.nullable {
                     return Err(write_error(format!(
@@ -112,6 +121,7 @@ impl AnalysisContext<'_> {
                             alias: "excluded".to_string(),
                             relation: None,
                             columns: relation.columns.clone(),
+                            column_order: relation.column_order.clone(),
                         },
                     ],
                 }];
@@ -125,7 +135,28 @@ impl AnalysisContext<'_> {
             bindings: vec![target_binding],
         }];
         let fields = self.result_fields(&insert.returning, &frames)?;
-        Ok(write_analysis(&relation, fields, self.referenced.clone()))
+        let cardinality = if fields.is_empty() {
+            Cardinality::ZERO
+        } else if !insert.rows.is_empty() {
+            let maximum = u64::try_from(insert.rows.len()).unwrap_or(u64::MAX);
+            Cardinality::new(
+                if insert.conflict.is_none() {
+                    maximum
+                } else {
+                    0
+                },
+                Some(maximum),
+            )
+            .unwrap_or(Cardinality::MANY)
+        } else {
+            Cardinality::MANY
+        };
+        Ok(write_analysis(
+            &relation,
+            fields,
+            self.referenced.clone(),
+            cardinality,
+        ))
     }
 
     pub(crate) fn analyze_update(
@@ -150,7 +181,18 @@ impl AnalysisContext<'_> {
             self.require_boolean(predicate, &frames)?;
         }
         let fields = self.result_fields(&update.returning, &frames)?;
-        Ok(write_analysis(&relation, fields, self.referenced.clone()))
+        let cardinality = write_cardinality(
+            &relation,
+            update.predicate.as_ref(),
+            update.alias.as_deref(),
+            fields.is_empty(),
+        );
+        Ok(write_analysis(
+            &relation,
+            fields,
+            self.referenced.clone(),
+            cardinality,
+        ))
     }
 
     pub(crate) fn analyze_delete(
@@ -174,7 +216,18 @@ impl AnalysisContext<'_> {
             self.require_boolean(predicate, &frames)?;
         }
         let fields = self.result_fields(&delete.returning, &frames)?;
-        Ok(write_analysis(&relation, fields, self.referenced.clone()))
+        let cardinality = write_cardinality(
+            &relation,
+            delete.predicate.as_ref(),
+            delete.alias.as_deref(),
+            fields.is_empty(),
+        );
+        Ok(write_analysis(
+            &relation,
+            fields,
+            self.referenced.clone(),
+            cardinality,
+        ))
     }
 
     fn check_assignments(
@@ -192,7 +245,14 @@ impl AnalysisContext<'_> {
                 )));
             }
             let column = writable_column(relation, &assignment.column)?;
-            if !matches!(assignment.value.kind, ExpressionKind::Default) {
+            if matches!(assignment.value.kind, ExpressionKind::Default) {
+                if !column.has_default && !column.nullable {
+                    return Err(write_error(format!(
+                        "DEFAULT cannot supply required column '{}.{}'",
+                        relation.identity, column.name
+                    )));
+                }
+            } else {
                 let fact = self.infer(&assignment.value, frames, Some(&column.database_type))?;
                 if fact.nullable && !column.nullable {
                     return Err(write_error(format!(
@@ -229,18 +289,80 @@ fn write_analysis(
     relation: &CatalogRelation,
     fields: Vec<ResultFact>,
     mut referenced: BTreeSet<ObjectId>,
+    cardinality: Cardinality,
 ) -> AnalyzedStatement {
     referenced.insert(relation.identity.clone());
     AnalyzedStatement {
-        cardinality: if fields.is_empty() {
-            Cardinality::ZERO
-        } else {
-            Cardinality::MANY
-        },
+        cardinality,
         fields,
         effect: QueryEffect::Write,
         referenced,
         affected: BTreeSet::from([relation.identity.clone()]),
         flags: BTreeSet::new(),
+    }
+}
+
+fn write_cardinality(
+    relation: &CatalogRelation,
+    predicate: Option<&crate::ast::Expression>,
+    alias: Option<&str>,
+    no_result: bool,
+) -> Cardinality {
+    if no_result {
+        return Cardinality::ZERO;
+    }
+    let Some(predicate) = predicate else {
+        return Cardinality::MANY;
+    };
+    let relation_name = relation
+        .identity
+        .as_str()
+        .rsplit('.')
+        .next()
+        .unwrap_or("relation");
+    let constrained = equality_columns(predicate, alias.unwrap_or(relation_name));
+    if (!relation.primary_key.is_empty() && relation.primary_key.is_subset(&constrained))
+        || relation
+            .unique_sets
+            .iter()
+            .any(|columns| columns.iter().all(|column| constrained.contains(column)))
+    {
+        Cardinality::AT_MOST_ONE
+    } else {
+        Cardinality::MANY
+    }
+}
+
+fn equality_columns(expression: &crate::ast::Expression, alias: &str) -> BTreeSet<String> {
+    match &expression.kind {
+        ExpressionKind::BooleanList {
+            and: true,
+            expressions,
+        } => expressions
+            .iter()
+            .flat_map(|expression| equality_columns(expression, alias))
+            .collect(),
+        ExpressionKind::Binary {
+            operator,
+            left,
+            right,
+        } if operator == "=" => [(&left.kind, &right.kind), (&right.kind, &left.kind)]
+            .into_iter()
+            .find_map(|(column, value)| match (column, value) {
+                (
+                    ExpressionKind::Column { path },
+                    ExpressionKind::Parameter { .. }
+                    | ExpressionKind::Integer { .. }
+                    | ExpressionKind::Float { .. }
+                    | ExpressionKind::String { .. }
+                    | ExpressionKind::Boolean { .. },
+                ) if path.len() == 1 || path.first().is_some_and(|name| name == alias) => {
+                    path.last().cloned()
+                }
+                _ => None,
+            })
+            .into_iter()
+            .collect(),
+        _ => BTreeSet::new(),
     }
 }

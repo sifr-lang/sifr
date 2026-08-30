@@ -1,5 +1,8 @@
 use crate::analysis::AnalysisContext;
 use crate::ast::{CreateTableStatement, PostgresStatement, StatementKind, TableConstraint};
+use crate::catalog_metadata::{
+    function_from_object, nested_string_set_property, operator_from_object, string_set_property,
+};
 use crate::ddl_constraints::{TableConstraintInput, add_table_constraints};
 use crate::diagnostic::{PostgresDiagnostic, PostgresDiagnosticCode};
 use crate::types::PostgresTypeRegistry;
@@ -102,6 +105,21 @@ impl PostgresCatalog {
                         identity: object.identity.clone(),
                     },
                 ),
+                SchemaObjectKind::Range => {
+                    let element = database_type_property(object, "subtype-database-type")?;
+                    types.add_nominal(
+                        &split_identity(&object.identity),
+                        DatabaseType::Named {
+                            identity: object.identity.clone(),
+                            parameters: Vec::new(),
+                            canonical: Box::new(DatabaseType::Range {
+                                element: Box::new(element),
+                                multirange: optional_bool_property(object, "multirange")
+                                    .unwrap_or(false),
+                            }),
+                        },
+                    );
+                }
                 SchemaObjectKind::Column => {
                     let name = text_property(object, "name")?.to_string();
                     columns.insert(
@@ -219,6 +237,11 @@ impl PostgresCatalog {
     }
 
     #[must_use]
+    pub(crate) fn relation_by_id(&self, identity: &ObjectId) -> Option<&CatalogRelation> {
+        self.relations.get(identity)
+    }
+
+    #[must_use]
     pub fn functions(&self, name: &[String]) -> &[CatalogFunction] {
         self.functions
             .get(
@@ -277,6 +300,23 @@ pub(crate) fn ddl_document(
                 DatabaseType::Domain {
                     identity: object.identity.clone(),
                     base: Box::new(database_type_property(object, "base-database-type")?),
+                },
+            ),
+            SchemaObjectKind::Composite => working_types.add_nominal(
+                &split_identity(&object.identity),
+                DatabaseType::Composite {
+                    identity: object.identity.clone(),
+                },
+            ),
+            SchemaObjectKind::Range => working_types.add_nominal(
+                &split_identity(&object.identity),
+                DatabaseType::Named {
+                    identity: object.identity.clone(),
+                    parameters: Vec::new(),
+                    canonical: Box::new(DatabaseType::Range {
+                        element: Box::new(database_type_property(object, "subtype-database-type")?),
+                        multirange: optional_bool_property(object, "multirange").unwrap_or(false),
+                    }),
                 },
             ),
             _ => {}
@@ -349,6 +389,24 @@ pub(crate) fn ddl_document(
                         base: Box::new(base.database_type),
                     },
                 );
+            }
+            StatementKind::CreateComposite(value) => {
+                crate::catalog_advanced::add_composite(
+                    &document,
+                    statement,
+                    value,
+                    &mut working_types,
+                    &mut objects,
+                )?;
+            }
+            StatementKind::CreateRange(value) => {
+                crate::catalog_advanced::add_range(
+                    &document,
+                    statement,
+                    value,
+                    &mut working_types,
+                    &mut objects,
+                )?;
             }
             StatementKind::CreateSequence(value) => {
                 add_namespace(&document, &value.name, &mut objects);
@@ -672,7 +730,11 @@ fn add_table(
     Ok(())
 }
 
-fn add_namespace(document: &str, name: &[String], objects: &mut BTreeMap<ObjectId, SchemaObject>) {
+pub(crate) fn add_namespace(
+    document: &str,
+    name: &[String],
+    objects: &mut BTreeMap<ObjectId, SchemaObject>,
+) {
     let namespace = if name.len() > 1 { &name[0] } else { "public" };
     let identity = ObjectId::new(namespace);
     objects.entry(identity.clone()).or_insert(SchemaObject {
@@ -688,7 +750,7 @@ fn add_namespace(document: &str, name: &[String], objects: &mut BTreeMap<ObjectI
     });
 }
 
-fn namespace_dependency(name: &[String]) -> BTreeSet<ObjectId> {
+pub(crate) fn namespace_dependency(name: &[String]) -> BTreeSet<ObjectId> {
     BTreeSet::from([ObjectId::new(if name.len() > 1 {
         name[0].clone()
     } else {
@@ -696,7 +758,7 @@ fn namespace_dependency(name: &[String]) -> BTreeSet<ObjectId> {
     })])
 }
 
-fn qualified_name(name: &[String]) -> String {
+pub(crate) fn qualified_name(name: &[String]) -> String {
     if name.len() > 1 {
         name.join(".")
     } else {
@@ -707,7 +769,10 @@ fn qualified_name(name: &[String]) -> String {
     }
 }
 
-fn source_location(document: &str, statement: &PostgresStatement) -> SchemaSourceLocation {
+pub(crate) fn source_location(
+    document: &str,
+    statement: &PostgresStatement,
+) -> SchemaSourceLocation {
     SchemaSourceLocation {
         document: document.to_string(),
         start: statement.span.start,
@@ -715,13 +780,15 @@ fn source_location(document: &str, statement: &PostgresStatement) -> SchemaSourc
     }
 }
 
-fn database_value(database_type: &DatabaseType) -> Result<SemanticValue, PostgresDiagnostic> {
+pub(crate) fn database_value(
+    database_type: &DatabaseType,
+) -> Result<SemanticValue, PostgresDiagnostic> {
     serde_json::to_string(database_type)
         .map(SemanticValue::Text)
         .map_err(|_| schema_error_message("cannot serialize PostgreSQL database type"))
 }
 
-fn database_type_property(
+pub(crate) fn database_type_property(
     object: &SchemaObject,
     key: &str,
 ) -> Result<DatabaseType, PostgresDiagnostic> {
@@ -729,7 +796,10 @@ fn database_type_property(
     serde_json::from_str(value).map_err(|_| schema_error(object, "invalid database type metadata"))
 }
 
-fn text_property<'a>(object: &'a SchemaObject, key: &str) -> Result<&'a str, PostgresDiagnostic> {
+pub(crate) fn text_property<'a>(
+    object: &'a SchemaObject,
+    key: &str,
+) -> Result<&'a str, PostgresDiagnostic> {
     match object.semantic.get(key) {
         Some(SemanticValue::Text(value)) => Ok(value),
         _ => Err(schema_error(
@@ -744,7 +814,7 @@ fn bool_property(object: &SchemaObject, key: &str) -> Result<bool, PostgresDiagn
         .ok_or_else(|| schema_error(object, format!("missing boolean property '{key}'")))
 }
 
-fn optional_bool_property(object: &SchemaObject, key: &str) -> Option<bool> {
+pub(crate) fn optional_bool_property(object: &SchemaObject, key: &str) -> Option<bool> {
     match object.semantic.get(key) {
         Some(SemanticValue::Bool(value)) => Some(*value),
         _ => None,
@@ -768,70 +838,6 @@ fn object_id_list_property(
             format!("missing list property '{key}'"),
         )),
     }
-}
-
-fn string_set_property(object: &SchemaObject, key: &str) -> Option<BTreeSet<String>> {
-    match object.semantic.get(key) {
-        Some(SemanticValue::Set(values)) => values
-            .iter()
-            .map(|value| match value {
-                SemanticValue::Text(value) => Some(value.clone()),
-                _ => None,
-            })
-            .collect(),
-        _ => None,
-    }
-}
-
-fn nested_string_set_property(object: &SchemaObject, key: &str) -> Option<BTreeSet<Vec<String>>> {
-    match object.semantic.get(key) {
-        Some(SemanticValue::List(values)) => values
-            .iter()
-            .map(|value| match value {
-                SemanticValue::List(values) => values
-                    .iter()
-                    .map(|value| match value {
-                        SemanticValue::Text(value) => Some(value.clone()),
-                        _ => None,
-                    })
-                    .collect(),
-                _ => None,
-            })
-            .collect(),
-        _ => None,
-    }
-}
-
-fn function_from_object(object: &SchemaObject) -> Result<CatalogFunction, PostgresDiagnostic> {
-    let arguments = match object.semantic.get("arguments") {
-        Some(SemanticValue::List(values)) => values
-            .iter()
-            .map(|value| match value {
-                SemanticValue::Text(value) => serde_json::from_str(value)
-                    .map_err(|_| schema_error(object, "invalid function argument type")),
-                _ => Err(schema_error(object, "invalid function argument metadata")),
-            })
-            .collect::<Result<Vec<_>, _>>()?,
-        _ => return Err(schema_error(object, "function has no argument list")),
-    };
-    Ok(CatalogFunction {
-        identity: object.identity.clone(),
-        arguments,
-        result: database_type_property(object, "result")?,
-        strict: optional_bool_property(object, "strict").unwrap_or(false),
-        aggregate: optional_bool_property(object, "aggregate").unwrap_or(false),
-        result_nullable: optional_bool_property(object, "result-nullable").unwrap_or(true),
-    })
-}
-
-fn operator_from_object(object: &SchemaObject) -> Result<CatalogOperator, PostgresDiagnostic> {
-    Ok(CatalogOperator {
-        identity: object.identity.clone(),
-        name: text_property(object, "name")?.to_string(),
-        left: database_type_property(object, "left")?,
-        right: database_type_property(object, "right")?,
-        result: database_type_property(object, "result")?,
-    })
 }
 
 fn split_identity(identity: &ObjectId) -> Vec<String> {
@@ -859,7 +865,10 @@ fn unknown_relation(name: &str) -> PostgresDiagnostic {
     )
 }
 
-fn schema_error(object: &SchemaObject, message: impl Into<String>) -> PostgresDiagnostic {
+pub(crate) fn schema_error(
+    object: &SchemaObject,
+    message: impl Into<String>,
+) -> PostgresDiagnostic {
     let mut diagnostic = schema_error_message(format!("{}: {}", object.identity, message.into()));
     if let Some(source) = &object.source {
         diagnostic = diagnostic.with_schema_span(source.document.clone(), source.start, source.end);
@@ -867,6 +876,6 @@ fn schema_error(object: &SchemaObject, message: impl Into<String>) -> PostgresDi
     diagnostic
 }
 
-fn schema_error_message(message: impl Into<String>) -> PostgresDiagnostic {
+pub(crate) fn schema_error_message(message: impl Into<String>) -> PostgresDiagnostic {
     PostgresDiagnostic::at_sql(PostgresDiagnosticCode::TypeMismatch, message, 0, 1)
 }

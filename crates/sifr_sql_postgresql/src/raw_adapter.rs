@@ -1,10 +1,10 @@
 use crate::ast::{
-    Assignment, ColumnDefinition, ConflictAction, ConflictClause, CreateDomainStatement,
-    CreateEnumStatement, CreateFunctionStatement, CreateIndexStatement, CreateSequenceStatement,
-    CreateTableStatement, CreateViewStatement, DeleteStatement, Expression, ExpressionKind,
-    FromItem, InsertStatement, JoinKind, OrderDirection, OrderItem, PostgresStatement,
-    PostgresTypeName, SelectItem, SelectStatement, SetOperation, SetOperator, SqlSpan,
-    StatementKind, TableConstraint, UpdateStatement,
+    ColumnDefinition, ConflictAction, ConflictClause, CreateDomainStatement, CreateEnumStatement,
+    CreateFunctionStatement, CreateIndexStatement, CreateSequenceStatement, CreateTableStatement,
+    CreateViewStatement, DeleteStatement, Expression, ExpressionKind, FromItem, InsertStatement,
+    JoinKind, OrderDirection, OrderItem, PostgresStatement, PostgresTypeName, SelectItem,
+    SelectStatement, SetOperation, SetOperator, SqlSpan, StatementKind, TableConstraint,
+    UpdateStatement,
 };
 use crate::diagnostic::{PostgresDiagnostic, PostgresDiagnosticCode};
 use crate::ffi;
@@ -12,6 +12,7 @@ use crate::raw_helpers::{
     alias, array, bool_field, name_list, object, object_field, optional_array,
     optional_object_field, relation_name, string_field, string_node, tagged, type_name, u32_field,
 };
+use crate::raw_writes::{assignments, returning_items};
 use serde_json::{Map, Value};
 use std::fmt;
 
@@ -76,8 +77,8 @@ impl fmt::Display for PostgresParseError {
 
 impl std::error::Error for PostgresParseError {}
 
-struct RawAdapter<'a> {
-    source: &'a str,
+pub(crate) struct RawAdapter<'a> {
+    pub(crate) source: &'a str,
 }
 
 impl<'a> RawAdapter<'a> {
@@ -123,6 +124,10 @@ impl<'a> RawAdapter<'a> {
                     "CreateStmt" => StatementKind::CreateTable(self.create_table(body)?),
                     "CreateEnumStmt" => StatementKind::CreateEnum(Self::create_enum(body)),
                     "CreateDomainStmt" => StatementKind::CreateDomain(Self::create_domain(body)?),
+                    "CompositeTypeStmt" => {
+                        StatementKind::CreateComposite(self.create_composite(body)?)
+                    }
+                    "CreateRangeStmt" => StatementKind::CreateRange(self.create_range(body)?),
                     "ViewStmt" => StatementKind::CreateView(self.create_view(body)?),
                     "CreateTableAsStmt"
                         if [string_field(body, "objtype"), string_field(body, "relkind")]
@@ -149,7 +154,10 @@ impl<'a> RawAdapter<'a> {
             .collect()
     }
 
-    fn select(&self, value: &Map<String, Value>) -> Result<SelectStatement, PostgresParseError> {
+    pub(crate) fn select(
+        &self,
+        value: &Map<String, Value>,
+    ) -> Result<SelectStatement, PostgresParseError> {
         let operation = string_field(value, "op").unwrap_or("SETOP_NONE");
         let set_operation = if operation == "SETOP_NONE" {
             None
@@ -170,6 +178,8 @@ impl<'a> RawAdapter<'a> {
             })
         };
         Ok(SelectStatement {
+            common_tables: self.common_tables(value)?,
+            recursive: Self::with_recursive(value)?,
             targets: optional_array(value, "targetList")
                 .iter()
                 .map(|target| self.select_item(target))
@@ -192,9 +202,14 @@ impl<'a> RawAdapter<'a> {
                 .iter()
                 .map(|order| self.order_item(order))
                 .collect::<Result<_, _>>()?,
+            windows: self.named_windows(value)?,
             limit: optional_object_field(value, "limitCount")
                 .map(|expression| self.expression_object(expression))
                 .transpose()?,
+            offset: optional_object_field(value, "limitOffset")
+                .map(|expression| self.expression_object(expression))
+                .transpose()?,
+            locking: Self::locking_clauses(value)?,
             values: optional_array(value, "valuesLists")
                 .iter()
                 .map(|row| {
@@ -209,7 +224,7 @@ impl<'a> RawAdapter<'a> {
         })
     }
 
-    fn select_item(&self, value: &Value) -> Result<SelectItem, PostgresParseError> {
+    pub(crate) fn select_item(&self, value: &Value) -> Result<SelectItem, PostgresParseError> {
         let (_, target) = tagged(object(value, "select target")?, "select target")?;
         let expression = self.expression_object(object_field(target, "val")?)?;
         Ok(SelectItem {
@@ -276,7 +291,7 @@ impl<'a> RawAdapter<'a> {
         self.parse_from_item(&Value::Object(value.clone()))
     }
 
-    fn order_item(&self, value: &Value) -> Result<OrderItem, PostgresParseError> {
+    pub(crate) fn order_item(&self, value: &Value) -> Result<OrderItem, PostgresParseError> {
         let (_, body) = tagged(object(value, "ORDER BY item")?, "ORDER BY item")?;
         Ok(OrderItem {
             expression: self.expression_object(object_field(body, "node")?)?,
@@ -288,18 +303,21 @@ impl<'a> RawAdapter<'a> {
         })
     }
 
-    fn expression(&self, value: &Value) -> Result<Expression, PostgresParseError> {
+    pub(crate) fn expression(&self, value: &Value) -> Result<Expression, PostgresParseError> {
         let object = object(value, "expression")?;
         self.expression_object(object)
     }
 
-    fn expression_object(
+    pub(crate) fn expression_object(
         &self,
         value: &Map<String, Value>,
     ) -> Result<Expression, PostgresParseError> {
         let (name, body) = tagged(value, "expression")?;
         let span = self.span(body);
         let kind = match name {
+            "ColumnRef" if Self::star_qualifier(body).is_some() => ExpressionKind::Star {
+                qualifier: Self::star_qualifier(body).unwrap_or_default(),
+            },
             "ColumnRef" => ExpressionKind::Column {
                 path: optional_array(body, "fields")
                     .iter()
@@ -349,7 +367,17 @@ impl<'a> RawAdapter<'a> {
                     .map(|argument| self.expression(argument))
                     .collect::<Result<_, _>>()?,
                 aggregate_star: bool_field(body, "agg_star").unwrap_or(false),
+                distinct: bool_field(body, "agg_distinct").unwrap_or(false),
+                filter: optional_object_field(body, "agg_filter")
+                    .map(|value| self.expression_object(value).map(Box::new))
+                    .transpose()?,
+                window: optional_object_field(body, "over")
+                    .map(|value| self.window_specification(value, true))
+                    .transpose()?,
             },
+            "A_ArrayExpr" => self.array_expression(body)?,
+            "CaseExpr" => self.case_expression(body)?,
+            "CoalesceExpr" => self.coalesce_expression(body)?,
             "NullTest" => ExpressionKind::NullTest {
                 expression: Box::new(self.expression_object(object_field(body, "arg")?)?),
                 is_not: string_field(body, "nulltesttype").unwrap_or("IS_NULL") == "IS_NOT_NULL",
@@ -381,11 +409,21 @@ impl<'a> RawAdapter<'a> {
                     ("AEXPR_NOT_DISTINCT", _) => "IS NOT DISTINCT FROM".to_string(),
                     _ => operator,
                 };
-                Ok(ExpressionKind::Binary {
-                    operator,
-                    left: Box::new(self.expression_object(object_field(body, "lexpr")?)?),
-                    right: Box::new(self.expression_object(object_field(body, "rexpr")?)?),
-                })
+                match (
+                    optional_object_field(body, "lexpr"),
+                    optional_object_field(body, "rexpr"),
+                ) {
+                    (None, Some(right)) if kind == "AEXPR_OP" => Ok(ExpressionKind::Unary {
+                        operator,
+                        expression: Box::new(self.expression_object(right)?),
+                    }),
+                    (Some(left), Some(right)) => Ok(ExpressionKind::Binary {
+                        operator,
+                        left: Box::new(self.expression_object(left)?),
+                        right: Box::new(self.expression_object(right)?),
+                    }),
+                    _ => Err(self.invalid("PostgreSQL operator has missing operands", body)),
+                }
             }
             "AEXPR_IN" => {
                 let list = object_field(body, "rexpr")?;
@@ -618,7 +656,7 @@ impl<'a> RawAdapter<'a> {
         })
     }
 
-    fn column_definition(
+    pub(crate) fn column_definition(
         &self,
         body: &Map<String, Value>,
     ) -> Result<ColumnDefinition, PostgresParseError> {
@@ -788,13 +826,14 @@ impl<'a> RawAdapter<'a> {
                 .unwrap_or_else(|_| PostgresTypeName {
                     path: vec!["void".to_string()],
                     modifiers: Vec::new(),
+                    array_dimensions: 0,
                 }),
             strict,
             aggregate: false,
         })
     }
 
-    fn span(&self, body: &Map<String, Value>) -> SqlSpan {
+    pub(crate) fn span(&self, body: &Map<String, Value>) -> SqlSpan {
         let source_len = u32::try_from(self.source.len()).unwrap_or(u32::MAX);
         let start = body
             .get("location")
@@ -823,42 +862,11 @@ impl<'a> RawAdapter<'a> {
         }
     }
 
-    fn invalid(&self, message: impl Into<String>, body: &Map<String, Value>) -> PostgresParseError {
+    pub(crate) fn invalid(
+        &self,
+        message: impl Into<String>,
+        body: &Map<String, Value>,
+    ) -> PostgresParseError {
         PostgresParseError::unsupported(message, self.span(body))
     }
-}
-
-fn assignments(
-    body: &Map<String, Value>,
-    key: &str,
-    adapter: &RawAdapter<'_>,
-) -> Result<Vec<Assignment>, PostgresParseError> {
-    optional_array(body, key)
-        .iter()
-        .map(|assignment| {
-            let (_, assignment) = tagged(object(assignment, "assignment")?, "assignment")?;
-            Ok(Assignment {
-                column: string_field(assignment, "name")
-                    .ok_or_else(|| adapter.invalid("assignment has no column", assignment))?
-                    .to_string(),
-                value: adapter.expression_object(object_field(assignment, "val")?)?,
-                span: adapter.span(assignment),
-            })
-        })
-        .collect()
-}
-
-fn returning_items(
-    body: &Map<String, Value>,
-    adapter: &RawAdapter<'_>,
-) -> Result<Vec<SelectItem>, PostgresParseError> {
-    let clause_items = optional_object_field(body, "returningClause")
-        .map(|clause| optional_array(clause, "exprs"))
-        .unwrap_or_default();
-    let items = if clause_items.is_empty() {
-        optional_array(body, "returningList")
-    } else {
-        clause_items
-    };
-    items.iter().map(|item| adapter.select_item(item)).collect()
 }

@@ -74,6 +74,7 @@ pub(crate) fn frame_for_results(fields: &[ResultFact]) -> ScopeFrame {
         bindings: vec![ScopeBinding {
             alias: "<result>".to_string(),
             relation: None,
+            column_order: fields.iter().map(|field| field.name.clone()).collect(),
             columns: fields
                 .iter()
                 .enumerate()
@@ -112,5 +113,6 @@ pub(crate) fn binding_for_relation(
         }),
         relation: Some(relation.identity.clone()),
         columns: relation.columns.clone(),
+        column_order: relation.column_order.clone(),
     }
 }

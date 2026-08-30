@@ -93,6 +93,8 @@ pub(crate) struct RootedEntrypointPlan {
     python_bridges: Option<sifr_package::ResolvedPythonBridgeGraph>,
     rust_interop_context: Option<PackageRustInteropContext>,
     sql_profiles: super::sql_profiles::PreparedSqlProfiles,
+    query_signatures: sifr_sql_contract::QuerySignatureRegistry,
+    package_identity: String,
     cargo_resolution: CargoResolutionPolicy,
 }
 
@@ -193,6 +195,7 @@ pub(crate) fn build_rooted_entrypoint_binary_with_report(
     let (plan, mode, entrypoint_path) =
         RootedEntrypointPlan::from_entrypoint_with_stages(entrypoint, &mut stages)?;
     let frontend_diagnostics = plan.frontend_diagnostics();
+    let query_signatures = plan.query_signature_artifact()?;
     let cargo_resolution = plan.cargo_resolution.clone();
     let generated_project = measure_stage(&mut stages, "Generating Rust project", || {
         plan.into_generated_binary_project()
@@ -213,6 +216,14 @@ pub(crate) fn build_rooted_entrypoint_binary_with_report(
         "Building release binary",
         materialized.cargo_elapsed,
     ));
+    let query_signature_artifact_path =
+        super::sql_query_signatures::emit_query_signature_artifact(output_dir, &query_signatures)
+            .map_err(|error| {
+            vec![crate::diagnostics::diagnostic_with_code(
+                error,
+                DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
+            )]
+        })?;
     Ok(BuildReport::new(BuildReportInput {
         entrypoint_path,
         mode,
@@ -222,6 +233,7 @@ pub(crate) fn build_rooted_entrypoint_binary_with_report(
         stages,
         frontend_diagnostics,
         cache_hit: false,
+        query_signature_artifact_path: Some(query_signature_artifact_path),
     }))
 }
 
@@ -312,6 +324,7 @@ fn build_cached_rooted_entrypoint_binary(
         stages,
         frontend_diagnostics,
         cache_hit: cache_entry.report().cache_hit(),
+        query_signature_artifact_path: None,
     });
     Ok(CachedBinaryArtifact {
         binary_path,
@@ -332,6 +345,11 @@ impl RootedEntrypointPlan {
     ) -> Result<(Self, BuildCompilationMode, PathBuf), Vec<RenderedDiagnostic>> {
         let mode = entrypoint.build_mode();
         let entrypoint_path = entrypoint.display_path();
+        let package_identity = match &entrypoint {
+            RootedEntrypoint::PackageProject { entrypoint, .. } => entrypoint.package_id.0.clone(),
+            RootedEntrypoint::Project { .. } => "__sifr_project__".to_string(),
+            RootedEntrypoint::SingleFile { .. } => "__sifr_single_file__".to_string(),
+        };
         let stdlib = measure_stage(stages, "Loading Sifr standard library", compile_stdlib)?;
         let package_entrypoint = match &entrypoint {
             RootedEntrypoint::PackageProject { entrypoint, .. } => Some(*entrypoint),
@@ -537,6 +555,8 @@ impl RootedEntrypointPlan {
                 python_bridges,
                 rust_interop_context,
                 sql_profiles,
+                query_signatures: sifr_sql_contract::QuerySignatureRegistry::default(),
+                package_identity,
                 cargo_resolution,
             },
             mode,
@@ -565,6 +585,19 @@ impl RootedEntrypointPlan {
                     .chain(diagnostics.rendered_reveal_types.clone())
             })
             .collect()
+    }
+
+    fn query_signature_artifact(
+        &self,
+    ) -> Result<sifr_sql_contract::QuerySignatureArtifact, Vec<RenderedDiagnostic>> {
+        self.query_signatures
+            .exported_artifact(self.package_identity.clone())
+            .map_err(|error| {
+                vec![crate::diagnostics::diagnostic_with_code(
+                    error.message,
+                    DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
+                )]
+            })
     }
 
     fn into_single_file_frontend(self) -> Result<FrontendCompiled, Vec<RenderedDiagnostic>> {

@@ -23,12 +23,17 @@ pub(crate) fn expression_has_aggregate(expression: &Expression) -> bool {
             name,
             arguments,
             aggregate_star,
+            window,
+            filter,
+            ..
         } => {
-            *aggregate_star
-                || name.last().is_some_and(|name| {
-                    matches!(name.as_str(), "count" | "sum" | "min" | "max" | "avg")
-                })
-                || arguments.iter().any(expression_has_aggregate)
+            window.is_none()
+                && (*aggregate_star
+                    || name.last().is_some_and(|name| {
+                        matches!(name.as_str(), "count" | "sum" | "min" | "max" | "avg")
+                    })
+                    || arguments.iter().any(expression_has_aggregate))
+                || filter.as_deref().is_some_and(expression_has_aggregate)
         }
         ExpressionKind::Cast { expression, .. }
         | ExpressionKind::Unary { expression, .. }
@@ -42,20 +47,140 @@ pub(crate) fn expression_has_aggregate(expression: &Expression) -> bool {
         ExpressionKind::BooleanList { expressions, .. } => {
             expressions.iter().any(expression_has_aggregate)
         }
-        ExpressionKind::Subquery { query }
-        | ExpressionKind::Exists { query }
-        | ExpressionKind::SubqueryComparison { query, .. } => query
-            .targets
-            .iter()
-            .any(|target| expression_has_aggregate(&target.expression)),
+        ExpressionKind::Array { elements }
+        | ExpressionKind::Coalesce {
+            arguments: elements,
+        } => elements.iter().any(expression_has_aggregate),
+        ExpressionKind::Case {
+            operand,
+            branches,
+            fallback,
+        } => {
+            operand.as_deref().is_some_and(expression_has_aggregate)
+                || branches.iter().any(|branch| {
+                    expression_has_aggregate(&branch.condition)
+                        || expression_has_aggregate(&branch.result)
+                })
+                || fallback.as_deref().is_some_and(expression_has_aggregate)
+        }
+        // A subquery has its own aggregation level. Its aggregates never change
+        // the cardinality of the containing SELECT.
+        ExpressionKind::Subquery { .. }
+        | ExpressionKind::Exists { .. }
+        | ExpressionKind::SubqueryComparison { .. } => false,
         _ => false,
     }
 }
 
-pub(crate) fn limit_is_one(expression: Option<&Expression>) -> bool {
-    expression.is_some_and(
-        |expression| matches!(&expression.kind, ExpressionKind::Integer { value } if value == "1"),
-    )
+pub(crate) fn expression_has_window(expression: &Expression) -> bool {
+    match &expression.kind {
+        ExpressionKind::Function {
+            arguments,
+            filter,
+            window,
+            ..
+        } => {
+            window.is_some()
+                || arguments.iter().any(expression_has_window)
+                || filter.as_deref().is_some_and(expression_has_window)
+        }
+        ExpressionKind::Cast { expression, .. }
+        | ExpressionKind::Unary { expression, .. }
+        | ExpressionKind::NullTest { expression, .. } => expression_has_window(expression),
+        ExpressionKind::Binary { left, right, .. } => {
+            expression_has_window(left) || expression_has_window(right)
+        }
+        ExpressionKind::InList {
+            expression, values, ..
+        } => expression_has_window(expression) || values.iter().any(expression_has_window),
+        ExpressionKind::BooleanList { expressions, .. } => {
+            expressions.iter().any(expression_has_window)
+        }
+        ExpressionKind::Array { elements }
+        | ExpressionKind::Coalesce {
+            arguments: elements,
+        } => elements.iter().any(expression_has_window),
+        ExpressionKind::Case {
+            operand,
+            branches,
+            fallback,
+        } => {
+            operand.as_deref().is_some_and(expression_has_window)
+                || branches.iter().any(|branch| {
+                    expression_has_window(&branch.condition)
+                        || expression_has_window(&branch.result)
+                })
+                || fallback.as_deref().is_some_and(expression_has_window)
+        }
+        ExpressionKind::Subquery { .. }
+        | ExpressionKind::Exists { .. }
+        | ExpressionKind::SubqueryComparison { .. } => false,
+        _ => false,
+    }
+}
+
+pub(crate) fn window_references(expression: &Expression, output: &mut Vec<String>) {
+    match &expression.kind {
+        ExpressionKind::Function {
+            arguments,
+            filter,
+            window,
+            ..
+        } => {
+            if let Some(reference) = window.as_ref().and_then(|window| window.reference.as_ref()) {
+                output.push(reference.clone());
+            }
+            for argument in arguments {
+                window_references(argument, output);
+            }
+            if let Some(filter) = filter {
+                window_references(filter, output);
+            }
+        }
+        ExpressionKind::Cast { expression, .. }
+        | ExpressionKind::Unary { expression, .. }
+        | ExpressionKind::NullTest { expression, .. } => window_references(expression, output),
+        ExpressionKind::Binary { left, right, .. } => {
+            window_references(left, output);
+            window_references(right, output);
+        }
+        ExpressionKind::InList {
+            expression, values, ..
+        } => {
+            window_references(expression, output);
+            for value in values {
+                window_references(value, output);
+            }
+        }
+        ExpressionKind::BooleanList { expressions, .. }
+        | ExpressionKind::Array {
+            elements: expressions,
+        }
+        | ExpressionKind::Coalesce {
+            arguments: expressions,
+        } => {
+            for expression in expressions {
+                window_references(expression, output);
+            }
+        }
+        ExpressionKind::Case {
+            operand,
+            branches,
+            fallback,
+        } => {
+            if let Some(operand) = operand {
+                window_references(operand, output);
+            }
+            for branch in branches {
+                window_references(&branch.condition, output);
+                window_references(&branch.result, output);
+            }
+            if let Some(fallback) = fallback {
+                window_references(fallback, output);
+            }
+        }
+        _ => {}
+    }
 }
 
 pub(crate) fn type_fact(database_type: DatabaseType, nullable: bool) -> TypeFact {

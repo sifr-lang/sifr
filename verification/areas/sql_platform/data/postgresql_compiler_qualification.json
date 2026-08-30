@@ -15,6 +15,7 @@
   "core_schema_objects": [
     "check-constraint",
     "column",
+    "composite",
     "domain",
     "enum",
     "foreign-key",
@@ -23,23 +24,35 @@
     "materialized-view",
     "namespace",
     "primary-key",
+    "range",
     "sequence",
     "table",
     "unique-constraint",
     "view"
   ],
   "semantic_mechanisms": [
+    "array-and-range-resolution",
     "aggregate-resolution",
     "alias-resolution",
     "cast-resolution",
     "correlated-subquery-resolution",
+    "cte-resolution",
     "exact-codec-inference",
     "exact-parameter-inference",
     "function-resolution",
+    "json-operator-resolution",
+    "outer-join-nullability",
     "operator-resolution",
     "postgresql-nullability",
     "set-operation-resolution",
+    "window-and-locking-resolution",
     "write-effects"
+  ],
+  "stability_mechanisms": [
+    "canonical-query-signature-artifact",
+    "explicit-private-star-expansion",
+    "exported-star-rejection",
+    "machine-applicable-projection-fixes"
   ],
   "write_mechanisms": [
     "conflict-targets",

@@ -152,12 +152,15 @@ The provider maps PostgreSQL types into closed `DatabaseType` values. Each
 supported value has one exact codec identity for the selected server profile.
 
 The core registry covers Boolean, fixed integers, numeric values, floats, text,
-binary values, temporal values, UUID, JSON, network values, and MAC addresses.
+binary values, temporal values, UUID, JSON, arrays, ranges, network values, and
+MAC addresses.
 `inet` and `cidr` keep different codec identities. Character and varying
 character types use `DatabaseType::Named`. This type preserves the qualified
 database identity and all modifiers while mapping the value to Sifr `str`.
 
-Enums, domains, and composites use stable schema object identities. Catalog
+Enums, domains, composites, ranges, and multiranges use stable schema object
+identities. Array types preserve their dimensions, element nullability, and
+lower bounds. Catalog
 metadata can extend functions, operators, and casts without exposing raw server
 identifiers.
 
@@ -181,22 +184,40 @@ composed result after rewriting.
 
 ## Query semantics
 
-The analyzer resolves casts, operators, scalar functions, aggregates, aliases,
-correlations, and set operations against the catalog.
+The analyzer resolves casts, operators, scalar functions, aggregates, window
+functions, aliases, common table expressions, correlations, and set operations
+against the catalog.
 
 Built-in rules cover common arithmetic, modulo, comparisons, `LIKE`, `IN`, text
-concatenation, `count`, `sum`, `avg`, `min`, `max`, `lower`, `upper`, and `now`.
-Catalog metadata supplies other overloads.
+concatenation, JSON operators, array and range operators, `CASE`, `COALESCE`,
+`count`, `sum`, `avg`, `min`, `max`, `row_number`, `rank`, `dense_rank`, `lag`,
+`lead`, `first_value`, `last_value`, `lower`, `upper`, and `now`. Catalog
+metadata supplies other overloads. Named windows must exist, must be unique,
+and must not form a reference cycle. Window functions are valid only in result
+and order expressions.
 
-Result fields must have unique names. Unnamed expressions receive deterministic
-`column_N` names.
+PostgreSQL does not enforce the array rank in a column declaration. The schema
+type therefore records an unknown rank, even when the declaration contains one
+or more bracket pairs. An array expression can record its known rank.
 
-Nullability is conservative. Columns preserve catalog nullability, strict
-operators propagate nullable inputs, and unknown function results remain
-nullable unless metadata proves otherwise.
+Result fields must have unique names. Public queries require explicit stable
+names. A private `SELECT *` expands to the catalog column order before the plan
+is emitted. An exported query cannot use `SELECT *`.
 
-Core cardinality recognizes aggregate rows and an exact `LIMIT 1`. Later
-semantic rules extend the same cardinality lattice.
+Nullability follows PostgreSQL semantics. Outer joins make only the extended
+side nullable. `CASE`, `COALESCE`, aggregates, scalar subqueries, strict
+functions, and JSON lookup operators each apply their own rule. Unknown
+function results remain nullable unless catalog metadata proves otherwise.
+
+Cardinality uses the complete interval lattice. It covers unique-key predicates,
+all constant limits and offsets, ungrouped aggregates, values rows, set
+operations, and writes with `RETURNING`. Aggregates inside a scalar subquery do
+not change the containing query cardinality. A `WHERE` or `HAVING` clause can
+reduce a syntactic singleton to zero rows, so these forms have an at-most-one
+interval.
+
+Row-lock clauses preserve the result type and add a semantic plan flag. The
+analyzer rejects row locking on aggregate and set-operation results.
 
 The effect contract lists every referenced and affected schema object. Embedded
 plans carry those objects as schema-fingerprinted dependencies.
@@ -204,7 +225,7 @@ plans carry those objects as schema-fingerprinted dependencies.
 ## Write semantics
 
 `INSERT` checks required columns, row widths, assignment casts, generated
-columns, and `INSERT SELECT` widths.
+columns, explicit `DEFAULT` values, and `INSERT SELECT` widths.
 
 `ON CONFLICT` targets must match a primary or unique key. Conflict-target and
 update predicates remain distinct. The `excluded` pseudo-relation uses the
@@ -214,8 +235,30 @@ column.
 `UPDATE` checks each assignment once and includes `FROM` relations in scope.
 `DELETE` includes `USING` relations in scope.
 
-All writes infer `RETURNING` fields through the normal result analyzer. Their
-effect contract marks the target relation as affected.
+All writes infer `RETURNING` fields through the normal result analyzer. Unique
+write predicates produce an at-most-one result. Bounded values rows produce a
+bounded interval. The effect contract marks the target relation as affected.
+
+## Public query artifacts
+
+Application builds write `sifr-query-signatures.json` with an atomic replace.
+The canonical artifact stores each exported symbol, parameter list, structural
+result, cardinality, effect, and schema dependency set. Its fingerprint excludes
+filesystem order and private queries. Dependencies include both referenced and
+affected schema objects.
+
+The compatibility checker reports removed symbols and changes to parameters,
+results, cardinality, effects, or schema dependencies. These changes are public
+API changes.
+
+Values fragments do not chunk implicitly. A batch that exceeds the provider
+parameter limit is an error until the query selects an explicit valid chunk
+size. Assignment fragments must be non-empty, writable, bounded, and in exact
+parameter-slot order.
+
+A custom codec binds one database identity to one Sifr type. Its encoder and
+decoder must be owned, fallible, exact inverse signatures. The binding keeps the
+declared null behavior, wire identity, and panic-containment policy.
 
 ## Diagnostics
 

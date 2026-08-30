@@ -27,6 +27,8 @@ pub(crate) fn type_name(body: &Map<String, Value>) -> PostgresTypeName {
             .iter()
             .filter_map(integer_constant)
             .collect(),
+        array_dimensions: u8::try_from(optional_array(body, "arrayBounds").len())
+            .unwrap_or(u8::MAX),
     }
 }
 

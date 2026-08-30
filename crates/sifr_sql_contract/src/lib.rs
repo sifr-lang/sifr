@@ -3,6 +3,7 @@
 mod bind;
 mod cardinality;
 mod codec;
+mod codec_binding;
 mod component;
 mod diagnostic;
 mod diff;
@@ -10,6 +11,7 @@ mod effect;
 mod error;
 mod fingerprint;
 mod fragment;
+mod fragment_batches;
 mod generated;
 mod identifier;
 mod normalization;
@@ -17,6 +19,7 @@ mod profile;
 mod profile_registry;
 mod provider;
 mod query;
+mod query_signature;
 mod schema;
 mod slice;
 mod sql_type;
@@ -28,6 +31,10 @@ pub use cardinality::{Cardinality, CardinalityError, FetchMethod};
 pub use codec::{
     CodecContract, CodecIdentity, CodecRegistry, NullCodecBehavior, PanicContainment,
     WireFormatIdentity,
+};
+pub use codec_binding::{
+    CheckedCodecBinding, CodecBindingError, CodecDecoderSignature, CodecEncoderSignature,
+    CodecFunctionIdentity,
 };
 pub use diagnostic::CommonSqlDiagnostic;
 
@@ -45,6 +52,10 @@ pub use fragment::{
     PackageCapabilityResolver, PredicateContext, QueryDefinitionScope, RelationAlias,
     ResultTransformation, SqlFragment, SqlPrecedence, StaticFragmentOrigin, UnsafeSyntaxAudit,
     UnsafeSyntaxGrant, UnsafeSyntaxLint, all_predicates, any_predicates, not_predicate,
+};
+pub use fragment_batches::{
+    AssignmentFragmentContract, BatchChunk, ConflictBatchBehavior, FragmentBatchError,
+    ProviderParameterLimit, ValuesFragmentContract,
 };
 pub use generated::{
     COMPILER_KNOWN_PROFILE_EXPORTS, GeneratedProfileModule, GeneratedSchemaType,
@@ -69,6 +80,11 @@ pub use query::{
     QueryAdapter, QueryContractError, QueryContractErrorKind, QueryOrigin, QueryParameterSlot,
     QuerySignatureRegistry, QuerySymbol, QuerySymbolKind, QueryTemplateContract,
     QueryTemplateDraft, QueryTemplateIdentity, QueryWarning, RowOfType, effect_can_unify,
+};
+pub use query_signature::{
+    ProjectionPolicy, ProjectionStability, PublicQueryChange, PublicQueryChangeKind,
+    QUERY_SIGNATURE_FORMAT_VERSION, QuerySignatureArtifact, QuerySignatureEntry,
+    QuerySignatureError, QuerySignatureFormat, compare_query_signatures,
 };
 pub use schema::{
     DialectIdentity, ObjectId, ProviderIdentity, SchemaIr, SchemaObject, SchemaObjectKind,
