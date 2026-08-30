@@ -228,6 +228,19 @@ fn canonical_read_matrix_covers_every_locked_semantic_family() {
             },
         ),
         (
+            DatabaseType::Array {
+                element: Box::new(custom_database.clone()),
+                dimensions: Some(1),
+                element_nullability: Nullability::NonNull,
+                preserves_lower_bounds: true,
+            },
+            SifrType::SqlArray {
+                element: Box::new(SifrType::Custom {
+                    identity: "app.Money".to_string(),
+                }),
+            },
+        ),
+        (
             DatabaseType::Enum {
                 identity: status.clone(),
             },
@@ -407,6 +420,15 @@ fn bind_matrix_is_closed_and_preserves_width_nullability_and_shape() {
             BindCompatibility::Fallible(EncodeCheck::DecimalPrecisionAndScale),
         ),
         (
+            input(SifrType::Numeric),
+            target(DatabaseType::Decimal {
+                precision: Some(5),
+                scale: Some(2),
+                representation: DecimalRepresentation::Decimal,
+            }),
+            BindCompatibility::Rejected(BindRejection::UnsupportedPair),
+        ),
+        (
             input(SifrType::Str),
             target(DatabaseType::Text {
                 fixed: true,
@@ -437,6 +459,51 @@ fn bind_matrix_is_closed_and_preserves_width_nullability_and_shape() {
             target(DatabaseType::Text {
                 fixed: false,
                 max_characters: None,
+            }),
+            BindCompatibility::Rejected(BindRejection::Nullability),
+        ),
+        (
+            InputType {
+                value: SifrType::Union {
+                    members: BTreeSet::from([SifrType::Str, SifrType::None]),
+                },
+                nullability: Nullability::NonNull,
+            },
+            ParameterType {
+                database: DatabaseType::Text {
+                    fixed: false,
+                    max_characters: None,
+                },
+                nullability: Nullability::Nullable,
+            },
+            BindCompatibility::Exact,
+        ),
+        (
+            InputType {
+                value: SifrType::None,
+                nullability: Nullability::NonNull,
+            },
+            ParameterType {
+                database: DatabaseType::Text {
+                    fixed: false,
+                    max_characters: None,
+                },
+                nullability: Nullability::Nullable,
+            },
+            BindCompatibility::Exact,
+        ),
+        (
+            InputType {
+                value: SifrType::Union {
+                    members: BTreeSet::from([SifrType::Str, SifrType::None]),
+                },
+                nullability: Nullability::NonNull,
+            },
+            target(DatabaseType::SqliteDynamic {
+                storage_classes: BTreeSet::from([
+                    SqliteStorageClass::Text,
+                    SqliteStorageClass::Null,
+                ]),
             }),
             BindCompatibility::Rejected(BindRejection::Nullability),
         ),

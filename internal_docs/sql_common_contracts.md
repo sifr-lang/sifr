@@ -58,6 +58,11 @@ checks range and precision. A bounded decimal target checks precision and scale.
 Bounded text and binary targets check length. SQLite dynamic parameters accept
 only values whose storage classes are in the declared storage-class set.
 
+`InputType.nullability` is canonical. The bind relation also normalizes an
+inline `None` or a union that contains `None` before it compares types. Thus,
+inline and explicit nullability have the same behavior. A decimal bind must
+match the target representation before any precision or scale check applies.
+
 A Sifr `list[T]` binds only to a one-dimensional SQL array with lower bound one.
 `SqlArray[T]` preserves dimensions and lower bounds. Array elements use the same
 closed bind relation. Nominal and custom values require the exact database and

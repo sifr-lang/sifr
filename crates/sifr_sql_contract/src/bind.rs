@@ -55,23 +55,34 @@ pub fn bind_compatibility(
     target: &ParameterType,
     codecs: &CodecRegistry,
 ) -> BindCompatibility {
-    if input.nullability == Nullability::Nullable && target.nullability == Nullability::NonNull {
+    let (value, inline_nullability) = split_nested_nullability(&input.value);
+    let nullability = if input.nullability == Nullability::Nullable
+        || inline_nullability == Nullability::Nullable
+    {
+        Nullability::Nullable
+    } else {
+        Nullability::NonNull
+    };
+    if nullability == Nullability::Nullable && target.nullability == Nullability::NonNull {
         return BindCompatibility::Rejected(BindRejection::Nullability);
     }
-    if input.nullability == Nullability::Nullable
+    if nullability == Nullability::Nullable
         && codecs
             .codec_for_database_type(&target.database)
             .is_some_and(|codec| codec.null_behavior == crate::NullCodecBehavior::Reject)
     {
         return BindCompatibility::Rejected(BindRejection::Nullability);
     }
+    if value == SifrType::None {
+        return BindCompatibility::Exact;
+    }
 
-    if let Some(result) = special_compatibility(&input.value, &target.database, codecs) {
+    if let Some(result) = special_compatibility(&value, &target.database, codecs) {
         return result;
     }
 
     match canonical_read_type(&target.database) {
-        Ok(mapped) if mapped == input.value => constrained_exact(&target.database),
+        Ok(mapped) if mapped == value => constrained_exact(&target.database),
         Ok(_) | Err(_) => BindCompatibility::Rejected(BindRejection::UnsupportedPair),
     }
 }
@@ -112,15 +123,6 @@ fn special_compatibility(
             EncodeCheck::Float32RangeAndPrecision,
         )),
         (SifrType::Float, DatabaseType::Float64) => Some(BindCompatibility::Exact),
-        (
-            SifrType::Decimal | SifrType::BigDecimal | SifrType::Numeric,
-            DatabaseType::Decimal {
-                precision: Some(_), ..
-            }
-            | DatabaseType::Decimal { scale: Some(_), .. },
-        ) => Some(BindCompatibility::Fallible(
-            EncodeCheck::DecimalPrecisionAndScale,
-        )),
         (
             SifrType::Str,
             DatabaseType::Text { fixed: true, .. }
@@ -289,6 +291,9 @@ fn array_element_compatibility(
 }
 
 fn split_nested_nullability(input: &SifrType) -> (SifrType, Nullability) {
+    if input == &SifrType::None {
+        return (SifrType::None, Nullability::Nullable);
+    }
     let SifrType::Union { members } = input else {
         return (input.clone(), Nullability::NonNull);
     };
@@ -297,10 +302,10 @@ fn split_nested_nullability(input: &SifrType) -> (SifrType, Nullability) {
     }
     let mut values = members.clone();
     values.remove(&SifrType::None);
-    let value = if values.len() == 1 {
-        values.into_iter().next().unwrap_or(SifrType::None)
-    } else {
-        SifrType::Union { members: values }
+    let value = match values.len() {
+        0 => SifrType::None,
+        1 => values.into_iter().next().unwrap_or(SifrType::None),
+        _ => SifrType::Union { members: values },
     };
     (value, Nullability::Nullable)
 }

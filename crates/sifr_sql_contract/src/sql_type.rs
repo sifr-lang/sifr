@@ -164,6 +164,13 @@ pub enum SifrType {
 }
 
 pub fn canonical_read_type(database: &DatabaseType) -> Result<SifrType, SchemaContractError> {
+    canonical_read_type_with_registry(database, None)
+}
+
+fn canonical_read_type_with_registry(
+    database: &DatabaseType,
+    codecs: Option<&CodecRegistry>,
+) -> Result<SifrType, SchemaContractError> {
     validate_database_type(database)?;
     let mapped = match database {
         DatabaseType::Boolean => SifrType::Bool,
@@ -193,7 +200,7 @@ pub fn canonical_read_type(database: &DatabaseType) -> Result<SifrType, SchemaCo
             ..
         } => SifrType::SqlArray {
             element: Box::new(with_nullability(
-                canonical_read_type(element)?,
+                canonical_read_type_with_registry(element, codecs)?,
                 *element_nullability,
             )),
         },
@@ -206,17 +213,28 @@ pub fn canonical_read_type(database: &DatabaseType) -> Result<SifrType, SchemaCo
             element,
             multirange,
         } => SifrType::Range {
-            element: Box::new(canonical_read_type(element)?),
+            element: Box::new(canonical_read_type_with_registry(element, codecs)?),
             multirange: *multirange,
         },
         DatabaseType::IpAddress => SifrType::IpAddress,
         DatabaseType::IpNetwork => SifrType::IpNetwork,
         DatabaseType::MacAddress => SifrType::MacAddress,
         DatabaseType::Custom { .. } => {
-            return Err(SchemaContractError::new(
-                SchemaContractErrorKind::InvalidProvider,
-                "custom database type requires a profile codec registry",
-            ));
+            let Some(codecs) = codecs else {
+                return Err(SchemaContractError::new(
+                    SchemaContractErrorKind::InvalidProvider,
+                    "custom database type requires a profile codec registry",
+                ));
+            };
+            codecs
+                .codec_for_database_type(database)
+                .map(|contract| contract.sifr_type.clone())
+                .ok_or_else(|| {
+                    SchemaContractError::new(
+                        SchemaContractErrorKind::InvalidProvider,
+                        "custom database type has no codec in the selected server profile",
+                    )
+                })?
         }
         DatabaseType::SqliteDynamic { storage_classes } => {
             if storage_classes.is_empty() {
@@ -241,19 +259,7 @@ pub fn canonical_read_type_in(
     database: &DatabaseType,
     codecs: &CodecRegistry,
 ) -> Result<SifrType, SchemaContractError> {
-    if matches!(database, DatabaseType::Custom { .. }) {
-        validate_database_type(database)?;
-        return codecs
-            .codec_for_database_type(database)
-            .map(|contract| contract.sifr_type.clone())
-            .ok_or_else(|| {
-                SchemaContractError::new(
-                    SchemaContractErrorKind::InvalidProvider,
-                    "custom database type has no codec in the selected server profile",
-                )
-            });
-    }
-    canonical_read_type(database)
+    canonical_read_type_with_registry(database, Some(codecs))
 }
 
 pub fn canonical_read_type_with_nullability(
