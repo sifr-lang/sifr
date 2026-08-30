@@ -15,16 +15,29 @@ use super::result_type_helpers::{
     integer_float_conversion_error_union, is_result_int_division_error_type,
 };
 
+pub(crate) struct CheckedNumericBinop<'a> {
+    pub(crate) left: RustExpr,
+    pub(crate) left_ty: &'a Type,
+    pub(crate) op: &'a str,
+    pub(crate) right: RustExpr,
+    pub(crate) right_ty: &'a Type,
+    pub(crate) right_source: &'a sifr_ir::HirExpr,
+    pub(crate) result_ty: &'a Type,
+}
+
 pub(crate) fn lower_numeric_binop_with_exact_integer_semantics(
     emitter: &mut RustEmitter,
-    left: RustExpr,
-    left_ty: &Type,
-    op: &str,
-    right: RustExpr,
-    right_ty: &Type,
-    right_source: &sifr_ir::HirExpr,
-    result_ty: &Type,
+    binop: CheckedNumericBinop<'_>,
 ) -> Result<Option<RustExpr>, CodegenError> {
+    let CheckedNumericBinop {
+        left,
+        left_ty,
+        op,
+        right,
+        right_ty,
+        right_source,
+        result_ty,
+    } = binop;
     if let Some(lowered) = lower_checked_decimal_arithmetic(
         emitter,
         left.clone(),

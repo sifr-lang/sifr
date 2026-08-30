@@ -1,4 +1,11 @@
-def main() -> None:
+def main() -> Result[None, DivisionError]:
     x: decimal = Decimal("1")
     y: decimal = Decimal("0")
-    x / y
+    try:
+        result: decimal = x / y
+        assert False, str(result)
+    except DivisionError as error:
+        raise error
+    except DecimalConversionError as error:
+        assert False, str(error)
+    return None

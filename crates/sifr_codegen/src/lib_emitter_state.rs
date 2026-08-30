@@ -679,14 +679,14 @@ impl RustEmitter {
             }
             let lowered_value = if let Some(lowered) = self.lower_rendered_expr_for_ir(value)? {
                 if let Some(target_ty) = self.local_binding_types.get(name).cloned() {
-                    self.validate_assignment_source_type_for_ir(name, &target_ty, value)?;
+                    Self::validate_assignment_source_type_for_ir(name, &target_ty, value)?;
                     self.coerce_local_value_for_target_type_for_ir(&target_ty, value, lowered)?
                 } else {
                     lowered
                 }
             } else if let Some(lowered) = self.lower_stmt_expr_for_ir(value)? {
                 if let Some(target_ty) = self.local_binding_types.get(name).cloned() {
-                    self.validate_assignment_source_type_for_ir(name, &target_ty, value)?;
+                    Self::validate_assignment_source_type_for_ir(name, &target_ty, value)?;
                     self.coerce_local_value_for_target_type_for_ir(&target_ty, value, lowered)?
                 } else {
                     lowered

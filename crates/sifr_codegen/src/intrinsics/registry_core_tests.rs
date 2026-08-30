@@ -410,6 +410,7 @@ pub(crate) fn lowers_encoding_intrinsics_via_registry() {
     let from_ints_rendered = render_expr(&from_ints.expr);
     assert!(from_ints_rendered.contains("byte out of range at index"));
     assert!(from_ints_rendered.contains("Ok::<Vec<u8>, ValueError>"));
+    assert!(!from_ints_rendered.contains("map_err(|_error| Err("));
 
     assert!(lower_intrinsic("bytes_to_hex_strict", &["vals".to_string()]).is_none());
 

@@ -557,19 +557,6 @@
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": null,
-      "code": "SIFR-INT-0006",
-      "deferral": {
-        "issue": "emitted-rust-excellence-item-3-retire-int0006",
-        "owner": "compiler/core-language",
-        "reason": "exact integer true division now lowers to a typed Result and source-level misuse renders SIFR-TYPE-0002; SIFR-INT-0006 remains only in the lower-level type-system API",
-        "removal_target": "Item 3 must retire the unreachable diagnostic registry, renderer, tests, and documentation or restore a source-reachable typed-failure use with a rendered baseline"
-      },
-      "multi_error_recovery_fixture": null,
-      "renderer_formats": [],
-      "suggestion_rendering_fixture": null
-    },
-    {
       "baseline_fixture_id": "e2e_bool_integer_comparison",
       "code": "SIFR-INT-0007",
       "deferral": null,

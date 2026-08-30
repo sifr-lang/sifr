@@ -360,7 +360,7 @@ pub(crate) fn lower_bytes_from_ints(args: &[RustExpr]) -> Option<RustExpr> {
                                 name: "_error".to_string(),
                                 ty: RustType::Named("_".to_string()),
                             }],
-                            body: Box::new(err_value_expr(RustExpr::FormatMacro {
+                            body: Box::new(value_error_expr(RustExpr::FormatMacro {
                                 name: "format".to_string(),
                                 format_str: "byte out of range at index {}: {}".to_string(),
                                 args: vec![

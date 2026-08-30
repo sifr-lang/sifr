@@ -5,7 +5,6 @@ use super::{
 };
 impl RustEmitter {
     pub(crate) fn validate_assignment_source_type_for_ir(
-        &self,
         name: &str,
         target_ty: &Type,
         value: &HirExpr,
@@ -147,7 +146,7 @@ impl RustEmitter {
                     let lowered_value = self.rewrite_stdlib_constant_idents_in_expr(lowered_value);
                     let lowered_value =
                         if let Some(target_ty) = self.local_binding_types.get(name).cloned() {
-                            self.validate_assignment_source_type_for_ir(name, &target_ty, value)?;
+                            Self::validate_assignment_source_type_for_ir(name, &target_ty, value)?;
                             self.coerce_local_value_for_target_type_for_ir(
                                 &target_ty,
                                 value,

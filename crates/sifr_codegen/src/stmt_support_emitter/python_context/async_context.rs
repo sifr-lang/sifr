@@ -133,10 +133,6 @@ impl RustEmitter {
             format!(
                 "Some(Ok(Ok(Some(__sifr_context_return)))) => {{ {normal_exit} return Ok(Ok(Some(__sifr_context_return))); }},"
             )
-        } else if self.try_closure_depth > 0 {
-            format!(
-                "Some(Ok(Ok(Some(__sifr_context_return)))) => {{ {normal_exit} return __sifr_context_return; }},"
-            )
         } else {
             format!(
                 "Some(Ok(Ok(Some(__sifr_context_return)))) => {{ {normal_exit} return __sifr_context_return; }},"

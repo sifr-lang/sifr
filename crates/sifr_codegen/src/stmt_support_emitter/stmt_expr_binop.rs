@@ -37,13 +37,15 @@ macro_rules! stmt_expr_binop {
 
             if let Some(lowered) = $crate::stmt_support_emitter::checked_integer_codegen::lower_numeric_binop_with_exact_integer_semantics(
                 $emitter,
-                lowered_left.clone(),
-                resolved_left_ty,
-                op,
-                lowered_right.clone(),
-                resolved_right_ty,
-                right,
-                resolved_result_ty,
+                $crate::stmt_support_emitter::checked_integer_codegen::CheckedNumericBinop {
+                    left: lowered_left.clone(),
+                    left_ty: resolved_left_ty,
+                    op,
+                    right: lowered_right.clone(),
+                    right_ty: resolved_right_ty,
+                    right_source: right,
+                    result_ty: resolved_result_ty,
+                },
             )? {
                 return Ok(Some(lowered));
             }

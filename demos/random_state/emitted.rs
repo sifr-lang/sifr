@@ -834,11 +834,11 @@ mod __sifr_project_nominals {
                             __pair
                                 .1
                                 .try_to_u8()
-                                .map_err(|_error| Err(ValueError {
+                                .map_err(|_error| ValueError {
                                     message: format!(
                                         "byte out of range at index {}: {}", __pair.0, * __pair.1
                                     ),
-                                }))?,
+                                })?,
                         );
                 }
                 Ok::<Vec<u8>, ValueError>(__out)
