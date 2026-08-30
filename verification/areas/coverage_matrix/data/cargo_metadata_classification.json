@@ -185,6 +185,21 @@
       ]
     },
     {
+      "name": "sifr_sql_dependency_lock",
+      "classification": "internal_codegen_tool",
+      "targets": [
+        {"name": "sifr_sql_dependency_lock", "kind": "lib", "classification": "internal_codegen_tool", "profile_assignment": "internal"}
+      ],
+      "features": [
+        {"name": "all", "profile_assignment": "internal", "classification": "internal_codegen_tool"},
+        {"name": "default", "profile_assignment": "internal", "classification": "internal_codegen_tool"},
+        {"name": "mysql", "profile_assignment": "internal", "classification": "internal_codegen_tool"},
+        {"name": "postgresql", "profile_assignment": "internal", "classification": "internal_codegen_tool"},
+        {"name": "runtime", "profile_assignment": "internal", "classification": "internal_codegen_tool"},
+        {"name": "sqlite", "profile_assignment": "internal", "classification": "internal_codegen_tool"}
+      ]
+    },
+    {
       "name": "sifr_stdlib",
       "classification": "first_party_runtime",
       "targets": [

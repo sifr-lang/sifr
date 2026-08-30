@@ -17,7 +17,7 @@
   "constraints": [
     {
       "id": "syntaqlite-source-and-fork-readiness",
-      "owner_milestone": "sql_17_sqlite_provider",
+      "platform_part": "sqlite_provider",
       "audit_owner": "sifr-sql-sqlite/component",
       "rules": [
         "Crates.io is the release authority.",
@@ -28,7 +28,7 @@
     },
     {
       "id": "single-sqlite-link-identity",
-      "owner_milestone": "sql_17_sqlite_provider",
+      "platform_part": "sqlite_provider",
       "audit_owner": "sifr-package/cargo-graph",
       "rules": [
         "Every first-party provider must resolve one compatible libsqlite3-sys link identity before linking.",
@@ -37,7 +37,7 @@
     },
     {
       "id": "shared-tls-dependency-ring",
-      "owner_milestone": "sql_5_common_contracts",
+      "platform_part": "common_sql",
       "audit_owner": "sifr_runtime/tls",
       "rules": [
         "Tokio, Rustls, Tokio Rustls, and the platform verifier remain shared dependency Ring 4 substrate.",
@@ -56,7 +56,7 @@
       "features": ["io-util", "macros", "net", "process", "rt", "signal", "sync", "time"],
       "artifacts": ["sql-runtime", "postgresql-runtime", "mysql-runtime"],
       "targets": ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu"],
-      "owner_milestone": "sql_5_common_contracts",
+      "platform_part": "common_sql",
       "audit_owner": "sifr_runtime"
     },
     {
@@ -68,7 +68,7 @@
       "features": ["aws_lc_rs", "logging", "prefer-post-quantum", "std", "tls12"],
       "artifacts": ["postgresql-runtime", "mysql-runtime"],
       "targets": ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu"],
-      "owner_milestone": "sql_5_common_contracts",
+      "platform_part": "common_sql",
       "audit_owner": "sifr_runtime/tls"
     },
     {
@@ -80,7 +80,7 @@
       "features": ["aws_lc_rs", "logging", "tls12"],
       "artifacts": ["postgresql-runtime", "mysql-runtime"],
       "targets": ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu"],
-      "owner_milestone": "sql_5_common_contracts",
+      "platform_part": "common_sql",
       "audit_owner": "sifr_runtime/tls"
     },
     {
@@ -92,7 +92,7 @@
       "features": [],
       "artifacts": ["postgresql-runtime", "mysql-runtime"],
       "targets": ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu"],
-      "owner_milestone": "sql_5_common_contracts",
+      "platform_part": "common_sql",
       "audit_owner": "sifr_runtime/tls"
     },
     {
@@ -104,7 +104,7 @@
       "features": ["runtime"],
       "artifacts": ["postgresql-runtime"],
       "targets": ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu"],
-      "owner_milestone": "sql_9_postgresql_runtime",
+      "platform_part": "postgresql_runtime",
       "audit_owner": "sifr-sql-postgresql/runtime"
     },
     {
@@ -116,7 +116,7 @@
       "features": ["derive"],
       "artifacts": ["postgresql-runtime"],
       "targets": ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu"],
-      "owner_milestone": "sql_9_postgresql_runtime",
+      "platform_part": "postgresql_runtime",
       "audit_owner": "sifr-sql-postgresql/runtime"
     },
     {
@@ -128,7 +128,7 @@
       "features": ["aws-lc-rs"],
       "artifacts": ["postgresql-runtime"],
       "targets": ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu"],
-      "owner_milestone": "sql_9_postgresql_runtime",
+      "platform_part": "postgresql_runtime",
       "audit_owner": "sifr-sql-postgresql/runtime"
     },
     {
@@ -140,7 +140,7 @@
       "features": ["lexer", "unicode"],
       "artifacts": ["mysql-component"],
       "targets": ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu"],
-      "owner_milestone": "sql_16_mysql_provider",
+      "platform_part": "mysql_provider",
       "audit_owner": "sifr-sql-mysql/component"
     },
     {
@@ -152,7 +152,7 @@
       "features": ["lexer", "std", "unicode"],
       "artifacts": ["mysql-component"],
       "targets": ["wasm32-wasip2"],
-      "owner_milestone": "sql_16_mysql_provider",
+      "platform_part": "mysql_provider",
       "audit_owner": "sifr-sql-mysql/component"
     },
     {
@@ -164,7 +164,7 @@
       "features": ["aws-lc-rs", "minimal-rust", "rustls-tls", "tls12"],
       "artifacts": ["mysql-runtime"],
       "targets": ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu"],
-      "owner_milestone": "sql_16_mysql_provider",
+      "platform_part": "mysql_provider",
       "audit_owner": "sifr-sql-mysql/runtime"
     },
     {
@@ -176,7 +176,7 @@
       "features": ["derive"],
       "artifacts": ["mysql-runtime"],
       "targets": ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu"],
-      "owner_milestone": "sql_16_mysql_provider",
+      "platform_part": "mysql_provider",
       "audit_owner": "sifr-sql-mysql/runtime"
     },
     {
@@ -188,7 +188,7 @@
       "features": ["analysis", "fmt", "pin-cflags", "pin-version", "serde", "sqlite"],
       "artifacts": ["sqlite-component"],
       "targets": ["wasm32-wasip2"],
-      "owner_milestone": "sql_17_sqlite_provider",
+      "platform_part": "sqlite_provider",
       "audit_owner": "sifr-sql-sqlite/component"
     },
     {
@@ -200,7 +200,7 @@
       "features": ["bundled", "hooks", "limits", "unlock_notify"],
       "artifacts": ["sqlite-runtime"],
       "targets": ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu"],
-      "owner_milestone": "sql_17_sqlite_provider",
+      "platform_part": "sqlite_provider",
       "audit_owner": "sifr-sql-sqlite/runtime"
     },
     {
@@ -212,7 +212,7 @@
       "features": ["bundled"],
       "artifacts": ["sqlite-runtime"],
       "targets": ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu"],
-      "owner_milestone": "sql_17_sqlite_provider",
+      "platform_part": "sqlite_provider",
       "audit_owner": "sifr-sql-sqlite/runtime"
     }
   ],
@@ -224,7 +224,7 @@
       "features": ["provider-owned-ast-adapter", "one-parser-source-per-server-major"],
       "artifacts": ["postgresql-component"],
       "targets": ["wasm32-wasip2"],
-      "owner_milestone": "sql_7_postgresql_compiler",
+      "platform_part": "postgresql_compiler",
       "audit_owner": "sifr-sql-postgresql/component"
     }
   ]

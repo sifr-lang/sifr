@@ -317,6 +317,15 @@ where
             }
             transform_type(ty, transform);
         }
+        HirExpr::TemplateString(template) => {
+            template.for_each_value_mut(&mut |value| {
+                transform_expr(value, transform, visit);
+            });
+            for interpolation in &mut template.interpolations {
+                transform_type(&mut interpolation.value_type, transform);
+            }
+            transform_type(&mut template.ty, transform);
+        }
         HirExpr::Slice {
             object,
             start,

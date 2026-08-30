@@ -209,6 +209,9 @@ fn collect_footprint(expr: &HirExpr, ctx: &LowerCtx, footprint: &mut Vec<Footpri
                 }
             }
         }
+        HirExpr::TemplateString(template) => {
+            template.for_each_value(&mut |expr| collect_footprint(expr, ctx, footprint));
+        }
         HirExpr::Lambda { body, .. } => collect_footprint(body, ctx, footprint),
         HirExpr::ListComp {
             expr, generators, ..

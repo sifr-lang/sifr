@@ -438,6 +438,13 @@ fn collect_expr(expr: &HirExpr, path: &str, facts: &mut NameFacts) {
                 }
             }
         }
+        HirExpr::TemplateString(template) => {
+            let mut index = 0usize;
+            template.for_each_value(&mut |expr| {
+                collect_expr(expr, &format!("{path}/template_value[{index}]"), facts);
+                index += 1;
+            });
+        }
         HirExpr::Slice {
             object,
             start,
@@ -560,6 +567,7 @@ fn expr_kind(expr: &HirExpr) -> &'static str {
         HirExpr::MethodCall { .. } => "MethodCall",
         HirExpr::ContainsOp { .. } => "ContainsOp",
         HirExpr::FString { .. } => "FString",
+        HirExpr::TemplateString(_) => "TemplateString",
         HirExpr::Slice { .. } => "Slice",
         HirExpr::WalrusExpr { .. } => "WalrusExpr",
         HirExpr::FieldAccess { .. } => "FieldAccess",

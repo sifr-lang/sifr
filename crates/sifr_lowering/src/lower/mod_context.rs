@@ -192,6 +192,9 @@ pub(in crate::lower) struct LowerCtx {
     pub(in crate::lower) declared_type_var_bounds: HashMap<String, Vec<String>>,
     /// Origin of the source currently being lowered.
     pub(in crate::lower) source_origin: LoweringSourceOrigin,
+    /// Original UTF-8 source. Template lowering uses it to retain exact
+    /// interpolation text; callers that only have an AST can omit it.
+    pub(in crate::lower) source_text: Option<String>,
     /// Set of parameter names that are immutably borrowed (&T) in the current function.
     pub(in crate::lower) borrowed_params: std::collections::HashSet<String>,
     /// Opaque values borrowed from Python context entry for the current lexical block.
@@ -338,6 +341,7 @@ impl LowerCtx {
             type_param_bounds: HashMap::new(),
             declared_type_var_bounds: HashMap::new(),
             source_origin: LoweringSourceOrigin::User,
+            source_text: None,
             borrowed_params: std::collections::HashSet::new(),
             python_context_borrows: HashMap::new(),
             class_declared_type_params: HashMap::new(),
@@ -455,6 +459,7 @@ impl LowerCtx {
         self.final_attached_api_sets = options.attached_api_sets;
         self.attached_api_selections_finalized = options.attached_api_selections_finalized;
         self.specialization_requests = options.specialization_requests;
+        self.source_text = options.source_text;
         self
     }
 
@@ -663,6 +668,7 @@ pub struct PythonTrustPolicy {
 
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct LoweringOptions {
+    pub source_text: Option<String>,
     pub python_trust_policy: Option<PythonTrustPolicy>,
     pub python_bridge_authorities: std::collections::BTreeMap<String, PythonBridgeTargetAuthority>,
     pub adapter_field_plans: std::collections::BTreeMap<String, Vec<sifr_ir::AdapterFieldPlan>>,

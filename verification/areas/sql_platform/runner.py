@@ -14,12 +14,12 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 AREA_ROOT = Path(__file__).resolve().parent
 MANIFEST_PATH = AREA_ROOT / "manifest.json"
 RESULT_JSON = REPO_ROOT / "target" / "verification" / "areas" / "sql-platform-results.json"
-CONTRACT_CHECKER = AREA_ROOT / "tools" / "check_contracts.py"
+PLATFORM_CHECKER = AREA_ROOT / "tools" / "check_contracts.py"
 BASELINE_RESOLVER = AREA_ROOT / "tools" / "resolve_dependency_baseline.py"
 COMMANDS = {
-    "sql-platform-contracts": [sys.executable, str(CONTRACT_CHECKER)],
+    "sql-platform-contracts": [sys.executable, str(PLATFORM_CHECKER)],
     "sql-dependency-baseline": [sys.executable, str(BASELINE_RESOLVER), "--check"],
-    "sql-platform-contract-mutations": [sys.executable, str(CONTRACT_CHECKER), "--self-test"],
+    "sql-platform-contract-mutations": [sys.executable, str(PLATFORM_CHECKER), "--self-test"],
     "sql-dependency-baseline-mutations": [sys.executable, str(BASELINE_RESOLVER), "--self-test"],
 }
 

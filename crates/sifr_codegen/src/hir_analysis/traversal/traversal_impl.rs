@@ -194,6 +194,17 @@ where
                 }
             }
         }
+        HirExpr::TemplateString(template) => {
+            let mut stopped = false;
+            template.for_each_value(&mut |value| {
+                if !stopped && matches!(walk_expr_until(value, on_expr), TraversalControl::Stop) {
+                    stopped = true;
+                }
+            });
+            if stopped {
+                return TraversalControl::Stop;
+            }
+        }
         HirExpr::Slice {
             object,
             start,

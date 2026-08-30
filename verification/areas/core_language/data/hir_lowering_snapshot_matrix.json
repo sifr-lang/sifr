@@ -245,6 +245,168 @@
           }
         ]
       }
+    },
+    {
+      "id": "template_single_line_conversion_and_format_spec",
+      "owner": "compiler/hir",
+      "source": "def make(name: str, width: int) -> Template:\n    return t\"value={name!r:>{width}}\"\n",
+      "expected_hir_snapshot": {
+        "functions": [
+          {
+            "name": "make",
+            "params": [
+              {
+                "name": "name",
+                "ty": "str"
+              },
+              {
+                "name": "width",
+                "ty": "int"
+              }
+            ],
+            "return_type": "Template",
+            "receiver": null,
+            "body": [
+              {
+                "kind": "Return",
+                "value": {
+                  "kind": "TemplateString",
+                  "ty": "Template[str]",
+                  "source_range": [56, 82],
+                  "virtual_source": "value=\ufffc",
+                  "segments": [
+                    {
+                      "value": "value=",
+                      "mappings": [
+                        {
+                          "source_range": [58, 64],
+                          "virtual_range": [0, 6]
+                        }
+                      ],
+                      "virtual_range": [0, 6]
+                    },
+                    {
+                      "value": "",
+                      "mappings": [],
+                      "virtual_range": [9, 9]
+                    }
+                  ],
+                  "interpolations": [
+                    {
+                      "value": {
+                        "kind": "Name",
+                        "ty": "str",
+                        "name": "name",
+                        "binding_id": 0
+                      },
+                      "clone_from_borrow": true,
+                      "value_type": "str",
+                      "source_range": [64, 81],
+                      "expression_range": [65, 69],
+                      "expression_source": "name",
+                      "virtual_range": [6, 9],
+                      "conversion": "r",
+                      "format_spec": {
+                        "range": [72, 80],
+                        "parts": [
+                          {
+                            "kind": "Literal",
+                            "value": ">"
+                          },
+                          {
+                            "kind": "Interpolation",
+                            "value": {
+                              "kind": "Name",
+                              "ty": "int",
+                              "name": "width",
+                              "binding_id": 1
+                            },
+                            "clone_from_borrow": false,
+                            "source_range": [73, 80],
+                            "conversion": null,
+                            "format_spec": null
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "template_multiline_unicode_and_escape",
+      "owner": "compiler/hir",
+      "source": "def make(value: str) -> Template:\n    return t\"\"\"α\\nline {value}\nend\"\"\"\n",
+      "expected_hir_snapshot": {
+        "functions": [
+          {
+            "name": "make",
+            "params": [
+              {
+                "name": "value",
+                "ty": "str"
+              }
+            ],
+            "return_type": "Template",
+            "receiver": null,
+            "body": [
+              {
+                "kind": "Return",
+                "value": {
+                  "kind": "TemplateString",
+                  "ty": "Template[str]",
+                  "source_range": [45, 72],
+                  "virtual_source": "α\nline \ufffc\nend",
+                  "segments": [
+                    {
+                      "value": "α\nline ",
+                      "mappings": [
+                        {
+                          "source_range": [49, 58],
+                          "virtual_range": [0, 8]
+                        }
+                      ],
+                      "virtual_range": [0, 8]
+                    },
+                    {
+                      "value": "\nend",
+                      "mappings": [
+                        {
+                          "source_range": [65, 69],
+                          "virtual_range": [11, 15]
+                        }
+                      ],
+                      "virtual_range": [11, 15]
+                    }
+                  ],
+                  "interpolations": [
+                    {
+                      "value": {
+                        "kind": "Name",
+                        "ty": "str",
+                        "name": "value",
+                        "binding_id": 0
+                      },
+                      "clone_from_borrow": true,
+                      "value_type": "str",
+                      "source_range": [58, 65],
+                      "expression_range": [59, 64],
+                      "expression_source": "value",
+                      "virtual_range": [8, 11],
+                      "conversion": null,
+                      "format_spec": null
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
     }
   ]
 }

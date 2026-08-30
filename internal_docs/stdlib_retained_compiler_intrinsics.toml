@@ -196,6 +196,18 @@ direct_runtime_roots = [
 ]
 
 [[surface]]
+id = "template-string-language-runtime"
+state = "retained-by-design"
+owner = "schema-first-sql-platform"
+issue = "sql_1_template_strings"
+evidence_links = [
+  "internal_docs/architecture.md",
+  "internal_docs/sql_architecture.md",
+]
+reason = "Template strings are compiler-owned language values. Their private generated Rust carrier preserves ordered static text, owned typed holes, recursive format specifications, and source metadata without adding a standard-library implementation or public runtime conversion."
+preamble_files = ["template_runtime.rs"]
+
+[[surface]]
 id = "mixed-io-logging-random-preamble"
 state = "retained-by-design"
 owner = "stdlib-native-boundary-completion"

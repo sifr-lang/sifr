@@ -397,6 +397,9 @@ macro_rules! stmt_expr_literals_and_calls {
                 args,
             }));
         }
+        if let HirExpr::TemplateString(template) = $expr {
+            return Ok($emitter.try_lower_template_string_expr_for_ir(template));
+        }
         if let HirExpr::ListLiteral { elements, ty } = $expr {
             let mut lowered_elements = Vec::with_capacity(elements.len());
             let list_ty = crate::resolve_alias_type_for_plain_call(ty);

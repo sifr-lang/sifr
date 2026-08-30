@@ -197,6 +197,13 @@ impl RustEmitter {
                 sifr_ir::HirFStringPart::Literal(_) => false,
                 sifr_ir::HirFStringPart::Expr(expr) => Self::expr_mentions_name(expr, needle),
             }),
+            HirExpr::TemplateString(template) => {
+                let mut found = false;
+                template.for_each_value(&mut |value| {
+                    found |= Self::expr_mentions_name(value, needle);
+                });
+                found
+            }
             HirExpr::Slice {
                 object,
                 start,

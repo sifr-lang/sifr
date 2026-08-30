@@ -4,6 +4,8 @@ use sifr_ir::{HirExpr, HirFunction, HirModule, HirStmt};
 use std::collections::HashSet;
 
 use super::{RustItem, Type};
+mod template;
+pub(crate) use template::module_uses_template;
 pub(crate) fn sync_channel_runtime_needed(rust_code: &str) -> bool {
     rust_code.contains("struct Channel<")
         || rust_code.contains("struct ChannelSender<")
@@ -419,9 +421,10 @@ pub(crate) fn type_contains_by(ty: &Type, predicate: fn(&Type) -> bool) -> bool 
         | Type::AsyncGenerator(key, value) => {
             type_contains_by(key, predicate) || type_contains_by(value, predicate)
         }
-        Type::Tuple(items) | Type::Union(items) | Type::Intersection(items) => {
-            items.iter().any(|item| type_contains_by(item, predicate))
-        }
+        Type::Tuple(items)
+        | Type::Template(items)
+        | Type::Union(items)
+        | Type::Intersection(items) => items.iter().any(|item| type_contains_by(item, predicate)),
         Type::Alias {
             type_args, body, ..
         } => {

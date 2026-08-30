@@ -167,6 +167,9 @@ fn collect_string_loop_target_use_expr(
                 }
             }
         }
+        HirExpr::TemplateString(template) => template.for_each_value(&mut |expr| {
+            collect_string_loop_target_use_expr(expr, target, usage);
+        }),
         HirExpr::Slice {
             object,
             start,

@@ -752,7 +752,8 @@ pub(crate) fn bridge_type_contract(
         | Type::Protocol { .. }
         | Type::Newtype { .. }
         | Type::Decimal
-        | Type::BigDecimal => unsupported_type(
+        | Type::BigDecimal
+        | Type::Template(_) => unsupported_type(
             ty,
             "type is outside the initial Rust bridge-compatible contract",
         ),

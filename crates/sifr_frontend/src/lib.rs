@@ -22,6 +22,8 @@ mod const_evaluator;
 pub use const_evaluator::*;
 mod structural_shape;
 pub use structural_shape::*;
+mod template_documents;
+pub use template_documents::*;
 mod class_method_exports;
 mod handler_ancestry;
 mod slot_table;

@@ -42,6 +42,11 @@
       "display_name": "Compiler Package Management"
     },
     {
+      "id": "compiler/sql-platform",
+      "kind": "team",
+      "display_name": "Compiler SQL Platform"
+    },
+    {
       "id": "compiler/performance",
       "kind": "team",
       "display_name": "Compiler Performance"

@@ -276,7 +276,7 @@ verification inventory. This phase does not reimplement those capabilities.
 | Milestone | Status | Name | Required outcome |
 |---:|---|---|---|
 | 0 | completed | Architecture and dependency lock | The final architecture, language dependencies, ownership map, capability matrix, verification inventory, and phase gates are authoritative and machine validated. |
-| 1 | pending | Template-string language foundation | Template strings preserve static segments, typed holes, evaluation order, and exact source maps through the full compiler pipeline. |
+| 1 | in progress | Template-string language foundation | Template strings preserve static segments, typed holes, evaluation order, and exact source maps through the full compiler pipeline. |
 | 2 | pending | Structural record type system | Immutable records have order-independent canonical identity, width subtyping, deterministic diagnostics, and interned Rust layouts. |
 | 3 | pending | Compiler component platform | Resolved packages can provide deterministic sandboxed embedded-language analysis through one closed, versioned, cacheable protocol. |
 | 4 | pending | Schema profiles and canonical `SchemaIR` | Configuration sources produce exact provider-owned schema graphs, nominal profile types, fingerprints, dependency slices, diffs, and runtime contracts. |
@@ -1250,7 +1250,7 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 | Milestone | Status | Pull request | Merge commit | Validation | Review | Notes |
 | ---: | --- | --- | --- | --- | --- | --- |
 | 0 | completed | [#3582](https://github.com/sifr-lang/sifr/pull/3582) | `1a1cef93dc` | SQL 4/4; docs 1/1; dependency and runner checks pass | Opus `SATISFIED` on `7f3f6bc2c` | Architecture and dependency lock |
-| 1 | pending | — | — | — | — | Template-string language foundation |
+| 1 | in progress | — | — | focused compiler, native, property, fuzz, and SQL contract checks pass; exact gates pending | Opus `NOT SATISFIED` on `78bd3e50b`; remediation pending | Template-string foundation; corrects the Milestone 0 lock-package metadata namespace |
 | 2 | pending | — | — | — | — | Structural record type system |
 | 3 | pending | — | — | — | — | Compiler component platform |
 | 4 | pending | — | — | — | — | Schema profiles and canonical `SchemaIR` |

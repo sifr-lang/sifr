@@ -1,0 +1,12 @@
+def retain(value: Template) -> int:
+    return 1
+
+
+def main():
+    name: str = "Ada"
+    precision: int = 2
+    result: int = retain(t"""
+        user={name!r}
+        score={3.5:.{precision}f}
+    """)
+    assert result == 1

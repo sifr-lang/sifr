@@ -1,3 +1,4 @@
+use super::super::template_string_support::lower_template_string_expr;
 use super::LowerCtx;
 use super::async_await::lower_await;
 use super::builtin_calls::{lower_bytes_type_factory_call, lower_defaultdict_constructor_call};
@@ -70,6 +71,7 @@ pub(in crate::lower) fn lower_expr(expr: &Expr, ctx: &mut LowerCtx) -> Option<Hi
         Expr::Subscript(sub) => lower_subscript(sub, ctx),
         Expr::Attribute(attr) => lower_attribute(attr, ctx),
         Expr::FString(fstring) => lower_fstring_expr(fstring, ctx),
+        Expr::TString(template) => lower_template_string_expr(template, ctx),
         Expr::Named(named) => lower_named_expr(named, ctx),
         Expr::Lambda(lambda) => lower_lambda(lambda, ctx),
         Expr::ListComp(comp) => lower_list_comp(comp, ctx),

@@ -6,7 +6,7 @@ rust-version.workspace = true
 publish = false
 license.workspace = true
 
-[package.metadata.sifr]
+[package.metadata.sifr_sql]
 artifact-role = "qualification-only"
 contract = "verification/areas/sql_platform/data/artifact_topology.json"
 

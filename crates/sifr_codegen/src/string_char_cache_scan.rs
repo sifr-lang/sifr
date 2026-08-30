@@ -144,6 +144,9 @@ pub(crate) fn collect_string_cache_uses(expr: &HirExpr, used: &mut HashSet<Strin
                 }
             }
         }
+        HirExpr::TemplateString(template) => {
+            template.for_each_value(&mut |expr| collect_string_cache_uses(expr, used))
+        }
         HirExpr::Slice {
             object,
             start,

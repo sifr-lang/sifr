@@ -1,0 +1,3 @@
+# expect-error: SIFR-TYPE-0002
+def main():
+    assert t"same" == t"same"
