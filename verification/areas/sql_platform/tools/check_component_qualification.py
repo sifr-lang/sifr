@@ -42,13 +42,17 @@ EXPECTED_CONTRACTS = {
     "source-maps",
     "typed-holes",
 }
+EXPECTED_DETERMINISM_CONTROLS = {
+    "nan-canonicalization",
+    "relaxed-simd-disabled",
+}
 
 
 class QualificationError(ValueError):
     """The compiler component qualification record is invalid."""
 
 
-def validate(payload: object) -> None:
+def validate(payload: object, *, host_source_override: str | None = None) -> None:
     if not isinstance(payload, dict) or payload.get("schema_version") != 1:
         raise QualificationError("qualification schema_version must be 1")
     if payload.get("protocol_major") != 1:
@@ -90,11 +94,13 @@ def validate(payload: object) -> None:
         target not in workflow for target in EXPECTED_TARGETS
     ):
         raise QualificationError("native component qualification matrix is incomplete")
-    host_source = (
+    host_source = host_source_override or (
         REPO_ROOT / "crates/sifr_compiler_component/src/host.rs"
     ).read_text(encoding="utf-8")
     required_host_controls = {
         "config.consume_fuel(true)",
+        "config.cranelift_nan_canonicalization(true)",
+        "config.wasm_relaxed_simd(false)",
         "config.wasm_memory64(false)",
         "config.wasm_multi_memory(false)",
         "StoreLimitsBuilder::new()",
@@ -102,6 +108,8 @@ def validate(payload: object) -> None:
     }
     if any(control not in host_source for control in required_host_controls):
         raise QualificationError("component host sandbox controls are incomplete")
+    if set(payload.get("determinism_controls", [])) != EXPECTED_DETERMINISM_CONTROLS:
+        raise QualificationError("component determinism controls are incomplete")
     if "wasmtime_wasi" in host_source:
         raise QualificationError("component host must not link WASI")
     if set(payload.get("denied_capabilities", [])) != EXPECTED_DENIALS:
@@ -114,14 +122,18 @@ def validate(payload: object) -> None:
         raise QualificationError("qualification requires a non-SQL fixture")
     if fixture.get("processor") != "fixture.words":
         raise QualificationError("non-SQL fixture processor identity is invalid")
-    if set(fixture.get("contracts", [])) != EXPECTED_CONTRACTS:
+    contracts = fixture.get("contracts")
+    if not isinstance(contracts, dict) or set(contracts) != EXPECTED_CONTRACTS:
         raise QualificationError("non-SQL fixture contract coverage is incomplete")
     tests = (REPO_ROOT / "crates/sifr_compiler_component/src/tests.rs").read_text(
         encoding="utf-8"
     )
-    evidence = fixture.get("evidence", "").rsplit("::", maxsplit=1)[-1]
-    if not evidence or f"fn {evidence}()" not in tests:
-        raise QualificationError("non-SQL fixture evidence does not resolve")
+    for contract, evidence_path in contracts.items():
+        if not isinstance(evidence_path, str):
+            raise QualificationError(f"non-SQL fixture evidence for {contract} is invalid")
+        evidence = evidence_path.rsplit("::", maxsplit=1)[-1]
+        if not evidence or f"fn {evidence}()" not in tests:
+            raise QualificationError(f"non-SQL fixture evidence for {contract} does not resolve")
 
 
 def run_self_test(payload: dict[str, object]) -> None:
@@ -138,6 +150,14 @@ def run_self_test(payload: dict[str, object]) -> None:
     missing_denial = copy.deepcopy(payload)
     missing_denial["denied_capabilities"] = missing_denial["denied_capabilities"][:-1]  # type: ignore[index]
     mutations.append(("capability", missing_denial))
+    missing_determinism = copy.deepcopy(payload)
+    missing_determinism["determinism_controls"] = missing_determinism[
+        "determinism_controls"
+    ][:-1]
+    mutations.append(("determinism", missing_determinism))
+    missing_contract = copy.deepcopy(payload)
+    del missing_contract["fixture"]["contracts"]["typed-holes"]  # type: ignore[index]
+    mutations.append(("contract", missing_contract))
     sql_fixture = copy.deepcopy(payload)
     sql_fixture["fixture"]["sql"] = True  # type: ignore[index]
     mutations.append(("fixture", sql_fixture))
@@ -147,6 +167,20 @@ def run_self_test(payload: dict[str, object]) -> None:
         except QualificationError:
             continue
         raise QualificationError(f"mutation did not fail: {name}")
+    host_source = (
+        REPO_ROOT / "crates/sifr_compiler_component/src/host.rs"
+    ).read_text(encoding="utf-8")
+    relaxed_simd = host_source.replace(
+        "config.wasm_relaxed_simd(false);",
+        "config.wasm_relaxed_simd(true);",
+    )
+    try:
+        validate(payload, host_source_override=relaxed_simd)
+    except QualificationError:
+        pass
+    else:
+        raise QualificationError("mutation did not fail: relaxed-simd")
+    mutations.append(("relaxed-simd", payload))
     print(f"compiler component qualification self-test ok: mutations={len(mutations)}")
 
 

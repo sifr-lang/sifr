@@ -65,8 +65,20 @@ impl AnalysisCache {
     pub fn get(
         &mut self,
         key: &CacheKey,
+        max_entry_bytes: u64,
     ) -> Result<Option<EmbeddedAnalysisResponse>, ComponentError> {
         let path = self.entry_path(key);
+        let metadata = match fs::metadata(&path) {
+            Ok(metadata) => metadata,
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(None),
+            Err(error) => return Err(cache_io_error(error)),
+        };
+        if metadata.len() > max_entry_bytes {
+            return Err(ComponentError::new(
+                ComponentErrorKind::ResourceLimit,
+                "component cache entry exceeds the response byte limit",
+            ));
+        }
         let bytes = match fs::read(path) {
             Ok(bytes) => bytes,
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(None),

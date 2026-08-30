@@ -13,12 +13,12 @@ use crate::manifest::sifr::{
     CompilerRequirement, PackageSourceRoot, PythonConfig, RustInteropConfig, SifrEdition,
     SifrManifest, SifrPackageName, TrustPolicy,
 };
-use crate::{CompilerComponentConfig, resolve_package_component};
+use crate::{CompilerComponentConfig, compiler_component_registrations, resolve_package_component};
 use semver::Version;
 use sha2::{Digest, Sha256};
 use sifr_compiler_component::{
-    ComponentIdentity, ComponentRequirement, DiagnosticRegistry, DiagnosticRegistryOwner,
-    ProtocolRange,
+    ComponentErrorKind, ComponentIdentity, ComponentRequirement, DiagnosticRegistry,
+    DiagnosticRegistryOwner, ProtocolRange,
 };
 use sifr_diagnostics::DiagnosticCode;
 use sifr_frontend::DiskSourceProvider;
@@ -333,6 +333,38 @@ fn package_component_resolution_checks_exact_identity_and_artifact_hash() {
     std::fs::write(&artifact, b"drifted").expect("fixture should change");
     assert!(resolve_package_component(&graph, &requirement).is_err());
     std::fs::remove_dir_all(root).expect("component fixture should be removable");
+}
+
+#[test]
+fn package_component_graph_rejects_duplicate_diagnostic_namespaces() {
+    let mut graph = package_graph(TrustPolicy::default(), Vec::new());
+    let package = graph.packages.values_mut().next().expect("package exists");
+    for (name, processor) in [("first", "fixture.first"), ("second", "fixture.second")] {
+        package.manifest.compiler_components.insert(
+            name.to_string(),
+            CompilerComponentConfig {
+                kind: "embedded-language-provider".to_string(),
+                artifact: PathBuf::from(format!("components/{name}.wasm")),
+                version: Version::new(1, 0, 0),
+                sha256: "a".repeat(64),
+                protocol: ProtocolRange {
+                    minimum: 1,
+                    maximum: 1,
+                },
+                processors: vec![processor.to_string()],
+                diagnostics: DiagnosticRegistry {
+                    owner: DiagnosticRegistryOwner::Provider {
+                        namespace: "FIXTURE".to_string(),
+                    },
+                    declarations: Vec::new(),
+                },
+            },
+        );
+    }
+
+    let error = compiler_component_registrations(&graph)
+        .expect_err("one provider namespace must have one component owner");
+    assert_eq!(error.kind, ComponentErrorKind::DiagnosticRegistry);
 }
 
 #[test]

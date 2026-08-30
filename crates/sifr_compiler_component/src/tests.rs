@@ -3,6 +3,7 @@ use crate::*;
 use semver::Version;
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
+use std::fmt::Write as _;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 static TEMP_SEQUENCE: AtomicU64 = AtomicU64::new(0);
@@ -94,30 +95,103 @@ fn diagnostic_registries_are_stable_disjoint_and_lifecycle_tagged() {
             .kind,
         ComponentErrorKind::DiagnosticRegistry
     );
+
+    let stolen = DiagnosticRegistry {
+        owner: DiagnosticRegistryOwner::Provider {
+            namespace: "IMPORT".to_string(),
+        },
+        declarations: Vec::new(),
+    };
+    assert_eq!(
+        stolen
+            .validate_with(&[])
+            .expect_err("every canonical compiler namespace is sealed")
+            .kind,
+        ComponentErrorKind::DiagnosticRegistry
+    );
+
+    let canonical_codes = ComponentErrorKind::ALL.map(ComponentErrorKind::code);
+    assert_eq!(
+        compiler
+            .declarations
+            .iter()
+            .map(|declaration| declaration.code.as_str())
+            .collect::<Vec<_>>(),
+        canonical_codes
+    );
+    for code in canonical_codes {
+        assert!(
+            sifr_diagnostics::registry_entry(code).is_some(),
+            "component error code {code} must be in the canonical registry"
+        );
+    }
 }
 
 #[test]
-fn non_sql_component_round_trip_is_validated_cached_and_deterministic() {
-    let request = request();
-    let response = response();
-    let output = serde_json::to_vec(&response).expect("fixture response should serialize");
-    let bytes = fixture_component(&output, false);
+fn non_sql_component_parses_typed_requests_and_is_cacheless_deterministic() {
+    let first_request = request();
+    let first_response = response_for_request(&first_request);
+    let mut second_request = first_request.clone();
+    let TemplatePart::Static { text, .. } = &mut second_request.parts[0] else {
+        panic!("fixture must start with static text");
+    };
+    *text = "world ".to_string();
+    second_request.holes[0].ty = ClosedType::Int;
+    let second_response = response_for_request(&second_request);
+    let bytes = routed_fixture_component(&[
+        (first_request.clone(), first_response.clone()),
+        (second_request.clone(), second_response.clone()),
+    ]);
     let identity = identity(&bytes);
-    let mut request = request;
-    request.component = identity.clone();
-    let registration = registration(identity);
+    let mut first_request = first_request;
+    first_request.component = identity.clone();
+    let mut second_request = second_request;
+    second_request.component = identity.clone();
+    let registration = registration(identity.clone());
+
+    for (request, expected) in [
+        (&first_request, &first_response),
+        (&second_request, &second_response),
+    ] {
+        let mut first_host = ComponentHost::new(ComponentHostLimits::default(), None)
+            .expect("component host should initialize");
+        let mut second_host = ComponentHost::new(ComponentHostLimits::default(), None)
+            .expect("component host should initialize");
+        let first = first_host
+            .analyze(&registration, &bytes, request)
+            .expect("fixture component should parse the request");
+        let second = second_host
+            .analyze(&registration, &bytes, request)
+            .expect("a fresh cacheless host should reproduce the plan");
+        assert_eq!(&first.response, expected);
+        assert_eq!(first.response, second.response);
+        assert!(!first.cache_hit);
+        assert!(!second.cache_hit);
+    }
+    assert_ne!(
+        first_response.plan.operations,
+        second_response.plan.operations
+    );
+    assert_ne!(
+        first_response.plan.result_type,
+        second_response.plan.result_type
+    );
+    assert_ne!(
+        first_response.plan.dependencies,
+        second_response.plan.dependencies
+    );
+
     let root = temp_root("round_trip");
     let cache = AnalysisCache::open(&root, 8 * 1024 * 1024).expect("cache should open");
     let mut host = ComponentHost::new(ComponentHostLimits::default(), Some(cache))
         .expect("component host should initialize");
-
     let first = host
-        .analyze(&registration, &bytes, &request)
+        .analyze(&registration, &bytes, &first_request)
         .expect("fixture component should run");
     let second = host
-        .analyze(&registration, &bytes, &request)
+        .analyze(&registration, &bytes, &first_request)
         .expect("fixture component should use cache");
-    assert_eq!(first.response, response);
+    assert_eq!(first.response, first_response);
     assert!(!first.cache_hit);
     assert!(second.cache_hit);
     assert_eq!(first.cache_key, second.cache_key);
@@ -261,8 +335,20 @@ fn fuel_and_output_bounds_fail_without_panics() {
     limits.max_output_bytes = 8;
     let mut host = ComponentHost::new(limits, None).expect("host should initialize");
     let error = host
-        .analyze(&registration(bounded_identity), &bounded, &bounded_request)
+        .analyze(
+            &registration(bounded_identity.clone()),
+            &bounded,
+            &bounded_request,
+        )
         .expect_err("oversized output must fail");
+    assert_eq!(error.kind, ComponentErrorKind::ResourceLimit);
+
+    let mut limits = ComponentHostLimits::default();
+    limits.max_component_bytes = bounded.len().saturating_sub(1);
+    let mut host = ComponentHost::new(limits, None).expect("host should initialize");
+    let error = host
+        .analyze(&registration(bounded_identity), &bounded, &bounded_request)
+        .expect_err("oversized component artifact must fail before compilation");
     assert_eq!(error.kind, ComponentErrorKind::ResourceLimit);
 }
 
@@ -308,6 +394,34 @@ fn protocol_recursion_input_and_diagnostic_bounds_are_structured() {
             .kind,
         ComponentErrorKind::ResourceLimit
     );
+}
+
+#[test]
+fn cached_responses_obey_the_current_host_output_limit() {
+    let response_bytes = serde_json::to_vec(&response()).expect("response should serialize");
+    let bytes = fixture_component(&response_bytes, false);
+    let identity = identity(&bytes);
+    let registration = registration(identity.clone());
+    let mut request = request();
+    request.component = identity;
+    let root = temp_root("cache_output_limit");
+
+    let cache = AnalysisCache::open(&root, 8 * 1024 * 1024).expect("cache should open");
+    let mut host = ComponentHost::new(ComponentHostLimits::default(), Some(cache))
+        .expect("component host should initialize");
+    host.analyze(&registration, &bytes, &request)
+        .expect("fixture response should populate the cache");
+    drop(host);
+
+    let cache = AnalysisCache::open(&root, 8 * 1024 * 1024).expect("cache should reopen");
+    let mut limits = ComponentHostLimits::default();
+    limits.max_output_bytes = 8;
+    let mut host = ComponentHost::new(limits, Some(cache)).expect("host should initialize");
+    let error = host
+        .analyze(&registration, &bytes, &request)
+        .expect_err("cache hits must enforce the current output limit");
+    assert_eq!(error.kind, ComponentErrorKind::ResourceLimit);
+    std::fs::remove_dir_all(root).expect("fixture cache should be removable");
 }
 
 #[test]
@@ -411,6 +525,14 @@ fn request() -> EmbeddedAnalysisRequest {
 }
 
 fn response() -> EmbeddedAnalysisResponse {
+    response_for_request(&request())
+}
+
+fn response_for_request(request: &EmbeddedAnalysisRequest) -> EmbeddedAnalysisResponse {
+    let TemplatePart::Static { text, span: source } = &request.parts[0] else {
+        panic!("fixture must start with static text");
+    };
+    let token_end = u32::try_from(text.trim_end().len()).expect("fixture token length should fit");
     let mut response = EmbeddedAnalysisResponse {
         protocol_major: COMPONENT_PROTOCOL_MAJOR,
         plan: EmbeddedPlan {
@@ -421,13 +543,13 @@ fn response() -> EmbeddedAnalysisResponse {
             result_type: ClosedType::Record {
                 fields: vec![RecordField {
                     name: "token".to_string(),
-                    ty: ClosedType::Str,
+                    ty: request.holes[0].ty.clone(),
                 }],
             },
             operations: vec![SemanticOperation::Sequence {
                 operations: vec![
                     SemanticOperation::Literal {
-                        value: "hello ".to_string(),
+                        value: text.clone(),
                     },
                     SemanticOperation::Hole { index: 0 },
                 ],
@@ -435,20 +557,28 @@ fn response() -> EmbeddedAnalysisResponse {
             runtime: RuntimeLowering::NoRuntime,
             dependencies: vec![DependencyDescriptor {
                 identity: "fixture.dictionary".to_string(),
-                fingerprint: "d".repeat(64),
+                fingerprint: hex_digest(Sha256::digest(text.as_bytes()).as_slice()),
             }],
             diagnostics: vec![EmbeddedDiagnostic {
                 code: "SIFR-FIXTURE-0001".to_string(),
                 severity: DiagnosticSeverity::Note,
                 lifecycle: DiagnosticLifecycle::Active,
-                message: "fixture note".to_string(),
-                primary: span(0, 5),
+                message: format!("recognized '{}'", text.trim_end()),
+                primary: SourceSpan {
+                    document: source.document.clone(),
+                    start: source.start,
+                    end: source.start + token_end,
+                },
                 related: Vec::new(),
             }],
             source_map: vec![SourceMapEntry {
                 provider_start: 0,
-                provider_end: 5,
-                source: span(0, 5),
+                provider_end: token_end,
+                source: SourceSpan {
+                    document: source.document.clone(),
+                    start: source.start,
+                    end: source.start + token_end,
+                },
             }],
             stable_fingerprint: String::new(),
         },
@@ -541,6 +671,170 @@ fn fixture_component(output: &[u8], infinite: bool) -> Vec<u8> {
             (export "analyze" (func $lifted)))"#
     );
     wat::parse_str(source).expect("fixture component WAT should parse")
+}
+
+fn routed_fixture_component(
+    routes: &[(EmbeddedAnalysisRequest, EmbeddedAnalysisResponse)],
+) -> Vec<u8> {
+    struct RouteLayout {
+        expected: usize,
+        mask: usize,
+        output: usize,
+        input_len: usize,
+        output_len: usize,
+    }
+
+    let mut cursor = 64_usize;
+    let mut data_segments = String::new();
+    let mut layouts = Vec::new();
+    for (request, response) in routes {
+        let expected = serde_json::to_vec(request).expect("fixture request should serialize");
+        let output = serde_json::to_vec(response).expect("fixture response should serialize");
+        let mut mask = vec![1_u8; expected.len()];
+        let marker = b"\"sha256\":\"";
+        let hash_start = expected
+            .windows(marker.len())
+            .position(|window| window == marker)
+            .map(|position| position + marker.len())
+            .expect("fixture request must contain the component hash");
+        mask[hash_start..hash_start + 64].fill(0);
+
+        let expected_offset = append_fixture_data(&mut data_segments, &mut cursor, &expected);
+        let mask_offset = append_fixture_data(&mut data_segments, &mut cursor, &mask);
+        let output_offset = append_fixture_data(&mut data_segments, &mut cursor, &output);
+        layouts.push(RouteLayout {
+            expected: expected_offset,
+            mask: mask_offset,
+            output: output_offset,
+            input_len: expected.len(),
+            output_len: output.len(),
+        });
+    }
+    let fallback = append_fixture_data(&mut data_segments, &mut cursor, b"not-json");
+    let heap_start = cursor.next_multiple_of(16);
+    let memory_pages = heap_start.div_ceil(65_536) + 1;
+    let route_body = layouts
+        .iter()
+        .map(|route| {
+            format!(
+                r#"local.get $request
+                    local.get $request-len
+                    i32.const {expected}
+                    i32.const {mask}
+                    i32.const {input_len}
+                    call $matches
+                    if
+                        i32.const 0
+                        i32.const {output}
+                        i32.store
+                        i32.const 0
+                        i32.const {output_len}
+                        i32.store offset=4
+                        i32.const 0
+                        return
+                    end"#,
+                expected = route.expected,
+                mask = route.mask,
+                input_len = route.input_len,
+                output = route.output,
+                output_len = route.output_len,
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+    let source = format!(
+        r#"(component
+            (type $analyze-type (func (param "request" (list u8)) (result (list u8))))
+            (core module $module
+                (memory (export "memory") {memory_pages})
+                {data_segments}
+                (global $next (mut i32) (i32.const {heap_start}))
+                (func (export "cabi_realloc")
+                    (param $old i32) (param $old-size i32) (param $align i32) (param $new-size i32)
+                    (result i32)
+                    (local $result i32)
+                    global.get $next
+                    local.tee $result
+                    local.get $new-size
+                    i32.add
+                    global.set $next
+                    local.get $result)
+                (func $matches
+                    (param $request i32) (param $request-len i32)
+                    (param $expected i32) (param $mask i32) (param $expected-len i32)
+                    (result i32)
+                    (local $index i32)
+                    local.get $request-len
+                    local.get $expected-len
+                    i32.ne
+                    if
+                        i32.const 0
+                        return
+                    end
+                    block $complete
+                        loop $compare
+                            local.get $index
+                            local.get $request-len
+                            i32.ge_u
+                            br_if $complete
+                            local.get $mask
+                            local.get $index
+                            i32.add
+                            i32.load8_u
+                            if
+                                local.get $request
+                                local.get $index
+                                i32.add
+                                i32.load8_u
+                                local.get $expected
+                                local.get $index
+                                i32.add
+                                i32.load8_u
+                                i32.ne
+                                if
+                                    i32.const 0
+                                    return
+                                end
+                            end
+                            local.get $index
+                            i32.const 1
+                            i32.add
+                            local.set $index
+                            br $compare
+                        end
+                    end
+                    i32.const 1)
+                (func (export "analyze")
+                    (param $request i32) (param $request-len i32) (result i32)
+                    {route_body}
+                    i32.const 0
+                    i32.const {fallback}
+                    i32.store
+                    i32.const 0
+                    i32.const 8
+                    i32.store offset=4
+                    i32.const 0))
+            (core instance $instance (instantiate $module))
+            (alias core export $instance "memory" (core memory $memory))
+            (alias core export $instance "cabi_realloc" (core func $realloc))
+            (alias core export $instance "analyze" (core func $analyze))
+            (func $lifted (type $analyze-type)
+                (canon lift (core func $analyze) (memory $memory) (realloc $realloc)))
+            (export "analyze" (func $lifted)))"#
+    );
+    wat::parse_str(source).expect("routed fixture component WAT should parse")
+}
+
+fn append_fixture_data(output: &mut String, cursor: &mut usize, bytes: &[u8]) -> usize {
+    let offset = *cursor;
+    let escaped = bytes
+        .iter()
+        .map(|byte| format!("\\{byte:02x}"))
+        .collect::<String>();
+    writeln!(output, "(data (i32.const {offset}) \"{escaped}\")")
+        .expect("writing fixture WAT to a string cannot fail");
+    *cursor += bytes.len();
+    offset
 }
 
 fn temp_root(label: &str) -> std::path::PathBuf {

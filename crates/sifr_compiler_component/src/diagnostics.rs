@@ -28,9 +28,10 @@ impl DiagnosticRegistry {
     pub fn compiler() -> Self {
         Self {
             owner: DiagnosticRegistryOwner::Compiler,
-            declarations: (1..=9)
-                .map(|number| DiagnosticCodeDeclaration {
-                    code: format!("SIFR-COMPONENT-{number:04}"),
+            declarations: ComponentErrorKind::ALL
+                .into_iter()
+                .map(|kind| DiagnosticCodeDeclaration {
+                    code: kind.code().to_string(),
                     lifecycle: DiagnosticLifecycle::Active,
                 })
                 .collect(),
@@ -69,7 +70,9 @@ impl DiagnosticRegistry {
         let prefix = match &self.owner {
             DiagnosticRegistryOwner::Compiler => "SIFR-COMPONENT-".to_string(),
             DiagnosticRegistryOwner::Provider { namespace } => {
-                if !valid_namespace(namespace) || namespace == "COMPONENT" {
+                let compiler_owned = sifr_diagnostics::compiler_diagnostic_namespaces()
+                    .any(|compiler_namespace| compiler_namespace == namespace);
+                if !valid_namespace(namespace) || compiler_owned {
                     return Err(ComponentError::new(
                         ComponentErrorKind::DiagnosticRegistry,
                         "provider diagnostic namespace is invalid or compiler-owned",

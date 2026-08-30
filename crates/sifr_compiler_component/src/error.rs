@@ -14,6 +14,18 @@ pub enum ComponentErrorKind {
 }
 
 impl ComponentErrorKind {
+    pub const ALL: [Self; 9] = [
+        Self::Registration,
+        Self::Integrity,
+        Self::ProtocolVersion,
+        Self::ProtocolEnvelope,
+        Self::Capability,
+        Self::ResourceLimit,
+        Self::Execution,
+        Self::Cache,
+        Self::DiagnosticRegistry,
+    ];
+
     #[must_use]
     pub const fn code(self) -> &'static str {
         match self {

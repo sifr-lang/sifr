@@ -61,6 +61,17 @@ impl DiagnosticCode {
         Self::new("SIFR-ASYNC-0006", Severity::Error);
     pub const ASYNC_DIRECT_SHELL_EXEC_CALL: Self = Self::new("SIFR-ASYNC-0007", Severity::Error);
 
+    pub const COMPONENT_REGISTRATION: Self = Self::new("SIFR-COMPONENT-0001", Severity::Error);
+    pub const COMPONENT_INTEGRITY: Self = Self::new("SIFR-COMPONENT-0002", Severity::Error);
+    pub const COMPONENT_PROTOCOL_VERSION: Self = Self::new("SIFR-COMPONENT-0003", Severity::Error);
+    pub const COMPONENT_PROTOCOL_ENVELOPE: Self = Self::new("SIFR-COMPONENT-0004", Severity::Error);
+    pub const COMPONENT_CAPABILITY: Self = Self::new("SIFR-COMPONENT-0005", Severity::Error);
+    pub const COMPONENT_RESOURCE_LIMIT: Self = Self::new("SIFR-COMPONENT-0006", Severity::Error);
+    pub const COMPONENT_EXECUTION: Self = Self::new("SIFR-COMPONENT-0007", Severity::Error);
+    pub const COMPONENT_CACHE: Self = Self::new("SIFR-COMPONENT-0008", Severity::Error);
+    pub const COMPONENT_DIAGNOSTIC_REGISTRY: Self =
+        Self::new("SIFR-COMPONENT-0009", Severity::Error);
+
     pub const RUST_CONFIG_MALFORMED_DECORATOR: Self =
         Self::new("SIFR-RUST-CONFIG-0001", Severity::Error);
     pub const RUST_RESOLVE_TARGET_ROOT: Self = Self::new("SIFR-RUST-RESOLVE-0001", Severity::Error);
@@ -408,6 +419,11 @@ pub const DIAGNOSTIC_FAMILIES: &[DiagnosticFamily] = &[
         reserved_base: "SIFR-ASYNC-0000",
     },
     DiagnosticFamily {
+        name: "COMPONENT",
+        summary: "Sandboxed compiler-component registration, protocol, and execution diagnostics.",
+        reserved_base: "SIFR-COMPONENT-0000",
+    },
+    DiagnosticFamily {
         name: "PYENV",
         summary: "Embedded CPython environment selection, probing, and ABI diagnostics.",
         reserved_base: "SIFR-PYENV-0000",
@@ -694,6 +710,15 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::ASYNC_UNCLASSIFIED_BLOCKING_OFFLOAD_TARGET,
     DiagnosticCode::ASYNC_WORKLOAD_ANNOTATION_ON_ASYNC_DEF,
     DiagnosticCode::ASYNC_DIRECT_SHELL_EXEC_CALL,
+    DiagnosticCode::COMPONENT_REGISTRATION,
+    DiagnosticCode::COMPONENT_INTEGRITY,
+    DiagnosticCode::COMPONENT_PROTOCOL_VERSION,
+    DiagnosticCode::COMPONENT_PROTOCOL_ENVELOPE,
+    DiagnosticCode::COMPONENT_CAPABILITY,
+    DiagnosticCode::COMPONENT_RESOURCE_LIMIT,
+    DiagnosticCode::COMPONENT_EXECUTION,
+    DiagnosticCode::COMPONENT_CACHE,
+    DiagnosticCode::COMPONENT_DIAGNOSTIC_REGISTRY,
     DiagnosticCode::PYENV_INVALID_CONFIG,
     DiagnosticCode::PYENV_MULTIPLE_SELECTIONS,
     DiagnosticCode::PYENV_MISSING_SELECTION,

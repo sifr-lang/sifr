@@ -18,6 +18,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `TYPE` | `SIFR-TYPE-0000` | Static type compatibility and inference diagnostics. |
 | `META` | `SIFR-META-0000` | Deterministic package metaprogramming and const-specialization diagnostics. |
 | `ASYNC` | `SIFR-ASYNC-0000` | Async effect, awaitability, and blocking-offload diagnostics. |
+| `COMPONENT` | `SIFR-COMPONENT-0000` | Sandboxed compiler-component registration, protocol, and execution diagnostics. |
 | `PYENV` | `SIFR-PYENV-0000` | Embedded CPython environment selection, probing, and ABI diagnostics. |
 | `PYIMP` | `SIFR-PYIMP-0000` | Embedded Python import and module-loading diagnostics. |
 | `PYCALL` | `SIFR-PYCALL-0000` | Embedded Python callable, attribute, item, and coroutine diagnostics. |
@@ -175,6 +176,15 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-STDLIB-0001`](/errors/SIFR-STDLIB-0001) | Error | Unsupported standard-library constructor, method, or surface. |
 | [`SIFR-STDLIB-0003`](/errors/SIFR-STDLIB-0003) | Error | Embedded standard-library bootstrap failure. |
 | [`SIFR-STDLIB-0004`](/errors/SIFR-STDLIB-0004) | Error | Standard-library cache build or reuse failure. |
+| [`SIFR-COMPONENT-0001`](/errors/SIFR-COMPONENT-0001) | Error | Compiler component registration is invalid. |
+| [`SIFR-COMPONENT-0002`](/errors/SIFR-COMPONENT-0002) | Error | Compiler component integrity verification failed. |
+| [`SIFR-COMPONENT-0003`](/errors/SIFR-COMPONENT-0003) | Error | Compiler component protocol version is incompatible. |
+| [`SIFR-COMPONENT-0004`](/errors/SIFR-COMPONENT-0004) | Error | Compiler component protocol envelope is invalid. |
+| [`SIFR-COMPONENT-0005`](/errors/SIFR-COMPONENT-0005) | Error | Compiler component requested a forbidden capability. |
+| [`SIFR-COMPONENT-0006`](/errors/SIFR-COMPONENT-0006) | Error | Compiler component exceeded a resource limit. |
+| [`SIFR-COMPONENT-0007`](/errors/SIFR-COMPONENT-0007) | Error | Compiler component execution failed. |
+| [`SIFR-COMPONENT-0008`](/errors/SIFR-COMPONENT-0008) | Error | Compiler component cache operation failed. |
+| [`SIFR-COMPONENT-0009`](/errors/SIFR-COMPONENT-0009) | Error | Compiler component diagnostic registry is invalid. |
 | [`SIFR-IO-0801`](/errors/SIFR-IO-0801) | Error | Text-mode open requires an explicit encoding. |
 | [`SIFR-IO-0802`](/errors/SIFR-IO-0802) | Error | Open mode must be statically known. |
 | [`SIFR-ENCODING-0803`](/errors/SIFR-ENCODING-0803) | Error | Encoding error handler must be statically known. |
@@ -282,6 +292,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-TYPE-0000`](/errors/diagnostic-codes) | `TYPE` | Reserved family base; not emitted as a diagnostic. |
 | [`SIFR-META-0000`](/errors/diagnostic-codes) | `META` | Reserved family base; not emitted as a diagnostic. |
 | [`SIFR-ASYNC-0000`](/errors/diagnostic-codes) | `ASYNC` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-COMPONENT-0000`](/errors/diagnostic-codes) | `COMPONENT` | Reserved family base; not emitted as a diagnostic. |
 | [`SIFR-PYENV-0000`](/errors/diagnostic-codes) | `PYENV` | Reserved family base; not emitted as a diagnostic. |
 | [`SIFR-PYIMP-0000`](/errors/diagnostic-codes) | `PYIMP` | Reserved family base; not emitted as a diagnostic. |
 | [`SIFR-PYCALL-0000`](/errors/diagnostic-codes) | `PYCALL` | Reserved family base; not emitted as a diagnostic. |

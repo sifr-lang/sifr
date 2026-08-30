@@ -1,9 +1,9 @@
 use crate::{SifrPackageGraph, SifrPackageId};
 use sifr_compiler_component::{
     ComponentError, ComponentErrorKind, ComponentRegistration, ComponentRequirement,
-    ResolvedComponent, resolve_component,
+    DiagnosticRegistry, DiagnosticRegistryOwner, ResolvedComponent, resolve_component,
 };
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -18,8 +18,26 @@ pub fn compiler_component_registrations(
     graph: &SifrPackageGraph,
 ) -> Result<BTreeMap<String, PackageCompilerComponent>, ComponentError> {
     let mut registrations = BTreeMap::new();
+    let mut diagnostic_registries = Vec::new();
+    let mut diagnostic_namespaces = BTreeSet::new();
     for package in graph.packages.values() {
         for component in package.manifest.compiler_components.values() {
+            let DiagnosticRegistryOwner::Provider { namespace } = &component.diagnostics.owner
+            else {
+                return Err(ComponentError::new(
+                    ComponentErrorKind::DiagnosticRegistry,
+                    "package compiler components must use provider-owned diagnostics",
+                ));
+            };
+            if !diagnostic_namespaces.insert(namespace.as_str()) {
+                return Err(ComponentError::new(
+                    ComponentErrorKind::DiagnosticRegistry,
+                    format!(
+                        "provider diagnostic namespace '{namespace}' is registered by more than one component"
+                    ),
+                ));
+            }
+            diagnostic_registries.push(component.diagnostics.clone());
             for registration in component.registrations(&package.package_id.0) {
                 let processor = registration.identity.processor.clone();
                 let resolved = PackageCompilerComponent {
@@ -39,6 +57,7 @@ pub fn compiler_component_registrations(
             }
         }
     }
+    DiagnosticRegistry::compiler().validate_with(&diagnostic_registries)?;
     Ok(registrations)
 }
 

@@ -10,6 +10,7 @@ use wasmtime::{Config, Engine, Store, StoreLimits, StoreLimitsBuilder, Trap};
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ComponentHostLimits {
     pub fuel: u64,
+    pub max_component_bytes: usize,
     pub max_memory_bytes: usize,
     pub max_wasm_stack_bytes: usize,
     pub max_input_bytes: usize,
@@ -31,6 +32,7 @@ impl Default for ComponentHostLimits {
     fn default() -> Self {
         Self {
             fuel: 10_000_000,
+            max_component_bytes: 64 * 1024 * 1024,
             max_memory_bytes: 64 * 1024 * 1024,
             max_wasm_stack_bytes: 2 * 1024 * 1024,
             max_input_bytes: 4 * 1024 * 1024,
@@ -77,6 +79,7 @@ impl ComponentHost {
         config.wasm_component_model(true);
         config.wasm_memory64(false);
         config.wasm_multi_memory(false);
+        config.wasm_relaxed_simd(false);
         config.max_wasm_stack(limits.max_wasm_stack_bytes);
         config.cranelift_nan_canonicalization(true);
         let engine = Engine::new(&config).map_err(engine_error)?;
@@ -93,6 +96,12 @@ impl ComponentHost {
         component_bytes: &[u8],
         request: &EmbeddedAnalysisRequest,
     ) -> Result<ComponentRun, ComponentError> {
+        if component_bytes.len() > self.limits.max_component_bytes {
+            return Err(ComponentError::new(
+                ComponentErrorKind::ResourceLimit,
+                "component artifact exceeds the component byte limit",
+            ));
+        }
         registration.protocol.validate()?;
         DiagnosticRegistry::compiler()
             .validate_with(std::slice::from_ref(&registration.diagnostics))?;
@@ -118,9 +127,19 @@ impl ComponentHost {
         validate_request(request, &self.limits)?;
         let key = CacheKey::for_request(request)?;
         if let Some(cache) = &mut self.cache {
-            if let Some(response) = cache.get(&key)? {
+            let max_cache_bytes = u64::try_from(self.limits.max_output_bytes)
+                .unwrap_or(u64::MAX)
+                .saturating_add(4_096);
+            if let Some(response) = cache.get(&key, max_cache_bytes)? {
+                let response_bytes =
+                    serde_json::to_vec(&response).map_err(protocol_serialization_error)?;
+                if response_bytes.len() > self.limits.max_output_bytes {
+                    return Err(ComponentError::new(
+                        ComponentErrorKind::ResourceLimit,
+                        "cached component response exceeds the output byte limit",
+                    ));
+                }
                 validate_response(request, &response, &self.limits, &registration.diagnostics)?;
-                cache.pin(key.clone());
                 return Ok(ComponentRun {
                     response,
                     cache_key: key,
@@ -131,13 +150,18 @@ impl ComponentHost {
         let response = self.execute(component_bytes, request, &registration.diagnostics)?;
         if let Some(cache) = &mut self.cache {
             cache.put(&key, &response)?;
-            cache.pin(key.clone());
         }
         Ok(ComponentRun {
             response,
             cache_key: key,
             cache_hit: false,
         })
+    }
+
+    pub fn pin_cache_entry(&mut self, key: CacheKey) {
+        if let Some(cache) = &mut self.cache {
+            cache.pin(key);
+        }
     }
 
     pub fn release_cache_entry(&mut self, key: &CacheKey) {

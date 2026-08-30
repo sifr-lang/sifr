@@ -155,7 +155,7 @@ fn parse_component(
         declarations: diagnostic_declarations(cargo_package_id, manifest_path, table, &prefix)?,
     };
     DiagnosticRegistry::compiler()
-        .validate_with(&[diagnostics.clone()])
+        .validate_with(std::slice::from_ref(&diagnostics))
         .map_err(|error| {
             invalid(
                 cargo_package_id,
