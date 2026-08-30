@@ -200,11 +200,21 @@ It does not broaden the active item.
 
 ### Item 3: Checked failure and impossible-state model
 
-- [ ] No generated user path contains abort, exit, unreachable, panic, unwrap,
+- [x] No generated user path contains abort, exit, unreachable, panic, unwrap,
   expect, or a silent fallback for an error-producing operation.
-- [ ] Compiler invariants are validated structurally before source rendering.
-- [ ] Typed errors preserve category, payload, source span where applicable,
+- [x] Compiler invariants are validated structurally before source rendering.
+- [x] Typed errors preserve category, payload, source span where applicable,
   and error timing.
+
+### Item 3A: Residual checked-flow and proof mechanism closure
+
+- [ ] Suppressible Python context errors rejoin every enclosing try carrier with
+  a structurally valid continuation, including direct-return contexts.
+- [ ] Exact-integer facts distinguish module constants from shadowing locals and
+  are invalidated by called nested-function `nonlocal` mutation.
+- [ ] Sync/async context and loop regressions compile and run with the intended
+  dynamic values and no mechanism-owned warning debt.
+- [ ] Static flow summaries and emitted carriers agree for every repaired path.
 
 ### Item 4: Collection access and mutation architecture
 
@@ -290,6 +300,7 @@ It does not broaden the active item.
 | 0 | merged | [#3574](https://github.com/sifr-lang/sifr/pull/3574) | `8d292f9395fee51ef8b348a413ea496a33c5ce38` | Candidate `b75a3c471f7ec8b4cb798e112e123bfb13d78b83`: inventory, mutation self-test, Python/JSON syntax, file-size, HIR maintainability, docs-link, and diff hygiene checks passed. No compiler files changed, so Sifr gates were omitted. | [Initial and sole remediation review](https://github.com/sifr-lang/sifr/pull/3574#issuecomment-5462303681): both NOT SATISFIED. The original evidence blocker was fixed; the remediation review's new checker mechanism is assigned to Item 1 under the explicit review limit. | Contract and 32-row inventory merged; three missing mutation branches and related checker provenance hardening are owned by Item 1. |
 | 1 | merged | [#3578](https://github.com/sifr-lang/sifr/pull/3578) | `b86eec0be7b7be2b5ddf012fea9cbcced286c342` | Candidate `b0fb5c2049b81fe28fc4b076c34ac624f8249e94`: full generated-code-quality profile passed 9 variants with 0 failures across 91 positive projects; exact safety, rustfmt, 38,957-diagnostic/105-lint Clippy, determinism, all 262 authoritative companions, recursive freshness, audit/debt/surface mutations, Python/JSON, file-size, HIR, driver, docs-link, and diff hygiene passed. No compiler files changed, so Sifr gates were omitted. | [Initial review](https://github.com/sifr-lang/sifr/pull/3578#issuecomment-5463056720) NOT SATISFIED; [sole remediation review](https://github.com/sifr-lang/sifr/pull/3578#issuecomment-5463053848) SATISFIED with all four blockers resolved and no new in-scope mechanism defect. | Exact surface digests, fail-closed quality protocols, strict source/lint policies, 18 negative seeds, and a 33-row governed audit inventory merged; all Item 0 deferred checker findings are resolved. |
 | 2 | merged | [#3580](https://github.com/sifr-lang/sifr/pull/3580) | `d618a7be107550629c3331ea7fdb3f76e28e0dce` | Compiler candidate `aa97d2ca6d0da1ec5700b02d3f57ef864a450a53`: 1,151 codegen tests and 557 driver tests passed; Clippy, formatting, generated inventory/freshness, diagnostics governance, file-size, HIR, and driver checks passed. The one create-PR gate completed every reached check and all 28 runtime-platform variants with zero failures before its cold rebuild exceeded the 120-second step budget. The one merge gate passed static, core-language, differential, Rust interop, coverage, and all 30 Python-interop variants before finding three stale diagnostic baselines. Follow-up `7b3ba45d25e07adabb820c9f80463534060d42ee` changed only diagnostic fixtures/governance; 178 of 179 full baseline variants passed before the sole new wording mismatch was corrected, and exact checks then passed. Neither gate was repeated. | [Initial review](https://github.com/sifr-lang/sifr/pull/3580#issuecomment-5465345414) on `d4aea519efebdf29bad472a9795afcdd72c4f865` and [sole remediation review](https://github.com/sifr-lang/sifr/pull/3580#issuecomment-5465345486) on `9606b67b84ae5865105415399d647319b455bb99` were NOT SATISFIED. The initial slice-step panic was fixed. The remediation review's new exact-ratio proof/codegen mismatch is assigned to Item 3 under the no-third-review rule. | Canonical inline-small/`BigInt` `SifrInt`, exact arithmetic and conversion paths, fixed-width boundaries, constants, ranges, collections, unions, and Rust/Python interop merged with debug/release and corpus evidence. |
+| 3 | merged | [#3587](https://github.com/sifr-lang/sifr/pull/3587) | `fe95d220be2819464d6231080d57e47444b0d429` | Reviewed compiler candidate `229c2687923d97c72531bb4e81deb047833367b1`: 1,156 codegen and 1,053 lowering tests passed; workspace Clippy, formatting, file-size, HIR, demo freshness, generated determinism, panic scan, demo corpus, intrinsic panic lint, diagnostics governance, and smoke/representative/full generated Clippy passed. The one create-PR gate stopped on a stale retained-intrinsic governance row after all preceding checks passed; docs-only `6e7c5b32dc9574a40ff5624834daa768613a0b14` removed it and the exact checker plus self-test passed. The one merge gate passed static, core-language, differential, Rust interop, coverage, and 29 of 30 Python-interop variants; its sole `sqlite-context` compiler failure is assigned to Item 3A. Neither gate was repeated. | [Initial review](https://github.com/sifr-lang/sifr/pull/3587#issuecomment-5466942667) on `2e3867cbe3546e09a94f391672410808315f3b25` was NOT SATISFIED; [sole remediation review](https://github.com/sifr-lang/sifr/pull/3587#issuecomment-5466942761) on `229c2687923d97c72531bb4e81deb047833367b1` was SATISFIED. The loop-constant blocker was fixed; later mechanism findings are assigned to Item 3A under the review limit. | Typed structural failure discharge, exact ratio materialization, checked Decimal/BigDecimal/bytes/random/input operations, structured try/finally and context carriers, pre-render invariant validation, regenerated demos, and retired `SIFR-INT-0006` governance merged. |
 
 ## Deferred Findings
 
@@ -306,22 +317,34 @@ It does not broaden the active item.
 | Item 2 merge-gate diagnostics | `SIFR-TYPE-0901` retains a warning IR variant, renderer, registry entry, catalog, and docs after exact arithmetic removed its final producer. | Item 8 | Remove the dead warning mechanism and regenerate all diagnostic governance artifacts. |
 | Item 2 gate output | The Python Arrow resource implementation retains an unused private `handle` method. | Item 8 | Remove the dead method through the canonical support implementation and prove generated support remains warning-clean. |
 | Item 2 generated-project inspection | Source constants generate helper names such as `__const_BASE`, retaining avoidable non-snake-case naming debt. | Item 8 | Canonicalize generated constant helper names and references without broad naming allowances, including project imports and re-exports. |
+| Item 3 initial review | Bare `return` in a binding-promoting `try`/`except` inside `Result[None, E]` can emit the wrong optional/control-flow payload. | Item 8 | Unify none-like return normalization across direct, optional, and binding-promotion carriers. |
+| Item 3 initial review | `break` and `continue` inside `try`/`finally` nested in a loop can escape into a Rust closure and fail with E0267. | Item 8 | Represent loop control structurally in the canonical try/finally carrier. |
+| Item 3 initial review | `raise` can type-check in a non-`Result` function and then emit an incompatible Rust `Err`. | Item 8 | Reject the invalid source path before emission through canonical return/error validation. |
+| Item 3 initial review | Phase 34 still claims retired `SIFR-INT-0006` behavior. | Item 8 | Reconcile stale historical generated-code records with the current diagnostic surface. |
+| Item 3 initial review | Pre-render forbidden-failure validation checks `MacroCall` but not `FormatMacro`. | Item 8 | Cover every macro-bearing Rust IR variant with one structural validation path and mutation evidence. |
+| Item 3 initial review | Exact literal materialization can leave source bindings unread in emitted Rust. | Item 8 | Remove dead generated bindings through canonical liveness/simplification rather than warning allowances. |
+| Item 3 remediation review | A cleared local exact-integer fact can fall back to a same-named module constant and fold the wrong value. | Item 3A | Make exact-integer proof lookup binding-identity aware and add local-shadow regressions. |
+| Item 3 remediation review | A nested function called in a loop can mutate a `nonlocal` integer without invalidating the enclosing loop-carried fact. | Item 3A | Model called nested-function mutation in loop fact invalidation and prove while/for/async-for behavior. |
+| Item 3 remediation review | Async-for constant-fact invalidation lacks a dedicated regression. | Item 3A | Add exact async-for evidence alongside the repaired mutation mechanism. |
+| Item 3 remediation review | Nested loops re-walk inner bodies once per enclosing level. | Item 9 | Replace repeated body collection with a single pre-pass or memoized summary and enforce a lowering-cost regression. |
+| Item 3 generated safety scan | Remaining direct collection indexing is the only generated panic-surface class in the full corpus. | Item 4 | Route every read, write, delete, and nested place through the checked-place architecture. |
+| Item 3 merge gate | Suppressed Python-context body errors can leave an enclosing direct-return try carrier expecting `Result` while the emitted suppression arm yields unit. | Item 3A | Make context suppression a typed continuation in static flow analysis and sync/async emission; compile and run the SQLite context example plus reduced regressions. |
 
 New out-of-scope findings must name a concrete active owner before the current
 item can close.
 
 ## Current Handoff
 
-- Active item: Item 3, checked failure and impossible-state model, based on
-  Item 2 merge `d618a7be107550629c3331ea7fdb3f76e28e0dce`.
-- Item 2 state: merged with canonical `SifrInt` storage and operations across
-  compiler, runtime, generated projects, constants, collections, ranges,
-  unions, and interop. The initial Opus blocker was fixed; the sole remediation
-  review's new proof/codegen mechanism defect is explicitly owned by Item 3.
-- Item 3 inherited audit: ERQ-009 and the Item 2 exact-ratio and slice-recovery
-  findings require one checked typed-failure architecture. `SIFR-INT-0006`
-  retirement is part of the same source-reachability and error-model cleanup.
-- Next action: re-audit generated panic, abort, exit, unreachable, unwrap,
-  expect, fallback, and compiler-proof paths on current `origin/main`; implement
-  the complete Item 3 architecture without testing, then run focused validation
-  and the single exact candidate gate sequence.
+- Active item: Item 3A, residual checked-flow and proof mechanism closure, based
+  on Item 3 merge `fe95d220be2819464d6231080d57e47444b0d429`.
+- Item 3 state: merged with structural typed failure discharge, exact numeric
+  materialization, pre-render invariant validation, regenerated demos, and full
+  generated-quality evidence. Its sole merge-gate failure and the remediation
+  review's new exact-integer mechanisms are explicitly owned by Item 3A.
+- Item 3A inherited scope: fix suppressible Python-context fallthrough across
+  enclosing try carriers; make exact-integer proof lookup binding-aware; model
+  called nested-function `nonlocal` mutation; add sync, async-for, and reduced
+  compile/run regressions.
+- Next action: implement the complete Item 3A architecture without testing,
+  then run focused validation, one exact-SHA Opus review with at most one
+  remediation, and the single exact candidate gate sequence.
