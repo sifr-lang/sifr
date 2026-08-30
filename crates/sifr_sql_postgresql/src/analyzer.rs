@@ -58,6 +58,10 @@ impl<P: PostgresParser> PostgresAnalyzer<P> {
                 ));
             }
         };
+        let explicit_source = match &statement.kind {
+            StatementKind::Select(select) => expand_private_star(source, select, &analyzed.fields)?,
+            _ => source.to_string(),
+        };
         let parameter_types = context.finish_parameters()?;
         let used_types = parameter_types
             .iter()
@@ -114,7 +118,7 @@ impl<P: PostgresParser> PostgresAnalyzer<P> {
             .collect::<Result<Vec<_>, PostgresAnalysisError>>()?;
         let analysis = ProviderAnalysis {
             server_profile: self.catalog.types.server_profile().to_string(),
-            normalized_statement: self.parser.normalize(source)?,
+            normalized_statement: self.parser.normalize(&explicit_source)?,
             parameters,
             result_fields,
             cardinality: analyzed.cardinality,
@@ -132,6 +136,78 @@ impl<P: PostgresParser> PostgresAnalyzer<P> {
     pub fn catalog(&self) -> &PostgresCatalog {
         &self.catalog
     }
+}
+
+fn expand_private_star(
+    source: &str,
+    select: &crate::ast::SelectStatement,
+    fields: &[crate::analysis::ResultFact],
+) -> Result<String, PostgresAnalysisError> {
+    let stars = select
+        .targets
+        .iter()
+        .enumerate()
+        .filter_map(|(index, target)| {
+            matches!(
+                target.expression.kind,
+                crate::ast::ExpressionKind::Star { .. }
+            )
+            .then_some((index, target))
+        })
+        .collect::<Vec<_>>();
+    if stars.is_empty() {
+        return Ok(source.to_string());
+    }
+    if stars.len() != 1 {
+        return Err(PostgresAnalysisError::at_start(
+            crate::PostgresDiagnosticCode::InvalidResult,
+            "a private query with more than one SELECT * item needs explicit columns",
+        ));
+    }
+    let (target_index, target) = stars[0];
+    let star_width = fields
+        .len()
+        .checked_sub(select.targets.len() - 1)
+        .ok_or_else(|| {
+            PostgresAnalysisError::at_start(
+                crate::PostgresDiagnosticCode::InvalidResult,
+                "SELECT * expansion has an invalid result width",
+            )
+        })?;
+    let qualifier = match &target.expression.kind {
+        crate::ast::ExpressionKind::Star { qualifier } => qualifier
+            .last()
+            .map(|value| format!("{}.", quote_identifier(value)))
+            .unwrap_or_default(),
+        _ => String::new(),
+    };
+    let replacement = fields[target_index..target_index + star_width]
+        .iter()
+        .map(|field| format!("{qualifier}{}", quote_identifier(&field.name)))
+        .collect::<Vec<_>>()
+        .join(", ");
+    let start = usize::try_from(target.expression.span.start).unwrap_or(usize::MAX);
+    let end = usize::try_from(target.expression.span.end).unwrap_or(usize::MAX);
+    if start >= end
+        || end > source.len()
+        || !source.is_char_boundary(start)
+        || !source.is_char_boundary(end)
+    {
+        return Err(PostgresAnalysisError::at_start(
+            crate::PostgresDiagnosticCode::InvalidResult,
+            "SELECT * source span cannot be expanded safely",
+        ));
+    }
+    Ok(format!(
+        "{}{}{}",
+        &source[..start],
+        replacement,
+        &source[end..]
+    ))
+}
+
+fn quote_identifier(value: &str) -> String {
+    format!("\"{}\"", value.replace('"', "\"\""))
 }
 
 impl<P: PostgresParser> DialectSemantics for PostgresAnalyzer<P> {

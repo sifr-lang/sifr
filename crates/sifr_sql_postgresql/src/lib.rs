@@ -1,29 +1,42 @@
 mod analysis;
+mod analysis_types;
 mod analyzer;
 mod ast;
+mod cardinality_analysis;
 mod catalog;
+mod catalog_advanced;
+mod catalog_metadata;
 mod catalog_snapshot;
 mod component;
 mod ddl_constraints;
 mod diagnostic;
+mod expression_operators;
 mod ffi;
 #[cfg(target_family = "wasm")]
 mod guest;
+mod locking_analysis;
+mod nullability_analysis;
 mod parameters;
 mod raw_adapter;
+mod raw_advanced;
 mod raw_helpers;
+mod raw_writes;
+mod result_analysis;
 mod scope;
 mod semantic_helpers;
 mod source;
 mod types;
+mod window_analysis;
 mod writes;
 
 pub use analysis::PostgresAnalysisError;
 pub use analyzer::PostgresAnalyzer;
 pub use ast::{
-    Assignment, ConflictAction, ConflictClause, Expression, ExpressionKind, FromItem, JoinKind,
-    OrderDirection, PostgresStatement, PostgresTypeName, SelectItem, SetOperator, StatementKind,
-    SubqueryQuantifier,
+    Assignment, CaseBranch, CommonTableExpression, ConflictAction, ConflictClause,
+    CreateCompositeStatement, CreateRangeStatement, CteMaterialization, Expression, ExpressionKind,
+    FromItem, JoinKind, LockStrength, LockWait, LockingClause, OrderDirection, PostgresStatement,
+    PostgresTypeName, SelectItem, SetOperator, StatementKind, SubqueryQuantifier,
+    WindowSpecification,
 };
 pub use catalog::{
     CatalogCast, CatalogColumn, CatalogFunction, CatalogOperator, CatalogRelation, PostgresCatalog,

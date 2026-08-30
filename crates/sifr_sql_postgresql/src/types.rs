@@ -1,9 +1,9 @@
 use crate::ast::PostgresTypeName;
 use sha2::{Digest, Sha256};
 use sifr_sql_contract::{
-    CodecContract, CodecIdentity, CodecRegistry, DatabaseType, DecimalRepresentation, IntegerSign,
-    IntegerWidth, NullCodecBehavior, PanicContainment, SchemaContractError, SifrType,
-    WireFormatIdentity, canonical_read_type,
+    CheckedCodecBinding, CodecContract, CodecIdentity, CodecRegistry, DatabaseType,
+    DecimalRepresentation, IntegerSign, IntegerWidth, NullCodecBehavior, Nullability,
+    PanicContainment, SchemaContractError, SifrType, WireFormatIdentity, canonical_read_type,
 };
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -17,6 +17,7 @@ pub struct PostgresType {
 pub struct PostgresTypeRegistry {
     server_profile: String,
     types: BTreeMap<String, PostgresType>,
+    custom_codecs: BTreeMap<DatabaseType, CodecContract>,
 }
 
 impl PostgresTypeRegistry {
@@ -25,6 +26,7 @@ impl PostgresTypeRegistry {
         let mut registry = Self {
             server_profile: format!("postgresql-{server_major}"),
             types: BTreeMap::new(),
+            custom_codecs: BTreeMap::new(),
         };
         for (names, ty) in builtin_types() {
             let canonical_name = names[0].to_string();
@@ -49,7 +51,21 @@ impl PostgresTypeRegistry {
     #[must_use]
     pub fn resolve(&self, name: &PostgresTypeName) -> Option<PostgresType> {
         let base = self.resolve_path(&name.path)?;
-        apply_modifiers(base, &name.modifiers)
+        let mut resolved = apply_modifiers(base, &name.modifiers)?;
+        if name.array_dimensions > 0 {
+            resolved
+                .canonical_name
+                .push_str(&"[]".repeat(usize::from(name.array_dimensions)));
+            resolved.database_type = DatabaseType::Array {
+                element: Box::new(resolved.database_type),
+                // PostgreSQL records array syntax but does not enforce the
+                // declared rank. Runtime values can have another rank.
+                dimensions: None,
+                element_nullability: Nullability::Nullable,
+                preserves_lower_bounds: true,
+            };
+        }
+        Some(resolved)
     }
 
     #[must_use]
@@ -91,6 +107,36 @@ impl PostgresTypeRegistry {
         }
     }
 
+    pub fn add_custom_codec(
+        &mut self,
+        names: &[String],
+        contract: CodecContract,
+        binding: &CheckedCodecBinding,
+    ) -> Result<(), SchemaContractError> {
+        if binding.identity != contract.identity
+            || binding.database_type != contract.database_type
+            || binding.sifr_type != contract.sifr_type
+        {
+            return Err(SchemaContractError::new(
+                sifr_sql_contract::SchemaContractErrorKind::InvalidProvider,
+                "PostgreSQL custom codec binding does not match its declared contract",
+            ));
+        }
+        CodecRegistry::for_profile(self.server_profile.clone(), [contract.clone()])?;
+        if self
+            .custom_codecs
+            .insert(contract.database_type.clone(), contract.clone())
+            .is_some()
+        {
+            return Err(SchemaContractError::new(
+                sifr_sql_contract::SchemaContractErrorKind::InvalidProvider,
+                "PostgreSQL database identity has more than one custom codec",
+            ));
+        }
+        self.add_nominal(names, contract.database_type);
+        Ok(())
+    }
+
     pub fn codec_registry(&self) -> Result<CodecRegistry, SchemaContractError> {
         self.codec_registry_for(self.types.values().map(|ty| &ty.database_type))
     }
@@ -104,7 +150,13 @@ impl PostgresTypeRegistry {
             self.server_profile.clone(),
             contracts
                 .into_iter()
-                .map(|database_type| codec_contract(&self.server_profile, database_type))
+                .map(|database_type| {
+                    self.custom_codecs
+                        .get(&database_type)
+                        .cloned()
+                        .map(Ok)
+                        .unwrap_or_else(|| codec_contract(&self.server_profile, database_type))
+                })
                 .collect::<Result<Vec<_>, _>>()?,
         )
     }
@@ -113,6 +165,9 @@ impl PostgresTypeRegistry {
         &self,
         database_type: &DatabaseType,
     ) -> Result<CodecIdentity, SchemaContractError> {
+        if let Some(contract) = self.custom_codecs.get(database_type) {
+            return Ok(contract.identity.clone());
+        }
         Ok(codec_contract(&self.server_profile, database_type.clone())?.identity)
     }
 }
@@ -308,7 +363,10 @@ fn named_type(identity: &str, parameters: &[i64], canonical: DatabaseType) -> Da
 #[allow(clippy::too_many_lines)]
 fn builtin_types() -> Vec<(&'static [&'static str], DatabaseType)> {
     vec![
-        (&["bool", "boolean"], DatabaseType::Boolean),
+        (
+            &["bool", "boolean", "pg_catalog.bool"],
+            DatabaseType::Boolean,
+        ),
         (
             &["int2", "smallint", "pg_catalog.int2"],
             DatabaseType::Integer {
@@ -338,8 +396,14 @@ fn builtin_types() -> Vec<(&'static [&'static str], DatabaseType)> {
                 representation: DecimalRepresentation::Numeric,
             },
         ),
-        (&["float4", "real"], DatabaseType::Float32),
-        (&["float8", "double precision"], DatabaseType::Float64),
+        (
+            &["float4", "real", "pg_catalog.float4"],
+            DatabaseType::Float32,
+        ),
+        (
+            &["float8", "double precision", "pg_catalog.float8"],
+            DatabaseType::Float64,
+        ),
         (
             &["text", "pg_catalog.text"],
             DatabaseType::Text {
@@ -361,18 +425,118 @@ fn builtin_types() -> Vec<(&'static [&'static str], DatabaseType)> {
                 max_characters: Some(1),
             },
         ),
-        (&["bytea"], DatabaseType::Binary { max_bytes: None }),
-        (&["date"], DatabaseType::Date),
-        (&["time"], DatabaseType::LocalTime { precision: 6 }),
-        (&["timetz"], DatabaseType::OffsetTime { precision: 6 }),
-        (&["timestamp"], DatabaseType::LocalDateTime { precision: 6 }),
-        (&["timestamptz"], DatabaseType::Instant { precision: 6 }),
-        (&["interval"], DatabaseType::CalendarInterval),
-        (&["uuid"], DatabaseType::Uuid),
-        (&["json"], DatabaseType::Json { binary: false }),
-        (&["jsonb"], DatabaseType::Json { binary: true }),
+        (
+            &["bytea", "pg_catalog.bytea"],
+            DatabaseType::Binary { max_bytes: None },
+        ),
+        (&["date", "pg_catalog.date"], DatabaseType::Date),
+        (
+            &["time", "pg_catalog.time"],
+            DatabaseType::LocalTime { precision: 6 },
+        ),
+        (
+            &["timetz", "pg_catalog.timetz"],
+            DatabaseType::OffsetTime { precision: 6 },
+        ),
+        (
+            &["timestamp", "pg_catalog.timestamp"],
+            DatabaseType::LocalDateTime { precision: 6 },
+        ),
+        (
+            &["timestamptz", "pg_catalog.timestamptz"],
+            DatabaseType::Instant { precision: 6 },
+        ),
+        (
+            &["interval", "pg_catalog.interval"],
+            DatabaseType::CalendarInterval,
+        ),
+        (&["uuid", "pg_catalog.uuid"], DatabaseType::Uuid),
+        (
+            &["json", "pg_catalog.json"],
+            DatabaseType::Json { binary: false },
+        ),
+        (
+            &["jsonb", "pg_catalog.jsonb"],
+            DatabaseType::Json { binary: true },
+        ),
         (&["inet", "pg_catalog.inet"], DatabaseType::IpAddress),
-        (&["cidr"], DatabaseType::IpNetwork),
-        (&["macaddr"], DatabaseType::MacAddress),
+        (&["cidr", "pg_catalog.cidr"], DatabaseType::IpNetwork),
+        (&["macaddr", "pg_catalog.macaddr"], DatabaseType::MacAddress),
+        (
+            &["int4range", "pg_catalog.int4range"],
+            named_type(
+                "pg_catalog.int4range",
+                &[],
+                DatabaseType::Range {
+                    element: Box::new(DatabaseType::Integer {
+                        sign: IntegerSign::Signed,
+                        width: IntegerWidth::Bits32,
+                    }),
+                    multirange: false,
+                },
+            ),
+        ),
+        (
+            &["int8range", "pg_catalog.int8range"],
+            named_type(
+                "pg_catalog.int8range",
+                &[],
+                DatabaseType::Range {
+                    element: Box::new(DatabaseType::Integer {
+                        sign: IntegerSign::Signed,
+                        width: IntegerWidth::Bits64,
+                    }),
+                    multirange: false,
+                },
+            ),
+        ),
+        (
+            &["numrange", "pg_catalog.numrange"],
+            named_type(
+                "pg_catalog.numrange",
+                &[],
+                DatabaseType::Range {
+                    element: Box::new(DatabaseType::Decimal {
+                        precision: None,
+                        scale: None,
+                        representation: DecimalRepresentation::Numeric,
+                    }),
+                    multirange: false,
+                },
+            ),
+        ),
+        (
+            &["daterange", "pg_catalog.daterange"],
+            named_type(
+                "pg_catalog.daterange",
+                &[],
+                DatabaseType::Range {
+                    element: Box::new(DatabaseType::Date),
+                    multirange: false,
+                },
+            ),
+        ),
+        (
+            &["tsrange", "pg_catalog.tsrange"],
+            named_type(
+                "pg_catalog.tsrange",
+                &[],
+                DatabaseType::Range {
+                    element: Box::new(DatabaseType::LocalDateTime { precision: 6 }),
+                    multirange: false,
+                },
+            ),
+        ),
+        (
+            &["tstzrange", "pg_catalog.tstzrange"],
+            named_type(
+                "pg_catalog.tstzrange",
+                &[],
+                DatabaseType::Range {
+                    element: Box::new(DatabaseType::Instant { precision: 6 }),
+                    multirange: false,
+                },
+            ),
+        ),
     ]
 }

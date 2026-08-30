@@ -367,6 +367,7 @@ fn type_name(path: &[&str], modifiers: &[i64]) -> PostgresTypeName {
     PostgresTypeName {
         path: path.iter().map(|value| (*value).to_string()).collect(),
         modifiers: modifiers.to_vec(),
+        array_dimensions: 0,
     }
 }
 

@@ -163,6 +163,7 @@ mod tests {
             ],
             frontend_diagnostics: Vec::new(),
             cache_hit,
+            query_signature_artifact_path: None,
         })
     }
 

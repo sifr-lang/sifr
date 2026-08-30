@@ -1,110 +1,26 @@
-use crate::ast::{
-    Expression, ExpressionKind, FromItem, JoinKind, SelectItem, SelectStatement, SetOperator,
+pub use crate::analysis_types::PostgresAnalysisError;
+pub(crate) use crate::analysis_types::{
+    AnalysisContext, AnalyzedStatement, ResultFact, ScopeBinding, ScopeFrame, TypeFact,
+};
+use crate::ast::{Expression, ExpressionKind, FromItem, JoinKind, SelectStatement, SetOperator};
+use crate::cardinality_analysis::{
+    apply_limit_and_offset, group_expression_functionally_dependent, group_expression_valid,
+    make_frame_nullable, set_cardinality, unique_predicate_cardinality,
 };
 use crate::catalog::{CatalogColumn, PostgresCatalog};
-use crate::diagnostic::{PostgresDiagnostic, PostgresDiagnosticCode};
-use crate::raw_adapter::PostgresParseError;
+use crate::diagnostic::PostgresDiagnosticCode;
+use crate::locking_analysis::validate_locking;
+use crate::nullability_analysis::refine_for_null_test;
 use crate::scope::{binding_for_relation, frame_for_results, resolve_column};
 use crate::semantic_helpers::{
-    arithmetic_result, expression_has_aggregate, integer_type, integer64_type, is_numeric,
-    is_textual, limit_is_one, text_type, type_fact, unique_result_names,
+    expression_has_aggregate, expression_has_window, integer_type, integer64_type, is_numeric,
+    text_type, type_fact, unique_result_names,
 };
-use sifr_sql_contract::{Cardinality, DatabaseType, ObjectId, QueryEffect};
+use crate::window_analysis::{
+    reject_window_expression, validate_named_windows, validate_window_references,
+};
+use sifr_sql_contract::{Cardinality, DatabaseType, Nullability, ObjectId, QueryEffect};
 use std::collections::{BTreeMap, BTreeSet};
-use std::fmt;
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct PostgresAnalysisError {
-    pub diagnostic: PostgresDiagnostic,
-}
-
-impl PostgresAnalysisError {
-    pub(crate) fn new(
-        code: PostgresDiagnosticCode,
-        message: impl Into<String>,
-        expression: &Expression,
-    ) -> Self {
-        Self {
-            diagnostic: PostgresDiagnostic::at_sql(
-                code,
-                message,
-                expression.span.start,
-                expression.span.end,
-            ),
-        }
-    }
-
-    pub(crate) fn at_start(code: PostgresDiagnosticCode, message: impl Into<String>) -> Self {
-        Self {
-            diagnostic: PostgresDiagnostic::at_sql(code, message, 0, 1),
-        }
-    }
-
-    pub(crate) fn with_sifr_span(mut self, document: &str, start: u32, end: u32) -> Self {
-        self.diagnostic = self
-            .diagnostic
-            .with_sifr_span(document.to_string(), start, end);
-        self
-    }
-}
-
-impl fmt::Display for PostgresAnalysisError {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.write_str(&self.diagnostic.message)
-    }
-}
-
-impl std::error::Error for PostgresAnalysisError {}
-
-impl From<PostgresParseError> for PostgresAnalysisError {
-    fn from(value: PostgresParseError) -> Self {
-        Self {
-            diagnostic: value.diagnostic,
-        }
-    }
-}
-#[derive(Clone)]
-pub(crate) struct ScopeBinding {
-    pub(crate) alias: String,
-    pub(crate) relation: Option<ObjectId>,
-    pub(crate) columns: BTreeMap<String, CatalogColumn>,
-}
-
-#[derive(Clone, Default)]
-pub(crate) struct ScopeFrame {
-    pub(crate) bindings: Vec<ScopeBinding>,
-}
-
-#[derive(Clone)]
-pub(crate) struct TypeFact {
-    pub(crate) database_type: DatabaseType,
-    pub(crate) nullable: bool,
-    pub(crate) source_object: Option<ObjectId>,
-    pub(crate) name_hint: Option<String>,
-}
-
-#[derive(Clone)]
-pub(crate) struct ResultFact {
-    pub(crate) name: String,
-    pub(crate) database_type: DatabaseType,
-    pub(crate) nullable: bool,
-    pub(crate) source_object: Option<ObjectId>,
-}
-
-pub(crate) struct AnalyzedStatement {
-    pub(crate) fields: Vec<ResultFact>,
-    pub(crate) cardinality: Cardinality,
-    pub(crate) effect: QueryEffect,
-    pub(crate) referenced: BTreeSet<ObjectId>,
-    pub(crate) affected: BTreeSet<ObjectId>,
-    pub(crate) flags: BTreeSet<String>,
-}
-
-pub(crate) struct AnalysisContext<'a> {
-    pub(crate) catalog: &'a PostgresCatalog,
-    pub(crate) parameters: BTreeMap<u32, DatabaseType>,
-    pub(crate) referenced: BTreeSet<ObjectId>,
-}
 
 impl<'a> AnalysisContext<'a> {
     pub(crate) fn new(catalog: &'a PostgresCatalog) -> Self {
@@ -146,7 +62,14 @@ impl<'a> AnalysisContext<'a> {
         outer: Vec<ScopeFrame>,
         expected_fields: Option<&[DatabaseType]>,
     ) -> Result<AnalyzedStatement, PostgresAnalysisError> {
+        let outer = self.scopes_with_ctes(select, outer)?;
         if let Some(set) = &select.set_operation {
+            if !select.locking.is_empty() {
+                return Err(PostgresAnalysisError::at_start(
+                    PostgresDiagnosticCode::InvalidResult,
+                    "PostgreSQL row locking cannot apply to a set operation",
+                ));
+            }
             let left =
                 self.analyze_select_with_expected(&set.left, outer.clone(), expected_fields)?;
             let right = self.analyze_select_with_expected(&set.right, outer, expected_fields)?;
@@ -179,6 +102,9 @@ impl<'a> AnalysisContext<'a> {
             if let Some(limit) = &select.limit {
                 self.infer(limit, &[], Some(&integer64_type()))?;
             }
+            if let Some(offset) = &select.offset {
+                self.infer(offset, &[], Some(&integer64_type()))?;
+            }
             let mut flags = BTreeSet::from([match set.operator {
                 SetOperator::Union => "set-union",
                 SetOperator::Intersect => "set-intersect",
@@ -188,13 +114,16 @@ impl<'a> AnalysisContext<'a> {
             if !select.order_by.is_empty() {
                 flags.insert("deterministic-order".to_string());
             }
+            if !select.common_tables.is_empty() {
+                flags.insert("common-table-expression".to_string());
+            }
             return Ok(AnalyzedStatement {
                 fields,
-                cardinality: if limit_is_one(select.limit.as_ref()) {
-                    Cardinality::AT_MOST_ONE
-                } else {
-                    left.cardinality.join(right.cardinality)
-                },
+                cardinality: apply_limit_and_offset(
+                    set_cardinality(set.operator, set.all, left.cardinality, right.cardinality),
+                    select.limit.as_ref(),
+                    select.offset.as_ref(),
+                ),
                 effect: QueryEffect::Read,
                 referenced,
                 affected: BTreeSet::new(),
@@ -205,7 +134,12 @@ impl<'a> AnalysisContext<'a> {
         let frame = self.scope_from(&select.from, &frames)?;
         frames.push(frame);
         if let Some(predicate) = &select.predicate {
+            reject_window_expression(predicate, "WHERE")?;
             self.require_boolean(predicate, &frames)?;
+        }
+        let window_names = validate_named_windows(self, select, &frames)?;
+        for target in &select.targets {
+            validate_window_references(&target.expression, &window_names)?;
         }
         let mut fields = if select.values.is_empty() {
             self.result_fields_with_expected(&select.targets, &frames, expected_fields)?
@@ -216,40 +150,159 @@ impl<'a> AnalysisContext<'a> {
         let mut alias_frames = frames.clone();
         alias_frames.push(frame_for_results(&fields));
         for expression in &select.group_by {
+            reject_window_expression(expression, "GROUP BY")?;
             self.infer(expression, &alias_frames, None)?;
         }
         if let Some(having) = &select.having {
+            reject_window_expression(having, "HAVING")?;
             self.require_boolean(having, &frames)?;
         }
         for order in &select.order_by {
+            validate_window_references(&order.expression, &window_names)?;
             self.infer(&order.expression, &alias_frames, None)?;
         }
         if let Some(limit) = &select.limit {
             self.infer(limit, &[], Some(&integer64_type()))?;
         }
+        if let Some(offset) = &select.offset {
+            self.infer(offset, &[], Some(&integer64_type()))?;
+        }
         let aggregate = select
             .targets
             .iter()
             .any(|target| expression_has_aggregate(&target.expression));
-        let cardinality = if aggregate && select.group_by.is_empty() {
-            Cardinality::EXACTLY_ONE
-        } else if limit_is_one(select.limit.as_ref()) {
+        if aggregate || !select.group_by.is_empty() {
+            for target in &select.targets {
+                if !expression_has_aggregate(&target.expression)
+                    && !group_expression_valid(&target.expression, &select.group_by)
+                    && !group_expression_functionally_dependent(
+                        &target.expression,
+                        &select.group_by,
+                        &frames,
+                        self.catalog,
+                    )
+                {
+                    return Err(PostgresAnalysisError::new(
+                        PostgresDiagnosticCode::InvalidResult,
+                        "a non-aggregate SELECT expression must appear in GROUP BY",
+                        &target.expression,
+                    ));
+                }
+            }
+        }
+        let base_cardinality = if !select.values.is_empty() {
+            let rows = u64::try_from(select.values.len()).unwrap_or(u64::MAX);
+            Cardinality::new(rows, Some(rows)).unwrap_or(Cardinality::MANY)
+        } else if aggregate && select.group_by.is_empty() {
+            if select.having.is_some() {
+                Cardinality::AT_MOST_ONE
+            } else {
+                Cardinality::EXACTLY_ONE
+            }
+        } else if select.from.is_empty() {
+            if select.predicate.is_some() {
+                Cardinality::AT_MOST_ONE
+            } else {
+                Cardinality::EXACTLY_ONE
+            }
+        } else if unique_predicate_cardinality(select, &frames, self.catalog) {
             Cardinality::AT_MOST_ONE
         } else {
             Cardinality::MANY
         };
+        let cardinality = apply_limit_and_offset(
+            base_cardinality,
+            select.limit.as_ref(),
+            select.offset.as_ref(),
+        );
+        let mut flags = if select.order_by.is_empty() {
+            BTreeSet::new()
+        } else {
+            BTreeSet::from(["deterministic-order".to_string()])
+        };
+        if !select.common_tables.is_empty() {
+            flags.insert("common-table-expression".to_string());
+        }
+        if !select.locking.is_empty() {
+            validate_locking(select, &frames, aggregate)?;
+            flags.insert("row-locking".to_string());
+        }
+        if !select.windows.is_empty()
+            || select
+                .targets
+                .iter()
+                .any(|target| expression_has_window(&target.expression))
+        {
+            flags.insert("window-function".to_string());
+        }
+        if select
+            .targets
+            .iter()
+            .any(|target| matches!(target.expression.kind, ExpressionKind::Star { .. }))
+        {
+            flags.insert("expanded-select-star".to_string());
+        }
         Ok(AnalyzedStatement {
             fields,
             cardinality,
             effect: QueryEffect::Read,
             referenced: self.referenced.clone(),
             affected: BTreeSet::new(),
-            flags: if select.order_by.is_empty() {
-                BTreeSet::new()
-            } else {
-                BTreeSet::from(["deterministic-order".to_string()])
-            },
+            flags,
         })
+    }
+
+    fn scopes_with_ctes(
+        &mut self,
+        select: &SelectStatement,
+        mut frames: Vec<ScopeFrame>,
+    ) -> Result<Vec<ScopeFrame>, PostgresAnalysisError> {
+        let mut cte_frame = ScopeFrame::default();
+        let mut names = BTreeSet::new();
+        for cte in &select.common_tables {
+            if !names.insert(cte.name.clone()) {
+                return Err(PostgresAnalysisError::at_start(
+                    PostgresDiagnosticCode::InvalidResult,
+                    format!("CTE '{}' is declared more than once", cte.name),
+                ));
+            }
+            let mut cte_scopes = frames.clone();
+            if !cte_frame.bindings.is_empty() {
+                cte_scopes.push(cte_frame.clone());
+            }
+            if select.recursive
+                && let Some(set) = &cte.query.set_operation
+            {
+                let anchor = self.analyze_select(&set.left, cte_scopes.clone())?;
+                let anchor_names = cte_names(cte, &anchor.fields)?;
+                cte_frame.bindings.push(ScopeBinding::derived(
+                    &cte.name,
+                    anchor_names,
+                    anchor.fields,
+                ));
+            }
+            if select.recursive {
+                cte_scopes.clone_from(&frames);
+                cte_scopes.push(cte_frame.clone());
+            }
+            let analyzed = self.analyze_select(&cte.query, cte_scopes)?;
+            let names = cte_names(cte, &analyzed.fields)?;
+            if select.recursive
+                && cte_frame
+                    .bindings
+                    .last()
+                    .is_some_and(|binding| binding.alias == cte.name)
+            {
+                cte_frame.bindings.pop();
+            }
+            cte_frame
+                .bindings
+                .push(ScopeBinding::derived(&cte.name, names, analyzed.fields));
+        }
+        if !cte_frame.bindings.is_empty() {
+            frames.push(cte_frame);
+        }
+        Ok(frames)
     }
 
     fn scope_from(
@@ -272,6 +325,20 @@ impl<'a> AnalysisContext<'a> {
     ) -> Result<(), PostgresAnalysisError> {
         match item {
             FromItem::Relation { name, alias, .. } => {
+                if name.len() == 1
+                    && let Some(binding) = outer
+                        .iter()
+                        .rev()
+                        .flat_map(|scope| scope.bindings.iter())
+                        .find(|binding| binding.alias == name[0] && binding.relation.is_none())
+                {
+                    let mut binding = binding.clone();
+                    if let Some(alias) = alias {
+                        binding.alias.clone_from(alias);
+                    }
+                    frame.bindings.push(binding);
+                    return Ok(());
+                }
                 let relation = self
                     .catalog
                     .relation(name)
@@ -295,6 +362,11 @@ impl<'a> AnalysisContext<'a> {
                 frame.bindings.push(ScopeBinding {
                     alias: alias.clone(),
                     relation: None,
+                    column_order: analyzed
+                        .fields
+                        .iter()
+                        .map(|field| field.name.clone())
+                        .collect(),
                     columns: analyzed
                         .fields
                         .into_iter()
@@ -325,14 +397,20 @@ impl<'a> AnalysisContext<'a> {
                 using_columns,
                 ..
             } => {
-                if !matches!(join, JoinKind::Inner | JoinKind::Cross) {
-                    return Err(PostgresAnalysisError::at_start(
-                        PostgresDiagnosticCode::UnsupportedCoreSyntax,
-                        "exact outer-join nullability belongs to PostgreSQL semantic completion",
-                    ));
+                let mut left_frame = ScopeFrame::default();
+                self.add_from_item(left, outer, &mut left_frame)?;
+                let mut right_outer = outer.to_vec();
+                right_outer.push(left_frame.clone());
+                let mut right_frame = ScopeFrame::default();
+                self.add_from_item(right, &right_outer, &mut right_frame)?;
+                if matches!(join, JoinKind::Right | JoinKind::Full) {
+                    make_frame_nullable(&mut left_frame);
                 }
-                self.add_from_item(left, outer, frame)?;
-                self.add_from_item(right, outer, frame)?;
+                if matches!(join, JoinKind::Left | JoinKind::Full) {
+                    make_frame_nullable(&mut right_frame);
+                }
+                frame.bindings.extend(left_frame.bindings);
+                frame.bindings.extend(right_frame.bindings);
                 if let Some(condition) = condition {
                     let mut scopes = outer.to_vec();
                     scopes.push(frame.clone());
@@ -356,98 +434,6 @@ impl<'a> AnalysisContext<'a> {
         Ok(())
     }
 
-    pub(crate) fn result_fields(
-        &mut self,
-        targets: &[SelectItem],
-        frames: &[ScopeFrame],
-    ) -> Result<Vec<ResultFact>, PostgresAnalysisError> {
-        self.result_fields_with_expected(targets, frames, None)
-    }
-
-    fn result_fields_with_expected(
-        &mut self,
-        targets: &[SelectItem],
-        frames: &[ScopeFrame],
-        expected_fields: Option<&[DatabaseType]>,
-    ) -> Result<Vec<ResultFact>, PostgresAnalysisError> {
-        if expected_fields.is_some_and(|fields| fields.len() != targets.len()) {
-            return Err(PostgresAnalysisError::at_start(
-                PostgresDiagnosticCode::TypeMismatch,
-                "SELECT result width does not match its assignment context",
-            ));
-        }
-        targets
-            .iter()
-            .enumerate()
-            .map(|(index, target)| {
-                let expected = expected_fields.and_then(|fields| fields.get(index));
-                let fact = self.infer(&target.expression, frames, expected)?;
-                Ok(ResultFact {
-                    name: target
-                        .alias
-                        .clone()
-                        .or(fact.name_hint)
-                        .unwrap_or_else(|| format!("column_{}", index + 1)),
-                    database_type: fact.database_type,
-                    nullable: fact.nullable,
-                    source_object: fact.source_object,
-                })
-            })
-            .collect()
-    }
-
-    fn value_fields(
-        &mut self,
-        rows: &[Vec<Expression>],
-        frames: &[ScopeFrame],
-    ) -> Result<Vec<ResultFact>, PostgresAnalysisError> {
-        let Some(first) = rows.first() else {
-            return Ok(Vec::new());
-        };
-        let mut facts = first
-            .iter()
-            .map(|expression| self.infer(expression, frames, None))
-            .collect::<Result<Vec<_>, _>>()?;
-        for row in rows.iter().skip(1) {
-            if row.len() != facts.len() {
-                return Err(PostgresAnalysisError::at_start(
-                    PostgresDiagnosticCode::TypeMismatch,
-                    "VALUES rows have different widths",
-                ));
-            }
-            for (expression, fact) in row.iter().zip(&mut facts) {
-                let next = self.infer(expression, frames, Some(&fact.database_type))?;
-                fact.nullable |= next.nullable;
-            }
-        }
-        Ok(facts
-            .into_iter()
-            .enumerate()
-            .map(|(index, fact)| ResultFact {
-                name: format!("column_{}", index + 1),
-                database_type: fact.database_type,
-                nullable: fact.nullable,
-                source_object: None,
-            })
-            .collect())
-    }
-
-    pub(crate) fn require_boolean(
-        &mut self,
-        expression: &Expression,
-        frames: &[ScopeFrame],
-    ) -> Result<(), PostgresAnalysisError> {
-        let fact = self.infer(expression, frames, Some(&DatabaseType::Boolean))?;
-        if fact.database_type != DatabaseType::Boolean {
-            return Err(PostgresAnalysisError::new(
-                PostgresDiagnosticCode::TypeMismatch,
-                "PostgreSQL predicate must have boolean type",
-                expression,
-            ));
-        }
-        Ok(())
-    }
-
     #[allow(clippy::too_many_lines)]
     pub(crate) fn infer(
         &mut self,
@@ -456,6 +442,11 @@ impl<'a> AnalysisContext<'a> {
         expected: Option<&DatabaseType>,
     ) -> Result<TypeFact, PostgresAnalysisError> {
         match &expression.kind {
+            ExpressionKind::Star { .. } => Err(PostgresAnalysisError::new(
+                PostgresDiagnosticCode::InvalidResult,
+                "SELECT * is valid only as a complete projection item",
+                expression,
+            )),
             ExpressionKind::Column { path } => {
                 resolve_column(self.catalog, path, frames, expression)
             }
@@ -480,7 +471,13 @@ impl<'a> AnalysisContext<'a> {
             }
             ExpressionKind::Integer { .. } => Ok(type_fact(integer_type(), false)),
             ExpressionKind::Float { .. } => Ok(type_fact(DatabaseType::Float64, false)),
-            ExpressionKind::String { .. } => Ok(type_fact(text_type(), false)),
+            // PostgreSQL string constants start with the pseudo-type `unknown`.
+            // Resolve them to an exact contextual type when one exists; use
+            // text only when the expression has no stronger context.
+            ExpressionKind::String { .. } => Ok(type_fact(
+                expected.cloned().unwrap_or_else(text_type),
+                false,
+            )),
             ExpressionKind::Boolean { .. } => Ok(type_fact(DatabaseType::Boolean, false)),
             ExpressionKind::Null => {
                 expected
@@ -582,6 +579,16 @@ impl<'a> AnalysisContext<'a> {
                         expression,
                     ));
                 }
+                if matches!(operator.as_str(), "+" | "-") && !is_numeric(&fact.database_type) {
+                    return Err(PostgresAnalysisError::new(
+                        PostgresDiagnosticCode::UnknownOperator,
+                        format!(
+                            "PostgreSQL unary {operator} needs a numeric operand, found {:?}",
+                            fact.database_type
+                        ),
+                        expression,
+                    ));
+                }
                 Ok(fact)
             }
             ExpressionKind::BooleanList { expressions, .. } => {
@@ -603,7 +610,189 @@ impl<'a> AnalysisContext<'a> {
                 name,
                 arguments,
                 aggregate_star,
-            } => self.infer_function(name, arguments, *aggregate_star, frames, expression),
+                distinct,
+                filter,
+                window,
+            } => {
+                let short = name.last().map(String::as_str).unwrap_or_default();
+                let window_only = matches!(
+                    short,
+                    "row_number"
+                        | "rank"
+                        | "dense_rank"
+                        | "lag"
+                        | "lead"
+                        | "first_value"
+                        | "last_value"
+                );
+                let aggregate_function = matches!(short, "count" | "sum" | "avg" | "min" | "max")
+                    || self
+                        .catalog
+                        .functions(name)
+                        .iter()
+                        .any(|function| function.aggregate);
+                if window_only && window.is_none() {
+                    return Err(PostgresAnalysisError::new(
+                        PostgresDiagnosticCode::InvalidResult,
+                        format!("PostgreSQL window function '{short}' needs an OVER clause"),
+                        expression,
+                    ));
+                }
+                if window.is_some() && !window_only && !aggregate_function {
+                    return Err(PostgresAnalysisError::new(
+                        PostgresDiagnosticCode::InvalidResult,
+                        format!("PostgreSQL function '{short}' cannot use an OVER clause"),
+                        expression,
+                    ));
+                }
+                if (*distinct || filter.is_some()) && !aggregate_function {
+                    return Err(PostgresAnalysisError::new(
+                        PostgresDiagnosticCode::InvalidResult,
+                        format!("PostgreSQL function '{short}' cannot use aggregate modifiers"),
+                        expression,
+                    ));
+                }
+                if let Some(filter) = filter {
+                    self.require_boolean(filter, frames)?;
+                }
+                if let Some(window) = window {
+                    for item in &window.partition_by {
+                        self.infer(item, frames, None)?;
+                    }
+                    for item in &window.order_by {
+                        self.infer(&item.expression, frames, None)?;
+                    }
+                    if let Some(offset) = &window.start_offset {
+                        self.infer(offset, frames, None)?;
+                    }
+                    if let Some(offset) = &window.end_offset {
+                        self.infer(offset, frames, None)?;
+                    }
+                }
+                self.infer_function(name, arguments, *aggregate_star, frames, expression)
+            }
+            ExpressionKind::Array { elements } => {
+                let Some(first) = elements.first() else {
+                    return Err(PostgresAnalysisError::new(
+                        PostgresDiagnosticCode::TypeMismatch,
+                        "an empty PostgreSQL array needs an explicit cast",
+                        expression,
+                    ));
+                };
+                let first = self.infer(first, frames, None)?;
+                let mut element_nullable = first.nullable;
+                for element in &elements[1..] {
+                    let next = self.infer(element, frames, Some(&first.database_type))?;
+                    element_nullable |= next.nullable;
+                }
+                Ok(type_fact(
+                    DatabaseType::Array {
+                        element: Box::new(first.database_type),
+                        dimensions: Some(1),
+                        element_nullability: if element_nullable {
+                            Nullability::Nullable
+                        } else {
+                            Nullability::NonNull
+                        },
+                        preserves_lower_bounds: true,
+                    },
+                    false,
+                ))
+            }
+            ExpressionKind::Case {
+                operand,
+                branches,
+                fallback,
+            } => {
+                let operand_fact = operand
+                    .as_deref()
+                    .map(|value| self.infer(value, frames, None))
+                    .transpose()?;
+                let mut result: Option<TypeFact> = None;
+                for branch in branches {
+                    if let Some(operand) = &operand_fact {
+                        self.infer(&branch.condition, frames, Some(&operand.database_type))?;
+                    } else {
+                        self.require_boolean(&branch.condition, frames)?;
+                    }
+                    let branch_frames =
+                        refine_for_null_test(self.catalog, frames, &branch.condition, true);
+                    let fact = self.infer(
+                        &branch.result,
+                        &branch_frames,
+                        result.as_ref().map(|fact| &fact.database_type).or(expected),
+                    )?;
+                    if let Some(current) = &mut result {
+                        if current.database_type != fact.database_type {
+                            return Err(PostgresAnalysisError::new(
+                                PostgresDiagnosticCode::TypeMismatch,
+                                "CASE branches have incompatible PostgreSQL types",
+                                &branch.result,
+                            ));
+                        }
+                        current.nullable |= fact.nullable;
+                    } else {
+                        result = Some(fact);
+                    }
+                }
+                if let Some(fallback) = fallback {
+                    let fallback_frames = if branches.len() == 1 {
+                        refine_for_null_test(self.catalog, frames, &branches[0].condition, false)
+                    } else {
+                        frames.to_vec()
+                    };
+                    let fact = self.infer(
+                        fallback,
+                        &fallback_frames,
+                        result.as_ref().map(|fact| &fact.database_type).or(expected),
+                    )?;
+                    if let Some(current) = &mut result {
+                        if current.database_type != fact.database_type {
+                            return Err(PostgresAnalysisError::new(
+                                PostgresDiagnosticCode::TypeMismatch,
+                                "CASE fallback has an incompatible PostgreSQL type",
+                                fallback,
+                            ));
+                        }
+                        current.nullable |= fact.nullable;
+                    } else {
+                        result = Some(fact);
+                    }
+                } else if let Some(current) = &mut result {
+                    current.nullable = true;
+                }
+                result.ok_or_else(|| {
+                    PostgresAnalysisError::new(
+                        PostgresDiagnosticCode::TypeMismatch,
+                        "CASE has no result expression",
+                        expression,
+                    )
+                })
+            }
+            ExpressionKind::Coalesce { arguments } => {
+                let Some(first) = arguments.first() else {
+                    return Err(PostgresAnalysisError::new(
+                        PostgresDiagnosticCode::TypeMismatch,
+                        "COALESCE needs an argument",
+                        expression,
+                    ));
+                };
+                let mut result = self.infer(first, frames, expected)?;
+                let mut all_nullable = result.nullable;
+                for argument in &arguments[1..] {
+                    let next = self.infer(argument, frames, Some(&result.database_type))?;
+                    if next.database_type != result.database_type {
+                        return Err(PostgresAnalysisError::new(
+                            PostgresDiagnosticCode::TypeMismatch,
+                            "COALESCE arguments have incompatible PostgreSQL types",
+                            argument,
+                        ));
+                    }
+                    all_nullable &= next.nullable;
+                }
+                result.nullable = all_nullable;
+                Ok(result)
+            }
             ExpressionKind::NullTest {
                 expression: inner, ..
             } => {
@@ -622,7 +811,7 @@ impl<'a> AnalysisContext<'a> {
                 let field = &analyzed.fields[0];
                 Ok(TypeFact {
                     database_type: field.database_type.clone(),
-                    nullable: true,
+                    nullable: field.nullable || analyzed.cardinality != Cardinality::EXACTLY_ONE,
                     source_object: field.source_object.clone(),
                     name_hint: Some(field.name.clone()),
                 })
@@ -680,212 +869,6 @@ impl<'a> AnalysisContext<'a> {
             }
         }
     }
-
-    fn infer_binary(
-        &mut self,
-        operator: &str,
-        left: &Expression,
-        right: &Expression,
-        frames: &[ScopeFrame],
-        whole: &Expression,
-    ) -> Result<TypeFact, PostgresAnalysisError> {
-        let left_parameter = matches!(
-            left.kind,
-            ExpressionKind::Parameter { .. } | ExpressionKind::Null
-        );
-        let right_parameter = matches!(
-            right.kind,
-            ExpressionKind::Parameter { .. } | ExpressionKind::Null
-        );
-        let (left_fact, right_fact) = if left_parameter && !right_parameter {
-            let right_fact = self.infer(right, frames, None)?;
-            let left_fact = self.infer(left, frames, Some(&right_fact.database_type))?;
-            (left_fact, right_fact)
-        } else if right_parameter && !left_parameter {
-            let left_fact = self.infer(left, frames, None)?;
-            let right_fact = self.infer(right, frames, Some(&left_fact.database_type))?;
-            (left_fact, right_fact)
-        } else {
-            (
-                self.infer(left, frames, None)?,
-                self.infer(right, frames, None)?,
-            )
-        };
-        let nullable = left_fact.nullable || right_fact.nullable;
-        if matches!(operator, "IS DISTINCT FROM" | "IS NOT DISTINCT FROM")
-            && (left_fact.database_type == right_fact.database_type
-                || self
-                    .catalog
-                    .can_cast(&left_fact.database_type, &right_fact.database_type, true)
-                || self
-                    .catalog
-                    .can_cast(&right_fact.database_type, &left_fact.database_type, true))
-        {
-            return Ok(type_fact(DatabaseType::Boolean, false));
-        }
-        if matches!(operator, "=" | "<>" | "<" | ">" | "<=" | ">=")
-            && (left_fact.database_type == right_fact.database_type
-                || self
-                    .catalog
-                    .can_cast(&left_fact.database_type, &right_fact.database_type, true)
-                || self
-                    .catalog
-                    .can_cast(&right_fact.database_type, &left_fact.database_type, true))
-        {
-            return Ok(type_fact(DatabaseType::Boolean, nullable));
-        }
-        if operator == "||"
-            && is_textual(&left_fact.database_type)
-            && is_textual(&right_fact.database_type)
-        {
-            return Ok(type_fact(text_type(), nullable));
-        }
-        if matches!(operator, "LIKE" | "NOT LIKE")
-            && is_textual(&left_fact.database_type)
-            && is_textual(&right_fact.database_type)
-        {
-            return Ok(type_fact(DatabaseType::Boolean, nullable));
-        }
-        if let Some(result) = arithmetic_result(
-            operator,
-            &left_fact.database_type,
-            &right_fact.database_type,
-        ) {
-            return Ok(type_fact(result, nullable));
-        }
-        if let Some(found) = self.catalog.operators(operator).iter().find(|candidate| {
-            self.catalog
-                .can_cast(&left_fact.database_type, &candidate.left, true)
-                && self
-                    .catalog
-                    .can_cast(&right_fact.database_type, &candidate.right, true)
-        }) {
-            return Ok(type_fact(found.result.clone(), nullable));
-        }
-        Err(PostgresAnalysisError::new(
-            PostgresDiagnosticCode::UnknownOperator,
-            format!("no PostgreSQL operator '{operator}' accepts these operand types"),
-            whole,
-        ))
-    }
-
-    fn infer_function(
-        &mut self,
-        name: &[String],
-        arguments: &[Expression],
-        aggregate_star: bool,
-        frames: &[ScopeFrame],
-        expression: &Expression,
-    ) -> Result<TypeFact, PostgresAnalysisError> {
-        let short = name
-            .last()
-            .map(String::as_str)
-            .unwrap_or_default()
-            .to_ascii_lowercase();
-        if short == "count" && (aggregate_star || arguments.len() == 1) {
-            for argument in arguments {
-                self.infer(argument, frames, None)?;
-            }
-            return Ok(type_fact(integer64_type(), false));
-        }
-        if matches!(short.as_str(), "lower" | "upper") && arguments.len() == 1 {
-            let argument = self.infer(&arguments[0], frames, Some(&text_type()))?;
-            if !is_textual(&argument.database_type) {
-                return Err(PostgresAnalysisError::new(
-                    PostgresDiagnosticCode::UnknownFunction,
-                    "lower/upper needs a text argument",
-                    expression,
-                ));
-            }
-            return Ok(type_fact(text_type(), argument.nullable));
-        }
-        if short == "now" && arguments.is_empty() {
-            return Ok(type_fact(DatabaseType::Instant { precision: 6 }, false));
-        }
-        if matches!(short.as_str(), "sum" | "avg" | "min" | "max") && arguments.len() == 1 {
-            let argument = self.infer(&arguments[0], frames, None)?;
-            let result = match short.as_str() {
-                "sum" => match &argument.database_type {
-                    DatabaseType::Integer {
-                        width:
-                            sifr_sql_contract::IntegerWidth::Bits16
-                            | sifr_sql_contract::IntegerWidth::Bits32,
-                        ..
-                    } => integer64_type(),
-                    DatabaseType::Integer {
-                        width: sifr_sql_contract::IntegerWidth::Bits64,
-                        ..
-                    } => DatabaseType::Decimal {
-                        precision: None,
-                        scale: None,
-                        representation: sifr_sql_contract::DecimalRepresentation::Numeric,
-                    },
-                    value if is_numeric(value) => value.clone(),
-                    _ => {
-                        return Err(PostgresAnalysisError::new(
-                            PostgresDiagnosticCode::UnknownFunction,
-                            "sum needs a numeric argument",
-                            expression,
-                        ));
-                    }
-                },
-                "avg" => match &argument.database_type {
-                    DatabaseType::Integer { .. } | DatabaseType::Decimal { .. } => {
-                        DatabaseType::Decimal {
-                            precision: None,
-                            scale: None,
-                            representation: sifr_sql_contract::DecimalRepresentation::Numeric,
-                        }
-                    }
-                    DatabaseType::Float32 | DatabaseType::Float64 => argument.database_type.clone(),
-                    _ => {
-                        return Err(PostgresAnalysisError::new(
-                            PostgresDiagnosticCode::UnknownFunction,
-                            "avg needs a numeric argument",
-                            expression,
-                        ));
-                    }
-                },
-                "min" | "max" => argument.database_type,
-                _ => {
-                    return Err(PostgresAnalysisError::new(
-                        PostgresDiagnosticCode::UnknownFunction,
-                        "unknown PostgreSQL aggregate",
-                        expression,
-                    ));
-                }
-            };
-            return Ok(type_fact(result, true));
-        }
-        let candidates = self.catalog.functions(name);
-        for candidate in candidates {
-            if candidate.arguments.len() != arguments.len() {
-                continue;
-            }
-            let mut facts = Vec::with_capacity(arguments.len());
-            let mut compatible = true;
-            for (argument, expected) in arguments.iter().zip(&candidate.arguments) {
-                let fact = self.infer(argument, frames, Some(expected))?;
-                compatible &= self.catalog.can_cast(&fact.database_type, expected, true);
-                facts.push(fact);
-            }
-            if compatible {
-                return Ok(type_fact(
-                    candidate.result.clone(),
-                    candidate.result_nullable
-                        || (candidate.strict && facts.iter().any(|fact| fact.nullable)),
-                ));
-            }
-        }
-        Err(PostgresAnalysisError::new(
-            PostgresDiagnosticCode::UnknownFunction,
-            format!(
-                "no PostgreSQL function '{}' matches these arguments",
-                name.join(".")
-            ),
-            expression,
-        ))
-    }
 }
 
 pub(crate) fn write_error(message: impl Into<String>) -> PostgresAnalysisError {
@@ -894,4 +877,20 @@ pub(crate) fn write_error(message: impl Into<String>) -> PostgresAnalysisError {
 
 pub(crate) fn type_error(message: impl Into<String>) -> PostgresAnalysisError {
     PostgresAnalysisError::at_start(PostgresDiagnosticCode::TypeMismatch, message)
+}
+
+fn cte_names(
+    cte: &crate::ast::CommonTableExpression,
+    fields: &[ResultFact],
+) -> Result<Vec<String>, PostgresAnalysisError> {
+    if cte.columns.is_empty() {
+        return Ok(fields.iter().map(|field| field.name.clone()).collect());
+    }
+    if cte.columns.len() != fields.len() {
+        return Err(PostgresAnalysisError::at_start(
+            PostgresDiagnosticCode::InvalidResult,
+            format!("CTE '{}' column list has the wrong width", cte.name),
+        ));
+    }
+    Ok(cte.columns.clone())
 }

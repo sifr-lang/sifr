@@ -153,6 +153,20 @@
           "command": "sql-postgresql-parser-matrix",
           "expect_exit_code": 0,
           "diagnostic_formats": []
+        },
+        {
+          "id": "sql-postgresql-semantic-completion",
+          "entry": "crates/sifr_sql_postgresql/tests/postgresql_compiler.rs",
+          "command": "sql-postgresql-semantic-completion",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-query-signature-and-fragment-semantics",
+          "entry": "crates/sifr_sql_contract/tests/semantic_completion.rs",
+          "command": "sql-query-signature-and-fragment-semantics",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
         }
       ]
     },

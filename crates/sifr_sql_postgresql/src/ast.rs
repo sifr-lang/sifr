@@ -24,6 +24,8 @@ pub enum StatementKind {
     CreateTable(CreateTableStatement),
     CreateEnum(CreateEnumStatement),
     CreateDomain(CreateDomainStatement),
+    CreateComposite(CreateCompositeStatement),
+    CreateRange(CreateRangeStatement),
     CreateView(CreateViewStatement),
     CreateIndex(CreateIndexStatement),
     CreateSequence(CreateSequenceStatement),
@@ -33,15 +35,69 @@ pub enum StatementKind {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct SelectStatement {
+    pub common_tables: Vec<CommonTableExpression>,
+    pub recursive: bool,
     pub targets: Vec<SelectItem>,
     pub from: Vec<FromItem>,
     pub predicate: Option<Expression>,
     pub group_by: Vec<Expression>,
     pub having: Option<Expression>,
     pub order_by: Vec<OrderItem>,
+    pub windows: Vec<NamedWindowDefinition>,
     pub limit: Option<Expression>,
+    pub offset: Option<Expression>,
+    pub locking: Vec<LockingClause>,
     pub values: Vec<Vec<Expression>>,
     pub set_operation: Option<SetOperation>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct NamedWindowDefinition {
+    pub name: String,
+    pub specification: WindowSpecification,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CommonTableExpression {
+    pub name: String,
+    pub columns: Vec<String>,
+    pub query: Box<SelectStatement>,
+    pub materialization: CteMaterialization,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CteMaterialization {
+    Default,
+    Materialized,
+    NotMaterialized,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct LockingClause {
+    pub strength: LockStrength,
+    pub relations: Vec<String>,
+    pub wait: LockWait,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum LockStrength {
+    KeyShare,
+    Share,
+    NoKeyUpdate,
+    Update,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum LockWait {
+    Block,
+    SkipLocked,
+    NoWait,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -130,6 +186,7 @@ pub struct Expression {
 pub struct PostgresTypeName {
     pub path: Vec<String>,
     pub modifiers: Vec<i64>,
+    pub array_dimensions: u8,
 }
 
 impl PostgresTypeName {
@@ -148,6 +205,9 @@ impl PostgresTypeName {
             );
             value.push(')');
         }
+        for _ in 0..self.array_dimensions {
+            value.push_str("[]");
+        }
         value
     }
 }
@@ -155,6 +215,9 @@ impl PostgresTypeName {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum ExpressionKind {
+    Star {
+        qualifier: Vec<String>,
+    },
     Column {
         path: Vec<String>,
     },
@@ -200,6 +263,20 @@ pub enum ExpressionKind {
         name: Vec<String>,
         arguments: Vec<Expression>,
         aggregate_star: bool,
+        distinct: bool,
+        filter: Option<Box<Expression>>,
+        window: Option<WindowSpecification>,
+    },
+    Array {
+        elements: Vec<Expression>,
+    },
+    Case {
+        operand: Option<Box<Expression>>,
+        branches: Vec<CaseBranch>,
+        fallback: Option<Box<Expression>>,
+    },
+    Coalesce {
+        arguments: Vec<Expression>,
     },
     NullTest {
         expression: Box<Expression>,
@@ -218,6 +295,24 @@ pub enum ExpressionKind {
         quantifier: SubqueryQuantifier,
     },
     Default,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CaseBranch {
+    pub condition: Expression,
+    pub result: Expression,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct WindowSpecification {
+    pub reference: Option<String>,
+    pub partition_by: Vec<Expression>,
+    pub order_by: Vec<OrderItem>,
+    pub frame_options: u32,
+    pub start_offset: Option<Box<Expression>>,
+    pub end_offset: Option<Box<Expression>>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -338,6 +433,21 @@ pub struct CreateDomainStatement {
     pub name: Vec<String>,
     pub base_type: PostgresTypeName,
     pub nullable: bool,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CreateCompositeStatement {
+    pub name: Vec<String>,
+    pub attributes: Vec<ColumnDefinition>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CreateRangeStatement {
+    pub name: Vec<String>,
+    pub subtype: PostgresTypeName,
+    pub multirange_name: Option<Vec<String>>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
