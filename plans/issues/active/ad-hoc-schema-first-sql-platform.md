@@ -291,7 +291,7 @@ can use these contracts.
 | 8 | completed | PostgreSQL semantic completion | Advanced PostgreSQL constructs, fragment scope changes, cardinality proofs, custom codecs, and exported-query stability rules are complete. |
 | 9 | completed | PostgreSQL runtime | Verified pools, session contracts, transactions, streaming, automatic statement caching, explicit fetch methods, bounded cleanup, tests, and panic-safe protocol handling are complete. |
 | 10 | completed | Incremental compiler and editor experience | Fine-grained caching, invalidation, virtual SQL documents, source maps, completion, navigation, rename, formatting, and quick fixes are complete. |
-| 11 | in review | Host tool graph and command runner | Cargo-locked host-only tool packages execute direct command namespaces without entering application code generation. |
+| 11 | completed | Host tool graph and command runner | Cargo-locked host-only tool packages execute direct command namespaces without entering application code generation. |
 | 12 | pending | Schema lifecycle tools | Pull, validate, and build commands produce deterministic snapshots, fingerprints, manifests, modules, semantic diffs, and affected-query reports. |
 | 13 | pending | Migration compiler and engine | Typed migration DAGs, intermediate schemas, DDL reflection, data steps, assertions, offline validation, recovery, and explicit rollback are complete. |
 | 14 | pending | PostgreSQL migration qualification | PostgreSQL DDL, locks, transactional limits, imports, baselines, recovery, and supported-version execution pass full migration qualification. |
@@ -1280,7 +1280,7 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 | 8 | completed | [#3604](https://github.com/sifr-lang/sifr/pull/3604) | `e18e0a92d5` | SQL 4/4; PostgreSQL 13-18 native and component suites; contract, build-output, strict Clippy, and guards pass | Opus round 2 closed the original nested-star blocker on `94fbb6e0f`; one new semantic-flag mechanism is deferred | PostgreSQL advanced semantics, stable projections, codecs, fragments, and query-signature artifacts |
 | 9 | completed | [#3611](https://github.com/sifr-lang/sifr/pull/3611) | `9dc0e55e09` | common and provider runtime tests; SQL compiler and runtime qualification; strict Clippy and guards; exact PostgreSQL 13-18 live matrix | Opus remediation `SATISFIED` on `258f13a9a`; one new malformed-BOOL classification defect is deferred | Verified PostgreSQL runtime, sessions, transactions, streaming, caching, cleanup, and resource bounds |
 | 10 | completed | [#3617](https://github.com/sifr-lang/sifr/pull/3617) | `35926da677` | incremental-editor 2/2; SQL mutation 9/9; frontend 134; analysis 51; LSP 81; PostgreSQL component 14/14; strict Clippy and guards pass | Opus round 2 closed all four original blockers on `08e864bf6`; one new failure-isolation defect is deferred | Incremental compiler and editor experience |
-| 11 | in review | — | — | host-tools 3/3; package 155; common contracts 9; analysis 52; strict Clippy and guards pass | pending exact-SHA review | Host tool graph, direct command runner, structured provisioning, and inherited M10 failure isolation |
+| 11 | completed | [#3619](https://github.com/sifr-lang/sifr/pull/3619) | `a20219da54` | host-tools 7/7; direct CLI 1/1; provisioning 1/1; analysis isolation 2/2; strict Clippy and guards pass | Two exact-SHA Opus reviews; round 2 verified the original blockers and deferred one Linux prerequisite plus new follow-ups under the continuation rule | Locked and confined host tool runner, structured provisioning, and inherited M10 failure isolation |
 | 12 | pending | — | — | — | — | Schema lifecycle tools |
 | 13 | pending | — | — | — | — | Migration compiler and engine |
 | 14 | pending | — | — | — | — | PostgreSQL migration qualification |
@@ -1330,6 +1330,13 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 | Milestone 10 remediation review | A SQL profile preparation failure aborts `AnalysisHost` construction and disables otherwise valid non-SQL language features. | Milestone 11 | Make SQL initialization failure explicit but non-fatal to non-SQL analysis. Add a package-host regression for a missing lockfile, malformed schema, or provider failure before host-tool work. |
 | Milestone 10 remediation review | Workspace URI changes rebuild the analysis host, discard SQL caches, and recompute package metadata and schema normalization. | Milestone 18 | Give prepared profiles and the SQL runtime a workspace-stable owner. Prove bounded cache reuse and precise invalidation across file-open and schema-edit events. |
 | Milestone 10 remediation review | Dependency observation uses the immutable prepared schema snapshot, so within-host invalidation cannot observe changes or newly added objects. | Milestone 18 | Observe current schema state independently of cached inputs and define conservative invalidation for newly introduced objects, including `SELECT *`. |
+| Milestone 11 remediation review | Linux host-tool enforcement requires Bubblewrap and `prlimit`, but the Ubuntu validation lanes do not declare, diagnose, or execute this prerequisite. | Milestone 18 | Provision and diagnose the sandbox dependencies. Execute the same Linux capability-denial and output-bound integration evidence before phase closure. |
+| Milestone 11 remediation review | A legal declared namespace that is one edit from a built-in is intercepted by typo correction before graph lookup. | Milestone 18 | Resolve the locked graph first. Suggest a built-in only when the namespace is not declared. Add a legal near-name regression. |
+| Milestone 11 remediation review | Host-tool output is buffered until exit and discarded when the combined bound is exceeded. | Milestone 18 | Define bounded streaming behavior for long-running tools without weakening the hard output limit. |
+| Milestone 11 remediation review | The macOS profile grants broad Mach lookup and `/private/etc` reads. | Milestone 18 | Narrow the mandatory platform bootstrap grants and retain executable denial tests. |
+| Milestone 11 remediation review | Cargo build scripts and procedural macros run before runtime confinement, but the host-tool trust document does not state that build-time boundary. | Milestone 18 | Document the reviewed-package build-time trust boundary or add build-time confinement evidence. |
+| Milestone 11 remediation review | SQL provision profile scanning counts `--profile` operands after a `--` separator. | Milestone 18 | Stop option recognition at `--` and add operand regressions. |
+| Milestone 11 remediation review | Host-tool qualification validates evidence-file presence but not the behavior contained in those files. | Milestone 18 | Bind qualification records to named executable tests and reject evidence removal or replacement. |
 
 ### Milestone 0 closure record
 
@@ -1961,6 +1968,72 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 - Next action: close the inherited SQL-profile failure-isolation regression,
   then implement Milestone 11 from the merged and recorded mainline.
 
+### Milestone 11 closure record
+
+- Status: completed and merged under the phase continuation rule.
+- Starting commit: `7e8da6870b50e157b51b4f326a5b8ac2c42d11a3`.
+- Initial reviewed candidate: `6375936723697e982776e9701e488214d9813e18`.
+- Remediation reviewed and final candidate:
+  `f0790104720bfc943d420c484a1325e25a1d1f53`.
+- Pull request: [#3619](https://github.com/sifr-lang/sifr/pull/3619).
+- Merge commit: `a20219da54e36d73baf6893d0da0a6e7958c51e6`.
+- Graph result: one exact tools workspace member exports direct, normal,
+  workspace-member binary entries. Application graph derivation rejects every
+  dependency closure that reaches the tools member or a declared tool package.
+- Identity result: `sifr tools lock` writes the committed
+  `sifr-tools.lock.json`. It binds the tools manifest, Cargo lock, entry points,
+  capabilities, and registry or path package identities. Invocation verifies
+  the record before build and again before direct execution.
+- Execution result: Sifr resolves Cargo and Rustc to absolute programs, removes
+  runner and wrapper substitutions, builds the exact host-target binary, hashes
+  it, and executes it directly. The native sandbox fails closed and enforces
+  environment, credential, project-read, project-write, network, and subprocess
+  grants. Combined output is limited to 10 MiB and an over-limit tool is killed.
+- Provisioning result: `sifr sql test provision --profile <name>` validates and
+  canonicalizes the common connection manifest. Credential helpers use an
+  executable plus argument array. Cleanup has one typed namespace, resource,
+  and command route.
+- Inherited result: SQL profile initialization failures preserve normal package
+  analysis in both overlay and direct `AnalysisHost::open_project` paths while
+  surfacing an explicit diagnostic.
+- Focused validation: package host-tool tests passed 7/7. The direct CLI
+  integration passed 1/1 and covered missing and checked locks, direct provision,
+  capability denial, self-subprocess denial, combined-output termination,
+  unknown namespaces, built-in typo behavior, and persisted source drift.
+  Provisioning passed 1/1. The full analysis suite passed 53/53 before the final
+  host-tool-only hardening, and the final isolation rerun passed 2/2. Strict
+  workspace Clippy, formatting, HIR maintainability, the 3,510-file size guard,
+  and host-tool qualification mutations passed.
+- Create-PR gate: the one allowed run used the exact final candidate. It stopped
+  before tests because `create-pr` omits the required `host-tools`,
+  `postgresql-live-differential`, and `postgresql-live-runtime` suites. It did
+  not run again. Milestone 18 owns the profile-model correction.
+- Merge gate: the one allowed run used the same exact final candidate. It stopped
+  before tests because `merge` omits the same three required suites. It did not
+  run again.
+- Review round 1: Opus returned `NOT SATISFIED` for advisory capabilities,
+  unusable external-tool topology, non-persisted hashes, Cargo execution
+  substitution, invocation-only contamination checks, and source-grep evidence.
+  The [published review](https://github.com/sifr-lang/sifr/pull/3619#issuecomment-5472000009)
+  records the exact initial candidate.
+- Remediation: one batch added the committed tool lock, workspace-member
+  topology, build-then-direct execution, OS confinement, bounded output,
+  application-time contamination checks, configuration hardening, structured
+  provisioning commands, and behavioral evidence.
+- Review round 2: Opus verified the original corrections and returned
+  `NOT SATISFIED` because Linux validation does not provision or diagnose the
+  Bubblewrap prerequisite. It also found a new declared-namespace typo-routing
+  defect. The
+  [published review](https://github.com/sifr-lang/sifr/pull/3619#issuecomment-5472000301)
+  records the exact final candidate. The user rule prohibits a third review and
+  assigns both findings and the other follow-ups to Milestone 18.
+- Documentation result: the architecture records workspace-member tool
+  topology, committed identity, direct execution, sandbox capabilities,
+  structured provisioning, and standard-library separation. The roadmap status
+  did not change because the phase remains active.
+- Exact next action: implement Milestone 12 schema lifecycle tools from the
+  merged and recorded mainline.
+
 ### External async prerequisite closure record
 
 - Status: complete and merged before Milestone 9.
@@ -2009,5 +2082,5 @@ Complete this section after Milestone 18 merges:
 - Final capability and verification inventory: pending.
 - Deferred out-of-scope work: pending.
 - Archive destination: `plans/issues/archive/ad-hoc-schema-first-sql-platform.md`.
-- Exact next action: implement Milestone 11 from current
+- Exact next action: implement Milestone 12 from current
   `origin/main`.
