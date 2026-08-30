@@ -20,7 +20,8 @@
       "seed_files": [
         "verification/areas/fuzz_property/seeds/invalid_import_seed.sifr",
         "verification/areas/fuzz_property/seeds/valid_control_flow_seed.sifr",
-        "verification/areas/fuzz_property/seeds/string_numeric_literals_seed.sifr"
+        "verification/areas/fuzz_property/seeds/string_numeric_literals_seed.sifr",
+        "verification/areas/fuzz_property/seeds/template_strings_seed.sifr"
       ],
       "iterations": 8,
       "random_seed": 1349393279,
@@ -68,7 +69,8 @@
       "seed_files": [
         "verification/areas/fuzz_property/seeds/type_mismatch_seed.sifr",
         "verification/areas/fuzz_property/seeds/function_signature_seed.sifr",
-        "verification/areas/fuzz_property/seeds/import_callable_seed.sifr"
+        "verification/areas/fuzz_property/seeds/import_callable_seed.sifr",
+        "verification/areas/fuzz_property/seeds/template_strings_seed.sifr"
       ],
       "iterations": 8,
       "random_seed": 1349393410,
@@ -115,7 +117,8 @@
       "corpus_dir": "verification/areas/fuzz_property/seeds",
       "seed_files": [
         "verification/areas/fuzz_property/seeds/integer_external_boundaries_seed.sifr",
-        "verification/areas/fuzz_property/seeds/integer_fixed_width_helpers_seed.sifr"
+        "verification/areas/fuzz_property/seeds/integer_fixed_width_helpers_seed.sifr",
+        "verification/areas/fuzz_property/seeds/template_strings_seed.sifr"
       ],
       "random_seed": 1349393579,
       "min_unique_cases": 2,
@@ -234,7 +237,8 @@
     "verification/areas/fuzz_property/seeds/import_callable_seed.sifr",
     "verification/areas/fuzz_property/seeds/string_numeric_literals_seed.sifr",
     "verification/areas/fuzz_property/seeds/integer_external_boundaries_seed.sifr",
-    "verification/areas/fuzz_property/seeds/integer_fixed_width_helpers_seed.sifr"
+    "verification/areas/fuzz_property/seeds/integer_fixed_width_helpers_seed.sifr",
+    "verification/areas/fuzz_property/seeds/template_strings_seed.sifr"
   ],
   "iterations": 32,
   "random_seed": 1349393279,

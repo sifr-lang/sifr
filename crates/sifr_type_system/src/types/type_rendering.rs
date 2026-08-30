@@ -418,11 +418,12 @@ impl Type {
                 key.contains_dynamic_slot(include_unknown)
                     || value.contains_dynamic_slot(include_unknown)
             }
-            Self::Tuple(elements) | Self::Union(elements) | Self::Intersection(elements) => {
-                elements
-                    .iter()
-                    .any(|element| element.contains_dynamic_slot(include_unknown))
-            }
+            Self::Tuple(elements)
+            | Self::Template(elements)
+            | Self::Union(elements)
+            | Self::Intersection(elements) => elements
+                .iter()
+                .any(|element| element.contains_dynamic_slot(include_unknown)),
             Self::Callable(params, _, result) | Self::AsyncCallable(params, _, result) => {
                 params
                     .iter()
@@ -578,6 +579,14 @@ impl Type {
             }
             (Self::Tuple(a), Self::Tuple(b)) => {
                 a.len() == b.len() && a.iter().zip(b.iter()).all(|(x, y)| x.is_assignable_to(y))
+            }
+            (Self::Template(_), Self::Template(target_holes)) if target_holes.is_empty() => true,
+            (Self::Template(source_holes), Self::Template(target_holes)) => {
+                source_holes.len() == target_holes.len()
+                    && source_holes
+                        .iter()
+                        .zip(target_holes)
+                        .all(|(source, target)| source.is_assignable_to(target))
             }
             // Class types: nominal typing with inheritance support
             (

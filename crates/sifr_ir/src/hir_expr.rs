@@ -45,6 +45,7 @@ impl HirExpr {
             | Self::SetComp { ty, .. }
             | Self::GeneratorExpr { ty, .. }
             | Self::EnumVariant { ty, .. } => ty,
+            Self::TemplateString(template) => &template.ty,
         }
     }
 }

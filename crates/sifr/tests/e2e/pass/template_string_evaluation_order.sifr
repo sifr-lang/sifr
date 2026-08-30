@@ -1,0 +1,14 @@
+def record(mut order: list[int], value: int) -> int:
+    order.append(value)
+    return value
+
+
+def consume(value: Template) -> int:
+    return 1
+
+
+def main():
+    order: list[int] = []
+    result: int = consume(t"first={record(order, 1)} second={record(order, 2):.{record(order, 3)}f}")
+    assert result == 1
+    assert order == [1, 2, 3]

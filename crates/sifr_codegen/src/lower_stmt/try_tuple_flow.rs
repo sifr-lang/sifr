@@ -200,6 +200,11 @@ pub(super) fn expr_has_result_flow(expr: &HirExpr) -> bool {
             sifr_ir::HirFStringPart::Literal(_) => false,
             sifr_ir::HirFStringPart::Expr(e) => expr_has_result_flow(e),
         }),
+        HirExpr::TemplateString(template) => {
+            let mut found = false;
+            template.for_each_value(&mut |value| found |= expr_has_result_flow(value));
+            found
+        }
         HirExpr::Lambda { body, .. } => expr_has_result_flow(body),
         HirExpr::WalrusExpr { value, .. } => expr_has_result_flow(value),
         HirExpr::FieldAccess { object, .. } => expr_has_result_flow(object),

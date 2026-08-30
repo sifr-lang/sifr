@@ -527,6 +527,7 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
             })
         }
         HirExpr::FString { parts, .. } => try_lower_simple_fstring_expr(parts),
+        HirExpr::TemplateString(_) => None,
         HirExpr::Lambda { params, body, .. } => try_lower_simple_lambda_expr(params, body),
         HirExpr::Call { func, args, .. } => try_lower_simple_call_expr(func, args),
         HirExpr::GenericCall { .. } => None,
@@ -595,7 +596,7 @@ pub(crate) fn try_lower_simple_comprehension_expr(expr: &HirExpr) -> Option<Rust
     }
 }
 
-pub(super) fn try_lower_leaf_or_name_expr(expr: &HirExpr) -> Option<RustExpr> {
+pub(crate) fn try_lower_leaf_or_name_expr(expr: &HirExpr) -> Option<RustExpr> {
     if let Some(lowered) = try_lower_leaf_expr(expr) {
         return Some(lowered);
     }

@@ -377,6 +377,13 @@ fn hir_expr_calls_function(expr: &HirExpr, func_name: &str) -> bool {
         HirExpr::FString { parts, .. } => parts.iter().any(|part| {
             matches!(part, crate::hir_nodes::HirFStringPart::Expr(expr) if hir_expr_calls_function(expr, func_name))
         }),
+        HirExpr::TemplateString(template) => {
+            let mut found = false;
+            template.for_each_value(&mut |value| {
+                found |= hir_expr_calls_function(value, func_name);
+            });
+            found
+        }
         HirExpr::EnumVariant { .. }
         | HirExpr::Name { .. }
         | HirExpr::IntLiteral(_)

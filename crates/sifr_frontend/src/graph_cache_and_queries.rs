@@ -294,8 +294,11 @@ pub fn compile_module_hir_with_source_and_options(
     external_defs: &ExternalDefs,
     diagnostic_style: FrontendDiagnosticStyle,
     source_context: Option<FrontendSourceContext<'_>>,
-    lowering_options: LoweringOptions,
+    mut lowering_options: LoweringOptions,
 ) -> Result<LoweringResult, Vec<RenderedDiagnostic>> {
+    if let Some(context) = source_context {
+        lowering_options.source_text = Some(context.source.to_string());
+    }
     // Collect source declarations before lowering finalizes class storage and
     // constructor shape. Later adapter stages consume this same representation.
     let class_declarations =

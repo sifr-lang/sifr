@@ -156,6 +156,9 @@ fn non_ipc_serializable_reason_inner(ty: &Type, visiting: &mut HashSet<String>) 
         Type::Protocol { .. } | Type::Intersection(_) => {
             Some("structural protocol payloads need generated concrete schemas".to_string())
         }
+        Type::Template(_) => {
+            Some("template values are compiler-owned processor inputs".to_string())
+        }
     }
 }
 

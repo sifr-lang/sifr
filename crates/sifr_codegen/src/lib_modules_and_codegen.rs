@@ -461,6 +461,7 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
         crate::python_interop_common::module_uses_async_python_declaration(module);
     let uses_timeout_result_type = module_uses_timeout_result_type(module);
     let uses_async_generator_type = module_uses_async_generator_type(module);
+    let uses_template = crate::module_uses_template(module);
     let referenced_error_classes = collect_complete_referenced_builtin_error_classes(
         module,
         &stdlib_preamble,
@@ -592,6 +593,9 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
     }
     if uses_async_generator_type {
         preamble_items.extend(build_async_generator_type_items());
+    }
+    if uses_template {
+        preamble_items.extend(crate::build_template_runtime_items());
     }
 
     // Emit file handle global state if open() built-in or any file handle intrinsic is used.

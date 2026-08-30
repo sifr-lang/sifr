@@ -62,6 +62,11 @@
   SQL verification area owns its dependency baseline, artifact topology,
   ownership map, capability matrix, and verification inventory.
 
+- The core compiler preserves PEP 750 template strings as typed HIR. The
+  frontend owns their U+FFFC virtual-document projection and bidirectional range
+  maps. Code generation emits a private, move-only carrier for inert runtime
+  values. Compiler components consume the typed structure before code generation.
+
 - Python ecosystem integration uses declarations or hermetic typed bridges as the ordinary example path. Live service clients execute from built Sifr binaries, and the schema-2 capability ledger binds current-run compiled callback, async HTTP, buffer, Arrow, and DLPack evidence to exact source, marker, trust, certification, resource-zero, and report-digest provenance. The complete declaration-first phase is closed through PR #3000 after repeated satisfied Fable High whole-phase review and an authoritative merge gate covering Python interop 25/25, E2E 674/674, and 261 hardening variants with zero failures.
 
 ## Vision

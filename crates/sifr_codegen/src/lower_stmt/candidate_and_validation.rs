@@ -106,7 +106,7 @@ pub(super) fn try_lower_simple_print_expr_stmt(expr: &HirExpr) -> Option<RustStm
             name: "println".to_string(),
             args: vec![RustExpr::Verbatim(format!("{value:?}"))],
         })),
-        [HirExpr::FString { .. }] => None,
+        [HirExpr::FString { .. } | HirExpr::TemplateString(_)] => None,
         [_arg] => None,
         _ => None,
     }
@@ -533,6 +533,15 @@ pub(super) fn validate_expr_lowering_shape(expr: &HirExpr) -> Result<(), Codegen
                 }
             }
             Ok(())
+        }
+        HirExpr::TemplateString(template) => {
+            let mut result = Ok(());
+            template.for_each_value(&mut |value| {
+                if result.is_ok() {
+                    result = validate_expr_lowering_shape(value);
+                }
+            });
+            result
         }
         HirExpr::Slice {
             object,

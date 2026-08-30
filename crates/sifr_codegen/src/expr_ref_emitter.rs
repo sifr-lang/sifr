@@ -52,7 +52,8 @@ fn uses_debug_display_format(ty: &Type) -> bool {
         | Type::Any
         | Type::Unknown
         | Type::Intersection(_)
-        | Type::Never => true,
+        | Type::Never
+        | Type::Template(_) => true,
         Type::Alias { body, .. } => uses_debug_display_format(body),
     }
 }

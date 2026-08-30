@@ -13,8 +13,9 @@ pub(crate) use lib_runtime_needs::{
     annotate_async_main_entrypoint, body_contains_await, module_uses_async_exit_cause_type,
     module_uses_async_generator_type, module_uses_cancellation_error_type,
     module_uses_failure_type, module_uses_join_set, module_uses_spawn_cpu, module_uses_task_scope,
-    module_uses_task_sleep, module_uses_timeout_result_type, publicize_generated_module_source,
-    replace_sync_channel_runtime_items, sync_channel_runtime_needed,
+    module_uses_task_sleep, module_uses_template, module_uses_timeout_result_type,
+    publicize_generated_module_source, replace_sync_channel_runtime_items,
+    sync_channel_runtime_needed,
 };
 mod lib_join_set_needs;
 pub(crate) use lib_join_set_needs::module_uses_join_set_spawn_cpu;

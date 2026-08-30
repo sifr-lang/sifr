@@ -750,6 +750,8 @@ pub enum HirExpr {
         parts: Vec<HirFStringPart>,
         ty: Type,
     },
+    /// PEP 750 template string with typed, eagerly evaluated holes.
+    TemplateString(crate::HirTemplateString),
     /// Slice: x[start:stop] or x[start:stop:step]
     Slice {
         object: Box<HirExpr>,

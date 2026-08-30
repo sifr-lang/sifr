@@ -215,7 +215,10 @@ fn collect_type_error_refs(
             collect_type_error_refs(err, referenced, builtin_error_classes);
         }
         Type::Awaitable(inner) => collect_type_error_refs(inner, referenced, builtin_error_classes),
-        Type::Tuple(items) | Type::Union(items) | Type::Intersection(items) => {
+        Type::Tuple(items)
+        | Type::Union(items)
+        | Type::Intersection(items)
+        | Type::Template(items) => {
             for item in items {
                 collect_type_error_refs(item, referenced, builtin_error_classes);
             }
@@ -562,6 +565,9 @@ fn collect_expr_error_refs(
                 }
             }
         }
+        HirExpr::TemplateString(template) => template.for_each_value(&mut |expr| {
+            collect_expr_error_refs(expr, referenced, builtin_error_classes);
+        }),
         HirExpr::Slice {
             object,
             start,

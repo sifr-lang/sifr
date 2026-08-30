@@ -62,11 +62,12 @@ impl Type {
                 key.contains_affine_resource_inner(visiting_classes)
                     || value.contains_affine_resource_inner(visiting_classes)
             }
-            Self::Tuple(elements) | Self::Union(elements) | Self::Intersection(elements) => {
-                elements
-                    .iter()
-                    .any(|element| element.contains_affine_resource_inner(visiting_classes))
-            }
+            Self::Tuple(elements)
+            | Self::Template(elements)
+            | Self::Union(elements)
+            | Self::Intersection(elements) => elements
+                .iter()
+                .any(|element| element.contains_affine_resource_inner(visiting_classes)),
             Self::Class { fields, .. } => {
                 let Some(key) = self.class_recursion_key() else {
                     return false;
@@ -116,6 +117,7 @@ impl Type {
             | Self::Iterator(_)
             | Self::AsyncIterator(..)
             | Self::AsyncGenerator(..)
+            | Self::Template(_)
             | Self::Intersection(_) => false,
             Self::List(element)
             | Self::Set(element)
@@ -191,7 +193,8 @@ impl Type {
             | Self::Awaitable(_)
             | Self::Iterator(_)
             | Self::AsyncIterator(..)
-            | Self::AsyncGenerator(..) => false,
+            | Self::AsyncGenerator(..)
+            | Self::Template(_) => false,
             Self::List(element) | Self::Iterable(element) => {
                 element.supports_structural_equality_inner(visiting_classes)
             }
@@ -431,6 +434,7 @@ impl Type {
             | Self::List(_)
             | Self::Dict(_, _)
             | Self::Set(_)
+            | Self::Template(_)
             | Self::Iterable(_)
             | Self::Iterator(_) => OwnershipKind::Move,
             Self::Tuple(elems) => {
@@ -483,6 +487,11 @@ impl Type {
             Self::Tuple(elems) => {
                 let parts: Vec<String> = elems.iter().map(Self::display_name).collect();
                 format!("tuple[{}]", parts.join(", "))
+            }
+            Self::Template(elems) if elems.is_empty() => "Template".to_string(),
+            Self::Template(elems) => {
+                let parts: Vec<String> = elems.iter().map(Self::display_name).collect();
+                format!("Template[{}]", parts.join(", "))
             }
             Self::Range => "range".to_string(),
             Self::Iterable(elem) => format!("Iterable[{}]", elem.display_name()),

@@ -322,9 +322,10 @@ fn type_information_score(ty: &Type) -> usize {
         | Type::AsyncGenerator(left, right) => {
             type_information_score(left) + type_information_score(right)
         }
-        Type::Tuple(items) | Type::Union(items) | Type::Intersection(items) => {
-            items.iter().map(type_information_score).sum()
-        }
+        Type::Tuple(items)
+        | Type::Template(items)
+        | Type::Union(items)
+        | Type::Intersection(items) => items.iter().map(type_information_score).sum(),
         Type::Function(function) | Type::AsyncFunction(function) => {
             function_information_score(function)
         }
@@ -451,6 +452,7 @@ fn type_source_sort_key(ty: &Type) -> (u8, String) {
         Type::Dict(_, _) => (11, String::new()),
         Type::Set(_) => (12, String::new()),
         Type::Tuple(_) => (13, String::new()),
+        Type::Template(_) => (41, String::new()),
         Type::Range => (13, String::new()),
         Type::Iterable(_) => (14, String::new()),
         Type::Iterator(_) => (15, String::new()),

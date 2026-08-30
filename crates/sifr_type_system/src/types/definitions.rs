@@ -91,6 +91,10 @@ pub enum Type {
     Set(Box<Type>),
     /// Tuple type (`tuple[A, B, ...]` in Sifr, `(A, B, ...)` in Rust)
     Tuple(Vec<Type>),
+    /// PEP 750 template string. The ordered element types describe the
+    /// interpolation values retained by a literal. An empty list is the
+    /// shape-erased `Template` annotation accepted by processor APIs.
+    Template(Vec<Type>),
     /// Range type (maps to `std::ops::Range<i64>` in Rust)
     Range,
     /// Iterable protocol type (`Iterable[T]`)

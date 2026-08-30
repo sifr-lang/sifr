@@ -341,7 +341,7 @@ def validate_cargo(baseline: dict[str, Any], qualification: dict[str, Any]) -> N
         member_features = set(lock_dependency.get("features", []))
         require(root_features.union(member_features) == expected_features, f"Cargo features for {name} differ from qualification")
 
-    metadata = lock_manifest.get("package", {}).get("metadata", {}).get("sifr", {})
+    metadata = lock_manifest.get("package", {}).get("metadata", {}).get("sifr_sql", {})
     require(metadata.get("artifact-role") == "qualification-only", "lock package has the wrong artifact role")
     require(metadata.get("contract") == "verification/areas/sql_platform/data/artifact_topology.json", "lock package has no topology contract")
     all_feature = set(lock_manifest.get("features", {}).get("all", []))

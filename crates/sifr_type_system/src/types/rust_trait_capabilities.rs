@@ -49,6 +49,7 @@ impl Type {
                 visiting_classes.remove(&key);
                 supports
             }
+            Self::Template(_) => false,
             _ => self.supports_hash_key(),
         }
     }
@@ -113,6 +114,7 @@ impl Type {
                 supports
             }
             Self::Newtype { inner, .. } => inner.supports_hash_key_inner(visiting_classes),
+            Self::Template(_) => false,
             _ => false,
         }
     }
@@ -143,6 +145,7 @@ impl Type {
             | Self::Iterator(_)
             | Self::AsyncIterator(..)
             | Self::AsyncGenerator(..)
+            | Self::Template(_)
             | Self::Intersection(_)
             | Self::TypeVar(_) => false,
             Self::List(element)

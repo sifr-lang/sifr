@@ -142,6 +142,57 @@ app.sql(t"SELECT {value:10}")
 These forms have no safe bound-parameter meaning. A bare template string is
 inert and cannot execute as SQL.
 
+### Template-string language contract
+
+Sifr follows the syntax and evaluation rules in
+[PEP 750](https://peps.python.org/pep-0750/). A `t` or `T` prefix creates a
+`Template` value. An `rt` or `tr` prefix creates a raw template value.
+
+The parser retains decoded static strings and interpolation nodes. It does not
+convert a template into string concatenation. Implicitly adjacent templates
+produce one ordered template value.
+
+Each interpolation retains these facts:
+
+- its typed Sifr value
+- the exact expression text when source text is available
+- its complete Sifr source range
+- its expression source range
+- its embedded-document range
+- its conversion flag
+- its structured format specification
+
+Sifr evaluates interpolation values from left to right. It evaluates each value
+once. It then evaluates that interpolation's nested format-spec values from left
+to right. Template construction owns the retained values. It copies a borrowed
+move value only when template construction must retain that value.
+
+`Template` is a shape-erased source annotation for processor APIs. A literal
+also carries its ordered hole types inside compiler HIR. Any typed template can
+flow to a `Template` parameter. Templates use move ownership and identity
+semantics. They do not support value equality, hashing, ordering, or implicit
+string conversion.
+
+The frontend creates one virtual document for each template. It writes decoded
+static text directly. It writes U+FFFC OBJECT REPLACEMENT CHARACTER for each
+interpolation. Each placeholder has one exact mapping to its Sifr hole. Each
+static source token maps to its complete decoded segment range. This range model
+keeps escapes and multiline strings unambiguous without inventing byte offsets.
+
+Generated Rust uses one private `__SifrTemplate` carrier. It stores ordered
+strings and ordered interpolation records. Each record stores its owned value,
+source metadata, conversion, format specification, and Sifr type name. The
+carrier erases runtime value types behind `Box<dyn Any>`. The compiler never
+downcasts these values during ordinary execution.
+
+Compiler processors consume typed HIR before ordinary runtime code generation.
+The opaque runtime carrier keeps an inert template valid when code retains or
+passes it through an ordinary function. It does not create a runtime SQL path.
+
+The formatter uses the Sifr Ruff fork's template-string nodes. It can change
+outer layout and expression spacing. It must preserve prefixes, quote meaning,
+escapes, static text, interpolation boundaries, and evaluation order.
+
 ### Reusable queries
 
 The query decorator defines a reusable typed template:

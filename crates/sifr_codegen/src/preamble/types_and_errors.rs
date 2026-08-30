@@ -29,6 +29,7 @@ pub fn sifr_type_to_rust_type(ty: &Type) -> RustType {
                 RustType::Tuple(items.iter().map(sifr_type_to_rust_type).collect())
             }
         }
+        Type::Template(_) => RustType::Named("__SifrTemplate".to_string()),
         Type::Range => RustType::Generic {
             base: "std::ops::Range".to_string(),
             params: vec![RustType::I64],
