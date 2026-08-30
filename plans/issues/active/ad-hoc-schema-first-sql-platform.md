@@ -275,7 +275,7 @@ verification inventory. This phase does not reimplement those capabilities.
 
 | Milestone | Status | Name | Required outcome |
 |---:|---|---|---|
-| 0 | in progress | Architecture and dependency lock | The final architecture, language dependencies, ownership map, capability matrix, verification inventory, and phase gates are authoritative and machine validated. |
+| 0 | completed | Architecture and dependency lock | The final architecture, language dependencies, ownership map, capability matrix, verification inventory, and phase gates are authoritative and machine validated. |
 | 1 | pending | Template-string language foundation | Template strings preserve static segments, typed holes, evaluation order, and exact source maps through the full compiler pipeline. |
 | 2 | pending | Structural record type system | Immutable records have order-independent canonical identity, width subtyping, deterministic diagnostics, and interned Rust layouts. |
 | 3 | pending | Compiler component platform | Resolved packages can provide deterministic sandboxed embedded-language analysis through one closed, versioned, cacheable protocol. |
@@ -1249,7 +1249,7 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 
 | Milestone | Status | Pull request | Merge commit | Validation | Review | Notes |
 | ---: | --- | --- | --- | --- | --- | --- |
-| 0 | in progress | — | — | — | — | Architecture and dependency lock |
+| 0 | completed | [#3582](https://github.com/sifr-lang/sifr/pull/3582) | `1a1cef93dc` | SQL 4/4; docs 1/1; dependency and runner checks pass | Opus `SATISFIED` on `7f3f6bc2c` | Architecture and dependency lock |
 | 1 | pending | — | — | — | — | Template-string language foundation |
 | 2 | pending | — | — | — | — | Structural record type system |
 | 3 | pending | — | — | — | — | Compiler component platform |
@@ -1279,6 +1279,45 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 | SQL design review | Shared TLS crates and provider TLS adapters need explicit dependency-ring records. | Milestone 0 | Record the existing shared substrate and each Ring 4 provider adapter. |
 | Tooling baseline review | PostgreSQL support policy can change while the phase runs. | Milestones 0 and 18 | Reconcile parser tags with the approved supported-major matrix at lock and closure. |
 | Tooling baseline review | Syntaqlite has GitHub source and crates.io release identities. | Milestone 0 | Name crates.io as release authority and GitHub as source authority in the baseline record. |
+| Milestone 0 remediation review | Match architecture dependency rows by their exact first table cell. | Milestone 18 | Harden the final dependency revalidation checker before phase closure. |
+| Milestone 0 remediation review | Bound GitHub release pagination and remove the unreachable tag-key fallback. | Milestone 18 | Harden the final release-authority refresh before phase closure. |
+
+### Milestone 0 closure record
+
+- Status: completed and merged.
+- Starting commit: `90762c7872de0de05f760ac91f95463d9c679d59`.
+- Initial reviewed candidate: `94c2bfb6362bede53f13cefbef92775f29119c94`.
+- Final candidate: `7f3f6bc2cb5209b5cae64576cf1f11288be31f75`.
+- Pull request: [#3582](https://github.com/sifr-lang/sifr/pull/3582).
+- Merge commit: `1a1cef93dce74c2c8f56ea0059046c7ca332676a`.
+- Acceptance disposition: all 14 Milestone 0 criteria are satisfied.
+- Owned result: the architecture, dependency baseline, qualification record,
+  ownership map, artifact topology, capability matrix, verification inventory,
+  verification area, root lock package, and external async prerequisite are
+  authoritative.
+- SQL validation: four variants passed with no failure. The contract checker
+  covers 19 milestones, three providers, six domains, and 30 invariants.
+- Dependency validation: all 14 crates and six `libpg_query` sources match their
+  release authorities. The all-feature qualification package and HTTP-enabled
+  shared runtime compile with the locked graph.
+- TLS validation: the inverse feature graph selects `rustls/aws_lc_rs` and
+  `tokio-rustls/aws_lc_rs`. It contains no `ring` feature edge for either crate.
+- Repository validation: documentation structure, verification-runner self-tests,
+  Rust formatting, Python compilation, diff hygiene, and file-size checks passed.
+- Gate disposition: no compiler source changed. The phase rule therefore skipped
+  both Sifr repository gates.
+- Review round 1: Opus found one shared TLS provider regression on
+  `94c2bfb6362bede53f13cefbef92775f29119c94`.
+- Remediation: the final candidate preserved the accepted AWS-LC-RS provider and
+  hardened the dependency and profile mutation checkers.
+- Review round 2: Opus returned `SATISFIED` with no blocking finding on
+  `7f3f6bc2cb5209b5cae64576cf1f11288be31f75`. The [published review](https://github.com/sifr-lang/sifr/pull/3582#issuecomment-5465914743)
+  is keyed by that candidate.
+- Evidence scope: positive, negative, mutation, and property checks apply to this
+  contract lock. The inventory assigns later fuzz and performance evidence to
+  their implementation owners.
+- Unrelated failures: none.
+- Next action: implement Milestone 1 from the merged and recorded mainline.
 
 ## Closure evidence template
 
@@ -1311,5 +1350,5 @@ Complete this section after Milestone 18 merges:
 - Final capability and verification inventory: pending.
 - Deferred out-of-scope work: pending.
 - Archive destination: `plans/issues/archive/ad-hoc-schema-first-sql-platform.md`.
-- Exact next action: implement Milestone 0 in a new session from current
+- Exact next action: implement Milestone 1 in a new session from current
   `origin/main`.
