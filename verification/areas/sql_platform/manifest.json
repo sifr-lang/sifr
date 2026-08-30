@@ -137,6 +137,26 @@
       ]
     },
     {
+      "name": "postgresql-compiler",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "sql-postgresql-compiler-qualification",
+          "entry": "verification/areas/sql_platform/data/postgresql_compiler_qualification.json",
+          "command": "sql-postgresql-compiler-qualification",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-postgresql-parser-matrix",
+          "entry": "crates/sifr_sql_postgresql/tests/postgresql_compiler.rs",
+          "command": "sql-postgresql-parser-matrix",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
       "name": "mutation",
       "kind": "adapter",
       "cases": [
@@ -179,6 +199,13 @@
           "id": "sql-query-substrate-qualification-mutations",
           "entry": "verification/areas/sql_platform/data/query_substrate_qualification.json",
           "command": "sql-query-substrate-qualification-mutations",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-postgresql-compiler-qualification-mutations",
+          "entry": "verification/areas/sql_platform/data/postgresql_compiler_qualification.json",
+          "command": "sql-postgresql-compiler-qualification-mutations",
           "expect_exit_code": 0,
           "diagnostic_formats": []
         }

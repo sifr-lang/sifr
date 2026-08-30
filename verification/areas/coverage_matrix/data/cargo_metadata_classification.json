@@ -152,6 +152,16 @@
       "features": []
     },
     {
+      "name": "sifr_sql_postgresql",
+      "classification": "first_party_compiler",
+      "targets": [
+        {"name": "build-script-build", "kind": "custom-build", "classification": "internal_codegen_tool", "profile_assignment": "merge"},
+        {"name": "postgresql_compiler", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
+        {"name": "sifr_sql_postgresql", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}
+      ],
+      "features": []
+    },
+    {
       "name": "sifr_structural_identity",
       "classification": "first_party_runtime",
       "targets": [

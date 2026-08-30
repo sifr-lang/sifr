@@ -78,6 +78,19 @@ COMMANDS = {
     "sql-query-frontend-tests": [
         "cargo", "test", "--locked", "-p", "sifr_frontend", "--test", "sql_queries",
     ],
+    "sql-postgresql-compiler-qualification": [
+        sys.executable,
+        str(AREA_ROOT / "tools" / "check_postgresql_compiler.py"),
+    ],
+    "sql-postgresql-compiler-qualification-mutations": [
+        sys.executable,
+        str(AREA_ROOT / "tools" / "check_postgresql_compiler.py"),
+        "--self-test",
+    ],
+    "sql-postgresql-parser-matrix": [
+        sys.executable,
+        str(AREA_ROOT / "tools" / "run_postgresql_parser_matrix.py"),
+    ],
 }
 
 

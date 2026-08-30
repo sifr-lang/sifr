@@ -168,6 +168,18 @@ published_at = "2026-08-18T00:18:20.879290Z"
 yanked = false
 
 [[crate]]
+name = "cc"
+display_name = "CC build adapter"
+version = "1.4.4"
+policy = "latest-stable"
+release_authority = "https://crates.io/crates/cc/1.4.4"
+api_authority = "https://crates.io/api/v1/crates/cc"
+checksum = "0ad534f4357a5264cce5019c989cf66a4f0dc4e0d1b1d15f8aacec0ff7360273"
+license = "MIT OR Apache-2.0"
+published_at = "2026-08-21T08:20:10.205770Z"
+yanked = false
+
+[[crate]]
 name = "rusqlite"
 display_name = "Rusqlite"
 version = "0.40.2"

@@ -120,6 +120,11 @@ the exact records into the runtime request.
 Unsafe syntax requires the `sql.unsafe-syntax` security capability. It also
 requires a package identity, an audit reason, and a non-deny lint policy.
 
+The root package grants the capability with
+`trust.security-capabilities = ["sql.unsafe-syntax"]`. `sifr_package` resolves
+the grant for the exact package identity. The fragment constructor consumes
+that resolver directly.
+
 The unsafe path still creates a typed, static fragment. It cannot turn runtime
 text into syntax through an ordinary interpolation.
 
@@ -136,6 +141,8 @@ The codec escapes these names with a reserved prefix:
 
 - a Sifr keyword
 - a name that contains the path separator `__`
+- a name that starts with an underscore
+- a name that ends with an underscore
 - a name that starts with the reserved generated prefix
 
 The escape contains the exact UTF-8 bytes in lowercase hexadecimal form. The

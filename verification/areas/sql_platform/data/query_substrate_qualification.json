@@ -43,6 +43,8 @@
   "cardinality_adapters": ["expect-at-most-one", "first-with-determinism-lint"],
   "unsafe_syntax": {
     "capability": "sql.unsafe-syntax",
+    "resolver": "sifr_package::ResolvedPackageCapabilities",
+    "manifest_field": "trust.security-capabilities",
     "requires_reason": true,
     "lint_policies": ["deny", "warn"],
     "runtime_text_is_syntax": false

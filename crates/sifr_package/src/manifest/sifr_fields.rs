@@ -4,6 +4,7 @@ use crate::manifest::sifr::{
     CompilerRequirement, PythonConfig, RustInteropConfig, SifrEdition, TrustPolicy,
     validate_relative_path,
 };
+use std::collections::BTreeSet;
 use std::path::Path;
 
 pub(super) fn parse_trust(
@@ -12,6 +13,7 @@ pub(super) fn parse_trust(
     table: &toml::Table,
 ) -> Result<TrustPolicy, PackageDiagnostic> {
     Ok(TrustPolicy {
+        security_capabilities: parse_security_capabilities(cargo_package_id, manifest_path, table)?,
         native: optional_string_list(cargo_package_id, manifest_path, table, "trust.native")?,
         build_scripts: optional_string_list(
             cargo_package_id,
@@ -70,6 +72,32 @@ pub(super) fn parse_trust(
             "trust.rust-panic-abort",
         )?,
     })
+}
+
+fn parse_security_capabilities(
+    cargo_package_id: &CargoPackageId,
+    manifest_path: &Path,
+    table: &toml::Table,
+) -> Result<Vec<String>, PackageDiagnostic> {
+    let capabilities = optional_string_list(
+        cargo_package_id,
+        manifest_path,
+        table,
+        "trust.security-capabilities",
+    )?;
+    let valid = capabilities
+        .iter()
+        .all(|capability| capability == "sql.unsafe-syntax")
+        && capabilities.iter().collect::<BTreeSet<_>>().len() == capabilities.len();
+    if !valid {
+        return Err(PackageDiagnostic::invalid_sifr_manifest(
+            cargo_package_id,
+            manifest_path.to_path_buf(),
+            "trust.security-capabilities",
+            "expected a unique supported security capability",
+        ));
+    }
+    Ok(capabilities)
 }
 
 pub(super) fn parse_python_config(

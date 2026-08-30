@@ -214,6 +214,18 @@
       "audit_owner": "sifr-sql-sqlite/component"
     },
     {
+      "crate": "cc",
+      "version": "1.4.4",
+      "checksum": "0ad534f4357a5264cce5019c989cf66a4f0dc4e0d1b1d15f8aacec0ff7360273",
+      "license": "MIT OR Apache-2.0",
+      "default_features": false,
+      "features": [],
+      "artifacts": ["postgresql-component"],
+      "targets": ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "wasm32-wasip2", "x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu"],
+      "platform_part": "postgresql_compiler",
+      "audit_owner": "sifr-sql-postgresql/component-build"
+    },
+    {
       "crate": "rusqlite",
       "version": "0.40.2",
       "checksum": "23f2a97da3e3873c73cb2a2e71b35c40ff95e0b1eefa8d72d8499a6928c3b5b3",

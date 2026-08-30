@@ -7873,6 +7873,7 @@ dependencies = [
 name = "sifr_sql_dependency_lock"
 version = "0.1.0"
 dependencies = [
+ "cc",
  "lalrpop",
  "lalrpop-util",
  "libsqlite3-sys",
@@ -7888,6 +7889,20 @@ dependencies = [
  "tokio-postgres-rustls",
  "tokio-rustls",
  "wasmtime",
+]
+
+[[package]]
+name = "sifr_sql_postgresql"
+version = "0.0.0"
+dependencies = [
+ "cc",
+ "insta",
+ "semver",
+ "serde",
+ "serde_json",
+ "sha2 0.11.0",
+ "sifr_compiler_component",
+ "sifr_sql_contract",
 ]
 
 [[package]]

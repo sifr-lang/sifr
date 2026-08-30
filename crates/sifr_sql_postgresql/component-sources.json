@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "component_family": "sifr.sql.postgresql.sql",
+  "target": "wasm32-wasip2",
+  "adapter": "provider-owned-json-ast-v1",
+  "sources": [
+    {"server_major": 13, "tag": "13-2.2.0", "commit": "1097b2c33e54a37c0d2c0f2d498c7d1cf967eae9", "archive_sha256": "4adfd32ffc0acac37ef89fe41fb404b81b3aaebed052c580e92793b05b45b210", "path": "../../third_party/libpg_query/13"},
+    {"server_major": 14, "tag": "14-3.0.0", "commit": "397cbb9c1b188b8a5c6e1a9633461b2d01903abc", "archive_sha256": "f23e52e8da9f6377df97dd36a10c2ff9b0ffe44f6078f803a354d581a17e7de8", "path": "../../third_party/libpg_query/14"},
+    {"server_major": 15, "tag": "15-4.2.4", "commit": "db39825bc7c1ddd45962ec6a626d740b7f8f027a", "archive_sha256": "da73fb4c1a0dcdf4d1c288d5c238fcf443c3ea363a6bcaff582a326d36219615", "path": "../../third_party/libpg_query/15"},
+    {"server_major": 16, "tag": "16-5.2.0", "commit": "fce106abf41205e5d0db47bea7de44ad1e36f7a5", "archive_sha256": "f8f59fd5bacbb7ea03fd99e55121a50e9c586287128aabcc462fa62509640701", "path": "../../third_party/libpg_query/16"},
+    {"server_major": 17, "tag": "17-6.2.2", "commit": "7be1aed1f1f968a36cf541319f71e845850f0381", "archive_sha256": "eefcecb4f29598fb35af9eb64995af97cdb1030cfca487cfcd75e3af22fd1381", "path": "../../third_party/libpg_query/17"},
+    {"server_major": 18, "tag": "18.0.0", "commit": "204fbdbd3ed5f8691ab358e49f1fc5397b4679e2", "archive_sha256": "adb0d9c1f3c5e4f7fe2cbca2ad1dbcae0b6b048c09f51dd62740fcfe611726f0", "path": "../../third_party/libpg_query/18"}
+  ]
+}

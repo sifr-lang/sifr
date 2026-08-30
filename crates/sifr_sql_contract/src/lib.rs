@@ -42,9 +42,9 @@ pub use error::{SchemaContractError, SchemaContractErrorKind};
 pub use fingerprint::{SchemaFingerprint, schema_fingerprint};
 pub use fragment::{
     AliasIdentity, EffectTransformation, FragmentCategory, FragmentDraft, FragmentIdentity,
-    PredicateContext, QueryDefinitionScope, RelationAlias, ResultTransformation, SqlFragment,
-    SqlPrecedence, StaticFragmentOrigin, UnsafeSyntaxAudit, UnsafeSyntaxGrant, UnsafeSyntaxLint,
-    all_predicates, any_predicates, not_predicate,
+    PackageCapabilityResolver, PredicateContext, QueryDefinitionScope, RelationAlias,
+    ResultTransformation, SqlFragment, SqlPrecedence, StaticFragmentOrigin, UnsafeSyntaxAudit,
+    UnsafeSyntaxGrant, UnsafeSyntaxLint, all_predicates, any_predicates, not_predicate,
 };
 pub use generated::{
     COMPILER_KNOWN_PROFILE_EXPORTS, GeneratedProfileModule, GeneratedSchemaType,

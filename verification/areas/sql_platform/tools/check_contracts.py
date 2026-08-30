@@ -51,6 +51,7 @@ PROFILE_SUITES = {
     "contracts",
     "dependency-baseline",
     "mutation",
+    "postgresql-compiler",
     "query-fragments",
     "schema-profiles",
 }

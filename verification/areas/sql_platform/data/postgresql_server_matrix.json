@@ -1,0 +1,78 @@
+{
+  "authority": "live-postgresql-server-differential",
+  "schema_version": 1,
+  "servers": [
+    {
+      "diagnostic_sqlstate": "42703",
+      "image": "postgres:13",
+      "image_digest": "sha256:4689940c683801b4ab839ab3b0a0a3555a5fe425371422310944e89eca7d8068",
+      "major": 13,
+      "nullability": "id:t|name:t|nickname:f",
+      "parameter_types": "{bigint,text}",
+      "result_types": "bigint|text|text",
+      "server_version_num": "130023",
+      "status": "passed",
+      "write_result": "1|second"
+    },
+    {
+      "diagnostic_sqlstate": "42703",
+      "image": "postgres:14",
+      "image_digest": "sha256:156f0b253fd61366d5fc2107ad45955027d5612f695a8436ce20167f3fa79bff",
+      "major": 14,
+      "nullability": "id:t|name:t|nickname:f",
+      "parameter_types": "{bigint,text}",
+      "result_types": "bigint|text|text",
+      "server_version_num": "140024",
+      "status": "passed",
+      "write_result": "1|second"
+    },
+    {
+      "diagnostic_sqlstate": "42703",
+      "image": "postgres:15",
+      "image_digest": "sha256:9b1d34adbce1dd07ee6e94b4a2cf698884b89bd44a6c9c12f5da8f3acbfe4957",
+      "major": 15,
+      "nullability": "id:t|name:t|nickname:f",
+      "parameter_types": "{bigint,text}",
+      "result_types": "bigint|text|text",
+      "server_version_num": "150019",
+      "status": "passed",
+      "write_result": "1|second"
+    },
+    {
+      "diagnostic_sqlstate": "42703",
+      "image": "postgres:16",
+      "image_digest": "sha256:f1c3376c26f2609ab9f29f71f824103fe2fcd8ee0346485cb6122a4f93df6f94",
+      "major": 16,
+      "nullability": "id:t|name:t|nickname:f",
+      "parameter_types": "{bigint,text}",
+      "result_types": "bigint|text|text",
+      "server_version_num": "160015",
+      "status": "passed",
+      "write_result": "1|second"
+    },
+    {
+      "diagnostic_sqlstate": "42703",
+      "image": "postgres:17",
+      "image_digest": "sha256:67f41722b7a8cbdb868a44a4995c846eddfdc2973bccb291ce937dce88ad5675",
+      "major": 17,
+      "nullability": "id:t|name:t|nickname:f",
+      "parameter_types": "{bigint,text}",
+      "result_types": "bigint|text|text",
+      "server_version_num": "170011",
+      "status": "passed",
+      "write_result": "1|second"
+    },
+    {
+      "diagnostic_sqlstate": "42703",
+      "image": "postgres:18",
+      "image_digest": "sha256:4ef4dbc939d61acea57712655ddb4b4ab27419c913f94cca0cd57cb3ea3c2280",
+      "major": 18,
+      "nullability": "id:t|name:t|nickname:f",
+      "parameter_types": "{bigint,text}",
+      "result_types": "bigint|text|text",
+      "server_version_num": "180006",
+      "status": "passed",
+      "write_result": "1|second"
+    }
+  ]
+}

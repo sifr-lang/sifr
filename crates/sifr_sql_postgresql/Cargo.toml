@@ -1,0 +1,30 @@
+[package]
+name = "sifr_sql_postgresql"
+version = "0.0.0"
+publish = false
+edition = { workspace = true }
+rust-version = { workspace = true }
+license = { workspace = true }
+build = "build.rs"
+
+[package.metadata.sifr_sql]
+artifact-role = "postgresql-compiler-component"
+source-manifest = "component-sources.json"
+
+[dependencies]
+semver = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sha2 = { workspace = true }
+sifr_compiler_component = { workspace = true }
+sifr_sql_contract = { workspace = true }
+
+[build-dependencies]
+cc = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+insta = { workspace = true }
+
+[lints]
+workspace = true

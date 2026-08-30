@@ -143,6 +143,7 @@ fn backend_trust_reports_untrusted_direct_backend_crate() {
 fn backend_trust_rejects_stale_non_direct_trust_entry() {
     let graph = package_graph(
         TrustPolicy {
+            security_capabilities: Vec::new(),
             native: vec!["unused-native".to_string()],
             build_scripts: Vec::new(),
             proc_macros: Vec::new(),

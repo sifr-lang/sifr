@@ -2,6 +2,7 @@ use super::digest::{GraphDigest, digest_serializable};
 use crate::graph::derive::SifrPackageGraph;
 use serde::Serialize;
 use sifr_compiler_component::{DiagnosticLifecycle, DiagnosticRegistryOwner};
+use std::collections::BTreeSet;
 
 #[must_use]
 pub fn digest_package_graph(graph: &SifrPackageGraph) -> GraphDigest {
@@ -28,6 +29,7 @@ struct CanonicalGraphPackage<'a> {
     rust_trust: CanonicalRustTrust<'a>,
     python: CanonicalPythonConfig<'a>,
     python_trust: CanonicalPythonTrust<'a>,
+    security_capabilities: Vec<&'a str>,
 }
 
 #[derive(Serialize)]
@@ -255,6 +257,15 @@ impl<'a> From<&'a SifrPackageGraph> for CanonicalGraph<'a> {
                             .map(String::as_str)
                             .collect(),
                     },
+                    security_capabilities: package
+                        .manifest
+                        .trust
+                        .security_capabilities
+                        .iter()
+                        .map(String::as_str)
+                        .collect::<BTreeSet<_>>()
+                        .into_iter()
+                        .collect(),
                 })
                 .collect(),
             edges: graph

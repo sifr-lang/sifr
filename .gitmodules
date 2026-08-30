@@ -34,3 +34,21 @@
 	path = verification/areas/developer_tooling/corpora/sifr-large-lsp-verification
 	url = https://github.com/sifr-lang/sifr-large-lsp-verification.git
 	branch = main
+[submodule "third_party/libpg_query/13"]
+	path = third_party/libpg_query/13
+	url = https://github.com/pganalyze/libpg_query.git
+[submodule "third_party/libpg_query/14"]
+	path = third_party/libpg_query/14
+	url = https://github.com/pganalyze/libpg_query.git
+[submodule "third_party/libpg_query/15"]
+	path = third_party/libpg_query/15
+	url = https://github.com/pganalyze/libpg_query.git
+[submodule "third_party/libpg_query/16"]
+	path = third_party/libpg_query/16
+	url = https://github.com/pganalyze/libpg_query.git
+[submodule "third_party/libpg_query/17"]
+	path = third_party/libpg_query/17
+	url = https://github.com/pganalyze/libpg_query.git
+[submodule "third_party/libpg_query/18"]
+	path = third_party/libpg_query/18
+	url = https://github.com/pganalyze/libpg_query.git
