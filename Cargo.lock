@@ -7561,6 +7561,8 @@ version = "0.0.0"
 dependencies = [
  "ruff_python_ast",
  "ruff_text_size",
+ "semver",
+ "sifr_compiler_component",
  "sifr_diagnostics",
  "sifr_driver",
  "sifr_format",

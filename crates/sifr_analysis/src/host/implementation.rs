@@ -1,4 +1,4 @@
-use super::text_edits::{fixed_source_edits, full_range, ranges_overlap, source_edit_to_text_edit};
+use super::text_edits::{fixed_source_edits, ranges_overlap, source_edit_to_text_edit};
 use crate::completion::{
     CompletionCandidate, rank_completion_candidates, rust_interop_completion_candidates,
 };
@@ -6,10 +6,10 @@ use crate::editor::line_end_insert_range;
 use crate::queries::{
     CodeAction, CodeActionContext, CodeActionData, CompletionItem, CompletionItems,
     DeferredCodeAction, DiagnosticClass, DiagnosticExplanation, DiagnosticId, DocumentHighlight,
-    DocumentSymbol, FileDiagnostics, FileTextEdits, FoldingRange, FormatOptions,
-    GeneratedRustPreview, HoverInfo, InlayHint, Location, RenameTarget, SelectionRange,
-    SemanticToken, SignatureHelp, SymbolName, SymbolQuery, TestCommand, TestCommandKind, TestItem,
-    TestItemId, TypeHierarchyItem, TypeHierarchyItemId, WorkspaceEdit, WorkspaceSymbol,
+    DocumentSymbol, FileDiagnostics, FileTextEdits, FoldingRange, GeneratedRustPreview, HoverInfo,
+    InlayHint, Location, RenameTarget, SelectionRange, SemanticToken, SignatureHelp, SymbolName,
+    SymbolQuery, TestCommand, TestCommandKind, TestItem, TestItemId, TypeHierarchyItem,
+    TypeHierarchyItemId, WorkspaceEdit, WorkspaceSymbol,
 };
 use crate::snapshot::{
     AnalysisError, AnalysisErrorKind, AnalysisQueryKind, AnalysisQueryResult, AnalysisRevision,
@@ -190,6 +190,9 @@ impl AnalysisHost {
         file: FileId,
         position: &TextPosition,
     ) -> QueryResult<CompletionItems> {
+        if let Some(items) = self.sql_completion(file, position)? {
+            return Ok(self.result(AnalysisQueryKind::Completion, items));
+        }
         let facts = self.editor_facts(file)?;
         let query = facts
             .identifier_at_position(position)
@@ -226,6 +229,9 @@ impl AnalysisHost {
         file: FileId,
         position: &TextPosition,
     ) -> QueryResult<Option<HoverInfo>> {
+        if let Some(hover) = self.sql_hover(file, position)? {
+            return Ok(self.result(AnalysisQueryKind::Hover, Some(hover)));
+        }
         let hover = self.semantic_hover(file, position)?;
         Ok(self.result(AnalysisQueryKind::Hover, hover))
     }
@@ -244,6 +250,9 @@ impl AnalysisHost {
         file: FileId,
         position: &TextPosition,
     ) -> QueryResult<Vec<Location>> {
+        if let Some(locations) = self.sql_locations(file, position, true)? {
+            return Ok(self.result(AnalysisQueryKind::Definition, locations));
+        }
         let locations = self.locations_for_identifier_at(file, position, true)?;
         Ok(self.result(AnalysisQueryKind::Definition, locations))
     }
@@ -253,6 +262,9 @@ impl AnalysisHost {
         file: FileId,
         position: &TextPosition,
     ) -> QueryResult<Vec<Location>> {
+        if let Some(locations) = self.sql_locations(file, position, true)? {
+            return Ok(self.result(AnalysisQueryKind::Declaration, locations));
+        }
         let locations = self.locations_for_identifier_at(file, position, true)?;
         Ok(self.result(AnalysisQueryKind::Declaration, locations))
     }
@@ -262,6 +274,9 @@ impl AnalysisHost {
         file: FileId,
         position: &TextPosition,
     ) -> QueryResult<Vec<Location>> {
+        if let Some(locations) = self.sql_locations(file, position, true)? {
+            return Ok(self.result(AnalysisQueryKind::TypeDefinition, locations));
+        }
         let locations = self.locations_for_identifier_at(file, position, true)?;
         Ok(self.result(AnalysisQueryKind::TypeDefinition, locations))
     }
@@ -271,6 +286,9 @@ impl AnalysisHost {
         file: FileId,
         position: &TextPosition,
     ) -> QueryResult<Vec<Location>> {
+        if let Some(locations) = self.sql_locations(file, position, false)? {
+            return Ok(self.result(AnalysisQueryKind::References, locations));
+        }
         let locations = self.locations_for_identifier_at(file, position, false)?;
         Ok(self.result(AnalysisQueryKind::References, locations))
     }
@@ -280,6 +298,21 @@ impl AnalysisHost {
         file: FileId,
         position: &TextPosition,
     ) -> QueryResult<Option<RenameTarget>> {
+        if let Some((document, offset)) = self.sql_document_at(file, position)?
+            && let Some(symbol) = document.symbol_at_source_offset(offset)
+        {
+            return Ok(self.result(
+                AnalysisQueryKind::PrepareRename,
+                Some(RenameTarget {
+                    symbol: WorkspaceSymbol {
+                        name: symbol.name,
+                        kind: symbol.kind,
+                        file,
+                        container_name: Some("SQL template".to_string()),
+                    },
+                }),
+            ));
+        }
         let facts = self.editor_facts(file)?;
         let Some(token) = facts.identifier_at_position(position) else {
             return Ok(self.result(AnalysisQueryKind::PrepareRename, None));
@@ -301,6 +334,9 @@ impl AnalysisHost {
         position: &TextPosition,
         new_name: &SymbolName,
     ) -> QueryResult<WorkspaceEdit> {
+        if let Some(edit) = self.sql_rename(file, position, new_name)? {
+            return Ok(self.result(AnalysisQueryKind::Rename, edit));
+        }
         let facts = self.editor_facts(file)?;
         let edits = if let Some(token) = facts.identifier_at_position(position) {
             self.reference_edits(&token.text, &new_name.0)?
@@ -345,7 +381,12 @@ impl AnalysisHost {
         file: FileId,
         range: Option<TextRange>,
     ) -> QueryResult<Vec<SemanticToken>> {
-        let tokens = self.editor_facts(file)?.semantic_tokens(range);
+        let mut tokens = self.editor_facts(file)?.semantic_tokens(range);
+        tokens.extend(self.sql_semantic_tokens(file, range)?);
+        tokens.sort_by_key(|token| (token.range.start(), token.range.end()));
+        tokens.dedup_by(|left, right| {
+            left.range == right.range && left.token_type == right.token_type
+        });
         Ok(self.result(AnalysisQueryKind::SemanticTokens, tokens))
     }
 
@@ -354,7 +395,8 @@ impl AnalysisHost {
         file: FileId,
         range: Option<TextRange>,
     ) -> QueryResult<Vec<InlayHint>> {
-        let hints = self.editor_facts(file)?.inlay_hints(range);
+        let mut hints = self.editor_facts(file)?.inlay_hints(range);
+        hints.extend(self.sql_inlay_hints(file, range)?);
         Ok(self.result(AnalysisQueryKind::InlayHints, hints))
     }
 
@@ -363,6 +405,9 @@ impl AnalysisHost {
         file: FileId,
         position: &TextPosition,
     ) -> QueryResult<Vec<DocumentHighlight>> {
+        if let Some(highlights) = self.sql_highlights(file, position)? {
+            return Ok(self.result(AnalysisQueryKind::DocumentHighlights, highlights));
+        }
         let facts = self.editor_facts(file)?;
         let highlights = facts
             .identifier_at_position(position)
@@ -462,6 +507,7 @@ impl AnalysisHost {
             }
         }
         actions.extend(self.safe_fix_actions(file, range, context)?);
+        actions.extend(self.sql_code_actions(file, range, context)?);
         Ok(self.result(AnalysisQueryKind::CodeActions, actions))
     }
 
@@ -529,39 +575,6 @@ impl AnalysisHost {
             });
         }
         Ok(actions)
-    }
-
-    pub fn format_document(
-        &mut self,
-        file: FileId,
-        options: FormatOptions,
-    ) -> QueryResult<Vec<sifr_format::TextEdit>> {
-        let source = self.source_text(file)?;
-        let path = self.context()?.path_for_file(file);
-        let result = sifr_format::format_source(&source, path, options)
-            .map_err(|diagnostics| frontend_diagnostics(&diagnostics))?;
-        let edits = if result.formatted == source {
-            Vec::new()
-        } else {
-            vec![sifr_format::TextEdit {
-                range: full_range(&source)?,
-                replacement: result.formatted,
-            }]
-        };
-        Ok(self.result(AnalysisQueryKind::FormatDocument, edits))
-    }
-
-    pub fn format_range(
-        &mut self,
-        file: FileId,
-        range: TextRange,
-        options: FormatOptions,
-    ) -> QueryResult<Vec<sifr_format::TextEdit>> {
-        let source = self.source_text(file)?;
-        let path = self.context()?.path_for_file(file);
-        let edits = sifr_format::format_range(&source, range, path, options)
-            .map_err(|diagnostics| frontend_diagnostics(&diagnostics))?;
-        Ok(self.result(AnalysisQueryKind::FormatRange, edits))
     }
 
     pub fn generated_rust_preview(

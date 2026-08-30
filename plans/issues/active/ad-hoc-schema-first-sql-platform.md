@@ -290,7 +290,7 @@ can use these contracts.
 | 7 | completed | PostgreSQL schema and query compiler | PostgreSQL catalogs, grammar, resolution, typing, nullability, result records, writes, dependencies, and diagnostics work offline. |
 | 8 | completed | PostgreSQL semantic completion | Advanced PostgreSQL constructs, fragment scope changes, cardinality proofs, custom codecs, and exported-query stability rules are complete. |
 | 9 | completed | PostgreSQL runtime | Verified pools, session contracts, transactions, streaming, automatic statement caching, explicit fetch methods, bounded cleanup, tests, and panic-safe protocol handling are complete. |
-| 10 | pending | Incremental compiler and editor experience | Fine-grained caching, invalidation, virtual SQL documents, source maps, completion, navigation, rename, formatting, and quick fixes are complete. |
+| 10 | in review | Incremental compiler and editor experience | Fine-grained caching, invalidation, virtual SQL documents, source maps, completion, navigation, rename, formatting, and quick fixes are complete. |
 | 11 | pending | Host tool graph and command runner | Cargo-locked host-only tool packages execute direct command namespaces without entering application code generation. |
 | 12 | pending | Schema lifecycle tools | Pull, validate, and build commands produce deterministic snapshots, fingerprints, manifests, modules, semantic diffs, and affected-query reports. |
 | 13 | pending | Migration compiler and engine | Typed migration DAGs, intermediate schemas, DDL reflection, data steps, assertions, offline validation, recovery, and explicit rollback are complete. |
@@ -749,21 +749,21 @@ Owned scope:
 
 Acceptance criteria:
 
-- [ ] Cache identity includes template, hole types, fragments, schema slice,
+- [x] Cache identity includes template, hole types, fragments, schema slice,
   provider, compatibility settings, component protocol, and compiler semantics.
-- [ ] Dependency-level invalidation preserves unaffected query results and always
+- [x] Dependency-level invalidation preserves unaffected query results and always
   invalidates semantic changes.
-- [ ] `sifr_frontend::cache_keys` owns cache identities. Cache bounds, pinning,
+- [x] `sifr_frontend::cache_keys` owns cache identities. Cache bounds, pinning,
   and eviction cannot affect diagnostics or generated output.
-- [ ] Every SQL template has a lossless virtual document and bidirectional source
+- [x] Every SQL template has a lossless virtual document and bidirectional source
   map.
-- [ ] Highlighting, completion, hover, definition, references, rename, parameter
+- [x] Highlighting, completion, hover, definition, references, rename, parameter
   information, result information, nullability, and cardinality work in templates.
-- [ ] Formatting preserves holes and source meaning.
-- [ ] Quick fixes cover aliases, casts, missing columns, unsafe collection, and
+- [x] Formatting preserves holes and source meaning.
+- [x] Quick fixes cover aliases, casts, missing columns, unsafe collection, and
   supported migration impact changes.
-- [ ] Fragment completion respects relation scope and aliases.
-- [ ] SQL editor operations have named performance budgets and cancellation
+- [x] Fragment completion respects relation scope and aliases.
+- [x] SQL editor operations have named performance budgets and cancellation
   checkpoints before component entry and between provider operations.
 
 Focused validation:
@@ -1275,7 +1275,7 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 | 7 | completed | [#3602](https://github.com/sifr-lang/sifr/pull/3602) | `46f1d06d8e` | PostgreSQL 13-18 native, component, and live matrices; SQL qualification, mutation, Clippy, and guards pass | Opus round 2 verified every original remediation on `6cd745149`; two new mechanisms are deferred | PostgreSQL schema and query compiler |
 | 8 | completed | [#3604](https://github.com/sifr-lang/sifr/pull/3604) | `e18e0a92d5` | SQL 4/4; PostgreSQL 13-18 native and component suites; contract, build-output, strict Clippy, and guards pass | Opus round 2 closed the original nested-star blocker on `94fbb6e0f`; one new semantic-flag mechanism is deferred | PostgreSQL advanced semantics, stable projections, codecs, fragments, and query-signature artifacts |
 | 9 | completed | [#3611](https://github.com/sifr-lang/sifr/pull/3611) | `9dc0e55e09` | common and provider runtime tests; SQL compiler and runtime qualification; strict Clippy and guards; exact PostgreSQL 13-18 live matrix | Opus remediation `SATISFIED` on `258f13a9a`; one new malformed-BOOL classification defect is deferred | Verified PostgreSQL runtime, sessions, transactions, streaming, caching, cleanup, and resource bounds |
-| 10 | pending | — | — | — | — | Incremental compiler and editor experience |
+| 10 | in review | — | — | incremental-editor 2/2; SQL mutation 9/9; frontend 134; analysis 51; LSP 79; strict Clippy and guards pass | pending exact-SHA review | Incremental compiler and editor experience |
 | 11 | pending | — | — | — | — | Host tool graph and command runner |
 | 12 | pending | — | — | — | — | Schema lifecycle tools |
 | 13 | pending | — | — | — | — | Migration compiler and engine |

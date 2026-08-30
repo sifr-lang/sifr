@@ -100,6 +100,7 @@ impl FrontendContext {
                     module,
                     symbols: Vec::new(),
                     editor_semantics: Default::default(),
+                    sql_documents: Vec::new(),
                 }),
             self.metadata(QueryKind::ModuleAnalysis, cache_status),
         )

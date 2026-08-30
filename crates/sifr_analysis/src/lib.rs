@@ -11,6 +11,7 @@ mod handles;
 mod host;
 mod queries;
 mod snapshot;
+mod sql_incremental_cache;
 mod symbols;
 mod worker_lanes;
 
@@ -31,6 +32,7 @@ pub use snapshot::{
     AnalysisError, AnalysisErrorKind, AnalysisQueryKind, AnalysisQueryResult, AnalysisRevision,
     AnalysisSnapshot, QueryMetadata,
 };
+pub use sql_incremental_cache::{SqlAnalysisDependency, SqlIncrementalAnalysisCache};
 pub use symbols::{
     SymbolBucketId, SymbolBucketKind, SymbolBucketReadiness, SymbolBucketReadinessState, SymbolId,
     SymbolIndex, SymbolIndexEntry,

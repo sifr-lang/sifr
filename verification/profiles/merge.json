@@ -757,6 +757,7 @@
         "dependency-baseline",
         "postgresql-compiler",
         "postgresql-runtime",
+        "incremental-editor",
         "query-fragments",
         "schema-profiles",
         "mutation"

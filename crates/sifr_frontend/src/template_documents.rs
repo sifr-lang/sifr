@@ -27,16 +27,23 @@ impl TemplateDocumentView {
     pub fn from_hir(template: &HirTemplateString) -> Self {
         let mut mappings = Vec::new();
         for segment in &template.segments {
-            mappings.extend(
-                segment
-                    .mappings
-                    .iter()
-                    .map(|static_mapping| TemplateSourceMapEntry {
+            for static_mapping in &segment.mappings {
+                if static_mapping.offsets.is_empty() {
+                    mappings.push(TemplateSourceMapEntry {
                         source_range: static_mapping.source_range,
                         virtual_range: static_mapping.virtual_range,
                         kind: TemplateSourceMapKind::Static,
-                    }),
-            );
+                    });
+                } else {
+                    mappings.extend(static_mapping.offsets.iter().map(|offset| {
+                        TemplateSourceMapEntry {
+                            source_range: offset.source_range,
+                            virtual_range: offset.virtual_range,
+                            kind: TemplateSourceMapKind::Static,
+                        }
+                    }));
+                }
+            }
         }
         mappings.extend(template.interpolations.iter().enumerate().map(
             |(index, interpolation)| TemplateSourceMapEntry {
@@ -63,11 +70,39 @@ impl TemplateDocumentView {
     }
 
     #[must_use]
+    pub fn virtual_offset_for_source(&self, offset: TextSize) -> Option<TextSize> {
+        let mapping = self
+            .mappings
+            .iter()
+            .find(|mapping| contains_offset(mapping.source_range, offset))?;
+        translate_offset(offset, mapping.source_range, mapping.virtual_range)
+    }
+
+    #[must_use]
     pub fn source_range_for_virtual(&self, offset: TextSize) -> Option<TextRange> {
         self.mappings
             .iter()
             .find(|mapping| contains_offset(mapping.virtual_range, offset))
             .map(|mapping| mapping.source_range)
+    }
+
+    #[must_use]
+    pub fn source_range_for_virtual_range(&self, range: TextRange) -> Option<TextRange> {
+        translate_range(&self.mappings, range, false)
+    }
+
+    #[must_use]
+    pub fn virtual_range_for_source_range(&self, range: TextRange) -> Option<TextRange> {
+        translate_range(&self.mappings, range, true)
+    }
+
+    #[must_use]
+    pub fn source_offset_for_virtual(&self, offset: TextSize) -> Option<TextSize> {
+        let mapping = self
+            .mappings
+            .iter()
+            .find(|mapping| contains_offset(mapping.virtual_range, offset))?;
+        translate_offset(offset, mapping.virtual_range, mapping.source_range)
     }
 
     #[must_use]
@@ -89,6 +124,52 @@ fn contains_offset(range: TextRange, offset: TextSize) -> bool {
     } else {
         range.start() <= offset && offset < range.end()
     }
+}
+
+fn translate_offset(offset: TextSize, from: TextRange, to: TextRange) -> Option<TextSize> {
+    if from.is_empty() {
+        return Some(to.start());
+    }
+    let delta = offset.to_u32().checked_sub(from.start().to_u32())?;
+    let translated = to.start().to_u32().checked_add(delta)?;
+    Some(TextSize::new(translated.min(to.end().to_u32())))
+}
+
+fn translate_range(
+    mappings: &[TemplateSourceMapEntry],
+    range: TextRange,
+    source_to_virtual: bool,
+) -> Option<TextRange> {
+    let ranges = |mapping: &TemplateSourceMapEntry| {
+        if source_to_virtual {
+            (mapping.source_range, mapping.virtual_range)
+        } else {
+            (mapping.virtual_range, mapping.source_range)
+        }
+    };
+    if range.is_empty() {
+        let mapping = mappings.iter().rev().find(|mapping| {
+            let (from, _) = ranges(mapping);
+            from.end() == range.start() || contains_offset(from, range.start())
+        })?;
+        let (from, to) = ranges(mapping);
+        return translate_offset(range.start(), from, to).map(TextRange::empty);
+    }
+    let start_mapping = mappings.iter().find(|mapping| {
+        let (from, _) = ranges(mapping);
+        contains_offset(from, range.start())
+    })?;
+    let final_offset = TextSize::new(range.end().to_u32().checked_sub(1)?);
+    let end_mapping = mappings.iter().find(|mapping| {
+        let (from, _) = ranges(mapping);
+        contains_offset(from, final_offset)
+    })?;
+    let (start_from, start_to) = ranges(start_mapping);
+    let (end_from, end_to) = ranges(end_mapping);
+    Some(TextRange::new(
+        translate_offset(range.start(), start_from, start_to)?,
+        translate_offset(range.end(), end_from, end_to)?,
+    ))
 }
 
 #[cfg(test)]
@@ -162,6 +243,24 @@ mod tests {
                 Some(mapping.source_range)
             );
         }
+    }
+
+    #[test]
+    fn token_ranges_round_trip_without_expanding_to_the_static_segment() {
+        let template = lowered_template(
+            "def query() -> Template:\n    return t\"SELECT users.name FROM users\"\n",
+        );
+        let document = TemplateDocumentView::from_hir(&template);
+        let virtual_range = TextRange::new(TextSize::new(7), TextSize::new(17));
+        let source_range = document
+            .source_range_for_virtual_range(virtual_range)
+            .expect("token maps to source");
+        assert_eq!(source_range.len(), virtual_range.len());
+        assert!(source_range.len() < document.source_range.len());
+        assert_eq!(
+            document.virtual_range_for_source_range(source_range),
+            Some(virtual_range)
+        );
     }
 
     #[test]

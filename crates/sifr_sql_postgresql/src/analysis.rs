@@ -424,7 +424,7 @@ impl AnalysisContext<'_> {
         match &expression.kind {
             ExpressionKind::Star { .. } => Err(PostgresAnalysisError::new(
                 PostgresDiagnosticCode::InvalidResult,
-                "SELECT * is valid only as a complete projection item",
+                "wildcard '*' is valid only as a SELECT projection item; this wildcard is inside an expression, so replace it with an explicit column or literal",
                 expression,
             )),
             ExpressionKind::Column { path } => {

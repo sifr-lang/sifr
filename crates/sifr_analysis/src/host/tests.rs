@@ -10,6 +10,8 @@ use crate::{
 use sifr_diagnostics::DiagnosticArg;
 use sifr_frontend::{FrontendMode, SourcePath, WorkspaceTracePhase};
 
+mod sql_editor_tests;
+
 fn single_file_input(source: &str) -> FrontendInput {
     FrontendInput {
         path: SourcePath::new("main.sifr"),

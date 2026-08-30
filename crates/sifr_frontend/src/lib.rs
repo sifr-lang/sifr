@@ -41,6 +41,10 @@ mod editor_semantics;
 pub use editor_semantics::*;
 mod embedded_analysis_cache_key;
 pub use embedded_analysis_cache_key::EmbeddedAnalysisKey;
+mod embedded_analysis_control;
+pub use embedded_analysis_control::*;
+mod embedded_query_cache;
+pub use embedded_query_cache::*;
 mod export_type_localization;
 mod frontend_reuse;
 pub use frontend_reuse::{FrontendCacheEntryIdentity, FrontendReuseStats};
@@ -64,10 +68,12 @@ mod query_diagnostics_behavior_tests;
 #[cfg(test)]
 mod query_diagnostics_equivalence_tests;
 mod source_provider;
+mod sql_editor;
 mod sql_queries;
 #[cfg(test)]
 mod structural_shape_import_tests;
 pub use source_provider::*;
+pub use sql_editor::*;
 pub use sql_queries::*;
 mod source_maps;
 pub use source_maps::*;

@@ -50,6 +50,7 @@ PROFILE_SUITES = {
     "compiler-components",
     "contracts",
     "dependency-baseline",
+    "incremental-editor",
     "mutation",
     "postgresql-compiler",
     "postgresql-runtime",
