@@ -1,0 +1,231 @@
+{
+  "schema_version": 1,
+  "rust_version": "1.98",
+  "root_lock_package": "sifr_sql_dependency_lock",
+  "sqlite_amalgamation": "3.53.2",
+  "build_environment": {
+    "SYNTAQLITE_SQLITE_VERSION": "3053002",
+    "SYNTAQLITE_CFLAG_*": []
+  },
+  "required_audits": [
+    "advisory",
+    "license",
+    "panic",
+    "secret-redaction",
+    "unsafe-code"
+  ],
+  "constraints": [
+    {
+      "id": "syntaqlite-source-and-fork-readiness",
+      "owner_milestone": "sql_17_sqlite_provider",
+      "audit_owner": "sifr-sql-sqlite/component",
+      "rules": [
+        "Crates.io is the release authority.",
+        "GitHub is the source authority.",
+        "The exact pre-1.0 release is pinned.",
+        "The provider-owned adapter is the documented fork boundary."
+      ]
+    },
+    {
+      "id": "single-sqlite-link-identity",
+      "owner_milestone": "sql_17_sqlite_provider",
+      "audit_owner": "sifr-package/cargo-graph",
+      "rules": [
+        "Every first-party provider must resolve one compatible libsqlite3-sys link identity before linking.",
+        "Every direct Rust interoperability path must use that identity."
+      ]
+    },
+    {
+      "id": "shared-tls-dependency-ring",
+      "owner_milestone": "sql_5_common_contracts",
+      "audit_owner": "sifr_runtime/tls",
+      "rules": [
+        "Tokio, Rustls, Tokio Rustls, and the platform verifier remain shared dependency Ring 4 substrate.",
+        "AWS-LC-RS is the shared Rustls crypto provider.",
+        "Each provider TLS adapter is an explicit dependency Ring 4 edge with AWS-LC-RS."
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "crate": "tokio",
+      "version": "1.53.1",
+      "checksum": "202caea871b69668250d242070849eb495be178ed697a3e98aebce5bc81a0bed",
+      "license": "MIT",
+      "default_features": false,
+      "features": ["io-util", "macros", "net", "process", "rt", "signal", "sync", "time"],
+      "artifacts": ["sql-runtime", "postgresql-runtime", "mysql-runtime"],
+      "targets": ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu"],
+      "owner_milestone": "sql_5_common_contracts",
+      "audit_owner": "sifr_runtime"
+    },
+    {
+      "crate": "rustls",
+      "version": "0.23.43",
+      "checksum": "0283386ce02abc0151e1761d08802dfe86c173b0b494af5cbc086574e453da06",
+      "license": "Apache-2.0 OR ISC OR MIT",
+      "default_features": false,
+      "features": ["aws_lc_rs", "logging", "prefer-post-quantum", "std", "tls12"],
+      "artifacts": ["postgresql-runtime", "mysql-runtime"],
+      "targets": ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu"],
+      "owner_milestone": "sql_5_common_contracts",
+      "audit_owner": "sifr_runtime/tls"
+    },
+    {
+      "crate": "tokio-rustls",
+      "version": "0.26.4",
+      "checksum": "1729aa945f29d91ba541258c8df89027d5792d85a8841fb65e8bf0f4ede4ef61",
+      "license": "MIT OR Apache-2.0",
+      "default_features": false,
+      "features": ["aws_lc_rs", "logging", "tls12"],
+      "artifacts": ["postgresql-runtime", "mysql-runtime"],
+      "targets": ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu"],
+      "owner_milestone": "sql_5_common_contracts",
+      "audit_owner": "sifr_runtime/tls"
+    },
+    {
+      "crate": "rustls-platform-verifier",
+      "version": "0.7.0",
+      "checksum": "26d1e2536ce4f35f4846aa13bff16bd0ff40157cdb14cc056c7b14ba41233ba0",
+      "license": "MIT OR Apache-2.0",
+      "default_features": false,
+      "features": [],
+      "artifacts": ["postgresql-runtime", "mysql-runtime"],
+      "targets": ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu"],
+      "owner_milestone": "sql_5_common_contracts",
+      "audit_owner": "sifr_runtime/tls"
+    },
+    {
+      "crate": "tokio-postgres",
+      "version": "0.7.18",
+      "checksum": "a528f7d280f6d5b9cd149635c8705b0dd049754bc67d81d31fa25169a93809d3",
+      "license": "MIT OR Apache-2.0",
+      "default_features": false,
+      "features": ["runtime"],
+      "artifacts": ["postgresql-runtime"],
+      "targets": ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu"],
+      "owner_milestone": "sql_9_postgresql_runtime",
+      "audit_owner": "sifr-sql-postgresql/runtime"
+    },
+    {
+      "crate": "postgres-types",
+      "version": "0.2.14",
+      "checksum": "851ca9db4932932d69f3ea811b1abe63087a0f740a47692619dd40d4899b68be",
+      "license": "MIT OR Apache-2.0",
+      "default_features": false,
+      "features": ["derive"],
+      "artifacts": ["postgresql-runtime"],
+      "targets": ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu"],
+      "owner_milestone": "sql_9_postgresql_runtime",
+      "audit_owner": "sifr-sql-postgresql/runtime"
+    },
+    {
+      "crate": "tokio-postgres-rustls",
+      "version": "0.14.0",
+      "checksum": "4c2ad44aa0ae96db89c4742212ed41645b2f597311ff6e1945542a4d9fadc2fb",
+      "license": "MIT",
+      "default_features": false,
+      "features": ["aws-lc-rs"],
+      "artifacts": ["postgresql-runtime"],
+      "targets": ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu"],
+      "owner_milestone": "sql_9_postgresql_runtime",
+      "audit_owner": "sifr-sql-postgresql/runtime"
+    },
+    {
+      "crate": "lalrpop",
+      "version": "0.23.1",
+      "checksum": "98a80a963123205c7157323c99611bc4abb65dcbd62ef46dc4bac74a3941bc75",
+      "license": "Apache-2.0 OR MIT",
+      "default_features": false,
+      "features": ["lexer", "unicode"],
+      "artifacts": ["mysql-component"],
+      "targets": ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu"],
+      "owner_milestone": "sql_16_mysql_provider",
+      "audit_owner": "sifr-sql-mysql/component"
+    },
+    {
+      "crate": "lalrpop-util",
+      "version": "0.23.1",
+      "checksum": "884f3e747ed2dcee867cda1b0c31a048f9e20de2d916a248949319921a2e666e",
+      "license": "Apache-2.0 OR MIT",
+      "default_features": false,
+      "features": ["lexer", "std", "unicode"],
+      "artifacts": ["mysql-component"],
+      "targets": ["wasm32-wasip2"],
+      "owner_milestone": "sql_16_mysql_provider",
+      "audit_owner": "sifr-sql-mysql/component"
+    },
+    {
+      "crate": "mysql_async",
+      "version": "0.37.0",
+      "checksum": "3519e91b0d254ac1ffa495bc42053286cb2172ad7241d5b3b1b9f8a891f21ee2",
+      "license": "MIT OR Apache-2.0",
+      "default_features": false,
+      "features": ["aws-lc-rs", "minimal-rust", "rustls-tls", "tls12"],
+      "artifacts": ["mysql-runtime"],
+      "targets": ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu"],
+      "owner_milestone": "sql_16_mysql_provider",
+      "audit_owner": "sifr-sql-mysql/runtime"
+    },
+    {
+      "crate": "mysql_common",
+      "version": "0.37.3",
+      "checksum": "0f27695f286b461da077b8c2f72f47feaa04ce3c3f9c0976257410e90e21208a",
+      "license": "MIT OR Apache-2.0",
+      "default_features": false,
+      "features": ["derive"],
+      "artifacts": ["mysql-runtime"],
+      "targets": ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu"],
+      "owner_milestone": "sql_16_mysql_provider",
+      "audit_owner": "sifr-sql-mysql/runtime"
+    },
+    {
+      "crate": "syntaqlite",
+      "version": "0.9.0",
+      "checksum": "89cadf7716f0ffb55450910b05310e5275991ae11f9e4492f1b93677760a8c7b",
+      "license": "Apache-2.0",
+      "default_features": false,
+      "features": ["analysis", "fmt", "pin-cflags", "pin-version", "serde", "sqlite"],
+      "artifacts": ["sqlite-component"],
+      "targets": ["wasm32-wasip2"],
+      "owner_milestone": "sql_17_sqlite_provider",
+      "audit_owner": "sifr-sql-sqlite/component"
+    },
+    {
+      "crate": "rusqlite",
+      "version": "0.40.2",
+      "checksum": "23f2a97da3e3873c73cb2a2e71b35c40ff95e0b1eefa8d72d8499a6928c3b5b3",
+      "license": "MIT",
+      "default_features": false,
+      "features": ["bundled", "hooks", "limits", "unlock_notify"],
+      "artifacts": ["sqlite-runtime"],
+      "targets": ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu"],
+      "owner_milestone": "sql_17_sqlite_provider",
+      "audit_owner": "sifr-sql-sqlite/runtime"
+    },
+    {
+      "crate": "libsqlite3-sys",
+      "version": "0.38.2",
+      "checksum": "f1d20bef17f513b9b3004532233187769cd072d790971f4e4da0e346eb6401e8",
+      "license": "MIT",
+      "default_features": false,
+      "features": ["bundled"],
+      "artifacts": ["sqlite-runtime"],
+      "targets": ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu"],
+      "owner_milestone": "sql_17_sqlite_provider",
+      "audit_owner": "sifr-sql-sqlite/runtime"
+    }
+  ],
+  "sources": [
+    {
+      "name": "libpg_query",
+      "versions": ["13-2.2.0", "14-3.0.0", "15-4.2.4", "16-5.2.0", "17-6.2.2", "18.0.0"],
+      "license": "BSD-3-Clause",
+      "features": ["provider-owned-ast-adapter", "one-parser-source-per-server-major"],
+      "artifacts": ["postgresql-component"],
+      "targets": ["wasm32-wasip2"],
+      "owner_milestone": "sql_7_postgresql_compiler",
+      "audit_owner": "sifr-sql-postgresql/component"
+    }
+  ]
+}

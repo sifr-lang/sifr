@@ -716,6 +716,17 @@
       "resource_classes": [
         "default-local"
       ]
+    },
+    {
+      "area": "sql_platform",
+      "suites": [
+        "contracts",
+        "dependency-baseline",
+        "mutation"
+      ],
+      "resource_classes": [
+        "default-local"
+      ]
     }
   ],
   "toolchain_steps": [

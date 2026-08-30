@@ -1,0 +1,47 @@
+[package]
+name = "sifr_sql_dependency_lock"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+publish = false
+license.workspace = true
+
+[package.metadata.sifr]
+artifact-role = "qualification-only"
+contract = "verification/areas/sql_platform/data/artifact_topology.json"
+
+[features]
+default = []
+postgresql = [
+    "dep:postgres-types",
+    "dep:tokio-postgres",
+    "dep:tokio-postgres-rustls",
+]
+mysql = ["dep:lalrpop", "dep:lalrpop-util", "dep:mysql_async", "dep:mysql_common"]
+sqlite = ["dep:libsqlite3-sys", "dep:rusqlite", "dep:syntaqlite"]
+runtime = [
+    "dep:rustls",
+    "dep:rustls-platform-verifier",
+    "dep:tokio",
+    "dep:tokio-rustls",
+]
+all = ["postgresql", "mysql", "sqlite", "runtime"]
+
+[dependencies]
+lalrpop = { workspace = true, optional = true, features = ["lexer", "unicode"] }
+lalrpop-util = { workspace = true, optional = true, features = ["lexer", "std", "unicode"] }
+libsqlite3-sys = { workspace = true, optional = true, features = ["bundled"] }
+mysql_async = { workspace = true, optional = true, features = ["aws-lc-rs", "minimal-rust", "rustls-tls", "tls12"] }
+mysql_common = { workspace = true, optional = true, features = ["derive"] }
+postgres-types = { workspace = true, optional = true, features = ["derive"] }
+rusqlite = { workspace = true, optional = true, features = ["bundled", "hooks", "limits", "unlock_notify"] }
+rustls = { workspace = true, optional = true, default-features = false, features = ["aws_lc_rs", "logging", "prefer-post-quantum", "std", "tls12"] }
+rustls-platform-verifier = { workspace = true, optional = true }
+syntaqlite = { workspace = true, optional = true, features = ["analysis", "fmt", "pin-cflags", "pin-version", "serde", "sqlite"] }
+tokio = { workspace = true, optional = true, default-features = false, features = ["io-util", "macros", "net", "process", "rt", "signal", "sync", "time"] }
+tokio-postgres = { workspace = true, optional = true, features = ["runtime"] }
+tokio-postgres-rustls = { workspace = true, optional = true, features = ["aws-lc-rs"] }
+tokio-rustls = { workspace = true, optional = true, default-features = false, features = ["aws_lc_rs", "logging", "tls12"] }
+
+[lints]
+workspace = true

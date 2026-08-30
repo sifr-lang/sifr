@@ -24,6 +24,7 @@ PYTHON_INTEROP_CAPABILITY_MATRIX = (
     REPO_ROOT / "verification" / "areas" / "python_interop" / "declaration_capabilities.json"
 )
 RUST_INTEROP_MANIFEST = REPO_ROOT / "verification" / "areas" / "rust_interop" / "manifest.json"
+SQL_PLATFORM_MANIFEST = REPO_ROOT / "verification" / "areas" / "sql_platform" / "manifest.json"
 
 
 def profile_path(profile: str, profiles_dir: Path = PROFILES_DIR) -> Path:
@@ -159,8 +160,18 @@ def validate_selected_area_suites(profile: dict[str, Any]) -> None:
                     f"profile {profile.get('name')} omits required Rust interop "
                     f"verification suites: {', '.join(missing)}"
                 )
+        if area == "sql_platform":
+            required_suites = required_sql_platform_suites()
+            missing = sorted(required_suites.difference(selected_suites))
+            if missing:
+                raise ProfileError(
+                    f"profile {profile.get('name')} omits required SQL platform "
+                    f"verification suites: {', '.join(missing)}"
+                )
     if profile.get("name") != "python-interop-live" and "rust_interop" not in seen_areas:
         raise ProfileError(f"profile {profile.get('name')} omits the required Rust interop area")
+    if profile.get("name") != "python-interop-live" and "sql_platform" not in seen_areas:
+        raise ProfileError(f"profile {profile.get('name')} omits the required SQL platform area")
 
 
 def required_rust_interop_suites() -> set[str]:
@@ -171,6 +182,21 @@ def required_rust_interop_suites() -> set[str]:
     names = {str(suite["name"]) for suite in suites if isinstance(suite, dict) and isinstance(suite.get("name"), str)}
     if len(names) != len(suites):
         raise ProfileError("Rust interop area manifest has invalid or duplicate suites")
+    return names
+
+
+def required_sql_platform_suites() -> set[str]:
+    manifest = load_json(SQL_PLATFORM_MANIFEST)
+    suites = manifest.get("suites") if isinstance(manifest, dict) else None
+    if not isinstance(suites, list) or not suites:
+        raise ProfileError("SQL platform area manifest has no suites")
+    names = {
+        str(suite["name"])
+        for suite in suites
+        if isinstance(suite, dict) and isinstance(suite.get("name"), str)
+    }
+    if len(names) != len(suites):
+        raise ProfileError("SQL platform area manifest has invalid or duplicate suites")
     return names
 
 

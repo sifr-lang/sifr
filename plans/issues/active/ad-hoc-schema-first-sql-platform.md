@@ -1,8 +1,8 @@
 # Ad hoc phase: Schema-first SQL platform
 
-Status: planned
+Status: active
 
-Baseline commit: `907fe8e3c2fbe64c5e6afb4ed5fda047b34dc68b`
+Baseline commit: `90762c7872de0de05f760ac91f95463d9c679d59`
 
 ## Objective
 
@@ -275,7 +275,7 @@ verification inventory. This phase does not reimplement those capabilities.
 
 | Milestone | Status | Name | Required outcome |
 |---:|---|---|---|
-| 0 | pending | Architecture and dependency lock | The final architecture, language dependencies, ownership map, capability matrix, verification inventory, and phase gates are authoritative and machine validated. |
+| 0 | in progress | Architecture and dependency lock | The final architecture, language dependencies, ownership map, capability matrix, verification inventory, and phase gates are authoritative and machine validated. |
 | 1 | pending | Template-string language foundation | Template strings preserve static segments, typed holes, evaluation order, and exact source maps through the full compiler pipeline. |
 | 2 | pending | Structural record type system | Immutable records have order-independent canonical identity, width subtyping, deterministic diagnostics, and interned Rust layouts. |
 | 3 | pending | Compiler component platform | Resolved packages can provide deterministic sandboxed embedded-language analysis through one closed, versioned, cacheable protocol. |
@@ -1249,7 +1249,7 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 
 | Milestone | Status | Pull request | Merge commit | Validation | Review | Notes |
 | ---: | --- | --- | --- | --- | --- | --- |
-| 0 | pending | — | — | — | — | Architecture and dependency lock |
+| 0 | in progress | — | — | — | — | Architecture and dependency lock |
 | 1 | pending | — | — | — | — | Template-string language foundation |
 | 2 | pending | — | — | — | — | Structural record type system |
 | 3 | pending | — | — | — | — | Compiler component platform |

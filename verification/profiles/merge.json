@@ -699,6 +699,17 @@
       "resource_classes": [
         "external-corpus"
       ]
+    },
+    {
+      "area": "sql_platform",
+      "suites": [
+        "contracts",
+        "dependency-baseline",
+        "mutation"
+      ],
+      "resource_classes": [
+        "default-local"
+      ]
     }
   ],
   "toolchain_steps": [
