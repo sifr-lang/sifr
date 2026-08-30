@@ -171,6 +171,26 @@
       ]
     },
     {
+      "name": "postgresql-runtime",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "sql-postgresql-runtime-qualification",
+          "entry": "verification/areas/sql_platform/data/postgresql_runtime_qualification.json",
+          "command": "sql-postgresql-runtime-qualification",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-postgresql-runtime-tests",
+          "entry": "crates/sifr_sql_postgresql_runtime/tests/runtime_types.rs",
+          "command": "sql-postgresql-runtime-tests",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
       "name": "mutation",
       "kind": "adapter",
       "cases": [
@@ -222,6 +242,13 @@
           "command": "sql-postgresql-compiler-qualification-mutations",
           "expect_exit_code": 0,
           "diagnostic_formats": []
+        },
+        {
+          "id": "sql-postgresql-runtime-qualification-mutations",
+          "entry": "verification/areas/sql_platform/data/postgresql_runtime_qualification.json",
+          "command": "sql-postgresql-runtime-qualification-mutations",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
         }
       ]
     },
@@ -240,6 +267,26 @@
           "id": "sql-postgresql-live-differential",
           "entry": "verification/areas/sql_platform/tools/run_postgresql_server_matrix.py",
           "command": "sql-postgresql-live-differential",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "postgresql-live-runtime",
+      "kind": "adapter",
+      "resource_classes": [
+        "container-runtime",
+        "network",
+        "platform-specific"
+      ],
+      "network_mode": "live",
+      "timeout_seconds": 3600,
+      "cases": [
+        {
+          "id": "sql-postgresql-live-runtime",
+          "entry": "verification/areas/sql_platform/tools/run_postgresql_runtime_matrix.py",
+          "command": "sql-postgresql-live-runtime",
           "expect_exit_code": 0,
           "diagnostic_formats": []
         }

@@ -18,7 +18,7 @@
     {"id": "typed-fragments", "platform_part": "query_composition", "repository_owner": "sifr_type_system", "acceptance": "fragment categories, scope, aliases, precedence, and unsafe capability"},
     {"id": "postgresql-query-compiler", "platform_part": "postgresql_compiler", "repository_owner": "sifr-sql-postgresql/component", "acceptance": "strict parsing, resolution, typing, nullability, writes, and diagnostics"},
     {"id": "postgresql-advanced-semantics", "platform_part": "postgresql_semantics", "repository_owner": "sifr-sql-postgresql/component", "acceptance": "advanced grammar, cardinality, codecs, fragments, and public stability"},
-    {"id": "postgresql-runtime", "platform_part": "postgresql_runtime", "repository_owner": "sifr-sql-postgresql/runtime", "acceptance": "verified pools, sessions, execution, transactions, streams, cancellation, and panic safety"},
+    {"id": "postgresql-runtime", "platform_part": "postgresql_runtime", "repository_owner": "sifr_sql_postgresql_runtime", "acceptance": "verified pools, sessions, execution, transactions, streams, cancellation, and panic safety"},
     {"id": "sql-incremental-analysis", "platform_part": "incremental_editor", "repository_owner": "sifr_analysis", "acceptance": "cache identity, dependency invalidation, determinism, and budgets"},
     {"id": "sql-editor", "platform_part": "incremental_editor", "repository_owner": "sifr_lsp", "acceptance": "virtual documents, source maps, navigation, formatting, and fixes"},
     {"id": "host-tool-graph", "platform_part": "host_tools", "repository_owner": "sifr_package", "acceptance": "host-only Cargo graph, namespaces, capabilities, and cross-compilation"},

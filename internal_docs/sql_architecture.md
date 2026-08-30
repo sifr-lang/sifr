@@ -1566,6 +1566,12 @@ Each provider distribution contains separate component, runtime, and tool
 artifacts. They can share one source repository and one release identity. Their
 dependency graphs and target environments remain separate.
 
+The implemented PostgreSQL runtime bridge is detailed in
+[`sql_postgresql_runtime.md`](./sql_postgresql_runtime.md). It defines verified
+pool states, raw-driver boundaries, task ownership, execution shapes,
+transactions, streaming, cancellation, and PostgreSQL 13 through 18 live
+qualification.
+
 ### Selected implementation foundations
 
 The selected names below are architecture choices. `Cargo.lock` and component
@@ -1853,7 +1859,8 @@ profile modules, and runtime verification manifests.
 The implemented common type, bind, codec, cardinality, effect, error, provider,
 and ownership contracts are detailed in
 [`sql_common_contracts.md`](./sql_common_contracts.md). The common runtime uses
-only `sifr_runtime`; no compiler contract or raw database driver enters it.
+`sifr_runtime` and Tokio synchronization and timing primitives. No compiler
+contract or raw database driver enters it.
 
 The implemented query and fragment substrate is detailed in
 [`sql_query_fragments.md`](./sql_query_fragments.md). It defines the two public
@@ -1868,6 +1875,10 @@ diagnostics, and differential server evidence.
 A new `sifr_sql_runtime` crate owns package-neutral SQL pooling, verified leases,
 session reset coordination, statement-cache policy, and cancellation cleanup. It
 depends on `sifr_runtime` and contains no provider driver or dialect semantics.
+
+The PostgreSQL provider implements that policy in
+`sifr_sql_postgresql_runtime`. It uses raw `tokio-postgres`, `postgres-types`,
+and `tokio-postgres-rustls` clients behind a driver-free public API.
 
 Dialect packages own their parser, analyzer, schema normalizer, WebAssembly
 component, Sifr API declarations, audited Rust runtime bridge, tools, migration

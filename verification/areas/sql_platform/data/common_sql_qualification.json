@@ -89,7 +89,7 @@
   "ownership": {
     "pool": ["clone", "send", "share-safe"],
     "connection": ["owned", "non-clone", "non-send"],
-    "transaction": ["exclusive-connection-borrow", "non-send"],
+    "transaction": ["exclusive-connection-ownership", "non-send", "terminally-consuming"],
     "row-stream": ["owner-borrow-or-owned-lease", "non-send"],
     "bound-parameters": ["owned", "ordered", "duplicate-free"]
   },
@@ -99,8 +99,13 @@
       "execution-shapes",
       "handle-states",
       "panic-containment",
+      "pool-coordination",
       "redacted-errors",
-      "resource-accounting"
+      "resource-accounting",
+      "session-reset-policy",
+      "statement-cache-policy",
+      "transaction-state-machine",
+      "verification-policy"
     ],
     "provider_owns": [
       "database-driver",

@@ -64,6 +64,14 @@ fn bound_parameters_are_owned_ordered_and_duplicate_free() {
     .expect("distinct owned parameters should bind");
     assert_eq!(bound.as_slice()[0].slot, 0);
     assert_eq!(bound.as_slice()[1].slot, 1);
+    assert!(
+        BoundParameters::new(vec![OwnedParameter {
+            slot: 1,
+            codec: RuntimeCodecIdentity::new("postgresql.text.v1").expect("valid codec"),
+            value: OwnedSqlValue::Text("gap".to_string()),
+        }])
+        .is_err()
+    );
 }
 
 #[test]
@@ -79,6 +87,7 @@ fn error_display_is_stable_and_never_renders_provider_metadata() {
         columns: Vec::new(),
         retry: RetryClassification::Never,
         resource_limit: None,
+        cardinality: None,
     };
     let error = SqlError::with_metadata(SqlErrorKind::Constraint, metadata)
         .expect("printable metadata is structurally safe");

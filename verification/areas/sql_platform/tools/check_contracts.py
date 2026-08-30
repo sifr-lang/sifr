@@ -52,6 +52,7 @@ PROFILE_SUITES = {
     "dependency-baseline",
     "mutation",
     "postgresql-compiler",
+    "postgresql-runtime",
     "query-fragments",
     "schema-profiles",
 }

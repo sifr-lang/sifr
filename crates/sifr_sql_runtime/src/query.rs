@@ -205,6 +205,7 @@ impl OrderedParameterEncoder {
 fn parameter_error(error: ParameterError) -> SqlError {
     let kind = match error {
         ParameterError::DuplicateSlot
+        | ParameterError::NonContiguousSlot
         | ParameterError::InvalidExactInteger
         | ParameterError::InvalidTypeIdentity => SqlErrorKind::Encode,
     };

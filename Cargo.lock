@@ -7908,11 +7908,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "sifr_sql_postgresql_runtime"
+version = "0.0.0"
+dependencies = [
+ "bytes",
+ "futures-core",
+ "postgres-types",
+ "rustls",
+ "rustls-platform-verifier",
+ "sha2 0.11.0",
+ "sifr_runtime",
+ "sifr_sql_runtime",
+ "static_assertions",
+ "tokio",
+ "tokio-postgres",
+ "tokio-postgres-rustls",
+]
+
+[[package]]
 name = "sifr_sql_runtime"
 version = "0.0.0"
 dependencies = [
  "sifr_runtime",
  "static_assertions",
+ "tokio",
 ]
 
 [[package]]
