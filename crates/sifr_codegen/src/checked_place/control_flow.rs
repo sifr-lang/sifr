@@ -62,6 +62,7 @@ impl RustEmitter {
         &self,
         condition: &crate::HirExpr,
         body: &[crate::HirStmt],
+        missing: &RustStmt,
     ) -> (Vec<String>, Vec<RustStmt>) {
         let condition_reads =
             crate::hir_analysis::queries::collection_reads_in_condition(condition)
@@ -84,7 +85,7 @@ impl RustEmitter {
             .map(|(_, witness)| RustStmt::LetElse {
                 pattern: format!("Some({})", witness.binding),
                 value: witness.option,
-                else_body: vec![RustStmt::Break],
+                else_body: vec![missing.clone()],
             })
             .collect();
         (keys, guards)

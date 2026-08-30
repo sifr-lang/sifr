@@ -99,17 +99,22 @@ def branch_witness_missing_breaks_while() -> int:
             total += values[0]
             clear_values(values)
             i += 1
+        else:
+            total = 99
         return total
     return -1
 
 
 def condition_witness_missing_breaks_while() -> int:
     values: list[int] = [1]
+    result: int = 7
     if len(values) == 0:
         return -1
     while values[0] < 3:
         clear_values(values)
-    return 7
+    else:
+        result = 99
+    return result
 
 
 def main():

@@ -461,6 +461,8 @@ def total(mut values: list[int]) -> int:
             result += values[0]
             clear_values(values)
             i += 1
+        else:
+            result = 99
         return result
     return -1
 "#,
@@ -475,10 +477,16 @@ def total(mut values: list[int]) -> int:
     let Some(missing_break) = loop_body[refresh..].find("break;") else {
         panic!("missing terminating refresh action: {generated}");
     };
+    let Some(broke_marker) = loop_body[refresh..].find("_broke = true") else {
+        panic!("missing loop-else suppression marker: {generated}");
+    };
     let Some(progress) = loop_body[refresh..].find("i = &i +") else {
         panic!("missing while progress update: {generated}");
     };
-    assert!(missing_break < progress, "{generated}");
+    assert!(
+        broke_marker < missing_break && missing_break < progress,
+        "{generated}"
+    );
     assert!(
         !loop_body.contains("if let Some(__sifr_checked_value_"),
         "a missing witness must not skip the entire while body: {generated}"
