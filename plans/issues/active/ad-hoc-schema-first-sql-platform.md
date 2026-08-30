@@ -283,7 +283,7 @@ verification inventory. This phase does not reimplement those capabilities.
 | 5 | completed | Common SQL contracts | Shared query kinds, complete type and bind mappings, codecs, errors, cardinality, effects, ownership, and provider interfaces have one final contract. |
 | 6 | completed | Query and fragment substrate | Query templates, owned bound queries, typed fragments, composition, safe interpolation, and cardinality adapters integrate with Sifr typing and HIR. |
 | 7 | completed | PostgreSQL schema and query compiler | PostgreSQL catalogs, grammar, resolution, typing, nullability, result records, writes, dependencies, and diagnostics work offline. |
-| 8 | pending | PostgreSQL semantic completion | Advanced PostgreSQL constructs, fragment scope changes, cardinality proofs, custom codecs, and exported-query stability rules are complete. |
+| 8 | completed | PostgreSQL semantic completion | Advanced PostgreSQL constructs, fragment scope changes, cardinality proofs, custom codecs, and exported-query stability rules are complete. |
 | 9 | pending | PostgreSQL runtime | Verified pools, session contracts, transactions, streaming, automatic statement caching, explicit fetch methods, bounded cleanup, tests, and panic-safe protocol handling are complete. |
 | 10 | pending | Incremental compiler and editor experience | Fine-grained caching, invalidation, virtual SQL documents, source maps, completion, navigation, rename, formatting, and quick fixes are complete. |
 | 11 | pending | Host tool graph and command runner | Cargo-locked host-only tool packages execute direct command namespaces without entering application code generation. |
@@ -641,23 +641,23 @@ Owned scope:
 
 Acceptance criteria:
 
-- [ ] Arrays, ranges, composite types, domains, enums, JSON operations, windows,
+- [x] Arrays, ranges, composite types, domains, enums, JSON operations, windows,
   common table expressions, locking, and PostgreSQL-specific DDL are complete.
-- [ ] Outer joins, aggregates, `CASE`, scalar subqueries, and provider functions
+- [x] Outer joins, aggregates, `CASE`, scalar subqueries, and provider functions
   produce exact nullability facts.
-- [ ] Unique predicates, limits, aggregates, writes, and set operations produce
+- [x] Unique predicates, limits, aggregates, writes, and set operations produce
   sound cardinality intervals.
-- [ ] Join and select-list fragments transform relation scope and result records
+- [x] Join and select-list fragments transform relation scope and result records
   without losing static typing.
-- [ ] Values and assignment fragments cover bounded batches, dynamic updates,
+- [x] Values and assignment fragments cover bounded batches, dynamic updates,
   conflict behavior, provider parameter limits, and explicit chunking semantics.
-- [ ] Custom codecs have one declared database identity and checked encode/decode
+- [x] Custom codecs have one declared database identity and checked encode/decode
   behavior.
-- [ ] Exported `SELECT *`, unstable names, duplicate names, and schema-sensitive
+- [x] Exported `SELECT *`, unstable names, duplicate names, and schema-sensitive
   public types have final lint behavior and machine-applicable fixes.
-- [ ] The compiler expands accepted private `SELECT *` forms to explicit emitted
+- [x] The compiler expands accepted private `SELECT *` forms to explicit emitted
   columns. Exported `SELECT *` is always an error.
-- [ ] Application `sifr build` emits query-signature artifacts for package API
+- [x] Application `sifr build` emits query-signature artifacts for package API
   compatibility checks.
 
 Focused validation:
@@ -1268,7 +1268,7 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 | 5 | completed | [#3597](https://github.com/sifr-lang/sifr/pull/3597) | `7f2382ae68` | contract 9/9; runtime 9/9 plus 2 compile-fail doctests; diagnostics 32/32; SQL common qualification; strict Clippy and guards pass | Final exact-SHA Opus `SATISFIED` on `f7a3e5a35` | Provider-neutral type, bind, codec, cardinality, effect, error, runtime, and ownership contracts |
 | 6 | completed | [#3599](https://github.com/sifr-lang/sifr/pull/3599) | `9944bdd450` | SQL 19/19; coverage 4/4; contract 23/23; runtime 12/12 plus two doctests; frontend 3/3; driver 2/2; strict Clippy and guards pass | Opus remediation `SATISFIED` on `0abd5109f` | Query and fragment substrate, registry, generated identifier codec, HIR, runtime binding, and execution request lowering |
 | 7 | completed | [#3602](https://github.com/sifr-lang/sifr/pull/3602) | `46f1d06d8e` | PostgreSQL 13-18 native, component, and live matrices; SQL qualification, mutation, Clippy, and guards pass | Opus round 2 verified every original remediation on `6cd745149`; two new mechanisms are deferred | PostgreSQL schema and query compiler |
-| 8 | pending | — | — | — | — | PostgreSQL semantic completion |
+| 8 | completed | [#3604](https://github.com/sifr-lang/sifr/pull/3604) | `e18e0a92d5` | SQL 4/4; PostgreSQL 13-18 native and component suites; contract, build-output, strict Clippy, and guards pass | Opus round 2 closed the original nested-star blocker on `94fbb6e0f`; one new semantic-flag mechanism is deferred | PostgreSQL advanced semantics, stable projections, codecs, fragments, and query-signature artifacts |
 | 9 | pending | — | — | — | — | PostgreSQL runtime |
 | 10 | pending | — | — | — | — | Incremental compiler and editor experience |
 | 11 | pending | — | — | — | — | Host tool graph and command runner |
@@ -1310,6 +1310,11 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 | Milestone 7 remediation review | The live PostgreSQL suite conflicts with the standard profiles' offline-only contract, so both required repository gates stop before tests. | Milestone 18 | Add an explicit live SQL profile or another verification-owned opt-in model. Keep standard profiles offline and make profile assignment validation understand live suites. |
 | Milestone 7 remediation review | The live server runner captures fresh facts but its default mode does not compare them with the checked evidence. | Milestone 18 | Make default execution fail on evidence drift. Keep `--write` as the explicit refresh operation. |
 | Milestone 7 remediation review | `A_Star` and unary minus produce misleading adapter diagnostics, and mixed aggregate queries lack a local GROUP BY validity check. | Milestone 8 | Add explicit syntax nodes or diagnostics and complete same-query-level grouping validation with positive and negative fixtures. |
+| Milestone 8 initial review | The application build creates a query-signature registry, but source-level query lowering does not populate it yet. | Milestone 18 | Wire normal `@profile.query` compilation into the build registry. Prove that a package with exported queries emits non-empty compatibility entries. |
+| Milestone 8 initial review | Projection fixes use prose instead of structured source edits. | Milestone 10 | Attach spans and replacements to projection diagnostics and expose them as language-server quick fixes. |
+| Milestone 8 remediation review | Set operations inherit operand `deterministic-order` flags without an outer `ORDER BY`. | Milestone 18 | Propagate only inheritable operand flags. Add a regression that rejects operand ordering as a set-result guarantee. |
+| Milestone 8 remediation review | `EXISTS (SELECT *)` follows the uniform exported no-star rule, but its diagnostic implies that the exported result projection contains the star. | Milestone 10 | Keep or narrow the policy explicitly, then make the diagnostic and quick fix describe the actual nested location. |
+| Milestone 8 remediation review | A locking clause on a set operand is not rejected by the enclosing set-operation check. | Milestone 18 | Reject row locking anywhere under `UNION`, `INTERSECT`, or `EXCEPT`. Add direct and parenthesized operand fixtures. |
 
 ### Milestone 0 closure record
 
@@ -1756,6 +1761,80 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 - Next action: start Milestone 8 with the two deferred soundness mechanisms, then
   complete every advanced PostgreSQL semantic and public-stability criterion.
 
+### Milestone 8 closure record
+
+- Status: completed and merged under the phase continuation rule.
+- Starting commit: `8341f37dd9ad4d7bf59fa81801f133a7caf6047b`.
+- Initial reviewed candidate: `a568927347837c6e2220583c96c50c87aac057b0`.
+- Remediation reviewed and final candidate:
+  `94fbb6e0f9abe53af8f48b6e73c4068f20dfc929`.
+- Pull request: [#3604](https://github.com/sifr-lang/sifr/pull/3604).
+- Merge commit: `e18e0a92d5e2f4b587a850db3991009587a825d2`.
+- Acceptance disposition: the merged candidate implements all nine Milestone 8
+  criteria and closes the Milestone 7 aggregate, `DEFAULT`, syntax-node, and
+  grouping findings. The permitted second review found one new semantic-flag
+  mechanism. The user rule prohibits a third review and assigns that mechanism
+  to Milestone 18. Final qualification cannot use set-result ordering evidence
+  from Milestone 8 until that row closes.
+- PostgreSQL result: the provider owns arrays, ranges, composites, domains,
+  enums, JSON operations, windows, named-window validation, CTE scope, row
+  locking, provider DDL, contextual unknown literals, and exact qualified
+  built-in type identities for PostgreSQL 13 through 18.
+- Proof result: outer joins, aggregates, `CASE`, `COALESCE`, scalar subqueries,
+  provider functions, primary-key grouping, unique predicates, limits, writes,
+  and set operations produce checked nullability and sound cardinality
+  intervals. Property families cover limits, offsets, filtered singletons,
+  grouping, joins, scalar subqueries, and window placement.
+- Stability result: private stars expand by exact source span in top-level,
+  set, CTE, derived-table, subquery, and `RETURNING` projections. Any star marks
+  the enclosing analysis, and exported registration rejects it. Stable query
+  signatures include parameters, result records, cardinality, effects, and
+  referenced and affected schema objects.
+- Contract result: join, select-list, values, returning, and assignment fragments
+  preserve or transform scope, results, and effects explicitly. Batches enforce
+  provider parameter limits and explicit chunking. Custom codecs bind one exact
+  database identity to checked, fallible encode and decode operations.
+- Build result: application `sifr build` writes canonical
+  `sifr-query-signatures.json` atomically and reports its path. Normal
+  source-level query lowering does not populate entries yet; Milestone 18 owns
+  the integrated non-empty package proof.
+- Focused validation: the milestone SQL suite passed four of four variants.
+  PostgreSQL 13, 14, 15, 16, 17, and 18 passed native parser, semantic, and
+  regression suites. All six regenerated components passed capability-free host
+  execution. Contract semantic completion passed 4/4, fragment contracts passed
+  6/6, PostgreSQL regressions passed 6/6, and application build-output behavior
+  passed 12/12. Strict focused Clippy, formatting, PostgreSQL qualification,
+  file-size, HIR maintainability, and diff checks passed.
+- Create-PR gate: the one allowed run used the exact final candidate. It stopped
+  before tests because the global profile validator requires
+  `postgresql-live-differential` in the offline `create-pr` profile. The gate did
+  not run again. Milestone 18 already owns this profile-model correction.
+- Merge gate: the one allowed run used the same exact final candidate. It stopped
+  before tests on the same live-suite and offline-profile contradiction. The
+  gate did not run again.
+- Review round 1: Opus returned `NOT SATISFIED` because set operands, CTEs, and
+  derived tables could hide `SELECT *` from expansion and exported-query
+  rejection. The [published review](https://github.com/sifr-lang/sifr/pull/3604#issuecomment-5470202950)
+  records the exact candidate and findings.
+- Remediation: one context-wide span map records every star expansion. The
+  analyzer applies replacements in reverse source order, marks the enclosing
+  analysis, preserves nested set flags, and tests direct, set, CTE, and derived
+  forms. Distinct unions also cap duplicate-sensitive positive lower bounds at
+  one.
+- Review round 2: Opus verified that the original star blocker is resolved. It
+  returned `NOT SATISFIED` for a new mechanism: set results can inherit an
+  operand-only `deterministic-order` flag. The
+  [published review](https://github.com/sifr-lang/sifr/pull/3604#issuecomment-5470203053)
+  assigns it to Milestone 18 and prohibits a third review.
+- Additional follow-up: Milestone 10 owns structured projection quick fixes and
+  nested-star diagnostic wording. Milestone 18 owns non-empty application
+  signature integration and locking rejection below set operands.
+- Architecture update: the PostgreSQL compiler document now defines advanced
+  types, queries, nullability, cardinality, star expansion, fragments, custom
+  codecs, and query-signature behavior. The roadmap status did not change
+  because the phase remains active.
+- Next action: implement Milestone 9 from the merged and recorded mainline.
+
 ## Closure evidence template
 
 Each milestone appends one progress record with:
@@ -1787,5 +1866,5 @@ Complete this section after Milestone 18 merges:
 - Final capability and verification inventory: pending.
 - Deferred out-of-scope work: pending.
 - Archive destination: `plans/issues/archive/ad-hoc-schema-first-sql-platform.md`.
-- Exact next action: implement Milestone 8 from current
+- Exact next action: implement Milestone 9 from current
   `origin/main`.
