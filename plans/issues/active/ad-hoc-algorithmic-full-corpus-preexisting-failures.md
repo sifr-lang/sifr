@@ -385,3 +385,13 @@ pre-merge table status.
 - [ ] The authoritative create-PR and merge profiles, Clippy, rustfmt,
   maintainability, file-size, and diff-hygiene gates pass locally.
 - [ ] Review rounds are satisfied and all remediation PRs are merged.
+
+## External validation observation
+
+- On 2026-08-30, the SQL Milestone 2 merge gate reached this verification area.
+- The worktree contained gitlink `ad116aa8dcae51b7db1bdf0052470456d671d31b`.
+- The worktree did not initialize the gitlink. Therefore, the required `src/`
+  directory was absent.
+- The algorithmic runner stopped before corpus execution. This result is an
+  environment failure and does not change corpus qualification evidence.
+- The SQL workstream did not initialize the external corpus or run a second gate.
