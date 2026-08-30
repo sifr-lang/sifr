@@ -64,6 +64,8 @@ same milestone must update both records and explain the resolved contract.
     cancellation cleanup, migrations, and public codecs above raw drivers.
 17. Compiler and editor semantics use one strict provider parser. A generic SQL
     parser cannot become a second semantic authority.
+18. Milestone 0 resolves and locks the latest stable compatible tooling set.
+    Every later milestone uses that exact baseline until an approved upgrade.
 
 ## Scope
 
@@ -164,6 +166,12 @@ same milestone must update both records and explain the resolved contract.
   milestone and one repository owner.
 - [ ] A dependency qualification manifest locks parser sources, runtime crates,
   TLS adapters, feature sets, licenses, checksums, target support, and audits.
+- [ ] `verification/areas/sql_platform/dependency_baseline.toml` records the
+  latest stable compatible version from every documented release authority.
+- [ ] The baseline generator excludes prereleases and yanked releases. It rejects
+  incompatible release families, broad version ranges, and unlocked Git sources.
+- [ ] The generated baseline matches the dated architecture table or updates it
+  in the same change. The root lockfile resolves every selected crate exactly.
 - [ ] Package metadata separates public Sifr APIs, WebAssembly components,
   runtime bridges, and host-only tools in the resolved graph.
 - [ ] A capability matrix lists required PostgreSQL, MySQL, and SQLite grammar,
@@ -287,6 +295,8 @@ same milestone must update both records and explain the resolved contract.
 
 ### Milestone 7: PostgreSQL schema and query compiler
 
+- [ ] The provider uses the Milestone 0 `libpg_query` tag for each supported
+  PostgreSQL major. The component manifest records every source checksum.
 - [ ] The provider embeds tagged `libpg_query` source for each supported server
   major and maps its raw tree into provider-owned syntax nodes.
 - [ ] Catalog ingestion and DDL sources normalize every supported PostgreSQL
@@ -325,6 +335,8 @@ same milestone must update both records and explain the resolved contract.
 
 ### Milestone 9: PostgreSQL runtime
 
+- [ ] Runtime manifests use the exact Milestone 0 versions of Tokio, Rustls,
+  `tokio-postgres`, `postgres-types`, and `tokio-postgres-rustls`.
 - [ ] The runtime uses raw `tokio-postgres`, `postgres-types`, and
   `tokio-postgres-rustls` clients with an explicit feature allowlist.
 - [ ] `sifr_sql_runtime` owns pooling, verified leases, session reset,
@@ -461,6 +473,8 @@ same milestone must update both records and explain the resolved contract.
 
 ### Milestone 16: MySQL provider completion
 
+- [ ] Component and runtime manifests use the exact Milestone 0 versions of
+  LALRPOP, `mysql_async`, `mysql_common`, Tokio, and Rustls.
 - [ ] A provider-owned LALRPOP grammar, lexer, AST, recovery mode, and version
   gates pass differential parsing against each supported MySQL server.
 - [ ] The runtime uses raw `mysql_async` connections without constructing its
@@ -480,6 +494,8 @@ same milestone must update both records and explain the resolved contract.
 
 ### Milestone 17: SQLite provider completion
 
+- [ ] Component and runtime manifests use the exact Milestone 0 versions of
+  syntaqlite, `rusqlite`, `libsqlite3-sys`, and the bundled SQLite amalgamation.
 - [ ] The component pins syntaqlite and its SQLite grammar for each supported
   SQLite version and qualified compile-flag set.
 - [ ] The runtime uses bundled `rusqlite` on dedicated blocking workers. It uses
@@ -499,6 +515,8 @@ same milestone must update both records and explain the resolved contract.
 
 ### Milestone 18: Integrated qualification and phase closure
 
+- [ ] The package graph, component manifests, tool workspace, and root lockfile
+  match the approved dependency baseline without version drift.
 - [ ] Automated checks reject unlocked parser or driver sources, unapproved
   features, missing license records, and parser-runtime version mismatches.
 - [ ] SQLx, generic SQL parsers, generic pools, and ORM migration engines do not

@@ -1398,6 +1398,59 @@ not change the architecture, but it requires provider qualification.
 | SQLite strict parser | [`syntaqlite`](https://github.com/LalitMaganti/syntaqlite) with its SQLite grammar and tokenizer | The component pins the SQLite version and compile flags recorded by the schema profile. |
 | SQLite runtime protocol | [`rusqlite`](https://docs.rs/rusqlite/) with bundled SQLite | The provider owns a dedicated blocking worker and exposes no raw connection. |
 
+### Stable version baseline
+
+The following versions are the latest stable compatible set verified on
+2026-08-30. A stable release has no prerelease suffix and is not yanked.
+
+| Tool | Baseline | Release authority |
+| --- | --- | --- |
+| Tokio | `1.53.1` | [`tokio` releases](https://crates.io/crates/tokio/1.53.1) |
+| Rustls | `0.23.43` | [`rustls` releases](https://crates.io/crates/rustls/0.23.43) |
+| Tokio Rustls | `0.26.4` | [`tokio-rustls` releases](https://crates.io/crates/tokio-rustls/0.26.4) |
+| Rustls platform verifier | `0.7.0` | [`rustls-platform-verifier` releases](https://crates.io/crates/rustls-platform-verifier/0.7.0) |
+| Tokio PostgreSQL | `0.7.18` | [`tokio-postgres` releases](https://crates.io/crates/tokio-postgres/0.7.18) |
+| PostgreSQL types | `0.2.14` | [`postgres-types` releases](https://crates.io/crates/postgres-types/0.2.14) |
+| Tokio PostgreSQL Rustls | `0.14.0` | [`tokio-postgres-rustls` releases](https://crates.io/crates/tokio-postgres-rustls/0.14.0) |
+| LALRPOP and LALRPOP utility | `0.23.1` | [`lalrpop` releases](https://crates.io/crates/lalrpop/0.23.1) |
+| MySQL async client | `0.37.0` | [`mysql_async` releases](https://crates.io/crates/mysql_async/0.37.0) |
+| MySQL protocol primitives | `0.37.3` | [`mysql_common` releases](https://crates.io/crates/mysql_common/0.37.3) |
+| Syntaqlite | `0.9.0` | [`syntaqlite` releases](https://crates.io/crates/syntaqlite/0.9.0) |
+| Rusqlite | `0.40.2` | [`rusqlite` releases](https://crates.io/crates/rusqlite/0.40.2) |
+| SQLite system bindings | `0.38.2` with SQLite `3.53.2` | [`libsqlite3-sys` releases](https://crates.io/crates/libsqlite3-sys/0.38.2) |
+
+`mysql_common` `0.38.2` is newer, but `mysql_async` `0.37.0` does not accept
+that release family. The baseline uses `0.37.3`, which is the latest stable
+release in the compatible `0.37` family.
+
+`rustls` `0.24.0-dev.1` is a prerelease. It does not qualify as a stable
+baseline. The provider uses `0.23.43` until Rustls publishes and qualifies a
+stable `0.24` release.
+
+`libpg_query` follows PostgreSQL major versions. The phase uses the latest
+stable parser tag for every PostgreSQL major that the capability matrix supports:
+
+| PostgreSQL major | `libpg_query` baseline | Release authority |
+| ---: | --- | --- |
+| 18 | `18.0.0` | [`18.0.0`](https://github.com/pganalyze/libpg_query/releases/tag/18.0.0) |
+| 17 | `17-6.2.2` | [`17-6.2.2`](https://github.com/pganalyze/libpg_query/releases/tag/17-6.2.2) |
+| 16 | `16-5.2.0` | [`16-5.2.0`](https://github.com/pganalyze/libpg_query/releases/tag/16-5.2.0) |
+| 15 | `15-4.2.4` | [`15-4.2.4`](https://github.com/pganalyze/libpg_query/releases/tag/15-4.2.4) |
+| 14 | `14-3.0.0` | [`14-3.0.0`](https://github.com/pganalyze/libpg_query/releases/tag/14-3.0.0) |
+| 13 | `13-2.2.0` | [`13-2.2.0`](https://github.com/pganalyze/libpg_query/releases/tag/13-2.2.0) |
+
+The SQLite component enables syntaqlite `pin-version` and `pin-cflags`. Its
+parser target must match SQLite `3.53.2` and the qualified amalgamation flags.
+Milestone 0 updates these values as one compatible unit.
+
+Milestone 0 must query each release authority again. It must replace a stale
+entry with the latest stable mutually compatible release. It must record the
+result in `verification/areas/sql_platform/dependency_baseline.toml`.
+
+The Milestone 0 record becomes binding for all later milestones. Later work
+cannot float to a new release or select a broad version range. An upgrade needs
+an updated dependency decision, lockfile, qualification record, and provider suite.
+
 The PostgreSQL component builds the selected `libpg_query` source into its
 sandboxed WebAssembly artifact. A small Rust adapter converts its raw parse tree
 into provider-owned nodes. A provider supports a PostgreSQL major version only
