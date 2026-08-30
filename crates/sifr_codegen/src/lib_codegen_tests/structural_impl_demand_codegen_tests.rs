@@ -38,7 +38,7 @@ fn structural_construction_uses_checked_defaults_for_missing_fields() {
         "{generated}"
     );
     assert!(
-        generated.contains("None => 7"),
+        generated.contains("None => SifrInt::from_i64(7)"),
         "missing structural fields must evaluate their checked default: {generated}"
     );
     assert!(
@@ -309,7 +309,7 @@ fn imported_stdlib_record_gets_one_late_canonical_structural_impl() {
             source_path: "stdlib/sifr/json.sifr".to_string(),
             source_sha256: "fixture".to_string(),
             nominal_types: std::collections::HashSet::from(["JsonValue".to_string()]),
-            rust: "struct JsonValue { value: i64 }".to_string(),
+            rust: "struct JsonValue { value: SifrInt }".to_string(),
         },
     );
 

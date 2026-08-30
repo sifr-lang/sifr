@@ -3,12 +3,15 @@ mod helper;
 
 use crate::helper::compute;
 
+use ::sifr_runtime::SifrInt;
+
 fn main() {
     println!("reachable_imports import-closure discovery demo:");
-    println!("{}", compute(6_i64));
+    println!("{}", compute(SifrInt::from_i64(6)));
 }
 
 // src/helper.rs
-pub fn compute(x: i64) -> i64 {
-    x * (7_i64)
+pub use ::sifr_runtime::SifrInt;
+pub fn compute(x: SifrInt) -> SifrInt {
+    &x * &SifrInt::from_i64(7)
 }

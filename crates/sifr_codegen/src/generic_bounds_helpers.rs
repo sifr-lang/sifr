@@ -1,6 +1,6 @@
 use crate::{RustEmitter, RustItem};
 use sifr_ir::{HirClass, HirFunction, HirStmt};
-use sifr_type_system::{FunctionType, OwnershipKind, Type};
+use sifr_type_system::{FunctionType, Type};
 use std::collections::{HashMap, HashSet};
 
 impl RustEmitter {
@@ -328,12 +328,15 @@ impl RustEmitter {
             .zip(conventions)
             .map(|(param, convention)| {
                 let converted = self.rust_ir_type_with_generics(param);
-                if convention.is_shared_borrow() && param.ownership() == OwnershipKind::Move {
+                if convention.is_shared_borrow() && !crate::helpers::is_copy_type_for_codegen(param)
+                {
                     crate::RustType::Ref {
                         mutable: false,
                         inner: Box::new(converted),
                     }
-                } else if convention.is_mut_borrow() && param.ownership() == OwnershipKind::Move {
+                } else if convention.is_mut_borrow()
+                    && !crate::helpers::is_copy_type_for_codegen(param)
+                {
                     crate::RustType::Ref {
                         mutable: true,
                         inner: Box::new(converted),
@@ -822,7 +825,7 @@ mod tests {
 
         assert_eq!(
             emitter.render_rust_type_with_generics(&ty),
-            format!("{canonical}<i64>")
+            format!("{canonical}<SifrInt>")
         );
     }
 
@@ -851,7 +854,7 @@ mod tests {
                 Box::new(Type::Int),
                 Box::new(Type::Never),
             )),
-            "Result<i64, ::std::convert::Infallible>"
+            "Result<SifrInt, ::std::convert::Infallible>"
         );
     }
 }

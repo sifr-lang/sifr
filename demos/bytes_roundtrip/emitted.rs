@@ -1,5 +1,6 @@
 // src/main.rs
 mod __sifr_project_nominals {
+    pub use ::sifr_runtime::SifrInt;
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct IOError {
         pub message: String,
@@ -74,15 +75,15 @@ mod __sifr_project_nominals {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct JSONDecodeError {
         pub message: String,
-        pub line: i64,
-        pub column: i64,
+        pub line: SifrInt,
+        pub column: SifrInt,
     }
     impl JSONDecodeError {
         pub fn new(message: String) -> Self {
             Self {
                 message,
-                line: 0,
-                column: 0,
+                line: SifrInt::from_i64(0),
+                column: SifrInt::from_i64(0),
             }
         }
     }
@@ -116,11 +117,14 @@ mod __sifr_project_nominals {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct JsonLimitError {
         pub message: String,
-        pub limit: i64,
+        pub limit: SifrInt,
     }
     impl JsonLimitError {
         pub fn new(message: String) -> Self {
-            Self { message, limit: 0 }
+            Self {
+                message,
+                limit: SifrInt::from_i64(0),
+            }
         }
     }
     impl ::std::fmt::Display for JsonLimitError {
@@ -132,15 +136,15 @@ mod __sifr_project_nominals {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TOMLDecodeError {
         pub message: String,
-        pub line: i64,
-        pub column: i64,
+        pub line: SifrInt,
+        pub column: SifrInt,
     }
     impl TOMLDecodeError {
         pub fn new(message: String) -> Self {
             Self {
                 message,
-                line: 0,
-                column: 0,
+                line: SifrInt::from_i64(0),
+                column: SifrInt::from_i64(0),
             }
         }
     }
@@ -210,6 +214,7 @@ pub use __sifr_project_nominals::ScopeFailure;
 pub use __sifr_project_nominals::TOMLDecodeError;
 pub use __sifr_project_nominals::TimeoutError;
 pub use __sifr_project_nominals::ValueError;
+use ::sifr_runtime::SifrInt;
 fn __io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
     let msg = e.to_string();
     let kind = {
@@ -234,24 +239,17 @@ fn __io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
 }
 fn main() {
     let payload: Vec<u8> = vec![
-        (98_i64) as u8, (105_i64) as u8, (110_i64) as u8, (97_i64) as u8, (114_i64) as
-        u8, (121_i64) as u8, (45_i64) as u8, (115_i64) as u8, (97_i64) as u8, (109_i64)
-        as u8, (112_i64) as u8, (108_i64) as u8, (101_i64) as u8
+        98u8, 105u8, 110u8, 97u8, 114u8, 121u8, 45u8, 115u8, 97u8, 109u8, 112u8, 108u8,
+        101u8
     ];
-    assert!(
-        payload.starts_with(& vec![(98_i64) as u8, (105_i64) as u8, (110_i64) as u8,
-        (97_i64) as u8, (114_i64) as u8, (121_i64) as u8])
-    );
-    assert!(
-        payload.ends_with(& vec![(115_i64) as u8, (97_i64) as u8, (109_i64) as u8,
-        (112_i64) as u8, (108_i64) as u8, (101_i64) as u8])
-    );
+    assert!(payload.starts_with(& vec![98u8, 105u8, 110u8, 97u8, 114u8, 121u8]));
+    assert!(payload.ends_with(& vec![115u8, 97u8, 109u8, 112u8, 108u8, 101u8]));
     let mut conversion_ok: bool = false;
     let __sifr_try_res: Result<(), ParseError> = (|| {
         let as_hex: String = {
             let __bytes_receiver = &payload;
             let mut __hex = String::with_capacity(
-                __bytes_receiver.len().saturating_mul(2),
+                __bytes_receiver.len().saturating_mul(2_usize),
             );
             for __byte in __bytes_receiver.iter() {
                 __hex.push_str(&format!("{:02x}", * __byte));

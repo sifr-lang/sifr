@@ -26,10 +26,8 @@ pub(super) fn lowers_leaf_expr_variants() {
 
     assert!(matches!(
         int_expr,
-        RustExpr::Cast {
-            ty: RustType::I64,
-            ..
-        }
+        RustExpr::FnCall { func, .. }
+            if matches!(func.as_ref(), RustExpr::Path(path) if path == &["SifrInt", "from_i64"])
     ));
     assert!(matches!(str_expr, RustExpr::Literal(RustLiteral::Str(_))));
     assert!(matches!(
@@ -66,7 +64,7 @@ pub(super) fn lowers_concrete_empty_list_with_explicit_rust_type() {
 
     assert_eq!(
         crate::render_expr(&concrete),
-        "{\n    let __sifr_empty_list_literal: Vec<Vec<i64>> = vec![];\n    __sifr_empty_list_literal\n}"
+        "{\n    let __sifr_empty_list_literal: Vec<Vec<SifrInt>> = vec![];\n    __sifr_empty_list_literal\n}"
     );
     assert_eq!(unresolved, RustExpr::Vec(Vec::new()));
     assert_eq!(nested_unresolved, RustExpr::Vec(Vec::new()));
@@ -271,8 +269,8 @@ pub(super) fn lowers_simple_numeric_binop_with_name_operands() {
         lowered,
         RustExpr::BinOp { op, left, right }
             if op == "+"
-                && matches!(left.as_ref(), RustExpr::Ident(name) if name == "lhs")
-                && matches!(right.as_ref(), RustExpr::Ident(name) if name == "rhs")
+                && matches!(left.as_ref(), RustExpr::Ref { expr, .. } if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "lhs"))
+                && matches!(right.as_ref(), RustExpr::Ref { expr, .. } if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "rhs"))
     ));
 }
 
@@ -300,10 +298,10 @@ pub(super) fn lowers_simple_mixed_int_float_division_with_name_operands() {
             if op == "/"
                 && matches!(
                     left.as_ref(),
-                    RustExpr::Cast {
-                        expr,
-                        ty: RustType::F64
-                    } if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "lhs")
+                    RustExpr::MethodCall { receiver, method, args }
+                        if method == "to_f64_proven_exact"
+                            && args.is_empty()
+                            && matches!(receiver.as_ref(), RustExpr::Ident(name) if name == "lhs")
                 )
                 && matches!(right.as_ref(), RustExpr::Ident(name) if name == "rhs")
     ));
@@ -332,8 +330,8 @@ pub(super) fn lowers_alias_wrapped_numeric_binop_with_name_operands() {
         lowered,
         RustExpr::BinOp { op, left, right }
             if op == "+"
-                && matches!(left.as_ref(), RustExpr::Ident(name) if name == "lhs")
-                && matches!(right.as_ref(), RustExpr::Ident(name) if name == "rhs")
+                && matches!(left.as_ref(), RustExpr::Ref { expr, .. } if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "lhs"))
+                && matches!(right.as_ref(), RustExpr::Ref { expr, .. } if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "rhs"))
     ));
 }
 
@@ -360,8 +358,8 @@ pub(super) fn lowers_simple_alias_base_int_binop_with_name_operands() {
         lowered,
         RustExpr::BinOp { op, left, right }
             if op == "+"
-                && matches!(left.as_ref(), RustExpr::Ident(name) if name == "lhs")
-                && matches!(right.as_ref(), RustExpr::Ident(name) if name == "rhs")
+                && matches!(left.as_ref(), RustExpr::Ref { expr, .. } if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "lhs"))
+                && matches!(right.as_ref(), RustExpr::Ref { expr, .. } if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "rhs"))
     ));
 }
 
@@ -391,10 +389,10 @@ pub(super) fn lowers_alias_wrapped_mixed_int_float_division_with_name_operands()
             if op == "/"
                 && matches!(
                     left.as_ref(),
-                    RustExpr::Cast {
-                        expr,
-                        ty: RustType::F64
-                    } if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "lhs")
+                    RustExpr::MethodCall { receiver, method, args }
+                        if method == "to_f64_proven_exact"
+                            && args.is_empty()
+                            && matches!(receiver.as_ref(), RustExpr::Ident(name) if name == "lhs")
                 )
                 && matches!(right.as_ref(), RustExpr::Ident(name) if name == "rhs")
     ));
@@ -440,17 +438,14 @@ pub(super) fn does_not_lower_simple_int_division_binop_with_non_float_result() {
 }
 
 #[test]
-pub(super) fn lowers_simple_floor_division_int_binop_as_div() {
+pub(super) fn defers_exact_integer_floor_division_to_proof_aware_lowering() {
     let bin = HirExpr::BinOp {
         left: Box::new(HirExpr::IntLiteral(7)),
         op: "//".to_string(),
         right: Box::new(HirExpr::IntLiteral(2)),
         ty: Type::Int,
     };
-    assert!(matches!(
-        try_lower_leaf_expr(&bin),
-        Some(RustExpr::BinOp { op, .. }) if op == "/"
-    ));
+    assert!(try_lower_leaf_expr(&bin).is_none());
 }
 
 #[test]
@@ -490,7 +485,7 @@ pub(super) fn lowers_simple_mixed_int_float_floor_division_binop_as_div_with_cas
         try_lower_leaf_expr(&bin),
         Some(RustExpr::BinOp { op, left, right })
             if op == "/"
-                && matches!(left.as_ref(), RustExpr::Cast { ty: RustType::F64, .. })
+                && matches!(left.as_ref(), RustExpr::MethodCall { method, .. } if method == "to_f64_proven_exact")
                 && matches!(right.as_ref(), RustExpr::Cast { ty: RustType::F64, .. })
     ));
 }
@@ -508,7 +503,7 @@ pub(super) fn lowers_simple_mixed_float_int_floor_division_binop_as_div_with_cas
         Some(RustExpr::BinOp { op, left, right })
             if op == "/"
                 && matches!(left.as_ref(), RustExpr::Cast { ty: RustType::F64, .. })
-                && matches!(right.as_ref(), RustExpr::Cast { ty: RustType::F64, .. })
+                && matches!(right.as_ref(), RustExpr::MethodCall { method, .. } if method == "to_f64_proven_exact")
     ));
 }
 
@@ -524,7 +519,7 @@ pub(super) fn lowers_simple_mixed_int_float_division_binop() {
         try_lower_leaf_expr(&bin),
         Some(RustExpr::BinOp { op, left, right })
             if op == "/"
-                && matches!(left.as_ref(), RustExpr::Cast { ty: RustType::F64, .. })
+                && matches!(left.as_ref(), RustExpr::MethodCall { method, .. } if method == "to_f64_proven_exact")
                 && matches!(right.as_ref(), RustExpr::Cast { ty: RustType::F64, .. })
     ));
 }
@@ -542,7 +537,7 @@ pub(super) fn lowers_simple_mixed_float_int_division_binop() {
         Some(RustExpr::BinOp { op, left, right })
             if op == "/"
                 && matches!(left.as_ref(), RustExpr::Cast { ty: RustType::F64, .. })
-                && matches!(right.as_ref(), RustExpr::Cast { ty: RustType::F64, .. })
+                && matches!(right.as_ref(), RustExpr::MethodCall { method, .. } if method == "to_f64_proven_exact")
     ));
 }
 
@@ -558,7 +553,7 @@ pub(super) fn lowers_simple_mixed_int_float_addition_binop() {
         try_lower_leaf_expr(&bin),
         Some(RustExpr::BinOp { op, left, right })
             if op == "+"
-                && matches!(left.as_ref(), RustExpr::Cast { ty: RustType::F64, .. })
+                && matches!(left.as_ref(), RustExpr::MethodCall { method, .. } if method == "to_f64_proven_exact")
                 && matches!(right.as_ref(), RustExpr::Cast { ty: RustType::F64, .. })
     ));
 }
@@ -576,7 +571,7 @@ pub(super) fn lowers_simple_mixed_float_int_modulo_binop() {
         Some(RustExpr::BinOp { op, left, right })
             if op == "%"
                 && matches!(left.as_ref(), RustExpr::Cast { ty: RustType::F64, .. })
-                && matches!(right.as_ref(), RustExpr::Cast { ty: RustType::F64, .. })
+                && matches!(right.as_ref(), RustExpr::MethodCall { method, .. } if method == "to_f64_proven_exact")
     ));
 }
 
@@ -592,8 +587,8 @@ pub(super) fn lowers_simple_int_true_division_binop_with_float_casts() {
         try_lower_leaf_expr(&bin),
         Some(RustExpr::BinOp { op, left, right })
             if op == "/"
-                && matches!(left.as_ref(), RustExpr::Cast { ty: RustType::F64, .. })
-                && matches!(right.as_ref(), RustExpr::Cast { ty: RustType::F64, .. })
+                && matches!(left.as_ref(), RustExpr::MethodCall { method, .. } if method == "to_f64_proven_exact")
+                && matches!(right.as_ref(), RustExpr::MethodCall { method, .. } if method == "to_f64_proven_exact")
     ));
 }
 
@@ -780,7 +775,8 @@ pub(super) fn lowers_unary_bitwise_invert_with_int_operand() {
         RustExpr::UnaryOp {
             op: ref operator,
             operand: ref inner,
-        } if operator == "!" && matches!(inner.as_ref(), RustExpr::Cast { ty: RustType::I64, .. })
+        } if operator == "!" && matches!(inner.as_ref(), RustExpr::FnCall { func, .. }
+            if matches!(func.as_ref(), RustExpr::Path(path) if path == &["SifrInt", "from_i64"]))
     ));
 }
 

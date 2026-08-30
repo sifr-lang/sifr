@@ -1,7 +1,9 @@
 // src/main.rs
 use ::std::collections::HashMap;
 
-static __SIFR_HOISTED_DICT_0: ::std::sync::LazyLock<HashMap<String, i64>> = ::std::sync::LazyLock::new(|| HashMap::from([("a".to_string(), 1_i64), ("b".to_string(), 2_i64)]));
+use ::sifr_runtime::SifrInt;
+
+static __SIFR_HOISTED_DICT_0: ::std::sync::LazyLock<HashMap<String, SifrInt>> = ::std::sync::LazyLock::new(|| HashMap::from([("a".to_string(), SifrInt::from_i64(1)), ("b".to_string(), SifrInt::from_i64(2))]));
 
 fn main() {
     let mut output: Vec<String> = vec![];

@@ -9,6 +9,7 @@ pub(crate) struct RecursiveOptionConstructorArgContext<'a> {
     pub(crate) effective_arg_ty: &'a Type,
     pub(crate) convention: ParamConvention,
     pub(crate) borrowed_name_arg: bool,
+    pub(crate) borrowed_name_materialized: bool,
 }
 
 impl RustEmitter {
@@ -49,6 +50,7 @@ impl RustEmitter {
         let arg_is_option = crate::helpers::is_option_type(context.effective_arg_ty);
         let arg_is_non_copy = !crate::helpers::is_copy_type_for_codegen(context.effective_arg_ty);
         let clone_before_adaptation = context.borrowed_name_arg
+            && !context.borrowed_name_materialized
             && arg_is_non_copy
             && (arg_is_option || !context.convention.is_owned());
         if clone_before_adaptation {
@@ -64,6 +66,7 @@ impl RustEmitter {
         } else {
             let param_is_owned_rust_value = context.convention.is_owned();
             let inner = if !clone_before_adaptation
+                && !context.borrowed_name_materialized
                 && (!param_is_owned_rust_value || context.borrowed_name_arg)
                 && arg_is_non_copy
             {

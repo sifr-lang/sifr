@@ -37,7 +37,14 @@ impl RustEmitter {
                 )
             }
             (HirExpr::Name { ty, .. }, lowered_expr)
-                if in_aggregate && ty.ownership() != sifr_type_system::OwnershipKind::Copy =>
+                if in_aggregate
+                    && !crate::helpers::is_copy_type_for_codegen(ty)
+                    && !matches!(&lowered_expr, crate::RustExpr::Clone(_))
+                    && !matches!(
+                        &lowered_expr,
+                        crate::RustExpr::MethodCall { method, args, .. }
+                            if method == "clone" && args.is_empty()
+                    ) =>
             {
                 crate::RustExpr::MethodCall {
                     receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_expr))),

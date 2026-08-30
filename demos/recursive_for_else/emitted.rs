@@ -1,19 +1,21 @@
 // src/main.rs
+use ::sifr_runtime::SifrInt;
+
 fn main() {
-    fn rec(n: i64) -> i64 {
-        let items: Vec<i64> = vec![1_i64];
+    fn rec(n: SifrInt) -> SifrInt {
+        let items: Vec<SifrInt> = vec![SifrInt::from_i64(1)];
         {
             let _broke: bool = false;
-            for i in items.iter().copied() {
+            for i in items.iter().cloned() {
             }
             if !(_broke) {
-                if n > (0_i64) {
-                    return rec(n - (1_i64));
+                if &n > &SifrInt::from_i64(0) {
+                    return rec(&n - &SifrInt::from_i64(1));
                 }
             }
         }
-        return 0_i64;
+        return SifrInt::from_i64(0);
     }
     println!("recursive_for_else canonical walker coverage demo:");
-    println!("{}", rec(3_i64));
+    println!("{}", rec(SifrInt::from_i64(3)));
 }

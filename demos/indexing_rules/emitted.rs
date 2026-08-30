@@ -1,36 +1,34 @@
 // src/main.rs
+use ::sifr_runtime::SifrInt;
+
 fn main() {
-    let mut items: Vec<i64> = vec![1_i64, 2_i64, 3_i64];
+    let mut items: Vec<SifrInt> = vec![SifrInt::from_i64(1), SifrInt::from_i64(2), SifrInt::from_i64(3)];
     {
-        let __idx_raw = -(1_i64);
-        let __idx_norm = if __idx_raw < 0 { (items.len() as i64) + __idx_raw } else { __idx_raw };
-        if __idx_norm >= 0 {
-            if let Some(__elem) = items.get_mut(__idx_norm as usize) {
-                *__elem = 9_i64;
-            }
+        let __idx_raw = -&SifrInt::from_i64(1);
+        let __idx_norm = __idx_raw.normalize_index_or_len(items.len());
+        if let Some(__elem) = items.get_mut(__idx_norm) {
+            *__elem = SifrInt::from_i64(9);
         }
     }
     {
-        let __idx_raw = -(2_i64);
-        let __idx_norm = if __idx_raw < 0 { (items.len() as i64) + __idx_raw } else { __idx_raw };
-        if __idx_norm >= 0 {
-            if let Some(__elem) = items.get_mut(__idx_norm as usize) {
-                *__elem += 5_i64;
-            }
+        let __idx_raw = -(SifrInt::from_i64(2));
+        let __idx_norm = __idx_raw.normalize_index_or_len(items.len());
+        if let Some(__elem) = items.get_mut(__idx_norm) {
+            *__elem += SifrInt::from_i64(5);
         }
     }
     {
-        let __idx_raw = -(1_i64);
-        let __idx_norm = if __idx_raw < 0 { (items.len() as i64) + __idx_raw } else { __idx_raw };
-        if (__idx_norm >= 0) && ((__idx_norm as usize) < items.len()) {
-            let _ = items.remove(__idx_norm as usize);
+        let __idx_raw = -&SifrInt::from_i64(1);
+        let __idx_norm = __idx_raw.normalize_index_or_len(items.len());
+        if __idx_norm < items.len() {
+            let _ = items.remove(__idx_norm);
         }
     }
     {
-        let __idx_raw = -(5_i64);
-        let __idx_norm = if __idx_raw < 0 { (items.len() as i64) + __idx_raw } else { __idx_raw };
-        if (__idx_norm >= 0) && ((__idx_norm as usize) < items.len()) {
-            let _ = items.remove(__idx_norm as usize);
+        let __idx_raw = -&SifrInt::from_i64(5);
+        let __idx_norm = __idx_raw.normalize_index_or_len(items.len());
+        if __idx_norm < items.len() {
+            let _ = items.remove(__idx_norm);
         }
     }
     println!("indexing_rules indexing and semantics parity fixes demo:");

@@ -198,6 +198,11 @@ pub(super) fn try_lower_simple_let_value(ty: &Type, value: &HirExpr) -> Option<R
         return None;
     }
     let lowered = try_lower_leaf_or_name_expr(value)?;
+    let lowered = if crate::helpers::is_logically_copy_rust_move_type(value.ty()) {
+        crate::RustEmitter::clone_non_copy_name_expr_for_ir(value, lowered)
+    } else {
+        lowered
+    };
     Some(crate::helpers::adapt_collection_storage_for_target(
         ty,
         value.ty(),
@@ -270,6 +275,11 @@ pub(super) fn try_lower_simple_field_assign_stmt(
     if object == "self" {
         // Keep self-field assignments on the structured path so class/recursive
         // storage adaptations (boxing and option handling) are consistently applied.
+        return None;
+    }
+    if crate::helpers::is_logically_copy_rust_move_type(field_ty) {
+        // Exact integers and aggregates containing them need scope-aware cloning.
+        // The structured path has access to parameter and local ownership facts.
         return None;
     }
     if resolve_alias_type(field_ty) != resolve_alias_type(value.ty()) {

@@ -17,9 +17,10 @@ mod __sifr_project_nominals {
     impl ::std::error::Error for ValueError {}
 }
 pub use __sifr_project_nominals::ValueError;
-fn classify(n: i64) -> i64 {
-    let __sifr_try_res: Result<i64, ValueError> = (|| {
-        if n > (0_i64) {
+use ::sifr_runtime::SifrInt;
+fn classify(n: SifrInt) -> SifrInt {
+    let __sifr_try_res: Result<SifrInt, ValueError> = (|| {
+        if &n > &SifrInt::from_i64(0) {
             return Ok(n);
         } else {
             return Err(ValueError::new("non-positive".to_string()));
@@ -32,12 +33,12 @@ fn classify(n: i64) -> i64 {
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return 99_i64;
+            return SifrInt::from_i64(99);
         }
     }
 }
 fn main() {
     println!("return_and_raise_paths control-flow effect query unification demo:");
-    println!("{}", classify(7_i64));
-    println!("{}", classify(0_i64));
+    println!("{}", classify(SifrInt::from_i64(7)));
+    println!("{}", classify(SifrInt::from_i64(0)));
 }

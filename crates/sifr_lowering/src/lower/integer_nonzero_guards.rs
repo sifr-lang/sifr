@@ -93,19 +93,30 @@ fn detect_compare_nonzero_guard(
     is_true_branch: bool,
     ctx: &LowerCtx,
 ) -> Option<String> {
-    let name = match (name_if_exact_int(left, ctx), is_zero_integer_literal(right)) {
-        (Some(name), true) => Some(name),
+    let (name, normalized_op) = match (name_if_exact_int(left, ctx), is_zero_integer_literal(right))
+    {
+        (Some(name), true) => Some((name, op)),
         _ => match (name_if_exact_int(right, ctx), is_zero_integer_literal(left)) {
-            (Some(name), true) => Some(name),
+            (Some(name), true) => Some((name, reverse_comparison(op))),
             _ => None,
         },
     }?;
 
     let proves_nonzero = matches!(
-        (op, is_true_branch),
-        (CmpOp::NotEq, true) | (CmpOp::Eq, false)
+        (normalized_op, is_true_branch),
+        (CmpOp::NotEq | CmpOp::Lt | CmpOp::Gt, true) | (CmpOp::Eq | CmpOp::LtE | CmpOp::GtE, false)
     );
     proves_nonzero.then_some(name)
+}
+
+fn reverse_comparison(op: CmpOp) -> CmpOp {
+    match op {
+        CmpOp::Lt => CmpOp::Gt,
+        CmpOp::LtE => CmpOp::GtE,
+        CmpOp::Gt => CmpOp::Lt,
+        CmpOp::GtE => CmpOp::LtE,
+        other => other,
+    }
 }
 
 fn name_if_exact_int(expr: &Expr, ctx: &LowerCtx) -> Option<String> {

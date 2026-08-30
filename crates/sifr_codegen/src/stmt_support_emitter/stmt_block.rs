@@ -3,7 +3,6 @@ use super::{
     is_result_int_division_error_type, result_int_to_sifr_int_rust_type,
     should_force_mutable_binding, should_omit_local_type_annotation, type_contains_any_or_unknown,
 };
-
 impl RustEmitter {
     pub(crate) fn try_lower_stmt_block_for_ir_inner(
         &mut self,
@@ -79,6 +78,7 @@ impl RustEmitter {
                     };
                     self.coerce_local_value_for_target_type_for_ir(&effective_ty, value, lowered)?
                 };
+                let lowered_value = self.rewrite_stdlib_constant_idents_in_expr(lowered_value);
                 let lowered_ty = if name == "_"
                     || generic_class_needs_inference
                     || borrowed_dict_get.is_some()
@@ -127,6 +127,7 @@ impl RustEmitter {
                             };
                             lowered
                         };
+                    let lowered_value = self.rewrite_stdlib_constant_idents_in_expr(lowered_value);
                     let lowered_value = if let Some(target_ty) =
                         self.local_binding_types.get(name).cloned()
                     {
@@ -167,7 +168,18 @@ impl RustEmitter {
                 }
             } else if let HirStmt::AugAssign { name, op, value } = stmt {
                 let value_ty = Self::resolve_alias_type_for_loop_iter(value.ty());
-                if op == "+=" {
+                if self.is_registered_sifr_int_local(name) {
+                    let Some(value_expr) = self.lower_stmt_expr_for_ir(value)? else {
+                        return Ok(None);
+                    };
+                    let value_expr = self.rewrite_stdlib_constant_idents_in_expr(value_expr);
+                    let Some(lowered) =
+                        self.lower_exact_int_augassign_stmt_for_ir(name, op, value_expr)
+                    else {
+                        return Ok(None);
+                    };
+                    (vec![lowered], true)
+                } else if op == "+=" {
                     match value_ty {
                         Type::Str => {
                             let cache_name = self.string_char_cache_vars.get(name).cloned();
@@ -246,6 +258,11 @@ impl RustEmitter {
                             let Some(lowered_value) = self.lower_stmt_expr_for_ir(value)? else {
                                 return Ok(None);
                             };
+                            let lowered_value = if self.is_registered_sifr_int_local(name) {
+                                self.coerce_expr_to_sifr_int_value(lowered_value)
+                            } else {
+                                lowered_value
+                            };
                             (
                                 vec![RustStmt::AugAssign {
                                     target: crate::RustExpr::Ident(name.clone()),
@@ -279,6 +296,11 @@ impl RustEmitter {
                 } else {
                     let Some(lowered_value) = self.lower_stmt_expr_for_ir(value)? else {
                         return Ok(None);
+                    };
+                    let lowered_value = if self.is_registered_sifr_int_local(name) {
+                        self.coerce_expr_to_sifr_int_value(lowered_value)
+                    } else {
+                        lowered_value
                     };
                     let normalized_op = if op == "//=" {
                         "/".to_string()
@@ -410,6 +432,7 @@ impl RustEmitter {
                         let Some(index_expr) = self.lower_rendered_expr_for_ir(index)? else {
                             return Ok(None);
                         };
+                        let index_expr = Self::clone_non_copy_name_expr_for_ir(index, index_expr);
                         crate::build_list_subscript_assign_stmt(
                             receiver,
                             index_expr,
@@ -460,27 +483,12 @@ impl RustEmitter {
                 value,
             } = stmt
             {
-                let target = crate::RustExpr::Field {
-                    expr: Box::new(Self::object_name_expr_for_ir(object)),
-                    field: field.clone(),
-                };
-                let Some(value_expr) = self.lower_stmt_expr_for_ir(value)? else {
+                let Some(lowered_stmt) =
+                    self.lower_field_assign_stmt_for_block(object, field, field_ty, value)?
+                else {
                     return Ok(None);
                 };
-                let value_expr = self.adapt_field_assign_value_for_recursive_storage(
-                    object,
-                    field,
-                    field_ty,
-                    value_expr,
-                    value.ty(),
-                );
-                (
-                    vec![RustStmt::Assign {
-                        target,
-                        value: value_expr,
-                    }],
-                    true,
-                )
+                (vec![lowered_stmt], true)
             } else if let HirStmt::NestedFieldAssign {
                 object,
                 field,
@@ -668,6 +676,7 @@ impl RustEmitter {
                 let Some(lowered_value) = self.lower_stmt_expr_for_ir(value)? else {
                     return Ok(None);
                 };
+                let lowered_value = Self::clone_non_copy_name_expr_for_ir(value, lowered_value);
                 (
                     vec![RustStmt::Expr(crate::RustExpr::MethodCall {
                         receiver: Box::new(crate::RustExpr::Ident("_yields".to_string())),

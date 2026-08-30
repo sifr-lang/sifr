@@ -7,6 +7,12 @@ pub(super) fn hir_function_returns_sifr_int(
     module_sifr_int_bindings: &HashSet<String>,
     function_sifr_int_returns: &HashSet<String>,
 ) -> bool {
+    if matches!(
+        crate::resolve_alias_type_for_plain_call(&func.return_type),
+        Type::Int | Type::LiteralInt(_)
+    ) {
+        return true;
+    }
     let local_int_bindings = func
         .body
         .iter()
@@ -67,47 +73,12 @@ pub(super) fn hir_function_returns_sifr_int(
 
 pub(super) fn function_returns_result_sifr_int(
     func: &HirFunction,
-    result_function_returns: &HashSet<String>,
-    result_method_returns: &HashSet<String>,
-    result_function_params: &HashMap<String, HashSet<usize>>,
-    initial_result_bindings: HashSet<String>,
+    _result_function_returns: &HashSet<String>,
+    _result_method_returns: &HashSet<String>,
+    _result_function_params: &HashMap<String, HashSet<usize>>,
+    _initial_result_bindings: HashSet<String>,
 ) -> bool {
-    if !is_result_int_type(&func.return_type) {
-        return false;
-    }
-
-    let mut result_function_returns = result_function_returns.clone();
-    result_function_returns.extend(collect_nested_sifr_int_result_function_returns(
-        &func.body,
-        &result_function_returns,
-        result_method_returns,
-        result_function_params,
-    ));
-    let local_result_bindings = collect_sifr_int_result_local_bindings_with_initial(
-        &func.body,
-        &result_function_returns,
-        result_method_returns,
-        initial_result_bindings,
-    );
-    let mut returns_sifr_int_result = false;
-    let mut on_stmt = |stmt: &HirStmt| {
-        if let HirStmt::Return { value: Some(value) } = stmt {
-            returns_sifr_int_result |= hir_expr_returns_sifr_int_result(
-                value,
-                &result_function_returns,
-                result_method_returns,
-                &local_result_bindings,
-            );
-        }
-    };
-    let mut on_expr = |_expr: &HirExpr| {};
-    traversal::walk_stmts(
-        &func.body,
-        TraversalConfig::LOCAL_SCOPE_ONLY,
-        &mut on_stmt,
-        &mut on_expr,
-    );
-    returns_sifr_int_result
+    is_result_int_type(&func.return_type)
 }
 
 pub(super) fn collect_nested_sifr_int_result_function_returns(
@@ -780,6 +751,7 @@ pub(super) fn collect_sifr_int_forced_locals_with_seed(
     seed: &HashSet<String>,
 ) -> HashSet<String> {
     let mut forced = seed.clone();
+    forced.extend(local_int_bindings.iter().cloned());
     if local_int_bindings.is_empty() {
         return forced;
     }
@@ -835,6 +807,12 @@ pub(super) fn hir_expr_needs_sifr_int_storage(
     module_sifr_int_bindings: &HashSet<String>,
     function_sifr_int_returns: &HashSet<String>,
 ) -> bool {
+    if matches!(
+        crate::resolve_alias_type_for_plain_call(expr.ty()),
+        Type::Int | Type::LiteralInt(_)
+    ) {
+        return true;
+    }
     match expr {
         HirExpr::LargeIntLiteral(_) => true,
         HirExpr::Name { name, .. } => {

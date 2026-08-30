@@ -382,7 +382,7 @@ impl RustEmitter {
                         HirExpr::Name { name, ty, .. }
                             if (self.borrowed_params.contains(name)
                                 || self.mut_borrowed_params.contains(name))
-                                && ty.ownership() != sifr_type_system::OwnershipKind::Copy =>
+                                && !crate::helpers::is_copy_type_for_codegen(ty) =>
                         {
                             RustExpr::Clone(Box::new(lowered))
                         }

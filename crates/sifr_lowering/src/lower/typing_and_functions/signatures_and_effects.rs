@@ -89,6 +89,8 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
         "DivisionError",
         "KeyError",
         "OverflowError",
+        "FloatOverflowError",
+        "FloatPrecisionLossError",
         "DecimalConversionError",
         "RustPanicError",
         "TimeoutError",
@@ -106,13 +108,41 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
             name: error_name.to_string(),
             fields: fields.clone(),
             methods: vec![],
-            parent_class: Some("Error".to_string()),
+            parent_class: Some(
+                if matches!(error_name, "FloatOverflowError" | "FloatPrecisionLossError") {
+                    "OverflowError"
+                } else {
+                    "Error"
+                }
+                .to_string(),
+            ),
         };
         ctx.class_types
             .insert(error_name.to_string(), class_ty.clone());
         ctx.error_types.insert(error_name.to_string());
         ctx.functions.insert(
             error_name.to_string(),
+            FunctionType::new(vec![("message".to_string(), Type::Str)], class_ty),
+        );
+    }
+    {
+        let fields = vec![
+            ("message".to_string(), Type::Str),
+            ("limit".to_string(), Type::Int),
+        ];
+        let class_ty = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
+            name: "ArithmeticLimitError".to_string(),
+            fields: fields.clone(),
+            methods: vec![],
+            parent_class: Some("OverflowError".to_string()),
+        };
+        ctx.class_types
+            .insert("ArithmeticLimitError".to_string(), class_ty.clone());
+        ctx.error_types.insert("ArithmeticLimitError".to_string());
+        ctx.functions.insert(
+            "ArithmeticLimitError".to_string(),
             FunctionType::new(vec![("message".to_string(), Type::Str)], class_ty),
         );
     }

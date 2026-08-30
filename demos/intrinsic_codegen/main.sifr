@@ -10,7 +10,12 @@ def main():
     rounded_down: int = floor(3.9)
     rounded_up: int = ceil(3.1)
     powered: float = pow(2.0, 3.0)
-    rounded: int = round(3.6)
+    rounded: int = 0
+    try:
+        converted_rounded: int = round(3.6)
+        rounded = converted_rounded
+    except ValueError:
+        assert False
     angle: float = atan2(1.0, 1.0)
     finite: bool = isfinite(powered)
 

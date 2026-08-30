@@ -94,6 +94,13 @@ pub(super) fn try_lower_simple_stmt_with_ctx_and_bindings(
             }])
         }
         HirStmt::AugAssign { name, op, value } => {
+            if bindings
+                .local_binding_types
+                .get(name)
+                .is_some_and(|ty| matches!(resolve_alias_type(ty), Type::Int | Type::LiteralInt(_)))
+            {
+                return None;
+            }
             try_lower_simple_augassign_stmt(crate::RustExpr::Ident(name.clone()), op, value)
         }
         HirStmt::AttributeAugAssign {
@@ -132,7 +139,7 @@ pub(super) fn try_lower_simple_stmt_with_ctx_and_bindings(
             let mut lowered = try_lower_simple_return_stmt(value, ctx)?;
             if matches!(value, HirExpr::Name { name, ty, .. }
                 if bindings.borrowed_params.contains(name)
-                    && ty.ownership() != sifr_type_system::OwnershipKind::Copy)
+                    && !crate::helpers::is_copy_type_for_codegen(ty))
             {
                 if let Some(RustStmt::Return(Some(returned))) = lowered.first_mut() {
                     *returned = RustExpr::Clone(Box::new(returned.clone()));
@@ -542,7 +549,7 @@ pub(super) fn try_lower_simple_nested_function_stmt(
         .iter()
         .filter(|param| {
             param.convention.is_shared_borrow()
-                && param.ty.ownership() != sifr_type_system::OwnershipKind::Copy
+                && !crate::helpers::is_copy_type_for_codegen(&param.ty)
         })
         .map(|param| param.name.clone())
         .collect();
@@ -550,8 +557,7 @@ pub(super) fn try_lower_simple_nested_function_stmt(
         .params
         .iter()
         .filter(|param| {
-            param.convention.is_mut_borrow()
-                && param.ty.ownership() != sifr_type_system::OwnershipKind::Copy
+            param.convention.is_mut_borrow() && !crate::helpers::is_copy_type_for_codegen(&param.ty)
         })
         .map(|param| param.name.clone())
         .collect();

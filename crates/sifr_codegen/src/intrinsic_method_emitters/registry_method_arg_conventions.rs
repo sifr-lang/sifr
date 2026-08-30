@@ -68,10 +68,10 @@ impl RustEmitter {
         }
 
         let requires_shared_borrow = convention.is_shared_borrow()
-            && (param_ty.ownership() != sifr_type_system::OwnershipKind::Copy
+            && (!crate::helpers::is_copy_type_for_codegen(param_ty)
                 || matches!(resolved_param, Type::TypeVar(_)));
         let requires_mut_borrow = convention.is_mut_borrow()
-            && (param_ty.ownership() != sifr_type_system::OwnershipKind::Copy
+            && (!crate::helpers::is_copy_type_for_codegen(param_ty)
                 || matches!(resolved_param, Type::TypeVar(_)));
 
         if requires_shared_borrow

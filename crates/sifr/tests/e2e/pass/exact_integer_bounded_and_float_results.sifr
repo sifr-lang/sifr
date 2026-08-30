@@ -1,0 +1,98 @@
+def bounded_power(base: int, exponent: int) -> Result[int, ValueError | ArithmeticLimitError]:
+    return base ** exponent
+
+
+def bounded_shift(value: int, shift: int) -> Result[int, ValueError | ArithmeticLimitError]:
+    return value << shift
+
+
+def exact_float(value: int) -> Result[float, FloatOverflowError | FloatPrecisionLossError]:
+    return float(value)
+
+
+def exact_divide(
+    left: int,
+    right: int,
+) -> Result[float, DivisionError | FloatOverflowError | FloatPrecisionLossError]:
+    return left / right
+
+
+def mixed_add(
+    value: int,
+    amount: float,
+) -> Result[float, FloatOverflowError | FloatPrecisionLossError]:
+    return value + amount
+
+
+def main():
+    try:
+        exponent: int = 10
+        power: int = bounded_power(2, exponent)
+        assert power == 1024
+
+        shift: int = 8
+        shifted: int = bounded_shift(3, shift)
+        assert shifted == 768
+
+        fitting: int = 9007199254740992
+        converted: float = exact_float(fitting)
+        assert converted == 9007199254740992.0
+
+        divisor: int = 2
+        quotient: float = exact_divide(3, divisor)
+        assert quotient == 1.5
+
+        mixed: float = mixed_add(fitting, 0.5)
+        assert mixed == 9007199254740992.0
+    except Error:
+        assert False
+
+    try:
+        negative_exponent: int = -1
+        negative_result: int = bounded_power(2, negative_exponent)
+        _ = negative_result
+        assert False
+    except ValueError as error:
+        assert "non-negative" in error.message
+    except Error:
+        assert False
+
+    try:
+        inexact: int = 9007199254740993
+        inexact_result: float = exact_float(inexact)
+        _ = inexact_result
+        assert False
+    except FloatPrecisionLossError as error:
+        assert "precision loss" in error.message
+    except Error:
+        assert False
+
+    try:
+        mixed_inexact: int = 9007199254740993
+        mixed_result: float = mixed_add(mixed_inexact, 0.5)
+        _ = mixed_result
+        assert False
+    except FloatPrecisionLossError as error:
+        assert "precision loss" in error.message
+    except Error:
+        assert False
+
+    try:
+        three: int = 3
+        inexact_quotient: float = exact_divide(1, three)
+        _ = inexact_quotient
+        assert False
+    except FloatPrecisionLossError as error:
+        assert "precision loss" in error.message
+    except Error:
+        assert False
+
+    try:
+        zero: int = 0
+        zero_quotient: float = exact_divide(1, zero)
+        _ = zero_quotient
+        assert False
+    except DivisionError as error:
+        assert error.message == "division by zero"
+    except Error:
+        assert False

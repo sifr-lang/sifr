@@ -24,6 +24,8 @@ mod __sifr_project_unions {
     }
 }
 pub use __sifr_project_unions::__SifrUnion_8_x3asequence5_x3aunion1_x3a224_x3a5_x3aclass11_x3amain_x2eCircle1_x3a024_x3a5_x3aclass11_x3amain_x2eSquare1_x3a0;
+use ::sifr_runtime::SifrInt;
+
 #[derive(Debug, Clone, PartialEq)]
 struct Point {
     x: f64,
@@ -128,16 +130,16 @@ impl ::std::fmt::Display for Square {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Color {
-    r: i64,
-    g: i64,
-    b: i64,
+    r: SifrInt,
+    g: SifrInt,
+    b: SifrInt,
 }
 
 impl Color {
-    fn new(r: i64, g: i64, b: i64) -> Self {
-        let __sifr_field_init_0: i64 = r;
-        let __sifr_field_init_1: i64 = g;
-        let __sifr_field_init_2: i64 = b;
+    fn new(r: SifrInt, g: SifrInt, b: SifrInt) -> Self {
+        let __sifr_field_init_0: SifrInt = r.clone();
+        let __sifr_field_init_1: SifrInt = g.clone();
+        let __sifr_field_init_2: SifrInt = b.clone();
         Self { r: __sifr_field_init_0, g: __sifr_field_init_1, b: __sifr_field_init_2 }
     }
 }
@@ -182,18 +184,18 @@ fn main() {
     describe_shape(&__SifrUnion_8_x3asequence5_x3aunion1_x3a224_x3a5_x3aclass11_x3amain_x2eCircle1_x3a024_x3a5_x3aclass11_x3amain_x2eSquare1_x3a0::__SifrUnionVariant_5_x3aclass11_x3amain_x2eCircle1_x3a0((c).clone()));
     describe_shape(&__SifrUnion_8_x3asequence5_x3aunion1_x3a224_x3a5_x3aclass11_x3amain_x2eCircle1_x3a024_x3a5_x3aclass11_x3amain_x2eSquare1_x3a0::__SifrUnionVariant_5_x3aclass11_x3amain_x2eSquare1_x3a0((s).clone()));
     println!("=== Hash ===");
-    let red: Color = Color::new(255_i64, 0_i64, 0_i64);
-    let also_red: Color = Color::new(255_i64, 0_i64, 0_i64);
-    let h1: i64 = {
+    let red: Color = Color::new(SifrInt::from_i64(255), SifrInt::from_i64(0), SifrInt::from_i64(0));
+    let also_red: Color = Color::new(SifrInt::from_i64(255), SifrInt::from_i64(0), SifrInt::from_i64(0));
+    let h1: SifrInt = {
     let mut __sifr_hash = ::std::collections::hash_map::DefaultHasher::new();
     ::std::hash::Hash::hash(&red, &mut __sifr_hash);
-    ::std::hash::Hasher::finish(&__sifr_hash) as i64
+    SifrInt::from(::std::hash::Hasher::finish(&__sifr_hash))
 };
-    let h2: i64 = {
+    let h2: SifrInt = {
     let mut __sifr_hash = ::std::collections::hash_map::DefaultHasher::new();
     ::std::hash::Hash::hash(&also_red, &mut __sifr_hash);
-    ::std::hash::Hasher::finish(&__sifr_hash) as i64
+    SifrInt::from(::std::hash::Hasher::finish(&__sifr_hash))
 };
-    println!("Same color same hash: {}", (h1 == h2));
+    println!("Same color same hash: {}", (&h1 == &h2));
     println!("=== Done ===");
 }

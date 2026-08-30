@@ -15,7 +15,13 @@ def compute_mean(data: list[float]) -> Result[float, StatisticsError]:
     total: float = 0.0
     for val in data:
         total = total + val
-    return total / len(data)
+    try:
+        count: float = float(len(data))
+        return total / count
+    except FloatOverflowError as error:
+        raise StatisticsError(error.message)
+    except FloatPrecisionLossError as error:
+        raise StatisticsError(error.message)
 
 # --- CycleError from sifr.graphlib ---
 

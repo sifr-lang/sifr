@@ -1,5 +1,7 @@
 // src/main.rs
-fn classify(items: &Vec<i64>) -> String {
+use ::sifr_runtime::SifrInt;
+
+fn classify(items: &Vec<SifrInt>) -> String {
     let mut result: String = "init".to_string();
     {
         let mut _broke: bool = false;
@@ -18,5 +20,5 @@ fn classify(items: &Vec<i64>) -> String {
 fn main() {
     println!("while_else while-else structured support demo:");
     println!("{}", classify(&vec![]));
-    println!("{}", classify(&vec![1_i64]));
+    println!("{}", classify(&vec![SifrInt::from_i64(1)]));
 }

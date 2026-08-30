@@ -268,10 +268,10 @@ pub(super) fn adapt_simple_map_callable_arg(
     }
 
     let requires_shared_borrow = convention.is_shared_borrow()
-        && (param_ty.ownership() != sifr_type_system::OwnershipKind::Copy
+        && (!crate::helpers::is_copy_type_for_codegen(param_ty)
             || matches!(resolved_param, Type::TypeVar(_) | Type::Any));
     let requires_mut_borrow = convention.is_mut_borrow()
-        && (param_ty.ownership() != sifr_type_system::OwnershipKind::Copy
+        && (!crate::helpers::is_copy_type_for_codegen(param_ty)
             || matches!(resolved_param, Type::TypeVar(_) | Type::Any));
 
     if requires_shared_borrow {
@@ -510,7 +510,13 @@ pub(super) fn try_lower_simple_defaultdict_index_expr(
         RustExpr::Clone(Box::new(lowered_index))
     };
     let default_expr = match alias_name.as_str() {
-        "__sifr_defaultdict_int" => RustExpr::Literal(crate::RustLiteral::Int(0)),
+        "__sifr_defaultdict_int" => RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec![
+                "SifrInt".to_string(),
+                "from_i64".to_string(),
+            ])),
+            args: vec![RustExpr::Literal(crate::RustLiteral::Int(0))],
+        },
         "__sifr_defaultdict_list" => RustExpr::FnCall {
             func: Box::new(RustExpr::Path(vec!["Vec".to_string(), "new".to_string()])),
             args: vec![],

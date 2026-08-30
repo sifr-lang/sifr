@@ -4,12 +4,14 @@ from sifr.difflib import get_close_matches, unified_diff
 def main():
     # get_close_matches
     words: list[str] = ["apple", "ape", "application", "banana"]
-    matches: list[str] = get_close_matches("app", words, 2, 0.3)
-    assert str(len(matches)) == '2'
+    try:
+        matches: list[str] = get_close_matches("app", words, 2, 0.3)
+        assert str(len(matches)) == '2'
+    except Error:
+        assert False
 
     # unified_diff
     a: list[str] = ["hello", "world"]
     b: list[str] = ["hello", "earth"]
     diff: list[str] = unified_diff(a, b)
     assert str(len(diff)) == '5'
-

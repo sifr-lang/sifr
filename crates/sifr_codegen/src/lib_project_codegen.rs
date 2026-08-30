@@ -185,6 +185,7 @@ fn resolve_exported_rust_opaque_class<'a>(
 pub(super) fn render_local_module_imports(
     module: &HirModule,
     project_modules: &HashMap<&str, &HirModule>,
+    project_code: &StdlibCode,
 ) -> String {
     let mut module_import_items: Vec<RustItem> = Vec::new();
     let mut imported_opaque_traits = HashSet::new();
@@ -195,17 +196,23 @@ pub(super) fn render_local_module_imports(
         let mut module_path = vec!["crate".to_string()];
         module_path.extend(import.module.split('.').map(str::to_string));
         for name in &import.names {
-            if let Some((_, alias)) = import.aliases.iter().find(|(orig, _)| orig == name) {
-                let mut alias_path = module_path.clone();
-                alias_path.push(name.clone());
-                module_import_items.push(RustItem::UseAlias {
-                    path: alias_path,
-                    alias: alias.clone(),
-                });
-            } else {
-                let mut import_path = module_path.clone();
-                import_path.push(name.clone());
-                module_import_items.push(RustItem::Use(import_path));
+            let is_constant = project_code
+                .module_constants
+                .get(&import.module)
+                .is_some_and(|constants| constants.contains_key(name));
+            if !is_constant {
+                if let Some((_, alias)) = import.aliases.iter().find(|(orig, _)| orig == name) {
+                    let mut alias_path = module_path.clone();
+                    alias_path.push(name.clone());
+                    module_import_items.push(RustItem::UseAlias {
+                        path: alias_path,
+                        alias: alias.clone(),
+                    });
+                } else {
+                    let mut import_path = module_path.clone();
+                    import_path.push(name.clone());
+                    module_import_items.push(RustItem::Use(import_path));
+                }
             }
             if let Some((owner_module, class)) = resolve_exported_rust_opaque_class(
                 &import.module,
@@ -326,6 +333,12 @@ pub fn generate_rust_multi_with_metadata(
     project_codegen_code
         .module_class_fields
         .extend(project_class_fields(modules));
+    let crate_root_modules = HashSet::from(["main"]);
+    crate::project_constants::extend_project_constant_mappings(
+        &mut project_codegen_code,
+        modules,
+        &crate_root_modules,
+    );
     let union_usage =
         project_union_usage(modules, &project_codegen_code, structural_interop_enabled);
     let structural_record_identities = if structural_interop_enabled {
@@ -339,7 +352,6 @@ pub fn generate_rust_multi_with_metadata(
         modules,
         structural_interop_enabled,
     );
-    let crate_root_modules = HashSet::from(["main"]);
     let mut nominal_type_paths = project_nominal_type_paths(modules, &crate_root_modules);
     let structural_identity_expressions = if structural_interop_enabled {
         crate::structural_identity_codegen::class_identity_expressions_for_project(
@@ -384,7 +396,8 @@ pub fn generate_rust_multi_with_metadata(
             Some(&structural_record_identities),
             Some(&structural_identity_expressions),
         );
-        let local_imports = render_local_module_imports(module, &project_modules);
+        let local_imports =
+            render_local_module_imports(module, &project_modules, &project_codegen_code);
         let union_imports =
             render_project_union_imports(module_name, &used_unions, &crate_root_modules);
         let mut rust_source = relocate_project_stdlib_nominals(
@@ -865,7 +878,7 @@ mod tests {
         };
         let modules = HashMap::from([("resources", &provider), ("main", &consumer)]);
 
-        let imports = render_local_module_imports(&consumer, &modules);
+        let imports = render_local_module_imports(&consumer, &modules, &StdlibCode::default());
 
         assert!(
             imports.contains("use crate::resources::Resource;"),

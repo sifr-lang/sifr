@@ -1,37 +1,35 @@
 // src/main.rs
 use ::std::collections::HashMap;
 
+use ::sifr_runtime::SifrInt;
+
 fn main() {
-    let mut nums: Vec<i64> = vec![1_i64, 2_i64, 3_i64];
+    let mut nums: Vec<SifrInt> = vec![SifrInt::from_i64(1), SifrInt::from_i64(2), SifrInt::from_i64(3)];
     {
-        let __idx_raw = 0_i64;
-        let __idx_norm = if __idx_raw < 0 { (nums.len() as i64) + __idx_raw } else { __idx_raw };
-        if __idx_norm >= 0 {
-            if let Some(__elem) = nums.get_mut(__idx_norm as usize) {
-                *__elem = 10_i64;
-            }
+        let __idx_raw = SifrInt::from_i64(0);
+        let __idx_norm = __idx_raw.normalize_index_or_len(nums.len());
+        if let Some(__elem) = nums.get_mut(__idx_norm) {
+            *__elem = SifrInt::from_i64(10);
         }
     }
     {
-        let __idx_raw = 2_i64;
-        let __idx_norm = if __idx_raw < 0 { (nums.len() as i64) + __idx_raw } else { __idx_raw };
-        if __idx_norm >= 0 {
-            if let Some(__elem) = nums.get_mut(__idx_norm as usize) {
-                *__elem = 30_i64;
-            }
+        let __idx_raw = SifrInt::from_i64(2);
+        let __idx_norm = __idx_raw.normalize_index_or_len(nums.len());
+        if let Some(__elem) = nums.get_mut(__idx_norm) {
+            *__elem = SifrInt::from_i64(30);
         }
     }
     println!("{:?}", nums);
     assert!((format!("{:?}", nums) == "[10, 2, 30]"));
-    let mut d: HashMap<String, i64> = HashMap::from([("a".to_string(), 1_i64)]);
-    d.insert("b".to_string(), 2_i64);
-    let val: Option<i64> = Some({
-    let Some(__sifr_proven_dict_value) = d.get("b").copied() else {
+    let mut d: HashMap<String, SifrInt> = HashMap::from([("a".to_string(), SifrInt::from_i64(1))]);
+    d.insert("b".to_string(), SifrInt::from_i64(2));
+    let val: Option<SifrInt> = Some({
+    let Some(__sifr_proven_dict_value) = d.get("b").cloned() else {
         ::std::process::abort();
     };
     __sifr_proven_dict_value
 });
-    if let Some(val) = val {
+    if let Some(val) = val.clone() {
         println!("{}", val);
         assert!((format!("{}", val) == "2"));
     }

@@ -27,7 +27,11 @@ def collect_basic_actual() -> list[bool]:
     actual.append(cos(0.0) == 1.0)
     actual.append(fabs(-5.0) == 5.0)
     actual.append(pow(2.0, 3.0) == 8.0)
-    actual.append(round(3.7) == 4)
+    try:
+        rounded: int = round(3.7)
+        actual.append(rounded == 4)
+    except ValueError:
+        actual.append(False)
     return actual
 
 def collect_expanded_actual() -> list[bool]:

@@ -2,11 +2,11 @@ use crate::{
     RustExpr, RustItem, RustParam, RustStmt, RustTrait, RustType, Type, Visibility,
     homogeneous_large_tuple_backing_array,
 };
-use sifr_type_system::{OwnershipKind, class_rust_name, source_class_rust_name};
+use sifr_type_system::{class_rust_name, source_class_rust_name};
 
 pub fn sifr_type_to_rust_type(ty: &Type) -> RustType {
     match ty {
-        Type::Int | Type::LiteralInt(_) => RustType::I64,
+        Type::Int | Type::LiteralInt(_) => RustType::Named("SifrInt".to_string()),
         Type::FixedInt(fixed) => RustType::Named(fixed.rust_name().to_string()),
         Type::Float => RustType::F64,
         Type::Bool | Type::LiteralBool(_) => RustType::Bool,
@@ -29,10 +29,7 @@ pub fn sifr_type_to_rust_type(ty: &Type) -> RustType {
                 RustType::Tuple(items.iter().map(sifr_type_to_rust_type).collect())
             }
         }
-        Type::Range => RustType::Generic {
-            base: "std::ops::Range".to_string(),
-            params: vec![RustType::I64],
-        },
+        Type::Range => RustType::Named("SifrRange".to_string()),
         Type::Iterable(inner) => RustType::Vec(Box::new(sifr_type_to_rust_type(inner))),
         Type::Iterator(inner) => RustType::Boxed(Box::new(RustType::DynTrait {
             trait_: RustTrait::Named {
@@ -295,7 +292,8 @@ fn callable_param_types(
             let converted = sifr_type_to_rust_type(ty);
             match conventions.get(index) {
                 Some(convention)
-                    if convention.is_shared_borrow() && ty.ownership() == OwnershipKind::Move =>
+                    if convention.is_shared_borrow()
+                        && !crate::helpers::is_copy_type_for_codegen(ty) =>
                 {
                     RustType::Ref {
                         mutable: false,
@@ -303,7 +301,8 @@ fn callable_param_types(
                     }
                 }
                 Some(convention)
-                    if convention.is_mut_borrow() && ty.ownership() == OwnershipKind::Move =>
+                    if convention.is_mut_borrow()
+                        && !crate::helpers::is_copy_type_for_codegen(ty) =>
                 {
                     RustType::Ref {
                         mutable: true,

@@ -1,11 +1,13 @@
 // src/main.rs
+use ::sifr_runtime::SifrInt;
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Node {
-    value: i64,
+    value: SifrInt,
 }
 
 impl Node {
-    fn new(value: i64) -> Self {
+    fn new(value: SifrInt) -> Self {
         Self { value }
     }
 }
@@ -22,11 +24,11 @@ impl ::std::fmt::Display for Node {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Person {
     name: String,
-    age: i64,
+    age: SifrInt,
 }
 
 impl Person {
-    fn new(name: String, age: i64) -> Self {
+    fn new(name: String, age: SifrInt) -> Self {
         Self { name, age }
     }
 }
@@ -42,12 +44,12 @@ impl ::std::fmt::Display for Person {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Item {
-    priority: i64,
+    priority: SifrInt,
     label: String,
 }
 
 impl Item {
-    fn new(priority: i64, label: String) -> Self {
+    fn new(priority: SifrInt, label: String) -> Self {
         Self { priority, label }
     }
 }
@@ -61,24 +63,24 @@ impl ::std::fmt::Display for Item {
     }
 }
 
-fn get_node_val(node: &Node) -> i64 {
-    node.value
+fn get_node_val(node: &Node) -> SifrInt {
+    node.value.clone()
 }
 
 fn describe_person(p: Person) -> String {
     p.name.clone()
 }
 
-fn process(item: &Item) -> i64 {
-    item.priority
+fn process(item: &Item) -> SifrInt {
+    item.priority.clone()
 }
 
 fn main() {
-    let n: Node = Node::new(42_i64);
-    assert!((get_node_val(&n) == (42_i64)));
-    let p: Person = Person::new("Alice".to_string(), 30_i64);
+    let n: Node = Node::new(SifrInt::from_i64(42));
+    assert!((&get_node_val(&n) == &SifrInt::from_i64(42)));
+    let p: Person = Person::new("Alice".to_string(), SifrInt::from_i64(30));
     assert!((describe_person(p) == "Alice"));
-    let it: Item = Item::new(5_i64, "urgent".to_string());
-    assert!((process(&it) == (5_i64)));
+    let it: Item = Item::new(SifrInt::from_i64(5), "urgent".to_string());
+    assert!((&process(&it) == &SifrInt::from_i64(5)));
     println!("forward_refs: ok");
 }

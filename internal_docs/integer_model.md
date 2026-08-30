@@ -498,7 +498,7 @@ before schema or serializer generation.
 
 The target runtime placement is a new workspace crate, `crates/sifr_runtime`, linked by generated projects through the codegen-emitted Cargo manifest. `SifrInt`, integer parsing/formatting helpers, arithmetic budget helpers, normalized integer hashing, and JSON integer profile helpers live there rather than being re-emitted into every generated Rust file.
 
-`SifrInt` is immutable, `Clone`, `Eq`, `Ord`, `Hash`, `Send`, and `Sync` when its backing implementation supports those traits. It is not `Copy` and has no `#[repr(C)]` ABI guarantee.
+`SifrInt` is immutable, `Clone`, `Eq`, `Ord`, `Hash`, `Send`, and `Sync` when its backing implementation supports those traits. It is not `Copy` and has no `#[repr(C)]` ABI guarantee. Sifr `int` nevertheless retains language-level value semantics; code generation inserts or elides explicit Rust clones according to ownership and liveness.
 
 Rust interop APIs must not expose `SifrInt` as a C-compatible integer. Interop either uses fixed-width integers or `sifr_runtime::interop::SifrIntBridge`, the explicit exact-integer bridge representation defined by the Rust interop architecture.
 

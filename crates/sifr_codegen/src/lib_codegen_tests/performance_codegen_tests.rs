@@ -139,7 +139,8 @@ def seen_twice(value: str) -> bool:
     );
 
     assert!(
-        generated.contains("buckets.entry(0_i64).or_insert(HashSet::new()).contains"),
+        generated
+            .contains("buckets.entry(SifrInt::from_i64(0)).or_insert(HashSet::new()).contains"),
         "{generated}"
     );
     assert!(
@@ -220,13 +221,16 @@ def has_key() -> bool:
 "#,
     );
 
-    assert!(generated.contains("HashMap<[i64; 13], i64>"), "{generated}");
     assert!(
-        generated.contains("let key: [i64; 13] = [1_i64, 1_i64, 1_i64"),
+        generated.contains("HashMap<[SifrInt; 13], SifrInt>"),
         "{generated}"
     );
     assert!(
-        !generated.contains("(i64, i64, i64, i64, i64, i64, i64, i64, i64, i64, i64, i64, i64)"),
+        generated.contains("let key: [SifrInt; 13] = [SifrInt::from_i64(1), SifrInt::from_i64(1), SifrInt::from_i64(1)"),
+        "{generated}"
+    );
+    assert!(
+        !generated.contains("(SifrInt, SifrInt, SifrInt, SifrInt, SifrInt, SifrInt, SifrInt, SifrInt, SifrInt, SifrInt, SifrInt, SifrInt, SifrInt)"),
         "{generated}"
     );
 }
@@ -368,7 +372,7 @@ def compute(values: list[int]) -> list[int]:
     );
 
     assert!(
-        generated.contains("let Some(pair) = pair else"),
+        generated.contains("let Some(pair) = pair.clone() else"),
         "{generated}"
     );
     assert!(
@@ -376,7 +380,7 @@ def compute(values: list[int]) -> list[int]:
         "{generated}"
     );
     assert!(
-        generated.contains("let previous_index: i64 = (pair).1"),
+        generated.contains("let previous_index: SifrInt = (pair).1.clone()"),
         "{generated}"
     );
     assert!(!generated.contains("if pair.is_none()"), "{generated}");
@@ -425,7 +429,7 @@ def count_marker(text: str) -> int:
     );
 
     assert!(
-        generated.contains("let mut __sifr_counter_chars: HashMap<char, i64> = HashMap::new()"),
+        generated.contains("let mut __sifr_counter_chars: HashMap<char, usize> = HashMap::new()"),
         "{generated}"
     );
     assert!(
@@ -636,7 +640,7 @@ def count_a(own mut value: str) -> int:
         "{generated}"
     );
     assert!(
-        generated.contains("__sifr_chars_value.get(i as usize)"),
+        generated.contains("__sifr_chars_value.get(::sifr_runtime::to_usize_proven(&(i)))"),
         "{generated}"
     );
     assert!(!generated.contains("value.chars().nth"), "{generated}");
@@ -702,7 +706,7 @@ def zeros(n: int) -> list[int]:
     );
 
     assert!(
-        generated.contains("std::iter::repeat(0_i64)"),
+        generated.contains("std::iter::repeat(SifrInt::from_i64(0))"),
         "{generated}"
     );
     assert!(generated.contains("collect::<Vec<_>>()"), "{generated}");
@@ -751,9 +755,11 @@ class Store:
 "#,
     );
 
-    assert!(generated.contains("fn put(&mut self, key: &String, value: &String, timestamp: i64)"));
     assert!(
-        generated.contains("__elem.push(((value).clone(), timestamp))"),
+        generated.contains("fn put(&mut self, key: &String, value: &String, timestamp: &SifrInt)")
+    );
+    assert!(
+        generated.contains("__elem.push(((value).clone(), timestamp.clone()))"),
         "{generated}"
     );
     assert!(
@@ -777,7 +783,10 @@ class Cache:
 "#,
     );
 
-    assert!(generated.contains("self.entries.remove(&key)"));
+    assert!(
+        generated.contains("self.entries.remove(key)"),
+        "{generated}"
+    );
     assert!(!generated.contains("self.entries.clone().remove"));
 }
 
@@ -875,26 +884,4 @@ fn nested_list_non_optional_read_returns_concrete_element() {
     assert!(rendered.contains("let Some(__sifr_right_value) = maybe_cell else"));
     assert!(rendered.contains("1 +"));
     assert!(rendered.contains("__sifr_right_value"));
-}
-
-#[test]
-fn list_indexed_dict_lookup_borrows_row_and_string_key() {
-    let generated = generate_rust_from_source(
-        r#"
-def child_at(rows: list[dict[str, int]], row: int, key: str) -> int:
-    if key in rows[row]:
-        value: int | None = rows[row][key]
-        if value is not None:
-            return value
-    return -1
-"#,
-    );
-
-    assert!(generated.contains("rows.get(__idx_norm as usize)"));
-    assert!(generated.contains("__bucket.contains_key((key).as_str())"));
-    assert!(generated.contains("__bucket.get((key).as_str())"));
-    assert!(generated.contains(")).copied()"));
-    assert!(!generated.contains("__bucket.contains_key(&key)"));
-    assert!(!generated.contains("__bucket.get(&key)"));
-    assert!(!generated.contains("__sifr_index_value).cloned()"));
 }

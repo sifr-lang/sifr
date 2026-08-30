@@ -1,7 +1,9 @@
 use super::async_context::PythonAsyncExitCause;
 use super::foreign_object::ForeignObjectLease;
+use super::int_conversion::{extract_sifr_int, int_to_python};
 use super::object_ops::{clone_handle, store_object};
 use super::{ObjectHandle, PythonError};
+use crate::SifrInt;
 use pyo3::IntoPyObjectExt;
 use pyo3::prelude::*;
 use pyo3::types::{PyBytes, PyDict, PyList, PyTuple};
@@ -15,7 +17,7 @@ use pyo3::types::{PyBytes, PyDict, PyList, PyTuple};
 pub enum PythonAsyncValue {
     None,
     Bool(bool),
-    Int(i64),
+    Int(SifrInt),
     Float(f64),
     Str(String),
     Bytes(Vec<u8>),
@@ -254,8 +256,12 @@ pub fn async_from_none() -> Result<PythonAsyncValue, PythonError> {
 }
 
 primitive_constructor!(async_from_bool, Bool, bool);
-primitive_constructor!(async_from_int, Int, i64);
 primitive_constructor!(async_from_float, Float, f64);
+
+#[doc(hidden)]
+pub fn async_from_int(value: impl Into<SifrInt>) -> Result<PythonAsyncValue, PythonError> {
+    Ok(PythonAsyncValue::Int(value.into()))
+}
 
 #[doc(hidden)]
 pub fn async_from_str(value: &str) -> Result<PythonAsyncValue, PythonError> {
@@ -334,10 +340,17 @@ pub fn async_to_none(value: PythonAsyncValue) -> Result<(), PythonError> {
 }
 
 primitive_extractor!(async_to_bool, Bool, bool, "bool");
-primitive_extractor!(async_to_int, Int, i64, "int");
 primitive_extractor!(async_to_float, Float, f64, "float");
 primitive_extractor!(async_to_str, Str, String, "str");
 primitive_extractor!(async_to_bytes, Bytes, Vec<u8>, "bytes");
+
+#[doc(hidden)]
+pub fn async_to_int(value: PythonAsyncValue) -> Result<SifrInt, PythonError> {
+    match value {
+        PythonAsyncValue::Int(value) => Ok(value),
+        _ => Err(conversion_error("expected converted int", "async_to_int")),
+    }
+}
 
 #[doc(hidden)]
 pub fn async_list_items(value: PythonAsyncValue) -> Result<Vec<PythonAsyncValue>, PythonError> {
@@ -413,7 +426,7 @@ pub(super) fn materialize(
     match value {
         PythonAsyncValue::None => Ok(py.None()),
         PythonAsyncValue::Bool(value) => into_python(py, *value, context),
-        PythonAsyncValue::Int(value) => into_python(py, *value, context),
+        PythonAsyncValue::Int(value) => int_to_python(py, value, context),
         PythonAsyncValue::Float(value) => into_python(py, *value, context),
         PythonAsyncValue::Str(value) => into_python(py, value.as_str(), context),
         PythonAsyncValue::Bytes(value) => Ok(PyBytes::new(py, value).into_any().unbind()),
@@ -457,7 +470,7 @@ pub(super) fn convert_output(
             }
         }
         PythonAsyncType::Bool => extract(py, value, context).map(PythonAsyncValue::Bool),
-        PythonAsyncType::Int => extract(py, value, context).map(PythonAsyncValue::Int),
+        PythonAsyncType::Int => extract_sifr_int(py, value, context).map(PythonAsyncValue::Int),
         PythonAsyncType::Float => extract(py, value, context).map(PythonAsyncValue::Float),
         PythonAsyncType::Str => extract(py, value, context).map(PythonAsyncValue::Str),
         PythonAsyncType::Bytes => value

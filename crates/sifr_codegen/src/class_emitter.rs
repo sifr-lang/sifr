@@ -43,9 +43,12 @@ impl RustEmitter {
                                     "SifrIntBridge".to_string(),
                                     "from".to_string(),
                                 ])),
-                                args: vec![RustExpr::Field {
-                                    expr: Box::new(RustExpr::Ident("self".to_string())),
-                                    field: "_handle".to_string(),
+                                args: vec![RustExpr::Ref {
+                                    mutable: false,
+                                    expr: Box::new(RustExpr::Field {
+                                        expr: Box::new(RustExpr::Ident("self".to_string())),
+                                        field: "_handle".to_string(),
+                                    }),
                                 }],
                             }],
                         },

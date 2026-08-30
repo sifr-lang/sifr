@@ -138,7 +138,7 @@ impl RustEmitter {
                 {
                     continue;
                 }
-                if ty.ownership() == sifr_type_system::OwnershipKind::Copy {
+                if crate::helpers::is_copy_type_for_codegen(ty) {
                     continue;
                 }
                 if let Some(lowered_arg) = ir_args.get(idx).cloned() {

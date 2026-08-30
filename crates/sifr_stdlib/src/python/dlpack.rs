@@ -1,5 +1,5 @@
 use super::{Handle, PythonError, PythonObject, object_bridge, take_resource};
-use sifr_runtime::python;
+use sifr_runtime::{SifrInt, python};
 use std::marker::PhantomData;
 use std::rc::Rc;
 
@@ -57,18 +57,18 @@ impl PythonDlpackStream {
     }
 
     #[must_use]
-    pub const fn device_type(&self) -> i64 {
-        self.metadata.device_type
+    pub fn device_type(&self) -> SifrInt {
+        SifrInt::from(self.metadata.device_type)
     }
 
     #[must_use]
-    pub const fn device_id(&self) -> i64 {
-        self.metadata.device_id
+    pub fn device_id(&self) -> SifrInt {
+        SifrInt::from(self.metadata.device_id)
     }
 
     #[must_use]
-    pub const fn stream_token(&self) -> i64 {
-        self.metadata.stream_token
+    pub fn stream_token(&self) -> SifrInt {
+        SifrInt::from(self.metadata.stream_token)
     }
 }
 
@@ -125,28 +125,38 @@ impl<T: PythonDlpackElement> PythonDlpackTensor<T> {
     }
 
     #[must_use]
-    pub fn shape(&self) -> Vec<i64> {
-        self.metadata.shape.clone()
+    pub fn shape(&self) -> Vec<SifrInt> {
+        self.metadata
+            .shape
+            .iter()
+            .copied()
+            .map(SifrInt::from)
+            .collect()
     }
 
     #[must_use]
-    pub fn strides(&self) -> Vec<i64> {
-        self.metadata.strides.clone()
+    pub fn strides(&self) -> Vec<SifrInt> {
+        self.metadata
+            .strides
+            .iter()
+            .copied()
+            .map(SifrInt::from)
+            .collect()
     }
 
     #[must_use]
-    pub const fn device_type(&self) -> i64 {
-        self.metadata.device_type
+    pub fn device_type(&self) -> SifrInt {
+        SifrInt::from(self.metadata.device_type)
     }
 
     #[must_use]
-    pub const fn device_id(&self) -> i64 {
-        self.metadata.device_id
+    pub fn device_id(&self) -> SifrInt {
+        SifrInt::from(self.metadata.device_id)
     }
 
     #[must_use]
-    pub const fn byte_offset(&self) -> i64 {
-        self.metadata.byte_offset
+    pub fn byte_offset(&self) -> SifrInt {
+        SifrInt::from(self.metadata.byte_offset)
     }
 }
 

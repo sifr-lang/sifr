@@ -4,8 +4,13 @@ def main():
     assert str("add = " + str(add(3, 4))) == 'add = 7'
     assert str("sub = " + str(sub(7, 4))) == 'sub = 3'
     assert str("mul = " + str(mul(2, 5))) == 'mul = 10'
-    assert str("floordiv = " + str(floordiv(5, 2))) == 'floordiv = 2'
-    assert str("mod_val = " + str(mod_val(5, 2))) == 'mod_val = 1'
+    try:
+        quotient: int = floordiv(5, 2)
+        remainder: int = mod_val(5, 2)
+        assert str("floordiv = " + str(quotient)) == 'floordiv = 2'
+        assert str("mod_val = " + str(remainder)) == 'mod_val = 1'
+    except DivisionError:
+        assert False
     assert str("neg = " + str(neg(5))) == 'neg = -5'
     assert str("lt = " + str(lt(3, 5))) == 'lt = true'
     assert str("eq = " + str(eq(3, 5))) == 'eq = false'

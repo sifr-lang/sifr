@@ -223,7 +223,7 @@ fn build_output_machine_formats_emit_no_success_progress() {
 fn build_output_compact_warning_success_emits_diagnostics_without_progress() {
     let project = TestProject::new(
         "compact_warning",
-        "def multiply(a: int, b: int) -> int:\n    return a * b\n\ndef main():\n    print(multiply(2, 3))\n",
+        "def value() -> int:\n    return 1\n    return 2\n\ndef main():\n    print(value())\n",
     );
     let output_dir = project.output_dir("out");
     let output_dir_arg = output_dir.to_string_lossy().to_string();
@@ -244,11 +244,7 @@ fn build_output_compact_warning_success_emits_diagnostics_without_progress() {
     assert_eq!(capture.status_code, 0, "stderr:\n{}", capture.stderr);
     assert!(capture.stdout.is_empty());
     assert!(capture.stderr.contains("0 errors, 1 warning"));
-    assert!(
-        capture
-            .stderr
-            .contains("integer multiplication may overflow")
-    );
+    assert!(capture.stderr.contains("unreachable statement ignored"));
     assert!(!capture.stderr.contains("Finished release build"));
     assert!(!capture.stderr.contains("Binary: "));
 }

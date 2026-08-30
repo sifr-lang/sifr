@@ -213,7 +213,7 @@ fn simple_compare_condition_wraps_proven_list_index_without_double_option() {
 }
 
 #[test]
-fn lowers_simple_field_assign_for_non_self_target() {
+fn exact_integer_field_assign_uses_scope_aware_path() {
     let stmt = HirStmt::FieldAssign {
         object: "node".to_string(),
         field: "value".to_string(),
@@ -224,18 +224,7 @@ fn lowers_simple_field_assign_for_non_self_target() {
             ty: Type::Int,
         },
     };
-    let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
-        .expect("field assign lowered");
-    assert_eq!(lowered.len(), 1);
-    assert!(matches!(
-        lowered[0],
-        RustStmt::Assign {
-            target: RustExpr::Field { ref expr, ref field },
-            value: RustExpr::Ident(ref rhs),
-        } if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "node")
-            && field == "value"
-            && rhs == "next_value"
-    ));
+    assert!(try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new()).is_none());
 }
 
 #[test]

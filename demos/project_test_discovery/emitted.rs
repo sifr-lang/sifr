@@ -10,10 +10,13 @@ fn main() {
 }
 
 // src/helper.rs
-pub use crate::shared::BASE;
-pub fn value() -> i64 {
-    BASE
+pub use ::sifr_runtime::SifrInt;
+pub fn value() -> SifrInt {
+    crate::shared::__const_BASE()
 }
 
 // src/shared.rs
-pub const BASE: i64 = 42_i64;
+pub use ::sifr_runtime::SifrInt;
+pub fn __const_BASE() -> SifrInt {
+    SifrInt::from_i64(42)
+}

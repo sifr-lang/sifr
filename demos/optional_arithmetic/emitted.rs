@@ -1,24 +1,26 @@
 // src/main.rs
-fn safe_add_one(x: Option<i64>) -> i64 {
-    let Some(x) = x else {
-        return 0_i64;
+use ::sifr_runtime::SifrInt;
+
+fn safe_add_one(x: Option<SifrInt>) -> SifrInt {
+    let Some(x) = x.clone() else {
+        return SifrInt::from_i64(0);
     };
-    x + (1_i64)
+    &x + &SifrInt::from_i64(1)
 }
 
 fn main() {
     println!("optional_arithmetic optional arithmetic soundness demo:");
-    println!("{}", safe_add_one(Some(5_i64)));
+    println!("{}", safe_add_one(Some(SifrInt::from_i64(5))));
     println!("{}", safe_add_one(None));
-    let total: Option<i64> = Some(9_i64);
-    let count: Option<i64> = Some(3_i64);
-    if let Some(total) = total {
-        if let Some(count) = count {
-            println!("{}", ((total) as f64) / ((count) as f64));
+    let total: Option<SifrInt> = Some(SifrInt::from_i64(9));
+    let count: Option<SifrInt> = Some(SifrInt::from_i64(3));
+    if let Some(total) = total.clone() {
+        if let Some(count) = count.clone() {
+            println!("{}", (total).to_f64_proven_exact() / (count).to_f64_proven_exact());
         }
     }
-    let missing_total: Option<i64> = None;
+    let missing_total: Option<SifrInt> = None;
     if missing_total.is_none() {
-        println!("{}", 0_i64);
+        println!("{}", SifrInt::from_i64(0));
     }
 }

@@ -100,7 +100,7 @@ def _hex_digit_value(ch: str) -> int:
 
 def _substring(value: str, start: int, end: int) -> str:
     result: str = ""
-    i: int = start
+    i: int = start.clone()
     while i < end:
         ch: str | None = value[i]
         if ch is not None:

@@ -1,5 +1,6 @@
 // src/main.rs
 mod __sifr_project_nominals {
+    pub use ::sifr_runtime::SifrInt;
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct IOError {
         pub message: String,
@@ -74,15 +75,15 @@ mod __sifr_project_nominals {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct JSONDecodeError {
         pub message: String,
-        pub line: i64,
-        pub column: i64,
+        pub line: SifrInt,
+        pub column: SifrInt,
     }
     impl JSONDecodeError {
         pub fn new(message: String) -> Self {
             Self {
                 message,
-                line: 0,
-                column: 0,
+                line: SifrInt::from_i64(0),
+                column: SifrInt::from_i64(0),
             }
         }
     }
@@ -116,11 +117,14 @@ mod __sifr_project_nominals {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct JsonLimitError {
         pub message: String,
-        pub limit: i64,
+        pub limit: SifrInt,
     }
     impl JsonLimitError {
         pub fn new(message: String) -> Self {
-            Self { message, limit: 0 }
+            Self {
+                message,
+                limit: SifrInt::from_i64(0),
+            }
         }
     }
     impl ::std::fmt::Display for JsonLimitError {
@@ -132,15 +136,15 @@ mod __sifr_project_nominals {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TOMLDecodeError {
         pub message: String,
-        pub line: i64,
-        pub column: i64,
+        pub line: SifrInt,
+        pub column: SifrInt,
     }
     impl TOMLDecodeError {
         pub fn new(message: String) -> Self {
             Self {
                 message,
-                line: 0,
-                column: 0,
+                line: SifrInt::from_i64(0),
+                column: SifrInt::from_i64(0),
             }
         }
     }
@@ -210,6 +214,7 @@ pub use __sifr_project_nominals::ScopeFailure;
 pub use __sifr_project_nominals::TOMLDecodeError;
 pub use __sifr_project_nominals::TimeoutError;
 pub use __sifr_project_nominals::ValueError;
+use ::sifr_runtime::SifrInt;
 fn __io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
     let msg = e.to_string();
     let kind = {
@@ -236,14 +241,24 @@ fn main() {
     let mut bad_size: bool = false;
     let __sifr_try_res: Result<(), ValueError> = (|| {
         let _ = {
-            let __size = -(1_i64);
-            if __size < 0 {
+            let __size = -&SifrInt::from_i64(1);
+            if &__size < &0 {
                 return Err(ValueError {
                     message: "bytes(size) requires a non-negative size"
                         .to_string()
                         .to_string(),
                 });
             }
+            let __size = match __size.try_to_usize() {
+                Ok(__size) => __size,
+                Err(_) => {
+                    return Err(ValueError {
+                        message: "bytes(size) exceeds the addressable size"
+                            .to_string()
+                            .to_string(),
+                    });
+                }
+            };
             Ok::<Vec<u8>, ValueError>((0..__size).map(|_| 0_u8).collect::<Vec<u8>>())
         };
         Ok(())
@@ -255,7 +270,7 @@ fn main() {
     let mut bad_values: bool = false;
     let __sifr_try_res: Result<(), ValueError> = (|| {
         let _ = {
-            let __vals = vec![0_i64, 999_i64];
+            let __vals = vec![SifrInt::from_i64(0), SifrInt::from_i64(999)];
             let mut __out = Vec::new();
             for __pair in __vals.iter().enumerate() {
                 if (*__pair.1 < 0) || (*__pair.1 > 255) {
@@ -265,7 +280,7 @@ fn main() {
                         ),
                     });
                 }
-                __out.push(*__pair.1 as u8);
+                __out.push(__pair.1.to_u8_proven_in_range());
             }
             Ok::<Vec<u8>, ValueError>(__out)
         };
@@ -338,7 +353,7 @@ fn main() {
     let mut bad_utf8: bool = false;
     let __sifr_try_res: Result<(), ParseError> = (|| {
         let _invalid_utf8: String = ::sifr_runtime::encoding::decode_text(
-                &vec![(255_i64) as u8],
+                &vec![255u8],
                 &"utf-8".to_string(),
                 &"strict".to_string(),
             )

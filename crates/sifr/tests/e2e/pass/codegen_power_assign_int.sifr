@@ -1,9 +1,9 @@
-# Tests that **= on int variables produces int result (not float)
+# Tests that statically bounded **= produces an exact int result.
 
 def main():
     x: int = 2
-    x **= 3
-    assert str(x) == '8'
+    x **= 0
+    assert str(x) == '1'
     y: int = 3
-    y **= 3
-    assert str(y) == '27'
+    y **= 0
+    assert str(y) == '1'

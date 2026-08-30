@@ -323,10 +323,6 @@ pub fn from_bool(value: bool) -> Result<ObjectHandle, PythonError> {
     store_primitive(value, "from bool")
 }
 
-pub fn from_int(value: i64) -> Result<ObjectHandle, PythonError> {
-    store_primitive(value, "from int")
-}
-
 pub fn from_float(value: f64) -> Result<ObjectHandle, PythonError> {
     store_primitive(value, "from float")
 }
@@ -392,10 +388,6 @@ pub fn to_bool(object: &ObjectHandle) -> Result<bool, PythonError> {
     extract_handle(object, "bool", "to_bool")
 }
 
-pub fn to_int(object: &ObjectHandle) -> Result<i64, PythonError> {
-    extract_handle(object, "int", "to_int")
-}
-
 pub fn to_i8(object: &ObjectHandle) -> Result<i8, PythonError> {
     extract_handle(object, "int8", "to_i8")
 }
@@ -458,7 +450,6 @@ pub fn to_bytes(object: &ObjectHandle) -> Result<Vec<u8>, PythonError> {
 
 typed_container_conversions! {
     copy_list_bool, copy_tuple_bool, copy_dict_str_bool => bool, "bool";
-    copy_list_int, copy_tuple_int, copy_dict_str_int => i64, "int";
     copy_list_i32, copy_tuple_i32, copy_dict_str_i32 => i32, "int32";
     copy_list_u8, copy_tuple_u8, copy_dict_str_u8 => u8, "uint8";
     copy_list_float, copy_tuple_float, copy_dict_str_float => f64, "float";
@@ -779,7 +770,10 @@ fn extract_exact_bytes(value: Bound<'_, PyAny>, context: String) -> Result<Vec<u
         .map_err(|_| conversion_error("expected Python bytes", context))
 }
 
-fn conversion_error(message: impl Into<String>, context: impl Into<String>) -> PythonError {
+pub(super) fn conversion_error(
+    message: impl Into<String>,
+    context: impl Into<String>,
+) -> PythonError {
     PythonError {
         kind: "conversion".to_string(),
         exception_type: "SifrPythonTypeConversionError".to_string(),

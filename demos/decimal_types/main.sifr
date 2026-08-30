@@ -3,8 +3,8 @@ def main():
     d: decimal = Decimal("12.50")
     b: bigdecimal = BigDecimal("3.25")
 
-    d_plus: decimal = d + 2
-    b_plus: bigdecimal = b + 4
+    d_plus: decimal = d + Decimal("2")
+    b_plus: bigdecimal = b + BigDecimal("4")
 
     assert d_plus == Decimal("14.50")
     assert b_plus == BigDecimal("7.25")

@@ -113,6 +113,7 @@ impl RustEmitter {
                         effective_arg_ty: &effective_arg_ty,
                         convention: *convention,
                         borrowed_name_arg,
+                        borrowed_name_materialized: false,
                     },
                     lowered_arg.clone(),
                 ) {
@@ -149,11 +150,14 @@ impl RustEmitter {
             }
 
             if self.function_param_lowers_to_sifr_int(func, idx) {
+                let lowered_arg = Self::clone_non_copy_name_expr_for_ir(hir_arg, lowered_arg);
                 let lowered_arg = self.rewrite_stdlib_constant_idents_in_expr(lowered_arg);
-                adapted.push(self.coerce_expr_to_sifr_int_value(lowered_arg));
+                adapted
+                    .push(self.coerce_typed_expr_to_sifr_int_value(lowered_arg, &effective_arg_ty));
                 continue;
             }
             if self.function_param_lowers_to_sifr_int_result(func, idx) {
+                let lowered_arg = Self::clone_non_copy_name_expr_for_ir(hir_arg, lowered_arg);
                 let lowered_arg = self.rewrite_stdlib_constant_idents_in_expr(lowered_arg);
                 adapted.push(self.coerce_result_int_expr_to_sifr_int_value(lowered_arg));
                 continue;
@@ -174,9 +178,15 @@ impl RustEmitter {
             }
 
             if convention.is_owned()
-                && borrowed_name_arg
                 && !recursive_option_adapted
                 && !consuming_value_adapted
+                && (borrowed_name_arg
+                    || (crate::helpers::is_logically_copy_rust_move_type(&effective_arg_ty)
+                        && matches!(
+                            crate::helpers::classify_value_category(hir_arg),
+                            crate::helpers::ValueCategory::Place
+                        )
+                        && Self::rust_expr_is_reusable_place_for_ir(&lowered_arg)))
             {
                 lowered_arg = crate::RustExpr::MethodCall {
                     receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_arg))),
@@ -186,13 +196,13 @@ impl RustEmitter {
             }
 
             let needs_shared_borrow = convention.is_shared_borrow()
-                && (param_ty.ownership() != sifr_type_system::OwnershipKind::Copy
+                && (!crate::helpers::is_copy_type_for_codegen(param_ty)
                     || matches!(
                         resolved_param,
                         Type::TypeVar(_) | Type::Any | Type::Callable(..) | Type::AsyncCallable(..)
                     ));
             let needs_mut_borrow = convention.is_mut_borrow()
-                && (param_ty.ownership() != sifr_type_system::OwnershipKind::Copy
+                && (!crate::helpers::is_copy_type_for_codegen(param_ty)
                     || matches!(resolved_param, Type::TypeVar(_) | Type::Any));
             let already_borrowed = matches!(lowered_arg, crate::RustExpr::Ref { .. })
                 || matches!(

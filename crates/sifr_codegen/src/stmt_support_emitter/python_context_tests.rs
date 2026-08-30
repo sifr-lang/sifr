@@ -209,7 +209,9 @@ fn entered_binding_preserves_mutability_and_mixed_item_nesting() {
     let rendered = crate::render_stmts(&[lowered]);
     assert!(rendered.contains("let Some(mut entered)"));
     assert!(
-        rendered.find("let _native = 1_i64").expect("native item")
+        rendered
+            .find("let _native = SifrInt::from_i64(1)")
+            .expect("native item")
             < rendered
                 .find("context_enter_with_callbacks(")
                 .expect("Python enter")

@@ -55,8 +55,7 @@ def main():
         i = i + 1
 
     try:
-        out_of_range: int = int(BigDecimal("999999999999999999999999999999999999"))
-        _ = out_of_range
-        assert False
+        huge: int = int(BigDecimal("999999999999999999999999999999999999"))
+        assert str(huge) == "999999999999999999999999999999999999"
     except DecimalConversionError as e:
-        assert e.message == 'bigdecimal value out of range for int'
+        assert False

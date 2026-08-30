@@ -1,7 +1,7 @@
 use super::*;
 use crate::RustExpr;
 use sifr_ir::{HirExceptHandler, HirExpr, HirFunction, HirModule, HirParam, HirStmt, MethodKind};
-use sifr_type_system::{OwnershipKind, ParamConvention, Type};
+use sifr_type_system::{FixedIntType, OwnershipKind, ParamConvention, Type};
 use std::collections::HashMap;
 
 fn mk_function(name: &str, body: Vec<HirStmt>) -> HirFunction {
@@ -80,13 +80,13 @@ fn classify_value_category_marks_names_and_fields_as_places() {
 }
 
 #[test]
-fn classify_value_category_treats_copy_tuple_literal_of_places_as_place() {
+fn classify_value_category_treats_physically_copy_tuple_literal_of_places_as_place() {
     let tuple_expr = HirExpr::TupleLiteral {
         elements: vec![
             HirExpr::Name {
                 name: "a".to_string(),
                 binding_id: None,
-                ty: Type::Int,
+                ty: Type::FixedInt(FixedIntType::I64),
             },
             HirExpr::Name {
                 name: "b".to_string(),
@@ -94,7 +94,7 @@ fn classify_value_category_treats_copy_tuple_literal_of_places_as_place() {
                 ty: Type::Bool,
             },
         ],
-        ty: Type::Tuple(vec![Type::Int, Type::Bool]),
+        ty: Type::Tuple(vec![Type::FixedInt(FixedIntType::I64), Type::Bool]),
     };
 
     assert_eq!(classify_value_category(&tuple_expr), ValueCategory::Place);
@@ -125,7 +125,7 @@ fn classify_value_category_treats_move_tuple_literal_as_temporary() {
 }
 
 #[test]
-fn iterator_plan_preserves_named_copy_element_collection() {
+fn iterator_plan_clones_named_exact_int_collection() {
     let source = HirExpr::Name {
         name: "xs".to_string(),
         binding_id: None,
@@ -135,8 +135,8 @@ fn iterator_plan_preserves_named_copy_element_collection() {
 
     assert_eq!(plan.value_category, ValueCategory::Place);
     assert_eq!(plan.source_access_mode, SourceAccessMode::Preserve);
-    assert_eq!(plan.yield_mode, YieldMode::Copy);
-    assert_eq!(plan.element_ownership, Some(OwnershipKind::Copy));
+    assert_eq!(plan.yield_mode, YieldMode::Clone);
+    assert_eq!(plan.element_ownership, Some(OwnershipKind::Move));
 }
 
 #[test]
@@ -165,7 +165,7 @@ fn iterator_plan_consumes_temporary_collection() {
     assert_eq!(plan.value_category, ValueCategory::Temporary);
     assert_eq!(plan.source_access_mode, SourceAccessMode::Consume);
     assert_eq!(plan.yield_mode, YieldMode::Move);
-    assert_eq!(plan.element_ownership, Some(OwnershipKind::Copy));
+    assert_eq!(plan.element_ownership, Some(OwnershipKind::Move));
 }
 
 #[test]
@@ -191,9 +191,9 @@ fn iterator_plan_defaults_to_borrow_for_conservative_unknown_elements() {
 }
 
 #[test]
-fn option_projection_method_prefers_copy_for_copy_types() {
+fn option_projection_method_uses_physical_rust_copy_semantics() {
     assert_eq!(
-        option_projection_method_for_owned_type(&Type::Int),
+        option_projection_method_for_owned_type(&Type::FixedInt(FixedIntType::I64)),
         "copied"
     );
     assert_eq!(
@@ -273,7 +273,7 @@ fn iterator_plan_list_typevar_uses_clone_yield() {
 }
 
 #[test]
-fn iterator_plan_copies_tuple_of_copy_elements() {
+fn iterator_plan_clones_tuple_containing_exact_ints() {
     let source = HirExpr::Name {
         name: "pairs".to_string(),
         binding_id: None,
@@ -281,12 +281,12 @@ fn iterator_plan_copies_tuple_of_copy_elements() {
     };
     let plan = plan_iterator_ownership(&source);
 
-    assert_eq!(plan.yield_mode, YieldMode::Copy);
-    assert_eq!(plan.element_ownership, Some(OwnershipKind::Copy));
+    assert_eq!(plan.yield_mode, YieldMode::Clone);
+    assert_eq!(plan.element_ownership, Some(OwnershipKind::Move));
 }
 
 #[test]
-fn iterator_plan_consumes_range_without_clone_rules() {
+fn iterator_plan_preserves_named_exact_integer_range() {
     let source = HirExpr::Name {
         name: "r".to_string(),
         binding_id: None,
@@ -294,9 +294,9 @@ fn iterator_plan_consumes_range_without_clone_rules() {
     };
     let plan = plan_iterator_ownership(&source);
 
-    assert_eq!(plan.source_access_mode, SourceAccessMode::Consume);
-    assert_eq!(plan.yield_mode, YieldMode::Move);
-    assert_eq!(plan.element_ownership, Some(OwnershipKind::Copy));
+    assert_eq!(plan.source_access_mode, SourceAccessMode::Preserve);
+    assert_eq!(plan.yield_mode, YieldMode::Clone);
+    assert_eq!(plan.element_ownership, Some(OwnershipKind::Move));
 }
 
 #[test]

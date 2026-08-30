@@ -13,6 +13,7 @@ fn key_error_type() -> Type {
 
 #[test]
 fn lowers_simple_list_subscript_augassign_plus_equal_stmt() {
+    let fixed = Type::FixedInt(sifr_type_system::FixedIntType::I64);
     let stmt = HirStmt::SubscriptAugAssign {
         object: "items".to_string(),
         index: HirExpr::Name {
@@ -24,9 +25,9 @@ fn lowers_simple_list_subscript_augassign_plus_equal_stmt() {
         value: HirExpr::Name {
             name: "delta".to_string(),
             binding_id: None,
-            ty: Type::Int,
+            ty: fixed.clone(),
         },
-        object_ty: Type::List(Box::new(Type::Int)),
+        object_ty: Type::List(Box::new(fixed)),
         missing_key_error: None,
     };
     let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
@@ -37,21 +38,15 @@ fn lowers_simple_list_subscript_augassign_plus_equal_stmt() {
     assert_eq!(stmts.len(), 3);
     assert!(matches!(
         &stmts[2],
-        RustStmt::If {
-            then_body,
-            ..
-        } if matches!(
+        RustStmt::IfLet { then_body, .. } if matches!(
             then_body.first(),
-            Some(RustStmt::IfLet { then_body, .. }) if matches!(
-                then_body.first(),
-                Some(RustStmt::AugAssign {
-                    target: RustExpr::Deref(target),
-                    op,
-                    value: RustExpr::Ident(rhs),
-                }) if matches!(target.as_ref(), RustExpr::Ident(name) if name == "__elem")
-                    && op == "+"
-                    && rhs == "delta"
-            )
+            Some(RustStmt::AugAssign {
+                target: RustExpr::Deref(target),
+                op,
+                value: RustExpr::Ident(rhs),
+            }) if matches!(target.as_ref(), RustExpr::Ident(name) if name == "__elem")
+                && op == "+"
+                && rhs == "delta"
         )
     ));
 }
@@ -77,29 +72,23 @@ fn lowers_simple_string_list_subscript_augassign_plus_equal_stmt() {
     };
     assert!(matches!(
         &stmts[2],
-        RustStmt::If {
-            then_body,
-            ..
-        } if matches!(
+        RustStmt::IfLet { then_body, .. } if matches!(
             then_body.first(),
-            Some(RustStmt::IfLet { then_body, .. }) if matches!(
-                then_body.first(),
-                Some(RustStmt::Expr(RustExpr::MethodCall { receiver, method, args }))
-                    if matches!(receiver.as_ref(), RustExpr::Ident(name) if name == "__elem")
-                        && method == "push_str"
-                        && matches!(
-                            args.first(),
-                            Some(RustExpr::MethodCall {
-                                receiver: inner_receiver,
-                                method: inner_method,
-                                args: inner_args,
-                            }) if matches!(
-                                inner_receiver.as_ref(),
-                                RustExpr::Paren(expr)
-                                    if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "c")
-                            ) && inner_method == "as_str" && inner_args.is_empty()
-                        )
-            )
+            Some(RustStmt::Expr(RustExpr::MethodCall { receiver, method, args }))
+                if matches!(receiver.as_ref(), RustExpr::Ident(name) if name == "__elem")
+                    && method == "push_str"
+                    && matches!(
+                        args.first(),
+                        Some(RustExpr::MethodCall {
+                            receiver: inner_receiver,
+                            method: inner_method,
+                            args: inner_args,
+                        }) if matches!(
+                            inner_receiver.as_ref(),
+                            RustExpr::Paren(expr)
+                                if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "c")
+                        ) && inner_method == "as_str" && inner_args.is_empty()
+                    )
         )
     ));
 }
@@ -120,9 +109,11 @@ fn lowers_simple_list_subscript_augassign_bitwise_and_shift_ops() {
             value: HirExpr::Name {
                 name: "rhs".to_string(),
                 binding_id: None,
-                ty: Type::Int,
+                ty: Type::FixedInt(sifr_type_system::FixedIntType::I64),
             },
-            object_ty: Type::List(Box::new(Type::Int)),
+            object_ty: Type::List(Box::new(Type::FixedInt(
+                sifr_type_system::FixedIntType::I64,
+            ))),
             missing_key_error: None,
         };
         let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
@@ -132,21 +123,15 @@ fn lowers_simple_list_subscript_augassign_bitwise_and_shift_ops() {
         };
         assert!(matches!(
             &stmts[2],
-            RustStmt::If {
-                then_body,
-                ..
-            } if matches!(
+            RustStmt::IfLet { then_body, .. } if matches!(
                 then_body.first(),
-                Some(RustStmt::IfLet { then_body, .. }) if matches!(
-                    then_body.first(),
-                    Some(RustStmt::AugAssign {
-                        target: RustExpr::Deref(target),
-                        op,
-                        value: RustExpr::Ident(rhs),
-                    }) if matches!(target.as_ref(), RustExpr::Ident(name) if name == "__elem")
-                        && op == expected
-                        && rhs == "rhs"
-                )
+                Some(RustStmt::AugAssign {
+                    target: RustExpr::Deref(target),
+                    op,
+                    value: RustExpr::Ident(rhs),
+                }) if matches!(target.as_ref(), RustExpr::Ident(name) if name == "__elem")
+                    && op == expected
+                    && rhs == "rhs"
             )
         ));
     }
@@ -165,9 +150,12 @@ fn lowers_simple_dict_subscript_augassign_with_name_key() {
         value: HirExpr::Name {
             name: "delta".to_string(),
             binding_id: None,
-            ty: Type::Int,
+            ty: Type::FixedInt(sifr_type_system::FixedIntType::I64),
         },
-        object_ty: Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
+        object_ty: Type::Dict(
+            Box::new(Type::Str),
+            Box::new(Type::FixedInt(sifr_type_system::FixedIntType::I64)),
+        ),
         missing_key_error: None,
     };
     let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
@@ -212,8 +200,15 @@ fn lowers_simple_dict_subscript_augassign_with_string_literal_key() {
         object: "mapping".to_string(),
         index: HirExpr::StringLiteral("k".to_string()),
         op: "-=".to_string(),
-        value: HirExpr::IntLiteral(1),
-        object_ty: Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
+        value: HirExpr::Name {
+            name: "delta".to_string(),
+            binding_id: None,
+            ty: Type::FixedInt(sifr_type_system::FixedIntType::I64),
+        },
+        object_ty: Type::Dict(
+            Box::new(Type::Str),
+            Box::new(Type::FixedInt(sifr_type_system::FixedIntType::I64)),
+        ),
         missing_key_error: None,
     };
     let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
@@ -241,10 +236,17 @@ fn lowers_simple_alias_dict_subscript_augassign_stmt() {
             ty: Type::Str,
         },
         op: "|=".to_string(),
-        value: HirExpr::IntLiteral(2),
+        value: HirExpr::Name {
+            name: "mask".to_string(),
+            binding_id: None,
+            ty: Type::FixedInt(sifr_type_system::FixedIntType::I64),
+        },
         object_ty: Type::alias(
             "IntMap",
-            Type::Dict(Box::new(Type::Str), Box::new(Type::Int)),
+            Type::Dict(
+                Box::new(Type::Str),
+                Box::new(Type::FixedInt(sifr_type_system::FixedIntType::I64)),
+            ),
         ),
         missing_key_error: None,
     };
@@ -317,8 +319,25 @@ fn annotated_defaultdict_alias_keeps_entry_insertion_codegen() {
         ),
         missing_key_error: None,
     };
-    let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
-        .expect("defaultdict augassign should lower");
+    assert!(try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new()).is_none());
+    let mut emitter = crate::RustEmitter::new();
+    let HirStmt::SubscriptAugAssign {
+        object,
+        index,
+        op,
+        value,
+        object_ty,
+        ..
+    } = &stmt
+    else {
+        unreachable!();
+    };
+    let lowered = vec![
+        emitter
+            .lower_subscript_augassign_stmt_for_ir(object, index, op, value, object_ty, None)
+            .expect("typed defaultdict augassign lowering should succeed")
+            .expect("typed defaultdict augassign should lower"),
+    ];
     assert!(matches!(
         &lowered[0],
         RustStmt::Block(stmts)

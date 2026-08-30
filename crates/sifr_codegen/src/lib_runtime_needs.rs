@@ -34,7 +34,7 @@ pub(crate) fn sync_channel_runtime_rust_code() -> &'static str {
 struct __SifrChannelState<T> {
     buffer: std::collections::VecDeque<T>,
     closed: bool,
-    capacity: i64,
+    capacity: SifrInt,
     sender_count: i64,
     receiver_alive: bool,
 }
@@ -64,7 +64,7 @@ impl<T: Clone> Clone for Channel<T> {
     }
 }
 impl<T: Clone> Channel<T> {
-    fn new(buffer: Vec<T>, capacity: i64) -> Self {
+    fn new(buffer: Vec<T>, capacity: SifrInt) -> Self {
         return Self {
             _state: std::sync::Arc::new(std::sync::Mutex::new(__SifrChannelState {
                 buffer: buffer.into_iter().collect(),
@@ -132,7 +132,9 @@ impl<T: Clone> Channel<T> {
             if state.closed || !state.receiver_alive {
                 return __SifrChannelPushState::Closed(value);
             }
-            if state.capacity >= 0 && (state.buffer.len() as i64) >= state.capacity {
+            if &state.capacity >= &SifrInt::from_i64(0)
+                && &SifrInt::from(state.buffer.len()) >= &state.capacity
+            {
                 return __SifrChannelPushState::Full(value);
             }
             state.buffer.push_back(value);
@@ -275,14 +277,14 @@ impl<T: Clone> std::fmt::Display for ChannelReceiver<T> {
 }
 
 pub(crate) fn channel<T: Clone + 'static>() -> (ChannelSender<T>, ChannelReceiver<T>) {
-    let shared_channel = Channel::new(vec![], -(1 as i64));
+    let shared_channel = Channel::new(vec![], SifrInt::from_i64(-1));
     return (
         ChannelSender::new(shared_channel.clone()),
         ChannelReceiver::new(shared_channel),
     );
 }
 
-pub(crate) fn bounded_channel<T: Clone + 'static>(capacity: i64) -> (ChannelSender<T>, ChannelReceiver<T>) {
+pub(crate) fn bounded_channel<T: Clone + 'static>(capacity: SifrInt) -> (ChannelSender<T>, ChannelReceiver<T>) {
     let shared_channel = Channel::new(vec![], capacity);
     return (
         ChannelSender::new(shared_channel.clone()),

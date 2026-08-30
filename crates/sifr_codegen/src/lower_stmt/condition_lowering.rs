@@ -3,8 +3,8 @@ use super::{
     SimpleStmtBindings, SimpleStmtLoweringCtx, Type, codegen_body_always_exits,
     detect_and_not_none_vars, detect_is_none_var, detect_is_not_none_var,
     detect_option_truthiness_alias, detect_or_is_none_vars, is_none_type, is_option_like_type,
-    lower_if_not_none_chain, option_binding_pattern, resolve_alias_type, try_lower_leaf_expr,
-    try_lower_leaf_or_name_expr, try_lower_simple_stmt_block,
+    lower_if_not_none_chain, option_binding_pattern, option_binding_value_expr, resolve_alias_type,
+    try_lower_leaf_expr, try_lower_leaf_or_name_expr, try_lower_simple_stmt_block,
 };
 pub(super) fn try_lower_simple_if_stmt(
     condition: &HirExpr,
@@ -33,7 +33,7 @@ pub(super) fn try_lower_simple_if_stmt(
                 value: RustExpr::Tuple(
                     option_vars
                         .iter()
-                        .map(|option_var| RustExpr::Ident(option_var.clone()))
+                        .map(|option_var| option_binding_value_expr(option_var, bindings))
                         .collect(),
                 ),
                 else_body: lowered_then_body,
@@ -44,7 +44,7 @@ pub(super) fn try_lower_simple_if_stmt(
                 try_lower_simple_stmt_block(then_body, in_loop_with_else, bindings, ctx)?;
             return Some(vec![RustStmt::LetElse {
                 pattern: option_binding_pattern(&option_var, bindings),
-                value: RustExpr::Ident(option_var),
+                value: option_binding_value_expr(&option_var, bindings),
                 else_body: lowered_then_body,
             }]);
         }
@@ -96,7 +96,7 @@ pub(super) fn try_lower_simple_if_clause(
     if let Some(option_var) = detect_is_not_none_var(condition) {
         return Some(RustStmt::IfLet {
             pattern: option_binding_pattern(&option_var, bindings),
-            expr: RustExpr::Ident(option_var),
+            expr: option_binding_value_expr(&option_var, bindings),
             then_body: lowered_then_body,
             else_body: nested_else,
         });
@@ -109,7 +109,7 @@ pub(super) fn try_lower_simple_if_clause(
     if let Some(option_var) = detect_option_truthiness_alias(condition) {
         return Some(RustStmt::IfLet {
             pattern: option_binding_pattern(&option_var, bindings),
-            expr: RustExpr::Ident(option_var),
+            expr: option_binding_value_expr(&option_var, bindings),
             then_body: lowered_then_body,
             else_body: nested_else,
         });
@@ -121,7 +121,7 @@ pub(super) fn try_lower_simple_if_clause(
         let lowered_else = nested_else.map(|else_body| {
             vec![RustStmt::IfLet {
                 pattern: option_binding_pattern(&option_var, bindings),
-                expr: RustExpr::Ident(option_var.clone()),
+                expr: option_binding_value_expr(&option_var, bindings),
                 then_body: else_body,
                 else_body: None,
             }]
@@ -172,9 +172,12 @@ pub(super) fn try_lower_simple_condition_test_expr(
 pub(super) fn try_lower_numeric_truthiness_condition_expr(expr: &HirExpr) -> Option<RustExpr> {
     fn zero_literal_for_type(ty: &Type) -> Option<RustExpr> {
         match resolve_alias_type(ty) {
-            Type::Int | Type::LiteralInt(_) => Some(RustExpr::Cast {
-                expr: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
-                ty: RustType::I64,
+            Type::Int | Type::LiteralInt(_) => Some(RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    "SifrInt".to_string(),
+                    "from_i64".to_string(),
+                ])),
+                args: vec![RustExpr::Literal(RustLiteral::Int(0))],
             }),
             Type::Float => Some(RustExpr::Cast {
                 expr: Box::new(RustExpr::Literal(RustLiteral::Float(0.0))),
@@ -198,13 +201,16 @@ pub(super) fn try_lower_numeric_truthiness_condition_expr(expr: &HirExpr) -> Opt
             ..
         } if method == "len" && args.is_empty() => {
             let receiver = try_lower_leaf_expr(object.as_ref())?;
-            let lhs = RustExpr::Cast {
-                expr: Box::new(RustExpr::MethodCall {
+            let lhs = RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    "SifrInt".to_string(),
+                    "from".to_string(),
+                ])),
+                args: vec![RustExpr::MethodCall {
                     receiver: Box::new(receiver),
                     method: "len".to_string(),
                     args: vec![],
-                }),
-                ty: RustType::I64,
+                }],
             };
             Some(RustExpr::BinOp {
                 left: Box::new(lhs),
@@ -226,13 +232,16 @@ pub(super) fn try_lower_numeric_truthiness_condition_expr(expr: &HirExpr) -> Opt
                 ..
             } if method == "len" && args.is_empty() => {
                 let receiver = try_lower_leaf_expr(object.as_ref())?;
-                let lhs = RustExpr::Cast {
-                    expr: Box::new(RustExpr::MethodCall {
+                let lhs = RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec![
+                        "SifrInt".to_string(),
+                        "from".to_string(),
+                    ])),
+                    args: vec![RustExpr::MethodCall {
                         receiver: Box::new(receiver),
                         method: "len".to_string(),
                         args: vec![],
-                    }),
-                    ty: RustType::I64,
+                    }],
                 };
                 Some(RustExpr::BinOp {
                     left: Box::new(lhs),
@@ -247,7 +256,7 @@ pub(super) fn try_lower_numeric_truthiness_condition_expr(expr: &HirExpr) -> Opt
 }
 
 pub(super) fn try_lower_structured_compare_condition_expr(expr: &HirExpr) -> Option<RustExpr> {
-    if try_lower_leaf_expr(expr).is_some() {
+    if !matches!(expr, HirExpr::Compare { .. }) && try_lower_leaf_expr(expr).is_some() {
         return None;
     }
     let HirExpr::Compare {
@@ -296,6 +305,15 @@ pub(super) fn try_lower_structured_compare_condition_expr(expr: &HirExpr) -> Opt
     }
     let mut lowered_left = try_lower_condition_operand_expr(left)?;
     let mut lowered_right = try_lower_condition_operand_expr(rhs_expr)?;
+    if let Some(lowered) = crate::lower_exact_integer_float_compare(
+        left.ty(),
+        rhs_expr.ty(),
+        lowered_op,
+        lowered_left.clone(),
+        lowered_right.clone(),
+    ) {
+        return Some(lowered);
+    }
     if is_option_like_type(left.ty())
         && !is_option_like_type(rhs_expr.ty())
         && !matches!(rhs_expr, HirExpr::NoneLiteral)
@@ -329,6 +347,21 @@ pub(super) fn try_lower_structured_compare_condition_expr(expr: &HirExpr) -> Opt
             method: "as_str".to_string(),
             args: vec![],
         };
+    } else if matches!(
+        resolve_alias_type(left.ty()),
+        Type::Int | Type::LiteralInt(_)
+    ) && matches!(
+        resolve_alias_type(rhs_expr.ty()),
+        Type::Int | Type::LiteralInt(_)
+    ) {
+        lowered_left = RustExpr::Ref {
+            mutable: false,
+            expr: Box::new(lowered_left),
+        };
+        lowered_right = RustExpr::Ref {
+            mutable: false,
+            expr: Box::new(lowered_right),
+        };
     }
     Some(RustExpr::BinOp {
         left: Box::new(lowered_left),
@@ -354,13 +387,16 @@ pub(super) fn try_lower_condition_operand_expr(expr: &HirExpr) -> Option<RustExp
             ) {
                 return None;
             }
-            Some(RustExpr::Cast {
-                expr: Box::new(RustExpr::MethodCall {
+            Some(RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    "SifrInt".to_string(),
+                    "from".to_string(),
+                ])),
+                args: vec![RustExpr::MethodCall {
                     receiver: Box::new(try_lower_leaf_or_name_expr(object)?),
                     method: "len".to_string(),
                     args: vec![],
-                }),
-                ty: RustType::I64,
+                }],
             })
         }
         HirExpr::Index {

@@ -29,6 +29,7 @@ mod coroutine_ops;
 mod declaration_object_bridge;
 mod dlpack_ops;
 mod foreign_object;
+mod int_conversion;
 mod object_ops;
 #[cfg(test)]
 mod object_ops_tests;
@@ -89,17 +90,17 @@ pub use dlpack_ops::{
     prepare_dlpack_argument, release_dlpack,
 };
 pub use foreign_object::ForeignObject;
+pub use int_conversion::{copy_dict_str_int, copy_list_int, copy_tuple_int, from_int, to_int};
 pub use object_ops::{
     ObjectHandle, call_attr, call_object, call_object_borrowed, call_object_owned, close_object,
     copy_dict_str_bool, copy_dict_str_bytes, copy_dict_str_float, copy_dict_str_i32,
-    copy_dict_str_int, copy_dict_str_str, copy_dict_str_u8, copy_list_bool, copy_list_bytes,
-    copy_list_float, copy_list_i32, copy_list_int, copy_list_str, copy_list_u8, copy_record_fields,
-    copy_tuple_bool, copy_tuple_bytes, copy_tuple_float, copy_tuple_i32, copy_tuple_int,
-    copy_tuple_str, copy_tuple_u8, enter_context, exit_context, expect_instance, from_bool,
-    from_bytes, from_dict_str, from_float, from_int, from_list, from_none, from_record, from_str,
-    from_tuple, get_attr, get_item_str, import_module, poison_object, resolve_target,
-    temporary_argument_handle, to_bool, to_bytes, to_float, to_i8, to_i16, to_i32, to_i64, to_int,
-    to_isize, to_none, to_str, to_u8, to_u16, to_u32, to_u64, to_usize,
+    copy_dict_str_str, copy_dict_str_u8, copy_list_bool, copy_list_bytes, copy_list_float,
+    copy_list_i32, copy_list_str, copy_list_u8, copy_record_fields, copy_tuple_bool,
+    copy_tuple_bytes, copy_tuple_float, copy_tuple_i32, copy_tuple_str, copy_tuple_u8,
+    enter_context, exit_context, expect_instance, from_bool, from_bytes, from_dict_str, from_float,
+    from_list, from_none, from_record, from_str, from_tuple, get_attr, get_item_str, import_module,
+    poison_object, resolve_target, temporary_argument_handle, to_bool, to_bytes, to_float, to_i8,
+    to_i16, to_i32, to_i64, to_isize, to_none, to_str, to_u8, to_u16, to_u32, to_u64, to_usize,
 };
 pub use opaque_ops::semantic_close;
 pub use python_error::PythonError;

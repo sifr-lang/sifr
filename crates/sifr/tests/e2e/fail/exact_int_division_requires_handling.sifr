@@ -1,5 +1,4 @@
 # expect-error: SIFR-TYPE-0002
 
-def main() -> None:
-    divisor: int = 3
-    value: int = 10 // divisor
+def divide(divisor: int) -> int:
+    return 10 // divisor

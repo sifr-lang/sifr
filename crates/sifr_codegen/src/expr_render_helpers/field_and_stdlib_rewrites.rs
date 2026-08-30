@@ -295,7 +295,7 @@ impl RustEmitter {
                 let right = self.rewrite_stdlib_constant_idents_in_expr(*right);
                 if is_sifr_int_checked_floor_op(&op)
                     && self.is_sifr_int_expr(&left)
-                    && is_proven_nonzero_integer_expr(&right)
+                    && self.is_sifr_int_expr(&right)
                 {
                     return self.sifr_int_known_nonzero_floor_expr(op.as_str(), left, right);
                 }
@@ -362,7 +362,14 @@ impl RustEmitter {
                 crate::RustExpr::Deref(Box::new(self.rewrite_stdlib_constant_idents_in_expr(*expr)))
             }
             crate::RustExpr::Clone(expr) => {
-                crate::RustExpr::Clone(Box::new(self.rewrite_stdlib_constant_idents_in_expr(*expr)))
+                let rewritten = self.rewrite_stdlib_constant_idents_in_expr(*expr);
+                if matches!(rewritten, crate::RustExpr::FnCall { .. })
+                    && self.is_sifr_int_expr(&rewritten)
+                {
+                    rewritten
+                } else {
+                    crate::RustExpr::Clone(Box::new(rewritten))
+                }
             }
             crate::RustExpr::Cast { expr, ty } => crate::RustExpr::Cast {
                 expr: Box::new(self.rewrite_stdlib_constant_idents_in_expr(*expr)),
@@ -535,6 +542,11 @@ impl RustEmitter {
                         .borrow_mut()
                         .insert(name.clone());
                     (ty.map(promote_result_i64_ok_to_sifr_int), value)
+                } else if ty.is_none() && (value_is_sifr_int || force_sifr_int) {
+                    self.sifr_int_local_bindings
+                        .borrow_mut()
+                        .insert(name.clone());
+                    (ty, value)
                 } else {
                     if !force_sifr_int {
                         self.sifr_int_local_bindings.borrow_mut().remove(&name);
@@ -584,6 +596,16 @@ impl RustEmitter {
                 let target = self.rewrite_stdlib_constant_idents_in_expr(target);
                 let value = self.rewrite_stdlib_constant_idents_in_expr(value);
                 let value = match &target {
+                    crate::RustExpr::Field { .. }
+                        if matches!(
+                            &value,
+                            crate::RustExpr::Ident(name)
+                                if self.borrowed_params.contains(name)
+                                    || self.mut_borrowed_params.contains(name)
+                        ) =>
+                    {
+                        crate::RustExpr::Clone(Box::new(value))
+                    }
                     crate::RustExpr::Ident(name)
                         if self.is_registered_sifr_int_local(name)
                             || self.is_forced_sifr_int_local(name) =>

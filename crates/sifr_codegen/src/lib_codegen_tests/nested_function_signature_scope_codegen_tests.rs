@@ -16,9 +16,11 @@ fn shadowed_nested_helper_restores_outer_calling_conventions() {
 "#,
     );
 
-    assert!(generated.contains("helper(40_i64, &"));
-    assert!(generated.contains("helper(1_i64, &vec![2_i64, 3_i64])"));
-    assert!(!generated.contains("helper(&(40_i64)"));
+    assert!(generated.contains("helper(SifrInt::from_i64(40), &"));
+    assert!(generated.contains(
+        "helper(SifrInt::from_i64(1), &vec![SifrInt::from_i64(2), SifrInt::from_i64(3)])"
+    ));
+    assert!(!generated.contains("helper(&(SifrInt::from_i64(40))"));
     syn::parse_file(&generated).expect("scoped nested-function calls should parse as Rust");
 }
 
@@ -38,8 +40,10 @@ fn loop_scopes_restore_outer_calling_conventions() {
 "#,
     );
 
-    assert!(generated.contains("helper(3_i64, &"));
-    assert!(generated.contains("helper(1_i64, &vec![2_i64, 3_i64])"));
+    assert!(generated.contains("helper(SifrInt::from_i64(3), &"));
+    assert!(generated.contains(
+        "helper(SifrInt::from_i64(1), &vec![SifrInt::from_i64(2), SifrInt::from_i64(3)])"
+    ));
     syn::parse_file(&generated).expect("loop-scoped nested-function calls should parse as Rust");
 }
 
@@ -59,7 +63,9 @@ fn exiting_branch_scopes_restore_outer_calling_conventions() {
 "#,
     );
 
-    assert!(generated.contains("helper(3_i64, &"));
-    assert!(generated.contains("helper(1_i64, &vec![2_i64, 3_i64])"));
+    assert!(generated.contains("helper(SifrInt::from_i64(3), &"));
+    assert!(generated.contains(
+        "helper(SifrInt::from_i64(1), &vec![SifrInt::from_i64(2), SifrInt::from_i64(3)])"
+    ));
     syn::parse_file(&generated).expect("exiting-branch nested-function calls should parse as Rust");
 }

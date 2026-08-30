@@ -8,8 +8,9 @@ fn main() {
 }
 
 // src/helper.rs
+pub use ::sifr_runtime::SifrInt;
 pub fn render() -> String {
-    let value: i64 = 42_i64;
+    let value: SifrInt = SifrInt::from_i64(42);
     if (format!("{}", value) == "42") {
         return "manifest unification demo: pass".to_string();
     }

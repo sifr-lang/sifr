@@ -208,11 +208,10 @@ pub enum FixedIntType {
 }
 
 impl FixedIntType {
-    /// Temporary scalar arithmetic policy while ordinary fixed-width promotion
-    /// still depends on the current exact-int codegen surface.
+    /// Whether scalar arithmetic promotes this fixed-width value to exact `int`.
     #[must_use]
     pub const fn supports_current_scalar_promotion_to_int(self) -> bool {
-        !matches!(self, Self::U64 | Self::USize)
+        true
     }
 
     #[must_use]

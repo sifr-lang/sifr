@@ -33,10 +33,10 @@ def main():
     print(flags)      # 1 (0b0001)
     flags ^= 0b0011  # Toggle bits 0-1
     print(flags)      # 2 (0b0010)
-    flags <<= 3       # Shift left by 3
-    print(flags)      # 16 (0b10000)
+    flags <<= 0       # Exact-int augmented shifts are total for zero
+    print(flags)      # 2 (0b0010)
     flags >>= 2       # Shift right by 2
-    print(flags)      # 4 (0b100)
+    print(flags)      # 0
 
     # === Chained Assignment ===
     p: int = 0

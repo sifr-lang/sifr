@@ -29,7 +29,10 @@ def borrowed_total(store: Store) -> int:
 "#,
     );
 
-    assert!(generated.contains("self.items.len() as i64"), "{generated}");
+    assert!(
+        generated.contains("SifrInt::from(self.items.len())"),
+        "{generated}"
+    );
     assert!(generated.contains("self.lookup.get(&key)"), "{generated}");
     assert!(generated.contains("head(&self.items)"));
     assert!(!generated.contains("self.items.clone().len()"));
@@ -37,7 +40,7 @@ def borrowed_total(store: Store) -> int:
     assert!(!generated.contains("head(&self.items.clone())"));
     assert!(generated.contains("let __sifr_index_list = &self.items"));
     assert!(!generated.contains("&self.items.clone()"));
-    assert!(generated.contains("store.items.len() as i64"));
+    assert!(generated.contains("SifrInt::from(store.items.len())"));
     assert!(!generated.contains("store.items.clone().len()"));
 }
 
@@ -444,8 +447,12 @@ fn test_list_repeat_lowers_without_vec_mul_shape() {
     };
 
     let generated = generate_rust_with_metadata(&module);
-    assert!(!generated.rust_source.contains("vec![0 as i64] * n"));
-    assert!(generated.rust_source.contains("std::iter::repeat(0_i64)"));
+    assert!(!generated.rust_source.contains("vec![0 as SifrInt] * n"));
+    assert!(
+        generated
+            .rust_source
+            .contains("std::iter::repeat(SifrInt::from_i64(0))")
+    );
     assert!(!generated.rust_source.contains("__sifr_repeat_out.extend("));
 }
 
@@ -504,7 +511,8 @@ fn test_compare_lowers_int_float_mixed_operands_with_cast() {
     };
 
     let generated = generate_rust_with_metadata(&module);
-    assert!(generated.rust_source.contains("as f64"));
+    assert!(generated.rust_source.contains("n.lt_f64(coins)"));
+    assert!(!generated.rust_source.contains(" as f64"));
 }
 
 #[test]
@@ -575,15 +583,15 @@ fn test_string_slice_negative_stop_normalizes_against_length() {
         "def has_marker_inside_sentinel_window(text: str) -> bool:\n    framed = \"[\" + text + \"]\"\n    return \"!\" in framed[1:-1]\n",
     );
     assert!(
-        rust_code.contains("_slice_len_i64"),
+        rust_code.contains("_slice_len"),
         "string slice lowering should materialize source length for negative-stop normalization"
     );
     assert!(
-        rust_code.contains("_slice_stop_i64"),
+        rust_code.contains("_slice_stop"),
         "string slice lowering should compute normalized stop bound"
     );
     assert!(
-        !rust_code.contains("((-(1 as i64)).max(0) - (1 as i64).max(0)).max(0)"),
+        !rust_code.contains("((-(1 as SifrInt)).max(0) - (1 as SifrInt).max(0)).max(0)"),
         "negative stop must not be clamped directly to zero"
     );
 }
@@ -635,7 +643,11 @@ fn test_generate_rust_multi_assembles_single_rust_file() {
     assert!(generate_block.contains("generate_rust_with_stdlib_for_module_with_project_policy("));
     assert!(generate_block.contains("structural_interop_enabled,"));
     assert!(generate_block.contains("register_imported_generic_classes("));
-    assert!(generate_block.contains("render_local_module_imports(module, &project_modules)"));
+    assert!(
+        generate_block.contains(
+            "render_local_module_imports(module, &project_modules, &project_codegen_code)"
+        )
+    );
     assert!(generate_block.contains("publicize_generated_module_source(&rust_source)"));
     assert!(generate_block.contains("required_features.extend(codegen_result.required_features)"));
     assert!(!generate_block.contains("assert_output_drained("));

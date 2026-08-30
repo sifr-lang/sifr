@@ -805,6 +805,12 @@ pub(super) fn should_remove_clone(inner: &RustExpr) -> bool {
         RustExpr::Literal(_) => true,
         RustExpr::Ref { .. } => true,
         RustExpr::Cast { ty, .. } => is_copy_type(ty),
+        RustExpr::Paren(inner) => should_remove_clone(inner),
+        RustExpr::FnCall { func, .. } => matches!(
+            func.as_ref(),
+            RustExpr::Path(path)
+                if path.first().is_some_and(|segment| segment == "SifrInt")
+        ),
         _ => false,
     }
 }

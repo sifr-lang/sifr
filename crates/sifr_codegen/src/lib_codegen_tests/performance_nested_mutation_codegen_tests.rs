@@ -35,7 +35,7 @@ class Store:
     );
 
     assert!(
-        generated.contains("self.rows.get_mut(__oi_norm as usize)"),
+        generated.contains("self.rows.get_mut(__oi_norm)"),
         "{generated}"
     );
     assert!(
@@ -58,10 +58,7 @@ def put(mut rows: list[dict[str, int]], row: int, key: str, value: int) -> None:
 "#,
     );
 
-    assert!(
-        generated.contains("rows.get_mut(__oi_norm as usize)"),
-        "{generated}"
-    );
+    assert!(generated.contains("rows.get_mut(__oi_norm)"), "{generated}");
     assert!(
         generated.contains("__row.insert(__nested_assign_key, __nested_assign_value)"),
         "{generated}"
@@ -96,11 +93,11 @@ class PriorityBuckets:
     );
 
     assert!(
-        generated.contains("fn rebalance(&mut self, value: i64)"),
+        generated.contains("fn rebalance(&mut self, value: &SifrInt)"),
         "{generated}"
     );
     assert!(
-        !generated.contains("fn rebalance(&self, value: i64)"),
+        !generated.contains("fn rebalance(&self, value: &SifrInt)"),
         "{generated}"
     );
 }

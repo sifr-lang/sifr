@@ -114,7 +114,7 @@ fn lowers_match_with_class_patterns_and_captures() {
         lowered[0],
         RustStmt::Match { ref arms, .. }
             if arms.len() == 2
-                && arms[0].pattern.contains("Point { x: 0, y: py")
+                && arms[0].pattern.contains("Point { x: SifrInt::Small(0), y: py")
                 && arms[0].bindings.iter().any(|name| name == "py")
     ));
 }

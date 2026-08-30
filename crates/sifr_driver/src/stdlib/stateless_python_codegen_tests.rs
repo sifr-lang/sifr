@@ -88,7 +88,9 @@ fn python_primitive_extractors_codegen_through_sifr_stdlib() {
     assert!(
         private_code
             .rust
-            .contains("__sifr_bridge_ok.to_i64_saturating()")
+            .contains("__sifr_bridge_ok.into_sifr_int()"),
+        "{}",
+        private_code.rust
     );
 }
 

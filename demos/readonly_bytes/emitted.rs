@@ -18,6 +18,7 @@ impl ::std::fmt::Display for __SifrIoNativeFileHandle {
 
 mod __sifr_project_nominals {
     use crate::__SifrIoNativeFileHandle;
+    pub use ::sifr_runtime::SifrInt;
     pub fn _encoding_is_supported_impl(label: &String) -> bool {
         ::sifr_stdlib::encoding::encoding_is_supported(label)
     }
@@ -273,15 +274,15 @@ mod __sifr_project_nominals {
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
     }
-    pub fn stat_size(path: &String) -> Result<i64, IOError> {
+    pub fn stat_size(path: &String) -> Result<SifrInt, IOError> {
         ::sifr_stdlib::fs::stat_size(path)
-            .map(|__sifr_bridge_ok| __sifr_bridge_ok.to_i64_saturating())
+            .map(|__sifr_bridge_ok| __sifr_bridge_ok.into_sifr_int())
             .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
     }
-    pub fn disk_usage(path: &String) -> Vec<i64> {
+    pub fn disk_usage(path: &String) -> Vec<SifrInt> {
         ::sifr_stdlib::fs::disk_usage(path)
             .into_iter()
-            .map(|__sifr_bridge_value| __sifr_bridge_value.to_i64_saturating())
+            .map(|__sifr_bridge_value| __sifr_bridge_value.into_sifr_int())
             .collect()
     }
     pub fn is_file(path: &String) -> bool {
@@ -606,7 +607,10 @@ mod __sifr_project_nominals {
                 &errors,
             );
             let __sifr_field_init_2: bool = false;
-            let __sifr_field_init_3: Vec<u8> = vec![];
+            let __sifr_field_init_3: Vec<u8> = {
+                let __sifr_empty_bytes_literal: Vec<u8> = vec![];
+                __sifr_empty_bytes_literal
+            };
             Self {
                 _encoding: __sifr_field_init_0,
                 _errors: __sifr_field_init_1,
@@ -653,7 +657,10 @@ mod __sifr_project_nominals {
                 )?;
                 self._pending = next_pending;
                 if r#final {
-                    self._pending = vec![];
+                    self._pending = {
+                        let __sifr_empty_bytes_literal: Vec<u8> = vec![];
+                        __sifr_empty_bytes_literal
+                    };
                     self._exhausted = true;
                 }
                 return Ok(Ok(outcome));
@@ -1040,7 +1047,7 @@ mod __sifr_project_nominals {
         }
     }
     pub fn encoding(label: &String) -> __SifrStdlib_sifr_x2eencoding_x2eEncoding {
-        __SifrStdlib_sifr_x2eencoding_x2eEncoding::new((label).clone())
+        __SifrStdlib_sifr_x2eencoding_x2eEncoding::new((label.clone()).clone())
     }
     pub fn utf8() -> __SifrStdlib_sifr_x2eencoding_x2eEncoding {
         __SifrStdlib_sifr_x2eencoding_x2eEncoding::new(__const_ENCODING_UTF8())
@@ -1386,14 +1393,14 @@ mod __sifr_project_nominals {
         }
     }
     impl __SifrIoFileHandle {
-        pub fn seek(&self, offset: i64, whence: i64) -> Result<i64, IOError> {
-            let _ = offset;
-            let _ = whence;
+        pub fn seek(&self, offset: &SifrInt, whence: &SifrInt) -> Result<SifrInt, IOError> {
+            let _ = offset.clone();
+            let _ = whence.clone();
             Err(IOError::new(_unsupported_seek_tell_error()))
         }
     }
     impl __SifrIoFileHandle {
-        pub fn tell(&self) -> Result<i64, IOError> {
+        pub fn tell(&self) -> Result<SifrInt, IOError> {
             Err(IOError::new(_unsupported_seek_tell_error()))
         }
     }
@@ -1532,15 +1539,15 @@ mod __sifr_project_nominals {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct JSONDecodeError {
         pub message: String,
-        pub line: i64,
-        pub column: i64,
+        pub line: SifrInt,
+        pub column: SifrInt,
     }
     impl JSONDecodeError {
         pub fn new(message: String) -> Self {
             Self {
                 message,
-                line: 0,
-                column: 0,
+                line: SifrInt::from_i64(0),
+                column: SifrInt::from_i64(0),
             }
         }
     }
@@ -1574,11 +1581,14 @@ mod __sifr_project_nominals {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct JsonLimitError {
         pub message: String,
-        pub limit: i64,
+        pub limit: SifrInt,
     }
     impl JsonLimitError {
         pub fn new(message: String) -> Self {
-            Self { message, limit: 0 }
+            Self {
+                message,
+                limit: SifrInt::from_i64(0),
+            }
         }
     }
     impl ::std::fmt::Display for JsonLimitError {
@@ -1590,15 +1600,15 @@ mod __sifr_project_nominals {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct TOMLDecodeError {
         pub message: String,
-        pub line: i64,
-        pub column: i64,
+        pub line: SifrInt,
+        pub column: SifrInt,
     }
     impl TOMLDecodeError {
         pub fn new(message: String) -> Self {
             Self {
                 message,
-                line: 0,
-                column: 0,
+                line: SifrInt::from_i64(0),
+                column: SifrInt::from_i64(0),
             }
         }
     }
@@ -1729,6 +1739,7 @@ pub use __sifr_project_nominals::__SifrStdlib_sifr_x2eencoding_x2eEncodeErrorHan
 pub use __sifr_project_nominals::__SifrStdlib_sifr_x2eencoding_x2eEncodeOutcome;
 pub use __sifr_project_nominals::__SifrStdlib_sifr_x2eencoding_x2eEncoder;
 pub use __sifr_project_nominals::__SifrStdlib_sifr_x2eencoding_x2eEncoding;
+use ::sifr_runtime::SifrInt;
 fn _encoding_is_supported_impl(label: &String) -> bool {
     ::sifr_stdlib::encoding::encoding_is_supported(label)
 }
@@ -1974,15 +1985,15 @@ fn chdir(path: &String) -> Result<(), IOError> {
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn stat_size(path: &String) -> Result<i64, IOError> {
+fn stat_size(path: &String) -> Result<SifrInt, IOError> {
     ::sifr_stdlib::fs::stat_size(path)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok.to_i64_saturating())
+        .map(|__sifr_bridge_ok| __sifr_bridge_ok.into_sifr_int())
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn disk_usage(path: &String) -> Vec<i64> {
+fn disk_usage(path: &String) -> Vec<SifrInt> {
     ::sifr_stdlib::fs::disk_usage(path)
         .into_iter()
-        .map(|__sifr_bridge_value| __sifr_bridge_value.to_i64_saturating())
+        .map(|__sifr_bridge_value| __sifr_bridge_value.into_sifr_int())
         .collect()
 }
 fn is_file(path: &String) -> bool {
@@ -2404,7 +2415,7 @@ fn _encoding_encode_outcome(
     }
 }
 fn encoding(label: &String) -> __SifrStdlib_sifr_x2eencoding_x2eEncoding {
-    __SifrStdlib_sifr_x2eencoding_x2eEncoding::new((label).clone())
+    __SifrStdlib_sifr_x2eencoding_x2eEncoding::new((label.clone()).clone())
 }
 fn utf8() -> __SifrStdlib_sifr_x2eencoding_x2eEncoding {
     __SifrStdlib_sifr_x2eencoding_x2eEncoding::new(__const_ENCODING_UTF8())
@@ -2676,7 +2687,7 @@ fn env_items() -> Vec<String> {
 fn get_args() -> Vec<String> {
     ::sifr_stdlib::sys::get_args()
 }
-fn sys_exit(code: i64) {
+fn sys_exit(code: SifrInt) {
     ::sifr_stdlib::sys::sys_exit(::sifr_runtime::interop::SifrIntBridge::from(code));
 }
 fn sys_version() -> String {
@@ -2685,14 +2696,14 @@ fn sys_version() -> String {
 fn sys_platform() -> String {
     ::sifr_stdlib::sys::sys_platform()
 }
-fn sys_maxsize() -> i64 {
-    ::sifr_stdlib::sys::sys_maxsize().to_i64_saturating()
+fn sys_maxsize() -> SifrInt {
+    ::sifr_stdlib::sys::sys_maxsize().into_sifr_int()
 }
-fn getpid() -> i64 {
-    ::sifr_stdlib::sys::getpid().to_i64_saturating()
+fn getpid() -> SifrInt {
+    ::sifr_stdlib::sys::getpid().into_sifr_int()
 }
-fn cpu_count() -> i64 {
-    ::sifr_stdlib::sys::cpu_count().to_i64_saturating()
+fn cpu_count() -> SifrInt {
+    ::sifr_stdlib::sys::cpu_count().into_sifr_int()
 }
 fn which(name: &String) -> Option<String> {
     ::sifr_stdlib::sys::which(name)
@@ -2728,53 +2739,59 @@ fn __io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
     };
     IOError { message: msg, kind }
 }
-fn sum_bytes(data: &Vec<u8>) -> i64 {
-    let mut total: i64 = 0_i64;
-    let values: Vec<i64> = data
+fn sum_bytes(data: &Vec<u8>) -> SifrInt {
+    let mut total: SifrInt = SifrInt::from_i64(0);
+    let values: Vec<SifrInt> = data
         .iter()
-        .map(|__byte| *__byte as i64)
-        .collect::<Vec<i64>>();
-    for value in values.iter().copied() {
-        total += value;
+        .map(|__byte| SifrInt::from(*__byte))
+        .collect::<Vec<SifrInt>>();
+    for value in values.iter().cloned() {
+        total = &total + &value;
     }
-    total
+    total.clone()
 }
 fn main() {
     let payload: Vec<u8> = vec![
-        (102_i64) as u8, (102_i64) as u8, (105_i64) as u8, (45_i64) as u8, (114_i64) as
-        u8, (101_i64) as u8, (97_i64) as u8, (100_i64) as u8, (121_i64) as u8
+        102u8, 102u8, 105u8, 45u8, 114u8, 101u8, 97u8, 100u8, 121u8
     ];
-    let second: Option<u8> = payload.get((1_i64) as usize).map(|__byte| *__byte as u8);
+    let second: Option<u8> = payload
+        .get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(1))))
+        .map(|__byte| *__byte as u8);
     let mut second_ok: bool = false;
     if let Some(second) = second {
         let expected_second: u8 = 102u8;
-        second_ok = (second == expected_second);
+        second_ok = (&SifrInt::from(second) == &SifrInt::from(expected_second));
     }
-    let iter_ok: bool = (sum_bytes(&payload) > (0_i64));
+    let iter_ok: bool = (&sum_bytes(&payload) > &SifrInt::from_i64(0));
     let contains_ok: bool = (({
         let __bytes_receiver = &payload;
         {
-            let __needle = 102_i64;
-            if (__needle < 0) || (__needle > 255) {
+            let __needle = SifrInt::from_i64(102);
+            if (&__needle < &SifrInt::from_i64(0))
+                || (&__needle > &SifrInt::from_i64(255))
+            {
                 false
             } else {
-                __bytes_receiver.contains(&(__needle as u8))
+                __bytes_receiver.contains(&__needle.to_u8_proven_in_range())
             }
         }
     })
         && (!({
             let __bytes_receiver = &payload;
             {
-                let __needle = 512_i64;
-                if (__needle < 0) || (__needle > 255) {
+                let __needle = SifrInt::from_i64(512);
+                if (&__needle < &SifrInt::from_i64(0))
+                    || (&__needle > &SifrInt::from_i64(255))
+                {
                     false
                 } else {
-                    __bytes_receiver.contains(&(__needle as u8))
+                    __bytes_receiver.contains(&__needle.to_u8_proven_in_range())
                 }
             }
         })));
     let to_ints_ok: bool = (format!(
-        "{:?}", payload.iter().map(| __byte | * __byte as i64).collect::< Vec < i64 >> ()
+        "{:?}", payload.iter().map(| __byte | SifrInt::from(* __byte)).collect::< Vec <
+        SifrInt >> ()
     ) == "[102, 102, 105, 45, 114, 101, 97, 100, 121]");
     let path: String = "/tmp/sifr_bytes_readonly_bytes.bin".to_string();
     let mut io_ok: bool = false;
@@ -2822,8 +2839,8 @@ fn main() {
         reader.close();
         io_ok = (((loaded == payload))
             && ((format!(
-                "{:?}", loaded.iter().map(| __byte | * __byte as i64).collect::< Vec <
-                i64 >> ()
+                "{:?}", loaded.iter().map(| __byte | SifrInt::from(* __byte)).collect::<
+                Vec < SifrInt >> ()
             ) == "[102, 102, 105, 45, 114, 101, 97, 100, 121]")));
         Ok(())
     })();

@@ -22,6 +22,7 @@ macro_rules! stmt_expr_stepped_slice {
             }
             _ => None,
         };
+
         if $start.is_none() && $stop.is_none() {
             if let (Type::Str, Some(step_value)) = (
                 crate::resolve_alias_type_for_plain_call($object.ty()),
@@ -77,137 +78,60 @@ macro_rules! stmt_expr_stepped_slice {
         }
 
         let lowered_start = if let Some(start_expr) = $start {
-            let Some(start_lowered) = $emitter.lower_stmt_expr_for_ir(start_expr)? else {
+            let Some(value) = $emitter.lower_stmt_expr_for_ir(start_expr)? else {
                 return Ok(None);
             };
-            crate::RustExpr::Block {
-                stmts: vec![crate::RustStmt::Let {
-                    mutable: false,
-                    name: "_sv".to_string(),
-                    ty: None,
-                    value: start_lowered,
-                }],
-                expr: Some(Box::new(crate::RustExpr::If {
-                    cond: Box::new(crate::RustExpr::BinOp {
-                        left: Box::new(crate::RustExpr::Ident("_sv".to_string())),
-                        op: "<".to_string(),
-                        right: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Int(0))),
-                    }),
-                    then_expr: Box::new(crate::RustExpr::Cast {
-                        expr: Box::new(crate::RustExpr::MethodCall {
-                            receiver: Box::new(crate::RustExpr::Paren(Box::new(
-                                crate::RustExpr::BinOp {
-                                    left: Box::new(crate::RustExpr::Ident("_len".to_string())),
-                                    op: "+".to_string(),
-                                    right: Box::new(crate::RustExpr::Ident("_sv".to_string())),
-                                },
-                            ))),
-                            method: "max".to_string(),
-                            args: vec![crate::RustExpr::Literal(crate::RustLiteral::Int(0))],
-                        }),
-                        ty: crate::RustType::Named("usize".to_string()),
-                    }),
-                    else_expr: Some(Box::new(crate::RustExpr::Cast {
-                        expr: Box::new(crate::RustExpr::MethodCall {
-                            receiver: Box::new(crate::RustExpr::Ident("_sv".to_string())),
-                            method: "min".to_string(),
-                            args: vec![crate::RustExpr::Ident("_len".to_string())],
-                        }),
-                        ty: crate::RustType::Named("usize".to_string()),
-                    })),
-                })),
+            crate::RustExpr::FnCall {
+                func: Box::new(crate::RustExpr::Path(vec!["Some".to_string()])),
+                args: vec![$emitter.coerce_expr_to_sifr_int_comparison_operand(value)],
             }
         } else {
-            crate::RustExpr::If {
-                cond: Box::new(crate::RustExpr::BinOp {
-                    left: Box::new(crate::RustExpr::Ident("_step".to_string())),
-                    op: ">".to_string(),
-                    right: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Int(0))),
-                }),
-                then_expr: Box::new(crate::RustExpr::Cast {
-                    expr: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Int(0))),
-                    ty: crate::RustType::Named("usize".to_string()),
-                }),
-                else_expr: Some(Box::new(crate::RustExpr::Cast {
-                    expr: Box::new(crate::RustExpr::Paren(Box::new(crate::RustExpr::BinOp {
-                        left: Box::new(crate::RustExpr::Ident("_len".to_string())),
-                        op: "-".to_string(),
-                        right: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Int(1))),
-                    }))),
-                    ty: crate::RustType::Named("usize".to_string()),
-                })),
+            crate::RustExpr::Literal(crate::RustLiteral::None)
+        };
+        let lowered_stop = if let Some(stop_expr) = $stop {
+            let Some(value) = $emitter.lower_stmt_expr_for_ir(stop_expr)? else {
+                return Ok(None);
+            };
+            crate::RustExpr::FnCall {
+                func: Box::new(crate::RustExpr::Path(vec!["Some".to_string()])),
+                args: vec![$emitter.coerce_expr_to_sifr_int_comparison_operand(value)],
             }
+        } else {
+            crate::RustExpr::Literal(crate::RustLiteral::None)
         };
 
-        let lowered_stop = if let Some(stop_expr) = $stop {
-            let Some(stop_lowered) = $emitter.lower_stmt_expr_for_ir(stop_expr)? else {
-                return Ok(None);
-            };
-            crate::RustExpr::Block {
-                stmts: vec![crate::RustStmt::Let {
-                    mutable: false,
-                    name: "_ev".to_string(),
-                    ty: None,
-                    value: stop_lowered,
-                }],
-                expr: Some(Box::new(crate::RustExpr::If {
-                    cond: Box::new(crate::RustExpr::BinOp {
-                        left: Box::new(crate::RustExpr::Ident("_ev".to_string())),
-                        op: "<".to_string(),
-                        right: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Int(0))),
-                    }),
-                    then_expr: Box::new(crate::RustExpr::Cast {
-                        expr: Box::new(crate::RustExpr::MethodCall {
-                            receiver: Box::new(crate::RustExpr::Paren(Box::new(
-                                crate::RustExpr::BinOp {
-                                    left: Box::new(crate::RustExpr::Ident("_len".to_string())),
-                                    op: "+".to_string(),
-                                    right: Box::new(crate::RustExpr::Ident("_ev".to_string())),
-                                },
-                            ))),
-                            method: "max".to_string(),
-                            args: vec![crate::RustExpr::Literal(crate::RustLiteral::Int(0))],
-                        }),
-                        ty: crate::RustType::Named("usize".to_string()),
-                    }),
-                    else_expr: Some(Box::new(crate::RustExpr::Cast {
-                        expr: Box::new(crate::RustExpr::MethodCall {
-                            receiver: Box::new(crate::RustExpr::Ident("_ev".to_string())),
-                            method: "min".to_string(),
-                            args: vec![crate::RustExpr::Ident("_len".to_string())],
-                        }),
-                        ty: crate::RustType::Named("usize".to_string()),
-                    })),
-                })),
-            }
-        } else {
-            crate::RustExpr::If {
-                cond: Box::new(crate::RustExpr::BinOp {
-                    left: Box::new(crate::RustExpr::Ident("_step".to_string())),
-                    op: ">".to_string(),
-                    right: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Int(0))),
-                }),
-                then_expr: Box::new(crate::RustExpr::Cast {
-                    expr: Box::new(crate::RustExpr::Ident("_len".to_string())),
-                    ty: crate::RustType::Named("usize".to_string()),
-                }),
-                else_expr: Some(Box::new(crate::RustExpr::Path(vec![
-                    "usize".to_string(),
-                    "MAX".to_string(),
-                ]))),
-            }
+        let indices_expr = |len_name: &str| crate::RustExpr::FnCall {
+            func: Box::new(crate::RustExpr::Path(vec![
+                "sifr_runtime".to_string(),
+                "SifrSliceIndices".to_string(),
+                "new_known_nonzero".to_string(),
+            ])),
+            args: vec![
+                crate::RustExpr::Ident(len_name.to_string()),
+                lowered_start.clone(),
+                lowered_stop.clone(),
+                $emitter.coerce_expr_to_sifr_int_comparison_operand(lowered_step.clone()),
+            ],
         };
 
         return match crate::resolve_alias_type_for_plain_call($object.ty()) {
             Type::List(_) | Type::Bytes => {
-                let copy_slice_elements =
-                    match crate::resolve_alias_type_for_plain_call($object.ty()) {
-                        Type::Bytes => true,
-                        Type::List(element_ty) => {
-                            crate::helpers::is_copy_type_for_codegen(element_ty.as_ref())
-                        }
-                        _ => false,
-                    };
+                let copy_elements = match crate::resolve_alias_type_for_plain_call($object.ty()) {
+                    Type::Bytes => true,
+                    Type::List(element_ty) => {
+                        crate::helpers::is_copy_type_for_codegen(element_ty.as_ref())
+                    }
+                    _ => false,
+                };
+                let indexed = crate::RustExpr::Index {
+                    expr: Box::new(crate::RustExpr::Ident("_v".to_string())),
+                    index: Box::new(crate::RustExpr::Ident("_i".to_string())),
+                };
+                let yielded = if copy_elements {
+                    indexed
+                } else {
+                    crate::RustExpr::Clone(Box::new(indexed))
+                };
                 Ok(Some(crate::RustExpr::Block {
                     stmts: vec![
                         crate::RustStmt::Let {
@@ -223,407 +147,79 @@ macro_rules! stmt_expr_stepped_slice {
                             mutable: false,
                             name: "_len".to_string(),
                             ty: None,
-                            value: crate::RustExpr::Cast {
-                                expr: Box::new(crate::RustExpr::MethodCall {
-                                    receiver: Box::new(crate::RustExpr::Ident("_v".to_string())),
-                                    method: "len".to_string(),
-                                    args: vec![],
-                                }),
-                                ty: crate::RustType::I64,
-                            },
-                        },
-                        crate::RustStmt::Let {
-                            mutable: false,
-                            name: "_step".to_string(),
-                            ty: None,
-                            value: lowered_step,
-                        },
-                        crate::RustStmt::Let {
-                            mutable: false,
-                            name: "_start".to_string(),
-                            ty: None,
-                            value: lowered_start,
-                        },
-                        crate::RustStmt::Let {
-                            mutable: false,
-                            name: "_stop".to_string(),
-                            ty: None,
-                            value: lowered_stop,
-                        },
-                        crate::RustStmt::Let {
-                            mutable: true,
-                            name: "_result".to_string(),
-                            ty: None,
-                            value: crate::RustExpr::FnCall {
-                                func: Box::new(crate::RustExpr::Path(vec![
-                                    "Vec".to_string(),
-                                    "new".to_string(),
-                                ])),
+                            value: crate::RustExpr::MethodCall {
+                                receiver: Box::new(crate::RustExpr::Ident("_v".to_string())),
+                                method: "len".to_string(),
                                 args: vec![],
                             },
                         },
-                        crate::RustStmt::If {
-                            cond: crate::RustExpr::BinOp {
-                                left: Box::new(crate::RustExpr::Ident("_step".to_string())),
-                                op: ">".to_string(),
-                                right: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Int(
-                                    0,
-                                ))),
-                            },
-                            then_body: vec![
-                                crate::RustStmt::Let {
-                                    mutable: true,
-                                    name: "_i".to_string(),
-                                    ty: None,
-                                    value: crate::RustExpr::Ident("_start".to_string()),
-                                },
-                                crate::RustStmt::While {
-                                    cond: crate::RustExpr::BinOp {
-                                        left: Box::new(crate::RustExpr::Ident("_i".to_string())),
-                                        op: "<".to_string(),
-                                        right: Box::new(crate::RustExpr::Ident(
-                                            "_stop".to_string(),
-                                        )),
-                                    },
-                                    body: vec![
-                                        crate::RustStmt::IfLet {
-                                            pattern: "Some(_el)".to_string(),
-                                            expr: crate::RustExpr::MethodCall {
-                                                receiver: Box::new(crate::RustExpr::Ident(
-                                                    "_v".to_string(),
-                                                )),
-                                                method: "get".to_string(),
-                                                args: vec![crate::RustExpr::Ident(
-                                                    "_i".to_string(),
-                                                )],
-                                            },
-                                            then_body: vec![crate::RustStmt::Expr(
-                                                crate::RustExpr::MethodCall {
-                                                    receiver: Box::new(crate::RustExpr::Ident(
-                                                        "_result".to_string(),
-                                                    )),
-                                                    method: "push".to_string(),
-                                                    args: vec![if copy_slice_elements {
-                                                        crate::RustExpr::Deref(Box::new(
-                                                            crate::RustExpr::Ident(
-                                                                "_el".to_string(),
-                                                            ),
-                                                        ))
-                                                    } else {
-                                                        crate::RustExpr::Clone(Box::new(
-                                                            crate::RustExpr::Ident(
-                                                                "_el".to_string(),
-                                                            ),
-                                                        ))
-                                                    }],
-                                                },
-                                            )],
-                                            else_body: None,
-                                        },
-                                        crate::RustStmt::AugAssign {
-                                            target: crate::RustExpr::Ident("_i".to_string()),
-                                            op: "+".to_string(),
-                                            value: crate::RustExpr::Cast {
-                                                expr: Box::new(crate::RustExpr::Ident(
-                                                    "_step".to_string(),
-                                                )),
-                                                ty: crate::RustType::Named("usize".to_string()),
-                                            },
-                                        },
-                                    ],
-                                },
-                            ],
-                            else_body: Some(vec![
-                                crate::RustStmt::Let {
-                                    mutable: true,
-                                    name: "_i".to_string(),
-                                    ty: None,
-                                    value: crate::RustExpr::Cast {
-                                        expr: Box::new(crate::RustExpr::Ident(
-                                            "_start".to_string(),
-                                        )),
-                                        ty: crate::RustType::I64,
-                                    },
-                                },
-                                crate::RustStmt::Let {
-                                    mutable: false,
-                                    name: "_stop_i".to_string(),
-                                    ty: None,
-                                    value: crate::RustExpr::Cast {
-                                        expr: Box::new(crate::RustExpr::Ident("_stop".to_string())),
-                                        ty: crate::RustType::I64,
-                                    },
-                                },
-                                crate::RustStmt::While {
-                                    cond: crate::RustExpr::BinOp {
-                                        left: Box::new(crate::RustExpr::Ident("_i".to_string())),
-                                        op: ">".to_string(),
-                                        right: Box::new(crate::RustExpr::Ident(
-                                            "_stop_i".to_string(),
-                                        )),
-                                    },
-                                    body: vec![
-                                        crate::RustStmt::If {
-                                            cond: crate::RustExpr::BinOp {
-                                                left: Box::new(crate::RustExpr::Ident(
-                                                    "_i".to_string(),
-                                                )),
-                                                op: ">=".to_string(),
-                                                right: Box::new(crate::RustExpr::Literal(
-                                                    crate::RustLiteral::Int(0),
-                                                )),
-                                            },
-                                            then_body: vec![crate::RustStmt::IfLet {
-                                                pattern: "Some(_el)".to_string(),
-                                                expr: crate::RustExpr::MethodCall {
-                                                    receiver: Box::new(crate::RustExpr::Ident(
-                                                        "_v".to_string(),
-                                                    )),
-                                                    method: "get".to_string(),
-                                                    args: vec![crate::RustExpr::Cast {
-                                                        expr: Box::new(crate::RustExpr::Ident(
-                                                            "_i".to_string(),
-                                                        )),
-                                                        ty: crate::RustType::Named(
-                                                            "usize".to_string(),
-                                                        ),
-                                                    }],
-                                                },
-                                                then_body: vec![crate::RustStmt::Expr(
-                                                    crate::RustExpr::MethodCall {
-                                                        receiver: Box::new(crate::RustExpr::Ident(
-                                                            "_result".to_string(),
-                                                        )),
-                                                        method: "push".to_string(),
-                                                        args: vec![if copy_slice_elements {
-                                                            crate::RustExpr::Deref(Box::new(
-                                                                crate::RustExpr::Ident(
-                                                                    "_el".to_string(),
-                                                                ),
-                                                            ))
-                                                        } else {
-                                                            crate::RustExpr::Clone(Box::new(
-                                                                crate::RustExpr::Ident(
-                                                                    "_el".to_string(),
-                                                                ),
-                                                            ))
-                                                        }],
-                                                    },
-                                                )],
-                                                else_body: None,
-                                            }],
-                                            else_body: None,
-                                        },
-                                        crate::RustStmt::AugAssign {
-                                            target: crate::RustExpr::Ident("_i".to_string()),
-                                            op: "+".to_string(),
-                                            value: crate::RustExpr::Ident("_step".to_string()),
-                                        },
-                                    ],
-                                },
-                            ]),
-                        },
                     ],
-                    expr: Some(Box::new(crate::RustExpr::Ident("_result".to_string()))),
+                    expr: Some(Box::new(crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::MethodCall {
+                            receiver: Box::new(indices_expr("_len")),
+                            method: "map".to_string(),
+                            args: vec![crate::RustExpr::Closure {
+                                params: vec![crate::RustParam::Named {
+                                    name: "_i".to_string(),
+                                    ty: crate::RustType::Named("_".to_string()),
+                                }],
+                                body: Box::new(yielded),
+                                is_move: false,
+                            }],
+                        }),
+                        method: "collect::<Vec<_>>".to_string(),
+                        args: vec![],
+                    })),
                 }))
             }
             Type::Str => Ok(Some(crate::RustExpr::Block {
                 stmts: vec![
                     crate::RustStmt::Let {
                         mutable: false,
-                        name: "_s".to_string(),
+                        name: "_chars".to_string(),
                         ty: None,
-                        value: crate::RustExpr::Ref {
-                            mutable: false,
-                            expr: Box::new(crate::RustExpr::Paren(Box::new($lowered_object))),
+                        value: crate::RustExpr::MethodCall {
+                            receiver: Box::new(crate::RustExpr::MethodCall {
+                                receiver: Box::new(crate::RustExpr::Paren(Box::new(
+                                    $lowered_object,
+                                ))),
+                                method: "chars".to_string(),
+                                args: vec![],
+                            }),
+                            method: "collect::<Vec<_>>".to_string(),
+                            args: vec![],
                         },
                     },
                     crate::RustStmt::Let {
                         mutable: false,
                         name: "_len".to_string(),
                         ty: None,
-                        value: crate::RustExpr::Cast {
-                            expr: Box::new(crate::RustExpr::MethodCall {
-                                receiver: Box::new(crate::RustExpr::MethodCall {
-                                    receiver: Box::new(crate::RustExpr::Ident("_s".to_string())),
-                                    method: "chars".to_string(),
-                                    args: vec![],
-                                }),
-                                method: "count".to_string(),
-                                args: vec![],
-                            }),
-                            ty: crate::RustType::I64,
-                        },
-                    },
-                    crate::RustStmt::Let {
-                        mutable: false,
-                        name: "_step".to_string(),
-                        ty: None,
-                        value: lowered_step,
-                    },
-                    crate::RustStmt::Let {
-                        mutable: false,
-                        name: "_start".to_string(),
-                        ty: None,
-                        value: lowered_start,
-                    },
-                    crate::RustStmt::Let {
-                        mutable: false,
-                        name: "_stop".to_string(),
-                        ty: None,
-                        value: lowered_stop,
-                    },
-                    crate::RustStmt::Let {
-                        mutable: true,
-                        name: "_result".to_string(),
-                        ty: None,
-                        value: crate::RustExpr::FnCall {
-                            func: Box::new(crate::RustExpr::Path(vec![
-                                "String".to_string(),
-                                "new".to_string(),
-                            ])),
+                        value: crate::RustExpr::MethodCall {
+                            receiver: Box::new(crate::RustExpr::Ident("_chars".to_string())),
+                            method: "len".to_string(),
                             args: vec![],
                         },
                     },
-                    crate::RustStmt::If {
-                        cond: crate::RustExpr::BinOp {
-                            left: Box::new(crate::RustExpr::Ident("_step".to_string())),
-                            op: ">".to_string(),
-                            right: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Int(0))),
-                        },
-                        then_body: vec![
-                            crate::RustStmt::Let {
-                                mutable: true,
-                                name: "_i".to_string(),
-                                ty: None,
-                                value: crate::RustExpr::Ident("_start".to_string()),
-                            },
-                            crate::RustStmt::While {
-                                cond: crate::RustExpr::BinOp {
-                                    left: Box::new(crate::RustExpr::Ident("_i".to_string())),
-                                    op: "<".to_string(),
-                                    right: Box::new(crate::RustExpr::Ident("_stop".to_string())),
-                                },
-                                body: vec![
-                                    crate::RustStmt::IfLet {
-                                        pattern: "Some(_ch)".to_string(),
-                                        expr: crate::RustExpr::MethodCall {
-                                            receiver: Box::new(crate::RustExpr::MethodCall {
-                                                receiver: Box::new(crate::RustExpr::Ident(
-                                                    "_s".to_string(),
-                                                )),
-                                                method: "chars".to_string(),
-                                                args: vec![],
-                                            }),
-                                            method: "nth".to_string(),
-                                            args: vec![crate::RustExpr::Ident("_i".to_string())],
-                                        },
-                                        then_body: vec![crate::RustStmt::Expr(
-                                            crate::RustExpr::MethodCall {
-                                                receiver: Box::new(crate::RustExpr::Ident(
-                                                    "_result".to_string(),
-                                                )),
-                                                method: "push".to_string(),
-                                                args: vec![crate::RustExpr::Ident(
-                                                    "_ch".to_string(),
-                                                )],
-                                            },
-                                        )],
-                                        else_body: None,
-                                    },
-                                    crate::RustStmt::AugAssign {
-                                        target: crate::RustExpr::Ident("_i".to_string()),
-                                        op: "+".to_string(),
-                                        value: crate::RustExpr::Cast {
-                                            expr: Box::new(crate::RustExpr::Ident(
-                                                "_step".to_string(),
-                                            )),
-                                            ty: crate::RustType::Named("usize".to_string()),
-                                        },
-                                    },
-                                ],
-                            },
-                        ],
-                        else_body: Some(vec![
-                            crate::RustStmt::Let {
-                                mutable: true,
-                                name: "_i".to_string(),
-                                ty: None,
-                                value: crate::RustExpr::Cast {
-                                    expr: Box::new(crate::RustExpr::Ident("_start".to_string())),
-                                    ty: crate::RustType::I64,
-                                },
-                            },
-                            crate::RustStmt::Let {
-                                mutable: false,
-                                name: "_stop_i".to_string(),
-                                ty: None,
-                                value: crate::RustExpr::Cast {
-                                    expr: Box::new(crate::RustExpr::Ident("_stop".to_string())),
-                                    ty: crate::RustType::I64,
-                                },
-                            },
-                            crate::RustStmt::While {
-                                cond: crate::RustExpr::BinOp {
-                                    left: Box::new(crate::RustExpr::Ident("_i".to_string())),
-                                    op: ">".to_string(),
-                                    right: Box::new(crate::RustExpr::Ident("_stop_i".to_string())),
-                                },
-                                body: vec![
-                                    crate::RustStmt::If {
-                                        cond: crate::RustExpr::BinOp {
-                                            left: Box::new(crate::RustExpr::Ident(
-                                                "_i".to_string(),
-                                            )),
-                                            op: ">=".to_string(),
-                                            right: Box::new(crate::RustExpr::Literal(
-                                                crate::RustLiteral::Int(0),
-                                            )),
-                                        },
-                                        then_body: vec![crate::RustStmt::IfLet {
-                                            pattern: "Some(_ch)".to_string(),
-                                            expr: crate::RustExpr::MethodCall {
-                                                receiver: Box::new(crate::RustExpr::MethodCall {
-                                                    receiver: Box::new(crate::RustExpr::Ident(
-                                                        "_s".to_string(),
-                                                    )),
-                                                    method: "chars".to_string(),
-                                                    args: vec![],
-                                                }),
-                                                method: "nth".to_string(),
-                                                args: vec![crate::RustExpr::Cast {
-                                                    expr: Box::new(crate::RustExpr::Ident(
-                                                        "_i".to_string(),
-                                                    )),
-                                                    ty: crate::RustType::Named("usize".to_string()),
-                                                }],
-                                            },
-                                            then_body: vec![crate::RustStmt::Expr(
-                                                crate::RustExpr::MethodCall {
-                                                    receiver: Box::new(crate::RustExpr::Ident(
-                                                        "_result".to_string(),
-                                                    )),
-                                                    method: "push".to_string(),
-                                                    args: vec![crate::RustExpr::Ident(
-                                                        "_ch".to_string(),
-                                                    )],
-                                                },
-                                            )],
-                                            else_body: None,
-                                        }],
-                                        else_body: None,
-                                    },
-                                    crate::RustStmt::AugAssign {
-                                        target: crate::RustExpr::Ident("_i".to_string()),
-                                        op: "+".to_string(),
-                                        value: crate::RustExpr::Ident("_step".to_string()),
-                                    },
-                                ],
-                            },
-                        ]),
-                    },
                 ],
-                expr: Some(Box::new(crate::RustExpr::Ident("_result".to_string()))),
+                expr: Some(Box::new(crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::MethodCall {
+                        receiver: Box::new(indices_expr("_len")),
+                        method: "map".to_string(),
+                        args: vec![crate::RustExpr::Closure {
+                            params: vec![crate::RustParam::Named {
+                                name: "_i".to_string(),
+                                ty: crate::RustType::Named("_".to_string()),
+                            }],
+                            body: Box::new(crate::RustExpr::Index {
+                                expr: Box::new(crate::RustExpr::Ident("_chars".to_string())),
+                                index: Box::new(crate::RustExpr::Ident("_i".to_string())),
+                            }),
+                            is_move: false,
+                        }],
+                    }),
+                    method: "collect::<String>".to_string(),
+                    args: vec![],
+                })),
             })),
             _ => Ok(None),
         };

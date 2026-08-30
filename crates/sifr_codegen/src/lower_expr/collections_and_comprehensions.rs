@@ -223,7 +223,11 @@ pub(super) fn try_lower_simple_dict_comp_expr(
     let iter = try_lower_simple_iter_source_expr(iter_expr)?;
 
     let result_ident = "__sifr_dict_comp".to_string();
-    let lowered_key = try_lower_leaf_or_name_expr(key_expr)?;
+    let lowered_key = crate::helpers::clone_dict_key_for_reused_value(
+        key_expr,
+        val_expr,
+        try_lower_leaf_or_name_expr(key_expr)?,
+    );
     let lowered_value = try_lower_leaf_or_name_expr(val_expr)?;
     let (lowered_key, lowered_value) = match resolve_alias_type(ty) {
         Type::Dict(key_ty, value_ty) => (

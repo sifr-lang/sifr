@@ -35,60 +35,16 @@ macro_rules! stmt_expr_binop {
             let resolved_left_ty = crate::resolve_alias_type_for_plain_call(left.ty());
             let resolved_right_ty = crate::resolve_alias_type_for_plain_call(right.ty());
 
-            if matches!(op.as_str(), "//" | "%")
-                && matches!(resolved_left_ty, Type::Int | Type::LiteralInt(_))
-                && matches!(resolved_right_ty, Type::Int | Type::LiteralInt(_))
-                && is_result_int_division_error_type(resolved_result_ty)
-            {
-                let method = if op == "//" {
-                    "checked_floor_div"
-                } else {
-                    "checked_floor_mod"
-                };
-                return Ok(Some(crate::RustExpr::Block {
-                    stmts: vec![
-                        crate::RustStmt::Let {
-                            mutable: false,
-                            name: "__sifr_floor_left".to_string(),
-                            ty: Some(crate::RustType::Named("SifrInt".to_string())),
-                            value: $emitter.coerce_expr_to_sifr_int_value(lowered_left),
-                        },
-                        crate::RustStmt::Let {
-                            mutable: false,
-                            name: "__sifr_floor_right".to_string(),
-                            ty: Some(crate::RustType::Named("SifrInt".to_string())),
-                            value: $emitter.coerce_expr_to_sifr_int_value(lowered_right),
-                        },
-                    ],
-                    expr: Some(Box::new(crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::MethodCall {
-                            receiver: Box::new(crate::RustExpr::Ident(
-                                "__sifr_floor_left".to_string(),
-                            )),
-                            method: method.to_string(),
-                            args: vec![crate::RustExpr::Ref {
-                                mutable: false,
-                                expr: Box::new(crate::RustExpr::Ident(
-                                    "__sifr_floor_right".to_string(),
-                                )),
-                            }],
-                        }),
-                        method: "ok_or_else".to_string(),
-                        args: vec![crate::RustExpr::Closure {
-                            params: vec![],
-                            body: Box::new(crate::RustExpr::FnCall {
-                                func: Box::new(crate::RustExpr::Path(vec![
-                                    "DivisionError".to_string(),
-                                    "new".to_string(),
-                                ])),
-                                args: vec![crate::RustExpr::Literal(crate::RustLiteral::Str(
-                                    "division by zero".to_string(),
-                                ))],
-                            }),
-                            is_move: false,
-                        }],
-                    })),
-                }));
+            if let Some(lowered) = $crate::stmt_support_emitter::checked_integer_codegen::lower_numeric_binop_with_exact_integer_semantics(
+                $emitter,
+                lowered_left.clone(),
+                resolved_left_ty,
+                op,
+                lowered_right.clone(),
+                resolved_right_ty,
+                resolved_result_ty,
+            )? {
+                return Ok(Some(lowered));
             }
 
             if op == "*" && matches!(resolved_result_ty, Type::Str) {
@@ -170,9 +126,15 @@ macro_rules! stmt_expr_binop {
                                         "__sifr_repeat_n".to_string(),
                                     )),
                                     op: "<=".to_string(),
-                                    right: Box::new(crate::RustExpr::Literal(
-                                        crate::RustLiteral::Int(0),
-                                    )),
+                                    right: Box::new(crate::RustExpr::FnCall {
+                                        func: Box::new(crate::RustExpr::Path(vec![
+                                            "SifrInt".to_string(),
+                                            "from_i64".to_string(),
+                                        ])),
+                                        args: vec![crate::RustExpr::Literal(
+                                            crate::RustLiteral::Int(0),
+                                        )],
+                                    }),
                                 }),
                                 then_expr: Box::new(crate::RustExpr::Vec(vec![])),
                                 else_expr: Some(Box::new(crate::RustExpr::MethodCall {
@@ -221,7 +183,13 @@ macro_rules! stmt_expr_binop {
                         cond: Box::new(crate::RustExpr::BinOp {
                             left: Box::new(crate::RustExpr::Ident("__sifr_repeat_n".to_string())),
                             op: "<=".to_string(),
-                            right: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Int(0))),
+                            right: Box::new(crate::RustExpr::FnCall {
+                                func: Box::new(crate::RustExpr::Path(vec![
+                                    "SifrInt".to_string(),
+                                    "from_i64".to_string(),
+                                ])),
+                                args: vec![crate::RustExpr::Literal(crate::RustLiteral::Int(0))],
+                            }),
                         }),
                         then_expr: Box::new(crate::RustExpr::Vec(vec![])),
                         else_expr: Some(Box::new(crate::RustExpr::Block {
@@ -380,6 +348,43 @@ macro_rules! stmt_expr_binop {
                     lowered_right = crate::RustExpr::Clone(Box::new(lowered_right));
                 }
             }
+            let exact_integer_operand = |value: crate::RustExpr, operand_ty: &Type| {
+                match operand_ty {
+                    Type::FixedInt(_) => $emitter
+                        .coerce_typed_expr_to_sifr_int_value(value, operand_ty),
+                    Type::Int | Type::LiteralInt(_) => $emitter
+                        .coerce_expr_to_sifr_int_comparison_operand(value),
+                    _ => value,
+                }
+            };
+            if matches!(resolved_result_ty, Type::Int | Type::LiteralInt(_))
+                && matches!(op.as_str(), "+" | "-" | "*" | "&" | "|" | "^")
+            {
+                lowered_left = exact_integer_operand(lowered_left, resolved_left_ty);
+                lowered_right = exact_integer_operand(lowered_right, resolved_right_ty);
+            }
+            if matches!(resolved_result_ty, Type::Int | Type::LiteralInt(_))
+                && matches!(op.as_str(), "<<" | ">>")
+            {
+                let shift = crate::integer_literal_decimal(right)
+                    .and_then(|value| value.parse::<usize>().ok())
+                    .ok_or_else(|| crate::CodegenError::new(
+                        "exact integer shift reached codegen without a proven target-width shift count",
+                    ))?;
+                let shift = i64::try_from(shift).map_err(|_| {
+                    crate::CodegenError::new(
+                        "exact integer shift count exceeds generated Rust literal width",
+                    )
+                })?;
+                return Ok(Some(crate::RustExpr::BinOp {
+                    left: Box::new(exact_integer_operand(lowered_left, resolved_left_ty)),
+                    op: op.clone(),
+                    right: Box::new(crate::RustExpr::Cast {
+                        expr: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Int(shift))),
+                        ty: crate::RustType::Named("usize".to_string()),
+                    }),
+                }));
+            }
             if matches!(
                 resolved_result_ty,
                 Type::Int | Type::Float | Type::LiteralInt(_) | Type::TypeVar(_)
@@ -395,14 +400,26 @@ macro_rules! stmt_expr_binop {
                 }
                 if matches!(resolved_result_ty, Type::Float) {
                     if matches!(resolved_left_ty, Type::Int | Type::LiteralInt(_)) {
+                        lowered_left = crate::RustExpr::MethodCall {
+                            receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_left))),
+                            method: "to_f64_proven_exact".to_string(),
+                            args: vec![],
+                        };
+                    } else if matches!(resolved_left_ty, Type::FixedInt(_)) {
                         lowered_left = crate::RustExpr::Cast {
-                            expr: Box::new(crate::RustExpr::Paren(Box::new(lowered_left))),
+                            expr: Box::new(lowered_left),
                             ty: crate::RustType::F64,
                         };
                     }
                     if matches!(resolved_right_ty, Type::Int | Type::LiteralInt(_)) {
+                        lowered_right = crate::RustExpr::MethodCall {
+                            receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_right))),
+                            method: "to_f64_proven_exact".to_string(),
+                            args: vec![],
+                        };
+                    } else if matches!(resolved_right_ty, Type::FixedInt(_)) {
                         lowered_right = crate::RustExpr::Cast {
-                            expr: Box::new(crate::RustExpr::Paren(Box::new(lowered_right))),
+                            expr: Box::new(lowered_right),
                             ty: crate::RustType::F64,
                         };
                     }
@@ -411,21 +428,39 @@ macro_rules! stmt_expr_binop {
 
             if matches!(resolved_result_ty, Type::Decimal) {
                 if matches!(resolved_left_ty, Type::Int | Type::LiteralInt(_)) {
+                    let decimal = crate::integer_literal_decimal(left)
+                        .and_then(|value| value.parse::<i128>().ok())
+                        .filter(|value| {
+                            const DECIMAL_MAX: i128 = 79_228_162_514_264_337_593_543_950_335;
+                            (-DECIMAL_MAX..=DECIMAL_MAX).contains(value)
+                        })
+                        .ok_or_else(|| crate::CodegenError::new(
+                            "decimal arithmetic received an exact integer operand without a proven rust_decimal range",
+                        ))?;
                     lowered_left = crate::RustExpr::FnCall {
                         func: Box::new(crate::RustExpr::Path(vec![
                             "Decimal".to_string(),
                             "from".to_string(),
                         ])),
-                        args: vec![lowered_left],
+                        args: vec![crate::RustExpr::Verbatim(format!("{decimal}_i128"))],
                     };
                 }
                 if op != "**" && matches!(resolved_right_ty, Type::Int | Type::LiteralInt(_)) {
+                    let decimal = crate::integer_literal_decimal(right)
+                        .and_then(|value| value.parse::<i128>().ok())
+                        .filter(|value| {
+                            const DECIMAL_MAX: i128 = 79_228_162_514_264_337_593_543_950_335;
+                            (-DECIMAL_MAX..=DECIMAL_MAX).contains(value)
+                        })
+                        .ok_or_else(|| crate::CodegenError::new(
+                            "decimal arithmetic received an exact integer operand without a proven rust_decimal range",
+                        ))?;
                     lowered_right = crate::RustExpr::FnCall {
                         func: Box::new(crate::RustExpr::Path(vec![
                             "Decimal".to_string(),
                             "from".to_string(),
                         ])),
-                        args: vec![lowered_right],
+                        args: vec![crate::RustExpr::Verbatim(format!("{decimal}_i128"))],
                     };
                 }
             }
@@ -459,13 +494,10 @@ macro_rules! stmt_expr_binop {
                     resolved_left_ty,
                     Type::Int | Type::LiteralInt(_)
                 ) {
-                    lowered_left = crate::RustExpr::FnCall {
-                        func: Box::new(crate::RustExpr::Path(vec![
-                            "BigDecimal".to_string(),
-                            "from".to_string(),
-                        ])),
-                        args: vec![lowered_left],
-                    };
+                    lowered_left = crate::stmt_support_emitter::checked_integer_codegen::exact_int_to_bigdecimal_expr(
+                        $emitter,
+                        lowered_left,
+                    );
                 } else if matches!(resolved_left_ty, Type::Decimal) {
                     lowered_left = lower_decimal_to_bigdecimal(lowered_left);
                 }
@@ -475,13 +507,10 @@ macro_rules! stmt_expr_binop {
                         Type::Int | Type::LiteralInt(_)
                     )
                 {
-                    lowered_right = crate::RustExpr::FnCall {
-                        func: Box::new(crate::RustExpr::Path(vec![
-                            "BigDecimal".to_string(),
-                            "from".to_string(),
-                        ])),
-                        args: vec![lowered_right],
-                    };
+                    lowered_right = crate::stmt_support_emitter::checked_integer_codegen::exact_int_to_bigdecimal_expr(
+                        $emitter,
+                        lowered_right,
+                    );
                 } else if op != "**" && matches!(resolved_right_ty, Type::Decimal) {
                     lowered_right = lower_decimal_to_bigdecimal(lowered_right);
                 }
@@ -763,11 +792,9 @@ macro_rules! stmt_expr_binop {
                 if matches!(resolved_result_ty, Type::Int) {
                     return Ok(Some(crate::RustExpr::MethodCall {
                         receiver: Box::new($emitter.coerce_expr_to_sifr_int_value(lowered_left)),
-                        method: "pow".to_string(),
-                        args: vec![crate::RustExpr::Cast {
-                            expr: Box::new(lowered_right),
-                            ty: crate::RustType::Named("u32".to_string()),
-                        }],
+                        method: "pow_known_valid".to_string(),
+                        args: vec![$emitter
+                            .coerce_expr_to_sifr_int_comparison_operand(lowered_right)],
                     }));
                 }
                 return Ok(Some(crate::RustExpr::MethodCall {

@@ -55,6 +55,8 @@ pub(crate) use helpers::{
     collect_referenced_vars_with_types, default_param_convention,
 };
 mod borrowed_string_compare;
+mod exact_integer_float_compare;
+pub(crate) use exact_integer_float_compare::lower_exact_integer_float_compare;
 mod hir_analysis;
 mod hoisted_literals;
 mod intrinsic_method_emitters;
@@ -93,6 +95,7 @@ mod option_binding_mutability;
 mod output_helpers;
 mod place_emitter;
 mod preamble;
+mod project_constants;
 mod project_stdlib_nominals;
 mod project_union_prelude;
 mod protocol_bridge_emitter;

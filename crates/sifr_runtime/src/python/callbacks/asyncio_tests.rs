@@ -132,7 +132,7 @@ async fn serial_reentrancy_is_rejected_before_waiting_for_the_fifo() {
         |_, _value, _| async move {
             let nested = function_request("reenter", Vec::new());
             match submit_async_declaration(nested, None).await {
-                Ok(_) => Err(CallbackExecutionError::Infrastructure(
+                Ok(_) => Err::<crate::SifrInt, _>(CallbackExecutionError::Infrastructure(
                     crate::python::PythonError::without_replay(
                         "callback",
                         "RuntimeError",
@@ -141,7 +141,9 @@ async fn serial_reentrancy_is_rejected_before_waiting_for_the_fifo() {
                         "asyncio callback reentrancy",
                     ),
                 )),
-                Err(error) => Err(CallbackExecutionError::Infrastructure(error)),
+                Err(error) => {
+                    Err::<crate::SifrInt, _>(CallbackExecutionError::Infrastructure(error))
+                }
             }
         },
         crate::python::from_int,

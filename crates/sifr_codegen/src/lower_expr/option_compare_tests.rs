@@ -439,19 +439,10 @@ pub(super) fn lowers_range_literal_with_step() {
     };
 
     let lowered = try_lower_leaf_expr(&range).expect("range with step lowered");
-    assert!(matches!(
-        lowered,
-        RustExpr::MethodCall {
-            receiver,
-            method,
-            args,
-        } if method == "step_by"
-            && matches!(receiver.as_ref(), RustExpr::Range { .. })
-            && matches!(
-                args.first(),
-                Some(RustExpr::Cast { ty: RustType::Named(name), .. }) if name == "usize"
-            )
-    ));
+    assert_eq!(
+        crate::render_expr(&lowered),
+        "SifrRange::new_known_nonzero(SifrInt::from_i64(1), SifrInt::from_i64(10), SifrInt::from_i64(2))"
+    );
 }
 
 #[test]
@@ -621,12 +612,10 @@ pub(super) fn lowers_range_literal_with_name_bounds() {
     };
 
     let lowered = try_lower_leaf_expr(&range).expect("range with name bounds lowered");
-    assert!(matches!(
-        lowered,
-        RustExpr::Range { start, end }
-            if matches!(start.as_ref(), RustExpr::Ident(name) if name == "start")
-                && matches!(end.as_ref(), RustExpr::Ident(name) if name == "end")
-    ));
+    assert_eq!(
+        crate::render_expr(&lowered),
+        "SifrRange::new_known_nonzero(start.clone(), end.clone(), SifrInt::from_i64(1))"
+    );
 }
 
 #[test]
@@ -643,17 +632,10 @@ pub(super) fn lowers_range_literal_with_name_step() {
     };
 
     let lowered = try_lower_leaf_expr(&range).expect("range with name step lowered");
-    assert!(matches!(
-        lowered,
-        RustExpr::MethodCall { method, args, .. }
-            if method == "step_by"
-                && matches!(
-                    args.first(),
-                    Some(RustExpr::Cast { expr, ty: RustType::Named(name) })
-                        if matches!(expr.as_ref(), RustExpr::Ident(step_name) if step_name == "step")
-                            && name == "usize"
-                )
-    ));
+    assert_eq!(
+        crate::render_expr(&lowered),
+        "SifrRange::new_known_nonzero(SifrInt::from_i64(1), SifrInt::from_i64(10), step.clone())"
+    );
 }
 
 #[test]
@@ -675,12 +657,10 @@ pub(super) fn lowers_range_literal_with_alias_name_bounds() {
     };
 
     let lowered = try_lower_leaf_expr(&range).expect("range with alias-name bounds lowered");
-    assert!(matches!(
-        lowered,
-        RustExpr::Range { start, end }
-            if matches!(start.as_ref(), RustExpr::Ident(name) if name == "start")
-                && matches!(end.as_ref(), RustExpr::Ident(name) if name == "end")
-    ));
+    assert_eq!(
+        crate::render_expr(&lowered),
+        "SifrRange::new_known_nonzero(start.clone(), end.clone(), SifrInt::from_i64(1))"
+    );
 }
 
 #[test]
@@ -698,17 +678,10 @@ pub(super) fn lowers_range_literal_with_alias_name_step() {
     };
 
     let lowered = try_lower_leaf_expr(&range).expect("range with alias-name step lowered");
-    assert!(matches!(
-        lowered,
-        RustExpr::MethodCall { method, args, .. }
-            if method == "step_by"
-                && matches!(
-                    args.first(),
-                    Some(RustExpr::Cast { expr, ty: RustType::Named(name) })
-                        if matches!(expr.as_ref(), RustExpr::Ident(step_name) if step_name == "step")
-                            && name == "usize"
-                )
-    ));
+    assert_eq!(
+        crate::render_expr(&lowered),
+        "SifrRange::new_known_nonzero(SifrInt::from_i64(1), SifrInt::from_i64(10), step.clone())"
+    );
 }
 
 #[test]

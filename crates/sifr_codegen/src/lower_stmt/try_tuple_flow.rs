@@ -363,7 +363,7 @@ fn tuple_unpack_source_expr(
     source_is_borrowed: bool,
 ) -> RustExpr {
     if source_is_borrowed
-        && matches!(value, HirExpr::Name { ty, .. } if ty.ownership() == sifr_type_system::OwnershipKind::Move)
+        && matches!(value, HirExpr::Name { ty, .. } if !crate::helpers::is_copy_type_for_codegen(ty))
     {
         RustExpr::Clone(Box::new(RustExpr::Paren(Box::new(RustExpr::Deref(
             Box::new(lowered_value),

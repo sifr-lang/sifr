@@ -55,6 +55,8 @@ mod class_trait_contract_codegen_tests;
 #[cfg(test)]
 mod classes_and_basics_codegen_tests;
 #[cfg(test)]
+mod classes_and_basics_multi_module_codegen_tests;
+#[cfg(test)]
 mod collections_and_stdlib_codegen_tests;
 #[cfg(test)]
 mod control_flow_codegen_tests;
@@ -64,6 +66,8 @@ mod defaultdict_augassign_codegen_tests;
 mod defaultdict_order_independent_codegen_tests;
 #[cfg(test)]
 mod empty_plain_dict_codegen_tests;
+#[cfg(test)]
+mod exact_integer_architecture_codegen_tests;
 #[cfg(test)]
 mod generic_inheritance_codegen_tests;
 #[cfg(test)]
@@ -76,6 +80,8 @@ mod nested_container_capture_codegen_tests;
 mod nested_function_signature_scope_codegen_tests;
 #[cfg(test)]
 mod performance_codegen_tests;
+#[cfg(test)]
+mod performance_collection_borrow_codegen_tests;
 #[cfg(test)]
 mod performance_nested_mutation_codegen_tests;
 #[cfg(test)]
@@ -98,6 +104,8 @@ mod structural_inheritance_codegen_tests;
 mod structural_stdlib_impl_codegen_tests;
 #[cfg(test)]
 mod structured_condition_codegen_tests;
+#[cfg(test)]
+mod structured_delete_codegen_tests;
 #[cfg(test)]
 mod structured_intrinsic_codegen_tests;
 #[cfg(test)]

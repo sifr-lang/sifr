@@ -157,9 +157,9 @@ fn lowers_simple_let_name_rhs() {
         RustStmt::Let {
             mutable: false,
             name: ref let_name,
-            value: RustExpr::Ident(ref rhs),
+            value: RustExpr::Clone(ref rhs),
             ..
-        } if let_name == "x" && rhs == "y"
+        } if let_name == "x" && matches!(rhs.as_ref(), RustExpr::Ident(name) if name == "y")
     ));
 }
 
@@ -180,7 +180,7 @@ fn lowers_simple_let_alias_int_literal_rhs() {
         RustStmt::Let {
             mutable: false,
             name: ref let_name,
-            value: RustExpr::Cast { ty: RustType::I64, .. },
+            value: RustExpr::FnCall { .. },
             ..
         } if let_name == "distance"
     ));
@@ -414,7 +414,7 @@ fn lowers_simple_option_let_leaf_rhs_to_some() {
             value: RustExpr::FnCall { ref func, ref args },
         } if let_name == "x"
             && matches!(func.as_ref(), RustExpr::Path(parts) if parts == &vec!["Some".to_string()])
-            && matches!(args.first(), Some(RustExpr::Cast { ty: RustType::I64, .. }))
+            && matches!(args.first(), Some(RustExpr::FnCall { .. }))
     ));
 }
 

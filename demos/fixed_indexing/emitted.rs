@@ -1,23 +1,27 @@
 // src/main.rs
-fn second_or_zero(values: &Vec<i64>) -> i64 {
-    if (values.len() as i64) < (2_i64) {
-        return 0_i64;
+use ::sifr_runtime::SifrInt;
+
+use ::sifr_runtime::SifrRange;
+
+fn second_or_zero(values: &Vec<SifrInt>) -> SifrInt {
+    if &SifrInt::from(values.len()) < &SifrInt::from_i64(2) {
+        return SifrInt::from_i64(0);
     }
-    values[(1_i64) as usize]
+    values[::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(1)))].clone()
 }
 
-fn neighbor_min_cost(cost: &mut Vec<i64>) -> i64 {
-    if (cost.len() as i64) < (2_i64) {
-        return 0_i64;
+fn neighbor_min_cost(cost: &mut Vec<SifrInt>) -> SifrInt {
+    if &SifrInt::from(cost.len()) < &SifrInt::from_i64(2) {
+        return SifrInt::from_i64(0);
     }
-    for i in (-(1_i64) + (1_i64)..((cost.len() as i64) - (3_i64)) + (1_i64)).rev() {
+    for i in SifrRange::new_known_nonzero(&SifrInt::from(cost.len()) - &SifrInt::from_i64(3), -(SifrInt::from_i64(1)), -(SifrInt::from_i64(1))) {
         {
-            let __assign_value = cost[i as usize] + ::std::cmp::min({
+            let __assign_value = &cost[::sifr_runtime::to_usize_proven(&(i))].clone() + &::std::cmp::min({
     let Some(__sifr_index_value) = ({
     let __sifr_index_list = &cost;
-    let __sifr_index_i = i + (1_i64);
-    let __sifr_index_norm = if __sifr_index_i < 0 { ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize } else { __sifr_index_i as usize };
-    __sifr_index_list.get(__sifr_index_norm).copied()
+    let __sifr_index_i = &i + &SifrInt::from_i64(1);
+    let __sifr_index_norm = __sifr_index_i.normalize_index_or_len(__sifr_index_list.len());
+    __sifr_index_list.get(__sifr_index_norm).cloned()
 }) else {
         unreachable!("compiler-verified index should be in range");
     };
@@ -25,21 +29,19 @@ fn neighbor_min_cost(cost: &mut Vec<i64>) -> i64 {
 }, {
     let Some(__sifr_index_value) = ({
     let __sifr_index_list = &cost;
-    let __sifr_index_i = i + (2_i64);
-    let __sifr_index_norm = if __sifr_index_i < 0 { ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize } else { __sifr_index_i as usize };
-    __sifr_index_list.get(__sifr_index_norm).copied()
+    let __sifr_index_i = &i + &SifrInt::from_i64(2);
+    let __sifr_index_norm = __sifr_index_i.normalize_index_or_len(__sifr_index_list.len());
+    __sifr_index_list.get(__sifr_index_norm).cloned()
 }) else {
         unreachable!("compiler-verified index should be in range");
     };
     __sifr_index_value
 });
             {
-                let __idx_raw = i;
-                let __idx_norm = if __idx_raw < 0 { (cost.len() as i64) + __idx_raw } else { __idx_raw };
-                if __idx_norm >= 0 {
-                    if let Some(__elem) = cost.get_mut(__idx_norm as usize) {
-                        *__elem = __assign_value;
-                    }
+                let __idx_raw = i.clone();
+                let __idx_norm = __idx_raw.normalize_index_or_len(cost.len());
+                if let Some(__elem) = cost.get_mut(__idx_norm) {
+                    *__elem = __assign_value;
                 }
             }
         }
@@ -47,9 +49,9 @@ fn neighbor_min_cost(cost: &mut Vec<i64>) -> i64 {
     ::std::cmp::min({
     let Some(__sifr_index_value) = ({
     let __sifr_index_list = &cost;
-    let __sifr_index_i = 0_i64;
-    let __sifr_index_norm = if __sifr_index_i < 0 { ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize } else { __sifr_index_i as usize };
-    __sifr_index_list.get(__sifr_index_norm).copied()
+    let __sifr_index_i = SifrInt::from_i64(0);
+    let __sifr_index_norm = __sifr_index_i.normalize_index_or_len(__sifr_index_list.len());
+    __sifr_index_list.get(__sifr_index_norm).cloned()
 }) else {
         unreachable!("compiler-verified index should be in range");
     };
@@ -57,9 +59,9 @@ fn neighbor_min_cost(cost: &mut Vec<i64>) -> i64 {
 }, {
     let Some(__sifr_index_value) = ({
     let __sifr_index_list = &cost;
-    let __sifr_index_i = 1_i64;
-    let __sifr_index_norm = if __sifr_index_i < 0 { ((__sifr_index_list.len() as i64) + __sifr_index_i) as usize } else { __sifr_index_i as usize };
-    __sifr_index_list.get(__sifr_index_norm).copied()
+    let __sifr_index_i = SifrInt::from_i64(1);
+    let __sifr_index_norm = __sifr_index_i.normalize_index_or_len(__sifr_index_list.len());
+    __sifr_index_list.get(__sifr_index_norm).cloned()
 }) else {
         unreachable!("compiler-verified index should be in range");
     };
@@ -68,7 +70,7 @@ fn neighbor_min_cost(cost: &mut Vec<i64>) -> i64 {
 }
 
 fn main() {
-    assert!((second_or_zero(&vec![8_i64, 13_i64]) == (13_i64)));
-    assert!((second_or_zero(&vec![8_i64]) == (0_i64)));
-    assert!((neighbor_min_cost(&mut vec![10_i64, 15_i64, 20_i64]) == (15_i64)));
+    assert!((&second_or_zero(&vec![SifrInt::from_i64(8), SifrInt::from_i64(13)]) == &SifrInt::from_i64(13)));
+    assert!((&second_or_zero(&vec![SifrInt::from_i64(8)]) == &SifrInt::from_i64(0)));
+    assert!((&neighbor_min_cost(&mut vec![SifrInt::from_i64(10), SifrInt::from_i64(15), SifrInt::from_i64(20)]) == &SifrInt::from_i64(15)));
 }

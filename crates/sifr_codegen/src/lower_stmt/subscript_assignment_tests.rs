@@ -19,53 +19,15 @@ fn lowers_simple_attribute_list_subscript_assign_stmt() {
     let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
         .expect("attribute list subscript assign lowered");
     assert_eq!(lowered.len(), 1);
-    let RustStmt::Block(stmts) = &lowered[0] else {
-        panic!("expected block-lowered attribute list subscript assignment");
-    };
-    assert_eq!(stmts.len(), 3);
-    assert!(matches!(
-        &stmts[2],
-        RustStmt::If {
-            then_body,
-            else_body: None,
-            ..
-        } if matches!(
-            then_body.first(),
-            Some(RustStmt::IfLet {
-                pattern,
-                expr: RustExpr::MethodCall {
-                    receiver,
-                    method,
-                    args,
-                },
-                then_body,
-                else_body: None,
-            }) if pattern == "Some(__elem)"
-                && method == "get_mut"
-                && matches!(
-                    receiver.as_ref(),
-                    RustExpr::Field { expr, field }
-                        if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "self")
-                        && field == "items"
-                )
-                && matches!(
-                    args.first(),
-                    Some(RustExpr::Cast {
-                        expr: idx,
-                        ty: RustType::Named(usize_ty),
-                    }) if matches!(idx.as_ref(), RustExpr::Ident(name) if name == "__idx_norm")
-                        && usize_ty == "usize"
-                )
-                && matches!(
-                    then_body.first(),
-                    Some(RustStmt::Assign {
-                        target: RustExpr::Deref(target),
-                        value: RustExpr::Ident(rhs),
-                    }) if matches!(target.as_ref(), RustExpr::Ident(name) if name == "__elem")
-                        && rhs == "v"
-                )
-        )
-    ));
+    let rendered = crate::render_stmts(&lowered);
+    assert!(rendered.contains("let __idx_raw = i.clone();"));
+    assert!(
+        rendered.contains("let __idx_norm = __idx_raw.normalize_index_or_len(self.items.len());")
+    );
+    assert!(rendered.contains("if let Some(__elem) = self.items.get_mut(__idx_norm)"));
+    assert!(rendered.contains("*__elem = v.clone();"));
+    assert!(!rendered.contains("__idx_norm >= 0"));
+    assert!(!rendered.contains("to_usize_proven"));
 }
 
 #[test]
@@ -114,8 +76,10 @@ fn lowers_simple_attribute_dict_subscript_assign_stmt() {
                     if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "self")
                     && field == "mapping"
             )
-            && matches!(args.first(), Some(RustExpr::Ident(name)) if name == "key")
-            && matches!(args.get(1), Some(RustExpr::Ident(name)) if name == "val")
+            && matches!(args.first(), Some(RustExpr::Clone(inner))
+                if matches!(inner.as_ref(), RustExpr::Ident(name) if name == "key"))
+            && matches!(args.get(1), Some(RustExpr::Clone(inner))
+                if matches!(inner.as_ref(), RustExpr::Ident(name) if name == "val"))
     ));
 }
 
@@ -199,47 +163,33 @@ fn lowers_simple_list_subscript_assign_stmt() {
         RustStmt::Let {
             mutable: false,
             ref name,
-            value: RustExpr::Ident(ref inner),
+            value: RustExpr::Clone(ref inner),
             ..
-        } if name == "__idx_raw" && inner == "i"
+        } if name == "__idx_raw" && matches!(inner.as_ref(), RustExpr::Ident(name) if name == "i")
     ));
     assert!(matches!(
         stmts[2],
-        RustStmt::If {
-            then_body: ref outer_then,
+        RustStmt::IfLet {
+            pattern: ref outer_pattern,
+            expr: RustExpr::MethodCall {
+                receiver: ref recv,
+                method: ref outer_method,
+                args: ref outer_args,
+            },
+            then_body: ref body,
             else_body: None,
-            ..
-        } if matches!(
-            outer_then.first(),
-            Some(RustStmt::IfLet {
-                pattern,
-                expr: RustExpr::MethodCall {
-                    receiver: recv,
-                    method,
-                    args,
-                },
-                then_body: body,
-                else_body: None,
-            }) if pattern == "Some(__elem)"
-                && method == "get_mut"
-                && matches!(recv.as_ref(), RustExpr::Ident(name) if name == "items")
-                && matches!(
-                    args.first(),
-                    Some(RustExpr::Cast {
-                        expr: inner,
-                        ty: RustType::Named(usize_ty),
-                    }) if matches!(inner.as_ref(), RustExpr::Ident(name) if name == "__idx_norm")
-                        && usize_ty == "usize"
-                )
-                && matches!(
-                    body.first(),
-                    Some(RustStmt::Assign {
-                        target: RustExpr::Deref(target),
-                        value: RustExpr::Ident(rhs),
-                    }) if matches!(target.as_ref(), RustExpr::Ident(name) if name == "__elem")
-                        && rhs == "v"
-                )
-        )
+        } if outer_pattern == "Some(__elem)"
+            && outer_method == "get_mut"
+            && matches!(recv.as_ref(), RustExpr::Ident(name) if name == "items")
+            && matches!(outer_args.first(), Some(RustExpr::Ident(name)) if name == "__idx_norm")
+            && matches!(
+                body.first(),
+                Some(RustStmt::Assign {
+                    target: RustExpr::Deref(target),
+                    value: RustExpr::Clone(rhs),
+                }) if matches!(target.as_ref(), RustExpr::Ident(name) if name == "__elem")
+                    && matches!(rhs.as_ref(), RustExpr::Ident(name) if name == "v")
+            )
     ));
 }
 
@@ -285,7 +235,8 @@ fn lowers_simple_dict_subscript_assign_stmt() {
             && matches!(recv.as_ref(), RustExpr::Ident(name) if name == "mapping")
             && matches!(args.first(), Some(RustExpr::Clone(inner))
                 if matches!(inner.as_ref(), RustExpr::Ident(name) if name == "key"))
-            && matches!(args.get(1), Some(RustExpr::Ident(name)) if name == "val")
+            && matches!(args.get(1), Some(RustExpr::Clone(inner))
+                if matches!(inner.as_ref(), RustExpr::Ident(name) if name == "val"))
     ));
 }
 
@@ -357,40 +308,12 @@ fn lowers_simple_list_delete_stmt() {
     let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
         .expect("list delete lowered");
     assert_eq!(lowered.len(), 1);
-    assert!(matches!(
-        lowered[0],
-        RustStmt::Block(ref stmts)
-            if matches!(
-                stmts.get(2),
-                Some(RustStmt::If {
-                    then_body,
-                    else_body: None,
-                    ..
-                }) if matches!(
-                    then_body.first(),
-                    Some(RustStmt::Let {
-                        mutable: false,
-                        name,
-                        value: RustExpr::MethodCall {
-                            receiver: recv,
-                            method,
-                            args,
-                        },
-                        ..
-                    }) if name == "_"
-                        && method == "remove"
-                        && matches!(recv.as_ref(), RustExpr::Ident(obj) if obj == "items")
-                        && matches!(
-                            args.first(),
-                            Some(RustExpr::Cast {
-                                expr: inner,
-                                ty: RustType::Named(usize_ty),
-                            }) if matches!(inner.as_ref(), RustExpr::Ident(idx) if idx == "__idx_norm")
-                                && usize_ty == "usize"
-                        )
-                )
-            )
-    ));
+    let rendered = crate::render_stmts(&lowered);
+    assert!(rendered.contains("let __idx_norm = __idx_raw.normalize_index_or_len(items.len());"));
+    assert!(rendered.contains("if __idx_norm < items.len()"));
+    assert!(rendered.contains("let _ = items.remove(__idx_norm);"));
+    assert!(!rendered.contains("__idx_norm >= 0"));
+    assert!(!rendered.contains("to_usize_proven"));
 }
 
 #[test]
@@ -473,93 +396,14 @@ fn lowers_simple_nested_subscript_assign_stmt() {
     let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
         .expect("nested subscript assign lowered");
     assert_eq!(lowered.len(), 1);
-    let RustStmt::Block(stmts) = &lowered[0] else {
-        panic!("expected block-lowered nested subscript assignment");
-    };
-    assert_eq!(stmts.len(), 3);
-    assert!(matches!(
-        &stmts[0],
-        RustStmt::Let {
-            name,
-            value: RustExpr::Ident(idx),
-            ..
-        } if name == "__oi_raw" && idx == "i"
-    ));
-    assert!(matches!(
-        &stmts[1],
-        RustStmt::Let {
-            name,
-            value: RustExpr::If { .. },
-            ..
-        } if name == "__oi_norm"
-    ));
-    assert!(matches!(
-        &stmts[2],
-        RustStmt::If {
-            then_body: outer_then,
-            else_body: None,
-            ..
-        } if matches!(
-            outer_then.first(),
-            Some(RustStmt::IfLet {
-                pattern,
-                expr: RustExpr::MethodCall {
-                    receiver: recv,
-                    method,
-                    args,
-                },
-                then_body: outer_body,
-                else_body: None,
-            }) if pattern == "Some(__row)"
-                && method == "get_mut"
-                && matches!(recv.as_ref(), RustExpr::Ident(name) if name == "matrix")
-                && matches!(
-                    args.first(),
-                    Some(RustExpr::Cast {
-                        expr,
-                        ty: RustType::Named(usize_ty),
-                    }) if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "__oi_norm")
-                        && usize_ty == "usize"
-                )
-            && matches!(
-                outer_body.last(),
-                Some(RustStmt::If {
-                    then_body: inner_outer_then,
-                    ..
-                }) if matches!(
-                    inner_outer_then.first(),
-                    Some(RustStmt::IfLet {
-                        pattern: inner_pattern,
-                        expr: RustExpr::MethodCall {
-                            receiver: inner_recv,
-                            method: inner_method,
-                            args: inner_args,
-                        },
-                        then_body: inner_then,
-                        else_body: None,
-                    }) if inner_pattern == "Some(__elem)"
-                        && inner_method == "get_mut"
-                        && matches!(inner_recv.as_ref(), RustExpr::Ident(name) if name == "__row")
-                        && matches!(
-                            inner_args.first(),
-                            Some(RustExpr::Cast {
-                                expr,
-                                ty: RustType::Named(usize_ty),
-                            }) if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "__ii_norm")
-                                && usize_ty == "usize"
-                        )
-                        && matches!(
-                            inner_then.first(),
-                            Some(RustStmt::Assign {
-                                target: RustExpr::Deref(target),
-                                value: RustExpr::Ident(rhs),
-                            }) if matches!(target.as_ref(), RustExpr::Ident(name) if name == "__elem")
-                                && rhs == "v"
-                        )
-                )
-            )
-        )
-    ));
+    let rendered = crate::render_stmts(&lowered);
+    assert!(rendered.contains("let __oi_raw = i.clone();"));
+    assert!(rendered.contains("matrix.get_mut(__oi_norm)"));
+    assert!(rendered.contains("let __ii_raw = j.clone();"));
+    assert!(rendered.contains("__row.get_mut(__ii_norm)"));
+    assert!(rendered.contains("*__elem = v.clone();"));
+    assert!(!rendered.contains(">= 0"));
+    assert!(!rendered.contains("to_usize_proven"));
 }
 
 #[test]
@@ -586,42 +430,14 @@ fn lowers_simple_nested_subscript_assign_stmt_with_optional_indices() {
 
     let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
         .expect("nested subscript assign lowered");
-    let RustStmt::Block(stmts) = &lowered[0] else {
-        panic!("expected block-lowered nested subscript assignment");
-    };
-    assert!(matches!(
-        stmts.first(),
-        Some(RustStmt::Let { name, value: RustExpr::Ident(idx), .. })
-            if name == "__oi_raw_opt" && idx == "oi"
-    ));
-    assert!(matches!(
-        stmts.get(1),
-        Some(RustStmt::IfLet {
-            pattern,
-            expr: RustExpr::Ident(raw_opt),
-            then_body,
-            else_body: None,
-        }) if pattern == "Some(__oi_raw)"
-            && raw_opt == "__oi_raw_opt"
-            && matches!(
-                then_body.get(1),
-                Some(RustStmt::If {
-                    then_body: outer_then,
-                    ..
-                }) if matches!(
-                    outer_then.first(),
-                    Some(RustStmt::IfLet { then_body: inner_body, .. })
-                        if matches!(
-                            inner_body.first(),
-                            Some(RustStmt::Let {
-                                name,
-                                value: RustExpr::Ident(ii_idx),
-                                ..
-                            }) if name == "__ii_raw_opt" && ii_idx == "ii"
-                        )
-                )
-            )
-    ));
+    let rendered = crate::render_stmts(&lowered);
+    assert!(rendered.contains("let __oi_raw_opt = oi.clone();"));
+    assert!(rendered.contains("if let Some(__oi_raw) = __oi_raw_opt"));
+    assert!(rendered.contains("matrix.get_mut(__oi_norm)"));
+    assert!(rendered.contains("let __ii_raw_opt = ii.clone();"));
+    assert!(rendered.contains("if let Some(__ii_raw) = __ii_raw_opt"));
+    assert!(rendered.contains("__row.get_mut(__ii_norm)"));
+    assert!(rendered.contains("*__elem = v.clone();"));
 }
 
 #[test]

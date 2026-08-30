@@ -346,36 +346,10 @@ fn test_type_check_source_surfaces_reveal_type_as_structured_note() {
 }
 
 #[test]
-fn test_type_check_source_surfaces_arithmetic_warning_as_structured_warning() {
+fn test_type_check_source_accepts_exact_integer_arithmetic_without_overflow_warning() {
     let diagnostics = type_check_source("def multiply(a: int, b: int) -> int:\n    return a * b\n");
 
-    assert_eq!(diagnostics.len(), 1);
-    let diagnostic = &diagnostics[0];
-    assert_eq!(
-        diagnostic.code,
-        DiagnosticCode::TYPE_ARITHMETIC_OVERFLOW_RISK.code()
-    );
-    assert_eq!(diagnostic.severity, sifr_diagnostics::Severity::Warning);
-    assert_eq!(
-        diagnostic.message_template,
-        "integer {operation} may overflow at runtime"
-    );
-    assert_eq!(
-        diagnostic.message,
-        "integer multiplication may overflow at runtime"
-    );
-    assert_eq!(
-        diagnostic.args.get("operation"),
-        Some(&DiagnosticArg::String("multiplication".to_string()))
-    );
-    let primary_span = diagnostic
-        .spans
-        .iter()
-        .find(|span| span.is_primary)
-        .expect("arithmetic warning should carry a primary span");
-    assert_eq!(primary_span.file.as_deref(), Some("main"));
-    assert_eq!(primary_span.line, Some(2));
-    assert!(primary_span.byte_end > primary_span.byte_start);
+    assert!(diagnostics.is_empty(), "{diagnostics:?}");
 }
 
 #[test]
@@ -503,7 +477,10 @@ def main():
 "#;
     match compile(source) {
         CompileResult::Success { rust_source } => {
-            assert!(rust_source.contains("fn factorial(n: i64) -> i64"));
+            assert!(
+                rust_source.contains("fn factorial(n: SifrInt) -> SifrInt"),
+                "{rust_source}"
+            );
             assert!(rust_source.contains("fn main()"));
         }
         CompileResult::Errors { errors } => {

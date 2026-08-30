@@ -491,7 +491,8 @@ pub(crate) fn input_conversion_borrowed(
         return input_conversion(name, ty, opaque_classes);
     }
     let value = match ty.resolve_alias() {
-        Type::Bool | Type::Int | Type::Float => RustExpr::Deref(Box::new(value_place(name))),
+        Type::Bool | Type::Float => RustExpr::Deref(Box::new(value_place(name))),
+        Type::Int => RustExpr::Clone(Box::new(value_place(name))),
         Type::Str | Type::Bytes => value_place(name),
         _ if is_python_object(ty) => {
             return Some(runtime_call(

@@ -1,7 +1,11 @@
 // src/main.rs
+use ::sifr_runtime::SifrInt;
+
 const PI: f64 = 3.14159_f64;
 
-const MAX_RETRIES: i64 = 3_i64;
+fn __const_MAX_RETRIES() -> SifrInt {
+    SifrInt::from_i64(3)
+}
 
 fn __const_APP_NAME() -> String {
     "sifr".to_string().to_string()
@@ -38,14 +42,14 @@ fn circle_area(r: f64) -> f64 {
 }
 
 fn get_config() -> String {
-    format!("{} (debug={}, retries={})", __const_APP_NAME(), DEBUG, MAX_RETRIES)
+    format!("{} (debug={}, retries={})", __const_APP_NAME(), DEBUG, __const_MAX_RETRIES())
 }
 
 fn main() {
     println!("{}", circle_area(5.0_f64));
     println!("{}", get_config());
     println!("{}", PI);
-    println!("{}", MAX_RETRIES);
+    println!("{}", __const_MAX_RETRIES());
     let t: Temperature = Temperature::new(100.0_f64);
     println!("{}", t.celsius);
     let t2: Temperature = Temperature::from_fahrenheit(212.0_f64);

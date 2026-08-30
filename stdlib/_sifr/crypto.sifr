@@ -8,6 +8,10 @@ def random_int(min: int, max: int) -> int:
 def random_float() -> float:
     ...
 
+@rust(sifr_stdlib.random.random_seed)
+def random_seed() -> int:
+    ...
+
 @rust(sifr_stdlib.random.random_uniform)
 def random_uniform(min: float, max: float) -> float:
     ...

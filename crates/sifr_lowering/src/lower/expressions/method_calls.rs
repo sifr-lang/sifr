@@ -7,12 +7,13 @@ use super::{
     refine_defaultdict_binding_expr, refine_empty_list_binding_expr, refine_empty_set_binding_expr,
     refine_generic_class_binding_expr, refine_nonempty_method_return_type,
     reject_immutable_method_mut_borrow_arguments, reject_immutable_parameter_method_mutation,
-    resolve_bytes_method_type, resolve_class_method_on_type, resolve_decimal_method_type,
-    resolve_dict_method_type, resolve_enum_method_type, resolve_fixed_width_method_type,
-    resolve_list_method_type, resolve_newtype_method_type, resolve_protocol_method_type,
-    resolve_python_arrow_method_type, resolve_python_buffer_method_type,
-    resolve_python_dlpack_method_type, resolve_set_method_type, resolve_str_method_type,
-    resolve_tuple_method_type, str, try_lower_class_method_call, try_lower_super_method_call, tsc,
+    reject_no_method_args, resolve_bytes_method_type, resolve_class_method_on_type,
+    resolve_decimal_method_type, resolve_dict_method_type, resolve_enum_method_type,
+    resolve_fixed_width_method_type, resolve_list_method_type, resolve_newtype_method_type,
+    resolve_protocol_method_type, resolve_python_arrow_method_type,
+    resolve_python_buffer_method_type, resolve_python_dlpack_method_type, resolve_set_method_type,
+    resolve_str_method_type, resolve_tuple_method_type, str, try_lower_class_method_call,
+    try_lower_super_method_call, tsc,
 };
 use super::{method_call_arguments, python_raw_object_methods};
 use crate::lower::python_interop::callback_method_arg_ranges;
@@ -383,6 +384,13 @@ pub(in crate::lower) fn resolve_method_type(
 ) -> Option<Type> {
     let canonical_object_ty = canonicalize_class_surface_type(object_ty);
     let object_ty = &canonical_object_ty;
+    if method == "clone" && object_ty.supports_derived_clone() {
+        if !args.is_empty() {
+            reject_no_method_args(ctx, method, arg_ranges, method_range);
+            return None;
+        }
+        return Some(object_ty.clone());
+    }
     if let Some(method_type) =
         python_raw_object_methods::method_type(object_ty, method, method_range, ctx)
     {

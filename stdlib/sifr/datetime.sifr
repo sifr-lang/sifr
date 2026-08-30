@@ -23,7 +23,7 @@ def _days_in_month(year: int, month: int) -> int:
 
 def _substring(value: str, start: int, end: int) -> str:
     result: str = ""
-    i: int = start
+    i: int = start.clone()
     while i < end:
         ch: str | None = value[i]
         if ch is not None:
@@ -104,8 +104,14 @@ class timedelta:
     def total_microseconds(self) -> int:
         return (self._days * 86400 + self._seconds) * 1000000 + self._microseconds
 
-    def total_seconds_float(self) -> float:
-        return float(self.total_microseconds()) / 1000000.0
+    def total_seconds_float(self) -> Result[float, FloatOverflowError | FloatPrecisionLossError]:
+        try:
+            total: float = float(self.total_microseconds())
+            return total / 1000000.0
+        except FloatOverflowError as error:
+            raise FloatOverflowError(error.message)
+        except FloatPrecisionLossError as error:
+            raise FloatPrecisionLossError(error.message)
 
     def __add__(own self, other: timedelta) -> timedelta:
         total: int = self.total_microseconds() + other.total_microseconds()
@@ -220,9 +226,9 @@ class datetime:
             base = base + "." + _six_digits(self.microsecond)
         tz_offset_opt: int | None = self._tz_offset
         if tz_offset_opt is not None:
-            offset: int = tz_offset_opt
+            offset: int = tz_offset_opt.clone()
             sign: str = "+"
-            abs_offset: int = offset
+            abs_offset: int = offset.clone()
             if abs_offset < 0:
                 sign = "-"
                 abs_offset = -abs_offset
@@ -262,7 +268,7 @@ class datetime:
         naive_timestamp: int = days * 86400 + self.hour * 3600 + self.minute * 60 + self.second
         tz_offset_opt: int | None = self._tz_offset
         if tz_offset_opt is not None:
-            offset: int = tz_offset_opt
+            offset: int = tz_offset_opt.clone()
             return naive_timestamp - offset
         return naive_timestamp
 
@@ -351,11 +357,12 @@ class time:
 def _from_timestamp_with_tz(ts: float, tz: timezone | None) -> Result[datetime, ValueError]:
     try:
         whole_seconds: int = int(ts)
-        fractional: float = ts - float(whole_seconds)
+        whole_seconds_float: float = float(whole_seconds)
+        fractional: float = ts - whole_seconds_float
         microsecond: int = int(fractional * 1000000.0)
         if microsecond < 0:
             microsecond = -microsecond
-        adjusted_seconds: int = whole_seconds
+        adjusted_seconds: int = whole_seconds.clone()
         tz_offset_value: int = 0
         tz_has_offset: bool = False
         if tz is not None:
@@ -365,7 +372,8 @@ def _from_timestamp_with_tz(ts: float, tz: timezone | None) -> Result[datetime, 
             tz_offset_value = tz_offset
             tz_has_offset = True
 
-        rendered: str = datetime_from_timestamp(float(adjusted_seconds))
+        adjusted_seconds_float: float = float(adjusted_seconds)
+        rendered: str = datetime_from_timestamp(adjusted_seconds_float)
         parts: tuple[int, int, int, int, int, int] = _parse_datetime_iso(rendered)
         year_part: int | None = parts[0]
         month_part: int | None = parts[1]
@@ -396,15 +404,24 @@ def _from_timestamp_with_tz(ts: float, tz: timezone | None) -> Result[datetime, 
         return datetime(year, month, day, hour, minute, second, microsecond, None)
     except ValueError as e:
         raise ValueError(e.message)
+    except FloatOverflowError as e:
+        raise ValueError(e.message)
+    except FloatPrecisionLossError as e:
+        raise ValueError(e.message)
 
 
 def _from_timestamp_microseconds_with_tz(value: int, tz: timezone | None) -> Result[datetime, ValueError]:
     whole_seconds: int = value // 1000000
     microsecond: int = value % 1000000
     try:
-        result: datetime = _from_timestamp_with_tz(float(whole_seconds), tz)
+        whole_seconds_float: float = float(whole_seconds)
+        result: datetime = _from_timestamp_with_tz(whole_seconds_float, tz)
         return datetime(result.year, result.month, result.day, result.hour, result.minute, result.second, microsecond, result._tz_offset)
     except ValueError as e:
+        raise ValueError(e.message)
+    except FloatOverflowError as e:
+        raise ValueError(e.message)
+    except FloatPrecisionLossError as e:
         raise ValueError(e.message)
 
 
@@ -423,17 +440,17 @@ def now(tz: timezone | None = None) -> datetime:
         sc: int = 0
         for i, v in enumerate(parts):
             if i == 0:
-                yr = v
+                yr = v.clone()
             if i == 1:
-                mo = v
+                mo = v.clone()
             if i == 2:
-                dy = v
+                dy = v.clone()
             if i == 3:
-                hr = v
+                hr = v.clone()
             if i == 4:
-                mn = v
+                mn = v.clone()
             if i == 5:
-                sc = v
+                sc = v.clone()
         if tz is not None:
             try:
                 parsed_offset: int = _timezone_offset_from_text(str(tz))

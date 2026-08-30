@@ -1,10 +1,12 @@
 // src/main.rs
-fn pick_value(maybe: Option<i64>) -> i64 {
-    let Some(maybe) = maybe else {
+use ::sifr_runtime::SifrInt;
+
+fn pick_value(maybe: Option<SifrInt>) -> SifrInt {
+    let Some(maybe) = maybe.clone() else {
         if true {
-            return 0_i64;
+            return SifrInt::from_i64(0);
         } else {
-            return 1_i64;
+            return SifrInt::from_i64(1);
         }
     };
     maybe
@@ -12,6 +14,6 @@ fn pick_value(maybe: Option<i64>) -> i64 {
 
 fn main() {
     println!("early_return_paths cfg integration behavior demo:");
-    println!("{}", pick_value(Some(41_i64)));
+    println!("{}", pick_value(Some(SifrInt::from_i64(41))));
     println!("{}", pick_value(None));
 }

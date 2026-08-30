@@ -261,7 +261,7 @@ pub(super) fn test_check_entrypoint_single_file_reveal_type_is_structured_spanne
 }
 
 #[test]
-pub(super) fn test_check_entrypoint_single_file_arithmetic_warning_is_structured_spanned_warning() {
+pub(super) fn test_check_entrypoint_exact_integer_multiplication_has_no_overflow_warning() {
     let dir = mktemp_dir("check_entrypoint_single_arithmetic_warning");
     let main = dir.join("main.sifr");
     std::fs::write(
@@ -271,41 +271,8 @@ pub(super) fn test_check_entrypoint_single_file_arithmetic_warning_is_structured
         .expect("main file should be written");
 
     let diagnostics = check_entrypoint(&main, &mut DiskSourceProvider::new());
-    assert_eq!(diagnostics.len(), 1);
-    let diagnostic = &diagnostics[0];
-    assert_eq!(
-        diagnostic.code,
-        DiagnosticCode::TYPE_ARITHMETIC_OVERFLOW_RISK.code()
-    );
-    assert_eq!(diagnostic.severity, Severity::Warning);
-    assert_eq!(
-        diagnostic.message_template,
-        "integer {operation} may overflow at runtime"
-    );
-    assert_eq!(
-        diagnostic.args.get("operation"),
-        Some(&DiagnosticArg::String("multiplication".to_string()))
-    );
-
-    let primary_span = diagnostic
-        .spans
-        .iter()
-        .find(|span| span.is_primary)
-        .expect("arithmetic warning should carry a primary span");
-    assert_eq!(
-        primary_span.file.as_deref(),
-        Some(main.to_string_lossy().as_ref())
-    );
-    assert_eq!(primary_span.line, Some(2));
+    assert!(diagnostics.is_empty());
     assert_eq!(diagnostic_exit_code(&diagnostics), EXIT_SUCCESS);
-
-    let human = render_diagnostic_output(&diagnostics, DiagnosticFormat::Human)
-        .expect("human warning diagnostics should render");
-    assert!(
-        human.contains("warning[SIFR-TYPE-0901]: integer multiplication may overflow at runtime")
-    );
-    assert!(human.contains(&format!("  --> {}:2:", main.display())));
-    assert!(human.contains("^"));
 
     let _ = std::fs::remove_dir_all(dir);
 }

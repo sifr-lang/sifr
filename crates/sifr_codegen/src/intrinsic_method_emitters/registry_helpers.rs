@@ -88,7 +88,13 @@ pub(super) fn registry_defaultdict_alias_parts(ty: &Type) -> Option<(&str, &Type
 
 pub(super) fn registry_defaultdict_default_expr(alias_name: &str) -> RustExpr {
     match alias_name {
-        "__sifr_defaultdict_int" => RustExpr::Literal(crate::RustLiteral::Int(0)),
+        "__sifr_defaultdict_int" => RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec![
+                "SifrInt".to_string(),
+                "from_i64".to_string(),
+            ])),
+            args: vec![RustExpr::Literal(crate::RustLiteral::Int(0))],
+        },
         "__sifr_defaultdict_list" => RustExpr::FnCall {
             func: Box::new(RustExpr::Path(vec!["Vec".to_string(), "new".to_string()])),
             args: vec![],
@@ -410,7 +416,7 @@ pub(crate) fn registry_iterable_to_owned_iter_expr_from_lowered(
     }
 }
 
-pub(super) fn registry_box_iterator_expr(iter_expr: RustExpr) -> RustExpr {
+pub(crate) fn registry_box_iterator_expr(iter_expr: RustExpr) -> RustExpr {
     RustExpr::FnCall {
         func: Box::new(RustExpr::Path(vec!["Box".to_string(), "new".to_string()])),
         args: vec![iter_expr],

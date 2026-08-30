@@ -1,17 +1,19 @@
 // src/main.rs
-fn sum_iterable(values: &Vec<i64>) -> i64 {
-    let mut total: i64 = 0_i64;
-    for value in values.iter().copied() {
-        total += value;
+use ::sifr_runtime::SifrInt;
+
+fn sum_iterable(values: &Vec<SifrInt>) -> SifrInt {
+    let mut total: SifrInt = SifrInt::from_i64(0);
+    for value in values.iter().cloned() {
+        total = &total + &value;
     }
-    total
+    total.clone()
 }
 
-fn passthrough(it: Box<dyn Iterator<Item = i64>>) -> Box<dyn Iterator<Item = i64>> {
+fn passthrough(it: Box<dyn Iterator<Item = SifrInt>>) -> Box<dyn Iterator<Item = SifrInt>> {
     it
 }
 
 fn main() {
-    let nums: Vec<i64> = vec![2_i64, 4_i64, 6_i64];
-    println!("{}", sum_iterable(&(nums).iter().copied().collect::<Vec<_>>()));
+    let nums: Vec<SifrInt> = vec![SifrInt::from_i64(2), SifrInt::from_i64(4), SifrInt::from_i64(6)];
+    println!("{}", sum_iterable(&(nums).iter().cloned().collect::<Vec<_>>()));
 }

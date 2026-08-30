@@ -205,6 +205,12 @@ impl From<SifrInt> for SifrIntBridge {
     }
 }
 
+impl From<&SifrInt> for SifrIntBridge {
+    fn from(value: &SifrInt) -> Self {
+        Self(value.clone())
+    }
+}
+
 impl From<i64> for SifrIntBridge {
     fn from(value: i64) -> Self {
         Self(SifrInt::from(value))

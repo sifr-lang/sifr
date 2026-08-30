@@ -232,17 +232,9 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
         .generic_class_templates
         .extend(stdlib_code.generic_class_templates.clone());
 
-    // Pre-register stdlib constants and function signatures so user code can reference them correctly
+    // Pre-register imported constants and function signatures so user code can reference them correctly.
+    crate::project_constants::register_imported_constants(&mut emitter, module, stdlib_code);
     for import in &module.imports {
-        if let Some(const_map) = stdlib_code.module_constants.get(&import.module) {
-            for name in &import.names {
-                if let Some((ty, rust_name)) = const_map.get(name) {
-                    emitter
-                        .module_constants
-                        .insert(name.clone(), (ty.clone(), rust_name.clone()));
-                }
-            }
-        }
         if let Some(sig_map) = stdlib_code.func_signatures.get(&import.module) {
             for name in &import.names {
                 register_imported_stdlib_signature(&mut emitter, stdlib_code, import, name);
@@ -323,7 +315,6 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
             .cloned()
             .collect();
     }
-
     // Detect recursive (self-referential) class fields that need Box<T>
     emitter.detect_recursive_fields(module);
 
@@ -333,6 +324,8 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
     // Second pass: emit the actual code
     emitter.emit_named_module(module, false, false, module_name);
     emitter.emit_imported_stdlib_structural_impls(module, stdlib_code);
+    // Expression lowering can introduce canonical intermediate error unions.
+    emitter.generate_enum_definitions();
 
     // Build stdlib preamble first so we can check for error type references
     let mut stdlib_preamble = String::new();
@@ -348,6 +341,13 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
         infra_skip_types.insert(error_name.to_string());
     }
     infra_skip_types.insert("__io_err".to_string());
+    infra_skip_types.extend(
+        emitter
+            .union_enums
+            .keys()
+            .filter(|name| !emitter.suppressed_union_enum_definitions.contains(*name))
+            .cloned(),
+    );
     let mut all_needed: Vec<String> = Vec::new();
     let mut transitive_dependency_modules: HashSet<String> = HashSet::new();
     let mut stdlib_needs_file_handles = false;
@@ -378,12 +378,24 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
                 let mut filtered =
                     if let Some(imported_names) = emitter.imported_stdlib_names.get(module_name) {
                         let pure_sifr_imports = imported_names.clone();
+                        let mut expanded_imports = pure_sifr_imports.clone();
+                        expanded_imports.extend(
+                            emitter
+                                .suppressed_union_enum_definitions
+                                .iter()
+                                .filter(|name| {
+                                    crate::stdlib_filter::rust_source_defines_item_name(
+                                        &rust_source.rust,
+                                        name,
+                                    )
+                                })
+                                .cloned(),
+                        );
                         if transitive_dependency_modules.contains(module_name) {
                             rust_source.rust.clone()
-                        } else if pure_sifr_imports.is_empty() {
+                        } else if expanded_imports.is_empty() {
                             String::new()
                         } else {
-                            let mut expanded_imports = pure_sifr_imports.clone();
                             if let Some(const_map) = stdlib_code.module_constants.get(module_name) {
                                 for name in &pure_sifr_imports {
                                     if const_map.contains_key(name) {
@@ -493,6 +505,13 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
         }
         let is_referenced = referenced_error_classes.contains(error_name);
         if is_referenced && !user_defined_error_classes.contains(error_name) {
+            let exact_zero = || RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    "SifrInt".to_string(),
+                    "from_i64".to_string(),
+                ])),
+                args: vec![RustExpr::Literal(RustLiteral::Int(0))],
+            };
             let (extra_fields, defaults) =
                 if error_name == "JSONDecodeError" || error_name == "TOMLDecodeError" {
                     (
@@ -501,8 +520,8 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
                             ("column".to_string(), sifr_type_to_rust_type(&Type::Int)),
                         ],
                         vec![
-                            ("line".to_string(), RustExpr::Literal(RustLiteral::Int(0))),
-                            ("column".to_string(), RustExpr::Literal(RustLiteral::Int(0))),
+                            ("line".to_string(), exact_zero()),
+                            ("column".to_string(), exact_zero()),
                         ],
                     )
                 } else if error_name == "JsonIntegerRangeError" {
@@ -534,10 +553,10 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
                             ),
                         ],
                     )
-                } else if error_name == "JsonLimitError" {
+                } else if error_name == "JsonLimitError" || error_name == "ArithmeticLimitError" {
                     (
                         vec![("limit".to_string(), sifr_type_to_rust_type(&Type::Int))],
-                        vec![("limit".to_string(), RustExpr::Literal(RustLiteral::Int(0)))],
+                        vec![("limit".to_string(), exact_zero())],
                     )
                 } else if error_name == "RegexError" {
                     (
@@ -673,6 +692,8 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
         || stdlib_import_needs.runtime.numeric.needs_bigdecimal;
     let needs_sifr_int =
         body_import_needs.runtime.needs_sifr_int || stdlib_import_needs.runtime.needs_sifr_int;
+    let needs_sifr_range =
+        body_import_needs.runtime.needs_sifr_range || stdlib_import_needs.runtime.needs_sifr_range;
     let needs_sifr_runtime = body_import_needs.runtime.needs_sifr_runtime
         || stdlib_import_needs.runtime.needs_sifr_runtime;
     let needs_mutex = needs_file_handles
@@ -724,6 +745,13 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
             String::new(),
             "sifr_runtime".to_string(),
             "SifrInt".to_string(),
+        ]));
+    }
+    if needs_sifr_range {
+        import_items.push(RustItem::Use(vec![
+            String::new(),
+            "sifr_runtime".to_string(),
+            "SifrRange".to_string(),
         ]));
     }
     if needs_mutex {

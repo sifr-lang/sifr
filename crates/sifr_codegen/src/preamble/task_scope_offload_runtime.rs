@@ -254,7 +254,7 @@ fn scoped_process_body(
             let _ = __stop_sender.send(());
         });
         self.children.push(__SifrScopeChild { handle: __observer, cancellation: None, observed: __child_observed, start_on_join: Some(__start_sender), stop_on_fail_fast: Some(__stop_on_fail_fast) });
-        return Ok(ProcessHandle::new(__handle));",
+        return Ok(ProcessHandle::new(::sifr_runtime::SifrInt::from(__handle)));",
             &replacements,
         ),
     )]

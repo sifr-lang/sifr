@@ -10,12 +10,28 @@ def _sum(data: list[float]) -> float:
         total = total + val
     return total
 
+def _float_int(value: int) -> Result[float, StatisticsError]:
+    try:
+        converted: float = float(value)
+        return converted
+    except FloatOverflowError as error:
+        raise StatisticsError(error.message)
+    except FloatPrecisionLossError as error:
+        raise StatisticsError(error.message)
+
+def _divide_by_int(numerator: float, denominator: int) -> Result[float, StatisticsError]:
+    try:
+        divisor: float = _float_int(denominator)
+        return numerator / divisor
+    except StatisticsError as error:
+        raise StatisticsError(error.message)
+
 def mean(data: list[float]) -> Result[float, StatisticsError]:
     count: int = len(data)
     if count == 0:
         raise StatisticsError("mean requires at least one data point")
     total: float = _sum(data)
-    return total / float(count)
+    return _divide_by_int(total, count)
 
 def median(data: list[float]) -> Result[float, StatisticsError]:
     n: int = len(data)
@@ -40,46 +56,64 @@ def variance(data: list[float]) -> Result[float, StatisticsError]:
     n: int = len(data)
     if n < 2:
         raise StatisticsError("variance requires at least two data points")
-    avg: float = _sum(data) / float(n)
+    try:
+        avg: float = _divide_by_int(_sum(data), n)
+    except StatisticsError as error:
+        raise StatisticsError(error.message)
     total: float = 0.0
     for val in data:
         diff: float = val - avg
         total = total + diff * diff
-    return total / float(n - 1)
+    return _divide_by_int(total, n - 1)
 
 def pvariance(data: list[float]) -> Result[float, StatisticsError]:
     n: int = len(data)
     if n == 0:
         raise StatisticsError("pvariance requires at least one data point")
-    avg: float = _sum(data) / float(n)
+    try:
+        avg: float = _divide_by_int(_sum(data), n)
+    except StatisticsError as error:
+        raise StatisticsError(error.message)
     total: float = 0.0
     for val in data:
         diff: float = val - avg
         total = total + diff * diff
-    return total / float(n)
+    return _divide_by_int(total, n)
 
 def stdev(data: list[float]) -> Result[float, StatisticsError]:
     n: int = len(data)
     if n < 2:
         raise StatisticsError("stdev requires at least two data points")
-    avg: float = _sum(data) / float(n)
+    try:
+        avg: float = _divide_by_int(_sum(data), n)
+    except StatisticsError as error:
+        raise StatisticsError(error.message)
     total: float = 0.0
     for val in data:
         diff: float = val - avg
         total = total + diff * diff
-    v: float = total / float(n - 1)
+    try:
+        v: float = _divide_by_int(total, n - 1)
+    except StatisticsError as error:
+        raise StatisticsError(error.message)
     return sqrt(v)
 
 def pstdev(data: list[float]) -> Result[float, StatisticsError]:
     n: int = len(data)
     if n == 0:
         raise StatisticsError("pstdev requires at least one data point")
-    avg: float = _sum(data) / float(n)
+    try:
+        avg: float = _divide_by_int(_sum(data), n)
+    except StatisticsError as error:
+        raise StatisticsError(error.message)
     total: float = 0.0
     for val in data:
         diff: float = val - avg
         total = total + diff * diff
-    v: float = total / float(n)
+    try:
+        v: float = _divide_by_int(total, n)
+    except StatisticsError as error:
+        raise StatisticsError(error.message)
     return sqrt(v)
 
 def harmonic_mean(data: list[float]) -> Result[float, StatisticsError]:
@@ -91,7 +125,11 @@ def harmonic_mean(data: list[float]) -> Result[float, StatisticsError]:
         if val <= 0.0:
             raise StatisticsError("harmonic_mean requires positive values")
         total = total + 1.0 / val
-    return float(n) / total
+    try:
+        numerator: float = _float_int(n)
+        return numerator / total
+    except StatisticsError as error:
+        raise StatisticsError(error.message)
 
 def geometric_mean(data: list[float]) -> Result[float, StatisticsError]:
     n: int = len(data)
@@ -102,7 +140,11 @@ def geometric_mean(data: list[float]) -> Result[float, StatisticsError]:
         if val <= 0.0:
             raise StatisticsError("geometric_mean requires positive values")
         log_sum = log_sum + log(val)
-    return exp(log_sum / float(n))
+    try:
+        mean_log: float = _divide_by_int(log_sum, n)
+        return exp(mean_log)
+    except StatisticsError as error:
+        raise StatisticsError(error.message)
 
 def median_low(data: list[float]) -> Result[float, StatisticsError]:
     n: int = len(data)
@@ -159,7 +201,13 @@ def median_grouped(data: list[float], interval: float = 1.0) -> Result[float, St
         raise StatisticsError("median_grouped: grouped frequency is zero")
 
     lower: float = midpoint - interval / 2.0
-    return lower + interval * ((float(n) / 2.0 - float(cf)) / float(f))
+    try:
+        n_float: float = _float_int(n)
+        cf_float: float = _float_int(cf)
+        f_float: float = _float_int(f)
+        return lower + interval * ((n_float / 2.0 - cf_float) / f_float)
+    except StatisticsError as error:
+        raise StatisticsError(error.message)
 
 def mode(data: list[int]) -> Result[int, StatisticsError]:
     if len(data) == 0:
@@ -232,9 +280,24 @@ def quantiles(data: list[float], n: int) -> Result[list[float], StatisticsError]
     result: list[float] = []
     i: int = 1
     while i < n:
-        idx_f: float = float(i) * float(m) / float(n)
-        idx: int = int(idx_f)
-        frac: float = idx_f - float(idx)
+        try:
+            i_float: float = _float_int(i)
+            m_float: float = _float_int(m)
+            n_float: float = _float_int(n)
+        except StatisticsError as error:
+            raise StatisticsError(error.message)
+        idx_f: float = i_float * m_float / n_float
+        idx: int = 0
+        try:
+            converted_idx: int = int(idx_f)
+            idx = converted_idx
+        except ValueError as error:
+            raise StatisticsError(error.message)
+        try:
+            idx_float: float = _float_int(idx)
+        except StatisticsError as error:
+            raise StatisticsError(error.message)
+        frac: float = idx_f - idx_float
         if idx >= m:
             idx = m - 1
         if idx < 0:
@@ -259,8 +322,11 @@ def covariance(x: list[float], y: list[float]) -> Result[float, StatisticsError]
         raise StatisticsError("covariance requires at least two data points")
     if len(y) != n:
         raise StatisticsError("covariance: x and y must have the same length")
-    mx: float = _sum(x) / float(n)
-    my: float = _sum(y) / float(n)
+    try:
+        mx: float = _divide_by_int(_sum(x), n)
+        my: float = _divide_by_int(_sum(y), n)
+    except StatisticsError as error:
+        raise StatisticsError(error.message)
     total: float = 0.0
     i: int = 0
     while i < n:
@@ -270,7 +336,7 @@ def covariance(x: list[float], y: list[float]) -> Result[float, StatisticsError]
             if yi is not None:
                 total = total + (xi - mx) * (yi - my)
         i = i + 1
-    return total / float(n - 1)
+    return _divide_by_int(total, n - 1)
 
 def correlation(x: list[float], y: list[float]) -> Result[float, StatisticsError]:
     n: int = len(x)
@@ -278,8 +344,11 @@ def correlation(x: list[float], y: list[float]) -> Result[float, StatisticsError
         raise StatisticsError("correlation requires at least two data points")
     if len(y) != n:
         raise StatisticsError("correlation: x and y must have the same length")
-    mx: float = _sum(x) / float(n)
-    my: float = _sum(y) / float(n)
+    try:
+        mx: float = _divide_by_int(_sum(x), n)
+        my: float = _divide_by_int(_sum(y), n)
+    except StatisticsError as error:
+        raise StatisticsError(error.message)
     cov_num: float = 0.0
     sx_num: float = 0.0
     sy_num: float = 0.0
@@ -293,13 +362,22 @@ def correlation(x: list[float], y: list[float]) -> Result[float, StatisticsError
                 sx_num = sx_num + (xi - mx) * (xi - mx)
                 sy_num = sy_num + (yi - my) * (yi - my)
         i = i + 1
-    sx: float = sqrt(sx_num / float(n - 1))
-    sy: float = sqrt(sy_num / float(n - 1))
+    try:
+        sx_variance: float = _divide_by_int(sx_num, n - 1)
+        sy_variance: float = _divide_by_int(sy_num, n - 1)
+        sx: float = sqrt(sx_variance)
+        sy: float = sqrt(sy_variance)
+    except StatisticsError as error:
+        raise StatisticsError(error.message)
     if sx == 0.0:
         raise StatisticsError("correlation: x has zero variance")
     if sy == 0.0:
         raise StatisticsError("correlation: y has zero variance")
-    return (cov_num / float(n - 1)) / (sx * sy)
+    try:
+        covariance_value: float = _divide_by_int(cov_num, n - 1)
+        return covariance_value / (sx * sy)
+    except StatisticsError as error:
+        raise StatisticsError(error.message)
 
 def linear_regression(x: list[float], y: list[float]) -> Result[list[float], StatisticsError]:
     # Returns [slope, intercept]
@@ -308,8 +386,11 @@ def linear_regression(x: list[float], y: list[float]) -> Result[list[float], Sta
         raise StatisticsError("linear_regression requires at least two data points")
     if len(y) != n:
         raise StatisticsError("linear_regression: x and y must have the same length")
-    mx: float = _sum(x) / float(n)
-    my: float = _sum(y) / float(n)
+    try:
+        mx: float = _divide_by_int(_sum(x), n)
+        my: float = _divide_by_int(_sum(y), n)
+    except StatisticsError as error:
+        raise StatisticsError(error.message)
     num: float = 0.0
     den: float = 0.0
     i: int = 0

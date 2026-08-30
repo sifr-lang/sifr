@@ -1,14 +1,16 @@
 // src/main.rs
 use ::std::collections::HashMap;
 
+use ::sifr_runtime::SifrInt;
+
 #[derive(Debug, Clone, PartialEq)]
 struct Payload {
-    values: Vec<i64>,
-    counts: HashMap<String, i64>,
+    values: Vec<SifrInt>,
+    counts: HashMap<String, SifrInt>,
 }
 
 impl Payload {
-    fn new(values: Vec<i64>, counts: HashMap<String, i64>) -> Self {
+    fn new(values: Vec<SifrInt>, counts: HashMap<String, SifrInt>) -> Self {
         Self { values, counts }
     }
 }
@@ -16,15 +18,15 @@ impl Payload {
 impl Payload {
 }
 
-fn append_default(mut items: Vec<i64>) -> Vec<i64> {
-    items.push(9_i64);
+fn append_default(mut items: Vec<SifrInt>) -> Vec<SifrInt> {
+    items.push(SifrInt::from_i64(9));
     items
 }
 
 fn main() {
-    let first: Vec<i64> = append_default(vec![1_i64]);
-    let second: Vec<i64> = append_default(vec![1_i64]);
-    let payload: Payload = Payload::new(vec![1_i64, 2_i64], HashMap::from([("ok".to_string(), 1_i64)]));
+    let first: Vec<SifrInt> = append_default(vec![SifrInt::from_i64(1)]);
+    let second: Vec<SifrInt> = append_default(vec![SifrInt::from_i64(1)]);
+    let payload: Payload = Payload::new(vec![SifrInt::from_i64(1), SifrInt::from_i64(2)], HashMap::from([("ok".to_string(), SifrInt::from_i64(1))]));
     println!("default_values defaults and panic-to-diagnostic conversion demo:");
     println!("{:?}", first);
     println!("{:?}", second);

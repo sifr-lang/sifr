@@ -411,7 +411,7 @@ class StringIO:
         start: int = self._cursor
         end: int = len(self._buffer)
         if size is not None:
-            maybe_size: int = size
+            maybe_size: int = size.clone()
             if maybe_size >= 0:
                 requested: int = start + maybe_size
                 if requested < end:
@@ -499,7 +499,7 @@ class BytesIO:
         start: int = self._cursor
         end: int = len(self._buffer)
         if size is not None:
-            maybe_size: int = size
+            maybe_size: int = size.clone()
             if maybe_size >= 0:
                 requested: int = start + maybe_size
                 if requested < end:
