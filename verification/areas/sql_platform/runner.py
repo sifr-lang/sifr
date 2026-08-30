@@ -121,6 +121,21 @@ COMMANDS = {
         "cargo", "test", "--locked", "-p", "sifr_frontend", "-p", "sifr_analysis",
         "-p", "sifr_lsp",
     ],
+    "sql-host-tool-qualification": [
+        sys.executable,
+        str(AREA_ROOT / "tools" / "check_host_tools.py"),
+    ],
+    "sql-host-tool-mutations": [
+        sys.executable,
+        str(AREA_ROOT / "tools" / "check_host_tools.py"),
+        "--self-test",
+    ],
+    "sql-host-tool-package-tests": [
+        "cargo", "test", "--locked", "-p", "sifr_package", "host_tool",
+    ],
+    "sql-host-tool-cli-tests": [
+        "cargo", "test", "--locked", "-p", "sifr", "--test", "host_tool_cli",
+    ],
     "sql-query-signature-and-fragment-semantics": [
         "cargo", "test", "--locked", "-p", "sifr_sql_contract", "--test",
         "semantic_completion",

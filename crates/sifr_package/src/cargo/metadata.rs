@@ -55,6 +55,7 @@ pub struct CargoMetadata {
     pub workspace_default_members: BTreeSet<CargoPackageId>,
     pub target_directory: PathBuf,
     pub workspace_root: PathBuf,
+    pub workspace_sifr: CargoWorkspaceSifrMetadata,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -65,6 +66,12 @@ pub struct NormalizedCargoMetadata {
     pub workspace_default_members: BTreeSet<CargoPackageId>,
     pub target_directory: PathBuf,
     pub workspace_root: PathBuf,
+    pub workspace_sifr: CargoWorkspaceSifrMetadata,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct CargoWorkspaceSifrMetadata {
+    pub tools_package: Option<String>,
 }
 
 impl CargoMetadata {
@@ -112,6 +119,7 @@ impl CargoMetadata {
             workspace_default_members: self.workspace_default_members,
             target_directory: self.target_directory,
             workspace_root: self.workspace_root,
+            workspace_sifr: self.workspace_sifr,
         }
     }
 }
@@ -132,6 +140,8 @@ struct RawCargoMetadata {
     workspace_default_members: Vec<String>,
     target_directory: PathBuf,
     workspace_root: PathBuf,
+    #[serde(default, rename = "metadata")]
+    workspace_metadata: Value,
 }
 
 #[derive(Debug, Deserialize)]
@@ -231,8 +241,44 @@ impl TryFrom<RawCargoMetadata> for CargoMetadata {
             workspace_default_members,
             target_directory: raw.target_directory,
             workspace_root: raw.workspace_root,
+            workspace_sifr: parse_workspace_sifr_metadata(&raw.workspace_metadata)?,
         })
     }
+}
+
+fn parse_workspace_sifr_metadata(
+    metadata: &Value,
+) -> Result<CargoWorkspaceSifrMetadata, PackageDiagnostic> {
+    let Some(sifr) = metadata.get("sifr") else {
+        return Ok(CargoWorkspaceSifrMetadata::default());
+    };
+    let Some(table) = sifr.as_object() else {
+        return Err(PackageDiagnostic::cargo_metadata_parse(
+            "[workspace.metadata.sifr] must be a table",
+        ));
+    };
+    for key in table.keys() {
+        if key != "tools-package" {
+            return Err(PackageDiagnostic::cargo_metadata_parse(&format!(
+                "unsupported [workspace.metadata.sifr] key '{key}'"
+            )));
+        }
+    }
+    let tools_package = table
+        .get("tools-package")
+        .map(|value| {
+            value
+                .as_str()
+                .filter(|value| !value.is_empty())
+                .map(str::to_string)
+                .ok_or_else(|| {
+                    PackageDiagnostic::cargo_metadata_parse(
+                        "[workspace.metadata.sifr].tools-package must be a non-empty string",
+                    )
+                })
+        })
+        .transpose()?;
+    Ok(CargoWorkspaceSifrMetadata { tools_package })
 }
 
 impl TryFrom<RawCargoPackage> for CargoPackage {

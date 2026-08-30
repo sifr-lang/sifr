@@ -291,7 +291,7 @@ can use these contracts.
 | 8 | completed | PostgreSQL semantic completion | Advanced PostgreSQL constructs, fragment scope changes, cardinality proofs, custom codecs, and exported-query stability rules are complete. |
 | 9 | completed | PostgreSQL runtime | Verified pools, session contracts, transactions, streaming, automatic statement caching, explicit fetch methods, bounded cleanup, tests, and panic-safe protocol handling are complete. |
 | 10 | completed | Incremental compiler and editor experience | Fine-grained caching, invalidation, virtual SQL documents, source maps, completion, navigation, rename, formatting, and quick fixes are complete. |
-| 11 | pending | Host tool graph and command runner | Cargo-locked host-only tool packages execute direct command namespaces without entering application code generation. |
+| 11 | in review | Host tool graph and command runner | Cargo-locked host-only tool packages execute direct command namespaces without entering application code generation. |
 | 12 | pending | Schema lifecycle tools | Pull, validate, and build commands produce deterministic snapshots, fingerprints, manifests, modules, semantic diffs, and affected-query reports. |
 | 13 | pending | Migration compiler and engine | Typed migration DAGs, intermediate schemas, DDL reflection, data steps, assertions, offline validation, recovery, and explicit rollback are complete. |
 | 14 | pending | PostgreSQL migration qualification | PostgreSQL DDL, locks, transactional limits, imports, baselines, recovery, and supported-version execution pass full migration qualification. |
@@ -790,25 +790,25 @@ Owned scope:
 
 Acceptance criteria:
 
-- [ ] SQL profile preparation failures preserve all non-SQL analysis, emit an
+- [x] SQL profile preparation failures preserve all non-SQL analysis, emit an
   explicit SQL initialization diagnostic, and have a live package-host
   regression test.
-- [ ] Cargo resolves a dedicated tools workspace member separately from
+- [x] Cargo resolves a dedicated tools workspace member separately from
   application and target packages.
-- [ ] `Cargo.lock`, Cargo metadata, and the tools member configuration record
+- [x] `Cargo.lock`, Cargo metadata, and the tools member configuration record
   exact tool packages, selected entry points, hashes, and capabilities.
-- [ ] `sifr <tool-namespace>` executes only the selected package entry point.
-- [ ] Built-in namespaces are reserved. Duplicate namespaces are hard errors.
-- [ ] `sifr sql test provision --profile <name>` invokes the selected provider
+- [x] `sifr <tool-namespace>` executes only the selected package entry point.
+- [x] Built-in namespaces are reserved. Duplicate namespaces are hard errors.
+- [x] `sifr sql test provision --profile <name>` invokes the selected provider
   tool, provisions its canonical schema fingerprint, and returns the common
   structured connection manifest.
-- [ ] File, network, environment, credential-helper, and subprocess capabilities
+- [x] File, network, environment, credential-helper, and subprocess capabilities
   require explicit grants.
-- [ ] Tool code and dependencies never enter target HIR, generated Rust, linker
+- [x] Tool code and dependencies never enter target HIR, generated Rust, linker
   input, sysroot selection, or application artifacts.
-- [ ] Cross-compilation uses host tools and target application dependencies without
+- [x] Cross-compilation uses host tools and target application dependencies without
   graph leakage.
-- [ ] Unknown tools, undeclared capabilities, hash drift, and target contamination
+- [x] Unknown tools, undeclared capabilities, hash drift, and target contamination
   fail closed.
 
 Focused validation:
@@ -1280,7 +1280,7 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 | 8 | completed | [#3604](https://github.com/sifr-lang/sifr/pull/3604) | `e18e0a92d5` | SQL 4/4; PostgreSQL 13-18 native and component suites; contract, build-output, strict Clippy, and guards pass | Opus round 2 closed the original nested-star blocker on `94fbb6e0f`; one new semantic-flag mechanism is deferred | PostgreSQL advanced semantics, stable projections, codecs, fragments, and query-signature artifacts |
 | 9 | completed | [#3611](https://github.com/sifr-lang/sifr/pull/3611) | `9dc0e55e09` | common and provider runtime tests; SQL compiler and runtime qualification; strict Clippy and guards; exact PostgreSQL 13-18 live matrix | Opus remediation `SATISFIED` on `258f13a9a`; one new malformed-BOOL classification defect is deferred | Verified PostgreSQL runtime, sessions, transactions, streaming, caching, cleanup, and resource bounds |
 | 10 | completed | [#3617](https://github.com/sifr-lang/sifr/pull/3617) | `35926da677` | incremental-editor 2/2; SQL mutation 9/9; frontend 134; analysis 51; LSP 81; PostgreSQL component 14/14; strict Clippy and guards pass | Opus round 2 closed all four original blockers on `08e864bf6`; one new failure-isolation defect is deferred | Incremental compiler and editor experience |
-| 11 | pending | — | — | — | — | Host tool graph and command runner |
+| 11 | in review | — | — | host-tools 3/3; package 155; common contracts 9; analysis 52; strict Clippy and guards pass | pending exact-SHA review | Host tool graph, direct command runner, structured provisioning, and inherited M10 failure isolation |
 | 12 | pending | — | — | — | — | Schema lifecycle tools |
 | 13 | pending | — | — | — | — | Migration compiler and engine |
 | 14 | pending | — | — | — | — | PostgreSQL migration qualification |

@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "graph_owner": "sifr_package",
+  "dispatch_owner": "sifr",
+  "workspace_metadata_key": "workspace.metadata.sifr.tools-package",
+  "lock_authority": "Cargo.lock",
+  "metadata_authority": "cargo metadata --frozen",
+  "execution": {
+    "build_target": "host",
+    "target_argument_allowed": true,
+    "target_source": "sifr-build-target",
+    "direct_namespace": true,
+    "application_graph_separate": true
+  },
+  "entrypoint_identity": [
+    "cargo-package-id",
+    "package-name",
+    "package-version",
+    "package-source",
+    "package-checksum",
+    "binary-entrypoint",
+    "capabilities",
+    "tools-manifest-fingerprint",
+    "lockfile-fingerprint"
+  ],
+  "capabilities": [
+    "credentials",
+    "environment",
+    "network",
+    "project-read",
+    "project-write",
+    "subprocess"
+  ],
+  "negative_contracts": [
+    "unknown-namespace",
+    "reserved-namespace",
+    "duplicate-namespace",
+    "unknown-capability",
+    "missing-entrypoint",
+    "non-direct-tool-package",
+    "lockfile-hash-drift",
+    "target-graph-contamination"
+  ],
+  "sql_test_provision": {
+    "command": "sifr sql test provision --profile <name>",
+    "manifest_version": 1,
+    "inline_credentials": false,
+    "cleanup_identity_required": true
+  },
+  "inherited_failure_isolation": {
+    "sql_initialization_is_fatal": false,
+    "diagnostic_is_required": true,
+    "non_sql_analysis_is_preserved": true
+  }
+}

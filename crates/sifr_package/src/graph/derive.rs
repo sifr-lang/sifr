@@ -56,6 +56,7 @@ pub enum PackageClassification {
     SifrSource(SifrPackageId),
     RustBackedSifr(SifrPackageId),
     BackendRust,
+    HostTools,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -82,6 +83,10 @@ pub fn derive_package_graph_from_normalized(
     let mut classifications = BTreeMap::new();
 
     for package in metadata.packages.values() {
+        if metadata.workspace_sifr.tools_package.as_deref() == Some(package.name.as_str()) {
+            classifications.insert(package.id.clone(), PackageClassification::HostTools);
+            continue;
+        }
         let Some(sifr_metadata) = &package.sifr_metadata else {
             classifications.insert(package.id.clone(), PackageClassification::BackendRust);
             continue;
@@ -461,6 +466,6 @@ fn classification_package_id(
             PackageClassification::SifrSource(package_id)
             | PackageClassification::RustBackedSifr(package_id),
         ) => Some(package_id.clone()),
-        Some(PackageClassification::BackendRust) | None => None,
+        Some(PackageClassification::BackendRust | PackageClassification::HostTools) | None => None,
     }
 }

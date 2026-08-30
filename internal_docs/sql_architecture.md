@@ -2023,7 +2023,9 @@ capabilities = ["network", "credentials", "project-write"]
 ```
 
 The tools member is not an application dependency. Sifr resolves and builds it for
-the host triple through the workspace `Cargo.lock`.
+the explicit Sifr build target through the workspace `Cargo.lock`. This target is
+the host that runs Sifr. A workspace cross-compilation default cannot redirect
+the tool build to the application target.
 
 Application builds select only the target application package. Tool code does not
 enter target HIR, generated Rust, linker input, or application artifacts.
@@ -2037,6 +2039,10 @@ Duplicate tool namespaces are hard errors.
 
 Package scripts remain available through `sifr run --script`. A script is not a
 tool namespace and cannot receive tool capabilities implicitly.
+
+[`sql_host_tools.md`](./sql_host_tools.md) records the implemented workspace
+metadata, locked identities, direct dispatch, capability grants, graph-isolation
+proof, cross-compilation behavior, and test connection manifest.
 
 ## Schema tools
 

@@ -836,3 +836,50 @@ fn provider_analysis_exposes_only_validated_common_semantics() {
     };
     assert!(nullable_custom.validate(&custom_registry).is_err());
 }
+
+#[test]
+fn test_connection_manifest_is_structured_and_never_contains_inline_credentials() {
+    let manifest = sifr_sql_contract::TestConnectionManifest {
+        schema_version: sifr_sql_contract::TEST_CONNECTION_MANIFEST_VERSION,
+        provider: "postgresql".to_string(),
+        profile: "app".to_string(),
+        schema_fingerprint: "sha256:test".to_string(),
+        connection: sifr_sql_contract::ProvisionedConnection::Tcp {
+            host: "127.0.0.1".to_string(),
+            port: 5432,
+            database: "test".to_string(),
+            user: "tester".to_string(),
+            credential: sifr_sql_contract::ProvisionedCredential::Environment {
+                variable: "SIFR_TEST_PASSWORD".to_string(),
+            },
+            tls: false,
+        },
+        cleanup: sifr_sql_contract::ProvisionedCleanup {
+            tool_namespace: "sql".to_string(),
+            resource_id: "fixture-1".to_string(),
+        },
+        expires_unix_seconds: None,
+    };
+    let encoded = manifest
+        .to_canonical_json()
+        .expect("manifest should encode");
+    assert!(!encoded.contains("password-value"));
+    assert_eq!(
+        sifr_sql_contract::TestConnectionManifest::from_json(&encoded)
+            .expect("manifest should decode"),
+        manifest
+    );
+
+    let mut invalid = manifest;
+    invalid.connection = sifr_sql_contract::ProvisionedConnection::Tcp {
+        host: "127.0.0.1".to_string(),
+        port: 5432,
+        database: "test".to_string(),
+        user: "tester".to_string(),
+        credential: sifr_sql_contract::ProvisionedCredential::Environment {
+            variable: "not-safe".to_string(),
+        },
+        tls: false,
+    };
+    assert!(invalid.validate().is_err());
+}

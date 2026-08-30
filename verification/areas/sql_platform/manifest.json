@@ -211,6 +211,33 @@
       ]
     },
     {
+      "name": "host-tools",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "sql-host-tool-qualification",
+          "entry": "verification/areas/sql_platform/data/host_tool_qualification.json",
+          "command": "sql-host-tool-qualification",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-host-tool-package-tests",
+          "entry": "crates/sifr_package/src/host_tools_tests.rs",
+          "command": "sql-host-tool-package-tests",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-host-tool-cli-tests",
+          "entry": "crates/sifr/tests/host_tool_cli.rs",
+          "command": "sql-host-tool-cli-tests",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
       "name": "mutation",
       "kind": "adapter",
       "cases": [
@@ -274,6 +301,13 @@
           "id": "sql-incremental-editor-mutations",
           "entry": "verification/areas/sql_platform/data/incremental_editor_qualification.json",
           "command": "sql-incremental-editor-mutations",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-host-tool-mutations",
+          "entry": "verification/areas/sql_platform/data/host_tool_qualification.json",
+          "command": "sql-host-tool-mutations",
           "expect_exit_code": 0,
           "diagnostic_formats": []
         }

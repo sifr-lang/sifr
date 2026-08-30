@@ -291,6 +291,7 @@ fn graph_and_metadata_without_rust_violation() -> (SifrPackageGraph, NormalizedC
         workspace_default_members: BTreeSet::new(),
         target_directory: PathBuf::from("/ws/target"),
         workspace_root: PathBuf::from("/ws"),
+        workspace_sifr: crate::CargoWorkspaceSifrMetadata::default(),
     };
     (graph, metadata)
 }

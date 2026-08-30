@@ -23,6 +23,7 @@ sifr_package = { workspace = true }
 sifr_python_ast = { workspace = true }
 sifr_sysroot = { workspace = true }
 sifr_syntax = { workspace = true }
+sifr_sql_contract = { workspace = true }
 clap = { version = "4.6.6", features = ["derive"] }
 serde = { workspace = true }
 serde_json = { workspace = true }

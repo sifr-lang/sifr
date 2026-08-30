@@ -25,9 +25,22 @@ struct PreparedSqlProfile {
 pub struct PreparedSqlProfiles {
     profiles: BTreeMap<String, PreparedSqlProfile>,
     registry: ProfileModuleRegistry,
+    initialization_diagnostics: Vec<RenderedDiagnostic>,
 }
 
 impl PreparedSqlProfiles {
+    #[must_use]
+    pub fn from_initialization_failure(diagnostics: Vec<RenderedDiagnostic>) -> Self {
+        Self {
+            initialization_diagnostics: diagnostics,
+            ..Self::default()
+        }
+    }
+
+    #[must_use]
+    pub fn initialization_diagnostics(&self) -> &[RenderedDiagnostic] {
+        &self.initialization_diagnostics
+    }
     #[must_use]
     #[cfg(test)]
     pub(super) fn module(
@@ -243,7 +256,11 @@ pub fn prepare_sql_profiles(
             vec![diagnostic_with_code(error.message, code)]
         })?;
     }
-    Ok(PreparedSqlProfiles { profiles, registry })
+    Ok(PreparedSqlProfiles {
+        profiles,
+        registry,
+        initialization_diagnostics: Vec::new(),
+    })
 }
 
 fn processor_kind(identity: &str) -> Option<&str> {

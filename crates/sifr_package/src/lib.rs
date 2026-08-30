@@ -3,6 +3,7 @@ mod compiler_components;
 pub mod diag;
 mod digest;
 pub mod graph;
+mod host_tools;
 pub mod imports;
 pub mod manifest;
 pub mod ops;
@@ -30,7 +31,7 @@ pub use crate::cargo::load::{
 pub use crate::cargo::lock_modes::{CargoLockMode, validate_offline_source_availability};
 pub use crate::cargo::metadata::{
     CargoDependency, CargoMetadata, CargoPackage, CargoPackageId, CargoResolveEdge, CargoTarget,
-    NormalizedCargoMetadata, parse_metadata_json,
+    CargoWorkspaceSifrMetadata, NormalizedCargoMetadata, parse_metadata_json,
 };
 pub use crate::cargo::package::{
     CargoPackageRole, PackageArchiveEntry, PackageArchiveValidation, PackageDryRunPlan,
@@ -62,6 +63,10 @@ pub use crate::graph::type_identity::{PackageTypeIdentity, TypeIdentityMismatch}
 pub use crate::graph::workspace::{
     WorkspacePackageSelection, explicit_package_selection, select_sifr_workspace_members,
     selected_workspace_members,
+};
+pub use crate::host_tools::{
+    HOST_TOOL_CAPABILITIES, HostToolCommandPlan, HostToolEntrypoint, HostToolGraph,
+    RESERVED_TOOL_NAMESPACES, resolve_host_tool_graph, verify_host_tool_graph,
 };
 pub use crate::imports::source_map::{
     DottedModulePath, PackageImportAmbiguity, PackageImportOrigin, PackageImportResolution,
@@ -120,6 +125,8 @@ pub use crate::sql_profiles::{ResolvedSqlProfile, resolve_sql_profiles};
 
 #[cfg(test)]
 mod cargo_backend_integration_tests;
+#[cfg(test)]
+mod host_tools_tests;
 #[cfg(test)]
 mod package_dependency_scope_tests;
 #[cfg(test)]

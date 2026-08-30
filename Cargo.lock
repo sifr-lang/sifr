@@ -7549,6 +7549,7 @@ dependencies = [
  "sifr_lint",
  "sifr_lsp",
  "sifr_package",
+ "sifr_sql_contract",
  "sifr_stdlib_manifest",
  "sifr_syntax",
  "sifr_sysroot",

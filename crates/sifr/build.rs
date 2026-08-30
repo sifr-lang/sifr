@@ -6,4 +6,6 @@ fn main() {
         .unwrap_or_else(|_| "0.0.0".to_string());
 
     println!("cargo:rustc-env=SIFR_BUILD_VERSION={version}");
+    let target = std::env::var("TARGET").unwrap_or_else(|_| "unknown-target".to_string());
+    println!("cargo:rustc-env=SIFR_BUILD_TARGET={target}");
 }
