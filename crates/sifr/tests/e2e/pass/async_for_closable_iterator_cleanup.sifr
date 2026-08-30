@@ -36,4 +36,15 @@ async def main() -> Result[None, StreamCloseError]:
 
     assert total == 3
     assert stream.closed
+
+    mapping: dict[str, int] = {"key": 1}
+    key: str = "key"
+    if key not in mapping:
+        return None
+    refresh_total: int = 0
+    refresh_stream: ClosableCounter = ClosableCounter(0, 2)
+    async for _value in refresh_stream:
+        refresh_total += mapping[key]
+        mapping[key] = 100
+    assert refresh_total == 101
     return None

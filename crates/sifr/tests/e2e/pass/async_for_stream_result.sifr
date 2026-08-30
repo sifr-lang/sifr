@@ -45,4 +45,14 @@ async def main() -> Result[None, StreamError]:
             assert False, str(error)
         seed = seed + 1
     assert dynamic == [0.0, 1.0, 2.0]
+
+    values: list[int] = [1]
+    if len(values) == 0:
+        return None
+    refresh_total: int = 0
+    refresh_stream: CounterStream = CounterStream(0, 2)
+    async for _value in refresh_stream:
+        refresh_total += values[0]
+        values[0] += 10
+    assert refresh_total == 12
     return None

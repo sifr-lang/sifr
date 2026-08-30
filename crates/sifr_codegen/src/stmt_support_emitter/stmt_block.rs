@@ -689,8 +689,9 @@ impl RustEmitter {
             {
                 let has_else = else_body.is_some();
                 self.loop_else_stack.push(has_else);
+                let missing = self.lower_loop_break_for_ir();
                 let (condition_refresh_keys, condition_refreshes) =
-                    self.checked_place_loop_condition_refreshes_for_ir(condition, body);
+                    self.checked_place_loop_condition_refreshes_for_ir(condition, body, &missing);
                 let Some(lowered_cond) = self.lower_condition_expr_for_ir(condition)? else {
                     let _ = self.loop_else_stack.pop();
                     return Ok(None);
@@ -700,7 +701,7 @@ impl RustEmitter {
                 let lowered_body = self.lower_checked_sequence_loop_body_for_ir(
                     body,
                     &checked_read_guards,
-                    &RustStmt::Break,
+                    &missing,
                     &condition_refresh_keys,
                 )?;
                 let lowered_loop = lowered_body.map(|body| {

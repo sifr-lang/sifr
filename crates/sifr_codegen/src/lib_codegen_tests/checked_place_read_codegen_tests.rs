@@ -447,6 +447,53 @@ def increment_to_three(mut values: list[int]) -> int:
 }
 
 #[test]
+fn loop_carried_branch_witness_uses_break_instead_of_skipping_while_progress() {
+    let generated = generate_rust_from_source(
+        r#"
+def clear_values(mut values: list[int]):
+    values.clear()
+
+def total(mut values: list[int]) -> int:
+    if values:
+        result: int = 0
+        i: int = 0
+        while i < 2:
+            result += values[0]
+            clear_values(values)
+            i += 1
+        else:
+            result = 99
+        return result
+    return -1
+"#,
+    );
+    let Some(loop_start) = generated.find("while ") else {
+        panic!("missing while loop: {generated}");
+    };
+    let loop_body = &generated[loop_start..];
+    let Some(refresh) = loop_body.find("let Some(__sifr_checked_value_") else {
+        panic!("missing loop-carried refresh: {generated}");
+    };
+    let Some(missing_break) = loop_body[refresh..].find("break;") else {
+        panic!("missing terminating refresh action: {generated}");
+    };
+    let Some(broke_marker) = loop_body[refresh..].find("_broke = true") else {
+        panic!("missing loop-else suppression marker: {generated}");
+    };
+    let Some(progress) = loop_body[refresh..].find("i = &i +") else {
+        panic!("missing while progress update: {generated}");
+    };
+    assert!(
+        broke_marker < missing_break && missing_break < progress,
+        "{generated}"
+    );
+    assert!(
+        !loop_body.contains("if let Some(__sifr_checked_value_"),
+        "a missing witness must not skip the entire while body: {generated}"
+    );
+}
+
+#[test]
 fn loop_carried_refreshes_skip_contextually_optional_reads() {
     let generated = generate_rust_from_source(
         r#"
