@@ -483,7 +483,6 @@ Reserve the `SIFR-INT-*` family for integer-model diagnostics:
 | `SIFR-INT-0003` | reserved integer width name such as `int128` or `uint128` before support lands |
 | `SIFR-INT-0004` | compile-time integer evaluation budget exceeded |
 | `SIFR-INT-0005` | exact integer division, modulo, exponentiation, or shift requires handling a typed failure |
-| `SIFR-INT-0006` | exact integer to `float` conversion would overflow or lose precision |
 | `SIFR-INT-0007` | bool/integer comparison without explicit conversion |
 | `SIFR-INT-0008` | fixed-width array/tensor/dataframe arithmetic missing overflow policy |
 | `SIFR-INT-0009` | JSON/web-safe integer serialization policy failure |

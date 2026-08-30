@@ -8,13 +8,11 @@ fn fnmatch(name: &String, pattern: &String) -> bool {
 fn _match(name: &String, mut ni: SifrInt, pattern: &String, mut pi: SifrInt) -> bool {
     while (&pi < &SifrInt::from(pattern.chars().count())) {
         let pc: Option<String> = Some({
-            let Some(__indexed_char) = pattern
+            let __indexed_char_option = pattern
                 .chars()
                 .nth(::sifr_runtime::to_usize_proven(&(pi)))
-                .map(|c| c.to_string()) else {
-                unreachable!("compiler-verified string index should be in range");
-            };
-            __indexed_char
+                .map(|c| c.to_string());
+            __indexed_char_option.as_slice()[0_usize].clone()
         });
         if let Some(pc) = pc {
             if pc == "*" {
@@ -42,15 +40,11 @@ fn _match(name: &String, mut ni: SifrInt, pattern: &String, mut pi: SifrInt) -> 
                         return false;
                     }
                     let nc: Option<String> = Some({
-                        let Some(__indexed_char) = name
+                        let __indexed_char_option = name
                             .chars()
                             .nth(::sifr_runtime::to_usize_proven(&(ni)))
-                            .map(|c| c.to_string()) else {
-                            unreachable!(
-                                "compiler-verified string index should be in range"
-                            );
-                        };
-                        __indexed_char
+                            .map(|c| c.to_string());
+                        __indexed_char_option.as_slice()[0_usize].clone()
                     });
                     if let Some(nc) = nc {
                         if nc != pc {

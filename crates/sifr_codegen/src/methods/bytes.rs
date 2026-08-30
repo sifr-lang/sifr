@@ -42,22 +42,26 @@ fn byte_range_guard_expr(
             ty: None,
             value,
         }],
-        expr: Some(Box::new(RustExpr::If {
-            cond: Box::new(RustExpr::BinOp {
-                left: Box::new(RustExpr::BinOp {
-                    left: Box::new(RustExpr::Ident("__needle".to_string())),
-                    op: "<".to_string(),
-                    right: Box::new(int(0)),
-                }),
-                op: "||".to_string(),
-                right: Box::new(RustExpr::BinOp {
-                    left: Box::new(RustExpr::Ident("__needle".to_string())),
-                    op: ">".to_string(),
-                    right: Box::new(int(255)),
-                }),
+        expr: Some(Box::new(RustExpr::Match {
+            expr: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("__needle".to_string())),
+                method: "try_to_u8".to_string(),
+                args: vec![],
             }),
-            then_expr: Box::new(invalid_expr),
-            else_expr: Some(Box::new(valid_expr)),
+            arms: vec![
+                crate::RustMatchArm {
+                    pattern: "Ok(__needle_u8)".to_string(),
+                    bindings: vec![],
+                    guard: None,
+                    body: vec![RustStmt::TailExpr(valid_expr)],
+                },
+                crate::RustMatchArm {
+                    pattern: "Err(_)".to_string(),
+                    bindings: vec![],
+                    guard: None,
+                    body: vec![RustStmt::TailExpr(invalid_expr)],
+                },
+            ],
         })),
     }
 }
@@ -112,11 +116,7 @@ pub(super) fn lower_count(object: &RustExpr, args: &[RustExpr]) -> Option<RustEx
                                     Box::new(RustExpr::Ident("__x".to_string())),
                                 )))),
                                 op: "==".to_string(),
-                                right: Box::new(RustExpr::MethodCall {
-                                    receiver: Box::new(RustExpr::Ident("__needle".to_string())),
-                                    method: "to_u8_proven_in_range".to_string(),
-                                    args: vec![],
-                                }),
+                                right: Box::new(RustExpr::Ident("__needle_u8".to_string())),
                             }),
                             is_move: false,
                         }],
@@ -143,11 +143,7 @@ pub(super) fn lower_contains(object: &RustExpr, args: &[RustExpr]) -> Option<Rus
                 method: "contains".to_string(),
                 args: vec![RustExpr::Ref {
                     mutable: false,
-                    expr: Box::new(RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::Ident("__needle".to_string())),
-                        method: "to_u8_proven_in_range".to_string(),
-                        args: vec![],
-                    }),
+                    expr: Box::new(RustExpr::Ident("__needle_u8".to_string())),
                 }],
             },
             RustExpr::Literal(crate::RustLiteral::Bool(false)),
@@ -231,13 +227,7 @@ pub(super) fn lower_find(object: &RustExpr, args: &[RustExpr]) -> Option<RustExp
                                             "__x".to_string(),
                                         )))),
                                         op: "==".to_string(),
-                                        right: Box::new(RustExpr::MethodCall {
-                                            receiver: Box::new(RustExpr::Ident(
-                                                "__needle".to_string(),
-                                            )),
-                                            method: "to_u8_proven_in_range".to_string(),
-                                            args: vec![],
-                                        }),
+                                        right: Box::new(RustExpr::Ident("__needle_u8".to_string())),
                                     },
                                     then_body: vec![RustStmt::Assign {
                                         target: RustExpr::Ident("__result".to_string()),

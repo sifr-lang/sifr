@@ -96,7 +96,12 @@ fn python_context_emits_enter_outcome_and_replay_aware_exit() {
     ));
     assert!(rendered.contains("context_exit_python_error_with_callbacks("));
     assert!(rendered.contains("context_exit_sifr_cause_with_callbacks("));
-    assert!(rendered.contains("Ok(Ok(Some(_)))"));
+    assert!(rendered.contains("Ok(Ok(()))"));
+    assert!(!rendered.contains("Ok(Ok(None))"));
+    assert!(
+        rendered.contains("match __sifr_context_control {\n}"),
+        "{rendered}"
+    );
     assert!(!rendered.contains("return __sifr_context_return"));
     syn::parse_file(&format!("fn generated() {{ {rendered} }}"))
         .expect("rendered context lowering should be valid Rust syntax");
@@ -207,7 +212,11 @@ fn entered_binding_preserves_mutability_and_mixed_item_nesting() {
         .expect("mixed lowering should succeed")
         .expect("mixed context should lower");
     let rendered = crate::render_stmts(&[lowered]);
-    assert!(rendered.contains("let Some(mut entered)"));
+    assert!(
+        rendered.contains("let mut entered: Entered = match"),
+        "{rendered}"
+    );
+    assert!(!rendered.contains("unreachable!"));
     assert!(
         rendered
             .find("let _native = SifrInt::from_i64(1)")

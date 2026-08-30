@@ -3,12 +3,14 @@ def main():
     d: decimal = Decimal("12.50")
     b: bigdecimal = BigDecimal("3.25")
 
-    d_plus: decimal = d + Decimal("2")
     b_plus: bigdecimal = b + BigDecimal("4")
 
-    assert d_plus == Decimal("14.50")
     assert b_plus == BigDecimal("7.25")
-
-    print("decimal_types type-system/parser/HIR integration demo")
-    print(str(d_plus))
-    print(str(b_plus))
+    try:
+        d_plus: decimal = d + Decimal("2")
+        assert d_plus == Decimal("14.50")
+        print("decimal_types type-system/parser/HIR integration demo")
+        print(str(d_plus))
+        print(str(b_plus))
+    except DecimalConversionError as error:
+        assert False, str(error)

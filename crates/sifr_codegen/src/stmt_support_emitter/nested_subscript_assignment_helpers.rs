@@ -94,6 +94,7 @@ impl RustEmitter {
 
     pub(crate) fn build_subscript_augassign_elem_stmt_for_ir(
         op: &str,
+        source_value: &HirExpr,
         lowered_value: crate::RustExpr,
         exact_integer: bool,
     ) -> Option<crate::RustStmt> {
@@ -107,6 +108,21 @@ impl RustEmitter {
                 _ => None,
             };
             if let Some(method) = method {
+                let method_arg = if matches!(op, "**=" | "<<=" | ">>=") {
+                    let primitive_ty = if op == "**=" { "u32" } else { "usize" };
+                    let literal = crate::integer_literal_decimal(source_value)?
+                        .parse::<i64>()
+                        .ok()?;
+                    crate::RustExpr::Cast {
+                        expr: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Int(literal))),
+                        ty: crate::RustType::Named(primitive_ty.to_string()),
+                    }
+                } else {
+                    crate::RustExpr::Ref {
+                        mutable: false,
+                        expr: Box::new(lowered_value),
+                    }
+                };
                 return Some(crate::RustStmt::Assign {
                     target: crate::RustExpr::Deref(Box::new(crate::RustExpr::Ident(
                         "__elem".to_string(),
@@ -114,10 +130,7 @@ impl RustEmitter {
                     value: crate::RustExpr::MethodCall {
                         receiver: Box::new(crate::RustExpr::Ident("__elem".to_string())),
                         method: method.to_string(),
-                        args: vec![crate::RustExpr::Ref {
-                            mutable: false,
-                            expr: Box::new(lowered_value),
-                        }],
+                        args: vec![method_arg],
                     },
                 });
             }

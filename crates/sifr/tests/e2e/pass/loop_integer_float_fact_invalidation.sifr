@@ -1,0 +1,34 @@
+def main() -> None:
+    while_values: list[str] = []
+    value: int = 0
+    while value < 3:
+        try:
+            divided: float = value / 2
+            converted: float = float(value)
+            mixed: float = value * 1.5
+            while_values.append(str(divided) + ":" + str(converted) + ":" + str(mixed))
+        except DivisionError as error:
+            assert False, str(error)
+        except FloatOverflowError as error:
+            assert False, str(error)
+        except FloatPrecisionLossError as error:
+            assert False, str(error)
+        value = value + 1
+    assert while_values == ["0:0:0", "0.5:1:1.5", "1:2:3"]
+
+    for_values: list[str] = []
+    value = 4
+    for _iteration in range(3):
+        try:
+            divided: float = value / 2
+            converted: float = float(value)
+            mixed: float = value * 1.5
+            for_values.append(str(divided) + ":" + str(converted) + ":" + str(mixed))
+        except DivisionError as error:
+            assert False, str(error)
+        except FloatOverflowError as error:
+            assert False, str(error)
+        except FloatPrecisionLossError as error:
+            assert False, str(error)
+        value = value + 2
+    assert for_values == ["2:4:6", "3:6:9", "4:8:12"]

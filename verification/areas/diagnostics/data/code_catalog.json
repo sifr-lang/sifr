@@ -881,22 +881,6 @@
       "suggestion_applicability": "none"
     },
     {
-      "code": "SIFR-INT-0006",
-      "constant": "INT_EXACT_TO_FLOAT_REQUIRES_HANDLING",
-      "docs_link": "docs/errors/SIFR-INT-0006.mdx",
-      "machine_applicable": false,
-      "owner": "compiler/core-language",
-      "renderer_support": [
-        "human",
-        "json",
-        "compact"
-      ],
-      "representative_fixture": "crates/sifr/tests/e2e/fail/exact_int_true_division_requires_handling.sifr",
-      "severity": "Error",
-      "stability": "stable",
-      "suggestion_applicability": "none"
-    },
-    {
       "code": "SIFR-INT-0007",
       "constant": "INT_BOOL_INTEGER_COMPARISON",
       "docs_link": "docs/errors/SIFR-INT-0007.mdx",

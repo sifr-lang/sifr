@@ -824,18 +824,15 @@ mod tests {
         let count = lower_method(&Type::Bytes, "count", "payload", &["needle".to_string()])
             .expect("bytes count lowers");
         let count_rendered = render_expr(&count.expr);
-        assert!(count_rendered.contains("__needle < SifrInt::from_i64(0)"));
-        assert!(count_rendered.contains("__needle.to_u8_proven_in_range()"));
+        assert!(count_rendered.contains("match __needle.try_to_u8()"));
+        assert!(count_rendered.contains("Ok(__needle_u8)"));
         assert_eq!(count_rendered.matches("payload").count(), 1);
 
         let contains = lower_method(&Type::Bytes, "contains", "payload", &["needle".to_string()])
             .expect("bytes contains lowers");
         let contains_rendered = render_expr(&contains.expr);
-        assert!(contains_rendered.contains("__needle > SifrInt::from_i64(255)"));
-        assert!(
-            contains_rendered
-                .contains("__bytes_receiver.contains(&__needle.to_u8_proven_in_range())")
-        );
+        assert!(contains_rendered.contains("match __needle.try_to_u8()"));
+        assert!(contains_rendered.contains("__bytes_receiver.contains(&__needle_u8)"));
         assert_eq!(contains_rendered.matches("payload").count(), 1);
 
         let find = lower_method(
@@ -846,7 +843,8 @@ mod tests {
         )
         .expect("bytes find lowers");
         let find_rendered = render_expr(&find.expr);
-        assert!(find_rendered.contains("__needle.to_u8_proven_in_range()"));
+        assert!(find_rendered.contains("match __needle.try_to_u8()"));
+        assert!(find_rendered.contains("__needle_u8"));
         assert!(find_rendered.contains("None"));
         assert_eq!(find_rendered.matches("payload").count(), 1);
 

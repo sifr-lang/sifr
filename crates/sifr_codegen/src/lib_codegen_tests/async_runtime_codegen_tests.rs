@@ -371,9 +371,10 @@ fn test_round_parenthesizes_cast_receiver() {
 
     let rust_code = generate_rust(&module);
     assert!(
-        rust_code.contains("SifrInt::from_f64_trunc((SifrInt::from_i64(3).to_f64_proven_exact()).round_ties_even())"),
+        rust_code.contains("SifrInt::from_f64_trunc((3.0).round_ties_even())"),
         "expected round receiver to be parenthesized; got: {rust_code}"
     );
+    assert!(!rust_code.contains("to_f64_proven_exact"));
     assert!(
         !rust_code.contains("as f64.round()"),
         "invalid Rust precedence should not be emitted"
@@ -446,13 +447,14 @@ fn test_float_min_max_parenthesize_cast_receivers() {
 
     let rust_code = generate_rust(&module);
     assert!(
-        rust_code.contains("SifrInt::from_i64(1).to_f64_proven_exact().min(SifrInt::from_i64(2).to_f64_proven_exact())"),
+        rust_code.contains("1.0.min(2.0)"),
         "expected min receiver to be parenthesized; got: {rust_code}"
     );
     assert!(
-        rust_code.contains("SifrInt::from_i64(1).to_f64_proven_exact().max(SifrInt::from_i64(2).to_f64_proven_exact())"),
+        rust_code.contains("1.0.max(2.0)"),
         "expected max receiver to be parenthesized; got: {rust_code}"
     );
+    assert!(!rust_code.contains("to_f64_proven_exact"));
     assert!(
         !rust_code.contains("as f64.min(") && !rust_code.contains("as f64.max("),
         "invalid Rust precedence should not be emitted"

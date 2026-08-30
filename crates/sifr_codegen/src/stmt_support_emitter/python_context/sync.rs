@@ -73,6 +73,7 @@ impl RustEmitter {
                 ..
             } => self.wrap_python_context_item(
                 item,
+                source_body,
                 entered_type,
                 enter_error_type,
                 exit_error_type,
@@ -84,6 +85,7 @@ impl RustEmitter {
     fn wrap_python_context_item(
         &mut self,
         item: &HirWithItem,
+        source_body: &[HirStmt],
         entered_type: &Type,
         enter_error_type: &Type,
         exit_error_type: &Type,
@@ -115,7 +117,6 @@ impl RustEmitter {
         let manager = format!("__sifr_python_context_manager_{suffix}");
         let entered_raw = format!("__sifr_python_context_entered_{suffix}");
         let conversion = format!("__sifr_python_context_conversion_{suffix}");
-        let entered_slot = format!("__sifr_python_context_entered_slot_{suffix}");
         let outcome = format!("__sifr_python_context_outcome_{suffix}");
         let error = format!("__sifr_python_context_error_{suffix}");
         let cleanup = format!("__sifr_python_context_cleanup_{suffix}");
@@ -170,14 +171,33 @@ impl RustEmitter {
             "OrdinaryError",
         );
 
+        let can_return = queries::body_contains_return(source_body);
         let mut closure_body = rewrite_context_control_flow(body, 0);
+        let normal_outcome = if can_return {
+            RustExpr::Literal(RustLiteral::None)
+        } else {
+            RustExpr::Tuple(Vec::new())
+        };
         closure_body.push(RustStmt::Return(Some(call(
             "Ok",
-            call("Ok", RustExpr::Literal(RustLiteral::None)),
+            call("Ok", normal_outcome),
         ))));
-        let return_expression_type = self.context_return_expression_type(&active_error_type);
+        let normal_outcome_type = if can_return {
+            format!(
+                "Option<{}>",
+                self.context_return_expression_type(&active_error_type)
+            )
+        } else {
+            "()".to_string()
+        };
+        let can_break_or_continue = !self.loop_else_stack.is_empty();
+        let loop_control_type = if can_break_or_continue {
+            "bool"
+        } else {
+            "std::convert::Infallible"
+        };
         let outcome_type = RustType::Named(format!(
-            "Result<Result<Option<{return_expression_type}>, bool>, {active_error_type}>"
+            "Result<Result<{normal_outcome_type}, {loop_control_type}>, {active_error_type}>"
         ));
         let closure_is_async = Self::rust_stmts_contain_await(&closure_body);
         let closure_call = RustExpr::FnCall {
@@ -203,7 +223,6 @@ impl RustEmitter {
                 suffix,
             )
         };
-        let can_break_or_continue = !self.loop_else_stack.is_empty();
         let active_error_body = if active_is_python_error {
             Self::python_error_exit_body(
                 manager_handle(),
@@ -224,12 +243,16 @@ impl RustEmitter {
         };
 
         let mut outcome_arms = vec![RustMatchArm {
-            pattern: "Ok(Ok(None))".to_string(),
+            pattern: if can_return {
+                "Ok(Ok(None))".to_string()
+            } else {
+                "Ok(Ok(()))".to_string()
+            },
             bindings: vec![],
             guard: None,
             body: normal_exit(),
         }];
-        if self.try_closure_depth > 0 {
+        if can_return {
             outcome_arms.push(RustMatchArm {
                 pattern: "Ok(Ok(Some(__sifr_context_return)))".to_string(),
                 bindings: vec!["__sifr_context_return".to_string()],
@@ -241,18 +264,6 @@ impl RustEmitter {
                     ))));
                     exit
                 },
-            });
-        } else {
-            outcome_arms.push(RustMatchArm {
-                pattern: "Ok(Ok(Some(_)))".to_string(),
-                bindings: vec![],
-                guard: None,
-                body: vec![RustStmt::Expr(RustExpr::FormatMacro {
-                    name: "unreachable".to_string(),
-                    format_str: "Python context captured a return in a non-returning try"
-                        .to_string(),
-                    args: vec![],
-                })],
             });
         }
         if can_break_or_continue {
@@ -280,13 +291,12 @@ impl RustEmitter {
             ]);
         } else {
             outcome_arms.push(RustMatchArm {
-                pattern: "Ok(Err(_))".to_string(),
-                bindings: vec![],
+                pattern: "Ok(Err(__sifr_context_control))".to_string(),
+                bindings: vec!["__sifr_context_control".to_string()],
                 guard: None,
-                body: vec![RustStmt::Expr(RustExpr::FormatMacro {
-                    name: "unreachable".to_string(),
-                    format_str: "Python context emitted loop control outside a loop".to_string(),
-                    args: vec![],
+                body: vec![RustStmt::TailExpr(RustExpr::Match {
+                    expr: Box::new(RustExpr::Ident("__sifr_context_control".to_string())),
+                    arms: vec![],
                 })],
             });
         }
@@ -323,51 +333,28 @@ impl RustEmitter {
                 value: conversion_call,
             },
             RustStmt::Let {
-                mutable: true,
-                name: entered_slot.clone(),
-                ty: Some(RustType::Option(Box::new(entered_rust_type))),
-                value: RustExpr::Literal(RustLiteral::None),
-            },
-            RustStmt::Match {
-                expr: RustExpr::Ident(conversion),
-                arms: vec![
-                    RustMatchArm {
-                        pattern: "Ok(__sifr_entered_value)".to_string(),
-                        bindings: vec!["__sifr_entered_value".to_string()],
-                        guard: None,
-                        body: vec![RustStmt::Assign {
-                            target: RustExpr::Ident(entered_slot.clone()),
-                            value: call(
-                                "Some",
-                                RustExpr::Ident("__sifr_entered_value".to_string()),
-                            ),
-                        }],
-                    },
-                    RustMatchArm {
-                        pattern: format!("Err(mut {error})"),
-                        bindings: vec![error.clone()],
-                        guard: None,
-                        body: conversion_error_body,
-                    },
-                ],
-            },
-            RustStmt::LetElse {
-                pattern: format!(
-                    "Some({}{})",
-                    if self.mutated_vars.contains(&item.target) {
-                        "mut "
-                    } else {
-                        ""
-                    },
-                    item.target
-                ),
-                value: RustExpr::Ident(entered_slot),
-                else_body: vec![RustStmt::Expr(RustExpr::FormatMacro {
-                    name: "unreachable".to_string(),
-                    format_str: "validated Python context conversion produced no entered value"
-                        .to_string(),
-                    args: vec![],
-                })],
+                mutable: self.mutated_vars.contains(&item.target),
+                name: item.target.clone(),
+                ty: Some(entered_rust_type),
+                value: RustExpr::Match {
+                    expr: Box::new(RustExpr::Ident(conversion)),
+                    arms: vec![
+                        RustMatchArm {
+                            pattern: "Ok(__sifr_entered_value)".to_string(),
+                            bindings: vec!["__sifr_entered_value".to_string()],
+                            guard: None,
+                            body: vec![RustStmt::TailExpr(RustExpr::Ident(
+                                "__sifr_entered_value".to_string(),
+                            ))],
+                        },
+                        RustMatchArm {
+                            pattern: format!("Err(mut {error})"),
+                            bindings: vec![error.clone()],
+                            guard: None,
+                            body: conversion_error_body,
+                        },
+                    ],
+                },
             },
             RustStmt::Let {
                 mutable: false,
@@ -383,22 +370,21 @@ impl RustEmitter {
     }
 
     pub(super) fn context_return_expression_type(&self, error_type: &str) -> String {
-        if self.try_closure_depth == 0 {
-            return "()".to_string();
-        }
         let function_return = self.current_return_type.as_ref().map_or_else(
             || "()".to_string(),
             |ty| crate::render_type(&crate::sifr_type_to_rust_type(ty)),
         );
-        let ok_type = if self
-            .try_closure_option_wrap
-            .last()
-            .copied()
-            .unwrap_or(false)
-        {
-            format!("Option<{function_return}>")
-        } else {
-            function_return
+        if self.try_closure_depth == 0 {
+            return function_return;
+        }
+        let ok_type = match self.try_closure_return_wrap.last() {
+            Some(crate::TryClosureReturnWrap::Optional) => {
+                format!("Option<{function_return}>")
+            }
+            Some(crate::TryClosureReturnWrap::ControlFlow { continue_type }) => {
+                format!("std::ops::ControlFlow<{function_return}, {continue_type}>")
+            }
+            Some(crate::TryClosureReturnWrap::Direct) | None => function_return,
         };
         format!("Result<{ok_type}, {error_type}>")
     }

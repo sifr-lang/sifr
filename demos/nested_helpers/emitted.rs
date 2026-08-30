@@ -19,20 +19,13 @@ fn expand_keyed_strings(keys: &String) -> Vec<String> {
             return;
         }
         let key: String = {
-    let Some(__indexed_char) = keys.chars().nth(::sifr_runtime::to_usize_proven(&(i))).map(|c| c.to_string()) else {
-        unreachable!("compiler-verified string index should be in range");
-    };
-    __indexed_char
+    let __indexed_char_option = keys.chars().nth(::sifr_runtime::to_usize_proven(&(i))).map(|c| c.to_string());
+    __indexed_char_option.as_slice()[0_usize].clone()
 };
         if !key_to_suffixes.contains_key(&key) {
             return;
         }
-        for suffix in {
-    let Some(__sifr_dict_iter_source) = key_to_suffixes.get(&key) else {
-        ::std::process::abort();
-    };
-    __sifr_dict_iter_source.iter().cloned()
-} {
+        for suffix in key_to_suffixes[&key].iter().cloned() {
             backtrack(&i + &SifrInt::from_i64(1), &format!("{}{}", cur, suffix), key_to_suffixes, keys, res);
         }
     }

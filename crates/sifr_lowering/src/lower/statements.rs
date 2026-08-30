@@ -17,7 +17,8 @@ use super::if_branch_bindings::{
     predeclare_exhaustive_if_assigned_names, seed_exhaustive_if_bindings,
 };
 use super::integer_const_facts::{
-    record_const_integer_binding, restore_const_integer_state_after_branches,
+    invalidate_loop_body_const_integer_facts, record_const_integer_binding,
+    restore_const_integer_state_after_branches,
 };
 use super::integer_nonzero_guards::{
     detect_false_nonzero_integer_guards, detect_true_nonzero_integer_guards,

@@ -199,22 +199,30 @@ impl RustEmitter {
 
     pub(crate) fn force_unwrap_option_expr_for_ir(
         value_expr: crate::RustExpr,
-        guard_message: &str,
+        _guard_message: &str,
     ) -> crate::RustExpr {
         crate::RustExpr::Block {
-            stmts: vec![crate::RustStmt::LetElse {
-                pattern: "Some(__sifr_unwrapped_option_value)".to_string(),
+            stmts: vec![crate::RustStmt::Let {
+                mutable: false,
+                name: "__sifr_proven_option".to_string(),
+                ty: None,
                 value: value_expr,
-                else_body: vec![crate::RustStmt::Expr(crate::RustExpr::MacroCall {
-                    name: "unreachable".to_string(),
-                    args: vec![crate::RustExpr::Literal(crate::RustLiteral::Str(
-                        guard_message.to_string(),
-                    ))],
-                })],
             }],
-            expr: Some(Box::new(crate::RustExpr::Ident(
-                "__sifr_unwrapped_option_value".to_string(),
-            ))),
+            expr: Some(Box::new(crate::RustExpr::Clone(Box::new(
+                crate::RustExpr::Index {
+                    expr: Box::new(crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::Ident(
+                            "__sifr_proven_option".to_string(),
+                        )),
+                        method: "as_slice".to_string(),
+                        args: vec![],
+                    }),
+                    index: Box::new(crate::RustExpr::Cast {
+                        expr: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Int(0))),
+                        ty: crate::RustType::Named("usize".to_string()),
+                    }),
+                },
+            )))),
         }
     }
 

@@ -414,10 +414,12 @@ mod __sifr_project_nominals {
                 return None;
             }
             Some({
-                let Some(__sifr_nonempty_pop_value) = self._data.pop_back() else {
-                    unreachable!("compiler-verified non-empty pop should return Some");
-                };
-                __sifr_nonempty_pop_value
+                let __sifr_nonempty_pop_index = self._data.len() - (1_usize);
+                let mut __sifr_nonempty_pop_values = self
+                    ._data
+                    .drain(__sifr_nonempty_pop_index..__sifr_nonempty_pop_index + (1_usize))
+                    .collect::<Vec<_>>();
+                __sifr_nonempty_pop_values.remove(0_usize)
             })
         }
     }
@@ -427,10 +429,12 @@ mod __sifr_project_nominals {
                 return None;
             }
             Some({
-                let Some(__sifr_nonempty_pop_value) = self._data.pop_front() else {
-                    unreachable!("compiler-verified non-empty pop should return Some");
-                };
-                __sifr_nonempty_pop_value
+                let __sifr_nonempty_pop_index = 0_usize;
+                let mut __sifr_nonempty_pop_values = self
+                    ._data
+                    .drain(__sifr_nonempty_pop_index..__sifr_nonempty_pop_index + (1_usize))
+                    .collect::<Vec<_>>();
+                __sifr_nonempty_pop_values.remove(0_usize)
             })
         }
     }
@@ -755,12 +759,7 @@ fn heappop<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
             .normalize_index_or_len(__sifr_index_list.len());
         __sifr_index_list.get(__sifr_index_norm).cloned()
     };
-    {
-        let Some(__sifr_nonempty_pop_value) = heap.pop() else {
-            unreachable!("compiler-verified non-empty pop should return Some");
-        };
-        __sifr_nonempty_pop_value
-    };
+    heap.remove(heap.len() - (1_usize));
     let n2: SifrInt = SifrInt::from(heap.len());
     if &n2 > &SifrInt::from_i64(0) {
         if let Some(last) = last {
@@ -975,16 +974,14 @@ fn repeat<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
             result
                 .push(
                     ({
-                        let Some(__sifr_index_value) = ({
+                        let __sifr_index_value_option = {
                             let __sifr_index_list = &holder;
                             let __sifr_index_i = SifrInt::from_i64(0);
                             let __sifr_index_norm = __sifr_index_i
                                 .normalize_index_or_len(__sifr_index_list.len());
                             __sifr_index_list.get(__sifr_index_norm).cloned()
-                        }) else {
-                            unreachable!("compiler-verified index should be in range");
                         };
-                        __sifr_index_value
+                        __sifr_index_value_option.as_slice()[0_usize].clone()
                     })
                         .clone(),
                 );
@@ -1223,6 +1220,11 @@ fn random_int(min: SifrInt, max: SifrInt) -> SifrInt {
 }
 fn random_float() -> f64 {
     ::sifr_stdlib::random::random_float()
+}
+fn random_word_to_unit_float(value: SifrInt) -> f64 {
+    ::sifr_stdlib::random::random_word_to_unit_float(
+        ::sifr_runtime::interop::SifrIntBridge::from(value),
+    )
 }
 fn random_seed() -> SifrInt {
     ::sifr_stdlib::random::random_seed().into_sifr_int()
@@ -1916,8 +1918,7 @@ impl __SifrStdlib_sifr_x2erandom_x2eRandom {
 }
 impl __SifrStdlib_sifr_x2erandom_x2eRandom {
     fn random(&mut self) -> f64 {
-        (&self._next_u32() & &__const__MT_WORD_MASK()).to_f64_proven_exact()
-            / (4294967296.0_f64)
+        random_word_to_unit_float(self._next_u32())
     }
 }
 impl __SifrStdlib_sifr_x2erandom_x2eRandom {
@@ -2038,14 +2039,17 @@ impl __SifrStdlib_sifr_x2erandom_x2eRandom {
             let __vals = values;
             let mut __out = Vec::new();
             for __pair in __vals.iter().enumerate() {
-                if (*__pair.1 < 0) || (*__pair.1 > 255) {
-                    return Err(ValueError {
-                        message: format!(
-                            "byte out of range at index {}: {}", __pair.0, * __pair.1
-                        ),
-                    });
-                }
-                __out.push(__pair.1.to_u8_proven_in_range());
+                __out
+                    .push(
+                        __pair
+                            .1
+                            .try_to_u8()
+                            .map_err(|_error| ValueError {
+                                message: format!(
+                                    "byte out of range at index {}: {}", __pair.0, * __pair.1
+                                ),
+                            })?,
+                    );
             }
             Ok::<Vec<u8>, ValueError>(__out)
         }

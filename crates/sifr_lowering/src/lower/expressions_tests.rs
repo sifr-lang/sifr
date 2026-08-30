@@ -23,6 +23,7 @@ mod dict_augassign_checked_error;
 mod empty_plain_dict_inference;
 mod exact_int_and_fixed_width;
 mod iteration_and_protocols;
+mod loop_const_fact_invalidation;
 mod minmax_sorted_sum;
 mod nested_container_capture_refinement;
 mod ownership_and_async;

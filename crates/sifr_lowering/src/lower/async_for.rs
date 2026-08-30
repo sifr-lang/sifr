@@ -1,4 +1,7 @@
 use super::LowerCtx;
+use super::integer_const_facts::{
+    invalidate_loop_body_const_integer_facts, restore_const_integer_state_after_branches,
+};
 use super::ownership_diagnostics;
 use super::python_interop::lower_python_context_owned_expr;
 use super::statement_diagnostics;
@@ -196,6 +199,8 @@ pub(in crate::lower) fn lower_async_for(
 
     let (target, _) = simple_for_target_name(&for_stmt.target, ctx)?;
     let moved_before_loop = ctx.scope.save_moved_state();
+    invalidate_loop_body_const_integer_facts(ctx, &for_stmt.body);
+    let saved_const_integer_state = ctx.scope.save_const_integer_state();
     ctx.scope.push();
     ctx.scope.define_ephemeral(
         target.clone(),
@@ -206,6 +211,12 @@ pub(in crate::lower) fn lower_async_for(
     let body = lower_stmts(&for_stmt.body, func_type, ctx);
     ctx.loop_depth -= 1;
     ctx.scope.pop();
+    let body_const_integer_state = ctx.scope.save_const_integer_state();
+    restore_const_integer_state_after_branches(
+        ctx,
+        &saved_const_integer_state,
+        &[(body_const_integer_state, false)],
+    );
     ownership_diagnostics::report_moved_across_loop(ctx, &moved_before_loop, for_stmt.range());
     if let Some(close_error_ty) = &close_error_ty {
         if stmts_contain_early_exit_for_current_loop(&body)

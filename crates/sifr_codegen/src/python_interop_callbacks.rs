@@ -126,14 +126,24 @@ pub(crate) fn callback_setup(
                 args: vec![factory],
             },
         });
-        statements.push(RustStmt::LetElse {
-            pattern: format!("Some(ref {callback_var})"),
-            value: RustExpr::Ident(provisional.clone()),
-            else_body: vec![RustStmt::Expr(RustExpr::FormatMacro {
-                name: "unreachable".to_string(),
-                format_str: "provisional asyncio callback was just assigned".to_string(),
-                args: Vec::new(),
-            })],
+        statements.push(RustStmt::Let {
+            mutable: false,
+            name: callback_var.clone(),
+            ty: None,
+            value: RustExpr::Ref {
+                mutable: false,
+                expr: Box::new(RustExpr::Index {
+                    expr: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident(provisional.clone())),
+                        method: "as_slice".to_string(),
+                        args: Vec::new(),
+                    }),
+                    index: Box::new(RustExpr::Cast {
+                        expr: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+                        ty: RustType::Named("usize".to_string()),
+                    }),
+                }),
+            },
         });
     } else {
         statements.push(RustStmt::Let {

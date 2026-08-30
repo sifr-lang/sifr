@@ -3,35 +3,29 @@
 use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
 
 fn bigdecimal_default_context_expr() -> RustExpr {
-    let base_ctx = RustExpr::MethodCall {
-        receiver: Box::new(RustExpr::FnCall {
-            func: Box::new(RustExpr::Path(vec![
-                "bigdecimal".to_string(),
-                "Context".to_string(),
-                "default".to_string(),
-            ])),
-            args: vec![],
-        }),
-        method: "with_rounding_mode".to_string(),
-        args: vec![RustExpr::Path(vec![
+    RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec![
             "bigdecimal".to_string(),
-            "RoundingMode".to_string(),
-            "HalfEven".to_string(),
-        ])],
-    };
-
-    RustExpr::MethodCall {
-        receiver: Box::new(RustExpr::MethodCall {
-            receiver: Box::new(base_ctx.clone()),
-            method: "with_prec".to_string(),
-            args: vec![RustExpr::Literal(RustLiteral::Int(28))],
-        }),
-        method: "unwrap_or_else".to_string(),
-        args: vec![RustExpr::Closure {
-            params: vec![],
-            body: Box::new(base_ctx),
-            is_move: false,
-        }],
+            "Context".to_string(),
+            "new".to_string(),
+        ])),
+        args: vec![
+            RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Path(vec![
+                    "std".to_string(),
+                    "num".to_string(),
+                    "NonZeroU64".to_string(),
+                    "MIN".to_string(),
+                ])),
+                method: "saturating_add".to_string(),
+                args: vec![RustExpr::Literal(RustLiteral::Int(27))],
+            },
+            RustExpr::Path(vec![
+                "bigdecimal".to_string(),
+                "RoundingMode".to_string(),
+                "HalfEven".to_string(),
+            ]),
+        ],
     }
 }
 

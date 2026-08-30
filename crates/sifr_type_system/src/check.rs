@@ -215,10 +215,7 @@ pub fn type_check_binary_op(left: &Type, op: &str, right: &Type) -> TypeCheckRes
         }
         "/" => {
             if is_exact_to_float_integer_type(left) && is_exact_to_float_integer_type(right) {
-                return Err((
-                    DiagnosticCode::INT_EXACT_TO_FLOAT_REQUIRES_HANDLING,
-                    "exact integer to float conversion requires handling possible overflow or precision loss".to_string(),
-                ));
+                return Ok(Type::Float);
             }
             // Decimal-family arithmetic
             if is_decimal_type(left) && is_decimal_type(right) {
@@ -653,18 +650,13 @@ mod tests {
     }
 
     #[test]
-    fn test_exact_integer_true_division_requires_float_handling() {
+    fn test_exact_integer_true_division_has_float_base_type() {
         for (left, right) in [
             (Type::Int, Type::Int),
             (Type::LiteralInt(10), Type::LiteralInt(2)),
             (Type::FixedInt(crate::FixedIntType::I32), Type::Int),
         ] {
-            let err = type_check_binary_op(&left, "/", &right).unwrap_err();
-            assert_eq!(err.0, DiagnosticCode::INT_EXACT_TO_FLOAT_REQUIRES_HANDLING);
-            assert_eq!(
-                err.1,
-                "exact integer to float conversion requires handling possible overflow or precision loss"
-            );
+            assert_eq!(type_check_binary_op(&left, "/", &right), Ok(Type::Float));
         }
     }
 

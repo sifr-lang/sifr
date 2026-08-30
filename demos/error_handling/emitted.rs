@@ -189,7 +189,7 @@ fn main() {
         let e = __sifr_try_err.clone();
         println!("conversion error: {}", e.message.clone());
     }
-    let x2: f64 = SifrInt::from_i64(5).to_f64_proven_exact();
+    let x2: f64 = 5.0;
     println!("float(5) = {}", x2);
     let x3: String = format!("{}", SifrInt::from_i64(42));
     println!("str(42) = {}", x3);

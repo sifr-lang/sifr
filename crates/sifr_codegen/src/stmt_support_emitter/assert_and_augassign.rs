@@ -5,6 +5,7 @@ impl RustEmitter {
         &self,
         name: &str,
         op: &str,
+        source_value: &HirExpr,
         value: crate::RustExpr,
     ) -> Option<crate::RustStmt> {
         if !self.is_registered_sifr_int_local(name) {
@@ -28,17 +29,26 @@ impl RustEmitter {
                 target.clone(),
                 operand,
             ),
-            "**=" | "<<=" | ">>=" => crate::RustExpr::MethodCall {
-                receiver: Box::new(target.clone()),
-                method: match op {
-                    "**=" => "pow_known_valid",
-                    "<<=" => "shl_known_valid",
-                    ">>=" => "shr_known_valid",
-                    _ => unreachable!(),
+            "**=" | "<<=" | ">>=" => {
+                let primitive_ty = if op == "**=" { "u32" } else { "usize" };
+                let literal = crate::integer_literal_decimal(source_value)?
+                    .parse::<i64>()
+                    .ok()?;
+                crate::RustExpr::MethodCall {
+                    receiver: Box::new(target.clone()),
+                    method: match op {
+                        "**=" => "pow_known_valid",
+                        "<<=" => "shl_known_valid",
+                        ">>=" => "shr_known_valid",
+                        _ => unreachable!(),
+                    }
+                    .to_string(),
+                    args: vec![crate::RustExpr::Cast {
+                        expr: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Int(literal))),
+                        ty: crate::RustType::Named(primitive_ty.to_string()),
+                    }],
                 }
-                .to_string(),
-                args: vec![operand],
-            },
+            }
             _ => return None,
         };
         Some(crate::RustStmt::Assign { target, value })
@@ -84,7 +94,8 @@ impl RustEmitter {
                 return Ok(false);
             };
             let value_expr = self.rewrite_stdlib_constant_idents_in_expr(value_expr);
-            let Some(lowered) = self.lower_exact_int_augassign_stmt_for_ir(name, op, value_expr)
+            let Some(lowered) =
+                self.lower_exact_int_augassign_stmt_for_ir(name, op, value, value_expr)
             else {
                 return Ok(false);
             };

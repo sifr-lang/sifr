@@ -200,7 +200,10 @@ fn test_generate_rust_elides_unreachable_returns_after_always_exit_paths() {
         return 77
 "#,
     );
-    assert!(always_exit_try.contains("return Err(ValueError::new(\"bad value\".to_string()));"));
+    assert!(
+        always_exit_try.contains("Err(ValueError::new(\"bad value\".to_string()))"),
+        "{always_exit_try}"
+    );
     assert!(always_exit_try.contains("return SifrInt::from_i64(77);"));
     assert!(!always_exit_try.contains("SifrInt::from_i64(11)"));
 
@@ -230,7 +233,7 @@ fn test_direct_try_capture_converts_result_none_to_unit() {
 "#,
     );
 
-    assert!(rust_code.contains("return Ok(Ok(()));"), "{rust_code}");
+    assert!(rust_code.contains("Ok(Ok(()))"), "{rust_code}");
     assert!(!rust_code.contains("return Ok(Ok(None));"), "{rust_code}");
 }
 
@@ -251,8 +254,11 @@ fn test_generate_rust_guarded_list_pop_unwraps_compiler_verified_nonempty() {
         "def main():\n    values: list[int] = [1, 2]\n    while values:\n        _: int = values.pop()\n",
     );
 
-    assert!(rust_code.contains("let Some(__sifr_nonempty_pop_value) = values.pop() else {"));
-    assert!(rust_code.contains("compiler-verified non-empty pop should return Some"));
+    assert!(
+        rust_code.contains("values.remove(values.len() - (1_usize))"),
+        "{rust_code}"
+    );
+    assert!(!rust_code.contains("unreachable!"));
 }
 
 #[test]
@@ -261,7 +267,8 @@ fn test_generate_rust_guarded_list_pop_zero_unwraps_compiler_verified_nonempty()
         "def main():\n    values: list[int] = [1, 2]\n    while values:\n        _: int = values.pop(0)\n",
     );
 
-    assert!(rust_code.contains("compiler-verified non-empty pop should return Some"));
+    assert!(rust_code.contains("values.remove(0"));
+    assert!(!rust_code.contains("unreachable!"));
 }
 
 #[test]

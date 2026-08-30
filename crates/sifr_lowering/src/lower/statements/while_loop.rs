@@ -1,8 +1,8 @@
 use super::{
     FunctionType, HirStmt, LowerCtx, Ranged, StmtWhile, apply_narrowing,
     detect_narrowing_condition, detect_true_nonzero_integer_guards, detect_while_sequence_guards,
-    lower_expr, lower_stmts, ownership_diagnostics, restore_const_integer_state_after_branches,
-    validate_control_flow_condition,
+    invalidate_loop_body_const_integer_facts, lower_expr, lower_stmts, ownership_diagnostics,
+    restore_const_integer_state_after_branches, validate_control_flow_condition,
 };
 
 pub(in crate::lower) fn lower_while(
@@ -10,6 +10,7 @@ pub(in crate::lower) fn lower_while(
     func_type: &FunctionType,
     ctx: &mut LowerCtx,
 ) -> Option<HirStmt> {
+    invalidate_loop_body_const_integer_facts(ctx, &while_stmt.body);
     let narrowing_cond = detect_narrowing_condition(&while_stmt.test, ctx);
     let condition = lower_expr(&while_stmt.test, ctx)?;
     validate_control_flow_condition(&condition, "while", while_stmt.test.range(), ctx);

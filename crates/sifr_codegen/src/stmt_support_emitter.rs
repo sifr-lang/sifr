@@ -31,6 +31,7 @@ mod async_with_and_for;
 mod await_and_async_comprehension;
 mod borrowed_operand_lowering;
 mod call_args_and_returns;
+pub(crate) mod checked_decimal_codegen;
 pub(crate) mod checked_integer_codegen;
 mod class_upcasts;
 mod comprehension_exprs;

@@ -299,8 +299,7 @@ fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
 fn has_match(pattern: &String, text: &String) -> Result<bool, RegexError> {
     let __sifr_try_res: Result<Result<bool, RegexError>, RegexError> = (|| {
         let found: Option<String> = search(pattern, text)?;
-        return Ok(Ok((found != None)));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok((found != None)))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {

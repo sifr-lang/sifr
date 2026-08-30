@@ -66,10 +66,12 @@ mod __sifr_project_nominals {
                 return None;
             }
             Some({
-                let Some(__sifr_nonempty_pop_value) = self._data.pop_back() else {
-                    unreachable!("compiler-verified non-empty pop should return Some");
-                };
-                __sifr_nonempty_pop_value
+                let __sifr_nonempty_pop_index = self._data.len() - (1_usize);
+                let mut __sifr_nonempty_pop_values = self
+                    ._data
+                    .drain(__sifr_nonempty_pop_index..__sifr_nonempty_pop_index + (1_usize))
+                    .collect::<Vec<_>>();
+                __sifr_nonempty_pop_values.remove(0_usize)
             })
         }
     }
@@ -79,10 +81,12 @@ mod __sifr_project_nominals {
                 return None;
             }
             Some({
-                let Some(__sifr_nonempty_pop_value) = self._data.pop_front() else {
-                    unreachable!("compiler-verified non-empty pop should return Some");
-                };
-                __sifr_nonempty_pop_value
+                let __sifr_nonempty_pop_index = 0_usize;
+                let mut __sifr_nonempty_pop_values = self
+                    ._data
+                    .drain(__sifr_nonempty_pop_index..__sifr_nonempty_pop_index + (1_usize))
+                    .collect::<Vec<_>>();
+                __sifr_nonempty_pop_values.remove(0_usize)
             })
         }
     }

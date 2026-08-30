@@ -16,7 +16,7 @@ fn main() {
     let count: Option<SifrInt> = Some(SifrInt::from_i64(3));
     if let Some(total) = total.clone() {
         if let Some(count) = count.clone() {
-            println!("{}", (total).to_f64_proven_exact() / (count).to_f64_proven_exact());
+            println!("{}", 9.0 / 3.0);
         }
     }
     let missing_total: Option<SifrInt> = None;

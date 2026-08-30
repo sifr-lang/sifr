@@ -28,6 +28,11 @@ fn random_int(min: SifrInt, max: SifrInt) -> SifrInt {
 fn random_float() -> f64 {
     ::sifr_stdlib::random::random_float()
 }
+fn random_word_to_unit_float(value: SifrInt) -> f64 {
+    ::sifr_stdlib::random::random_word_to_unit_float(
+        ::sifr_runtime::interop::SifrIntBridge::from(value),
+    )
+}
 fn random_seed() -> SifrInt {
     ::sifr_stdlib::random::random_seed().into_sifr_int()
 }
@@ -208,7 +213,7 @@ fn b16encode(s: &String) -> Result<String, ParseError> {
                 &"strict".to_string(),
             )
             .map_err(|__message| ParseError { message: __message })?;
-        return Ok(
+        Ok(
             Ok(
                 ({
                     let __bytes_receiver = &data;
@@ -222,8 +227,7 @@ fn b16encode(s: &String) -> Result<String, ParseError> {
                 })
                     .to_uppercase(),
             ),
-        );
-        unreachable!("sifr try/except return capture fell through");
+        )
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -274,15 +278,14 @@ fn b16decode(s: &String) -> Result<String, ParseError> {
             }
             Ok::<Vec<u8>, ParseError>(result)
         })?;
-        return Ok(
+        Ok(
             ::sifr_runtime::encoding::decode_text(
                     &data,
                     &"utf-8".to_string(),
                     &"strict".to_string(),
                 )
                 .map_err(|__message| ParseError { message: __message }),
-        );
-        unreachable!("sifr try/except return capture fell through");
+        )
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -340,8 +343,7 @@ fn encode_urlsafe_b64_or_empty(payload: &String) -> String {
 fn decode_b64_or_empty(payload: &String) -> String {
     let __sifr_try_res: Result<String, ParseError> = (|| {
         let decoded: String = b64decode(payload)?;
-        return Ok(decoded);
-        unreachable!("sifr try/except return capture fell through");
+        Ok(decoded)
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -357,8 +359,7 @@ fn decode_b64_or_empty(payload: &String) -> String {
 fn decode_urlsafe_b64_or_empty(payload: &String) -> String {
     let __sifr_try_res: Result<String, ParseError> = (|| {
         let decoded: String = urlsafe_b64decode(payload)?;
-        return Ok(decoded);
-        unreachable!("sifr try/except return capture fell through");
+        Ok(decoded)
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {

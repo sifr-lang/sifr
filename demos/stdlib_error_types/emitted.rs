@@ -1082,8 +1082,7 @@ fn compute_mean(
                     )
                 }
             })?;
-        return Ok(Ok(total / count));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(total / count))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {

@@ -6,7 +6,7 @@ use sifr_type_system::{Type, make_union};
 
 const DEFAULT_MAX_INTEGER_OUTPUT_BITS: u64 = 1_000_000;
 
-pub(in crate::lower) fn decimal_integer_arithmetic_result_type(
+pub(in crate::lower) fn checked_decimal_arithmetic_result_type(
     left: &HirExpr,
     op: &str,
     right: &HirExpr,
@@ -17,14 +17,38 @@ pub(in crate::lower) fn decimal_integer_arithmetic_result_type(
     }
     let left_ty = left.ty().resolve_alias();
     let right_ty = right.ty().resolve_alias();
-    let exact_integer = |ty: &Type| matches!(ty, Type::Int | Type::LiteralInt(_));
-    let mixes_decimal_and_exact_integer = (matches!(left_ty, Type::Decimal)
-        && exact_integer(right_ty))
-        || (op != "**" && matches!(right_ty, Type::Decimal) && exact_integer(left_ty));
-    mixes_decimal_and_exact_integer.then(|| {
+    let integral = |ty: &Type| matches!(ty, Type::Int | Type::LiteralInt(_) | Type::FixedInt(_));
+    let decimal_operands = (matches!(left_ty, Type::Decimal)
+        && (matches!(right_ty, Type::Decimal) || integral(right_ty)))
+        || (op != "**" && matches!(right_ty, Type::Decimal) && integral(left_ty));
+    if decimal_operands {
+        let conversion = super::super::decimal_methods::decimal_conversion_error_type(ctx);
+        let error = if matches!(op, "/" | "//" | "%") {
+            make_union(vec![division_error_type(ctx), conversion])
+        } else {
+            conversion
+        };
+        return Some(Type::Result(Box::new(Type::Decimal), Box::new(error)));
+    }
+
+    let bigdecimal_division = matches!(left_ty, Type::BigDecimal)
+        && (matches!(right_ty, Type::BigDecimal) || integral(right_ty))
+        && matches!(op, "/" | "//" | "%");
+    if bigdecimal_division {
+        return Some(Type::Result(
+            Box::new(Type::BigDecimal),
+            Box::new(division_error_type(ctx)),
+        ));
+    }
+
+    let bigdecimal_power = matches!(left_ty, Type::BigDecimal) && integral(right_ty) && op == "**";
+    bigdecimal_power.then(|| {
         Type::Result(
-            Box::new(Type::Decimal),
-            Box::new(super::super::decimal_methods::decimal_conversion_error_type(ctx)),
+            Box::new(Type::BigDecimal),
+            Box::new(make_union(vec![
+                division_error_type(ctx),
+                super::super::decimal_methods::decimal_conversion_error_type(ctx),
+            ])),
         )
     })
 }
@@ -85,7 +109,7 @@ fn statically_safe_bounded_integer_arithmetic(
     right: &HirExpr,
     ctx: &LowerCtx,
 ) -> bool {
-    let Some(exponent) = proven_exact_integer_value(right, ctx) else {
+    let Some(exponent) = literal_exact_integer_value(right) else {
         return false;
     };
     if exponent.sign() == Sign::Minus {
@@ -218,6 +242,15 @@ fn exact_integer_ratio_is_proven_float_representable(
     denominator: &HirExpr,
     ctx: &LowerCtx,
 ) -> bool {
+    if !proven_exact_integer_value(numerator, ctx)
+        .as_ref()
+        .is_some_and(is_exactly_representable_as_float)
+        || !proven_exact_integer_value(denominator, ctx)
+            .as_ref()
+            .is_some_and(is_exactly_representable_as_float)
+    {
+        return false;
+    }
     let (Some(numerator), Some(denominator)) = (
         proven_exact_integer_value(numerator, ctx),
         proven_exact_integer_value(denominator, ctx),
@@ -254,6 +287,17 @@ fn exact_integer_ratio_is_proven_float_representable(
     let exponent = i128::from(numerator_twos) - i128::from(denominator_power);
     let highest_exponent = exponent + i128::from(significand_bits) - 1;
     highest_exponent <= 1023 && exponent >= -1074
+}
+
+pub(in crate::lower) fn proven_exact_integer_literal(
+    expr: &HirExpr,
+    ctx: &LowerCtx,
+) -> Option<HirExpr> {
+    let value = proven_exact_integer_value(expr, ctx)?;
+    Some(value.to_i64().map_or_else(
+        || HirExpr::LargeIntLiteral(value.to_string()),
+        HirExpr::IntLiteral,
+    ))
 }
 
 fn bigint_gcd(mut left: BigInt, mut right: BigInt) -> BigInt {
@@ -295,29 +339,9 @@ pub(in crate::lower) fn exact_integer_expr_is_proven_float_representable(
     expr: &HirExpr,
     ctx: &LowerCtx,
 ) -> bool {
-    if proven_exact_integer_value(expr, ctx)
+    proven_exact_integer_value(expr, ctx)
         .as_ref()
         .is_some_and(is_exactly_representable_as_float)
-    {
-        return true;
-    }
-    let HirExpr::BinOp {
-        left, op, right, ..
-    } = expr
-    else {
-        return false;
-    };
-    let bound = match op.as_str() {
-        "&" => proven_exact_integer_value(left, ctx)
-            .or_else(|| proven_exact_integer_value(right, ctx))
-            .filter(|value| value.sign() != Sign::Minus),
-        "%" => proven_exact_integer_value(right, ctx)
-            .filter(|value| value > &BigInt::ZERO)
-            .map(|value| value - BigInt::from(1_u8)),
-        _ => None,
-    };
-    let max_exact_integer = BigInt::from(1_u8) << 53_usize;
-    bound.is_some_and(|value| value <= max_exact_integer)
 }
 
 pub(in crate::lower) fn is_exactly_representable_as_float(value: &BigInt) -> bool {

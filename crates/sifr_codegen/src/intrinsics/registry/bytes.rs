@@ -342,29 +342,25 @@ pub(crate) fn lower_bytes_from_ints(args: &[RustExpr]) -> Option<RustExpr> {
                     method: "enumerate".to_string(),
                     args: vec![],
                 },
-                body: vec![
-                    RustStmt::If {
-                        cond: RustExpr::BinOp {
-                            left: Box::new(RustExpr::BinOp {
-                                left: Box::new(RustExpr::Deref(Box::new(RustExpr::Field {
-                                    expr: Box::new(RustExpr::Ident("__pair".to_string())),
-                                    field: "1".to_string(),
-                                }))),
-                                op: "<".to_string(),
-                                right: Box::new(int(0)),
+                body: vec![RustStmt::Expr(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("__out".to_string())),
+                    method: "push".to_string(),
+                    args: vec![RustExpr::Try(Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Field {
+                                expr: Box::new(RustExpr::Ident("__pair".to_string())),
+                                field: "1".to_string(),
                             }),
-                            op: "||".to_string(),
-                            right: Box::new(RustExpr::BinOp {
-                                left: Box::new(RustExpr::Deref(Box::new(RustExpr::Field {
-                                    expr: Box::new(RustExpr::Ident("__pair".to_string())),
-                                    field: "1".to_string(),
-                                }))),
-                                op: ">".to_string(),
-                                right: Box::new(int(255)),
-                            }),
-                        },
-                        then_body: vec![RustStmt::Return(Some(err_value_expr(
-                            RustExpr::FormatMacro {
+                            method: "try_to_u8".to_string(),
+                            args: vec![],
+                        }),
+                        method: "map_err".to_string(),
+                        args: vec![RustExpr::Closure {
+                            params: vec![crate::RustParam::Named {
+                                name: "_error".to_string(),
+                                ty: RustType::Named("_".to_string()),
+                            }],
+                            body: Box::new(value_error_expr(RustExpr::FormatMacro {
                                 name: "format".to_string(),
                                 format_str: "byte out of range at index {}: {}".to_string(),
                                 args: vec![
@@ -377,23 +373,11 @@ pub(crate) fn lower_bytes_from_ints(args: &[RustExpr]) -> Option<RustExpr> {
                                         field: "1".to_string(),
                                     })),
                                 ],
-                            },
-                        )))],
-                        else_body: None,
-                    },
-                    RustStmt::Expr(RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::Ident("__out".to_string())),
-                        method: "push".to_string(),
-                        args: vec![RustExpr::MethodCall {
-                            receiver: Box::new(RustExpr::Field {
-                                expr: Box::new(RustExpr::Ident("__pair".to_string())),
-                                field: "1".to_string(),
-                            }),
-                            method: "to_u8_proven_in_range".to_string(),
-                            args: vec![],
+                            })),
+                            is_move: false,
                         }],
-                    }),
-                ],
+                    }))],
+                })],
             },
         ],
         expr: Some(Box::new(typed_ok_expr(

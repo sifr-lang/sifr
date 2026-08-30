@@ -581,35 +581,19 @@ impl RustEmitter {
         };
         let plan =
             crate::helpers::plan_iterator_ownership_with_element_hint(source, element_type_hint);
-        let iter_binding = "__sifr_dict_iter_source".to_string();
         let iterator = Self::apply_copy_clone_yield_mode_for_ir(
             crate::RustExpr::MethodCall {
-                receiver: Box::new(crate::RustExpr::Ident(iter_binding.clone())),
+                receiver: Box::new(crate::RustExpr::Index {
+                    expr: Box::new(lowered_object),
+                    index: Box::new(Self::build_dict_lookup_key_arg_for_ir(lowered_index)),
+                }),
                 method: "iter".to_string(),
                 args: vec![],
             },
             plan.yield_mode,
         );
         let iterator = Self::wrap_iterator_expr_for_mode_for_ir(iterator, prefer_boxed_iterator);
-        Ok(Some(crate::RustExpr::Block {
-            stmts: vec![crate::RustStmt::LetElse {
-                pattern: format!("Some({iter_binding})"),
-                value: crate::RustExpr::MethodCall {
-                    receiver: Box::new(lowered_object),
-                    method: "get".to_string(),
-                    args: vec![Self::build_dict_lookup_key_arg_for_ir(lowered_index)],
-                },
-                else_body: vec![crate::RustStmt::Expr(crate::RustExpr::FnCall {
-                    func: Box::new(crate::RustExpr::Path(vec![
-                        "std".to_string(),
-                        "process".to_string(),
-                        "abort".to_string(),
-                    ])),
-                    args: vec![],
-                })],
-            }],
-            expr: Some(Box::new(iterator)),
-        }))
+        Ok(Some(iterator))
     }
 
     pub(crate) fn is_collect_call_expr(expr: &crate::RustExpr) -> bool {

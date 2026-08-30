@@ -14,11 +14,13 @@ def checked_add(value: decimal, increment: int) -> Result[decimal, DecimalConver
         raise error
 
 
-def checked_mod(value: decimal, divisor: int) -> Result[decimal, DecimalConversionError]:
+def checked_mod(value: decimal, divisor: int) -> Result[decimal, DecimalConversionError | DivisionError]:
     try:
         result: decimal = value % divisor
         return result
     except DecimalConversionError as error:
+        raise error
+    except DivisionError as error:
         raise error
 
 
@@ -31,6 +33,8 @@ def main() -> None:
         assert str(summed) == "50"
         assert str(remainder) == "1"
     except DecimalConversionError as error:
+        assert False, str(error)
+    except DivisionError as error:
         assert False, str(error)
 
     try:

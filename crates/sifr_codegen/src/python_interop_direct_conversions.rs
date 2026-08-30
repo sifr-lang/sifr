@@ -17,27 +17,31 @@ pub(crate) fn input_conversion(
             inner.resolve_alias(),
             Type::None | Type::Bool | Type::Int | Type::Float
         );
-        let inner_value = RustExpr::MethodCall {
-            receiver: Box::new(if borrowed_inner {
-                RustExpr::MethodCall {
-                    receiver: Box::new(receiver.clone()),
-                    method: "as_ref".to_string(),
-                    args: Vec::new(),
-                }
-            } else {
-                receiver.clone()
-            }),
-            method: "unwrap".to_string(),
-            args: Vec::new(),
+        let pattern = if borrowed_inner {
+            "Some(ref __sifr_optional_input)"
+        } else {
+            "Some(__sifr_optional_input)"
         };
-        return Some(RustExpr::If {
-            cond: Box::new(RustExpr::MethodCall {
-                receiver: Box::new(receiver),
-                method: "is_some".to_string(),
-                args: Vec::new(),
-            }),
-            then_expr: Box::new(input_conversion_value(inner_value, inner, opaque_classes)?),
-            else_expr: Some(Box::new(runtime_call("from_none", Vec::new()))),
+        return Some(RustExpr::Match {
+            expr: Box::new(receiver),
+            arms: vec![
+                crate::RustMatchArm {
+                    pattern: pattern.to_string(),
+                    bindings: Vec::new(),
+                    guard: None,
+                    body: vec![RustStmt::TailExpr(input_conversion_value(
+                        RustExpr::Ident("__sifr_optional_input".to_string()),
+                        inner,
+                        opaque_classes,
+                    )?)],
+                },
+                crate::RustMatchArm {
+                    pattern: "None".to_string(),
+                    bindings: Vec::new(),
+                    guard: None,
+                    body: vec![RustStmt::TailExpr(runtime_call("from_none", Vec::new()))],
+                },
+            ],
         });
     }
     if matches!(ty.resolve_alias(), Type::Class { name: class_name, .. } if opaque_classes.contains_key(class_name))

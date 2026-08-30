@@ -46,6 +46,22 @@ pub fn random_float() -> f64 {
     rand::random::<f64>()
 }
 
+/// Maps the low 32 bits of an exact integer to the half-open unit interval.
+///
+/// The Mersenne Twister implementation uses this after its word-level state
+/// transition. Masking here makes the conversion total for every `SifrInt`
+/// while preserving the generator's exact 32-bit semantics.
+#[must_use]
+pub fn random_word_to_unit_float(value: SifrIntBridge) -> f64 {
+    let masked = value.into_sifr_int() & SifrInt::from(u32::MAX);
+    let (_, digits) = masked.as_bigint().to_u32_digits();
+    let word = match digits.first() {
+        Some(word) => *word,
+        None => 0,
+    };
+    f64::from(word) / 4_294_967_296.0
+}
+
 #[must_use]
 pub fn random_seed() -> SifrIntBridge {
     SifrIntBridge::from(SifrInt::from(rand::random::<u64>()))
@@ -132,4 +148,26 @@ fn random_module_state() -> MutexGuard<'static, RandomModuleState> {
     RANDOM_MODULE_STATE
         .lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn word_to_unit_float_uses_exact_low_32_bit_semantics() {
+        let denominator = 4_294_967_296.0;
+        assert_eq!(
+            random_word_to_unit_float(SifrIntBridge::from(SifrInt::from(u32::MAX))),
+            f64::from(u32::MAX) / denominator
+        );
+        assert_eq!(
+            random_word_to_unit_float(SifrIntBridge::from(SifrInt::from(1_u64 << 32))),
+            0.0
+        );
+        assert_eq!(
+            random_word_to_unit_float(SifrIntBridge::from(SifrInt::from_i64(-1))),
+            f64::from(u32::MAX) / denominator
+        );
+    }
 }

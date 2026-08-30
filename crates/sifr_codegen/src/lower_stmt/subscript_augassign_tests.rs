@@ -56,11 +56,7 @@ fn lowers_simple_list_subscript_augassign_power_equal_stmt() {
         object: "items".to_string(),
         index: HirExpr::IntLiteral(0),
         op: "**=".to_string(),
-        value: HirExpr::Name {
-            name: "p".to_string(),
-            binding_id: None,
-            ty: Type::Int,
-        },
+        value: HirExpr::IntLiteral(2),
         object_ty: Type::List(Box::new(Type::Int)),
         missing_key_error: None,
     };
@@ -98,8 +94,8 @@ fn lowers_simple_list_subscript_augassign_power_equal_stmt() {
                 && method == "pow_known_valid"
                 && matches!(
                     args.first(),
-                    Some(RustExpr::Ref { expr, .. })
-                        if matches!(expr.as_ref(), RustExpr::Clone(inner) if matches!(inner.as_ref(), RustExpr::Ident(v) if v == "p"))
+                    Some(RustExpr::Cast { expr, .. })
+                        if matches!(expr.as_ref(), RustExpr::Literal(crate::RustLiteral::Int(2)))
                 )
         )
     ));

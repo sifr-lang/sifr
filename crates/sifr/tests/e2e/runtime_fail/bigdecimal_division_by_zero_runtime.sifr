@@ -1,4 +1,9 @@
-def main() -> None:
+def main() -> Result[None, DivisionError]:
     x: bigdecimal = BigDecimal("1")
     y: bigdecimal = BigDecimal("0")
-    x / y
+    try:
+        result: bigdecimal = x / y
+        assert False, str(result)
+    except DivisionError as error:
+        raise error
+    return None

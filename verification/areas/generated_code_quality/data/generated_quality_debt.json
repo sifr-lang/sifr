@@ -7,32 +7,22 @@
     "owner_items": [3, 4, 11],
     "entries": {
       "checked-demo-snapshots": {
-        "direct-index": {"count": 268, "signature_sha256": "00bbd9bff54d774bf959cd7d722732055bc210ff7312de62669fabff67bbdc35"},
-        "process-abort": {"count": 5, "signature_sha256": "84b9239f3656562f0522615534dc311948d76f128c0ea9e8ccf78976cc246a94"},
-        "process-exit": {"count": 8, "signature_sha256": "f99b0b8650e2d9b9dcd5d7d19b807ee62494a62ef63b887925100cbb9458fabd"},
-        "unreachable": {"count": 2122, "signature_sha256": "80461fb7813f33d6ce7a5bdf1107dfcf71bf9859ce1ae7a013e7697594662855"}
-      },
-      "selection-8e91c9f5f5bb2334": {
-        "unreachable": {"count": 20, "signature_sha256": "fc46cd006c8b082847a51e3145c2a2d2d20ee2bf6f0587c5fedb5e2bb3c2503a"}
+        "direct-index": {"count": 273, "signature_sha256": "ffd0aee7d8fcddf1fc48f6e5b009992d11d0d9430cb4165ef6474d6901d578cf"}
       },
       "selection-7cddd09acf851f35": {
-        "direct-index": {"count": 21, "signature_sha256": "416362a71b2838f1c90556362d0d40580bb0242141b7efa7856339a4be9d1f06"},
-        "signed-to-usize": {"count": 89, "signature_sha256": "157d241cd3d547249605fa5338cbe9ae18178340c0d870ba065c83d4c581b46b"},
-        "unreachable": {"count": 167, "signature_sha256": "89699043eb5a422cc0fac3edba1e5dc9a7531a9dd1fd4e2262be6060e6bc549a"}
+        "direct-index": {"count": 21, "signature_sha256": "1d2451df7491f6205fd5013f066add04ae075d8e43e38b31c1b2a69d8245eb60"}
       },
       "selection-0902166e369de295": {
-        "direct-index": {"count": 124, "signature_sha256": "284932d3eafcdadeb9ae8010987014ff60413863f914f4541536d953862db63d"},
-        "signed-to-usize": {"count": 529, "signature_sha256": "9532c2883603201b45e55baafa8f028581f1bc7ed4b9fc02af76f5d6b1f449e4"},
-        "unreachable": {"count": 912, "signature_sha256": "dd2688792fdd46bb512f8022e771d91ef610d06f360e5105ac7848ccdb445910"}
+        "direct-index": {"count": 125, "signature_sha256": "7409f56ba319eb4f77d85546e1d116f3cf59b5f390e311ffd2bea1fff2341980"}
       }
     }
   },
   "rustfmt": {
     "owner_items": [8],
     "entries": {
-      "selection-8e91c9f5f5bb2334": {"count": 2, "signature_sha256": "0654d199bdab6a90389339cf6be5d542a74df90406459e52d584d47abb8d3b44"},
-      "selection-7cddd09acf851f35": {"count": 12, "signature_sha256": "700bc4b03b393ed1c768cda3a3df2ff326d0bf91df361dd11782179e9f30a22b"},
-      "selection-0902166e369de295": {"count": 91, "signature_sha256": "1c44f20eca46d1aa085155d2f734c86a87660f5a501823fc8139df8b7d085905"}
+      "selection-8e91c9f5f5bb2334": {"count": 2, "signature_sha256": "4861e5d2f111f4f9ea5c7cf2d97e443f17eb32c759c206b6ecfb5bbcf92596ec"},
+      "selection-7cddd09acf851f35": {"count": 12, "signature_sha256": "41373209accf9f3dbc3b7e159837ada836a804cf86de62ff728c22ea4e54af51"},
+      "selection-0902166e369de295": {"count": 91, "signature_sha256": "af0b33524b196181a038b8595c25eb43d17542640efdad45505c21dbc2548ac4"}
     }
   },
   "clippy": {
@@ -41,24 +31,19 @@
       "clippy::approx_constant": 8,
       "clippy::arithmetic_side_effects": 2,
       "clippy::assertions_on_constants": 8,
-      "clippy::assign_op_pattern": 8,
+      "clippy::assigning_clones": 7,
       "clippy::box_collection": 7,
       "clippy::branches_sharing_code": 8,
       "clippy::cast_lossless": 11,
-      "clippy::cast_possible_truncation": 11,
-      "clippy::cast_possible_wrap": 11,
-      "clippy::cast_precision_loss": 11,
-      "clippy::cast_sign_loss": 11,
       "clippy::clone_on_copy": 7,
       "clippy::cloned_instead_of_copied": 7,
       "clippy::collapsible_else_if": 8,
       "clippy::collapsible_if": 8,
       "clippy::collapsible_str_replace": 9,
       "clippy::comparison_to_empty": 8,
+      "clippy::cmp_owned": 7,
       "clippy::derive_partial_eq_without_eq": 8,
       "clippy::double_parens": 8,
-      "clippy::eq_op": 8,
-      "clippy::explicit_counter_loop": 9,
       "clippy::explicit_into_iter_loop": 7,
       "clippy::float_cmp": 2,
       "clippy::fn_params_excessive_bools": 8,
@@ -70,12 +55,12 @@
       "clippy::indexing_slicing": 4,
       "clippy::items_after_statements": 8,
       "clippy::iter_cloned_collect": 7,
-      "clippy::len_without_is_empty": 8,
+      "clippy::iter_overeager_cloned": 7,
       "clippy::let_unit_value": 8,
       "clippy::manual_assert_eq": 8,
       "clippy::manual_is_multiple_of": 2,
+      "clippy::manual_let_else": 8,
       "clippy::manual_ok_err": 8,
-      "clippy::manual_range_contains": 8,
       "clippy::manual_string_new": 8,
       "clippy::map_identity": 8,
       "clippy::many_single_char_names": 8,
@@ -87,7 +72,6 @@
       "clippy::needless_collect": 9,
       "clippy::needless_pass_by_value": 7,
       "clippy::needless_return": 8,
-      "clippy::needless_type_cast": 11,
       "clippy::no_effect_underscore_binding": 8,
       "clippy::option_if_let_else": 8,
       "clippy::op_ref": 7,
@@ -96,19 +80,19 @@
       "clippy::ptr_arg": 7,
       "clippy::pub_underscore_fields": 8,
       "clippy::question_mark": 8,
+      "clippy::range_plus_one": 8,
       "clippy::redundant_clone": 7,
       "clippy::redundant_closure": 8,
       "clippy::redundant_closure_call": 8,
       "clippy::redundant_closure_for_method_calls": 8,
       "clippy::redundant_else": 8,
-      "clippy::redundant_guards": 8,
+      "clippy::redundant_iter_cloned": 7,
       "clippy::ref_option": 7,
       "clippy::return_self_not_must_use": 8,
       "clippy::semicolon_if_nothing_returned": 8,
       "clippy::similar_names": 8,
       "clippy::single_char_pattern": 9,
       "clippy::single_match_else": 8,
-      "clippy::stable_sort_primitive": 9,
       "clippy::struct_excessive_bools": 8,
       "clippy::to_string_in_format_args": 8,
       "clippy::too_many_arguments": 8,
@@ -145,9 +129,9 @@
       "unused_variables": 8
     },
     "entries": {
-      "selection-8e91c9f5f5bb2334": {"count": 463, "lint_count": 40, "signature_sha256": "7531158ae2705bd1cf107308e04156e0899f382b7a26b5841f1314a187f3eea2"},
-      "selection-7cddd09acf851f35": {"count": 7031, "lint_count": 74, "signature_sha256": "a142cde0cb24d00b928bdc9e3e077b74429248597bdc39ddb0efb6f4b1056a78"},
-      "selection-0902166e369de295": {"count": 38957, "lint_count": 105, "signature_sha256": "d265420f6d205e4c9df78bc9102c6347e801880b87054618b2c144ed4ba584ac"}
+      "selection-8e91c9f5f5bb2334": {"count": 679, "lint_count": 40, "signature_sha256": "7bab7e5d7aad0f2eb033b37a187cbced46bc18017e9c820102d9462b3e6861f5"},
+      "selection-7cddd09acf851f35": {"count": 7205, "lint_count": 73, "signature_sha256": "ec5dbe847d1ff95e51d217b37469f88de52d16a542b5093107c8c83bcc9fc0b9"},
+      "selection-0902166e369de295": {"count": 35982, "lint_count": 99, "signature_sha256": "9bcb53cd081c44b33167709332ec723a04b4b6615ac4f8bf2566da5becb21f14"}
     }
   },
   "freshness": {"owner_items": [8], "entries": {}}

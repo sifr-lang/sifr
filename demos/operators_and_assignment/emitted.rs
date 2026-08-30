@@ -7,8 +7,8 @@ fn main() {
     println!("{}", &a & &b);
     println!("{}", &a | &b);
     println!("{}", &a ^ &b);
-    println!("{}", a.clone().shl_known_valid(&SifrInt::from_i64(2)));
-    println!("{}", a.clone().shr_known_valid(&SifrInt::from_i64(1)));
+    println!("{}", a.clone().shl_known_valid(2_usize));
+    println!("{}", a.clone().shr_known_valid(1_usize));
     let x: SifrInt = SifrInt::from_i64(42);
     println!("{}", !(x));
     println!("{}", !(SifrInt::from_i64(0)));
@@ -23,9 +23,9 @@ fn main() {
     println!("{}", flags);
     flags = &flags ^ &SifrInt::from_i64(3);
     println!("{}", flags);
-    flags = flags.shl_known_valid(&SifrInt::from_i64(0));
+    flags = flags.shl_known_valid(0_usize);
     println!("{}", flags);
-    flags = flags.shr_known_valid(&SifrInt::from_i64(2));
+    flags = flags.shr_known_valid(2_usize);
     println!("{}", flags);
     let mut p: SifrInt = SifrInt::from_i64(0);
     let mut q: SifrInt = SifrInt::from_i64(0);

@@ -271,10 +271,9 @@ fn collect_primary_actual(payload: &Vec<u8>) -> Vec<String> {
         .push(
             format!(
                 "{}", { let __bytes_receiver = & payload; { let __needle =
-                SifrInt::from_i64(115); if (& __needle < & SifrInt::from_i64(0)) || (&
-                __needle > & SifrInt::from_i64(255)) { SifrInt::from_i64(0) } else {
-                SifrInt::from(__bytes_receiver.iter().filter(| __x | ** __x == __needle
-                .to_u8_proven_in_range()).count()) } } }
+                SifrInt::from_i64(115); match __needle.try_to_u8() { Ok(__needle_u8) => {
+                SifrInt::from(__bytes_receiver.iter().filter(| __x | ** __x ==
+                __needle_u8).count()) }, Err(_) => { SifrInt::from_i64(0) }, } } }
             ),
         );
     actual
@@ -283,12 +282,8 @@ fn collect_primary_actual(payload: &Vec<u8>) -> Vec<String> {
                 let __bytes_receiver = &payload;
                 {
                     let __needle = SifrInt::from_i64(45);
-                    if (&__needle < &SifrInt::from_i64(0))
-                        || (&__needle > &SifrInt::from_i64(255))
-                    {
-                        None
-                    } else {
-                        {
+                    match __needle.try_to_u8() {
+                        Ok(__needle_u8) => {
                             let __len = __bytes_receiver.len();
                             let __start = 0_usize;
                             let __stop = __len;
@@ -296,7 +291,7 @@ fn collect_primary_actual(payload: &Vec<u8>) -> Vec<String> {
                             let mut __result = None;
                             while (__i < __stop) && (__result == None) {
                                 if let Some(__x) = __bytes_receiver.get(__i) {
-                                    if *__x == __needle.to_u8_proven_in_range() {
+                                    if *__x == __needle_u8 {
                                         __result = Some(SifrInt::from(__i));
                                     }
                                 }
@@ -304,6 +299,7 @@ fn collect_primary_actual(payload: &Vec<u8>) -> Vec<String> {
                             }
                             __result
                         }
+                        Err(_) => None,
                     }
                 }
             }),
@@ -327,8 +323,7 @@ fn bytes_to_hex_or_empty(payload: &Vec<u8>) -> String {
             }
             __hex
         };
-        return Ok(hx);
-        unreachable!("sifr try/except return capture fell through");
+        Ok(hx)
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -386,8 +381,7 @@ fn bytes_from_hex_to_text_or_empty(payload: &String) -> String {
                 &"strict".to_string(),
             )
             .map_err(|__message| ParseError { message: __message })?;
-        return Ok(txt);
-        unreachable!("sifr try/except return capture fell through");
+        Ok(txt)
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {

@@ -128,8 +128,8 @@ pub struct RustEmitter {
     pub(crate) try_enum_counter: usize,
     /// Depth of try-block closures that capture return statements.
     pub(crate) try_closure_depth: usize,
-    /// Per-try closure return wrapping mode (true => wrap return payload in Some(...)).
-    pub(crate) try_closure_option_wrap: Vec<bool>,
+    /// Per-try closure representation for returns captured from the enclosing function.
+    pub(crate) try_closure_return_wrap: Vec<TryClosureReturnWrap>,
     /// Per-try closure target error type for `?` adaptation.
     pub(crate) try_closure_error_type: Vec<String>,
     /// Resolved error type for Python context cause classification in each try closure.
@@ -195,6 +195,13 @@ pub(crate) struct CollectionNeeds {
 #[derive(Default)]
 pub(crate) struct RuntimeNeeds {
     pub(crate) flags: HashSet<RuntimeNeed>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum TryClosureReturnWrap {
+    Direct,
+    Optional,
+    ControlFlow { continue_type: String },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -278,7 +285,7 @@ impl RustEmitter {
             emission_ctx: EmissionContext::default(),
             try_enum_counter: 0,
             try_closure_depth: 0,
-            try_closure_option_wrap: Vec::new(),
+            try_closure_return_wrap: Vec::new(),
             try_closure_error_type: Vec::new(),
             try_closure_error_type_info: Vec::new(),
             python_context_counter: 0,
@@ -675,47 +682,15 @@ impl RustEmitter {
             }
             let lowered_value = if let Some(lowered) = self.lower_rendered_expr_for_ir(value)? {
                 if let Some(target_ty) = self.local_binding_types.get(name).cloned() {
-                    let mut lowered =
-                        self.coerce_local_value_for_target_type_for_ir(&target_ty, value, lowered)?;
-                    if !crate::helpers::is_option_type(&target_ty)
-                        && crate::helpers::is_option_type(value.ty())
-                        && !value.ty().is_assignable_to(&target_ty)
-                    {
-                        let fallback = if crate::helpers::is_copy_type_for_codegen(&target_ty) {
-                            RustExpr::Ident(name.clone())
-                        } else {
-                            RustExpr::Clone(Box::new(RustExpr::Ident(name.clone())))
-                        };
-                        lowered = RustExpr::MethodCall {
-                            receiver: Box::new(RustExpr::Paren(Box::new(lowered))),
-                            method: "unwrap_or".to_string(),
-                            args: vec![fallback],
-                        };
-                    }
-                    lowered
+                    Self::validate_assignment_source_type_for_ir(name, &target_ty, value)?;
+                    self.coerce_local_value_for_target_type_for_ir(&target_ty, value, lowered)?
                 } else {
                     lowered
                 }
             } else if let Some(lowered) = self.lower_stmt_expr_for_ir(value)? {
                 if let Some(target_ty) = self.local_binding_types.get(name).cloned() {
-                    let mut lowered =
-                        self.coerce_local_value_for_target_type_for_ir(&target_ty, value, lowered)?;
-                    if !crate::helpers::is_option_type(&target_ty)
-                        && crate::helpers::is_option_type(value.ty())
-                        && !value.ty().is_assignable_to(&target_ty)
-                    {
-                        let fallback = if crate::helpers::is_copy_type_for_codegen(&target_ty) {
-                            RustExpr::Ident(name.clone())
-                        } else {
-                            RustExpr::Clone(Box::new(RustExpr::Ident(name.clone())))
-                        };
-                        lowered = RustExpr::MethodCall {
-                            receiver: Box::new(RustExpr::Paren(Box::new(lowered))),
-                            method: "unwrap_or".to_string(),
-                            args: vec![fallback],
-                        };
-                    }
-                    lowered
+                    Self::validate_assignment_source_type_for_ir(name, &target_ty, value)?;
+                    self.coerce_local_value_for_target_type_for_ir(&target_ty, value, lowered)?
                 } else {
                     lowered
                 }

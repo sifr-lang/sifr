@@ -9,10 +9,8 @@ fn collect_vowels(text: &String) -> String {
     let mut i: SifrInt = SifrInt::from_i64(0);
     while (&i < &SifrInt::from(__sifr_chars_text.len())) {
         let ch: String = {
-    let Some(__indexed_char) = __sifr_chars_text.get(::sifr_runtime::to_usize_proven(&(i))).map(|c| c.to_string()) else {
-        unreachable!("compiler-verified string index should be in range");
-    };
-    __indexed_char
+    let __indexed_char_option = __sifr_chars_text.get(::sifr_runtime::to_usize_proven(&(i))).map(|c| c.to_string());
+    __indexed_char_option.as_slice()[0_usize].clone()
 };
         if "aeiou".to_string().contains(&ch) {
             result.push_str((ch).as_str());

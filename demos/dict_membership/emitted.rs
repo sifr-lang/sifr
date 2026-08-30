@@ -7,23 +7,13 @@ fn guarded_lookup(table: &HashMap<SifrInt, SifrInt>, key: SifrInt) -> SifrInt {
     if !table.contains_key(&key) {
         return -&SifrInt::from_i64(1);
     }
-    let value: SifrInt = {
-    let Some(__sifr_proven_dict_value) = table.get(&key).cloned() else {
-        ::std::process::abort();
-    };
-    __sifr_proven_dict_value
-};
+    let value: SifrInt = table[&key].clone();
     value.clone()
 }
 
 fn expression_lookup(table: &HashMap<SifrInt, SifrInt>, base: SifrInt) -> SifrInt {
     if (table.keys().cloned().collect::<Vec<_>>()).contains(&(&base + &SifrInt::from_i64(1))) {
-        let value: SifrInt = {
-    let Some(__sifr_proven_dict_value) = table.get(&(&base + &SifrInt::from_i64(1))).cloned() else {
-        ::std::process::abort();
-    };
-    __sifr_proven_dict_value
-};
+        let value: SifrInt = table[&(&base + &SifrInt::from_i64(1))].clone();
         return value.clone();
     }
     -&SifrInt::from_i64(1)
@@ -33,12 +23,7 @@ fn sum_known_keys(table: &HashMap<SifrInt, SifrInt>, keys: &Vec<SifrInt>) -> Sif
     let mut total: SifrInt = SifrInt::from_i64(0);
     for key in keys.iter().cloned() {
         if table.contains_key(&key) {
-            total = &total + &({
-    let Some(__sifr_proven_dict_value) = table.get(&key).cloned() else {
-        ::std::process::abort();
-    };
-    __sifr_proven_dict_value
-});
+            total = &total + &table[&key].clone();
         }
     }
     total.clone()

@@ -195,8 +195,7 @@ mod __sifr_project_nominals {
     ) -> Result<__SifrIoNativeFileHandle, IOError> {
         let __sifr_try_res: Result<Result<__SifrIoNativeFileHandle, IOError>, IOError> = (|| {
             let handle_id: String = _open_file(path, mode)?;
-            return Ok(Ok(__SifrIoNativeFileHandle::new(handle_id)));
-            unreachable!("sifr try/except return capture fell through");
+            Ok(Ok(__SifrIoNativeFileHandle::new(handle_id)))
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -671,8 +670,7 @@ mod __sifr_project_nominals {
                     };
                     self._exhausted = true;
                 }
-                return Ok(Ok(outcome));
-                unreachable!("sifr try/except return capture fell through");
+                Ok(Ok(outcome))
             })();
             match __sifr_try_res {
                 Ok(__sifr_ret_val) => {
@@ -741,8 +739,7 @@ mod __sifr_project_nominals {
                 if r#final {
                     self._exhausted = true;
                 }
-                return Ok(Ok(outcome));
-                unreachable!("sifr try/except return capture fell through");
+                Ok(Ok(outcome))
             })();
             match __sifr_try_res {
                 Ok(__sifr_ret_val) => {
@@ -776,8 +773,7 @@ mod __sifr_project_nominals {
             ParseError,
         > = (|| {
             let value: String = _encoding_canonical_label_impl(label)?;
-            return Ok(Ok(value));
-            unreachable!("sifr try/except return capture fell through");
+            Ok(Ok(value))
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -801,8 +797,7 @@ mod __sifr_project_nominals {
             ParseError,
         > = (|| {
             let text: String = _encoding_decode_text_impl(data, encoding, errors)?;
-            return Ok(Ok(text));
-            unreachable!("sifr try/except return capture fell through");
+            Ok(Ok(text))
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -830,8 +825,7 @@ mod __sifr_project_nominals {
                 encoding,
                 errors,
             )?;
-            return Ok(Ok(recoveries));
-            unreachable!("sifr try/except return capture fell through");
+            Ok(Ok(recoveries))
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -866,10 +860,7 @@ mod __sifr_project_nominals {
                 encoding,
                 errors,
             )?;
-            return Ok(
-                Ok(__SifrStdlib_sifr_x2eencoding_x2eDecodeOutcome::new(text, recoveries)),
-            );
-            unreachable!("sifr try/except return capture fell through");
+            Ok(Ok(__SifrStdlib_sifr_x2eencoding_x2eDecodeOutcome::new(text, recoveries)))
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -914,10 +905,7 @@ mod __sifr_project_nominals {
                 errors,
                 r#final,
             )?;
-            return Ok(
-                Ok(__SifrStdlib_sifr_x2eencoding_x2eDecodeOutcome::new(text, recoveries)),
-            );
-            unreachable!("sifr try/except return capture fell through");
+            Ok(Ok(__SifrStdlib_sifr_x2eencoding_x2eDecodeOutcome::new(text, recoveries)))
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -947,8 +935,7 @@ mod __sifr_project_nominals {
                 encoding,
                 r#final,
             )?;
-            return Ok(Ok(next_pending));
-            unreachable!("sifr try/except return capture fell through");
+            Ok(Ok(next_pending))
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -972,8 +959,7 @@ mod __sifr_project_nominals {
             ParseError,
         > = (|| {
             let data: Vec<u8> = _encoding_encode_bytes_impl(text, encoding, errors)?;
-            return Ok(Ok(data));
-            unreachable!("sifr try/except return capture fell through");
+            Ok(Ok(data))
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -1001,8 +987,7 @@ mod __sifr_project_nominals {
                 encoding,
                 errors,
             )?;
-            return Ok(Ok(recoveries));
-            unreachable!("sifr try/except return capture fell through");
+            Ok(Ok(recoveries))
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -1037,10 +1022,7 @@ mod __sifr_project_nominals {
                 encoding,
                 errors,
             )?;
-            return Ok(
-                Ok(__SifrStdlib_sifr_x2eencoding_x2eEncodeOutcome::new(data, recoveries)),
-            );
-            unreachable!("sifr try/except return capture fell through");
+            Ok(Ok(__SifrStdlib_sifr_x2eencoding_x2eEncodeOutcome::new(data, recoveries)))
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -1189,10 +1171,7 @@ mod __sifr_project_nominals {
                 __SifrStdlib_sifr_x2eencoding_x2eDecodeError,
             >,
             __SifrStdlib_sifr_x2eencoding_x2eDecodeError,
-        > = (|| {
-            return Ok(_encoding_decode_outcome(data, &enc.label.clone(), &handler_name));
-            unreachable!("sifr try/except return capture fell through");
-        })();
+        > = (|| { Ok(_encoding_decode_outcome(data, &enc.label.clone(), &handler_name)) })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
                 return __sifr_ret_val;
@@ -1219,8 +1198,7 @@ mod __sifr_project_nominals {
                 enc,
                 errors,
             )?;
-            return Ok(Ok(outcome.get_text()));
-            unreachable!("sifr try/except return capture fell through");
+            Ok(Ok(outcome.get_text()))
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -1249,10 +1227,7 @@ mod __sifr_project_nominals {
                 __SifrStdlib_sifr_x2eencoding_x2eEncodeError,
             >,
             __SifrStdlib_sifr_x2eencoding_x2eEncodeError,
-        > = (|| {
-            return Ok(_encoding_encode_outcome(text, &enc.label.clone(), &handler_name));
-            unreachable!("sifr try/except return capture fell through");
-        })();
+        > = (|| { Ok(_encoding_encode_outcome(text, &enc.label.clone(), &handler_name)) })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
                 return __sifr_ret_val;
@@ -1279,8 +1254,7 @@ mod __sifr_project_nominals {
                 enc,
                 errors,
             )?;
-            return Ok(Ok(outcome.get_data()));
-            unreachable!("sifr try/except return capture fell through");
+            Ok(Ok(outcome.get_data()))
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -1791,8 +1765,7 @@ mod __sifr_project_nominals {
                     .map_err(|__e| __SifrUnion_8_x3asequence5_x3aunion1_x3a238_x3a5_x3aclass25_x3asifr_x2eencoding_x2eDecodeError1_x3a019_x3a5_x3aclass7_x3aIOError1_x3a0::__SifrUnionVariant_5_x3aclass25_x3asifr_x2eencoding_x2eDecodeError1_x3a0(
                         __e,
                     ))?;
-                return Ok(Ok(text));
-                unreachable!("sifr try/except return capture fell through");
+                Ok(Ok(text))
             })();
             match __sifr_try_res {
                 Ok(__sifr_ret_val) => {
@@ -1844,8 +1817,7 @@ mod __sifr_project_nominals {
                     .map_err(|__e| __SifrUnion_8_x3asequence5_x3aunion1_x3a238_x3a5_x3aclass25_x3asifr_x2eencoding_x2eEncodeError1_x3a019_x3a5_x3aclass7_x3aIOError1_x3a0::__SifrUnionVariant_5_x3aclass7_x3aIOError1_x3a0(
                         __e,
                     ))?;
-                return Ok(Ok(()));
-                unreachable!("sifr try/except return capture fell through");
+                Ok(Ok(()))
             })();
             match __sifr_try_res {
                 Ok(__sifr_ret_val) => {
@@ -2499,8 +2471,7 @@ mod __sifr_project_nominals {
     pub fn open(path: &String, mode: &String) -> Result<__SifrIoFileHandle, IOError> {
         let __sifr_try_res: Result<Result<__SifrIoFileHandle, IOError>, IOError> = (|| {
             let handle: __SifrIoNativeFileHandle = open_file(path, mode)?;
-            return Ok(Ok(__SifrIoFileHandle::new(handle, (mode.clone()).clone())));
-            unreachable!("sifr try/except return capture fell through");
+            Ok(Ok(__SifrIoFileHandle::new(handle, (mode.clone()).clone())))
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -2521,8 +2492,7 @@ mod __sifr_project_nominals {
         }
         let __sifr_try_res: Result<Result<__SifrIoBinaryFileHandle, IOError>, IOError> = (|| {
             let handle: __SifrIoNativeFileHandle = open_file(path, mode)?;
-            return Ok(Ok(__SifrIoBinaryFileHandle::new(handle, (mode.clone()).clone())));
-            unreachable!("sifr try/except return capture fell through");
+            Ok(Ok(__SifrIoBinaryFileHandle::new(handle, (mode.clone()).clone())))
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -2552,7 +2522,7 @@ mod __sifr_project_nominals {
                 &decode_errors,
             );
             let binary: __SifrIoBinaryFileHandle = open_binary(path, &binary_mode)?;
-            return Ok(
+            Ok(
                 Ok(
                     __SifrIoTextFileHandle::new(
                         binary,
@@ -2561,8 +2531,7 @@ mod __sifr_project_nominals {
                         encode_errors,
                     ),
                 ),
-            );
-            unreachable!("sifr try/except return capture fell through");
+            )
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -3441,8 +3410,7 @@ fn _file_write_bytes(handle: &String, data: &Vec<u8>) -> Result<(), IOError> {
 fn open_file(path: &String, mode: &String) -> Result<__SifrIoNativeFileHandle, IOError> {
     let __sifr_try_res: Result<Result<__SifrIoNativeFileHandle, IOError>, IOError> = (|| {
         let handle_id: String = _open_file(path, mode)?;
-        return Ok(Ok(__SifrIoNativeFileHandle::new(handle_id)));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(__SifrIoNativeFileHandle::new(handle_id)))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -3672,8 +3640,7 @@ fn _encoding_canonical_label(
         ParseError,
     > = (|| {
         let value: String = _encoding_canonical_label_impl(label)?;
-        return Ok(Ok(value));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(value))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -3697,8 +3664,7 @@ fn _encoding_decode_text(
         ParseError,
     > = (|| {
         let text: String = _encoding_decode_text_impl(data, encoding, errors)?;
-        return Ok(Ok(text));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(text))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -3726,8 +3692,7 @@ fn _encoding_decode_recoveries(
             encoding,
             errors,
         )?;
-        return Ok(Ok(recoveries));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(recoveries))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -3762,10 +3727,7 @@ fn _encoding_decode_outcome(
             encoding,
             errors,
         )?;
-        return Ok(
-            Ok(__SifrStdlib_sifr_x2eencoding_x2eDecodeOutcome::new(text, recoveries)),
-        );
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(__SifrStdlib_sifr_x2eencoding_x2eDecodeOutcome::new(text, recoveries)))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -3810,10 +3772,7 @@ fn _encoding_decode_incremental_outcome(
             errors,
             r#final,
         )?;
-        return Ok(
-            Ok(__SifrStdlib_sifr_x2eencoding_x2eDecodeOutcome::new(text, recoveries)),
-        );
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(__SifrStdlib_sifr_x2eencoding_x2eDecodeOutcome::new(text, recoveries)))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -3843,8 +3802,7 @@ fn _encoding_decode_incremental_pending(
             encoding,
             r#final,
         )?;
-        return Ok(Ok(next_pending));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(next_pending))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -3868,8 +3826,7 @@ fn _encoding_encode_bytes(
         ParseError,
     > = (|| {
         let data: Vec<u8> = _encoding_encode_bytes_impl(text, encoding, errors)?;
-        return Ok(Ok(data));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(data))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -3897,8 +3854,7 @@ fn _encoding_encode_recoveries(
             encoding,
             errors,
         )?;
-        return Ok(Ok(recoveries));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(recoveries))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -3933,10 +3889,7 @@ fn _encoding_encode_outcome(
             encoding,
             errors,
         )?;
-        return Ok(
-            Ok(__SifrStdlib_sifr_x2eencoding_x2eEncodeOutcome::new(data, recoveries)),
-        );
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(__SifrStdlib_sifr_x2eencoding_x2eEncodeOutcome::new(data, recoveries)))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -4085,10 +4038,7 @@ fn decode_outcome(
             __SifrStdlib_sifr_x2eencoding_x2eDecodeError,
         >,
         __SifrStdlib_sifr_x2eencoding_x2eDecodeError,
-    > = (|| {
-        return Ok(_encoding_decode_outcome(data, &enc.label.clone(), &handler_name));
-        unreachable!("sifr try/except return capture fell through");
-    })();
+    > = (|| { Ok(_encoding_decode_outcome(data, &enc.label.clone(), &handler_name)) })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
             return __sifr_ret_val;
@@ -4115,8 +4065,7 @@ fn decode(
             enc,
             errors,
         )?;
-        return Ok(Ok(outcome.get_text()));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(outcome.get_text()))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -4145,10 +4094,7 @@ fn encode_outcome(
             __SifrStdlib_sifr_x2eencoding_x2eEncodeError,
         >,
         __SifrStdlib_sifr_x2eencoding_x2eEncodeError,
-    > = (|| {
-        return Ok(_encoding_encode_outcome(text, &enc.label.clone(), &handler_name));
-        unreachable!("sifr try/except return capture fell through");
-    })();
+    > = (|| { Ok(_encoding_encode_outcome(text, &enc.label.clone(), &handler_name)) })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
             return __sifr_ret_val;
@@ -4175,8 +4121,7 @@ fn encode(
             enc,
             errors,
         )?;
-        return Ok(Ok(outcome.get_data()));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(outcome.get_data()))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -4337,8 +4282,7 @@ fn _encode_errors_from_decode_errors(
 fn open(path: &String, mode: &String) -> Result<__SifrIoFileHandle, IOError> {
     let __sifr_try_res: Result<Result<__SifrIoFileHandle, IOError>, IOError> = (|| {
         let handle: __SifrIoNativeFileHandle = open_file(path, mode)?;
-        return Ok(Ok(__SifrIoFileHandle::new(handle, (mode.clone()).clone())));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(__SifrIoFileHandle::new(handle, (mode.clone()).clone())))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -4359,8 +4303,7 @@ fn open_binary(
     }
     let __sifr_try_res: Result<Result<__SifrIoBinaryFileHandle, IOError>, IOError> = (|| {
         let handle: __SifrIoNativeFileHandle = open_file(path, mode)?;
-        return Ok(Ok(__SifrIoBinaryFileHandle::new(handle, (mode.clone()).clone())));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(__SifrIoBinaryFileHandle::new(handle, (mode.clone()).clone())))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -4390,7 +4333,7 @@ fn open_text(
             &decode_errors,
         );
         let binary: __SifrIoBinaryFileHandle = open_binary(path, &binary_mode)?;
-        return Ok(
+        Ok(
             Ok(
                 __SifrIoTextFileHandle::new(
                     binary,
@@ -4399,8 +4342,7 @@ fn open_text(
                     encode_errors,
                 ),
             ),
-        );
-        unreachable!("sifr try/except return capture fell through");
+        )
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {

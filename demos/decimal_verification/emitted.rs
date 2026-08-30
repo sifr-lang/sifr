@@ -1,11 +1,87 @@
 // src/main.rs
+mod __sifr_project_nominals {
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct DivisionError {
+        pub message: String,
+    }
+    impl DivisionError {
+        pub fn new(message: String) -> Self {
+            Self { message }
+        }
+    }
+    impl ::std::fmt::Display for DivisionError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for DivisionError {}
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct DecimalConversionError {
+        pub message: String,
+    }
+    impl DecimalConversionError {
+        pub fn new(message: String) -> Self {
+            Self { message }
+        }
+    }
+    impl ::std::fmt::Display for DecimalConversionError {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for DecimalConversionError {}
+}
+pub use __sifr_project_nominals::DecimalConversionError;
+pub use __sifr_project_nominals::DivisionError;
+
+mod __sifr_project_unions {
+    #[derive(Debug, Clone)]
+    pub enum __SifrUnion_8_x3asequence5_x3aunion1_x3a226_x3a5_x3aclass13_x3aDivisionError1_x3a035_x3a5_x3aclass22_x3aDecimalConversionError1_x3a0 {
+        __SifrUnionVariant_5_x3aclass22_x3aDecimalConversionError1_x3a0(
+            crate::__sifr_project_nominals::DecimalConversionError,
+        ),
+        __SifrUnionVariant_5_x3aclass13_x3aDivisionError1_x3a0(
+            crate::__sifr_project_nominals::DivisionError,
+        ),
+    }
+    impl From<crate::__sifr_project_nominals::DecimalConversionError>
+    for __SifrUnion_8_x3asequence5_x3aunion1_x3a226_x3a5_x3aclass13_x3aDivisionError1_x3a035_x3a5_x3aclass22_x3aDecimalConversionError1_x3a0 {
+        fn from(value: crate::__sifr_project_nominals::DecimalConversionError) -> Self {
+            __SifrUnion_8_x3asequence5_x3aunion1_x3a226_x3a5_x3aclass13_x3aDivisionError1_x3a035_x3a5_x3aclass22_x3aDecimalConversionError1_x3a0::__SifrUnionVariant_5_x3aclass22_x3aDecimalConversionError1_x3a0(
+                value,
+            )
+        }
+    }
+    impl From<crate::__sifr_project_nominals::DivisionError>
+    for __SifrUnion_8_x3asequence5_x3aunion1_x3a226_x3a5_x3aclass13_x3aDivisionError1_x3a035_x3a5_x3aclass22_x3aDecimalConversionError1_x3a0 {
+        fn from(value: crate::__sifr_project_nominals::DivisionError) -> Self {
+            __SifrUnion_8_x3asequence5_x3aunion1_x3a226_x3a5_x3aclass13_x3aDivisionError1_x3a035_x3a5_x3aclass22_x3aDecimalConversionError1_x3a0::__SifrUnionVariant_5_x3aclass13_x3aDivisionError1_x3a0(
+                value,
+            )
+        }
+    }
+    impl ::std::fmt::Display
+    for __SifrUnion_8_x3asequence5_x3aunion1_x3a226_x3a5_x3aclass13_x3aDivisionError1_x3a035_x3a5_x3aclass22_x3aDecimalConversionError1_x3a0 {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match self {
+                __SifrUnion_8_x3asequence5_x3aunion1_x3a226_x3a5_x3aclass13_x3aDivisionError1_x3a035_x3a5_x3aclass22_x3aDecimalConversionError1_x3a0::__SifrUnionVariant_5_x3aclass22_x3aDecimalConversionError1_x3a0(
+                    v,
+                ) => {
+                    return write!(f, "{}", v);
+                }
+                __SifrUnion_8_x3asequence5_x3aunion1_x3a226_x3a5_x3aclass13_x3aDivisionError1_x3a035_x3a5_x3aclass22_x3aDecimalConversionError1_x3a0::__SifrUnionVariant_5_x3aclass13_x3aDivisionError1_x3a0(
+                    v,
+                ) => {
+                    return write!(f, "{}", v);
+                }
+            }
+        }
+    }
+}
+pub use __sifr_project_unions::__SifrUnion_8_x3asequence5_x3aunion1_x3a226_x3a5_x3aclass13_x3aDivisionError1_x3a035_x3a5_x3aclass22_x3aDecimalConversionError1_x3a0;
 use ::rust_decimal::Decimal;
-
 use ::bigdecimal::BigDecimal;
-
 use ::sifr_runtime::SifrInt;
-
-// --- stdlib: _sifr.encoding ---
 fn _encoding_is_supported_impl(label: &String) -> bool {
     ::sifr_stdlib::encoding::encoding_is_supported(label)
 }
@@ -115,8 +191,6 @@ fn _encoding_encode_recoveries_impl(
             message: __sifr_bridge_error.to_string(),
         })
 }
-
-// --- stdlib: _sifr.fs ---
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct __SifrIoNativeFileHandle {
     _id: String,
@@ -197,8 +271,7 @@ fn _file_write_bytes(handle: &String, data: &Vec<u8>) -> Result<(), IOError> {
 fn open_file(path: &String, mode: &String) -> Result<__SifrIoNativeFileHandle, IOError> {
     let __sifr_try_res: Result<Result<__SifrIoNativeFileHandle, IOError>, IOError> = (|| {
         let handle_id: String = _open_file(path, mode)?;
-        return Ok(Ok(__SifrIoNativeFileHandle::new(handle_id)));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(__SifrIoNativeFileHandle::new(handle_id)))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -334,8 +407,6 @@ fn rglob_pattern(dir: &String, pattern: &String) -> Result<Vec<String>, IOError>
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-
-// --- stdlib: _sifr.json ---
 fn json_load_tokens(text: &String) -> Result<Vec<String>, JSONDecodeError> {
     ::sifr_stdlib::json::json_load_tokens(text)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
@@ -371,8 +442,6 @@ fn json_dump_tokens_web(tokens: &Vec<String>) -> Result<String, JsonIntegerRange
             profile: __sifr_bridge_error.profile().to_string(),
         })
 }
-
-// --- stdlib: sifr.encoding ---
 fn __const_ENCODING_UTF8() -> String {
     "utf-8".to_string().to_string()
 }
@@ -697,8 +766,7 @@ impl __SifrStdlib_sifr_x2eencoding_x2eDecoder {
                 };
                 self._exhausted = true;
             }
-            return Ok(Ok(outcome));
-            unreachable!("sifr try/except return capture fell through");
+            Ok(Ok(outcome))
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -767,8 +835,7 @@ impl __SifrStdlib_sifr_x2eencoding_x2eEncoder {
             if r#final {
                 self._exhausted = true;
             }
-            return Ok(Ok(outcome));
-            unreachable!("sifr try/except return capture fell through");
+            Ok(Ok(outcome))
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -802,8 +869,7 @@ fn _encoding_canonical_label(
         ParseError,
     > = (|| {
         let value: String = _encoding_canonical_label_impl(label)?;
-        return Ok(Ok(value));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(value))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -827,8 +893,7 @@ fn _encoding_decode_text(
         ParseError,
     > = (|| {
         let text: String = _encoding_decode_text_impl(data, encoding, errors)?;
-        return Ok(Ok(text));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(text))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -856,8 +921,7 @@ fn _encoding_decode_recoveries(
             encoding,
             errors,
         )?;
-        return Ok(Ok(recoveries));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(recoveries))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -892,10 +956,7 @@ fn _encoding_decode_outcome(
             encoding,
             errors,
         )?;
-        return Ok(
-            Ok(__SifrStdlib_sifr_x2eencoding_x2eDecodeOutcome::new(text, recoveries)),
-        );
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(__SifrStdlib_sifr_x2eencoding_x2eDecodeOutcome::new(text, recoveries)))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -940,10 +1001,7 @@ fn _encoding_decode_incremental_outcome(
             errors,
             r#final,
         )?;
-        return Ok(
-            Ok(__SifrStdlib_sifr_x2eencoding_x2eDecodeOutcome::new(text, recoveries)),
-        );
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(__SifrStdlib_sifr_x2eencoding_x2eDecodeOutcome::new(text, recoveries)))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -973,8 +1031,7 @@ fn _encoding_decode_incremental_pending(
             encoding,
             r#final,
         )?;
-        return Ok(Ok(next_pending));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(next_pending))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -998,8 +1055,7 @@ fn _encoding_encode_bytes(
         ParseError,
     > = (|| {
         let data: Vec<u8> = _encoding_encode_bytes_impl(text, encoding, errors)?;
-        return Ok(Ok(data));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(data))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -1027,8 +1083,7 @@ fn _encoding_encode_recoveries(
             encoding,
             errors,
         )?;
-        return Ok(Ok(recoveries));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(recoveries))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -1063,10 +1118,7 @@ fn _encoding_encode_outcome(
             encoding,
             errors,
         )?;
-        return Ok(
-            Ok(__SifrStdlib_sifr_x2eencoding_x2eEncodeOutcome::new(data, recoveries)),
-        );
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(__SifrStdlib_sifr_x2eencoding_x2eEncodeOutcome::new(data, recoveries)))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -1215,10 +1267,7 @@ fn decode_outcome(
             __SifrStdlib_sifr_x2eencoding_x2eDecodeError,
         >,
         __SifrStdlib_sifr_x2eencoding_x2eDecodeError,
-    > = (|| {
-        return Ok(_encoding_decode_outcome(data, &enc.label.clone(), &handler_name));
-        unreachable!("sifr try/except return capture fell through");
-    })();
+    > = (|| { Ok(_encoding_decode_outcome(data, &enc.label.clone(), &handler_name)) })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
             return __sifr_ret_val;
@@ -1245,8 +1294,7 @@ fn decode(
             enc,
             errors,
         )?;
-        return Ok(Ok(outcome.get_text()));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(outcome.get_text()))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -1275,10 +1323,7 @@ fn encode_outcome(
             __SifrStdlib_sifr_x2eencoding_x2eEncodeError,
         >,
         __SifrStdlib_sifr_x2eencoding_x2eEncodeError,
-    > = (|| {
-        return Ok(_encoding_encode_outcome(text, &enc.label.clone(), &handler_name));
-        unreachable!("sifr try/except return capture fell through");
-    })();
+    > = (|| { Ok(_encoding_encode_outcome(text, &enc.label.clone(), &handler_name)) })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
             return __sifr_ret_val;
@@ -1305,8 +1350,7 @@ fn encode(
             enc,
             errors,
         )?;
-        return Ok(Ok(outcome.get_data()));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(outcome.get_data()))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -1320,8 +1364,6 @@ fn encode(
         }
     }
 }
-
-// --- stdlib: sifr.io ---
 #[derive(Debug, Clone)]
 enum __SifrUnion_8_x3asequence5_x3aunion1_x3a238_x3a5_x3aclass25_x3asifr_x2eencoding_x2eDecodeError1_x3a019_x3a5_x3aclass7_x3aIOError1_x3a0 {
     __SifrUnionVariant_5_x3aclass7_x3aIOError1_x3a0(IOError),
@@ -1819,8 +1861,7 @@ impl __SifrIoTextFileHandle {
                 .map_err(|__e| __SifrUnion_8_x3asequence5_x3aunion1_x3a238_x3a5_x3aclass25_x3asifr_x2eencoding_x2eDecodeError1_x3a019_x3a5_x3aclass7_x3aIOError1_x3a0::__SifrUnionVariant_5_x3aclass25_x3asifr_x2eencoding_x2eDecodeError1_x3a0(
                     __e,
                 ))?;
-            return Ok(Ok(text));
-            unreachable!("sifr try/except return capture fell through");
+            Ok(Ok(text))
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -1872,8 +1913,7 @@ impl __SifrIoTextFileHandle {
                 .map_err(|__e| __SifrUnion_8_x3asequence5_x3aunion1_x3a238_x3a5_x3aclass25_x3asifr_x2eencoding_x2eEncodeError1_x3a019_x3a5_x3aclass7_x3aIOError1_x3a0::__SifrUnionVariant_5_x3aclass7_x3aIOError1_x3a0(
                     __e,
                 ))?;
-            return Ok(Ok(()));
-            unreachable!("sifr try/except return capture fell through");
+            Ok(Ok(()))
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -2519,8 +2559,7 @@ fn _encode_errors_from_decode_errors(
 fn open(path: &String, mode: &String) -> Result<__SifrIoFileHandle, IOError> {
     let __sifr_try_res: Result<Result<__SifrIoFileHandle, IOError>, IOError> = (|| {
         let handle: __SifrIoNativeFileHandle = open_file(path, mode)?;
-        return Ok(Ok(__SifrIoFileHandle::new(handle, (mode.clone()).clone())));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(__SifrIoFileHandle::new(handle, (mode.clone()).clone())))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -2541,8 +2580,7 @@ fn open_binary(
     }
     let __sifr_try_res: Result<Result<__SifrIoBinaryFileHandle, IOError>, IOError> = (|| {
         let handle: __SifrIoNativeFileHandle = open_file(path, mode)?;
-        return Ok(Ok(__SifrIoBinaryFileHandle::new(handle, (mode.clone()).clone())));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(__SifrIoBinaryFileHandle::new(handle, (mode.clone()).clone())))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -2572,7 +2610,7 @@ fn open_text(
             &decode_errors,
         );
         let binary: __SifrIoBinaryFileHandle = open_binary(path, &binary_mode)?;
-        return Ok(
+        Ok(
             Ok(
                 __SifrIoTextFileHandle::new(
                     binary,
@@ -2581,8 +2619,7 @@ fn open_text(
                     encode_errors,
                 ),
             ),
-        );
-        unreachable!("sifr try/except return capture fell through");
+        )
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -2594,8 +2631,6 @@ fn open_text(
         }
     }
 }
-
-// --- stdlib: sifr.json ---
 #[derive(Debug, Clone, PartialEq)]
 enum __SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0 {
     __SifrUnionVariant_4_x3aatom4_x3abool(bool),
@@ -2988,280 +3023,469 @@ fn _json_bridge_tokens(value: &__SifrStdlib_sifr_x2ejson_x2eJsonValue) -> Vec<St
 fn dumps(
     value: &__SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0,
 ) -> String {
-    if let __SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0::__SifrUnionVariant_5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0(
-        value,
-    ) = value {
-        return json_dump_tokens(&_json_bridge_tokens(value));
-    } else {
-        if let __SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0::__SifrUnionVariant_4_x3aatom4_x3abool(
+    match value {
+        __SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0::__SifrUnionVariant_5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0(
             value,
-        ) = value {
+        ) => {
+            return json_dump_tokens(&_json_bridge_tokens(value));
+        }
+        __SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0::__SifrUnionVariant_4_x3aatom4_x3abool(
+            value,
+        ) => {
             return json_dump_tokens(&_json_bridge_tokens(&from_bool((value).clone())));
-        } else {
-            if let __SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0::__SifrUnionVariant_4_x3aatom3_x3aint(
-                value,
-            ) = value {
-                return json_dump_tokens(
-                    &_json_bridge_tokens(&from_int((value.clone()).clone())),
-                );
-            } else {
-                if let __SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0::__SifrUnionVariant_4_x3aatom5_x3afloat(
-                    value,
-                ) = value {
-                    return json_dump_tokens(
-                        &_json_bridge_tokens(&from_float((value).clone())),
-                    );
-                } else {
-                    return json_dump_tokens(
-                        &_json_bridge_tokens(&from_str(&format!("{}", value))),
-                    );
-                }
-            }
+        }
+        __SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0::__SifrUnionVariant_4_x3aatom3_x3aint(
+            value,
+        ) => {
+            return json_dump_tokens(
+                &_json_bridge_tokens(&from_int((value.clone()).clone())),
+            );
+        }
+        __SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0::__SifrUnionVariant_4_x3aatom5_x3afloat(
+            value,
+        ) => {
+            return json_dump_tokens(&_json_bridge_tokens(&from_float((value).clone())));
+        }
+        value => {
+            return json_dump_tokens(
+                &_json_bridge_tokens(&from_str(&format!("{}", value))),
+            );
         }
     }
 }
-// --- end stdlib ---
-
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct IOError {
     message: String,
     kind: String,
 }
-
 impl IOError {
     fn new(message: String) -> Self {
-        Self { message, kind: "Other".to_string() }
+        Self {
+            message,
+            kind: "Other".to_string(),
+        }
     }
 }
-
 impl ::std::fmt::Display for IOError {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::std::fmt::Display::fmt(&self.message, f)
     }
 }
-
-impl ::std::error::Error for IOError {
-}
-
+impl ::std::error::Error for IOError {}
 fn __io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
     let msg = e.to_string();
     let kind = {
-    let __sifr_io_kind = (&e as &dyn ::std::any::Any).downcast_ref::<std::io::Error>().map(::std::io::Error::kind);
-    match __sifr_io_kind {
-    Some(::std::io::ErrorKind::NotFound) => {
-        "FileNotFound".to_string()
-    },
-    Some(::std::io::ErrorKind::PermissionDenied) => {
-        "PermissionDenied".to_string()
-    },
-    Some(::std::io::ErrorKind::AlreadyExists) => {
-        "FileExists".to_string()
-    },
-    Some(::std::io::ErrorKind::IsADirectory) => {
-        "IsADirectory".to_string()
-    },
-    Some(::std::io::ErrorKind::NotADirectory) => {
-        "NotADirectory".to_string()
-    },
-    Some(::std::io::ErrorKind::DirectoryNotEmpty) => {
-        "DirectoryNotEmpty".to_string()
-    },
-    _ => {
-        "Other".to_string()
-    },
-}
-};
+        let __sifr_io_kind = (&e as &dyn ::std::any::Any)
+            .downcast_ref::<std::io::Error>()
+            .map(::std::io::Error::kind);
+        match __sifr_io_kind {
+            Some(::std::io::ErrorKind::NotFound) => "FileNotFound".to_string(),
+            Some(::std::io::ErrorKind::PermissionDenied) => {
+                "PermissionDenied".to_string()
+            }
+            Some(::std::io::ErrorKind::AlreadyExists) => "FileExists".to_string(),
+            Some(::std::io::ErrorKind::IsADirectory) => "IsADirectory".to_string(),
+            Some(::std::io::ErrorKind::NotADirectory) => "NotADirectory".to_string(),
+            Some(::std::io::ErrorKind::DirectoryNotEmpty) => {
+                "DirectoryNotEmpty".to_string()
+            }
+            _ => "Other".to_string(),
+        }
+    };
     IOError { message: msg, kind }
 }
-
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Error {
     message: String,
 }
-
 impl Error {
     fn new(message: String) -> Self {
         Self { message }
     }
 }
-
 impl ::std::fmt::Display for Error {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::std::fmt::Display::fmt(&self.message, f)
     }
 }
-
-impl ::std::error::Error for Error {
-}
-
+impl ::std::error::Error for Error {}
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct ParseError {
     message: String,
 }
-
 impl ParseError {
     fn new(message: String) -> Self {
         Self { message }
     }
 }
-
 impl ::std::fmt::Display for ParseError {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::std::fmt::Display::fmt(&self.message, f)
     }
 }
-
-impl ::std::error::Error for ParseError {
-}
-
+impl ::std::error::Error for ParseError {}
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct JSONDecodeError {
     message: String,
     line: SifrInt,
     column: SifrInt,
 }
-
 impl JSONDecodeError {
     fn new(message: String) -> Self {
-        Self { message, line: SifrInt::from_i64(0), column: SifrInt::from_i64(0) }
+        Self {
+            message,
+            line: SifrInt::from_i64(0),
+            column: SifrInt::from_i64(0),
+        }
     }
 }
-
 impl ::std::fmt::Display for JSONDecodeError {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::std::fmt::Display::fmt(&self.message, f)
     }
 }
-
-impl ::std::error::Error for JSONDecodeError {
-}
-
+impl ::std::error::Error for JSONDecodeError {}
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct JsonIntegerRangeError {
     message: String,
     path: String,
     profile: String,
 }
-
 impl JsonIntegerRangeError {
     fn new(message: String) -> Self {
-        Self { message, path: String::new(), profile: String::new() }
+        Self {
+            message,
+            path: String::new(),
+            profile: String::new(),
+        }
     }
 }
-
 impl ::std::fmt::Display for JsonIntegerRangeError {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::std::fmt::Display::fmt(&self.message, f)
     }
 }
-
-impl ::std::error::Error for JsonIntegerRangeError {
-}
-
+impl ::std::error::Error for JsonIntegerRangeError {}
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct JsonLimitError {
     message: String,
     limit: SifrInt,
 }
-
 impl JsonLimitError {
     fn new(message: String) -> Self {
-        Self { message, limit: SifrInt::from_i64(0) }
+        Self {
+            message,
+            limit: SifrInt::from_i64(0),
+        }
     }
 }
-
 impl ::std::fmt::Display for JsonLimitError {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::std::fmt::Display::fmt(&self.message, f)
     }
 }
-
-impl ::std::error::Error for JsonLimitError {
-}
-
+impl ::std::error::Error for JsonLimitError {}
 impl From<IOError> for Error {
     fn from(err: IOError) -> Self {
         Self::new(err.message)
     }
 }
-
 impl From<ParseError> for Error {
     fn from(err: ParseError) -> Self {
         Self::new(err.message)
     }
 }
-
+impl From<DivisionError> for Error {
+    fn from(err: DivisionError) -> Self {
+        Self::new(err.message)
+    }
+}
 impl From<JSONDecodeError> for Error {
     fn from(err: JSONDecodeError) -> Self {
         Self::new(err.message)
     }
 }
-
 impl From<JsonIntegerRangeError> for Error {
     fn from(err: JsonIntegerRangeError) -> Self {
         Self::new(err.message)
     }
 }
-
 impl From<JsonLimitError> for Error {
     fn from(err: JsonLimitError) -> Self {
         Self::new(err.message)
     }
 }
-
+impl From<DecimalConversionError> for Error {
+    fn from(err: DecimalConversionError) -> Self {
+        Self::new(err.message)
+    }
+}
 fn main() {
     println!("decimal_verification verification corpus and determinism gates demo");
-    let d: Decimal = Decimal::from_str_exact(("-7.5".to_string()).as_str()).unwrap_or_else(|__e| unreachable!());
-    let bd: BigDecimal = ("-7.5".to_string()).parse::<BigDecimal>().unwrap_or_else(|__e| unreachable!());
-    println!("{}", {
-    let __l = d;
-    let __r = Decimal::from_str_exact(("2".to_string()).as_str()).unwrap_or_else(|__e| unreachable!());
-    Decimal::checked_div(__l, __r).map_or_else(|| {
-    eprintln!("runtime error: decimal floor-division failed (division by zero or overflow)");
-    ::std::process::exit(1)
-}, |__q| __q.floor())
-});
-    println!("{}", {
-    let __l = d;
-    let __r = Decimal::from_str_exact(("2".to_string()).as_str()).unwrap_or_else(|__e| unreachable!());
-    Decimal::checked_div(__l, __r).map_or_else(|| {
-    eprintln!("runtime error: decimal modulo failed (division by zero or overflow)");
-    ::std::process::exit(1)
-}, |__q| __l - (__q.floor() * __r))
-});
-    println!("{}", {
-    let __l = bd.clone();
-    let __r = ("2".to_string()).parse::<BigDecimal>().unwrap_or_else(|__e| unreachable!()).clone();
-    if __r == BigDecimal::from(0) { {
-    eprintln!("runtime error: bigdecimal floor-division by zero");
-    ::std::process::exit(1)
-} } else { ::bigdecimal::Context::default().with_rounding_mode(::bigdecimal::RoundingMode::HalfEven).with_prec(28).unwrap_or_else(|| ::bigdecimal::Context::default().with_rounding_mode(::bigdecimal::RoundingMode::HalfEven)).round_decimal_ref(&((&__l / &__r).with_scale_round(0, ::bigdecimal::RoundingMode::Floor))) }
-});
-    println!("{}", {
-    let __l = bd.clone();
-    let __r = ("2".to_string()).parse::<BigDecimal>().unwrap_or_else(|__e| unreachable!()).clone();
-    if __r == BigDecimal::from(0) { {
-    eprintln!("runtime error: bigdecimal modulo by zero");
-    ::std::process::exit(1)
-} } else { ::bigdecimal::Context::default().with_rounding_mode(::bigdecimal::RoundingMode::HalfEven).with_prec(28).unwrap_or_else(|| ::bigdecimal::Context::default().with_rounding_mode(::bigdecimal::RoundingMode::HalfEven)).round_decimal_ref(&(&__l - ((&__l / &__r).with_scale_round(0, ::bigdecimal::RoundingMode::Floor) * &__r))) }
-});
-    println!("{}", dumps(&__SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0::__SifrUnionVariant_4_x3aatom7_x3adecimal(Decimal::from_str_exact(("1.2300".to_string()).as_str()).unwrap_or_else(|__e| unreachable!()))));
-    println!("{}", dumps(&__SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0::__SifrUnionVariant_4_x3aatom10_x3abigdecimal((("1.2300".to_string()).parse::<BigDecimal>().unwrap_or_else(|__e| unreachable!())).clone())));
-    let baseline_tmp_d: Decimal = Decimal::from_str_exact(("1.2345".to_string()).as_str()).unwrap_or_else(|__e| unreachable!()) * Decimal::from_str_exact(("3.0".to_string()).as_str()).unwrap_or_else(|__e| unreachable!());
-    let baseline_d: String = format!("{}", baseline_tmp_d.round_dp_with_strategy({
-    let __scale = 3;
-    (if __scale < 0 { 0 } else { __scale }) as u32
-}, ::rust_decimal::RoundingStrategy::MidpointNearestEven));
-    let baseline_bd: String = format!("{}", ::bigdecimal::Context::default().with_rounding_mode(::bigdecimal::RoundingMode::HalfEven).with_prec(28).unwrap_or_else(|| ::bigdecimal::Context::default().with_rounding_mode(::bigdecimal::RoundingMode::HalfEven)).round_decimal_ref(&(("1.2345678901234567890123456789".to_string()).parse::<BigDecimal>().unwrap_or_else(|__e| unreachable!()).clone() + ("0".to_string()).parse::<BigDecimal>().unwrap_or_else(|__e| unreachable!()).clone())).round(6));
-    let mut i: SifrInt = SifrInt::from_i64(0);
-    while &i < &SifrInt::from_i64(20) {
-        let loop_tmp_d: Decimal = Decimal::from_str_exact(("1.2345".to_string()).as_str()).unwrap_or_else(|__e| unreachable!()) * Decimal::from_str_exact(("3.0".to_string()).as_str()).unwrap_or_else(|__e| unreachable!());
-        assert!((format!("{}", loop_tmp_d.round_dp_with_strategy({
-    let __scale = 3;
-    (if __scale < 0 { 0 } else { __scale }) as u32
-}, ::rust_decimal::RoundingStrategy::MidpointNearestEven)) == baseline_d));
-        assert!((format!("{}", ::bigdecimal::Context::default().with_rounding_mode(::bigdecimal::RoundingMode::HalfEven).with_prec(28).unwrap_or_else(|| ::bigdecimal::Context::default().with_rounding_mode(::bigdecimal::RoundingMode::HalfEven)).round_decimal_ref(&(("1.2345678901234567890123456789".to_string()).parse::<BigDecimal>().unwrap_or_else(|__e| unreachable!()).clone() + ("0".to_string()).parse::<BigDecimal>().unwrap_or_else(|__e| unreachable!()).clone())).round(6)) == baseline_bd));
-        i = &i + &SifrInt::from_i64(1);
+    let d: Decimal = Decimal::from_i128_with_scale(-75_i128, 1);
+    let bd: BigDecimal = BigDecimal::new(
+        ::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&vec![181]),
+        1,
+    );
+    println!(
+        "{}", dumps(&
+        __SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0::__SifrUnionVariant_4_x3aatom7_x3adecimal(Decimal::from_i128_with_scale(12300_i128,
+        4)))
+    );
+    println!(
+        "{}", dumps(&
+        __SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0::__SifrUnionVariant_4_x3aatom10_x3abigdecimal((BigDecimal::new(::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&
+        vec![48, 12]), 4)).clone()))
+    );
+    let __sifr_try_res: Result<
+        (),
+        __SifrUnion_8_x3asequence5_x3aunion1_x3a226_x3a5_x3aclass13_x3aDivisionError1_x3a035_x3a5_x3aclass22_x3aDecimalConversionError1_x3a0,
+    > = (|| {
+        let d_floor: Decimal = ({
+            let __sifr_decimal_left_result = Ok(d);
+            let __sifr_decimal_right_result = Ok(
+                Decimal::from_i128_with_scale(2_i128, 0),
+            );
+            __sifr_decimal_left_result
+                .and_then(move |__sifr_decimal_left| {
+                    __sifr_decimal_right_result
+                        .and_then(move |__sifr_decimal_right| {
+                            Decimal::checked_div(
+                                    __sifr_decimal_left,
+                                    __sifr_decimal_right,
+                                )
+                                .map(|__sifr_decimal_quotient| {
+                                    __sifr_decimal_quotient.floor()
+                                })
+                                .map_or_else(
+                                    || Err(
+                                        if __sifr_decimal_right.is_zero() {
+                                            __SifrUnion_8_x3asequence5_x3aunion1_x3a226_x3a5_x3aclass13_x3aDivisionError1_x3a035_x3a5_x3aclass22_x3aDecimalConversionError1_x3a0::__SifrUnionVariant_5_x3aclass13_x3aDivisionError1_x3a0(
+                                                DivisionError::new("division by zero".to_string()),
+                                            )
+                                        } else {
+                                            __SifrUnion_8_x3asequence5_x3aunion1_x3a226_x3a5_x3aclass13_x3aDivisionError1_x3a035_x3a5_x3aclass22_x3aDecimalConversionError1_x3a0::__SifrUnionVariant_5_x3aclass22_x3aDecimalConversionError1_x3a0(
+                                                DecimalConversionError::new(
+                                                    "decimal // operation overflowed its exact representation"
+                                                        .to_string(),
+                                                ),
+                                            )
+                                        },
+                                    ),
+                                    |__sifr_decimal_value| Ok(__sifr_decimal_value),
+                                )
+                        })
+                })
+        })?;
+        let d_remainder: Decimal = ({
+            let __sifr_decimal_left_result = Ok(d);
+            let __sifr_decimal_right_result = Ok(
+                Decimal::from_i128_with_scale(2_i128, 0),
+            );
+            __sifr_decimal_left_result
+                .and_then(move |__sifr_decimal_left| {
+                    __sifr_decimal_right_result
+                        .and_then(move |__sifr_decimal_right| {
+                            Decimal::checked_div(
+                                    __sifr_decimal_left,
+                                    __sifr_decimal_right,
+                                )
+                                .and_then(|__sifr_decimal_quotient| {
+                                    Decimal::checked_mul(
+                                            __sifr_decimal_quotient.floor(),
+                                            __sifr_decimal_right,
+                                        )
+                                        .and_then(|__sifr_decimal_product| Decimal::checked_sub(
+                                            __sifr_decimal_left,
+                                            __sifr_decimal_product,
+                                        ))
+                                })
+                                .map_or_else(
+                                    || Err(
+                                        if __sifr_decimal_right.is_zero() {
+                                            __SifrUnion_8_x3asequence5_x3aunion1_x3a226_x3a5_x3aclass13_x3aDivisionError1_x3a035_x3a5_x3aclass22_x3aDecimalConversionError1_x3a0::__SifrUnionVariant_5_x3aclass13_x3aDivisionError1_x3a0(
+                                                DivisionError::new("division by zero".to_string()),
+                                            )
+                                        } else {
+                                            __SifrUnion_8_x3asequence5_x3aunion1_x3a226_x3a5_x3aclass13_x3aDivisionError1_x3a035_x3a5_x3aclass22_x3aDecimalConversionError1_x3a0::__SifrUnionVariant_5_x3aclass22_x3aDecimalConversionError1_x3a0(
+                                                DecimalConversionError::new(
+                                                    "decimal % operation overflowed its exact representation"
+                                                        .to_string(),
+                                                ),
+                                            )
+                                        },
+                                    ),
+                                    |__sifr_decimal_value| Ok(__sifr_decimal_value),
+                                )
+                        })
+                })
+        })?;
+        let bd_floor: BigDecimal = ({
+            let __sifr_bigdecimal_left = bd.clone();
+            let __sifr_bigdecimal_right = BigDecimal::new(
+                    ::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&vec![2]),
+                    0,
+                )
+                .clone();
+            if ::bigdecimal::Zero::is_zero(&__sifr_bigdecimal_right) {
+                Err(DivisionError::new("division by zero".to_string()))
+            } else {
+                Ok(
+                    ::bigdecimal::Context::new(
+                            ::std::num::NonZeroU64::MIN.saturating_add(27),
+                            ::bigdecimal::RoundingMode::HalfEven,
+                        )
+                        .round_decimal_ref(
+                            &((&__sifr_bigdecimal_left / &__sifr_bigdecimal_right)
+                                .with_scale_round(0, ::bigdecimal::RoundingMode::Floor)),
+                        ),
+                )
+            }
+        })
+            .map_err(|__e| __SifrUnion_8_x3asequence5_x3aunion1_x3a226_x3a5_x3aclass13_x3aDivisionError1_x3a035_x3a5_x3aclass22_x3aDecimalConversionError1_x3a0::__SifrUnionVariant_5_x3aclass13_x3aDivisionError1_x3a0(
+                __e,
+            ))?;
+        let bd_remainder: BigDecimal = ({
+            let __sifr_bigdecimal_left = bd.clone();
+            let __sifr_bigdecimal_right = BigDecimal::new(
+                    ::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&vec![2]),
+                    0,
+                )
+                .clone();
+            if ::bigdecimal::Zero::is_zero(&__sifr_bigdecimal_right) {
+                Err(DivisionError::new("division by zero".to_string()))
+            } else {
+                Ok(
+                    ::bigdecimal::Context::new(
+                            ::std::num::NonZeroU64::MIN.saturating_add(27),
+                            ::bigdecimal::RoundingMode::HalfEven,
+                        )
+                        .round_decimal_ref(
+                            &(&__sifr_bigdecimal_left
+                                - ((&__sifr_bigdecimal_left / &__sifr_bigdecimal_right)
+                                    .with_scale_round(0, ::bigdecimal::RoundingMode::Floor)
+                                    * &__sifr_bigdecimal_right)),
+                        ),
+                )
+            }
+        })
+            .map_err(|__e| __SifrUnion_8_x3asequence5_x3aunion1_x3a226_x3a5_x3aclass13_x3aDivisionError1_x3a035_x3a5_x3aclass22_x3aDecimalConversionError1_x3a0::__SifrUnionVariant_5_x3aclass13_x3aDivisionError1_x3a0(
+                __e,
+            ))?;
+        println!("{}", d_floor);
+        println!("{}", d_remainder);
+        println!("{}", bd_floor);
+        println!("{}", bd_remainder);
+        let baseline_tmp_d: Decimal = ({
+            let __sifr_decimal_left_result = Ok(
+                Decimal::from_i128_with_scale(12345_i128, 4),
+            );
+            let __sifr_decimal_right_result = Ok(
+                Decimal::from_i128_with_scale(30_i128, 1),
+            );
+            __sifr_decimal_left_result
+                .and_then(move |__sifr_decimal_left| {
+                    __sifr_decimal_right_result
+                        .and_then(move |__sifr_decimal_right| {
+                            Decimal::checked_mul(
+                                    __sifr_decimal_left,
+                                    __sifr_decimal_right,
+                                )
+                                .map_or_else(
+                                    || Err(
+                                        DecimalConversionError::new(
+                                            "decimal * operation overflowed its exact representation"
+                                                .to_string(),
+                                        ),
+                                    ),
+                                    |__sifr_decimal_value| Ok(__sifr_decimal_value),
+                                )
+                        })
+                })
+        })
+            .map_err(|__e| __SifrUnion_8_x3asequence5_x3aunion1_x3a226_x3a5_x3aclass13_x3aDivisionError1_x3a035_x3a5_x3aclass22_x3aDecimalConversionError1_x3a0::__SifrUnionVariant_5_x3aclass22_x3aDecimalConversionError1_x3a0(
+                __e,
+            ))?;
+        let baseline_d: String = format!(
+            "{}", baseline_tmp_d.round_dp_with_strategy({ let __scale = 3; (if __scale <
+            0 { 0 } else { __scale }) as u32 },
+            ::rust_decimal::RoundingStrategy::MidpointNearestEven)
+        );
+        let baseline_bd: String = format!(
+            "{}", ::bigdecimal::Context::new(::std::num::NonZeroU64::MIN
+            .saturating_add(27), ::bigdecimal::RoundingMode::HalfEven)
+            .round_decimal_ref(&
+            (BigDecimal::new(::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&
+            vec![39, 228, 27, 50, 70, 190, 201, 177, 110, 57, 129, 21]), 28).clone() +
+            BigDecimal::new(::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&
+            vec![0]), 0).clone())).round(6)
+        );
+        let mut i: SifrInt = SifrInt::from_i64(0);
+        while &i < &SifrInt::from_i64(20) {
+            let loop_tmp_d: Decimal = ({
+                let __sifr_decimal_left_result = Ok(
+                    Decimal::from_i128_with_scale(12345_i128, 4),
+                );
+                let __sifr_decimal_right_result = Ok(
+                    Decimal::from_i128_with_scale(30_i128, 1),
+                );
+                __sifr_decimal_left_result
+                    .and_then(move |__sifr_decimal_left| {
+                        __sifr_decimal_right_result
+                            .and_then(move |__sifr_decimal_right| {
+                                Decimal::checked_mul(
+                                        __sifr_decimal_left,
+                                        __sifr_decimal_right,
+                                    )
+                                    .map_or_else(
+                                        || Err(
+                                            DecimalConversionError::new(
+                                                "decimal * operation overflowed its exact representation"
+                                                    .to_string(),
+                                            ),
+                                        ),
+                                        |__sifr_decimal_value| Ok(__sifr_decimal_value),
+                                    )
+                            })
+                    })
+            })
+                .map_err(|__e| __SifrUnion_8_x3asequence5_x3aunion1_x3a226_x3a5_x3aclass13_x3aDivisionError1_x3a035_x3a5_x3aclass22_x3aDecimalConversionError1_x3a0::__SifrUnionVariant_5_x3aclass22_x3aDecimalConversionError1_x3a0(
+                    __e,
+                ))?;
+            assert!(
+                (format!("{}", loop_tmp_d.round_dp_with_strategy({ let __scale = 3; (if
+                __scale < 0 { 0 } else { __scale }) as u32 },
+                ::rust_decimal::RoundingStrategy::MidpointNearestEven)) == baseline_d)
+            );
+            assert!(
+                (format!("{}", ::bigdecimal::Context::new(::std::num::NonZeroU64::MIN
+                .saturating_add(27), ::bigdecimal::RoundingMode::HalfEven)
+                .round_decimal_ref(&
+                (BigDecimal::new(::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&
+                vec![39, 228, 27, 50, 70, 190, 201, 177, 110, 57, 129, 21]), 28).clone()
+                +
+                BigDecimal::new(::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&
+                vec![0]), 0).clone())).round(6)) == baseline_bd)
+            );
+            i = &i + &SifrInt::from_i64(1);
+        }
+        Ok(())
+    })();
+    if let Err(__sifr_try_err) = __sifr_try_res {
+        match __sifr_try_err {
+            __SifrUnion_8_x3asequence5_x3aunion1_x3a226_x3a5_x3aclass13_x3aDivisionError1_x3a035_x3a5_x3aclass22_x3aDecimalConversionError1_x3a0::__SifrUnionVariant_5_x3aclass22_x3aDecimalConversionError1_x3a0(
+                __sifr_try_variant_error,
+            ) => {
+                let error = __sifr_try_variant_error.clone();
+                assert!(false, "{}", format!("{}", error));
+            }
+            __SifrUnion_8_x3asequence5_x3aunion1_x3a226_x3a5_x3aclass13_x3aDivisionError1_x3a035_x3a5_x3aclass22_x3aDecimalConversionError1_x3a0::__SifrUnionVariant_5_x3aclass13_x3aDivisionError1_x3a0(
+                __sifr_try_variant_error,
+            ) => {
+                let error = __sifr_try_variant_error.clone();
+                assert!(false, "{}", format!("{}", error));
+            }
+        }
     }
     println!("deterministic decimal and bigdecimal corpus checks passed");
 }

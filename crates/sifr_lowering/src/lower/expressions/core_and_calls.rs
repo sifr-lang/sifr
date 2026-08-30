@@ -621,10 +621,11 @@ pub(in crate::lower) fn lower_subscript(
         } else {
             None
         };
-        let step = if let Some(ref s) = slice_expr.step {
-            super::slice_validation::lower_proven_nonzero_slice_step(s, ctx)
-        } else {
-            None
+        let step = match &slice_expr.step {
+            Some(step) => Some(super::slice_validation::lower_proven_nonzero_slice_step(
+                step, ctx,
+            )?),
+            None => None,
         };
 
         // Determine result type for slicing

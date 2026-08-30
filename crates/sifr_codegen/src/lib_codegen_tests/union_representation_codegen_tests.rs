@@ -208,9 +208,10 @@ fn isinstance_narrows_union_items_inside_for_loops() {
     let rust_code = generate_rust_from_source(source);
 
     assert!(!rust_code.contains("if isinstance("), "{rust_code}");
-    assert!(rust_code.contains("if let"), "{rust_code}");
+    assert!(rust_code.contains("match value"), "{rust_code}");
     assert!(
         rust_code.contains(&format!("{}(value)", Type::Str.union_variant_name())),
         "{rust_code}"
     );
+    assert!(!rust_code.contains("unreachable!"), "{rust_code}");
 }

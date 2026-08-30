@@ -197,8 +197,7 @@ mod __sifr_project_nominals {
     ) -> Result<__SifrIoNativeFileHandle, IOError> {
         let __sifr_try_res: Result<Result<__SifrIoNativeFileHandle, IOError>, IOError> = (|| {
             let handle_id: String = _open_file(path, mode)?;
-            return Ok(Ok(__SifrIoNativeFileHandle::new(handle_id)));
-            unreachable!("sifr try/except return capture fell through");
+            Ok(Ok(__SifrIoNativeFileHandle::new(handle_id)))
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -665,8 +664,7 @@ mod __sifr_project_nominals {
                     };
                     self._exhausted = true;
                 }
-                return Ok(Ok(outcome));
-                unreachable!("sifr try/except return capture fell through");
+                Ok(Ok(outcome))
             })();
             match __sifr_try_res {
                 Ok(__sifr_ret_val) => {
@@ -735,8 +733,7 @@ mod __sifr_project_nominals {
                 if r#final {
                     self._exhausted = true;
                 }
-                return Ok(Ok(outcome));
-                unreachable!("sifr try/except return capture fell through");
+                Ok(Ok(outcome))
             })();
             match __sifr_try_res {
                 Ok(__sifr_ret_val) => {
@@ -770,8 +767,7 @@ mod __sifr_project_nominals {
             ParseError,
         > = (|| {
             let value: String = _encoding_canonical_label_impl(label)?;
-            return Ok(Ok(value));
-            unreachable!("sifr try/except return capture fell through");
+            Ok(Ok(value))
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -795,8 +791,7 @@ mod __sifr_project_nominals {
             ParseError,
         > = (|| {
             let text: String = _encoding_decode_text_impl(data, encoding, errors)?;
-            return Ok(Ok(text));
-            unreachable!("sifr try/except return capture fell through");
+            Ok(Ok(text))
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -824,8 +819,7 @@ mod __sifr_project_nominals {
                 encoding,
                 errors,
             )?;
-            return Ok(Ok(recoveries));
-            unreachable!("sifr try/except return capture fell through");
+            Ok(Ok(recoveries))
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -860,10 +854,7 @@ mod __sifr_project_nominals {
                 encoding,
                 errors,
             )?;
-            return Ok(
-                Ok(__SifrStdlib_sifr_x2eencoding_x2eDecodeOutcome::new(text, recoveries)),
-            );
-            unreachable!("sifr try/except return capture fell through");
+            Ok(Ok(__SifrStdlib_sifr_x2eencoding_x2eDecodeOutcome::new(text, recoveries)))
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -908,10 +899,7 @@ mod __sifr_project_nominals {
                 errors,
                 r#final,
             )?;
-            return Ok(
-                Ok(__SifrStdlib_sifr_x2eencoding_x2eDecodeOutcome::new(text, recoveries)),
-            );
-            unreachable!("sifr try/except return capture fell through");
+            Ok(Ok(__SifrStdlib_sifr_x2eencoding_x2eDecodeOutcome::new(text, recoveries)))
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -941,8 +929,7 @@ mod __sifr_project_nominals {
                 encoding,
                 r#final,
             )?;
-            return Ok(Ok(next_pending));
-            unreachable!("sifr try/except return capture fell through");
+            Ok(Ok(next_pending))
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -966,8 +953,7 @@ mod __sifr_project_nominals {
             ParseError,
         > = (|| {
             let data: Vec<u8> = _encoding_encode_bytes_impl(text, encoding, errors)?;
-            return Ok(Ok(data));
-            unreachable!("sifr try/except return capture fell through");
+            Ok(Ok(data))
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -995,8 +981,7 @@ mod __sifr_project_nominals {
                 encoding,
                 errors,
             )?;
-            return Ok(Ok(recoveries));
-            unreachable!("sifr try/except return capture fell through");
+            Ok(Ok(recoveries))
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -1031,10 +1016,7 @@ mod __sifr_project_nominals {
                 encoding,
                 errors,
             )?;
-            return Ok(
-                Ok(__SifrStdlib_sifr_x2eencoding_x2eEncodeOutcome::new(data, recoveries)),
-            );
-            unreachable!("sifr try/except return capture fell through");
+            Ok(Ok(__SifrStdlib_sifr_x2eencoding_x2eEncodeOutcome::new(data, recoveries)))
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -1183,10 +1165,7 @@ mod __sifr_project_nominals {
                 __SifrStdlib_sifr_x2eencoding_x2eDecodeError,
             >,
             __SifrStdlib_sifr_x2eencoding_x2eDecodeError,
-        > = (|| {
-            return Ok(_encoding_decode_outcome(data, &enc.label.clone(), &handler_name));
-            unreachable!("sifr try/except return capture fell through");
-        })();
+        > = (|| { Ok(_encoding_decode_outcome(data, &enc.label.clone(), &handler_name)) })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
                 return __sifr_ret_val;
@@ -1213,8 +1192,7 @@ mod __sifr_project_nominals {
                 enc,
                 errors,
             )?;
-            return Ok(Ok(outcome.get_text()));
-            unreachable!("sifr try/except return capture fell through");
+            Ok(Ok(outcome.get_text()))
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -1243,10 +1221,7 @@ mod __sifr_project_nominals {
                 __SifrStdlib_sifr_x2eencoding_x2eEncodeError,
             >,
             __SifrStdlib_sifr_x2eencoding_x2eEncodeError,
-        > = (|| {
-            return Ok(_encoding_encode_outcome(text, &enc.label.clone(), &handler_name));
-            unreachable!("sifr try/except return capture fell through");
-        })();
+        > = (|| { Ok(_encoding_encode_outcome(text, &enc.label.clone(), &handler_name)) })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
                 return __sifr_ret_val;
@@ -1273,8 +1248,7 @@ mod __sifr_project_nominals {
                 enc,
                 errors,
             )?;
-            return Ok(Ok(outcome.get_data()));
-            unreachable!("sifr try/except return capture fell through");
+            Ok(Ok(outcome.get_data()))
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -1785,8 +1759,7 @@ mod __sifr_project_nominals {
                     .map_err(|__e| __SifrUnion_8_x3asequence5_x3aunion1_x3a238_x3a5_x3aclass25_x3asifr_x2eencoding_x2eDecodeError1_x3a019_x3a5_x3aclass7_x3aIOError1_x3a0::__SifrUnionVariant_5_x3aclass25_x3asifr_x2eencoding_x2eDecodeError1_x3a0(
                         __e,
                     ))?;
-                return Ok(Ok(text));
-                unreachable!("sifr try/except return capture fell through");
+                Ok(Ok(text))
             })();
             match __sifr_try_res {
                 Ok(__sifr_ret_val) => {
@@ -1838,8 +1811,7 @@ mod __sifr_project_nominals {
                     .map_err(|__e| __SifrUnion_8_x3asequence5_x3aunion1_x3a238_x3a5_x3aclass25_x3asifr_x2eencoding_x2eEncodeError1_x3a019_x3a5_x3aclass7_x3aIOError1_x3a0::__SifrUnionVariant_5_x3aclass7_x3aIOError1_x3a0(
                         __e,
                     ))?;
-                return Ok(Ok(()));
-                unreachable!("sifr try/except return capture fell through");
+                Ok(Ok(()))
             })();
             match __sifr_try_res {
                 Ok(__sifr_ret_val) => {
@@ -2493,8 +2465,7 @@ mod __sifr_project_nominals {
     pub fn open(path: &String, mode: &String) -> Result<__SifrIoFileHandle, IOError> {
         let __sifr_try_res: Result<Result<__SifrIoFileHandle, IOError>, IOError> = (|| {
             let handle: __SifrIoNativeFileHandle = open_file(path, mode)?;
-            return Ok(Ok(__SifrIoFileHandle::new(handle, (mode.clone()).clone())));
-            unreachable!("sifr try/except return capture fell through");
+            Ok(Ok(__SifrIoFileHandle::new(handle, (mode.clone()).clone())))
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -2515,8 +2486,7 @@ mod __sifr_project_nominals {
         }
         let __sifr_try_res: Result<Result<__SifrIoBinaryFileHandle, IOError>, IOError> = (|| {
             let handle: __SifrIoNativeFileHandle = open_file(path, mode)?;
-            return Ok(Ok(__SifrIoBinaryFileHandle::new(handle, (mode.clone()).clone())));
-            unreachable!("sifr try/except return capture fell through");
+            Ok(Ok(__SifrIoBinaryFileHandle::new(handle, (mode.clone()).clone())))
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -2546,7 +2516,7 @@ mod __sifr_project_nominals {
                 &decode_errors,
             );
             let binary: __SifrIoBinaryFileHandle = open_binary(path, &binary_mode)?;
-            return Ok(
+            Ok(
                 Ok(
                     __SifrIoTextFileHandle::new(
                         binary,
@@ -2555,8 +2525,7 @@ mod __sifr_project_nominals {
                         encode_errors,
                     ),
                 ),
-            );
-            unreachable!("sifr try/except return capture fell through");
+            )
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -3026,8 +2995,7 @@ mod __sifr_project_nominals {
                 .map_err(|__e| __SifrUnion_8_x3asequence5_x3aunion1_x3a223_x3a5_x3aclass10_x3aParseError1_x3a028_x3a5_x3aclass15_x3aJSONDecodeError1_x3a0::__SifrUnionVariant_5_x3aclass10_x3aParseError1_x3a0(
                     __e,
                 ))?;
-            return Ok(Ok(parsed));
-            unreachable!("sifr try/except return capture fell through");
+            Ok(Ok(parsed))
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -3076,8 +3044,7 @@ mod __sifr_project_nominals {
                 .map_err(|__e| __SifrUnion_8_x3asequence5_x3aunion1_x3a223_x3a5_x3aclass10_x3aParseError1_x3a028_x3a5_x3aclass15_x3aJSONDecodeError1_x3a0::__SifrUnionVariant_5_x3aclass10_x3aParseError1_x3a0(
                     __e,
                 ))?;
-            return Ok(Ok(parsed));
-            unreachable!("sifr try/except return capture fell through");
+            Ok(Ok(parsed))
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -3263,7 +3230,7 @@ mod __sifr_project_nominals {
                 }
                 return Ok(Ok((object_value, next_index.clone())));
             }
-            return Err(
+            Err(
                 JSONDecodeError::new({
                     let mut __sifr_concat: String = String::with_capacity(
                         43usize + tag.len(),
@@ -3272,8 +3239,7 @@ mod __sifr_project_nominals {
                     __sifr_concat.push_str((tag).as_str());
                     __sifr_concat
                 }),
-            );
-            unreachable!("sifr try/except return capture fell through");
+            )
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -3301,8 +3267,7 @@ mod __sifr_project_nominals {
                     JSONDecodeError::new("JSON bridge payload has trailing data".to_string()),
                 );
             }
-            return Ok(Ok((decoded).0.clone()));
-            unreachable!("sifr try/except return capture fell through");
+            Ok(Ok((decoded).0.clone()))
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -3403,8 +3368,7 @@ mod __sifr_project_nominals {
             JSONDecodeError,
         > = (|| {
             let tokens: Vec<String> = json_load_tokens(s)?;
-            return Ok(_json_decode_tokens(&tokens));
-            unreachable!("sifr try/except return capture fell through");
+            Ok(_json_decode_tokens(&tokens))
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -3424,8 +3388,7 @@ mod __sifr_project_nominals {
             JSONDecodeError,
         > = (|| {
             let value: __SifrStdlib_sifr_x2ejson_x2eJsonValue = _decode_json(content)?;
-            return Ok(Ok(value));
-            unreachable!("sifr try/except return capture fell through");
+            Ok(Ok(value))
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -3446,8 +3409,7 @@ mod __sifr_project_nominals {
             IOError,
         > = (|| {
             let content: String = content_result?;
-            return Ok(_decode_loaded_json(&content));
-            unreachable!("sifr try/except return capture fell through");
+            Ok(_decode_loaded_json(&content))
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -3466,8 +3428,7 @@ mod __sifr_project_nominals {
             IOError,
         > = (|| {
             let content: String = content_result?;
-            return Ok(_decode_loaded_json(&content));
-            unreachable!("sifr try/except return capture fell through");
+            Ok(_decode_loaded_json(&content))
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -3482,35 +3443,33 @@ mod __sifr_project_nominals {
     pub fn dumps(
         value: &__SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0,
     ) -> String {
-        if let __SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0::__SifrUnionVariant_5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0(
-            value,
-        ) = value {
-            return json_dump_tokens(&_json_bridge_tokens(value));
-        } else {
-            if let __SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0::__SifrUnionVariant_4_x3aatom4_x3abool(
+        match value {
+            __SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0::__SifrUnionVariant_5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0(
                 value,
-            ) = value {
+            ) => {
+                return json_dump_tokens(&_json_bridge_tokens(value));
+            }
+            __SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0::__SifrUnionVariant_4_x3aatom4_x3abool(
+                value,
+            ) => {
                 return json_dump_tokens(&_json_bridge_tokens(&from_bool((value).clone())));
-            } else {
-                if let __SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0::__SifrUnionVariant_4_x3aatom3_x3aint(
-                    value,
-                ) = value {
-                    return json_dump_tokens(
-                        &_json_bridge_tokens(&from_int((value.clone()).clone())),
-                    );
-                } else {
-                    if let __SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0::__SifrUnionVariant_4_x3aatom5_x3afloat(
-                        value,
-                    ) = value {
-                        return json_dump_tokens(
-                            &_json_bridge_tokens(&from_float((value).clone())),
-                        );
-                    } else {
-                        return json_dump_tokens(
-                            &_json_bridge_tokens(&from_str(&format!("{}", value))),
-                        );
-                    }
-                }
+            }
+            __SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0::__SifrUnionVariant_4_x3aatom3_x3aint(
+                value,
+            ) => {
+                return json_dump_tokens(
+                    &_json_bridge_tokens(&from_int((value.clone()).clone())),
+                );
+            }
+            __SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0::__SifrUnionVariant_4_x3aatom5_x3afloat(
+                value,
+            ) => {
+                return json_dump_tokens(&_json_bridge_tokens(&from_float((value).clone())));
+            }
+            value => {
+                return json_dump_tokens(
+                    &_json_bridge_tokens(&from_str(&format!("{}", value))),
+                );
             }
         }
     }
@@ -4048,6 +4007,11 @@ fn random_int(min: SifrInt, max: SifrInt) -> SifrInt {
 fn random_float() -> f64 {
     ::sifr_stdlib::random::random_float()
 }
+fn random_word_to_unit_float(value: SifrInt) -> f64 {
+    ::sifr_stdlib::random::random_word_to_unit_float(
+        ::sifr_runtime::interop::SifrIntBridge::from(value),
+    )
+}
 fn random_seed() -> SifrInt {
     ::sifr_stdlib::random::random_seed().into_sifr_int()
 }
@@ -4393,8 +4357,7 @@ fn _file_write_bytes(handle: &String, data: &Vec<u8>) -> Result<(), IOError> {
 fn open_file(path: &String, mode: &String) -> Result<__SifrIoNativeFileHandle, IOError> {
     let __sifr_try_res: Result<Result<__SifrIoNativeFileHandle, IOError>, IOError> = (|| {
         let handle_id: String = _open_file(path, mode)?;
-        return Ok(Ok(__SifrIoNativeFileHandle::new(handle_id)));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(__SifrIoNativeFileHandle::new(handle_id)))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -4651,8 +4614,7 @@ fn _encoding_canonical_label(
         ParseError,
     > = (|| {
         let value: String = _encoding_canonical_label_impl(label)?;
-        return Ok(Ok(value));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(value))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -4676,8 +4638,7 @@ fn _encoding_decode_text(
         ParseError,
     > = (|| {
         let text: String = _encoding_decode_text_impl(data, encoding, errors)?;
-        return Ok(Ok(text));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(text))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -4705,8 +4666,7 @@ fn _encoding_decode_recoveries(
             encoding,
             errors,
         )?;
-        return Ok(Ok(recoveries));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(recoveries))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -4741,10 +4701,7 @@ fn _encoding_decode_outcome(
             encoding,
             errors,
         )?;
-        return Ok(
-            Ok(__SifrStdlib_sifr_x2eencoding_x2eDecodeOutcome::new(text, recoveries)),
-        );
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(__SifrStdlib_sifr_x2eencoding_x2eDecodeOutcome::new(text, recoveries)))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -4789,10 +4746,7 @@ fn _encoding_decode_incremental_outcome(
             errors,
             r#final,
         )?;
-        return Ok(
-            Ok(__SifrStdlib_sifr_x2eencoding_x2eDecodeOutcome::new(text, recoveries)),
-        );
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(__SifrStdlib_sifr_x2eencoding_x2eDecodeOutcome::new(text, recoveries)))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -4822,8 +4776,7 @@ fn _encoding_decode_incremental_pending(
             encoding,
             r#final,
         )?;
-        return Ok(Ok(next_pending));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(next_pending))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -4847,8 +4800,7 @@ fn _encoding_encode_bytes(
         ParseError,
     > = (|| {
         let data: Vec<u8> = _encoding_encode_bytes_impl(text, encoding, errors)?;
-        return Ok(Ok(data));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(data))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -4876,8 +4828,7 @@ fn _encoding_encode_recoveries(
             encoding,
             errors,
         )?;
-        return Ok(Ok(recoveries));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(recoveries))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -4912,10 +4863,7 @@ fn _encoding_encode_outcome(
             encoding,
             errors,
         )?;
-        return Ok(
-            Ok(__SifrStdlib_sifr_x2eencoding_x2eEncodeOutcome::new(data, recoveries)),
-        );
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(__SifrStdlib_sifr_x2eencoding_x2eEncodeOutcome::new(data, recoveries)))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -5064,10 +5012,7 @@ fn decode_outcome(
             __SifrStdlib_sifr_x2eencoding_x2eDecodeError,
         >,
         __SifrStdlib_sifr_x2eencoding_x2eDecodeError,
-    > = (|| {
-        return Ok(_encoding_decode_outcome(data, &enc.label.clone(), &handler_name));
-        unreachable!("sifr try/except return capture fell through");
-    })();
+    > = (|| { Ok(_encoding_decode_outcome(data, &enc.label.clone(), &handler_name)) })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
             return __sifr_ret_val;
@@ -5094,8 +5039,7 @@ fn decode(
             enc,
             errors,
         )?;
-        return Ok(Ok(outcome.get_text()));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(outcome.get_text()))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -5124,10 +5068,7 @@ fn encode_outcome(
             __SifrStdlib_sifr_x2eencoding_x2eEncodeError,
         >,
         __SifrStdlib_sifr_x2eencoding_x2eEncodeError,
-    > = (|| {
-        return Ok(_encoding_encode_outcome(text, &enc.label.clone(), &handler_name));
-        unreachable!("sifr try/except return capture fell through");
-    })();
+    > = (|| { Ok(_encoding_encode_outcome(text, &enc.label.clone(), &handler_name)) })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
             return __sifr_ret_val;
@@ -5154,8 +5095,7 @@ fn encode(
             enc,
             errors,
         )?;
-        return Ok(Ok(outcome.get_data()));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(outcome.get_data()))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -5316,8 +5256,7 @@ fn _encode_errors_from_decode_errors(
 fn open(path: &String, mode: &String) -> Result<__SifrIoFileHandle, IOError> {
     let __sifr_try_res: Result<Result<__SifrIoFileHandle, IOError>, IOError> = (|| {
         let handle: __SifrIoNativeFileHandle = open_file(path, mode)?;
-        return Ok(Ok(__SifrIoFileHandle::new(handle, (mode.clone()).clone())));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(__SifrIoFileHandle::new(handle, (mode.clone()).clone())))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -5338,8 +5277,7 @@ fn open_binary(
     }
     let __sifr_try_res: Result<Result<__SifrIoBinaryFileHandle, IOError>, IOError> = (|| {
         let handle: __SifrIoNativeFileHandle = open_file(path, mode)?;
-        return Ok(Ok(__SifrIoBinaryFileHandle::new(handle, (mode.clone()).clone())));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(__SifrIoBinaryFileHandle::new(handle, (mode.clone()).clone())))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -5369,7 +5307,7 @@ fn open_text(
             &decode_errors,
         );
         let binary: __SifrIoBinaryFileHandle = open_binary(path, &binary_mode)?;
-        return Ok(
+        Ok(
             Ok(
                 __SifrIoTextFileHandle::new(
                     binary,
@@ -5378,8 +5316,7 @@ fn open_text(
                     encode_errors,
                 ),
             ),
-        );
-        unreachable!("sifr try/except return capture fell through");
+        )
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -5565,8 +5502,7 @@ fn _json_token_int(
             .map_err(|__e| __SifrUnion_8_x3asequence5_x3aunion1_x3a223_x3a5_x3aclass10_x3aParseError1_x3a028_x3a5_x3aclass15_x3aJSONDecodeError1_x3a0::__SifrUnionVariant_5_x3aclass10_x3aParseError1_x3a0(
                 __e,
             ))?;
-        return Ok(Ok(parsed));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(parsed))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -5615,8 +5551,7 @@ fn _json_token_float(
             .map_err(|__e| __SifrUnion_8_x3asequence5_x3aunion1_x3a223_x3a5_x3aclass10_x3aParseError1_x3a028_x3a5_x3aclass15_x3aJSONDecodeError1_x3a0::__SifrUnionVariant_5_x3aclass10_x3aParseError1_x3a0(
                 __e,
             ))?;
-        return Ok(Ok(parsed));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(parsed))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -5802,7 +5737,7 @@ fn _json_decode_value_at(
             }
             return Ok(Ok((object_value, next_index.clone())));
         }
-        return Err(
+        Err(
             JSONDecodeError::new({
                 let mut __sifr_concat: String = String::with_capacity(
                     43usize + tag.len(),
@@ -5811,8 +5746,7 @@ fn _json_decode_value_at(
                 __sifr_concat.push_str((tag).as_str());
                 __sifr_concat
             }),
-        );
-        unreachable!("sifr try/except return capture fell through");
+        )
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -5840,8 +5774,7 @@ fn _json_decode_tokens(
                 JSONDecodeError::new("JSON bridge payload has trailing data".to_string()),
             );
         }
-        return Ok(Ok((decoded).0.clone()));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok((decoded).0.clone()))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -5940,8 +5873,7 @@ fn _decode_json(
         JSONDecodeError,
     > = (|| {
         let tokens: Vec<String> = json_load_tokens(s)?;
-        return Ok(_json_decode_tokens(&tokens));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(_json_decode_tokens(&tokens))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -5961,8 +5893,7 @@ fn _decode_loaded_json(
         JSONDecodeError,
     > = (|| {
         let value: __SifrStdlib_sifr_x2ejson_x2eJsonValue = _decode_json(content)?;
-        return Ok(Ok(value));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(value))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -5983,8 +5914,7 @@ fn load_handle(
         IOError,
     > = (|| {
         let content: String = content_result?;
-        return Ok(_decode_loaded_json(&content));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(_decode_loaded_json(&content))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -6003,8 +5933,7 @@ fn load(path: &String) -> Result<__SifrStdlib_sifr_x2ejson_x2eJsonValue, Error> 
         IOError,
     > = (|| {
         let content: String = content_result?;
-        return Ok(_decode_loaded_json(&content));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(_decode_loaded_json(&content))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -6019,35 +5948,33 @@ fn load(path: &String) -> Result<__SifrStdlib_sifr_x2ejson_x2eJsonValue, Error> 
 fn dumps(
     value: &__SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0,
 ) -> String {
-    if let __SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0::__SifrUnionVariant_5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0(
-        value,
-    ) = value {
-        return json_dump_tokens(&_json_bridge_tokens(value));
-    } else {
-        if let __SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0::__SifrUnionVariant_4_x3aatom4_x3abool(
+    match value {
+        __SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0::__SifrUnionVariant_5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0(
             value,
-        ) = value {
+        ) => {
+            return json_dump_tokens(&_json_bridge_tokens(value));
+        }
+        __SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0::__SifrUnionVariant_4_x3aatom4_x3abool(
+            value,
+        ) => {
             return json_dump_tokens(&_json_bridge_tokens(&from_bool((value).clone())));
-        } else {
-            if let __SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0::__SifrUnionVariant_4_x3aatom3_x3aint(
-                value,
-            ) = value {
-                return json_dump_tokens(
-                    &_json_bridge_tokens(&from_int((value.clone()).clone())),
-                );
-            } else {
-                if let __SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0::__SifrUnionVariant_4_x3aatom5_x3afloat(
-                    value,
-                ) = value {
-                    return json_dump_tokens(
-                        &_json_bridge_tokens(&from_float((value).clone())),
-                    );
-                } else {
-                    return json_dump_tokens(
-                        &_json_bridge_tokens(&from_str(&format!("{}", value))),
-                    );
-                }
-            }
+        }
+        __SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0::__SifrUnionVariant_4_x3aatom3_x3aint(
+            value,
+        ) => {
+            return json_dump_tokens(
+                &_json_bridge_tokens(&from_int((value.clone()).clone())),
+            );
+        }
+        __SifrUnion_8_x3asequence5_x3aunion1_x3a719_x3a4_x3aatom10_x3abigdecimal11_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool13_x3a4_x3aatom5_x3afloat15_x3a4_x3aatom7_x3adecimal32_x3a5_x3aclass19_x3asifr_x2ejson_x2eJsonValue1_x3a0::__SifrUnionVariant_4_x3aatom5_x3afloat(
+            value,
+        ) => {
+            return json_dump_tokens(&_json_bridge_tokens(&from_float((value).clone())));
+        }
+        value => {
+            return json_dump_tokens(
+                &_json_bridge_tokens(&from_str(&format!("{}", value))),
+            );
         }
     }
 }
@@ -6380,8 +6307,7 @@ fn _token_int(tokens: &Vec<String>, index: SifrInt) -> Result<SifrInt, TOMLDecod
             .map_err(|__e| __SifrUnion_8_x3asequence5_x3aunion1_x3a223_x3a5_x3aclass10_x3aParseError1_x3a028_x3a5_x3aclass15_x3aTOMLDecodeError1_x3a0::__SifrUnionVariant_5_x3aclass10_x3aParseError1_x3a0(
                 __e,
             ))?;
-        return Ok(Ok(parsed));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(parsed))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -6427,8 +6353,7 @@ fn _token_float(tokens: &Vec<String>, index: SifrInt) -> Result<f64, TOMLDecodeE
             .map_err(|__e| __SifrUnion_8_x3asequence5_x3aunion1_x3a223_x3a5_x3aclass10_x3aParseError1_x3a028_x3a5_x3aclass15_x3aTOMLDecodeError1_x3a0::__SifrUnionVariant_5_x3aclass10_x3aParseError1_x3a0(
                 __e,
             ))?;
-        return Ok(Ok(parsed));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(parsed))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -6619,7 +6544,7 @@ fn _decode_toml_value_at(
             }
             return Ok(Ok((table_value, next_index.clone())));
         }
-        return Err(
+        Err(
             TOMLDecodeError::new({
                 let mut __sifr_concat: String = String::with_capacity(
                     43usize + tag.len(),
@@ -6628,8 +6553,7 @@ fn _decode_toml_value_at(
                 __sifr_concat.push_str((tag).as_str());
                 __sifr_concat
             }),
-        );
-        unreachable!("sifr try/except return capture fell through");
+        )
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -6657,8 +6581,7 @@ fn _decode_toml_tokens(
                 TOMLDecodeError::new("TOML bridge payload has trailing data".to_string()),
             );
         }
-        return Ok(Ok((decoded).0.clone()));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok((decoded).0.clone()))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -6678,8 +6601,7 @@ fn loads(
         ParseError,
     > = (|| {
         let tokens: Vec<String> = toml_parse_tokens(text)?;
-        return Ok(_decode_toml_tokens(&tokens));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(_decode_toml_tokens(&tokens))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -6722,8 +6644,7 @@ fn _load_json(
 fn has_match(pattern: &String, text: &String) -> Result<bool, RegexError> {
     let __sifr_try_res: Result<Result<bool, RegexError>, RegexError> = (|| {
         let found: Option<String> = search(pattern, text)?;
-        return Ok(Ok((found != None)));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok((found != None)))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {

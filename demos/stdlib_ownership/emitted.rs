@@ -671,12 +671,7 @@ fn heappop<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
             .normalize_index_or_len(__sifr_index_list.len());
         __sifr_index_list.get(__sifr_index_norm).cloned()
     };
-    {
-        let Some(__sifr_nonempty_pop_value) = heap.pop() else {
-            unreachable!("compiler-verified non-empty pop should return Some");
-        };
-        __sifr_nonempty_pop_value
-    };
+    heap.remove(heap.len() - (1_usize));
     let n2: SifrInt = SifrInt::from(heap.len());
     if &n2 > &SifrInt::from_i64(0) {
         if let Some(last) = last {

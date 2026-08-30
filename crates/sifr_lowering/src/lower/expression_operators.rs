@@ -21,10 +21,11 @@ mod integer_semantics;
 pub(in crate::lower) use integer_semantics::{
     bounded_integer_arithmetic_result_type, builtin_error_type,
     exact_integer_expr_is_proven_float_representable, is_exact_or_fixed_int_like,
-    proven_exact_integer_value, statically_safe_bounded_integer_augassign,
+    proven_exact_integer_literal, proven_exact_integer_value,
+    statically_safe_bounded_integer_augassign,
 };
 use integer_semantics::{
-    decimal_integer_arithmetic_result_type, exact_int_floor_result_type,
+    checked_decimal_arithmetic_result_type, exact_int_floor_result_type,
     exact_int_true_division_result_type,
 };
 
@@ -166,7 +167,7 @@ pub(in crate::lower) fn lower_binop(binop: &ExprBinOp, ctx: &mut LowerCtx) -> Op
     if generic_addition_requires_addable_bound(&left, op_str, &right, ctx, binop.range()) {
         return None;
     }
-    if let Some(result_ty) = decimal_integer_arithmetic_result_type(&left, op_str, &right, ctx) {
+    if let Some(result_ty) = checked_decimal_arithmetic_result_type(&left, op_str, &right, ctx) {
         return Some(HirExpr::BinOp {
             left: Box::new(left),
             op: op_str.to_string(),
@@ -191,6 +192,14 @@ pub(in crate::lower) fn lower_binop(binop: &ExprBinOp, ctx: &mut LowerCtx) -> Op
         });
     }
     if let Some(result_ty) = exact_int_true_division_result_type(&left, op_str, &right, ctx) {
+        let (left, right) = if matches!(result_ty, Type::Float) {
+            (
+                proven_exact_integer_literal(&left, ctx)?,
+                proven_exact_integer_literal(&right, ctx)?,
+            )
+        } else {
+            (left, right)
+        };
         return Some(HirExpr::BinOp {
             left: Box::new(left),
             op: op_str.to_string(),
@@ -200,6 +209,22 @@ pub(in crate::lower) fn lower_binop(binop: &ExprBinOp, ctx: &mut LowerCtx) -> Op
     }
     if let Some(result_ty) = mixed_float_integer_arithmetic_result_type(&left, op_str, &right, ctx)
     {
+        let (left, right) = if matches!(result_ty, Type::Float) {
+            (
+                if matches!(left.ty().resolve_alias(), Type::Int | Type::LiteralInt(_)) {
+                    proven_exact_integer_literal(&left, ctx).unwrap_or(left)
+                } else {
+                    left
+                },
+                if matches!(right.ty().resolve_alias(), Type::Int | Type::LiteralInt(_)) {
+                    proven_exact_integer_literal(&right, ctx).unwrap_or(right)
+                } else {
+                    right
+                },
+            )
+        } else {
+            (left, right)
+        };
         return Some(HirExpr::BinOp {
             left: Box::new(left),
             op: op_str.to_string(),

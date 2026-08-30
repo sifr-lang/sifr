@@ -7313,11 +7313,13 @@ dependencies = [
 name = "sifr_codegen"
 version = "0.0.0"
 dependencies = [
+ "bigdecimal",
  "insta",
  "prettyplease 0.3.0",
  "proc-macro2",
  "ruff_python_parser",
  "ruff_text_size",
+ "rust_decimal",
  "sifr_diagnostics",
  "sifr_ir",
  "sifr_lowering",

@@ -22,6 +22,7 @@ use crate::{CodegenError, RustExpr, RustLiteral, RustStmt, RustType};
 use sifr_ir::{HirExpr, HirIteratorOp};
 use sifr_type_system::Type;
 use std::cell::RefCell;
+use std::str::FromStr as _;
 
 thread_local! {
     static ALLOWED_PLAIN_CALLS: RefCell<Vec<String>> = const { RefCell::new(Vec::new()) };
@@ -150,13 +151,24 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
             ])),
             args: vec![RustExpr::Literal(RustLiteral::Int(*v))],
         }),
-        HirExpr::LargeIntLiteral(value) => Some(RustExpr::FnCall {
-            func: Box::new(RustExpr::Path(vec![
-                "SifrInt".to_string(),
-                "from_decimal_literal".to_string(),
-            ])),
-            args: vec![RustExpr::Literal(RustLiteral::StaticStr(value.clone()))],
-        }),
+        HirExpr::LargeIntLiteral(value) => {
+            let integer = bigdecimal::num_bigint::BigInt::from_str(value).ok()?;
+            let bytes = integer
+                .to_signed_bytes_be()
+                .into_iter()
+                .map(|byte| RustExpr::Literal(RustLiteral::Int(i64::from(byte))))
+                .collect();
+            Some(RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    "SifrInt".to_string(),
+                    "from_signed_bytes_be".to_string(),
+                ])),
+                args: vec![RustExpr::Ref {
+                    mutable: false,
+                    expr: Box::new(RustExpr::Vec(bytes)),
+                }],
+            })
+        }
         HirExpr::FloatLiteral(v) if v.is_finite() => Some(RustExpr::Cast {
             expr: Box::new(RustExpr::Literal(RustLiteral::Float(*v))),
             ty: RustType::F64,

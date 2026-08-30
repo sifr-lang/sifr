@@ -52,7 +52,13 @@ impl RustEmitter {
             crate::render_type(&crate::sifr_type_to_rust_type(enter_error_type));
         let active_error_rust_type =
             crate::render_type(&crate::sifr_type_to_rust_type(active_error_type));
+        let can_return = crate::hir_analysis::queries::body_contains_return(body);
         let return_expression_type = self.context_return_expression_type(&active_error_rust_type);
+        let normal_outcome_type = if can_return {
+            format!("Option<{return_expression_type}>")
+        } else {
+            "()".to_string()
+        };
         let target = target.unwrap_or("_");
         let target = if self.mutated_vars.contains(target) {
             format!("mut {target}")
@@ -81,7 +87,12 @@ impl RustEmitter {
             0,
         );
         rewritten.push(RustStmt::Return(Some(RustExpr::Verbatim(
-            "Ok(Ok(None))".to_string(),
+            if can_return {
+                "Ok(Ok(None))"
+            } else {
+                "Ok(Ok(()))"
+            }
+            .to_string(),
         ))));
         let body = crate::render_stmts(&rewritten);
 
@@ -109,18 +120,22 @@ impl RustEmitter {
                 true,
             )
         };
-        let loop_arms = loop_control_arms(&normal_exit, !self.loop_else_stack.is_empty());
-        let return_arm = if self.try_closure_depth > 0 && context_is_nested {
+        let can_loop = !self.loop_else_stack.is_empty();
+        let loop_control_type = if can_loop {
+            "bool"
+        } else {
+            "std::convert::Infallible"
+        };
+        let loop_arms = loop_control_arms(&normal_exit, can_loop);
+        let return_arm = if !can_return {
+            String::new()
+        } else if self.try_closure_depth > 0 && context_is_nested {
             format!(
                 "Some(Ok(Ok(Some(__sifr_context_return)))) => {{ {normal_exit} return Ok(Ok(Some(__sifr_context_return))); }},"
             )
-        } else if self.try_closure_depth > 0 {
-            format!(
-                "Some(Ok(Ok(Some(__sifr_context_return)))) => {{ {normal_exit} return __sifr_context_return; }},"
-            )
         } else {
             format!(
-                "Some(Ok(Ok(Some(_)))) => {{ {normal_exit} unreachable!(\"Python async context captured a return in a non-returning try\"); }},"
+                "Some(Ok(Ok(Some(__sifr_context_return)))) => {{ {normal_exit} return __sifr_context_return; }},"
             )
         };
 
@@ -182,13 +197,13 @@ let {body_future} = async move {{
 }};
 let mut {scoped_body} = Box::pin(__SIFR_TASK_CANCELLATION.scope({child}.clone(), {body_future}));
 let mut {body_cancel} = Box::pin({scope}.notification());
-let {outcome}: Option<Result<Result<Option<{return_expression_type}>, bool>, {active_error_rust_type}>> = tokio::select! {{
+let {outcome}: Option<Result<Result<{normal_outcome_type}, {loop_control_type}>, {active_error_rust_type}>> = tokio::select! {{
     biased;
     _ = &mut {body_cancel} => None,
     result = &mut {scoped_body} => Some(result),
 }};
 match {outcome} {{
-    Some(Ok(Ok(None))) => {{ {normal_exit} }},
+    Some(Ok(Ok({normal_outcome}))) => {{ {normal_exit} }},
     {return_arm}
     {loop_arms}
     Some(Err(mut {body_error})) => {{ {active_exit} }},
@@ -239,6 +254,8 @@ drop({scope});
             scoped_body = names.scoped_body,
             body_cancel = names.body_cancel,
             outcome = names.outcome,
+            normal_outcome = if can_return { "None" } else { "()" },
+            loop_control_type = loop_control_type,
             body_error = names.body_error,
             cleanup_carrier = names.cleanup_carrier,
             cleanup_result = names.cleanup_result,
@@ -528,7 +545,7 @@ fn loop_control_arms(normal_exit: &str, can_loop: bool) -> String {
         )
     } else {
         format!(
-            "Some(Ok(Err(_))) => {{ {normal_exit} unreachable!(\"Python async context emitted loop control outside a loop\"); }},"
+            "Some(Ok(Err(__sifr_context_control))) => {{ {normal_exit} match __sifr_context_control {{}} }},"
         )
     }
 }
