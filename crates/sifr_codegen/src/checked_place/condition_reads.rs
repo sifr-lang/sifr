@@ -1,6 +1,6 @@
 use super::{
     CheckedDictReadGuard, CheckedPlaceReadWitness, RustEmitter, RustExpr, Type,
-    checked_place_read_key,
+    checked_place_dependencies, checked_place_read_key,
 };
 
 impl RustEmitter {
@@ -100,6 +100,7 @@ impl RustEmitter {
         let Some(key) = checked_place_read_key(object, index) else {
             return Ok(None);
         };
+        let dependencies = checked_place_dependencies(object, index);
         let lowered_object = if let crate::HirExpr::Index {
             object: parent,
             index: parent_index,
@@ -121,7 +122,7 @@ impl RustEmitter {
             return Ok(None);
         };
         let key_arg = self.checked_dict_key_arg_for_ir(index, lowered_index);
-        let binding = self.next_checked_place_read_binding();
+        let (order, binding) = self.next_checked_place_read_binding();
         Ok(Some(CheckedDictReadGuard {
             key,
             binding,
@@ -132,6 +133,8 @@ impl RustEmitter {
             },
             negated: true,
             borrowed: true,
+            dependencies,
+            order,
         }))
     }
 }

@@ -528,11 +528,13 @@ impl RustEmitter {
         let callable_var_conventions = self.callable_var_conventions.clone();
         let nested_fn_captures = self.nested_fn_captures.clone();
         let nonempty_list_bindings = self.nonempty_list_bindings.clone();
+        let checked_place_read_witnesses = self.checked_place_read_witnesses.clone();
         let result = self.try_lower_stmt_block_for_ir(stmts);
         self.string_char_cache_vars = string_char_cache_vars;
         self.callable_var_conventions = callable_var_conventions;
         self.nested_fn_captures = nested_fn_captures;
         self.nonempty_list_bindings = nonempty_list_bindings;
+        self.checked_place_read_witnesses = checked_place_read_witnesses;
         result
     }
 

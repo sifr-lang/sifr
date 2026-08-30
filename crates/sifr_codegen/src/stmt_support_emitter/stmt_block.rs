@@ -27,6 +27,12 @@ impl RustEmitter {
         let mut lowered_block = Vec::new();
         for (stmt_index, stmt) in stmts.iter().enumerate() {
             if let Some(lowered) =
+                self.try_lower_checked_place_mutation_tail_for_ir(stmt, &stmts[stmt_index + 1..])?
+            {
+                lowered_block.extend(lowered);
+                return Ok(Some(lowered_block));
+            }
+            if let Some(lowered) =
                 self.try_lower_nonempty_pop_tail_for_ir(stmt, &stmts[stmt_index + 1..])?
             {
                 lowered_block.push(lowered);

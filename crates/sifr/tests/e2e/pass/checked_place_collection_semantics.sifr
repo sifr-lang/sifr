@@ -1,4 +1,67 @@
+def list_exit_guard_refreshes_after_assignment() -> int:
+    values: list[int] = [1, 2]
+    if len(values) == 0:
+        return -1
+    values[0] = 5
+    return values[0]
+
+
+def list_exit_guard_refreshes_after_augmented_assignment() -> int:
+    values: list[int] = [1, 2]
+    if len(values) == 0:
+        return -1
+    values[0] += 4
+    return values[0]
+
+
+def positive_list_guard_refreshes_after_assignment() -> int:
+    values: list[int] = [1, 2]
+    if values:
+        values[0] = 7
+        return values[0]
+    return -1
+
+
+def dict_exit_guard_refreshes_after_assignment() -> int:
+    mapping: dict[str, int] = {"key": 1}
+    key: str = "key"
+    if key not in mapping:
+        return -1
+    mapping[key] = 99
+    return mapping[key]
+
+
+def positive_dict_guard_refreshes_after_assignment() -> int:
+    mapping: dict[str, int] = {"key": 1}
+    key: str = "key"
+    if key in mapping:
+        mapping[key] = 99
+        return mapping[key]
+    return -1
+
+
+def replace_first(mut values: list[int]) -> None:
+    if len(values) == 0:
+        return
+    values[0] = 42
+
+
+def list_exit_guard_refreshes_after_mut_borrow_call() -> int:
+    values: list[int] = [1, 2]
+    if len(values) == 0:
+        return -1
+    replace_first(values)
+    return values[0]
+
+
 def main():
+    assert list_exit_guard_refreshes_after_assignment() == 5
+    assert list_exit_guard_refreshes_after_augmented_assignment() == 5
+    assert positive_list_guard_refreshes_after_assignment() == 7
+    assert dict_exit_guard_refreshes_after_assignment() == 99
+    assert positive_dict_guard_refreshes_after_assignment() == 99
+    assert list_exit_guard_refreshes_after_mut_borrow_call() == 42
+
     short: list[int] = [1]
     assert not (len(short) > 3 and short[3] != 0)
     assert len(short) <= 3 or short[3] != 0

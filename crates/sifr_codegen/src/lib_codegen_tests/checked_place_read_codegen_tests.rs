@@ -251,3 +251,122 @@ def validate(items: list[tuple[str, str]]):
     assert!(!generated.contains("items["), "{generated}");
     assert!(!generated.contains("compile_error!"), "{generated}");
 }
+
+#[test]
+fn checked_read_witnesses_refresh_after_collection_mutation() {
+    let generated = generate_rust_from_source(
+        r#"
+def list_value(mut values: list[int], index: int) -> int:
+    if index < 0 or index >= len(values):
+        return -1
+    values[index] = 5
+    return values[index]
+
+def dict_value(mut mapping: dict[str, int], key: str) -> int:
+    if key not in mapping:
+        return -1
+    mapping[key] = 99
+    return mapping[key]
+"#,
+    );
+    assert!(
+        generated.matches("let Some(__sifr_checked_value_").count() >= 4,
+        "{generated}"
+    );
+    assert!(generated.matches("mapping.get(key)").count() >= 2);
+    assert!(
+        generated
+            .matches("__sifr_checked_read_collection.get(")
+            .count()
+            >= 2
+    );
+    assert!(!generated.contains("mapping["), "{generated}");
+    assert!(!generated.contains("values["), "{generated}");
+    assert!(!generated.contains("compile_error!"), "{generated}");
+}
+
+#[test]
+fn positive_guard_witnesses_refresh_inside_the_guarded_branch() {
+    let generated = generate_rust_from_source(
+        r#"
+def list_value(mut values: list[int]) -> int:
+    if values:
+        values[0] += 1
+        return values[0]
+    return -1
+
+def dict_value(mut mapping: dict[str, int], key: str) -> int:
+    if key in mapping:
+        mapping[key] = 99
+        return mapping[key]
+    return -1
+"#,
+    );
+    assert!(
+        generated
+            .matches("if let Some(__sifr_checked_value_")
+            .count()
+            >= 4
+    );
+    assert!(generated.matches("mapping.get(key)").count() >= 2);
+    assert!(!generated.contains("mapping["), "{generated}");
+    assert!(!generated.contains("values["), "{generated}");
+    assert!(!generated.contains("compile_error!"), "{generated}");
+}
+
+#[test]
+fn checked_read_witnesses_refresh_after_mut_borrow_calls() {
+    let generated = generate_rust_from_source(
+        r#"
+def replace_first(mut values: list[int]) -> None:
+    if len(values) == 0:
+        return
+    values[0] = 42
+
+def value_after_call(mut values: list[int]) -> int:
+    if len(values) == 0:
+        return -1
+    replace_first(values)
+    return values[0]
+"#,
+    );
+    let Some(call) = generated.find("replace_first(values);") else {
+        panic!("{generated}");
+    };
+    let Some(refreshed) = generated[call..]
+        .find("let Some(__sifr_checked_value_")
+        .map(|offset| call + offset)
+    else {
+        panic!("{generated}");
+    };
+    let Some(returned) = generated[refreshed..]
+        .find("__sifr_checked_value_0.clone()")
+        .map(|offset| refreshed + offset)
+    else {
+        panic!("{generated}");
+    };
+    assert!(call < refreshed && refreshed < returned, "{generated}");
+    assert!(!generated.contains("values["), "{generated}");
+    assert!(!generated.contains("compile_error!"), "{generated}");
+}
+
+#[test]
+fn exit_guard_witnesses_refresh_after_nested_control_flow_mutation() {
+    let generated = generate_rust_from_source(
+        r#"
+def neighbor_min_cost(mut cost: list[int]) -> int:
+    if len(cost) < 2:
+        return 0
+    for i in range(len(cost) - 3, -1, -1):
+        cost[i] = cost[i] + min(cost[i + 1], cost[i + 2])
+    return min(cost[0], cost[1])
+"#,
+    );
+    assert_eq!(
+        generated.matches("let Some(__sifr_checked_value_").count(),
+        7,
+        "{generated}"
+    );
+    assert!(!generated.contains("to_usize_proven"), "{generated}");
+    assert!(!generated.contains("compile_error!"), "{generated}");
+}

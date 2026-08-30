@@ -4,52 +4,10 @@ mod condition_reads;
 mod control_flow;
 mod nonempty_lists;
 mod option_reads;
+mod witnesses;
 
-fn checked_place_expr_token(expr: &crate::HirExpr) -> Option<String> {
-    match expr {
-        crate::HirExpr::Name { name, .. } => Some(format!("name:{name}")),
-        crate::HirExpr::IntLiteral(value) => Some(format!("int:{value}")),
-        crate::HirExpr::LargeIntLiteral(value) => Some(format!("int:{value}")),
-        crate::HirExpr::StringLiteral(value) => Some(format!("str:{value:?}")),
-        crate::HirExpr::BoolLiteral(value) => Some(format!("bool:{value}")),
-        crate::HirExpr::FieldAccess { object, field, .. } => Some(format!(
-            "field:{}.{field}",
-            checked_place_expr_token(object)?
-        )),
-        crate::HirExpr::Index { object, index, .. } => Some(format!(
-            "index:{}[{}]",
-            checked_place_expr_token(object)?,
-            checked_place_expr_token(index)?
-        )),
-        crate::HirExpr::TupleLiteral { elements, .. } => {
-            let elements = elements
-                .iter()
-                .map(checked_place_expr_token)
-                .collect::<Option<Vec<_>>>()?;
-            Some(format!("tuple:({})", elements.join(",")))
-        }
-        crate::HirExpr::BinOp {
-            left, op, right, ..
-        } => Some(format!(
-            "binop:{op}({},{})",
-            checked_place_expr_token(left)?,
-            checked_place_expr_token(right)?
-        )),
-        crate::HirExpr::UnaryOp { op, operand, .. } => Some(format!(
-            "unary:{op}({})",
-            checked_place_expr_token(operand)?
-        )),
-        _ => None,
-    }
-}
-
-fn checked_place_read_key(object: &crate::HirExpr, index: &crate::HirExpr) -> Option<String> {
-    Some(format!(
-        "{}[{}]",
-        checked_place_expr_token(object)?,
-        checked_place_expr_token(index)?
-    ))
-}
+pub(crate) use witnesses::{CheckedDictReadGuard, CheckedPlaceReadWitness};
+use witnesses::{checked_place_dependencies, checked_place_expr_token, checked_place_read_key};
 
 fn condition_supports_checked_sequence_read(
     condition: &crate::HirExpr,
@@ -273,29 +231,6 @@ fn checked_sequence_get_option(
     }
 }
 
-pub(crate) struct CheckedDictReadGuard {
-    pub(crate) key: String,
-    pub(crate) binding: String,
-    pub(crate) option: RustExpr,
-    pub(crate) negated: bool,
-    pub(crate) borrowed: bool,
-}
-
-#[derive(Clone)]
-pub(crate) struct CheckedPlaceReadWitness {
-    binding: String,
-    borrowed: bool,
-}
-
-impl CheckedDictReadGuard {
-    fn witness(&self) -> CheckedPlaceReadWitness {
-        CheckedPlaceReadWitness {
-            binding: self.binding.clone(),
-            borrowed: self.borrowed,
-        }
-    }
-}
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum CheckedPlaceFailureKind {
     Index,
@@ -322,10 +257,10 @@ impl CheckedPlaceFailureKind {
 }
 
 impl RustEmitter {
-    pub(crate) fn next_checked_place_read_binding(&mut self) -> String {
+    pub(crate) fn next_checked_place_read_binding(&mut self) -> (usize, String) {
         let id = self.next_checked_place_read_witness;
         self.next_checked_place_read_witness += 1;
-        format!("__sifr_checked_value_{id}")
+        (id, format!("__sifr_checked_value_{id}"))
     }
 
     pub(crate) fn try_lower_nonempty_pop_tail_for_ir(
@@ -734,6 +669,7 @@ impl RustEmitter {
         let Some(key) = checked_place_read_key(collection, element) else {
             return Ok(None);
         };
+        let dependencies = checked_place_dependencies(collection, element);
         let lowered_collection = if let Some(path) = self.emit_shared_receiver_path(collection) {
             path
         } else if let Some(lowered) = self.lower_stmt_expr_for_ir(collection)? {
@@ -750,13 +686,15 @@ impl RustEmitter {
             method: "get".to_string(),
             args: vec![key_arg],
         };
-        let binding = self.next_checked_place_read_binding();
+        let (order, binding) = self.next_checked_place_read_binding();
         Ok(Some(CheckedDictReadGuard {
             key,
             binding,
             option,
             negated,
             borrowed: true,
+            dependencies,
+            order,
         }))
     }
 
@@ -770,6 +708,7 @@ impl RustEmitter {
         let Some(key) = checked_place_read_key(object, index) else {
             return Ok(None);
         };
+        let dependencies = checked_place_dependencies(object, index);
         let (lowered_object, object_is_borrowed) = if let crate::HirExpr::Index {
             object: parent,
             index: parent_index,
@@ -805,13 +744,15 @@ impl RustEmitter {
             }
             _ => return Ok(None),
         };
-        let binding = self.next_checked_place_read_binding();
+        let (order, binding) = self.next_checked_place_read_binding();
         Ok(Some(CheckedDictReadGuard {
             key,
             binding,
             option,
             negated: true,
             borrowed: false,
+            dependencies,
+            order,
         }))
     }
 

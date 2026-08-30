@@ -129,6 +129,9 @@ pub struct RustEmitter {
     /// Prevents recursive re-entry while an atomic checked-read statement is
     /// lowered under the witnesses established for that statement.
     pub(crate) checked_place_atomic_guard_suppressed: bool,
+    /// Statement-block depth whose current statement is already being lowered
+    /// by checked-place mutation refresh handling.
+    pub(crate) checked_place_refresh_suppressed_depth: Option<usize>,
     /// Local list comprehensions represented by `SifrNonEmptyVec`, keyed by
     /// binding name with their statically non-empty nesting depth.
     pub(crate) nonempty_list_bindings: HashMap<String, usize>,
@@ -297,6 +300,7 @@ impl RustEmitter {
             checked_place_read_witnesses: HashMap::new(),
             next_checked_place_read_witness: 0,
             checked_place_atomic_guard_suppressed: false,
+            checked_place_refresh_suppressed_depth: None,
             nonempty_list_bindings: HashMap::new(),
             emission_ctx: EmissionContext::default(),
             try_enum_counter: 0,
