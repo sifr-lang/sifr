@@ -1,5 +1,5 @@
 use crate::{
-    CodecRegistry, DatabaseType, Nullability, SifrType, SqliteStorageClass, canonical_read_type,
+    CodecRegistry, DatabaseType, Nullability, SifrType, SqliteStorageClass, canonical_read_type_in,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
@@ -81,7 +81,7 @@ pub fn bind_compatibility(
         return result;
     }
 
-    match canonical_read_type(&target.database) {
+    match canonical_read_type_in(&target.database, codecs) {
         Ok(mapped) if mapped == value => constrained_exact(&target.database),
         Ok(_) | Err(_) => BindCompatibility::Rejected(BindRejection::UnsupportedPair),
     }

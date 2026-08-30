@@ -391,6 +391,22 @@ fn bind_matrix_is_closed_and_preserves_width_nullability_and_shape() {
             BindCompatibility::Exact,
         ),
         (
+            input(SifrType::Range {
+                element: Box::new(SifrType::Custom {
+                    identity: "app.Money".to_string(),
+                }),
+                multirange: false,
+            }),
+            target(DatabaseType::Range {
+                element: Box::new(DatabaseType::Custom {
+                    identity: ObjectId::new("public.money"),
+                    codec: codec_identity("app.money.v1"),
+                }),
+                multirange: false,
+            }),
+            BindCompatibility::Exact,
+        ),
+        (
             input(SifrType::FixedInteger {
                 sign: IntegerSign::Signed,
                 width: IntegerWidth::Bits64,

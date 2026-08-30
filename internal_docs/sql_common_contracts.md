@@ -66,7 +66,9 @@ match the target representation before any precision or scale check applies.
 A Sifr `list[T]` binds only to a one-dimensional SQL array with lower bound one.
 `SqlArray[T]` preserves dimensions and lower bounds. Array elements use the same
 closed bind relation. Nominal and custom values require the exact database and
-codec identities.
+codec identities. Registry-aware matching recurses through arrays, ranges, and
+multiranges, so a value read through a profile can bind back to the same nested
+database type.
 
 All pairs outside this relation are compile errors. Providers can reject more
 values for an exact dialect rule. They cannot add an implicit width conversion.
