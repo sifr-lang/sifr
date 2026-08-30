@@ -25,7 +25,8 @@ runtime = [
     "dep:tokio",
     "dep:tokio-rustls",
 ]
-all = ["postgresql", "mysql", "sqlite", "runtime"]
+components = ["dep:wasmtime"]
+all = ["postgresql", "mysql", "sqlite", "runtime", "components"]
 
 [dependencies]
 lalrpop = { workspace = true, optional = true, features = ["lexer", "unicode"] }
@@ -42,6 +43,7 @@ tokio = { workspace = true, optional = true, default-features = false, features 
 tokio-postgres = { workspace = true, optional = true, features = ["runtime"] }
 tokio-postgres-rustls = { workspace = true, optional = true, features = ["aws-lc-rs"] }
 tokio-rustls = { workspace = true, optional = true, default-features = false, features = ["aws_lc_rs", "logging", "tls12"] }
+wasmtime = { workspace = true, optional = true }
 
 [lints]
 workspace = true

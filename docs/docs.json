@@ -278,6 +278,20 @@
                 ]
               },
               {
+                "group": "COMPONENT",
+                "pages": [
+                  "errors/SIFR-COMPONENT-0001",
+                  "errors/SIFR-COMPONENT-0002",
+                  "errors/SIFR-COMPONENT-0003",
+                  "errors/SIFR-COMPONENT-0004",
+                  "errors/SIFR-COMPONENT-0005",
+                  "errors/SIFR-COMPONENT-0006",
+                  "errors/SIFR-COMPONENT-0007",
+                  "errors/SIFR-COMPONENT-0008",
+                  "errors/SIFR-COMPONENT-0009"
+                ]
+              },
+              {
                 "group": "PYENV",
                 "pages": [
                   "errors/SIFR-PYENV-0001",

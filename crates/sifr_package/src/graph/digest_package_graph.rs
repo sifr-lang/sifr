@@ -1,6 +1,7 @@
 use super::digest::{GraphDigest, digest_serializable};
 use crate::graph::derive::SifrPackageGraph;
 use serde::Serialize;
+use sifr_compiler_component::{DiagnosticLifecycle, DiagnosticRegistryOwner};
 
 #[must_use]
 pub fn digest_package_graph(graph: &SifrPackageGraph) -> GraphDigest {
@@ -22,10 +23,31 @@ struct CanonicalGraphPackage<'a> {
     cargo_package_id: &'a str,
     sifr_name: &'a str,
     import_root: &'a str,
+    compiler_components: Vec<CanonicalCompilerComponent<'a>>,
     rust: CanonicalRustInteropConfig,
     rust_trust: CanonicalRustTrust<'a>,
     python: CanonicalPythonConfig<'a>,
     python_trust: CanonicalPythonTrust<'a>,
+}
+
+#[derive(Serialize)]
+struct CanonicalCompilerComponent<'a> {
+    name: &'a str,
+    kind: &'a str,
+    artifact: String,
+    version: String,
+    sha256: &'a str,
+    protocol_minimum: u16,
+    protocol_maximum: u16,
+    processors: Vec<&'a str>,
+    diagnostic_namespace: &'a str,
+    diagnostics: Vec<CanonicalComponentDiagnostic<'a>>,
+}
+
+#[derive(Serialize)]
+struct CanonicalComponentDiagnostic<'a> {
+    code: &'a str,
+    lifecycle: &'static str,
 }
 
 #[derive(Serialize)]
@@ -92,6 +114,37 @@ impl<'a> From<&'a SifrPackageGraph> for CanonicalGraph<'a> {
                     cargo_package_id: &package.cargo_package_id.0,
                     sifr_name: &package.sifr_name.0,
                     import_root: &package.sifr_name.0,
+                    compiler_components: package
+                        .manifest
+                        .compiler_components
+                        .iter()
+                        .map(|(name, component)| CanonicalCompilerComponent {
+                            name,
+                            kind: &component.kind,
+                            artifact: normalized_path_string(&component.artifact),
+                            version: component.version.to_string(),
+                            sha256: &component.sha256,
+                            protocol_minimum: component.protocol.minimum,
+                            protocol_maximum: component.protocol.maximum,
+                            processors: component.processors.iter().map(String::as_str).collect(),
+                            diagnostic_namespace: match &component.diagnostics.owner {
+                                DiagnosticRegistryOwner::Provider { namespace } => namespace,
+                                DiagnosticRegistryOwner::Compiler => "COMPONENT",
+                            },
+                            diagnostics: component
+                                .diagnostics
+                                .declarations
+                                .iter()
+                                .map(|declaration| CanonicalComponentDiagnostic {
+                                    code: &declaration.code,
+                                    lifecycle: match declaration.lifecycle {
+                                        DiagnosticLifecycle::Active => "active",
+                                        DiagnosticLifecycle::Deprecated => "deprecated",
+                                    },
+                                })
+                                .collect(),
+                        })
+                        .collect(),
                     rust: CanonicalRustInteropConfig {
                         bridges: package
                             .manifest

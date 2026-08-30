@@ -243,6 +243,96 @@
       "suggestion_rendering_fixture": null
     },
     {
+      "baseline_fixture_id": "compiler_component_rules_cases",
+      "code": "SIFR-COMPONENT-0001",
+      "deferral": null,
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [
+        "compact"
+      ],
+      "suggestion_rendering_fixture": null
+    },
+    {
+      "baseline_fixture_id": "compiler_component_rules_cases",
+      "code": "SIFR-COMPONENT-0002",
+      "deferral": null,
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [
+        "compact"
+      ],
+      "suggestion_rendering_fixture": null
+    },
+    {
+      "baseline_fixture_id": "compiler_component_rules_cases",
+      "code": "SIFR-COMPONENT-0003",
+      "deferral": null,
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [
+        "compact"
+      ],
+      "suggestion_rendering_fixture": null
+    },
+    {
+      "baseline_fixture_id": "compiler_component_rules_cases",
+      "code": "SIFR-COMPONENT-0004",
+      "deferral": null,
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [
+        "compact"
+      ],
+      "suggestion_rendering_fixture": null
+    },
+    {
+      "baseline_fixture_id": "compiler_component_rules_cases",
+      "code": "SIFR-COMPONENT-0005",
+      "deferral": null,
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [
+        "compact"
+      ],
+      "suggestion_rendering_fixture": null
+    },
+    {
+      "baseline_fixture_id": "compiler_component_rules_cases",
+      "code": "SIFR-COMPONENT-0006",
+      "deferral": null,
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [
+        "compact"
+      ],
+      "suggestion_rendering_fixture": null
+    },
+    {
+      "baseline_fixture_id": "compiler_component_rules_cases",
+      "code": "SIFR-COMPONENT-0007",
+      "deferral": null,
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [
+        "compact"
+      ],
+      "suggestion_rendering_fixture": null
+    },
+    {
+      "baseline_fixture_id": "compiler_component_rules_cases",
+      "code": "SIFR-COMPONENT-0008",
+      "deferral": null,
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [
+        "compact"
+      ],
+      "suggestion_rendering_fixture": null
+    },
+    {
+      "baseline_fixture_id": "compiler_component_rules_cases",
+      "code": "SIFR-COMPONENT-0009",
+      "deferral": null,
+      "multi_error_recovery_fixture": null,
+      "renderer_formats": [
+        "compact"
+      ],
+      "suggestion_rendering_fixture": null
+    },
+    {
       "baseline_fixture_id": "decimal_invalid_literal",
       "code": "SIFR-DECIMAL-0001",
       "deferral": null,

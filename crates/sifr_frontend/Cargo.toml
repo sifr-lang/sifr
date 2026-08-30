@@ -7,6 +7,7 @@ rust-version = { workspace = true }
 license = { workspace = true }
 
 [dependencies]
+sifr_compiler_component = { workspace = true }
 sifr_diagnostics = { workspace = true }
 sifr_lowering = { workspace = true }
 sifr_source = { workspace = true }

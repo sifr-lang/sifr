@@ -148,6 +148,13 @@ pub fn required_archive_entries(
         &package.package_root,
         &package.manifest,
     ));
+    required.extend(
+        package
+            .manifest
+            .compiler_components
+            .values()
+            .map(|component| component.artifact.clone()),
+    );
     required.extend(required_python_bridge_archive_entries(
         &package.package_root,
     ));

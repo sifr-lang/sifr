@@ -1,4 +1,5 @@
 pub mod cargo;
+mod compiler_components;
 pub mod diag;
 mod digest;
 pub mod graph;
@@ -35,6 +36,9 @@ pub use crate::cargo::package::{
 };
 pub use crate::cargo::package_lock_drift_reason;
 pub use crate::cargo::trust::{BackendTrustSummary, validate_backend_trust};
+pub use crate::compiler_components::{
+    PackageCompilerComponent, compiler_component_registrations, resolve_package_component,
+};
 pub use crate::diag::{PackageDiagnostic, PackageDiagnosticOrigin};
 pub use crate::graph::changed::{
     ChangedPackageSelection, ChangedPathSelection, select_changed_packages,
@@ -61,6 +65,7 @@ pub use crate::imports::source_map::{
     DottedModulePath, PackageImportAmbiguity, PackageImportOrigin, PackageImportResolution,
     PackageImportResolutionResult, PackageModuleKey, PackageModuleSource, PackageSourceMap,
 };
+pub use crate::manifest::CompilerComponentConfig;
 pub use crate::manifest::metadata::{CargoSifrAliasMetadata, CargoSifrMetadata};
 pub use crate::manifest::package_sections::{SifrDependency, SifrScript};
 pub use crate::manifest::sifr::{

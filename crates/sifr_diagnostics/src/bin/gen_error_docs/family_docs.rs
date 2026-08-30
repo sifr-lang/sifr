@@ -32,6 +32,10 @@ pub(crate) fn family_docs(family: &str) -> FamilyDocs {
             display_name: "Async effect and awaitability",
             why_it_happens: "Sifr tracks suspension and blocking effects statically. This diagnostic fires when async code either does not really suspend, awaits work that cannot suspend, or calls blocking/CPU-heavy work without an explicit offload boundary.",
         },
+        "COMPONENT" => FamilyDocs {
+            display_name: "Sandboxed compiler components",
+            why_it_happens: "A compiler component has an invalid registration, artifact, protocol message, diagnostic registry, capability request, resource use, cache entry, or execution result. Check the exact component identity and its declared compiler-component contract.",
+        },
         "PYENV" => FamilyDocs {
             display_name: "Embedded CPython environment",
             why_it_happens: "The selected Python environment is missing, malformed, ambiguous, or fails probe/ABI checks. Configure exactly one root-application uv environment and ensure the interpreter, site-packages, and declared imports are available.",

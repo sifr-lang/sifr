@@ -10,6 +10,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
     reserved_family_base("SIFR-TYPE-0000", "TYPE"),
     reserved_family_base("SIFR-META-0000", "META"),
     reserved_family_base("SIFR-ASYNC-0000", "ASYNC"),
+    reserved_family_base("SIFR-COMPONENT-0000", "COMPONENT"),
     reserved_family_base("SIFR-PYENV-0000", "PYENV"),
     reserved_family_base("SIFR-PYIMP-0000", "PYIMP"),
     reserved_family_base("SIFR-PYCALL-0000", "PYCALL"),

@@ -1,0 +1,5 @@
+package sifr:compiler-component@1.0.0;
+
+world embedded-language-provider {
+    export analyze: func(request: list<u8>) -> list<u8>;
+}

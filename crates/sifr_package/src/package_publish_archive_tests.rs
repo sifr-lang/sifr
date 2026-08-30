@@ -159,6 +159,7 @@ fn package(trust: TrustPolicy) -> SifrPackageMetadata {
             scripts: BTreeMap::new(),
             dependencies: BTreeMap::new(),
             dev_dependencies: BTreeMap::new(),
+            compiler_components: BTreeMap::new(),
             trust,
             python: PythonConfig::default(),
             rust: RustInteropConfig::default(),

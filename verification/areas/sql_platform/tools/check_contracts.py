@@ -45,7 +45,7 @@ PROVIDERS = {"postgresql", "mysql", "sqlite"}
 DOMAINS = {"grammar", "schema", "runtime", "tool", "migration", "editor"}
 EVIDENCE_TYPES = {"positive", "negative", "mutation", "integration", "fuzz", "property", "performance"}
 PROFILE_NAMES = {"create-pr", "merge", "nightly", "release"}
-PROFILE_SUITES = {"contracts", "dependency-baseline", "mutation"}
+PROFILE_SUITES = {"compiler-components", "contracts", "dependency-baseline", "mutation"}
 REQUIRED_AUDITS = {"advisory", "license", "panic", "secret-redaction", "unsafe-code"}
 
 
@@ -236,6 +236,7 @@ def validate_qualification(payload: dict[str, Any], baseline: dict[str, Any], ar
     require(set(payload.get("required_audits", [])) == REQUIRED_AUDITS, "dependency audit inventory is incomplete")
     constraints = unique_rows(payload.get("constraints"), "id", "dependency constraints")
     expected_constraints = {
+        "compiler-component-sandbox",
         "syntaqlite-source-and-fork-readiness",
         "single-sqlite-link-identity",
         "shared-tls-dependency-ring",
@@ -297,7 +298,10 @@ def validate_cargo(baseline: dict[str, Any], qualification: dict[str, Any]) -> N
     require(metadata.get("artifact-role") == "qualification-only", "lock package has the wrong artifact role")
     require(metadata.get("contract") == "verification/areas/sql_platform/data/artifact_topology.json", "lock package has no topology contract")
     all_feature = set(lock_manifest.get("features", {}).get("all", []))
-    require(all_feature == {"postgresql", "mysql", "sqlite", "runtime"}, "lock package all feature is incomplete")
+    require(
+        all_feature == {"postgresql", "mysql", "sqlite", "runtime", "components"},
+        "lock package all feature is incomplete",
+    )
 
     lockfile = read_toml(LOCKFILE_PATH)
     packages = lockfile.get("package", [])

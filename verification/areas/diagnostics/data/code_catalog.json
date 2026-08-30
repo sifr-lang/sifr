@@ -385,6 +385,132 @@
       "suggestion_applicability": "none"
     },
     {
+      "code": "SIFR-COMPONENT-0001",
+      "constant": "COMPONENT_REGISTRATION",
+      "docs_link": "docs/errors/SIFR-COMPONENT-0001.mdx",
+      "machine_applicable": false,
+      "owner": "compiler/component-platform",
+      "renderer_support": [
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_compiler_component/src/tests.rs",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-COMPONENT-0002",
+      "constant": "COMPONENT_INTEGRITY",
+      "docs_link": "docs/errors/SIFR-COMPONENT-0002.mdx",
+      "machine_applicable": false,
+      "owner": "compiler/component-platform",
+      "renderer_support": [
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_compiler_component/src/tests.rs",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-COMPONENT-0003",
+      "constant": "COMPONENT_PROTOCOL_VERSION",
+      "docs_link": "docs/errors/SIFR-COMPONENT-0003.mdx",
+      "machine_applicable": false,
+      "owner": "compiler/component-platform",
+      "renderer_support": [
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_compiler_component/src/tests.rs",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-COMPONENT-0004",
+      "constant": "COMPONENT_PROTOCOL_ENVELOPE",
+      "docs_link": "docs/errors/SIFR-COMPONENT-0004.mdx",
+      "machine_applicable": false,
+      "owner": "compiler/component-platform",
+      "renderer_support": [
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_compiler_component/src/tests.rs",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-COMPONENT-0005",
+      "constant": "COMPONENT_CAPABILITY",
+      "docs_link": "docs/errors/SIFR-COMPONENT-0005.mdx",
+      "machine_applicable": false,
+      "owner": "compiler/component-platform",
+      "renderer_support": [
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_compiler_component/src/tests.rs",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-COMPONENT-0006",
+      "constant": "COMPONENT_RESOURCE_LIMIT",
+      "docs_link": "docs/errors/SIFR-COMPONENT-0006.mdx",
+      "machine_applicable": false,
+      "owner": "compiler/component-platform",
+      "renderer_support": [
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_compiler_component/src/tests.rs",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-COMPONENT-0007",
+      "constant": "COMPONENT_EXECUTION",
+      "docs_link": "docs/errors/SIFR-COMPONENT-0007.mdx",
+      "machine_applicable": false,
+      "owner": "compiler/component-platform",
+      "renderer_support": [
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_compiler_component/src/tests.rs",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-COMPONENT-0008",
+      "constant": "COMPONENT_CACHE",
+      "docs_link": "docs/errors/SIFR-COMPONENT-0008.mdx",
+      "machine_applicable": false,
+      "owner": "compiler/component-platform",
+      "renderer_support": [
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_compiler_component/src/tests.rs",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-COMPONENT-0009",
+      "constant": "COMPONENT_DIAGNOSTIC_REGISTRY",
+      "docs_link": "docs/errors/SIFR-COMPONENT-0009.mdx",
+      "machine_applicable": false,
+      "owner": "compiler/component-platform",
+      "renderer_support": [
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_compiler_component/src/tests.rs",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
       "code": "SIFR-DECIMAL-0001",
       "constant": "DECIMAL_INVALID_LITERAL",
       "docs_link": "docs/errors/SIFR-DECIMAL-0001.mdx",

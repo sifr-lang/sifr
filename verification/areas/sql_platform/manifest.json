@@ -36,6 +36,19 @@
       ]
     },
     {
+      "name": "compiler-components",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "sql-component-qualification",
+          "entry": "verification/areas/sql_platform/data/compiler_component_qualification.json",
+          "command": "sql-component-qualification",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
       "name": "mutation",
       "kind": "adapter",
       "cases": [
@@ -50,6 +63,13 @@
           "id": "sql-dependency-baseline-mutations",
           "entry": "verification/areas/sql_platform/tools/resolve_dependency_baseline.py",
           "command": "sql-dependency-baseline-mutations",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-component-qualification-mutations",
+          "entry": "verification/areas/sql_platform/tools/check_component_qualification.py",
+          "command": "sql-component-qualification-mutations",
           "expect_exit_code": 0,
           "diagnostic_formats": []
         }

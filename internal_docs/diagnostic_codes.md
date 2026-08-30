@@ -23,6 +23,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `TYPE` | `SIFR-TYPE-0000` | Static type compatibility and inference diagnostics. |
 | `META` | `SIFR-META-0000` | Deterministic package metaprogramming and const-specialization diagnostics. |
 | `ASYNC` | `SIFR-ASYNC-0000` | Async effect, awaitability, and blocking-offload diagnostics. |
+| `COMPONENT` | `SIFR-COMPONENT-0000` | Sandboxed compiler-component registration, protocol, and execution diagnostics. |
 | `PYENV` | `SIFR-PYENV-0000` | Embedded CPython environment selection, probing, and ABI diagnostics. |
 | `PYIMP` | `SIFR-PYIMP-0000` | Embedded Python import and module-loading diagnostics. |
 | `PYCALL` | `SIFR-PYCALL-0000` | Embedded Python callable, attribute, item, and coroutine diagnostics. |
@@ -74,6 +75,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `SIFR-TYPE-0000` | `TYPE` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-META-0000` | `META` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-ASYNC-0000` | `ASYNC` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
+| `SIFR-COMPONENT-0000` | `COMPONENT` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-PYENV-0000` | `PYENV` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-PYIMP-0000` | `PYIMP` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-PYCALL-0000` | `PYCALL` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
@@ -238,6 +240,15 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `SIFR-STDLIB-0001` | `STDLIB` | Active | Error | `docs/errors/SIFR-STDLIB-0001.mdx` | `crates/sifr/tests/e2e/fail/defaultdict_keyword_constructor_unsupported.sifr` | `sifr_lowering::lower::builtin_calls` | `defaultdict() does not support keyword arguments` | n/a | n/a | n/a | false |
 | `SIFR-STDLIB-0003` | `STDLIB` | Active | Error | `docs/errors/SIFR-STDLIB-0003.mdx` | `crates/sifr_driver/src/tests/stdlib_exports.rs` | `sifr_driver::stdlib::bootstrap` | `embedded standard library bootstrap failed during {operation}` | `operation (message+json)` | `operation` | n/a | false |
 | `SIFR-STDLIB-0004` | `STDLIB` | Active | Error | `docs/errors/SIFR-STDLIB-0004.mdx` | `crates/sifr_driver/src/tests/project_build_check.rs` | `sifr_driver::stdlib::cache` | `standard-library cache failed during {operation}` | `operation (message+json)` | `operation` | n/a | false |
+| `SIFR-COMPONENT-0001` | `COMPONENT` | Active | Error | `docs/errors/SIFR-COMPONENT-0001.mdx` | `crates/sifr_compiler_component/src/tests.rs` | `sifr_compiler_component` | `compiler component registration is invalid` | n/a | n/a | n/a | false |
+| `SIFR-COMPONENT-0002` | `COMPONENT` | Active | Error | `docs/errors/SIFR-COMPONENT-0002.mdx` | `crates/sifr_compiler_component/src/tests.rs` | `sifr_compiler_component` | `compiler component integrity verification failed` | n/a | n/a | n/a | false |
+| `SIFR-COMPONENT-0003` | `COMPONENT` | Active | Error | `docs/errors/SIFR-COMPONENT-0003.mdx` | `crates/sifr_compiler_component/src/tests.rs` | `sifr_compiler_component` | `compiler component protocol version is incompatible` | n/a | n/a | n/a | false |
+| `SIFR-COMPONENT-0004` | `COMPONENT` | Active | Error | `docs/errors/SIFR-COMPONENT-0004.mdx` | `crates/sifr_compiler_component/src/tests.rs` | `sifr_compiler_component` | `compiler component protocol envelope is invalid` | n/a | n/a | n/a | false |
+| `SIFR-COMPONENT-0005` | `COMPONENT` | Active | Error | `docs/errors/SIFR-COMPONENT-0005.mdx` | `crates/sifr_compiler_component/src/tests.rs` | `sifr_compiler_component` | `compiler component requested a forbidden capability` | n/a | n/a | n/a | false |
+| `SIFR-COMPONENT-0006` | `COMPONENT` | Active | Error | `docs/errors/SIFR-COMPONENT-0006.mdx` | `crates/sifr_compiler_component/src/tests.rs` | `sifr_compiler_component` | `compiler component exceeded a resource limit` | n/a | n/a | n/a | false |
+| `SIFR-COMPONENT-0007` | `COMPONENT` | Active | Error | `docs/errors/SIFR-COMPONENT-0007.mdx` | `crates/sifr_compiler_component/src/tests.rs` | `sifr_compiler_component` | `compiler component execution failed` | n/a | n/a | n/a | false |
+| `SIFR-COMPONENT-0008` | `COMPONENT` | Active | Error | `docs/errors/SIFR-COMPONENT-0008.mdx` | `crates/sifr_compiler_component/src/tests.rs` | `sifr_compiler_component` | `compiler component cache operation failed` | n/a | n/a | n/a | false |
+| `SIFR-COMPONENT-0009` | `COMPONENT` | Active | Error | `docs/errors/SIFR-COMPONENT-0009.mdx` | `crates/sifr_compiler_component/src/tests.rs` | `sifr_compiler_component` | `compiler component diagnostic registry is invalid` | n/a | n/a | n/a | false |
 | `SIFR-IO-0801` | `IO` | Active | Error | `docs/errors/SIFR-IO-0801.mdx` | `crates/sifr/tests/e2e/fail/text_i18n_open_without_encoding.sifr` | `sifr_lowering::lower::expressions::call_shadowable_builtins` | `text-mode open requires an explicit encoding; Sifr does not use locale-derived default encodings` | n/a | n/a | n/a | false |
 | `SIFR-IO-0802` | `IO` | Active | Error | `docs/errors/SIFR-IO-0802.mdx` | `crates/sifr/tests/e2e/fail/text_i18n_open_dynamic_mode.sifr` | `sifr_lowering::lower::expressions::call_shadowable_builtins` | `open mode must be a string literal so Sifr can choose a binary or text handle type` | n/a | n/a | n/a | false |
 | `SIFR-ENCODING-0803` | `ENCODING` | Active | Error | `docs/errors/SIFR-ENCODING-0803.mdx` | `crates/sifr/tests/e2e/fail/text_i18n_dynamic_errors_handler.sifr` | `sifr_lowering::lower::bytes_methods` | `encoding error handlers must be statically known typed values` | n/a | n/a | n/a | false |

@@ -1,5 +1,6 @@
 use crate::cargo::metadata::CargoPackageId;
 use crate::diag::PackageDiagnostic;
+use crate::manifest::compiler_components::{CompilerComponentConfig, parse_compiler_components};
 use crate::manifest::package_sections::{
     SifrDependency, SifrScript, parse_dependencies, parse_scripts,
 };
@@ -80,6 +81,7 @@ pub struct SifrManifest {
     pub scripts: BTreeMap<String, SifrScript>,
     pub dependencies: BTreeMap<String, SifrDependency>,
     pub dev_dependencies: BTreeMap<String, SifrDependency>,
+    pub compiler_components: BTreeMap<String, CompilerComponentConfig>,
     pub trust: TrustPolicy,
     pub python: PythonConfig,
     pub rust: RustInteropConfig,
@@ -150,6 +152,15 @@ impl SifrManifest {
             .map(|dependencies| parse_dependencies(cargo_package_id, manifest_path, dependencies))
             .transpose()?
             .unwrap_or_default();
+        let compiler_components = optional_table(
+            cargo_package_id,
+            manifest_path,
+            &value,
+            "compiler-components",
+        )?
+        .map(|components| parse_compiler_components(cargo_package_id, manifest_path, components))
+        .transpose()?
+        .unwrap_or_default();
         let trust = optional_table(cargo_package_id, manifest_path, &value, "trust")?
             .map(|trust| parse_trust(cargo_package_id, manifest_path, trust))
             .transpose()?
@@ -173,6 +184,7 @@ impl SifrManifest {
             scripts,
             dependencies,
             dev_dependencies,
+            compiler_components,
             trust,
             python,
             rust,

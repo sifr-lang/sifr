@@ -5,7 +5,9 @@
 //! deterministic invalidation reports.
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 
+mod cache_fingerprint;
 mod cache_keys;
+pub use cache_fingerprint::CacheKeyFingerprint;
 mod callable_exports;
 mod canonical_types;
 mod class_declarations;
@@ -37,6 +39,8 @@ mod analysis_views;
 pub use analysis_views::*;
 mod editor_semantics;
 pub use editor_semantics::*;
+mod embedded_analysis_cache_key;
+pub use embedded_analysis_cache_key::EmbeddedAnalysisKey;
 mod export_type_localization;
 mod frontend_reuse;
 pub use frontend_reuse::{FrontendCacheEntryIdentity, FrontendReuseStats};

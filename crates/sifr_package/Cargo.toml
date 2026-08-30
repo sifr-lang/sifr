@@ -7,6 +7,7 @@ rust-version = { workspace = true }
 license = { workspace = true }
 
 [dependencies]
+sifr_compiler_component = { workspace = true }
 sifr_diagnostics = { workspace = true }
 sifr_frontend = { workspace = true }
 sifr_python_ast = { workspace = true }
@@ -14,6 +15,7 @@ sifr_syntax = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 sha2 = { workspace = true }
+semver = { workspace = true }
 toml = { workspace = true }
 
 [lints]

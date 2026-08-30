@@ -307,17 +307,26 @@ rewrites, HIR injection, type variants, or Rust source generation.
 Registration uses the locked package identity and exported symbol identity.
 The compiler resolves processors through normal imports.
 
-Conceptually, a provider declares:
+The package manifest declares each component and its processors:
 
-```text
-package: sifr-sql-postgresql
-component-kind: embedded-language-provider
-processor: sifr.sql.postgresql.sql
-fragment-processors: predicate, expression, order_by, identifier
-schema-dialect: postgresql
-migration-dialect: postgresql
-protocol-version: 1
+```toml
+[compiler-components.postgresql]
+kind = "embedded-language-provider"
+artifact = "components/postgresql.wasm"
+version = "1.0.0"
+sha256 = "<64 lowercase hexadecimal characters>"
+protocol-min = 1
+protocol-max = 1
+processors = ["sifr.sql.postgresql.sql"]
+diagnostic-namespace = "SQL-POSTGRESQL"
+diagnostics = [
+  { code = "SIFR-SQL-POSTGRESQL-0001", lifecycle = "active" },
+]
 ```
+
+A version is one exact semantic version. The processor list and diagnostic list
+use canonical sorted order. The package graph includes every field in its digest.
+A package archive must contain the component artifact.
 
 A local variable with the same spelling does not gain provider authority.
 
@@ -326,15 +335,24 @@ A local variable with the same spelling does not gain provider authority.
 Compiler components use a deterministic sandboxed protocol. `Cargo.lock` and
 the resolved package metadata bind the component bytes and protocol version.
 
-Components use the WebAssembly Component Model and a compiler-owned WIT
-interface. They receive no WASI interfaces by default.
+Components use the WebAssembly Component Model and the compiler-owned
+`sifr:compiler-component@1.0.0` WIT world. The only export is `analyze`. The
+function takes and returns bytes that contain the canonical JSON protocol
+envelope. The host rejects unknown JSON fields and malformed closed variants.
+
+The host uses Wasmtime `48.0.1` with default features disabled. It enables only
+`component-model`, `cranelift`, `runtime`, and `std`. The component linker is
+empty. The Wasmtime `threads` feature is absent, so shared memories cannot
+compile. No WASI interface or other host interface is linked.
 
 The sandbox denies undeclared access to the filesystem, network, environment,
 clocks, random sources, host processes, threads, shared memory, and native
 dynamic libraries.
 
-The compiler supplies declared source inputs through immutable handles. The
-component receives time, memory, recursion, output, and diagnostic limits.
+The compiler supplies source and semantic inputs in one immutable request. Fuel
+bounds CPU work. Store limits bound linear memory, instances, memories, and
+tables. Host limits also bound the WebAssembly stack, request bytes, response
+bytes, type depth, operation depth, collection width, and diagnostics.
 
 The compiler supports cancellation between component operations. A timeout or
 crash produces a compiler diagnostic, not a compiler panic.
@@ -348,7 +366,7 @@ An embedded-language request contains:
 
 ```text
 provider protocol version
-processor identity
+exact package, processor, component version, and component SHA-256 identity
 template parts and source maps
 typed hole descriptions
 schema profile and normalized SchemaIR
@@ -376,6 +394,16 @@ EmbeddedPlan
 
 The compiler validates each output field. Type descriptions use only supported
 Sifr types.
+
+The compiler calculates the plan fingerprint from the canonical validated plan.
+It rejects a provider fingerprint that does not match. Dependencies, record
+fields, source maps, and diagnostic declarations use canonical order.
+
+Compiler diagnostic codes use `SIFR-COMPONENT-NNNN`. Each provider declares one
+different `SIFR-<NAMESPACE>-NNNN` registry in package metadata. Each declaration
+has `active` or `deprecated` lifecycle data. Package resolution rejects duplicate,
+unsorted, malformed, or compiler-owned provider codes. Response validation rejects
+an undeclared code or a lifecycle mismatch.
 
 The provider payload is opaque to SQL-independent code. Its envelope remains
 visible to ownership, hashing, effects, code generation, and diagnostics.
@@ -1539,6 +1567,7 @@ not change the architecture, but it requires provider qualification.
 
 | Surface | Selected foundation | Ownership rule |
 | --- | --- | --- |
+| Compiler component host | [`wasmtime`](https://docs.rs/wasmtime/) Component Model APIs | `sifr_compiler_component` enables no WASI surface and owns fuel, memory, stack, protocol, and output limits. |
 | Async executor and I/O | Workspace `tokio` | `sifr_runtime` owns task and cancellation integration. |
 | TLS | Workspace `rustls`, `tokio-rustls`, and `rustls-platform-verifier` with AWS-LC-RS | Sifr owns the shared crypto provider, certificate policy, identity checks, and secret-safe errors. |
 | PostgreSQL strict parser | [`libpg_query`](https://github.com/pganalyze/libpg_query) | The component embeds one tagged parser source for each supported PostgreSQL major version. |
@@ -1556,6 +1585,7 @@ The following versions are the latest stable compatible set verified on
 
 | Tool | Baseline | Release authority |
 | --- | --- | --- |
+| Wasmtime | `48.0.1` | [`wasmtime` releases](https://crates.io/crates/wasmtime/48.0.1) |
 | Tokio | `1.53.1` | [`tokio` releases](https://crates.io/crates/tokio/1.53.1) |
 | Rustls | `0.23.43` | [`rustls` releases](https://crates.io/crates/rustls/0.23.43) |
 | Tokio Rustls | `0.26.4` | [`tokio-rustls` releases](https://crates.io/crates/tokio-rustls/0.26.4) |
@@ -1831,6 +1861,13 @@ only and cannot change diagnostics or generated output.
 Changes invalidate only entries whose dependency fingerprints changed. A column
 comment change does not invalidate a query unless comments participate in the
 selected contract. A changed referenced column type always invalidates it.
+
+The component transport key hashes the complete request. It therefore includes
+the exact component identity, protocol, compiler semantic version, template
+segments and spans, hole types, fragment identities, schema context, semantic
+settings, imported signatures, and requested plan kind. The frontend wraps that
+key with its compiler, workspace, package, target, mode, source, and policy
+fingerprints.
 
 ### Reproducibility
 

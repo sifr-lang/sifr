@@ -2779,6 +2779,22 @@
       "renderer": "compact",
       "source_hash": "sha256:3007bb5315d0ad56fc994a8215ffa8cc0136b55a0dbad532567faa1f551c6f59",
       "suite": "baselines"
+    },
+    {
+      "bless_reason": "Synthetic compact baseline coverage for stable compiler-component platform diagnostics.",
+      "bless_reference": "sql_3_compiler_components",
+      "fixture_id": "compiler_component_rules_cases",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/component-platform",
+      "renderer": "compact",
+      "source_hash": "sha256:d267b3af5054c333c37dce4a189e24d7763de5815f2a63515b7fba754761fb70",
+      "suite": "synthetic_baselines",
+      "synthetic": true
     }
   ],
   "schema_version": 1

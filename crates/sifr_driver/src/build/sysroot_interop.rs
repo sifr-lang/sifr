@@ -226,6 +226,7 @@ fn sysroot_package(
             scripts: BTreeMap::new(),
             dependencies: BTreeMap::new(),
             dev_dependencies: BTreeMap::new(),
+            compiler_components: BTreeMap::new(),
             trust: TrustPolicy::default(),
             python: sifr_package::PythonConfig::default(),
             rust: RustInteropConfig {

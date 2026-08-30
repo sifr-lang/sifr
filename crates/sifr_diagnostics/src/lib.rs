@@ -6,7 +6,7 @@ pub mod render;
 pub mod schema;
 pub mod source_map;
 
-pub use codes::DiagnosticCode;
+pub use codes::{DiagnosticCode, registry_entry};
 pub use model::{
     ChildSeverity, DiagnosticArg, DiagnosticBuilder, DiagnosticChild, DiagnosticSink,
     DiagnosticSuggestion, ErrorEmitted, InternalDiagnostic, RelatedKind, RelatedSpan, Severity,
@@ -19,3 +19,7 @@ pub use render::{
     render_sink_compact, render_sink_human, render_sink_json,
 };
 pub use source_map::{SourceId, SourceMap, SourceMapError, SourceSpan};
+
+pub fn compiler_diagnostic_namespaces() -> impl Iterator<Item = &'static str> {
+    codes::DIAGNOSTIC_FAMILIES.iter().map(|family| family.name)
+}

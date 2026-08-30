@@ -1,0 +1,10 @@
+9 errors, 0 warnings, 0 notes
+E SIFR-COMPONENT-0001 <unknown> compiler component registration is invalid
+E SIFR-COMPONENT-0002 <unknown> compiler component integrity verification failed
+E SIFR-COMPONENT-0003 <unknown> compiler component protocol version is incompatible
+E SIFR-COMPONENT-0004 <unknown> compiler component protocol envelope is invalid
+E SIFR-COMPONENT-0005 <unknown> compiler component requested a forbidden capability
+E SIFR-COMPONENT-0006 <unknown> compiler component exceeded a resource limit
+E SIFR-COMPONENT-0007 <unknown> compiler component execution failed
+E SIFR-COMPONENT-0008 <unknown> compiler component cache operation failed
+E SIFR-COMPONENT-0009 <unknown> compiler component diagnostic registry is invalid

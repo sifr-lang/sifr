@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "protocol_major": 1,
+  "engine": {
+    "crate": "wasmtime",
+    "version": "48.0.1",
+    "default_features": false,
+    "features": ["component-model", "cranelift", "runtime", "std"]
+  },
+  "wit": "crates/sifr_compiler_component/wit/compiler-component.wit",
+  "host_targets": [
+    "aarch64-apple-darwin",
+    "aarch64-unknown-linux-gnu",
+    "x86_64-pc-windows-msvc",
+    "x86_64-unknown-linux-gnu"
+  ],
+  "determinism_controls": [
+    "nan-canonicalization",
+    "relaxed-simd-disabled"
+  ],
+  "denied_capabilities": [
+    "clock",
+    "environment",
+    "filesystem",
+    "linker",
+    "native-library",
+    "network",
+    "process",
+    "random",
+    "rust-source",
+    "shared-memory",
+    "thread",
+    "wasi"
+  ],
+  "limits": [
+    "cache-entry-bytes",
+    "component-bytes",
+    "diagnostics",
+    "fuel",
+    "input-bytes",
+    "memory",
+    "operation-depth",
+    "output-bytes",
+    "stack",
+    "type-depth"
+  ],
+  "fixture": {
+    "name": "words",
+    "sql": false,
+    "processor": "fixture.words",
+    "source": "crates/sifr_compiler_component/fixtures/words_component/src/lib.rs",
+    "artifact": "crates/sifr_compiler_component/fixtures/words_component/words_component.wasm",
+    "artifact_sha256": "24884d640876cb1caecb253a2ae114552a166dd0cae6a509988c184bc58cc42b",
+    "build_tooling": {
+      "rust_target": "wasm32-unknown-unknown",
+      "wit_bindgen": "0.57.1",
+      "wit_component": "0.254.0"
+    },
+    "contracts": {
+      "cache": "sifr_compiler_component::tests::non_sql_component_parses_typed_requests_and_is_cacheless_deterministic",
+      "dependencies": "sifr_compiler_component::tests::non_sql_component_parses_typed_requests_and_is_cacheless_deterministic",
+      "determinism": "sifr_compiler_component::tests::non_sql_component_parses_typed_requests_and_is_cacheless_deterministic",
+      "diagnostics": "sifr_compiler_component::tests::diagnostic_registries_are_stable_disjoint_and_lifecycle_tagged",
+      "malformed-output": "sifr_compiler_component::tests::malformed_output_and_missing_wit_export_are_structured_errors",
+      "parsing": "sifr_compiler_component::tests::non_sql_component_parses_typed_requests_and_is_cacheless_deterministic",
+      "source-maps": "sifr_compiler_component::tests::non_sql_component_parses_typed_requests_and_is_cacheless_deterministic",
+      "typed-holes": "sifr_compiler_component::tests::non_sql_component_parses_typed_requests_and_is_cacheless_deterministic"
+    }
+  }
+}
