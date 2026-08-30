@@ -86,6 +86,32 @@ def list_witness_refreshes_before_while_condition() -> int:
     return values[0]
 
 
+def clear_values(mut values: list[int]):
+    values.clear()
+
+
+def branch_witness_missing_breaks_while() -> int:
+    values: list[int] = [7]
+    if values:
+        total: int = 0
+        i: int = 0
+        while i < 2:
+            total += values[0]
+            clear_values(values)
+            i += 1
+        return total
+    return -1
+
+
+def condition_witness_missing_breaks_while() -> int:
+    values: list[int] = [1]
+    if len(values) == 0:
+        return -1
+    while values[0] < 3:
+        clear_values(values)
+    return 7
+
+
 def main():
     assert list_exit_guard_refreshes_after_assignment() == 5
     assert list_exit_guard_refreshes_after_augmented_assignment() == 5
@@ -96,6 +122,8 @@ def main():
     assert list_witness_refreshes_on_for_back_edge() == 33
     assert dict_witness_refreshes_on_for_back_edge() == 101
     assert list_witness_refreshes_before_while_condition() == 3
+    assert branch_witness_missing_breaks_while() == 7
+    assert condition_witness_missing_breaks_while() == 7
 
     short: list[int] = [1]
     assert not (len(short) > 3 and short[3] != 0)

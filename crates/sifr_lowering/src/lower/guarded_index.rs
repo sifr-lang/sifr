@@ -194,6 +194,7 @@ fn sequence_guard_target_name(expr: &Expr) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use crate::{HirDiagnostic, HirModule, LoweringResult, lower_module};
+    use sifr_diagnostics::DiagnosticCode;
     use sifr_ir::{HirExpr, HirStmt};
     use sifr_python_parser::parse_module;
     use sifr_type_system::{Type, union_contains_none};
@@ -509,23 +510,43 @@ mod tests {
 
     #[test]
     fn test_loop_delete_invalidates_membership_guard_before_body_lowering() {
-        let result = lower_source(
+        let errors = lower_source(
             "def pick(mut table: dict[int, int], key: int) -> int:\n    if key not in table:\n        return 0\n    total: int = 0\n    for i in range(2):\n        total += table[key]\n        del table[key]\n    return total\n",
-        );
+        )
+        .expect_err("a loop-invalidated key proof must not type-check the body read");
         assert!(
-            result.is_err(),
-            "a proof invalidated on a loop back-edge must not narrow the first body read"
+            errors
+                .iter()
+                .any(|error| error.code == Some(DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR)),
+            "expected the optional checked read to fail the integer addition: {errors:?}"
         );
     }
 
     #[test]
     fn test_async_loop_delete_invalidates_membership_guard_before_body_lowering() {
-        let result = lower_source(
+        let errors = lower_source(
             "async def numbers() -> AsyncGenerator[int, GeneratorCloseError]:\n    yield 1\n    yield 2\n\nasync def total(mut table: dict[str, int], key: str) -> Result[int, GeneratorCloseError]:\n    if key not in table:\n        return 0\n    result: int = 0\n    async for value in numbers():\n        result += table[key]\n        try:\n            del table[key]\n        except KeyError:\n            pass\n    return result\n",
-        );
+        )
+        .expect_err("an async-loop-invalidated key proof must not type-check the body read");
         assert!(
-            result.is_err(),
-            "an async-loop back-edge must not retain a key-presence proof invalidated by deletion"
+            errors
+                .iter()
+                .any(|error| error.code == Some(DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR)),
+            "expected the optional checked read to fail the integer addition: {errors:?}"
+        );
+    }
+
+    #[test]
+    fn test_async_loop_body_guard_does_not_escape_a_possibly_empty_loop() {
+        let errors = lower_source(
+            "async def numbers() -> AsyncGenerator[int, GeneratorCloseError]:\n    yield 1\n\nasync def total(mut table: dict[str, int], key: str) -> Result[int, GeneratorCloseError]:\n    async for value in numbers():\n        table[key] = value\n    return table[key] + 1\n",
+        )
+        .expect_err("a guard established only in an async-loop body must not escape the loop");
+        assert!(
+            errors
+                .iter()
+                .any(|error| error.code == Some(DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR)),
+            "expected the post-loop optional read to fail the integer addition: {errors:?}"
         );
     }
 

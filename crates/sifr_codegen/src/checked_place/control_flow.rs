@@ -84,7 +84,7 @@ impl RustEmitter {
             .map(|(_, witness)| RustStmt::LetElse {
                 pattern: format!("Some({})", witness.binding),
                 value: witness.option,
-                else_body: witness.missing.unwrap_or_else(|| vec![RustStmt::Break]),
+                else_body: vec![RustStmt::Break],
             })
             .collect();
         (keys, guards)
@@ -470,22 +470,13 @@ impl RustEmitter {
         }
         drop(locally_satisfied);
         for (_, witness) in loop_carried.into_iter().rev() {
-            lowered = if let Some(missing) = witness.missing {
-                let mut guarded = vec![RustStmt::LetElse {
-                    pattern: format!("Some({})", witness.binding),
-                    value: witness.option,
-                    else_body: missing,
-                }];
-                guarded.extend(lowered);
-                guarded
-            } else {
-                vec![RustStmt::IfLet {
-                    pattern: format!("Some({})", witness.binding),
-                    expr: witness.option,
-                    then_body: lowered,
-                    else_body: None,
-                }]
-            };
+            let mut guarded = vec![RustStmt::LetElse {
+                pattern: format!("Some({})", witness.binding),
+                value: witness.option,
+                else_body: vec![missing.clone()],
+            }];
+            guarded.extend(lowered);
+            lowered = guarded;
         }
         for guard in guards
             .iter()

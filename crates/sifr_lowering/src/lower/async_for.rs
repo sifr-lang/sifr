@@ -216,6 +216,7 @@ pub(in crate::lower) fn lower_async_for(
         ctx.clear_sequence_guards_for_target(&target);
     }
     let saved_const_integer_state = ctx.scope.save_const_integer_state();
+    let saved_sequence_guards = ctx.save_sequence_guards();
     ctx.scope.push();
     ctx.scope.define_ephemeral(
         target.clone(),
@@ -233,6 +234,7 @@ pub(in crate::lower) fn lower_async_for(
         &saved_const_integer_state,
         &[(body_const_integer_state, false)],
     );
+    ctx.restore_sequence_guards(&saved_sequence_guards);
     ownership_diagnostics::report_moved_across_loop(ctx, &moved_before_loop, for_stmt.range());
     if let Some(close_error_ty) = &close_error_ty {
         if stmts_contain_early_exit_for_current_loop(&body)
