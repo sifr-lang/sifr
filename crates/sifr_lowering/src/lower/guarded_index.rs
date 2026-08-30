@@ -519,6 +519,17 @@ mod tests {
     }
 
     #[test]
+    fn test_async_loop_delete_invalidates_membership_guard_before_body_lowering() {
+        let result = lower_source(
+            "async def numbers() -> AsyncGenerator[int, GeneratorCloseError]:\n    yield 1\n    yield 2\n\nasync def total(mut table: dict[str, int], key: str) -> Result[int, GeneratorCloseError]:\n    if key not in table:\n        return 0\n    result: int = 0\n    async for value in numbers():\n        result += table[key]\n        try:\n            del table[key]\n        except KeyError:\n            pass\n    return result\n",
+        );
+        assert!(
+            result.is_err(),
+            "an async-loop back-edge must not retain a key-presence proof invalidated by deletion"
+        );
+    }
+
+    #[test]
     fn test_loop_reassignment_invalidates_length_guard_before_condition_lowering() {
         let module = lower_source(
             "def pick(mut values: list[int]) -> int:\n    if len(values) == 0:\n        return 0\n    while values[0] < 3:\n        values = []\n    return 1\n",

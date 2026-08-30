@@ -59,7 +59,7 @@ def list_witness_refreshes_on_for_back_edge() -> int:
     if len(values) == 0:
         return -1
     total: int = 0
-    for i in range(3):
+    for _i in range(3):
         total += values[0]
         values[0] += 10
     return total
@@ -71,7 +71,7 @@ def dict_witness_refreshes_on_for_back_edge() -> int:
     if key not in mapping:
         return -1
     total: int = 0
-    for i in range(2):
+    for _i in range(2):
         total += mapping[key]
         mapping[key] = 100
     return total
