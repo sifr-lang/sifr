@@ -467,6 +467,9 @@ fn collect_expr(expr: &HirExpr, path: &str, facts: &mut NameFacts) {
         HirExpr::FieldAccess { object, .. } => {
             collect_expr(object, &format!("{path}/object"), facts)
         }
+        HirExpr::StructuralRecordProject { source, .. } => {
+            collect_expr(source, &format!("{path}/source"), facts)
+        }
         HirExpr::ConstructorCall { args, .. } => {
             for (index, arg) in args.iter().enumerate() {
                 collect_expr(arg, &format!("{path}/arg[{index}]"), facts);
@@ -571,6 +574,7 @@ fn expr_kind(expr: &HirExpr) -> &'static str {
         HirExpr::Slice { .. } => "Slice",
         HirExpr::WalrusExpr { .. } => "WalrusExpr",
         HirExpr::FieldAccess { .. } => "FieldAccess",
+        HirExpr::StructuralRecordProject { .. } => "StructuralRecordProject",
         HirExpr::ConstructorCall { .. } => "ConstructorCall",
         HirExpr::QuestionMark { .. } => "QuestionMark",
         HirExpr::OkWrap { .. } => "OkWrap",

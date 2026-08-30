@@ -85,6 +85,7 @@ impl crate::RustEmitter {
                 derives: vec![
                     "Debug".to_string(),
                     "Clone".to_string(),
+                    "Copy".to_string(),
                     "PartialEq".to_string(),
                     "Eq".to_string(),
                     "Hash".to_string(),

@@ -216,6 +216,7 @@ fn collect_python_callback_bound_names_expr(
         | HirExpr::ErrWrap { value: body, .. }
         | HirExpr::Await { value: body, .. }
         | HirExpr::UnaryOp { operand: body, .. }
+        | HirExpr::StructuralRecordProject { source: body, .. }
         | HirExpr::FieldAccess { object: body, .. }
         | HirExpr::WalrusExpr { value: body, .. } => {
             collect_python_callback_bound_names_expr(body, callable_params, names);
@@ -401,6 +402,7 @@ fn collect_callable_param_name_refs(
         | HirExpr::ErrWrap { value: body, .. }
         | HirExpr::Await { value: body, .. }
         | HirExpr::UnaryOp { operand: body, .. }
+        | HirExpr::StructuralRecordProject { source: body, .. }
         | HirExpr::FieldAccess { object: body, .. }
         | HirExpr::WalrusExpr { value: body, .. } => {
             collect_callable_param_name_refs(body, callable_params, names);

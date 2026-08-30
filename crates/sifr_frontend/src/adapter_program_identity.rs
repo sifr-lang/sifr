@@ -366,7 +366,9 @@ fn strip_expr_locations(expression: &mut HirExpr) {
                 strip_expr_locations(bound);
             }
         }
-        HirExpr::WalrusExpr { value, .. } | HirExpr::FieldAccess { object: value, .. } => {
+        HirExpr::WalrusExpr { value, .. }
+        | HirExpr::FieldAccess { object: value, .. }
+        | HirExpr::StructuralRecordProject { source: value, .. } => {
             strip_expr_locations(value);
         }
         HirExpr::Lambda { params, body, .. } => {

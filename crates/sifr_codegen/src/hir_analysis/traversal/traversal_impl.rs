@@ -64,6 +64,9 @@ where
         | HirExpr::OkWrap { value: operand, .. }
         | HirExpr::ErrWrap { value: operand, .. }
         | HirExpr::WalrusExpr { value: operand, .. }
+        | HirExpr::StructuralRecordProject {
+            source: operand, ..
+        }
         | HirExpr::FieldAccess {
             object: operand, ..
         } => {

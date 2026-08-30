@@ -226,6 +226,9 @@ impl RustEmitter {
                 name == needle || Self::expr_mentions_name(value, needle)
             }
             HirExpr::FieldAccess { object, .. } => Self::expr_mentions_name(object, needle),
+            HirExpr::StructuralRecordProject { source, .. } => {
+                Self::expr_mentions_name(source, needle)
+            }
             HirExpr::Lambda { body, .. } => Self::expr_mentions_name(body, needle),
             HirExpr::ListComp {
                 expr, generators, ..

@@ -566,6 +566,7 @@ pub(super) fn validate_expr_lowering_shape(expr: &HirExpr) -> Result<(), Codegen
         | HirExpr::QuestionMark { expr: value, .. }
         | HirExpr::OkWrap { value, .. }
         | HirExpr::ErrWrap { value, .. } => validate_expr_lowering_shape(value),
+        HirExpr::StructuralRecordProject { source, .. } => validate_expr_lowering_shape(source),
         HirExpr::FieldAccess { object, .. } => validate_expr_lowering_shape(object),
         HirExpr::ConstructorCall { args, .. } | HirExpr::SuperCall { args, .. } => {
             for arg in args {

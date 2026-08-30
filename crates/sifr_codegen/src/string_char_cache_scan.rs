@@ -65,7 +65,10 @@ pub(crate) fn collect_string_cache_uses(expr: &HirExpr, used: &mut HashSet<Strin
         | HirExpr::Await { value: operand, .. }
         | HirExpr::QuestionMark { expr: operand, .. }
         | HirExpr::OkWrap { value: operand, .. }
-        | HirExpr::ErrWrap { value: operand, .. } => collect_string_cache_uses(operand, used),
+        | HirExpr::ErrWrap { value: operand, .. }
+        | HirExpr::StructuralRecordProject {
+            source: operand, ..
+        } => collect_string_cache_uses(operand, used),
         HirExpr::Compare {
             left, comparators, ..
         } => {

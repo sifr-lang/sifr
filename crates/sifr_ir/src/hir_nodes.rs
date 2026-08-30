@@ -772,6 +772,12 @@ pub enum HirExpr {
         field: String,
         ty: Type,
     },
+    /// Consuming projection from a wider structural record.
+    StructuralRecordProject {
+        source: Box<HirExpr>,
+        fields: Vec<String>,
+        ty: Type,
+    },
     /// Constructor call: ClassName(args)
     ConstructorCall {
         class_name: String,

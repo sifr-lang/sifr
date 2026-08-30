@@ -4,6 +4,8 @@ type User = {active: bool, email: str, id: int}
 type UserSummary = {email: str, id: int}
 type Boxed[T] = {value: T}
 type ReorderedUser = {id: int, email: str, active: bool}
+type Flags = {active: bool, admin: bool}
+type Count = {value: int}
 
 
 def read_id(user: UserSummary) -> int:
@@ -16,6 +18,14 @@ def unwrap[T](box: Boxed[T]) -> T:
 
 def wrap[T](own value: T) -> Boxed[T]:
     return Boxed[T](value=value)
+
+
+def is_active(flags: Flags) -> bool:
+    return flags.active
+
+
+def count_value(count: Count) -> int:
+    return count.value
 
 
 def main():
@@ -33,6 +43,14 @@ def main():
     assert unwrap(box) == 9
     wrapped: Boxed[int] = wrap(10)
     assert unwrap(wrapped) == 10
+
+    flags: Flags = Flags(active=True, admin=False)
+    assert is_active(flags)
+    assert is_active(flags)
+
+    count: Count = Count(value=1)
+    assert count_value(count) == 1
+    assert count_value(count) == 1
 
     projected: UserSummary = user.project[UserSummary]()
     assert projected.id == 7

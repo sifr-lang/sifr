@@ -148,19 +148,15 @@ fn lower_structural_record_projection(
         );
         return Some(None);
     }
-    let args = target_record
+    let fields = target_record
         .fields()
         .iter()
-        .map(|field| HirExpr::FieldAccess {
-            object: Box::new(source.clone()),
-            field: field.name().to_string(),
-            ty: field.ty().clone(),
-        })
+        .map(|field| field.name().to_string())
         .collect();
     consume_owned_value(&source, source_name.range(), ctx);
-    Some(Some(HirExpr::ConstructorCall {
-        class_name: target_ty.display_name(),
-        args,
+    Some(Some(HirExpr::StructuralRecordProject {
+        source: Box::new(source),
+        fields,
         ty: target_ty,
     }))
 }

@@ -228,6 +228,12 @@ pub(super) fn project_expr(expr: &HirExpr) -> Value {
             "object": project_expr(object),
             "field": field,
         }),
+        HirExpr::StructuralRecordProject { source, fields, .. } => json!({
+            "kind": "StructuralRecordProject",
+            "ty": expr_type_name(expr),
+            "source": project_expr(source),
+            "fields": fields,
+        }),
         HirExpr::ConstructorCall {
             class_name, args, ..
         } => json!({

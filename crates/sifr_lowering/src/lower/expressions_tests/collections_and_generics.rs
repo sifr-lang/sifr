@@ -579,6 +579,9 @@ pub(super) fn test_iterator_builtins_lower_to_canonical_iterator_call_nodes() {
             | HirExpr::OkWrap { value: operand, .. }
             | HirExpr::ErrWrap { value: operand, .. }
             | HirExpr::WalrusExpr { value: operand, .. }
+            | HirExpr::StructuralRecordProject {
+                source: operand, ..
+            }
             | HirExpr::FieldAccess {
                 object: operand, ..
             } => call_uses_legacy_iterator_builtin(operand),

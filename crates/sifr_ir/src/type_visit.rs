@@ -179,6 +179,11 @@ where
             ty,
             ..
         }
+        | HirExpr::StructuralRecordProject {
+            source: operand,
+            ty,
+            ..
+        }
         | HirExpr::QuestionMark {
             expr: operand, ty, ..
         }

@@ -207,6 +207,7 @@ pub(super) fn expr_has_result_flow(expr: &HirExpr) -> bool {
         }
         HirExpr::Lambda { body, .. } => expr_has_result_flow(body),
         HirExpr::WalrusExpr { value, .. } => expr_has_result_flow(value),
+        HirExpr::StructuralRecordProject { source, .. } => expr_has_result_flow(source),
         HirExpr::FieldAccess { object, .. } => expr_has_result_flow(object),
         HirExpr::ContainsOp {
             element,

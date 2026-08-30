@@ -268,7 +268,10 @@ fn hir_expr_calls_function(expr: &HirExpr, func_name: &str) -> bool {
         | HirExpr::QuestionMark { expr: operand, .. }
         | HirExpr::OkWrap { value: operand, .. }
         | HirExpr::ErrWrap { value: operand, .. }
-        | HirExpr::WalrusExpr { value: operand, .. } => hir_expr_calls_function(operand, func_name),
+        | HirExpr::WalrusExpr { value: operand, .. }
+        | HirExpr::StructuralRecordProject {
+            source: operand, ..
+        } => hir_expr_calls_function(operand, func_name),
         HirExpr::ListLiteral { elements, .. }
         | HirExpr::SetLiteral { elements, .. }
         | HirExpr::TupleLiteral { elements, .. } => elements
