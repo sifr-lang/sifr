@@ -277,7 +277,7 @@ verification inventory. This phase does not reimplement those capabilities.
 |---:|---|---|---|
 | 0 | completed | Architecture and dependency lock | The final architecture, language dependencies, ownership map, capability matrix, verification inventory, and phase gates are authoritative and machine validated. |
 | 1 | completed | Template-string language foundation | Template strings preserve static segments, typed holes, evaluation order, and exact source maps through the full compiler pipeline. |
-| 2 | pending | Structural record type system | Immutable records have order-independent canonical identity, width subtyping, deterministic diagnostics, and interned Rust layouts. |
+| 2 | completed | Structural record type system | Immutable records have order-independent canonical identity, width subtyping, deterministic diagnostics, and interned Rust layouts. |
 | 3 | pending | Compiler component platform | Resolved packages can provide deterministic sandboxed embedded-language analysis through one closed, versioned, cacheable protocol. |
 | 4 | pending | Schema profiles and canonical `SchemaIR` | Configuration sources produce exact provider-owned schema graphs, nominal profile types, fingerprints, dependency slices, diffs, and runtime contracts. |
 | 5 | pending | Common SQL contracts | Shared query kinds, complete type and bind mappings, codecs, errors, cardinality, effects, ownership, and provider interfaces have one final contract. |
@@ -1172,8 +1172,9 @@ pre-existing problem enters the deferred-work ledger with an owner.
 Apply valid blocking findings in one batch. If the same finding returns twice,
 stop and request adjudication.
 
-If a second review finds a new mechanism defect, stop and revise the milestone
-scope. Do not hide the new scope in another remediation round.
+If a second review finds a new mechanism defect, record a later phase item.
+Continue the sequence and do not run a third review. Milestone 18 must resolve
+the item before the final qualification.
 
 Review approval and validation must cover the same final candidate. Record-only
 evidence updates do not require another broad implementation review.
@@ -1251,7 +1252,7 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 | ---: | --- | --- | --- | --- | --- | --- |
 | 0 | completed | [#3582](https://github.com/sifr-lang/sifr/pull/3582) | `1a1cef93dc` | SQL 4/4; docs 1/1; dependency and runner checks pass | Opus `SATISFIED` on `7f3f6bc2c` | Architecture and dependency lock |
 | 1 | completed | [#3585](https://github.com/sifr-lang/sifr/pull/3585) | `1173cd9e20` | type system 140/140; focused template 13/13; property 15/15; fuzz 26/26; SQL and repository checks pass | Opus remediation `SATISFIED` on `56f131e1b` | Typed template strings; also corrects the Milestone 0 verification integration |
-| 2 | pending | — | — | — | — | Structural record type system |
+| 2 | completed | [#3588](https://github.com/sifr-lang/sifr/pull/3588) | `955e97f6db` | affected packages, native fixture, HIR guard, and file-size guard pass | Opus round 2 closed both original blockers on `dd7ac3cdc`; one new mechanism defect is deferred | Structural record type system |
 | 3 | pending | — | — | — | — | Compiler component platform |
 | 4 | pending | — | — | — | — | Schema profiles and canonical `SchemaIR` |
 | 5 | pending | — | — | — | — | Common SQL contracts |
@@ -1281,6 +1282,8 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 | Tooling baseline review | Syntaqlite has GitHub source and crates.io release identities. | Milestone 0 | Name crates.io as release authority and GitHub as source authority in the baseline record. |
 | Milestone 0 remediation review | Match architecture dependency rows by their exact first table cell. | Milestone 18 | Harden the final dependency revalidation checker before phase closure. |
 | Milestone 0 remediation review | Bound GitHub release pagination and remove the unreachable tag-key fallback. | Milestone 18 | Harden the final release-authority refresh before phase closure. |
+| Milestone 2 remediation review | An all-`int` wide record can stay live after projection while Rust partially moves one `SifrInt` field. | Milestone 18 | Align logical-copy projection with physical Rust moves. Add a multi-field projection-and-reuse regression fixture. |
+| Milestone 2 remediation review | Record fields with `Callable` or union types can produce invalid generated Rust. | Milestone 18 | Complete these record field layouts before integrated qualification. Add native positive fixtures for both field types. |
 
 ### Milestone 0 closure record
 
@@ -1370,6 +1373,49 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
   in `ad-hoc-pre-v1-compatibility-removal.md`.
 - Next action: implement Milestone 2 from the merged and recorded mainline.
 
+### Milestone 2 closure record
+
+- Status: completed and merged.
+- Starting commit: `30e8bc375e3901e57d285daba9836a0d9e1c1e38`.
+- Initial reviewed candidate: `930b1e6dfbd5d63f8766353f5a6307b47d324be8`.
+- Final candidate: `dd7ac3cdc83ce7d44a7ac4a527be313e67e1d231`.
+- Pull request: [#3588](https://github.com/sifr-lang/sifr/pull/3588).
+- Merge commit: `955e97f6db04850cd78767597e12a379a99387f0`.
+- Owned result: immutable structural records now have canonical field order and
+  order-independent identity. The compiler supports exact field access, named
+  construction, named destructuring, generic records, and nested records.
+- Type rules: ordinary assignment is exact. Width conversion exists only for a
+  shared-borrow call boundary. Owned projection uses an explicit consuming HIR
+  node and moves selected fields without implicit clones.
+- Rust result: code generation interns canonical generic layouts. The generated
+  layouts support equality, hashing, ordering, display, and IPC serialization.
+  Physical `Copy` classification follows every nested Rust field type.
+- Focused validation: all 1,161 codegen tests passed. All 1,060 lowering tests
+  passed, with one ignored test. All 146 type-system tests passed. Frontend tests,
+  the workspace check, and the native structural-record fixture also passed.
+- Property and guard validation: field-permutation, identity, width, capability,
+  layout-reuse, and build-order cases passed. The HIR and file-size guards passed.
+- Create-PR gate: the one allowed run used `930b1e6d`. All functional areas
+  passed. The cold runtime-platform area exceeded its time budget.
+- Merge gate: the one allowed run used `dd7ac3cd`. Rust interop, coverage, core
+  language, CPython differential, Python interop, diagnostics, and runtime
+  platform passed. Runtime platform passed 30 variants with zero failures.
+- External gate failure: algorithmic compatibility stopped because this
+  worktree did not initialize the LeetCode corpus gitlink. The corpus path was
+  absent. The owning algorithmic issue records this external failure. The gate
+  did not run again.
+- Review round 1: Opus found implicit clones in owned projection. It also found
+  a mismatch between Sifr copy rules and physical Rust `Copy` behavior.
+- Remediation: the final candidate adds a projection HIR node, direct field
+  moves, bounded Rust `Copy` derives, and recursive physical-copy checks.
+- Review round 2: Opus verified both original mechanisms. It found a new case
+  for projection from a multi-field all-`int` record. The [published review](https://github.com/sifr-lang/sifr/pull/3588#issuecomment-5466767448)
+  records the exact case. The phase rule assigns this case to Milestone 18 and
+  prohibits a third review.
+- Deferred record fields: the same review noted invalid generated Rust for
+  `Callable` and union fields. Milestone 18 owns both native closure cases.
+- Next action: implement Milestone 3 from the merged and recorded mainline.
+
 ## Closure evidence template
 
 Each milestone appends one progress record with:
@@ -1401,5 +1447,5 @@ Complete this section after Milestone 18 merges:
 - Final capability and verification inventory: pending.
 - Deferred out-of-scope work: pending.
 - Archive destination: `plans/issues/archive/ad-hoc-schema-first-sql-platform.md`.
-- Exact next action: implement Milestone 2 in a new session from current
+- Exact next action: implement Milestone 3 in a new session from current
   `origin/main`.
