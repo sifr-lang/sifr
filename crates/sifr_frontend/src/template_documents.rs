@@ -116,6 +116,34 @@ impl TemplateDocumentView {
             None
         })
     }
+
+    #[must_use]
+    pub fn interpolation_at_source_offset(&self, offset: TextSize) -> Option<usize> {
+        self.mappings.iter().find_map(|mapping| {
+            if contains_offset(mapping.source_range, offset)
+                && let TemplateSourceMapKind::Interpolation { index } = mapping.kind
+            {
+                return Some(index);
+            }
+            None
+        })
+    }
+
+    #[must_use]
+    pub fn is_static_source_offset(&self, offset: TextSize) -> bool {
+        self.mappings.iter().any(|mapping| {
+            mapping.kind == TemplateSourceMapKind::Static
+                && contains_offset(mapping.source_range, offset)
+        })
+    }
+
+    #[must_use]
+    pub fn is_interpolation_source_offset(&self, offset: TextSize) -> bool {
+        self.mappings.iter().any(|mapping| {
+            matches!(mapping.kind, TemplateSourceMapKind::Interpolation { .. })
+                && contains_offset(mapping.source_range, offset)
+        })
+    }
 }
 
 fn contains_offset(range: TextRange, offset: TextSize) -> bool {

@@ -96,6 +96,7 @@ pub use report::{
     PythonDeclarationCheck, PythonEnvironmentCheck, PythonInteropCheckReport, PythonTargetCheck,
     PythonTargetCheckStatus,
 };
+pub use sql_profiles::{PreparedSqlProfiles, load_sql_editor_profiles, prepare_sql_profiles};
 pub use sql_query_signatures::{QUERY_SIGNATURE_ARTIFACT_NAME, emit_query_signature_artifact};
 
 pub(crate) use cargo_manifest::{

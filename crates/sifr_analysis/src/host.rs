@@ -1,3 +1,4 @@
+mod construction;
 mod debug_status;
 mod editor_facts;
 #[cfg(test)]

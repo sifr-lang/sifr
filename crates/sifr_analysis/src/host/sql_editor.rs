@@ -40,7 +40,7 @@ impl AnalysisHost {
         file: FileId,
         position: &TextPosition,
     ) -> Result<Option<HoverInfo>, AnalysisError> {
-        let Some((document, offset)) = self.sql_document_at(file, position)? else {
+        let Some((document, offset)) = self.sql_document_or_hole_at(file, position)? else {
             return Ok(None);
         };
         let Some(symbol) = document.symbol_at_source_offset(offset) else {
@@ -282,7 +282,26 @@ impl AnalysisHost {
         Ok(self
             .sql_documents_for_file(file)?
             .into_iter()
-            .find(|document| document.contains_source_offset(offset))
+            .find(|document| document.contains_static_source_offset(offset))
+            .map(|document| (document, offset)))
+    }
+
+    fn sql_document_or_hole_at(
+        &mut self,
+        file: FileId,
+        position: &TextPosition,
+    ) -> Result<Option<(SqlEditorDocumentView, TextSize)>, AnalysisError> {
+        let source = SourceText::new(self.source_text(file)?);
+        let Some(offset) = source.byte_offset(position) else {
+            return Ok(None);
+        };
+        Ok(self
+            .sql_documents_for_file(file)?
+            .into_iter()
+            .find(|document| {
+                document.contains_static_source_offset(offset)
+                    || document.contains_interpolation_source_offset(offset)
+            })
             .map(|document| (document, offset)))
     }
 
@@ -293,11 +312,39 @@ impl AnalysisHost {
         let Some(module) = self.file_to_module.get(&file).copied() else {
             return Ok(Vec::new());
         };
+        let (mut documents, cache_context, source_document) = {
+            let context = self.context_mut()?;
+            let source_document = sql_source_document(context, file);
+            let cache_context = context.embedded_analysis_cache_context();
+            let documents = context
+                .analysis_for_module(module)
+                .into_value()
+                .sql_documents;
+            (documents, cache_context, source_document)
+        };
+        documents.retain(|document| document.profile_name.is_some());
+        self.sql_editor_runtime
+            .enrich(documents, &cache_context, &source_document)
+            .map_err(|error| {
+                AnalysisError::new(
+                    AnalysisErrorKind::FrontendDiagnostic,
+                    format!("SQL editor analysis failed: {error}"),
+                )
+            })
+    }
+
+    pub(super) fn sql_provider_diagnostics(
+        &mut self,
+        file: FileId,
+    ) -> Result<Vec<sifr_diagnostics::RenderedDiagnostic>, AnalysisError> {
+        let documents = self.sql_documents_for_file(file)?;
+        if documents.is_empty() {
+            return Ok(Vec::new());
+        }
+        let source_document = sql_source_document(self.context_mut()?, file);
         Ok(self
-            .context_mut()?
-            .analysis_for_module(module)
-            .into_value()
-            .sql_documents)
+            .sql_editor_runtime
+            .diagnostics_for_source(&source_document))
     }
 
     fn all_sql_documents(&mut self) -> Result<Vec<(FileId, SqlEditorDocumentView)>, AnalysisError> {
@@ -326,6 +373,22 @@ impl AnalysisHost {
                     .then_some(file.id)
             })
     }
+}
+
+fn sql_source_document(context: &sifr_frontend::FrontendContext, file: FileId) -> String {
+    context
+        .source_map()
+        .files
+        .iter()
+        .find(|source| source.id == file)
+        .map(|source| {
+            source
+                .canonical_path
+                .as_path()
+                .to_string_lossy()
+                .into_owned()
+        })
+        .unwrap_or_else(|| format!("file-{}", file.as_u32()))
 }
 
 fn symbol_detail(symbol: &sifr_frontend::SqlEditorSymbol) -> Option<String> {

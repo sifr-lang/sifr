@@ -39,14 +39,15 @@ pub use codec_binding::{
 pub use diagnostic::CommonSqlDiagnostic;
 
 pub use component::{
-    SCHEMA_NORMALIZATION_OPERATION, SCHEMA_NORMALIZATION_PAYLOAD_TAG, SchemaNormalizationOutput,
-    SchemaSourceArtifact, SchemaSourceInput, normalized_schema_from_response,
+    PROVIDER_ANALYSIS_PAYLOAD_TAG, SCHEMA_NORMALIZATION_OPERATION,
+    SCHEMA_NORMALIZATION_PAYLOAD_TAG, SchemaNormalizationOutput, SchemaSourceArtifact,
+    SchemaSourceInput, normalized_schema_from_response, provider_analysis_from_response,
     schema_normalization_request, schema_source_fingerprint,
 };
 pub use diff::{ObjectChange, ObjectChangeKind, SchemaDiff, semantic_diff};
 pub use effect::{EffectContract, QueryEffect};
 pub use error::{SchemaContractError, SchemaContractErrorKind};
-pub use fingerprint::{SchemaFingerprint, schema_fingerprint};
+pub use fingerprint::{SchemaFingerprint, schema_fingerprint, schema_object_fingerprint};
 pub use fragment::{
     AliasIdentity, EffectTransformation, FragmentCategory, FragmentDraft, FragmentIdentity,
     PackageCapabilityResolver, PredicateContext, QueryDefinitionScope, RelationAlias,

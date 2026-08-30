@@ -372,6 +372,10 @@ pub(in crate::lower) fn lower_function(
                 } else {
                     None
                 }
+            } else if let Expr::Attribute(attribute) = &d.expression
+                && let Expr::Name(root) = attribute.value.as_ref()
+            {
+                Some(format!("{}.{}", root.id, attribute.attr))
             } else if super::super::attached_api_declarations::is_attached_api_decorator(d) {
                 Some("attached_api".to_string())
             } else {

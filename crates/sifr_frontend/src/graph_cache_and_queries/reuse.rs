@@ -365,6 +365,11 @@ impl FrontendContext {
         context.with_query_policy(QueryPolicyFingerprint::new(policy))
     }
 
+    #[must_use]
+    pub fn embedded_analysis_cache_context(&self) -> CacheKeyContext {
+        self.semantic_cache_context(CacheFamily::EmbeddedAnalysis)
+    }
+
     fn semantic_graph_fingerprint(&self) -> CacheKeyFingerprint {
         let mut fields = vec![
             ("entrypoint", self.entrypoint.as_u32().to_string()),

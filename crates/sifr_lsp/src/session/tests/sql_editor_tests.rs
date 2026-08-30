@@ -3,11 +3,15 @@ use serde_json::{Value, json};
 
 #[test]
 fn sql_virtual_document_features_share_the_analysis_snapshot() {
-    let source = "def query(user_id: int) -> Template:\n    return t\"SELECT users.name FROM users WHERE users.id = {user_id} LIMIT 1\"\n";
+    let source = "@app.query\ndef query(user_id: int) -> Template:\n    return t\"SELECT users.name FROM users WHERE users.id = {user_id} LIMIT 1\"\n";
     let (mut session, _temp, uri) = open_fixture(source);
-    let completion = request(&mut session, "textDocument/completion", &uri, 1, 22);
-    let hover = request(&mut session, "textDocument/hover", &uri, 1, 22);
-    let references = request(&mut session, "textDocument/references", &uri, 1, 22);
+    let completion = request(&mut session, "textDocument/completion", &uri, 2, 22);
+    let hover = request(&mut session, "textDocument/hover", &uri, 2, 22);
+    let references = request(&mut session, "textDocument/references", &uri, 2, 22);
+    let hole_completion = request(&mut session, "textDocument/completion", &uri, 2, 62);
+    let hole_hover = request(&mut session, "textDocument/hover", &uri, 2, 62);
+    let hole_definition = request(&mut session, "textDocument/definition", &uri, 2, 62);
+    let hole_references = request(&mut session, "textDocument/references", &uri, 2, 62);
     let semantic = crate::requests::handle(
         &mut session,
         "textDocument/semanticTokens/full",
@@ -21,7 +25,7 @@ fn sql_virtual_document_features_share_the_analysis_snapshot() {
             "textDocument": { "uri": uri },
             "range": {
                 "start": { "line": 0, "character": 0 },
-                "end": { "line": 2, "character": 0 }
+                "end": { "line": 3, "character": 0 }
             }
         }),
     )
@@ -31,7 +35,7 @@ fn sql_virtual_document_features_share_the_analysis_snapshot() {
         "textDocument/rename",
         json!({
             "textDocument": { "uri": uri },
-            "position": { "line": 1, "character": 22 },
+            "position": { "line": 2, "character": 22 },
             "newName": "accounts"
         }),
     )
@@ -51,14 +55,14 @@ fn sql_virtual_document_features_share_the_analysis_snapshot() {
         json!({
             "textDocument": { "uri": uri },
             "range": {
-                "start": { "line": 1, "character": 20 },
-                "end": { "line": 1, "character": 24 }
+                "start": { "line": 2, "character": 20 },
+                "end": { "line": 2, "character": 24 }
             },
             "context": {
                 "diagnostics": [{
                     "range": {
-                        "start": { "line": 1, "character": 20 },
-                        "end": { "line": 1, "character": 24 }
+                        "start": { "line": 2, "character": 20 },
+                        "end": { "line": 2, "character": 24 }
                     },
                     "severity": 1,
                     "code": "SIFR-SQL-POSTGRESQL-0005",
@@ -88,6 +92,11 @@ fn sql_virtual_document_features_share_the_analysis_snapshot() {
         "format_preserves_hole": formatting.as_array().is_some_and(|edits| edits.is_empty())
             || formatting.to_string().contains("{user_id}"),
         "structured_cast_fix": code_actions.to_string().contains("quickfix.sifr.sql.cast"),
+        "hole_completion_is_sifr": !hole_completion.to_string().contains("\"SELECT\""),
+        "hole_hover_is_parameter": hole_hover.to_string().contains("SQL parameter"),
+        "hole_definition_is_sifr": hole_definition.as_array().is_some_and(|items| !items.is_empty())
+            || hole_definition.get("uri").is_some(),
+        "hole_references_are_sifr": hole_references.as_array().is_some_and(|items| !items.is_empty()),
     });
     insta::assert_snapshot!(serde_json::to_string_pretty(&summary).expect("summary JSON"), @r###"
     {
@@ -97,11 +106,15 @@ fn sql_virtual_document_features_share_the_analysis_snapshot() {
         "WHERE"
       ],
       "format_preserves_hole": true,
+      "hole_completion_is_sifr": true,
+      "hole_definition_is_sifr": true,
+      "hole_hover_is_parameter": true,
+      "hole_references_are_sifr": true,
       "hover_has_cardinality": true,
       "inlay_hint_count": 3,
       "reference_count": 3,
       "rename_edits_present": true,
-      "semantic_token_data": 135,
+      "semantic_token_data": 150,
       "structured_cast_fix": true
     }
     "###);

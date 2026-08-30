@@ -16,22 +16,30 @@ pub struct EmbeddedAnalysisCancelled {
 /// The caller supplies the cancellation state because the frontend must not own
 /// an LSP transport token. A cancelled pipeline never publishes a partial value.
 pub fn run_embedded_provider_operations<T, E>(
-    mut cancelled: impl FnMut(EmbeddedAnalysisCheckpoint) -> bool,
+    cancelled: impl FnMut(EmbeddedAnalysisCheckpoint) -> bool,
     operations: impl IntoIterator<Item = Box<dyn FnOnce() -> Result<T, E>>>,
+) -> Result<Vec<T>, EmbeddedProviderOperationError<E>> {
+    run_embedded_provider_items(cancelled, operations, |operation| operation())
+}
+
+pub fn run_embedded_provider_items<I, T, E>(
+    mut cancelled: impl FnMut(EmbeddedAnalysisCheckpoint) -> bool,
+    items: impl IntoIterator<Item = I>,
+    mut operation: impl FnMut(I) -> Result<T, E>,
 ) -> Result<Vec<T>, EmbeddedProviderOperationError<E>> {
     check(
         &mut cancelled,
         EmbeddedAnalysisCheckpoint::BeforeComponentEntry,
     )?;
     let mut values = Vec::new();
-    for operation in operations {
+    for item in items {
         if !values.is_empty() {
             check(
                 &mut cancelled,
                 EmbeddedAnalysisCheckpoint::BetweenProviderOperations,
             )?;
         }
-        values.push(operation().map_err(EmbeddedProviderOperationError::Provider)?);
+        values.push(operation(item).map_err(EmbeddedProviderOperationError::Provider)?);
     }
     check(
         &mut cancelled,

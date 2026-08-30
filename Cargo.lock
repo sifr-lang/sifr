@@ -7562,12 +7562,14 @@ dependencies = [
  "ruff_python_ast",
  "ruff_text_size",
  "semver",
+ "serde_json",
  "sifr_compiler_component",
  "sifr_diagnostics",
  "sifr_driver",
  "sifr_format",
  "sifr_frontend",
  "sifr_lint",
+ "sifr_sql_contract",
  "sifr_syntax",
 ]
 

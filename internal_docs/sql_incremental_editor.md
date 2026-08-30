@@ -6,9 +6,13 @@ schema-first SQL. The normative SQL design remains in
 
 ## Ownership
 
-`sifr_frontend::cache_keys` owns the semantic cache identity. An embedded SQL
-key contains the complete component request and the normal frontend context.
-The request includes these inputs:
+`sifr_frontend::cache_keys` owns the semantic cache identity. The analysis host
+loads the resolved SQL profiles from the frozen package graph. It resolves one
+schema processor and one query processor from the selected provider package.
+The editor uses the same profile authority and provider component as the build.
+
+An embedded SQL key contains the query component request and the normal frontend
+context. The request includes these inputs:
 
 - template segments and closed hole types
 - fragment identities
@@ -18,9 +22,14 @@ The request includes these inputs:
 - component protocol major
 - compiler semantic version
 
-The dependency-slice fingerprint is the schema fingerprint in the component
-request. A caller must not substitute the complete database fingerprint when a
-smaller proven slice exists.
+The request sent to the provider contains the complete current schema artifact.
+The base lookup key excludes that artifact and its complete-schema fingerprint.
+After analysis, the provider returns each referenced schema object and its
+canonical fingerprint. The final cache key includes this dependency slice. The
+analysis cache namespaces the dependencies by profile and maps the stable base
+lookup to the slice key. It reuses a result only while all recorded object
+fingerprints are unchanged. Thus, an unrelated schema change does not invalidate
+the query.
 
 `sifr_frontend::EmbeddedQueryCache` owns bounded process-local value reuse. Its
 default capacity is 4,096 entries. It supports pinning and reports each evicted
@@ -39,7 +48,11 @@ diagnostic, query plan, or generated output.
 ## Virtual documents and maps
 
 The frontend creates one `SqlEditorDocumentView` for each typed template in the
-HIR. It retains the virtual SQL text, hole order, hole types, and source range.
+HIR. SQL features activate only for a template bound to a SQL profile name, such
+as the body of `@profile.query`. An ordinary template remains a Sifr value. A
+resolved profile adds live schema and provider semantics; a single-file editor
+can still provide lexical SQL behavior before package resolution. Each SQL
+document retains the virtual SQL text, hole order, hole types, and source range.
 
 The lowerer records one source-to-virtual mapping for each decoded character.
 This mapping keeps escapes, doubled braces, Unicode text, and interpolation
@@ -59,8 +72,10 @@ locations and the reversible generated-name map. `with_provider_analysis`
 adds result fields, database types, Sifr types, nullability, and exact
 cardinality from provider analysis.
 
-The analysis layer routes a SQL position through the same snapshot as normal
-Sifr queries. It provides:
+The analysis layer routes static SQL positions through the same snapshot as
+normal Sifr queries. A cursor inside an interpolation uses Sifr completion,
+navigation, references, and rename. SQL hover can still show the parameter's
+database type, Sifr type, and nullability. The editor provides:
 
 - syntax highlighting and scoped completion
 - hover, definition, references, and rename
@@ -68,10 +83,11 @@ Sifr queries. It provides:
 - formatting through the Sifr formatter
 - structured quick fixes
 
-Fragment completion filters both relations and their columns. It resolves a
-relation alias before it selects column candidates. The generated identifier
-reverse codec converts generated profile names to database identities before
-symbol lookup.
+Completion derives the active relation scope and aliases from the typed SQL
+document. It filters both relations and their columns. It resolves a relation
+alias before it selects column candidates. The generated identifier reverse
+codec converts generated profile names to database identities before symbol
+lookup.
 
 Provider diagnostics can supply structured fixes with an exact virtual range,
 replacement, title, and detail. The editor also supplies safe fixes for known
@@ -85,16 +101,17 @@ has a safe column candidate, the editor offers an explicit-column replacement.
 
 ## Cancellation and performance
 
-`run_embedded_provider_operations` checks cancellation at these boundaries:
+`run_embedded_provider_items` checks cancellation at these boundaries:
 
 1. before component entry
 2. between provider operations
 3. before result publication
 
-The caller supplies the cancellation state. This keeps transport cancellation
-outside the frontend. A cancelled pipeline does not publish a partial result.
-The language server also checks its request token before and after document
-analysis and rejects a result after a document-version change.
+The language-server message pump signals the active request token immediately,
+including while a provider component runs. The analysis host passes that token
+to the frontend checkpoints. A cancelled pipeline does not publish a partial
+result. The language server also checks its request token before and after
+document analysis. It rejects a result after a document-version change.
 
 The SQL editor reserves these blocking latency budgets:
 

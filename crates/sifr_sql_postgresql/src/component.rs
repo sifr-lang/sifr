@@ -14,15 +14,16 @@ use sifr_compiler_component::{
     PlanKind, ProtocolRange, RecordField, RuntimeLowering, SemanticOperation, TemplatePart,
 };
 use sifr_sql_contract::{
-    DialectIdentity, ObjectId, ProviderAnalysis, ProviderIdentity, SchemaIr,
-    SchemaNormalizationOutput, SchemaObject, SifrType, normalize_schema,
+    DialectIdentity, ObjectId, PROVIDER_ANALYSIS_PAYLOAD_TAG, ProviderAnalysis, ProviderIdentity,
+    SCHEMA_NORMALIZATION_PAYLOAD_TAG, SchemaIr, SchemaNormalizationOutput, SchemaObject, SifrType,
+    normalize_schema, schema_object_fingerprint,
 };
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 
 pub const POSTGRESQL_QUERY_OPERATION: &str = "sifr.sql.postgresql.sql";
-pub(crate) const POSTGRESQL_QUERY_PAYLOAD_TAG: &str = "sifr.sql.postgresql.analysis";
+pub(crate) const POSTGRESQL_QUERY_PAYLOAD_TAG: &str = PROVIDER_ANALYSIS_PAYLOAD_TAG;
 pub const POSTGRESQL_SCHEMA_ARTIFACT_KIND: &str = "sifr.sql.schema-ir";
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -226,7 +227,9 @@ pub fn execute_embedded_request(
         .next()
         .and_then(|value| value.parse::<u16>().ok())
         .ok_or_else(|| component_diagnostic("PostgreSQL SchemaIR has no server major"))?;
-    if request.component.processor != format!("{POSTGRESQL_QUERY_OPERATION}.v{server_major}") {
+    if request.component.processor != POSTGRESQL_QUERY_OPERATION
+        && request.component.processor != format!("{POSTGRESQL_QUERY_OPERATION}.v{server_major}")
+    {
         return Err(component_diagnostic(
             "PostgreSQL component identity and SchemaIR server major differ",
         ));
@@ -234,7 +237,7 @@ pub fn execute_embedded_request(
     let (source, document, start, end) = embedded_sql_source(&request)?;
     let response = PostgresCompilerComponent::new(crate::LibpgQueryParser).execute(
         PostgresComponentRequest::AnalyzeQuery {
-            schema,
+            schema: schema.clone(),
             source,
             sifr_document: document,
             sifr_start: start,
@@ -244,11 +247,7 @@ pub fn execute_embedded_request(
     into_embedded_response(
         server_major,
         request.context.schema_profile,
-        request
-            .context
-            .schema_fingerprint
-            .as_deref()
-            .unwrap_or(&schema_artifact.fingerprint),
+        &schema,
         &response,
     )
 }
@@ -331,10 +330,13 @@ pub fn provider_diagnostics() -> DiagnosticRegistry {
 pub fn into_embedded_response(
     server_major: u16,
     schema_identity: Option<String>,
-    schema_fingerprint: &str,
+    schema: &SchemaIr,
     response: &PostgresComponentResponse,
 ) -> Result<EmbeddedAnalysisResponse, PostgresDiagnostic> {
-    let payload = serde_json::to_vec(response).map_err(|_| {
+    let PostgresComponentResponse::Query(analysis) = response else {
+        return into_non_query_embedded_response(server_major, schema_identity, response);
+    };
+    let payload = serde_json::to_vec(analysis).map_err(|_| {
         PostgresDiagnostic::at_sql(
             PostgresDiagnosticCode::UnsupportedCoreSyntax,
             "cannot serialize PostgreSQL component response",
@@ -342,26 +344,54 @@ pub fn into_embedded_response(
             1,
         )
     })?;
-    let (plan_kind, result_type, runtime, dependencies, diagnostics) = match response {
-        PostgresComponentResponse::Query(analysis) => (
-            PlanKind::Expression,
-            if analysis.result_fields.is_empty() {
-                ClosedType::None
-            } else {
-                ClosedType::List {
-                    item: Box::new(ClosedType::Record {
-                        fields: analysis
-                            .result_fields
-                            .iter()
-                            .map(|field| RecordField {
-                                name: field.name.clone(),
-                                ty: closed_type(&field.sifr_type),
-                            })
-                            .collect(),
-                    }),
-                }
-            },
-            RuntimeLowering::ProviderCall {
+    let result_type = if analysis.result_fields.is_empty() {
+        ClosedType::None
+    } else {
+        ClosedType::List {
+            item: Box::new(ClosedType::Record {
+                fields: analysis
+                    .result_fields
+                    .iter()
+                    .map(|field| RecordField {
+                        name: field.name.clone(),
+                        ty: closed_type(&field.sifr_type),
+                    })
+                    .collect(),
+            }),
+        }
+    };
+    let dependencies = analysis
+        .effects
+        .referenced_objects
+        .union(&analysis.effects.affected_objects)
+        .map(|identity| {
+            let fingerprint = schema
+                .objects
+                .get(identity)
+                .ok_or_else(|| component_diagnostic("query dependency is absent from SchemaIR"))
+                .and_then(|object| {
+                    schema_object_fingerprint(object)
+                        .map_err(|error| component_diagnostic(error.to_string()))
+                })?;
+            Ok(DependencyDescriptor {
+                identity: identity.as_str().to_string(),
+                fingerprint,
+            })
+        })
+        .collect::<Result<Vec<_>, PostgresDiagnostic>>()?;
+    let mut response = EmbeddedAnalysisResponse {
+        protocol_major: COMPONENT_PROTOCOL_MAJOR,
+        plan: EmbeddedPlan {
+            provider_identity: format!("{POSTGRESQL_QUERY_OPERATION}.v{server_major}"),
+            protocol_major: COMPONENT_PROTOCOL_MAJOR,
+            plan_kind: PlanKind::Expression,
+            schema_identity,
+            result_type,
+            operations: vec![SemanticOperation::ProviderNode {
+                tag: POSTGRESQL_QUERY_PAYLOAD_TAG.to_string(),
+                payload: payload.clone(),
+            }],
+            runtime: RuntimeLowering::ProviderCall {
                 declaration: "sifr.sql.postgresql.execute".to_string(),
                 payload: payload.clone(),
                 parameter_order: analysis
@@ -370,26 +400,35 @@ pub fn into_embedded_response(
                     .map(|parameter| parameter.slot)
                     .collect(),
             },
-            analysis
-                .effects
-                .referenced_objects
-                .union(&analysis.effects.affected_objects)
-                .map(|identity| DependencyDescriptor {
-                    identity: identity.as_str().to_string(),
-                    fingerprint: schema_fingerprint.to_string(),
-                })
-                .collect(),
-            Vec::new(),
-        ),
+            dependencies,
+            diagnostics: Vec::new(),
+            source_map: Vec::new(),
+            stable_fingerprint: String::new(),
+        },
+    };
+    response.plan.stable_fingerprint =
+        sifr_compiler_component::compute_plan_fingerprint(&response.plan)
+            .map_err(|error| component_diagnostic(error.to_string()))?;
+    Ok(response)
+}
+
+fn into_non_query_embedded_response(
+    server_major: u16,
+    schema_identity: Option<String>,
+    response: &PostgresComponentResponse,
+) -> Result<EmbeddedAnalysisResponse, PostgresDiagnostic> {
+    let payload = serde_json::to_vec(response)
+        .map_err(|_| component_diagnostic("cannot serialize PostgreSQL component response"))?;
+    let (plan_kind, payload_tag, diagnostics) = match response {
         PostgresComponentResponse::Schema(_) => (
             PlanKind::Document,
-            ClosedType::None,
-            RuntimeLowering::NoRuntime,
-            Vec::new(),
+            SCHEMA_NORMALIZATION_PAYLOAD_TAG,
             Vec::new(),
         ),
-        PostgresComponentResponse::Diagnostic(diagnostic) => {
-            let embedded = sifr_compiler_component::EmbeddedDiagnostic {
+        PostgresComponentResponse::Diagnostic(diagnostic) => (
+            PlanKind::Expression,
+            POSTGRESQL_QUERY_PAYLOAD_TAG,
+            vec![sifr_compiler_component::EmbeddedDiagnostic {
                 code: diagnostic.code.as_str().to_string(),
                 severity: sifr_compiler_component::DiagnosticSeverity::Error,
                 lifecycle: DiagnosticLifecycle::Active,
@@ -408,39 +447,37 @@ pub fn into_embedded_response(
                         end: span.end,
                     })
                     .collect(),
-            };
-            (
-                PlanKind::Expression,
-                ClosedType::None,
-                RuntimeLowering::NoRuntime,
-                Vec::new(),
-                vec![embedded],
-            )
+            }],
+        ),
+        PostgresComponentResponse::Query(_) => {
+            return Err(component_diagnostic(
+                "query response entered non-query encoder",
+            ));
         }
     };
-    let mut response = EmbeddedAnalysisResponse {
+    let mut embedded = EmbeddedAnalysisResponse {
         protocol_major: COMPONENT_PROTOCOL_MAJOR,
         plan: EmbeddedPlan {
             provider_identity: format!("{POSTGRESQL_QUERY_OPERATION}.v{server_major}"),
             protocol_major: COMPONENT_PROTOCOL_MAJOR,
             plan_kind,
             schema_identity,
-            result_type,
+            result_type: ClosedType::None,
             operations: vec![SemanticOperation::ProviderNode {
-                tag: POSTGRESQL_QUERY_PAYLOAD_TAG.to_string(),
+                tag: payload_tag.to_string(),
                 payload,
             }],
-            runtime,
-            dependencies,
+            runtime: RuntimeLowering::NoRuntime,
+            dependencies: Vec::new(),
             diagnostics,
             source_map: Vec::new(),
             stable_fingerprint: String::new(),
         },
     };
-    response.plan.stable_fingerprint =
-        sifr_compiler_component::compute_plan_fingerprint(&response.plan)
+    embedded.plan.stable_fingerprint =
+        sifr_compiler_component::compute_plan_fingerprint(&embedded.plan)
             .map_err(|error| component_diagnostic(error.to_string()))?;
-    Ok(response)
+    Ok(embedded)
 }
 
 fn closed_type(ty: &SifrType) -> ClosedType {

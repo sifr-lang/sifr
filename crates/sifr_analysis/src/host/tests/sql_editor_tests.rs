@@ -2,12 +2,12 @@ use super::*;
 
 #[test]
 fn sql_templates_route_through_virtual_document_editor_queries() {
-    let source = "def query(user_id: int) -> Template:\n    return t\"SELECT users.name FROM users WHERE users.id = {user_id} LIMIT 1\"\n";
+    let source = "@app.query\ndef query(user_id: int) -> Template:\n    return t\"SELECT users.name FROM users WHERE users.id = {user_id} LIMIT 1\"\n";
     let mut host =
         AnalysisHost::open_single_file(single_file_input(source)).expect("host should load");
     let file = host.files()[0];
     let users_position = TextPosition {
-        line: 1,
+        line: 2,
         character: 22,
     };
 

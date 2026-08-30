@@ -1,5 +1,6 @@
-use crate::TemplateDocumentView;
+use crate::{TemplateDocumentView, TemplateSourceMapKind};
 use ruff_text_size::{TextRange, TextSize};
+use sifr_compiler_component::ClosedType;
 use sifr_ir::{
     HirExpr, HirModule, HirStmt, HirTemplateString, visit_hir_function_exprs_mut,
     visit_hir_stmts_exprs_mut,
@@ -7,6 +8,7 @@ use sifr_ir::{
 use sifr_sql_contract::{
     Nullability, ProviderAnalysis, SchemaIr, decode_generated_path, encode_generated_path,
 };
+use sifr_type_system::Type;
 use std::collections::{BTreeMap, BTreeSet};
 
 mod support;
@@ -117,9 +119,13 @@ pub struct SqlEditorDocumentView {
     pub template: TemplateDocumentView,
     pub tokens: Vec<SqlEditorToken>,
     pub catalog: SqlEditorCatalog,
+    pub profile_name: Option<String>,
     pub fragment_identity: Option<String>,
     pub relation_aliases: BTreeMap<String, String>,
     pub parameter_types: Vec<String>,
+    pub parameter_protocol_types: Vec<Option<ClosedType>>,
+    pub parameter_database_types: Vec<Option<String>>,
+    pub parameter_nullability: Vec<Option<bool>>,
     pub result_fields: Vec<SqlEditorSymbol>,
     pub cardinality: String,
     pub fixes: Vec<SqlEditorFix>,
@@ -135,9 +141,13 @@ impl SqlEditorDocumentView {
             template,
             tokens,
             catalog: SqlEditorCatalog::default(),
+            profile_name: None,
             fragment_identity: None,
             relation_aliases,
             parameter_types: Vec::new(),
+            parameter_protocol_types: Vec::new(),
+            parameter_database_types: Vec::new(),
+            parameter_nullability: Vec::new(),
             result_fields: Vec::new(),
             cardinality,
             fixes: Vec::new(),
@@ -152,7 +162,27 @@ impl SqlEditorDocumentView {
             .iter()
             .map(|interpolation| interpolation.value_type.to_string())
             .collect();
+        document.parameter_protocol_types = template
+            .interpolations
+            .iter()
+            .map(|interpolation| closed_type(&interpolation.value_type))
+            .collect();
+        document.parameter_database_types = vec![None; document.parameter_types.len()];
+        document.parameter_nullability = vec![None; document.parameter_types.len()];
         document
+    }
+
+    #[must_use]
+    pub fn with_profile(mut self, profile_name: impl Into<String>) -> Self {
+        self.profile_name = Some(profile_name.into());
+        self
+    }
+
+    #[must_use]
+    pub fn with_catalog(mut self, catalog: SqlEditorCatalog) -> Self {
+        self.catalog = catalog;
+        self.apply_relation_scope();
+        self
     }
 
     #[must_use]
@@ -179,6 +209,17 @@ impl SqlEditorDocumentView {
         analysis: &ProviderAnalysis,
     ) -> Self {
         self.catalog = SqlEditorCatalog::from_schema(schema);
+        self.apply_relation_scope();
+        self.parameter_database_types = analysis
+            .parameters
+            .iter()
+            .map(|parameter| Some(format!("{:?}", parameter.database_type)))
+            .collect();
+        self.parameter_nullability = analysis
+            .parameters
+            .iter()
+            .map(|parameter| Some(parameter.nullability == Nullability::Nullable))
+            .collect();
         self.result_fields = analysis
             .result_fields
             .iter()
@@ -202,6 +243,27 @@ impl SqlEditorDocumentView {
             .collect();
         self.cardinality = cardinality_label(analysis.cardinality);
         self
+    }
+
+    fn apply_relation_scope(&mut self) {
+        let relations = self
+            .relation_aliases
+            .values()
+            .cloned()
+            .collect::<BTreeSet<_>>();
+        if relations.is_empty() {
+            return;
+        }
+        let identity = self.fragment_identity.get_or_insert_with(|| {
+            format!(
+                "sql-template:{}:{}",
+                self.template.source_range.start().to_u32(),
+                self.template.source_range.end().to_u32()
+            )
+        });
+        self.catalog
+            .fragment_relations
+            .insert(identity.clone(), relations);
     }
 
     #[must_use]
@@ -309,6 +371,16 @@ impl SqlEditorDocumentView {
     }
 
     #[must_use]
+    pub fn contains_static_source_offset(&self, offset: TextSize) -> bool {
+        self.template.is_static_source_offset(offset)
+    }
+
+    #[must_use]
+    pub fn contains_interpolation_source_offset(&self, offset: TextSize) -> bool {
+        self.template.is_interpolation_source_offset(offset)
+    }
+
+    #[must_use]
     pub fn token_at_source_offset(&self, offset: TextSize) -> Option<&SqlEditorToken> {
         let virtual_offset = self.template.virtual_offset_for_source(offset)?;
         self.tokens
@@ -370,20 +442,12 @@ impl SqlEditorDocumentView {
 
     #[must_use]
     pub fn symbol_at_source_offset(&self, offset: TextSize) -> Option<SqlEditorSymbol> {
+        if let Some(index) = self.template.interpolation_at_source_offset(offset) {
+            return Some(self.parameter_symbol(index));
+        }
         let token = self.token_at_source_offset(offset)?;
         match token.kind {
-            SqlEditorTokenKind::Hole { index } => Some(SqlEditorSymbol {
-                name: format!("parameter ${}", index + 1),
-                kind: "parameter".to_string(),
-                database_type: None,
-                sifr_type: self.parameter_types.get(index).cloned(),
-                nullable: None,
-                definition_document: None,
-                definition_range: Some(
-                    self.template
-                        .source_range_for_virtual_range(token.virtual_range)?,
-                ),
-            }),
+            SqlEditorTokenKind::Hole { index } => Some(self.parameter_symbol(index)),
             SqlEditorTokenKind::Identifier => {
                 let database_name = self
                     .catalog
@@ -407,6 +471,22 @@ impl SqlEditorDocumentView {
                     .or_else(|| Some(inferred_symbol(token, &self.tokens)))
             }
             _ => None,
+        }
+    }
+
+    fn parameter_symbol(&self, index: usize) -> SqlEditorSymbol {
+        let definition_range = self.template.mappings.iter().find_map(|mapping| {
+            (mapping.kind == TemplateSourceMapKind::Interpolation { index })
+                .then_some(mapping.source_range)
+        });
+        SqlEditorSymbol {
+            name: format!("parameter ${}", index + 1),
+            kind: "parameter".to_string(),
+            database_type: self.parameter_database_types.get(index).cloned().flatten(),
+            sifr_type: self.parameter_types.get(index).cloned(),
+            nullable: self.parameter_nullability.get(index).copied().flatten(),
+            definition_document: None,
+            definition_range,
         }
     }
 
@@ -501,9 +581,100 @@ pub fn sql_editor_documents(module: &HirModule) -> Vec<SqlEditorDocumentView> {
         })
         .collect::<Vec<_>>();
     visit_hir_stmts_exprs_mut(&mut constants, &mut collect);
+    let mut assign_profile = |expression: &mut HirExpr| {
+        let (HirExpr::Call { func, args, .. } | HirExpr::GenericCall { func, args, .. }) =
+            expression
+        else {
+            return;
+        };
+        let Some(profile) = func.strip_suffix(".sql") else {
+            return;
+        };
+        for template in args.iter().filter_map(|argument| {
+            if let HirExpr::TemplateString(template) = argument {
+                Some(template)
+            } else {
+                None
+            }
+        }) {
+            if let Some(document) = documents
+                .iter_mut()
+                .find(|document| document.template.source_range == template.source_range)
+            {
+                document.profile_name = Some(profile.to_string());
+            }
+        }
+    };
+    for function in &mut module.functions {
+        visit_hir_function_exprs_mut(function, &mut assign_profile);
+    }
+    for class in &mut module.classes {
+        for method in &mut class.methods {
+            visit_hir_function_exprs_mut(method, &mut assign_profile);
+        }
+        for (_, method) in &mut class.operator_impls {
+            visit_hir_function_exprs_mut(method, &mut assign_profile);
+        }
+    }
+    for function in &mut module.functions {
+        let Some(profile) = function
+            .decorators
+            .iter()
+            .find_map(|decorator| decorator.strip_suffix(".query"))
+            .map(str::to_string)
+        else {
+            continue;
+        };
+        let mut assign_query_profile = |expression: &mut HirExpr| {
+            if let HirExpr::TemplateString(template) = expression
+                && let Some(document) = documents
+                    .iter_mut()
+                    .find(|document| document.template.source_range == template.source_range)
+            {
+                document.profile_name = Some(profile.clone());
+            }
+        };
+        visit_hir_function_exprs_mut(function, &mut assign_query_profile);
+    }
     documents.sort_by_key(|document| document.template.source_range.start());
     documents.dedup_by_key(|document| document.template.source_range);
     documents
+}
+
+fn closed_type(ty: &Type) -> Option<ClosedType> {
+    match ty.resolve_alias() {
+        Type::Bool | Type::LiteralBool(_) => Some(ClosedType::Bool),
+        Type::Int | Type::FixedInt(_) | Type::LiteralInt(_) => Some(ClosedType::Int),
+        Type::Float => Some(ClosedType::Float),
+        Type::Str | Type::LiteralStr(_) => Some(ClosedType::Str),
+        Type::Bytes => Some(ClosedType::Bytes),
+        Type::None => Some(ClosedType::None),
+        Type::List(item) => Some(ClosedType::List {
+            item: Box::new(closed_type(item)?),
+        }),
+        Type::Tuple(items) => Some(ClosedType::Tuple {
+            items: items.iter().map(closed_type).collect::<Option<Vec<_>>>()?,
+        }),
+        Type::StructuralRecord(record) => Some(ClosedType::Record {
+            fields: record
+                .fields()
+                .iter()
+                .map(|field| {
+                    Some(sifr_compiler_component::RecordField {
+                        name: field.name().to_string(),
+                        ty: closed_type(field.ty())?,
+                    })
+                })
+                .collect::<Option<Vec<_>>>()?,
+        }),
+        Type::Union(items) if items.len() == 2 && items.iter().any(|item| item == &Type::None) => {
+            let item = items.iter().find(|item| *item != &Type::None)?;
+            Some(ClosedType::Optional {
+                item: Box::new(closed_type(item)?),
+            })
+        }
+        _ => None,
+    }
 }
 
 #[cfg(test)]

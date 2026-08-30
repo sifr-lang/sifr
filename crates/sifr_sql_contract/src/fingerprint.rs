@@ -1,4 +1,4 @@
-use crate::{SchemaContractError, SchemaContractErrorKind, SchemaIr};
+use crate::{SchemaContractError, SchemaContractErrorKind, SchemaIr, SchemaObject};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
@@ -52,6 +52,22 @@ pub fn schema_fingerprint(schema: &SchemaIr) -> Result<SchemaFingerprint, Schema
         )
     })?;
     Ok(SchemaFingerprint(lower_hex(&Sha256::digest(bytes))))
+}
+
+pub fn schema_object_fingerprint(object: &SchemaObject) -> Result<String, SchemaContractError> {
+    let canonical = CanonicalObject {
+        identity: &object.identity,
+        kind: object.kind,
+        semantic: &object.semantic,
+        dependencies: &object.dependencies,
+    };
+    let bytes = serde_json::to_vec(&canonical).map_err(|error| {
+        SchemaContractError::new(
+            SchemaContractErrorKind::Serialization,
+            format!("cannot serialize canonical schema object: {error}"),
+        )
+    })?;
+    Ok(lower_hex(&Sha256::digest(bytes)))
 }
 
 pub(crate) fn lower_hex(bytes: &[u8]) -> String {

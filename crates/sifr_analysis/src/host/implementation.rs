@@ -15,12 +15,13 @@ use crate::snapshot::{
     AnalysisError, AnalysisErrorKind, AnalysisQueryKind, AnalysisQueryResult, AnalysisRevision,
     AnalysisSnapshot, QueryMetadata,
 };
+use crate::sql_editor_runtime::SqlEditorRuntime;
 use crate::symbols::{SymbolBucketReadiness, SymbolIndex};
 use ruff_text_size::TextRange;
 use sifr_diagnostics::RenderedDiagnostic;
 use sifr_frontend::{
-    DocumentVersion, FileId, FrontendInput, InvalidationReport, ModuleId, ProjectRoot, SourceText,
-    UpdatedDocumentInfo, WorkspaceSession, WorkspaceSnapshot,
+    DocumentVersion, FileId, InvalidationReport, ModuleId, SourceText, UpdatedDocumentInfo,
+    WorkspaceSession, WorkspaceSnapshot,
 };
 use sifr_syntax::TextPosition;
 use std::collections::BTreeMap;
@@ -33,43 +34,10 @@ pub struct AnalysisHost {
     pub(super) symbol_index: Option<SymbolIndex>,
     pub(super) last_invalidation: Option<InvalidationReport>,
     pub(super) current_revision: AnalysisRevision,
+    pub(super) sql_editor_runtime: SqlEditorRuntime,
 }
 
 impl AnalysisHost {
-    pub fn open_project(root: &ProjectRoot) -> Result<Self, Vec<RenderedDiagnostic>> {
-        let session = WorkspaceSession::open_project_with_external_defs_and_auxiliary_sources(
-            root.clone(),
-            sifr_driver::stdlib_external_defs()?,
-            sifr_driver::stdlib_tooling_sources()?,
-        )?;
-        Self::new(session)
-    }
-
-    pub fn open_single_file(input: FrontendInput) -> Result<Self, Vec<RenderedDiagnostic>> {
-        let session = WorkspaceSession::open_single_file_with_external_defs_and_auxiliary_sources(
-            input,
-            sifr_driver::stdlib_external_defs()?,
-            sifr_driver::stdlib_tooling_sources()?,
-        )?;
-        Self::new(session)
-    }
-
-    pub(super) fn new(mut session: WorkspaceSession) -> Result<Self, Vec<RenderedDiagnostic>> {
-        let snapshot = session.snapshot();
-        let Some(current_revision) = revision_from_workspace_snapshot(&snapshot) else {
-            return Err(Vec::new());
-        };
-        let mut host = Self {
-            session,
-            file_to_module: BTreeMap::new(),
-            symbol_index: None,
-            last_invalidation: None,
-            current_revision,
-        };
-        host.refresh_file_map();
-        Ok(host)
-    }
-
     pub fn update_document(
         &mut self,
         file: FileId,
@@ -171,6 +139,7 @@ impl AnalysisHost {
             .into_value()
             .diagnostics;
         diagnostics.extend(self.lint_diagnostics(file)?);
+        diagnostics.extend(self.sql_provider_diagnostics(file)?);
         Ok(self.result(AnalysisQueryKind::Diagnostics, diagnostics))
     }
 
@@ -875,7 +844,9 @@ impl AnalysisHost {
     }
 }
 
-fn revision_from_workspace_snapshot(snapshot: &WorkspaceSnapshot) -> Option<AnalysisRevision> {
+pub(super) fn revision_from_workspace_snapshot(
+    snapshot: &WorkspaceSnapshot,
+) -> Option<AnalysisRevision> {
     Some(AnalysisRevision {
         graph: snapshot.module_graph.as_ref()?.revision,
         source: snapshot.source_map.as_ref()?.revision,
