@@ -129,6 +129,8 @@ explicit audited site.
 ## Generated names
 
 Generated schema names use one reversible codec. Safe names stay readable.
+The codec escapes a segment that starts or ends with an underscore. Thus, a
+boundary underscore cannot combine with the double-underscore path separator.
 
 The codec escapes these names with a reserved prefix:
 

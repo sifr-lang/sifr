@@ -5,14 +5,19 @@ const ESCAPE_PREFIX: &str = "_sifr_sql_";
 /// Encode one database identifier as a valid, reversible Sifr identifier.
 ///
 /// Ordinary identifiers remain readable. Reserved words, names that contain
-/// the path separator, and names in the reserved generated namespace use a
-/// UTF-8 hex escape. This makes the mapping injective without a collision
-/// table or a schema-order-dependent suffix.
+/// the path separator, names with a boundary underscore, and names in the
+/// reserved generated namespace use a UTF-8 hex escape. Boundary underscores
+/// cannot combine with the path separator, so the path mapping stays
+/// injective without a collision table or schema-order-dependent suffix.
 pub fn encode_generated_identifier(value: &str) -> Result<String, SchemaContractError> {
     if !valid_identifier(value) {
         return Err(invalid_identifier(value));
     }
-    if !is_sifr_keyword(value) && !value.starts_with(ESCAPE_PREFIX) && !value.contains("__") {
+    if !is_sifr_keyword(value)
+        && !value.starts_with('_')
+        && !value.ends_with('_')
+        && !value.contains("__")
+    {
         return Ok(value.to_string());
     }
 

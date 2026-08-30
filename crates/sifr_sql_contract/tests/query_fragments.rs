@@ -42,6 +42,8 @@ fn generated_identifiers_are_injective_reversible_and_readable_when_safe() {
         vec!["a".to_string(), "b".to_string()],
         vec!["a__b".to_string()],
         vec!["if".to_string(), "value".to_string()],
+        vec!["x_".to_string(), "y".to_string()],
+        vec!["x".to_string(), "_y".to_string()],
     ];
     let encoded_paths = paths
         .iter()
