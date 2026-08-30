@@ -146,7 +146,7 @@ It does not broaden the active item.
 |---:|---|---|---|
 | 0 | complete | Contract and audit inventory lock | The full quality contract, reconciled finding ledger, baseline, ownership, review limits, and closure rules are machine checked and merged. |
 | 1 | complete | Comprehensive corpus and non-vacuous gates | Every generated surface is discoverable; freshness, rustfmt, Clippy, panic/static analysis, determinism, and negative self-tests fail closed without broad quality suppressions. |
-| 2 | pending | Exact integer and overflow architecture | Canonical `int` storage and all arithmetic use one exact semantic model; debug/release behavior agrees; fixed-width boundaries remain explicitly checked. |
+| 2 | complete | Exact integer and overflow architecture | Canonical `int` storage and all arithmetic use one exact semantic model; debug/release behavior agrees; fixed-width boundaries remain explicitly checked. |
 | 3 | pending | Checked failure and impossible-state model | Generated user paths use typed errors; abort/exit/unreachable discharge and silent value fallbacks are removed; compiler invariants fail before materialization. |
 | 4 | pending | Collection access and mutation architecture | Reads, writes, deletes, nested access, augassign, membership, and unpacking share checked place semantics with no panic or silent no-op path. |
 | 5 | pending | Lazy iterator and generator architecture | Yield, generator state, `count`, `islice`, chained adapters, and errors are lazy and semantically unbounded where required. |
@@ -192,11 +192,11 @@ It does not broaden the active item.
 
 ### Item 2: Exact integer and overflow architecture
 
-- [ ] `int` has one canonical runtime representation through locals,
+- [x] `int` has one canonical runtime representation through locals,
   parameters, returns, fields, containers, constants, unions, and interop.
-- [ ] All arithmetic and conversions preserve the language's exact semantics.
-- [ ] Floor division/modulo and zero/overflow errors are consistent.
-- [ ] Debug and release differential/property evidence agrees.
+- [x] All arithmetic and conversions preserve the language's exact semantics.
+- [x] Floor division/modulo and zero/overflow errors are consistent.
+- [x] Debug and release differential/property evidence agrees.
 
 ### Item 3: Checked failure and impossible-state model
 
@@ -289,6 +289,7 @@ It does not broaden the active item.
 |---:|---|---|---|---|---|---|
 | 0 | merged | [#3574](https://github.com/sifr-lang/sifr/pull/3574) | `8d292f9395fee51ef8b348a413ea496a33c5ce38` | Candidate `b75a3c471f7ec8b4cb798e112e123bfb13d78b83`: inventory, mutation self-test, Python/JSON syntax, file-size, HIR maintainability, docs-link, and diff hygiene checks passed. No compiler files changed, so Sifr gates were omitted. | [Initial and sole remediation review](https://github.com/sifr-lang/sifr/pull/3574#issuecomment-5462303681): both NOT SATISFIED. The original evidence blocker was fixed; the remediation review's new checker mechanism is assigned to Item 1 under the explicit review limit. | Contract and 32-row inventory merged; three missing mutation branches and related checker provenance hardening are owned by Item 1. |
 | 1 | merged | [#3578](https://github.com/sifr-lang/sifr/pull/3578) | `b86eec0be7b7be2b5ddf012fea9cbcced286c342` | Candidate `b0fb5c2049b81fe28fc4b076c34ac624f8249e94`: full generated-code-quality profile passed 9 variants with 0 failures across 91 positive projects; exact safety, rustfmt, 38,957-diagnostic/105-lint Clippy, determinism, all 262 authoritative companions, recursive freshness, audit/debt/surface mutations, Python/JSON, file-size, HIR, driver, docs-link, and diff hygiene passed. No compiler files changed, so Sifr gates were omitted. | [Initial review](https://github.com/sifr-lang/sifr/pull/3578#issuecomment-5463056720) NOT SATISFIED; [sole remediation review](https://github.com/sifr-lang/sifr/pull/3578#issuecomment-5463053848) SATISFIED with all four blockers resolved and no new in-scope mechanism defect. | Exact surface digests, fail-closed quality protocols, strict source/lint policies, 18 negative seeds, and a 33-row governed audit inventory merged; all Item 0 deferred checker findings are resolved. |
+| 2 | merged | [#3580](https://github.com/sifr-lang/sifr/pull/3580) | `d618a7be107550629c3331ea7fdb3f76e28e0dce` | Compiler candidate `aa97d2ca6d0da1ec5700b02d3f57ef864a450a53`: 1,151 codegen tests and 557 driver tests passed; Clippy, formatting, generated inventory/freshness, diagnostics governance, file-size, HIR, and driver checks passed. The one create-PR gate completed every reached check and all 28 runtime-platform variants with zero failures before its cold rebuild exceeded the 120-second step budget. The one merge gate passed static, core-language, differential, Rust interop, coverage, and all 30 Python-interop variants before finding three stale diagnostic baselines. Follow-up `7b3ba45d25e07adabb820c9f80463534060d42ee` changed only diagnostic fixtures/governance; 178 of 179 full baseline variants passed before the sole new wording mismatch was corrected, and exact checks then passed. Neither gate was repeated. | [Initial review](https://github.com/sifr-lang/sifr/pull/3580#issuecomment-5465345414) on `d4aea519efebdf29bad472a9795afcdd72c4f865` and [sole remediation review](https://github.com/sifr-lang/sifr/pull/3580#issuecomment-5465345486) on `9606b67b84ae5865105415399d647319b455bb99` were NOT SATISFIED. The initial slice-step panic was fixed. The remediation review's new exact-ratio proof/codegen mismatch is assigned to Item 3 under the no-third-review rule. | Canonical inline-small/`BigInt` `SifrInt`, exact arithmetic and conversion paths, fixed-width boundaries, constants, ranges, collections, unions, and Rust/Python interop merged with debug/release and corpus evidence. |
 
 ## Deferred Findings
 
@@ -298,20 +299,29 @@ It does not broaden the active item.
 | Item 1 remediation review | ERQ-025 still describes the fifteen legacy demo `main.rs` files removed by Item 1. | Item 8 | Close the already-discharged row when Item 8 reconciles stale snapshots and generated ceremony. |
 | Item 1 remediation review | The exact discovery inventory is broader than the 91-project executable quality corpus. | Item 12 | State and verify the intended qualification relationship, and ensure final full-corpus closure cannot leave an inventoried entrypoint class unexercised. |
 | Item 1 remediation review | Checked-in emitted companions receive freshness and safety scans but are not individually governed by rustfmt and Clippy. | Item 8 | Regenerate or remove the remaining producer debt and make authoritative checked-in output satisfy the canonical formatting/lint contract. |
+| Item 2 remediation review | A reduced exact-integer quotient can be float-representable even when either original operand is not; lowering proves the reduced ratio while infallible codegen independently calls `to_f64_proven_exact` on each operand, leaving a source-reachable proof panic. | Item 3 | Make the static proof and emitted operation share one precondition, add the cancelled-large-factor regression, and remove the data-dependent proof assertion from generated user paths. |
+| Item 2 remediation review | Exact integer true division loses Python's negative-zero sign for a zero numerator and negative denominator. | Item 6 | Derive a zero quotient's sign from both operands and add signed-zero differential coverage. |
+| Item 2 remediation review | Rejected slice-step lowering records an error but recovers with a step-less slice HIR node, which can produce misleading cascading diagnostics. | Item 3 | Propagate failed step lowering consistently with failed start/stop lowering while preserving the primary typed diagnostic and source span. |
+| Item 2 merge-gate diagnostics | `SIFR-INT-0006` remains registered and documented although source exact-integer true division now lowers to a typed `Result` and misuse renders contextual `SIFR-TYPE-0002`; only the lower-level type-system path still produces the old code. | Item 3 | Retire the unreachable registry, renderer, test, catalog, and documentation path, or restore a justified source-reachable typed-failure use with a rendered baseline. |
+| Item 2 merge-gate diagnostics | `SIFR-TYPE-0901` retains a warning IR variant, renderer, registry entry, catalog, and docs after exact arithmetic removed its final producer. | Item 8 | Remove the dead warning mechanism and regenerate all diagnostic governance artifacts. |
+| Item 2 gate output | The Python Arrow resource implementation retains an unused private `handle` method. | Item 8 | Remove the dead method through the canonical support implementation and prove generated support remains warning-clean. |
+| Item 2 generated-project inspection | Source constants generate helper names such as `__const_BASE`, retaining avoidable non-snake-case naming debt. | Item 8 | Canonicalize generated constant helper names and references without broad naming allowances, including project imports and re-exports. |
 
 New out-of-scope findings must name a concrete active owner before the current
 item can close.
 
 ## Current Handoff
 
-- Active item: Item 2, exact integer and overflow architecture, based on Item 1
-  merge `b86eec0be7b7be2b5ddf012fea9cbcced286c342`.
-- Item 1 state: merged with exact surface discovery, fail-closed quality gates,
-  owner-bound debt, strict source/lint policy, recursive freshness, and 18
-  negative seeds. Its final exact-SHA Opus remediation review was SATISFIED.
-- Item 2 inherited audit: ERQ-007 and ERQ-008 own the mixed integer
-  representation and broad safe-math workaround; arithmetic Clippy debt is
-  owned by Item 2 and must be eliminated through one canonical exact model.
-- Next action: re-audit integer representation and arithmetic on current
-  `origin/main`, implement the complete Item 2 architecture without testing,
-  then run focused validation and the single exact candidate gate sequence.
+- Active item: Item 3, checked failure and impossible-state model, based on
+  Item 2 merge `d618a7be107550629c3331ea7fdb3f76e28e0dce`.
+- Item 2 state: merged with canonical `SifrInt` storage and operations across
+  compiler, runtime, generated projects, constants, collections, ranges,
+  unions, and interop. The initial Opus blocker was fixed; the sole remediation
+  review's new proof/codegen mechanism defect is explicitly owned by Item 3.
+- Item 3 inherited audit: ERQ-009 and the Item 2 exact-ratio and slice-recovery
+  findings require one checked typed-failure architecture. `SIFR-INT-0006`
+  retirement is part of the same source-reachability and error-model cleanup.
+- Next action: re-audit generated panic, abort, exit, unreachable, unwrap,
+  expect, fallback, and compiler-proof paths on current `origin/main`; implement
+  the complete Item 3 architecture without testing, then run focused validation
+  and the single exact candidate gate sequence.
