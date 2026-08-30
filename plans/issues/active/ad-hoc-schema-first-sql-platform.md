@@ -280,7 +280,7 @@ verification inventory. This phase does not reimplement those capabilities.
 | 2 | completed | Structural record type system | Immutable records have order-independent canonical identity, width subtyping, deterministic diagnostics, and interned Rust layouts. |
 | 3 | completed | Compiler component platform | Resolved packages can provide deterministic sandboxed embedded-language analysis through one closed, versioned, cacheable protocol. |
 | 4 | completed | Schema profiles and canonical `SchemaIR` | Configuration sources produce exact provider-owned schema graphs, nominal profile types, fingerprints, dependency slices, diffs, and runtime contracts. |
-| 5 | pending | Common SQL contracts | Shared query kinds, complete type and bind mappings, codecs, errors, cardinality, effects, ownership, and provider interfaces have one final contract. |
+| 5 | completed | Common SQL contracts | Shared query kinds, complete type and bind mappings, codecs, errors, cardinality, effects, ownership, and provider interfaces have one final contract. |
 | 6 | pending | Query and fragment substrate | Query templates, owned bound queries, typed fragments, composition, safe interpolation, and cardinality adapters integrate with Sifr typing and HIR. |
 | 7 | pending | PostgreSQL schema and query compiler | PostgreSQL catalogs, grammar, resolution, typing, nullability, result records, writes, dependencies, and diagnostics work offline. |
 | 8 | pending | PostgreSQL semantic completion | Advanced PostgreSQL constructs, fragment scope changes, cardinality proofs, custom codecs, and exported-query stability rules are complete. |
@@ -514,20 +514,20 @@ Owned scope:
 
 Acceptance criteria:
 
-- [ ] Fixed-width SQL integers map to exact Sifr widths. Generic integer binding
+- [x] Fixed-width SQL integers map to exact Sifr widths. Generic integer binding
   uses checked narrowing.
-- [ ] Decimal, floating-point, temporal, text, binary, UUID, JSON, enum, array,
+- [x] Decimal, floating-point, temporal, text, binary, UUID, JSON, enum, array,
   domain, composite, range, IP, network, MAC, custom, unsigned, and SQLite
   affinity rules have explicit provider contracts.
-- [ ] Every supported value pair has an exact bind-compatibility rule. Width
+- [x] Every supported value pair has an exact bind-compatibility rule. Width
   mismatch, nullability, arrays, custom codecs, and generic integers fail or
   convert according to that table.
-- [ ] Compile-time and runtime error families are structured, stable, redacted,
+- [x] Compile-time and runtime error families are structured, stable, redacted,
   and panic-safe.
-- [ ] Cardinality uses the complete interval lattice and never selects containers.
-- [ ] Read and write effects identify referenced and affected schema objects.
-- [ ] Provider interfaces separate shared execution shape from dialect semantics.
-- [ ] Query, pool, connection, transaction, and stream ownership protocols have
+- [x] Cardinality uses the complete interval lattice and never selects containers.
+- [x] Read and write effects identify referenced and affected schema objects.
+- [x] Provider interfaces separate shared execution shape from dialect semantics.
+- [x] Query, pool, connection, transaction, and stream ownership protocols have
   explicit transfer, sharing, and lifetime rules.
 
 Focused validation:
@@ -575,6 +575,12 @@ Acceptance criteria:
   through normal Sifr typing.
 - [ ] Unsafe syntax escape requires the complete security capability and lint
   contract.
+- [ ] Generated schema identifiers use one injective, reversible encoding across
+  paths, keywords, enum variants, and composite fields.
+- [ ] Frontend and query compilation consume a production-queryable profile-module
+  registry; qualification invokes that production consumer.
+- [ ] Query lowering preserves the compile-time cardinality and effect records in
+  the runtime request. Executable round-trip tests prove both views are equal.
 
 Focused validation:
 
@@ -693,6 +699,10 @@ Acceptance criteria:
   result contracts.
 - [ ] Connections, transactions, savepoints, cleanup, commit, rollback, and live
   streams obey static ownership and fallible cleanup rules.
+- [ ] The transaction runtime implements and tests an explicit live, committed,
+  rolled-back, poisoned, and dropped transition matrix. Commit, rollback, and
+  cleanup cannot leave a handle reusable or report success after an invalid
+  transition.
 - [ ] Pools are `ShareSafe` cloneable handles. Connections, transactions, and
   streams cannot cross task boundaries.
 - [ ] Context transactions never retry automatically. The separate replay API
@@ -1255,7 +1265,7 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 | 2 | completed | [#3588](https://github.com/sifr-lang/sifr/pull/3588) | `955e97f6db` | affected packages, native fixture, HIR guard, and file-size guard pass | Opus round 2 closed both original blockers on `dd7ac3cdc`; one new mechanism defect is deferred | Structural record type system |
 | 3 | completed | [#3592](https://github.com/sifr-lang/sifr/pull/3592) | `9badcfc4aa` | component 14/14; diagnostics 32/32; package resolution 4/4; SQL 6/6; coverage 5/5; four-target qualification pass | Opus round 2 closed the original sandbox and diagnostics blockers on `3d97d7e35`; two new mechanism defects are deferred | Compiler component platform |
 | 4 | completed | [#3595](https://github.com/sifr-lang/sifr/pull/3595) | `40facaf98d` | contract 9/9; component 14/14; driver 2/2; package 149; SQL 10/10; coverage, Clippy, formatting, HIR, and file-size checks pass | Opus round 2 verified the original pipeline and credential fixes on `04e00c51b`; two new mechanisms are deferred | Canonical schema profiles, provider authority pipeline, generated modules, fingerprints, slices, diffs, and runtime manifests |
-| 5 | pending | — | — | — | — | Common SQL contracts |
+| 5 | completed | [#3597](https://github.com/sifr-lang/sifr/pull/3597) | `7f2382ae68` | contract 9/9; runtime 9/9 plus 2 compile-fail doctests; diagnostics 32/32; SQL common qualification; strict Clippy and guards pass | Final exact-SHA Opus `SATISFIED` on `f7a3e5a35` | Provider-neutral type, bind, codec, cardinality, effect, error, runtime, and ownership contracts |
 | 6 | pending | — | — | — | — | Query and fragment substrate |
 | 7 | pending | — | — | — | — | PostgreSQL schema and query compiler |
 | 8 | pending | — | — | — | — | PostgreSQL semantic completion |
@@ -1288,6 +1298,8 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 | Milestone 3 remediation review | Component response diagnostics and source maps can name document identities that were not present in the request. | Milestone 18 | Restrict primary, related, and source-map spans to request-owned template documents. Add forged-document rejection tests. |
 | Milestone 4 remediation review | Generated schema paths, language-keyword escapes, enum variants, and composite fields can collapse to the same emitted identifier. | Milestone 6 | Replace the flattening and escaping rules with one injective, reversible encoding. Add collision properties before queries consume generated schema types. |
 | Milestone 4 remediation review | The qualification record claims a compiler profile registry, but production code only consumes a cache fragment and exposes generated modules to tests. | Milestone 6 | Add one production-queryable profile-module registry for frontend and query compilation. Bind its qualification evidence to an executable consumer. |
+| Milestone 5 initial review | The common ownership model cannot prove a provider transaction's commit, rollback, poison, and drop transitions against a real runtime implementation. | Milestone 9 | Implement the explicit transaction state machine in the PostgreSQL runtime and test every terminal, cleanup, cancellation, and invalid-reuse transition. |
+| Milestone 5 initial review | Compile-time cardinality and effect analysis has no executable lowering round trip into the runtime request. | Milestone 6 | Lower both records with each bound query and prove compiler/runtime equality for reads, writes, adapters, and fragment transformations. |
 
 ### Milestone 0 closure record
 
@@ -1532,6 +1544,75 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
   The roadmap status did not change because the phase remains active.
 - Next action: implement Milestone 5 from the merged and recorded mainline.
 
+### Milestone 5 closure record
+
+- Status: completed and merged.
+- Starting commit: `f83bb85c7b54f618ecf8a17019c942bbd788e59a`.
+- Initial reviewed candidate: `f71d1bb5d5f266355402185d9a88f7717f4708ab`.
+- Remediation reviewed candidate:
+  `f7d729ed6d8828d2907c0016cd1dbd7defd11ca7`.
+- Final candidate: `f7a3e5a3523f9cd90309f457a78ba7220fabe6d5`.
+- Pull request: [#3597](https://github.com/sifr-lang/sifr/pull/3597).
+- Merge commit: `7f2382ae68053ca1cde737c51a687ebd701e2e2d`.
+- Acceptance disposition: all eight Milestone 5 criteria are satisfied for the
+  common contract layer. Runtime-specific transaction transitions are assigned
+  to Milestone 9. Compiler-to-runtime cardinality and effect preservation is
+  assigned to Milestone 6.
+- Owned result: `sifr_sql_contract` defines provider-neutral database and Sifr
+  values, exact, fallible, and rejected bind relations, profile-scoped codecs,
+  the complete cardinality lattice, read/write effects, provider analysis, and
+  typed common diagnostics.
+- Runtime result: the driver-free `sifr_sql_runtime` crate owns redacted encoded
+  parameters and requests, checked ownership-state handles, resource bounds,
+  structured runtime errors, and panic containment at the provider-future
+  boundary.
+- Type result: fixed-width integers, generic checked narrowing, decimals with
+  precision and scale, floats, temporal values, text, bytes, UUID, JSON, enums,
+  arrays, domains, composites, ranges, network families, custom codecs,
+  unsigned providers, and SQLite dynamic affinity have explicit tested rules.
+  Nullable normalization and custom types nested through arrays and ranges use
+  the selected profile's registry.
+- Diagnostics result: `SIFR-SQL-0001` through `SIFR-SQL-0008` are active typed
+  diagnostic codes with generated catalog, documentation, baselines, and an
+  executable qualification fixture.
+- Focused validation: 9 contract tests, 9 runtime tests, two compile-fail
+  ownership doctests, and all 32 diagnostics tests passed. Strict Clippy passed
+  for all three crates. The diagnostics rules area, SQL common qualification,
+  formatting, file-size guard, and HIR maintainability guard passed.
+- Create-PR gate: the one allowed run used
+  `472cd7d0b84484957e3cffc7b9ec1e51289d1fca`. Every preceding check passed,
+  then diagnostic coverage rejected string-only use of the eight new codes.
+  The final candidate replaced that path with direct `DiagnosticCode::SQL_*`
+  mappings and passed the focused coverage and diagnostics checks. The gate did
+  not run again.
+- Merge gate: the one allowed run used the exact final candidate. Repository
+  guardrails, Rust interop 10/10, coverage readiness 4/4, core language, and
+  CPython differential passed. Python interop passed 28 of 30 variants. The
+  existing `readonly-check-doctor` 300-second and `binding-authoring`
+  180-second host timeouts are documented by the archived representative
+  performance-budget owner and Phase 40 evidence ledger. The SQL workstream did
+  not change a timeout, threshold, or waiver, and the gate did not run again.
+- Review rounds 1 and 2 found incomplete bind/codec closure, redaction gaps,
+  qualification drift, decimal representation loss, nullable normalization,
+  and recursive custom-type handling. The implementation corrected those
+  mechanisms in one common model.
+- User-authorized exact-SHA adjudication then exposed and corrected the final
+  `Range<Custom>` read/bind asymmetry. The [satisfied review](https://github.com/sifr-lang/sifr/pull/3597#issuecomment-5468015187)
+  approved that candidate with no blocker.
+- The create-PR diagnostic correction changed the exact candidate. A final
+  [exact-SHA review](https://github.com/sifr-lang/sifr/pull/3597#issuecomment-5468075122)
+  verified the dependency topology and every active diagnostic-code mapping on
+  `f7a3e5a3523f9cd90309f457a78ba7220fabe6d5`; it returned `SATISFIED` with no
+  blocking finding.
+- The initial review's later transaction-transition mechanism is assigned to
+  Milestone 9. Its compile-time/runtime cardinality and effect round trip is
+  assigned to Milestone 6.
+- Architecture update: the SQL architecture documents now name the common
+  compiler contract, driver-free runtime boundary, codec registry, error and
+  ownership rules, and provider qualification matrix. The roadmap status did
+  not change because the phase remains active.
+- Next action: implement Milestone 6 from the merged and recorded mainline.
+
 ## Closure evidence template
 
 Each milestone appends one progress record with:
@@ -1563,5 +1644,5 @@ Complete this section after Milestone 18 merges:
 - Final capability and verification inventory: pending.
 - Deferred out-of-scope work: pending.
 - Archive destination: `plans/issues/archive/ad-hoc-schema-first-sql-platform.md`.
-- Exact next action: implement Milestone 5 from current
+- Exact next action: implement Milestone 6 from current
   `origin/main`.
