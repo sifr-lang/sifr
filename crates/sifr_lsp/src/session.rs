@@ -1,5 +1,5 @@
 use crate::analysis_workspace::{LspAnalysisWorkspace, LspFileMaps, LspWorkspaceSymbol};
-use crate::cancellation::CancellationToken;
+use crate::cancellation::{CancellationRegistry, CancellationToken};
 use crate::diagnostic_jobs::{DiagnosticJobs, ScheduledDiagnosticJob};
 use crate::document_events::{CompactedDocumentChange, compact_content_changes};
 use crate::document_store::DocumentStore;
@@ -25,6 +25,7 @@ pub(crate) struct Session {
     queue: RequestQueue,
     progress: ProgressState,
     active_request: Option<CancellationToken>,
+    cancellation_registry: CancellationRegistry,
     initialized: bool,
     position_encoding: PositionEncoding,
     shutdown_requested: bool,
@@ -49,6 +50,7 @@ impl Session {
             queue: RequestQueue::default(),
             progress: ProgressState::default(),
             active_request: None,
+            cancellation_registry: CancellationRegistry::default(),
             initialized: false,
             position_encoding: PositionEncoding::Utf16,
             shutdown_requested: false,
@@ -197,11 +199,19 @@ impl Session {
     ) -> LspResult<T> {
         self.check_active_request_cancelled()?;
         let before_version = self.store.document(uri)?.version();
+        let cancellation = self.active_request.as_ref().map(CancellationToken::flag);
         let result = {
             let document = self.store.document(uri)?;
-            self.analysis.with_document(document, operation)?
+            self.analysis
+                .with_document(document, |snapshot, host, file, uri| {
+                    host.set_sql_cancellation_flag(cancellation);
+                    let result = operation(snapshot, host, file, uri);
+                    host.set_sql_cancellation_flag(None);
+                    result
+                })
         };
         self.check_active_request_cancelled()?;
+        let result = result?;
         let after_version = self.store.document(uri)?.version();
         if after_version != before_version {
             self.trace(
@@ -278,11 +288,18 @@ impl Session {
     }
 
     pub(crate) fn begin_request_execution(&mut self, id: &RequestId) -> LspResult<()> {
-        self.active_request = Some(CancellationToken::new(id));
+        let token = CancellationToken::new(id);
+        self.cancellation_registry.activate(&token);
+        self.active_request = Some(token);
         self.check_request_cancelled(id)
     }
 
+    pub(crate) fn cancellation_registry(&self) -> CancellationRegistry {
+        self.cancellation_registry.clone()
+    }
+
     pub(crate) fn finish_request(&mut self, id: &RequestId) {
+        self.cancellation_registry.finish(id);
         if self
             .active_request
             .as_ref()
@@ -295,6 +312,18 @@ impl Session {
 
     pub(crate) fn cancel_request(&mut self, id: &RequestId) -> CancellationTarget {
         let target = self.queue.mark_cancelled(id);
+        if target == CancellationTarget::None {
+            self.cancellation_registry.discard_pending(id);
+        } else {
+            self.cancellation_registry.cancel(id);
+        }
+        if let Some(token) = self
+            .active_request
+            .as_ref()
+            .filter(|token| token.request_id() == id)
+        {
+            token.cancel();
+        }
         if target != CancellationTarget::None {
             self.trace(
                 WorkspaceTracePhase::Cancellation,
@@ -316,6 +345,12 @@ impl Session {
 
     pub(crate) fn check_active_request_cancelled(&self) -> LspResult<()> {
         if let Some(token) = &self.active_request {
+            if token.is_cancelled() {
+                return Err(LspError::request_cancelled(format!(
+                    "request {:?} was cancelled",
+                    token.request_id()
+                )));
+            }
             self.check_request_cancelled(token.request_id())?;
         }
         Ok(())
@@ -325,6 +360,7 @@ impl Session {
         self.shutdown_requested = true;
         self.queue.begin_shutdown();
         self.diagnostic_jobs.clear();
+        self.cancellation_registry.clear();
         self.active_request = None;
     }
 
@@ -410,6 +446,8 @@ mod tests {
     mod python_declaration_tests;
     #[path = "python_package_ownership_tests.rs"]
     mod python_package_ownership_tests;
+    #[path = "sql_editor_tests.rs"]
+    mod sql_editor_tests;
     #[path = "sysroot_request_tests.rs"]
     mod sysroot_request_tests;
 

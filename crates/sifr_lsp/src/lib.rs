@@ -25,6 +25,7 @@ mod scheduler;
 mod server;
 mod session;
 mod settings;
+mod sql_editor_contract;
 mod watchdog;
 
 pub use server::{run_stdio, run_stdio_with_options};

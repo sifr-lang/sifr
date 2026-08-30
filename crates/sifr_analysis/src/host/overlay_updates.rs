@@ -11,6 +11,8 @@ impl AnalysisHost {
         root: &ProjectRoot,
         overlays: Vec<(SourcePath, Option<String>, DocumentVersion, SourceText)>,
     ) -> Result<Self, Vec<RenderedDiagnostic>> {
+        let profiles =
+            sifr_driver::load_sql_editor_profiles(root.root.as_path(), root.entrypoint.as_path())?;
         let mut session = WorkspaceSession::project_with_external_defs_and_auxiliary_sources(
             root.clone(),
             sifr_driver::stdlib_external_defs()?,
@@ -20,7 +22,7 @@ impl AnalysisHost {
             session.upsert_overlay(path, uri, version, source, None);
         }
         session.reload()?;
-        Self::new(session)
+        Self::new_with_sql_profiles(session, profiles)
     }
 
     pub fn open_single_file_overlay(

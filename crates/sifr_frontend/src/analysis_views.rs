@@ -1,4 +1,4 @@
-use crate::{EditorSemanticView, ModuleId};
+use crate::{EditorSemanticView, ModuleId, SqlEditorDocumentView};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SymbolView {
@@ -19,6 +19,7 @@ pub struct ModuleAnalysisView {
     pub module: ModuleId,
     pub symbols: Vec<SymbolView>,
     pub editor_semantics: EditorSemanticView,
+    pub sql_documents: Vec<SqlEditorDocumentView>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]

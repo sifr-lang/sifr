@@ -16,9 +16,12 @@ use crate::errors::{LspError, LspResult};
 use crate::session::Session;
 use serde_json::{Value, json};
 use std::path::Path;
+use std::time::Instant;
 
 pub(crate) fn handle(session: &mut Session, method: &str, params: Value) -> LspResult<Value> {
-    match method {
+    let budget = crate::sql_editor_contract::budget_for_method(method);
+    let started = Instant::now();
+    let result = match method {
         "workspace/symbol" => symbols::workspace_symbol(session, params),
         "workspace/executeCommand" => execute_command(session, params),
         "textDocument/diagnostic" => diagnostics::text_document_diagnostic(session, params),
@@ -52,7 +55,18 @@ pub(crate) fn handle(session: &mut Session, method: &str, params: Value) -> LspR
         _ => Err(LspError::method_not_found(format!(
             "unsupported Sifr LSP request: {method}"
         ))),
+    };
+    if let Some(budget) = budget {
+        let elapsed = u64::try_from(started.elapsed().as_millis()).unwrap_or(u64::MAX);
+        session.trace(
+            sifr_analysis::WorkspaceTracePhase::LspTiming,
+            format!(
+                "sql_editor_budget id={} elapsed_ms={elapsed} maximum_ms={}",
+                budget.id, budget.maximum_ms
+            ),
+        );
     }
+    result
 }
 
 fn sysroot_status(params: &Value) -> LspResult<Value> {

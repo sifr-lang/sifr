@@ -1,6 +1,6 @@
 use crate::{
-    DialectIdentity, ProviderIdentity, SchemaContractError, SchemaContractErrorKind,
-    SchemaDocument, SchemaDocumentKind, SchemaIr, normalize_schema,
+    DialectIdentity, ProviderAnalysis, ProviderIdentity, SchemaContractError,
+    SchemaContractErrorKind, SchemaDocument, SchemaDocumentKind, SchemaIr, normalize_schema,
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -13,6 +13,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 pub const SCHEMA_NORMALIZATION_OPERATION: &str = "sifr.sql.normalize-schema";
 pub const SCHEMA_NORMALIZATION_PAYLOAD_TAG: &str = "sifr.sql.normalized-schema";
+pub const PROVIDER_ANALYSIS_PAYLOAD_TAG: &str = "sifr.sql.provider-analysis";
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SchemaSourceInput {
@@ -159,6 +160,30 @@ pub fn normalized_schema_from_response(
         ));
     }
     normalize_schema(provider, output.dialect, output.documents)
+}
+
+pub fn provider_analysis_from_response(
+    response: &EmbeddedAnalysisResponse,
+) -> Result<ProviderAnalysis, SchemaContractError> {
+    if !response.plan.diagnostics.is_empty() {
+        return Err(invalid("provider analysis returned diagnostics"));
+    }
+    let mut payloads = response.plan.operations.iter().filter_map(|operation| {
+        if let SemanticOperation::ProviderNode { tag, payload } = operation
+            && tag == PROVIDER_ANALYSIS_PAYLOAD_TAG
+        {
+            Some(payload)
+        } else {
+            None
+        }
+    });
+    let payload = payloads
+        .next()
+        .ok_or_else(|| invalid("provider analysis payload is missing"))?;
+    if payloads.next().is_some() {
+        return Err(invalid("provider analysis payload is duplicated"));
+    }
+    serde_json::from_slice(payload).map_err(|error| serialization_error(&error))
 }
 
 const fn source_artifact_kind(kind: SchemaDocumentKind) -> &'static str {

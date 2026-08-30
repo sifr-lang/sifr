@@ -108,6 +108,19 @@ COMMANDS = {
         "cargo", "test", "--locked", "-p", "sifr_sql_postgresql_runtime",
         "--lib", "--test", "runtime_types",
     ],
+    "sql-incremental-editor-qualification": [
+        sys.executable,
+        str(AREA_ROOT / "tools" / "check_incremental_editor.py"),
+    ],
+    "sql-incremental-editor-mutations": [
+        sys.executable,
+        str(AREA_ROOT / "tools" / "check_incremental_editor.py"),
+        "--self-test",
+    ],
+    "sql-incremental-editor-tests": [
+        "cargo", "test", "--locked", "-p", "sifr_frontend", "-p", "sifr_analysis",
+        "-p", "sifr_lsp",
+    ],
     "sql-query-signature-and-fragment-semantics": [
         "cargo", "test", "--locked", "-p", "sifr_sql_contract", "--test",
         "semantic_completion",

@@ -1978,6 +1978,11 @@ Each embedded request uses the existing LSP cancellation, progress, and watchdog
 contracts. The frontend checks cancellation before component entry and between
 provider operations.
 
+[`sql_incremental_editor.md`](./sql_incremental_editor.md) records the
+implemented cache ownership, dependency invalidation, lossless source maps,
+editor queries, structured fixes, cancellation checkpoints, and latency
+budgets.
+
 ## Tool graph and command runner
 
 Package tools use direct Sifr command namespaces:

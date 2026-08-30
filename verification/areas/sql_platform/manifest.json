@@ -191,6 +191,26 @@
       ]
     },
     {
+      "name": "incremental-editor",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "sql-incremental-editor-qualification",
+          "entry": "verification/areas/sql_platform/data/incremental_editor_qualification.json",
+          "command": "sql-incremental-editor-qualification",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-incremental-editor-tests",
+          "entry": "crates/sifr_frontend/src/sql_editor.rs",
+          "command": "sql-incremental-editor-tests",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
       "name": "mutation",
       "kind": "adapter",
       "cases": [
@@ -247,6 +267,13 @@
           "id": "sql-postgresql-runtime-qualification-mutations",
           "entry": "verification/areas/sql_platform/data/postgresql_runtime_qualification.json",
           "command": "sql-postgresql-runtime-qualification-mutations",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-incremental-editor-mutations",
+          "entry": "verification/areas/sql_platform/data/incremental_editor_qualification.json",
+          "command": "sql-incremental-editor-mutations",
           "expect_exit_code": 0,
           "diagnostic_formats": []
         }

@@ -100,6 +100,7 @@ impl FrontendContext {
                     module,
                     symbols: Vec::new(),
                     editor_semantics: Default::default(),
+                    sql_documents: Vec::new(),
                 }),
             self.metadata(QueryKind::ModuleAnalysis, cache_status),
         )
@@ -362,6 +363,11 @@ impl FrontendContext {
             self.semantic_graph_fingerprint().as_str()
         );
         context.with_query_policy(QueryPolicyFingerprint::new(policy))
+    }
+
+    #[must_use]
+    pub fn embedded_analysis_cache_context(&self) -> CacheKeyContext {
+        self.semantic_cache_context(CacheFamily::EmbeddedAnalysis)
     }
 
     fn semantic_graph_fingerprint(&self) -> CacheKeyFingerprint {

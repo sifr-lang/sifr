@@ -187,6 +187,10 @@ pub(super) fn project_expr(expr: &HirExpr) -> Value {
                 "mappings": segment.mappings.iter().map(|mapping| json!({
                     "source_range": project_range(mapping.source_range),
                     "virtual_range": project_range(mapping.virtual_range),
+                    "offsets": mapping.offsets.iter().map(|offset| json!({
+                        "source_range": project_range(offset.source_range),
+                        "virtual_range": project_range(offset.virtual_range),
+                    })).collect::<Vec<_>>(),
                 })).collect::<Vec<_>>(),
                 "virtual_range": project_range(segment.virtual_range),
             })).collect::<Vec<_>>(),

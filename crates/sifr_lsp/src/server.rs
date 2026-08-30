@@ -66,7 +66,23 @@ impl LspServer {
         });
         self.connection
             .initialize_finish(initialize_id, initialize_data)?;
-        while let Ok(message) = self.connection.receiver.recv() {
+        let source = self.connection.receiver.clone();
+        let cancellation = self.session.cancellation_registry();
+        let (forward, incoming) = std::sync::mpsc::channel();
+        let message_pump = std::thread::spawn(move || {
+            while let Ok(message) = source.recv() {
+                if let Message::Notification(notification) = &message
+                    && notification.method == "$/cancelRequest"
+                    && let Some(id) = notifications::cancel_request_id(&notification.params)
+                {
+                    cancellation.cancel(&id);
+                }
+                if forward.send(message).is_err() {
+                    break;
+                }
+            }
+        });
+        while let Ok(message) = incoming.recv() {
             self.watchdog.check()?;
             match message {
                 Message::Request(request) => {
@@ -113,6 +129,9 @@ impl LspServer {
                 }
                 Message::Response(_) => {}
             }
+        }
+        if message_pump.join().is_err() {
+            return Err(Box::new(LspError::internal("LSP message pump panicked")));
         }
         self.finish()
     }

@@ -4,7 +4,7 @@ use super::type_bounds::supports_print_formatting;
 use ruff_text_size::{Ranged, TextRange, TextSize};
 use sifr_ir::{
     HirExpr, HirTemplateFormatSpec, HirTemplateFormatSpecPart, HirTemplateInterpolation,
-    HirTemplateSegment, HirTemplateStaticMapping, HirTemplateString,
+    HirTemplateOffsetMapping, HirTemplateSegment, HirTemplateStaticMapping, HirTemplateString,
 };
 use sifr_python_ast::{ExprTString, InterpolatedStringElement, InterpolatedStringFormatSpec};
 use sifr_type_system::Type;
@@ -29,10 +29,13 @@ pub(in crate::lower) fn lower_template_string_expr(
                     let virtual_start = TextSize::of(&virtual_source);
                     current_text.push_str(&literal.value);
                     virtual_source.push_str(&literal.value);
-                    current_mappings.push(HirTemplateStaticMapping {
-                        source_range: literal.range,
-                        virtual_range: TextRange::new(virtual_start, TextSize::of(&virtual_source)),
-                    });
+                    current_mappings.push(static_mapping(
+                        literal.range,
+                        &literal.value,
+                        virtual_start,
+                        TextSize::of(&virtual_source),
+                        ctx,
+                    ));
                 }
                 InterpolatedStringElement::Interpolation(interpolation) => {
                     let segment_end = TextSize::of(&virtual_source);
@@ -90,6 +93,103 @@ pub(in crate::lower) fn lower_template_string_expr(
         interpolations,
         ty: Type::Template(hole_types),
     }))
+}
+
+fn static_mapping(
+    source_range: TextRange,
+    decoded: &str,
+    virtual_start: TextSize,
+    virtual_end: TextSize,
+    ctx: &LowerCtx,
+) -> HirTemplateStaticMapping {
+    let offsets = ctx
+        .source_text
+        .as_deref()
+        .and_then(|source| {
+            source.get(source_range.start().to_usize()..source_range.end().to_usize())
+        })
+        .map(|raw| decoded_offset_mappings(raw, decoded, source_range.start(), virtual_start))
+        .unwrap_or_default();
+    HirTemplateStaticMapping {
+        source_range,
+        virtual_range: TextRange::new(virtual_start, virtual_end),
+        offsets,
+    }
+}
+
+fn decoded_offset_mappings(
+    raw: &str,
+    decoded: &str,
+    source_start: TextSize,
+    virtual_start: TextSize,
+) -> Vec<HirTemplateOffsetMapping> {
+    let mut mappings = Vec::new();
+    let mut raw_offset = 0;
+    let mut decoded_offset = 0;
+    while decoded_offset < decoded.len() && raw_offset < raw.len() {
+        let decoded_character = decoded[decoded_offset..].chars().next().unwrap_or('\0');
+        let decoded_length = decoded_character.len_utf8();
+        let raw_length = raw_unit_length(&raw[raw_offset..], decoded_character);
+        let Ok(source_delta) = u32::try_from(raw_offset) else {
+            break;
+        };
+        let Ok(source_length) = u32::try_from(raw_length) else {
+            break;
+        };
+        let Ok(virtual_delta) = u32::try_from(decoded_offset) else {
+            break;
+        };
+        let Ok(virtual_length) = u32::try_from(decoded_length) else {
+            break;
+        };
+        mappings.push(HirTemplateOffsetMapping {
+            source_range: TextRange::new(
+                source_start + TextSize::new(source_delta),
+                source_start + TextSize::new(source_delta + source_length),
+            ),
+            virtual_range: TextRange::new(
+                virtual_start + TextSize::new(virtual_delta),
+                virtual_start + TextSize::new(virtual_delta + virtual_length),
+            ),
+        });
+        raw_offset += raw_length;
+        decoded_offset += decoded_length;
+    }
+    mappings
+}
+
+fn raw_unit_length(raw: &str, decoded: char) -> usize {
+    let mut characters = raw.char_indices();
+    let Some((_, first)) = characters.next() else {
+        return 0;
+    };
+    if first == decoded {
+        return first.len_utf8();
+    }
+    if (decoded == '{' && raw.starts_with("{{")) || (decoded == '}' && raw.starts_with("}}")) {
+        return 2;
+    }
+    if first != '\\' {
+        return first.len_utf8();
+    }
+    let bytes = raw.as_bytes();
+    match bytes.get(1).copied() {
+        Some(b'x') => raw.len().min(4),
+        Some(b'u') => raw.len().min(6),
+        Some(b'U') => raw.len().min(10),
+        Some(b'N') => raw
+            .find('}')
+            .map_or(raw.len().min(2), |end| end.saturating_add(1)),
+        Some(b'0'..=b'7') => {
+            1 + bytes[1..]
+                .iter()
+                .take(3)
+                .take_while(|byte| matches!(byte, b'0'..=b'7'))
+                .count()
+        }
+        Some(_) => raw.len().min(2),
+        None => 1,
+    }
 }
 
 fn lower_format_spec(

@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "cache_owner": "sifr_frontend::cache_keys",
+  "invalidation_owner": "sifr_analysis",
+  "presentation_owner": "sifr_lsp",
+  "production_wiring": [
+    "resolved-profile-registry",
+    "provider-component-analysis",
+    "dependency-scoped-cache",
+    "live-lsp-cancellation",
+    "static-sql-routing"
+  ],
+  "cache_identity": [
+    "template-segments",
+    "hole-types",
+    "fragment-identities",
+    "schema-profile-and-slice",
+    "provider-identity-and-version",
+    "compatibility-settings",
+    "component-protocol",
+    "compiler-semantics"
+  ],
+  "editor_features": [
+    "highlighting",
+    "completion",
+    "hover",
+    "definition",
+    "references",
+    "rename",
+    "parameter-information",
+    "result-information",
+    "nullability",
+    "cardinality",
+    "formatting",
+    "quick-fixes",
+    "fragment-scope"
+  ],
+  "quick_fixes": [
+    "aliases",
+    "casts",
+    "missing-columns",
+    "unsafe-collection",
+    "migration-impact"
+  ],
+  "performance_budgets_ms": {
+    "perf.lsp.sql.completion": 200,
+    "perf.lsp.sql.hover": 100,
+    "perf.lsp.sql.navigation": 500,
+    "perf.lsp.sql.diagnostics": 250,
+    "perf.lsp.sql.format": 500
+  },
+  "cancellation_checkpoints": [
+    "before-component-entry",
+    "between-provider-operations",
+    "before-result-publication"
+  ],
+  "cache_capacity_entries": 4096
+}

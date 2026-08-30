@@ -1,7 +1,7 @@
 use crate::diagnostics::{RenderedDiagnostic, diagnostic_with_code, render_package_diagnostic};
 use sifr_compiler_component::{
     COMPONENT_PROTOCOL_MAJOR, ComponentError, ComponentHost, ComponentHostLimits,
-    ComponentRequirement,
+    ComponentRequirement, ResolvedComponent,
 };
 use sifr_package::{
     SifrPackageGraph, SifrPackageId, compiler_component_registrations, resolve_package_component,
@@ -13,14 +13,16 @@ use sifr_sql_contract::{
 };
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
+use std::path::Path;
 
-#[derive(Debug)]
-pub(super) struct PreparedSqlProfile {
+#[derive(Clone, Debug)]
+struct PreparedSqlProfile {
     context: sifr_compiler_component::ContextArtifact,
+    query_component: ResolvedComponent,
 }
 
-#[derive(Debug, Default)]
-pub(super) struct PreparedSqlProfiles {
+#[derive(Clone, Debug, Default)]
+pub struct PreparedSqlProfiles {
     profiles: BTreeMap<String, PreparedSqlProfile>,
     registry: ProfileModuleRegistry,
 }
@@ -36,6 +38,33 @@ impl PreparedSqlProfiles {
             .profile(profile)
             .ok()
             .map(sifr_sql_contract::RegisteredProfileModule::module)
+    }
+
+    #[must_use]
+    pub fn registry(&self) -> &ProfileModuleRegistry {
+        &self.registry
+    }
+
+    #[must_use]
+    pub fn query_component(&self, profile: &str) -> Option<&ResolvedComponent> {
+        self.profiles
+            .get(profile)
+            .map(|prepared| &prepared.query_component)
+    }
+
+    #[must_use]
+    pub fn schema_context(
+        &self,
+        profile: &str,
+    ) -> Option<&sifr_compiler_component::ContextArtifact> {
+        self.profiles.get(profile).map(|prepared| &prepared.context)
+    }
+
+    #[must_use]
+    pub fn sole_profile_name(&self) -> Option<&str> {
+        (self.profiles.len() == 1)
+            .then(|| self.profiles.keys().next().map(String::as_str))
+            .flatten()
     }
 
     #[must_use]
@@ -58,7 +87,55 @@ impl PreparedSqlProfiles {
     }
 }
 
-pub(super) fn prepare_sql_profiles(
+pub fn load_sql_editor_profiles(
+    workspace_root: &Path,
+    entrypoint: &Path,
+) -> Result<PreparedSqlProfiles, Vec<RenderedDiagnostic>> {
+    if !workspace_root.join("sifr.toml").is_file() || !workspace_root.join("Cargo.toml").is_file() {
+        return Ok(PreparedSqlProfiles::default());
+    }
+    let mut provider = sifr_frontend::DiskSourceProvider::new();
+    let snapshot = sifr_package::load_package_graph_snapshot(
+        workspace_root,
+        sifr_package::CargoLockMode::Frozen,
+        &mut provider,
+    )
+    .map_err(|failure| match failure.kind {
+        sifr_package::PackageGraphLoadFailureKind::Package { diagnostics, .. } => diagnostics
+            .into_iter()
+            .map(render_package_diagnostic)
+            .collect(),
+        sifr_package::PackageGraphLoadFailureKind::Spawn { message } => vec![diagnostic_with_code(
+            format!("cannot load the SQL editor package graph: {message}"),
+            sifr_diagnostics::DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
+        )],
+        sifr_package::PackageGraphLoadFailureKind::Command { output, .. } => {
+            vec![diagnostic_with_code(
+                format!(
+                    "cannot load the SQL editor package graph: {}",
+                    output.trim()
+                ),
+                sifr_diagnostics::DiagnosticCode::BUILD_MATERIALIZATION_FAILURE,
+            )]
+        }
+    })?;
+    let owner = snapshot
+        .graph
+        .packages
+        .values()
+        .filter(|package| {
+            entrypoint.starts_with(&package.package_root)
+                || workspace_root.starts_with(&package.package_root)
+        })
+        .max_by_key(|package| package.package_root.components().count())
+        .map(|package| package.package_id.clone());
+    let Some(owner) = owner else {
+        return Ok(PreparedSqlProfiles::default());
+    };
+    prepare_sql_profiles(&snapshot.graph, &owner)
+}
+
+pub fn prepare_sql_profiles(
     graph: &SifrPackageGraph,
     owner_package_id: &SifrPackageId,
 ) -> Result<PreparedSqlProfiles, Vec<RenderedDiagnostic>> {
@@ -81,11 +158,7 @@ pub(super) fn prepare_sql_profiles(
             .values()
             .filter(|component| {
                 component.package_id.0 == profile.provider.package_id
-                    && component
-                        .registration
-                        .identity
-                        .processor
-                        .ends_with(".schema")
+                    && processor_kind(&component.registration.identity.processor) == Some("schema")
             })
             .collect::<Vec<_>>();
         if candidates.len() != 1 {
@@ -104,6 +177,31 @@ pub(super) fn prepare_sql_profiles(
         };
         let component =
             resolve_package_component(graph, &requirement).map_err(component_diagnostics)?;
+        let query_candidates = registrations
+            .values()
+            .filter(|candidate| {
+                candidate.package_id.0 == profile.provider.package_id
+                    && processor_kind(&candidate.registration.identity.processor) == Some("sql")
+            })
+            .collect::<Vec<_>>();
+        if query_candidates.len() != 1 {
+            return Err(vec![diagnostic_with_code(
+                format!(
+                    "SQL profile '{name}' requires one exact provider processor ending in '.sql'; found {}",
+                    query_candidates.len()
+                ),
+                sifr_diagnostics::DiagnosticCode::COMPONENT_REGISTRATION,
+            )]);
+        }
+        let query_registration = &query_candidates[0].registration;
+        let query_component = resolve_package_component(
+            graph,
+            &ComponentRequirement {
+                identity: query_registration.identity.clone(),
+                protocol_major: COMPONENT_PROTOCOL_MAJOR,
+            },
+        )
+        .map_err(component_diagnostics)?;
         let sources = profile.load_schema_sources().map_err(schema_diagnostics)?;
         let request = schema_normalization_request(
             &component.registration,
@@ -130,7 +228,13 @@ pub(super) fn prepare_sql_profiles(
         registry
             .register(authority, module)
             .map_err(schema_diagnostics)?;
-        profiles.insert(name, PreparedSqlProfile { context });
+        profiles.insert(
+            name,
+            PreparedSqlProfile {
+                context,
+                query_component,
+            },
+        );
     }
     let compiler = sifr_frontend::SqlQueryCompiler::new(&registry);
     for name in profiles.keys() {
@@ -140,6 +244,10 @@ pub(super) fn prepare_sql_profiles(
         })?;
     }
     Ok(PreparedSqlProfiles { profiles, registry })
+}
+
+fn processor_kind(identity: &str) -> Option<&str> {
+    identity.rsplit_once('.').map(|(_, kind)| kind)
 }
 
 fn component_diagnostics(error: ComponentError) -> Vec<RenderedDiagnostic> {

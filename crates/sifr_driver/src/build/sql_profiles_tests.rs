@@ -177,7 +177,7 @@ version = "1.0.0"
 sha256 = "{sha256}"
 protocol-min = 1
 protocol-max = 1
-processors = ["sifr.sql.postgresql.schema"]
+processors = ["sifr.sql.postgresql.schema", "sifr.sql.postgresql.sql"]
 diagnostic-namespace = "SQL-POSTGRESQL"
 diagnostics = [{{ code = "SIFR-SQL-POSTGRESQL-0001", lifecycle = "active" }}]
 "#

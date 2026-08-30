@@ -7,7 +7,7 @@ use super::{
     WorkspacePackageConfigIdentity, WorkspaceSessionTarget, WorkspaceSingleFileTarget,
     collect_module_exports, diagnostic_with_code, editor_semantics_from_module,
     hir_diagnostic_to_rendered, local_import_dependencies, module_state, reveal_type_diagnostics,
-    source_hash, symbols_from_hir, warning_diagnostics,
+    source_hash, sql_editor_documents, symbols_from_hir, warning_diagnostics,
 };
 use crate::frontend_reuse::FrontendReuseCaches;
 use crate::module_signatures::{ModuleSignature, module_signature};
@@ -796,12 +796,18 @@ impl FrontendContext {
                 })
             })
             .unwrap_or_default();
+        let sql_documents = self.modules[index]
+            .lowered
+            .as_ref()
+            .map(|lowered| sql_editor_documents(&lowered.module))
+            .unwrap_or_default();
         self.modules[index].analysis = Some(self.reuse_caches.insert_index(
             index_key,
             ModuleAnalysisView {
                 module,
                 symbols,
                 editor_semantics,
+                sql_documents,
             },
         ));
         CacheStatus::Miss

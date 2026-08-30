@@ -676,6 +676,10 @@ pub(in crate::lower) fn lower_class(
                         } else {
                             None
                         }
+                    } else if let Expr::Attribute(attribute) = &d.expression
+                        && let Expr::Name(root) = attribute.value.as_ref()
+                    {
+                        Some(format!("{}.{}", root.id, attribute.attr))
                     } else {
                         None
                     }

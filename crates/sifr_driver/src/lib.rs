@@ -21,7 +21,7 @@ mod workspace;
 pub use build::{
     BuildCompilationMode, BuildReport, BuildReportInput, BuildStageReport, BuildSysrootReport,
     CachedBinaryArtifact, CargoInvocation, PackageEntrypoint, PackagePythonRuntime,
-    PythonDeclarationCheck, PythonEnvironmentCheck, PythonInteropCheckReport,
+    PreparedSqlProfiles, PythonDeclarationCheck, PythonEnvironmentCheck, PythonInteropCheckReport,
     PythonInteropPlanDiagnostic, PythonTargetCheck, PythonTargetCheckStatus,
     PythonTargetInspection, PythonTargetParameter, QUERY_SIGNATURE_ARTIFACT_NAME,
     apply_python_target_inspection, build, build_cached_package_project, build_cached_project,
@@ -29,7 +29,8 @@ pub use build::{
     build_single_file_report, capture_cargo_invocations, check_package_project,
     check_package_python_interop, check_project, check_single_file, emit_project,
     emit_query_signature_artifact, generate_dependency_cargo_toml, inspect_python_target,
-    probe_python_interop_plan, sysroot_cargo_config_args, try_generate_standalone_dependency_plan,
+    load_sql_editor_profiles, prepare_sql_profiles, probe_python_interop_plan,
+    sysroot_cargo_config_args, try_generate_standalone_dependency_plan,
     validate_binding_distributions, validate_certification_distributions,
     validate_protocol_certifications_for_plan,
 };

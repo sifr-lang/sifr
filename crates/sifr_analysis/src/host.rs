@@ -1,8 +1,10 @@
+mod construction;
 mod debug_status;
 mod editor_facts;
 #[cfg(test)]
 mod editor_query_corpus_tests;
 mod file_access;
+mod formatting;
 #[cfg(test)]
 mod generated_rust_preview_tests;
 mod implementation;
@@ -14,6 +16,7 @@ mod semantic_editor;
 #[cfg(test)]
 mod semantic_editor_tests;
 mod snapshot_queries;
+mod sql_editor;
 mod stdlib_navigation;
 #[cfg(test)]
 mod stdlib_tests;

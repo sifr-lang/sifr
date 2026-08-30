@@ -424,6 +424,7 @@ mod tests {
                 ModuleAnalysisView {
                     module: ModuleId::new(1),
                     editor_semantics: Default::default(),
+                    sql_documents: Vec::new(),
                     symbols: vec![
                         SymbolView {
                             name: main_name.to_string(),
@@ -438,6 +439,7 @@ mod tests {
                 ModuleAnalysisView {
                     module: ModuleId::new(2),
                     editor_semantics: Default::default(),
+                    sql_documents: Vec::new(),
                     symbols: vec![SymbolView {
                         name: helper_name.to_string(),
                         kind: SymbolKind::Constant,
@@ -584,6 +586,7 @@ mod tests {
         analysis.modules.push(ModuleAnalysisView {
             module: ModuleId::new(3),
             editor_semantics: Default::default(),
+            sql_documents: Vec::new(),
             symbols: vec![SymbolView {
                 name: "extra".to_string(),
                 kind: SymbolKind::Function,

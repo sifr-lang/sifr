@@ -16,6 +16,16 @@ pub struct HirTemplateSegment {
 pub struct HirTemplateStaticMapping {
     pub source_range: TextRange,
     pub virtual_range: TextRange,
+    /// Exact decoded-character mappings. Escapes can consume several source
+    /// bytes and produce one virtual character, so range endpoints alone are
+    /// not sufficient for safe editor edits.
+    pub offsets: Vec<HirTemplateOffsetMapping>,
+}
+
+#[derive(Debug, Clone)]
+pub struct HirTemplateOffsetMapping {
+    pub source_range: TextRange,
+    pub virtual_range: TextRange,
 }
 
 /// A format specification is evaluated eagerly after its owning value.

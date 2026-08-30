@@ -8,7 +8,7 @@ use sifr_compiler_component::{
 };
 use sifr_sql_contract::{
     Cardinality, DatabaseType, QueryEffect, SchemaDocument, SchemaDocumentKind, SchemaObject,
-    SchemaObjectKind, SemanticValue, normalize_schema,
+    SchemaObjectKind, SemanticValue, normalize_schema, provider_analysis_from_response,
 };
 use sifr_sql_postgresql::{
     LibpgQueryParser, POSTGRESQL_QUERY_OPERATION, POSTGRESQL_SCHEMA_ARTIFACT_KIND,
@@ -247,12 +247,16 @@ fn ddl_normalization_and_query_analysis_share_one_schema_authority() {
     let embedded = into_embedded_response(
         server_major,
         Some("app.Schema".to_string()),
-        &schema_output_fingerprint(&schema),
-        &PostgresComponentResponse::Query(analysis),
+        &schema,
+        &PostgresComponentResponse::Query(analysis.clone()),
     )
     .unwrap();
     assert_eq!(embedded.plan.operations.len(), 1);
     assert_eq!(embedded.plan.schema_identity.as_deref(), Some("app.Schema"));
+    assert_eq!(
+        provider_analysis_from_response(&embedded).expect("common provider envelope"),
+        analysis
+    );
 }
 
 #[test]
