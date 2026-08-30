@@ -159,9 +159,27 @@ fn main() {
     println!("{}", Direction::EAST.opposite());
     println!("=== Enum as Dict Key ===");
     let mut scores: HashMap<Color, SifrInt> = HashMap::from([]);
-    scores.insert(Color::RED, SifrInt::from_i64(10));
-    scores.insert(Color::GREEN, SifrInt::from_i64(20));
-    scores.insert(Color::BLUE, SifrInt::from_i64(30));
+    {
+        let __assign_value = SifrInt::from_i64(10);
+        {
+            let __assign_key = Color::RED;
+            scores.insert(__assign_key, __assign_value);
+        }
+    }
+    {
+        let __assign_value = SifrInt::from_i64(20);
+        {
+            let __assign_key = Color::GREEN;
+            scores.insert(__assign_key, __assign_value);
+        }
+    }
+    {
+        let __assign_value = SifrInt::from_i64(30);
+        {
+            let __assign_key = Color::BLUE;
+            scores.insert(__assign_key, __assign_value);
+        }
+    }
     let v: Option<SifrInt> = scores.get(&Color::GREEN).cloned();
     if let Some(v) = v.clone() {
         println!("{}", v);

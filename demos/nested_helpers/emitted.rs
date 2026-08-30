@@ -14,18 +14,24 @@ fn expand_keyed_strings(keys: &String) -> Vec<String> {
     let mut res: Vec<String> = vec![];
     let key_to_suffixes = &*__SIFR_HOISTED_DICT_0;
     fn backtrack(i: SifrInt, cur: &String, key_to_suffixes: &HashMap<String, Vec<String>>, keys: &String, res: &mut Vec<String>) {
-        if (&i >= &SifrInt::from(keys.chars().count())) {
+        if (&i < &SifrInt::from_i64(0)) || (&i >= &SifrInt::from(keys.chars().count())) {
             res.push(format!("{}", cur));
             return;
         }
-        let key: String = {
-    let __indexed_char_option = keys.chars().nth(::sifr_runtime::to_usize_proven(&(i))).map(|c| c.to_string());
-    __indexed_char_option.as_slice()[0_usize].clone()
-};
-        if !key_to_suffixes.contains_key(&key) {
+        let Some(__sifr_checked_value_0) = ({
+    let __sifr_string_source = &keys;
+    let __sifr_string_index = i.clone();
+    let __sifr_string_index_normalized = __sifr_string_index.normalize_index_or_len(__sifr_string_source.chars().count());
+    __sifr_string_source.chars().nth(__sifr_string_index_normalized)
+}).map(|c| c.to_string()) else {
+            res.push(format!("{}", cur));
             return;
-        }
-        for suffix in key_to_suffixes[&key].iter().cloned() {
+        };
+        let key: String = __sifr_checked_value_0.clone();
+        let Some(__sifr_checked_value_1) = key_to_suffixes.get(&key) else {
+            return;
+        };
+        for suffix in __sifr_checked_value_1.iter().cloned() {
             backtrack(&i + &SifrInt::from_i64(1), &format!("{}{}", cur, suffix), key_to_suffixes, keys, res);
         }
     }
@@ -63,8 +69,21 @@ fn find_root(n: SifrInt, par: &Vec<SifrInt>) -> SifrInt {
         return SifrInt::from_i64(0);
     }
     let mut p: SifrInt = n.clone();
-    while ((&p >= &SifrInt::from_i64(0)) && (&p < &SifrInt::from(par.len()))) && (&par[::sifr_runtime::to_usize_proven(&(p))].clone() != &p) {
-        p = par[::sifr_runtime::to_usize_proven(&(p))].clone();
+    while ((&p >= &SifrInt::from_i64(0)) && (&p < &SifrInt::from(par.len()))) && ({
+    let __sifr_checked_read_collection = &par;
+    let __sifr_checked_read_index = p.clone();
+    let __sifr_checked_read_normalized = __sifr_checked_read_index.normalize_index_or_len(__sifr_checked_read_collection.len());
+    __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+}).is_some_and(|__sifr_checked_value_2| (&__sifr_checked_value_2.clone() != &p)) {
+        let Some(__sifr_checked_value_3) = ({
+    let __sifr_checked_read_collection = &par;
+    let __sifr_checked_read_index = p.clone();
+    let __sifr_checked_read_normalized = __sifr_checked_read_index.normalize_index_or_len(__sifr_checked_read_collection.len());
+    __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+}) else {
+            break;
+        };
+        p = __sifr_checked_value_3.clone();
     }
     p.clone()
 }
@@ -72,44 +91,66 @@ fn find_root(n: SifrInt, par: &Vec<SifrInt>) -> SifrInt {
 fn union_nodes(n1: SifrInt, n2: SifrInt, par: &mut Vec<SifrInt>, rank: &mut Vec<SifrInt>) -> bool {
     let p1: SifrInt = find_root((n1).clone(), par);
     let p2: SifrInt = find_root((n2).clone(), par);
-    if (((&p1 < &SifrInt::from_i64(0)) || (&p1 >= &SifrInt::from(rank.len()))) || (&p2 < &SifrInt::from_i64(0))) || (&p2 >= &SifrInt::from(rank.len())) {
+    if (((((&p1 < &SifrInt::from_i64(0)) || (&p1 >= &SifrInt::from(rank.len()))) || (&p1 >= &SifrInt::from(par.len()))) || (&p2 < &SifrInt::from_i64(0))) || (&p2 >= &SifrInt::from(rank.len()))) || (&p2 >= &SifrInt::from(par.len())) {
         return false;
     }
+    let Some(__sifr_checked_value_4) = ({
+    let __sifr_checked_read_collection = &rank;
+    let __sifr_checked_read_index = p1.clone();
+    let __sifr_checked_read_normalized = __sifr_checked_read_index.normalize_index_or_len(__sifr_checked_read_collection.len());
+    __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+}) else {
+        return false;
+    };
+    let Some(__sifr_checked_value_5) = ({
+    let __sifr_checked_read_collection = &rank;
+    let __sifr_checked_read_index = p2.clone();
+    let __sifr_checked_read_normalized = __sifr_checked_read_index.normalize_index_or_len(__sifr_checked_read_collection.len());
+    __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+}) else {
+        return false;
+    };
     if &p1 == &p2 {
         return false;
     }
-    if (rank[::sifr_runtime::to_usize_proven(&(p1))].clone() > rank[::sifr_runtime::to_usize_proven(&(p2))].clone()) {
+    if (__sifr_checked_value_4.clone() > __sifr_checked_value_5.clone()) {
         {
-            let __idx_raw = p2.clone();
-            let __idx_norm = __idx_raw.normalize_index_or_len(par.len());
-            if let Some(__elem) = par.get_mut(__idx_norm) {
-                *__elem = p1.clone();
+            let __assign_value = p1.clone();
+            {
+                let __index_raw = p2.clone();
+                let __index_normalized = __index_raw.normalize_index_or_len(par.len());
+                if let Some(__elem) = par.get_mut(__index_normalized) {
+                    *__elem = __assign_value;
+                }
             }
         }
         {
-            let __assign_value = &rank[::sifr_runtime::to_usize_proven(&(p1))].clone() + &rank[::sifr_runtime::to_usize_proven(&(p2))].clone();
+            let __assign_value = &__sifr_checked_value_4.clone() + &__sifr_checked_value_5.clone();
             {
-                let __idx_raw = p1.clone();
-                let __idx_norm = __idx_raw.normalize_index_or_len(rank.len());
-                if let Some(__elem) = rank.get_mut(__idx_norm) {
+                let __index_raw = p1.clone();
+                let __index_normalized = __index_raw.normalize_index_or_len(rank.len());
+                if let Some(__elem) = rank.get_mut(__index_normalized) {
                     *__elem = __assign_value;
                 }
             }
         }
     } else {
         {
-            let __idx_raw = p1.clone();
-            let __idx_norm = __idx_raw.normalize_index_or_len(par.len());
-            if let Some(__elem) = par.get_mut(__idx_norm) {
-                *__elem = p2.clone();
+            let __assign_value = p2.clone();
+            {
+                let __index_raw = p1.clone();
+                let __index_normalized = __index_raw.normalize_index_or_len(par.len());
+                if let Some(__elem) = par.get_mut(__index_normalized) {
+                    *__elem = __assign_value;
+                }
             }
         }
         {
-            let __assign_value = &rank[::sifr_runtime::to_usize_proven(&(p2))].clone() + &rank[::sifr_runtime::to_usize_proven(&(p1))].clone();
+            let __assign_value = &__sifr_checked_value_5.clone() + &__sifr_checked_value_4.clone();
             {
-                let __idx_raw = p2.clone();
-                let __idx_norm = __idx_raw.normalize_index_or_len(rank.len());
-                if let Some(__elem) = rank.get_mut(__idx_norm) {
+                let __index_raw = p2.clone();
+                let __index_normalized = __index_raw.normalize_index_or_len(rank.len());
+                if let Some(__elem) = rank.get_mut(__index_normalized) {
                     *__elem = __assign_value;
                 }
             }
@@ -134,7 +175,7 @@ fn detect_first_cycle(edges: &Vec<(SifrInt, SifrInt)>) -> Vec<SifrInt> {
     __sifr_list_comp
 };
     for (n1, n2) in edges.iter().cloned() {
-        if !(union_nodes((n1).clone(), (n2).clone(), &mut par, &mut rank)) {
+        if !union_nodes((n1).clone(), (n2).clone(), &mut par, &mut rank) {
             return vec![n1.clone(), n2.clone()];
         }
     }

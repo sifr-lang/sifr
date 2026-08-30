@@ -10,6 +10,7 @@ pub(crate) enum IrValidationKind {
     InvalidVerbatimExpression,
     InvalidIdentifier,
     ForbiddenFailureDischarge,
+    UncheckedIndex,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -357,6 +358,11 @@ fn validate_expr(expr: &RustExpr, issues: &mut Vec<IrValidationIssue>, in_functi
         | RustExpr::Await(operand) => validate_expr(operand, issues, in_function),
         RustExpr::Field { expr, .. } => validate_expr(expr, issues, in_function),
         RustExpr::Index { expr, index } => {
+            issues.push(IrValidationIssue {
+                kind: IrValidationKind::UncheckedIndex,
+                message: "generated Rust must use a checked-place plan instead of `[]` indexing"
+                    .to_string(),
+            });
             validate_expr(expr, issues, in_function);
             validate_expr(index, issues, in_function);
         }
@@ -669,6 +675,28 @@ mod tests {
         assert!(issues.iter().any(|issue| {
             issue.kind == IrValidationKind::ForbiddenFailureDischarge
                 && issue.message.contains("unwrap call")
+        }));
+    }
+
+    #[test]
+    fn rejects_unchecked_index_before_rendering() {
+        let items = vec![RustItem::Fn {
+            name: "broken".to_string(),
+            visibility: Visibility::Private,
+            type_params: vec![],
+            params: vec![],
+            ret: None,
+            body: vec![RustStmt::Expr(RustExpr::Index {
+                expr: Box::new(RustExpr::Ident("values".to_string())),
+                index: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+            })],
+            is_async: false,
+        }];
+
+        let issues = validate_items(&items);
+        assert!(issues.iter().any(|issue| {
+            issue.kind == IrValidationKind::UncheckedIndex
+                && issue.message.contains("checked-place plan")
         }));
     }
 }

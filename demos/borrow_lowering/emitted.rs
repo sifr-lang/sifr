@@ -24,6 +24,28 @@ mod __sifr_project_unions {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub enum __SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool {
+        __SifrUnionVariant_4_x3aatom4_x3abool(bool),
+        __SifrUnionVariant_4_x3aatom3_x3astr(String),
+    }
+    impl ::std::fmt::Display
+    for __SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match self {
+                __SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool::__SifrUnionVariant_4_x3aatom4_x3abool(
+                    v,
+                ) => {
+                    return write!(f, "{}", v);
+                }
+                __SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool::__SifrUnionVariant_4_x3aatom3_x3astr(
+                    v,
+                ) => {
+                    return write!(f, "{}", v);
+                }
+            }
+        }
+    }
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub enum __SifrUnion_8_x3asequence5_x3aunion1_x3a311_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool {
         __SifrUnionVariant_4_x3aatom4_x3abool(bool),
         __SifrUnionVariant_4_x3aatom3_x3aint(SifrInt),
@@ -53,6 +75,7 @@ mod __sifr_project_unions {
     }
 }
 pub use __sifr_project_unions::__SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr;
+pub use __sifr_project_unions::__SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool;
 pub use __sifr_project_unions::__SifrUnion_8_x3asequence5_x3aunion1_x3a311_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool;
 use ::sifr_runtime::SifrInt;
 

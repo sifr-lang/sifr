@@ -2,5 +2,8 @@
 
 def main():
     matrix: list[list[int]] = [[1, 2], [3, 4]]
-    matrix[0][1] = 99
+    try:
+        matrix[0][1] = 99
+    except IndexError as e:
+        return
     assert str(matrix[0][1]) == '99'

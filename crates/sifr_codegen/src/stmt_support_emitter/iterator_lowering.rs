@@ -366,7 +366,7 @@ impl RustEmitter {
                 source,
                 prefer_boxed_iterator,
                 element_type_hint,
-            )?
+            )
         {
             return Ok(Some(lowered_dict_list_iter));
         }
@@ -559,41 +559,33 @@ impl RustEmitter {
         source: &HirExpr,
         prefer_boxed_iterator: bool,
         element_type_hint: Option<&Type>,
-    ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
+    ) -> Option<crate::RustExpr> {
         let HirExpr::Index { object, index, .. } = source else {
-            return Ok(None);
+            return None;
         };
         let Type::Dict(_, value_ty) = crate::resolve_alias_type_for_plain_call(object.ty()) else {
-            return Ok(None);
+            return None;
         };
         if !matches!(
             crate::resolve_alias_type_for_plain_call(value_ty.as_ref()),
             Type::List(_)
         ) {
-            return Ok(None);
+            return None;
         }
 
-        let Some(lowered_object) = self.lower_rendered_expr_for_ir(object)? else {
-            return Ok(None);
-        };
-        let Some(lowered_index) = self.lower_rendered_expr_for_ir(index)? else {
-            return Ok(None);
-        };
         let plan =
             crate::helpers::plan_iterator_ownership_with_element_hint(source, element_type_hint);
+        let list = self.checked_place_read_borrow_witness(object, index)?;
         let iterator = Self::apply_copy_clone_yield_mode_for_ir(
             crate::RustExpr::MethodCall {
-                receiver: Box::new(crate::RustExpr::Index {
-                    expr: Box::new(lowered_object),
-                    index: Box::new(Self::build_dict_lookup_key_arg_for_ir(lowered_index)),
-                }),
+                receiver: Box::new(list),
                 method: "iter".to_string(),
                 args: vec![],
             },
             plan.yield_mode,
         );
         let iterator = Self::wrap_iterator_expr_for_mode_for_ir(iterator, prefer_boxed_iterator);
-        Ok(Some(iterator))
+        Some(iterator)
     }
 
     pub(crate) fn is_collect_call_expr(expr: &crate::RustExpr) -> bool {

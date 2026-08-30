@@ -388,10 +388,18 @@ fn collect_string_loop_target_use_stmt(
             star,
             after,
             value,
+            ..
         } => {
-            if before.iter().any(|(name, _)| name == target)
-                || star.0 == target
-                || after.iter().any(|(name, _)| name == target)
+            if before
+                .iter()
+                .chain(std::iter::once(star))
+                .chain(after)
+                .any(|unpack_target| {
+                    matches!(
+                        &unpack_target.binding,
+                        sifr_ir::HirTupleTargetBinding::Name(name) if name == target
+                    )
+                })
             {
                 usage.valid = false;
                 return;
@@ -416,7 +424,7 @@ fn collect_string_loop_target_use_stmt(
             }
             collect_string_loop_target_use_expr(value, target, usage);
         }
-        HirStmt::Delete { object, index } => {
+        HirStmt::Delete { object, index, .. } => {
             collect_string_loop_target_use_expr(object, target, usage);
             collect_string_loop_target_use_expr(index, target, usage);
         }
@@ -484,7 +492,11 @@ impl RustEmitter {
         &self,
         stmt: &HirStmt,
     ) -> Result<Option<Vec<crate::RustStmt>>, crate::CodegenError> {
-        if self.try_closure_depth > 0 || !self.active_timeout_durations.is_empty() {
+        if self.try_closure_depth > 0
+            || !self.active_timeout_durations.is_empty()
+            || self.stmt_uses_checked_place_read_witness(stmt)
+            || Self::stmt_defines_nonempty_list(stmt)
+        {
             return Ok(None);
         }
         crate::try_lower_simple_stmt_with_scope_result_and_bindings(
@@ -515,10 +527,14 @@ impl RustEmitter {
         let string_char_cache_vars = self.string_char_cache_vars.clone();
         let callable_var_conventions = self.callable_var_conventions.clone();
         let nested_fn_captures = self.nested_fn_captures.clone();
+        let nonempty_list_bindings = self.nonempty_list_bindings.clone();
+        let checked_place_read_witnesses = self.checked_place_read_witnesses.clone();
         let result = self.try_lower_stmt_block_for_ir(stmts);
         self.string_char_cache_vars = string_char_cache_vars;
         self.callable_var_conventions = callable_var_conventions;
         self.nested_fn_captures = nested_fn_captures;
+        self.nonempty_list_bindings = nonempty_list_bindings;
+        self.checked_place_read_witnesses = checked_place_read_witnesses;
         result
     }
 
@@ -548,9 +564,29 @@ impl RustEmitter {
                 | HirStmt::For { .. }
                 | HirStmt::AsyncFor { .. }
                 | HirStmt::Delete { .. }
+                | HirStmt::SubscriptAssign { .. }
+                | HirStmt::NestedSubscriptAssign { .. }
+                | HirStmt::AttributeNestedSubscriptAssign { .. }
+                | HirStmt::AttributeSubscriptAssign { .. }
+                | HirStmt::SubscriptAugAssign { .. }
+                | HirStmt::StarUnpack { .. }
                 | HirStmt::Raise { .. }
         ) || matches!(stmt, HirStmt::Let { ty, .. } if self.type_contains_generic_class(ty))
             || matches!(stmt, HirStmt::TupleUnpack { targets, .. } if targets.iter().any(|target| {
+                let sifr_ir::HirTupleTargetBinding::Name(name) = &target.binding else {
+                    return false;
+                };
+                self.string_char_cache_required_names.contains(name)
+                    || matches!(
+                        crate::resolve_alias_type_for_plain_call(&target.ty),
+                        Type::Str | Type::LiteralStr(_)
+                    )
+            }))
+            || matches!(stmt, HirStmt::StarUnpack { before, star, after, .. } if before
+            .iter()
+            .chain(std::iter::once(star))
+            .chain(after)
+            .any(|target| {
                 let sifr_ir::HirTupleTargetBinding::Name(name) = &target.binding else {
                     return false;
                 };

@@ -6,17 +6,25 @@ fn edge_pairs_text(text: &String) -> String {
     let mut left: SifrInt = SifrInt::from_i64(0);
     let mut right: SifrInt = &SifrInt::from(__sifr_chars_text.len()) - &SifrInt::from_i64(1);
     let mut out: String = "".to_string();
-    while &left < &right {
+    while (&left < &right) {
+        let Some(__sifr_checked_value_0) = ({
+    let __sifr_string_index = left.clone();
+    let __sifr_string_index_normalized = __sifr_string_index.normalize_index_or_len(__sifr_chars_text.len());
+    __sifr_chars_text.get(__sifr_string_index_normalized)
+}).map(|c| c.to_string()) else {
+            break;
+        };
+        let Some(__sifr_checked_value_1) = ({
+    let __sifr_string_index = right.clone();
+    let __sifr_string_index_normalized = __sifr_string_index.normalize_index_or_len(__sifr_chars_text.len());
+    __sifr_chars_text.get(__sifr_string_index_normalized)
+}).map(|c| c.to_string()) else {
+            break;
+        };
         out.push('(');
-        out.push_str(({
-    let __indexed_char_option = __sifr_chars_text.get(::sifr_runtime::to_usize_proven(&(left))).map(|c| c.to_string());
-    __indexed_char_option.as_slice()[0_usize].clone()
-}).as_str());
+        out.push_str((__sifr_checked_value_0.clone()).as_str());
         out.push(',');
-        out.push_str(({
-    let __indexed_char_option = __sifr_chars_text.get(::sifr_runtime::to_usize_proven(&(right))).map(|c| c.to_string());
-    __indexed_char_option.as_slice()[0_usize].clone()
-}).as_str());
+        out.push_str((__sifr_checked_value_1.clone()).as_str());
         out.push(')');
         left = &left + &SifrInt::from_i64(1);
         right = &right - &SifrInt::from_i64(1);

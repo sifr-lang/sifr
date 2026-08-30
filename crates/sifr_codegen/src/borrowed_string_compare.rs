@@ -57,6 +57,7 @@ impl RustEmitter {
         let Some(lowered_index) = self.lower_stmt_expr_for_ir(index)? else {
             return Ok(None);
         };
+        let lowered_index = Self::clone_non_copy_name_expr_for_ir(index, lowered_index);
         Ok(Some(RustExpr::Block {
             stmts: vec![
                 RustStmt::Let {
@@ -125,7 +126,7 @@ impl RustEmitter {
         object: &HirExpr,
         index: &HirExpr,
     ) -> Result<Option<RustExpr>, crate::CodegenError> {
-        let mut stmts = if let HirExpr::Index {
+        if let HirExpr::Index {
             object: outer_object,
             index: outer_index,
             ..
@@ -141,74 +142,101 @@ impl RustEmitter {
                 let Some(lowered_outer_index) = self.lower_stmt_expr_for_ir(outer_index)? else {
                     return Ok(None);
                 };
-                vec![
-                    RustStmt::Let {
-                        mutable: false,
-                        name: "__sifr_cmp_outer_list".to_string(),
-                        ty: None,
-                        value: RustExpr::Ref {
+                let lowered_outer_index =
+                    Self::clone_non_copy_name_expr_for_ir(outer_index, lowered_outer_index);
+                let Some(lowered_inner_index) = self.lower_stmt_expr_for_ir(index)? else {
+                    return Ok(None);
+                };
+                let lowered_inner_index =
+                    Self::clone_non_copy_name_expr_for_ir(index, lowered_inner_index);
+                return Ok(Some(RustExpr::Block {
+                    stmts: vec![
+                        RustStmt::Let {
                             mutable: false,
-                            expr: Box::new(lowered_outer_object),
+                            name: "__sifr_cmp_outer_list".to_string(),
+                            ty: None,
+                            value: RustExpr::Ref {
+                                mutable: false,
+                                expr: Box::new(lowered_outer_object),
+                            },
                         },
-                    },
-                    RustStmt::Let {
-                        mutable: false,
-                        name: "__sifr_cmp_outer_i".to_string(),
-                        ty: None,
-                        value: lowered_outer_index,
-                    },
-                    RustStmt::Let {
-                        mutable: false,
-                        name: "__sifr_cmp_outer_norm".to_string(),
-                        ty: None,
-                        value: crate::build_normalized_list_index_i64_expr(
-                            RustExpr::Ident("__sifr_cmp_outer_list".to_string()),
-                            "__sifr_cmp_outer_i",
-                        ),
-                    },
-                    RustStmt::Let {
-                        mutable: false,
-                        name: "__sifr_cmp_list".to_string(),
-                        ty: None,
-                        value: RustExpr::Ref {
+                        RustStmt::Let {
                             mutable: false,
-                            expr: Box::new(RustExpr::Index {
-                                expr: Box::new(RustExpr::Ident(
-                                    "__sifr_cmp_outer_list".to_string(),
-                                )),
-                                index: Box::new(RustExpr::Cast {
-                                    expr: Box::new(RustExpr::Ident(
-                                        "__sifr_cmp_outer_norm".to_string(),
+                            name: "__sifr_cmp_outer_i".to_string(),
+                            ty: None,
+                            value: lowered_outer_index,
+                        },
+                        RustStmt::Let {
+                            mutable: false,
+                            name: "__sifr_cmp_outer_norm".to_string(),
+                            ty: None,
+                            value: crate::build_normalized_list_index_i64_expr(
+                                RustExpr::Ident("__sifr_cmp_outer_list".to_string()),
+                                "__sifr_cmp_outer_i",
+                            ),
+                        },
+                        RustStmt::Let {
+                            mutable: false,
+                            name: "__sifr_cmp_i".to_string(),
+                            ty: None,
+                            value: lowered_inner_index,
+                        },
+                    ],
+                    expr: Some(Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Ident(
+                                "__sifr_cmp_outer_list".to_string(),
+                            )),
+                            method: "get".to_string(),
+                            args: vec![RustExpr::Ident("__sifr_cmp_outer_norm".to_string())],
+                        }),
+                        method: "and_then".to_string(),
+                        args: vec![RustExpr::ClosureBlock {
+                            params: vec![RustParam::Named {
+                                name: "__sifr_cmp_list".to_string(),
+                                ty: RustType::Named("_".to_string()),
+                            }],
+                            body: vec![
+                                RustStmt::Let {
+                                    mutable: false,
+                                    name: "__sifr_cmp_norm".to_string(),
+                                    ty: None,
+                                    value: crate::build_normalized_list_index_i64_expr(
+                                        RustExpr::Ident("__sifr_cmp_list".to_string()),
+                                        "__sifr_cmp_i",
+                                    ),
+                                },
+                                RustStmt::Return(Some(Self::as_str_option(RustExpr::MethodCall {
+                                    receiver: Box::new(RustExpr::Ident(
+                                        "__sifr_cmp_list".to_string(),
                                     )),
-                                    ty: RustType::Named("usize".to_string()),
-                                }),
-                            }),
-                        },
-                    },
-                ]
-            } else {
-                vec![]
+                                    method: "get".to_string(),
+                                    args: vec![RustExpr::Ident("__sifr_cmp_norm".to_string())],
+                                }))),
+                            ],
+                            is_move: false,
+                            is_async: false,
+                        }],
+                    })),
+                }));
             }
-        } else {
-            vec![]
-        };
-        if stmts.is_empty() {
-            let Some(lowered_object) = self.lower_stmt_expr_for_ir(object)? else {
-                return Ok(None);
-            };
-            stmts.push(RustStmt::Let {
-                mutable: false,
-                name: "__sifr_cmp_list".to_string(),
-                ty: None,
-                value: RustExpr::Ref {
-                    mutable: false,
-                    expr: Box::new(lowered_object),
-                },
-            });
         }
+        let Some(lowered_object) = self.lower_stmt_expr_for_ir(object)? else {
+            return Ok(None);
+        };
+        let mut stmts = vec![RustStmt::Let {
+            mutable: false,
+            name: "__sifr_cmp_list".to_string(),
+            ty: None,
+            value: RustExpr::Ref {
+                mutable: false,
+                expr: Box::new(lowered_object),
+            },
+        }];
         let Some(lowered_index) = self.lower_stmt_expr_for_ir(index)? else {
             return Ok(None);
         };
+        let lowered_index = Self::clone_non_copy_name_expr_for_ir(index, lowered_index);
         stmts.extend([
             RustStmt::Let {
                 mutable: false,
@@ -250,13 +278,25 @@ impl RustEmitter {
         let Some(lowered_index) = self.lower_stmt_expr_for_ir(index)? else {
             return Ok(None);
         };
+        let key = if matches!(
+            resolve_alias_type_for_plain_call(index.ty()),
+            Type::Str | Type::LiteralStr(_)
+        ) {
+            RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Paren(Box::new(lowered_index))),
+                method: "as_str".to_string(),
+                args: Vec::new(),
+            }
+        } else {
+            RustExpr::Ref {
+                mutable: false,
+                expr: Box::new(RustExpr::Paren(Box::new(lowered_index))),
+            }
+        };
         Ok(Some(Self::as_str_option(RustExpr::MethodCall {
             receiver: Box::new(lowered_object),
             method: "get".to_string(),
-            args: vec![RustExpr::Ref {
-                mutable: false,
-                expr: Box::new(RustExpr::Paren(Box::new(lowered_index))),
-            }],
+            args: vec![key],
         })))
     }
 

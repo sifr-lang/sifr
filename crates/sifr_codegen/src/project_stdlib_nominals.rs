@@ -215,6 +215,12 @@ pub(crate) fn project_stdlib_nominal_plan(
     let shared_source = strip_rust_items_by_name(&generated.rust_source, &probe_name_refs);
     register_emitted_builtin_nominals(&shared_source, &mut registry);
     register_transitive_stdlib_nominals(&shared_source, stdlib_code, &mut registry);
+    let shared_defined_names = rust_source_defined_item_names(&shared_source);
+    for union_name in unions.keys() {
+        if shared_defined_names.contains(union_name) {
+            registry.shared_rust_names.insert(union_name.clone());
+        }
+    }
     let crate_root_candidates = SHARED_MODULE_CRATE_ROOT_NOMINAL_IDENTITIES
         .iter()
         .filter_map(|identity| {

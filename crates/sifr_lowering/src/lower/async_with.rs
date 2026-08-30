@@ -547,7 +547,7 @@ fn stmt_contains_await(stmt: &HirStmt) -> bool {
                 HirAsyncWithKind::TaskTimeout { .. } | HirAsyncWithKind::UserDefined { .. }
             ) || body.iter().any(stmt_contains_await)
         }
-        HirStmt::Delete { object, index } => {
+        HirStmt::Delete { object, index, .. } => {
             expr_contains_await(object) || expr_contains_await(index)
         }
         HirStmt::With { items, body } => {
@@ -631,7 +631,7 @@ fn stmt_contains_task_spawn(stmt: &HirStmt) -> bool {
                     .is_some_and(|body| body.iter().any(stmt_contains_task_spawn))
         }
         HirStmt::AsyncWith { body, .. } => body.iter().any(stmt_contains_task_spawn),
-        HirStmt::Delete { object, index } => {
+        HirStmt::Delete { object, index, .. } => {
             expr_contains_task_spawn(object) || expr_contains_task_spawn(index)
         }
         HirStmt::With { items, body } => {

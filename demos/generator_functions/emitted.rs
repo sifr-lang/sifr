@@ -27,8 +27,8 @@ fn main() {
     let all_values: Vec<SifrInt> = countdown(SifrInt::from_i64(4)).collect::<Vec<_>>();
     assert!(first == Some(SifrInt::from_i64(3)));
     assert!(second == Some(SifrInt::from_i64(2)));
-    assert!(remaining == vec![SifrInt::from_i64(1)]);
-    assert!(all_values == vec![SifrInt::from_i64(4), SifrInt::from_i64(3), SifrInt::from_i64(2), SifrInt::from_i64(1)]);
+    assert!((remaining == vec![SifrInt::from_i64(1)]));
+    assert!((all_values == vec![SifrInt::from_i64(4), SifrInt::from_i64(3), SifrInt::from_i64(2), SifrInt::from_i64(1)]));
     println!("{}", (first).map_or("None".to_string().to_string(), |__v| format!("{}", __v)));
     println!("{}", (second).map_or("None".to_string().to_string(), |__v| format!("{}", __v)));
     println!("{:?}", remaining);

@@ -510,7 +510,10 @@ def replace_first() -> Result[int, ProbeError]:
         data: list[int] = [1]
     except ProbeError as error:
         raise error
-    data[0] = 5
+    try:
+        data[0] = 5
+    except IndexError:
+        pass
     return 0
 "#
     ));
@@ -531,9 +534,12 @@ def classify() -> str:
 "#
     ));
 
-    assert!(generated.contains("Result<(), ProbeError>"), "{generated}");
     assert!(
-        generated.contains("if let Err(__sifr_try_err) = __sifr_try_res"),
+        generated.contains("Result<::std::convert::Infallible, ProbeError>"),
+        "{generated}"
+    );
+    assert!(
+        generated.contains("match __sifr_infallible {}"),
         "{generated}"
     );
     assert!(!generated.contains("unreachable!"));
@@ -570,7 +576,11 @@ def classify() -> Result[str, IOError]:
     );
 
     assert!(
-        generated.contains("if let Err(__sifr_try_err) = __sifr_try_res"),
+        generated.contains("Result<::std::convert::Infallible, IOError>"),
+        "{generated}"
+    );
+    assert!(
+        generated.contains("match __sifr_infallible {}"),
         "{generated}"
     );
     assert!(generated.contains("return Err(__sifr_try_err);"));

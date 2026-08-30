@@ -87,6 +87,7 @@ pub(in crate::lower) fn register_builtins(ctx: &mut LowerCtx) {
         "ParseError",
         "ValueError",
         "DivisionError",
+        "IndexError",
         "KeyError",
         "OverflowError",
         "FloatOverflowError",

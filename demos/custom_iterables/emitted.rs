@@ -52,7 +52,7 @@ impl Countdown {
     fn __iter__(&self) -> Box<dyn Iterator<Item = SifrInt>> {
         let mut values: Vec<SifrInt> = vec![];
         let mut i: SifrInt = self.start.clone();
-        while &i > &SifrInt::from_i64(0) {
+        while (&i > &SifrInt::from_i64(0)) {
             values.push(i.clone());
             i = &i - &SifrInt::from_i64(1);
         }

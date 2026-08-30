@@ -303,64 +303,26 @@ impl RustEmitter {
             index,
             value,
             field_ty,
+            failure,
+            operation,
         } = stmt
         else {
             return Ok(false);
         };
-        let Some(value_expr) = self.lower_stmt_expr_for_ir(value)? else {
-            return Ok(false);
-        };
-
         let receiver = crate::RustExpr::Field {
             expr: Box::new(Self::object_name_expr_for_ir(object)),
             field: field.clone(),
         };
-        let lowered = match field_ty {
-            Type::List(element_ty) => {
-                let Some(index_expr) = self.lower_stmt_expr_for_ir(index)? else {
-                    return Ok(false);
-                };
-                let index_expr = Self::clone_non_copy_name_expr_for_ir(index, index_expr);
-                crate::build_list_subscript_assign_stmt(
-                    receiver,
-                    index_expr,
-                    crate::helpers::flatten_option_value_for_target(
-                        element_ty.as_ref(),
-                        value.ty(),
-                        value_expr,
-                    ),
-                )
-            }
-            Type::Dict(key_ty, value_ty) => {
-                let key_needs_clone = matches!(key_ty.as_ref(), Type::Str | Type::TypeVar(_))
-                    && matches!(index, HirExpr::Name { name, .. }
-                        if self.borrowed_params.contains(name.as_str()) || self.mut_borrowed_params.contains(name.as_str()));
-                let key_is_non_copy_name = matches!(index, HirExpr::Name { .. })
-                    && matches!(
-                        crate::resolve_alias_type_for_plain_call(index.ty()),
-                        Type::Str | Type::LiteralStr(_)
-                    );
-
-                let Some(mut index_expr) = self.lower_stmt_expr_for_ir(index)? else {
-                    return Ok(false);
-                };
-                if key_needs_clone || key_is_non_copy_name {
-                    index_expr = crate::RustExpr::Clone(Box::new(index_expr));
-                }
-                crate::RustStmt::Expr(crate::RustExpr::MethodCall {
-                    receiver: Box::new(receiver),
-                    method: "insert".to_string(),
-                    args: vec![
-                        index_expr,
-                        crate::helpers::flatten_option_value_for_target(
-                            value_ty.as_ref(),
-                            value.ty(),
-                            value_expr,
-                        ),
-                    ],
-                })
-            }
-            _ => return Ok(false),
+        let Some(lowered) = self.lower_checked_single_mutation_for_ir(
+            receiver,
+            field_ty,
+            index,
+            value,
+            operation,
+            failure.as_ref(),
+        )?
+        else {
+            return Ok(false);
         };
         self.emit_lowered_stmts(std::slice::from_ref(&lowered));
         Ok(true)
@@ -377,20 +339,29 @@ impl RustEmitter {
             inner_index,
             value,
             field_ty,
+            outer_failure,
+            inner_failure,
+            operation,
         } = stmt
         else {
             return Ok(false);
         };
 
-        let Some(lowered) = self
-            .lower_structured_attribute_nested_list_subscript_assign_stmt_for_ir(
-                object,
-                field,
+        let Some(lowered) = self.lower_checked_nested_mutation_for_ir(
+            crate::checked_place_mutation::CheckedNestedMutationPlan {
+                root: crate::RustExpr::Field {
+                    expr: Box::new(Self::object_name_expr_for_ir(object)),
+                    field: field.clone(),
+                },
+                root_ty: field_ty,
                 outer_index,
                 inner_index,
                 value,
-                field_ty,
-            )?
+                operation,
+                outer_failure: outer_failure.as_ref(),
+                inner_failure: inner_failure.as_ref(),
+            },
+        )?
         else {
             return Ok(false);
         };

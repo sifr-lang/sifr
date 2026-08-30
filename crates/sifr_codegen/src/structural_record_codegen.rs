@@ -5,10 +5,10 @@ use crate::{
 use sifr_type_system::StructuralRecordType;
 
 pub(crate) fn structural_record_rust_type(record: &StructuralRecordType) -> RustType {
-    let base = format!(
-        "crate::{}",
-        crate::structural_identity_codegen::structural_record_layout_rust_name(record)
-    );
+    // Structural layouts are emitted in the current standalone module. Project
+    // modules import the canonical crate-root layout explicitly, which keeps
+    // the generated module relocatable (including when test harnesses nest it).
+    let base = crate::structural_identity_codegen::structural_record_layout_rust_name(record);
     let arguments = record
         .fields()
         .iter()
@@ -38,12 +38,12 @@ fn generic_name(name: &str, arguments: &[String]) -> String {
     }
 }
 
-fn rust_type_params(names: &[String], bounds: Vec<String>) -> Vec<RustTypeParam> {
+fn rust_type_params(names: &[String], bounds: &[String]) -> Vec<RustTypeParam> {
     names
         .iter()
         .map(|name| RustTypeParam {
             name: name.clone(),
-            bounds: bounds.clone(),
+            bounds: bounds.to_vec(),
         })
         .collect()
 }
@@ -96,7 +96,7 @@ impl crate::RustEmitter {
             });
             self.body_items.push(RustItem::Impl {
                 target: declared_name.clone(),
-                type_params: rust_type_params(&field_params, Vec::new()),
+                type_params: rust_type_params(&field_params, &[]),
                 trait_: None,
                 items: vec![RustItem::Fn {
                     name: "new".to_string(),
@@ -143,7 +143,7 @@ impl crate::RustEmitter {
             }));
             self.body_items.push(RustItem::Impl {
                 target: declared_name,
-                type_params: rust_type_params(&field_params, vec!["std::fmt::Display".to_string()]),
+                type_params: rust_type_params(&field_params, &["std::fmt::Display".to_string()]),
                 trait_: Some("std::fmt::Display".to_string()),
                 items: vec![RustItem::Fn {
                     name: "fmt".to_string(),
@@ -208,31 +208,29 @@ impl crate::RustEmitter {
                     continue;
                 }
                 let source_field_params = field_type_params(source);
+                let source_field_indices = source
+                    .fields()
+                    .iter()
+                    .enumerate()
+                    .map(|(index, field)| (field.name(), index))
+                    .collect::<HashMap<_, _>>();
                 let trait_arguments = target
                     .fields()
                     .iter()
                     .map(|target_field| {
-                        let index = source
-                            .fields()
-                            .iter()
-                            .position(|field| field.name() == target_field.name())
-                            .expect("the source layout contains every target field");
+                        let index = source_field_indices[target_field.name()];
                         source_field_params[index].clone()
                     })
                     .collect::<Vec<_>>();
                 self.body_items.push(RustItem::Impl {
                     target: generic_name(source_layout, &source_field_params),
-                    type_params: rust_type_params(&source_field_params, Vec::new()),
+                    type_params: rust_type_params(&source_field_params, &[]),
                     trait_: Some(generic_name(&trait_name, &trait_arguments)),
                     items: target
                         .fields()
                         .iter()
                         .map(|field| {
-                            let index = source
-                                .fields()
-                                .iter()
-                                .position(|source_field| source_field.name() == field.name())
-                                .expect("the source layout contains every target field");
+                            let index = source_field_indices[field.name()];
                             RustItem::Fn {
                                 name: format!("__sifr_record_field_{}", field.name()),
                                 visibility: Visibility::Private,

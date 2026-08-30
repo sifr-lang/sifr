@@ -75,10 +75,7 @@ impl RustEmitter {
             } else {
                 lowered_object
             };
-            lowered_object = Self::force_unwrap_option_expr_for_ir(
-                option_expr,
-                "compiler-verified option field base should be Some",
-            );
+            lowered_object = option_expr;
         }
 
         let is_self_access = matches!(object, HirExpr::Name { name, .. } if name == "self");
@@ -204,36 +201,6 @@ impl RustEmitter {
 }
 
 impl RustEmitter {
-    pub(crate) fn lower_proven_index_option_expr_for_ir(
-        option_expr: crate::RustExpr,
-        binding_name: &str,
-        _message: &str,
-    ) -> crate::RustExpr {
-        crate::RustExpr::Block {
-            stmts: vec![crate::RustStmt::Let {
-                mutable: false,
-                name: format!("{binding_name}_option"),
-                ty: None,
-                value: option_expr,
-            }],
-            expr: Some(Box::new(crate::RustExpr::Clone(Box::new(
-                crate::RustExpr::Index {
-                    expr: Box::new(crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::Ident(format!(
-                            "{binding_name}_option"
-                        ))),
-                        method: "as_slice".to_string(),
-                        args: vec![],
-                    }),
-                    index: Box::new(crate::RustExpr::Cast {
-                        expr: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Int(0))),
-                        ty: crate::RustType::Named("usize".to_string()),
-                    }),
-                },
-            )))),
-        }
-    }
-
     pub(crate) fn try_lower_registry_expr_result(
         &self,
         expr: &HirExpr,

@@ -67,8 +67,12 @@ impl RustEmitter {
                 after,
                 ..
             } => {
-                for (name, ty) in before.iter().chain(std::iter::once(star)).chain(after) {
-                    bindings.entry(name.clone()).or_insert_with(|| ty.clone());
+                for target in before.iter().chain(std::iter::once(star)).chain(after) {
+                    if let sifr_ir::HirTupleTargetBinding::Name(name) = &target.binding {
+                        bindings
+                            .entry(name.clone())
+                            .or_insert_with(|| target.ty.clone());
+                    }
                 }
             }
             _ => {}

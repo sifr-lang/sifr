@@ -4,8 +4,9 @@ use ::sifr_runtime::SifrInt;
 fn drain(values: &mut Vec<SifrInt>) -> SifrInt {
     let mut total: SifrInt = SifrInt::from_i64(0);
     while !values.is_empty() {
-        let item: SifrInt = values.remove(values.len() - (1_usize));
-        total = &total + &item;
+        if let Some(item) = values.pop() {
+            total = &total + &item;
+        }
     }
     total.clone()
 }
@@ -13,8 +14,13 @@ fn drain(values: &mut Vec<SifrInt>) -> SifrInt {
 fn drain_front(values: &mut Vec<SifrInt>) -> SifrInt {
     let mut total: SifrInt = SifrInt::from_i64(0);
     while !values.is_empty() {
-        let item: SifrInt = values.remove(0_usize);
-        total = &total + &item;
+        if let Some(item) = {
+    let __len = values.len();
+    let __index = SifrInt::from_i64(0).normalize_index_or_len(__len);
+    if __index >= __len { None } else { Some(values.remove(__index)) }
+} {
+            total = &total + &item;
+        }
     }
     total.clone()
 }

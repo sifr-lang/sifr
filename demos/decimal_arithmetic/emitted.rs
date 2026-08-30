@@ -35,7 +35,7 @@ pub use __sifr_project_nominals::DecimalConversionError;
 pub use __sifr_project_nominals::DivisionError;
 
 mod __sifr_project_unions {
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub enum __SifrUnion_8_x3asequence5_x3aunion1_x3a226_x3a5_x3aclass13_x3aDivisionError1_x3a035_x3a5_x3aclass22_x3aDecimalConversionError1_x3a0 {
         __SifrUnionVariant_5_x3aclass22_x3aDecimalConversionError1_x3a0(
             crate::__sifr_project_nominals::DecimalConversionError,

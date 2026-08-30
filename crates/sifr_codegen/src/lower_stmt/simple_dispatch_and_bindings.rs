@@ -5,16 +5,11 @@ use super::{
     collect_referenced_vars_with_types, is_option_like_type, resolve_alias_type,
     try_lower_expr_stmt_with_bindings, try_lower_leaf_or_name_expr, try_lower_name_ident_expr,
     try_lower_simple_assign_value, try_lower_simple_async_with_stmt,
-    try_lower_simple_attribute_nested_subscript_assign_stmt,
-    try_lower_simple_attribute_subscript_assign_stmt, try_lower_simple_augassign_stmt,
-    try_lower_simple_condition_test_expr, try_lower_simple_delete_stmt,
+    try_lower_simple_augassign_stmt, try_lower_simple_condition_test_expr,
     try_lower_simple_field_assign_stmt, try_lower_simple_for_stmt, try_lower_simple_if_stmt,
-    try_lower_simple_let_value, try_lower_simple_match_stmt,
-    try_lower_simple_nested_subscript_assign_stmt, try_lower_simple_return_stmt,
-    try_lower_simple_star_unpack_stmt, try_lower_simple_subscript_assign_stmt,
-    try_lower_simple_subscript_augassign_stmt, try_lower_simple_try_except_stmt,
-    try_lower_simple_tuple_unpack_stmt, try_lower_simple_while_stmt, try_lower_simple_with_stmt,
-    try_lower_simple_yield_stmt,
+    try_lower_simple_let_value, try_lower_simple_match_stmt, try_lower_simple_return_stmt,
+    try_lower_simple_try_except_stmt, try_lower_simple_tuple_unpack_stmt,
+    try_lower_simple_while_stmt, try_lower_simple_with_stmt, try_lower_simple_yield_stmt,
 };
 pub(crate) fn try_lower_simple_stmt_with_ctx(
     stmt: &HirStmt,
@@ -245,71 +240,13 @@ pub(super) fn try_lower_simple_stmt_with_ctx_and_bindings(
                 source_is_borrowed,
             )
         }
-        HirStmt::StarUnpack {
-            before,
-            star,
-            after,
-            value,
-        } => try_lower_simple_star_unpack_stmt(before, star, after, value),
-        HirStmt::AttributeSubscriptAssign {
-            object,
-            field,
-            index,
-            value,
-            field_ty,
-        } => {
-            try_lower_simple_attribute_subscript_assign_stmt(object, field, index, value, field_ty)
-        }
-        HirStmt::SubscriptAssign {
-            object,
-            index,
-            value,
-            object_ty,
-        } => try_lower_simple_subscript_assign_stmt(object, index, value, object_ty),
-        HirStmt::NestedSubscriptAssign {
-            object,
-            outer_index,
-            inner_index,
-            value,
-            object_ty,
-        } => try_lower_simple_nested_subscript_assign_stmt(
-            object,
-            outer_index,
-            inner_index,
-            value,
-            object_ty,
-        ),
-        HirStmt::AttributeNestedSubscriptAssign {
-            object,
-            field,
-            outer_index,
-            inner_index,
-            value,
-            field_ty,
-        } => try_lower_simple_attribute_nested_subscript_assign_stmt(
-            object,
-            field,
-            outer_index,
-            inner_index,
-            value,
-            field_ty,
-        ),
-        HirStmt::SubscriptAugAssign {
-            object,
-            index,
-            op,
-            value,
-            object_ty,
-            missing_key_error,
-        } => try_lower_simple_subscript_augassign_stmt(
-            object,
-            index,
-            op,
-            value,
-            object_ty,
-            missing_key_error.as_ref(),
-        ),
-        HirStmt::Delete { object, index } => try_lower_simple_delete_stmt(object, index),
+        HirStmt::StarUnpack { .. } => None,
+        HirStmt::AttributeSubscriptAssign { .. }
+        | HirStmt::SubscriptAssign { .. }
+        | HirStmt::NestedSubscriptAssign { .. }
+        | HirStmt::AttributeNestedSubscriptAssign { .. }
+        | HirStmt::SubscriptAugAssign { .. }
+        | HirStmt::Delete { .. } => None,
         HirStmt::Yield { value } => try_lower_simple_yield_stmt(value, ctx),
         HirStmt::With { items, body } => {
             try_lower_simple_with_stmt(items, body, in_loop_with_else, bindings, ctx)

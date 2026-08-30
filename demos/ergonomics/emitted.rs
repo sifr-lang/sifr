@@ -86,7 +86,7 @@ fn demo_step_slicing() {
                 None,
                 &SifrInt::from_i64(2),
             )
-            .map(|_i| _v[_i].clone())
+            .filter_map(|_i| _v.get(_i).cloned())
             .collect::<Vec<_>>()
     };
     println!("Evens: {} elements", SifrInt::from(evens.len()));
@@ -99,7 +99,7 @@ fn demo_step_slicing() {
                 None,
                 &-(SifrInt::from_i64(1)),
             )
-            .map(|_i| _v[_i].clone())
+            .filter_map(|_i| _v.get(_i).cloned())
             .collect::<Vec<_>>()
     };
     println!(
@@ -206,10 +206,20 @@ fn demo_star_unpacking() {
         SifrInt::from_i64(1), SifrInt::from_i64(2), SifrInt::from_i64(3),
         SifrInt::from_i64(4), SifrInt::from_i64(5)
     ];
-    let _star_tmp = &items;
-    let first = _star_tmp[0].clone();
-    let rest = _star_tmp[1.._star_tmp.len()].to_vec();
-    println!("First: {}, Rest length: {}", first, SifrInt::from(rest.len()));
+    let __sifr_try_res: Result<(), ValueError> = (|| {
+        let __sifr_unpack_source = &items;
+        let [__sifr_before_0, __sifr_star @ ..] = __sifr_unpack_source.as_slice() else {
+            return Err(ValueError::new("not enough values to unpack".to_string()));
+        };
+        let first = __sifr_before_0.clone();
+        let rest = __sifr_star.to_vec();
+        println!("First: {}, Rest length: {}", first, SifrInt::from(rest.len()));
+        Ok(())
+    })();
+    if let Err(__sifr_try_err) = __sifr_try_res {
+        let error = __sifr_try_err.clone();
+        println!("Unpack failed: {}", error.message.clone());
+    }
 }
 fn demo_loop_else() {
     let items: Vec<SifrInt> = vec![
@@ -247,7 +257,7 @@ fn demo_walrus() {
         SifrInt::from_i64(10)
     ];
     let n = SifrInt::from(items.len());
-    if &n > &SifrInt::from_i64(5) {
+    if (&n > &SifrInt::from_i64(5)) {
         println!("List has {} items (more than 5)", n);
     }
 }

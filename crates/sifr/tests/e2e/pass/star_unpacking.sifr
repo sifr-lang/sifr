@@ -1,5 +1,8 @@
 def main():
     items: list[int] = [1, 2, 3, 4, 5]
-    first, *rest = items
-    assert str(first) == '1'
-    assert str(len(rest)) == '4'
+    try:
+        first, *rest = items
+        assert str(first) == '1'
+        assert str(len(rest)) == '4'
+    except ValueError:
+        assert False

@@ -141,7 +141,7 @@ pub(in crate::lower) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx)
                 if !names.insert(name.id.to_string()) {
                     invalid_type_annotation(
                         ctx,
-                        &format!("duplicate record field '{}'", name.id),
+                        format!("duplicate record field '{}'", name.id),
                         name.range(),
                     );
                     return Type::Any;

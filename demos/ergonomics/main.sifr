@@ -120,8 +120,11 @@ def demo_string_multiply():
 # --- Star Unpacking ---
 def demo_star_unpacking():
     items: list[int] = [1, 2, 3, 4, 5]
-    first, *rest = items
-    print(f"First: {first}, Rest length: {len(rest)}")
+    try:
+        first, *rest = items
+        print(f"First: {first}, Rest length: {len(rest)}")
+    except ValueError as error:
+        print(f"Unpack failed: {error.message}")
 
 # --- For...Else ---
 def demo_loop_else():

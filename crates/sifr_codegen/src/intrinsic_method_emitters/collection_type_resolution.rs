@@ -10,7 +10,20 @@ impl RustEmitter {
     }
 
     fn effective_collection_expr_ty(&self, expr: &HirExpr) -> Type {
+        if let HirExpr::Index {
+            object, index, ty, ..
+        } = expr
+            && self.has_checked_place_read_witness(object, index)
+            && let Some(inner) = ty.optional_member_type()
+        {
+            return inner;
+        }
         if let HirExpr::Name { name, ty, .. } = expr {
+            if self.option_unwrapped_vars.contains(name)
+                && let Some(inner) = ty.optional_member_type()
+            {
+                return inner;
+            }
             if self.none_widened_local_bindings.contains(name) {
                 if let Some(bound_ty) = self.local_binding_types.get(name) {
                     return bound_ty.clone();

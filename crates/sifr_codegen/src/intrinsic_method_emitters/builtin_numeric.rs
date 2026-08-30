@@ -2,58 +2,9 @@ use super::{
     HirExpr, RustEmitter, RustExpr, Type, registry_option_inner_type,
     registry_uses_debug_display_format,
 };
-use std::str::FromStr as _;
 
-fn decimal_literal_expr(argument: &HirExpr) -> Option<RustExpr> {
-    let HirExpr::StringLiteral(source) = argument else {
-        return None;
-    };
-    let value = rust_decimal::Decimal::from_str_exact(source).ok()?;
-    Some(RustExpr::FnCall {
-        func: Box::new(RustExpr::Path(vec![
-            "Decimal".to_string(),
-            "from_i128_with_scale".to_string(),
-        ])),
-        args: vec![
-            RustExpr::Verbatim(format!("{}_i128", value.mantissa())),
-            RustExpr::Literal(crate::RustLiteral::Int(i64::from(value.scale()))),
-        ],
-    })
-}
-
-fn bigdecimal_literal_expr(argument: &HirExpr) -> Option<RustExpr> {
-    let HirExpr::StringLiteral(source) = argument else {
-        return None;
-    };
-    let value = bigdecimal::BigDecimal::from_str(source).ok()?;
-    let (coefficient, scale) = value.as_bigint_and_exponent();
-    let bytes = coefficient
-        .to_signed_bytes_be()
-        .into_iter()
-        .map(|byte| RustExpr::Literal(crate::RustLiteral::Int(i64::from(byte))))
-        .collect();
-    Some(RustExpr::FnCall {
-        func: Box::new(RustExpr::Path(vec![
-            "BigDecimal".to_string(),
-            "new".to_string(),
-        ])),
-        args: vec![
-            RustExpr::FnCall {
-                func: Box::new(RustExpr::Path(vec![
-                    "bigdecimal".to_string(),
-                    "num_bigint".to_string(),
-                    "BigInt".to_string(),
-                    "from_signed_bytes_be".to_string(),
-                ])),
-                args: vec![RustExpr::Ref {
-                    mutable: false,
-                    expr: Box::new(RustExpr::Vec(bytes)),
-                }],
-            },
-            RustExpr::Literal(crate::RustLiteral::Int(scale)),
-        ],
-    })
-}
+mod literals;
+use literals::{bigdecimal_literal_expr, decimal_literal_expr};
 
 impl RustEmitter {
     pub(crate) fn try_lower_registry_numeric_builtin_call_expr(
@@ -102,48 +53,51 @@ impl RustEmitter {
                             args: vec![],
                         },
                     }],
-                    expr: Some(Box::new(RustExpr::If {
-                        cond: Box::new(RustExpr::BinOp {
-                            left: Box::new(RustExpr::MethodCall {
-                                receiver: Box::new(RustExpr::Ident("__sifr_ord_chars".to_string())),
-                                method: "len".to_string(),
-                                args: vec![],
-                            }),
-                            op: "==".to_string(),
-                            right: Box::new(RustExpr::Literal(crate::RustLiteral::Int(1))),
+                    expr: Some(Box::new(RustExpr::Match {
+                        expr: Box::new(RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Ident("__sifr_ord_chars".to_string())),
+                            method: "as_slice".to_string(),
+                            args: vec![],
                         }),
-                        then_expr: Box::new(RustExpr::FnCall {
-                            func: Box::new(RustExpr::Path(vec!["Ok".to_string()])),
-                            args: vec![RustExpr::FnCall {
-                                func: Box::new(RustExpr::Path(vec![
-                                    "SifrInt".to_string(),
-                                    "from".to_string(),
-                                ])),
-                                args: vec![RustExpr::Cast {
-                                    expr: Box::new(RustExpr::Index {
-                                        expr: Box::new(RustExpr::Ident(
-                                            "__sifr_ord_chars".to_string(),
-                                        )),
-                                        index: Box::new(RustExpr::Literal(
-                                            crate::RustLiteral::Int(0),
-                                        )),
-                                    }),
-                                    ty: crate::RustType::Named("u32".to_string()),
-                                }],
-                            }],
-                        }),
-                        else_expr: Some(Box::new(RustExpr::FnCall {
-                            func: Box::new(RustExpr::Path(vec!["Err".to_string()])),
-                            args: vec![RustExpr::StructInit {
-                                name: "ValueError".to_string(),
-                                fields: vec![(
-                                    "message".to_string(),
-                                    RustExpr::Literal(crate::RustLiteral::Str(
-                                        "ord() expected a string of length 1".to_string(),
-                                    )),
-                                )],
-                            }],
-                        })),
+                        arms: vec![
+                            crate::RustMatchArm {
+                                pattern: "[__sifr_ord_char]".to_string(),
+                                bindings: vec!["__sifr_ord_char".to_string()],
+                                guard: None,
+                                body: vec![crate::RustStmt::TailExpr(RustExpr::FnCall {
+                                    func: Box::new(RustExpr::Path(vec!["Ok".to_string()])),
+                                    args: vec![RustExpr::FnCall {
+                                        func: Box::new(RustExpr::Path(vec![
+                                            "SifrInt".to_string(),
+                                            "from".to_string(),
+                                        ])),
+                                        args: vec![RustExpr::Cast {
+                                            expr: Box::new(RustExpr::Deref(Box::new(
+                                                RustExpr::Ident("__sifr_ord_char".to_string()),
+                                            ))),
+                                            ty: crate::RustType::Named("u32".to_string()),
+                                        }],
+                                    }],
+                                })],
+                            },
+                            crate::RustMatchArm {
+                                pattern: "_".to_string(),
+                                bindings: vec![],
+                                guard: None,
+                                body: vec![crate::RustStmt::TailExpr(RustExpr::FnCall {
+                                    func: Box::new(RustExpr::Path(vec!["Err".to_string()])),
+                                    args: vec![RustExpr::StructInit {
+                                        name: "ValueError".to_string(),
+                                        fields: vec![(
+                                            "message".to_string(),
+                                            RustExpr::Literal(crate::RustLiteral::Str(
+                                                "ord() expected a string of length 1".to_string(),
+                                            )),
+                                        )],
+                                    }],
+                                })],
+                            },
+                        ],
                     })),
                 })
             }
@@ -318,6 +272,8 @@ impl RustEmitter {
                             lowered = RustExpr::Paren(Box::new(RustExpr::Deref(Box::new(lowered))));
                         }
                         lowered = RustExpr::Clone(Box::new(lowered));
+                    } else {
+                        lowered = Self::clone_non_copy_name_expr_for_ir(arg, lowered);
                     }
                     lowered_args.push(lowered);
                 }

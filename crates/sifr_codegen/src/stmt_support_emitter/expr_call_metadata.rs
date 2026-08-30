@@ -12,10 +12,9 @@ pub(crate) fn canonical_constructor_class_name(class_name: &str, ty: &Type) -> S
                 other => crate::render_type(&other),
             }
         }
-        Type::StructuralRecord(record) => format!(
-            "crate::{}",
+        Type::StructuralRecord(record) => {
             crate::structural_identity_codegen::structural_record_layout_rust_name(record)
-        ),
+        }
         _ => sifr_type_system::source_class_rust_name(class_name),
     }
 }
@@ -95,6 +94,28 @@ pub(crate) fn is_narrowable_pop_call_for_ir(method: &str, args: &[HirExpr]) -> b
     }
 }
 
+/// Whether HIR proves a pop succeeds while the Rust deque API still returns
+/// `Option<T>`. Comparisons must account for the concrete Rust representation
+/// without introducing a panic-producing unwrap.
+pub(crate) fn compiler_verified_pop_lowers_as_option_for_ir(expr: &HirExpr) -> bool {
+    let HirExpr::MethodCall {
+        object,
+        method,
+        args,
+        ty,
+        ..
+    } = expr
+    else {
+        return false;
+    };
+    !crate::helpers::is_option_type(ty)
+        && is_narrowable_pop_call_for_ir(method, args)
+        && matches!(
+            crate::resolve_alias_type_for_plain_call(object.ty()),
+            Type::Class { name, .. } if is_deque_class_name_for_ir(name)
+        )
+}
+
 pub(crate) fn unwrap_compiler_verified_nonempty_pop_result_for_ir(
     object_ty: &Type,
     method: &str,
@@ -118,6 +139,9 @@ pub(crate) fn unwrap_compiler_verified_nonempty_pop_result_for_ir(
             crate::resolve_alias_type_for_plain_call(object_ty),
             Type::Class { name, .. } if is_deque_class_name_for_ir(name)
         );
+    if is_deque && !is_deque_data_field {
+        return lowered_expr;
+    }
     let remove_from_end = method == "pop" && args.is_empty();
     if !is_deque {
         let index = if remove_from_end {

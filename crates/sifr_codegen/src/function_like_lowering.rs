@@ -26,6 +26,10 @@ impl RustEmitter {
         let saved_sifr_int_local_bindings = self.sifr_int_local_bindings.borrow().clone();
         let saved_sifr_int_forced_local_bindings =
             self.sifr_int_forced_local_bindings.borrow().clone();
+        let saved_checked_place_read_witnesses =
+            std::mem::take(&mut self.checked_place_read_witnesses);
+        let saved_nonempty_list_bindings = std::mem::take(&mut self.nonempty_list_bindings);
+        let saved_option_unwrapped_vars = std::mem::take(&mut self.option_unwrapped_vars);
 
         self.current_return_type = Some(func.return_type.clone());
         self.mutated_vars = collect_mutated_vars_with_sigs(&func.body, &self.func_signatures);
@@ -66,7 +70,9 @@ impl RustEmitter {
             if is_simple_stmt_candidate(stmt) {
                 self.lowering_stats.stmt_candidate_total += 1;
             }
-            let simple_lowered = if stmt_needs_performance_lowering(stmt) {
+            let simple_lowered = if stmt_needs_performance_lowering(stmt)
+                || Self::stmt_defines_nonempty_list(stmt)
+            {
                 Ok(None)
             } else {
                 try_lower_simple_stmt_with_scope_result_and_bindings(
@@ -92,7 +98,18 @@ impl RustEmitter {
                     );
                 }
                 Ok(None) => {
-                    if let Some(lowered) = fallback(self, stmt) {
+                    let checked_place_lowered = self
+                        .lower_checked_place_mutation_stmt_for_ir(stmt)
+                        .unwrap_or_else(|error| {
+                            panic!("{failed_panic_message}: {stmt:?}; error={error}")
+                        });
+                    if let Some(lowered) = checked_place_lowered {
+                        self.lowering_stats.expr_candidate_total += 1;
+                        self.lowering_stats.expr_candidate_structured += 1;
+                        self.lowering_stats.stmt_structured += 1;
+                        self.lowering_stats.stmt_candidate_structured += 1;
+                        lowered_body.extend(lowered);
+                    } else if let Some(lowered) = fallback(self, stmt) {
                         self.lowering_stats.expr_candidate_total += 1;
                         self.lowering_stats.expr_candidate_structured += 1;
                         self.lowering_stats.stmt_structured += 1;
@@ -117,6 +134,9 @@ impl RustEmitter {
         self.string_char_cache_vars = saved_string_char_cache_vars;
         *self.sifr_int_local_bindings.borrow_mut() = saved_sifr_int_local_bindings;
         *self.sifr_int_forced_local_bindings.borrow_mut() = saved_sifr_int_forced_local_bindings;
+        self.checked_place_read_witnesses = saved_checked_place_read_witnesses;
+        self.nonempty_list_bindings = saved_nonempty_list_bindings;
+        self.option_unwrapped_vars = saved_option_unwrapped_vars;
         lowered_body
     }
 }

@@ -38,7 +38,7 @@ fn join_strings(sep: &String, parts: &Vec<String>) -> String {
     let mut result: String = "".to_string();
     let mut i: SifrInt = SifrInt::from_i64(0);
     for p in parts.iter().cloned() {
-        if &i > &SifrInt::from_i64(0) {
+        if (&i > &SifrInt::from_i64(0)) {
             result.push_str((sep).as_str());
         }
         result.push_str((p).as_str());

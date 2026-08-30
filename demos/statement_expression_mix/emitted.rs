@@ -16,7 +16,7 @@ fn main() {
     let mut i: SifrInt = SifrInt::from_i64(0);
     {
         let _broke: bool = false;
-        while &i < &SifrInt::from_i64(3) {
+        while (&i < &SifrInt::from_i64(3)) {
             acc = &acc + &i;
             i = &i + &SifrInt::from_i64(1);
         }

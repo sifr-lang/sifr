@@ -49,7 +49,7 @@ fn evens(limit: SifrInt) -> Box<dyn Iterator<Item = SifrInt>> {
     if !__sifr_generator_initialized {
         let mut _yields: Vec<SifrInt> = Vec::new();
         let mut i: SifrInt = SifrInt::from_i64(0);
-        while &i < &limit {
+        while (&i < &limit) {
             if (&i.floor_mod_known_nonzero(&SifrInt::from_i64(2)) == &SifrInt::from_i64(0)) {
                 _yields.push(i.clone());
             }
@@ -87,15 +87,15 @@ fn format_int_list(values: &Vec<SifrInt>) -> String {
     let mut formatted: String = "[".to_string();
     let mut i: SifrInt = SifrInt::from_i64(0);
     while (&i < &SifrInt::from(values.len())) {
-        formatted.push_str((format!("{}", {
-    let __sifr_index_value_option = {
-    let __sifr_index_list = &values;
-    let __sifr_index_i = i.clone();
-    let __sifr_index_norm = __sifr_index_i.normalize_index_or_len(__sifr_index_list.len());
-    __sifr_index_list.get(__sifr_index_norm).cloned()
-};
-    __sifr_index_value_option.as_slice()[0_usize].clone()
-})).as_str());
+        let Some(__sifr_checked_value_0) = ({
+    let __sifr_checked_read_collection = &values;
+    let __sifr_checked_read_index = i.clone();
+    let __sifr_checked_read_normalized = __sifr_checked_read_index.normalize_index_or_len(__sifr_checked_read_collection.len());
+    __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+}) else {
+            break;
+        };
+        formatted.push_str((format!("{}", __sifr_checked_value_0.clone())).as_str());
         if (&(&i + &SifrInt::from_i64(1)) < &SifrInt::from(values.len())) {
             formatted.push_str(", ");
         }
@@ -125,7 +125,7 @@ fn main() {
     output.push("=== Count (collected) ===".to_string());
     let nums: Vec<SifrInt> = count_up(SifrInt::from_i64(5)).collect::<Vec<_>>();
     output.push(format_int_list(&nums));
-    assert!(output == vec!["=== Fibonacci (lazy for loop) ===".to_string(), "0".to_string(), "1".to_string(), "1".to_string(), "2".to_string(), "3".to_string(), "5".to_string(), "8".to_string(), "13".to_string(), "=== Squares (collected) ===".to_string(), "[0, 1, 4, 9, 16]".to_string(), "=== Evens (conditional yield) ===".to_string(), "0".to_string(), "2".to_string(), "4".to_string(), "6".to_string(), "8".to_string(), "=== Count (lazy) ===".to_string(), "0".to_string(), "1".to_string(), "2".to_string(), "=== Count (collected) ===".to_string(), "[0, 1, 2, 3, 4]".to_string()]);
+    assert!((output == vec!["=== Fibonacci (lazy for loop) ===".to_string(), "0".to_string(), "1".to_string(), "1".to_string(), "2".to_string(), "3".to_string(), "5".to_string(), "8".to_string(), "13".to_string(), "=== Squares (collected) ===".to_string(), "[0, 1, 4, 9, 16]".to_string(), "=== Evens (conditional yield) ===".to_string(), "0".to_string(), "2".to_string(), "4".to_string(), "6".to_string(), "8".to_string(), "=== Count (lazy) ===".to_string(), "0".to_string(), "1".to_string(), "2".to_string(), "=== Count (collected) ===".to_string(), "[0, 1, 2, 3, 4]".to_string()]));
     println!("Lazy iterator demo output:");
     for item in output.iter().cloned() {
         println!("{}", item);

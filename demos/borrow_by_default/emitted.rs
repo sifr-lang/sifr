@@ -9,7 +9,11 @@ fn get_length(items: &Vec<SifrInt>) -> SifrInt {
 
 fn get_first_char(s: &String) -> String {
     let __sifr_chars_s: Vec<char> = s.chars().collect::<Vec<char>>();
-    let result: Option<String> = __sifr_chars_s.get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(0)))).map(|c| c.to_string());
+    let result: Option<String> = ({
+    let __sifr_string_index = SifrInt::from_i64(0);
+    let __sifr_string_index_normalized = __sifr_string_index.normalize_index_or_len(__sifr_chars_s.len());
+    __sifr_chars_s.get(__sifr_string_index_normalized)
+}).map(|c| c.to_string());
     if let Some(result) = result {
         return result;
     }

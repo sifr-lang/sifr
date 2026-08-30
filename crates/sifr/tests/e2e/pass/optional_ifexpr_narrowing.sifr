@@ -1,11 +1,11 @@
 # Test: ternary branches consume narrowing and sequence-index guards
 
 def pick_guarded_index(values: list[int], i: int) -> int:
-    value: int = values[i] if i < len(values) else 0
+    value: int = values[i] if 0 <= i and i < len(values) else 0
     return value
 
 def pick_guarded_index_offset(values: list[int], i: int) -> int:
-    value: int = values[i + 1] if i + 1 < len(values) else 0
+    value: int = values[i + 1] if 0 <= i and i + 1 < len(values) else 0
     return value
 
 def main():

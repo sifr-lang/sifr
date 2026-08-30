@@ -336,7 +336,7 @@ fn main() {
     let mut demo_ok: bool = false;
     let __sifr_try_res: Result<(), IOError> = (|| {
         let out: String = run_command(&"echo runtime_subprocess".to_string())?;
-        demo_ok = out == "runtime_subprocess";
+        demo_ok = (out == "runtime_subprocess");
         Ok(())
     })();
     if let Err(__sifr_try_err) = __sifr_try_res {

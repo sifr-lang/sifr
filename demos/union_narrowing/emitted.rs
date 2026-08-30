@@ -1,6 +1,28 @@
 // src/main.rs
 mod __sifr_project_unions {
     #[derive(Debug, Clone, PartialEq)]
+    pub enum __SifrUnion_8_x3asequence5_x3aunion1_x3a220_x3a5_x3aclass8_x3amain_x2eCat1_x3a021_x3a5_x3aclass9_x3amain_x2eBird1_x3a0 {
+        __SifrUnionVariant_5_x3aclass9_x3amain_x2eBird1_x3a0(crate::Bird),
+        __SifrUnionVariant_5_x3aclass8_x3amain_x2eCat1_x3a0(crate::Cat),
+    }
+    impl ::std::fmt::Display
+    for __SifrUnion_8_x3asequence5_x3aunion1_x3a220_x3a5_x3aclass8_x3amain_x2eCat1_x3a021_x3a5_x3aclass9_x3amain_x2eBird1_x3a0 {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match self {
+                __SifrUnion_8_x3asequence5_x3aunion1_x3a220_x3a5_x3aclass8_x3amain_x2eCat1_x3a021_x3a5_x3aclass9_x3amain_x2eBird1_x3a0::__SifrUnionVariant_5_x3aclass9_x3amain_x2eBird1_x3a0(
+                    v,
+                ) => {
+                    return write!(f, "{}", v);
+                }
+                __SifrUnion_8_x3asequence5_x3aunion1_x3a220_x3a5_x3aclass8_x3amain_x2eCat1_x3a021_x3a5_x3aclass9_x3amain_x2eBird1_x3a0::__SifrUnionVariant_5_x3aclass8_x3amain_x2eCat1_x3a0(
+                    v,
+                ) => {
+                    return write!(f, "{}", v);
+                }
+            }
+        }
+    }
+    #[derive(Debug, Clone, PartialEq)]
     pub enum __SifrUnion_8_x3asequence5_x3aunion1_x3a320_x3a5_x3aclass8_x3amain_x2eCat1_x3a020_x3a5_x3aclass8_x3amain_x2eDog1_x3a021_x3a5_x3aclass9_x3amain_x2eBird1_x3a0 {
         __SifrUnionVariant_5_x3aclass9_x3amain_x2eBird1_x3a0(crate::Bird),
         __SifrUnionVariant_5_x3aclass8_x3amain_x2eCat1_x3a0(crate::Cat),
@@ -29,6 +51,7 @@ mod __sifr_project_unions {
         }
     }
 }
+pub use __sifr_project_unions::__SifrUnion_8_x3asequence5_x3aunion1_x3a220_x3a5_x3aclass8_x3amain_x2eCat1_x3a021_x3a5_x3aclass9_x3amain_x2eBird1_x3a0;
 pub use __sifr_project_unions::__SifrUnion_8_x3asequence5_x3aunion1_x3a320_x3a5_x3aclass8_x3amain_x2eCat1_x3a020_x3a5_x3aclass8_x3amain_x2eDog1_x3a021_x3a5_x3aclass9_x3amain_x2eBird1_x3a0;
 use ::sifr_runtime::SifrInt;
 
@@ -139,7 +162,7 @@ fn is_positive(x: Option<SifrInt>) -> bool {
 }
 
 fn summarize(items: &Vec<String>) -> String {
-    if items.is_empty() {
+    if !!items.is_empty() {
         return "no items".to_string();
     }
     format!("{} items", SifrInt::from(items.len()))

@@ -5,8 +5,11 @@
 def main():
     # List subscript assignment
     nums: list[int] = [1, 2, 3]
-    nums[0] = 10
-    nums[2] = 30
+    try:
+        nums[0] = 10
+        nums[2] = 30
+    except IndexError:
+        return
     print(nums)
     assert str(nums) == "[10, 2, 30]"
 

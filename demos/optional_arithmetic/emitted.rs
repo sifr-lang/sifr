@@ -20,7 +20,7 @@ fn main() {
         }
     }
     let missing_total: Option<SifrInt> = None;
-    if missing_total.is_none() {
+    if (missing_total == None) {
         println!("{}", SifrInt::from_i64(0));
     }
 }

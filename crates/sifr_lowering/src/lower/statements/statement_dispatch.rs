@@ -39,7 +39,6 @@ use crate::lower::rust_interop::{
     RustInteropOwner, classify_rust_interop_stub_body, collect_rust_interop_declarations,
     has_rust_interop_decorator_syntax,
 };
-use crate::lower::type_bounds::reject_unavailable_dict_hash_key;
 use ruff_text_size::Ranged;
 use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{ExceptHandler, Expr, Stmt};
@@ -237,37 +236,7 @@ pub(in crate::lower) fn lower_stmt(
             Some(HirStmt::Continue)
         }
         Stmt::Pass(_) => Some(HirStmt::Pass),
-        Stmt::Delete(del_stmt) => {
-            if del_stmt.targets.len() != 1 {
-                statement_diagnostics::unsupported_form(
-                    ctx,
-                    "del with multiple targets",
-                    del_stmt.range(),
-                );
-                return None;
-            }
-            if let Expr::Subscript(sub) = &del_stmt.targets[0] {
-                let object = lower_expr(&sub.value, ctx)?;
-                let index = lower_expr(&sub.slice, ctx)?;
-                if reject_unavailable_dict_hash_key(
-                    object.ty(),
-                    index.ty(),
-                    "dict item deletion",
-                    sub.range(),
-                    ctx,
-                ) {
-                    return None;
-                }
-                Some(HirStmt::Delete { object, index })
-            } else {
-                statement_diagnostics::unsupported_form(
-                    ctx,
-                    "del is only supported for collection items (del d[key], del a[i])",
-                    del_stmt.targets[0].range(),
-                );
-                None
-            }
-        }
+        Stmt::Delete(del_stmt) => super::collection_delete::lower_delete(del_stmt, ctx),
         Stmt::Assert(assert_stmt) => {
             let test = lower_expr(&assert_stmt.test, ctx)?;
             let msg = if let Some(ref msg_expr) = assert_stmt.msg {

@@ -476,14 +476,14 @@ macro_rules! stmt_expr_binop {
                     }],
                 }));
             }
-            return Ok(Some(crate::stmt_support_emitter::binop_with_optional_operands(
+            return Ok(crate::stmt_support_emitter::binop_with_optional_operands(
                 lowered_left,
                 lowered_right,
                 op,
                 &resolved_left_ty,
                 &resolved_right_ty,
                 resolved_result_ty,
-            )));
+            ));
         }
     }};
 }

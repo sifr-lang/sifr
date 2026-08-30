@@ -16,7 +16,10 @@ def main() -> None:
 
     first: int = 0
     rest: list[int] = []
-    first, *rest = nums
+    try:
+        first, *rest = nums
+    except ValueError:
+        assert False
 
     print(str(mapped))
     print(str(filtered))

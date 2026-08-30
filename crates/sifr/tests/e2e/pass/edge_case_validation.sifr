@@ -188,11 +188,14 @@ def main():
         assert str(f"error: {e.message}") == expected[len(expected) - expected_index - 1]
         expected_index = expected_index + 1
 
-    # --- subscript assign: out of bounds is a no-op ---
+    # --- subscript assign: out of bounds reports IndexError ---
     assert str("=== subscript assign ===") == expected[len(expected) - expected_index - 1]
     expected_index = expected_index + 1
     nums: list[int] = [10, 20, 30]
-    nums[99] = 999
+    try:
+        nums[99] = 999
+    except IndexError as e:
+        pass
     assert str(nums) == expected[len(expected) - expected_index - 1]
     expected_index = expected_index + 1
 

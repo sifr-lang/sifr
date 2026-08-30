@@ -419,10 +419,11 @@ pub enum HirStmt {
     },
     /// Star unpacking: first, *rest = items
     StarUnpack {
-        before: Vec<(String, Type)>,
-        star: (String, Type),
-        after: Vec<(String, Type)>,
+        before: Vec<HirTupleTarget>,
+        star: HirTupleTarget,
+        after: Vec<HirTupleTarget>,
         value: HirExpr,
+        failure: Option<Type>,
     },
     /// Pass (no-op)
     Pass,
@@ -467,6 +468,7 @@ pub enum HirStmt {
         index: HirExpr,
         value: HirExpr,
         object_ty: Type,
+        failure: Option<Type>,
     },
     /// Nested subscript assignment: matrix[i][j] = val
     NestedSubscriptAssign {
@@ -475,6 +477,9 @@ pub enum HirStmt {
         inner_index: HirExpr,
         value: HirExpr,
         object_ty: Type,
+        outer_failure: Option<Type>,
+        inner_failure: Option<Type>,
+        operation: HirCollectionMutation,
     },
     /// Nested subscript assignment on an attribute: self.field[key][i] = val
     AttributeNestedSubscriptAssign {
@@ -484,6 +489,9 @@ pub enum HirStmt {
         inner_index: HirExpr,
         value: HirExpr,
         field_ty: Type,
+        outer_failure: Option<Type>,
+        inner_failure: Option<Type>,
+        operation: HirCollectionMutation,
     },
     /// Subscript augmented assignment: list[i] += val
     SubscriptAugAssign {
@@ -492,7 +500,7 @@ pub enum HirStmt {
         op: String,
         value: HirExpr,
         object_ty: Type,
-        missing_key_error: Option<Type>,
+        failure: Option<Type>,
     },
     /// Augmented assignment on attribute: self.field += val
     AttributeAugAssign {
@@ -508,9 +516,15 @@ pub enum HirStmt {
         index: HirExpr,
         value: HirExpr,
         field_ty: Type,
+        failure: Option<Type>,
+        operation: HirCollectionMutation,
     },
     /// Delete statement: del d[key] or del a[i]
-    Delete { object: HirExpr, index: HirExpr },
+    Delete {
+        object: HirExpr,
+        index: HirExpr,
+        failure: Option<Type>,
+    },
     /// Yield statement: yield expr (in generator functions)
     Yield { value: HirExpr },
     /// With statement: with expr as var: body
@@ -541,6 +555,12 @@ pub enum HirStmt {
         subject_ty: Type,
         arms: Vec<HirMatchArm>,
     },
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum HirCollectionMutation {
+    Assign,
+    AugAssign(String),
 }
 
 /// A single arm in a match statement.
@@ -846,7 +866,7 @@ pub enum HirExpr {
     },
 }
 
-/// A tuple-unpack target binding destination.
+/// An unpack target binding destination.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum HirTupleTargetBinding {
     /// Local name binding target.
@@ -855,7 +875,7 @@ pub enum HirTupleTargetBinding {
     Field { object: String, field: String },
 }
 
-/// A tuple-unpack target.
+/// A tuple or star-unpack target.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct HirTupleTarget {
     /// The assignment destination.

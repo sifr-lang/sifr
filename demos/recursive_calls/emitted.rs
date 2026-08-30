@@ -8,7 +8,7 @@ fn main() {
             for i in vec![SifrInt::from_i64(1)].into_iter() {
             }
             if !(_broke) {
-                if &n > &SifrInt::from_i64(0) {
+                if (&n > &SifrInt::from_i64(0)) {
                     return recurse(&n - &SifrInt::from_i64(1));
                 }
             }

@@ -40,12 +40,16 @@ fn parseNumber(s: &String) -> SifrInt {
     let mut value: SifrInt = SifrInt::from_i64(0);
     let mut i: SifrInt = SifrInt::from_i64(0);
     while (&i < &SifrInt::from(__sifr_chars_s.len())) {
-        let ch: String = {
-    let __indexed_char_option = __sifr_chars_s.get(::sifr_runtime::to_usize_proven(&(i))).map(|c| c.to_string());
-    __indexed_char_option.as_slice()[0_usize].clone()
-};
+        let Some(__sifr_checked_value_0) = ({
+    let __sifr_string_index = i.clone();
+    let __sifr_string_index_normalized = __sifr_string_index.normalize_index_or_len(__sifr_chars_s.len());
+    __sifr_chars_s.get(__sifr_string_index_normalized)
+}).map(|c| c.to_string()) else {
+            break;
+        };
+        let ch: String = __sifr_checked_value_0.clone();
         let d: SifrInt = parseDigit(&ch);
-        if &d < &SifrInt::from_i64(0) {
+        if (&d < &SifrInt::from_i64(0)) {
             return -&SifrInt::from_i64(1);
         }
         value = &(&value * &SifrInt::from_i64(10)) + &d;

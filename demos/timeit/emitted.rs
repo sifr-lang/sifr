@@ -7,8 +7,14 @@ fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
     let mut i: SifrInt = SifrInt::from_i64(0);
     while &i < &SifrInt::from(actual.len()) {
         assert!(
-            Some(actual[::sifr_runtime::to_usize_proven(& (i))]) == expected
-            .get(::sifr_runtime::to_usize_proven(& (i))).copied()
+            ({ let __sifr_condition_list = & actual; let __sifr_condition_index = i
+            .clone(); let __sifr_condition_normalized = __sifr_condition_index
+            .normalize_index_or_len(__sifr_condition_list.len()); __sifr_condition_list
+            .get(__sifr_condition_normalized).copied() }) == ({ let __sifr_condition_list
+            = & expected; let __sifr_condition_index = i.clone(); let
+            __sifr_condition_normalized = __sifr_condition_index
+            .normalize_index_or_len(__sifr_condition_list.len()); __sifr_condition_list
+            .get(__sifr_condition_normalized).copied() })
         );
         i = &i + &SifrInt::from_i64(1);
     }
@@ -95,7 +101,7 @@ fn _elapsed_non_negative(start: f64, end: f64) -> f64 {
 fn timeit(stmt: impl Fn(), number: SifrInt) -> f64 {
     let start: f64 = perf_counter();
     let mut i: SifrInt = SifrInt::from_i64(0);
-    while &i < &number {
+    while (&i < &number) {
         stmt();
         i = &i + &SifrInt::from_i64(1);
     }
@@ -105,10 +111,10 @@ fn timeit(stmt: impl Fn(), number: SifrInt) -> f64 {
 fn repeat(stmt: impl Fn(), count: SifrInt, number: SifrInt) -> Vec<f64> {
     let mut results: Vec<f64> = vec![];
     let mut r: SifrInt = SifrInt::from_i64(0);
-    while &r < &count {
+    while (&r < &count) {
         let start: f64 = perf_counter();
         let mut i: SifrInt = SifrInt::from_i64(0);
-        while &i < &number {
+        while (&i < &number) {
             stmt();
             i = &i + &SifrInt::from_i64(1);
         }
@@ -153,11 +159,16 @@ fn workload() {
 fn all_non_negative(values: &Vec<f64>) -> bool {
     let mut i: SifrInt = SifrInt::from_i64(0);
     while (&i < &SifrInt::from(values.len())) {
-        let current: Option<f64> = Some(values[::sifr_runtime::to_usize_proven(&(i))]);
+        let current: Option<f64> = {
+    let __sifr_checked_read_collection = &values;
+    let __sifr_checked_read_index = i.clone();
+    let __sifr_checked_read_normalized = __sifr_checked_read_index.normalize_index_or_len(__sifr_checked_read_collection.len());
+    __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+};
         let Some(current) = current else {
             return false;
         };
-        if current < (0.0_f64) {
+        if (current < (0.0_f64)) {
             return false;
         }
         i = &i + &SifrInt::from_i64(1);

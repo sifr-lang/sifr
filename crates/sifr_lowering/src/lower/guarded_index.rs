@@ -343,7 +343,7 @@ mod tests {
     #[test]
     fn test_early_return_method_len_guard_narrows_index_type() {
         let result = lower_source_result(
-            "def pick(values: list[int], i: int) -> int:\n    if i >= values.len():\n        return 0\n    reveal_type(values[i])\n    return values[i]\n",
+            "def pick(values: list[int], i: int) -> int:\n    if i < 0 or i >= values.len():\n        return 0\n    reveal_type(values[i])\n    return values[i]\n",
         )
         .expect("post-return method len guard should lower");
 
@@ -388,7 +388,7 @@ mod tests {
     #[test]
     fn test_early_return_or_guard_narrows_index_type() {
         let result = lower_source_result(
-            "def pick(values: list[int], i: int, limit: int) -> int:\n    if i >= len(values) or limit < 0:\n        return 0\n    reveal_type(values[i])\n    return values[i]\n",
+            "def pick(values: list[int], i: int, limit: int) -> int:\n    if i < 0 or i >= len(values) or limit < 0:\n        return 0\n    reveal_type(values[i])\n    return values[i]\n",
         )
         .expect("post-return or guard should narrow the guarded index");
 
@@ -518,13 +518,13 @@ mod tests {
     }
 
     #[test]
-    fn test_index_narrows_after_equal_len_early_return() {
+    fn test_index_does_not_narrow_after_equal_len_early_return() {
         let result = lower_source(
             "def pick(values: list[int], i: int) -> int:\n    if i == len(values):\n        return 0\n    return values[i]\n",
         );
         assert!(
-            result.is_ok(),
-            "post-return `i == len(values)` should permit guarded index typing"
+            result.is_err(),
+            "excluding only `i == len(values)` does not prove that the index is in range"
         );
     }
 

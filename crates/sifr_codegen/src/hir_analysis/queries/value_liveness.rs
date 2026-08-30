@@ -91,7 +91,17 @@ fn stmt_max_reassignments(stmt: &HirStmt, var_name: &str) -> usize {
             after,
             ..
         } => usize::from(
-            before.iter().chain(after).any(|(name, _)| name == var_name) || star.0 == var_name,
+            before
+                .iter()
+                .chain(std::iter::once(star))
+                .chain(after)
+                .any(|target| {
+                    matches!(
+                        &target.binding,
+                        HirTupleTargetBinding::Name(name)
+                            if target.rebind_existing && name == var_name
+                    )
+                }),
         ),
         HirStmt::TryExcept { body, handlers, .. } => {
             let body_count = max_reassignments_on_path(body, var_name);
@@ -317,9 +327,20 @@ fn stmt_requires_value(stmt: &HirStmt, var_name: &str, live_after: bool) -> bool
             star,
             after,
             value,
+            ..
         } => {
             let rebinds_value =
-                before.iter().chain(after).any(|(name, _)| name == var_name) || star.0 == var_name;
+                before
+                    .iter()
+                    .chain(std::iter::once(star))
+                    .chain(after)
+                    .any(|target| {
+                        matches!(
+                            &target.binding,
+                            HirTupleTargetBinding::Name(name)
+                                if target.rebind_existing && name == var_name
+                        )
+                    });
             expr_references_var(value, var_name) || (live_after && !rebinds_value)
         }
         HirStmt::Pass => live_after,
@@ -389,7 +410,7 @@ fn stmt_requires_value(stmt: &HirStmt, var_name: &str, live_after: bool) -> bool
                 || expr_references_var(value, var_name)
                 || live_after
         }
-        HirStmt::Delete { object, index } => {
+        HirStmt::Delete { object, index, .. } => {
             expr_references_var(object, var_name)
                 || expr_references_var(index, var_name)
                 || live_after

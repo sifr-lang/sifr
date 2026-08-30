@@ -7,9 +7,11 @@ fn frequency_score(nums: &Vec<SifrInt>) -> SifrInt {
     let mut counts: HashMap<SifrInt, SifrInt> = HashMap::from([]);
     for n in nums.iter().cloned() {
         {
-            let __assign_key = n.clone();
             let __assign_value = &SifrInt::from_i64(1) + &counts.get(&n).cloned().unwrap_or(SifrInt::from_i64(0));
-            counts.insert(__assign_key, __assign_value);
+            {
+                let __assign_key = n.clone();
+                counts.insert(__assign_key, __assign_value);
+            }
         }
     }
     let mut score: SifrInt = SifrInt::from_i64(0);

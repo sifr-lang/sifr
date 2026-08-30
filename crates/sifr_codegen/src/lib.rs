@@ -60,6 +60,8 @@ pub(crate) use helpers::{
     collect_referenced_vars_with_types, default_param_convention,
 };
 mod borrowed_string_compare;
+mod checked_place;
+mod checked_place_mutation;
 mod exact_integer_float_compare;
 pub(crate) use exact_integer_float_compare::lower_exact_integer_float_compare;
 mod hir_analysis;

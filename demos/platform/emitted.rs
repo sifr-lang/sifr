@@ -47,8 +47,14 @@ fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
     let mut i: SifrInt = SifrInt::from_i64(0);
     while &i < &SifrInt::from(actual.len()) {
         assert!(
-            Some(actual[::sifr_runtime::to_usize_proven(& (i))]) == expected
-            .get(::sifr_runtime::to_usize_proven(& (i))).copied()
+            ({ let __sifr_condition_list = & actual; let __sifr_condition_index = i
+            .clone(); let __sifr_condition_normalized = __sifr_condition_index
+            .normalize_index_or_len(__sifr_condition_list.len()); __sifr_condition_list
+            .get(__sifr_condition_normalized).copied() }) == ({ let __sifr_condition_list
+            = & expected; let __sifr_condition_index = i.clone(); let
+            __sifr_condition_normalized = __sifr_condition_index
+            .normalize_index_or_len(__sifr_condition_list.len()); __sifr_condition_list
+            .get(__sifr_condition_normalized).copied() })
         );
         i = &i + &SifrInt::from_i64(1);
     }
@@ -59,7 +65,7 @@ fn collect_core_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![];
     let sys_name: String = system();
     let __sifr_chars_sys_name: Vec<char> = sys_name.chars().collect::<Vec<char>>();
-    actual.push((((&SifrInt::from(sys_name.chars().count()) > &SifrInt::from_i64(0)) && (sys_name != "linux")) && (sys_name != "macos")) && (sys_name != "windows"));
+    actual.push((((&SifrInt::from(__sifr_chars_sys_name.len()) > &SifrInt::from_i64(0)) && (sys_name != "linux")) && (sys_name != "macos")) && (sys_name != "windows"));
     actual.push(&SifrInt::from(machine().chars().count()) > &SifrInt::from_i64(0));
     actual.push(&SifrInt::from(processor().chars().count()) > &SifrInt::from_i64(0));
     actual

@@ -5,17 +5,7 @@
   "policy": "Exact signatures may only stay equal or be removed. Unknown or changed debt fails. The file must be empty at Item 12.",
   "safety": {
     "owner_items": [3, 4, 11],
-    "entries": {
-      "checked-demo-snapshots": {
-        "direct-index": {"count": 273, "signature_sha256": "ffd0aee7d8fcddf1fc48f6e5b009992d11d0d9430cb4165ef6474d6901d578cf"}
-      },
-      "selection-7cddd09acf851f35": {
-        "direct-index": {"count": 21, "signature_sha256": "1d2451df7491f6205fd5013f066add04ae075d8e43e38b31c1b2a69d8245eb60"}
-      },
-      "selection-0902166e369de295": {
-        "direct-index": {"count": 125, "signature_sha256": "7409f56ba319eb4f77d85546e1d116f3cf59b5f390e311ffd2bea1fff2341980"}
-      }
-    }
+    "entries": {}
   },
   "rustfmt": {
     "owner_items": [8],

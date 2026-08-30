@@ -147,31 +147,31 @@ impl ::std::fmt::Display for AppError {
 }
 impl ::std::error::Error for AppError {}
 fn validate_age(age: SifrInt) -> Result<SifrInt, ValueError> {
-    if &age < &SifrInt::from_i64(0) {
+    if (&age < &SifrInt::from_i64(0)) {
         return Err(ValueError::new("age must be positive".to_string()));
     }
-    if &age > &SifrInt::from_i64(150) {
+    if (&age > &SifrInt::from_i64(150)) {
         return Err(ValueError::new("too large".to_string()));
     }
     Ok(age.clone())
 }
 fn safe_divide(a: SifrInt, b: SifrInt) -> Result<SifrInt, DivisionError> {
-    if &b == &SifrInt::from_i64(0) {
+    if (&b == &SifrInt::from_i64(0)) {
         return Err(DivisionError::new("division by zero".to_string()));
     }
     Ok(a.floor_div_known_nonzero(&b))
 }
 fn check_input(x: SifrInt) -> Result<SifrInt, AppError> {
-    if &x < &SifrInt::from_i64(0) {
+    if (&x < &SifrInt::from_i64(0)) {
         return Err(AppError::new("invalid input".to_string()));
     }
     Ok(x.clone())
 }
 fn process_age(age: SifrInt) -> Result<SifrInt, ValueError> {
-    if &age < &SifrInt::from_i64(0) {
+    if (&age < &SifrInt::from_i64(0)) {
         return Err(ValueError::new("age must be positive".to_string()));
     }
-    if &age > &SifrInt::from_i64(150) {
+    if (&age > &SifrInt::from_i64(150)) {
         return Err(ValueError::new("too large".to_string()));
     }
     Ok(age.clone())

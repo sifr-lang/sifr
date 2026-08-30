@@ -15,6 +15,7 @@ mod interop_callbacks;
 pub mod json;
 #[cfg(feature = "net")]
 pub mod net;
+mod nonempty_vec;
 #[cfg(feature = "python")]
 pub mod python;
 mod range;
@@ -34,5 +35,6 @@ pub use int::{
     IntegerDivisionError, IntegerFloatConversionError, IntegerParseError, IntegerRangeError,
     NormalizedIntegerHash, SifrInt,
 };
+pub use nonempty_vec::SifrNonEmptyVec;
 pub use range::SifrRange;
 pub use slice::SifrSliceIndices;

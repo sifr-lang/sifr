@@ -1523,7 +1523,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.readable()) {
+            if !self.readable() {
                 return Err(IOError::new("stream is not readable".to_string()));
             }
             file_read(&self._handle)
@@ -1534,7 +1534,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.writable()) {
+            if !self.writable() {
                 return Err(IOError::new("stream is not writable".to_string()));
             }
             file_write(&self._handle, data)
@@ -1545,7 +1545,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.readable()) {
+            if !self.readable() {
                 return Err(IOError::new("stream is not readable".to_string()));
             }
             file_readline(&self._handle)
@@ -1556,7 +1556,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.readable()) {
+            if !self.readable() {
                 return Err(IOError::new("stream is not readable".to_string()));
             }
             file_readlines(&self._handle)
@@ -1567,7 +1567,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.readable()) {
+            if !self.readable() {
                 return Err(IOError::new("stream is not readable".to_string()));
             }
             file_read_bytes(&self._handle)
@@ -1578,7 +1578,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.writable()) {
+            if !self.writable() {
                 return Err(IOError::new("stream is not writable".to_string()));
             }
             file_write_bytes(&self._handle, data)
@@ -1675,7 +1675,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.readable()) {
+            if !self.readable() {
                 return Err(IOError::new("stream is not readable".to_string()));
             }
             file_read_bytes(&self._handle)
@@ -1686,7 +1686,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.writable()) {
+            if !self.writable() {
                 return Err(IOError::new("stream is not writable".to_string()));
             }
             file_write_bytes(&self._handle, data)
@@ -2081,9 +2081,9 @@ mod __sifr_project_nominals {
             let mut end: SifrInt = SifrInt::from(self._buffer.chars().count());
             if let Some(size) = size.as_ref() {
                 let maybe_size: SifrInt = size.clone();
-                if &maybe_size >= &SifrInt::from_i64(0) {
+                if (&maybe_size >= &SifrInt::from_i64(0)) {
                     let requested: SifrInt = &start + &maybe_size;
-                    if &requested < &end {
+                    if (&requested < &end) {
                         end = requested;
                     }
                 }
@@ -2182,7 +2182,7 @@ mod __sifr_project_nominals {
                 }
             }
             let mut next_pos: SifrInt = &origin + offset;
-            if &next_pos < &SifrInt::from_i64(0) {
+            if (&next_pos < &SifrInt::from_i64(0)) {
                 return Err(IOError::new(_negative_seek_error((next_pos).clone())));
             }
             let end: SifrInt = SifrInt::from(self._buffer.chars().count());
@@ -2269,9 +2269,9 @@ mod __sifr_project_nominals {
             let mut end: SifrInt = SifrInt::from(self._buffer.len());
             if let Some(size) = size.as_ref() {
                 let maybe_size: SifrInt = size.clone();
-                if &maybe_size >= &SifrInt::from_i64(0) {
+                if (&maybe_size >= &SifrInt::from_i64(0)) {
                     let requested: SifrInt = &start + &maybe_size;
-                    if &requested < &end {
+                    if (&requested < &end) {
                         end = requested;
                     }
                 }
@@ -2385,7 +2385,7 @@ mod __sifr_project_nominals {
                 }
             }
             let mut next_pos: SifrInt = &origin + offset;
-            if &next_pos < &SifrInt::from_i64(0) {
+            if (&next_pos < &SifrInt::from_i64(0)) {
                 return Err(IOError::new(_negative_seek_error((next_pos).clone())));
             }
             let end: SifrInt = SifrInt::from(self._buffer.len());
@@ -2518,7 +2518,7 @@ mod __sifr_project_nominals {
         path: &String,
         mode: &String,
     ) -> Result<__SifrIoBinaryFileHandle, IOError> {
-        if !(mode.contains(&"b".to_string())) {
+        if !mode.contains(&"b".to_string()) {
             return Err(IOError::new("open_binary requires binary mode".to_string()));
         }
         let __sifr_try_res: Result<Result<__SifrIoBinaryFileHandle, IOError>, IOError> = (|| {
@@ -2723,7 +2723,7 @@ mod __sifr_project_nominals {
     }
     impl __SifrStdlib_sifr_x2ejson_x2eJsonValue {
         pub fn as_array(&self) -> Option<Vec<__SifrStdlib_sifr_x2ejson_x2eJsonValue>> {
-            if !(self.is_array()) {
+            if !self.is_array() {
                 return None;
             }
             let mut result: Vec<__SifrStdlib_sifr_x2ejson_x2eJsonValue> = vec![];
@@ -2737,7 +2737,7 @@ mod __sifr_project_nominals {
         pub fn as_object(
             &self,
         ) -> Option<Vec<(String, __SifrStdlib_sifr_x2ejson_x2eJsonValue)>> {
-            if !(self.is_object()) {
+            if !self.is_object() {
                 return None;
             }
             let mut result: Vec<(String, __SifrStdlib_sifr_x2ejson_x2eJsonValue)> = vec![];
@@ -2749,7 +2749,7 @@ mod __sifr_project_nominals {
     }
     impl __SifrStdlib_sifr_x2ejson_x2eJsonValue {
         pub fn at(&self, index: &SifrInt) -> Option<__SifrStdlib_sifr_x2ejson_x2eJsonValue> {
-            if !(self.is_array()) {
+            if !self.is_array() {
                 return None;
             }
             if (&index.clone() < &SifrInt::from_i64(0))
@@ -2757,18 +2757,19 @@ mod __sifr_project_nominals {
             {
                 return None;
             }
-            let value: Option<__SifrStdlib_sifr_x2ejson_x2eJsonValue> = Some(
-                (self.array_items)
-                    .as_ref()
-                    .clone()[::sifr_runtime::to_usize_proven(&(index))]
-                    .clone(),
-            );
+            let value: Option<__SifrStdlib_sifr_x2ejson_x2eJsonValue> = {
+                let __sifr_checked_read_collection = &self.array_items;
+                let __sifr_checked_read_index = index.clone();
+                let __sifr_checked_read_normalized = __sifr_checked_read_index
+                    .normalize_index_or_len(__sifr_checked_read_collection.len());
+                __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+            };
             value
         }
     }
     impl __SifrStdlib_sifr_x2ejson_x2eJsonValue {
         pub fn get(&self, key: &String) -> Option<__SifrStdlib_sifr_x2ejson_x2eJsonValue> {
-            if !(self.is_object()) {
+            if !self.is_object() {
                 return None;
             }
             for (item_key, item_value) in (self.object_items)
@@ -2787,7 +2788,7 @@ mod __sifr_project_nominals {
     impl __SifrStdlib_sifr_x2ejson_x2eJsonValue {
         pub fn keys(&self) -> Vec<String> {
             let mut result: Vec<String> = vec![];
-            if !(self.is_object()) {
+            if !self.is_object() {
                 return result;
             }
             for (item_key, _item_value) in (self.object_items)
@@ -2804,7 +2805,7 @@ mod __sifr_project_nominals {
     impl __SifrStdlib_sifr_x2ejson_x2eJsonValue {
         pub fn values(&self) -> Vec<__SifrStdlib_sifr_x2ejson_x2eJsonValue> {
             let mut result: Vec<__SifrStdlib_sifr_x2ejson_x2eJsonValue> = vec![];
-            if !(self.is_object()) {
+            if !self.is_object() {
                 return result;
             }
             for (_item_key, item_value) in (self.object_items)
@@ -2820,7 +2821,7 @@ mod __sifr_project_nominals {
     }
     impl __SifrStdlib_sifr_x2ejson_x2eJsonValue {
         pub fn items(&self) -> Vec<(String, __SifrStdlib_sifr_x2ejson_x2eJsonValue)> {
-            if !(self.is_object()) {
+            if !self.is_object() {
                 return vec![];
             }
             let mut result: Vec<(String, __SifrStdlib_sifr_x2ejson_x2eJsonValue)> = vec![];
@@ -2891,7 +2892,7 @@ mod __sifr_project_nominals {
         tokens.push(format!("{}{}", value.kind.clone(), ""));
         if (value.kind.clone() == "bool") {
             let bool_value: Option<bool> = value.bool_value;
-            if bool_value.is_none() {
+            if (bool_value == None) {
                 tokens.push("false".to_string());
             } else {
                 if let Some(bool_value) = bool_value {
@@ -2901,7 +2902,7 @@ mod __sifr_project_nominals {
         } else {
             if (value.kind.clone() == "int") {
                 let int_value: Option<SifrInt> = value.int_value.clone();
-                if int_value.is_none() {
+                if (int_value == None) {
                     tokens.push("0".to_string());
                 } else {
                     if let Some(int_value) = int_value.clone() {
@@ -2911,7 +2912,7 @@ mod __sifr_project_nominals {
             } else {
                 if (value.kind.clone() == "float") {
                     let float_value: Option<f64> = value.float_value;
-                    if float_value.is_none() {
+                    if (float_value == None) {
                         tokens.push("0.0".to_string());
                     } else {
                         if let Some(float_value) = float_value {
@@ -2921,7 +2922,7 @@ mod __sifr_project_nominals {
                 } else {
                     if (value.kind.clone() == "str") {
                         let str_value: Option<String> = value.as_str();
-                        if str_value.is_none() {
+                        if (str_value == None) {
                             tokens.push("".to_string());
                         } else {
                             if let Some(str_value) = str_value {
@@ -4273,7 +4274,7 @@ fn open_binary(
     path: &String,
     mode: &String,
 ) -> Result<__SifrIoBinaryFileHandle, IOError> {
-    if !(mode.contains(&"b".to_string())) {
+    if !mode.contains(&"b".to_string()) {
         return Err(IOError::new("open_binary requires binary mode".to_string()));
     }
     let __sifr_try_res: Result<Result<__SifrIoBinaryFileHandle, IOError>, IOError> = (|| {
@@ -4463,11 +4464,11 @@ fn _json_token_at(
     index: SifrInt,
 ) -> Result<String, JSONDecodeError> {
     let value: Option<String> = {
-        let __sifr_index_list = &tokens;
-        let __sifr_index_i = index.clone();
-        let __sifr_index_norm = __sifr_index_i
-            .normalize_index_or_len(__sifr_index_list.len());
-        __sifr_index_list.get(__sifr_index_norm).cloned()
+        let __sifr_checked_read_collection = &tokens;
+        let __sifr_checked_read_index = index.clone();
+        let __sifr_checked_read_normalized = __sifr_checked_read_index
+            .normalize_index_or_len(__sifr_checked_read_collection.len());
+        __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
     };
     let Some(value) = value else {
         return Err(
@@ -4601,7 +4602,7 @@ fn _json_decode_value_at(
     > = (|| {
         let tag: String = _json_token_at(tokens, (index).clone())?;
         let payload_index: SifrInt = &index + &SifrInt::from_i64(1);
-        if tag == "null" {
+        if (tag == "null") {
             return Ok(
                 Ok((
                     __SifrStdlib_sifr_x2ejson_x2eJsonValue::new(
@@ -4615,7 +4616,7 @@ fn _json_decode_value_at(
                 )),
             );
         }
-        if tag == "bool" {
+        if (tag == "bool") {
             let bool_token: String = _json_token_at(tokens, (payload_index).clone())?;
             let bool_value: bool = _json_decode_bool_token(&bool_token)?;
             return Ok(
@@ -4631,7 +4632,7 @@ fn _json_decode_value_at(
                 )),
             );
         }
-        if tag == "int" {
+        if (tag == "int") {
             let int_value: SifrInt = _json_token_int(tokens, (payload_index).clone())?;
             return Ok(
                 Ok((
@@ -4646,7 +4647,7 @@ fn _json_decode_value_at(
                 )),
             );
         }
-        if tag == "float" {
+        if (tag == "float") {
             let float_value: f64 = _json_token_float(tokens, (payload_index).clone())?;
             return Ok(
                 Ok((
@@ -4661,7 +4662,7 @@ fn _json_decode_value_at(
                 )),
             );
         }
-        if tag == "str" {
+        if (tag == "str") {
             let str_value: String = _json_token_at(tokens, (payload_index).clone())?;
             return Ok(
                 Ok((
@@ -4676,9 +4677,9 @@ fn _json_decode_value_at(
                 )),
             );
         }
-        if tag == "array" {
+        if (tag == "array") {
             let array_count: SifrInt = _json_token_int(tokens, (payload_index).clone())?;
-            if &array_count < &SifrInt::from_i64(0) {
+            if (&array_count < &SifrInt::from_i64(0)) {
                 return Err(
                     JSONDecodeError::new(
                         "JSON bridge payload has invalid array length".to_string(),
@@ -4694,7 +4695,7 @@ fn _json_decode_value_at(
             );
             let mut next_index: SifrInt = &payload_index + &SifrInt::from_i64(1);
             let mut consumed: SifrInt = SifrInt::from_i64(0);
-            while &consumed < &array_count {
+            while (&consumed < &array_count) {
                 let item_result: (__SifrStdlib_sifr_x2ejson_x2eJsonValue, SifrInt) = _json_decode_value_at(
                     tokens,
                     (next_index).clone(),
@@ -4705,12 +4706,12 @@ fn _json_decode_value_at(
             }
             return Ok(Ok((array_value, next_index.clone())));
         }
-        if tag == "object" {
+        if (tag == "object") {
             let object_count: SifrInt = _json_token_int(
                 tokens,
                 (payload_index).clone(),
             )?;
-            if &object_count < &SifrInt::from_i64(0) {
+            if (&object_count < &SifrInt::from_i64(0)) {
                 return Err(
                     JSONDecodeError::new(
                         "JSON bridge payload has invalid object length".to_string(),
@@ -4726,7 +4727,7 @@ fn _json_decode_value_at(
             );
             let mut next_index: SifrInt = &payload_index + &SifrInt::from_i64(1);
             let mut consumed: SifrInt = SifrInt::from_i64(0);
-            while &consumed < &object_count {
+            while (&consumed < &object_count) {
                 let key: String = _json_token_at(tokens, (next_index).clone())?;
                 let item_result: (__SifrStdlib_sifr_x2ejson_x2eJsonValue, SifrInt) = _json_decode_value_at(
                     tokens,
@@ -4794,7 +4795,7 @@ fn _json_append_tokens(
     tokens.push(format!("{}{}", value.kind.clone(), ""));
     if (value.kind.clone() == "bool") {
         let bool_value: Option<bool> = value.bool_value;
-        if bool_value.is_none() {
+        if (bool_value == None) {
             tokens.push("false".to_string());
         } else {
             if let Some(bool_value) = bool_value {
@@ -4804,7 +4805,7 @@ fn _json_append_tokens(
     } else {
         if (value.kind.clone() == "int") {
             let int_value: Option<SifrInt> = value.int_value.clone();
-            if int_value.is_none() {
+            if (int_value == None) {
                 tokens.push("0".to_string());
             } else {
                 if let Some(int_value) = int_value.clone() {
@@ -4814,7 +4815,7 @@ fn _json_append_tokens(
         } else {
             if (value.kind.clone() == "float") {
                 let float_value: Option<f64> = value.float_value;
-                if float_value.is_none() {
+                if (float_value == None) {
                     tokens.push("0.0".to_string());
                 } else {
                     if let Some(float_value) = float_value {
@@ -4824,7 +4825,7 @@ fn _json_append_tokens(
             } else {
                 if (value.kind.clone() == "str") {
                     let str_value: Option<String> = value.as_str();
-                    if str_value.is_none() {
+                    if (str_value == None) {
                         tokens.push("".to_string());
                     } else {
                         if let Some(str_value) = str_value {
@@ -4927,8 +4928,14 @@ fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
     let mut i: SifrInt = SifrInt::from_i64(0);
     while &i < &SifrInt::from(actual.len()) {
         assert!(
-            Some(actual[::sifr_runtime::to_usize_proven(& (i))]) == expected
-            .get(::sifr_runtime::to_usize_proven(& (i))).copied()
+            ({ let __sifr_condition_list = & actual; let __sifr_condition_index = i
+            .clone(); let __sifr_condition_normalized = __sifr_condition_index
+            .normalize_index_or_len(__sifr_condition_list.len()); __sifr_condition_list
+            .get(__sifr_condition_normalized).copied() }) == ({ let __sifr_condition_list
+            = & expected; let __sifr_condition_index = i.clone(); let
+            __sifr_condition_normalized = __sifr_condition_index
+            .normalize_index_or_len(__sifr_condition_list.len()); __sifr_condition_list
+            .get(__sifr_condition_normalized).copied() })
         );
         i = &i + &SifrInt::from_i64(1);
     }

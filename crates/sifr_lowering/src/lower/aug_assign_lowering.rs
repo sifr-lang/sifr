@@ -3,7 +3,7 @@ use sifr_diagnostics::DiagnosticCode;
 use sifr_python_ast::{Expr, Operator, StmtAugAssign};
 use sifr_type_system::{Type, type_check_binary_op};
 
-use crate::hir_nodes::{HirExpr, HirStmt};
+use crate::hir_nodes::{HirCollectionMutation, HirExpr, HirStmt};
 
 use super::LowerCtx;
 use super::binding_mutability::ensure_mutable_parameter_binding;
@@ -12,6 +12,7 @@ use super::container_literal_specialization::{
 };
 use super::defaultdict_refinement::refine_defaultdict_int_augassign_key;
 use super::expressions::{affine_value_references_name, consume_owned_value, lower_expr};
+use super::guarded_index::guarded_sequence_index_result_type;
 use super::integer_failure_diagnostics::exact_int_augassign_requires_handling;
 use super::name_diagnostics;
 use super::python_interop::lower_python_context_owned_expr;
@@ -27,28 +28,6 @@ fn invalid_target_shape(ctx: &mut LowerCtx, message: &'static str, range: TextRa
 
 fn invalid_subscript_target_shape(ctx: &mut LowerCtx, range: TextRange) {
     invalid_target_shape(ctx, AUGMENTED_SUBSCRIPT_TARGET_SIMPLE_NAME, range);
-}
-
-fn plain_dict_missing_key_error(
-    object_ty: &Type,
-    key_is_proven_present: bool,
-    ctx: &mut LowerCtx,
-) -> Option<Type> {
-    if key_is_proven_present
-        || !matches!(object_ty.resolve_alias(), Type::Dict(_, _))
-        || matches!(
-            object_ty,
-            Type::Alias { name, .. } if name.starts_with("__sifr_defaultdict_")
-        )
-    {
-        return None;
-    }
-    Some(
-        ctx.class_types
-            .get("KeyError")
-            .cloned()
-            .unwrap_or_else(|| super::fallback_error_type("KeyError")),
-    )
 }
 
 fn op_to_augassign_string(
@@ -113,23 +92,14 @@ pub(in crate::lower) fn lower_aug_assign(
     // Handle augmented assignment on subscript: list[i] += val
     if let Expr::Subscript(sub) = aug.target.as_ref() {
         if let Expr::Subscript(inner_sub) = sub.value.as_ref() {
-            let (obj_name, nested_field_name, obj_ty, nested_object_expr) =
+            let (obj_name, nested_field_name, obj_ty) =
                 if let Expr::Name(n) = inner_sub.value.as_ref() {
                     let obj_ty = ctx
                         .scope
                         .lookup(&n.id)
                         .map(|info| info.effective_type().clone())
                         .unwrap_or(Type::Unknown);
-                    (
-                        n.id.to_string(),
-                        None,
-                        obj_ty.clone(),
-                        HirExpr::Name {
-                            name: n.id.to_string(),
-                            binding_id: ctx.scope.lookup(&n.id).map(|info| info.binding_id),
-                            ty: obj_ty,
-                        },
-                    )
+                    (n.id.to_string(), None, obj_ty)
                 } else if let Expr::Attribute(attr) = inner_sub.value.as_ref() {
                     let obj_name = if let Expr::Name(n) = attr.value.as_ref() {
                         n.id.to_string()
@@ -139,12 +109,7 @@ pub(in crate::lower) fn lower_aug_assign(
                     };
                     let field_name = attr.attr.to_string();
                     let field_ty = resolve_object_field_type(ctx, &obj_name, &field_name);
-                    let object_expr = HirExpr::FieldAccess {
-                        object: Box::new(lower_expr(attr.value.as_ref(), ctx)?),
-                        field: field_name.clone(),
-                        ty: field_ty.clone(),
-                    };
-                    (obj_name, Some(field_name), field_ty, object_expr)
+                    (obj_name, Some(field_name), field_ty)
                 } else {
                     invalid_subscript_target_shape(ctx, inner_sub.value.range());
                     return None;
@@ -163,60 +128,65 @@ pub(in crate::lower) fn lower_aug_assign(
             let inner_index = lower_expr(&sub.slice, ctx)?;
             let value = lower_python_context_owned_expr(&aug.value, ctx)?;
             let op_str = op_to_augassign_string(aug.op, ctx, aug.target.range())?;
-            let outer_elem_ty = resolve_subscript_result_type(
+            let _outer_result_ty = resolve_subscript_result_type(
                 inner_sub,
                 &obj_ty,
                 &outer_index,
                 outer_index.ty(),
                 ctx,
             );
-            let current_elem_ty = resolve_subscript_result_type(
-                sub,
-                &outer_elem_ty,
-                &inner_index,
-                inner_index.ty(),
-                ctx,
-            );
+            let outer_elem_ty = super::statements::checked_place_value_type(&obj_ty)?;
+            let current_elem_ty = super::statements::checked_place_value_type(&outer_elem_ty)?;
             let base_op = &op_str[..op_str.len() - 1];
-            let result_ty = match type_check_binary_op(&current_elem_ty, base_op, value.ty()) {
+            let _result_ty = match type_check_binary_op(&current_elem_ty, base_op, value.ty()) {
                 Ok(ty) => ty,
                 Err((code, message)) => {
                     ctx.error_with_code_at(code, message, aug.value.range());
                     return None;
                 }
             };
-            let outer_expr = HirExpr::Index {
-                object: Box::new(nested_object_expr),
-                index: Box::new(outer_index.clone()),
-                ty: outer_elem_ty,
-            };
-            let current_value_expr = HirExpr::Index {
-                object: Box::new(outer_expr),
-                index: Box::new(inner_index.clone()),
-                ty: current_elem_ty,
-            };
-            let lowered_value = HirExpr::BinOp {
-                left: Box::new(current_value_expr),
-                op: base_op.to_string(),
-                right: Box::new(value.clone()),
-                ty: result_ty,
-            };
+            let outer_statically_present =
+                guarded_sequence_index_result_type(inner_sub, &obj_ty, ctx).is_some();
+            let outer_failure = super::statements::checked_place_projection_failure(
+                ctx,
+                &obj_ty,
+                true,
+                outer_statically_present,
+                "nested augmented subscript assignment",
+                inner_sub.range(),
+            );
+            let inner_statically_present =
+                guarded_sequence_index_result_type(sub, &outer_elem_ty, ctx).is_some();
+            let inner_failure = super::statements::checked_place_projection_failure(
+                ctx,
+                &outer_elem_ty,
+                true,
+                inner_statically_present,
+                "nested augmented subscript assignment",
+                sub.range(),
+            );
             if let Some(field_name) = nested_field_name {
                 return Some(HirStmt::AttributeNestedSubscriptAssign {
                     object: obj_name,
                     field: field_name,
                     outer_index,
                     inner_index,
-                    value: lowered_value,
+                    value,
                     field_ty: obj_ty,
+                    outer_failure,
+                    inner_failure,
+                    operation: HirCollectionMutation::AugAssign(op_str.to_string()),
                 });
             }
             return Some(HirStmt::NestedSubscriptAssign {
                 object: obj_name,
                 outer_index,
                 inner_index,
-                value: lowered_value,
+                value,
                 object_ty: obj_ty,
+                outer_failure,
+                inner_failure,
+                operation: HirCollectionMutation::AugAssign(op_str.to_string()),
             });
         }
         if let Expr::Attribute(attr) = sub.value.as_ref() {
@@ -238,14 +208,13 @@ pub(in crate::lower) fn lower_aug_assign(
                 );
                 return None;
             }
-            let object_expr = lower_expr(attr.value.as_ref(), ctx)?;
             let index = lower_expr(&sub.slice, ctx)?;
             let value = lower_python_context_owned_expr(&aug.value, ctx)?;
             let op_str = op_to_augassign_string(aug.op, ctx, aug.target.range())?;
 
-            let element_ty = resolve_subscript_result_type(sub, &field_ty, &index, index.ty(), ctx);
+            let element_ty = super::statements::checked_place_value_type(&field_ty)?;
             let base_op = &op_str[..op_str.len() - 1];
-            let result_ty = match type_check_binary_op(&element_ty, base_op, value.ty()) {
+            let _result_ty = match type_check_binary_op(&element_ty, base_op, value.ty()) {
                 Ok(ty) => ty,
                 Err((code, message)) => {
                     ctx.error_with_code_at(code, message, aug.value.range());
@@ -253,29 +222,25 @@ pub(in crate::lower) fn lower_aug_assign(
                 }
             };
 
-            let field_access_expr = HirExpr::FieldAccess {
-                object: Box::new(object_expr),
-                field: field_name.clone(),
-                ty: field_ty.clone(),
-            };
-            let current_value_expr = HirExpr::Index {
-                object: Box::new(field_access_expr),
-                index: Box::new(index.clone()),
-                ty: element_ty,
-            };
-            let lowered_value = HirExpr::BinOp {
-                left: Box::new(current_value_expr),
-                op: base_op.to_string(),
-                right: Box::new(value.clone()),
-                ty: result_ty,
-            };
+            let statically_present =
+                guarded_sequence_index_result_type(sub, &field_ty, ctx).is_some();
+            let failure = super::statements::checked_place_projection_failure(
+                ctx,
+                &field_ty,
+                true,
+                statically_present,
+                "augmented subscript assignment",
+                sub.range(),
+            );
 
             return Some(HirStmt::AttributeSubscriptAssign {
                 object: obj_name,
                 field: field_name,
                 index,
-                value: lowered_value,
+                value,
                 field_ty,
+                failure,
+                operation: HirCollectionMutation::AugAssign(op_str.to_string()),
             });
         }
         let obj_name = if let Expr::Name(n) = sub.value.as_ref() {
@@ -299,8 +264,6 @@ pub(in crate::lower) fn lower_aug_assign(
             );
             return None;
         }
-        let key_is_proven_present = ctx.has_dict_key_guard(&obj_name, sub.slice.as_ref())
-            || ctx.has_subscript_guard(&obj_name, sub.slice.as_ref());
         let index = lower_expr(&sub.slice, ctx)?;
         let value = lower_python_context_owned_expr(&aug.value, ctx)?;
         let op_str = op_to_augassign_string(aug.op, ctx, aug.target.range())?;
@@ -318,25 +281,27 @@ pub(in crate::lower) fn lower_aug_assign(
                 rhs_range: aug.value.range(),
             },
         );
-        let missing_key_error =
-            plain_dict_missing_key_error(&object_ty, key_is_proven_present, ctx);
-        if let Some(error_ty) = &missing_key_error {
-            if ctx.in_try_block {
-                super::statements::record_try_error_types(ctx, error_ty);
-            } else {
-                super::result_diagnostics::unhandled_dict_augassign_key_error(
-                    ctx,
-                    aug.target.range(),
-                );
-            }
-        }
+        let is_defaultdict = matches!(
+            object_ty,
+            Type::Alias { ref name, .. } if name.starts_with("__sifr_defaultdict_")
+        );
+        let statically_present =
+            is_defaultdict || guarded_sequence_index_result_type(sub, &object_ty, ctx).is_some();
+        let failure = super::statements::checked_place_projection_failure(
+            ctx,
+            &object_ty,
+            true,
+            statically_present,
+            "augmented subscript assignment",
+            sub.range(),
+        );
         return Some(HirStmt::SubscriptAugAssign {
             object: obj_name,
             index,
             op: op_str.to_string(),
             value,
             object_ty,
-            missing_key_error,
+            failure,
         });
     }
     let (name, name_range): (String, TextRange) = if let Expr::Name(n) = aug.target.as_ref() {

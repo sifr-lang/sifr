@@ -7,7 +7,15 @@ fn sum_forward(nums: &Vec<SifrInt>) -> SifrInt {
     let n: SifrInt = SifrInt::from(nums.len());
     let mut total: SifrInt = SifrInt::from_i64(0);
     for i in SifrRange::new_known_nonzero(SifrInt::from_i64(0), n.clone(), SifrInt::from_i64(1)) {
-        total = &total + &nums[::sifr_runtime::to_usize_proven(&(i))].clone();
+        let Some(__sifr_checked_value_0) = ({
+    let __sifr_checked_read_collection = &nums;
+    let __sifr_checked_read_index = i.clone();
+    let __sifr_checked_read_normalized = __sifr_checked_read_index.normalize_index_or_len(__sifr_checked_read_collection.len());
+    __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+}) else {
+            break;
+        };
+        total = &total + &__sifr_checked_value_0.clone();
     }
     total.clone()
 }
@@ -16,7 +24,15 @@ fn sum_reverse(nums: &Vec<SifrInt>) -> SifrInt {
     let n: SifrInt = SifrInt::from(nums.len());
     let mut total: SifrInt = SifrInt::from_i64(0);
     for i in SifrRange::new_known_nonzero(&n - &SifrInt::from_i64(1), -(SifrInt::from_i64(1)), -(SifrInt::from_i64(1))) {
-        total = &total + &nums[::sifr_runtime::to_usize_proven(&(i))].clone();
+        let Some(__sifr_checked_value_1) = ({
+    let __sifr_checked_read_collection = &nums;
+    let __sifr_checked_read_index = i.clone();
+    let __sifr_checked_read_normalized = __sifr_checked_read_index.normalize_index_or_len(__sifr_checked_read_collection.len());
+    __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+}) else {
+            break;
+        };
+        total = &total + &__sifr_checked_value_1.clone();
     }
     total.clone()
 }
@@ -25,8 +41,16 @@ fn sum_reverse_while(nums: &Vec<SifrInt>) -> SifrInt {
     let n: SifrInt = SifrInt::from(nums.len());
     let mut i: SifrInt = &n - &SifrInt::from_i64(1);
     let mut total: SifrInt = SifrInt::from_i64(0);
-    while &i >= &SifrInt::from_i64(0) {
-        total = &total + &nums[::sifr_runtime::to_usize_proven(&(i))].clone();
+    while (&i >= &SifrInt::from_i64(0)) {
+        let Some(__sifr_checked_value_2) = ({
+    let __sifr_checked_read_collection = &nums;
+    let __sifr_checked_read_index = i.clone();
+    let __sifr_checked_read_normalized = __sifr_checked_read_index.normalize_index_or_len(__sifr_checked_read_collection.len());
+    __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+}) else {
+            break;
+        };
+        total = &total + &__sifr_checked_value_2.clone();
         i = &i - &SifrInt::from_i64(1);
     }
     total.clone()
@@ -40,8 +64,16 @@ fn append_growth_product(nums: &Vec<SifrInt>) -> SifrInt {
     }
     let mut i: SifrInt = &n - &SifrInt::from_i64(1);
     let mut product: SifrInt = SifrInt::from_i64(1);
-    while &i >= &SifrInt::from_i64(0) {
-        product = &product * &weights[::sifr_runtime::to_usize_proven(&(i))].clone();
+    while (&i >= &SifrInt::from_i64(0)) {
+        let Some(__sifr_checked_value_3) = ({
+    let __sifr_checked_read_collection = &weights;
+    let __sifr_checked_read_index = i.clone();
+    let __sifr_checked_read_normalized = __sifr_checked_read_index.normalize_index_or_len(__sifr_checked_read_collection.len());
+    __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+}) else {
+            break;
+        };
+        product = &product * &__sifr_checked_value_3.clone();
         i = &i - &SifrInt::from_i64(1);
     }
     product.clone()

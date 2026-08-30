@@ -19,9 +19,15 @@ mod __sifr_project_nominals {
                 }
                 let mut i: SifrInt = start;
                 while (&i < &SifrInt::from(items.len())) {
-                    let item: Option<T> = Some(
-                        items[::sifr_runtime::to_usize_proven(&(i))].clone(),
-                    );
+                    let item: Option<T> = {
+                        let __sifr_checked_read_collection = &items;
+                        let __sifr_checked_read_index = i.clone();
+                        let __sifr_checked_read_normalized = __sifr_checked_read_index
+                            .normalize_index_or_len(__sifr_checked_read_collection.len());
+                        __sifr_checked_read_collection
+                            .get(__sifr_checked_read_normalized)
+                            .cloned()
+                    };
                     if let Some(item) = item {
                         data.push(item.clone());
                     }
@@ -166,7 +172,7 @@ mod __sifr_project_nominals {
                 steps = &steps + &length;
             }
             let mut count: SifrInt = SifrInt::from_i64(0);
-            while &count < &steps {
+            while (&count < &steps) {
                 let value: Option<T> = self._data.pop_back();
                 if let Some(value) = value {
                     self._data.push_front(value.clone());
@@ -204,24 +210,26 @@ mod __sifr_project_nominals {
             let mut end: SifrInt = size.clone();
             if let Some(stop) = stop.as_ref() {
                 end = stop.clone();
-                if &end < &SifrInt::from_i64(0) {
+                if (&end < &SifrInt::from_i64(0)) {
                     end = &size + &end;
                 }
-                if &end < &SifrInt::from_i64(0) {
+                if (&end < &SifrInt::from_i64(0)) {
                     end = SifrInt::from_i64(0);
                 }
-                if &end > &size {
+                if (&end > &size) {
                     end = size;
                 }
             }
             let mut i: SifrInt = begin.clone();
-            while &i < &end {
+            while (&i < &end) {
                 let current: Option<T> = {
-                    let __sifr_index_list = &self._data;
-                    let __sifr_index_i = i.clone();
-                    let __sifr_index_norm = __sifr_index_i
-                        .normalize_index_or_len(__sifr_index_list.len());
-                    __sifr_index_list.get(__sifr_index_norm).cloned()
+                    let __sifr_checked_read_collection = &self._data;
+                    let __sifr_checked_read_index = i.clone();
+                    let __sifr_checked_read_normalized = __sifr_checked_read_index
+                        .normalize_index_or_len(__sifr_checked_read_collection.len());
+                    __sifr_checked_read_collection
+                        .get(__sifr_checked_read_normalized)
+                        .cloned()
                 };
                 if let Some(current) = current {
                     if current == *value {
@@ -240,11 +248,17 @@ mod __sifr_project_nominals {
                 let mut rebuilt: Vec<T> = vec![];
                 let mut i: SifrInt = SifrInt::from_i64(0);
                 while (&i < &SifrInt::from(self._data.len())) {
-                    let current: Option<T> = Some(
-                        self._data.clone()[::sifr_runtime::to_usize_proven(&(i))].clone(),
-                    );
+                    let current: Option<T> = {
+                        let __sifr_checked_read_collection = &self._data;
+                        let __sifr_checked_read_index = i.clone();
+                        let __sifr_checked_read_normalized = __sifr_checked_read_index
+                            .normalize_index_or_len(__sifr_checked_read_collection.len());
+                        __sifr_checked_read_collection
+                            .get(__sifr_checked_read_normalized)
+                            .cloned()
+                    };
                     if let Some(current) = current {
-                        if &i != &idx {
+                        if (&i != &idx) {
                             rebuilt.push(current.clone());
                         }
                     }
@@ -291,8 +305,8 @@ fn main() {
         ()
     };
     assert!(
-        seen.entry(SifrInt::from_i64(1)).or_insert(HashSet::new()).contains(& ("a"
-        .to_string()))
+        seen.get(& SifrInt::from_i64(1)).is_some_and(| __sifr_defaultdict_bucket |
+        __sifr_defaultdict_bucket.contains(& ("a".to_string())))
     );
     let mut counts: HashMap<String, SifrInt> = HashMap::new();
     {

@@ -42,12 +42,7 @@ impl RustEmitter {
                 element_ty,
             ))
         } else {
-            Some(non_option_nested_list_element(
-                lowered_outer_object,
-                lowered_outer_index,
-                lowered_inner_index,
-                element_ty,
-            ))
+            None
         }
     }
 }
@@ -137,58 +132,6 @@ fn option_nested_list_element(
                 is_async: false,
             }],
         })),
-    }
-}
-
-fn non_option_nested_list_element(
-    lowered_outer_object: RustExpr,
-    lowered_outer_index: RustExpr,
-    lowered_inner_index: RustExpr,
-    element_ty: &Type,
-) -> RustExpr {
-    let mut stmts = common_index_stmts(lowered_outer_object, lowered_outer_index);
-    stmts.extend([
-        RustStmt::Let {
-            mutable: false,
-            name: "__sifr_row".to_string(),
-            ty: None,
-            value: RustExpr::Ref {
-                mutable: false,
-                expr: Box::new(RustExpr::Index {
-                    expr: Box::new(RustExpr::Ident("__sifr_outer_list".to_string())),
-                    index: Box::new(usize_cast(RustExpr::Ident("__sifr_outer_norm".to_string()))),
-                }),
-            },
-        },
-        RustStmt::Let {
-            mutable: false,
-            name: "__sifr_inner_i".to_string(),
-            ty: None,
-            value: lowered_inner_index,
-        },
-        RustStmt::Let {
-            mutable: false,
-            name: "__sifr_inner_norm".to_string(),
-            ty: None,
-            value: crate::build_normalized_list_index_i64_expr(
-                RustExpr::Ident("__sifr_row".to_string()),
-                "__sifr_inner_i",
-            ),
-        },
-    ]);
-    let indexed = RustExpr::Index {
-        expr: Box::new(RustExpr::Ident("__sifr_row".to_string())),
-        index: Box::new(usize_cast(RustExpr::Ident("__sifr_inner_norm".to_string()))),
-    };
-    RustExpr::Block {
-        stmts,
-        expr: Some(Box::new(
-            if crate::helpers::is_copy_type_for_codegen(element_ty) {
-                indexed
-            } else {
-                RustExpr::Clone(Box::new(indexed))
-            },
-        )),
     }
 }
 

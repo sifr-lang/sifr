@@ -168,7 +168,7 @@ fn collect_python_callback_bound_names_stmt(
         | HirStmt::AttributeSubscriptAssign { value, .. } => {
             collect_python_callback_bound_names_expr(value, callable_params, names);
         }
-        HirStmt::Delete { object, index } => {
+        HirStmt::Delete { object, index, .. } => {
             collect_python_callback_bound_names_expr(object, callable_params, names);
             collect_python_callback_bound_names_expr(index, callable_params, names);
         }

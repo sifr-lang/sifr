@@ -7,17 +7,17 @@ fn _prepend<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     tails: &Vec<Vec<T>>,
 ) -> Vec<Vec<T>> {
     let mut result: Vec<Vec<T>> = vec![];
-    let head_holder: Vec<T> = vec![head];
+    let head_holder: Vec<T> = vec![head.clone()];
     for tail in tails.iter().cloned() {
         let current: Option<T> = {
-            let __sifr_index_list = &head_holder;
-            let __sifr_index_i = SifrInt::from_i64(0);
-            let __sifr_index_norm = __sifr_index_i
-                .normalize_index_or_len(__sifr_index_list.len());
-            __sifr_index_list.get(__sifr_index_norm).cloned()
+            let __sifr_checked_read_collection = &head_holder;
+            let __sifr_checked_read_index = SifrInt::from_i64(0);
+            let __sifr_checked_read_normalized = __sifr_checked_read_index
+                .normalize_index_or_len(__sifr_checked_read_collection.len());
+            __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
         };
         if let Some(current) = current {
-            let mut item: Vec<T> = vec![current];
+            let mut item: Vec<T> = vec![current.clone()];
             for value in tail.iter().cloned() {
                 item.push(value.clone());
             }
@@ -35,25 +35,50 @@ fn _product_impl<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     }
     let suffixes: Vec<Vec<T>> = _product_impl(pools, &index + &SifrInt::from_i64(1));
     let mut result: Vec<Vec<T>> = vec![];
-    let current_pool: Option<Vec<T>> = Some(
-        pools[::sifr_runtime::to_usize_proven(&(index))].clone(),
-    );
+    let current_pool: Option<Vec<T>> = {
+        let __sifr_checked_read_collection = &pools;
+        let __sifr_checked_read_index = index.clone();
+        let __sifr_checked_read_normalized = __sifr_checked_read_index
+            .normalize_index_or_len(__sifr_checked_read_collection.len());
+        __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+    };
     let Some(current_pool) = current_pool else {
         return result;
     };
     let mut i: SifrInt = SifrInt::from_i64(0);
     while (&i < &SifrInt::from(current_pool.len())) {
+        let Some(__sifr_checked_value_2) = ({
+            let __sifr_checked_read_collection = &current_pool;
+            let __sifr_checked_read_index = i.clone();
+            let __sifr_checked_read_normalized = __sifr_checked_read_index
+                .normalize_index_or_len(__sifr_checked_read_collection.len());
+            __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+        }) else {
+            break;
+        };
         let mut j: SifrInt = SifrInt::from_i64(0);
         while (&j < &SifrInt::from(suffixes.len())) {
-            let value: Option<T> = Some(
-                current_pool[::sifr_runtime::to_usize_proven(&(i))].clone(),
-            );
-            let suffix: Option<Vec<T>> = Some(
-                suffixes[::sifr_runtime::to_usize_proven(&(j))].clone(),
-            );
+            let value: Option<T> = {
+                let __sifr_checked_read_collection = &current_pool;
+                let __sifr_checked_read_index = i.clone();
+                let __sifr_checked_read_normalized = __sifr_checked_read_index
+                    .normalize_index_or_len(__sifr_checked_read_collection.len());
+                __sifr_checked_read_collection
+                    .get(__sifr_checked_read_normalized)
+                    .cloned()
+            };
+            let suffix: Option<Vec<T>> = {
+                let __sifr_checked_read_collection = &suffixes;
+                let __sifr_checked_read_index = j.clone();
+                let __sifr_checked_read_normalized = __sifr_checked_read_index
+                    .normalize_index_or_len(__sifr_checked_read_collection.len());
+                __sifr_checked_read_collection
+                    .get(__sifr_checked_read_normalized)
+                    .cloned()
+            };
             if let Some(value) = value {
                 if let Some(suffix) = suffix {
-                    let mut entry: Vec<T> = vec![value];
+                    let mut entry: Vec<T> = vec![value.clone()];
                     for suffix_value in suffix.iter().cloned() {
                         entry.push(suffix_value.clone());
                     }
@@ -78,11 +103,11 @@ fn _combinations_impl<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     let mut i: SifrInt = start.clone();
     while (&i <= &(&SifrInt::from(data.len()) - &r)) {
         let current: Option<T> = {
-            let __sifr_index_list = &data;
-            let __sifr_index_i = i.clone();
-            let __sifr_index_norm = __sifr_index_i
-                .normalize_index_or_len(__sifr_index_list.len());
-            __sifr_index_list.get(__sifr_index_norm).cloned()
+            let __sifr_checked_read_collection = &data;
+            let __sifr_checked_read_index = i.clone();
+            let __sifr_checked_read_normalized = __sifr_checked_read_index
+                .normalize_index_or_len(__sifr_checked_read_collection.len());
+            __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
         };
         if let Some(current) = current {
             let tails: Vec<Vec<T>> = _combinations_impl(
@@ -133,25 +158,22 @@ fn repeat<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     value: T,
     times: SifrInt,
 ) -> Box<dyn Iterator<Item = T>> {
-    let holder: Vec<T> = vec![value];
+    let holder: Vec<T> = vec![value.clone()];
     let mut result: Vec<T> = vec![];
     let mut i: SifrInt = SifrInt::from_i64(0);
-    while &i < &times {
+    while (&i < &times) {
         if (&SifrInt::from(holder.len()) > &SifrInt::from_i64(0)) {
-            result
-                .push(
-                    ({
-                        let __sifr_index_value_option = {
-                            let __sifr_index_list = &holder;
-                            let __sifr_index_i = SifrInt::from_i64(0);
-                            let __sifr_index_norm = __sifr_index_i
-                                .normalize_index_or_len(__sifr_index_list.len());
-                            __sifr_index_list.get(__sifr_index_norm).cloned()
-                        };
-                        __sifr_index_value_option.as_slice()[0_usize].clone()
-                    })
-                        .clone(),
-                );
+            if let Some(__sifr_checked_value_15) = {
+                let __sifr_checked_read_collection = &holder;
+                let __sifr_checked_read_index = SifrInt::from_i64(0);
+                let __sifr_checked_read_normalized = __sifr_checked_read_index
+                    .normalize_index_or_len(__sifr_checked_read_collection.len());
+                __sifr_checked_read_collection
+                    .get(__sifr_checked_read_normalized)
+                    .cloned()
+            } {
+                result.push(__sifr_checked_value_15.clone().clone());
+            }
         }
         i = &i + &SifrInt::from_i64(1);
     }
@@ -179,17 +201,23 @@ fn islice<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
         actual_stop = SifrInt::from_i64(0);
     }
     let mut stride: SifrInt = step.clone();
-    if &stride <= &SifrInt::from_i64(0) {
+    if (&stride <= &SifrInt::from_i64(0)) {
         stride = SifrInt::from_i64(1);
         actual_stop = actual_start.clone();
     }
     let mut result: Vec<T> = vec![];
     let mut index: SifrInt = actual_start.clone();
-    while &index < &actual_stop {
+    while (&index < &actual_stop) {
         if (&index < &SifrInt::from(data_owned.len())) {
-            let value: Option<T> = Some(
-                data_owned[::sifr_runtime::to_usize_proven(&(index))].clone(),
-            );
+            let value: Option<T> = {
+                let __sifr_checked_read_collection = &data_owned;
+                let __sifr_checked_read_index = index.clone();
+                let __sifr_checked_read_normalized = __sifr_checked_read_index
+                    .normalize_index_or_len(__sifr_checked_read_collection.len());
+                __sifr_checked_read_collection
+                    .get(__sifr_checked_read_normalized)
+                    .cloned()
+            };
             if let Some(value) = value {
                 result.push(value.clone());
             }
@@ -215,7 +243,7 @@ fn product<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
             if !__sifr_generator_initialized {
                 let mut _yields: Vec<Vec<T>> = Vec::new();
                 let mut result: Vec<Vec<T>> = vec![];
-                if &repeat >= &SifrInt::from_i64(0) {
+                if (&repeat >= &SifrInt::from_i64(0)) {
                     let mut base_pools: Vec<Vec<T>> = vec![];
                     for iterable in iterables.iter().cloned() {
                         base_pools
@@ -227,7 +255,7 @@ fn product<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
                     }
                     let mut pools: Vec<Vec<T>> = vec![];
                     let mut i: SifrInt = SifrInt::from_i64(0);
-                    while &i < &repeat {
+                    while (&i < &repeat) {
                         for pool in base_pools.iter().cloned() {
                             pools.push(pool.clone());
                         }
@@ -241,7 +269,20 @@ fn product<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
                 }
                 let mut i: SifrInt = SifrInt::from_i64(0);
                 while (&i < &SifrInt::from(result.len())) {
-                    _yields.push(result[::sifr_runtime::to_usize_proven(&(i))].clone());
+                    let Some(__sifr_checked_value_18) = ({
+                        let __sifr_checked_read_collection = &result;
+                        let __sifr_checked_read_index = i.clone();
+                        let __sifr_checked_read_normalized = __sifr_checked_read_index
+                            .normalize_index_or_len(
+                                __sifr_checked_read_collection.len(),
+                            );
+                        __sifr_checked_read_collection
+                            .get(__sifr_checked_read_normalized)
+                            .cloned()
+                    }) else {
+                        break;
+                    };
+                    _yields.push(__sifr_checked_value_18.clone());
                     i = &i + &SifrInt::from_i64(1);
                 }
                 __sifr_generator_iter = _yields.into_iter();
@@ -269,7 +310,7 @@ fn combinations<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
                 if (&r >= &SifrInt::from_i64(0))
                     && (&r <= &SifrInt::from(materialized.len()))
                 {
-                    if &r == &SifrInt::from_i64(0) {
+                    if (&r == &SifrInt::from_i64(0)) {
                         result = vec![vec![]];
                     } else {
                         result = _combinations_impl(
@@ -281,7 +322,20 @@ fn combinations<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
                 }
                 let mut i: SifrInt = SifrInt::from_i64(0);
                 while (&i < &SifrInt::from(result.len())) {
-                    _yields.push(result[::sifr_runtime::to_usize_proven(&(i))].clone());
+                    let Some(__sifr_checked_value_20) = ({
+                        let __sifr_checked_read_collection = &result;
+                        let __sifr_checked_read_index = i.clone();
+                        let __sifr_checked_read_normalized = __sifr_checked_read_index
+                            .normalize_index_or_len(
+                                __sifr_checked_read_collection.len(),
+                            );
+                        __sifr_checked_read_collection
+                            .get(__sifr_checked_read_normalized)
+                            .cloned()
+                    }) else {
+                        break;
+                    };
+                    _yields.push(__sifr_checked_value_20.clone());
                     i = &i + &SifrInt::from_i64(1);
                 }
                 __sifr_generator_iter = _yields.into_iter();
@@ -326,7 +380,7 @@ fn odds(limit: SifrInt) -> Box<dyn Iterator<Item = SifrInt>> {
     if !__sifr_generator_initialized {
         let mut _yields: Vec<SifrInt> = Vec::new();
         let mut i: SifrInt = SifrInt::from_i64(0);
-        while &i < &limit {
+        while (&i < &limit) {
             if (&i.floor_mod_known_nonzero(&SifrInt::from_i64(2)) == &SifrInt::from_i64(1)) {
                 _yields.push(i.clone());
             }

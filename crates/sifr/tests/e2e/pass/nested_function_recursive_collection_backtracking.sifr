@@ -7,7 +7,7 @@ def accumulate_items(items: list[int], limit: int) -> list[list[int]]:
         if total == limit:
             snapshots.append(current.copy())
             return
-        if index >= len(items) or total > limit:
+        if index < 0 or index >= len(items) or total > limit:
             return
 
         current.append(items[index])

@@ -30,7 +30,7 @@ fn tree_value_sum(node: &Option<TreeNode>) -> SifrInt {
 }
 
 fn paired_tree_value_sum(p: &Option<TreeNode>, q: &Option<TreeNode>) -> SifrInt {
-    if p.is_none() && q.is_none() {
+    if !p.is_some() && !q.is_some() {
         return SifrInt::from_i64(0);
     }
     let (Some(p), Some(q)) = (p.as_ref(), q.as_ref()) else {

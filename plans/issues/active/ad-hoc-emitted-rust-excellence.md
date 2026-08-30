@@ -148,7 +148,8 @@ It does not broaden the active item.
 | 1 | complete | Comprehensive corpus and non-vacuous gates | Every generated surface is discoverable; freshness, rustfmt, Clippy, panic/static analysis, determinism, and negative self-tests fail closed without broad quality suppressions. |
 | 2 | complete | Exact integer and overflow architecture | Canonical `int` storage and all arithmetic use one exact semantic model; debug/release behavior agrees; fixed-width boundaries remain explicitly checked. |
 | 3 | complete | Checked failure and impossible-state model | Generated user paths use typed errors; abort/exit/unreachable discharge and silent value fallbacks are removed; compiler invariants fail before materialization. |
-| 4 | pending | Collection access and mutation architecture | Reads, writes, deletes, nested access, augassign, membership, and unpacking share checked place semantics with no panic or silent no-op path. |
+| 4 | merged | Collection access and mutation architecture | Reads, writes, deletes, nested access, augassign, membership, and unpacking share checked place semantics with no panic or silent no-op path. |
+| 4A | pending | Residual checked-place lifecycle closure | Loop-carried witnesses, post-mutation missing behavior, and callback argument decoding preserve exact semantics and compile on every generated surface. |
 | 5 | pending | Lazy iterator and generator architecture | Yield, generator state, `count`, `islice`, chained adapters, and errors are lazy and semantically unbounded where required. |
 | 6 | pending | Stdlib emitted-semantics closure | String widths, IO reads/seeks/errors, decimal precision, iteration arguments, and every inventory-owned stdlib defect have exact behavior and resource safety. |
 | 7 | pending | Ownership, borrowing, and clone quality | Signatures and expressions use idiomatic borrowing; avoidable container, row, tree, and scalar clones are eliminated without weakening ownership safety. |
@@ -218,11 +219,20 @@ It does not broaden the active item.
 
 ### Item 4: Collection access and mutation architecture
 
-- [ ] Every collection access form uses one typed checked-place plan.
-- [ ] Negative indices, nested indices, unpacking cardinality, missing keys,
+- [x] Every collection access form uses one typed checked-place plan.
+- [x] Negative indices, nested indices, unpacking cardinality, missing keys,
   deletes, and writes preserve Sifr semantics.
-- [ ] Membership and read-only access do not mutate containers.
-- [ ] Out-of-range writes never become no-ops.
+- [x] Membership and read-only access do not mutate containers.
+- [x] Out-of-range writes never become no-ops.
+
+### Item 4A: Residual checked-place lifecycle closure
+
+- [ ] A checked-place witness does not survive a loop back-edge after any
+  mutation of its object or index dependencies.
+- [ ] A fresh read after mutation uses the operation's current typed failure
+  semantics; deletion followed by access cannot replay an earlier guard exit.
+- [ ] Fixed-arity callback argument decoding is type-directed, panic-free, and
+  compiles for one or more callback arguments across the Python interop matrix.
 
 ### Item 5: Lazy iterator and generator architecture
 
@@ -302,6 +312,7 @@ It does not broaden the active item.
 | 2 | merged | [#3580](https://github.com/sifr-lang/sifr/pull/3580) | `d618a7be107550629c3331ea7fdb3f76e28e0dce` | Compiler candidate `aa97d2ca6d0da1ec5700b02d3f57ef864a450a53`: 1,151 codegen tests and 557 driver tests passed; Clippy, formatting, generated inventory/freshness, diagnostics governance, file-size, HIR, and driver checks passed. The one create-PR gate completed every reached check and all 28 runtime-platform variants with zero failures before its cold rebuild exceeded the 120-second step budget. The one merge gate passed static, core-language, differential, Rust interop, coverage, and all 30 Python-interop variants before finding three stale diagnostic baselines. Follow-up `7b3ba45d25e07adabb820c9f80463534060d42ee` changed only diagnostic fixtures/governance; 178 of 179 full baseline variants passed before the sole new wording mismatch was corrected, and exact checks then passed. Neither gate was repeated. | [Initial review](https://github.com/sifr-lang/sifr/pull/3580#issuecomment-5465345414) on `d4aea519efebdf29bad472a9795afcdd72c4f865` and [sole remediation review](https://github.com/sifr-lang/sifr/pull/3580#issuecomment-5465345486) on `9606b67b84ae5865105415399d647319b455bb99` were NOT SATISFIED. The initial slice-step panic was fixed. The remediation review's new exact-ratio proof/codegen mismatch is assigned to Item 3 under the no-third-review rule. | Canonical inline-small/`BigInt` `SifrInt`, exact arithmetic and conversion paths, fixed-width boundaries, constants, ranges, collections, unions, and Rust/Python interop merged with debug/release and corpus evidence. |
 | 3 | merged | [#3587](https://github.com/sifr-lang/sifr/pull/3587) | `fe95d220be2819464d6231080d57e47444b0d429` | Reviewed compiler candidate `229c2687923d97c72531bb4e81deb047833367b1`: 1,156 codegen and 1,053 lowering tests passed; workspace Clippy, formatting, file-size, HIR, demo freshness, generated determinism, panic scan, demo corpus, intrinsic panic lint, diagnostics governance, and smoke/representative/full generated Clippy passed. The one create-PR gate stopped on a stale retained-intrinsic governance row after all preceding checks passed; docs-only `6e7c5b32dc9574a40ff5624834daa768613a0b14` removed it and the exact checker plus self-test passed. The one merge gate passed static, core-language, differential, Rust interop, coverage, and 29 of 30 Python-interop variants; its sole `sqlite-context` compiler failure is assigned to Item 3A. Neither gate was repeated. | [Initial review](https://github.com/sifr-lang/sifr/pull/3587#issuecomment-5466942667) on `2e3867cbe3546e09a94f391672410808315f3b25` was NOT SATISFIED; [sole remediation review](https://github.com/sifr-lang/sifr/pull/3587#issuecomment-5466942761) on `229c2687923d97c72531bb4e81deb047833367b1` was SATISFIED. The loop-constant blocker was fixed; later mechanism findings are assigned to Item 3A under the review limit. | Typed structural failure discharge, exact ratio materialization, checked Decimal/BigDecimal/bytes/random/input operations, structured try/finally and context carriers, pre-render invariant validation, regenerated demos, and retired `SIFR-INT-0006` governance merged. |
 | 3A | merged | [#3591](https://github.com/sifr-lang/sifr/pull/3591) | `d88192be94823a6e1c0f30b712d2f7440ac2c6b4` | Compiler candidate `719bd96ad5b4d11c507b356bd6fece2ab6d4ac3f`: 4 IR, 1,167 codegen, and 1,072 lowering tests passed with one intentional ignore; all non-E2E Sifr test groups, focused sync/async/SQLite runtime regressions, formatting, HIR, file-size, and item-owned Clippy checks passed. The sole create-PR run passed every functional check but exceeded the runtime-platform step budget after the required cold-cache cleanup; its later warm merge run passed that area in 24.5 seconds. The sole merge run passed core language, CPython differential, Rust/Python interop, diagnostics, runtime, algorithmic, tooling, and all emitted-Rust corpus, panic-scan, rustfmt, Clippy, determinism, and freshness checks. Its only failure was a pre-existing surface inventory record: both base and candidate contain the same 704 E2E paths and digest while the record expects 701. Neither gate was repeated. | [Initial review](https://github.com/sifr-lang/sifr/pull/3591#issuecomment-5467141026) on `8b7b46cd629e6530d693462e10590ec287b931c3` was NOT SATISFIED; [sole remediation review](https://github.com/sifr-lang/sifr/pull/3591#issuecomment-5467149668) on `719bd96ad5b4d11c507b356bd6fece2ab6d4ac3f` was SATISFIED with no blockers. The imported-constant proof regression was fixed through lexical module-frame resolution. | Suppressible Python contexts now rejoin typed carriers; exact-integer facts respect lexical binding identity and nested-call mutation; loop/context emitted fallthrough agrees with static flow; sync, async-for, and SQLite regressions merged. |
+| 4 | merged | [#3601](https://github.com/sifr-lang/sifr/pull/3601) | `ab1bd8371faf090f3f7549524147b0fbabbd3b7a` | Compiler candidate `a91f43d2bace42c5579d02cf0a9bce57e4962300`: 1,172 codegen, 1,073 lowering with one intentional ignore, 84 runtime, and 8 exact-integer architecture tests passed; E2E passed 705/705 with signature `9f98912689339124`; workspace Clippy, formatting, HIR, file-size, generated inventory, demo freshness, governed corpus, and panic scan passed. The full generated-quality run's 91 rustfmt-classified cases passed individually, but its exact aggregate debt signature changed and remains Item 8-owned. The sole create-PR gate passed every reached guardrail plus Rust interop, coverage, diagnostics, and 23 of 24 Python-interop variants. The sole merge gate passed all guardrails, Rust interop, coverage, core language, CPython differential, and 29 of 30 Python-interop variants. Both gates stopped only on the same underconstrained callback-decoder array conversion assigned to Item 4A, and neither was repeated. | [Initial review](https://github.com/sifr-lang/sifr/pull/3601#issuecomment-5470119120) on `054c14f728ed13f6ed548647a5669504a36d729f` was NOT SATISFIED; [sole remediation review](https://github.com/sifr-lang/sifr/pull/3601#issuecomment-5470119110) on `a91f43d2bace42c5579d02cf0a9bce57e4962300` was NOT SATISFIED. The straight-line stale-value and E0502 blocker was fixed. The remediation review's new loop-back-edge and post-deletion failure-semantics defects are assigned to Item 4A under the no-third-review rule. | One typed checked-place architecture now covers negative and nested reads, writes, deletes, augmented assignment, membership, unpacking, optional targets, and generated direct-index removal. Mutation-aware straight-line witness refresh, checked non-empty vectors, typed failure plans, and regenerated companions merged; bounded residual lifecycle defects are owned by Item 4A. |
 
 ## Deferred Findings
 
@@ -337,21 +348,26 @@ It does not broaden the active item.
 | Item 3A local Clippy audit | Strict workspace/all-target Clippy exposes untouched compiler and test lint debt, including annotation-resolution needless borrowing and structural-record ownership/`expect` findings. | Item 8 | Remove the underlying lint debt without broad allowances and make maintained compiler/test surfaces warning-clean under the phase policy. |
 | Item 3A merge gate | The generated-code surface inventory expects 701 E2E pass sources, but the exact Item 3A base and candidate both contain the same 704 paths and digest `ef6a17a107fa114027c96eb2947afc71430a781834df64b97df608629dc10b87`. | Item 8 | Refresh the authoritative inventory from the owning producer and add it to stale generated-record reconciliation; Item 3A added or removed no E2E source path. |
 | Item 3A create-PR gate | A required first cold-cache run exceeded the runtime-platform 120-second step budget although all 28 variants passed; the warmed merge run completed the same area in 24.5 seconds. | Item 12 | Ensure final qualification budgets distinguish mandated cold-cache setup from warm blocking evidence and retain both timing receipts. |
+| Item 4 remediation review | A checked-place witness established outside a loop can survive a mutating loop back-edge, producing stale list values or an E0502 dictionary borrow on later iterations. | Item 4A | Invalidate before entering any repeatable block whose body mutates a witness dependency, and establish a fresh checked read inside each iteration before use. |
+| Item 4 remediation review | Refresh after deletion reuses the original membership guard's exit action, so a later missing read can return the guard fallback instead of raising the operation's typed missing-key error. | Item 4A | Derive the refreshed read's failure continuation from the post-mutation operation rather than replaying proof-establishment control flow. |
+| Item 4 create-PR and merge gates | Callback argument decoding replaced direct vector indexing with an underconstrained fixed-array `try_into`; one-argument callback examples fail Rust inference with E0282. | Item 4A | Emit an explicit fixed-array type or an equivalent type-directed checked decoder for every callback arity, with Python interop regressions. |
+| Item 4 full generated-quality run | All 91 governed rustfmt cases retained their expected individual classification, but changed emitted source produced aggregate signature `c62a991cbb6e89aa92fa2cd0514ed03433d88b135fb662f52ab19527ca955687` instead of the locked Item 1 signature. | Item 8 | Remove the underlying formatting debt through canonical Rust IR/emission cleanup; do not rebase the exact debt signature to changed debt. |
 
 New out-of-scope findings must name a concrete active owner before the current
 item can close.
 
 ## Current Handoff
 
-- Active item: Item 4, collection access and mutation architecture, based on
-  Item 3A merge `d88192be94823a6e1c0f30b712d2f7440ac2c6b4`.
-- Item 3A state: merged with typed suppressible-context continuation, lexical
-  exact-integer proof lookup, nested-call mutation summaries, aligned static
-  flow/emission, and sync, async-for, loop, and SQLite runtime evidence.
-- Item 4 inherited scope: replace the remaining generated direct-index panic
-  surface with one checked-place architecture across reads, writes, deletes,
-  nested targets, augmented assignment, membership, and unpacking.
-- Next action: audit every collection access producer and existing Item 4
-  inventory row, implement the complete checked-place architecture without
-  testing, then run focused validation, the bounded exact-SHA Opus review, and
-  the single exact candidate gate sequence.
+- Active item: Item 4A, residual checked-place lifecycle closure, based on Item
+  4 merge `ab1bd8371faf090f3f7549524147b0fbabbd3b7a`.
+- Item 4 state: merged with one typed checked-place architecture for reads,
+  writes, deletes, nested targets, augmented assignment, membership, unpacking,
+  and optional targets; straight-line mutation refresh is covered by native
+  and E2E evidence.
+- Item 4A inherited scope is limited to the sole remediation review's two new
+  mechanism defects and the sole gate sequence's callback-decoder regression:
+  loop back-edge validity, post-deletion missing semantics, and type-directed
+  fixed-arity callback decoding.
+- Next action: implement all three Item 4A corrections without testing, then
+  run focused collection/callback validation, the bounded exact-SHA Opus
+  review, and the single exact candidate gate sequence before Item 5 starts.

@@ -408,8 +408,10 @@ macro_rules! stmt_expr_literals_and_calls {
                     return Ok(None);
                 };
                 if !element.ty().contains_affine_resource() {
-                    lowered_element =
-                        $emitter.clone_field_storage_name_expr_for_ir(element, lowered_element);
+                    lowered_element = crate::RustEmitter::clone_non_copy_name_expr_for_ir(
+                        element,
+                        lowered_element,
+                    );
                 }
                 if let Type::List(element_ty) = list_ty {
                     lowered_element = crate::helpers::adapt_collection_value_for_target(
