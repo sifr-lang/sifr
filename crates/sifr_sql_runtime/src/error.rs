@@ -1,3 +1,4 @@
+use sifr_runtime::async_cleanup::AsyncCleanupEvidence;
 use std::fmt;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -15,6 +16,7 @@ pub enum SqlErrorKind {
     Encode,
     Cardinality,
     ResourceLimit,
+    TransactionControl,
     Provider,
     Migration,
 }
@@ -47,6 +49,13 @@ pub enum ResourceLimitKind {
     CollectedRows,
     StatementCache,
     Parameters,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CardinalityViolation {
+    ExpectedExactlyOneFoundZero,
+    ExpectedExactlyOneFoundMany,
+    ExpectedAtMostOneFoundMany,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -104,6 +113,7 @@ pub struct SqlErrorMetadata {
     pub columns: Vec<SafeSqlIdentifier>,
     pub retry: RetryClassification,
     pub resource_limit: Option<ResourceLimitKind>,
+    pub cardinality: Option<CardinalityViolation>,
 }
 
 impl Default for SqlErrorMetadata {
@@ -117,6 +127,7 @@ impl Default for SqlErrorMetadata {
             columns: Vec::new(),
             retry: RetryClassification::Never,
             resource_limit: None,
+            cardinality: None,
         }
     }
 }
@@ -134,6 +145,7 @@ impl SqlErrorMetadata {
 pub struct SqlError {
     kind: SqlErrorKind,
     metadata: Box<SqlErrorMetadata>,
+    secondary: Vec<AsyncCleanupEvidence>,
 }
 
 impl SqlError {
@@ -142,6 +154,7 @@ impl SqlError {
         Self {
             kind,
             metadata: Box::default(),
+            secondary: Vec::new(),
         }
     }
 
@@ -150,6 +163,7 @@ impl SqlError {
         Ok(Self {
             kind,
             metadata: Box::new(metadata),
+            secondary: Vec::new(),
         })
     }
 
@@ -161,6 +175,50 @@ impl SqlError {
     #[must_use]
     pub fn metadata(&self) -> &SqlErrorMetadata {
         self.metadata.as_ref()
+    }
+
+    #[must_use]
+    pub const fn retry_classification(&self) -> RetryClassification {
+        self.metadata.retry
+    }
+
+    #[must_use]
+    pub fn secondary(&self) -> &[AsyncCleanupEvidence] {
+        &self.secondary
+    }
+
+    #[must_use]
+    pub fn with_secondary(mut self, evidence: AsyncCleanupEvidence) -> Self {
+        self.secondary.push(evidence);
+        self
+    }
+
+    pub fn extend_secondary(&mut self, evidence: impl IntoIterator<Item = AsyncCleanupEvidence>) {
+        self.secondary.extend(evidence);
+    }
+
+    #[must_use]
+    pub fn resource_limit(limit: ResourceLimitKind) -> Self {
+        Self::with_metadata(
+            SqlErrorKind::ResourceLimit,
+            SqlErrorMetadata {
+                resource_limit: Some(limit),
+                ..SqlErrorMetadata::default()
+            },
+        )
+        .unwrap_or_else(|error| error)
+    }
+
+    #[must_use]
+    pub fn cardinality(violation: CardinalityViolation) -> Self {
+        Self::with_metadata(
+            SqlErrorKind::Cardinality,
+            SqlErrorMetadata {
+                cardinality: Some(violation),
+                ..SqlErrorMetadata::default()
+            },
+        )
+        .unwrap_or_else(|error| error)
     }
 }
 
@@ -180,6 +238,7 @@ impl fmt::Display for SqlError {
             SqlErrorKind::Encode => "database parameter encoding failed",
             SqlErrorKind::Cardinality => "database result cardinality was violated",
             SqlErrorKind::ResourceLimit => "SQL resource limit was exceeded",
+            SqlErrorKind::TransactionControl => "SQL transaction state is invalid",
             SqlErrorKind::Provider => "database provider failed",
             SqlErrorKind::Migration => "database migration failed",
         })

@@ -11,8 +11,9 @@ analysis interface. It contains no parser and no database driver.
 
 `sifr_sql_runtime` owns application runtime shape. It defines verified handle
 states, owned parameters, explicit execution modes, structured errors,
-cancellation handoff, and panic containment. It depends only on `sifr_runtime`
-only. The compiler emits closed runtime metadata; the runtime never links the
+cancellation handoff, and panic containment. It depends on `sifr_runtime` and
+Tokio synchronization and timing primitives. It links no raw database driver.
+The compiler emits closed runtime metadata; the runtime never links the
 compiler-only contract crate.
 
 Provider components own dialect parsing and semantic analysis. Provider runtime

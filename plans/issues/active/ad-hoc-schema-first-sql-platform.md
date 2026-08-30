@@ -289,7 +289,7 @@ can use these contracts.
 | 6 | completed | Query and fragment substrate | Query templates, owned bound queries, typed fragments, composition, safe interpolation, and cardinality adapters integrate with Sifr typing and HIR. |
 | 7 | completed | PostgreSQL schema and query compiler | PostgreSQL catalogs, grammar, resolution, typing, nullability, result records, writes, dependencies, and diagnostics work offline. |
 | 8 | completed | PostgreSQL semantic completion | Advanced PostgreSQL constructs, fragment scope changes, cardinality proofs, custom codecs, and exported-query stability rules are complete. |
-| 9 | pending | PostgreSQL runtime | Verified pools, session contracts, transactions, streaming, automatic statement caching, explicit fetch methods, bounded cleanup, tests, and panic-safe protocol handling are complete. |
+| 9 | in_progress | PostgreSQL runtime | Verified pools, session contracts, transactions, streaming, automatic statement caching, explicit fetch methods, bounded cleanup, tests, and panic-safe protocol handling are complete. |
 | 10 | pending | Incremental compiler and editor experience | Fine-grained caching, invalidation, virtual SQL documents, source maps, completion, navigation, rename, formatting, and quick fixes are complete. |
 | 11 | pending | Host tool graph and command runner | Cargo-locked host-only tool packages execute direct command namespaces without entering application code generation. |
 | 12 | pending | Schema lifecycle tools | Pull, validate, and build commands produce deterministic snapshots, fingerprints, manifests, modules, semantic diffs, and affected-query reports. |
@@ -687,45 +687,45 @@ Owned scope:
 
 Acceptance criteria:
 
-- [ ] Runtime manifests use the exact Milestone 0 versions of Tokio, Rustls,
+- [x] Runtime manifests use the exact Milestone 0 versions of Tokio, Rustls,
   `tokio-postgres`, `postgres-types`, and `tokio-postgres-rustls`.
-- [ ] The runtime uses raw `tokio-postgres`, `postgres-types`, and
+- [x] The runtime uses raw `tokio-postgres`, `postgres-types`, and
   `tokio-postgres-rustls` clients with an explicit feature allowlist.
-- [ ] `sifr_sql_runtime` owns pooling, verified leases, session reset,
+- [x] `sifr_sql_runtime` owns pooling, verified leases, session reset,
   statement-cache policy, cancellation budgets, and resource accounting.
-- [ ] Pool verification combines one evidence mode with one strictness mode.
-- [ ] Compatible verification compares every recorded property and absence fact
+- [x] Pool verification combines one evidence mode with one strictness mode.
+- [x] Compatible verification compares every recorded property and absence fact
   in the referenced schema slice.
-- [ ] Unverified handles cannot execute queries.
-- [ ] Session state is typed, verified, and re-applied on every acquisition and
+- [x] Unverified handles cannot execute queries.
+- [x] Session state is typed, verified, and re-applied on every acquisition and
   reset. Unsupported transaction-pooler settings fail before execution.
-- [ ] `execute`, `fetch_one`, `fetch_optional`, `expect_at_most_one`, `first`,
+- [x] `execute`, `fetch_one`, `fetch_optional`, `expect_at_most_one`, `first`,
   bounded `fetch_all`, `stream`, and one-field `.scalar()` implement exact
   result contracts.
-- [ ] Connections, transactions, savepoints, cleanup, commit, rollback, and live
+- [x] Connections, transactions, savepoints, cleanup, commit, rollback, and live
   streams obey static ownership and fallible cleanup rules.
-- [ ] The transaction runtime implements and tests an explicit live, committed,
+- [x] The transaction runtime implements and tests an explicit live, committed,
   rolled-back, poisoned, and dropped transition matrix. Commit, rollback, and
   cleanup cannot leave a handle reusable or report success after an invalid
   transition.
-- [ ] Pools are `ShareSafe` cloneable handles. Connections, transactions, and
+- [x] Pools are `ShareSafe` cloneable handles. Connections, transactions, and
   streams cannot cross task boundaries.
-- [ ] Context transactions never retry automatically. The separate replay API
+- [x] Context transactions never retry automatically. The separate replay API
   admits only compiler-validated `@retry_safe` callbacks and creates a fresh
   transaction per attempt.
-- [ ] Cancellation gives resource cleanup one bounded shielded interval.
+- [x] Cancellation gives resource cleanup one bounded shielded interval.
   Timeout closes or discards the resource and records a secondary cleanup error.
-- [ ] Connections use bounded least-recently-used statement caches with complete
+- [x] Connections use bounded least-recently-used statement caches with complete
   semantic identity and explicit `warm` support. Preparation is not a public type.
-- [ ] Deadlines, cancellation, backpressure, row-byte bounds, row-count bounds,
+- [x] Deadlines, cancellation, backpressure, row-byte bounds, row-count bounds,
   statement-cache bounds, and connection bounds return structured errors.
-- [ ] `ExecutionResult` has exact rows-affected and provider-metadata contracts.
-- [ ] Runtime qualification provisions the exact PostgreSQL provider through its
+- [x] `ExecutionResult` has exact rows-affected and provider-metadata contracts.
+- [x] Runtime qualification provisions the exact PostgreSQL provider through its
   harness and rolls back test transactions. It does not depend on the later
   public tool namespace. No fake database API exists.
-- [ ] The external async prerequisite is merged. Transactions and streams pass
+- [x] The external async prerequisite is merged. Transactions and streams pass
   abnormal-exit, cancellation-cause, secondary-cleanup, and early-close tests.
-- [ ] Malformed protocol and database data cannot reach a user-triggered panic.
+- [x] Malformed protocol and database data cannot reach a user-triggered panic.
 
 Focused validation:
 
@@ -1274,7 +1274,7 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 | 6 | completed | [#3599](https://github.com/sifr-lang/sifr/pull/3599) | `9944bdd450` | SQL 19/19; coverage 4/4; contract 23/23; runtime 12/12 plus two doctests; frontend 3/3; driver 2/2; strict Clippy and guards pass | Opus remediation `SATISFIED` on `0abd5109f` | Query and fragment substrate, registry, generated identifier codec, HIR, runtime binding, and execution request lowering |
 | 7 | completed | [#3602](https://github.com/sifr-lang/sifr/pull/3602) | `46f1d06d8e` | PostgreSQL 13-18 native, component, and live matrices; SQL qualification, mutation, Clippy, and guards pass | Opus round 2 verified every original remediation on `6cd745149`; two new mechanisms are deferred | PostgreSQL schema and query compiler |
 | 8 | completed | [#3604](https://github.com/sifr-lang/sifr/pull/3604) | `e18e0a92d5` | SQL 4/4; PostgreSQL 13-18 native and component suites; contract, build-output, strict Clippy, and guards pass | Opus round 2 closed the original nested-star blocker on `94fbb6e0f`; one new semantic-flag mechanism is deferred | PostgreSQL advanced semantics, stable projections, codecs, fragments, and query-signature artifacts |
-| 9 | pending | — | — | — | — | PostgreSQL runtime |
+| 9 | in_progress | — | — | focused Rust, SQL qualification, Clippy, guards, and PostgreSQL 13-18 live matrix pass | review pending | implementation candidate ready; merge and record pending |
 | 10 | pending | — | — | — | — | Incremental compiler and editor experience |
 | 11 | pending | — | — | — | — | Host tool graph and command runner |
 | 12 | pending | — | — | — | — | Schema lifecycle tools |

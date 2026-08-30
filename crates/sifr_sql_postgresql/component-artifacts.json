@@ -3,7 +3,7 @@
   "target": "wasm32-wasip2",
   "wit_world": "embedded-language-provider",
   "protocol_major": 1,
-  "guest_source_sha256": "611a8a8466703a8c738673186250a24a5bdbbb9c82402eea37d5e089dd79872f",
+  "guest_source_sha256": "aef6a2fb770687cf70b11af4ff313dd50352df254a91cc2e00445973b05e3e8c",
   "toolchain": {
     "wasi_sdk": "33.0",
     "wasi_sdk_asset_sha256": "85c997a2665ead91673b5bb88b7d0df3fc8900df3bfa244f720d478187bbdc78",
