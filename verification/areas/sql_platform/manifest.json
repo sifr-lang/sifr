@@ -103,6 +103,40 @@
       ]
     },
     {
+      "name": "query-fragments",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "sql-query-substrate-qualification",
+          "entry": "verification/areas/sql_platform/data/query_substrate_qualification.json",
+          "command": "sql-query-substrate-qualification",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-query-contract-tests",
+          "entry": "crates/sifr_sql_contract/tests/query_fragments.rs",
+          "command": "sql-query-contract-tests",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-query-runtime-tests",
+          "entry": "crates/sifr_sql_runtime/tests/query_substrate.rs",
+          "command": "sql-query-runtime-tests",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-query-frontend-tests",
+          "entry": "crates/sifr_frontend/tests/sql_queries.rs",
+          "command": "sql-query-frontend-tests",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
       "name": "mutation",
       "kind": "adapter",
       "cases": [
@@ -138,6 +172,13 @@
           "id": "sql-common-qualification-mutations",
           "entry": "verification/areas/sql_platform/data/common_sql_qualification.json",
           "command": "sql-common-qualification-mutations",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-query-substrate-qualification-mutations",
+          "entry": "verification/areas/sql_platform/data/query_substrate_qualification.json",
+          "command": "sql-query-substrate-qualification-mutations",
           "expect_exit_code": 0,
           "diagnostic_formats": []
         }

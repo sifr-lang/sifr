@@ -1,6 +1,6 @@
 use crate::{
     ObjectId, ProfileAuthority, SchemaContractError, SchemaContractErrorKind, SchemaObjectKind,
-    SemanticValue,
+    SemanticValue, encode_generated_identifier, encode_generated_path,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
@@ -125,11 +125,15 @@ fn render_generated_type(
 ) -> Result<(), SchemaContractError> {
     match generated {
         GeneratedSchemaType::Enum { path, variants, .. } => {
-            let name = emitted_name(path)?;
+            let name = encode_generated_path(path)?;
             writeln!(source, "\nclass {name}(Enum):").map_err(format_error)?;
             for (index, variant) in variants.iter().enumerate() {
-                writeln!(source, "    {} = {index}", escape_identifier(variant))
-                    .map_err(format_error)?;
+                writeln!(
+                    source,
+                    "    {} = {index}",
+                    encode_generated_identifier(variant)?
+                )
+                .map_err(format_error)?;
             }
             if variants.is_empty() {
                 source.push_str("    pass\n");
@@ -138,15 +142,19 @@ fn render_generated_type(
         GeneratedSchemaType::Domain {
             path, storage_type, ..
         } => {
-            let name = emitted_name(path)?;
+            let name = encode_generated_path(path)?;
             writeln!(source, "\nclass {name}:\n    value: {storage_type}").map_err(format_error)?;
         }
         GeneratedSchemaType::Composite { path, fields, .. } => {
-            let name = emitted_name(path)?;
+            let name = encode_generated_path(path)?;
             writeln!(source, "\nclass {name}:").map_err(format_error)?;
             for (field, field_type) in fields {
-                writeln!(source, "    {}: {field_type}", escape_identifier(field))
-                    .map_err(format_error)?;
+                writeln!(
+                    source,
+                    "    {}: {field_type}",
+                    encode_generated_identifier(field)?
+                )
+                .map_err(format_error)?;
             }
             if fields.is_empty() {
                 source.push_str("    pass\n");
@@ -263,7 +271,7 @@ fn qualified_generated_path(identity: &str) -> Result<Vec<String>, SchemaContrac
         .split('.')
         .map(|name| {
             if valid_identifier(name) {
-                Ok(escape_identifier(name))
+                Ok(name.to_string())
             } else {
                 Err(SchemaContractError::new(
                     SchemaContractErrorKind::InvalidSchema,
@@ -280,77 +288,13 @@ fn generated_path(category: &str, qualified: &[String]) -> Vec<String> {
         .collect()
 }
 
-fn emitted_name(path: &[String]) -> Result<String, SchemaContractError> {
-    if path.is_empty() {
-        return Err(SchemaContractError::new(
-            SchemaContractErrorKind::InvalidSchema,
-            "generated schema type path must not be empty",
-        ));
-    }
-    Ok(path.join("__"))
-}
-
-fn valid_identifier(value: &str) -> bool {
-    let mut chars = value.chars();
-    chars
-        .next()
-        .is_some_and(|first| first == '_' || first.is_alphabetic())
-        && chars.all(|character| character == '_' || character.is_alphanumeric())
-}
+use crate::identifier::{is_sifr_keyword, valid_identifier};
 
 fn valid_type_path(value: &str) -> bool {
     !value.is_empty()
         && value
             .split('.')
             .all(|part| valid_identifier(part) && !is_sifr_keyword(part))
-}
-
-fn escape_identifier(value: &str) -> String {
-    if is_sifr_keyword(value) {
-        format!("{value}_")
-    } else {
-        value.to_string()
-    }
-}
-
-fn is_sifr_keyword(value: &str) -> bool {
-    matches!(
-        value,
-        "False"
-            | "None"
-            | "True"
-            | "and"
-            | "as"
-            | "async"
-            | "await"
-            | "break"
-            | "class"
-            | "continue"
-            | "def"
-            | "del"
-            | "elif"
-            | "else"
-            | "except"
-            | "finally"
-            | "for"
-            | "from"
-            | "global"
-            | "if"
-            | "import"
-            | "in"
-            | "is"
-            | "lambda"
-            | "nonlocal"
-            | "not"
-            | "or"
-            | "pass"
-            | "raise"
-            | "return"
-            | "try"
-            | "while"
-            | "with"
-            | "yield"
-    )
 }
 
 fn format_error(_: std::fmt::Error) -> SchemaContractError {

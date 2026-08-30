@@ -64,6 +64,7 @@
       "classification": "first_party_compiler",
       "targets": [
         {"name": "sifr_frontend", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"},
+        {"name": "sql_queries", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "frontend_query_bench", "kind": "bin", "classification": "benchmark", "profile_assignment": "performance"}
       ],
       "features": []
@@ -135,6 +136,7 @@
       "targets": [
         {"name": "sifr_sql_contract", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"},
         {"name": "common_sql_contracts", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
+        {"name": "query_fragments", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "schema_profiles", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"}
       ],
       "features": []
@@ -144,6 +146,7 @@
       "classification": "first_party_runtime",
       "targets": [
         {"name": "sifr_sql_runtime", "kind": "lib", "classification": "first_party_runtime", "profile_assignment": "merge"},
+        {"name": "query_substrate", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
         {"name": "runtime_contracts", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"}
       ],
       "features": []

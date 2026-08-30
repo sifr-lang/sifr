@@ -9,10 +9,14 @@ mod diff;
 mod effect;
 mod error;
 mod fingerprint;
+mod fragment;
 mod generated;
+mod identifier;
 mod normalization;
 mod profile;
+mod profile_registry;
 mod provider;
+mod query;
 mod schema;
 mod slice;
 mod sql_type;
@@ -36,9 +40,19 @@ pub use diff::{ObjectChange, ObjectChangeKind, SchemaDiff, semantic_diff};
 pub use effect::{EffectContract, QueryEffect};
 pub use error::{SchemaContractError, SchemaContractErrorKind};
 pub use fingerprint::{SchemaFingerprint, schema_fingerprint};
+pub use fragment::{
+    AliasIdentity, EffectTransformation, FragmentCategory, FragmentDraft, FragmentIdentity,
+    PredicateContext, QueryDefinitionScope, RelationAlias, ResultTransformation, SqlFragment,
+    SqlPrecedence, StaticFragmentOrigin, UnsafeSyntaxAudit, UnsafeSyntaxGrant, UnsafeSyntaxLint,
+    all_predicates, any_predicates, not_predicate,
+};
 pub use generated::{
     COMPILER_KNOWN_PROFILE_EXPORTS, GeneratedProfileModule, GeneratedSchemaType,
     ProfileModuleMetadata, generate_profile_module,
+};
+pub use identifier::{
+    decode_generated_identifier, decode_generated_path, encode_generated_identifier,
+    encode_generated_path,
 };
 pub use normalization::{SchemaDocument, SchemaDocumentKind, normalize_schema};
 pub use profile::{
@@ -46,9 +60,15 @@ pub use profile::{
     SchemaProfile, SchemaStrictness, SessionContract, build_profile_authority,
     schema_context_artifact,
 };
+pub use profile_registry::{ProfileModuleRegistry, RegisteredProfileModule};
 pub use provider::{
     DialectSemantics, ProviderAnalysis, ProviderAnalysisError, ProviderParameter,
     ProviderResultField,
+};
+pub use query::{
+    QueryAdapter, QueryContractError, QueryContractErrorKind, QueryOrigin, QueryParameterSlot,
+    QuerySignatureRegistry, QuerySymbol, QuerySymbolKind, QueryTemplateContract,
+    QueryTemplateDraft, QueryTemplateIdentity, QueryWarning, RowOfType, effect_can_unify,
 };
 pub use schema::{
     DialectIdentity, ObjectId, ProviderIdentity, SchemaIr, SchemaObject, SchemaObjectKind,

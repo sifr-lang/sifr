@@ -756,6 +756,7 @@
         "common-sql",
         "contracts",
         "dependency-baseline",
+        "query-fragments",
         "schema-profiles",
         "mutation"
       ],

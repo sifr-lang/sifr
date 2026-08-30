@@ -10,6 +10,7 @@ mod future;
 mod handles;
 mod parameter;
 mod provider;
+mod query;
 mod resource;
 
 pub use codec::{RuntimeCodec, catch_codec_boundary};
@@ -29,5 +30,6 @@ pub use provider::{
     CancellationReason, ExecutionMetadata, ExecutionMode, ExecutionRequest, ExecutionResult,
     ProviderRuntime, ResetReason, RuntimeCardinality, RuntimeEffect, RuntimeEffectContract,
 };
+pub use query::{BoundQuery, EncodeParameters, OrderedParameterEncoder, QueryTemplate};
 pub use resource::{ResourceUsage, RuntimeLimits};
 pub use sifr_runtime::cancellation::CancellationCarrier;

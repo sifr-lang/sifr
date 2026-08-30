@@ -51,6 +51,7 @@ PROFILE_SUITES = {
     "contracts",
     "dependency-baseline",
     "mutation",
+    "query-fragments",
     "schema-profiles",
 }
 REQUIRED_AUDITS = {"advisory", "license", "panic", "secret-redaction", "unsafe-code"}

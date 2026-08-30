@@ -10,11 +10,13 @@ license = { workspace = true }
 sifr_compiler_component = { workspace = true }
 sifr_diagnostics = { workspace = true }
 sifr_lowering = { workspace = true }
+sifr_ir = { workspace = true }
 sifr_source = { workspace = true }
 sifr_syntax = { workspace = true }
 sifr_type_system = { workspace = true }
 sifr_python_ast = { workspace = true }
 sifr_structural_identity = { workspace = true }
+sifr_sql_contract = { workspace = true }
 ruff_text_size = { workspace = true }
 num-bigint = { workspace = true }
 serde = { workspace = true }
@@ -22,3 +24,7 @@ serde_json = { workspace = true }
 
 [lints]
 workspace = true
+
+[dev-dependencies]
+semver = { workspace = true }
+sifr_sql_runtime = { workspace = true }

@@ -225,7 +225,11 @@ fn nominal_profiles_and_generated_namespaces_do_not_collapse_equal_schemas() {
     assert!(module.source.contains("class Schema:"));
     assert!(module.source.contains("class enums__public__sql(Enum):"));
     assert!(module.source.contains("class enums__app__sql(Enum):"));
-    assert!(module.source.contains("class enums__app__class_(Enum):"));
+    assert!(
+        module
+            .source
+            .contains("class enums__app___sifr_sql_636c617373(Enum):")
+    );
     assert!(module.metadata.compiler_known_exports.contains("sql"));
     assert_eq!(
         module

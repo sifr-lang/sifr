@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "compiler_contract": "sifr_sql_contract",
+  "frontend_consumer": "sifr_frontend::SqlQueryCompiler",
+  "runtime_contract": "sifr_sql_runtime",
+  "public_query_states": ["QueryTemplate", "BoundQuery"],
+  "fragment_categories": [
+    "assignment-list",
+    "command",
+    "expression",
+    "identifier",
+    "join",
+    "order-by",
+    "predicate",
+    "query",
+    "relation",
+    "returning-list",
+    "select-list",
+    "values"
+  ],
+  "fragment_contract": [
+    "category",
+    "dialect",
+    "effect-transformation",
+    "free-identifiers",
+    "hygienic-aliases",
+    "input-output-scope",
+    "parameter-slots",
+    "precedence",
+    "profile",
+    "query-identity",
+    "result-transformation"
+  ],
+  "static_identity_rules": [
+    "no-runtime-branches",
+    "no-runtime-containers",
+    "no-runtime-loops",
+    "no-returned-aliases",
+    "source-location-alias-identity",
+    "top-level-row-of-only"
+  ],
+  "predicate_combinators": ["all", "any", "not"],
+  "cardinality_adapters": ["expect-at-most-one", "first-with-determinism-lint"],
+  "unsafe_syntax": {
+    "capability": "sql.unsafe-syntax",
+    "requires_reason": true,
+    "lint_policies": ["deny", "warn"],
+    "runtime_text_is_syntax": false
+  },
+  "generated_identifier_codec": "injective-reversible-reserved-prefix-utf8",
+  "profile_registry_indexes": ["module-path", "nominal-identity", "profile-name"],
+  "lowering_contract": [
+    "bound-query-consumption",
+    "capture-once-left-to-right",
+    "conditional-clone",
+    "normal-sifr-query-types",
+    "runtime-cardinality-round-trip",
+    "runtime-effect-round-trip"
+  ],
+  "evidence": [
+    "alias-escape-negatives",
+    "binding-order-and-failure-timing",
+    "cardinality-method-negatives",
+    "fragment-composition-properties",
+    "generated-name-collision-properties",
+    "profile-registry-production-consumer",
+    "row-of-symbol-negatives",
+    "unsafe-capability-negatives"
+  ]
+}
