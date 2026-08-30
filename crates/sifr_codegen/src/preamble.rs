@@ -4,6 +4,9 @@ use crate::{RustExpr, RustItem, RustMatchArm, RustParam, RustStmt, RustType, Vis
 
 mod types_and_errors;
 pub use types_and_errors::*;
+mod error_conversion;
+mod secondary_error;
+pub use error_conversion::*;
 mod task_context_runtime;
 mod template_runtime;
 mod type_validation;

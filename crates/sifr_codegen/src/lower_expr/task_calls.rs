@@ -32,8 +32,15 @@ pub(crate) fn try_lower_task_duration_expr(
     duration: &HirExpr,
     seconds_name: &str,
 ) -> Option<RustExpr> {
+    Some(task_duration_expr_from_seconds(
+        try_lower_leaf_or_name_expr(duration)?,
+        seconds_name,
+    ))
+}
+
+pub(crate) fn task_duration_expr_from_seconds(seconds: RustExpr, seconds_name: &str) -> RustExpr {
     let seconds = RustExpr::Cast {
-        expr: Box::new(try_lower_leaf_or_name_expr(duration)?),
+        expr: Box::new(seconds),
         ty: RustType::F64,
     };
     let seconds_name = seconds_name.to_string();
@@ -50,7 +57,7 @@ pub(crate) fn try_lower_task_duration_expr(
             right: Box::new(RustExpr::Literal(RustLiteral::Float(0.0))),
         }),
     };
-    Some(RustExpr::Block {
+    RustExpr::Block {
         stmts: vec![RustStmt::Let {
             mutable: false,
             name: seconds_name.clone(),
@@ -70,5 +77,5 @@ pub(crate) fn try_lower_task_duration_expr(
                 else_expr: Some(Box::new(RustExpr::Literal(RustLiteral::Float(0.0)))),
             }],
         })),
-    })
+    }
 }

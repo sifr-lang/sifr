@@ -628,7 +628,7 @@ impl RustEmitter {
     }
 }
 
-pub(super) fn rewrite_context_control_flow(
+pub(crate) fn rewrite_context_control_flow(
     stmts: Vec<RustStmt>,
     loop_depth: usize,
 ) -> Vec<RustStmt> {
@@ -709,7 +709,7 @@ pub(super) fn rewrite_context_control_flow(
         .collect()
 }
 
-pub(super) fn rust_stmts_always_exit(stmts: &[RustStmt]) -> bool {
+pub(crate) fn rust_stmts_always_exit(stmts: &[RustStmt]) -> bool {
     stmts.last().is_some_and(rust_stmt_always_exits)
 }
 

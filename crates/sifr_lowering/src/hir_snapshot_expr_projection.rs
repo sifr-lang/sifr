@@ -461,12 +461,16 @@ pub(super) fn async_with_kind_name(kind: &HirAsyncWithKind) -> Value {
             enter_value_ty,
             enter_error_ty,
             exit_error_ty,
+            active_error_ty,
+            body_may_raise,
         } => json!({
             "kind": "UserDefined",
             "context": project_expr(context),
             "enter_value_ty": type_name(enter_value_ty),
             "enter_error_ty": type_name(enter_error_ty),
             "exit_error_ty": type_name(exit_error_ty),
+            "active_error_ty": type_name(active_error_ty),
+            "body_may_raise": body_may_raise,
         }),
         HirAsyncWithKind::Python {
             context,

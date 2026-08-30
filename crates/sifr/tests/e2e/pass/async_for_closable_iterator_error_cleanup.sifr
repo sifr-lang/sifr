@@ -1,0 +1,39 @@
+class StreamError(Error):
+    message: str
+
+
+class ClosableCounter:
+    current: int
+    closed: bool
+
+    def __init__(self):
+        self.current = 0
+        self.closed = False
+
+    async def anext(mut self) -> Result[Option[int], StreamError]:
+        if self.current >= 2:
+            return None
+        value: int = self.current
+        self.current = self.current + 1
+        next_value: Option[int] = value
+        return next_value
+
+    async def aclose(mut self) -> Result[None, StreamError]:
+        assert not self.closed
+        self.closed = True
+        return None
+
+
+async def consume(mut stream: ClosableCounter) -> Result[None, StreamError]:
+    async for value in stream:
+        if value == 1:
+            raise StreamError("body failed")
+    return None
+
+
+async def main() -> Result[None, StreamError]:
+    stream: ClosableCounter = ClosableCounter()
+    result = await consume(stream)
+    assert str(result).find("body failed") is not None
+    assert stream.closed
+    return None

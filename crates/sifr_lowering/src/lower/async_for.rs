@@ -5,7 +5,6 @@ use super::integer_const_facts::{
 use super::ownership_diagnostics;
 use super::python_interop::lower_python_context_owned_expr;
 use super::statement_diagnostics;
-use super::statements::lower_stmts;
 use crate::hir_nodes::HirStmt;
 use ruff_text_size::{Ranged, TextRange};
 use sifr_diagnostics::DiagnosticCode;
@@ -188,6 +187,17 @@ pub(in crate::lower) fn lower_async_for(
         return None;
     };
     let close_error_ty = async_closable_error_type(&iter_ty);
+    if close_error_ty.is_some()
+        && super::typing_and_functions::function_body_contains_yield(&for_stmt.body)
+    {
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_MISMATCH,
+            "closable async iterators cannot contain yield until async-generator cleanup suspension is implemented"
+                .to_string(),
+            for_stmt.iter.range(),
+        );
+        return None;
+    }
     if !return_type_accepts_error(&func_type.return_type, &iter_error_ty) {
         ctx.error_with_code_at(
             DiagnosticCode::TYPE_MISMATCH,
@@ -208,7 +218,8 @@ pub(in crate::lower) fn lower_async_for(
         crate::scope::EphemeralOrigin::Iteration,
     );
     ctx.loop_depth += 1;
-    let body = lower_stmts(&for_stmt.body, func_type, ctx);
+    let (body, body_may_raise) =
+        crate::lower::statements::lower_python_context_body(&for_stmt.body, func_type, ctx);
     ctx.loop_depth -= 1;
     ctx.scope.pop();
     let body_const_integer_state = ctx.scope.save_const_integer_state();
@@ -231,12 +242,18 @@ pub(in crate::lower) fn lower_async_for(
         }
     }
 
+    let active_error_ty = match func_type.return_type.resolve_alias() {
+        Type::Result(_, error) => error.as_ref().clone(),
+        _ => Type::Never,
+    };
     Some(HirStmt::AsyncFor {
         target,
         target_ty,
         iter,
         iter_error_ty,
         close_error_ty,
+        active_error_ty,
+        body_may_raise,
         body,
         else_body: None,
     })

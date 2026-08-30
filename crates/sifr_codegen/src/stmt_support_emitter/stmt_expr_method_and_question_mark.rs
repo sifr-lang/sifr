@@ -177,6 +177,34 @@ macro_rules! stmt_expr_method_call {
                     }
                 }
             }
+            if method == "__sifr_timeout"
+                && matches!(
+                    crate::resolve_alias_type_for_plain_call(object.ty()),
+                    Type::Task(_, _)
+                )
+            {
+                let [duration] = args.as_slice() else {
+                    return Ok(None);
+                };
+                let Some(lowered_object) = $emitter.lower_method_receiver_place_for_stmt(
+                    object,
+                    *receiver_convention,
+                    receiver_target.as_ref(),
+                )? else {
+                    return Ok(None);
+                };
+                let Some(lowered_duration) = $emitter.lower_stmt_expr_for_ir(duration)? else {
+                    return Ok(None);
+                };
+                return Ok(Some(crate::RustExpr::MethodCall {
+                    receiver: Box::new(lowered_object),
+                    method: method.clone(),
+                    args: vec![crate::task_duration_expr_from_seconds(
+                        lowered_duration,
+                        "__sifr_task_timeout_seconds",
+                    )],
+                }));
+            }
             let lowered_registry = $emitter.try_lower_registry_method_call_expr(
                 object,
                 method,

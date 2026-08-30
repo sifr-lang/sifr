@@ -1,0 +1,61 @@
+from sifr.io import exists, write_text
+from sifr.os import getpid, remove_file
+
+
+class ResourceError(Error):
+    message: str
+
+
+def marker_path(name: str) -> str:
+    return "/tmp/sifr_async_with_nested_error_" + name + "_" + str(getpid()) + ".txt"
+
+
+class OrderedResource:
+    path: str
+    prerequisite: str
+
+    def __init__(self, path: str, prerequisite: str):
+        self.path = path
+        self.prerequisite = prerequisite
+
+    async def __aenter__(self) -> Result[None, ResourceError]:
+        return None
+
+    async def __aexit__(self, _cause: AsyncExitCause) -> Result[None, ResourceError]:
+        if self.prerequisite != "":
+            assert exists(self.prerequisite)
+        try:
+            _written: None = write_text(self.path, "closed")
+        except IOError as e:
+            raise ResourceError(e.message)
+        return None
+
+
+async def fail_nested(outer_path: str, inner_path: str) -> Result[None, ResourceError]:
+    async with OrderedResource(outer_path, inner_path):
+        async with OrderedResource(inner_path, ""):
+            raise ResourceError("body failed")
+    return None
+
+
+async def main() -> Result[None, Error]:
+    outer_path: str = marker_path("outer")
+    inner_path: str = marker_path("inner")
+    for path in [outer_path, inner_path]:
+        if exists(path):
+            try:
+                _removed_existing: None = remove_file(path)
+            except IOError as e:
+                _existing_cleanup_error: str = e.message
+
+    result = await fail_nested(outer_path, inner_path)
+    assert str(result).find("body failed") is not None
+    assert exists(inner_path)
+    assert exists(outer_path)
+
+    for path in [outer_path, inner_path]:
+        try:
+            _removed: None = remove_file(path)
+        except IOError as e:
+            _cleanup_error: str = e.message
+    return None

@@ -40,6 +40,8 @@ mod field_assignment;
 mod if_condition_lowering;
 mod iterator_lowering;
 mod loops_try_finally;
+mod native_async_context;
+mod native_async_for;
 mod nested_subscript_assignment;
 mod nested_subscript_assignment_helpers;
 pub(crate) mod performance_lowering_gate;
@@ -57,7 +59,6 @@ mod subscript_augassign_delete;
 mod try_error_helpers;
 mod try_handlers;
 mod tuple_unpack_block;
-use async_cleanup::{inject_async_for_early_exit_cleanup, inject_async_with_return_cleanup};
 pub(crate) use result_type_helpers::integer_float_conversion_error_union;
 use result_type_helpers::{
     is_none_like_result_value, is_result_int_division_error_type, result_int_to_sifr_int_rust_type,

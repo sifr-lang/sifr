@@ -758,6 +758,7 @@ impl RustEmitter {
                 iter,
                 iter_error_ty,
                 close_error_ty,
+                active_error_ty,
                 body,
                 ..
             } = stmt
@@ -767,6 +768,7 @@ impl RustEmitter {
                     iter,
                     iter_error_ty,
                     close_error_ty.as_ref(),
+                    active_error_ty,
                     body,
                 )?
                 else {

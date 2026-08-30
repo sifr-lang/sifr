@@ -114,7 +114,7 @@ fn collect_item(item: &RustItem, needs: &mut IrImportNeeds) {
 
 fn collect_stmt(stmt: &RustStmt, needs: &mut IrImportNeeds) {
     match stmt {
-        RustStmt::Verbatim(_) => {}
+        RustStmt::Verbatim(source) => scan_named_text(source, needs),
         RustStmt::Let { ty, value, .. } => {
             if let Some(ty) = ty {
                 collect_type(ty, needs);
@@ -647,6 +647,26 @@ mod tests {
                 ])),
                 args: vec![RustExpr::Literal(RustLiteral::Int(1))],
             }))],
+            is_async: false,
+        }];
+
+        let needs = collect_import_needs_from_items(&items);
+
+        assert!(needs.runtime.needs_sifr_int);
+        assert!(needs.runtime.needs_sifr_runtime);
+    }
+
+    #[test]
+    fn collects_import_symbols_from_verbatim_statements() {
+        let items = vec![RustItem::Fn {
+            name: "demo".to_string(),
+            visibility: Visibility::Private,
+            type_params: vec![],
+            params: vec![],
+            ret: None,
+            body: vec![RustStmt::Verbatim(
+                "let value: SifrInt = SifrInt::from_i64(1);".to_string(),
+            )],
             is_async: false,
         }];
 

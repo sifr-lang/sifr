@@ -1,0 +1,28 @@
+class ResourceError(Error):
+    message: str
+
+
+class PanickingResource:
+    async def __aenter__(self) -> Result[None, ResourceError]:
+        return None
+
+    async def __aexit__(self, _cause: AsyncExitCause) -> Result[None, ResourceError]:
+        assert False
+        return None
+
+
+async def worker() -> Result[None, ResourceError]:
+    async with PanickingResource():
+        raise ResourceError("body remains primary")
+    return None
+
+
+async def main() -> Result[None, ScopeFailure]:
+    async with task.scope() as scope:
+        handle = scope.spawn(worker())
+        result = await handle
+        rendered: str = str(result)
+        assert rendered.find("body remains primary") is not None
+        assert rendered.find("asynchronous cleanup panicked") is not None
+        assert rendered.find("CleanupFailed") is not None
+    return None

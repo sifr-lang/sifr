@@ -302,6 +302,8 @@ pub enum HirAsyncWithKind {
         enter_value_ty: Type,
         enter_error_ty: Type,
         exit_error_ty: Type,
+        active_error_ty: Type,
+        body_may_raise: bool,
     },
     /// Dedicated declaration-first Python async context protocol, distinct
     /// from native user-defined async context semantics.
@@ -401,6 +403,8 @@ pub enum HirStmt {
         iter: HirExpr,
         iter_error_ty: Type,
         close_error_ty: Option<Type>,
+        active_error_ty: Type,
+        body_may_raise: bool,
         body: Vec<HirStmt>,
         else_body: Option<Vec<HirStmt>>,
     },

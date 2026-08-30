@@ -121,6 +121,7 @@ pub(crate) fn generate_rust_test_with_project_policy(
     let uses_join_set = super::module_uses_join_set(module);
     let uses_async_python =
         super::python_interop_common::module_uses_async_python_declaration(module);
+    let uses_native_async_cleanup = super::module_uses_native_async_cleanup(module);
     let uses_join_set_spawn_cpu = super::module_uses_join_set_spawn_cpu(module);
     let uses_task_scope_offload = super::module_uses_task_scope_offload(module);
     let uses_task_scope_spawn_cpu = super::module_uses_task_scope_spawn_cpu(module);
@@ -134,8 +135,11 @@ pub(crate) fn generate_rust_test_with_project_policy(
     if super::module_uses_async_exit_cause_type(module) {
         emitted_items.extend(super::build_async_exit_cause_type_items());
     }
-    if uses_task_scope || uses_join_set || uses_async_python {
-        emitted_items.extend(super::build_task_cancellation_items(uses_async_python));
+    if uses_task_scope || uses_join_set || uses_async_python || uses_native_async_cleanup {
+        emitted_items.extend(super::build_task_cancellation_items(
+            uses_async_python || uses_native_async_cleanup,
+            uses_task_scope || uses_join_set || uses_native_async_cleanup,
+        ));
     }
     if uses_task_scope || uses_join_set {
         emitted_items.extend(super::build_task_scope_items());

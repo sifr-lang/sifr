@@ -490,6 +490,7 @@ impl RustEmitter {
             iter,
             iter_error_ty,
             close_error_ty,
+            active_error_ty,
             body,
             ..
         } = stmt
@@ -499,6 +500,7 @@ impl RustEmitter {
                 iter,
                 iter_error_ty,
                 close_error_ty.as_ref(),
+                active_error_ty,
                 body,
             )? {
                 self.push_captured_stmt(&self.rewrite_stdlib_constant_idents_in_stmt(lowered_stmt));

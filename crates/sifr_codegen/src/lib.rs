@@ -7,8 +7,10 @@ pub use lib_modules_and_codegen::*;
 mod builtin_errors;
 pub(crate) use builtin_errors::BUILTIN_ERROR_CLASSES;
 mod lib_async_main_cancellation;
+mod lib_native_async_cleanup_needs;
 mod lib_runtime_needs;
 pub(crate) use lib_async_main_cancellation::scope_async_main_cancellation;
+pub(crate) use lib_native_async_cleanup_needs::module_uses_native_async_cleanup;
 pub(crate) use lib_runtime_needs::{
     annotate_async_main_entrypoint, body_contains_await, module_uses_async_exit_cause_type,
     module_uses_async_generator_type, module_uses_cancellation_error_type,

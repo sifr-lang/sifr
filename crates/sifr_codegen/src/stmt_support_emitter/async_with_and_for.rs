@@ -1,7 +1,4 @@
-use super::{
-    HirExpr, HirStmt, RustEmitter, RustStmt, Type, inject_async_for_early_exit_cleanup,
-    inject_async_with_return_cleanup, queries,
-};
+use super::{HirExpr, HirStmt, RustEmitter, RustStmt, Type, queries};
 impl RustEmitter {
     pub(crate) fn try_lower_with_stmt_for_ir(
         &mut self,
@@ -91,96 +88,20 @@ impl RustEmitter {
                 body,
             );
         }
-        if let sifr_ir::HirAsyncWithKind::UserDefined { context, .. } = kind {
-            let body_always_exits = queries::block_control_flow_effect(body).always_exits();
-            let Some(mut lowered_body) = self.try_lower_scoped_stmt_block_for_ir(body)? else {
-                return Ok(None);
-            };
-            if let HirExpr::Name { name, .. } = context {
-                lowered_body = inject_async_with_return_cleanup(
-                    &lowered_body,
-                    &crate::RustExpr::Ident(name.clone()),
-                );
-                let enter_stmt = crate::RustStmt::Let {
-                    mutable: false,
-                    name: target.unwrap_or("_").to_string(),
-                    ty: None,
-                    value: crate::RustExpr::Try(Box::new(crate::RustExpr::Await(Box::new(
-                        crate::RustExpr::MethodCall {
-                            receiver: Box::new(crate::RustExpr::Ident(name.clone())),
-                            method: "__aenter__".to_string(),
-                            args: vec![],
-                        },
-                    )))),
-                };
-                let exit_stmt = crate::RustStmt::Expr(crate::RustExpr::Try(Box::new(
-                    crate::RustExpr::Await(Box::new(crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::Ident(name.clone())),
-                        method: "__aexit__".to_string(),
-                        args: vec![crate::RustExpr::Ref {
-                            mutable: false,
-                            expr: Box::new(crate::RustExpr::Path(vec![
-                                "AsyncExitCause".to_string(),
-                                "Normal".to_string(),
-                            ])),
-                        }],
-                    })),
-                )));
-                let mut stmts = Vec::with_capacity(lowered_body.len() + 2);
-                stmts.push(enter_stmt);
-                stmts.append(&mut lowered_body);
-                if !body_always_exits {
-                    stmts.push(exit_stmt);
-                }
-                return Ok(Some(RustStmt::Block(stmts)));
-            }
-
-            let Some(lowered_context) = self.lower_stmt_expr_for_ir(context)? else {
-                return Ok(None);
-            };
-            lowered_body = inject_async_with_return_cleanup(
-                &lowered_body,
-                &crate::RustExpr::Ident("__sifr_async_cm".to_string()),
+        if let sifr_ir::HirAsyncWithKind::UserDefined {
+            context,
+            exit_error_ty,
+            active_error_ty,
+            ..
+        } = kind
+        {
+            return self.try_lower_native_async_context_for_ir(
+                context,
+                exit_error_ty,
+                active_error_ty,
+                target,
+                body,
             );
-            let enter_call = crate::RustExpr::Try(Box::new(crate::RustExpr::Await(Box::new(
-                crate::RustExpr::MethodCall {
-                    receiver: Box::new(crate::RustExpr::Ident("__sifr_async_cm".to_string())),
-                    method: "__aenter__".to_string(),
-                    args: vec![],
-                },
-            ))));
-            let enter_stmt = crate::RustStmt::Let {
-                mutable: false,
-                name: target.unwrap_or("_").to_string(),
-                ty: None,
-                value: enter_call,
-            };
-            let exit_stmt = crate::RustStmt::Expr(crate::RustExpr::Try(Box::new(
-                crate::RustExpr::Await(Box::new(crate::RustExpr::MethodCall {
-                    receiver: Box::new(crate::RustExpr::Ident("__sifr_async_cm".to_string())),
-                    method: "__aexit__".to_string(),
-                    args: vec![crate::RustExpr::Ref {
-                        mutable: false,
-                        expr: Box::new(crate::RustExpr::Path(vec![
-                            "AsyncExitCause".to_string(),
-                            "Normal".to_string(),
-                        ])),
-                    }],
-                })),
-            )));
-            let mut stmts = Vec::with_capacity(lowered_body.len() + 3);
-            stmts.push(crate::RustStmt::Let {
-                mutable: true,
-                name: "__sifr_async_cm".to_string(),
-                ty: None,
-                value: lowered_context,
-            });
-            stmts.push(enter_stmt);
-            stmts.append(&mut lowered_body);
-            if !body_always_exits {
-                stmts.push(exit_stmt);
-            }
-            return Ok(Some(RustStmt::Block(stmts)));
         }
 
         let timeout_duration = if let sifr_ir::HirAsyncWithKind::TaskTimeout { duration } = kind {
@@ -263,8 +184,19 @@ impl RustEmitter {
         iter: &HirExpr,
         iter_error_ty: &Type,
         close_error_ty: Option<&Type>,
+        active_error_ty: &Type,
         body: &[HirStmt],
     ) -> Result<Option<RustStmt>, crate::CodegenError> {
+        if let Some(close_error_ty) = close_error_ty {
+            return self.try_lower_closable_native_async_for_for_ir(
+                target,
+                iter,
+                iter_error_ty,
+                close_error_ty,
+                active_error_ty,
+                body,
+            );
+        }
         let Some(lowered_body) = self.try_lower_scoped_stmt_block_for_ir(body)? else {
             return Ok(None);
         };
@@ -275,11 +207,7 @@ impl RustEmitter {
         };
         let infallible_iter = matches!(iter_error_ty.resolve_alias(), Type::Never);
         let loop_body = |receiver: crate::RustExpr| {
-            let lowered_body = if let Some(close_error_ty) = close_error_ty {
-                inject_async_for_early_exit_cleanup(&lowered_body, &receiver, close_error_ty)
-            } else {
-                lowered_body.clone()
-            };
+            let lowered_body = lowered_body.clone();
             let next_call = crate::RustExpr::Await(Box::new(crate::RustExpr::MethodCall {
                 receiver: Box::new(receiver),
                 method: "anext".to_string(),

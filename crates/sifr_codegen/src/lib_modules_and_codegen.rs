@@ -11,11 +11,11 @@ use super::{
     build_worker_panic_hook_items, module_uses_async_exit_cause_type,
     module_uses_async_generator_type, module_uses_cancellation_error_type,
     module_uses_failure_type, module_uses_join_set, module_uses_join_set_spawn_cpu,
-    module_uses_spawn_cpu, module_uses_task_scope, module_uses_task_scope_offload,
-    module_uses_task_scope_process, module_uses_task_scope_spawn_cpu, module_uses_task_sleep,
-    module_uses_timeout_result_type, replace_parallel_runtime_items,
-    replace_sync_channel_runtime_items, scope_async_main_cancellation, sifr_type_to_rust_type,
-    sync_channel_runtime_needed,
+    module_uses_native_async_cleanup, module_uses_spawn_cpu, module_uses_task_scope,
+    module_uses_task_scope_offload, module_uses_task_scope_process,
+    module_uses_task_scope_spawn_cpu, module_uses_task_sleep, module_uses_timeout_result_type,
+    replace_parallel_runtime_items, replace_sync_channel_runtime_items,
+    scope_async_main_cancellation, sifr_type_to_rust_type, sync_channel_runtime_needed,
 };
 use crate::StdlibCode;
 use crate::error_refs::collect_complete_referenced_builtin_error_classes;
@@ -474,6 +474,7 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
     let uses_async_exit_cause_type = module_uses_async_exit_cause_type(module);
     let uses_async_python =
         crate::python_interop_common::module_uses_async_python_declaration(module);
+    let uses_native_async_cleanup = module_uses_native_async_cleanup(module);
     let uses_timeout_result_type = module_uses_timeout_result_type(module);
     let uses_async_generator_type = module_uses_async_generator_type(module);
     let uses_template = crate::module_uses_template(module);
@@ -627,8 +628,11 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
             preamble_items.extend(build_file_handle_struct_items());
         }
     }
-    if uses_task_scope || uses_join_set || uses_async_python {
-        preamble_items.extend(build_task_cancellation_items(uses_async_python));
+    if uses_task_scope || uses_join_set || uses_async_python || uses_native_async_cleanup {
+        preamble_items.extend(build_task_cancellation_items(
+            uses_async_python || uses_native_async_cleanup,
+            uses_task_scope || uses_join_set || uses_native_async_cleanup,
+        ));
     }
     if uses_task_scope || uses_join_set {
         preamble_items.extend(build_task_scope_items());
@@ -673,7 +677,7 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
     if !emitter.body_items.is_empty() {
         assembled_body_items.extend(emitter.body_items.clone());
     }
-    if uses_async_python {
+    if uses_async_python || uses_native_async_cleanup {
         scope_async_main_cancellation(&mut assembled_body_items);
     }
     remove_trivial_clones_in_items(&mut assembled_body_items);

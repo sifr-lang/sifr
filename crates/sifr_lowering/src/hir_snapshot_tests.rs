@@ -178,6 +178,8 @@ fn project_stmt(stmt: &HirStmt) -> Value {
             iter,
             iter_error_ty,
             close_error_ty,
+            active_error_ty,
+            body_may_raise,
             body,
             else_body,
         } => json!({
@@ -187,6 +189,8 @@ fn project_stmt(stmt: &HirStmt) -> Value {
             "iter": project_expr(iter),
             "iter_error_ty": type_name(iter_error_ty),
             "close_error_ty": close_error_ty.as_ref().map(type_name),
+            "active_error_ty": type_name(active_error_ty),
+            "body_may_raise": body_may_raise,
             "body": project_stmts(body),
             "else_body": else_body.as_deref().map(project_stmts),
         }),
