@@ -1,0 +1,59 @@
+from sifr.io import exists, write_text
+from sifr.os import getpid, remove_file
+
+
+def marker_path() -> str:
+    return "/tmp/sifr_async_for_cancellation_cleanup_" + str(getpid()) + ".txt"
+
+
+class SlowStream:
+    path: str
+    closed: bool
+
+    def __init__(self, path: str):
+        self.path = path
+        self.closed = False
+
+    async def anext(self) -> Result[Option[int], Error]:
+        await task.sleep(10.0)
+        value: Option[int] = 1
+        return value
+
+    async def aclose(mut self) -> Result[None, Error]:
+        assert not self.closed
+        self.closed = True
+        try:
+            _written: None = write_text(self.path, "closed")
+        except IOError as e:
+            _write_error: str = e.message
+        return None
+
+
+async def consume() -> Result[None, Error]:
+    path: str = marker_path()
+    stream = SlowStream(path)
+    async for _value in stream:
+        pass
+    return None
+
+
+async def main() -> Result[None, Error]:
+    path: str = marker_path()
+    if exists(path):
+        try:
+            _removed_existing: None = remove_file(path)
+        except IOError as e:
+            _existing_cleanup_error: str = e.message
+
+    async with task.scope() as scope:
+        handle = scope.spawn(consume())
+        await task.sleep(0.0)
+        handle.cancel()
+        _cancelled = await handle
+
+    assert exists(path)
+    try:
+        _removed: None = remove_file(path)
+    except IOError as e:
+        _cleanup_error: str = e.message
+    return None

@@ -757,7 +757,33 @@ protocol AsyncContextManager[T, EnterE, ExitE]:
 
 `__aenter__` and `__aexit__` are the async context-manager methods. If `__aenter__` fails, `__aexit__` is not called, because the resource was not acquired.
 
-Implementation status: the initial async context-manager and iterator compiler capability supports the normal-exit path for user-defined async context managers that structurally provide async `__aenter__` and `__aexit__` methods. Abnormal body exit, cancellation-specific causes, secondary cleanup evidence, and `async for` cleanup remain deferred cleanup cases in the same implementation track.
+The compiler lowers each acquired native async context into one cleanup envelope.
+The envelope classifies the concrete body outcome before error conversion. It
+calls `__aexit__` exactly once for normal completion, return, ordinary error,
+timeout, cancellation, or runtime fault. Nested envelopes pass return and loop
+control to their parent envelope. This rule gives cleanup last-in, first-out
+order.
+
+The compiler races async entry and the body against the active cancellation
+carrier. Entry completion wins a same-poll tie. If entry does not complete,
+the resource is not acquired and `__aexit__` does not run. After acquisition,
+cleanup runs under a fresh cancellation carrier. This carrier prevents a
+second cancellation request from interrupting the active cleanup attempt.
+
+The default abnormal-cleanup budget is five seconds. The runtime drops the
+cleanup future when the budget expires. A dropped cleanup future invalidates
+that resource attempt. Resource owners must treat
+`AsyncCleanupEvidence.CleanupTimedOut` as a discard signal. They must not put
+the resource back into a pool.
+
+The cancellation carrier stores ordered, typed cleanup evidence. A spawned
+task converts this evidence to `SecondaryError.CleanupFailed` or
+`SecondaryError.CleanupTimedOut` at its observation boundary. The original
+body error, timeout, cancellation, or runtime fault stays primary.
+The abnormal-cleanup boundary also catches a panic from `__aexit__` or
+`aclose()`. It records that panic as `CleanupFailed` and preserves the primary
+outcome. Task-handle timeout waits for cleanup and attaches the same evidence
+to its timeout failure.
 
 ```sifr
 enum AsyncExitCause:
@@ -822,6 +848,12 @@ loop:
 - `anext()` returning `Err(E)` causes automatic propagation through ordinary Sifr error handling. The enclosing function must be able to carry `E`, or the compiler rejects the `async for`.
 
 If an early-exit path from `async for` may call `aclose()`, the enclosing function must be able to propagate the iterator's close error type, or the close error must be handled explicitly. This applies to both the `IterE` error from `anext()` and the `CloseE` error from `aclose()` on early exit.
+
+The compiler runs a closable iterator in one cancellation scope. Normal
+exhaustion does not call `aclose()`. `break`, `return`, propagated body or
+iterator error, timeout, cancellation, and runtime fault call `aclose()` once.
+`continue` does not close the iterator. Abnormal close uses the same cleanup
+budget and typed secondary-evidence rules as `async with`.
 
 If the loop exits before iterator exhaustion via `break`, `return`, ordinary error propagation, timeout, or active cancellation, and the iterator implements `AsyncClosable`, the compiler awaits `aclose()` before leaving the loop:
 - On normal `break` or `return`, `aclose()` failure is a primary ordinary error.

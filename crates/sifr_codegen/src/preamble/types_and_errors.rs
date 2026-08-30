@@ -344,6 +344,9 @@ pub fn build_error_type_items(
     extra_fields: &[(String, RustType)],
     constructor_defaults: &[(String, RustExpr)],
 ) -> Vec<RustItem> {
+    if name == "SecondaryError" {
+        return super::secondary_error::build_secondary_error_type_items();
+    }
     let mut fields = vec![("message".to_string(), RustType::String_)];
     fields.extend(extra_fields.iter().cloned());
 
@@ -435,32 +438,6 @@ pub fn build_error_type_items(
     ]
 }
 
-pub fn build_error_into_error_impl(source_name: &str) -> RustItem {
-    RustItem::Impl {
-        target: "Error".to_string(),
-        type_params: vec![],
-        trait_: Some(format!("From<{source_name}>")),
-        items: vec![RustItem::Fn {
-            name: "from".to_string(),
-            visibility: Visibility::Private,
-            type_params: vec![],
-            params: vec![RustParam::Named {
-                name: "err".to_string(),
-                ty: RustType::Named(source_name.to_string()),
-            }],
-            ret: Some(RustType::Named("Self".to_string())),
-            body: vec![RustStmt::Return(Some(RustExpr::FnCall {
-                func: Box::new(RustExpr::Path(vec!["Self".to_string(), "new".to_string()])),
-                args: vec![RustExpr::Field {
-                    expr: Box::new(RustExpr::Ident("err".to_string())),
-                    field: "message".to_string(),
-                }],
-            }))],
-            is_async: false,
-        }],
-    }
-}
-
 pub fn build_failure_type_items() -> Vec<RustItem> {
     vec![
         RustItem::Struct {
@@ -538,6 +515,36 @@ pub fn build_failure_type_items() -> Vec<RustItem> {
                             (
                                 "secondary".to_string(),
                                 RustExpr::Verbatim("self.secondary".to_string()),
+                            ),
+                        ],
+                    }))],
+                    is_async: false,
+                },
+                RustItem::Fn {
+                    name: "with_secondary".to_string(),
+                    visibility: Visibility::Private,
+                    type_params: vec![],
+                    params: vec![
+                        RustParam::Named {
+                            name: "primary".to_string(),
+                            ty: RustType::Named("E".to_string()),
+                        },
+                        RustParam::Named {
+                            name: "secondary".to_string(),
+                            ty: RustType::Named("Vec<SecondaryError>".to_string()),
+                        },
+                    ],
+                    ret: Some(RustType::Named("Self".to_string())),
+                    body: vec![RustStmt::Return(Some(RustExpr::StructInit {
+                        name: "Self".to_string(),
+                        fields: vec![
+                            (
+                                "primary".to_string(),
+                                RustExpr::Ident("primary".to_string()),
+                            ),
+                            (
+                                "secondary".to_string(),
+                                RustExpr::Ident("secondary".to_string()),
                             ),
                         ],
                     }))],

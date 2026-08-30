@@ -143,6 +143,38 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
                     }],
                 }))],
                 is_async: false,
+            }, RustItem::Fn {
+                name: "cancelled_with_secondary".to_string(),
+                visibility: Visibility::Private,
+                type_params: vec![],
+                params: vec![RustParam::Named {
+                    name: "secondary".to_string(),
+                    ty: RustType::Named("Vec<SecondaryError>".to_string()),
+                }],
+                ret: Some(RustType::Named("Self".to_string())),
+                body: vec![RustStmt::Return(Some(RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec![
+                        "Self".to_string(),
+                        "Cancelled".to_string(),
+                    ])),
+                    args: vec![RustExpr::FnCall {
+                        func: Box::new(RustExpr::Path(vec![
+                            "__SifrFailure".to_string(),
+                            "with_secondary".to_string(),
+                        ])),
+                        args: vec![
+                            RustExpr::FnCall {
+                                func: Box::new(RustExpr::Path(vec![
+                                    "CancellationError".to_string(),
+                                    "new".to_string(),
+                                ])),
+                                args: vec![],
+                            },
+                            RustExpr::Ident("secondary".to_string()),
+                        ],
+                    }],
+                }))],
+                is_async: false,
             }],
         },
         RustItem::Enum {
@@ -206,7 +238,7 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
                     params: vec![RustParam::SelfValue],
                     ret: Some(RustType::Named("__SifrTaskResult<T, E>".to_string())),
                     body: vec![RustStmt::Verbatim(
-                        "let __SifrTask { receiver, observed, .. } = self;\n        observed.store(true, std::sync::atomic::Ordering::SeqCst);\n        if let Some(receiver) = receiver {\n            return match receiver.await {\n                Ok(result) => result,\n                Err(_) => __SifrTaskResult::cancelled(),\n            };\n        }\n        return __SifrTaskResult::cancelled()".to_string(),
+                        "let __SifrTask { receiver, cancellation, observed, .. } = self;\n        observed.store(true, std::sync::atomic::Ordering::SeqCst);\n        if let Some(receiver) = receiver {\n            return match receiver.await {\n                Ok(result) => result,\n                Err(_) => __SifrTaskResult::cancelled_with_secondary(cancellation.take_async_cleanup_secondary()),\n            };\n        }\n        return __SifrTaskResult::cancelled_with_secondary(cancellation.take_async_cleanup_secondary())".to_string(),
                     )],
                     is_async: true,
                 },
@@ -228,7 +260,7 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
                     params: vec![RustParam::SelfValue],
                     ret: Some(RustType::Named("__SifrTaskResult<T, E>".to_string())),
                     body: vec![RustStmt::Verbatim(
-                        "let __SifrTask { receiver, cancellation, observed, _error } = self;\n        observed.store(true, std::sync::atomic::Ordering::SeqCst);\n        let _ = cancellation.request_cancel();\n        if let Some(receiver) = receiver {\n            let _ = receiver.await;\n        }\n        return __SifrTaskResult::cancelled()".to_string(),
+                        "let __SifrTask { receiver, cancellation, observed, _error } = self;\n        observed.store(true, std::sync::atomic::Ordering::SeqCst);\n        let _ = cancellation.request_cancel();\n        if let Some(receiver) = receiver {\n            let _ = receiver.await;\n        }\n        return __SifrTaskResult::cancelled_with_secondary(cancellation.take_async_cleanup_secondary())".to_string(),
                     )],
                     is_async: true,
                 },
@@ -247,7 +279,42 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
                         "__SifrTaskResult<T, __SifrTimeoutResult<E>>".to_string(),
                     )),
                     body: vec![RustStmt::Verbatim(
-                        "let __SifrTask { receiver, cancellation, observed, _error } = self;\n        observed.store(true, std::sync::atomic::Ordering::SeqCst);\n        if let Some(mut receiver) = receiver {\n            return tokio::select! {\n                biased;\n                result = &mut receiver => {\n                    match result {\n                        Ok(__SifrTaskResult::Ok(value)) => __SifrTaskResult::Ok(value),\n                        Ok(__SifrTaskResult::Err(failure)) => __SifrTaskResult::Err(failure.map_primary(__SifrTimeoutResult::Inner)),\n                        Ok(__SifrTaskResult::Cancelled(failure)) => __SifrTaskResult::Cancelled(failure),\n                        Err(_) => __SifrTaskResult::cancelled(),\n                    }\n                },\n                _ = tokio::time::sleep(duration) => {\n                    let request = cancellation.request_cancel();\n                    let terminal = receiver.await;\n                    if matches!(request, ::sifr_runtime::cancellation::CancellationRequest::Claimed) {\n                        match terminal {\n                            Ok(__SifrTaskResult::Ok(value)) => __SifrTaskResult::Ok(value),\n                            Ok(__SifrTaskResult::Err(failure)) => __SifrTaskResult::Err(failure.map_primary(__SifrTimeoutResult::Inner)),\n                            Ok(__SifrTaskResult::Cancelled(_)) | Err(_) => __SifrTaskResult::Err(__SifrFailure::new(__SifrTimeoutResult::Timeout)),\n                        }\n                    } else {\n                        __SifrTaskResult::Err(__SifrFailure::new(__SifrTimeoutResult::Timeout))\n                    }\n                }\n            };\n        }\n        return __SifrTaskResult::cancelled()".to_string(),
+                        r#"let __SifrTask { receiver, cancellation, observed, _error } = self;
+        observed.store(true, std::sync::atomic::Ordering::SeqCst);
+        if let Some(mut receiver) = receiver {
+            return tokio::select! {
+                biased;
+                result = &mut receiver => {
+                    match result {
+                        Ok(__SifrTaskResult::Ok(value)) => __SifrTaskResult::Ok(value),
+                        Ok(__SifrTaskResult::Err(failure)) => __SifrTaskResult::Err(failure.map_primary(__SifrTimeoutResult::Inner)),
+                        Ok(__SifrTaskResult::Cancelled(failure)) => __SifrTaskResult::Cancelled(failure),
+                        Err(_) => __SifrTaskResult::cancelled_with_secondary(cancellation.take_async_cleanup_secondary()),
+                    }
+                },
+                _ = tokio::time::sleep(duration) => {
+                    let request = cancellation.request_cancel();
+                    let terminal = receiver.await;
+                    if matches!(request, ::sifr_runtime::cancellation::CancellationRequest::Claimed) {
+                        match terminal {
+                            Ok(__SifrTaskResult::Ok(value)) => __SifrTaskResult::Ok(value),
+                            Ok(__SifrTaskResult::Err(failure)) => __SifrTaskResult::Err(failure.map_primary(__SifrTimeoutResult::Inner)),
+                            Ok(__SifrTaskResult::Cancelled(_)) | Err(_) => __SifrTaskResult::Err(__SifrFailure::with_secondary(
+                                __SifrTimeoutResult::Timeout,
+                                cancellation.take_async_cleanup_secondary(),
+                            )),
+                        }
+                    } else {
+                        __SifrTaskResult::Err(__SifrFailure::with_secondary(
+                            __SifrTimeoutResult::Timeout,
+                            cancellation.take_async_cleanup_secondary(),
+                        ))
+                    }
+                }
+            };
+        }
+        return __SifrTaskResult::cancelled_with_secondary(cancellation.take_async_cleanup_secondary())"#
+                            .to_string(),
                     )],
                     is_async: true,
                 },
@@ -572,7 +639,7 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
                             name: "child".to_string(),
                             ty: None,
                             value: RustExpr::Verbatim(
-                                "tokio::spawn(async move { __SIFR_TASK_CANCELLATION.scope(child_cancellation, async move { match child_context_label { Some(__sifr_context_label) => __SIFR_TASK_CONTEXT_LABEL.scope(__sifr_context_label, async move { let result = match future.await { Ok(value) => __SifrTaskResult::Ok(value), Err(err) => __SifrTaskResult::Err(__SifrFailure::new(err)) }; let outcome = match &result { __SifrTaskResult::Ok(_) => __SifrScopeChildOutcome::Ok, __SifrTaskResult::Err(_) => __SifrScopeChildOutcome::Failed, __SifrTaskResult::Cancelled(_) => __SifrScopeChildOutcome::Cancelled }; let _ = sender.send(result); outcome }).await, None => { let result = match future.await { Ok(value) => __SifrTaskResult::Ok(value), Err(err) => __SifrTaskResult::Err(__SifrFailure::new(err)) }; let outcome = match &result { __SifrTaskResult::Ok(_) => __SifrScopeChildOutcome::Ok, __SifrTaskResult::Err(_) => __SifrScopeChildOutcome::Failed, __SifrTaskResult::Cancelled(_) => __SifrScopeChildOutcome::Cancelled }; let _ = sender.send(result); outcome } } }).await })"
+                                "tokio::spawn(async move { __SIFR_TASK_CANCELLATION.scope(child_cancellation, async move { match child_context_label { Some(__sifr_context_label) => __SIFR_TASK_CONTEXT_LABEL.scope(__sifr_context_label, async move { let result = match future.await { Ok(value) => __SifrTaskResult::Ok(value), Err(err) => __SifrTaskResult::Err(__SifrFailure::with_secondary(err, __sifr_take_current_async_cleanup_secondary())) }; let outcome = match &result { __SifrTaskResult::Ok(_) => __SifrScopeChildOutcome::Ok, __SifrTaskResult::Err(_) => __SifrScopeChildOutcome::Failed, __SifrTaskResult::Cancelled(_) => __SifrScopeChildOutcome::Cancelled }; let _ = sender.send(result); outcome }).await, None => { let result = match future.await { Ok(value) => __SifrTaskResult::Ok(value), Err(err) => __SifrTaskResult::Err(__SifrFailure::with_secondary(err, __sifr_take_current_async_cleanup_secondary())) }; let outcome = match &result { __SifrTaskResult::Ok(_) => __SifrScopeChildOutcome::Ok, __SifrTaskResult::Err(_) => __SifrScopeChildOutcome::Failed, __SifrTaskResult::Cancelled(_) => __SifrScopeChildOutcome::Cancelled }; let _ = sender.send(result); outcome } } }).await })"
                                     .to_string(),
                             ),
                         },

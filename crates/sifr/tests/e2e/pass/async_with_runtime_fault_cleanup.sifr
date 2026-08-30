@@ -1,0 +1,46 @@
+from sifr.io import exists, write_text
+from sifr.os import getpid, remove_file
+
+
+def marker_path() -> str:
+    return "/tmp/sifr_async_with_runtime_fault_cleanup_" + str(getpid()) + ".txt"
+
+
+class MarkerResource:
+    path: str
+
+    def __init__(self, path: str):
+        self.path = path
+
+    async def __aenter__(self) -> Result[None, IOError]:
+        return None
+
+    async def __aexit__(self, _cause: AsyncExitCause) -> Result[None, IOError]:
+        return write_text(self.path, "runtime-fault-cleaned")
+
+
+async def worker() -> Result[None, IOError]:
+    path: str = marker_path()
+    async with MarkerResource(path):
+        assert False
+    return None
+
+
+async def main() -> Result[None, ScopeFailure]:
+    path: str = marker_path()
+    if exists(path):
+        try:
+            _removed_existing: None = remove_file(path)
+        except IOError as e:
+            _existing_cleanup_error: str = e.message
+
+    async with task.scope() as scope:
+        handle = scope.spawn(worker())
+        _runtime_fault = await handle
+
+    assert exists(path)
+    try:
+        _removed: None = remove_file(path)
+    except IOError as e:
+        _cleanup_error: str = e.message
+    return None

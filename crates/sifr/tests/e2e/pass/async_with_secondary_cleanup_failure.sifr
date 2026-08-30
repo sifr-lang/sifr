@@ -1,0 +1,29 @@
+class CleanupError(Error):
+    message: str
+
+
+class FailingResource:
+    async def __aenter__(self) -> Result[None, CleanupError]:
+        return None
+
+    async def __aexit__(self, _cause: AsyncExitCause) -> Result[None, CleanupError]:
+        raise CleanupError("cleanup failed")
+
+
+async def worker() -> Result[None, CleanupError]:
+    async with FailingResource():
+        raise CleanupError("body failed")
+    return None
+
+
+async def main() -> Result[None, ScopeFailure]:
+    _position_seed: int = 0
+    assert _position_seed == 0
+    async with task.scope() as scope:
+        handle = scope.spawn(worker())
+        result = await handle
+        rendered: str = str(result)
+        assert rendered.find("body failed") is not None
+        assert rendered.find("cleanup failed") is not None
+        assert rendered.find("CleanupFailed") is not None
+    return None

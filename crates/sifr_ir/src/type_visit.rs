@@ -509,6 +509,7 @@ where
             iter,
             iter_error_ty,
             close_error_ty,
+            active_error_ty,
             body,
             else_body,
             ..
@@ -518,6 +519,7 @@ where
             if let Some(ty) = close_error_ty {
                 transform_type(ty, transform);
             }
+            transform_type(active_error_ty, transform);
             transform_expr(iter, transform, visit);
             transform_stmts(body, transform, visit);
             if let Some(body) = else_body {
@@ -740,11 +742,14 @@ where
             enter_value_ty,
             enter_error_ty,
             exit_error_ty,
+            active_error_ty,
+            ..
         } => {
             transform_expr(context, transform, visit);
             transform_type(enter_value_ty, transform);
             transform_type(enter_error_ty, transform);
             transform_type(exit_error_ty, transform);
+            transform_type(active_error_ty, transform);
         }
         HirAsyncWithKind::Python {
             context,

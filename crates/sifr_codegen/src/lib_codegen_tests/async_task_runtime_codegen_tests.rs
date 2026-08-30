@@ -416,10 +416,11 @@ fn test_task_handle_cancel_uses_cooperative_carrier_with_abort_fallback() {
             .contains("static __SIFR_TASK_CANCELLATION:")
     );
     assert!(
-        !result
+        result
             .rust_source
             .contains("fn __sifr_current_task_cancellation")
     );
+    assert!(result.rust_source.contains("take_async_cleanup_secondary"));
     assert!(
         result
             .rust_source
@@ -514,7 +515,12 @@ fn test_task_timeout_handle_lowers_to_private_timeout_result() {
     assert!(
         result
             .rust_source
-            .contains("__SifrFailure::new(__SifrTimeoutResult::Timeout)")
+            .contains("__SifrFailure::with_secondary(\n                                __SifrTimeoutResult::Timeout")
+    );
+    assert!(
+        result
+            .rust_source
+            .contains("cancellation.take_async_cleanup_secondary()")
     );
     assert!(
         result.rust_source.contains(

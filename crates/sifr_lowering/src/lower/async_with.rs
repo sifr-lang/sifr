@@ -1,4 +1,5 @@
 use super::LowerCtx;
+use super::async_with_flow::stmt_contains_scope_early_exit;
 use super::expressions::lower_expr;
 use super::python_interop::try_lower_python_async_with;
 use super::statement_diagnostics;
@@ -213,25 +214,38 @@ fn lower_native_user_async_with(
             );
         return None;
     }
+    let Type::Result(_, active_error_ty) = func_type.return_type.resolve_alias() else {
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_MISMATCH,
+            "user-defined async context manager requires an enclosing Result return type"
+                .to_string(),
+            item.context_expr.range(),
+        );
+        return None;
+    };
     let target = simple_with_target_name(item.optional_vars.as_deref(), ctx);
     if let Some(name) = &target {
         ctx.scope.define(name.clone(), enter_value_ty.clone());
     }
-    let body = lower_stmts(&with_stmt.body, func_type, ctx);
-    if body.iter().any(stmt_contains_user_async_with_blocked_exit) {
+    if super::typing_and_functions::function_body_contains_yield(&with_stmt.body) {
         ctx.error_with_code_at(
-                DiagnosticCode::TYPE_MISMATCH,
-                "user-defined async context managers cannot use raise or yield inside the body until abnormal-exit cleanup lowering is implemented".to_string(),
-                item.context_expr.range(),
-            );
+            DiagnosticCode::TYPE_MISMATCH,
+            "user-defined async context managers cannot contain yield until async-generator cleanup suspension is implemented"
+                .to_string(),
+            item.context_expr.range(),
+        );
         return None;
     }
+    let (body, body_may_raise) =
+        crate::lower::statements::lower_python_context_body(&with_stmt.body, func_type, ctx);
     Some(HirStmt::AsyncWith {
         kind: HirAsyncWithKind::UserDefined {
             context,
             enter_value_ty,
             enter_error_ty,
             exit_error_ty,
+            active_error_ty: active_error_ty.as_ref().clone(),
+            body_may_raise,
         },
         target,
         body,
@@ -643,81 +657,6 @@ fn stmt_contains_task_spawn(stmt: &HirStmt) -> bool {
                         || arm.body.iter().any(stmt_contains_task_spawn)
                 })
         }
-        _ => false,
-    }
-}
-
-fn stmt_contains_user_async_with_blocked_exit(stmt: &HirStmt) -> bool {
-    stmt_contains_scope_exit(stmt, false)
-}
-
-fn stmt_contains_scope_early_exit(stmt: &HirStmt) -> bool {
-    stmt_contains_scope_exit(stmt, true)
-}
-
-fn stmt_contains_scope_exit(stmt: &HirStmt, include_return: bool) -> bool {
-    match stmt {
-        HirStmt::Return { .. } => include_return,
-        HirStmt::Raise { .. } | HirStmt::Yield { .. } => true,
-        HirStmt::If {
-            then_body,
-            elif_clauses,
-            else_body,
-            ..
-        } => {
-            then_body
-                .iter()
-                .any(|stmt| stmt_contains_scope_exit(stmt, include_return))
-                || elif_clauses.iter().any(|(_, body)| {
-                    body.iter()
-                        .any(|stmt| stmt_contains_scope_exit(stmt, include_return))
-                })
-                || else_body.as_ref().is_some_and(|body| {
-                    body.iter()
-                        .any(|stmt| stmt_contains_scope_exit(stmt, include_return))
-                })
-        }
-        HirStmt::While {
-            body, else_body, ..
-        }
-        | HirStmt::For {
-            body, else_body, ..
-        }
-        | HirStmt::AsyncFor {
-            body, else_body, ..
-        } => {
-            body.iter()
-                .any(|stmt| stmt_contains_scope_exit(stmt, include_return))
-                || else_body.as_ref().is_some_and(|body| {
-                    body.iter()
-                        .any(|stmt| stmt_contains_scope_exit(stmt, include_return))
-                })
-        }
-        HirStmt::AsyncWith { body, .. } | HirStmt::With { body, .. } => body
-            .iter()
-            .any(|stmt| stmt_contains_scope_exit(stmt, include_return)),
-        HirStmt::TryExcept { body, handlers, .. } => {
-            body.iter()
-                .any(|stmt| stmt_contains_scope_exit(stmt, include_return))
-                || handlers.iter().any(|handler| {
-                    handler
-                        .body
-                        .iter()
-                        .any(|stmt| stmt_contains_scope_exit(stmt, include_return))
-                })
-        }
-        HirStmt::TryFinally { body, finalbody } => {
-            body.iter()
-                .any(|stmt| stmt_contains_scope_exit(stmt, include_return))
-                || finalbody
-                    .iter()
-                    .any(|stmt| stmt_contains_scope_exit(stmt, include_return))
-        }
-        HirStmt::Match { arms, .. } => arms.iter().any(|arm| {
-            arm.body
-                .iter()
-                .any(|stmt| stmt_contains_scope_exit(stmt, include_return))
-        }),
         _ => false,
     }
 }

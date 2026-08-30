@@ -1,6 +1,6 @@
 # Ad hoc issue: Complete abnormal async cleanup
 
-Status: planned external prerequisite
+Status: implementation in progress
 
 Owner: core language and async runtime
 
@@ -38,3 +38,45 @@ require before runtime implementation starts.
 
 Milestone `sql_9_postgresql_runtime` cannot start until this issue has merged
 evidence. The SQL phase records that merge in its verification inventory.
+
+## Implementation map
+
+- HIR records the active error type and body error effect for native `async
+  with` and closable `async for`.
+- Native `async with` code generation owns entry cancellation, concrete exit
+  classification, nested control-flow propagation, bounded cleanup, and
+  runtime-fault cleanup.
+- Closable `async for` code generation owns normal exhaustion, `continue`,
+  early `break`, return, propagated error, timeout, cancellation, and runtime
+  fault as distinct outcomes.
+- `sifr_runtime::async_cleanup` owns panic-safe future polling and the closed
+  cleanup-evidence variants.
+- `CancellationCarrier` owns ordered evidence until the generated task
+  observation boundary drains it into `Failure.secondary`.
+- A cleanup timeout drops the cleanup future and records a discard signal. A
+  resource provider must invalidate that resource and must not return it to a
+  pool.
+
+## Verification record
+
+Candidate SHA: pending
+
+- `cargo test -p sifr_runtime --lib`: passed, 86 tests
+- `cargo test -p sifr_codegen --lib`: passed, 1,172 tests
+- `cargo test -p sifr_lowering --lib`: passed, 1,072 tests and one ignored test
+- Direct native fixtures passed for every accepted exit class, nested LIFO
+  cleanup, typed secondary evidence, cleanup panic, cleanup timeout, and task
+  timeout evidence.
+- `cargo fmt --check`, `git diff --check`, and the HIR maintainability
+  guardrail passed.
+- The file-size guardrail passed for every changed hand-maintained source file.
+- Targeted Clippy reached the changed crates. It remains blocked by unrelated
+  existing findings in `annotation_resolution.rs` and
+  `structural_record_codegen.rs`.
+- The manifest E2E runner remains blocked by the existing SQL verification
+  profile contradiction. The runner requires `postgresql-live-differential`,
+  but the `create-pr` profile omits that suite.
+- exact-SHA Opus review: pending
+- create-PR gate: pending
+- merge gate: pending
+- PR and merge evidence: pending

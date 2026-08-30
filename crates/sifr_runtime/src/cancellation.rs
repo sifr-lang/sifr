@@ -4,6 +4,9 @@ use std::future::Future;
 use std::pin::Pin;
 use std::sync::{Arc, Mutex};
 use std::task::{Context, Poll, Waker};
+use std::time::Duration;
+
+use crate::async_cleanup::AsyncCleanupEvidence;
 
 pub type CancellationHook = Arc<dyn Fn() + Send + Sync + 'static>;
 
@@ -19,6 +22,7 @@ struct CancellationState {
     requested: bool,
     fallback_resumed: bool,
     next_generation: u64,
+    async_cleanup_evidence: Vec<AsyncCleanupEvidence>,
 }
 
 struct ExactCancellation {
@@ -198,6 +202,48 @@ impl CancellationCarrier {
         };
         hook();
         CancellationResume::Invoked
+    }
+
+    pub fn record_async_cleanup_failed(
+        &self,
+        error: String,
+        location: String,
+        resource: String,
+        operation: String,
+        budget: Duration,
+    ) {
+        self.record_async_cleanup_evidence(AsyncCleanupEvidence::cleanup_failed(
+            error, location, resource, operation, budget,
+        ));
+    }
+
+    pub fn record_async_cleanup_timed_out(
+        &self,
+        location: String,
+        resource: String,
+        operation: String,
+        budget: Duration,
+    ) {
+        self.record_async_cleanup_evidence(AsyncCleanupEvidence::cleanup_timed_out(
+            location, resource, operation, budget,
+        ));
+    }
+
+    pub fn record_async_cleanup_evidence(&self, evidence: AsyncCleanupEvidence) {
+        let mut state = self
+            .state
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        state.async_cleanup_evidence.push(evidence);
+    }
+
+    #[must_use]
+    pub fn take_async_cleanup_evidence(&self) -> Vec<AsyncCleanupEvidence> {
+        let mut state = self
+            .state
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        std::mem::take(&mut state.async_cleanup_evidence)
     }
 }
 
@@ -645,6 +691,44 @@ mod tests {
         let _second = carrier
             .claim(counting_hook(&second_calls))
             .expect("released carrier should accept the next await");
+    }
+
+    #[test]
+    fn async_cleanup_evidence_is_typed_ordered_and_drained_once() {
+        let carrier = CancellationCarrier::new();
+        carrier.record_async_cleanup_failed(
+            "close failed".to_string(),
+            "fixture:1".to_string(),
+            "Outer".to_string(),
+            "__aexit__".to_string(),
+            Duration::from_secs(5),
+        );
+        carrier.record_async_cleanup_timed_out(
+            "fixture:2".to_string(),
+            "Inner".to_string(),
+            "aclose".to_string(),
+            Duration::from_secs(3),
+        );
+
+        assert_eq!(
+            carrier.take_async_cleanup_evidence(),
+            vec![
+                AsyncCleanupEvidence::cleanup_failed(
+                    "close failed".to_string(),
+                    "fixture:1".to_string(),
+                    "Outer".to_string(),
+                    "__aexit__".to_string(),
+                    Duration::from_secs(5),
+                ),
+                AsyncCleanupEvidence::cleanup_timed_out(
+                    "fixture:2".to_string(),
+                    "Inner".to_string(),
+                    "aclose".to_string(),
+                    Duration::from_secs(3),
+                ),
+            ]
+        );
+        assert!(carrier.take_async_cleanup_evidence().is_empty());
     }
 
     #[test]

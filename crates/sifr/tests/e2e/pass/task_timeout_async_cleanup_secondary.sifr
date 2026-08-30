@@ -1,0 +1,27 @@
+class ResourceError(Error):
+    message: str
+
+
+class FailingCancellationCleanup:
+    async def __aenter__(self) -> Result[None, ResourceError]:
+        return None
+
+    async def __aexit__(self, _cause: AsyncExitCause) -> Result[None, ResourceError]:
+        raise ResourceError("timeout cleanup failed")
+
+
+async def worker() -> Result[None, ResourceError]:
+    async with FailingCancellationCleanup():
+        await task.sleep(10.0)
+    return None
+
+
+async def main() -> Result[None, ScopeFailure]:
+    async with task.scope() as scope:
+        handle = scope.spawn(worker())
+        result = await task.timeout(handle, 0.0)
+        rendered: str = str(result)
+        assert rendered.find("Timeout") is not None
+        assert rendered.find("timeout cleanup failed") is not None
+        assert rendered.find("CleanupFailed") is not None
+    return None
