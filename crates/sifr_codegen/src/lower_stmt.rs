@@ -29,6 +29,7 @@ pub(crate) use candidate_and_validation::{
     is_simple_stmt_candidate, try_lower_simple_stmt_with_scope_result_and_bindings,
 };
 mod simple_dispatch_and_bindings;
+pub(crate) use simple_dispatch_and_bindings::lower_loop_break_stmt;
 #[cfg(test)]
 use simple_dispatch_and_bindings::try_lower_simple_stmt_with_ctx;
 use simple_dispatch_and_bindings::try_lower_simple_stmt_with_ctx_and_bindings;

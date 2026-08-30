@@ -51,7 +51,24 @@ def list_exit_guard_refreshes_after_mut_borrow_call() -> int:
     if len(values) == 0:
         return -1
     replace_first(values)
+    if len(values) == 0:
+        return -1
     return values[0]
+
+
+def nested_mutation_renews_outer_while_witness() -> int:
+    values: list[int] = [1]
+    if len(values) == 0:
+        return -1
+    total: int = 0
+    while values[0] < 3:
+        for index in range(1):
+            if index == 0:
+                values[0] += 1
+                total += values[0]
+    else:
+        total += 100
+    return total
 
 
 def list_witness_refreshes_on_for_back_edge() -> int:
@@ -124,6 +141,7 @@ def main():
     assert dict_exit_guard_refreshes_after_assignment() == 99
     assert positive_dict_guard_refreshes_after_assignment() == 99
     assert list_exit_guard_refreshes_after_mut_borrow_call() == 42
+    assert nested_mutation_renews_outer_while_witness() == 105
     assert list_witness_refreshes_on_for_back_edge() == 33
     assert dict_witness_refreshes_on_for_back_edge() == 101
     assert list_witness_refreshes_before_while_condition() == 3

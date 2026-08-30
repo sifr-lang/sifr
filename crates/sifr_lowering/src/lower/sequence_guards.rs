@@ -1,6 +1,7 @@
 use super::LowerCtx;
 use crate::hir_nodes::HirExpr;
 use sifr_python_ast::{Expr, Number, Operator, UnaryOp};
+use sifr_type_system::ParamConvention;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(in crate::lower) enum SequenceGuard {
@@ -277,6 +278,23 @@ pub(in crate::lower) fn hir_sequence_guard_target_name(expr: &HirExpr) -> Option
             Some(format!("{base}.{field}"))
         }
         _ => None,
+    }
+}
+
+pub(in crate::lower) fn invalidate_mutable_call_sequence_guards(
+    ctx: &mut LowerCtx,
+    args: &[HirExpr],
+    conventions: impl IntoIterator<Item = ParamConvention>,
+) {
+    for (arg, convention) in args.iter().zip(conventions) {
+        if !convention.is_mut_borrow() {
+            continue;
+        }
+        let Some(target) = hir_sequence_guard_target_name(arg) else {
+            continue;
+        };
+        ctx.clear_sequence_guards_for_binding(&target);
+        ctx.clear_sequence_guards_for_target(&target);
     }
 }
 
