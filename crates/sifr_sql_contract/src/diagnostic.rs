@@ -1,5 +1,6 @@
 use crate::{BindRejection, ProviderAnalysisError, SchemaContractErrorKind};
 use serde::{Deserialize, Serialize};
+use sifr_diagnostics::DiagnosticCode;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -17,15 +18,20 @@ pub enum CommonSqlDiagnostic {
 impl CommonSqlDiagnostic {
     #[must_use]
     pub const fn code(self) -> &'static str {
+        self.diagnostic_code().code()
+    }
+
+    #[must_use]
+    pub const fn diagnostic_code(self) -> DiagnosticCode {
         match self {
-            Self::DatabaseType => "SIFR-SQL-0001",
-            Self::BindCompatibility => "SIFR-SQL-0002",
-            Self::Nullability => "SIFR-SQL-0003",
-            Self::CodecContract => "SIFR-SQL-0004",
-            Self::Cardinality => "SIFR-SQL-0005",
-            Self::Effect => "SIFR-SQL-0006",
-            Self::ProviderContract => "SIFR-SQL-0007",
-            Self::Ownership => "SIFR-SQL-0008",
+            Self::DatabaseType => DiagnosticCode::SQL_DATABASE_TYPE,
+            Self::BindCompatibility => DiagnosticCode::SQL_BIND_COMPATIBILITY,
+            Self::Nullability => DiagnosticCode::SQL_NULLABILITY,
+            Self::CodecContract => DiagnosticCode::SQL_CODEC_CONTRACT,
+            Self::Cardinality => DiagnosticCode::SQL_CARDINALITY,
+            Self::Effect => DiagnosticCode::SQL_EFFECT,
+            Self::ProviderContract => DiagnosticCode::SQL_PROVIDER_CONTRACT,
+            Self::Ownership => DiagnosticCode::SQL_OWNERSHIP,
         }
     }
 

@@ -598,6 +598,12 @@ fn common_diagnostic_mapping_is_closed_and_stable() {
         "SIFR-SQL-0004",
     );
     assert_eq!(CommonSqlDiagnostic::Ownership.code(), "SIFR-SQL-0008");
+    assert_eq!(
+        CommonSqlDiagnostic::ProviderContract
+            .diagnostic_code()
+            .code(),
+        "SIFR-SQL-0007",
+    );
 }
 
 #[test]
