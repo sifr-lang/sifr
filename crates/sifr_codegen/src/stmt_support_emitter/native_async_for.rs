@@ -33,7 +33,8 @@ impl RustEmitter {
         };
 
         self.python_context_envelope_depth += 1;
-        let lowered_body = self.try_lower_scoped_stmt_block_for_ir(body);
+        let lowered_body =
+            self.lower_checked_sequence_loop_body_for_ir(body, &[], &RustStmt::Continue, &[]);
         self.python_context_envelope_depth -= 1;
         let mut rewritten = rewrite_context_control_flow(
             lowered_body?.ok_or_else(|| {

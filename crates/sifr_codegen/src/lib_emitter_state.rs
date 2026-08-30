@@ -124,10 +124,11 @@ pub struct RustEmitter {
     /// Keys describe the original HIR collection place and index expression.
     pub(crate) checked_place_read_witnesses:
         HashMap<String, crate::checked_place::CheckedPlaceReadWitness>,
+    /// Witness keys consumed while lowering an isolated structured region.
+    pub(crate) checked_place_read_witness_uses: RefCell<Option<HashSet<String>>>,
     /// Monotonic identifier for collision-free checked-place witness locals.
     pub(crate) next_checked_place_read_witness: usize,
-    /// Prevents recursive re-entry while an atomic checked-read statement is
-    /// lowered under the witnesses established for that statement.
+    /// Prevents recursive re-entry under an atomic checked-read statement's witnesses.
     pub(crate) checked_place_atomic_guard_suppressed: bool,
     /// Statement-block depth whose current statement is already being lowered
     /// by checked-place mutation refresh handling.
@@ -298,6 +299,7 @@ impl RustEmitter {
             imported_project_functions: HashSet::new(),
             protected_mutable_place_roots: HashSet::new(),
             checked_place_read_witnesses: HashMap::new(),
+            checked_place_read_witness_uses: RefCell::new(None),
             next_checked_place_read_witness: 0,
             checked_place_atomic_guard_suppressed: false,
             checked_place_refresh_suppressed_depth: None,

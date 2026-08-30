@@ -7,7 +7,10 @@ use sifr_python_ast::{
 };
 use sifr_type_system::Type;
 
+mod loop_invalidations;
 mod nonnegative_guards;
+
+pub(in crate::lower) use loop_invalidations::loop_invalidated_sequence_targets;
 
 pub(in crate::lower) fn detect_while_sequence_guards(
     while_stmt: &StmtWhile,

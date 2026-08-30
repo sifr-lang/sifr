@@ -54,6 +54,38 @@ def list_exit_guard_refreshes_after_mut_borrow_call() -> int:
     return values[0]
 
 
+def list_witness_refreshes_on_for_back_edge() -> int:
+    values: list[int] = [1]
+    if len(values) == 0:
+        return -1
+    total: int = 0
+    for _i in range(3):
+        total += values[0]
+        values[0] += 10
+    return total
+
+
+def dict_witness_refreshes_on_for_back_edge() -> int:
+    mapping: dict[str, int] = {"key": 1}
+    key: str = "key"
+    if key not in mapping:
+        return -1
+    total: int = 0
+    for _i in range(2):
+        total += mapping[key]
+        mapping[key] = 100
+    return total
+
+
+def list_witness_refreshes_before_while_condition() -> int:
+    values: list[int] = [1]
+    if len(values) == 0:
+        return -1
+    while values[0] < 3:
+        values[0] += 1
+    return values[0]
+
+
 def main():
     assert list_exit_guard_refreshes_after_assignment() == 5
     assert list_exit_guard_refreshes_after_augmented_assignment() == 5
@@ -61,6 +93,9 @@ def main():
     assert dict_exit_guard_refreshes_after_assignment() == 99
     assert positive_dict_guard_refreshes_after_assignment() == 99
     assert list_exit_guard_refreshes_after_mut_borrow_call() == 42
+    assert list_witness_refreshes_on_for_back_edge() == 33
+    assert dict_witness_refreshes_on_for_back_edge() == 101
+    assert list_witness_refreshes_before_while_condition() == 3
 
     short: list[int] = [1]
     assert not (len(short) > 3 and short[3] != 0)

@@ -7,13 +7,14 @@ use super::{
     detect_true_sequence_guards, empty_collection_literal_kind, ensure_mutable_parameter_binding,
     failed_initializer_taint, finish_async_generator_advance_for_expr,
     invalidate_loop_body_const_integer_facts, invalidate_rebound_binding_facts,
-    is_collection_backed_iter_source, loop_body_mutates_iter_source, lower_expr,
-    lower_star_unpack_assign, lower_stmts, lower_tuple_unpack_assign,
-    maybe_record_dict_assignment_guard, merge_exhaustive_branch_sequence_guards, name_diagnostics,
-    numeric_domain_for_type, numeric_sentinel_kind, ownership_diagnostics,
-    predeclare_exhaustive_if_assigned_names, reconcile_optional_reassignment,
-    record_async_generator_advance_binding, record_const_integer_binding, record_len_alias_fact,
-    record_sequence_pointer_fact, resolve_field_type_from_type, resolve_object_field_type,
+    is_collection_backed_iter_source, loop_body_mutates_iter_source,
+    loop_invalidated_sequence_targets, lower_expr, lower_star_unpack_assign, lower_stmts,
+    lower_tuple_unpack_assign, maybe_record_dict_assignment_guard,
+    merge_exhaustive_branch_sequence_guards, name_diagnostics, numeric_domain_for_type,
+    numeric_sentinel_kind, ownership_diagnostics, predeclare_exhaustive_if_assigned_names,
+    reconcile_optional_reassignment, record_async_generator_advance_binding,
+    record_const_integer_binding, record_len_alias_fact, record_sequence_pointer_fact,
+    resolve_field_type_from_type, resolve_object_field_type,
     restore_const_integer_state_after_branches, seed_binding_after_failed_initializer,
     seed_exhaustive_if_bindings, sequence_shape_fact, should_adopt_inferred_binding_hint,
     should_rebind_simple_name, statement_diagnostics, str, task_group_spawn_owner,
@@ -783,6 +784,10 @@ pub(in crate::lower) fn lower_for(
     // Snapshot moved state before loop to detect moves inside the body
     let moved_before_loop = ctx.scope.save_moved_state();
     invalidate_loop_body_const_integer_facts(ctx, &for_stmt.body);
+    for target in loop_invalidated_sequence_targets(&for_stmt.body) {
+        ctx.clear_sequence_guards_for_binding(&target);
+        ctx.clear_sequence_guards_for_target(&target);
+    }
     let saved_const_integer_state = ctx.scope.save_const_integer_state();
 
     // Create a new scope for the loop body, define the loop variable(s)

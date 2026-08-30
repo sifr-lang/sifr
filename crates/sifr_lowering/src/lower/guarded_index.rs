@@ -194,8 +194,9 @@ fn sequence_guard_target_name(expr: &Expr) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use crate::{HirDiagnostic, HirModule, LoweringResult, lower_module};
+    use sifr_ir::{HirExpr, HirStmt};
     use sifr_python_parser::parse_module;
-    use sifr_type_system::Type;
+    use sifr_type_system::{Type, union_contains_none};
 
     fn lower_source(source: &str) -> Result<HirModule, Vec<HirDiagnostic>> {
         let parsed = parse_module(source).expect("parse failed");
@@ -492,6 +493,68 @@ mod tests {
         assert!(
             result.is_ok(),
             "post-guard dict index should narrow after `if key not in dict: return`"
+        );
+    }
+
+    #[test]
+    fn test_dict_delete_invalidates_membership_guard_for_following_read() {
+        let result = lower_source(
+            "def pick(mut table: dict[int, int], key: int) -> int:\n    if key not in table:\n        return 0\n    del table[key]\n    return table[key]\n",
+        );
+        assert!(
+            result.is_err(),
+            "deletion must invalidate the dominated key-presence proof"
+        );
+    }
+
+    #[test]
+    fn test_loop_delete_invalidates_membership_guard_before_body_lowering() {
+        let result = lower_source(
+            "def pick(mut table: dict[int, int], key: int) -> int:\n    if key not in table:\n        return 0\n    total: int = 0\n    for i in range(2):\n        total += table[key]\n        del table[key]\n    return total\n",
+        );
+        assert!(
+            result.is_err(),
+            "a proof invalidated on a loop back-edge must not narrow the first body read"
+        );
+    }
+
+    #[test]
+    fn test_async_loop_delete_invalidates_membership_guard_before_body_lowering() {
+        let result = lower_source(
+            "async def numbers() -> AsyncGenerator[int, GeneratorCloseError]:\n    yield 1\n    yield 2\n\nasync def total(mut table: dict[str, int], key: str) -> Result[int, GeneratorCloseError]:\n    if key not in table:\n        return 0\n    result: int = 0\n    async for value in numbers():\n        result += table[key]\n        try:\n            del table[key]\n        except KeyError:\n            pass\n    return result\n",
+        );
+        assert!(
+            result.is_err(),
+            "an async-loop back-edge must not retain a key-presence proof invalidated by deletion"
+        );
+    }
+
+    #[test]
+    fn test_loop_reassignment_invalidates_length_guard_before_condition_lowering() {
+        let module = lower_source(
+            "def pick(mut values: list[int]) -> int:\n    if len(values) == 0:\n        return 0\n    while values[0] < 3:\n        values = []\n    return 1\n",
+        )
+        .expect("optional comparisons remain valid typed expressions");
+        let HirStmt::While { condition, .. } = &module.functions[0].body[1] else {
+            panic!("expected while statement");
+        };
+        let HirExpr::Compare { left, .. } = condition else {
+            panic!("expected comparison condition");
+        };
+        assert!(
+            union_contains_none(left.ty()),
+            "a repeated condition must retain the optional index type after its proof is invalidated"
+        );
+    }
+
+    #[test]
+    fn test_loop_reassignment_invalidates_index_binding_guard_before_body_lowering() {
+        let result = lower_source(
+            "def total(values: list[int], i: int) -> int:\n    if i < 0 or i >= len(values):\n        return 0\n    result: int = 0\n    for iteration in range(2):\n        result += values[i]\n        i += 1\n    return result\n",
+        );
+        assert!(
+            result.is_err(),
+            "a loop back-edge must invalidate a proof that depends on a rebound index"
         );
     }
 

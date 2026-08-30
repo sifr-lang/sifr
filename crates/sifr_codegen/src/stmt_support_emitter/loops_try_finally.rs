@@ -38,23 +38,21 @@ impl RustEmitter {
         };
         let has_else = else_body.is_some();
         self.loop_else_stack.push(has_else);
+        let (condition_refresh_keys, condition_refreshes) =
+            self.checked_place_loop_condition_refreshes_for_ir(condition, body);
         let Some(lowered_cond) = self.lower_condition_expr_for_ir(condition)? else {
             let _ = self.loop_else_stack.pop();
             return Ok(false);
         };
         let checked_read_guards = self.checked_sequence_loop_guards_for_ir(condition, body)?;
-        let lowered_body = if checked_read_guards.is_empty() {
-            self.try_lower_scoped_stmt_block_for_ir(body)?
-        } else {
-            self.lower_checked_sequence_loop_body_for_ir(
-                body,
-                &checked_read_guards,
-                &RustStmt::Break,
-            )?
-        };
-        let lowered_loop = lowered_body.map(|body| RustStmt::While {
-            cond: lowered_cond,
+        let lowered_body = self.lower_checked_sequence_loop_body_for_ir(
             body,
+            &checked_read_guards,
+            &RustStmt::Break,
+            &condition_refresh_keys,
+        )?;
+        let lowered_loop = lowered_body.map(|body| {
+            Self::checked_place_while_stmt_for_ir(lowered_cond, body, condition_refreshes)
         });
         let popped = self.loop_else_stack.pop();
         debug_assert!(popped.is_some(), "loop_else_stack should not underflow");
@@ -131,15 +129,12 @@ impl RustEmitter {
         } else {
             self.string_char_cache_init_stmt_for_loop_target(target, target_ty)
         };
-        let lowered_body = if checked_read_guards.is_empty() {
-            self.try_lower_scoped_stmt_block_for_ir(body)
-        } else {
-            self.lower_checked_sequence_loop_body_for_ir(
-                body,
-                &checked_read_guards,
-                &RustStmt::Continue,
-            )
-        };
+        let lowered_body = self.lower_checked_sequence_loop_body_for_ir(
+            body,
+            &checked_read_guards,
+            &RustStmt::Continue,
+            &[],
+        );
         let lowered_body = lowered_body?;
         let popped = self.loop_else_stack.pop();
         debug_assert!(popped.is_some(), "loop_else_stack should not underflow");

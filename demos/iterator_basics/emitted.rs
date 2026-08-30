@@ -47,15 +47,6 @@ fn _product_impl<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     };
     let mut i: SifrInt = SifrInt::from_i64(0);
     while (&i < &SifrInt::from(current_pool.len())) {
-        let Some(__sifr_checked_value_2) = ({
-            let __sifr_checked_read_collection = &current_pool;
-            let __sifr_checked_read_index = i.clone();
-            let __sifr_checked_read_normalized = __sifr_checked_read_index
-                .normalize_index_or_len(__sifr_checked_read_collection.len());
-            __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
-        }) else {
-            break;
-        };
         let mut j: SifrInt = SifrInt::from_i64(0);
         while (&j < &SifrInt::from(suffixes.len())) {
             let value: Option<T> = {

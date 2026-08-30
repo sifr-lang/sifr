@@ -341,6 +341,12 @@ fn typed_current_callback_emits_checked_adapter_failure_reconciliation_and_clean
         "{rendered}"
     );
     assert!(rendered.contains("list_items"), "{rendered}");
+    assert!(
+        rendered.contains(
+            "let __sifr_callback_args_array: Result<[::sifr_runtime::python::ForeignObject; 1], _> = __sifr_callback_args.try_into();"
+        ),
+        "{rendered}"
+    );
     assert!(rendered.contains("Sifr callback handler returned an error"));
     assert!(rendered.contains("__sifr_callback_0.close()"), "{rendered}");
     assert!(

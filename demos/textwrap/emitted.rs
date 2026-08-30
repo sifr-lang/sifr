@@ -402,15 +402,6 @@ fn dedent(text: &String) -> String {
             let mut j: SifrInt = SifrInt::from_i64(0);
             let mut done: bool = false;
             while (&j < &SifrInt::from(__sifr_chars_line.len())) {
-                let Some(__sifr_checked_value_9) = ({
-                    let __sifr_string_index = j.clone();
-                    let __sifr_string_index_normalized = __sifr_string_index
-                        .normalize_index_or_len(__sifr_chars_line.len());
-                    __sifr_chars_line.get(__sifr_string_index_normalized)
-                })
-                    .map(|c| c.to_string()) else {
-                    break;
-                };
                 if !done {
                     let ch: Option<String> = ({
                         let __sifr_string_index = j.clone();

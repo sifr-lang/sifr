@@ -4,6 +4,7 @@ use super::integer_const_facts::{
 };
 use super::ownership_diagnostics;
 use super::python_interop::lower_python_context_owned_expr;
+use super::sequence_guard_detection::loop_invalidated_sequence_targets;
 use super::statement_diagnostics;
 use crate::hir_nodes::HirStmt;
 use ruff_text_size::{Ranged, TextRange};
@@ -210,6 +211,10 @@ pub(in crate::lower) fn lower_async_for(
     let (target, _) = simple_for_target_name(&for_stmt.target, ctx)?;
     let moved_before_loop = ctx.scope.save_moved_state();
     invalidate_loop_body_const_integer_facts(ctx, &for_stmt.body);
+    for target in loop_invalidated_sequence_targets(&for_stmt.body) {
+        ctx.clear_sequence_guards_for_binding(&target);
+        ctx.clear_sequence_guards_for_target(&target);
+    }
     let saved_const_integer_state = ctx.scope.save_const_integer_state();
     ctx.scope.push();
     ctx.scope.define_ephemeral(

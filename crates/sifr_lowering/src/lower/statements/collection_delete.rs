@@ -1,5 +1,6 @@
 use super::{HirStmt, LowerCtx, Type, checked_place_subscript_failure, statement_diagnostics};
 use crate::lower::expressions::lower_expr;
+use crate::lower::sequence_guards::hir_sequence_guard_target_name;
 use crate::lower::type_bounds::reject_unavailable_dict_hash_key;
 use ruff_text_size::Ranged;
 use sifr_python_ast::{Expr, StmtDelete};
@@ -47,6 +48,9 @@ pub(super) fn lower_delete(del_stmt: &StmtDelete, ctx: &mut LowerCtx) -> Option<
         "collection item deletion",
         subscript,
     );
+    if let Some(target) = hir_sequence_guard_target_name(&object) {
+        ctx.clear_sequence_guards_for_target(&target);
+    }
     Some(HirStmt::Delete {
         object,
         index,

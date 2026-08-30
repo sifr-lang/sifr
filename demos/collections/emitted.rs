@@ -119,17 +119,6 @@ mod __sifr_project_nominals {
             }
             let mut i: SifrInt = SifrInt::from_i64(0);
             while (&SifrInt::from_i64(0) <= &i) && (&i < &SifrInt::from(result.len())) {
-                let Some(__sifr_checked_value_0) = ({
-                    let __sifr_checked_read_collection = &result;
-                    let __sifr_checked_read_index = i.clone();
-                    let __sifr_checked_read_normalized = __sifr_checked_read_index
-                        .normalize_index_or_len(__sifr_checked_read_collection.len());
-                    __sifr_checked_read_collection
-                        .get(__sifr_checked_read_normalized)
-                        .cloned()
-                }) else {
-                    break;
-                };
                 let mut j: SifrInt = &i + &SifrInt::from_i64(1);
                 while (&SifrInt::from_i64(0) <= &j) && (&j < &SifrInt::from(result.len())) {
                     let left: Option<(T, SifrInt)> = {
@@ -218,17 +207,6 @@ mod __sifr_project_nominals {
             let mut result: Vec<T> = self.counts.keys().cloned().collect::<Vec<_>>();
             let mut i: SifrInt = SifrInt::from_i64(0);
             while (&SifrInt::from_i64(0) <= &i) && (&i < &SifrInt::from(result.len())) {
-                let Some(__sifr_checked_value_4) = ({
-                    let __sifr_checked_read_collection = &result;
-                    let __sifr_checked_read_index = i.clone();
-                    let __sifr_checked_read_normalized = __sifr_checked_read_index
-                        .normalize_index_or_len(__sifr_checked_read_collection.len());
-                    __sifr_checked_read_collection
-                        .get(__sifr_checked_read_normalized)
-                        .cloned()
-                }) else {
-                    break;
-                };
                 let mut j: SifrInt = &i + &SifrInt::from_i64(1);
                 while (&SifrInt::from_i64(0) <= &j) && (&j < &SifrInt::from(result.len())) {
                     let left: Option<T> = {
@@ -372,17 +350,6 @@ mod __sifr_project_nominals {
             let all_keys: Vec<T> = self.counts.keys().cloned().collect::<Vec<_>>();
             let mut ki: SifrInt = SifrInt::from_i64(0);
             while (&ki < &SifrInt::from(all_keys.len())) {
-                let Some(__sifr_checked_value_7) = ({
-                    let __sifr_checked_read_collection = &all_keys;
-                    let __sifr_checked_read_index = ki.clone();
-                    let __sifr_checked_read_normalized = __sifr_checked_read_index
-                        .normalize_index_or_len(__sifr_checked_read_collection.len());
-                    __sifr_checked_read_collection
-                        .get(__sifr_checked_read_normalized)
-                        .cloned()
-                }) else {
-                    break;
-                };
                 let key_opt: Option<T> = {
                     let __sifr_checked_read_collection = &all_keys;
                     let __sifr_checked_read_index = ki.clone();

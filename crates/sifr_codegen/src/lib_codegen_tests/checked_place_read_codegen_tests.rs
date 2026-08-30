@@ -370,3 +370,113 @@ def neighbor_min_cost(mut cost: list[int]) -> int:
     assert!(!generated.contains("to_usize_proven"), "{generated}");
     assert!(!generated.contains("compile_error!"), "{generated}");
 }
+
+#[test]
+fn loop_carried_witnesses_refresh_inside_for_iterations() {
+    let generated = generate_rust_from_source(
+        r#"
+def list_total(mut values: list[int]) -> int:
+    if len(values) == 0:
+        return -1
+    total: int = 0
+    for i in range(3):
+        total += values[0]
+        values[0] += 10
+    return total
+
+def dict_total(mut mapping: dict[str, int], key: str) -> int:
+    if key not in mapping:
+        return -1
+    total: int = 0
+    for i in range(2):
+        total += mapping[key]
+        mapping[key] = 100
+    return total
+"#,
+    );
+    let Some(first_loop) = generated.find("for i in") else {
+        panic!("missing for loop: {generated}");
+    };
+    let Some(list_refresh) = generated[first_loop..].find("let Some(__sifr_checked_value_") else {
+        panic!("missing list iteration refresh: {generated}");
+    };
+    let Some(list_total) = generated[first_loop..].find("total =") else {
+        panic!("missing list total update: {generated}");
+    };
+    assert!(list_refresh < list_total);
+    let Some(dict_loop) = generated[first_loop + 1..]
+        .find("for i in")
+        .map(|offset| first_loop + 1 + offset)
+    else {
+        panic!("missing dict for loop: {generated}");
+    };
+    assert!(
+        generated[dict_loop..].contains("let Some(__sifr_checked_value_")
+            && generated[dict_loop..].contains("mapping.get(key)")
+    );
+    assert!(!generated.contains("mapping["), "{generated}");
+    assert!(!generated.contains("values["), "{generated}");
+    assert!(!generated.contains("compile_error!"), "{generated}");
+}
+
+#[test]
+fn loop_carried_witnesses_refresh_before_repeated_while_conditions() {
+    let generated = generate_rust_from_source(
+        r#"
+def increment_to_three(mut values: list[int]) -> int:
+    if len(values) == 0:
+        return -1
+    while values[0] < 3:
+        values[0] += 1
+    return values[0]
+"#,
+    );
+    let Some(loop_start) = generated.find("loop {") else {
+        panic!("missing rewritten loop: {generated}");
+    };
+    let loop_body = &generated[loop_start..];
+    let Some(refresh) = loop_body.find("let Some(__sifr_checked_value_") else {
+        panic!("missing condition refresh: {generated}");
+    };
+    let Some(condition) = loop_body.find("if !(") else {
+        panic!("missing repeated checked condition: {generated}");
+    };
+    assert!(refresh < condition, "{generated}");
+    assert!(!generated.contains("values["), "{generated}");
+    assert!(!generated.contains("compile_error!"), "{generated}");
+}
+
+#[test]
+fn loop_carried_refreshes_skip_contextually_optional_reads() {
+    let generated = generate_rust_from_source(
+        r#"
+def revisit_pairs(mut values: list[tuple[int, int]]):
+    if len(values) == 0:
+        return
+    i: int = 0
+    while i < len(values):
+        j: int = i + 1
+        while j < len(values):
+            left: tuple[int, int] | None = values[i]
+            if left is not None:
+                values.reverse()
+            j += 1
+        i += 1
+"#,
+    );
+    let Some(inner_loop) = generated
+        .match_indices("while ")
+        .nth(1)
+        .map(|(offset, _)| offset)
+    else {
+        panic!("missing inner loop: {generated}");
+    };
+    let inner_body = &generated[inner_loop..];
+    assert!(inner_body.contains("let left: Option<"), "{generated}");
+    assert!(
+        !inner_body.starts_with("let Some(__sifr_checked_value_")
+            && !inner_body[..inner_body.find("let left:").unwrap_or(inner_body.len())]
+                .contains("let Some(__sifr_checked_value_"),
+        "optional reads must not produce unused loop refresh bindings: {generated}"
+    );
+}
