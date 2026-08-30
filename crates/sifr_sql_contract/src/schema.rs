@@ -40,7 +40,7 @@ pub struct ProviderIdentity {
 pub struct DialectIdentity {
     pub family: String,
     pub server_version: String,
-    pub modes: BTreeMap<String, String>,
+    pub modes: BTreeSet<String>,
     pub features: BTreeSet<String>,
 }
 
@@ -132,10 +132,14 @@ impl SchemaIr {
                 )
             });
         }
+        if let Some(exact) = self.objects.get(&ObjectId::new(name)) {
+            return Ok(exact);
+        }
         let suffix = format!(".{name}");
-        let mut matches = self.objects.iter().filter(|(identity, _)| {
-            identity.as_str() == name || identity.as_str().ends_with(&suffix)
-        });
+        let mut matches = self
+            .objects
+            .iter()
+            .filter(|(identity, _)| identity.as_str().ends_with(&suffix));
         let Some((_, first)) = matches.next() else {
             return Err(SchemaContractError::new(
                 SchemaContractErrorKind::UnknownSymbol,

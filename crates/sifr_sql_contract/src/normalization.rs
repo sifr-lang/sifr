@@ -29,9 +29,19 @@ pub fn normalize_schema(
     validate_provider(&provider)?;
     validate_dialect(&dialect)?;
     let mut objects = BTreeMap::new();
+    let mut document_kinds = BTreeMap::new();
     for document in documents {
         if document.document.is_empty() {
             return Err(invalid_schema("schema document identity must not be empty"));
+        }
+        if document_kinds
+            .insert(document.document.clone(), document.kind)
+            .is_some()
+        {
+            return Err(invalid_schema(format!(
+                "schema document '{}' is declared more than once",
+                document.document
+            )));
         }
         for mut object in document.objects {
             validate_object(&object)?;
@@ -127,7 +137,7 @@ fn validate_dialect(dialect: &DialectIdentity) -> Result<(), SchemaContractError
             "dialect family and server version must not be empty",
         ));
     }
-    if dialect.modes.keys().any(String::is_empty) || dialect.features.iter().any(String::is_empty) {
+    if dialect.modes.iter().any(String::is_empty) || dialect.features.iter().any(String::is_empty) {
         return Err(invalid_schema(
             "dialect mode and feature names must not be empty",
         ));

@@ -1,13 +1,21 @@
 #![allow(clippy::expect_used, clippy::unwrap_used)]
 
 use semver::Version;
+use sifr_compiler_component::{
+    ClosedType, ComponentIdentity, ComponentRegistration, DiagnosticRegistry,
+    DiagnosticRegistryOwner, EmbeddedAnalysisResponse, EmbeddedPlan, PlanKind, ProtocolRange,
+    RuntimeLowering, SemanticOperation, compute_plan_fingerprint,
+};
 use sifr_sql_contract::{
-    AbsenceFact, DialectIdentity, ObjectId, ObjectRequirement, PoolingMode, ProviderIdentity,
-    SchemaDependencyRequest, SchemaDocument, SchemaDocumentKind, SchemaEvidence, SchemaIr,
-    SchemaObject, SchemaObjectKind, SchemaProfile, SchemaSlice, SchemaSourceLocation,
+    AbsenceFact, DialectIdentity, ObjectId, ObjectRequirement, OverloadSetKind, PoolingMode,
+    ProviderIdentity, SCHEMA_NORMALIZATION_PAYLOAD_TAG, SchemaDependencyRequest, SchemaDocument,
+    SchemaDocumentKind, SchemaEvidence, SchemaIr, SchemaNormalizationOutput, SchemaObject,
+    SchemaObjectKind, SchemaProfile, SchemaSlice, SchemaSourceInput, SchemaSourceLocation,
     SchemaStrictness, SemanticValue, SessionContract, build_profile_authority,
-    generate_profile_module, minimum_schema_slice, normalize_schema, schema_context_artifact,
-    schema_fingerprint, semantic_diff, verify_compatible_slice,
+    generate_profile_module, minimum_schema_slice, normalize_schema,
+    normalized_schema_from_response, schema_context_artifact, schema_fingerprint,
+    schema_normalization_request, schema_source_fingerprint, semantic_diff,
+    verify_compatible_slice,
 };
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -140,15 +148,84 @@ fn minimum_slice_keeps_requested_properties_transitive_dependencies_and_absence(
 }
 
 #[test]
+fn transitive_reachability_expands_a_direct_requirement_and_compatible_edges_may_grow() {
+    let schema = schema(vec![namespace(), table(), column()]);
+    let slice = minimum_schema_slice(
+        &schema,
+        [
+            SchemaDependencyRequest {
+                identity: ObjectId::new("public.users"),
+                properties: BTreeSet::new(),
+            },
+            SchemaDependencyRequest {
+                identity: ObjectId::new("public.users.id"),
+                properties: BTreeSet::from(["nullable".to_string()]),
+            },
+        ],
+        [],
+    )
+    .expect("slice");
+    assert_eq!(
+        slice.objects[&ObjectId::new("public.users")].properties,
+        schema.objects[&ObjectId::new("public.users")].semantic
+    );
+    let mut observed = schema;
+    observed
+        .objects
+        .get_mut(&ObjectId::new("public.users"))
+        .expect("table")
+        .dependencies
+        .insert(ObjectId::new("public.users.id"));
+    verify_compatible_slice(&observed, &slice).expect("new dependency edge is compatible");
+}
+
+#[test]
+fn overload_absence_facts_use_explicit_provider_metadata_for_every_overload_kind() {
+    let mut operator = object("public.plus.int4.int4", SchemaObjectKind::Operator);
+    operator.semantic.insert(
+        "overload_namespace".to_string(),
+        SemanticValue::Text("public".to_string()),
+    );
+    operator.semantic.insert(
+        "overload_name".to_string(),
+        SemanticValue::Text("plus".to_string()),
+    );
+    let schema = schema(vec![operator]);
+    let candidates = BTreeSet::from([ObjectId::new("public.plus.int4.int4")]);
+    let slice = minimum_schema_slice(
+        &schema,
+        [],
+        [AbsenceFact::ExactOverloadSet {
+            object_kind: OverloadSetKind::Operator,
+            namespace: "public".to_string(),
+            name: "plus".to_string(),
+            candidates,
+        }],
+    )
+    .expect("overload slice");
+    verify_compatible_slice(&schema, &slice).expect("exact operator set");
+}
+
+#[test]
 fn nominal_profiles_and_generated_namespaces_do_not_collapse_equal_schemas() {
-    let first = authority("app", schema(vec![namespace(), enum_object("public.sql")]));
+    let first = authority(
+        "app",
+        schema(vec![
+            namespace(),
+            enum_object("public.sql"),
+            enum_object("app.sql"),
+            enum_object("app.class"),
+        ]),
+    );
     let second = authority("analytics", first.profile.schema.clone());
     assert_ne!(first.nominal_identity, second.nominal_identity);
     assert_ne!(first.profile_fingerprint, second.profile_fingerprint);
 
     let module = generate_profile_module(&first).expect("generated module");
     assert!(module.source.contains("class Schema:"));
-    assert!(!module.source.contains("class sql(Enum):"));
+    assert!(module.source.contains("class enums__public__sql(Enum):"));
+    assert!(module.source.contains("class enums__app__sql(Enum):"));
+    assert!(module.source.contains("class enums__app__class_(Enum):"));
     assert!(module.metadata.compiler_known_exports.contains("sql"));
     assert_eq!(
         module
@@ -157,6 +234,73 @@ fn nominal_profiles_and_generated_namespaces_do_not_collapse_equal_schemas() {
         ObjectId::new("public.sql")
     );
     assert!(!module.source.contains("database_url"));
+}
+
+#[test]
+fn schema_component_round_trip_binds_source_bytes_and_source_kinds() {
+    let sources = vec![SchemaSourceInput {
+        document: "db/schema.sql".to_string(),
+        kind: SchemaDocumentKind::SqlDdl,
+        fingerprint: schema_source_fingerprint(b"create schema public;"),
+        contents: b"create schema public;".to_vec(),
+    }];
+    let registration = component_registration();
+    let request = schema_normalization_request(
+        &registration,
+        "0.0.0",
+        "app::main",
+        "18",
+        &BTreeSet::new(),
+        &BTreeSet::from(["citext".to_string()]),
+        &sources,
+    )
+    .expect("schema request");
+    assert_eq!(
+        request.context.artifacts[0].fingerprint,
+        sources[0].fingerprint
+    );
+    let output = SchemaNormalizationOutput {
+        dialect: dialect(),
+        documents: vec![document(
+            SchemaDocumentKind::SqlDdl,
+            "db/schema.sql",
+            vec![namespace()],
+        )],
+    };
+    let mut plan = EmbeddedPlan {
+        provider_identity: registration.identity.processor.clone(),
+        protocol_major: 1,
+        plan_kind: PlanKind::Document,
+        schema_identity: None,
+        result_type: ClosedType::None,
+        operations: vec![SemanticOperation::ProviderNode {
+            tag: SCHEMA_NORMALIZATION_PAYLOAD_TAG.to_string(),
+            payload: serde_json::to_vec(&output).expect("output"),
+        }],
+        runtime: RuntimeLowering::NoRuntime,
+        dependencies: Vec::new(),
+        diagnostics: Vec::new(),
+        source_map: Vec::new(),
+        stable_fingerprint: String::new(),
+    };
+    plan.stable_fingerprint = compute_plan_fingerprint(&plan).expect("plan fingerprint");
+    let response = EmbeddedAnalysisResponse {
+        protocol_major: 1,
+        plan,
+    };
+    let normalized = normalized_schema_from_response(provider(), &sources, &response)
+        .expect("normalized response");
+    assert!(normalized.objects.contains_key(&ObjectId::new("public")));
+
+    let mut wrong_kind = response;
+    let SemanticOperation::ProviderNode { payload, .. } = &mut wrong_kind.plan.operations[0] else {
+        unreachable!();
+    };
+    let mut output: SchemaNormalizationOutput =
+        serde_json::from_slice(payload).expect("decode output");
+    output.documents[0].kind = SchemaDocumentKind::ProviderMetadata;
+    *payload = serde_json::to_vec(&output).expect("encode output");
+    assert!(normalized_schema_from_response(provider(), &sources, &wrong_kind).is_err());
 }
 
 #[test]
@@ -188,6 +332,7 @@ fn authority(name: &str, schema: SchemaIr) -> sifr_sql_contract::ProfileAuthorit
         package_id: "app@1.0.0#registry".to_string(),
         name: name.to_string(),
         source_files: BTreeSet::from(["db/schema.sql".to_string()]),
+        source_fingerprints: BTreeMap::from([("db/schema.sql".to_string(), "b".repeat(64))]),
         evidence: SchemaEvidence::MigrationHead,
         strictness: SchemaStrictness::Compatible,
         pooling: PoolingMode::Session,
@@ -241,8 +386,30 @@ fn dialect() -> DialectIdentity {
     DialectIdentity {
         family: "postgresql".to_string(),
         server_version: "18".to_string(),
-        modes: BTreeMap::new(),
+        modes: BTreeSet::new(),
         features: BTreeSet::from(["citext".to_string()]),
+    }
+}
+
+fn component_registration() -> ComponentRegistration {
+    ComponentRegistration {
+        identity: ComponentIdentity {
+            package: "sifr-sql-postgresql@1.0.0#registry".to_string(),
+            processor: "sifr.sql.postgresql.schema".to_string(),
+            version: Version::new(1, 0, 0),
+            sha256: "a".repeat(64),
+        },
+        protocol: ProtocolRange {
+            minimum: 1,
+            maximum: 1,
+        },
+        artifact: "components/postgresql.wasm".to_string(),
+        diagnostics: DiagnosticRegistry {
+            owner: DiagnosticRegistryOwner::Provider {
+                namespace: "SQL-POSTGRESQL".to_string(),
+            },
+            declarations: Vec::new(),
+        },
     }
 }
 

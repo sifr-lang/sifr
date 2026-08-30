@@ -14,6 +14,10 @@ fn manifest_parses_complete_offline_profile_contract() {
     assert_eq!(profile.source_kind, SchemaSourceKind::SqlDdl);
     assert_eq!(profile.server_version, "18");
     assert_eq!(profile.session.search_path, ["app", "public"]);
+    assert_eq!(
+        profile.session.sql_modes,
+        BTreeSet::from(["standard".to_string()])
+    );
     assert_eq!(profile.session.time_zone.as_deref(), Some("UTC"));
 }
 
@@ -33,6 +37,14 @@ fn manifest_rejects_credentials_and_live_connection_inputs() {
         assert!(error.message.contains("unsupported field"));
         assert!(!error.message.contains("secret"));
     }
+    let source = app_manifest("sifr_sql_postgresql").replace(
+        "sql-modes = [\"standard\"]",
+        "sql-modes = [\"postgresql://user:secret@host/db\"]",
+    );
+    let error = SifrManifest::parse(&cargo_id("app"), Path::new("/ws/app/sifr.toml"), &source)
+        .expect_err("SQL modes must not carry arbitrary credential strings");
+    assert!(error.message.contains("SQL mode identifiers"));
+    assert!(!error.message.contains("secret"));
 }
 
 #[test]
@@ -84,12 +96,12 @@ fn profile_provider_resolves_to_locked_package_and_component_identity() {
         dialect: DialectIdentity {
             family: "postgresql".to_string(),
             server_version: "18".to_string(),
-            modes: BTreeMap::new(),
+            modes: BTreeSet::new(),
             features: BTreeSet::from(["citext".to_string()]),
         },
         objects: BTreeMap::new(),
     };
-    assert!(profile.build_authority(wrong_schema).is_err());
+    assert!(profile.build_authority(wrong_schema, &[]).is_err());
 }
 
 fn package(name: &str, manifest: SifrManifest) -> SifrPackageMetadata {
@@ -128,6 +140,7 @@ source = "db/schema.sql"
 server-version = "18"
 search-path = ["app", "public"]
 extensions = ["citext"]
+sql-modes = ["standard"]
 pooling = "session"
 schema-evidence = "migration-head"
 schema-strictness = "compatible"
@@ -152,7 +165,7 @@ version = "1.0.0"
 sha256 = "{}"
 protocol-min = 1
 protocol-max = 1
-processors = ["sifr.sql.postgresql.sql"]
+processors = ["sifr.sql.postgresql.schema", "sifr.sql.postgresql.sql"]
 diagnostic-namespace = "SQL-POSTGRESQL"
 diagnostics = [{{ code = "SIFR-SQL-POSTGRESQL-0001", lifecycle = "active" }}]
 "#,

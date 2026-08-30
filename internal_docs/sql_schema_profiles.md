@@ -34,6 +34,7 @@ source-kind = "sql-ddl"
 server-version = "18"
 search-path = ["app", "public"]
 extensions = ["citext"]
+sql-modes = ["standard"]
 pooling = "session"
 schema-evidence = "migration-head"
 schema-strictness = "compatible"
@@ -47,6 +48,11 @@ package loader requires every path to be a package-local file. It sorts and
 deduplicates paths. `source-kind` is `sql-ddl`, `provider-metadata`, or
 `generated-definitions`. It defaults to `sql-ddl` for the common case.
 
+`sql-modes` is a list of short mode identifiers. It is not a key/value table.
+Values can contain only letters, digits, `_`, and `-`, and can contain at most
+64 bytes. This form can represent provider modes but cannot carry a connection
+URL, password, or arbitrary environment reference.
+
 The parser rejects unknown profile and session fields. Session configuration has
 no arbitrary option map. Thus, a connection URL,
 password, credential environment variable, or live-introspection option cannot
@@ -58,6 +64,28 @@ later compilation.
 `schema-strictness` is `exact` or `compatible`. Signed manifests require at
 least one accepted signer. Transaction pooling rejects a persistent session
 role because it cannot guarantee that state across acquisitions.
+
+## Compile-time preparation
+
+Each provider package registers one exact compiler-component processor whose
+identity ends in `.schema`. The driver resolves this processor from the locked
+provider package. A user does not select a processor separately.
+
+For each package build, the driver reads the declared source files. It hashes the
+source bytes and sends them to the schema processor as bounded context artifacts.
+The artifact kind preserves `sql-ddl`, `provider-metadata`, or
+`generated-definitions`. The component returns one closed normalized-schema
+payload. The compiler checks that the response contains every input document
+exactly once and does not change its source kind.
+
+The component host has no WASI, network, environment, clock, random, process, or
+filesystem imports. Therefore, schema preparation is offline. A requested
+ambient import fails package compilation with a component capability diagnostic.
+
+The driver normalizes the response, builds the profile authority, produces the
+generated profile module and metadata, and adds the profile and schema
+fingerprints to the build-cache identity. A change to checked-in source bytes
+changes the profile fingerprint even when the normalized schema is equal.
 
 ## Canonical `SchemaIR`
 
@@ -97,6 +125,9 @@ remain ordered. Any change that can affect resolution, typing, encoding,
 cardinality, or execution must appear in a semantic property and change the
 fingerprint.
 
+The profile fingerprint additionally includes normalized relative source paths
+and the SHA-256 of each source file. It never includes an absolute host path.
+
 The semantic diff reports provider drift, dialect drift, and exact added,
 removed, or changed objects. Source-location-only changes do not appear.
 
@@ -107,16 +138,28 @@ keeps only those properties. It also closes over every declared object
 dependency and records the complete semantics of each transitive dependency.
 
 A slice can contain absence facts. These include a required missing object and
-an exact overload candidate set. Compatible runtime verification compares the
+an exact function, operator, or cast overload candidate set. Providers record
+the canonical `overload_namespace` and `overload_name` semantic properties; the
+compiler does not infer overload identity from object-name punctuation.
+Compatible runtime verification compares the
 observed schema with every required property, dependency, and absence fact.
-Objects outside the slice do not affect compatibility.
+Objects outside the slice do not affect compatibility. A required dependency
+must remain present, but compatible verification permits new dependency edges.
 
 ## Generated profile modules
 
 The generated module path is `sifr.sql.schemas.<profile>`. Its source contains
 the nominal zero-field `Schema` type and generated enum, domain, and composite
-types. A sidecar `ProfileModuleMetadata` contains the nominal identity, profile
-and schema fingerprints, compiler-known exports, generated types, and complete
+types. Generated types live under the compiler-known `enums`, `domains`, and
+`composites` namespaces. Their emitted name includes every qualified identity
+segment, joined by `__`. Thus, `app.status` and `public.status` remain distinct.
+Sifr keywords receive a trailing `_` in generated source. Metadata retains each
+original qualified database identity. Generated source uses a collision-free
+internal class name such as `enums__public__status`; the compiler-known metadata
+exposes that type as `enums.public.status`.
+
+A sidecar `ProfileModuleMetadata` contains the nominal identity, profile and
+schema fingerprints, compiler-known exports, generated types, and complete
 schema-symbol index.
 
 Compiler-known exports are not emitted as runtime profile values. Their names

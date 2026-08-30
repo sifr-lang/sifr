@@ -35,7 +35,7 @@ pub enum PoolingMode {
 #[serde(deny_unknown_fields)]
 pub struct SessionContract {
     pub search_path: Vec<String>,
-    pub sql_modes: BTreeMap<String, String>,
+    pub sql_modes: BTreeSet<String>,
     pub collation: Option<String>,
     pub character_set: Option<String>,
     pub time_zone: Option<String>,
@@ -49,6 +49,7 @@ pub struct SchemaProfile {
     pub package_id: String,
     pub name: String,
     pub source_files: BTreeSet<String>,
+    pub source_fingerprints: BTreeMap<String, String>,
     pub evidence: SchemaEvidence,
     pub strictness: SchemaStrictness,
     pub pooling: PoolingMode,
@@ -122,6 +123,7 @@ pub fn build_profile_authority(
         &nominal_identity,
         &schema_fingerprint,
         &profile.source_files,
+        &profile.source_fingerprints,
         profile.evidence,
         profile.strictness,
         profile.pooling,
@@ -180,6 +182,18 @@ fn validate_profile(profile: &SchemaProfile) -> Result<(), SchemaContractError> 
             "profile schema sources must be non-empty normalized relative paths",
         ));
     }
+    if profile.source_fingerprints.keys().collect::<BTreeSet<_>>()
+        != profile.source_files.iter().collect::<BTreeSet<_>>()
+        || profile
+            .source_fingerprints
+            .values()
+            .any(|fingerprint| !valid_sha256(fingerprint))
+    {
+        return Err(SchemaContractError::new(
+            SchemaContractErrorKind::InvalidProfile,
+            "profile schema source fingerprints must cover every source with exact SHA-256 values",
+        ));
+    }
     if profile.evidence == SchemaEvidence::SignedManifest && profile.accepted_signers.is_empty() {
         return Err(SchemaContractError::new(
             SchemaContractErrorKind::InvalidProfile,
@@ -192,7 +206,26 @@ fn validate_profile(profile: &SchemaProfile) -> Result<(), SchemaContractError> 
             "transaction pooling cannot carry a persistent session role",
         ));
     }
+    if profile.session.sql_modes.iter().any(|mode| {
+        mode.is_empty()
+            || mode.len() > 64
+            || !mode
+                .bytes()
+                .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'-'))
+    }) {
+        return Err(SchemaContractError::new(
+            SchemaContractErrorKind::InvalidProfile,
+            "SQL modes must be short identifiers, not arbitrary values",
+        ));
+    }
     Ok(())
+}
+
+fn valid_sha256(value: &str) -> bool {
+    value.len() == 64
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
 }
 
 fn valid_profile_name(value: &str) -> bool {

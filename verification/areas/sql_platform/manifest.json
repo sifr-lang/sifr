@@ -58,6 +58,20 @@
           "command": "sql-schema-profile-qualification",
           "expect_exit_code": 0,
           "diagnostic_formats": []
+        },
+        {
+          "id": "sql-schema-profile-rust-tests",
+          "entry": "crates/sifr_sql_contract/tests/schema_profiles.rs",
+          "command": "sql-schema-profile-rust-tests",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-schema-profile-driver-tests",
+          "entry": "crates/sifr_driver/src/build/sql_profiles_tests.rs",
+          "command": "sql-schema-profile-driver-tests",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
         }
       ]
     },

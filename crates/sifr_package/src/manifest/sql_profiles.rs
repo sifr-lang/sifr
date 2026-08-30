@@ -203,23 +203,15 @@ fn parse_profile(
             ));
         }
     };
-    let sql_modes = optional_table(
-        cargo_package_id,
-        manifest_path,
-        table,
-        &format!("{prefix}.sql-modes"),
-        "sql-modes",
-    )?
-    .map(|modes| {
-        string_map(
+    let sql_modes = string_set(cargo_package_id, manifest_path, table, &prefix, "sql-modes")?;
+    if sql_modes.iter().any(|mode| !valid_sql_mode(mode)) {
+        return Err(invalid(
             cargo_package_id,
             manifest_path,
-            &format!("{prefix}.sql-modes"),
-            modes,
-        )
-    })
-    .transpose()?
-    .unwrap_or_default();
+            format!("{prefix}.sql-modes"),
+            "expected short SQL mode identifiers containing only letters, digits, '_' or '-'",
+        ));
+    }
     let session_table = optional_table(
         cargo_package_id,
         manifest_path,
@@ -339,7 +331,7 @@ fn parse_session(
     manifest_path: &Path,
     prefix: &str,
     search_path: Vec<String>,
-    sql_modes: BTreeMap<String, String>,
+    sql_modes: BTreeSet<String>,
     table: Option<&toml::Table>,
 ) -> Result<SessionContract, PackageDiagnostic> {
     let Some(table) = table else {
@@ -455,29 +447,12 @@ fn string_set(
     )
 }
 
-fn string_map(
-    cargo_package_id: &CargoPackageId,
-    manifest_path: &Path,
-    key: &str,
-    table: &toml::Table,
-) -> Result<BTreeMap<String, String>, PackageDiagnostic> {
-    table
-        .iter()
-        .map(|(name, value)| {
-            value
-                .as_str()
-                .filter(|value| !value.is_empty())
-                .map(|value| (name.clone(), value.to_string()))
-                .ok_or_else(|| {
-                    invalid(
-                        cargo_package_id,
-                        manifest_path,
-                        format!("{key}.{name}"),
-                        "expected a non-empty string",
-                    )
-                })
-        })
-        .collect()
+fn valid_sql_mode(value: &str) -> bool {
+    !value.is_empty()
+        && value.len() <= 64
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'-'))
 }
 
 fn optional_table<'a>(

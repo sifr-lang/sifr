@@ -26,24 +26,27 @@ pub const COMPILER_KNOWN_PROFILE_EXPORTS: &[&str] = &[
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum GeneratedSchemaType {
     Enum {
-        name: String,
+        identity: ObjectId,
+        path: Vec<String>,
         variants: Vec<String>,
     },
     Domain {
-        name: String,
+        identity: ObjectId,
+        path: Vec<String>,
         storage_type: String,
     },
     Composite {
-        name: String,
+        identity: ObjectId,
+        path: Vec<String>,
         fields: BTreeMap<String, String>,
     },
 }
 
 impl GeneratedSchemaType {
-    fn name(&self) -> &str {
+    fn path(&self) -> &[String] {
         match self {
-            Self::Enum { name, .. } | Self::Domain { name, .. } | Self::Composite { name, .. } => {
-                name
+            Self::Enum { path, .. } | Self::Domain { path, .. } | Self::Composite { path, .. } => {
+                path
             }
         }
     }
@@ -75,6 +78,12 @@ impl GeneratedProfileModule {
         name: &str,
     ) -> Result<ObjectId, SchemaContractError> {
         let object = authority.profile.schema.resolve_symbol(name)?;
+        if !self.metadata.schema_symbols.contains(&object.identity) {
+            return Err(SchemaContractError::new(
+                SchemaContractErrorKind::UnknownSymbol,
+                format!("schema symbol '{name}' is absent from generated module metadata"),
+            ));
+        }
         Ok(object.identity.clone())
     }
 }
@@ -92,27 +101,7 @@ pub fn generate_profile_module(
         authority.nominal_identity
     );
     for generated in &generated_types {
-        match generated {
-            GeneratedSchemaType::Enum { name, variants } => {
-                write!(source, "\nclass {name}(Enum):\n").map_err(format_error)?;
-                for (index, variant) in variants.iter().enumerate() {
-                    writeln!(source, "    {variant} = {index}").map_err(format_error)?;
-                }
-            }
-            GeneratedSchemaType::Domain { name, storage_type } => {
-                writeln!(source, "\nclass {name}:\n    value: {storage_type}")
-                    .map_err(format_error)?;
-            }
-            GeneratedSchemaType::Composite { name, fields } => {
-                writeln!(source, "\nclass {name}:").map_err(format_error)?;
-                for (field, field_type) in fields {
-                    writeln!(source, "    {field}: {field_type}").map_err(format_error)?;
-                }
-                if fields.is_empty() {
-                    source.push_str("    pass\n");
-                }
-            }
-        }
+        render_generated_type(&mut source, generated)?;
     }
     let metadata = ProfileModuleMetadata {
         profile_name: authority.profile.name.clone(),
@@ -130,50 +119,84 @@ pub fn generate_profile_module(
     })
 }
 
+fn render_generated_type(
+    source: &mut String,
+    generated: &GeneratedSchemaType,
+) -> Result<(), SchemaContractError> {
+    match generated {
+        GeneratedSchemaType::Enum { path, variants, .. } => {
+            let name = emitted_name(path)?;
+            writeln!(source, "\nclass {name}(Enum):").map_err(format_error)?;
+            for (index, variant) in variants.iter().enumerate() {
+                writeln!(source, "    {} = {index}", escape_identifier(variant))
+                    .map_err(format_error)?;
+            }
+            if variants.is_empty() {
+                source.push_str("    pass\n");
+            }
+        }
+        GeneratedSchemaType::Domain {
+            path, storage_type, ..
+        } => {
+            let name = emitted_name(path)?;
+            writeln!(source, "\nclass {name}:\n    value: {storage_type}").map_err(format_error)?;
+        }
+        GeneratedSchemaType::Composite { path, fields, .. } => {
+            let name = emitted_name(path)?;
+            writeln!(source, "\nclass {name}:").map_err(format_error)?;
+            for (field, field_type) in fields {
+                writeln!(source, "    {}: {field_type}", escape_identifier(field))
+                    .map_err(format_error)?;
+            }
+            if fields.is_empty() {
+                source.push_str("    pass\n");
+            }
+        }
+    }
+    Ok(())
+}
+
 fn generated_types(
     authority: &ProfileAuthority,
 ) -> Result<Vec<GeneratedSchemaType>, SchemaContractError> {
-    let reserved = COMPILER_KNOWN_PROFILE_EXPORTS
-        .iter()
-        .copied()
-        .collect::<BTreeSet<_>>();
     let mut generated = Vec::new();
     for object in authority.profile.schema.objects.values() {
-        let Some(name) = local_name(object.identity.as_str()) else {
-            continue;
-        };
+        let qualified = qualified_generated_path(object.identity.as_str())?;
         let candidate = match object.kind {
             SchemaObjectKind::Enum => Some(GeneratedSchemaType::Enum {
-                name: name.to_string(),
+                identity: object.identity.clone(),
+                path: generated_path("enums", &qualified),
                 variants: identifier_list_property(object, "variants")?,
             }),
             SchemaObjectKind::Domain => Some(GeneratedSchemaType::Domain {
-                name: name.to_string(),
+                identity: object.identity.clone(),
+                path: generated_path("domains", &qualified),
                 storage_type: type_property(object, "sifr_type")?.to_string(),
             }),
             SchemaObjectKind::Composite => Some(GeneratedSchemaType::Composite {
-                name: name.to_string(),
+                identity: object.identity.clone(),
+                path: generated_path("composites", &qualified),
                 fields: type_map_property(object, "fields")?,
             }),
             _ => None,
         };
         if let Some(candidate) = candidate {
-            if reserved.contains(candidate.name()) {
-                continue;
-            }
             if generated
                 .iter()
-                .any(|existing: &GeneratedSchemaType| existing.name() == candidate.name())
+                .any(|existing: &GeneratedSchemaType| existing.path() == candidate.path())
             {
                 return Err(SchemaContractError::new(
-                    SchemaContractErrorKind::ReservedExport,
-                    format!("generated schema type '{}' is ambiguous", candidate.name()),
+                    SchemaContractErrorKind::InvalidSchema,
+                    format!(
+                        "generated schema type path '{}' is ambiguous",
+                        candidate.path().join(".")
+                    ),
                 ));
             }
             generated.push(candidate);
         }
     }
-    generated.sort_by(|left, right| left.name().cmp(right.name()));
+    generated.sort_by(|left, right| left.path().cmp(right.path()));
     Ok(generated)
 }
 
@@ -235,11 +258,36 @@ fn invalid_generated_property(object: &crate::SchemaObject, name: &str) -> Schem
     )
 }
 
-fn local_name(identity: &str) -> Option<&str> {
+fn qualified_generated_path(identity: &str) -> Result<Vec<String>, SchemaContractError> {
     identity
-        .rsplit('.')
-        .next()
-        .filter(|name| valid_identifier(name))
+        .split('.')
+        .map(|name| {
+            if valid_identifier(name) {
+                Ok(escape_identifier(name))
+            } else {
+                Err(SchemaContractError::new(
+                    SchemaContractErrorKind::InvalidSchema,
+                    format!("schema type identity '{identity}' cannot be emitted as Sifr"),
+                ))
+            }
+        })
+        .collect()
+}
+
+fn generated_path(category: &str, qualified: &[String]) -> Vec<String> {
+    std::iter::once(category.to_string())
+        .chain(qualified.iter().cloned())
+        .collect()
+}
+
+fn emitted_name(path: &[String]) -> Result<String, SchemaContractError> {
+    if path.is_empty() {
+        return Err(SchemaContractError::new(
+            SchemaContractErrorKind::InvalidSchema,
+            "generated schema type path must not be empty",
+        ));
+    }
+    Ok(path.join("__"))
 }
 
 fn valid_identifier(value: &str) -> bool {
@@ -251,7 +299,58 @@ fn valid_identifier(value: &str) -> bool {
 }
 
 fn valid_type_path(value: &str) -> bool {
-    !value.is_empty() && value.split('.').all(valid_identifier)
+    !value.is_empty()
+        && value
+            .split('.')
+            .all(|part| valid_identifier(part) && !is_sifr_keyword(part))
+}
+
+fn escape_identifier(value: &str) -> String {
+    if is_sifr_keyword(value) {
+        format!("{value}_")
+    } else {
+        value.to_string()
+    }
+}
+
+fn is_sifr_keyword(value: &str) -> bool {
+    matches!(
+        value,
+        "False"
+            | "None"
+            | "True"
+            | "and"
+            | "as"
+            | "async"
+            | "await"
+            | "break"
+            | "class"
+            | "continue"
+            | "def"
+            | "del"
+            | "elif"
+            | "else"
+            | "except"
+            | "finally"
+            | "for"
+            | "from"
+            | "global"
+            | "if"
+            | "import"
+            | "in"
+            | "is"
+            | "lambda"
+            | "nonlocal"
+            | "not"
+            | "or"
+            | "pass"
+            | "raise"
+            | "return"
+            | "try"
+            | "while"
+            | "with"
+            | "yield"
+    )
 }
 
 fn format_error(_: std::fmt::Error) -> SchemaContractError {

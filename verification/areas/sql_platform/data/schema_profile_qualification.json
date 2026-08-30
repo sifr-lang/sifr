@@ -34,12 +34,15 @@
   ],
   "fingerprint_includes": ["dialect", "format-version", "object-dependencies", "object-identities", "object-kinds", "provider", "semantic-properties"],
   "fingerprint_excludes": ["absolute-paths", "diagnostic-rendering", "source-offsets"],
-  "generated_artifacts": ["component-schema-context", "profile-module", "profile-module-metadata", "runtime-schema-manifest"],
+  "profile_fingerprint_includes": ["normalized-source-paths", "source-sha256"],
+  "generated_artifacts": ["compiler-profile-registry", "component-schema-context", "profile-module", "profile-module-metadata", "runtime-schema-manifest"],
   "compiler_known_exports": ["Schema", "all", "any", "composites", "connect", "domains", "enums", "not_", "open_pool", "query", "schema", "sql", "symbol"],
   "normal_compilation_credentials": false,
   "evidence": {
     "canonicalization": "crates/sifr_sql_contract/tests/schema_profiles.rs",
     "configuration": "crates/sifr_package/src/sql_profile_tests.rs",
+    "offline-compilation": "crates/sifr_driver/src/build/sql_profiles_tests.rs",
+    "preparation": "crates/sifr_driver/src/build/sql_profiles.rs",
     "documentation": "internal_docs/sql_schema_profiles.md",
     "provider-resolution": "crates/sifr_package/src/sql_profiles.rs"
   }

@@ -14,7 +14,7 @@ RECORD = REPO_ROOT / "verification/areas/sql_platform/data/schema_profile_qualif
 
 SOURCE_KINDS = {"sql-ddl", "provider-metadata", "generated-definitions"}
 GENERATED = {
-    "component-schema-context", "profile-module", "profile-module-metadata",
+    "compiler-profile-registry", "component-schema-context", "profile-module", "profile-module-metadata",
     "runtime-schema-manifest",
 }
 EXPORTS = {
@@ -47,6 +47,10 @@ def validate(payload: Any) -> None:
         raise ContractError("SchemaIR object-kind set is incomplete")
     if set(payload.get("generated_artifacts", [])) != GENERATED:
         raise ContractError("generated schema artifact set is incomplete")
+    if set(payload.get("profile_fingerprint_includes", [])) != {
+        "normalized-source-paths", "source-sha256",
+    }:
+        raise ContractError("profile fingerprint does not bind checked-in source bytes")
     if set(payload.get("compiler_known_exports", [])) != EXPORTS:
         raise ContractError("compiler-known profile export set is incomplete")
     if payload.get("normal_compilation_credentials") is not False:
@@ -61,6 +65,8 @@ def validate(payload: Any) -> None:
         "generated": (REPO_ROOT / "crates/sifr_sql_contract/src/generated.rs").read_text(encoding="utf-8"),
         "package": (REPO_ROOT / "crates/sifr_package/src/manifest/sql_profiles.rs").read_text(encoding="utf-8"),
         "component": (REPO_ROOT / "crates/sifr_compiler_component/src/protocol.rs").read_text(encoding="utf-8"),
+        "dispatch": (REPO_ROOT / "crates/sifr_driver/src/build/sql_profiles.rs").read_text(encoding="utf-8"),
+        "schema_component": (REPO_ROOT / "crates/sifr_sql_contract/src/component.rs").read_text(encoding="utf-8"),
     }
     required_tokens = {
         "schema": ["pub struct SchemaIr", "pub enum SchemaObjectKind", "pub enum SemanticValue"],
@@ -69,6 +75,8 @@ def validate(payload: Any) -> None:
         "generated": ["COMPILER_KNOWN_PROFILE_EXPORTS", "lookup_static_symbol", "GeneratedProfileModule"],
         "package": ["parse_sql_config", "connection URLs, credentials", "signed-manifest"],
         "component": ["pub struct ContextArtifact", "pub artifacts: Vec<ContextArtifact>"],
+        "dispatch": ["prepare_sql_profiles", "ComponentHost", "load_schema_sources"],
+        "schema_component": ["schema_normalization_request", "normalized_schema_from_response", "SchemaSourceInput"],
     }
     for owner, tokens in required_tokens.items():
         if any(token not in sources[owner] for token in tokens):
@@ -91,6 +99,9 @@ def self_test(payload: dict[str, Any]) -> None:
     missing_export = copy.deepcopy(payload)
     missing_export["compiler_known_exports"].remove("symbol")
     mutations.append(("static-symbol", missing_export))
+    missing_source_hash = copy.deepcopy(payload)
+    missing_source_hash["profile_fingerprint_includes"].remove("source-sha256")
+    mutations.append(("source-hash", missing_source_hash))
     for name, mutated in mutations:
         try:
             validate(mutated)

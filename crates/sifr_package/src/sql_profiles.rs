@@ -5,7 +5,7 @@ use crate::{
 use semver::Version;
 use sifr_sql_contract::{
     ProfileAuthority, ProviderIdentity, SchemaContractError, SchemaContractErrorKind, SchemaIr,
-    SchemaProfile, build_profile_authority,
+    SchemaProfile, SchemaSourceInput, build_profile_authority, schema_source_fingerprint,
 };
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
@@ -20,9 +20,33 @@ pub struct ResolvedSqlProfile {
 }
 
 impl ResolvedSqlProfile {
+    pub fn load_schema_sources(&self) -> Result<Vec<SchemaSourceInput>, SchemaContractError> {
+        self.config
+            .sources
+            .iter()
+            .zip(&self.schema_sources)
+            .map(|(relative, absolute)| {
+                let document = normalized_relative_path(relative)?;
+                let contents = std::fs::read(absolute).map_err(|error| {
+                    SchemaContractError::new(
+                        SchemaContractErrorKind::InvalidProfile,
+                        format!("cannot read checked-in schema source '{document}': {error}"),
+                    )
+                })?;
+                Ok(SchemaSourceInput {
+                    document,
+                    kind: self.config.source_kind.into(),
+                    fingerprint: schema_source_fingerprint(&contents),
+                    contents,
+                })
+            })
+            .collect()
+    }
+
     pub fn build_authority(
         &self,
         schema: SchemaIr,
+        sources: &[SchemaSourceInput],
     ) -> Result<ProfileAuthority, SchemaContractError> {
         if schema.provider != self.provider {
             return Err(SchemaContractError::new(
@@ -39,15 +63,31 @@ impl ResolvedSqlProfile {
                 "normalized schema dialect inputs do not match the profile configuration",
             ));
         }
+        let expected_sources = self
+            .config
+            .sources
+            .iter()
+            .map(|path| normalized_relative_path(path))
+            .collect::<Result<BTreeSet<_>, _>>()?;
+        let observed_sources = sources
+            .iter()
+            .map(|source| source.document.clone())
+            .collect::<BTreeSet<_>>();
+        if expected_sources != observed_sources || sources.len() != expected_sources.len() {
+            return Err(SchemaContractError::new(
+                SchemaContractErrorKind::InvalidProfile,
+                "loaded schema sources do not match the package profile",
+            ));
+        }
+        let source_fingerprints = sources
+            .iter()
+            .map(|source| (source.document.clone(), source.fingerprint.clone()))
+            .collect::<BTreeMap<_, _>>();
         build_profile_authority(SchemaProfile {
             package_id: self.owner_package_id.0.clone(),
             name: self.profile_name.clone(),
-            source_files: self
-                .config
-                .sources
-                .iter()
-                .map(|path| path.to_string_lossy().into_owned())
-                .collect(),
+            source_files: expected_sources,
+            source_fingerprints,
             evidence: self.config.evidence,
             strictness: self.config.strictness,
             pooling: self.config.pooling,
@@ -56,6 +96,26 @@ impl ResolvedSqlProfile {
             schema,
         })
     }
+}
+
+impl From<crate::SchemaSourceKind> for sifr_sql_contract::SchemaDocumentKind {
+    fn from(value: crate::SchemaSourceKind) -> Self {
+        match value {
+            crate::SchemaSourceKind::SqlDdl => Self::SqlDdl,
+            crate::SchemaSourceKind::ProviderMetadata => Self::ProviderMetadata,
+            crate::SchemaSourceKind::GeneratedDefinitions => Self::GeneratedDefinitions,
+        }
+    }
+}
+
+fn normalized_relative_path(path: &std::path::Path) -> Result<String, SchemaContractError> {
+    let value = path.to_str().ok_or_else(|| {
+        SchemaContractError::new(
+            SchemaContractErrorKind::InvalidProfile,
+            "schema source path must be valid UTF-8",
+        )
+    })?;
+    Ok(value.replace('\\', "/"))
 }
 
 pub fn resolve_sql_profiles(

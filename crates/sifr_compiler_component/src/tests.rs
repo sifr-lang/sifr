@@ -506,6 +506,32 @@ fn closed_envelopes_reject_unknown_fields_and_noncanonical_records() {
             .kind,
         ComponentErrorKind::ProtocolEnvelope
     );
+
+    let mut limits = ComponentHostLimits::default();
+    limits.max_context_artifacts = 0;
+    let mut bounded = request();
+    bounded.context.artifacts.push(ContextArtifact {
+        kind: "fixture.schema".to_string(),
+        identity: "fixture".to_string(),
+        format_version: 1,
+        fingerprint: "a".repeat(64),
+        payload: vec![1],
+    });
+    assert_eq!(
+        validate_request(&bounded, &limits)
+            .expect_err("context artifact count must be bounded")
+            .kind,
+        ComponentErrorKind::ResourceLimit
+    );
+
+    let mut limits = ComponentHostLimits::default();
+    limits.max_context_artifact_bytes = 0;
+    assert_eq!(
+        validate_request(&bounded, &limits)
+            .expect_err("context artifact bytes must be bounded")
+            .kind,
+        ComponentErrorKind::ResourceLimit
+    );
 }
 
 fn request() -> EmbeddedAnalysisRequest {

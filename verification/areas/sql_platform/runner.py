@@ -39,6 +39,12 @@ COMMANDS = {
         str(AREA_ROOT / "tools" / "check_schema_profiles.py"),
         "--self-test",
     ],
+    "sql-schema-profile-rust-tests": [
+        "cargo", "test", "--locked", "-p", "sifr_sql_contract", "--test", "schema_profiles",
+    ],
+    "sql-schema-profile-driver-tests": [
+        "cargo", "test", "--locked", "-p", "sifr_driver", "sql_profiles_tests",
+    ],
 }
 
 

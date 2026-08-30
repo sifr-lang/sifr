@@ -92,6 +92,7 @@ pub(crate) struct RootedEntrypointPlan {
     python_runtime: Option<PackagePythonRuntime>,
     python_bridges: Option<sifr_package::ResolvedPythonBridgeGraph>,
     rust_interop_context: Option<PackageRustInteropContext>,
+    sql_profiles: super::sql_profiles::PreparedSqlProfiles,
     cargo_resolution: CargoResolutionPolicy,
 }
 
@@ -367,6 +368,7 @@ impl RootedEntrypointPlan {
                     None,
                     None,
                     None,
+                    super::sql_profiles::PreparedSqlProfiles::default(),
                 )
             }
             RootedEntrypoint::Project {
@@ -417,12 +419,19 @@ impl RootedEntrypointPlan {
                     None,
                     None,
                     None,
+                    super::sql_profiles::PreparedSqlProfiles::default(),
                 )
             }
             RootedEntrypoint::PackageProject {
                 entrypoint,
                 provider,
             } => {
+                let sql_profiles = measure_stage(stages, "Preparing SQL schema profiles", || {
+                    super::sql_profiles::prepare_sql_profiles(
+                        &entrypoint.graph,
+                        &entrypoint.package_id,
+                    )
+                })?;
                 let python_bridges = sifr_package::resolve_python_bridge_graph(
                     &entrypoint.graph,
                     &entrypoint.package_id,
@@ -506,11 +515,18 @@ impl RootedEntrypointPlan {
                     entrypoint.python_runtime.clone(),
                     Some(python_bridges),
                     Some(rust_interop_context),
+                    sql_profiles,
                 )
             }
         };
-        let (shape, project_lowering, python_runtime, python_bridges, rust_interop_context) =
-            resolved;
+        let (
+            shape,
+            project_lowering,
+            python_runtime,
+            python_bridges,
+            rust_interop_context,
+            sql_profiles,
+        ) = resolved;
 
         Ok((
             Self {
@@ -520,6 +536,7 @@ impl RootedEntrypointPlan {
                 python_runtime,
                 python_bridges,
                 rust_interop_context,
+                sql_profiles,
                 cargo_resolution,
             },
             mode,
@@ -583,8 +600,9 @@ impl RootedEntrypointPlan {
         let python_bridges = self.python_bridges.clone();
         let rust_interop_context = self.rust_interop_context.clone();
         let cargo_resolution = self.cargo_resolution.clone();
+        let sql_profile_cache_fragment = self.sql_profiles.cache_fragment();
         let stdlib_interop = self.stdlib.interop.clone();
-        let generated = match self.shape {
+        let mut generated = match self.shape {
             RootedEntrypointShape::SingleFile => {
                 let codegen_result = self.into_single_file_codegen_result()?;
                 generated_single_file_binary_project(codegen_result)
@@ -593,6 +611,13 @@ impl RootedEntrypointPlan {
                 generated_project_binary_project(&self.stdlib.code, self.project_lowering)?
             }
         };
+        if !sql_profile_cache_fragment.is_empty() {
+            super::project_codegen::push_cache_key_fragment(
+                &mut generated.cache_key_fragment,
+                "sql-schema-profiles",
+                &sql_profile_cache_fragment,
+            );
+        }
         let (generated, rust_interop_context) =
             attach_stdlib_rust_interop(generated, rust_interop_context, &stdlib_interop);
         let generated = super::rust_interop::apply_package_rust_interop_metadata_with_resolution(

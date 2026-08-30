@@ -34,6 +34,7 @@ pub fn validate_request(
         .validate_with(std::slice::from_ref(&request.provider_diagnostics))?;
     if request.parts.len() > limits.max_template_parts
         || request.holes.len() > limits.max_holes
+        || request.context.artifacts.len() > limits.max_context_artifacts
         || request.context.imported_signatures.len() > limits.max_dependencies
     {
         return Err(limit_error("request collection limit exceeded"));
@@ -141,6 +142,9 @@ pub fn validate_request(
             return Err(envelope_error(
                 "context artifacts require a kind, identity, format version, fingerprint, and payload",
             ));
+        }
+        if artifact.payload.len() > limits.max_context_artifact_bytes {
+            return Err(limit_error("context artifact exceeds its byte limit"));
         }
         let key = (&artifact.kind, &artifact.identity);
         if previous_artifact.is_some_and(|previous| previous >= key) {

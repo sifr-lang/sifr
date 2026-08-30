@@ -12,10 +12,29 @@ pub enum AbsenceFact {
         identity: ObjectId,
     },
     ExactOverloadSet {
+        object_kind: OverloadSetKind,
         namespace: String,
         name: String,
         candidates: BTreeSet<ObjectId>,
     },
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum OverloadSetKind {
+    Function,
+    Operator,
+    Cast,
+}
+
+impl OverloadSetKind {
+    const fn schema_kind(self) -> SchemaObjectKind {
+        match self {
+            Self::Function => SchemaObjectKind::Function,
+            Self::Operator => SchemaObjectKind::Operator,
+            Self::Cast => SchemaObjectKind::Cast,
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -74,7 +93,8 @@ pub fn minimum_schema_slice(
             })?;
             requested
                 .entry(dependency.clone())
-                .or_insert_with(|| dependency_object.semantic.keys().cloned().collect());
+                .or_default()
+                .extend(dependency_object.semantic.keys().cloned());
             queue.push_back(dependency.clone());
         }
     }
@@ -130,7 +150,9 @@ pub fn verify_compatible_slice(
                 requirement.identity
             )));
         };
-        if object.kind != requirement.kind || object.dependencies != requirement.dependencies {
+        if object.kind != requirement.kind
+            || !object.dependencies.is_superset(&requirement.dependencies)
+        {
             return Err(incompatible(format!(
                 "required schema object '{}' changed kind or dependencies",
                 requirement.identity
@@ -153,19 +175,24 @@ pub fn verify_compatible_slice(
                 )));
             }
             AbsenceFact::ExactOverloadSet {
+                object_kind,
                 namespace,
                 name,
                 candidates,
             } => {
-                let prefix = format!("{namespace}.{name}.");
-                let exact = format!("{namespace}.{name}");
                 let observed_candidates = observed
                     .objects
                     .iter()
-                    .filter(|(identity, object)| {
-                        object.kind == SchemaObjectKind::Function
-                            && (identity.as_str() == exact
-                                || identity.as_str().starts_with(&prefix))
+                    .filter(|(_, object)| {
+                        object.kind == object_kind.schema_kind()
+                            && matches!(
+                                object.semantic.get("overload_namespace"),
+                                Some(SemanticValue::Text(value)) if value == namespace
+                            )
+                            && matches!(
+                                object.semantic.get("overload_name"),
+                                Some(SemanticValue::Text(value)) if value == name
+                            )
                     })
                     .map(|(identity, _)| identity.clone())
                     .collect::<BTreeSet<_>>();
