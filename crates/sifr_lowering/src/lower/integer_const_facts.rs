@@ -1,6 +1,8 @@
 use crate::hir_nodes::HirExpr;
 use crate::scope::ConstIntegerSnapshot;
 use num_bigint::BigInt;
+use sifr_python_ast::Stmt;
+use std::collections::HashSet;
 
 use super::LowerCtx;
 
@@ -24,6 +26,20 @@ pub(in crate::lower) fn record_const_integer_binding(
         ctx.scope.set_const_integer_value(name, const_value);
     } else {
         ctx.scope.clear_const_integer_value(name);
+    }
+}
+
+pub(in crate::lower) fn invalidate_loop_body_const_integer_facts(
+    ctx: &mut LowerCtx,
+    body: &[Stmt],
+) {
+    let mut assigned_names = HashSet::new();
+    super::nested_function_inference::collect_current_function_local_bindings(
+        body,
+        &mut assigned_names,
+    );
+    for name in assigned_names {
+        ctx.scope.clear_const_integer_value(&name);
     }
 }
 
