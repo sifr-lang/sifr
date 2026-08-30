@@ -7886,6 +7886,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "sifr_sql_runtime"
+version = "0.0.0"
+dependencies = [
+ "sifr_runtime",
+ "static_assertions",
+]
+
+[[package]]
 name = "sifr_stdlib"
 version = "0.0.0"
 dependencies = [

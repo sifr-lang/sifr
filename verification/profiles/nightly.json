@@ -744,6 +744,7 @@
       "area": "sql_platform",
       "suites": [
         "compiler-components",
+        "common-sql",
         "contracts",
         "dependency-baseline",
         "schema-profiles",

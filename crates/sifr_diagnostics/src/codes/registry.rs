@@ -1,5 +1,8 @@
 use crate::model::Severity;
 
+mod component;
+mod sql;
+
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct DiagnosticCode {
     code: &'static str,
@@ -60,17 +63,6 @@ impl DiagnosticCode {
     pub const ASYNC_WORKLOAD_ANNOTATION_ON_ASYNC_DEF: Self =
         Self::new("SIFR-ASYNC-0006", Severity::Error);
     pub const ASYNC_DIRECT_SHELL_EXEC_CALL: Self = Self::new("SIFR-ASYNC-0007", Severity::Error);
-
-    pub const COMPONENT_REGISTRATION: Self = Self::new("SIFR-COMPONENT-0001", Severity::Error);
-    pub const COMPONENT_INTEGRITY: Self = Self::new("SIFR-COMPONENT-0002", Severity::Error);
-    pub const COMPONENT_PROTOCOL_VERSION: Self = Self::new("SIFR-COMPONENT-0003", Severity::Error);
-    pub const COMPONENT_PROTOCOL_ENVELOPE: Self = Self::new("SIFR-COMPONENT-0004", Severity::Error);
-    pub const COMPONENT_CAPABILITY: Self = Self::new("SIFR-COMPONENT-0005", Severity::Error);
-    pub const COMPONENT_RESOURCE_LIMIT: Self = Self::new("SIFR-COMPONENT-0006", Severity::Error);
-    pub const COMPONENT_EXECUTION: Self = Self::new("SIFR-COMPONENT-0007", Severity::Error);
-    pub const COMPONENT_CACHE: Self = Self::new("SIFR-COMPONENT-0008", Severity::Error);
-    pub const COMPONENT_DIAGNOSTIC_REGISTRY: Self =
-        Self::new("SIFR-COMPONENT-0009", Severity::Error);
 
     pub const RUST_CONFIG_MALFORMED_DECORATOR: Self =
         Self::new("SIFR-RUST-CONFIG-0001", Severity::Error);
@@ -422,6 +414,11 @@ pub const DIAGNOSTIC_FAMILIES: &[DiagnosticFamily] = &[
         reserved_base: "SIFR-COMPONENT-0000",
     },
     DiagnosticFamily {
+        name: "SQL",
+        summary: "Provider-neutral SQL type, bind, codec, cardinality, effect, and ownership diagnostics.",
+        reserved_base: "SIFR-SQL-0000",
+    },
+    DiagnosticFamily {
         name: "PYENV",
         summary: "Embedded CPython environment selection, probing, and ABI diagnostics.",
         reserved_base: "SIFR-PYENV-0000",
@@ -717,6 +714,14 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::COMPONENT_EXECUTION,
     DiagnosticCode::COMPONENT_CACHE,
     DiagnosticCode::COMPONENT_DIAGNOSTIC_REGISTRY,
+    DiagnosticCode::SQL_DATABASE_TYPE,
+    DiagnosticCode::SQL_BIND_COMPATIBILITY,
+    DiagnosticCode::SQL_NULLABILITY,
+    DiagnosticCode::SQL_CODEC_CONTRACT,
+    DiagnosticCode::SQL_CARDINALITY,
+    DiagnosticCode::SQL_EFFECT,
+    DiagnosticCode::SQL_PROVIDER_CONTRACT,
+    DiagnosticCode::SQL_OWNERSHIP,
     DiagnosticCode::PYENV_INVALID_CONFIG,
     DiagnosticCode::PYENV_MULTIPLE_SELECTIONS,
     DiagnosticCode::PYENV_MISSING_SELECTION,

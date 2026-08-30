@@ -3413,6 +3413,134 @@
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-SQL-0001",
+      "constant": "SQL_DATABASE_TYPE",
+      "docs_link": "docs/errors/SIFR-SQL-0001.mdx",
+      "machine_applicable": false,
+      "owner": "compiler/sql-platform",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_sql_contract/tests/common_sql_contracts.rs",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-SQL-0002",
+      "constant": "SQL_BIND_COMPATIBILITY",
+      "docs_link": "docs/errors/SIFR-SQL-0002.mdx",
+      "machine_applicable": false,
+      "owner": "compiler/sql-platform",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_sql_contract/tests/common_sql_contracts.rs",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-SQL-0003",
+      "constant": "SQL_NULLABILITY",
+      "docs_link": "docs/errors/SIFR-SQL-0003.mdx",
+      "machine_applicable": false,
+      "owner": "compiler/sql-platform",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_sql_contract/tests/common_sql_contracts.rs",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-SQL-0004",
+      "constant": "SQL_CODEC_CONTRACT",
+      "docs_link": "docs/errors/SIFR-SQL-0004.mdx",
+      "machine_applicable": false,
+      "owner": "compiler/sql-platform",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_sql_contract/tests/common_sql_contracts.rs",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-SQL-0005",
+      "constant": "SQL_CARDINALITY",
+      "docs_link": "docs/errors/SIFR-SQL-0005.mdx",
+      "machine_applicable": false,
+      "owner": "compiler/sql-platform",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_sql_contract/tests/common_sql_contracts.rs",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-SQL-0006",
+      "constant": "SQL_EFFECT",
+      "docs_link": "docs/errors/SIFR-SQL-0006.mdx",
+      "machine_applicable": false,
+      "owner": "compiler/sql-platform",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_sql_contract/tests/common_sql_contracts.rs",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-SQL-0007",
+      "constant": "SQL_PROVIDER_CONTRACT",
+      "docs_link": "docs/errors/SIFR-SQL-0007.mdx",
+      "machine_applicable": false,
+      "owner": "compiler/sql-platform",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_sql_contract/tests/common_sql_contracts.rs",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
+    },
+    {
+      "code": "SIFR-SQL-0008",
+      "constant": "SQL_OWNERSHIP",
+      "docs_link": "docs/errors/SIFR-SQL-0008.mdx",
+      "machine_applicable": false,
+      "owner": "compiler/sql-platform",
+      "renderer_support": [
+        "human",
+        "json",
+        "compact"
+      ],
+      "representative_fixture": "crates/sifr_sql_contract/tests/common_sql_contracts.rs",
+      "severity": "Error",
+      "stability": "stable",
+      "suggestion_applicability": "none"
     }
   ],
   "generated_from": "crates/sifr_diagnostics/src/codes/registry.rs",

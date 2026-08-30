@@ -1,0 +1,16 @@
+[package]
+name = "sifr_sql_runtime"
+version = "0.0.0"
+publish = false
+edition = { workspace = true }
+rust-version = { workspace = true }
+license = { workspace = true }
+
+[dependencies]
+sifr_runtime = { workspace = true }
+
+[dev-dependencies]
+static_assertions = { workspace = true }
+
+[lints]
+workspace = true

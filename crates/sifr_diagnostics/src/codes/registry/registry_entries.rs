@@ -5,6 +5,7 @@ use std::sync::LazyLock;
 use super::DiagnosticRegistryEntry;
 
 mod calls_flow_and_protocols;
+mod common_sql;
 mod compiler_components;
 mod formatting_and_lint;
 mod metaprogramming;
@@ -21,6 +22,7 @@ const REGISTRY_GROUPS: &[&[DiagnosticRegistryEntry]] = &[
     metaprogramming::ENTRIES,
     calls_flow_and_protocols::ENTRIES,
     compiler_components::ENTRIES,
+    common_sql::ENTRIES,
     project_and_backend::ENTRIES,
     formatting_and_lint::ENTRIES,
     package::ENTRIES,

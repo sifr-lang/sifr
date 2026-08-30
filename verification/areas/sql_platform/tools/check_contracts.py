@@ -45,7 +45,14 @@ PROVIDERS = {"postgresql", "mysql", "sqlite"}
 DOMAINS = {"grammar", "schema", "runtime", "tool", "migration", "editor"}
 EVIDENCE_TYPES = {"positive", "negative", "mutation", "integration", "fuzz", "property", "performance"}
 PROFILE_NAMES = {"create-pr", "merge", "nightly", "release"}
-PROFILE_SUITES = {"compiler-components", "contracts", "dependency-baseline", "mutation"}
+PROFILE_SUITES = {
+    "common-sql",
+    "compiler-components",
+    "contracts",
+    "dependency-baseline",
+    "mutation",
+    "schema-profiles",
+}
 REQUIRED_AUDITS = {"advisory", "license", "panic", "secret-redaction", "unsafe-code"}
 
 
