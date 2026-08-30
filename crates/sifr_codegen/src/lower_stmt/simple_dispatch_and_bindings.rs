@@ -32,6 +32,20 @@ pub(crate) fn try_lower_simple_stmt_with_ctx(
     )
 }
 
+pub(crate) fn lower_loop_break_stmt(in_loop_with_else: bool) -> RustStmt {
+    if in_loop_with_else {
+        RustStmt::Block(vec![
+            RustStmt::Assign {
+                target: crate::RustExpr::Ident("_broke".to_string()),
+                value: crate::RustExpr::Literal(crate::RustLiteral::Bool(true)),
+            },
+            RustStmt::Break,
+        ])
+    } else {
+        RustStmt::Break
+    }
+}
+
 pub(super) fn try_lower_simple_stmt_with_ctx_and_bindings(
     stmt: &HirStmt,
     in_loop_with_else: bool,
@@ -292,19 +306,10 @@ pub(super) fn try_lower_simple_stmt_with_ctx_and_bindings(
         HirStmt::TryFinally { .. } => None,
         HirStmt::Pass => Some(vec![]),
         HirStmt::Continue => Some(vec![RustStmt::Continue]),
-        HirStmt::Break => {
-            if in_loop_with_else {
-                Some(vec![
-                    RustStmt::Assign {
-                        target: crate::RustExpr::Ident("_broke".to_string()),
-                        value: crate::RustExpr::Literal(crate::RustLiteral::Bool(true)),
-                    },
-                    RustStmt::Break,
-                ])
-            } else {
-                Some(vec![RustStmt::Break])
-            }
-        }
+        HirStmt::Break => Some(match lower_loop_break_stmt(in_loop_with_else) {
+            RustStmt::Block(stmts) => stmts,
+            stmt => vec![stmt],
+        }),
         _ => None,
     }
 }

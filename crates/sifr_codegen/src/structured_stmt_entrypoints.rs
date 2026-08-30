@@ -14,6 +14,10 @@ impl RustEmitter {
         if is_simple_stmt_candidate(stmt) {
             self.lowering_stats.stmt_candidate_total += 1;
         }
+        for preparation in self.prepare_checked_place_witnesses_for_mutation(stmt, following_stmts)
+        {
+            self.push_captured_stmt(&preparation);
+        }
         match self.try_lower_structured_stmt_with_following(stmt, following_stmts) {
             Ok(true) => {
                 for refresh in

@@ -238,6 +238,14 @@ pub(super) fn lower_regular_call(
                 &func_name,
                 ctx,
             );
+        super::super::sequence_guards::invalidate_mutable_call_sequence_guards(
+            ctx,
+            &args,
+            signature
+                .params
+                .iter()
+                .map(|(_, _, convention)| *convention),
+        );
         if function_binding_id.is_some() {
             super::super::integer_const_facts::invalidate_nested_function_call_const_integer_facts(
                 ctx, &func_name,
@@ -280,6 +288,11 @@ pub(super) fn lower_regular_call(
         let args =
             lower_signature_call_args(call, &format!("{func_name}.__call__"), &call_ft, None, ctx)?;
         consume_owned_method_arguments(&args, call, &call_ft, ctx);
+        super::super::sequence_guards::invalidate_mutable_call_sequence_guards(
+            ctx,
+            &args,
+            call_ft.params.iter().map(|(_, _, convention)| *convention),
+        );
         return Some(HirExpr::MethodCall {
             object: Box::new(object),
             method: "__call__".to_string(),
@@ -540,6 +553,11 @@ pub(super) fn lower_regular_call(
         call.range(),
         &func_name,
         ctx,
+    );
+    super::super::sequence_guards::invalidate_mutable_call_sequence_guards(
+        ctx,
+        &args,
+        ft.params.iter().map(|(_, _, convention)| *convention),
     );
 
     // Track ownership: only mark arguments as moved when the parameter convention is Own

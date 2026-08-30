@@ -24,17 +24,60 @@ impl RustEmitter {
         used
     }
 
+    fn checked_place_witness_is_invalidated_by_stmt(
+        witness: &super::CheckedPlaceReadWitness,
+        stmt: &crate::HirStmt,
+    ) -> bool {
+        let mut invalidated = false;
+        crate::hir_analysis::traversal::walk_stmts(
+            std::slice::from_ref(stmt),
+            crate::hir_analysis::traversal::TraversalConfig::LOCAL_SCOPE_ONLY,
+            &mut |_| {},
+            &mut |expr| {
+                let (args, mutable_arg_places) = match expr {
+                    crate::HirExpr::Call {
+                        args,
+                        mutable_arg_places,
+                        ..
+                    }
+                    | crate::HirExpr::GenericCall {
+                        args,
+                        mutable_arg_places,
+                        ..
+                    }
+                    | crate::HirExpr::MethodCall {
+                        args,
+                        mutable_arg_places,
+                        ..
+                    } => (args, mutable_arg_places),
+                    _ => return,
+                };
+                for (arg, target) in args.iter().zip(mutable_arg_places) {
+                    if target.is_none() {
+                        continue;
+                    }
+                    crate::hir_analysis::traversal::walk_expr(arg, &mut |candidate| {
+                        if matches!(candidate, crate::HirExpr::Name { name, .. }
+                            if witness.dependencies.contains(name))
+                        {
+                            invalidated = true;
+                        }
+                    });
+                }
+            },
+        );
+        invalidated
+    }
+
     fn checked_place_witnesses_affected_by_stmts(
         &self,
         stmts: &[crate::HirStmt],
-        require_missing_body: bool,
     ) -> Vec<(String, super::CheckedPlaceReadWitness)> {
         let mutated =
             crate::hir_analysis::queries::collect_mutated_vars(stmts, Some(&self.func_signatures));
         let mut affected = self
             .checked_place_read_witnesses
             .iter()
-            .filter(|(_, witness)| !require_missing_body || witness.missing.is_some())
             .filter(|(_, witness)| {
                 witness
                     .dependencies
@@ -50,12 +93,47 @@ impl RustEmitter {
     fn checked_place_witnesses_affected_by_stmt(
         &self,
         stmt: &crate::HirStmt,
-        require_missing_body: bool,
     ) -> Vec<(String, super::CheckedPlaceReadWitness)> {
-        self.checked_place_witnesses_affected_by_stmts(
-            std::slice::from_ref(stmt),
-            require_missing_body,
-        )
+        self.checked_place_witnesses_affected_by_stmts(std::slice::from_ref(stmt))
+    }
+
+    pub(crate) fn prepare_checked_place_witnesses_for_mutation(
+        &mut self,
+        stmt: &crate::HirStmt,
+        following: Option<&[crate::HirStmt]>,
+    ) -> Vec<RustStmt> {
+        let Some(following) = following else {
+            return Vec::new();
+        };
+        let mut preparations = Vec::new();
+        for (key, mut witness) in self.checked_place_witnesses_affected_by_stmt(stmt) {
+            if !witness.borrowed
+                || Self::checked_place_witness_is_invalidated_by_stmt(&witness, stmt)
+                || !Self::checked_place_read_is_used(&key, following)
+            {
+                continue;
+            }
+            preparations.push(RustStmt::Let {
+                mutable: false,
+                name: witness.binding.clone(),
+                ty: None,
+                value: crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::Paren(Box::new(crate::RustExpr::Deref(
+                        Box::new(crate::RustExpr::Ident(witness.binding.clone())),
+                    )))),
+                    method: "clone".to_string(),
+                    args: Vec::new(),
+                },
+            });
+            witness.borrowed = false;
+            witness.option = crate::RustExpr::MethodCall {
+                receiver: Box::new(witness.option),
+                method: "cloned".to_string(),
+                args: Vec::new(),
+            };
+            self.checked_place_read_witnesses.insert(key, witness);
+        }
+        preparations
     }
 
     pub(crate) fn checked_place_loop_condition_refreshes_for_ir(
@@ -75,7 +153,7 @@ impl RustEmitter {
                 })
                 .collect::<std::collections::BTreeSet<_>>();
         let refreshed = self
-            .checked_place_witnesses_affected_by_stmts(body, false)
+            .checked_place_witnesses_affected_by_stmts(body)
             .into_iter()
             .filter(|(key, _)| condition_reads.contains(key))
             .collect::<Vec<_>>();
@@ -121,22 +199,26 @@ impl RustEmitter {
         stmt: &crate::HirStmt,
         following: Option<&[crate::HirStmt]>,
     ) -> Vec<RustStmt> {
-        let affected = self.checked_place_witnesses_affected_by_stmt(stmt, true);
+        let affected = self.checked_place_witnesses_affected_by_stmt(stmt);
         let mut refreshes = Vec::new();
         for (key, witness) in affected {
             self.checked_place_read_witnesses.remove(&key);
-            if !following.is_some_and(|tail| Self::checked_place_read_is_used(&key, tail)) {
+            if Self::checked_place_witness_is_invalidated_by_stmt(&witness, stmt)
+                || !following.is_some_and(|tail| Self::checked_place_read_is_used(&key, tail))
+            {
                 continue;
             }
-            let Some(missing) = witness.missing.clone() else {
-                continue;
-            };
             self.checked_place_read_witnesses
                 .insert(key, witness.clone());
-            refreshes.push(RustStmt::LetElse {
-                pattern: format!("Some({})", witness.binding),
-                value: witness.option,
-                else_body: missing,
+            refreshes.push(RustStmt::Let {
+                mutable: false,
+                name: witness.binding.clone(),
+                ty: None,
+                value: crate::RustExpr::MethodCall {
+                    receiver: Box::new(witness.option),
+                    method: "unwrap_or".to_string(),
+                    args: vec![crate::RustExpr::Ident(witness.binding)],
+                },
             });
         }
         refreshes
@@ -153,7 +235,9 @@ impl RustEmitter {
             return Ok(None);
         }
 
-        let affected = self.checked_place_witnesses_affected_by_stmt(stmt, false);
+        let mut preparations =
+            self.prepare_checked_place_witnesses_for_mutation(stmt, Some(following));
+        let affected = self.checked_place_witnesses_affected_by_stmt(stmt);
         if affected.is_empty() {
             return Ok(None);
         }
@@ -162,46 +246,45 @@ impl RustEmitter {
         self.checked_place_refresh_suppressed_depth = Some(self.stmt_block_depth + 1);
         let lowered_stmt = self.try_lower_stmt_block_for_ir(std::slice::from_ref(stmt));
         self.checked_place_refresh_suppressed_depth = previous_suppressed_depth;
-        let Some(mut lowered) = lowered_stmt? else {
+        let Some(lowered_stmt) = lowered_stmt? else {
             return Err(crate::CodegenError::new(
                 "codegen invariant violated: mutation under a checked-place witness was not structurally lowered",
             ));
         };
+        preparations.extend(lowered_stmt);
+        let mut lowered = preparations;
 
         for (key, _) in &affected {
             self.checked_place_read_witnesses.remove(key);
         }
         let refreshed = affected
             .into_iter()
-            .filter(|(key, _)| Self::checked_place_read_is_used(key, following))
+            .filter(|(key, witness)| {
+                !Self::checked_place_witness_is_invalidated_by_stmt(witness, stmt)
+                    && Self::checked_place_read_is_used(key, following)
+            })
             .collect::<Vec<_>>();
         for (key, witness) in &refreshed {
             self.checked_place_read_witnesses
                 .insert(key.clone(), witness.clone());
         }
-        let Some(mut tail) = self.try_lower_stmt_block_for_ir(following)? else {
+        for (_, witness) in &refreshed {
+            lowered.push(RustStmt::Let {
+                mutable: false,
+                name: witness.binding.clone(),
+                ty: None,
+                value: crate::RustExpr::MethodCall {
+                    receiver: Box::new(witness.option.clone()),
+                    method: "unwrap_or".to_string(),
+                    args: vec![crate::RustExpr::Ident(witness.binding.clone())],
+                },
+            });
+        }
+        let Some(tail) = self.try_lower_stmt_block_for_ir(following)? else {
             return Err(crate::CodegenError::new(
                 "codegen invariant violated: tail after checked-place witness refresh was not structurally lowered",
             ));
         };
-        for (_, witness) in refreshed.into_iter().rev() {
-            tail = if let Some(missing) = witness.missing {
-                let mut guarded = vec![RustStmt::LetElse {
-                    pattern: format!("Some({})", witness.binding),
-                    value: witness.option,
-                    else_body: missing,
-                }];
-                guarded.extend(tail);
-                guarded
-            } else {
-                vec![RustStmt::IfLet {
-                    pattern: format!("Some({})", witness.binding),
-                    expr: witness.option,
-                    then_body: tail,
-                    else_body: None,
-                }]
-            };
-        }
         lowered.extend(tail);
         Ok(Some(lowered))
     }
@@ -409,7 +492,7 @@ impl RustEmitter {
             .map(|guard| guard.key.as_str())
             .collect::<std::collections::BTreeSet<_>>();
         let loop_carried_candidates = self
-            .checked_place_witnesses_affected_by_stmts(body, false)
+            .checked_place_witnesses_affected_by_stmts(body)
             .into_iter()
             .filter(|(key, _)| {
                 !guard_keys.contains(key.as_str())
@@ -422,10 +505,8 @@ impl RustEmitter {
             .map(|guard| {
                 (
                     guard.key.clone(),
-                    self.checked_place_read_witnesses.insert(
-                        guard.key.clone(),
-                        guard.witness_with_missing(vec![missing.clone()]),
-                    ),
+                    self.checked_place_read_witnesses
+                        .insert(guard.key.clone(), guard.witness()),
                 )
             })
             .collect::<Vec<_>>();
@@ -581,10 +662,8 @@ impl RustEmitter {
         let Some(absent_body) = self.lower_checked_read_branch(then_body, &guard, false)? else {
             return Ok(None);
         };
-        self.checked_place_read_witnesses.insert(
-            guard.key.clone(),
-            guard.witness_with_missing(absent_body.clone()),
-        );
+        self.checked_place_read_witnesses
+            .insert(guard.key.clone(), guard.witness());
         Ok(Some(RustStmt::LetElse {
             pattern: format!("Some({})", guard.binding),
             value: guard.option,
@@ -661,10 +740,8 @@ impl RustEmitter {
             });
         }
         for guard in guards {
-            self.checked_place_read_witnesses.insert(
-                guard.key.clone(),
-                guard.witness_with_missing(absent_body.clone()),
-            );
+            self.checked_place_read_witnesses
+                .insert(guard.key.clone(), guard.witness());
             lowered.push(RustStmt::LetElse {
                 pattern: format!("Some({})", guard.binding),
                 value: guard.option,

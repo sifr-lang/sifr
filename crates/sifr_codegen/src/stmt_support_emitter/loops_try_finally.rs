@@ -8,17 +8,8 @@ mod try_except;
 
 impl RustEmitter {
     pub(crate) fn lower_loop_break_for_ir(&self) -> RustStmt {
-        if self.loop_else_stack.last().copied().unwrap_or(false) {
-            RustStmt::Block(vec![
-                RustStmt::Assign {
-                    target: RustExpr::Ident("_broke".to_string()),
-                    value: RustExpr::Literal(crate::RustLiteral::Bool(true)),
-                },
-                RustStmt::Break,
-            ])
-        } else {
-            RustStmt::Break
-        }
+        let in_loop_with_else = self.loop_else_stack.last().copied().unwrap_or(false);
+        crate::lower_loop_break_stmt(in_loop_with_else)
     }
 
     pub(crate) fn lower_loop_control_stmt_for_ir(&self, stmt: &HirStmt) -> Option<RustStmt> {

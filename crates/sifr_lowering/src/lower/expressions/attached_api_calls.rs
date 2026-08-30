@@ -143,6 +143,14 @@ fn lower_call(
         &binding.emitted_function,
         ctx,
     );
+    super::super::sequence_guards::invalidate_mutable_call_sequence_guards(
+        ctx,
+        &args,
+        full_type
+            .params
+            .iter()
+            .map(|(_, _, convention)| *convention),
+    );
     for (index, argument) in args.iter().enumerate() {
         if full_type
             .params

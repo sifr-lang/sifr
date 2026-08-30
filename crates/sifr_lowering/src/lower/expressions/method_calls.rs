@@ -153,6 +153,14 @@ pub(in crate::lower) fn lower_method_call(
     )?;
     if let Some(function_type) = &method_type {
         consume_owned_method_arguments(&args, call, function_type, ctx);
+        super::super::sequence_guards::invalidate_mutable_call_sequence_guards(
+            ctx,
+            &args,
+            function_type
+                .params
+                .iter()
+                .map(|(_, _, convention)| *convention),
+        );
     }
     consume_affine_collection_method_arguments(
         &object_ty,
