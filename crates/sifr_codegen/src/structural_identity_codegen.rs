@@ -1,6 +1,6 @@
 use sifr_ir::{HirClass, HirModule, canonical_structural_identity_value};
 use sifr_structural_identity::{self as identity, ALGORITHM_VERSION, NominalField, ShapeIdentity};
-use sifr_type_system::{Type, substitute_type_vars_with_class_scopes};
+use sifr_type_system::{StructuralRecordType, Type, substitute_type_vars_with_class_scopes};
 use std::collections::{HashMap, HashSet};
 
 mod mapped_opaque;
@@ -307,6 +307,9 @@ fn compile_type(
             }
         }
         Type::Tuple(values) => compile_many("tuple", values, scope_module_name, context, stack),
+        Type::StructuralRecord(record) => {
+            CompiledIdentity::Static(structural_record_identity(record))
+        }
         Type::Union(values) => match optional_member(values) {
             Some(member) => compile_unary("optional", member, scope_module_name, context, stack),
             None => compile_many("union", values, scope_module_name, context, stack),
@@ -428,6 +431,53 @@ fn compile_type(
             "unsupported structural type reached compiler-owned identity generation: {other:?}"
         ),
     }
+}
+
+pub(crate) fn structural_record_identity(record: &StructuralRecordType) -> ShapeIdentity {
+    let field_identities = record
+        .fields()
+        .iter()
+        .map(|field| {
+            (
+                field.name(),
+                identity::primitive(&field.ty().canonical_identity_key()),
+            )
+        })
+        .collect::<Vec<_>>();
+    identity::structural_record(&field_identities)
+}
+
+pub(crate) fn structural_record_rust_name(record: &StructuralRecordType) -> String {
+    let identity = structural_record_identity(record);
+    structural_record_name_from_identity(&identity)
+}
+
+fn structural_record_name_from_identity(identity: &ShapeIdentity) -> String {
+    let mut suffix = String::with_capacity(32);
+    for byte in &identity.as_bytes()[..16] {
+        use std::fmt::Write;
+        let _ = write!(suffix, "{byte:02x}");
+    }
+    format!("__SifrRecord_{suffix}")
+}
+
+pub(crate) fn structural_record_layout_rust_name(record: &StructuralRecordType) -> String {
+    let field_identities = record
+        .fields()
+        .iter()
+        .enumerate()
+        .map(|(index, field)| {
+            (
+                field.name(),
+                identity::primitive(&format!("structural-record-field-{index}")),
+            )
+        })
+        .collect::<Vec<_>>();
+    structural_record_name_from_identity(&identity::structural_record(&field_identities))
+}
+
+pub(crate) fn structural_record_view_trait_name(record: &StructuralRecordType) -> String {
+    structural_record_layout_rust_name(record).replacen("__SifrRecord_", "__SifrRecordView_", 1)
 }
 
 fn compile_record(

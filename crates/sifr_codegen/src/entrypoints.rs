@@ -72,6 +72,9 @@ pub(crate) fn generate_rust_test_with_project_policy(
 
     // Generate enum definitions for non-Option union types
     emitter.generate_enum_definitions();
+    if project_union_enums.is_none() {
+        emitter.generate_structural_record_definitions();
+    }
 
     // Second pass: emit the actual code
     emitter.emit_named_module(module, false, true, Some(module_name));

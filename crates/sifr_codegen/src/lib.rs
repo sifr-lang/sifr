@@ -27,9 +27,11 @@ pub(crate) use lib_task_scope_offload_needs::{
 mod lib_project_codegen;
 mod lib_project_signatures;
 mod lib_test_project_codegen;
+mod project_structural_record_codegen;
 mod rust_interop_error_mapping;
 pub use lib_project_codegen::*;
 pub use lib_test_project_codegen::*;
+pub(crate) use project_structural_record_codegen::render_project_structural_record_prelude;
 mod lib_emitter_state;
 pub use lib_emitter_state::*;
 mod class_emitter;
@@ -100,7 +102,9 @@ mod project_constants;
 mod project_stdlib_nominals;
 mod project_union_prelude;
 mod protocol_bridge_emitter;
+mod structural_record_codegen;
 pub use preamble::*;
+pub(crate) use structural_record_codegen::structural_record_rust_type;
 mod python_arrow_codegen;
 #[cfg(test)]
 mod python_arrow_codegen_tests;

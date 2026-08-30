@@ -11,6 +11,8 @@ mod collection_capabilities;
 pub mod infer;
 pub mod literal;
 mod safe_optional;
+#[cfg(test)]
+mod structural_record_tests;
 mod substitution;
 #[cfg(test)]
 mod type_capability_identity_tests;
@@ -26,9 +28,10 @@ pub use infer::infer_literal_type;
 pub use types::{
     COMPILER_RUST_PATH_ROOTS, CRATE_ROOT_RUST_NOMINAL_IDENTITIES, FixedIntType, FunctionType,
     GLOBAL_RUST_NOMINAL_IDENTITIES, IterationCapability, IterationMetadata, OwnershipKind,
-    ParamConvention, ParamMutability, ParamOwnership, PythonArrowKind, ReceiverConvention, Type,
-    class_rust_name, is_crate_root_rust_nominal_identity, is_global_rust_nominal_identity,
-    source_class_rust_name, stdlib_class_rust_name,
+    ParamConvention, ParamMutability, ParamOwnership, PythonArrowKind, ReceiverConvention,
+    StructuralRecordField, StructuralRecordType, Type, class_rust_name,
+    is_crate_root_rust_nominal_identity, is_global_rust_nominal_identity, source_class_rust_name,
+    stdlib_class_rust_name,
 };
 pub mod narrow;
 pub use literal::{LiteralValue, widen as widen_literal};

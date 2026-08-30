@@ -40,6 +40,13 @@ where
         Type::Dict(key, value) => Type::Dict(Box::new(recurse(key)), Box::new(recurse(value))),
         Type::Tuple(values) => Type::Tuple(values.iter().map(recurse).collect()),
         Type::Template(values) => Type::Template(values.iter().map(recurse).collect()),
+        Type::StructuralRecord(record) => Type::StructuralRecord(crate::StructuralRecordType::new(
+            record
+                .source_fields()
+                .into_iter()
+                .map(|field| (field.name().to_string(), recurse(field.ty())))
+                .collect(),
+        )),
         Type::Union(values) => make_union(values.iter().map(recurse).collect()),
         Type::Callable(params, conventions, result) => Type::Callable(
             params.iter().map(recurse).collect(),

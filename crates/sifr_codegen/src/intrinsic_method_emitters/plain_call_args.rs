@@ -854,6 +854,6 @@ fn registry_needs_structural_value_coercion(target_ty: &Type, source_ty: &Type) 
     let target = crate::resolve_alias_type_for_plain_call(target_ty);
     let source = crate::resolve_alias_type_for_plain_call(source_ty);
     target != source
-        && source_ty.is_assignable_to(target_ty)
-        && matches!(target, Type::Union(_) | Type::Result(_, _))
+        && (source_ty.is_assignable_to(target_ty)
+            && matches!(target, Type::Union(_) | Type::Result(_, _)))
 }

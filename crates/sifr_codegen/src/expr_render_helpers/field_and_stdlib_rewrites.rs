@@ -108,6 +108,27 @@ impl RustEmitter {
                 if self.borrowed_params.contains(name) || self.mut_borrowed_params.contains(name)
         );
 
+        if is_borrowed_parameter
+            && matches!(
+                crate::resolve_alias_type_for_plain_call(&effective_base_object_ty),
+                Type::StructuralRecord(_)
+            )
+        {
+            let borrowed_field = crate::RustExpr::MethodCall {
+                receiver: Box::new(lowered_object),
+                method: format!("__sifr_record_field_{field}"),
+                args: Vec::new(),
+            };
+            if crate::helpers::is_copy_type_for_codegen(ty) {
+                return crate::RustExpr::Deref(Box::new(borrowed_field));
+            }
+            return crate::RustExpr::MethodCall {
+                receiver: Box::new(borrowed_field),
+                method: "clone".to_string(),
+                args: Vec::new(),
+            };
+        }
+
         let needs_clone = needs_clone_for_type(ty)
             && (is_self_access || is_borrowed_parameter || ty.supports_derived_clone());
 

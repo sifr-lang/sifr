@@ -8,6 +8,7 @@ use crate::project_stdlib_nominals::{
     project_stdlib_nominal_plan, relocate_project_stdlib_nominals,
 };
 use crate::project_union_prelude::render_project_union_prelude;
+use crate::render_project_structural_record_prelude;
 use sifr_stdlib_manifest::{StdlibFeature, try_generated_cargo_dependencies};
 use sifr_type_system::source_class_rust_name;
 
@@ -364,12 +365,17 @@ pub fn generate_rust_multi_with_metadata(
     };
     nominal_type_paths.extend(stdlib_nominal_plan.registry.rust_paths.clone());
     let union_prelude = render_project_union_prelude(&union_usage, &nominal_type_paths);
-    let project_union_prelude = [stdlib_nominal_plan.prelude.as_str(), union_prelude.as_str()]
-        .into_iter()
-        .filter(|source| !source.trim().is_empty())
-        .map(str::trim_end)
-        .collect::<Vec<_>>()
-        .join("\n\n");
+    let record_prelude = render_project_structural_record_prelude(modules, &project_codegen_code);
+    let project_union_prelude = [
+        stdlib_nominal_plan.prelude.as_str(),
+        union_prelude.as_str(),
+        record_prelude.as_str(),
+    ]
+    .into_iter()
+    .filter(|source| !source.trim().is_empty())
+    .map(str::trim_end)
+    .collect::<Vec<_>>()
+    .join("\n\n");
     used_stdlib_modules.extend(stdlib_nominal_plan.used_stdlib_modules.iter().cloned());
     required_features.extend(stdlib_nominal_plan.required_features.iter().copied());
 

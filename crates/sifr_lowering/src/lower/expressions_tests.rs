@@ -27,5 +27,6 @@ mod minmax_sorted_sum;
 mod nested_container_capture_refinement;
 mod ownership_and_async;
 mod slice_diagnostics;
+mod structural_records;
 mod support;
 mod task_runtime_rules_tests;

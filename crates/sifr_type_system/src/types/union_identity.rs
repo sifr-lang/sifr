@@ -1,6 +1,14 @@
 use super::{FunctionType, ParamConvention, Type};
 
 impl Type {
+    /// Canonical, length-delimited identity input for compiler-owned layouts.
+    /// Aliases resolve to their structural body and nominal declarations retain
+    /// their declaration identity.
+    #[must_use]
+    pub fn canonical_identity_key(&self) -> String {
+        self.union_identity_key()
+    }
+
     /// Return the compiler-owned Rust enum name for a non-optional union.
     ///
     /// The encoded identity is deliberately disjoint from every source name in
@@ -59,6 +67,15 @@ impl Type {
             Self::Set(element) => unary("set", element),
             Self::Tuple(elements) => sequence("tuple", elements),
             Self::Template(elements) => sequence("template", elements),
+            Self::StructuralRecord(record) => {
+                let mut key = component("sequence", "structural_record");
+                append(&mut key, &record.fields().len().to_string());
+                for field in record.fields() {
+                    append(&mut key, field.name());
+                    append(&mut key, &field.ty().union_identity_key());
+                }
+                key
+            }
             Self::Range => atom("range"),
             Self::Iterable(element) => unary("iterable", element),
             Self::Iterator(element) => unary("iterator", element),

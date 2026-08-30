@@ -303,6 +303,11 @@ pub(super) fn call_arity_range(call: &ExprCall) -> TextRange {
 
 pub(in crate::lower) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Option<HirExpr> {
     if let Expr::Subscript(subscript) = call.func.as_ref() {
+        if let Some(record_call) =
+            super::try_lower_structural_record_subscript_call(subscript, call, ctx)
+        {
+            return record_call;
+        }
         match lower_task_join_set_constructor(subscript, call, ctx) {
             JoinSetConstructorLowering::Lowered(expr) => {
                 return Some(expr);
@@ -346,12 +351,10 @@ pub(in crate::lower) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Optio
     {
         return lower_defaultdict_constructor_call(call, ctx);
     }
-    // Handle `cls(...)` in @classmethod as constructor call for the current class
     if func_name == "cls" {
         if let Some(ref class_name) = ctx.current_class {
             let class_name = class_name.clone();
             if let Some(class_ty) = ctx.class_types.get(&class_name).cloned() {
-                // Lower arguments
                 let mut args = Vec::new();
                 for arg in &call.arguments.args {
                     let expr = lower_expr(arg, ctx)?;
@@ -392,6 +395,7 @@ pub(in crate::lower) fn lower_call(call: &ExprCall, ctx: &mut LowerCtx) -> Optio
 
     lower_regular_call(func_name, call, ctx)
 }
+
 pub(in crate::lower) fn lower_list_literal(list: &ExprList, ctx: &mut LowerCtx) -> Option<HirExpr> {
     let mut elements = Vec::new();
     let mut elem_ty: Option<Type> = None;
@@ -788,6 +792,17 @@ pub(in crate::lower) fn lower_attribute(
     let resolved_object_ty = canonicalize_class_surface_type(object_ty.resolve_alias())
         .resolve_alias()
         .clone();
+
+    if let Some(record_access) = super::lower_structural_record_field_access(
+        object.clone(),
+        &object_ty,
+        &resolved_object_ty,
+        &field_name,
+        attr,
+        ctx,
+    ) {
+        return record_access;
+    }
 
     // Check if the object is a class instance with this field
     if let Type::Class {

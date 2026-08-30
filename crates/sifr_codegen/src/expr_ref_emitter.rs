@@ -21,6 +21,7 @@ fn uses_debug_display_format(ty: &Type) -> bool {
         | Type::Enum { .. }
         | Type::Decimal
         | Type::BigDecimal => false,
+        Type::StructuralRecord(_) => !ty.supports_display_formatting(),
         Type::List(_)
         | Type::Bytes
         | Type::Dict(_, _)

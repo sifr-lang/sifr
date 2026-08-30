@@ -388,6 +388,9 @@ fn expr_effects(expr: &HirExpr, effects: &mut Vec<FlowEffect>) {
         | HirExpr::QuestionMark { expr: operand, .. }
         | HirExpr::OkWrap { value: operand, .. }
         | HirExpr::ErrWrap { value: operand, .. }
+        | HirExpr::StructuralRecordProject {
+            source: operand, ..
+        }
         | HirExpr::FieldAccess {
             object: operand, ..
         } => expr_effects(operand, effects),

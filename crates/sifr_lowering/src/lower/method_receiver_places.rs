@@ -592,6 +592,7 @@ pub(super) fn is_owned_temporary(expr: &HirExpr) -> bool {
         | HirExpr::BoolOp { .. }
         | HirExpr::Index { .. }
         | HirExpr::WalrusExpr { .. }
+        | HirExpr::StructuralRecordProject { .. }
         | HirExpr::FieldAccess { .. } => false,
     }
 }

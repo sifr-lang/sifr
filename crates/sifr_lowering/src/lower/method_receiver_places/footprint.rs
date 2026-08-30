@@ -132,7 +132,10 @@ fn collect_footprint(expr: &HirExpr, ctx: &LowerCtx, footprint: &mut Vec<Footpri
         | HirExpr::WalrusExpr { value: operand, .. }
         | HirExpr::QuestionMark { expr: operand, .. }
         | HirExpr::OkWrap { value: operand, .. }
-        | HirExpr::ErrWrap { value: operand, .. } => {
+        | HirExpr::ErrWrap { value: operand, .. }
+        | HirExpr::StructuralRecordProject {
+            source: operand, ..
+        } => {
             collect_footprint(operand, ctx, footprint);
         }
         HirExpr::Compare {

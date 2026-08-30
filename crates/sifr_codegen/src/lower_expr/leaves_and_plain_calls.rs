@@ -119,6 +119,7 @@ pub(crate) fn is_leaf_expr_candidate(expr: &HirExpr) -> bool {
         | HirExpr::ListLiteral { .. }
         | HirExpr::RangeLiteral { .. }
         | HirExpr::FieldAccess { .. }
+        | HirExpr::StructuralRecordProject { .. }
         | HirExpr::ContainsOp { .. }
         | HirExpr::QuestionMark { .. }
         | HirExpr::Await { .. }
@@ -640,6 +641,20 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
         HirExpr::ConstructorCall {
             class_name, args, ..
         } => try_lower_simple_constructor_call_expr(class_name, args),
+        HirExpr::StructuralRecordProject { source, fields, ty } => {
+            let lowered_source = try_lower_leaf_or_name_expr(source)?;
+            let constructor = crate::stmt_support_emitter::canonical_constructor_class_name("", ty);
+            Some(RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![constructor, "new".to_string()])),
+                args: fields
+                    .iter()
+                    .map(|field| RustExpr::Field {
+                        expr: Box::new(lowered_source.clone()),
+                        field: field.clone(),
+                    })
+                    .collect(),
+            })
+        }
         HirExpr::Index { object, index, ty } => try_lower_simple_index_expr(object, index, ty),
         HirExpr::Slice {
             object,

@@ -223,6 +223,11 @@ fn collect_type_error_refs(
                 collect_type_error_refs(item, referenced, builtin_error_classes);
             }
         }
+        Type::StructuralRecord(record) => {
+            for field in record.fields() {
+                collect_type_error_refs(field.ty(), referenced, builtin_error_classes);
+            }
+        }
         Type::Function(sig) | Type::AsyncFunction(sig) => {
             for (_, param_ty, _) in &sig.params {
                 collect_type_error_refs(param_ty, referenced, builtin_error_classes);
@@ -489,6 +494,9 @@ fn collect_expr_error_refs(
         | HirExpr::OkWrap { value: operand, .. }
         | HirExpr::ErrWrap { value: operand, .. }
         | HirExpr::WalrusExpr { value: operand, .. }
+        | HirExpr::StructuralRecordProject {
+            source: operand, ..
+        }
         | HirExpr::FieldAccess {
             object: operand, ..
         } => {

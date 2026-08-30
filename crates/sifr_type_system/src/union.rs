@@ -326,6 +326,14 @@ fn type_information_score(ty: &Type) -> usize {
         | Type::Template(items)
         | Type::Union(items)
         | Type::Intersection(items) => items.iter().map(type_information_score).sum(),
+        Type::StructuralRecord(record) => {
+            record.fields().len()
+                + record
+                    .fields()
+                    .iter()
+                    .map(|field| type_information_score(field.ty()))
+                    .sum::<usize>()
+        }
         Type::Function(function) | Type::AsyncFunction(function) => {
             function_information_score(function)
         }
@@ -453,6 +461,14 @@ fn type_source_sort_key(ty: &Type) -> (u8, String) {
         Type::Set(_) => (12, String::new()),
         Type::Tuple(_) => (13, String::new()),
         Type::Template(_) => (41, String::new()),
+        Type::StructuralRecord(record) => (14, {
+            let mut key = String::new();
+            for field in record.fields() {
+                append_representative_component(&mut key, field.name());
+                append_representative_component(&mut key, &field.ty().canonical_identity_key());
+            }
+            key
+        }),
         Type::Range => (13, String::new()),
         Type::Iterable(_) => (14, String::new()),
         Type::Iterator(_) => (15, String::new()),

@@ -1,3 +1,100 @@
+use std::hash::{Hash, Hasher};
+
+/// One field in an immutable structural record.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct StructuralRecordField {
+    name: String,
+    ty: Type,
+}
+
+impl StructuralRecordField {
+    #[must_use]
+    pub fn new(name: String, ty: Type) -> Self {
+        Self { name, ty }
+    }
+
+    #[must_use]
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    #[must_use]
+    pub fn ty(&self) -> &Type {
+        &self.ty
+    }
+}
+
+/// Canonical immutable structural-record shape.
+///
+/// Equality and hashing use canonical field order. `source_order` is retained
+/// only so diagnostics can follow the spelling at the declaration site.
+#[derive(Debug, Clone)]
+pub struct StructuralRecordType {
+    canonical_fields: Vec<StructuralRecordField>,
+    source_order: Vec<String>,
+}
+
+impl StructuralRecordType {
+    #[must_use]
+    pub fn new(fields: Vec<(String, Type)>) -> Self {
+        let source_order = fields.iter().map(|(name, _)| name.clone()).collect();
+        let mut canonical_fields = fields
+            .into_iter()
+            .map(|(name, ty)| StructuralRecordField::new(name, ty))
+            .collect::<Vec<_>>();
+        canonical_fields.sort_by(|left, right| left.name.cmp(&right.name));
+        Self {
+            canonical_fields,
+            source_order,
+        }
+    }
+
+    #[must_use]
+    pub fn fields(&self) -> &[StructuralRecordField] {
+        &self.canonical_fields
+    }
+
+    #[must_use]
+    pub fn source_fields(&self) -> Vec<&StructuralRecordField> {
+        self.source_order
+            .iter()
+            .filter_map(|name| self.field(name))
+            .collect()
+    }
+
+    #[must_use]
+    pub fn field(&self, name: &str) -> Option<&StructuralRecordField> {
+        self.canonical_fields
+            .binary_search_by(|field| field.name.as_str().cmp(name))
+            .ok()
+            .map(|index| &self.canonical_fields[index])
+    }
+
+    /// Whether `self` contains every field required by `target`, with exact
+    /// field types. This relation is available only to borrow-call checking.
+    #[must_use]
+    pub fn is_width_subtype_of(&self, target: &Self) -> bool {
+        target.fields().iter().all(|required| {
+            self.field(required.name())
+                .is_some_and(|field| field.ty() == required.ty())
+        })
+    }
+}
+
+impl PartialEq for StructuralRecordType {
+    fn eq(&self, other: &Self) -> bool {
+        self.canonical_fields == other.canonical_fields
+    }
+}
+
+impl Eq for StructuralRecordType {}
+
+impl Hash for StructuralRecordType {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.canonical_fields.hash(state);
+    }
+}
+
 /// Affine resource kind exported through the Arrow C Data Interface.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum PythonArrowKind {
@@ -95,6 +192,8 @@ pub enum Type {
     /// interpolation values retained by a literal. An empty list is the
     /// shape-erased `Template` annotation accepted by processor APIs.
     Template(Vec<Type>),
+    /// Immutable structural record. Field order is not part of type identity.
+    StructuralRecord(StructuralRecordType),
     /// Range type (maps to `std::ops::Range<i64>` in Rust)
     Range,
     /// Iterable protocol type (`Iterable[T]`)

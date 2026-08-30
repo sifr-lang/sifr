@@ -435,6 +435,28 @@ fn try_lower_typed_match_pattern(
         HirPattern::Class {
             class_type, fields, ..
         } => {
+            if let Type::StructuralRecord(record) = resolve_alias_type(subject_ty) {
+                if resolve_alias_type(class_type) != resolve_alias_type(subject_ty) {
+                    return None;
+                }
+                let mut rendered_fields = Vec::with_capacity(fields.len());
+                let mut bindings = Vec::new();
+                for (field_name, field_pattern) in fields {
+                    let field_ty = record.field(field_name)?.ty();
+                    let (field_rendered, field_bindings) =
+                        try_lower_typed_match_pattern(field_pattern, field_ty)?;
+                    rendered_fields.push(format!("{field_name}: {field_rendered}"));
+                    bindings.extend(field_bindings);
+                }
+                let rust_name = format!(
+                    "crate::{}",
+                    crate::structural_identity_codegen::structural_record_layout_rust_name(record)
+                );
+                return Some((
+                    format!("{rust_name} {{ {}, .. }}", rendered_fields.join(", ")),
+                    bindings,
+                ));
+            }
             let class_ty @ Type::Class {
                 fields: class_fields,
                 ..

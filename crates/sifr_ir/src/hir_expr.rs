@@ -34,6 +34,7 @@ impl HirExpr {
             | Self::Slice { ty, .. }
             | Self::WalrusExpr { ty, .. }
             | Self::FieldAccess { ty, .. }
+            | Self::StructuralRecordProject { ty, .. }
             | Self::ConstructorCall { ty, .. }
             | Self::QuestionMark { ty, .. }
             | Self::OkWrap { ty, .. }

@@ -68,6 +68,10 @@ impl Type {
             | Self::Intersection(elements) => elements
                 .iter()
                 .any(|element| element.contains_affine_resource_inner(visiting_classes)),
+            Self::StructuralRecord(record) => record
+                .fields()
+                .iter()
+                .any(|field| field.ty().contains_affine_resource_inner(visiting_classes)),
             Self::Class { fields, .. } => {
                 let Some(key) = self.class_recursion_key() else {
                     return false;
@@ -132,6 +136,10 @@ impl Type {
             Self::Tuple(elements) | Self::Union(elements) => elements
                 .iter()
                 .all(|element| element.supports_derived_clone_inner(visiting_classes)),
+            Self::StructuralRecord(record) => record
+                .fields()
+                .iter()
+                .all(|field| field.ty().supports_derived_clone_inner(visiting_classes)),
             Self::Class {
                 fields,
                 parent_class,
@@ -210,6 +218,11 @@ impl Type {
             Self::Tuple(elements) | Self::Union(elements) => elements
                 .iter()
                 .all(|element| element.supports_structural_equality_inner(visiting_classes)),
+            Self::StructuralRecord(record) => record.fields().iter().all(|field| {
+                field
+                    .ty()
+                    .supports_structural_equality_inner(visiting_classes)
+            }),
             Self::Class {
                 fields,
                 methods,
@@ -437,6 +450,17 @@ impl Type {
             | Self::Template(_)
             | Self::Iterable(_)
             | Self::Iterator(_) => OwnershipKind::Move,
+            Self::StructuralRecord(record) => {
+                if record
+                    .fields()
+                    .iter()
+                    .all(|field| field.ty().ownership() == OwnershipKind::Copy)
+                {
+                    OwnershipKind::Copy
+                } else {
+                    OwnershipKind::Move
+                }
+            }
             Self::Tuple(elems) => {
                 if elems
                     .iter()
@@ -492,6 +516,15 @@ impl Type {
             Self::Template(elems) => {
                 let parts: Vec<String> = elems.iter().map(Self::display_name).collect();
                 format!("Template[{}]", parts.join(", "))
+            }
+            Self::StructuralRecord(record) => {
+                let fields = record
+                    .fields()
+                    .iter()
+                    .map(|field| format!("{}: {}", field.name(), field.ty().display_name()))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                format!("{{{fields}}}")
             }
             Self::Range => "range".to_string(),
             Self::Iterable(elem) => format!("Iterable[{}]", elem.display_name()),

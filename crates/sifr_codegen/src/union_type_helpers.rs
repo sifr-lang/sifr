@@ -212,6 +212,15 @@ impl RustEmitter {
             }
         }
         match resolved {
+            Type::StructuralRecord(record) => {
+                let name = crate::structural_identity_codegen::structural_record_rust_name(record);
+                self.structural_record_types
+                    .entry(name)
+                    .or_insert_with(|| record.clone());
+                for field in record.fields() {
+                    self.register_union_type_with_usage(field.ty(), ordinary_value);
+                }
+            }
             Type::Union(members) => {
                 let is_option = resolved.optional_member_type().is_some();
                 if !is_option {

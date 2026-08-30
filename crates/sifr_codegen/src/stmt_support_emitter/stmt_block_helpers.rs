@@ -86,7 +86,10 @@ fn collect_string_loop_target_use_expr(
         | HirExpr::Await { value: operand, .. }
         | HirExpr::QuestionMark { expr: operand, .. }
         | HirExpr::OkWrap { value: operand, .. }
-        | HirExpr::ErrWrap { value: operand, .. } => {
+        | HirExpr::ErrWrap { value: operand, .. }
+        | HirExpr::StructuralRecordProject {
+            source: operand, ..
+        } => {
             collect_string_loop_target_use_expr(operand, target, usage);
         }
         HirExpr::Compare {

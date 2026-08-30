@@ -184,6 +184,21 @@ pub fn tuple(members: &[ShapeIdentity]) -> ShapeIdentity {
     compose_identities("tuple", members)
 }
 
+/// Identity for an immutable structural record. Callers can supply fields in
+/// any order; names and field identities jointly define the canonical shape.
+#[must_use]
+pub fn structural_record(fields: &[(&str, ShapeIdentity)]) -> ShapeIdentity {
+    let mut canonical = fields.to_vec();
+    canonical.sort_unstable_by(|left, right| left.0.cmp(right.0));
+    let mut hash = encoder("structural-record");
+    push_usize(&mut hash, canonical.len());
+    for (name, identity) in canonical {
+        push_bytes(&mut hash, name.as_bytes());
+        push_bytes(&mut hash, identity.as_bytes());
+    }
+    finish(hash)
+}
+
 #[must_use]
 pub fn union(members: &[ShapeIdentity]) -> ShapeIdentity {
     let mut canonical = members.to_vec();
@@ -347,6 +362,20 @@ mod tests {
         assert_eq!(union(&[]), primitive("never"));
         assert_eq!(union(&[integer]), integer);
         assert_eq!(union(&[integer, integer]), integer);
+    }
+
+    #[test]
+    fn structural_record_identity_ignores_field_order_and_tracks_names() {
+        let integer = primitive("int");
+        let string = primitive("str");
+        assert_eq!(
+            structural_record(&[("id", integer), ("name", string)]),
+            structural_record(&[("name", string), ("id", integer)])
+        );
+        assert_ne!(
+            structural_record(&[("id", integer)]),
+            structural_record(&[("other", integer)])
+        );
     }
 
     #[test]

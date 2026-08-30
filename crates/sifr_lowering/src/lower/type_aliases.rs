@@ -272,6 +272,17 @@ fn collect_alias_dependencies(
                 );
             }
         }
+        Expr::Dict(dict) => {
+            for item in &dict.items {
+                collect_alias_dependencies(
+                    &item.value,
+                    alias_names,
+                    local_type_params,
+                    crosses_boundary,
+                    deps,
+                );
+            }
+        }
         Expr::BooleanLiteral(_)
         | Expr::NumberLiteral(_)
         | Expr::StringLiteral(_)

@@ -183,6 +183,10 @@ pub(crate) fn is_copy_type_for_codegen(ty: &Type) -> bool {
         Type::Tuple(elements) | Type::Union(elements) | Type::Intersection(elements) => {
             elements.iter().all(is_copy_type_for_codegen)
         }
+        Type::StructuralRecord(record) => record
+            .fields()
+            .iter()
+            .all(|field| is_copy_type_for_codegen(field.ty())),
         Type::Newtype { inner, .. } => is_copy_type_for_codegen(inner),
         Type::Alias { body, .. } => is_copy_type_for_codegen(body),
         _ => resolved.ownership() == OwnershipKind::Copy,

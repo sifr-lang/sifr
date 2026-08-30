@@ -435,23 +435,7 @@ pub(in crate::lower) fn supports_total_order_in_context(ty: &Type, _ctx: &LowerC
 }
 
 fn supports_total_order(ty: &Type) -> bool {
-    match ty.resolve_alias() {
-        Type::Int
-        | Type::FixedInt(_)
-        | Type::Bool
-        | Type::Str
-        | Type::Bytes
-        | Type::None
-        | Type::LiteralInt(_)
-        | Type::LiteralStr(_)
-        | Type::LiteralBool(_)
-        | Type::Decimal
-        | Type::BigDecimal => true,
-        Type::List(element) => supports_total_order(element),
-        Type::Tuple(elements) => elements.iter().all(supports_total_order),
-        Type::TypeVar(_) => false,
-        _ => false,
-    }
+    ty.supports_total_order()
 }
 
 /// Whether `print` can use the exact Display/Debug strategy selected by codegen.

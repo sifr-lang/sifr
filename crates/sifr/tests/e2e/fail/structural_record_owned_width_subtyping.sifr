@@ -1,0 +1,11 @@
+type Wide = {id: int, email: str}
+type Narrow = {id: int}
+
+
+def consume(own value: Narrow):
+    pass
+
+
+def main():
+    wide: Wide = Wide(id=1, email="dev@sifr.dev")
+    consume(wide)
