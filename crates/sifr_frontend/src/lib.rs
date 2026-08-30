@@ -64,9 +64,11 @@ mod query_diagnostics_behavior_tests;
 #[cfg(test)]
 mod query_diagnostics_equivalence_tests;
 mod source_provider;
+mod sql_queries;
 #[cfg(test)]
 mod structural_shape_import_tests;
 pub use source_provider::*;
+pub use sql_queries::*;
 mod source_maps;
 pub use source_maps::*;
 mod workspace_session;

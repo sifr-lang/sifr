@@ -60,6 +60,24 @@ COMMANDS = {
     "sql-common-runtime-tests": [
         "cargo", "test", "--locked", "-p", "sifr_sql_runtime",
     ],
+    "sql-query-substrate-qualification": [
+        sys.executable,
+        str(AREA_ROOT / "tools" / "check_query_substrate.py"),
+    ],
+    "sql-query-substrate-qualification-mutations": [
+        sys.executable,
+        str(AREA_ROOT / "tools" / "check_query_substrate.py"),
+        "--self-test",
+    ],
+    "sql-query-contract-tests": [
+        "cargo", "test", "--locked", "-p", "sifr_sql_contract", "--test", "query_fragments",
+    ],
+    "sql-query-runtime-tests": [
+        "cargo", "test", "--locked", "-p", "sifr_sql_runtime", "--test", "query_substrate",
+    ],
+    "sql-query-frontend-tests": [
+        "cargo", "test", "--locked", "-p", "sifr_frontend", "--test", "sql_queries",
+    ],
 }
 
 

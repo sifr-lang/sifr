@@ -1839,6 +1839,11 @@ and ownership contracts are detailed in
 [`sql_common_contracts.md`](./sql_common_contracts.md). The common runtime uses
 only `sifr_runtime`; no compiler contract or raw database driver enters it.
 
+The implemented query and fragment substrate is detailed in
+[`sql_query_fragments.md`](./sql_query_fragments.md). It defines the two public
+query states, the production profile registry, closed query HIR, typed fragment
+composition, cardinality adapters, and the unsafe-syntax capability.
+
 A new `sifr_sql_runtime` crate owns package-neutral SQL pooling, verified leases,
 session reset coordination, statement-cache policy, and cancellation cleanup. It
 depends on `sifr_runtime` and contains no provider driver or dialect semantics.
