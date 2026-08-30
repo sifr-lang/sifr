@@ -1,0 +1,29 @@
+class BodyError(Error):
+    message: str
+
+
+class SlowCleanupResource:
+    async def __aenter__(self) -> Result[None, BodyError]:
+        return None
+
+    async def __aexit__(self, _cause: AsyncExitCause) -> Result[None, BodyError]:
+        await task.sleep(10.0)
+        return None
+
+
+async def worker() -> Result[None, BodyError]:
+    async with SlowCleanupResource():
+        raise BodyError("body remains primary")
+    return None
+
+
+async def main() -> Result[None, ScopeFailure]:
+    _position_seed: int = 0
+    assert _position_seed == 0
+    async with task.scope() as scope:
+        handle = scope.spawn(worker())
+        result = await handle
+        rendered: str = str(result)
+        assert rendered.find("body remains primary") is not None
+        assert rendered.find("CleanupTimedOut") is not None
+    return None

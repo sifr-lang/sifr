@@ -13,6 +13,7 @@ mod async_for;
 mod async_generator_advances;
 mod async_generator_methods;
 mod async_with;
+mod async_with_flow;
 mod attached_api_declarations;
 mod attached_api_surfaces;
 mod attribute_access;

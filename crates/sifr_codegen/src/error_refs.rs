@@ -98,6 +98,9 @@ pub(crate) fn collect_complete_referenced_builtin_error_classes(
     if crate::module_uses_async_generator_type(module) {
         referenced.insert("GeneratorCloseError".to_string());
     }
+    if crate::module_uses_native_async_cleanup(module) {
+        referenced.insert("SecondaryError".to_string());
+    }
     if crate::module_uses_spawn_cpu(module)
         || crate::module_uses_join_set_spawn_cpu(module)
         || crate::module_uses_task_scope_spawn_cpu(module)

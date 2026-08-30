@@ -1,0 +1,53 @@
+from sifr.io import exists, write_text
+from sifr.os import getpid, remove_file
+
+
+class ResourceError(Error):
+    message: str
+
+
+def marker_path() -> str:
+    return "/tmp/sifr_async_with_ordinary_error_cleanup_" + str(getpid()) + ".txt"
+
+
+class MarkerResource:
+    path: str
+
+    def __init__(self, path: str):
+        self.path = path
+
+    async def __aenter__(self) -> Result[int, ResourceError]:
+        return 1
+
+    async def __aexit__(self, _cause: AsyncExitCause) -> Result[None, ResourceError]:
+        try:
+            _written: None = write_text(self.path, "ordinary-error")
+        except IOError as e:
+            raise ResourceError(e.message)
+        return None
+
+
+async def fail_inside(path: str) -> Result[None, ResourceError]:
+    async with MarkerResource(path) as value:
+        assert value == 1
+        raise ResourceError("body failed")
+    return None
+
+
+async def main() -> Result[None, Error]:
+    path: str = marker_path()
+    if exists(path):
+        try:
+            _removed_existing: None = remove_file(path)
+        except IOError as e:
+            _existing_cleanup_error: str = e.message
+
+    result = await fail_inside(path)
+    assert str(result).find("body failed") is not None
+    assert exists(path)
+
+    try:
+        _removed: None = remove_file(path)
+    except IOError as e:
+        _cleanup_error: str = e.message
+    return None

@@ -1,0 +1,49 @@
+from sifr.io import exists, write_text
+from sifr.os import getpid, remove_file
+
+
+def marker_path() -> str:
+    return "/tmp/sifr_async_with_timeout_cleanup_" + str(getpid()) + ".txt"
+
+
+class MarkerResource:
+    path: str
+
+    def __init__(self, path: str):
+        self.path = path
+
+    async def __aenter__(self) -> Result[None, TimeoutError]:
+        return None
+
+    async def __aexit__(self, _cause: AsyncExitCause) -> Result[None, TimeoutError]:
+        try:
+            _written: None = write_text(self.path, "timeout")
+        except IOError as e:
+            _write_error: str = e.message
+        return None
+
+
+async def time_out(path: str) -> Result[None, TimeoutError]:
+    async with task.timeout(0.0):
+        async with MarkerResource(path):
+            await task.sleep(10.0)
+    return None
+
+
+async def main() -> Result[None, Error]:
+    path: str = marker_path()
+    if exists(path):
+        try:
+            _removed_existing: None = remove_file(path)
+        except IOError as e:
+            _existing_cleanup_error: str = e.message
+
+    result = await time_out(path)
+    assert str(result).find("TimeoutError") is not None
+    assert exists(path)
+
+    try:
+        _removed: None = remove_file(path)
+    except IOError as e:
+        _cleanup_error: str = e.message
+    return None

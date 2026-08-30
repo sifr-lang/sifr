@@ -36,7 +36,7 @@ use scalar_operands::{
     try_lower_simple_binop_operand_expr, try_lower_simple_range_operand_expr,
 };
 mod task_calls;
-pub(crate) use task_calls::try_lower_task_duration_expr;
+pub(crate) use task_calls::{task_duration_expr_from_seconds, try_lower_task_duration_expr};
 
 pub(crate) fn fixed_width_int_type(ty: &Type) -> bool {
     collections_and_comprehensions::is_fixed_width_int_like_simple(ty)
