@@ -10,6 +10,14 @@ status: complete
 > from the live tree and remain recoverable from `sifr-lang/leetcode` git
 > history.
 
+> 2026-08-30 validation note: the schema-first SQL Milestone 3 merge gate passed
+> all areas before algorithmic compatibility. That area then stopped because the
+> LeetCode profile manifest's `corpus_root` points to the checked-in corpus
+> gitlink, which was not initialized in the validating worktree. This is a
+> repository-state failure owned by the corpus setup contract, not by the SQL
+> compiler-component implementation. PR #3592 consumed its one merge gate and
+> did not rerun it.
+
 ## Objective
 Run a representative LeetCode corpus end-to-end on Sifr, identify failures, classify root causes, and define the language/compiler fixes required to improve algorithmic compatibility.
 

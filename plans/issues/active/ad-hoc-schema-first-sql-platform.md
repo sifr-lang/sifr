@@ -278,7 +278,7 @@ verification inventory. This phase does not reimplement those capabilities.
 | 0 | completed | Architecture and dependency lock | The final architecture, language dependencies, ownership map, capability matrix, verification inventory, and phase gates are authoritative and machine validated. |
 | 1 | completed | Template-string language foundation | Template strings preserve static segments, typed holes, evaluation order, and exact source maps through the full compiler pipeline. |
 | 2 | completed | Structural record type system | Immutable records have order-independent canonical identity, width subtyping, deterministic diagnostics, and interned Rust layouts. |
-| 3 | pending | Compiler component platform | Resolved packages can provide deterministic sandboxed embedded-language analysis through one closed, versioned, cacheable protocol. |
+| 3 | completed | Compiler component platform | Resolved packages can provide deterministic sandboxed embedded-language analysis through one closed, versioned, cacheable protocol. |
 | 4 | pending | Schema profiles and canonical `SchemaIR` | Configuration sources produce exact provider-owned schema graphs, nominal profile types, fingerprints, dependency slices, diffs, and runtime contracts. |
 | 5 | pending | Common SQL contracts | Shared query kinds, complete type and bind mappings, codecs, errors, cardinality, effects, ownership, and provider interfaces have one final contract. |
 | 6 | pending | Query and fragment substrate | Query templates, owned bound queries, typed fragments, composition, safe interpolation, and cardinality adapters integrate with Sifr typing and HIR. |
@@ -434,26 +434,26 @@ Owned scope:
 
 Acceptance criteria:
 
-- [ ] The package graph resolves compiler components by exact identity, version,
+- [x] The package graph resolves compiler components by exact identity, version,
   hash, and protocol range.
-- [ ] Components use the WebAssembly Component Model and the compiler-owned WIT
+- [x] Components use the WebAssembly Component Model and the compiler-owned WIT
   interface without default WASI capabilities.
-- [ ] The protocol accepts static source, typed holes, context, and source maps.
-- [ ] It returns diagnostics, dependencies, type descriptors, semantic plans,
+- [x] The protocol accepts static source, typed holes, context, and source maps.
+- [x] It returns diagnostics, dependencies, type descriptors, semantic plans,
   and runtime-lowering descriptors from a closed schema.
-- [ ] The sandbox denies ambient file, network, clock, random, environment,
+- [x] The sandbox denies ambient file, network, clock, random, environment,
   process, thread, shared-memory, native-library, linker, Rust-source, and
   arbitrary-HIR access.
-- [ ] Official and third-party providers use the same component ABI and validation
+- [x] Official and third-party providers use the same component ABI and validation
   path.
-- [ ] CPU, memory, recursion, input, output, and diagnostic bounds fail with
+- [x] CPU, memory, recursion, input, output, and diagnostic bounds fail with
   structured compiler errors.
-- [ ] Compiler and provider diagnostic code registries have stable, disjoint
+- [x] Compiler and provider diagnostic code registries have stable, disjoint
   namespaces with machine-validated uniqueness and lifecycle metadata.
-- [ ] Compiler and components declare compatible protocol ranges. Incompatible
+- [x] Compiler and components declare compatible protocol ranges. Incompatible
   ranges fail without protocol downgrade.
-- [ ] Cache keys include all semantic inputs and component identities.
-- [ ] A non-SQL fixture proves parsing, typed holes, diagnostics, source maps,
+- [x] Cache keys include all semantic inputs and component identities.
+- [x] A non-SQL fixture proves parsing, typed holes, diagnostics, source maps,
   dependencies, caching, determinism, and malformed-output rejection.
 
 Focused validation:
@@ -1253,7 +1253,7 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 | 0 | completed | [#3582](https://github.com/sifr-lang/sifr/pull/3582) | `1a1cef93dc` | SQL 4/4; docs 1/1; dependency and runner checks pass | Opus `SATISFIED` on `7f3f6bc2c` | Architecture and dependency lock |
 | 1 | completed | [#3585](https://github.com/sifr-lang/sifr/pull/3585) | `1173cd9e20` | type system 140/140; focused template 13/13; property 15/15; fuzz 26/26; SQL and repository checks pass | Opus remediation `SATISFIED` on `56f131e1b` | Typed template strings; also corrects the Milestone 0 verification integration |
 | 2 | completed | [#3588](https://github.com/sifr-lang/sifr/pull/3588) | `955e97f6db` | affected packages, native fixture, HIR guard, and file-size guard pass | Opus round 2 closed both original blockers on `dd7ac3cdc`; one new mechanism defect is deferred | Structural record type system |
-| 3 | pending | — | — | — | — | Compiler component platform |
+| 3 | completed | [#3592](https://github.com/sifr-lang/sifr/pull/3592) | `9badcfc4aa` | component 14/14; diagnostics 32/32; package resolution 4/4; SQL 6/6; coverage 5/5; four-target qualification pass | Opus round 2 closed the original sandbox and diagnostics blockers on `3d97d7e35`; two new mechanism defects are deferred | Compiler component platform |
 | 4 | pending | — | — | — | — | Schema profiles and canonical `SchemaIR` |
 | 5 | pending | — | — | — | — | Common SQL contracts |
 | 6 | pending | — | — | — | — | Query and fragment substrate |
@@ -1284,6 +1284,8 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 | Milestone 0 remediation review | Bound GitHub release pagination and remove the unreachable tag-key fallback. | Milestone 18 | Harden the final release-authority refresh before phase closure. |
 | Milestone 2 remediation review | An all-`int` wide record can stay live after projection while Rust partially moves one `SifrInt` field. | Milestone 18 | Align logical-copy projection with physical Rust moves. Add a multi-field projection-and-reuse regression fixture. |
 | Milestone 2 remediation review | Record fields with `Callable` or union types can produce invalid generated Rust. | Milestone 18 | Complete these record field layouts before integrated qualification. Add native positive fixtures for both field types. |
+| Milestone 3 remediation review | A warm component-cache hit can bypass the current request's `max_input_bytes` limit. | Milestone 18 | Validate the input envelope and its byte limit before cache lookup. Add a warm-cache mutation test with a lower request limit. |
+| Milestone 3 remediation review | Component response diagnostics and source maps can name document identities that were not present in the request. | Milestone 18 | Restrict primary, related, and source-map spans to request-owned template documents. Add forged-document rejection tests. |
 
 ### Milestone 0 closure record
 
@@ -1416,6 +1418,56 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
   `Callable` and union fields. Milestone 18 owns both native closure cases.
 - Next action: implement Milestone 3 from the merged and recorded mainline.
 
+### Milestone 3 closure record
+
+- Status: completed and merged.
+- Starting commit: `aec0452484f43732d46b791f909922c001e5eb8b`.
+- Initial reviewed candidate: `3b861261a1b832bfedb107fddd76f782fe071688`.
+- Remediation reviewed candidate: `3d97d7e35961ed5efb7203dd0f152cdbb0705992`.
+- Final candidate: `9764def9e5a43199d15b83beb1efb5d53112da25`.
+- Pull request: [#3592](https://github.com/sifr-lang/sifr/pull/3592).
+- Merge commit: `9badcfc4aaaebfcd458d6b16359e4cd425daa6d6`.
+- Owned result: resolved packages can register exact compiler-component
+  identities and protocol ranges. The host executes the closed WIT contract in
+  Wasmtime without WASI or ambient capabilities. It validates manifests,
+  package-graph ownership, protocol envelopes, bounds, cache identities,
+  diagnostic namespaces, and deterministic output.
+- Qualification result: the checked-in non-SQL component is built from Rust
+  source and analyzes the request inside WebAssembly. It proves typed-hole
+  parsing, diagnostics, source maps, dependencies, semantic plans, runtime
+  lowering, caching, determinism, malformed-output rejection, and exact tooling
+  provenance. Qualification passes on all four supported native targets.
+- Focused validation: all 14 component tests, all 32 diagnostics tests, and all
+  four package component-resolution tests passed. All six SQL-platform variants
+  and all five coverage-matrix variants passed. Strict Clippy, formatting,
+  diagnostic catalog and baseline checks, HIR maintainability, documentation
+  generation, and the file-size guard passed.
+- Create-PR gate: the one allowed run used
+  `8d9f1f06aabe91c22da38d636cebe7fe3af7cee0`. It stopped on missing
+  coverage classification for the new crate and feature. The classification was
+  fixed and its focused coverage checks passed. The gate did not run again.
+- Merge gate: the one allowed run used the exact final candidate
+  `9764def9e5a43199d15b83beb1efb5d53112da25`. Rust interop, coverage, core
+  language, CPython differential,
+  Python interop, diagnostics, and runtime platform passed. The gate then
+  stopped because the LeetCode profile manifest pointed to a corpus gitlink that
+  was not initialized in this worktree. The owning Phase 31 record tracks this
+  external repository-state failure. The gate did not run again.
+- Review round 1: Opus found that relaxed SIMD was not disabled, component
+  diagnostics were outside the canonical global registry, and the non-SQL guest
+  returned host-selected canned responses.
+- Remediation: the host now disables relaxed SIMD and canonicalizes NaNs. The
+  compiler owns `SIFR-COMPONENT-0001` through `0009`, with catalog and baseline
+  gates. A real Rust-built component parses each request and derives its result
+  inside WebAssembly.
+- Review round 2: Opus verified the original sandbox and diagnostic mechanisms.
+  It found two new mechanisms: warm cache hits can bypass a lower input bound,
+  and response spans can name documents outside the request. The [published
+  review](https://github.com/sifr-lang/sifr/pull/3592#issuecomment-5467260005)
+  records both cases. The phase rule assigns them to Milestone 18 and prohibits
+  a third review.
+- Next action: implement Milestone 4 from the merged and recorded mainline.
+
 ## Closure evidence template
 
 Each milestone appends one progress record with:
@@ -1447,5 +1499,5 @@ Complete this section after Milestone 18 merges:
 - Final capability and verification inventory: pending.
 - Deferred out-of-scope work: pending.
 - Archive destination: `plans/issues/archive/ad-hoc-schema-first-sql-platform.md`.
-- Exact next action: implement Milestone 3 in a new session from current
+- Exact next action: implement Milestone 4 in a new session from current
   `origin/main`.
