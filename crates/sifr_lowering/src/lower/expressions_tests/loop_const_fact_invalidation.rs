@@ -1,4 +1,5 @@
 use super::*;
+use num_bigint::BigInt;
 
 fn assert_loop_numeric_operations_require_typed_handling(source: &str) {
     let errors = lower_source(source)
@@ -172,4 +173,29 @@ def main() -> None:
         value = value + 1
 ",
     );
+}
+
+#[test]
+fn imported_integer_constant_retains_exact_value_proof() {
+    let mut externals = crate::ExternalDefs::default();
+    externals
+        .constants
+        .entry("settings".to_string())
+        .or_default()
+        .insert("LIMIT".to_string(), Type::Int);
+    externals
+        .constant_integer_values
+        .entry("settings".to_string())
+        .or_default()
+        .insert("LIMIT".to_string(), BigInt::from(8));
+
+    let source = "\
+from settings import LIMIT
+
+def main() -> None:
+    value: float = float(LIMIT)
+";
+
+    lower_source_with_externals(source, &externals)
+        .expect("an imported integer constant should retain its exact value proof");
 }
