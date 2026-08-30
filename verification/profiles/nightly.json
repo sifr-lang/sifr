@@ -746,6 +746,7 @@
         "compiler-components",
         "contracts",
         "dependency-baseline",
+        "schema-profiles",
         "mutation"
       ],
       "resource_classes": [
