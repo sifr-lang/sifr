@@ -34,9 +34,9 @@ fn main() {
     println!("{}", &x + &y);
     println!("{}", &y - &x);
     println!("{}", &x * &y);
-    println!("{}", SifrInt::from_i64(10).pow_known_valid(&SifrInt::from_i64(9)));
+    println!("{}", SifrInt::from_i64(10).pow_known_valid(9_u32));
     println!("=== Exact integer constants ===");
-    let exact_value: SifrInt = SifrInt::from_i64(2).pow_known_valid(&SifrInt::from_i64(30));
+    let exact_value: SifrInt = SifrInt::from_i64(2).pow_known_valid(30_u32);
     println!("{}", exact_value);
     println!("=== Comparison ===");
     let a: SifrInt = SifrInt::from_i64(100);

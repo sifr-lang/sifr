@@ -11,6 +11,11 @@ mod __sifr_project_nominals {
     pub fn random_float() -> f64 {
         ::sifr_stdlib::random::random_float()
     }
+    pub fn random_word_to_unit_float(value: SifrInt) -> f64 {
+        ::sifr_stdlib::random::random_word_to_unit_float(
+            ::sifr_runtime::interop::SifrIntBridge::from(value),
+        )
+    }
     pub fn random_seed() -> SifrInt {
         ::sifr_stdlib::random::random_seed().into_sifr_int()
     }
@@ -703,8 +708,7 @@ mod __sifr_project_nominals {
     }
     impl __SifrStdlib_sifr_x2erandom_x2eRandom {
         pub fn random(&mut self) -> f64 {
-            (&self._next_u32() & &__const__MT_WORD_MASK()).to_f64_proven_exact()
-                / (4294967296.0_f64)
+            random_word_to_unit_float(self._next_u32())
         }
     }
     impl __SifrStdlib_sifr_x2erandom_x2eRandom {
@@ -825,14 +829,17 @@ mod __sifr_project_nominals {
                 let __vals = values;
                 let mut __out = Vec::new();
                 for __pair in __vals.iter().enumerate() {
-                    if (*__pair.1 < 0) || (*__pair.1 > 255) {
-                        return Err(ValueError {
-                            message: format!(
-                                "byte out of range at index {}: {}", __pair.0, * __pair.1
-                            ),
-                        });
-                    }
-                    __out.push(__pair.1.to_u8_proven_in_range());
+                    __out
+                        .push(
+                            __pair
+                                .1
+                                .try_to_u8()
+                                .map_err(|_error| Err(ValueError {
+                                    message: format!(
+                                        "byte out of range at index {}: {}", __pair.0, * __pair.1
+                                    ),
+                                }))?,
+                        );
                 }
                 Ok::<Vec<u8>, ValueError>(__out)
             }
@@ -987,6 +994,11 @@ fn random_int(min: SifrInt, max: SifrInt) -> SifrInt {
 }
 fn random_float() -> f64 {
     ::sifr_stdlib::random::random_float()
+}
+fn random_word_to_unit_float(value: SifrInt) -> f64 {
+    ::sifr_stdlib::random::random_word_to_unit_float(
+        ::sifr_runtime::interop::SifrIntBridge::from(value),
+    )
 }
 fn random_seed() -> SifrInt {
     ::sifr_stdlib::random::random_seed().into_sifr_int()

@@ -64,30 +64,27 @@ fn find_user(name: &String) -> Option<String> {
 }
 
 fn process(x: &__SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr) -> String {
-    if let __SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr::__SifrUnionVariant_4_x3aatom3_x3aint(x) = x {
-        return format!("number: {}", x);
-    } else {
-        if let __SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr::__SifrUnionVariant_4_x3aatom3_x3astr(x) = x {
+    match x {
+        __SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr::__SifrUnionVariant_4_x3aatom3_x3aint(x) => {
+            return format!("number: {}", x);
+        },
+        __SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr::__SifrUnionVariant_4_x3aatom3_x3astr(x) => {
             return format!("string: {}", x);
-        } else {
-            unreachable!("sifr union narrowing fell through exhaustive branch chain");
-        }
+        },
     }
 }
 
 fn classify(x: &__SifrUnion_8_x3asequence5_x3aunion1_x3a311_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool) -> String {
-    if let __SifrUnion_8_x3asequence5_x3aunion1_x3a311_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool::__SifrUnionVariant_4_x3aatom3_x3aint(x) = x {
-        return "int".to_string();
-    } else {
-        if let __SifrUnion_8_x3asequence5_x3aunion1_x3a311_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool::__SifrUnionVariant_4_x3aatom3_x3astr(x) = x {
+    match x {
+        __SifrUnion_8_x3asequence5_x3aunion1_x3a311_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool::__SifrUnionVariant_4_x3aatom3_x3aint(x) => {
+            return "int".to_string();
+        },
+        __SifrUnion_8_x3asequence5_x3aunion1_x3a311_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool::__SifrUnionVariant_4_x3aatom3_x3astr(x) => {
             return "str".to_string();
-        } else {
-            if let __SifrUnion_8_x3asequence5_x3aunion1_x3a311_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool::__SifrUnionVariant_4_x3aatom4_x3abool(x) = x {
-                return "bool".to_string();
-            } else {
-                unreachable!("sifr union narrowing fell through exhaustive branch chain");
-            }
-        }
+        },
+        __SifrUnion_8_x3asequence5_x3aunion1_x3a311_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool::__SifrUnionVariant_4_x3aatom4_x3abool(x) => {
+            return "bool".to_string();
+        },
     }
 }
 

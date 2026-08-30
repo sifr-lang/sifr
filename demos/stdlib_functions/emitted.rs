@@ -594,8 +594,7 @@ fn _file_write_bytes(handle: &String, data: &Vec<u8>) -> Result<(), IOError> {
 fn open_file(path: &String, mode: &String) -> Result<__SifrIoNativeFileHandle, IOError> {
     let __sifr_try_res: Result<Result<__SifrIoNativeFileHandle, IOError>, IOError> = (|| {
         let handle_id: String = _open_file(path, mode)?;
-        return Ok(Ok(__SifrIoNativeFileHandle::new(handle_id)));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(__SifrIoNativeFileHandle::new(handle_id)))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -736,12 +735,10 @@ fn basename(path: &String) -> String {
     let mut i: SifrInt = &SifrInt::from(__sifr_chars_path.len()) - &SifrInt::from_i64(1);
     while &i >= &SifrInt::from_i64(0) {
         let ch: Option<String> = Some({
-            let Some(__indexed_char) = __sifr_chars_path
+            let __indexed_char_option = __sifr_chars_path
                 .get(::sifr_runtime::to_usize_proven(&(i)))
-                .map(|c| c.to_string()) else {
-                unreachable!("compiler-verified string index should be in range");
-            };
-            __indexed_char
+                .map(|c| c.to_string());
+            __indexed_char_option.as_slice()[0_usize].clone()
         });
         if let Some(ch) = ch {
             if ch == "/" {
@@ -776,12 +773,10 @@ fn stem(path: &String) -> String {
     let mut i: SifrInt = &SifrInt::from(__sifr_chars_base.len()) - &SifrInt::from_i64(1);
     while &i > &SifrInt::from_i64(0) {
         let ch: Option<String> = Some({
-            let Some(__indexed_char) = __sifr_chars_base
+            let __indexed_char_option = __sifr_chars_base
                 .get(::sifr_runtime::to_usize_proven(&(i)))
-                .map(|c| c.to_string()) else {
-                unreachable!("compiler-verified string index should be in range");
-            };
-            __indexed_char
+                .map(|c| c.to_string());
+            __indexed_char_option.as_slice()[0_usize].clone()
         });
         if let Some(ch) = ch {
             if ch == "." {
@@ -830,12 +825,10 @@ fn is_absolute(path: &String) -> bool {
         }
     }
     let first: Option<String> = Some({
-        let Some(__indexed_char) = __sifr_chars_path
+        let __indexed_char_option = __sifr_chars_path
             .get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(0))))
-            .map(|c| c.to_string()) else {
-            unreachable!("compiler-verified string index should be in range");
-        };
-        __indexed_char
+            .map(|c| c.to_string());
+        __indexed_char_option.as_slice()[0_usize].clone()
     });
     if let Some(first) = first {
         if (first == "/") || (first == "\\") {
@@ -924,8 +917,7 @@ fn _float_int(
                     )
                 }
             })?;
-        return Ok(Ok(converted));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(converted))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -984,8 +976,7 @@ fn harmonic_mean(
         __SifrStdlib_sifr_x2estatistics_x2eStatisticsError,
     > = (|| {
         let numerator: f64 = _float_int((n).clone())?;
-        return Ok(Ok(numerator / total));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(numerator / total))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {

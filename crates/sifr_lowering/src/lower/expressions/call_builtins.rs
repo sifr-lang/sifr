@@ -530,7 +530,7 @@ pub(super) fn lower_unshadowed_builtin_call(
         if let Some(kind) = float_sentinel_kind_from_call(call) {
             return Some(CallLowering::Lowered(float_sentinel_expr(kind)));
         }
-        let arg = lower_expr(&call.arguments.args[0], ctx)?;
+        let mut arg = lower_expr(&call.arguments.args[0], ctx)?;
         let arg_ty = arg.ty().clone();
         let exact_integer_conversion = matches!(
             arg_ty.resolve_alias(),
@@ -540,6 +540,11 @@ pub(super) fn lower_unshadowed_builtin_call(
             && super::super::expression_operators::exact_integer_expr_is_proven_float_representable(
                 &arg, ctx,
             );
+        if integer_conversion_is_proven
+            && matches!(arg_ty.resolve_alias(), Type::Int | Type::LiteralInt(_))
+        {
+            arg = super::super::expression_operators::proven_exact_integer_literal(&arg, ctx)?;
+        }
         let result_ty = if arg_ty == Type::Str {
             let parse_error_ty =
                 ctx.class_types

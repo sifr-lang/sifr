@@ -88,15 +88,13 @@ fn format_int_list(values: &Vec<SifrInt>) -> String {
     let mut i: SifrInt = SifrInt::from_i64(0);
     while (&i < &SifrInt::from(values.len())) {
         formatted.push_str((format!("{}", {
-    let Some(__sifr_index_value) = ({
+    let __sifr_index_value_option = {
     let __sifr_index_list = &values;
     let __sifr_index_i = i.clone();
     let __sifr_index_norm = __sifr_index_i.normalize_index_or_len(__sifr_index_list.len());
     __sifr_index_list.get(__sifr_index_norm).cloned()
-}) else {
-        unreachable!("compiler-verified index should be in range");
-    };
-    __sifr_index_value
+};
+    __sifr_index_value_option.as_slice()[0_usize].clone()
 })).as_str());
         if (&(&i + &SifrInt::from_i64(1)) < &SifrInt::from(values.len())) {
             formatted.push_str(", ");

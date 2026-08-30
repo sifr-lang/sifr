@@ -231,6 +231,8 @@ impl RustEmitter {
                         method,
                         args,
                         ty,
+                        object_expr,
+                        self.is_deque_data_field(object),
                         lowered.expr,
                     ));
                 }
@@ -254,6 +256,8 @@ impl RustEmitter {
                     method,
                     args,
                     ty,
+                    object_expr.clone(),
+                    self.is_deque_data_field(object),
                     crate::RustExpr::MethodCall {
                         receiver: Box::new(object_expr),
                         method: method.clone(),

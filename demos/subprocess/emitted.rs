@@ -124,8 +124,7 @@ fn _file_write_bytes(handle: &String, data: &Vec<u8>) -> Result<(), IOError> {
 fn open_file(path: &String, mode: &String) -> Result<__SifrIoNativeFileHandle, IOError> {
     let __sifr_try_res: Result<Result<__SifrIoNativeFileHandle, IOError>, IOError> = (|| {
         let handle_id: String = _open_file(path, mode)?;
-        return Ok(Ok(__SifrIoNativeFileHandle::new(handle_id)));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(__SifrIoNativeFileHandle::new(handle_id)))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {

@@ -9,7 +9,7 @@ fn main() {
     assert!((format!("{}", format!("Tuple index: {}, {}", a, b)) == "Tuple index: 10, 20"));
     let x: SifrInt = SifrInt::from_i64(10);
     let y: SifrInt = SifrInt::from_i64(2);
-    let result: f64 = x.to_f64_proven_exact() / y.to_f64_proven_exact();
+    let result: f64 = 10.0 / 2.0;
     println!("Division 10/2: {}", result);
     assert!((format!("{}", format!("Division 10/2: {}", result)) == "Division 10/2: 5"));
     let val: Option<SifrInt> = None;
@@ -27,12 +27,12 @@ fn main() {
     println!("bool([]): {}", !empty.is_empty());
     assert!((format!("{}", format!("bool([]): {}", !empty.is_empty())) == "bool([]): false"));
     let mut base: SifrInt = SifrInt::from_i64(2);
-    base = base.pow_known_valid(&SifrInt::from_i64(0));
+    base = base.pow_known_valid(0_u32);
     println!("2**0 = {}", base);
     assert!((format!("{}", format!("2**0 = {}", base)) == "2**0 = 1"));
     let i: SifrInt = SifrInt::from_i64(10);
     let f: f64 = 3.5_f64;
-    let mixed: f64 = i.to_f64_proven_exact() + f;
+    let mixed: f64 = 10.0 + f;
     println!("10 + 3.5 = {}", mixed);
     assert!((format!("{}", format!("10 + 3.5 = {}", mixed)) == "10 + 3.5 = 13.5"));
     let msg: String = "She said \"hello\"".to_string();

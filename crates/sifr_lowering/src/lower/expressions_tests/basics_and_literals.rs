@@ -390,6 +390,26 @@ def main() -> None:
 }
 
 #[test]
+pub(super) fn test_reduced_exact_ratio_does_not_bypass_operand_float_proofs() {
+    let source = "\
+def main() -> None:
+    numerator: int = 27021597764222979
+    denominator: int = 9007199254740993
+    value: float = numerator / denominator
+";
+    let errors = lower_source(source)
+        .expect_err("a reduced ratio must not bypass each emitted operand conversion proof");
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && error
+                .message
+                .contains("expected 'float', got 'Result[float,")
+            && error.primary_range == Some(range_for(source, "numerator / denominator"))
+    }));
+}
+
+#[test]
 pub(super) fn test_exact_int_true_division_branch_reassignment_does_not_leak_const_proof() {
     let source = "\
 def main(flag: bool) -> None:

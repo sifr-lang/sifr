@@ -492,8 +492,7 @@ fn _float_int(
                     )
                 }
             })?;
-        return Ok(Ok(converted));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(converted))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -534,8 +533,7 @@ fn _divide_by_int(
         __SifrStdlib_sifr_x2estatistics_x2eStatisticsError,
     > = (|| {
         let divisor: f64 = _float_int((denominator).clone())?;
-        return Ok(Ok(numerator / divisor));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(numerator / divisor))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -742,8 +740,7 @@ fn harmonic_mean(
         __SifrStdlib_sifr_x2estatistics_x2eStatisticsError,
     > = (|| {
         let numerator: f64 = _float_int((n).clone())?;
-        return Ok(Ok(numerator / total));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(numerator / total))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -786,8 +783,7 @@ fn geometric_mean(
         __SifrStdlib_sifr_x2estatistics_x2eStatisticsError,
     > = (|| {
         let mean_log: f64 = _divide_by_int(log_sum, (n).clone())?;
-        return Ok(Ok(exp(mean_log)));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(exp(mean_log)))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -1173,8 +1169,7 @@ fn correlation(
         __SifrStdlib_sifr_x2estatistics_x2eStatisticsError,
     > = (|| {
         let covariance_value: f64 = _divide_by_int(cov_num, &n - &SifrInt::from_i64(1))?;
-        return Ok(Ok(covariance_value / (sx * sy)));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(covariance_value / (sx * sy)))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {

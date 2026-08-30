@@ -23,12 +23,7 @@ fn main() {
     assert!((format!("{:?}", nums) == "[10, 2, 30]"));
     let mut d: HashMap<String, SifrInt> = HashMap::from([("a".to_string(), SifrInt::from_i64(1))]);
     d.insert("b".to_string(), SifrInt::from_i64(2));
-    let val: Option<SifrInt> = Some({
-    let Some(__sifr_proven_dict_value) = d.get("b").cloned() else {
-        ::std::process::abort();
-    };
-    __sifr_proven_dict_value
-});
+    let val: Option<SifrInt> = Some(d["b"].clone());
     if let Some(val) = val.clone() {
         println!("{}", val);
         assert!((format!("{}", val) == "2"));

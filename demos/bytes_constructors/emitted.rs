@@ -283,14 +283,17 @@ fn main() {
             ];
             let mut __out = Vec::new();
             for __pair in __vals.iter().enumerate() {
-                if (*__pair.1 < 0) || (*__pair.1 > 255) {
-                    return Err(ValueError {
-                        message: format!(
-                            "byte out of range at index {}: {}", __pair.0, * __pair.1
-                        ),
-                    });
-                }
-                __out.push(__pair.1.to_u8_proven_in_range());
+                __out
+                    .push(
+                        __pair
+                            .1
+                            .try_to_u8()
+                            .map_err(|_error| Err(ValueError {
+                                message: format!(
+                                    "byte out of range at index {}: {}", __pair.0, * __pair.1
+                                ),
+                            }))?,
+                    );
             }
             Ok::<Vec<u8>, ValueError>(__out)
         })?;

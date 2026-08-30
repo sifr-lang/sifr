@@ -96,6 +96,8 @@ pub(crate) fn unwrap_compiler_verified_nonempty_pop_result_for_ir(
     method: &str,
     args: &[HirExpr],
     method_return_ty: &Type,
+    object_expr: RustExpr,
+    is_deque_data_field: bool,
     lowered_expr: RustExpr,
 ) -> RustExpr {
     if !supports_nonempty_pop_narrowing_type_for_ir(object_ty) {
@@ -107,20 +109,103 @@ pub(crate) fn unwrap_compiler_verified_nonempty_pop_result_for_ir(
     if crate::helpers::is_option_type(method_return_ty) {
         return lowered_expr;
     }
+    let is_deque = is_deque_data_field
+        || matches!(
+            crate::resolve_alias_type_for_plain_call(object_ty),
+            Type::Class { name, .. } if is_deque_class_name_for_ir(name)
+        );
+    let remove_from_end = method == "pop" && args.is_empty();
+    if !is_deque {
+        let index = if remove_from_end {
+            RustExpr::BinOp {
+                left: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(object_expr.clone()),
+                    method: "len".to_string(),
+                    args: vec![],
+                }),
+                op: "-".to_string(),
+                right: Box::new(RustExpr::Cast {
+                    expr: Box::new(RustExpr::Literal(crate::RustLiteral::Int(1))),
+                    ty: crate::RustType::Named("usize".to_string()),
+                }),
+            }
+        } else {
+            RustExpr::Cast {
+                expr: Box::new(RustExpr::Literal(crate::RustLiteral::Int(0))),
+                ty: crate::RustType::Named("usize".to_string()),
+            }
+        };
+        return RustExpr::MethodCall {
+            receiver: Box::new(object_expr),
+            method: "remove".to_string(),
+            args: vec![index],
+        };
+    }
+
+    let index = if remove_from_end {
+        RustExpr::BinOp {
+            left: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(object_expr.clone()),
+                method: "len".to_string(),
+                args: vec![],
+            }),
+            op: "-".to_string(),
+            right: Box::new(RustExpr::Cast {
+                expr: Box::new(RustExpr::Literal(crate::RustLiteral::Int(1))),
+                ty: crate::RustType::Named("usize".to_string()),
+            }),
+        }
+    } else {
+        RustExpr::Cast {
+            expr: Box::new(RustExpr::Literal(crate::RustLiteral::Int(0))),
+            ty: crate::RustType::Named("usize".to_string()),
+        }
+    };
     RustExpr::Block {
-        stmts: vec![RustStmt::LetElse {
-            pattern: "Some(__sifr_nonempty_pop_value)".to_string(),
-            value: lowered_expr,
-            else_body: vec![RustStmt::Expr(RustExpr::MacroCall {
-                name: "unreachable".to_string(),
-                args: vec![RustExpr::Literal(crate::RustLiteral::Str(
-                    "compiler-verified non-empty pop should return Some".to_string(),
-                ))],
-            })],
-        }],
-        expr: Some(Box::new(RustExpr::Ident(
-            "__sifr_nonempty_pop_value".to_string(),
-        ))),
+        stmts: vec![
+            RustStmt::Let {
+                mutable: false,
+                name: "__sifr_nonempty_pop_index".to_string(),
+                ty: None,
+                value: index,
+            },
+            RustStmt::Let {
+                mutable: true,
+                name: "__sifr_nonempty_pop_values".to_string(),
+                ty: None,
+                value: RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(object_expr),
+                        method: "drain".to_string(),
+                        args: vec![RustExpr::Range {
+                            start: Box::new(RustExpr::Ident(
+                                "__sifr_nonempty_pop_index".to_string(),
+                            )),
+                            end: Box::new(RustExpr::BinOp {
+                                left: Box::new(RustExpr::Ident(
+                                    "__sifr_nonempty_pop_index".to_string(),
+                                )),
+                                op: "+".to_string(),
+                                right: Box::new(RustExpr::Cast {
+                                    expr: Box::new(RustExpr::Literal(crate::RustLiteral::Int(1))),
+                                    ty: crate::RustType::Named("usize".to_string()),
+                                }),
+                            }),
+                        }],
+                    }),
+                    method: "collect::<Vec<_>>".to_string(),
+                    args: vec![],
+                },
+            },
+        ],
+        expr: Some(Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Ident("__sifr_nonempty_pop_values".to_string())),
+            method: "remove".to_string(),
+            args: vec![RustExpr::Cast {
+                expr: Box::new(RustExpr::Literal(crate::RustLiteral::Int(0))),
+                ty: crate::RustType::Named("usize".to_string()),
+            }],
+        })),
     }
 }
 

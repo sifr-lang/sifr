@@ -107,6 +107,9 @@ fn async_python_context_emits_biased_cancellation_and_masked_exit() {
         "record_context_ignored_suppression(\n                    \"cancellation:CancellationError\""
     ));
     assert!(!rendered.contains("enter_cancel"));
+    assert!(rendered.contains("Some(Ok(Ok(())))"));
+    assert!(!rendered.contains("Some(Ok(Ok(None)))"));
+    assert!(!rendered.contains("__sifr_context_return"));
     syn::parse_file(&format!(
         "async fn generated() -> Result<(), PythonError> {{ {rendered} Ok(()) }}"
     ))
@@ -250,10 +253,8 @@ fn async_python_context_uses_the_enclosing_try_error_carrier() {
         class_type("Error"),
     ]);
     let carrier_rust_type = crate::render_type(&crate::sifr_type_to_rust_type(&carrier));
-    let return_expression_type = emitter.context_return_expression_type(&carrier_rust_type);
-    let expected_outcome_type = format!(
-        "Option<Result<Result<Option<{return_expression_type}>, bool>, {carrier_rust_type}>>"
-    );
+    let expected_outcome_type =
+        format!("Option<Result<Result<(), ::std::convert::Infallible>, {carrier_rust_type}>>");
     emitter.try_closure_error_type[0] = carrier_rust_type.clone();
     emitter
         .try_closure_error_type_info

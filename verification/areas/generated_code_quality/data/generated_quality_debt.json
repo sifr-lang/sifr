@@ -7,10 +7,7 @@
     "owner_items": [3, 4, 11],
     "entries": {
       "checked-demo-snapshots": {
-        "direct-index": {"count": 268, "signature_sha256": "00bbd9bff54d774bf959cd7d722732055bc210ff7312de62669fabff67bbdc35"},
-        "process-abort": {"count": 5, "signature_sha256": "84b9239f3656562f0522615534dc311948d76f128c0ea9e8ccf78976cc246a94"},
-        "process-exit": {"count": 8, "signature_sha256": "f99b0b8650e2d9b9dcd5d7d19b807ee62494a62ef63b887925100cbb9458fabd"},
-        "unreachable": {"count": 2122, "signature_sha256": "80461fb7813f33d6ce7a5bdf1107dfcf71bf9859ce1ae7a013e7697594662855"}
+        "direct-index": {"count": 273, "signature_sha256": "ffd0aee7d8fcddf1fc48f6e5b009992d11d0d9430cb4165ef6474d6901d578cf"}
       },
       "selection-8e91c9f5f5bb2334": {
         "unreachable": {"count": 20, "signature_sha256": "fc46cd006c8b082847a51e3145c2a2d2d20ee2bf6f0587c5fedb5e2bb3c2503a"}

@@ -327,7 +327,7 @@ macro_rules! stmt_expr_method_call {
                 }
             }
             let lowered_method = crate::RustExpr::MethodCall {
-                receiver: Box::new(lowered_object),
+                receiver: Box::new(lowered_object.clone()),
                 method: method.clone(),
                 args: lowered_args,
             };
@@ -336,6 +336,8 @@ macro_rules! stmt_expr_method_call {
                 method,
                 args,
                 $expr.ty(),
+                lowered_object,
+                $emitter.is_deque_data_field(object),
                 lowered_method,
             );
             if matches!(

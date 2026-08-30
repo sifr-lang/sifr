@@ -89,9 +89,12 @@ impl RustEmitter {
         } else {
             lowered_value
         };
-        let Some(lowered_body_stmt) =
-            Self::build_subscript_augassign_elem_stmt_for_ir(op, lowered_value, exact_integer)
-        else {
+        let Some(lowered_body_stmt) = Self::build_subscript_augassign_elem_stmt_for_ir(
+            op,
+            value,
+            lowered_value,
+            exact_integer,
+        ) else {
             return Ok(None);
         };
 

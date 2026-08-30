@@ -124,8 +124,7 @@ fn _file_write_bytes(handle: &String, data: &Vec<u8>) -> Result<(), IOError> {
 fn open_file(path: &String, mode: &String) -> Result<__SifrIoNativeFileHandle, IOError> {
     let __sifr_try_res: Result<Result<__SifrIoNativeFileHandle, IOError>, IOError> = (|| {
         let handle_id: String = _open_file(path, mode)?;
-        return Ok(Ok(__SifrIoNativeFileHandle::new(handle_id)));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(__SifrIoNativeFileHandle::new(handle_id)))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -267,13 +266,11 @@ fn fnmatch(name: &String, pattern: &String) -> bool {
 fn _match(name: &String, mut ni: SifrInt, pattern: &String, mut pi: SifrInt) -> bool {
     while (&pi < &SifrInt::from(pattern.chars().count())) {
         let pc: Option<String> = Some({
-            let Some(__indexed_char) = pattern
+            let __indexed_char_option = pattern
                 .chars()
                 .nth(::sifr_runtime::to_usize_proven(&(pi)))
-                .map(|c| c.to_string()) else {
-                unreachable!("compiler-verified string index should be in range");
-            };
-            __indexed_char
+                .map(|c| c.to_string());
+            __indexed_char_option.as_slice()[0_usize].clone()
         });
         if let Some(pc) = pc {
             if pc == "*" {
@@ -301,15 +298,11 @@ fn _match(name: &String, mut ni: SifrInt, pattern: &String, mut pi: SifrInt) -> 
                         return false;
                     }
                     let nc: Option<String> = Some({
-                        let Some(__indexed_char) = name
+                        let __indexed_char_option = name
                             .chars()
                             .nth(::sifr_runtime::to_usize_proven(&(ni)))
-                            .map(|c| c.to_string()) else {
-                            unreachable!(
-                                "compiler-verified string index should be in range"
-                            );
-                        };
-                        __indexed_char
+                            .map(|c| c.to_string());
+                        __indexed_char_option.as_slice()[0_usize].clone()
                     });
                     if let Some(nc) = nc {
                         if nc != pc {
@@ -387,12 +380,10 @@ fn translate(pattern: &String) -> String {
     let mut i: SifrInt = SifrInt::from_i64(0);
     while (&i < &SifrInt::from(__sifr_chars_pattern.len())) {
         let ch: Option<String> = Some({
-            let Some(__indexed_char) = __sifr_chars_pattern
+            let __indexed_char_option = __sifr_chars_pattern
                 .get(::sifr_runtime::to_usize_proven(&(i)))
-                .map(|c| c.to_string()) else {
-                unreachable!("compiler-verified string index should be in range");
-            };
-            __indexed_char
+                .map(|c| c.to_string());
+            __indexed_char_option.as_slice()[0_usize].clone()
         });
         if let Some(ch) = ch {
             if ch == "*" {
@@ -431,12 +422,10 @@ fn glob(directory: &String, pattern: &String) -> Vec<String> {
     let include_hidden: bool = (((&SifrInt::from(__sifr_chars_pattern.len())
         > &SifrInt::from_i64(0)))
         && ((({
-            let Some(__indexed_char) = __sifr_chars_pattern
+            let __indexed_char_option = __sifr_chars_pattern
                 .get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(0))))
-                .map(|c| c.to_string()) else {
-                unreachable!("compiler-verified string index should be in range");
-            };
-            __indexed_char
+                .map(|c| c.to_string());
+            __indexed_char_option.as_slice()[0_usize].clone()
         }) == ".")));
     let mut matches: Vec<String> = vec![];
     let __sifr_try_res: Result<(), IOError> = (|| {
@@ -448,14 +437,10 @@ fn glob(directory: &String, pattern: &String) -> Vec<String> {
             }
             if !include_hidden
                 && (({
-                    let Some(__indexed_char) = __sifr_chars_entry
+                    let __indexed_char_option = __sifr_chars_entry
                         .get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(0))))
-                        .map(|c| c.to_string()) else {
-                        unreachable!(
-                            "compiler-verified string index should be in range"
-                        );
-                    };
-                    __indexed_char
+                        .map(|c| c.to_string());
+                    __indexed_char_option.as_slice()[0_usize].clone()
                 }) == ".")
             {
                 continue;
@@ -910,8 +895,7 @@ impl __SifrStdlib_sifr_x2eencoding_x2eDecoder {
                 };
                 self._exhausted = true;
             }
-            return Ok(Ok(outcome));
-            unreachable!("sifr try/except return capture fell through");
+            Ok(Ok(outcome))
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -980,8 +964,7 @@ impl __SifrStdlib_sifr_x2eencoding_x2eEncoder {
             if r#final {
                 self._exhausted = true;
             }
-            return Ok(Ok(outcome));
-            unreachable!("sifr try/except return capture fell through");
+            Ok(Ok(outcome))
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -1015,8 +998,7 @@ fn _encoding_canonical_label(
         ParseError,
     > = (|| {
         let value: String = _encoding_canonical_label_impl(label)?;
-        return Ok(Ok(value));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(value))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -1040,8 +1022,7 @@ fn _encoding_decode_text(
         ParseError,
     > = (|| {
         let text: String = _encoding_decode_text_impl(data, encoding, errors)?;
-        return Ok(Ok(text));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(text))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -1069,8 +1050,7 @@ fn _encoding_decode_recoveries(
             encoding,
             errors,
         )?;
-        return Ok(Ok(recoveries));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(recoveries))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -1105,10 +1085,7 @@ fn _encoding_decode_outcome(
             encoding,
             errors,
         )?;
-        return Ok(
-            Ok(__SifrStdlib_sifr_x2eencoding_x2eDecodeOutcome::new(text, recoveries)),
-        );
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(__SifrStdlib_sifr_x2eencoding_x2eDecodeOutcome::new(text, recoveries)))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -1153,10 +1130,7 @@ fn _encoding_decode_incremental_outcome(
             errors,
             r#final,
         )?;
-        return Ok(
-            Ok(__SifrStdlib_sifr_x2eencoding_x2eDecodeOutcome::new(text, recoveries)),
-        );
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(__SifrStdlib_sifr_x2eencoding_x2eDecodeOutcome::new(text, recoveries)))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -1186,8 +1160,7 @@ fn _encoding_decode_incremental_pending(
             encoding,
             r#final,
         )?;
-        return Ok(Ok(next_pending));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(next_pending))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -1211,8 +1184,7 @@ fn _encoding_encode_bytes(
         ParseError,
     > = (|| {
         let data: Vec<u8> = _encoding_encode_bytes_impl(text, encoding, errors)?;
-        return Ok(Ok(data));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(data))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -1240,8 +1212,7 @@ fn _encoding_encode_recoveries(
             encoding,
             errors,
         )?;
-        return Ok(Ok(recoveries));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(recoveries))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -1276,10 +1247,7 @@ fn _encoding_encode_outcome(
             encoding,
             errors,
         )?;
-        return Ok(
-            Ok(__SifrStdlib_sifr_x2eencoding_x2eEncodeOutcome::new(data, recoveries)),
-        );
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(__SifrStdlib_sifr_x2eencoding_x2eEncodeOutcome::new(data, recoveries)))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -1428,10 +1396,7 @@ fn decode_outcome(
             __SifrStdlib_sifr_x2eencoding_x2eDecodeError,
         >,
         __SifrStdlib_sifr_x2eencoding_x2eDecodeError,
-    > = (|| {
-        return Ok(_encoding_decode_outcome(data, &enc.label.clone(), &handler_name));
-        unreachable!("sifr try/except return capture fell through");
-    })();
+    > = (|| { Ok(_encoding_decode_outcome(data, &enc.label.clone(), &handler_name)) })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
             return __sifr_ret_val;
@@ -1458,8 +1423,7 @@ fn decode(
             enc,
             errors,
         )?;
-        return Ok(Ok(outcome.get_text()));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(outcome.get_text()))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -1488,10 +1452,7 @@ fn encode_outcome(
             __SifrStdlib_sifr_x2eencoding_x2eEncodeError,
         >,
         __SifrStdlib_sifr_x2eencoding_x2eEncodeError,
-    > = (|| {
-        return Ok(_encoding_encode_outcome(text, &enc.label.clone(), &handler_name));
-        unreachable!("sifr try/except return capture fell through");
-    })();
+    > = (|| { Ok(_encoding_encode_outcome(text, &enc.label.clone(), &handler_name)) })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
             return __sifr_ret_val;
@@ -1518,8 +1479,7 @@ fn encode(
             enc,
             errors,
         )?;
-        return Ok(Ok(outcome.get_data()));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(outcome.get_data()))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {

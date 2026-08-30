@@ -1,6 +1,3 @@
-use super::narrowing_helpers::{
-    is_narrowable_pop_call_for_codegen, supports_nonempty_pop_narrowing_type_for_codegen,
-};
 use super::{
     HirExpr, RustEmitter, RustExpr, Type, methods, registry_box_iterator_expr,
     registry_defaultdict_alias_parts, registry_defaultdict_default_expr,
@@ -364,6 +361,8 @@ impl RustEmitter {
             method,
             args,
             method_return_ty,
+            object_expr,
+            is_deque_data_field,
             lowered.expr,
         );
         if matches!(
@@ -385,32 +384,19 @@ impl RustEmitter {
         method: &str,
         args: &[HirExpr],
         method_return_ty: &Type,
+        object_expr: crate::RustExpr,
+        is_deque_data_field: bool,
         lowered_expr: crate::RustExpr,
     ) -> crate::RustExpr {
-        if !supports_nonempty_pop_narrowing_type_for_codegen(object_ty) {
-            return lowered_expr;
-        }
-        if !is_narrowable_pop_call_for_codegen(method, args) {
-            return lowered_expr;
-        }
-        if crate::helpers::is_option_type(method_return_ty) {
-            return lowered_expr;
-        }
-        crate::RustExpr::Block {
-            stmts: vec![crate::RustStmt::LetElse {
-                pattern: "Some(__sifr_nonempty_pop_value)".to_string(),
-                value: lowered_expr,
-                else_body: vec![crate::RustStmt::Expr(crate::RustExpr::MacroCall {
-                    name: "unreachable".to_string(),
-                    args: vec![crate::RustExpr::Literal(crate::RustLiteral::Str(
-                        "compiler-verified non-empty pop should return Some".to_string(),
-                    ))],
-                })],
-            }],
-            expr: Some(Box::new(crate::RustExpr::Ident(
-                "__sifr_nonempty_pop_value".to_string(),
-            ))),
-        }
+        crate::stmt_support_emitter::unwrap_compiler_verified_nonempty_pop_result_for_ir(
+            object_ty,
+            method,
+            args,
+            method_return_ty,
+            object_expr,
+            is_deque_data_field,
+            lowered_expr,
+        )
     }
 
     pub(crate) fn try_lower_registry_set_method_call_expr(
@@ -738,6 +724,8 @@ impl RustEmitter {
                     method,
                     args,
                     method_return_ty,
+                    entry_expr,
+                    false,
                     lowered.expr,
                 ))
             }

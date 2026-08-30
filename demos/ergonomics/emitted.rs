@@ -230,12 +230,8 @@ fn demo_loop_else() {
     }
 }
 fn demo_power() {
-    println!(
-        "2 ** 10 = {}", SifrInt::from_i64(2).pow_known_valid(& SifrInt::from_i64(10))
-    );
-    println!(
-        "3 ** 3 = {}", SifrInt::from_i64(3).pow_known_valid(& SifrInt::from_i64(3))
-    );
+    println!("2 ** 10 = {}", SifrInt::from_i64(2).pow_known_valid(10_u32));
+    println!("3 ** 3 = {}", SifrInt::from_i64(3).pow_known_valid(3_u32));
 }
 fn divmod(a: SifrInt, b: SifrInt) -> (SifrInt, SifrInt) {
     if &b == &SifrInt::from_i64(0) {

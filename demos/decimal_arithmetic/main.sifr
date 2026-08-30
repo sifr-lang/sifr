@@ -4,15 +4,24 @@ def main():
 
     cash: decimal = Decimal("10.00")
     fee: decimal = Decimal("3.00")
-    print(cash // fee)
-    print(cash % fee)
+    try:
+        cash_floor: decimal = cash // fee
+        cash_remainder: decimal = cash % fee
+        negative_floor: bigdecimal = BigDecimal("-1.9") // BigDecimal("1")
+        negative_remainder: bigdecimal = BigDecimal("-1.9") % BigDecimal("1")
+        print(cash_floor)
+        print(cash_remainder)
+        print(negative_floor)
+        print(negative_remainder)
+    except DivisionError as error:
+        assert False, str(error)
+    except DecimalConversionError as error:
+        assert False, str(error)
     print(Decimal("2.5").round(0))
     print(Decimal("2.5").quantize(0))
 
     precise: bigdecimal = BigDecimal("1.234567890123456789012345678901")
     print(precise + BigDecimal("0"))
-    print(BigDecimal("-1.9") // BigDecimal("1"))
-    print(BigDecimal("-1.9") % BigDecimal("1"))
     print(BigDecimal("2.5").round(0))
     print(BigDecimal("2.5").quantize(0))
 

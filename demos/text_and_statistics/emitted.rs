@@ -154,12 +154,10 @@ mod __sifr_project_nominals {
         let mut i: SifrInt = SifrInt::from_i64(0);
         while (&i < &SifrInt::from(__sifr_chars_text.len())) {
             let ch_opt: Option<String> = Some({
-                let Some(__indexed_char) = __sifr_chars_text
+                let __indexed_char_option = __sifr_chars_text
                     .get(::sifr_runtime::to_usize_proven(&(i)))
-                    .map(|c| c.to_string()) else {
-                    unreachable!("compiler-verified string index should be in range");
-                };
-                __indexed_char
+                    .map(|c| c.to_string());
+                __indexed_char_option.as_slice()[0_usize].clone()
             });
             if let Some(ch_opt) = ch_opt {
                 let ch: String = ch_opt;
@@ -257,12 +255,10 @@ mod __sifr_project_nominals {
         let mut start: SifrInt = SifrInt::from_i64(0);
         while (&start < &SifrInt::from(__sifr_chars_line.len()))
             && (({
-                let Some(__indexed_char) = __sifr_chars_line
+                let __indexed_char_option = __sifr_chars_line
                     .get(::sifr_runtime::to_usize_proven(&(start)))
-                    .map(|c| c.to_string()) else {
-                    unreachable!("compiler-verified string index should be in range");
-                };
-                __indexed_char
+                    .map(|c| c.to_string());
+                __indexed_char_option.as_slice()[0_usize].clone()
             }) == " ")
         {
             start = &start + &SifrInt::from_i64(1);
@@ -417,12 +413,10 @@ mod __sifr_project_nominals {
         let mut i: SifrInt = SifrInt::from_i64(0);
         while (&i < &SifrInt::from(__sifr_chars_text.len())) {
             let ch_opt: Option<String> = Some({
-                let Some(__indexed_char) = __sifr_chars_text
+                let __indexed_char_option = __sifr_chars_text
                     .get(::sifr_runtime::to_usize_proven(&(i)))
-                    .map(|c| c.to_string()) else {
-                    unreachable!("compiler-verified string index should be in range");
-                };
-                __indexed_char
+                    .map(|c| c.to_string());
+                __indexed_char_option.as_slice()[0_usize].clone()
             });
             if let Some(ch_opt) = ch_opt {
                 let ch: String = ch_opt;
@@ -433,18 +427,14 @@ mod __sifr_project_nominals {
                         < &SifrInt::from(__sifr_chars_text.len()))
                     {
                         next_opt = Some({
-                            let Some(__indexed_char) = __sifr_chars_text
+                            let __indexed_char_option = __sifr_chars_text
                                 .get(
                                     ::sifr_runtime::to_usize_proven(
                                         &(&i + &SifrInt::from_i64(1)),
                                     ),
                                 )
-                                .map(|c| c.to_string()) else {
-                                unreachable!(
-                                    "compiler-verified string index should be in range"
-                                );
-                            };
-                            __indexed_char
+                                .map(|c| c.to_string());
+                            __indexed_char_option.as_slice()[0_usize].clone()
                         });
                     }
                     let mut next2_opt: Option<String> = None;
@@ -452,18 +442,14 @@ mod __sifr_project_nominals {
                         < &SifrInt::from(__sifr_chars_text.len()))
                     {
                         next2_opt = Some({
-                            let Some(__indexed_char) = __sifr_chars_text
+                            let __indexed_char_option = __sifr_chars_text
                                 .get(
                                     ::sifr_runtime::to_usize_proven(
                                         &(&i + &SifrInt::from_i64(2)),
                                     ),
                                 )
-                                .map(|c| c.to_string()) else {
-                                unreachable!(
-                                    "compiler-verified string index should be in range"
-                                );
-                            };
-                            __indexed_char
+                                .map(|c| c.to_string());
+                            __indexed_char_option.as_slice()[0_usize].clone()
                         });
                     }
                     if next_opt.is_some() && (next_opt == Some(" ".to_string())) {
@@ -1090,8 +1076,7 @@ fn _float_int(
                     )
                 }
             })?;
-        return Ok(Ok(converted));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(converted))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -1189,10 +1174,7 @@ fn median_grouped(
         let n_float: f64 = _float_int((n).clone())?;
         let cf_float: f64 = _float_int((cf).clone())?;
         let f_float: f64 = _float_int((f).clone())?;
-        return Ok(
-            Ok(lower + (interval * (((n_float / (2.0_f64)) - cf_float) / f_float))),
-        );
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(lower + (interval * (((n_float / (2.0_f64)) - cf_float) / f_float))))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -1233,12 +1215,10 @@ fn _expand_tabs_impl(text: &String, tabsize: SifrInt) -> String {
     let mut i: SifrInt = SifrInt::from_i64(0);
     while (&i < &SifrInt::from(__sifr_chars_text.len())) {
         let ch_opt: Option<String> = Some({
-            let Some(__indexed_char) = __sifr_chars_text
+            let __indexed_char_option = __sifr_chars_text
                 .get(::sifr_runtime::to_usize_proven(&(i)))
-                .map(|c| c.to_string()) else {
-                unreachable!("compiler-verified string index should be in range");
-            };
-            __indexed_char
+                .map(|c| c.to_string());
+            __indexed_char_option.as_slice()[0_usize].clone()
         });
         if let Some(ch_opt) = ch_opt {
             let ch: String = ch_opt;
@@ -1336,12 +1316,10 @@ fn _trim_line(line: &String) -> String {
     let mut start: SifrInt = SifrInt::from_i64(0);
     while (&start < &SifrInt::from(__sifr_chars_line.len()))
         && (({
-            let Some(__indexed_char) = __sifr_chars_line
+            let __indexed_char_option = __sifr_chars_line
                 .get(::sifr_runtime::to_usize_proven(&(start)))
-                .map(|c| c.to_string()) else {
-                unreachable!("compiler-verified string index should be in range");
-            };
-            __indexed_char
+                .map(|c| c.to_string());
+            __indexed_char_option.as_slice()[0_usize].clone()
         }) == " ")
     {
         start = &start + &SifrInt::from_i64(1);
@@ -1496,12 +1474,10 @@ fn _apply_sentence_endings_line(text: &String) -> String {
     let mut i: SifrInt = SifrInt::from_i64(0);
     while (&i < &SifrInt::from(__sifr_chars_text.len())) {
         let ch_opt: Option<String> = Some({
-            let Some(__indexed_char) = __sifr_chars_text
+            let __indexed_char_option = __sifr_chars_text
                 .get(::sifr_runtime::to_usize_proven(&(i)))
-                .map(|c| c.to_string()) else {
-                unreachable!("compiler-verified string index should be in range");
-            };
-            __indexed_char
+                .map(|c| c.to_string());
+            __indexed_char_option.as_slice()[0_usize].clone()
         });
         if let Some(ch_opt) = ch_opt {
             let ch: String = ch_opt;
@@ -1512,18 +1488,14 @@ fn _apply_sentence_endings_line(text: &String) -> String {
                     < &SifrInt::from(__sifr_chars_text.len()))
                 {
                     next_opt = Some({
-                        let Some(__indexed_char) = __sifr_chars_text
+                        let __indexed_char_option = __sifr_chars_text
                             .get(
                                 ::sifr_runtime::to_usize_proven(
                                     &(&i + &SifrInt::from_i64(1)),
                                 ),
                             )
-                            .map(|c| c.to_string()) else {
-                            unreachable!(
-                                "compiler-verified string index should be in range"
-                            );
-                        };
-                        __indexed_char
+                            .map(|c| c.to_string());
+                        __indexed_char_option.as_slice()[0_usize].clone()
                     });
                 }
                 let mut next2_opt: Option<String> = None;
@@ -1531,18 +1503,14 @@ fn _apply_sentence_endings_line(text: &String) -> String {
                     < &SifrInt::from(__sifr_chars_text.len()))
                 {
                     next2_opt = Some({
-                        let Some(__indexed_char) = __sifr_chars_text
+                        let __indexed_char_option = __sifr_chars_text
                             .get(
                                 ::sifr_runtime::to_usize_proven(
                                     &(&i + &SifrInt::from_i64(2)),
                                 ),
                             )
-                            .map(|c| c.to_string()) else {
-                            unreachable!(
-                                "compiler-verified string index should be in range"
-                            );
-                        };
-                        __indexed_char
+                            .map(|c| c.to_string());
+                        __indexed_char_option.as_slice()[0_usize].clone()
                     });
                 }
                 if next_opt.is_some() && (next_opt == Some(" ".to_string())) {

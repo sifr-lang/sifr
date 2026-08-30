@@ -9,6 +9,7 @@ pub(crate) enum IrValidationKind {
     InvalidVerbatimStatement,
     InvalidVerbatimExpression,
     InvalidIdentifier,
+    ForbiddenFailureDischarge,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -27,7 +28,8 @@ pub(crate) fn validate_items(items: &[RustItem]) -> Vec<IrValidationIssue> {
 
 fn validate_item(item: &RustItem, issues: &mut Vec<IrValidationIssue>) {
     match item {
-        RustItem::Use(_) | RustItem::UseAlias { .. } | RustItem::Attr(_) => {}
+        RustItem::Use(_) | RustItem::UseAlias { .. } => {}
+        RustItem::Attr(source) => validate_raw_failure_discharge(source, issues),
         RustItem::Struct { name, fields, .. } => {
             let mut seen = HashSet::new();
             for (field_name, field_ty) in fields {
@@ -106,6 +108,7 @@ fn validate_item(item: &RustItem, issues: &mut Vec<IrValidationIssue>) {
 fn validate_stmt(stmt: &RustStmt, issues: &mut Vec<IrValidationIssue>, in_function: bool) {
     match stmt {
         RustStmt::Verbatim(source) => {
+            validate_raw_failure_discharge(source, issues);
             let wrapper = format!("async fn __sifr_validate_verbatim() {{ {source} }}");
             if let Err(error) = syn::parse_file(&wrapper) {
                 issues.push(IrValidationIssue {
@@ -248,6 +251,7 @@ fn validate_expr(expr: &RustExpr, issues: &mut Vec<IrValidationIssue>, in_functi
     match expr {
         RustExpr::Literal(_) | RustExpr::Path(_) => {}
         RustExpr::Verbatim(source) => {
+            validate_raw_failure_discharge(source, issues);
             if let Err(error) = syn::parse_str::<syn::Expr>(source) {
                 issues.push(IrValidationIssue {
                     kind: IrValidationKind::InvalidVerbatimExpression,
@@ -268,22 +272,61 @@ fn validate_expr(expr: &RustExpr, issues: &mut Vec<IrValidationIssue>, in_functi
                 });
             }
         }
-        RustExpr::MethodCall { receiver, args, .. } => {
+        RustExpr::MethodCall {
+            receiver,
+            method,
+            args,
+        } => {
+            if matches!(method.as_str(), "unwrap" | "expect") {
+                issues.push(IrValidationIssue {
+                    kind: IrValidationKind::ForbiddenFailureDischarge,
+                    message: format!(
+                        "generated Rust must not discharge a fallible value with `.{method}()`"
+                    ),
+                });
+            }
             validate_expr(receiver, issues, in_function);
             for arg in args {
                 validate_expr(arg, issues, in_function);
             }
         }
         RustExpr::FnCall { func, args } => {
+            if let RustExpr::Path(path) = func.as_ref() {
+                let joined = path.join("::");
+                if matches!(
+                    joined.as_str(),
+                    "std::process::abort"
+                        | "::std::process::abort"
+                        | "std::process::exit"
+                        | "::std::process::exit"
+                        | "process::abort"
+                        | "process::exit"
+                ) {
+                    issues.push(IrValidationIssue {
+                        kind: IrValidationKind::ForbiddenFailureDischarge,
+                        message: format!(
+                            "generated Rust must not terminate the process with `{joined}`"
+                        ),
+                    });
+                }
+            }
             validate_expr(func, issues, in_function);
             for arg in args {
                 validate_expr(arg, issues, in_function);
             }
         }
-        RustExpr::MacroCall { args, .. }
-        | RustExpr::Tuple(args)
-        | RustExpr::Array(args)
-        | RustExpr::Vec(args) => {
+        RustExpr::MacroCall { name, args } => {
+            if matches!(name.as_str(), "panic" | "unreachable") {
+                issues.push(IrValidationIssue {
+                    kind: IrValidationKind::ForbiddenFailureDischarge,
+                    message: format!("generated Rust must not contain `{name}!`"),
+                });
+            }
+            for arg in args {
+                validate_expr(arg, issues, in_function);
+            }
+        }
+        RustExpr::Tuple(args) | RustExpr::Array(args) | RustExpr::Vec(args) => {
             for arg in args {
                 validate_expr(arg, issues, in_function);
             }
@@ -375,6 +418,29 @@ fn validate_expr(expr: &RustExpr, issues: &mut Vec<IrValidationIssue>, in_functi
         RustExpr::Range { start, end } => {
             validate_expr(start, issues, in_function);
             validate_expr(end, issues, in_function);
+        }
+    }
+}
+
+fn validate_raw_failure_discharge(source: &str, issues: &mut Vec<IrValidationIssue>) {
+    const FORBIDDEN: &[(&str, &str)] = &[
+        ("panic!", "panic macro"),
+        ("unreachable!", "unreachable macro"),
+        (".unwrap(", "unwrap call"),
+        (".expect(", "expect call"),
+        ("std::process::abort(", "process abort"),
+        ("::std::process::abort(", "process abort"),
+        ("std::process::exit(", "process exit"),
+        ("::std::process::exit(", "process exit"),
+    ];
+    for (needle, description) in FORBIDDEN {
+        if source.contains(needle) {
+            issues.push(IrValidationIssue {
+                kind: IrValidationKind::ForbiddenFailureDischarge,
+                message: format!(
+                    "compiler-owned raw Rust contains forbidden {description}: `{needle}`"
+                ),
+            });
         }
     }
 }
@@ -569,5 +635,40 @@ mod tests {
                 .iter()
                 .any(|issue| issue.kind == IrValidationKind::InvalidVerbatimExpression)
         );
+    }
+
+    #[test]
+    fn rejects_structured_failure_discharge_before_rendering() {
+        let items = vec![RustItem::Fn {
+            name: "broken".to_string(),
+            visibility: Visibility::Private,
+            type_params: vec![],
+            params: vec![],
+            ret: None,
+            body: vec![RustStmt::Expr(RustExpr::MacroCall {
+                name: "unreachable".to_string(),
+                args: vec![],
+            })],
+            is_async: false,
+        }];
+
+        let issues = validate_items(&items);
+        assert!(issues.iter().any(|issue| {
+            issue.kind == IrValidationKind::ForbiddenFailureDischarge
+                && issue.message.contains("unreachable!")
+        }));
+    }
+
+    #[test]
+    fn rejects_raw_failure_discharge_before_rendering() {
+        let items = vec![RustItem::Attr(
+            "fn broken(value: Option<i64>) -> i64 { value.unwrap() }".to_string(),
+        )];
+
+        let issues = validate_items(&items);
+        assert!(issues.iter().any(|issue| {
+            issue.kind == IrValidationKind::ForbiddenFailureDischarge
+                && issue.message.contains("unwrap call")
+        }));
     }
 }

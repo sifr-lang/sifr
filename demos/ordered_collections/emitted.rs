@@ -414,10 +414,12 @@ mod __sifr_project_nominals {
                 return None;
             }
             Some({
-                let Some(__sifr_nonempty_pop_value) = self._data.pop_back() else {
-                    unreachable!("compiler-verified non-empty pop should return Some");
-                };
-                __sifr_nonempty_pop_value
+                let __sifr_nonempty_pop_index = self._data.len() - (1_usize);
+                let mut __sifr_nonempty_pop_values = self
+                    ._data
+                    .drain(__sifr_nonempty_pop_index..__sifr_nonempty_pop_index + (1_usize))
+                    .collect::<Vec<_>>();
+                __sifr_nonempty_pop_values.remove(0_usize)
             })
         }
     }
@@ -427,10 +429,12 @@ mod __sifr_project_nominals {
                 return None;
             }
             Some({
-                let Some(__sifr_nonempty_pop_value) = self._data.pop_front() else {
-                    unreachable!("compiler-verified non-empty pop should return Some");
-                };
-                __sifr_nonempty_pop_value
+                let __sifr_nonempty_pop_index = 0_usize;
+                let mut __sifr_nonempty_pop_values = self
+                    ._data
+                    .drain(__sifr_nonempty_pop_index..__sifr_nonempty_pop_index + (1_usize))
+                    .collect::<Vec<_>>();
+                __sifr_nonempty_pop_values.remove(0_usize)
             })
         }
     }
@@ -868,12 +872,7 @@ fn heappop<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
             .normalize_index_or_len(__sifr_index_list.len());
         __sifr_index_list.get(__sifr_index_norm).cloned()
     };
-    {
-        let Some(__sifr_nonempty_pop_value) = heap.pop() else {
-            unreachable!("compiler-verified non-empty pop should return Some");
-        };
-        __sifr_nonempty_pop_value
-    };
+    heap.remove(heap.len() - (1_usize));
     let n2: SifrInt = SifrInt::from(heap.len());
     if &n2 > &SifrInt::from_i64(0) {
         if let Some(last) = last {

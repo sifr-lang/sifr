@@ -1,6 +1,107 @@
 use super::{HirExpr, HirStmt, RustEmitter, RustStmt, Type};
 use crate::hir_analysis::queries;
 impl RustEmitter {
+    pub(crate) fn try_lower_isinstance_union_chain_for_ir(
+        &mut self,
+        condition: &HirExpr,
+        then_body: &[HirStmt],
+        elif_clauses: &[(HirExpr, Vec<HirStmt>)],
+        else_body: Option<&[HirStmt]>,
+    ) -> Result<Option<RustStmt>, crate::CodegenError> {
+        let Some((var_name, first_variant, first_enum_name, _)) =
+            crate::helpers::detect_isinstance_union(condition)
+        else {
+            return Ok(None);
+        };
+        let mut branch_specs: Vec<(String, &[HirStmt])> = vec![(first_variant, then_body)];
+        let mut needed_variants = vec![branch_specs[0].0.clone()];
+        for (elif_cond, elif_body) in elif_clauses {
+            let Some((elif_var, elif_variant, _, _)) =
+                crate::helpers::detect_isinstance_union(elif_cond)
+            else {
+                return Ok(None);
+            };
+            if elif_var != var_name || needed_variants.contains(&elif_variant) {
+                return Ok(None);
+            }
+            needed_variants.push(elif_variant.clone());
+            branch_specs.push((elif_variant, elif_body.as_slice()));
+        }
+
+        let enum_name = self.resolve_union_enum_name(&first_enum_name, &needed_variants);
+        let all_variants = self
+            .union_enums
+            .get(&enum_name)
+            .ok_or_else(|| {
+                crate::CodegenError::new(format!(
+                    "internal codegen invariant violated: union narrowing has no definition for {enum_name}"
+                ))
+            })?
+            .iter()
+            .map(Type::union_variant_name)
+            .collect::<Vec<_>>();
+        let mut arms = Vec::with_capacity(branch_specs.len() + usize::from(else_body.is_some()));
+        for (variant_name, body) in branch_specs {
+            let mutated = queries::collect_mutated_vars(body, None);
+            let binding = if mutated.contains(&var_name) {
+                format!("mut {var_name}")
+            } else {
+                var_name.clone()
+            };
+            let Some(lowered_body) = self.try_lower_if_branch_for_ir(body)? else {
+                return Ok(None);
+            };
+            arms.push(crate::RustMatchArm {
+                pattern: format!("{enum_name}::{variant_name}({binding})"),
+                bindings: vec![var_name.clone()],
+                guard: None,
+                body: lowered_body,
+            });
+        }
+
+        let remaining_variants = all_variants
+            .iter()
+            .filter(|variant| !needed_variants.contains(variant))
+            .cloned()
+            .collect::<Vec<_>>();
+        if let Some(else_body) = else_body {
+            if !remaining_variants.is_empty() {
+                let else_mutated = queries::collect_mutated_vars(else_body, None);
+                let else_binding = if else_mutated.contains(&var_name) {
+                    format!("mut {var_name}")
+                } else {
+                    var_name.clone()
+                };
+                let Some(lowered_else_body) = self.try_lower_if_branch_for_ir(else_body)? else {
+                    return Ok(None);
+                };
+                let pattern = if remaining_variants.len() == 1 {
+                    format!("{enum_name}::{}({else_binding})", remaining_variants[0])
+                } else {
+                    else_binding
+                };
+                arms.push(crate::RustMatchArm {
+                    pattern,
+                    bindings: vec![var_name.clone()],
+                    guard: None,
+                    body: lowered_else_body,
+                });
+            }
+        } else if !remaining_variants.is_empty() {
+            arms.push(crate::RustMatchArm {
+                pattern: "_".to_string(),
+                bindings: vec![],
+                guard: None,
+                body: vec![],
+            });
+        }
+
+        Ok(Some(RustStmt::Match {
+            expr: crate::RustExpr::Ident(var_name),
+            arms,
+        }))
+    }
+
     pub(crate) fn try_lower_borrowed_name_compare_condition_for_ir(
         &self,
         expr: &HirExpr,
@@ -315,101 +416,17 @@ impl RustEmitter {
         elif_clauses: &[(HirExpr, Vec<HirStmt>)],
         else_body: Option<&[HirStmt]>,
     ) -> Result<Option<RustStmt>, crate::CodegenError> {
-        if let Some((var_name, first_variant, first_enum_name, _)) =
-            crate::helpers::detect_isinstance_union(condition)
-        {
-            let mut branch_specs: Vec<(String, &[HirStmt])> = vec![(first_variant, then_body)];
-            let mut needed_variants = vec![branch_specs[0].0.clone()];
-            let mut all_isinstance = true;
-            for (elif_cond, elif_body) in elif_clauses {
-                let Some((elif_var, elif_variant, _, _)) =
-                    crate::helpers::detect_isinstance_union(elif_cond)
-                else {
-                    all_isinstance = false;
-                    break;
-                };
-                if elif_var != var_name {
-                    all_isinstance = false;
-                    break;
-                }
-                needed_variants.push(elif_variant.clone());
-                branch_specs.push((elif_variant, elif_body.as_slice()));
-            }
-            if all_isinstance {
-                let speculative_string_char_cache_vars = self.string_char_cache_vars.clone();
-                let lowered_union = (|| -> Result<Option<RustStmt>, crate::CodegenError> {
-                    let enum_name =
-                        self.resolve_union_enum_name(&first_enum_name, &needed_variants);
-                    let mut nested_else = if let Some(else_body) = else_body {
-                        let remaining_variants = self
-                            .union_enums
-                            .get(&enum_name)
-                            .map(|members| {
-                                members
-                                    .iter()
-                                    .map(Type::union_variant_name)
-                                    .filter(|variant| !needed_variants.contains(variant))
-                                    .collect::<Vec<_>>()
-                            })
-                            .unwrap_or_default();
-                        let Some(lowered_else_body) = self.try_lower_if_branch_for_ir(else_body)?
-                        else {
-                            return Ok(None);
-                        };
-                        if remaining_variants.len() == 1 {
-                            let else_mutated = queries::collect_mutated_vars(else_body, None);
-                            let else_binding = if else_mutated.contains(&var_name) {
-                                format!("mut {var_name}")
-                            } else {
-                                var_name.clone()
-                            };
-                            Some(vec![RustStmt::IfLet {
-                                pattern: format!(
-                                    "{enum_name}::{}({else_binding})",
-                                    remaining_variants[0]
-                                ),
-                                expr: crate::RustExpr::Ident(var_name.clone()),
-                                then_body: lowered_else_body,
-                                else_body: Some(vec![RustStmt::Expr(
-                                    crate::RustExpr::FormatMacro {
-                                        name: "unreachable".to_string(),
-                                        format_str: "sifr union narrowing fell through exhaustive branch chain"
-                                            .to_string(),
-                                        args: vec![],
-                                    },
-                                )]),
-                            }])
-                        } else {
-                            Some(lowered_else_body)
-                        }
-                    } else {
-                        None
-                    };
-
-                    for (variant_name, body) in branch_specs.iter().rev() {
-                        let mutated = queries::collect_mutated_vars(body, None);
-                        let binding = if mutated.contains(&var_name) {
-                            format!("mut {var_name}")
-                        } else {
-                            var_name.clone()
-                        };
-                        let Some(lowered_body) = self.try_lower_if_branch_for_ir(body)? else {
-                            return Ok(None);
-                        };
-                        nested_else = Some(vec![RustStmt::IfLet {
-                            pattern: format!("{enum_name}::{variant_name}({binding})"),
-                            expr: crate::RustExpr::Ident(var_name.clone()),
-                            then_body: lowered_body,
-                            else_body: nested_else,
-                        }]);
-                    }
-
-                    Ok(nested_else.and_then(|stmts| stmts.into_iter().next()))
-                })();
-                self.string_char_cache_vars = speculative_string_char_cache_vars;
-                return lowered_union;
-            }
+        let speculative_string_char_cache_vars = self.string_char_cache_vars.clone();
+        if let Some(lowered_union) = self.try_lower_isinstance_union_chain_for_ir(
+            condition,
+            then_body,
+            elif_clauses,
+            else_body,
+        )? {
+            self.string_char_cache_vars = speculative_string_char_cache_vars;
+            return Ok(Some(lowered_union));
         }
+        self.string_char_cache_vars = speculative_string_char_cache_vars;
 
         if elif_clauses.is_empty()
             && else_body.is_none()
@@ -700,6 +717,7 @@ mod tests {
     #[test]
     fn declined_isinstance_union_restores_successful_sibling_cache_state() {
         let mut emitter = RustEmitter::new();
+        emitter.register_union_type(&Type::Union(vec![Type::Int, Type::Str]));
         emitter
             .string_char_cache_required_names
             .insert("text".to_string());

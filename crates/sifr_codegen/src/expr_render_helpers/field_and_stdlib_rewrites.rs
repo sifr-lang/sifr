@@ -186,20 +186,30 @@ impl RustEmitter {
     pub(crate) fn lower_proven_index_option_expr_for_ir(
         option_expr: crate::RustExpr,
         binding_name: &str,
-        message: &str,
+        _message: &str,
     ) -> crate::RustExpr {
         crate::RustExpr::Block {
-            stmts: vec![crate::RustStmt::LetElse {
-                pattern: format!("Some({binding_name})"),
+            stmts: vec![crate::RustStmt::Let {
+                mutable: false,
+                name: format!("{binding_name}_option"),
+                ty: None,
                 value: option_expr,
-                else_body: vec![crate::RustStmt::Expr(crate::RustExpr::MacroCall {
-                    name: "unreachable".to_string(),
-                    args: vec![crate::RustExpr::Literal(crate::RustLiteral::Str(
-                        message.to_string(),
-                    ))],
-                })],
             }],
-            expr: Some(Box::new(crate::RustExpr::Ident(binding_name.to_string()))),
+            expr: Some(Box::new(crate::RustExpr::Clone(Box::new(
+                crate::RustExpr::Index {
+                    expr: Box::new(crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::Ident(format!(
+                            "{binding_name}_option"
+                        ))),
+                        method: "as_slice".to_string(),
+                        args: vec![],
+                    }),
+                    index: Box::new(crate::RustExpr::Cast {
+                        expr: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Int(0))),
+                        ty: crate::RustType::Named("usize".to_string()),
+                    }),
+                },
+            )))),
         }
     }
 

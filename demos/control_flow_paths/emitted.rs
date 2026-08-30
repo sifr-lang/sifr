@@ -46,8 +46,7 @@ fn safe(seed: SifrInt) -> SifrInt {
         if &value > &SifrInt::from_i64(3) {
             return Ok(value);
         }
-        return Err(ValueError::new("too small".to_string()));
-        unreachable!("sifr try/except return capture fell through");
+        Err(ValueError::new("too small".to_string()))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {

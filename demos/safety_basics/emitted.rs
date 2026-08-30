@@ -225,6 +225,11 @@ fn random_int(min: SifrInt, max: SifrInt) -> SifrInt {
 fn random_float() -> f64 {
     ::sifr_stdlib::random::random_float()
 }
+fn random_word_to_unit_float(value: SifrInt) -> f64 {
+    ::sifr_stdlib::random::random_word_to_unit_float(
+        ::sifr_runtime::interop::SifrIntBridge::from(value),
+    )
+}
 fn random_seed() -> SifrInt {
     ::sifr_stdlib::random::random_seed().into_sifr_int()
 }

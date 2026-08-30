@@ -487,7 +487,7 @@ impl RustEmitter {
         let saved_python_context_counter = self.python_context_counter;
         let saved_python_context_envelope_depth = self.python_context_envelope_depth;
         let saved_try_closure_depth = std::mem::replace(&mut self.try_closure_depth, 0);
-        let saved_try_closure_option_wrap = std::mem::take(&mut self.try_closure_option_wrap);
+        let saved_try_closure_return_wrap = std::mem::take(&mut self.try_closure_return_wrap);
         let saved_try_closure_error_type = std::mem::take(&mut self.try_closure_error_type);
         let saved_try_closure_error_type_info =
             std::mem::take(&mut self.try_closure_error_type_info);
@@ -572,7 +572,7 @@ impl RustEmitter {
         self.python_context_counter = saved_python_context_counter;
         self.python_context_envelope_depth = saved_python_context_envelope_depth;
         self.try_closure_depth = saved_try_closure_depth;
-        self.try_closure_option_wrap = saved_try_closure_option_wrap;
+        self.try_closure_return_wrap = saved_try_closure_return_wrap;
         self.try_closure_error_type = saved_try_closure_error_type;
         self.try_closure_error_type_info = saved_try_closure_error_type_info;
         self.string_char_cache_vars = saved_string_char_cache_vars;

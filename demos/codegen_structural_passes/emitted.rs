@@ -611,44 +611,34 @@ mod __sifr_project_nominals {
             return Err(ValueError::new("invalid datetime string".to_string()));
         }
         if ((((({
-            let Some(__indexed_char) = __sifr_chars_value
+            let __indexed_char_option = __sifr_chars_value
                 .get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(4))))
-                .map(|c| c.to_string()) else {
-                unreachable!("compiler-verified string index should be in range");
-            };
-            __indexed_char
+                .map(|c| c.to_string());
+            __indexed_char_option.as_slice()[0_usize].clone()
         }) != "-")
             || (({
-                let Some(__indexed_char) = __sifr_chars_value
+                let __indexed_char_option = __sifr_chars_value
                     .get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(7))))
-                    .map(|c| c.to_string()) else {
-                    unreachable!("compiler-verified string index should be in range");
-                };
-                __indexed_char
+                    .map(|c| c.to_string());
+                __indexed_char_option.as_slice()[0_usize].clone()
             }) != "-"))
             || (({
-                let Some(__indexed_char) = __sifr_chars_value
+                let __indexed_char_option = __sifr_chars_value
                     .get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(10))))
-                    .map(|c| c.to_string()) else {
-                    unreachable!("compiler-verified string index should be in range");
-                };
-                __indexed_char
+                    .map(|c| c.to_string());
+                __indexed_char_option.as_slice()[0_usize].clone()
             }) != "T"))
             || (({
-                let Some(__indexed_char) = __sifr_chars_value
+                let __indexed_char_option = __sifr_chars_value
                     .get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(13))))
-                    .map(|c| c.to_string()) else {
-                    unreachable!("compiler-verified string index should be in range");
-                };
-                __indexed_char
+                    .map(|c| c.to_string());
+                __indexed_char_option.as_slice()[0_usize].clone()
             }) != ":"))
             || (({
-                let Some(__indexed_char) = __sifr_chars_value
+                let __indexed_char_option = __sifr_chars_value
                     .get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(16))))
-                    .map(|c| c.to_string()) else {
-                    unreachable!("compiler-verified string index should be in range");
-                };
-                __indexed_char
+                    .map(|c| c.to_string());
+                __indexed_char_option.as_slice()[0_usize].clone()
             }) != ":")
         {
             return Err(ValueError::new("invalid datetime string".to_string()));
@@ -699,7 +689,7 @@ mod __sifr_project_nominals {
                 .map_err(|e| ParseError {
                     message: e.to_string(),
                 })?;
-            return Ok(
+            Ok(
                 Ok((
                     year.clone(),
                     month.clone(),
@@ -708,8 +698,7 @@ mod __sifr_project_nominals {
                     minute.clone(),
                     second.clone(),
                 )),
-            );
-            unreachable!("sifr try/except return capture fell through");
+            )
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -766,8 +755,7 @@ mod __sifr_project_nominals {
             if sign_value == "-" {
                 offset = -&offset;
             }
-            return Ok(Ok(offset));
-            unreachable!("sifr try/except return capture fell through");
+            Ok(Ok(offset))
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -948,7 +936,7 @@ mod __sifr_project_nominals {
                     ),
                 );
             }
-            return Ok(
+            Ok(
                 Ok(
                     __SifrStdlib_sifr_x2edatetime_x2edatetime::new(
                         (year).clone(),
@@ -961,8 +949,7 @@ mod __sifr_project_nominals {
                         None,
                     ),
                 ),
-            );
-            unreachable!("sifr try/except return capture fell through");
+            )
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -1047,7 +1034,7 @@ mod __sifr_project_nominals {
                 .map_err(|__e| __SifrUnion_8_x3asequence5_x3aunion1_x3a323_x3a5_x3aclass10_x3aValueError1_x3a031_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a0::__SifrUnionVariant_5_x3aclass10_x3aValueError1_x3a0(
                     __e,
                 ))?;
-            return Ok(
+            Ok(
                 Ok(
                     __SifrStdlib_sifr_x2edatetime_x2edatetime::new(
                         result.year.clone(),
@@ -1060,8 +1047,7 @@ mod __sifr_project_nominals {
                         result._tz_offset.clone(),
                     ),
                 ),
-            );
-            unreachable!("sifr try/except return capture fell through");
+            )
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {
@@ -1389,44 +1375,34 @@ fn _parse_datetime_iso(
         return Err(ValueError::new("invalid datetime string".to_string()));
     }
     if ((((({
-        let Some(__indexed_char) = __sifr_chars_value
+        let __indexed_char_option = __sifr_chars_value
             .get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(4))))
-            .map(|c| c.to_string()) else {
-            unreachable!("compiler-verified string index should be in range");
-        };
-        __indexed_char
+            .map(|c| c.to_string());
+        __indexed_char_option.as_slice()[0_usize].clone()
     }) != "-")
         || (({
-            let Some(__indexed_char) = __sifr_chars_value
+            let __indexed_char_option = __sifr_chars_value
                 .get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(7))))
-                .map(|c| c.to_string()) else {
-                unreachable!("compiler-verified string index should be in range");
-            };
-            __indexed_char
+                .map(|c| c.to_string());
+            __indexed_char_option.as_slice()[0_usize].clone()
         }) != "-"))
         || (({
-            let Some(__indexed_char) = __sifr_chars_value
+            let __indexed_char_option = __sifr_chars_value
                 .get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(10))))
-                .map(|c| c.to_string()) else {
-                unreachable!("compiler-verified string index should be in range");
-            };
-            __indexed_char
+                .map(|c| c.to_string());
+            __indexed_char_option.as_slice()[0_usize].clone()
         }) != "T"))
         || (({
-            let Some(__indexed_char) = __sifr_chars_value
+            let __indexed_char_option = __sifr_chars_value
                 .get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(13))))
-                .map(|c| c.to_string()) else {
-                unreachable!("compiler-verified string index should be in range");
-            };
-            __indexed_char
+                .map(|c| c.to_string());
+            __indexed_char_option.as_slice()[0_usize].clone()
         }) != ":"))
         || (({
-            let Some(__indexed_char) = __sifr_chars_value
+            let __indexed_char_option = __sifr_chars_value
                 .get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(16))))
-                .map(|c| c.to_string()) else {
-                unreachable!("compiler-verified string index should be in range");
-            };
-            __indexed_char
+                .map(|c| c.to_string());
+            __indexed_char_option.as_slice()[0_usize].clone()
         }) != ":")
     {
         return Err(ValueError::new("invalid datetime string".to_string()));
@@ -1477,7 +1453,7 @@ fn _parse_datetime_iso(
             .map_err(|e| ParseError {
                 message: e.to_string(),
             })?;
-        return Ok(
+        Ok(
             Ok((
                 year.clone(),
                 month.clone(),
@@ -1486,8 +1462,7 @@ fn _parse_datetime_iso(
                 minute.clone(),
                 second.clone(),
             )),
-        );
-        unreachable!("sifr try/except return capture fell through");
+        )
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -1544,8 +1519,7 @@ fn _timezone_offset_from_text(text: &String) -> Result<SifrInt, ValueError> {
         if sign_value == "-" {
             offset = -&offset;
         }
-        return Ok(Ok(offset));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(offset))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -1726,7 +1700,7 @@ fn _from_timestamp_with_tz(
                 ),
             );
         }
-        return Ok(
+        Ok(
             Ok(
                 __SifrStdlib_sifr_x2edatetime_x2edatetime::new(
                     (year).clone(),
@@ -1739,8 +1713,7 @@ fn _from_timestamp_with_tz(
                     None,
                 ),
             ),
-        );
-        unreachable!("sifr try/except return capture fell through");
+        )
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -1825,7 +1798,7 @@ fn _from_timestamp_microseconds_with_tz(
             .map_err(|__e| __SifrUnion_8_x3asequence5_x3aunion1_x3a323_x3a5_x3aclass10_x3aValueError1_x3a031_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a0::__SifrUnionVariant_5_x3aclass10_x3aValueError1_x3a0(
                 __e,
             ))?;
-        return Ok(
+        Ok(
             Ok(
                 __SifrStdlib_sifr_x2edatetime_x2edatetime::new(
                     result.year.clone(),
@@ -1838,8 +1811,7 @@ fn _from_timestamp_microseconds_with_tz(
                     result._tz_offset.clone(),
                 ),
             ),
-        );
-        unreachable!("sifr try/except return capture fell through");
+        )
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -1879,8 +1851,7 @@ fn now(
             current_epoch,
             tz,
         )?;
-        return Ok(current);
-        unreachable!("sifr try/except return capture fell through");
+        Ok(current)
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -1932,7 +1903,7 @@ fn now(
                     let parsed_offset: SifrInt = _timezone_offset_from_text(
                         &format!("{}", tz),
                     )?;
-                    return Ok(
+                    Ok(
                         __SifrStdlib_sifr_x2edatetime_x2edatetime::new(
                             (yr).clone(),
                             (mo).clone(),
@@ -1943,8 +1914,7 @@ fn now(
                             SifrInt::from_i64(0),
                             Some(parsed_offset),
                         ),
-                    );
-                    unreachable!("sifr try/except return capture fell through");
+                    )
                 })();
                 match __sifr_try_res {
                     Ok(__sifr_ret_val) => {

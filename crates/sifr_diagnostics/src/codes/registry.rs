@@ -97,8 +97,6 @@ impl DiagnosticCode {
     pub const INT_EVAL_BUDGET_EXCEEDED: Self = Self::new("SIFR-INT-0004", Severity::Error);
     pub const INT_EXACT_DIVISION_REQUIRES_HANDLING: Self =
         Self::new("SIFR-INT-0005", Severity::Error);
-    pub const INT_EXACT_TO_FLOAT_REQUIRES_HANDLING: Self =
-        Self::new("SIFR-INT-0006", Severity::Error);
     pub const INT_BOOL_INTEGER_COMPARISON: Self = Self::new("SIFR-INT-0007", Severity::Error);
     pub const INT_JSON_BOUNDARY_POLICY: Self = Self::new("SIFR-INT-0009", Severity::Error);
 
@@ -746,7 +744,6 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::INT_RESERVED_WIDTH_NAME,
     DiagnosticCode::INT_EVAL_BUDGET_EXCEEDED,
     DiagnosticCode::INT_EXACT_DIVISION_REQUIRES_HANDLING,
-    DiagnosticCode::INT_EXACT_TO_FLOAT_REQUIRES_HANDLING,
     DiagnosticCode::INT_BOOL_INTEGER_COMPARISON,
     DiagnosticCode::INT_JSON_BOUNDARY_POLICY,
     DiagnosticCode::IO_TEXT_OPEN_REQUIRES_ENCODING,

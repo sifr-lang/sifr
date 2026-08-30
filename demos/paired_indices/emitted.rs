@@ -9,17 +9,13 @@ fn edge_pairs_text(text: &String) -> String {
     while &left < &right {
         out.push('(');
         out.push_str(({
-    let Some(__indexed_char) = __sifr_chars_text.get(::sifr_runtime::to_usize_proven(&(left))).map(|c| c.to_string()) else {
-        unreachable!("compiler-verified string index should be in range");
-    };
-    __indexed_char
+    let __indexed_char_option = __sifr_chars_text.get(::sifr_runtime::to_usize_proven(&(left))).map(|c| c.to_string());
+    __indexed_char_option.as_slice()[0_usize].clone()
 }).as_str());
         out.push(',');
         out.push_str(({
-    let Some(__indexed_char) = __sifr_chars_text.get(::sifr_runtime::to_usize_proven(&(right))).map(|c| c.to_string()) else {
-        unreachable!("compiler-verified string index should be in range");
-    };
-    __indexed_char
+    let __indexed_char_option = __sifr_chars_text.get(::sifr_runtime::to_usize_proven(&(right))).map(|c| c.to_string());
+    __indexed_char_option.as_slice()[0_usize].clone()
 }).as_str());
         out.push(')');
         left = &left + &SifrInt::from_i64(1);

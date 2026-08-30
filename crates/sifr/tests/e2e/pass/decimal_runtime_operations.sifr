@@ -5,11 +5,19 @@ def main():
     d: decimal = Decimal("-7.5")
     bd: bigdecimal = BigDecimal("-7.5")
 
-    assert str(d // Decimal("2")) == '-4'
-    assert str(d % Decimal("2")) == '0.5'
-
-    assert str(bd // BigDecimal("2")) == '-4.000000000000000000000000000'
-    assert str(bd % BigDecimal("2")) == '0.5000000000000000000000000000'
+    try:
+        d_floor: decimal = d // Decimal("2")
+        d_remainder: decimal = d % Decimal("2")
+        bd_floor: bigdecimal = bd // BigDecimal("2")
+        bd_remainder: bigdecimal = bd % BigDecimal("2")
+        assert str(d_floor) == '-4'
+        assert str(d_remainder) == '0.5'
+        assert str(bd_floor) == '-4.000000000000000000000000000'
+        assert str(bd_remainder) == '0.5000000000000000000000000000'
+    except DivisionError as error:
+        assert False, str(error)
+    except DecimalConversionError as error:
+        assert False, str(error)
 
     assert str(Decimal("4").sqrt()) == 'Ok(2)'
     assert str(BigDecimal("4").sqrt()).startswith('Ok(')
@@ -41,18 +49,21 @@ def main():
     assert dumps(Decimal("1.2300")) == '"1.2300"'
     assert dumps(BigDecimal("1.2300")) == '"1.2300"'
 
-    baseline_tmp_d: decimal = Decimal("1.2345") * Decimal("3.0")
-    baseline_d: str = str(baseline_tmp_d.quantize(3))
     baseline_bd: str = str((BigDecimal("1.2345678901234567890123456789") + BigDecimal("0")).round(6))
 
-    i: int = 0
-    while i < 30:
-        current_tmp_d: decimal = Decimal("1.2345") * Decimal("3.0")
-        current_d: str = str(current_tmp_d.quantize(3))
-        current_bd: str = str((BigDecimal("1.2345678901234567890123456789") + BigDecimal("0")).round(6))
-        assert current_d == baseline_d
-        assert current_bd == baseline_bd
-        i = i + 1
+    try:
+        baseline_tmp_d: decimal = Decimal("1.2345") * Decimal("3.0")
+        baseline_d: str = str(baseline_tmp_d.quantize(3))
+        i: int = 0
+        while i < 30:
+            current_tmp_d: decimal = Decimal("1.2345") * Decimal("3.0")
+            current_d: str = str(current_tmp_d.quantize(3))
+            current_bd: str = str((BigDecimal("1.2345678901234567890123456789") + BigDecimal("0")).round(6))
+            assert current_d == baseline_d
+            assert current_bd == baseline_bd
+            i = i + 1
+    except DecimalConversionError as error:
+        assert False, str(error)
 
     try:
         huge: int = int(BigDecimal("999999999999999999999999999999999999"))

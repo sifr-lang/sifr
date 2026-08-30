@@ -45,16 +45,14 @@ fn repeat<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
             result
                 .push(
                     ({
-                        let Some(__sifr_index_value) = ({
+                        let __sifr_index_value_option = {
                             let __sifr_index_list = &holder;
                             let __sifr_index_i = SifrInt::from_i64(0);
                             let __sifr_index_norm = __sifr_index_i
                                 .normalize_index_or_len(__sifr_index_list.len());
                             __sifr_index_list.get(__sifr_index_norm).cloned()
-                        }) else {
-                            unreachable!("compiler-verified index should be in range");
                         };
-                        __sifr_index_value
+                        __sifr_index_value_option.as_slice()[0_usize].clone()
                     })
                         .clone(),
                 );

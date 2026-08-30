@@ -699,8 +699,7 @@ fn _float_int(
                     )
                 }
             })?;
-        return Ok(Ok(converted));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(converted))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -741,8 +740,7 @@ fn _divide_by_int(
         __SifrStdlib_sifr_x2estatistics_x2eStatisticsError,
     > = (|| {
         let divisor: f64 = _float_int((denominator).clone())?;
-        return Ok(Ok(numerator / divisor));
-        unreachable!("sifr try/except return capture fell through");
+        Ok(Ok(numerator / divisor))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {

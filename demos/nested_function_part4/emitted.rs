@@ -12,26 +12,22 @@ fn collect_value_groups(items: &Vec<SifrInt>, limit: SifrInt) -> Vec<Vec<SifrInt
             return;
         }
         cur.push({
-    let Some(__sifr_index_value) = ({
+    let __sifr_index_value_option = {
     let __sifr_index_list = &items;
     let __sifr_index_i = i.clone();
     let __sifr_index_norm = __sifr_index_i.normalize_index_or_len(__sifr_index_list.len());
     __sifr_index_list.get(__sifr_index_norm).cloned()
-}) else {
-        unreachable!("compiler-verified index should be in range");
-    };
-    __sifr_index_value
+};
+    __sifr_index_value_option.as_slice()[0_usize].clone()
 });
         dfs((i).clone(), cur, &total + ({
-    let Some(__sifr_index_value) = ({
+    let __sifr_index_value_option = {
     let __sifr_index_list = &items;
     let __sifr_index_i = i.clone();
     let __sifr_index_norm = __sifr_index_i.normalize_index_or_len(__sifr_index_list.len());
     __sifr_index_list.get(__sifr_index_norm).cloned()
-}) else {
-        unreachable!("compiler-verified index should be in range");
-    };
-    __sifr_index_value
+};
+    __sifr_index_value_option.as_slice()[0_usize].clone()
 }), items, limit.clone(), result);
         cur.pop();
         dfs(&i + &SifrInt::from_i64(1), cur, (total).clone(), items, limit.clone(), result);
@@ -50,15 +46,13 @@ fn collect_prefixes(nums: &Vec<SifrInt>) -> Vec<Vec<SifrInt>> {
         }
         dfs(&i + &SifrInt::from_i64(1), nums, result, subset);
         subset.push({
-    let Some(__sifr_index_value) = ({
+    let __sifr_index_value_option = {
     let __sifr_index_list = &nums;
     let __sifr_index_i = i.clone();
     let __sifr_index_norm = __sifr_index_i.normalize_index_or_len(__sifr_index_list.len());
     __sifr_index_list.get(__sifr_index_norm).cloned()
-}) else {
-        unreachable!("compiler-verified index should be in range");
-    };
-    __sifr_index_value
+};
+    __sifr_index_value_option.as_slice()[0_usize].clone()
 });
         dfs(&i + &SifrInt::from_i64(1), nums, result, subset);
         subset.pop();

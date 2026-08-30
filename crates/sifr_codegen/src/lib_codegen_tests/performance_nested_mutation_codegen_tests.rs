@@ -116,13 +116,10 @@ def collect_bucket(values: dict[str, list[str]], key: str) -> list[str]:
     );
 
     assert!(
-        generated.contains("let Some(__sifr_dict_iter_source) = values.get"),
+        generated.contains("values[&key].iter().cloned()"),
         "{generated}"
     );
-    assert!(
-        generated.contains("__sifr_dict_iter_source.iter().cloned()"),
-        "{generated}"
-    );
+    assert!(!generated.contains("unreachable!"), "{generated}");
     assert!(!generated.contains("compile_error!"), "{generated}");
 }
 

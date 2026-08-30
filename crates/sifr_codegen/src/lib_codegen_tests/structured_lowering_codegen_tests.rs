@@ -534,9 +534,16 @@ fn test_structured_stmt_path_handles_non_optional_string_index_return_expr() {
             .contains("let __sifr_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();")
     );
     assert!(generated.rust_source.contains(
-        "let Some(__indexed_char) = __sifr_chars_text.get(::sifr_runtime::to_usize_proven(&(j))).map(|c| c.to_string()) else {"
+        "let __indexed_char_option = __sifr_chars_text.get(::sifr_runtime::to_usize_proven(&(j))).map(|c| c.to_string())"
     ));
-    assert!(generated.rust_source.contains(";\n    __indexed_char\n}"));
+    assert!(
+        generated
+            .rust_source
+            .contains("__indexed_char_option.as_slice()[0_usize].clone()"),
+        "{}",
+        generated.rust_source
+    );
+    assert!(!generated.rust_source.contains("unreachable!"));
     assert!(
         generated.lowering_stats.stmt_structured >= 1,
         "non-optional string index return should stay on the structured stmt path"

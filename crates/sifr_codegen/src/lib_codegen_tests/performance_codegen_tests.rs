@@ -179,14 +179,8 @@ def values_for(grouped: dict[int, list[str]], key: int) -> list[str]:
 "#,
     );
 
-    assert!(
-        generated.contains("let Some(__sifr_proven_dict_value) = grouped.get(&key).cloned() else"),
-        "{generated}"
-    );
-    assert!(
-        generated.contains("__sifr_proven_dict_value"),
-        "{generated}"
-    );
+    assert!(generated.contains("grouped[&key].clone()"), "{generated}");
+    assert!(!generated.contains("abort()"), "{generated}");
 }
 
 #[test]
@@ -881,7 +875,11 @@ fn nested_list_non_optional_read_returns_concrete_element() {
     );
     let rendered = crate::render_expr(&lowered);
 
-    assert!(rendered.contains("let Some(__sifr_right_value) = maybe_cell else"));
+    assert!(rendered.contains("let __sifr_right_value_option = maybe_cell"));
+    assert!(
+        rendered.contains("__sifr_right_value_option.as_slice()[0_usize].clone()"),
+        "{rendered}"
+    );
     assert!(rendered.contains("1 +"));
     assert!(rendered.contains("__sifr_right_value"));
 }

@@ -17,6 +17,8 @@ ruff_text_size = { workspace = true }
 syn = { workspace = true, features = ["visit-mut"] }
 prettyplease = "0.3.0"
 proc-macro2 = "1.0.107"
+bigdecimal = { workspace = true }
+rust_decimal = { workspace = true }
 
 [dev-dependencies]
 sifr_lowering = { workspace = true }

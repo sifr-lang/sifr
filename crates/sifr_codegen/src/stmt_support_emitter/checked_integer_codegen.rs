@@ -1,6 +1,15 @@
 use crate::{CodegenError, RustEmitter, RustExpr, RustLiteral, RustMatchArm, RustParam, RustStmt};
+use bigdecimal::num_bigint::BigInt;
+use bigdecimal::num_traits::{FromPrimitive, ToPrimitive};
 use sifr_type_system::Type;
+use std::str::FromStr as _;
 
+pub(crate) use super::checked_decimal_codegen::{
+    decimal_to_bigdecimal_expr, exact_int_to_bigdecimal_expr, exact_int_to_decimal_result_expr,
+};
+use super::checked_decimal_codegen::{
+    lower_checked_bigdecimal_arithmetic, lower_checked_decimal_arithmetic,
+};
 use super::result_type_helpers::{
     integer_arithmetic_error_union, integer_division_error_union,
     integer_float_conversion_error_union, is_result_int_division_error_type,
@@ -13,9 +22,10 @@ pub(crate) fn lower_numeric_binop_with_exact_integer_semantics(
     op: &str,
     right: RustExpr,
     right_ty: &Type,
+    right_source: &sifr_ir::HirExpr,
     result_ty: &Type,
 ) -> Result<Option<RustExpr>, CodegenError> {
-    if let Some(lowered) = lower_decimal_integer_arithmetic(
+    if let Some(lowered) = lower_checked_decimal_arithmetic(
         emitter,
         left.clone(),
         left_ty,
@@ -23,7 +33,18 @@ pub(crate) fn lower_numeric_binop_with_exact_integer_semantics(
         right.clone(),
         right_ty,
         result_ty,
-    ) {
+    )? {
+        return Ok(Some(lowered));
+    }
+    if let Some(lowered) = lower_checked_bigdecimal_arithmetic(
+        emitter,
+        left.clone(),
+        left_ty,
+        op,
+        right.clone(),
+        right_ty,
+        result_ty,
+    )? {
         return Ok(Some(lowered));
     }
 
@@ -113,301 +134,58 @@ pub(crate) fn lower_numeric_binop_with_exact_integer_semantics(
         && exact_operands
         && matches!(result_ty.resolve_alias(), Type::Int | Type::LiteralInt(_))
     {
-        let method = match op {
-            "**" => "pow_known_valid",
-            "<<" => "shl_known_valid",
-            ">>" => "shr_known_valid",
-            _ => unreachable!(),
+        let primitive_ty = if op == "**" { "u32" } else { "usize" };
+        let exponent = crate::integer_literal_decimal(right_source)
+            .and_then(|value| value.parse::<u64>().ok())
+            .and_then(|value| i64::try_from(value).ok())
+            .ok_or_else(|| {
+                CodegenError::new(
+                    "bounded exact-integer operation reached codegen without a literal exponent",
+                )
+            })?;
+        let method = if op == "**" {
+            "pow_known_valid"
+        } else if op == "<<" {
+            "shl_known_valid"
+        } else {
+            "shr_known_valid"
         };
         return Ok(Some(RustExpr::MethodCall {
             receiver: Box::new(emitter.coerce_expr_to_sifr_int_value(left)),
             method: method.to_string(),
-            args: vec![emitter.coerce_expr_to_sifr_int_comparison_operand(right)],
+            args: vec![RustExpr::Cast {
+                expr: Box::new(RustExpr::Literal(RustLiteral::Int(exponent))),
+                ty: crate::RustType::Named(primitive_ty.to_string()),
+            }],
         }));
     }
 
     lower_mixed_float_integer_arithmetic(emitter, left, right, left_ty, right_ty, op, result_ty)
 }
 
-pub(crate) fn exact_int_to_bigdecimal_expr(emitter: &RustEmitter, value: RustExpr) -> RustExpr {
-    let signed_bytes = RustExpr::MethodCall {
-        receiver: Box::new(emitter.coerce_expr_to_sifr_int_method_receiver(value)),
-        method: "to_signed_bytes_be".to_string(),
-        args: vec![],
-    };
-    let bigint = RustExpr::FnCall {
-        func: Box::new(RustExpr::Path(vec![
-            "bigdecimal".to_string(),
-            "num_bigint".to_string(),
-            "BigInt".to_string(),
-            "from_signed_bytes_be".to_string(),
-        ])),
-        args: vec![RustExpr::Ref {
-            mutable: false,
-            expr: Box::new(signed_bytes),
-        }],
-    };
-    RustExpr::FnCall {
-        func: Box::new(RustExpr::Path(vec![
-            "BigDecimal".to_string(),
-            "new".to_string(),
-        ])),
-        args: vec![bigint, RustExpr::Literal(RustLiteral::Int(0))],
+pub(crate) fn exact_integer_float_literal(
+    expr: &sifr_ir::HirExpr,
+) -> Result<RustExpr, CodegenError> {
+    let source = crate::integer_literal_decimal(expr).ok_or_else(|| {
+        CodegenError::new(
+            "exact integer reached infallible float rendering without literal proof metadata",
+        )
+    })?;
+    let integer = BigInt::from_str(&source).map_err(|_| {
+        CodegenError::new("exact integer literal could not be reconstructed for float rendering")
+    })?;
+    let value = integer
+        .to_f64()
+        .filter(|value| value.is_finite())
+        .ok_or_else(|| {
+            CodegenError::new("proven exact integer literal is outside the finite float range")
+        })?;
+    if BigInt::from_f64(value).as_ref() != Some(&integer) {
+        return Err(CodegenError::new(
+            "proven exact integer literal cannot be represented without float precision loss",
+        ));
     }
-}
-
-fn decimal_conversion_error(message: RustExpr) -> RustExpr {
-    RustExpr::StructInit {
-        name: "DecimalConversionError".to_string(),
-        fields: vec![("message".to_string(), message)],
-    }
-}
-
-fn map_decimal_conversion_error(receiver: RustExpr) -> RustExpr {
-    RustExpr::MethodCall {
-        receiver: Box::new(receiver),
-        method: "map_err".to_string(),
-        args: vec![RustExpr::Closure {
-            params: vec![RustParam::Named {
-                name: "__sifr_decimal_error".to_string(),
-                ty: crate::RustType::Named("_".to_string()),
-            }],
-            body: Box::new(decimal_conversion_error(RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Ident("__sifr_decimal_error".to_string())),
-                method: "to_string".to_string(),
-                args: vec![],
-            })),
-            is_move: false,
-        }],
-    }
-}
-
-pub(crate) fn exact_int_to_decimal_result_expr(emitter: &RustEmitter, value: RustExpr) -> RustExpr {
-    let narrowed = map_decimal_conversion_error(RustExpr::MethodCall {
-        receiver: Box::new(emitter.coerce_expr_to_sifr_int_method_receiver(value)),
-        method: "try_to_i128".to_string(),
-        args: vec![],
-    });
-    RustExpr::MethodCall {
-        receiver: Box::new(narrowed),
-        method: "and_then".to_string(),
-        args: vec![RustExpr::Closure {
-            params: vec![RustParam::Named {
-                name: "__sifr_decimal_mantissa".to_string(),
-                ty: crate::RustType::Named("_".to_string()),
-            }],
-            body: Box::new(map_decimal_conversion_error(RustExpr::FnCall {
-                func: Box::new(RustExpr::Path(vec![
-                    "Decimal".to_string(),
-                    "try_from_i128_with_scale".to_string(),
-                ])),
-                args: vec![
-                    RustExpr::Ident("__sifr_decimal_mantissa".to_string()),
-                    RustExpr::Literal(RustLiteral::Int(0)),
-                ],
-            })),
-            is_move: false,
-        }],
-    }
-}
-
-fn decimal_operand_result(emitter: &RustEmitter, value: RustExpr, ty: &Type) -> RustExpr {
-    if matches!(ty.resolve_alias(), Type::Int | Type::LiteralInt(_)) {
-        exact_int_to_decimal_result_expr(emitter, value)
-    } else {
-        RustExpr::FnCall {
-            func: Box::new(RustExpr::Path(vec!["Ok".to_string()])),
-            args: vec![value],
-        }
-    }
-}
-
-fn decimal_checked_operation(op: &str) -> Option<RustExpr> {
-    let left = RustExpr::Ident("__sifr_decimal_left".to_string());
-    let right = RustExpr::Ident("__sifr_decimal_right".to_string());
-    let checked = match op {
-        "+" => RustExpr::FnCall {
-            func: Box::new(RustExpr::Path(vec![
-                "Decimal".to_string(),
-                "checked_add".to_string(),
-            ])),
-            args: vec![left, right],
-        },
-        "-" => RustExpr::FnCall {
-            func: Box::new(RustExpr::Path(vec![
-                "Decimal".to_string(),
-                "checked_sub".to_string(),
-            ])),
-            args: vec![left, right],
-        },
-        "*" => RustExpr::FnCall {
-            func: Box::new(RustExpr::Path(vec![
-                "Decimal".to_string(),
-                "checked_mul".to_string(),
-            ])),
-            args: vec![left, right],
-        },
-        "/" => RustExpr::FnCall {
-            func: Box::new(RustExpr::Path(vec![
-                "Decimal".to_string(),
-                "checked_div".to_string(),
-            ])),
-            args: vec![left, right],
-        },
-        "//" => RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::FnCall {
-                func: Box::new(RustExpr::Path(vec![
-                    "Decimal".to_string(),
-                    "checked_div".to_string(),
-                ])),
-                args: vec![left, right],
-            }),
-            method: "map".to_string(),
-            args: vec![RustExpr::Closure {
-                params: vec![RustParam::Named {
-                    name: "__sifr_decimal_quotient".to_string(),
-                    ty: crate::RustType::Named("_".to_string()),
-                }],
-                body: Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::Ident("__sifr_decimal_quotient".to_string())),
-                    method: "floor".to_string(),
-                    args: vec![],
-                }),
-                is_move: false,
-            }],
-        },
-        "%" => {
-            let quotient = RustExpr::FnCall {
-                func: Box::new(RustExpr::Path(vec![
-                    "Decimal".to_string(),
-                    "checked_div".to_string(),
-                ])),
-                args: vec![left.clone(), right.clone()],
-            };
-            RustExpr::MethodCall {
-                receiver: Box::new(quotient),
-                method: "and_then".to_string(),
-                args: vec![RustExpr::Closure {
-                    params: vec![RustParam::Named {
-                        name: "__sifr_decimal_quotient".to_string(),
-                        ty: crate::RustType::Named("_".to_string()),
-                    }],
-                    body: Box::new(RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::FnCall {
-                            func: Box::new(RustExpr::Path(vec![
-                                "Decimal".to_string(),
-                                "checked_mul".to_string(),
-                            ])),
-                            args: vec![
-                                RustExpr::MethodCall {
-                                    receiver: Box::new(RustExpr::Ident(
-                                        "__sifr_decimal_quotient".to_string(),
-                                    )),
-                                    method: "floor".to_string(),
-                                    args: vec![],
-                                },
-                                right,
-                            ],
-                        }),
-                        method: "and_then".to_string(),
-                        args: vec![RustExpr::Closure {
-                            params: vec![RustParam::Named {
-                                name: "__sifr_decimal_product".to_string(),
-                                ty: crate::RustType::Named("_".to_string()),
-                            }],
-                            body: Box::new(RustExpr::FnCall {
-                                func: Box::new(RustExpr::Path(vec![
-                                    "Decimal".to_string(),
-                                    "checked_sub".to_string(),
-                                ])),
-                                args: vec![
-                                    left,
-                                    RustExpr::Ident("__sifr_decimal_product".to_string()),
-                                ],
-                            }),
-                            is_move: false,
-                        }],
-                    }),
-                    is_move: false,
-                }],
-            }
-        }
-        _ => return None,
-    };
-    Some(RustExpr::MethodCall {
-        receiver: Box::new(checked),
-        method: "ok_or_else".to_string(),
-        args: vec![RustExpr::Closure {
-            params: vec![],
-            body: Box::new(decimal_conversion_error(RustExpr::Literal(
-                RustLiteral::Str(format!(
-                    "decimal {op} operation failed (division by zero or overflow)"
-                )),
-            ))),
-            is_move: false,
-        }],
-    })
-}
-
-pub(crate) fn lower_decimal_integer_arithmetic(
-    emitter: &RustEmitter,
-    left: RustExpr,
-    left_ty: &Type,
-    op: &str,
-    right: RustExpr,
-    right_ty: &Type,
-    result_ty: &Type,
-) -> Option<RustExpr> {
-    let Type::Result(ok_ty, error_ty) = result_ty.resolve_alias() else {
-        return None;
-    };
-    if !matches!(ok_ty.resolve_alias(), Type::Decimal)
-        || !matches!(error_ty.resolve_alias(), Type::Class { name, .. } if name == "DecimalConversionError")
-    {
-        return None;
-    }
-    let operation = decimal_checked_operation(op)?;
-    let left_result = decimal_operand_result(emitter, left, left_ty);
-    let right_result = decimal_operand_result(emitter, right, right_ty);
-    Some(RustExpr::Block {
-        stmts: vec![
-            RustStmt::Let {
-                mutable: false,
-                name: "__sifr_decimal_left_result".to_string(),
-                ty: None,
-                value: left_result,
-            },
-            RustStmt::Let {
-                mutable: false,
-                name: "__sifr_decimal_right_result".to_string(),
-                ty: None,
-                value: right_result,
-            },
-        ],
-        expr: Some(Box::new(RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::Ident("__sifr_decimal_left_result".to_string())),
-            method: "and_then".to_string(),
-            args: vec![RustExpr::Closure {
-                params: vec![RustParam::Named {
-                    name: "__sifr_decimal_left".to_string(),
-                    ty: crate::RustType::Named("_".to_string()),
-                }],
-                body: Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::Ident("__sifr_decimal_right_result".to_string())),
-                    method: "and_then".to_string(),
-                    args: vec![RustExpr::Closure {
-                        params: vec![RustParam::Named {
-                            name: "__sifr_decimal_right".to_string(),
-                            ty: crate::RustType::Named("_".to_string()),
-                        }],
-                        body: Box::new(operation),
-                        is_move: true,
-                    }],
-                }),
-                is_move: true,
-            }],
-        })),
-    })
+    Ok(RustExpr::Literal(RustLiteral::Float(value)))
 }
 
 pub(crate) fn lower_integer_true_division(

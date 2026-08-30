@@ -2,6 +2,65 @@ use super::{
     HirExpr, HirStmt, RustEmitter, RustExpr, RustStmt, Type, is_none_like_result_value, queries,
 };
 impl RustEmitter {
+    pub(crate) fn try_closure_return_value_for_ir(
+        &self,
+        mut value: RustExpr,
+        source_value_is_none_like: bool,
+        return_ty: Option<&Type>,
+    ) -> RustExpr {
+        let wrap = self
+            .try_closure_return_wrap
+            .last()
+            .cloned()
+            .unwrap_or(crate::TryClosureReturnWrap::Direct);
+        if wrap == crate::TryClosureReturnWrap::Direct
+            && source_value_is_none_like
+            && return_ty.is_some_and(|return_ty| {
+                matches!(
+                    crate::resolve_alias_type_for_plain_call(return_ty),
+                    Type::Result(ok_ty, _)
+                        if matches!(
+                            crate::resolve_alias_type_for_plain_call(ok_ty.as_ref()),
+                            Type::None
+                        )
+                )
+            })
+        {
+            value = RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec!["Ok".to_string()])),
+                args: vec![RustExpr::Literal(crate::RustLiteral::Unit)],
+            };
+        }
+        let payload = match wrap {
+            crate::TryClosureReturnWrap::Direct => value,
+            crate::TryClosureReturnWrap::Optional => RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
+                args: vec![value],
+            },
+            crate::TryClosureReturnWrap::ControlFlow { .. } => RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    "std".to_string(),
+                    "ops".to_string(),
+                    "ControlFlow".to_string(),
+                    "Break".to_string(),
+                ])),
+                args: vec![value],
+            },
+        };
+        RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec!["Ok".to_string()])),
+            args: vec![payload],
+        }
+    }
+
+    pub(crate) fn try_closure_unit_return_for_ir(&self, return_ty: Option<&Type>) -> RustExpr {
+        self.try_closure_return_value_for_ir(
+            RustExpr::Literal(crate::RustLiteral::Unit),
+            true,
+            return_ty,
+        )
+    }
+
     pub(crate) fn try_lower_structured_return_stmt(
         &mut self,
         stmt: &HirStmt,
@@ -29,51 +88,17 @@ impl RustEmitter {
                 return Ok(true);
             }
             if self.try_closure_depth > 0 {
-                let wrap_option = self
-                    .try_closure_option_wrap
-                    .last()
-                    .copied()
-                    .unwrap_or(false);
-
-                let Some(mut lowered_return_value) =
+                let Some(lowered_return_value) =
                     self.lower_return_value_expr_for_ir(value, return_ty_snapshot.as_ref())?
                 else {
                     return Ok(false);
                 };
-
-                if !wrap_option {
-                    if let Some(return_ty) = return_ty_snapshot.as_ref() {
-                        if let Type::Result(ok_ty, _) =
-                            crate::resolve_alias_type_for_plain_call(return_ty)
-                        {
-                            let value_is_none_like = is_none_like_result_value(value);
-                            if value_is_none_like
-                                && matches!(
-                                    crate::resolve_alias_type_for_plain_call(ok_ty.as_ref()),
-                                    Type::None
-                                )
-                            {
-                                lowered_return_value = crate::RustExpr::FnCall {
-                                    func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
-                                    args: vec![crate::RustExpr::Literal(crate::RustLiteral::Unit)],
-                                };
-                            }
-                        }
-                    }
-                }
-
-                let try_payload = if wrap_option {
-                    crate::RustExpr::FnCall {
-                        func: Box::new(crate::RustExpr::Path(vec!["Some".to_string()])),
-                        args: vec![lowered_return_value],
-                    }
-                } else {
-                    lowered_return_value
-                };
-                self.push_captured_stmt(&RustStmt::Return(Some(crate::RustExpr::FnCall {
-                    func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
-                    args: vec![try_payload],
-                })));
+                let captured_return = self.try_closure_return_value_for_ir(
+                    lowered_return_value,
+                    is_none_like_result_value(value),
+                    return_ty_snapshot.as_ref(),
+                );
+                self.push_captured_stmt(&RustStmt::Return(Some(captured_return)));
                 return Ok(true);
             }
 
@@ -87,44 +112,8 @@ impl RustEmitter {
         }
 
         if self.try_closure_depth > 0 {
-            let wrap_option = self
-                .try_closure_option_wrap
-                .last()
-                .copied()
-                .unwrap_or(false);
-            if wrap_option {
-                self.push_captured_stmt(&RustStmt::Return(Some(crate::RustExpr::FnCall {
-                    func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
-                    args: vec![crate::RustExpr::FnCall {
-                        func: Box::new(crate::RustExpr::Path(vec!["Some".to_string()])),
-                        args: vec![crate::RustExpr::Literal(crate::RustLiteral::Unit)],
-                    }],
-                })));
-            } else {
-                let direct_result_none = return_ty_snapshot.as_ref().is_some_and(|ret_ty| {
-                    match crate::resolve_alias_type_for_plain_call(ret_ty) {
-                        Type::Result(ok_ty, _) => matches!(
-                            crate::resolve_alias_type_for_plain_call(ok_ty.as_ref()),
-                            Type::None
-                        ),
-                        _ => false,
-                    }
-                });
-                if direct_result_none {
-                    self.push_captured_stmt(&RustStmt::Return(Some(crate::RustExpr::FnCall {
-                        func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
-                        args: vec![crate::RustExpr::FnCall {
-                            func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
-                            args: vec![crate::RustExpr::Literal(crate::RustLiteral::Unit)],
-                        }],
-                    })));
-                } else {
-                    self.push_captured_stmt(&RustStmt::Return(Some(crate::RustExpr::FnCall {
-                        func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
-                        args: vec![crate::RustExpr::Literal(crate::RustLiteral::Unit)],
-                    })));
-                }
-            }
+            let captured_return = self.try_closure_unit_return_for_ir(return_ty_snapshot.as_ref());
+            self.push_captured_stmt(&RustStmt::Return(Some(captured_return)));
         } else if self.emission_ctx.in_display_impl {
             self.push_captured_stmt(&RustStmt::Return(Some(crate::RustExpr::FnCall {
                 func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
@@ -261,97 +250,14 @@ impl RustEmitter {
             }
         }
 
-        if let Some((var_name, first_variant, first_enum_name, _)) =
-            crate::helpers::detect_isinstance_union(condition)
-        {
-            let mut branch_specs: Vec<(String, &[HirStmt])> = vec![(first_variant, then_body)];
-            let mut needed_variants = vec![branch_specs[0].0.clone()];
-            let mut all_isinstance = true;
-            for (elif_cond, elif_body) in elif_clauses {
-                let Some((elif_var, elif_variant, _, _)) =
-                    crate::helpers::detect_isinstance_union(elif_cond)
-                else {
-                    all_isinstance = false;
-                    break;
-                };
-                if elif_var != var_name {
-                    all_isinstance = false;
-                    break;
-                }
-                needed_variants.push(elif_variant.clone());
-                branch_specs.push((elif_variant, elif_body.as_slice()));
-            }
-            if all_isinstance {
-                let enum_name = self.resolve_union_enum_name(&first_enum_name, &needed_variants);
-                let mut nested_else = if let Some(else_body) = else_body {
-                    let remaining_variants = self
-                        .union_enums
-                        .get(&enum_name)
-                        .map(|members| {
-                            members
-                                .iter()
-                                .map(Type::union_variant_name)
-                                .filter(|variant| !needed_variants.contains(variant))
-                                .collect::<Vec<_>>()
-                        })
-                        .unwrap_or_default();
-                    let Some(lowered_else_body) = self.try_lower_if_branch_for_ir(else_body)?
-                    else {
-                        return Ok(false);
-                    };
-                    if remaining_variants.len() == 1 {
-                        let else_mutated = queries::collect_mutated_vars(else_body, None);
-                        let else_binding = if else_mutated.contains(&var_name) {
-                            format!("mut {var_name}")
-                        } else {
-                            var_name.clone()
-                        };
-                        Some(vec![RustStmt::IfLet {
-                            pattern: format!(
-                                "{enum_name}::{}({else_binding})",
-                                remaining_variants[0]
-                            ),
-                            expr: RustExpr::Ident(var_name.clone()),
-                            then_body: lowered_else_body,
-                            else_body: Some(vec![RustStmt::Expr(RustExpr::FormatMacro {
-                                name: "unreachable".to_string(),
-                                format_str:
-                                    "sifr union narrowing fell through exhaustive branch chain"
-                                        .to_string(),
-                                args: vec![],
-                            })]),
-                        }])
-                    } else {
-                        Some(lowered_else_body)
-                    }
-                } else {
-                    None
-                };
-
-                for (variant_name, body) in branch_specs.iter().rev() {
-                    let mutated = queries::collect_mutated_vars(body, None);
-                    let binding = if mutated.contains(&var_name) {
-                        format!("mut {var_name}")
-                    } else {
-                        var_name.clone()
-                    };
-                    let Some(lowered_body) = self.try_lower_if_branch_for_ir(body)? else {
-                        return Ok(false);
-                    };
-                    nested_else = Some(vec![RustStmt::IfLet {
-                        pattern: format!("{enum_name}::{variant_name}({binding})"),
-                        expr: RustExpr::Ident(var_name.clone()),
-                        then_body: lowered_body,
-                        else_body: nested_else,
-                    }]);
-                }
-
-                let Some(root) = nested_else.and_then(|stmts| stmts.into_iter().next()) else {
-                    return Ok(false);
-                };
-                self.push_captured_stmt(&root);
-                return Ok(true);
-            }
+        if let Some(lowered_union) = self.try_lower_isinstance_union_chain_for_ir(
+            condition,
+            then_body,
+            elif_clauses,
+            else_body.as_deref(),
+        )? {
+            self.push_captured_stmt(&lowered_union);
+            return Ok(true);
         }
 
         if elif_clauses.is_empty() {

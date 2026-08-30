@@ -412,8 +412,7 @@ mod __sifr_project_nominals {
                         .map_err(|e| ParseError {
                             message: e.to_string(),
                         })?;
-                    return Ok(Some(format!("{}", parsed_int)));
-                    unreachable!("sifr try/except return capture fell through");
+                    Ok(Some(format!("{}", parsed_int)))
                 })();
                 match __sifr_try_res {
                     Ok(__sifr_ret_val) => {
@@ -432,8 +431,7 @@ mod __sifr_project_nominals {
                         .map_err(|e| ParseError {
                             message: e.to_string(),
                         })?;
-                    return Ok(Some(format!("{}", parsed_float)));
-                    unreachable!("sifr try/except return capture fell through");
+                    Ok(Some(format!("{}", parsed_float)))
                 })();
                 match __sifr_try_res {
                     Ok(__sifr_ret_val) => {
@@ -886,26 +884,20 @@ mod __sifr_project_nominals {
         let mut i: SifrInt = SifrInt::from_i64(0);
         while (&i < &SifrInt::from(__sifr_chars_token.len())) {
             let ch: Option<String> = Some({
-                let Some(__indexed_char) = __sifr_chars_token
+                let __indexed_char_option = __sifr_chars_token
                     .get(::sifr_runtime::to_usize_proven(&(i)))
-                    .map(|c| c.to_string()) else {
-                    unreachable!("compiler-verified string index should be in range");
-                };
-                __indexed_char
+                    .map(|c| c.to_string());
+                __indexed_char_option.as_slice()[0_usize].clone()
             });
             if ch.is_some() && (ch == Some("=".to_string())) {
                 let mut value: String = "".to_string();
                 let mut j: SifrInt = &i + &SifrInt::from_i64(1);
                 while (&j < &SifrInt::from(__sifr_chars_token.len())) {
                     let part: Option<String> = Some({
-                        let Some(__indexed_char) = __sifr_chars_token
+                        let __indexed_char_option = __sifr_chars_token
                             .get(::sifr_runtime::to_usize_proven(&(j)))
-                            .map(|c| c.to_string()) else {
-                            unreachable!(
-                                "compiler-verified string index should be in range"
-                            );
-                        };
-                        __indexed_char
+                            .map(|c| c.to_string());
+                        __indexed_char_option.as_slice()[0_usize].clone()
                     });
                     if let Some(part) = part {
                         value.push_str((part).as_str());
@@ -996,8 +988,7 @@ mod __sifr_project_nominals {
                     .map_err(|e| ParseError {
                         message: e.to_string(),
                     })?;
-                return Ok(&parsed > &SifrInt::from_i64(1));
-                unreachable!("sifr try/except return capture fell through");
+                Ok(&parsed > &SifrInt::from_i64(1))
             })();
             match __sifr_try_res {
                 Ok(__sifr_ret_val) => {
@@ -1485,26 +1476,20 @@ fn _split_inline_option(token: &String) -> (bool, String, String) {
     let mut i: SifrInt = SifrInt::from_i64(0);
     while (&i < &SifrInt::from(__sifr_chars_token.len())) {
         let ch: Option<String> = Some({
-            let Some(__indexed_char) = __sifr_chars_token
+            let __indexed_char_option = __sifr_chars_token
                 .get(::sifr_runtime::to_usize_proven(&(i)))
-                .map(|c| c.to_string()) else {
-                unreachable!("compiler-verified string index should be in range");
-            };
-            __indexed_char
+                .map(|c| c.to_string());
+            __indexed_char_option.as_slice()[0_usize].clone()
         });
         if ch.is_some() && (ch == Some("=".to_string())) {
             let mut value: String = "".to_string();
             let mut j: SifrInt = &i + &SifrInt::from_i64(1);
             while (&j < &SifrInt::from(__sifr_chars_token.len())) {
                 let part: Option<String> = Some({
-                    let Some(__indexed_char) = __sifr_chars_token
+                    let __indexed_char_option = __sifr_chars_token
                         .get(::sifr_runtime::to_usize_proven(&(j)))
-                        .map(|c| c.to_string()) else {
-                        unreachable!(
-                            "compiler-verified string index should be in range"
-                        );
-                    };
-                    __indexed_char
+                        .map(|c| c.to_string());
+                    __indexed_char_option.as_slice()[0_usize].clone()
                 });
                 if let Some(part) = part {
                     value.push_str((part).as_str());
@@ -1595,8 +1580,7 @@ fn _nargs_is_multi(nargs: &String) -> bool {
                 .map_err(|e| ParseError {
                     message: e.to_string(),
                 })?;
-            return Ok(&parsed > &SifrInt::from_i64(1));
-            unreachable!("sifr try/except return capture fell through");
+            Ok(&parsed > &SifrInt::from_i64(1))
         })();
         match __sifr_try_res {
             Ok(__sifr_ret_val) => {

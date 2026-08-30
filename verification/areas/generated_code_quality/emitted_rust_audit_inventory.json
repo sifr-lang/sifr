@@ -252,7 +252,7 @@
       "owner_item": 6,
       "mechanism": "BigDecimal default-context lowering calls with_prec(28) and silently falls back to the unmodified default context when precision construction fails.",
       "evidence": ["crates/sifr_codegen/src/methods/decimal.rs"],
-      "semantic_anchor": {"kind": "text", "revision": "current", "path": "crates/sifr_codegen/src/methods/decimal.rs", "contains": "method: \"unwrap_or_else\".to_string()"},
+      "semantic_anchor": {"kind": "text", "revision": "baseline", "path": "crates/sifr_codegen/src/methods/decimal.rs", "contains": "method: \"unwrap_or_else\".to_string()"},
       "sources": ["internal", "external"]
     },
     {

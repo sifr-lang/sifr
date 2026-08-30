@@ -25,7 +25,6 @@ fn classify(n: SifrInt) -> SifrInt {
         } else {
             return Err(ValueError::new("non-positive".to_string()));
         }
-        unreachable!("sifr try/except return capture fell through");
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {

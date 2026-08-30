@@ -136,13 +136,15 @@ async def run_async() -> None:
     );
 
     assert_eq!(
-        generated.matches("Result<(), ()>").count(),
-        2,
+        generated
+            .matches("Result<(), ::std::convert::Infallible>")
+            .count(),
+        4,
         "{generated}"
     );
     assert_eq!(
         generated.matches("Result<(), ValueError>").count(),
-        4,
+        2,
         "{generated}"
     );
     syn::parse_file(&generated).expect("nested try/finally discovery Rust should parse");
@@ -163,10 +165,8 @@ def conditional(flag: bool) -> Result[int, ProbeError]:
 "#
     ));
 
-    assert!(
-        generated.contains("let mut __sifr_successful_try_bindings: Option<(SifrInt,)> = None")
-    );
-    assert!(generated.contains("let Some((value,)) = __sifr_successful_try_bindings else"));
+    assert!(generated.contains("ControlFlow<Result<SifrInt, ProbeError>, (SifrInt,)>"));
+    assert!(generated.contains("let (value,) = match __sifr_try_res"));
     assert!(!generated.contains(".unwrap()"));
     assert!(!generated.contains(".expect("));
     syn::parse_file(&generated).expect("combined try carriers should parse");
@@ -202,7 +202,8 @@ def length_or_error(flag: bool) -> Result[int, IOError]:
 "#,
     );
 
-    assert!(generated.contains("let Some((content,)) = __sifr_successful_try_bindings else"));
+    assert!(generated.contains("ControlFlow<Result<SifrInt, IOError>, (String,)>"));
+    assert!(generated.contains("let (content,) = match __sifr_try_res"));
     assert!(generated.contains("\"NotADirectory\".to_string()"));
     assert_eq!(generated.matches("__sifr_try_err.kind ==").count(), 6);
     assert!(!generated.contains(".unwrap()"));
@@ -530,10 +531,12 @@ def classify() -> str:
 "#
     ));
 
-    assert!(generated.contains("match __sifr_try_res"));
-    assert!(generated.contains("Ok(()) =>"));
-    assert!(generated.contains("sifr try/except raising body returned success"));
-    assert!(!generated.contains("if let Err(__sifr_try_err) = __sifr_try_res"));
+    assert!(generated.contains("Result<(), ProbeError>"), "{generated}");
+    assert!(
+        generated.contains("if let Err(__sifr_try_err) = __sifr_try_res"),
+        "{generated}"
+    );
+    assert!(!generated.contains("unreachable!"));
     syn::parse_file(&generated).expect("total raising try Rust should parse");
 }
 
@@ -567,8 +570,10 @@ def classify() -> Result[str, IOError]:
     );
 
     assert!(
-        generated.contains("Err(__sifr_try_err) => {\n            return Err(__sifr_try_err);")
+        generated.contains("if let Err(__sifr_try_err) = __sifr_try_res"),
+        "{generated}"
     );
+    assert!(generated.contains("return Err(__sifr_try_err);"));
     assert!(!generated.contains("structured statement emission missing"));
     syn::parse_file(&generated).expect("branchless residual Rust should parse");
 }

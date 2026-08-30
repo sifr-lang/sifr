@@ -150,6 +150,11 @@ impl SifrInt {
         }
     }
 
+    #[must_use]
+    pub fn from_signed_bytes_be(bytes: &[u8]) -> Self {
+        Self::from_bigint(BigInt::from_signed_bytes_be(bytes))
+    }
+
     pub fn parse_decimal(text: &str, max_digits: usize) -> Result<Self, IntegerParseError> {
         let digit_count = count_decimal_digits(text)?;
         if digit_count > max_digits {
@@ -315,13 +320,8 @@ impl SifrInt {
 
     /// Executes exponentiation after compile-time validity and output-budget proof.
     #[must_use]
-    pub fn pow_known_valid(&self, exponent: &Self) -> Self {
-        match self.checked_pow(exponent) {
-            Ok(value) => value,
-            Err(error) => {
-                panic!("compiler exact-integer exponentiation proof was invalid: {error:?}")
-            }
-        }
+    pub fn pow_known_valid(&self, exponent: u32) -> Self {
+        Self::from_bigint(self.as_bigint().pow(exponent))
     }
 
     pub fn checked_shl(&self, shift: &Self) -> Result<Self, IntegerArithmeticError> {
@@ -369,24 +369,14 @@ impl SifrInt {
 
     /// Executes a left shift after compile-time validity and output-budget proof.
     #[must_use]
-    pub fn shl_known_valid(&self, shift: &Self) -> Self {
-        match self.checked_shl(shift) {
-            Ok(value) => value,
-            Err(error) => {
-                panic!("compiler exact-integer left-shift proof was invalid: {error:?}")
-            }
-        }
+    pub fn shl_known_valid(&self, shift: usize) -> Self {
+        Self::from_bigint(self.as_bigint() << shift)
     }
 
     /// Executes a right shift after compile-time validity proof.
     #[must_use]
-    pub fn shr_known_valid(&self, shift: &Self) -> Self {
-        match self.checked_shr(shift) {
-            Ok(value) => value,
-            Err(error) => {
-                panic!("compiler exact-integer right-shift proof was invalid: {error:?}")
-            }
-        }
+    pub fn shr_known_valid(&self, shift: usize) -> Self {
+        Self::from_bigint(self.as_bigint() >> shift)
     }
 
     #[must_use]

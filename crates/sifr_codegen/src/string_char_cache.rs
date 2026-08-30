@@ -122,23 +122,11 @@ impl RustEmitter {
         lowered_object: RustExpr,
         lowered_index: RustExpr,
     ) -> RustExpr {
-        RustExpr::Block {
-            stmts: vec![RustStmt::LetElse {
-                pattern: "Some(__indexed_char)".to_string(),
-                value: self.lower_string_index_option_with_cache(
-                    object,
-                    lowered_object,
-                    lowered_index,
-                ),
-                else_body: vec![RustStmt::Expr(RustExpr::MacroCall {
-                    name: "unreachable".to_string(),
-                    args: vec![RustExpr::Literal(RustLiteral::Str(
-                        "compiler-verified string index should be in range".to_string(),
-                    ))],
-                })],
-            }],
-            expr: Some(Box::new(RustExpr::Ident("__indexed_char".to_string()))),
-        }
+        Self::lower_proven_index_option_expr_for_ir(
+            self.lower_string_index_option_with_cache(object, lowered_object, lowered_index),
+            "__indexed_char",
+            "compiler-verified string index should be in range",
+        )
     }
 
     pub(crate) fn try_lower_dict_indexed_list_append_expr(
@@ -424,12 +412,13 @@ impl RustEmitter {
         let lowered_object = self.emit_checked_place(index_object, base_place)?;
         let lowered_index = self.try_lower_registry_expr_strict(index)?;
         let key_arg = Self::list_indexed_dict_lookup_key_arg(index, lowered_index);
+        let bucket_option_expr = RustExpr::MethodCall {
+            receiver: Box::new(lowered_object),
+            method: "get_mut".to_string(),
+            args: vec![key_arg],
+        };
         let option_pop_expr = RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::MethodCall {
-                receiver: Box::new(lowered_object),
-                method: "get_mut".to_string(),
-                args: vec![key_arg],
-            }),
+            receiver: Box::new(bucket_option_expr.clone()),
             method: "and_then".to_string(),
             args: vec![RustExpr::Closure {
                 params: vec![crate::RustParam::Named {
@@ -448,17 +437,57 @@ impl RustEmitter {
             return Some(option_pop_expr);
         }
         Some(RustExpr::Block {
-            stmts: vec![RustStmt::LetElse {
-                pattern: "Some(__sifr_popped)".to_string(),
-                value: option_pop_expr,
-                else_body: vec![RustStmt::Expr(RustExpr::MacroCall {
-                    name: "unreachable".to_string(),
-                    args: vec![RustExpr::Literal(RustLiteral::Str(
-                        "compiler-verified non-empty dict list pop should return Some".to_string(),
-                    ))],
-                })],
-            }],
-            expr: Some(Box::new(RustExpr::Ident("__sifr_popped".to_string()))),
+            stmts: vec![
+                RustStmt::Let {
+                    mutable: true,
+                    name: "__sifr_bucket_option".to_string(),
+                    ty: None,
+                    value: bucket_option_expr,
+                },
+                RustStmt::Let {
+                    mutable: false,
+                    name: "__sifr_bucket".to_string(),
+                    ty: None,
+                    value: RustExpr::Ref {
+                        mutable: true,
+                        expr: Box::new(RustExpr::Index {
+                            expr: Box::new(RustExpr::MethodCall {
+                                receiver: Box::new(RustExpr::Ident(
+                                    "__sifr_bucket_option".to_string(),
+                                )),
+                                method: "as_mut_slice".to_string(),
+                                args: vec![],
+                            }),
+                            index: Box::new(RustExpr::Cast {
+                                expr: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+                                ty: RustType::Named("usize".to_string()),
+                            }),
+                        }),
+                    },
+                },
+                RustStmt::Let {
+                    mutable: false,
+                    name: "__sifr_pop_index".to_string(),
+                    ty: None,
+                    value: RustExpr::BinOp {
+                        left: Box::new(RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Ident("__sifr_bucket".to_string())),
+                            method: "len".to_string(),
+                            args: vec![],
+                        }),
+                        op: "-".to_string(),
+                        right: Box::new(RustExpr::Cast {
+                            expr: Box::new(RustExpr::Literal(RustLiteral::Int(1))),
+                            ty: RustType::Named("usize".to_string()),
+                        }),
+                    },
+                },
+            ],
+            expr: Some(Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("__sifr_bucket".to_string())),
+                method: "remove".to_string(),
+                args: vec![RustExpr::Ident("__sifr_pop_index".to_string())],
+            })),
         })
     }
 

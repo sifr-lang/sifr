@@ -713,11 +713,7 @@ macro_rules! stmt_expr_literals_and_calls {
                 };
                 return Ok(Some(
                     match crate::resolve_alias_type_for_plain_call(args[0].ty()) {
-                        Type::Int | Type::LiteralInt(_) => crate::RustExpr::MethodCall {
-                            receiver: Box::new(lowered_arg),
-                            method: "to_f64_proven_exact".to_string(),
-                            args: vec![],
-                        },
+                        Type::Int | Type::LiteralInt(_) => crate::stmt_support_emitter::checked_integer_codegen::exact_integer_float_literal(&args[0])?,
                         Type::FixedInt(_) => crate::RustExpr::Cast {
                             expr: Box::new(lowered_arg),
                             ty: crate::RustType::F64,

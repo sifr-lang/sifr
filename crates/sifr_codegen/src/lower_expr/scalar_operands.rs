@@ -22,11 +22,10 @@ pub(super) fn try_lower_simple_range_operand_expr(expr: &HirExpr) -> Option<Rust
 pub(super) fn try_lower_mixed_float_operand_expr(expr: &HirExpr) -> Option<RustExpr> {
     let lowered = try_lower_simple_binop_operand_expr(expr)?;
     if is_int_like_simple(expr.ty()) {
-        return Some(RustExpr::MethodCall {
-            receiver: Box::new(lowered),
-            method: "to_f64_proven_exact".to_string(),
-            args: vec![],
-        });
+        return crate::stmt_support_emitter::checked_integer_codegen::exact_integer_float_literal(
+            expr,
+        )
+        .ok();
     }
     Some(lowered)
 }

@@ -54,12 +54,10 @@ fn _expand_tabs_impl(text: &String, tabsize: SifrInt) -> String {
     let mut i: SifrInt = SifrInt::from_i64(0);
     while (&i < &SifrInt::from(__sifr_chars_text.len())) {
         let ch_opt: Option<String> = Some({
-            let Some(__indexed_char) = __sifr_chars_text
+            let __indexed_char_option = __sifr_chars_text
                 .get(::sifr_runtime::to_usize_proven(&(i)))
-                .map(|c| c.to_string()) else {
-                unreachable!("compiler-verified string index should be in range");
-            };
-            __indexed_char
+                .map(|c| c.to_string());
+            __indexed_char_option.as_slice()[0_usize].clone()
         });
         if let Some(ch_opt) = ch_opt {
             let ch: String = ch_opt;
@@ -117,12 +115,10 @@ fn _has_non_whitespace(text: &String) -> bool {
     let mut i: SifrInt = SifrInt::from_i64(0);
     while (&i < &SifrInt::from(__sifr_chars_text.len())) {
         let ch: Option<String> = Some({
-            let Some(__indexed_char) = __sifr_chars_text
+            let __indexed_char_option = __sifr_chars_text
                 .get(::sifr_runtime::to_usize_proven(&(i)))
-                .map(|c| c.to_string()) else {
-                unreachable!("compiler-verified string index should be in range");
-            };
-            __indexed_char
+                .map(|c| c.to_string());
+            __indexed_char_option.as_slice()[0_usize].clone()
         });
         if let Some(ch) = ch {
             if ch != " " {
@@ -191,12 +187,10 @@ fn _trim_line(line: &String) -> String {
     let mut start: SifrInt = SifrInt::from_i64(0);
     while (&start < &SifrInt::from(__sifr_chars_line.len()))
         && (({
-            let Some(__indexed_char) = __sifr_chars_line
+            let __indexed_char_option = __sifr_chars_line
                 .get(::sifr_runtime::to_usize_proven(&(start)))
-                .map(|c| c.to_string()) else {
-                unreachable!("compiler-verified string index should be in range");
-            };
-            __indexed_char
+                .map(|c| c.to_string());
+            __indexed_char_option.as_slice()[0_usize].clone()
         }) == " ")
     {
         start = &start + &SifrInt::from_i64(1);
@@ -394,14 +388,10 @@ fn dedent(text: &String) -> String {
             while (&j < &SifrInt::from(__sifr_chars_line.len())) {
                 if !done {
                     let ch: Option<String> = Some({
-                        let Some(__indexed_char) = __sifr_chars_line
+                        let __indexed_char_option = __sifr_chars_line
                             .get(::sifr_runtime::to_usize_proven(&(j)))
-                            .map(|c| c.to_string()) else {
-                            unreachable!(
-                                "compiler-verified string index should be in range"
-                            );
-                        };
-                        __indexed_char
+                            .map(|c| c.to_string());
+                        __indexed_char_option.as_slice()[0_usize].clone()
                     });
                     if let Some(ch) = ch {
                         if ch == " " {

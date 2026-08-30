@@ -617,17 +617,6 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
         []
     ),
     active_entry!(
-        "SIFR-INT-0006",
-        "INT",
-        "Exact integer to float conversion requires handling precision loss.",
-        Severity::Error,
-        "crates/sifr/tests/e2e/fail/exact_int_true_division_requires_handling.sifr",
-        "exact integer to float conversion requires handling possible overflow or precision loss",
-        "sifr_type_system",
-        [],
-        []
-    ),
-    active_entry!(
         "SIFR-INT-0007",
         "INT",
         "Bool and integer comparison requires explicit conversion.",

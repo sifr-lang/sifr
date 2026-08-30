@@ -86,6 +86,29 @@ pub(super) fn integer_division_error_union(ty: &Type) -> Option<(&Type, &Type, &
     ))
 }
 
+pub(super) fn result_error_member<'a>(
+    result_ty: &'a Type,
+    expected: &str,
+) -> Option<(&'a Type, &'a Type)> {
+    let Type::Result(_, error_ty) = result_ty.resolve_alias() else {
+        return None;
+    };
+    let resolved_error = crate::resolve_alias_type_for_plain_call(error_ty.as_ref());
+    if matches!(resolved_error, Type::Class { name, .. } if name == expected) {
+        return Some((error_ty.as_ref(), error_ty.as_ref()));
+    }
+    let Type::Union(members) = resolved_error else {
+        return None;
+    };
+    let member = members.iter().find(|member| {
+        matches!(
+            crate::resolve_alias_type_for_plain_call(member),
+            Type::Class { name, .. } if name == expected
+        )
+    })?;
+    Some((error_ty.as_ref(), member))
+}
+
 pub(crate) fn integer_float_conversion_error_union(ty: &Type) -> Option<(&Type, &Type, &Type)> {
     let Type::Result(ok_ty, err_ty) = ty else {
         return None;

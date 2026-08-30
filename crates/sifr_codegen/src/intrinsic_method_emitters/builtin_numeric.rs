@@ -2,6 +2,59 @@ use super::{
     HirExpr, RustEmitter, RustExpr, Type, registry_option_inner_type,
     registry_uses_debug_display_format,
 };
+use std::str::FromStr as _;
+
+fn decimal_literal_expr(argument: &HirExpr) -> Option<RustExpr> {
+    let HirExpr::StringLiteral(source) = argument else {
+        return None;
+    };
+    let value = rust_decimal::Decimal::from_str_exact(source).ok()?;
+    Some(RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec![
+            "Decimal".to_string(),
+            "from_i128_with_scale".to_string(),
+        ])),
+        args: vec![
+            RustExpr::Verbatim(format!("{}_i128", value.mantissa())),
+            RustExpr::Literal(crate::RustLiteral::Int(i64::from(value.scale()))),
+        ],
+    })
+}
+
+fn bigdecimal_literal_expr(argument: &HirExpr) -> Option<RustExpr> {
+    let HirExpr::StringLiteral(source) = argument else {
+        return None;
+    };
+    let value = bigdecimal::BigDecimal::from_str(source).ok()?;
+    let (coefficient, scale) = value.as_bigint_and_exponent();
+    let bytes = coefficient
+        .to_signed_bytes_be()
+        .into_iter()
+        .map(|byte| RustExpr::Literal(crate::RustLiteral::Int(i64::from(byte))))
+        .collect();
+    Some(RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec![
+            "BigDecimal".to_string(),
+            "new".to_string(),
+        ])),
+        args: vec![
+            RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    "bigdecimal".to_string(),
+                    "num_bigint".to_string(),
+                    "BigInt".to_string(),
+                    "from_signed_bytes_be".to_string(),
+                ])),
+                args: vec![RustExpr::Ref {
+                    mutable: false,
+                    expr: Box::new(RustExpr::Vec(bytes)),
+                }],
+            },
+            RustExpr::Literal(crate::RustLiteral::Int(scale)),
+        ],
+    })
+}
+
 impl RustEmitter {
     pub(crate) fn try_lower_registry_numeric_builtin_call_expr(
         &mut self,
@@ -316,7 +369,14 @@ impl RustEmitter {
                     Some(crate::RustExpr::MethodCall {
                         receiver: Box::new(self.coerce_expr_to_sifr_int_method_receiver(base)),
                         method: "pow_known_valid".to_string(),
-                        args: vec![self.coerce_expr_to_sifr_int_comparison_operand(exp)],
+                        args: vec![crate::RustExpr::Cast {
+                            expr: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Int(
+                                crate::integer_literal_decimal(&args[1])?
+                                    .parse::<i64>()
+                                    .ok()?,
+                            ))),
+                            ty: crate::RustType::Named("u32".to_string()),
+                        }],
                     })
                 } else if matches!(
                     crate::resolve_alias_type_for_plain_call(args[0].ty()),
@@ -456,11 +516,8 @@ impl RustEmitter {
                     });
                 }
                 match crate::resolve_alias_type_for_plain_call(args[0].ty()) {
-                    Type::Int | Type::LiteralInt(_) => Some(crate::RustExpr::MethodCall {
-                        receiver: Box::new(lowered),
-                        method: "to_f64_proven_exact".to_string(),
-                        args: vec![],
-                    }),
+                    Type::Int | Type::LiteralInt(_) =>
+                        crate::stmt_support_emitter::checked_integer_codegen::exact_integer_float_literal(&args[0]).ok(),
                     Type::FixedInt(_) => Some(crate::RustExpr::Cast {
                         expr: Box::new(lowered),
                         ty: crate::RustType::F64,
@@ -694,31 +751,7 @@ impl RustEmitter {
                         args: vec![lowered],
                     }),
                     Type::Decimal => Some(lowered),
-                    Type::Str | Type::LiteralStr(_) => Some(crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::FnCall {
-                            func: Box::new(crate::RustExpr::Path(vec![
-                                "Decimal".to_string(),
-                                "from_str_exact".to_string(),
-                            ])),
-                            args: vec![crate::RustExpr::MethodCall {
-                                receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered))),
-                                method: "as_str".to_string(),
-                                args: vec![],
-                            }],
-                        }),
-                        method: "unwrap_or_else".to_string(),
-                        args: vec![crate::RustExpr::Closure {
-                            params: vec![crate::RustParam::Named {
-                                name: "__e".to_string(),
-                                ty: crate::RustType::Named("_".to_string()),
-                            }],
-                            body: Box::new(crate::RustExpr::MacroCall {
-                                name: "unreachable".to_string(),
-                                args: vec![],
-                            }),
-                            is_move: false,
-                        }],
-                    }),
+                    Type::Str | Type::LiteralStr(_) => decimal_literal_expr(&args[0]),
                     Type::BigDecimal => Some(crate::RustExpr::MethodCall {
                         receiver: Box::new(crate::RustExpr::MethodCall {
                             receiver: Box::new(crate::RustExpr::FnCall {
@@ -781,35 +814,12 @@ impl RustEmitter {
                             self, lowered,
                         ),
                     ),
-                    Type::Decimal | Type::Str | Type::LiteralStr(_) => {
-                        let source = match crate::resolve_alias_type_for_plain_call(args[0].ty()) {
-                            Type::Decimal => crate::RustExpr::MethodCall {
-                                receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered))),
-                                method: "to_string".to_string(),
-                                args: vec![],
-                            },
-                            _ => lowered,
-                        };
-                        Some(crate::RustExpr::MethodCall {
-                            receiver: Box::new(crate::RustExpr::MethodCall {
-                                receiver: Box::new(crate::RustExpr::Paren(Box::new(source))),
-                                method: "parse::<BigDecimal>".to_string(),
-                                args: vec![],
-                            }),
-                            method: "unwrap_or_else".to_string(),
-                            args: vec![crate::RustExpr::Closure {
-                                params: vec![crate::RustParam::Named {
-                                    name: "__e".to_string(),
-                                    ty: crate::RustType::Named("_".to_string()),
-                                }],
-                                body: Box::new(crate::RustExpr::MacroCall {
-                                    name: "unreachable".to_string(),
-                                    args: vec![],
-                                }),
-                                is_move: false,
-                            }],
-                        })
-                    }
+                    Type::Decimal => Some(
+                        crate::stmt_support_emitter::checked_integer_codegen::decimal_to_bigdecimal_expr(
+                            lowered,
+                        ),
+                    ),
+                    Type::Str | Type::LiteralStr(_) => bigdecimal_literal_expr(&args[0]),
                     Type::BigDecimal => Some(lowered),
                     _ => None,
                 }

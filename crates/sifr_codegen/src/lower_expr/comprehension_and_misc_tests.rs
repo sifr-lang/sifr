@@ -514,30 +514,10 @@ pub(super) fn lowers_dict_index_to_proven_some_block_for_non_optional_hir_type()
     };
 
     let lowered = try_lower_leaf_expr(&expr).expect("dict index lowered");
-    let RustExpr::Block { stmts, expr } = lowered else {
-        panic!("expected block lowering");
-    };
     assert!(matches!(
-        stmts.first(),
-        Some(RustStmt::LetElse {
-            pattern,
-            value: RustExpr::MethodCall { method, .. },
-            else_body,
-        }) if pattern == "Some(__sifr_proven_dict_value)"
-            && method == "cloned"
-            && matches!(
-                else_body.first(),
-                Some(RustStmt::Expr(RustExpr::FnCall { func, .. }))
-                    if matches!(func.as_ref(), RustExpr::Path(path) if path == &vec![
-                        "std".to_string(),
-                        "process".to_string(),
-                        "abort".to_string()
-                    ])
-            )
-    ));
-    assert!(matches!(
-        expr.as_deref(),
-        Some(RustExpr::Ident(name)) if name == "__sifr_proven_dict_value"
+        lowered,
+        RustExpr::Clone(inner)
+            if matches!(inner.as_ref(), RustExpr::Index { .. })
     ));
 }
 

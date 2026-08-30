@@ -291,20 +291,7 @@ pub(super) fn lowers_simple_mixed_int_float_division_with_name_operands() {
         ty: Type::Float,
     };
 
-    let lowered = try_lower_leaf_expr(&bin).expect("mixed int/float-name division lowered");
-    assert!(matches!(
-        lowered,
-        RustExpr::BinOp { op, left, right }
-            if op == "/"
-                && matches!(
-                    left.as_ref(),
-                    RustExpr::MethodCall { receiver, method, args }
-                        if method == "to_f64_proven_exact"
-                            && args.is_empty()
-                            && matches!(receiver.as_ref(), RustExpr::Ident(name) if name == "lhs")
-                )
-                && matches!(right.as_ref(), RustExpr::Ident(name) if name == "rhs")
-    ));
+    assert!(try_lower_leaf_expr(&bin).is_none());
 }
 
 #[test]
@@ -382,20 +369,7 @@ pub(super) fn lowers_alias_wrapped_mixed_int_float_division_with_name_operands()
         ty: alias_float,
     };
 
-    let lowered = try_lower_leaf_expr(&bin).expect("alias mixed int/float-name division lowered");
-    assert!(matches!(
-        lowered,
-        RustExpr::BinOp { op, left, right }
-            if op == "/"
-                && matches!(
-                    left.as_ref(),
-                    RustExpr::MethodCall { receiver, method, args }
-                        if method == "to_f64_proven_exact"
-                            && args.is_empty()
-                            && matches!(receiver.as_ref(), RustExpr::Ident(name) if name == "lhs")
-                )
-                && matches!(right.as_ref(), RustExpr::Ident(name) if name == "rhs")
-    ));
+    assert!(try_lower_leaf_expr(&bin).is_none());
 }
 
 #[test]
@@ -485,7 +459,7 @@ pub(super) fn lowers_simple_mixed_int_float_floor_division_binop_as_div_with_cas
         try_lower_leaf_expr(&bin),
         Some(RustExpr::BinOp { op, left, right })
             if op == "/"
-                && matches!(left.as_ref(), RustExpr::MethodCall { method, .. } if method == "to_f64_proven_exact")
+                && matches!(left.as_ref(), RustExpr::Literal(RustLiteral::Float(value)) if *value == 7.0)
                 && matches!(right.as_ref(), RustExpr::Cast { ty: RustType::F64, .. })
     ));
 }
@@ -503,7 +477,7 @@ pub(super) fn lowers_simple_mixed_float_int_floor_division_binop_as_div_with_cas
         Some(RustExpr::BinOp { op, left, right })
             if op == "/"
                 && matches!(left.as_ref(), RustExpr::Cast { ty: RustType::F64, .. })
-                && matches!(right.as_ref(), RustExpr::MethodCall { method, .. } if method == "to_f64_proven_exact")
+                && matches!(right.as_ref(), RustExpr::Literal(RustLiteral::Float(value)) if *value == 2.0)
     ));
 }
 
@@ -519,7 +493,7 @@ pub(super) fn lowers_simple_mixed_int_float_division_binop() {
         try_lower_leaf_expr(&bin),
         Some(RustExpr::BinOp { op, left, right })
             if op == "/"
-                && matches!(left.as_ref(), RustExpr::MethodCall { method, .. } if method == "to_f64_proven_exact")
+                && matches!(left.as_ref(), RustExpr::Literal(RustLiteral::Float(value)) if *value == 7.0)
                 && matches!(right.as_ref(), RustExpr::Cast { ty: RustType::F64, .. })
     ));
 }
@@ -537,7 +511,7 @@ pub(super) fn lowers_simple_mixed_float_int_division_binop() {
         Some(RustExpr::BinOp { op, left, right })
             if op == "/"
                 && matches!(left.as_ref(), RustExpr::Cast { ty: RustType::F64, .. })
-                && matches!(right.as_ref(), RustExpr::MethodCall { method, .. } if method == "to_f64_proven_exact")
+                && matches!(right.as_ref(), RustExpr::Literal(RustLiteral::Float(value)) if *value == 2.0)
     ));
 }
 
@@ -553,7 +527,7 @@ pub(super) fn lowers_simple_mixed_int_float_addition_binop() {
         try_lower_leaf_expr(&bin),
         Some(RustExpr::BinOp { op, left, right })
             if op == "+"
-                && matches!(left.as_ref(), RustExpr::MethodCall { method, .. } if method == "to_f64_proven_exact")
+                && matches!(left.as_ref(), RustExpr::Literal(RustLiteral::Float(value)) if *value == 7.0)
                 && matches!(right.as_ref(), RustExpr::Cast { ty: RustType::F64, .. })
     ));
 }
@@ -571,7 +545,7 @@ pub(super) fn lowers_simple_mixed_float_int_modulo_binop() {
         Some(RustExpr::BinOp { op, left, right })
             if op == "%"
                 && matches!(left.as_ref(), RustExpr::Cast { ty: RustType::F64, .. })
-                && matches!(right.as_ref(), RustExpr::MethodCall { method, .. } if method == "to_f64_proven_exact")
+                && matches!(right.as_ref(), RustExpr::Literal(RustLiteral::Float(value)) if *value == 2.0)
     ));
 }
 
@@ -587,8 +561,8 @@ pub(super) fn lowers_simple_int_true_division_binop_with_float_casts() {
         try_lower_leaf_expr(&bin),
         Some(RustExpr::BinOp { op, left, right })
             if op == "/"
-                && matches!(left.as_ref(), RustExpr::MethodCall { method, .. } if method == "to_f64_proven_exact")
-                && matches!(right.as_ref(), RustExpr::MethodCall { method, .. } if method == "to_f64_proven_exact")
+                && matches!(left.as_ref(), RustExpr::Literal(RustLiteral::Float(value)) if *value == 7.0)
+                && matches!(right.as_ref(), RustExpr::Literal(RustLiteral::Float(value)) if *value == 2.0)
     ));
 }
 

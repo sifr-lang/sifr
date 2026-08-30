@@ -29,25 +29,11 @@ pub(super) fn try_lower_simple_index_expr(
             if is_option_like_simple(result_ty) {
                 Some(projected)
             } else {
-                // Type checking proved this keyed read is present (e.g. guarded by `key in dict`).
-                // Keep runtime behavior explicit while avoiding Optional leakage in emitted Rust types.
-                Some(RustExpr::Block {
-                    stmts: vec![RustStmt::LetElse {
-                        pattern: "Some(__sifr_proven_dict_value)".to_string(),
-                        value: projected,
-                        else_body: vec![RustStmt::Expr(RustExpr::FnCall {
-                            func: Box::new(RustExpr::Path(vec![
-                                "std".to_string(),
-                                "process".to_string(),
-                                "abort".to_string(),
-                            ])),
-                            args: vec![],
-                        })],
-                    }],
-                    expr: Some(Box::new(RustExpr::Ident(
-                        "__sifr_proven_dict_value".to_string(),
-                    ))),
-                })
+                let direct = RustExpr::Index {
+                    expr: Box::new(try_lower_leaf_or_name_expr(object)?),
+                    index: Box::new(try_lower_dict_get_key_expr(index)?),
+                };
+                Some(RustExpr::Clone(Box::new(direct)))
             }
         }
         Type::Any => Some(RustExpr::Index {

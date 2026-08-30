@@ -4,6 +4,23 @@ use super::{
     should_force_mutable_binding, should_omit_local_type_annotation, type_contains_any_or_unknown,
 };
 impl RustEmitter {
+    pub(crate) fn validate_assignment_source_type_for_ir(
+        &self,
+        name: &str,
+        target_ty: &Type,
+        value: &HirExpr,
+    ) -> Result<(), crate::CodegenError> {
+        if !crate::helpers::is_option_type(target_ty)
+            && crate::helpers::is_option_type(value.ty())
+            && !value.ty().is_assignable_to(target_ty)
+        {
+            return Err(crate::CodegenError::new(format!(
+                "codegen invariant violated: optional value reached assignment to non-optional local `{name}`"
+            )));
+        }
+        Ok(())
+    }
+
     pub(crate) fn try_lower_stmt_block_for_ir_inner(
         &mut self,
         stmts: &[HirStmt],
@@ -128,35 +145,17 @@ impl RustEmitter {
                             lowered
                         };
                     let lowered_value = self.rewrite_stdlib_constant_idents_in_expr(lowered_value);
-                    let lowered_value = if let Some(target_ty) =
-                        self.local_binding_types.get(name).cloned()
-                    {
-                        let mut lowered = self.coerce_local_value_for_target_type_for_ir(
-                            &target_ty,
-                            value,
-                            lowered_value,
-                        )?;
-                        if !crate::helpers::is_option_type(&target_ty)
-                            && crate::helpers::is_option_type(value.ty())
-                            && !value.ty().is_assignable_to(&target_ty)
-                        {
-                            let fallback = if crate::helpers::is_copy_type_for_codegen(&target_ty) {
-                                crate::RustExpr::Ident(name.clone())
-                            } else {
-                                crate::RustExpr::Clone(Box::new(crate::RustExpr::Ident(
-                                    name.clone(),
-                                )))
-                            };
-                            lowered = crate::RustExpr::MethodCall {
-                                receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered))),
-                                method: "unwrap_or".to_string(),
-                                args: vec![fallback],
-                            };
-                        }
-                        lowered
-                    } else {
-                        lowered_value
-                    };
+                    let lowered_value =
+                        if let Some(target_ty) = self.local_binding_types.get(name).cloned() {
+                            self.validate_assignment_source_type_for_ir(name, &target_ty, value)?;
+                            self.coerce_local_value_for_target_type_for_ir(
+                                &target_ty,
+                                value,
+                                lowered_value,
+                            )?
+                        } else {
+                            lowered_value
+                        };
                     let mut lowered = vec![RustStmt::Assign {
                         target: crate::RustExpr::Ident(name.clone()),
                         value: lowered_value,
@@ -174,7 +173,7 @@ impl RustEmitter {
                     };
                     let value_expr = self.rewrite_stdlib_constant_idents_in_expr(value_expr);
                     let Some(lowered) =
-                        self.lower_exact_int_augassign_stmt_for_ir(name, op, value_expr)
+                        self.lower_exact_int_augassign_stmt_for_ir(name, op, value, value_expr)
                     else {
                         return Ok(None);
                     };
@@ -565,56 +564,16 @@ impl RustEmitter {
                             ],
                         }))
                     } else if self.try_closure_depth > 0 {
-                        let wrap_option = self
-                            .try_closure_option_wrap
-                            .last()
-                            .copied()
-                            .unwrap_or(false);
-                        let Some(mut lowered_return_value) = self
+                        let Some(lowered_return_value) = self
                             .lower_return_value_expr_for_ir(value, return_ty_snapshot.as_ref())?
                         else {
                             return Ok(None);
                         };
-
-                        if !wrap_option {
-                            if let Some(return_ty) = return_ty_snapshot.as_ref() {
-                                if let Type::Result(ok_ty, _) =
-                                    crate::resolve_alias_type_for_plain_call(return_ty)
-                                {
-                                    let value_is_none_like = is_none_like_result_value(value);
-                                    if value_is_none_like
-                                        && matches!(
-                                            crate::resolve_alias_type_for_plain_call(
-                                                ok_ty.as_ref()
-                                            ),
-                                            Type::None
-                                        )
-                                    {
-                                        lowered_return_value = crate::RustExpr::FnCall {
-                                            func: Box::new(crate::RustExpr::Path(vec![
-                                                "Ok".to_string(),
-                                            ])),
-                                            args: vec![crate::RustExpr::Literal(
-                                                crate::RustLiteral::Unit,
-                                            )],
-                                        };
-                                    }
-                                }
-                            }
-                        }
-
-                        let try_payload = if wrap_option {
-                            crate::RustExpr::FnCall {
-                                func: Box::new(crate::RustExpr::Path(vec!["Some".to_string()])),
-                                args: vec![lowered_return_value],
-                            }
-                        } else {
-                            lowered_return_value
-                        };
-                        RustStmt::Return(Some(crate::RustExpr::FnCall {
-                            func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
-                            args: vec![try_payload],
-                        }))
+                        RustStmt::Return(Some(self.try_closure_return_value_for_ir(
+                            lowered_return_value,
+                            is_none_like_result_value(value),
+                            return_ty_snapshot.as_ref(),
+                        )))
                     } else {
                         let Some(lowered_return_value) = self
                             .lower_return_value_expr_for_ir(value, return_ty_snapshot.as_ref())?
@@ -624,45 +583,9 @@ impl RustEmitter {
                         RustStmt::Return(Some(lowered_return_value))
                     }
                 } else if self.try_closure_depth > 0 {
-                    let wrap_option = self
-                        .try_closure_option_wrap
-                        .last()
-                        .copied()
-                        .unwrap_or(false);
-                    if wrap_option {
-                        RustStmt::Return(Some(crate::RustExpr::FnCall {
-                            func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
-                            args: vec![crate::RustExpr::FnCall {
-                                func: Box::new(crate::RustExpr::Path(vec!["Some".to_string()])),
-                                args: vec![crate::RustExpr::Literal(crate::RustLiteral::Unit)],
-                            }],
-                        }))
-                    } else {
-                        let direct_result_none =
-                            return_ty_snapshot.as_ref().is_some_and(|ret_ty| {
-                                match crate::resolve_alias_type_for_plain_call(ret_ty) {
-                                    Type::Result(ok_ty, _) => matches!(
-                                        crate::resolve_alias_type_for_plain_call(ok_ty.as_ref()),
-                                        Type::None
-                                    ),
-                                    _ => false,
-                                }
-                            });
-                        if direct_result_none {
-                            RustStmt::Return(Some(crate::RustExpr::FnCall {
-                                func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
-                                args: vec![crate::RustExpr::FnCall {
-                                    func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
-                                    args: vec![crate::RustExpr::Literal(crate::RustLiteral::Unit)],
-                                }],
-                            }))
-                        } else {
-                            RustStmt::Return(Some(crate::RustExpr::FnCall {
-                                func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
-                                args: vec![crate::RustExpr::Literal(crate::RustLiteral::Unit)],
-                            }))
-                        }
-                    }
+                    RustStmt::Return(Some(
+                        self.try_closure_unit_return_for_ir(return_ty_snapshot.as_ref()),
+                    ))
                 } else if self.emission_ctx.in_display_impl {
                     RustStmt::Return(Some(crate::RustExpr::FnCall {
                         func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
