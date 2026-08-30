@@ -39,9 +39,11 @@ library modules.
 - exact custom types with one registered codec; and
 - SQLite dynamic storage-class unions.
 
-`canonical_read_type` preserves storage width and nominal identity. It does not
-use `Any`, `str`, or `bytes` as a fallback. SQLite dynamic columns preserve each
-allowed storage class, including `None`.
+`canonical_read_type` preserves storage width and nominal identity for common
+types. `canonical_read_type_in` uses the selected server-profile codec registry
+for custom types. A registry-free custom-type request is an error. Neither path
+uses `Any`, `str`, or `bytes` as a fallback. SQLite dynamic columns preserve
+each allowed storage class, including `None`.
 
 ## Bind contract
 
@@ -52,7 +54,9 @@ reason.
 Exact Sifr and database types bind without conversion. Nullable input cannot
 bind to a non-null parameter. Exact `int` uses a checked fixed-width encoder.
 Different fixed widths or signs do not convert implicitly. A 32-bit float target
-checks range and precision. Bounded text and binary targets check length.
+checks range and precision. A bounded decimal target checks precision and scale.
+Bounded text and binary targets check length. SQLite dynamic parameters accept
+only values whose storage classes are in the declared storage-class set.
 
 A Sifr `list[T]` binds only to a one-dimensional SQL array with lower bound one.
 `SqlArray[T]` preserves dimensions and lower bounds. Array elements use the same
@@ -68,9 +72,11 @@ Each `CodecContract` contains one database type, one Sifr type, accepted server
 profiles, closed encode and decode errors, null behavior, wire-format identity,
 and required panic containment.
 
-`CodecRegistry` rejects duplicate codec identities and duplicate database-type
-registrations. Unknown custom types are compile errors. Runtime codec operations
-return `SqlError`; the common boundary catches and redacts a provider panic.
+`CodecRegistry` selects one server profile. It rejects duplicate codec identities
+and duplicate database-type registrations within that profile. Separate
+profiles can select different wire codecs for the same common database type.
+Unknown custom types are compile errors. Runtime codec operations return
+`SqlError`; the common boundary catches and redacts a provider panic.
 
 ## Cardinality and effects
 
@@ -98,7 +104,8 @@ A transaction exclusively borrows its connection. A transaction stream borrows
 the transaction. A pool stream owns its leased connection until close.
 
 Bound parameters contain only owned values. Slots are sorted and unique. No
-borrowed value can enter an execution request.
+borrowed value can enter an execution request. Debug output shows value kinds
+and sizes but never shows parameter contents, profile contents, or SQL text.
 
 Rust compile-fail documentation tests enforce the task and borrow boundaries.
 Static trait tests enforce the pool and connection capabilities.

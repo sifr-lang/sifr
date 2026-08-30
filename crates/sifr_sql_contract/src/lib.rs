@@ -60,7 +60,8 @@ pub use slice::{
 };
 pub use sql_type::{
     DatabaseType, DecimalRepresentation, IntegerSign, IntegerWidth, Nullability, SifrType,
-    SqliteStorageClass, canonical_read_type, canonical_read_type_with_nullability,
+    SqliteStorageClass, canonical_read_type, canonical_read_type_in,
+    canonical_read_type_with_nullability, canonical_read_type_with_nullability_in,
 };
 
 /// The canonical serialization and fingerprint contract for schema graphs.

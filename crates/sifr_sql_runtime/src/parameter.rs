@@ -19,7 +19,7 @@ impl RuntimeCodecIdentity {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub enum OwnedSqlValue {
     Null,
     Bool(bool),
@@ -34,6 +34,42 @@ pub enum OwnedSqlValue {
         type_identity: String,
         payload: Arc<[u8]>,
     },
+}
+
+impl fmt::Debug for OwnedSqlValue {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Null => formatter.write_str("Null"),
+            Self::Bool(_) => formatter.write_str("Bool(<redacted>)"),
+            Self::Signed(_) => formatter.write_str("Signed(<redacted>)"),
+            Self::Unsigned(_) => formatter.write_str("Unsigned(<redacted>)"),
+            Self::Float(_) => formatter.write_str("Float(<redacted>)"),
+            Self::ExactInteger(value) => formatter
+                .debug_struct("ExactInteger")
+                .field("len", &value.len())
+                .finish(),
+            Self::Text(value) => formatter
+                .debug_struct("Text")
+                .field("len", &value.len())
+                .finish(),
+            Self::Bytes(value) => formatter
+                .debug_struct("Bytes")
+                .field("len", &value.len())
+                .finish(),
+            Self::Sequence(values) => formatter
+                .debug_struct("Sequence")
+                .field("len", &values.len())
+                .finish(),
+            Self::Encoded {
+                type_identity,
+                payload,
+            } => formatter
+                .debug_struct("Encoded")
+                .field("type_identity", type_identity)
+                .field("len", &payload.len())
+                .finish(),
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq)]

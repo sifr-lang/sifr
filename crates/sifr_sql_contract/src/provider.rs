@@ -1,6 +1,6 @@
 use crate::{
-    Cardinality, CodecIdentity, CodecRegistry, DatabaseType, EffectContract, Nullability, ObjectId,
-    SifrType, canonical_read_type_with_nullability,
+    Cardinality, CodecIdentity, CodecRegistry, DatabaseType, EffectContract, NullCodecBehavior,
+    Nullability, ObjectId, SifrType, canonical_read_type_with_nullability_in,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
@@ -29,6 +29,7 @@ pub struct ProviderResultField {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ProviderAnalysis {
+    pub server_profile: String,
     pub normalized_statement: String,
     pub parameters: Vec<ProviderParameter>,
     pub result_fields: Vec<ProviderResultField>,
@@ -59,7 +60,8 @@ pub trait DialectSemantics {
 
 impl ProviderAnalysis {
     pub fn validate(&self, codecs: &CodecRegistry) -> Result<(), ProviderAnalysisError> {
-        if self.normalized_statement.trim().is_empty()
+        if self.server_profile != codecs.server_profile()
+            || self.normalized_statement.trim().is_empty()
             || self
                 .semantic_flags
                 .iter()
@@ -72,7 +74,7 @@ impl ProviderAnalysis {
         }
         for (expected_slot, parameter) in self.parameters.iter().enumerate() {
             if usize::try_from(parameter.slot) != Ok(expected_slot)
-                || !codec_matches(codecs, &parameter.codec, &parameter.database_type, None)
+                || !codec_matches(codecs, &parameter.codec, &parameter.database_type)
             {
                 return Err(ProviderAnalysisError::InvalidBind {
                     slot: parameter.slot,
@@ -83,20 +85,23 @@ impl ProviderAnalysis {
         for field in &self.result_fields {
             if field.name.is_empty()
                 || !names.insert(field.name.as_str())
-                || !codec_matches(
-                    codecs,
-                    &field.codec,
-                    &field.database_type,
-                    Some(&field.sifr_type),
-                )
+                || !codec_matches(codecs, &field.codec, &field.database_type)
             {
                 return Err(ProviderAnalysisError::InvalidResultField {
                     field: field.name.clone(),
                 });
             }
-            if !matches!(field.database_type, DatabaseType::Custom { .. })
-                && canonical_read_type_with_nullability(&field.database_type, field.nullability)
-                    .as_ref()
+            let null_rejected = field.nullability == Nullability::Nullable
+                && codecs
+                    .codec(&field.codec)
+                    .is_some_and(|codec| codec.null_behavior == NullCodecBehavior::Reject);
+            if null_rejected
+                || canonical_read_type_with_nullability_in(
+                    &field.database_type,
+                    field.nullability,
+                    codecs,
+                )
+                .as_ref()
                     != Ok(&field.sifr_type)
             {
                 return Err(ProviderAnalysisError::InvalidResultField {
@@ -112,13 +117,11 @@ fn codec_matches(
     codecs: &CodecRegistry,
     identity: &CodecIdentity,
     database: &DatabaseType,
-    sifr_type: Option<&SifrType>,
 ) -> bool {
     let Some(contract) = codecs.codec(identity) else {
         return false;
     };
     contract.database_type == *database
-        && sifr_type.is_none_or(|sifr_type| contract.sifr_type == *sifr_type)
 }
 
 fn valid_semantic_flag(value: &str) -> bool {

@@ -1,5 +1,8 @@
-use crate::{CodecRegistry, DatabaseType, Nullability, SifrType, canonical_read_type};
+use crate::{
+    CodecRegistry, DatabaseType, Nullability, SifrType, SqliteStorageClass, canonical_read_type,
+};
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeSet;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -20,6 +23,7 @@ pub struct ParameterType {
 pub enum EncodeCheck {
     ExactIntegerRange,
     Float32RangeAndPrecision,
+    DecimalPrecisionAndScale,
     TextLength,
     BinaryLength,
     ArrayShape,
@@ -55,7 +59,6 @@ pub fn bind_compatibility(
         return BindCompatibility::Rejected(BindRejection::Nullability);
     }
     if input.nullability == Nullability::Nullable
-        && matches!(target.database, DatabaseType::Custom { .. })
         && codecs
             .codec_for_database_type(&target.database)
             .is_some_and(|codec| codec.null_behavior == crate::NullCodecBehavior::Reject)
@@ -109,6 +112,15 @@ fn special_compatibility(
             EncodeCheck::Float32RangeAndPrecision,
         )),
         (SifrType::Float, DatabaseType::Float64) => Some(BindCompatibility::Exact),
+        (
+            SifrType::Decimal | SifrType::BigDecimal | SifrType::Numeric,
+            DatabaseType::Decimal {
+                precision: Some(_), ..
+            }
+            | DatabaseType::Decimal { scale: Some(_), .. },
+        ) => Some(BindCompatibility::Fallible(
+            EncodeCheck::DecimalPrecisionAndScale,
+        )),
         (
             SifrType::Str,
             DatabaseType::Text { fixed: true, .. }
@@ -181,8 +193,57 @@ fn special_compatibility(
                 None => BindCompatibility::Rejected(BindRejection::MissingCodec),
             })
         }
+        (input, DatabaseType::SqliteDynamic { storage_classes }) => {
+            Some(sqlite_dynamic_compatibility(input, storage_classes))
+        }
         _ => None,
     }
+}
+
+fn sqlite_dynamic_compatibility(
+    input: &SifrType,
+    allowed: &BTreeSet<SqliteStorageClass>,
+) -> BindCompatibility {
+    let Some(required) = sqlite_storage_classes(input) else {
+        return BindCompatibility::Rejected(BindRejection::UnsupportedPair);
+    };
+    if !required.is_subset(allowed) {
+        return BindCompatibility::Rejected(BindRejection::UnsupportedPair);
+    }
+    if matches!(input, SifrType::ExactInteger)
+        || matches!(
+            input,
+            SifrType::FixedInteger {
+                sign: crate::IntegerSign::Unsigned,
+                width: crate::IntegerWidth::Bits64,
+            }
+        )
+    {
+        BindCompatibility::Fallible(EncodeCheck::ExactIntegerRange)
+    } else {
+        BindCompatibility::Exact
+    }
+}
+
+fn sqlite_storage_classes(input: &SifrType) -> Option<BTreeSet<SqliteStorageClass>> {
+    let storage = match input {
+        SifrType::Bool | SifrType::FixedInteger { .. } | SifrType::ExactInteger => {
+            SqliteStorageClass::Integer
+        }
+        SifrType::Float => SqliteStorageClass::Real,
+        SifrType::Str => SqliteStorageClass::Text,
+        SifrType::Bytes => SqliteStorageClass::Blob,
+        SifrType::None => SqliteStorageClass::Null,
+        SifrType::Union { members } => {
+            let mut result = BTreeSet::new();
+            for member in members {
+                result.extend(sqlite_storage_classes(member)?);
+            }
+            return Some(result);
+        }
+        _ => return None,
+    };
+    Some(BTreeSet::from([storage]))
 }
 
 fn list_array_compatibility(
@@ -246,6 +307,12 @@ fn split_nested_nullability(input: &SifrType) -> (SifrType, Nullability) {
 
 fn constrained_exact(database: &DatabaseType) -> BindCompatibility {
     match database {
+        DatabaseType::Decimal {
+            precision: Some(_), ..
+        }
+        | DatabaseType::Decimal { scale: Some(_), .. } => {
+            BindCompatibility::Fallible(EncodeCheck::DecimalPrecisionAndScale)
+        }
         DatabaseType::Text {
             fixed: true,
             max_characters: _,

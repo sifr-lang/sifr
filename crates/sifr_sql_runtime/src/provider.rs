@@ -1,4 +1,5 @@
 use crate::{BoundParameters, ProviderFuture, ProviderLeaseToken, SqlError, SqlErrorKind};
+use std::fmt;
 use std::sync::Arc;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -112,7 +113,7 @@ pub struct ExecutionMetadata {
     pub schema_fingerprint: String,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub struct ExecutionRequest<P> {
     pub profile: Arc<P>,
     pub statement: Arc<str>,
@@ -122,6 +123,21 @@ pub struct ExecutionRequest<P> {
     pub returns_rows: bool,
     pub metadata: ExecutionMetadata,
     pub mode: ExecutionMode,
+}
+
+impl<P> fmt::Debug for ExecutionRequest<P> {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("ExecutionRequest")
+            .field("statement_len", &self.statement.len())
+            .field("parameters", &self.parameters)
+            .field("cardinality", &self.cardinality)
+            .field("effects", &self.effects)
+            .field("returns_rows", &self.returns_rows)
+            .field("metadata", &self.metadata)
+            .field("mode", &self.mode)
+            .finish_non_exhaustive()
+    }
 }
 
 impl<P> ExecutionRequest<P> {

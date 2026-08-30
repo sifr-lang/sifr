@@ -186,10 +186,16 @@ fn common_runtime_has_no_dialect_semantic_fallback() {
 
 #[test]
 fn execution_shape_requires_explicit_compatible_fetch_method() {
+    let parameters = BoundParameters::new(vec![OwnedParameter {
+        slot: 0,
+        codec: RuntimeCodecIdentity::new("postgresql.text.v1").expect("valid codec"),
+        value: OwnedSqlValue::Text("parameter-secret".to_string()),
+    }])
+    .expect("one parameter should bind");
     let request = ExecutionRequest {
         profile: Arc::new(App),
-        statement: Arc::from("select 1"),
-        parameters: BoundParameters::default(),
+        statement: Arc::from("select 'statement-secret'"),
+        parameters,
         cardinality: RuntimeCardinality::new(0, Some(1)).expect("valid cardinality"),
         effects: RuntimeEffectContract::new(RuntimeEffect::Read, Vec::new(), Vec::new())
             .expect("valid read effect"),
@@ -203,6 +209,10 @@ fn execution_shape_requires_explicit_compatible_fetch_method() {
         mode: ExecutionMode::FetchOptional,
     };
     assert!(request.validate().is_ok());
+    let rendered = format!("{request:?}");
+    assert!(!rendered.contains("parameter-secret"));
+    assert!(!rendered.contains("statement-secret"));
+    assert!(rendered.contains("Text { len: 16 }"));
     let incompatible = ExecutionRequest {
         mode: ExecutionMode::Execute,
         ..request

@@ -24,6 +24,7 @@ TYPE_FAMILIES = {
 }
 BIND_RESULTS = {
     "exact", "fallible-array-shape", "fallible-binary-length",
+    "fallible-decimal-precision-and-scale",
     "fallible-exact-integer-range", "fallible-float32-range-and-precision",
     "fallible-text-length", "reject-array-element", "reject-integer-sign",
     "reject-integer-width", "reject-missing-codec", "reject-nominal-identity",
@@ -171,7 +172,11 @@ def main() -> int:
     if args.self_test:
         self_test(payload)
     else:
-        print("common SQL qualification ok: types=25 bind-results=13 diagnostics=8 runtime-errors=15")
+        print(
+            "common SQL qualification ok: "
+            f"types={len(TYPE_FAMILIES)} bind-results={len(BIND_RESULTS)} "
+            f"diagnostics={len(DIAGNOSTICS)} runtime-errors={len(RUNTIME_ERRORS)}"
+        )
     return 0
 
 

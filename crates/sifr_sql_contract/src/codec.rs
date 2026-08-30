@@ -63,19 +63,30 @@ pub struct CodecContract {
     pub panic_containment: PanicContainment,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CodecRegistry {
+    server_profile: String,
     codecs: BTreeMap<CodecIdentity, CodecContract>,
     database_types: BTreeMap<DatabaseType, CodecIdentity>,
 }
 
 impl CodecRegistry {
-    pub fn from_contracts(
+    pub fn for_profile(
+        server_profile: impl Into<String>,
         contracts: impl IntoIterator<Item = CodecContract>,
     ) -> Result<Self, SchemaContractError> {
-        let mut registry = Self::default();
+        let server_profile = server_profile.into();
+        validate_identity("server profile", &server_profile)?;
+        let mut registry = Self {
+            server_profile,
+            codecs: BTreeMap::new(),
+            database_types: BTreeMap::new(),
+        };
         for contract in contracts {
             validate_contract(&contract)?;
+            if !contract.server_profiles.contains(&registry.server_profile) {
+                continue;
+            }
             if registry.codecs.contains_key(&contract.identity) {
                 return Err(invalid(format!(
                     "duplicate codec identity '{}'",
@@ -94,6 +105,11 @@ impl CodecRegistry {
             registry.codecs.insert(contract.identity.clone(), contract);
         }
         Ok(registry)
+    }
+
+    #[must_use]
+    pub fn server_profile(&self) -> &str {
+        &self.server_profile
     }
 
     #[must_use]

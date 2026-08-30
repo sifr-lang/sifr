@@ -1,4 +1,4 @@
-use crate::{CodecIdentity, ObjectId, SchemaContractError, SchemaContractErrorKind};
+use crate::{CodecIdentity, CodecRegistry, ObjectId, SchemaContractError, SchemaContractErrorKind};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
 
@@ -212,9 +212,12 @@ pub fn canonical_read_type(database: &DatabaseType) -> Result<SifrType, SchemaCo
         DatabaseType::IpAddress => SifrType::IpAddress,
         DatabaseType::IpNetwork => SifrType::IpNetwork,
         DatabaseType::MacAddress => SifrType::MacAddress,
-        DatabaseType::Custom { codec, .. } => SifrType::Custom {
-            identity: codec.as_str().to_string(),
-        },
+        DatabaseType::Custom { .. } => {
+            return Err(SchemaContractError::new(
+                SchemaContractErrorKind::InvalidProvider,
+                "custom database type requires a profile codec registry",
+            ));
+        }
         DatabaseType::SqliteDynamic { storage_classes } => {
             if storage_classes.is_empty() {
                 return Err(SchemaContractError::new(
@@ -234,12 +237,42 @@ pub fn canonical_read_type(database: &DatabaseType) -> Result<SifrType, SchemaCo
     Ok(mapped)
 }
 
+pub fn canonical_read_type_in(
+    database: &DatabaseType,
+    codecs: &CodecRegistry,
+) -> Result<SifrType, SchemaContractError> {
+    if matches!(database, DatabaseType::Custom { .. }) {
+        validate_database_type(database)?;
+        return codecs
+            .codec_for_database_type(database)
+            .map(|contract| contract.sifr_type.clone())
+            .ok_or_else(|| {
+                SchemaContractError::new(
+                    SchemaContractErrorKind::InvalidProvider,
+                    "custom database type has no codec in the selected server profile",
+                )
+            });
+    }
+    canonical_read_type(database)
+}
+
 pub fn canonical_read_type_with_nullability(
     database: &DatabaseType,
     nullability: Nullability,
 ) -> Result<SifrType, SchemaContractError> {
     Ok(with_nullability(
         canonical_read_type(database)?,
+        nullability,
+    ))
+}
+
+pub fn canonical_read_type_with_nullability_in(
+    database: &DatabaseType,
+    nullability: Nullability,
+    codecs: &CodecRegistry,
+) -> Result<SifrType, SchemaContractError> {
+    Ok(with_nullability(
+        canonical_read_type_in(database, codecs)?,
         nullability,
     ))
 }

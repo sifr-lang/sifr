@@ -33,6 +33,7 @@
     "exact",
     "fallible-array-shape",
     "fallible-binary-length",
+    "fallible-decimal-precision-and-scale",
     "fallible-exact-integer-range",
     "fallible-float32-range-and-precision",
     "fallible-text-length",
