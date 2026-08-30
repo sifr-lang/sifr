@@ -1,0 +1,188 @@
+use crate::{
+    CargoPackageId, PackageDiagnostic, SifrPackageGraph, SifrPackageId, SqlProfileConfig,
+    digest_package_graph,
+};
+use semver::Version;
+use sifr_sql_contract::{
+    ProfileAuthority, ProviderIdentity, SchemaContractError, SchemaContractErrorKind, SchemaIr,
+    SchemaProfile, build_profile_authority,
+};
+use std::collections::{BTreeMap, BTreeSet};
+use std::path::PathBuf;
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ResolvedSqlProfile {
+    pub owner_package_id: SifrPackageId,
+    pub profile_name: String,
+    pub config: SqlProfileConfig,
+    pub provider: ProviderIdentity,
+    pub schema_sources: Vec<PathBuf>,
+}
+
+impl ResolvedSqlProfile {
+    pub fn build_authority(
+        &self,
+        schema: SchemaIr,
+    ) -> Result<ProfileAuthority, SchemaContractError> {
+        if schema.provider != self.provider {
+            return Err(SchemaContractError::new(
+                SchemaContractErrorKind::InvalidProvider,
+                "normalized schema provider does not match the package-resolved profile provider",
+            ));
+        }
+        if schema.dialect.server_version != self.config.server_version
+            || schema.dialect.features != self.config.extensions
+            || schema.dialect.modes != self.config.session.sql_modes
+        {
+            return Err(SchemaContractError::new(
+                SchemaContractErrorKind::InvalidProfile,
+                "normalized schema dialect inputs do not match the profile configuration",
+            ));
+        }
+        build_profile_authority(SchemaProfile {
+            package_id: self.owner_package_id.0.clone(),
+            name: self.profile_name.clone(),
+            source_files: self
+                .config
+                .sources
+                .iter()
+                .map(|path| path.to_string_lossy().into_owned())
+                .collect(),
+            evidence: self.config.evidence,
+            strictness: self.config.strictness,
+            pooling: self.config.pooling,
+            session: self.config.session.clone(),
+            accepted_signers: self.config.accepted_signers.clone(),
+            schema,
+        })
+    }
+}
+
+pub fn resolve_sql_profiles(
+    graph: &SifrPackageGraph,
+    owner_package_id: &SifrPackageId,
+) -> Result<BTreeMap<String, ResolvedSqlProfile>, Vec<PackageDiagnostic>> {
+    let Some(owner) = graph.packages.get(owner_package_id) else {
+        return Err(vec![profile_error(
+            &CargoPackageId(owner_package_id.0.clone()),
+            PathBuf::from("sifr.toml"),
+            "sql.profiles",
+            "profile owner package is not in the resolved graph",
+        )]);
+    };
+    let graph_digest = digest_package_graph(graph);
+    let scope = graph.direct_dependency_scopes.get(owner_package_id);
+    let mut output = BTreeMap::new();
+    let mut diagnostics = Vec::new();
+    for (name, config) in &owner.manifest.sql.profiles {
+        let candidates = scope
+            .into_iter()
+            .flat_map(|scope| scope.imports.values())
+            .filter(|import| {
+                import.dependency_name == config.provider || import.import_root.0 == config.provider
+            })
+            .map(|import| import.package_id.clone())
+            .collect::<BTreeSet<_>>();
+        if candidates.len() != 1 {
+            diagnostics.push(profile_error(
+                &owner.cargo_package_id,
+                owner.sifr_manifest.clone(),
+                format!("sql.profiles.{name}.provider"),
+                if candidates.is_empty() {
+                    format!(
+                        "provider '{}' is not one exact direct Sifr dependency",
+                        config.provider
+                    )
+                } else {
+                    format!(
+                        "provider '{}' resolves to more than one package identity",
+                        config.provider
+                    )
+                },
+            ));
+            continue;
+        }
+        let Some(provider_id) = candidates.into_iter().next() else {
+            continue;
+        };
+        let Some(provider_package) = graph.packages.get(&provider_id) else {
+            diagnostics.push(profile_error(
+                &owner.cargo_package_id,
+                owner.sifr_manifest.clone(),
+                format!("sql.profiles.{name}.provider"),
+                "resolved provider package metadata is missing",
+            ));
+            continue;
+        };
+        let components = provider_package
+            .manifest
+            .compiler_components
+            .iter()
+            .map(|(component_name, component)| {
+                (
+                    format!("{component_name}@{}", component.version),
+                    component.sha256.clone(),
+                )
+            })
+            .collect::<BTreeMap<_, _>>();
+        if components.is_empty() {
+            diagnostics.push(profile_error(
+                &owner.cargo_package_id,
+                owner.sifr_manifest.clone(),
+                format!("sql.profiles.{name}.provider"),
+                "SQL provider package has no compiler component",
+            ));
+            continue;
+        }
+        let package_version = match Version::parse(&provider_package.cargo_version) {
+            Ok(version) => version,
+            Err(error) => {
+                diagnostics.push(profile_error(
+                    &owner.cargo_package_id,
+                    owner.sifr_manifest.clone(),
+                    format!("sql.profiles.{name}.provider"),
+                    format!("provider package version is not exact semantic versioning: {error}"),
+                ));
+                continue;
+            }
+        };
+        let provider = ProviderIdentity {
+            package_id: provider_package.package_id.0.clone(),
+            package_version,
+            package_source: provider_package
+                .cargo_source
+                .clone()
+                .unwrap_or_else(|| "path".to_string()),
+            package_graph_digest: format!("{}:{}", graph_digest.algorithm, graph_digest.hex),
+            compiler_components: components,
+        };
+        output.insert(
+            name.clone(),
+            ResolvedSqlProfile {
+                owner_package_id: owner_package_id.clone(),
+                profile_name: name.clone(),
+                config: config.clone(),
+                provider,
+                schema_sources: config
+                    .sources
+                    .iter()
+                    .map(|path| owner.package_root.join(path))
+                    .collect(),
+            },
+        );
+    }
+    if diagnostics.is_empty() {
+        Ok(output)
+    } else {
+        Err(diagnostics)
+    }
+}
+
+fn profile_error(
+    package_id: &CargoPackageId,
+    manifest_path: PathBuf,
+    key: impl Into<String>,
+    reason: impl Into<String>,
+) -> PackageDiagnostic {
+    PackageDiagnostic::invalid_sifr_manifest(package_id, manifest_path, key, reason)
+}

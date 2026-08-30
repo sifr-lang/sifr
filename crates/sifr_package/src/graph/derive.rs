@@ -152,6 +152,13 @@ fn load_sifr_package(
         &manifest,
         provider,
     )?;
+    validate_sql_schema_sources(
+        &package.id,
+        manifest_path,
+        package_root,
+        &manifest,
+        provider,
+    )?;
     if !manifest.declares_rust_backend() {
         validate_pure_markers(package, &package.id, provider)?;
     }
@@ -179,6 +186,66 @@ fn load_sifr_package(
             .map(|metadata| metadata.aliases.clone())
             .unwrap_or_default(),
     })
+}
+
+fn validate_sql_schema_sources(
+    cargo_package_id: &CargoPackageId,
+    manifest_path: &Path,
+    package_root: &Path,
+    manifest: &SifrManifest,
+    provider: &mut impl SourceProvider,
+) -> Result<(), PackageDiagnostic> {
+    let canonical_root = if manifest.sql.profiles.is_empty() {
+        None
+    } else {
+        Some(provider.canonicalize(package_root).map_err(|error| {
+            PackageDiagnostic::invalid_sifr_manifest(
+                cargo_package_id,
+                manifest_path.to_path_buf(),
+                "sql.profiles",
+                format!("cannot resolve package root for schema sources: {error}"),
+            )
+        })?)
+    };
+    for (profile_name, profile) in &manifest.sql.profiles {
+        for source in &profile.sources {
+            let path = package_root.join(source);
+            if !provider.is_file(&path) {
+                return Err(PackageDiagnostic::invalid_sifr_manifest(
+                    cargo_package_id,
+                    manifest_path.to_path_buf(),
+                    format!("sql.profiles.{profile_name}.source"),
+                    format!(
+                        "schema source '{}' must be a checked-in file inside the package",
+                        source.display()
+                    ),
+                ));
+            }
+            let canonical_source = provider.canonicalize(&path).map_err(|error| {
+                PackageDiagnostic::invalid_sifr_manifest(
+                    cargo_package_id,
+                    manifest_path.to_path_buf(),
+                    format!("sql.profiles.{profile_name}.source"),
+                    format!(
+                        "cannot resolve schema source '{}': {error}",
+                        source.display()
+                    ),
+                )
+            })?;
+            if !canonical_source.starts_with(canonical_root.as_deref().unwrap_or(package_root)) {
+                return Err(PackageDiagnostic::invalid_sifr_manifest(
+                    cargo_package_id,
+                    manifest_path.to_path_buf(),
+                    format!("sql.profiles.{profile_name}.source"),
+                    format!(
+                        "schema source '{}' resolves outside the package",
+                        source.display()
+                    ),
+                ));
+            }
+        }
+    }
+    Ok(())
 }
 
 fn package_root(package: &CargoPackage) -> PathBuf {

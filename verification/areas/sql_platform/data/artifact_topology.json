@@ -23,7 +23,7 @@
       "id": "sql-contract",
       "role": "compiler-contract",
       "repository_owner": "sifr_sql_contract",
-      "platform_part": "common_sql",
+      "platform_part": "schema_profiles",
       "target": "shared",
       "included_in_application": false,
       "depends_on": ["compiler-component-host"]

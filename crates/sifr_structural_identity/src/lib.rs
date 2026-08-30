@@ -12,6 +12,9 @@ pub const STATIC_PROGRAM_ALGORITHM_VERSION: u32 = 1;
 /// The current compiler-emitted method-slot table identity algorithm.
 pub const METHOD_SLOT_TABLE_ALGORITHM_VERSION: u32 = 1;
 
+/// The current nominal SQL profile identity algorithm.
+pub const PROFILE_IDENTITY_ALGORITHM_VERSION: u32 = 1;
+
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct ShapeIdentity([u8; 32]);
 
@@ -44,6 +47,27 @@ impl StaticProgramIdentity {
 
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct SlotTableIdentity([u8; 32]);
+
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct ProfileIdentity([u8; 32]);
+
+impl ProfileIdentity {
+    #[must_use]
+    pub const fn as_bytes(&self) -> &[u8; 32] {
+        &self.0
+    }
+}
+
+/// Produces the nominal identity of one package-owned schema profile.
+#[must_use]
+pub fn profile_identity(package_id: &str, profile_name: &str) -> ProfileIdentity {
+    let mut hash = Sha256::new();
+    hash.update(b"sifr-schema-profile-identity");
+    hash.update(PROFILE_IDENTITY_ALGORITHM_VERSION.to_be_bytes());
+    push_bytes(&mut hash, package_id.as_bytes());
+    push_bytes(&mut hash, profile_name.as_bytes());
+    ProfileIdentity(hash.finalize().into())
+}
 
 impl SlotTableIdentity {
     #[must_use]

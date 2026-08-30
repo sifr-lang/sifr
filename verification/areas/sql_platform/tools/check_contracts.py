@@ -276,7 +276,14 @@ def validate_cargo(baseline: dict[str, Any], qualification: dict[str, Any]) -> N
     root = read_toml(ROOT_MANIFEST_PATH)
     members = root.get("workspace", {}).get("members", [])
     require("crates/sifr_sql_dependency_lock" in members, "root workspace omits sifr_sql_dependency_lock")
+    require("crates/sifr_sql_contract" in members, "root workspace omits sifr_sql_contract")
     dependencies = root.get("workspace", {}).get("dependencies", {})
+    schema_ir_dependency = dependencies.get("sifr_sql_contract")
+    require(
+        isinstance(schema_ir_dependency, dict)
+        and schema_ir_dependency.get("path") == "crates/sifr_sql_contract",
+        "workspace does not own the SQL contract crate",
+    )
     lock_manifest = read_toml(LOCK_MANIFEST_PATH)
     lock_dependencies = lock_manifest.get("dependencies", {})
     qualified = {row["crate"]: row for row in qualification["dependencies"]}

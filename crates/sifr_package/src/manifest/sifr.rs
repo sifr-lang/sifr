@@ -9,6 +9,7 @@ use crate::manifest::sifr_fields::{
     parse_python_config, parse_rust_interop_config, parse_trust, validate_compiler_requirement,
     validate_edition,
 };
+use crate::manifest::sql_profiles::{SqlConfig, parse_sql_config};
 use std::collections::BTreeMap;
 use std::path::{Component, Path, PathBuf};
 
@@ -82,6 +83,7 @@ pub struct SifrManifest {
     pub dependencies: BTreeMap<String, SifrDependency>,
     pub dev_dependencies: BTreeMap<String, SifrDependency>,
     pub compiler_components: BTreeMap<String, CompilerComponentConfig>,
+    pub sql: SqlConfig,
     pub trust: TrustPolicy,
     pub python: PythonConfig,
     pub rust: RustInteropConfig,
@@ -161,6 +163,8 @@ impl SifrManifest {
         .map(|components| parse_compiler_components(cargo_package_id, manifest_path, components))
         .transpose()?
         .unwrap_or_default();
+        let sql = optional_table(cargo_package_id, manifest_path, &value, "sql")?;
+        let sql = parse_sql_config(cargo_package_id, manifest_path, sql)?;
         let trust = optional_table(cargo_package_id, manifest_path, &value, "trust")?
             .map(|trust| parse_trust(cargo_package_id, manifest_path, trust))
             .transpose()?
@@ -185,6 +189,7 @@ impl SifrManifest {
             dependencies,
             dev_dependencies,
             compiler_components,
+            sql,
             trust,
             python,
             rust,

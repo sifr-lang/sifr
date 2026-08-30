@@ -1,5 +1,7 @@
 use crate::cargo::lock_modes::CargoLockMode;
-use crate::cargo::package::{PackageArchiveEntry, package_dry_run_plan, validate_package_archive};
+use crate::cargo::package::{
+    PackageArchiveEntry, package_dry_run_plan, required_archive_entries, validate_package_archive,
+};
 use crate::cargo::trust::validate_backend_trust;
 use crate::diag::PackageDiagnostic;
 use crate::graph::derive::{
@@ -43,6 +45,33 @@ fn archive_missing_required_entry_reports_0403() {
         diagnostic.code == DiagnosticCode::PACKAGE_INCLUDE_EXCLUDE_OMITS_SOURCE
             && diagnostic.message.contains("src/__init__.sifr")
     }));
+}
+
+#[test]
+fn archive_requires_checked_in_schema_profile_sources() {
+    let mut package = package(TrustPolicy::default());
+    package.manifest.sql = SifrManifest::parse(
+        &package.cargo_package_id,
+        &package.sifr_manifest,
+        r#"[package]
+name = "app"
+edition = "2026"
+sifr-version = ">=0.3,<0.4"
+
+[sql.profiles.app]
+provider = "postgres"
+source = ["db/schema.sql", "db/types.sql"]
+server-version = "18"
+pooling = "session"
+schema-evidence = "migration-head"
+schema-strictness = "exact"
+"#,
+    )
+    .expect("profile manifest")
+    .sql;
+    let required = required_archive_entries(&package, &source_map(&package));
+    assert!(required.contains(&PathBuf::from("db/schema.sql")));
+    assert!(required.contains(&PathBuf::from("db/types.sql")));
 }
 
 #[test]
@@ -160,6 +189,7 @@ fn package(trust: TrustPolicy) -> SifrPackageMetadata {
             dependencies: BTreeMap::new(),
             dev_dependencies: BTreeMap::new(),
             compiler_components: BTreeMap::new(),
+            sql: crate::SqlConfig::default(),
             trust,
             python: PythonConfig::default(),
             rust: RustInteropConfig::default(),

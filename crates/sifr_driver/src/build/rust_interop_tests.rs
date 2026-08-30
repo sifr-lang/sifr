@@ -703,6 +703,7 @@ fn package_context_with_root(
             dependencies: BTreeMap::new(),
             dev_dependencies: BTreeMap::new(),
             compiler_components: BTreeMap::new(),
+            sql: sifr_package::SqlConfig::default(),
             trust,
             python: sifr_package::PythonConfig::default(),
             rust: RustInteropConfig {

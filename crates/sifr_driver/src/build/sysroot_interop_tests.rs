@@ -268,6 +268,7 @@ fn user_context() -> PackageRustInteropContext {
             dependencies: BTreeMap::new(),
             dev_dependencies: BTreeMap::new(),
             compiler_components: BTreeMap::new(),
+            sql: sifr_package::SqlConfig::default(),
             trust: TrustPolicy {
                 rust_no_panic: vec!["bridge.user_noop".to_string()],
                 ..TrustPolicy::default()

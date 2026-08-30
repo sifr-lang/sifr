@@ -130,6 +130,26 @@ pub fn validate_request(
             "imported signatures must be non-empty, unique, and sorted",
         ));
     }
+    let mut previous_artifact = None;
+    for artifact in &request.context.artifacts {
+        if artifact.kind.is_empty()
+            || artifact.identity.is_empty()
+            || artifact.format_version == 0
+            || !valid_fingerprint(&artifact.fingerprint)
+            || artifact.payload.is_empty()
+        {
+            return Err(envelope_error(
+                "context artifacts require a kind, identity, format version, fingerprint, and payload",
+            ));
+        }
+        let key = (&artifact.kind, &artifact.identity);
+        if previous_artifact.is_some_and(|previous| previous >= key) {
+            return Err(envelope_error(
+                "context artifacts must be non-empty, unique, and sorted by kind and identity",
+            ));
+        }
+        previous_artifact = Some(key);
+    }
     Ok(())
 }
 

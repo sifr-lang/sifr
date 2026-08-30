@@ -1825,6 +1825,12 @@ A new `sifr_sql_contract` crate owns compiler-facing SQL envelopes, `SchemaIR`
 interfaces, common type descriptors, capability manifests, and conformance data.
 It contains no dialect parser or runtime driver.
 
+The implemented schema-profile and canonical graph contract is detailed in
+[`sql_schema_profiles.md`](./sql_schema_profiles.md). `sifr_package` resolves
+profile providers through the locked package graph. `sifr_sql_contract` owns
+normalization, fingerprints, semantic diffs, dependency slices, generated
+profile modules, and runtime verification manifests.
+
 A new `sifr_sql_runtime` crate owns package-neutral SQL pooling, verified leases,
 session reset coordination, statement-cache policy, and cancellation cleanup. It
 depends on `sifr_runtime` and contains no provider driver or dialect semantics.
