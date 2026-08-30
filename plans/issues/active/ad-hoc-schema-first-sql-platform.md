@@ -282,7 +282,7 @@ verification inventory. This phase does not reimplement those capabilities.
 | 4 | completed | Schema profiles and canonical `SchemaIR` | Configuration sources produce exact provider-owned schema graphs, nominal profile types, fingerprints, dependency slices, diffs, and runtime contracts. |
 | 5 | completed | Common SQL contracts | Shared query kinds, complete type and bind mappings, codecs, errors, cardinality, effects, ownership, and provider interfaces have one final contract. |
 | 6 | completed | Query and fragment substrate | Query templates, owned bound queries, typed fragments, composition, safe interpolation, and cardinality adapters integrate with Sifr typing and HIR. |
-| 7 | pending | PostgreSQL schema and query compiler | PostgreSQL catalogs, grammar, resolution, typing, nullability, result records, writes, dependencies, and diagnostics work offline. |
+| 7 | completed | PostgreSQL schema and query compiler | PostgreSQL catalogs, grammar, resolution, typing, nullability, result records, writes, dependencies, and diagnostics work offline. |
 | 8 | pending | PostgreSQL semantic completion | Advanced PostgreSQL constructs, fragment scope changes, cardinality proofs, custom codecs, and exported-query stability rules are complete. |
 | 9 | pending | PostgreSQL runtime | Verified pools, session contracts, transactions, streaming, automatic statement caching, explicit fetch methods, bounded cleanup, tests, and panic-safe protocol handling are complete. |
 | 10 | pending | Incremental compiler and editor experience | Fine-grained caching, invalidation, virtual SQL documents, source maps, completion, navigation, rename, formatting, and quick fixes are complete. |
@@ -603,21 +603,21 @@ Owned scope:
 
 Acceptance criteria:
 
-- [ ] The provider uses the Milestone 0 `libpg_query` tag for each supported
+- [x] The provider uses the Milestone 0 `libpg_query` tag for each supported
   PostgreSQL major. The component manifest records every source checksum.
-- [ ] The provider embeds tagged `libpg_query` source for each supported server
+- [x] The provider embeds tagged `libpg_query` source for each supported server
   major and maps its raw tree into provider-owned syntax nodes.
-- [ ] Catalog ingestion and DDL sources normalize every supported PostgreSQL
+- [x] Catalog ingestion and DDL sources normalize every supported PostgreSQL
   object into `SchemaIR`.
-- [ ] The provider implements PostgreSQL parsing, name resolution, casts,
+- [x] The provider implements PostgreSQL parsing, name resolution, casts,
   operators, functions, aggregates, aliases, correlations, and set operations.
-- [ ] Parameter inference produces one exact database type and codec per hole.
-- [ ] Result inference produces unique named structural fields with conservative
+- [x] Parameter inference produces one exact database type and codec per hole.
+- [x] Result inference produces unique named structural fields with conservative
   and PostgreSQL-correct nullability.
-- [ ] Write analysis covers required values, generated columns, conflict clauses,
+- [x] Write analysis covers required values, generated columns, conflict clauses,
   effects, and `RETURNING`.
-- [ ] Diagnostics map to Sifr, virtual SQL, and schema spans.
-- [ ] Differential tests validate behavior against every supported PostgreSQL
+- [x] Diagnostics map to Sifr, virtual SQL, and schema spans.
+- [x] Differential tests validate behavior against every supported PostgreSQL
   server version.
 
 Focused validation:
@@ -1267,7 +1267,7 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 | 4 | completed | [#3595](https://github.com/sifr-lang/sifr/pull/3595) | `40facaf98d` | contract 9/9; component 14/14; driver 2/2; package 149; SQL 10/10; coverage, Clippy, formatting, HIR, and file-size checks pass | Opus round 2 verified the original pipeline and credential fixes on `04e00c51b`; two new mechanisms are deferred | Canonical schema profiles, provider authority pipeline, generated modules, fingerprints, slices, diffs, and runtime manifests |
 | 5 | completed | [#3597](https://github.com/sifr-lang/sifr/pull/3597) | `7f2382ae68` | contract 9/9; runtime 9/9 plus 2 compile-fail doctests; diagnostics 32/32; SQL common qualification; strict Clippy and guards pass | Final exact-SHA Opus `SATISFIED` on `f7a3e5a35` | Provider-neutral type, bind, codec, cardinality, effect, error, runtime, and ownership contracts |
 | 6 | completed | [#3599](https://github.com/sifr-lang/sifr/pull/3599) | `9944bdd450` | SQL 19/19; coverage 4/4; contract 23/23; runtime 12/12 plus two doctests; frontend 3/3; driver 2/2; strict Clippy and guards pass | Opus remediation `SATISFIED` on `0abd5109f` | Query and fragment substrate, registry, generated identifier codec, HIR, runtime binding, and execution request lowering |
-| 7 | pending | — | — | — | — | PostgreSQL schema and query compiler |
+| 7 | completed | [#3602](https://github.com/sifr-lang/sifr/pull/3602) | `46f1d06d8e` | PostgreSQL 13-18 native, component, and live matrices; SQL qualification, mutation, Clippy, and guards pass | Opus round 2 verified every original remediation on `6cd745149`; two new mechanisms are deferred | PostgreSQL schema and query compiler |
 | 8 | pending | — | — | — | — | PostgreSQL semantic completion |
 | 9 | pending | — | — | — | — | PostgreSQL runtime |
 | 10 | pending | — | — | — | — | Incremental compiler and editor experience |
@@ -1305,6 +1305,11 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 | Milestone 6 initial review | The driver profile cache silently skips a registry entry if its context artifact map is inconsistent. | Milestone 18 | Collapse or explicitly validate the two-map invariant during integrated hardening. |
 | Milestone 6 initial review | The reverse generated-identifier codec has no production consumer yet. | Milestone 10 | Use the reverse map in editor and source-display paths and qualify real generated modules. |
 | Milestone 6 remediation review | The identifier documentation's trigger bullet list does not name all boundary-underscore escapes. | Milestone 7 | Correct the list when the PostgreSQL generated-schema documentation is extended. |
+| Milestone 7 remediation review | An aggregate inside a scalar or predicate subquery marks the enclosing query as aggregate and can narrow its cardinality to exactly one. | Milestone 8 | Keep aggregate detection at one query level. Add a correlated scalar-subquery regression that preserves outer `MANY` cardinality. |
+| Milestone 7 remediation review | Explicit `DEFAULT` bypasses the required-value check for a non-null column that has no default. | Milestone 8 | Reject explicit `DEFAULT` in INSERT and UPDATE when the target has no default and cannot accept null. Add positive and negative write fixtures. |
+| Milestone 7 remediation review | The live PostgreSQL suite conflicts with the standard profiles' offline-only contract, so both required repository gates stop before tests. | Milestone 18 | Add an explicit live SQL profile or another verification-owned opt-in model. Keep standard profiles offline and make profile assignment validation understand live suites. |
+| Milestone 7 remediation review | The live server runner captures fresh facts but its default mode does not compare them with the checked evidence. | Milestone 18 | Make default execution fail on evidence drift. Keep `--write` as the explicit refresh operation. |
+| Milestone 7 remediation review | `A_Star` and unary minus produce misleading adapter diagnostics, and mixed aggregate queries lack a local GROUP BY validity check. | Milestone 8 | Add explicit syntax nodes or diagnostics and complete same-query-level grouping validation with positive and negative fixtures. |
 
 ### Milestone 0 closure record
 
@@ -1681,6 +1686,76 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
   trip. The roadmap status did not change because the phase remains active.
 - Next action: implement Milestone 7 from the merged and recorded mainline.
 
+### Milestone 7 closure record
+
+- Status: completed and merged under the phase continuation rule.
+- Starting commit: `f7697e147c55657d485548a4a0ffc568a604796c`.
+- Initial reviewed candidate: `45065c710e9134bc46cbf59c35b19fb91338264d`.
+- Remediation reviewed and final candidate:
+  `6cd74514901a66988ddd011f85b5eac7cfaf81e4`.
+- Pull request: [#3602](https://github.com/sifr-lang/sifr/pull/3602).
+- Merge commit: `46f1d06d8e72da7f068503c6a973d72acca7ccb5`.
+- Acceptance disposition: the merged candidate delivers all nine listed
+  Milestone 7 surfaces and closes every initial-review defect. The permitted
+  second review found two new soundness mechanisms. The user rule prohibits a
+  third review and assigns both mechanisms to the next item, Milestone 8. The
+  phase cannot use M7 as final cardinality or write-completeness evidence until
+  those rows close.
+- Parser result: the provider embeds the exact Milestone 0 `libpg_query` source
+  for PostgreSQL 13 through 18. The build selects one source, maps its raw tree
+  into owned nodes, preserves exact spans and parameter slots, and records
+  deterministic source content checksums.
+- Component result: six checked-in `wasm32-wasip2` components execute the real
+  parser and analyzer. The artifact authority binds their binary hashes to the
+  parser commits, Rust and WIT guest inputs, WASI SDK `33.0`, WIT Bindgen
+  `0.61.1`, and WASI-Virt `0.2.0`. The empty-linker host grants no import and
+  bounds fuel, stack, instances, memories, tables, input, and output.
+- Semantic result: catalog and DDL ingestion preserve declaration order, real
+  view results, qualified nominal identities, casts, operators, aggregates,
+  aliases, correlations, set operations, writes, conflict predicates,
+  `RETURNING`, exact codecs, nullability, and provider diagnostics across the
+  common boundary.
+- Capability result: unsafe SQL authority comes only from the exact root package
+  in the resolved package graph. A dependency cannot lend or consume the root
+  grant. Production fragment compilation consumes the resolver directly.
+- Focused validation: native parser and provider tests passed for PostgreSQL 13,
+  14, 15, 16, 17, and 18. All six final components passed exact capability-free
+  host execution. The live PostgreSQL 13-18 matrix passed version, parameter,
+  result, nullability, conflict-write, and diagnostic comparisons. Component,
+  contract, package-capability, and provider tests passed. SQL qualification,
+  mutation, dependency, formatting, selected strict Clippy, HIR, file-size, and
+  diff checks passed.
+- Create-PR gate: the one allowed run used the exact final candidate. It stopped
+  before tests because the global profile validator requires the new live SQL
+  suite in `create-pr`, while that profile forbids live network access. The gate
+  did not run again.
+- Merge gate: the one allowed run used the same exact final candidate. It stopped
+  at the same live-suite and offline-profile contradiction before tests. The gate
+  did not run again. Milestone 18 owns the verification-profile model correction.
+- Review round 1: Opus found gaps in the real server differential, view analysis,
+  declaration order, raw syntax shapes, operator and aggregate semantics, codec
+  identities, qualification, explicit null writes, executable components,
+  provider diagnostics, E strings, source checksums, spans, and unsafe-capability
+  authority.
+- Remediation: one batch implemented the missing provider mechanisms, regression
+  fixtures, exact tooling authority, real component artifact pipeline, and live
+  server evidence.
+- Review round 2: Opus verified every original remediation on the exact final
+  candidate. It returned `NOT SATISFIED` for two newly discovered mechanisms:
+  scalar-subquery aggregate leakage into outer cardinality and explicit
+  `DEFAULT` bypass of required-value checks. The
+  [published review](https://github.com/sifr-lang/sifr/pull/3602#issuecomment-5469555240)
+  assigns both to Milestone 8 and prohibits a third review.
+- Additional follow-up: Milestone 8 also owns explicit `A_Star`, unary-minus,
+  and grouping diagnostics. Milestone 18 owns the opt-in live-suite profile and
+  default-mode evidence comparison.
+- Architecture update: the SQL documents now define the PostgreSQL source and
+  artifact authority, parser and analyzer boundary, capability-free component
+  host, exact type and codec model, live evidence, and build tooling. The roadmap
+  status did not change because the phase remains active.
+- Next action: start Milestone 8 with the two deferred soundness mechanisms, then
+  complete every advanced PostgreSQL semantic and public-stability criterion.
+
 ## Closure evidence template
 
 Each milestone appends one progress record with:
@@ -1712,5 +1787,5 @@ Complete this section after Milestone 18 merges:
 - Final capability and verification inventory: pending.
 - Deferred out-of-scope work: pending.
 - Archive destination: `plans/issues/archive/ad-hoc-schema-first-sql-platform.md`.
-- Exact next action: implement Milestone 7 from current
+- Exact next action: implement Milestone 8 from current
   `origin/main`.
