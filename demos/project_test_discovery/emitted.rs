@@ -10,10 +10,9 @@ fn main() {
 }
 
 // src/helper.rs
-pub use crate::shared::BASE;
 pub use ::sifr_runtime::SifrInt;
 pub fn value() -> SifrInt {
-    BASE
+    crate::shared::__const_BASE()
 }
 
 // src/shared.rs

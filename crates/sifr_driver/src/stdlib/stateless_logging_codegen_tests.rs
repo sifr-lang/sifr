@@ -24,7 +24,9 @@ fn logging_private_declarations_codegen_through_sifr_stdlib() {
     assert!(
         private_code
             .rust
-            .contains("::sifr_stdlib::logging::get_global_level().to_i64_saturating()")
+            .contains("::sifr_stdlib::logging::get_global_level().into_sifr_int()"),
+        "{}",
+        private_code.rust
     );
     assert!(
         private_code

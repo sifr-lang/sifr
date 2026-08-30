@@ -529,7 +529,16 @@ fn test_generate_rust_multi_exports_non_main_items() {
             name: "main".to_string(),
             params: vec![],
             return_type: Type::None,
-            body: vec![HirStmt::Pass],
+            body: vec![HirStmt::Let {
+                name: "value".to_string(),
+                ty: Type::Int,
+                value: HirExpr::Name {
+                    name: "LIMIT".to_string(),
+                    binding_id: None,
+                    ty: Type::Int,
+                },
+                is_mutable: false,
+            }],
             is_async: false,
             method_kind: MethodKind::Regular,
             receiver: None,
@@ -540,7 +549,11 @@ fn test_generate_rust_multi_exports_non_main_items() {
             type_params: vec![],
         }],
         classes: vec![],
-        imports: vec![],
+        imports: vec![HirImport {
+            module: "facade".to_string(),
+            names: vec!["EXPORTED".to_string()],
+            aliases: vec![("EXPORTED".to_string(), "LIMIT".to_string())],
+        }],
         constants: vec![],
         generic_functions: std::collections::HashMap::new(),
         type_param_bounds: std::collections::HashMap::new(),
@@ -589,7 +602,24 @@ fn test_generate_rust_multi_exports_non_main_items() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let files = generate_rust_multi(&[("main", &main_module), ("utils", &utils_module)]);
+    let facade_module = HirModule {
+        functions: vec![],
+        classes: vec![],
+        imports: vec![HirImport {
+            module: "utils".to_string(),
+            names: vec!["ANSWER".to_string()],
+            aliases: vec![("ANSWER".to_string(), "EXPORTED".to_string())],
+        }],
+        constants: vec![],
+        generic_functions: std::collections::HashMap::new(),
+        type_param_bounds: std::collections::HashMap::new(),
+    };
+
+    let files = generate_rust_multi(&[
+        ("main", &main_module),
+        ("facade", &facade_module),
+        ("utils", &utils_module),
+    ]);
     let main_rs = files.get("main").expect("main module should be generated");
     let utils_rs = files
         .get("utils")
@@ -597,6 +627,14 @@ fn test_generate_rust_multi_exports_non_main_items() {
 
     assert!(main_rs.contains("fn main()"));
     assert!(!main_rs.contains("pub fn main("));
+    assert!(
+        main_rs.contains("let value: SifrInt = crate::utils::__const_ANSWER();"),
+        "{main_rs}"
+    );
+    assert!(
+        !main_rs.contains("use crate::facade::EXPORTED"),
+        "{main_rs}"
+    );
     assert!(utils_rs.contains("pub fn helper() -> SifrInt"));
     assert!(utils_rs.contains("pub struct Thing"));
     assert!(utils_rs.contains("pub fn __const_ANSWER() -> SifrInt"));

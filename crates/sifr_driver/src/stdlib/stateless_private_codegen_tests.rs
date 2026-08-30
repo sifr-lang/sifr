@@ -136,8 +136,8 @@ fn calendar_private_declarations_codegen_through_sifr_stdlib() {
         "::sifr_stdlib::calendar::calendar_isleap(::sifr_runtime::interop::SifrIntBridge::from(year))"
     ));
     assert!(private_code.rust.contains(
-        "::sifr_stdlib::calendar::calendar_monthrange(::sifr_runtime::interop::SifrIntBridge::from(year), ::sifr_runtime::interop::SifrIntBridge::from(month)).into_iter().map(|__sifr_bridge_value| __sifr_bridge_value.to_i64_saturating()).collect()"
-    ));
+        "::sifr_stdlib::calendar::calendar_monthrange(::sifr_runtime::interop::SifrIntBridge::from(year), ::sifr_runtime::interop::SifrIntBridge::from(month)).into_iter().map(|__sifr_bridge_value| __sifr_bridge_value.into_sifr_int()).collect()"
+    ), "{}", private_code.rust);
     assert!(
         compiled
             .code
@@ -357,8 +357,8 @@ fn json_private_declarations_codegen_through_sifr_stdlib() {
             "{name} should lower through _sifr.json private Rust interop declarations"
         );
     }
-    assert!(private_code.rust.contains("JSONDecodeError { message: __sifr_bridge_error.message().to_string(), line: __sifr_bridge_error.line() as i64, column: __sifr_bridge_error.column() as i64 }"));
-    assert!(private_code.rust.contains("JsonLimitError { message: __sifr_bridge_error.message().to_string(), limit: __sifr_bridge_error.limit() as i64 }"));
+    assert!(private_code.rust.contains("JSONDecodeError { message: __sifr_bridge_error.message().to_string(), line: SifrInt::from(__sifr_bridge_error.line()), column: SifrInt::from(__sifr_bridge_error.column()) }"), "{}", private_code.rust);
+    assert!(private_code.rust.contains("JsonLimitError { message: __sifr_bridge_error.message().to_string(), limit: SifrInt::from(__sifr_bridge_error.limit()) }"), "{}", private_code.rust);
     assert!(private_code.rust.contains("JsonIntegerRangeError { message: __sifr_bridge_error.message().to_string(), path: __sifr_bridge_error.path().to_string(), profile: __sifr_bridge_error.profile().to_string() }"));
     assert!(
         compiled
@@ -661,8 +661,8 @@ fn i18n_private_declarations_codegen_through_sifr_stdlib() {
         "::sifr_stdlib::i18n::i18n_format_datetime(locale, style, ::sifr_runtime::interop::SifrIntBridge::from(year)"
     ));
     assert!(private_code.rust.contains(
-        "::sifr_stdlib::i18n::i18n_collate(locale, strength, left, right).map(|__sifr_bridge_ok| __sifr_bridge_ok.to_i64_saturating())"
-    ));
+        "::sifr_stdlib::i18n::i18n_collate(locale, strength, left, right).map(|__sifr_bridge_ok| __sifr_bridge_ok.into_sifr_int())"
+    ), "{}", private_code.rust);
     assert!(private_code.rust.contains(
         "map_err(|__sifr_bridge_error| ParseError { message: __sifr_bridge_error.to_string() })"
     ));

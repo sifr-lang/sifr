@@ -95,6 +95,7 @@ mod option_binding_mutability;
 mod output_helpers;
 mod place_emitter;
 mod preamble;
+mod project_constants;
 mod project_stdlib_nominals;
 mod project_union_prelude;
 mod protocol_bridge_emitter;

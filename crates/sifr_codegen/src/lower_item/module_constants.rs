@@ -45,6 +45,19 @@ pub fn try_lower_simple_module_constant_item_result(
     try_lower_simple_module_constant_item_result_impl(name, ty, value)
 }
 
+pub(crate) fn module_constant_rust_reference(
+    name: &str,
+    ty: &Type,
+    value: &HirExpr,
+) -> Result<String, CodegenError> {
+    Ok(
+        match try_lower_simple_module_constant_item_result(name, ty, value)? {
+            Some((_, rust_reference)) => rust_reference,
+            None => format!("__const_{name}()"),
+        },
+    )
+}
+
 pub(super) fn validate_module_constant_shape(name: &str) -> Result<(), CodegenError> {
     if name.trim().is_empty() {
         return Err(CodegenError::new(

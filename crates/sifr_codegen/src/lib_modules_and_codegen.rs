@@ -232,17 +232,9 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
         .generic_class_templates
         .extend(stdlib_code.generic_class_templates.clone());
 
-    // Pre-register stdlib constants and function signatures so user code can reference them correctly
+    // Pre-register imported constants and function signatures so user code can reference them correctly.
+    crate::project_constants::register_imported_constants(&mut emitter, module, stdlib_code);
     for import in &module.imports {
-        if let Some(const_map) = stdlib_code.module_constants.get(&import.module) {
-            for name in &import.names {
-                if let Some((ty, rust_name)) = const_map.get(name) {
-                    emitter
-                        .module_constants
-                        .insert(name.clone(), (ty.clone(), rust_name.clone()));
-                }
-            }
-        }
         if let Some(sig_map) = stdlib_code.func_signatures.get(&import.module) {
             for name in &import.names {
                 register_imported_stdlib_signature(&mut emitter, stdlib_code, import, name);

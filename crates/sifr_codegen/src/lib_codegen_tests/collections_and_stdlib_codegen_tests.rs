@@ -643,7 +643,11 @@ fn test_generate_rust_multi_assembles_single_rust_file() {
     assert!(generate_block.contains("generate_rust_with_stdlib_for_module_with_project_policy("));
     assert!(generate_block.contains("structural_interop_enabled,"));
     assert!(generate_block.contains("register_imported_generic_classes("));
-    assert!(generate_block.contains("render_local_module_imports(module, &project_modules)"));
+    assert!(
+        generate_block.contains(
+            "render_local_module_imports(module, &project_modules, &project_codegen_code)"
+        )
+    );
     assert!(generate_block.contains("publicize_generated_module_source(&rust_source)"));
     assert!(generate_block.contains("required_features.extend(codegen_result.required_features)"));
     assert!(!generate_block.contains("assert_output_drained("));

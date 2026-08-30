@@ -9,11 +9,10 @@ fn main() {
 }
 
 // src/consumer.rs
-pub use crate::provider::BASE;
 pub use crate::provider::answer;
 pub use ::sifr_runtime::SifrInt;
 pub fn describe() -> SifrInt {
-    &(&answer() + &BASE) - &SifrInt::from_i64(40)
+    &(&answer() + &crate::provider::__const_BASE()) - &SifrInt::from_i64(40)
 }
 
 // src/provider.rs
