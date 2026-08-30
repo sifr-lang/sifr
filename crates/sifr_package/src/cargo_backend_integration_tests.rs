@@ -89,6 +89,7 @@ fn offline_mode_reports_missing_sifr_source_package() {
         workspace_default_members: BTreeSet::new(),
         target_directory: PathBuf::from("/ws/target"),
         workspace_root: PathBuf::from("/ws"),
+        workspace_sifr: crate::CargoWorkspaceSifrMetadata::default(),
     };
 
     let diagnostics = validate_offline_source_availability(

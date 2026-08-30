@@ -24,6 +24,8 @@ mod diagnostic_rendering_and_run;
 mod diagnostic_test_sink;
 mod explain_cli;
 mod formatter_cli;
+mod host_tool_cli;
+mod host_tool_sandbox;
 mod lint_cli;
 mod package_graph_context;
 mod package_python_certifications;

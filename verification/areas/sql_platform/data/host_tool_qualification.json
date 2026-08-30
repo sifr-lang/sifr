@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "graph_owner": "sifr_package",
+  "dispatch_owner": "sifr",
+  "workspace_metadata_key": "workspace.metadata.sifr.tools-package",
+  "lock_authority": ["Cargo.lock", "sifr-tools.lock.json"],
+  "metadata_authority": "cargo metadata --frozen",
+  "execution": {
+    "build_target": "host",
+    "target_argument_allowed": true,
+    "target_source": "sifr-build-target",
+    "direct_namespace": true,
+    "application_graph_separate": true,
+    "build_then_direct_exec": true,
+    "cargo_program_absolute": true,
+    "native_sandbox_required": true,
+    "output_limit_bytes": 10485760
+  },
+  "entrypoint_identity": [
+    "cargo-package-id",
+    "package-name",
+    "package-version",
+    "package-source",
+    "package-checksum",
+    "binary-entrypoint",
+    "capabilities",
+    "tools-manifest-fingerprint",
+    "lockfile-fingerprint",
+    "persisted-tool-graph",
+    "executable-sha256"
+  ],
+  "capabilities": [
+    "credentials",
+    "environment",
+    "network",
+    "project-read",
+    "project-write",
+    "subprocess"
+  ],
+  "negative_contracts": [
+    "unknown-namespace",
+    "reserved-namespace",
+    "duplicate-namespace",
+    "unknown-capability",
+    "missing-entrypoint",
+    "non-direct-tool-package",
+    "lockfile-hash-drift",
+    "target-graph-contamination",
+    "missing-persisted-lock",
+    "tools-manifest-drift",
+    "path-source-drift",
+    "capability-denial"
+  ],
+  "sql_test_provision": {
+    "command": "sifr sql test provision --profile <name>",
+    "manifest_version": 1,
+    "inline_credentials": false,
+    "cleanup_identity_required": true,
+    "cleanup_command": "sifr <tool-namespace> test cleanup --resource-id <id>",
+    "credential_helper_uses_shell": false
+  },
+  "inherited_failure_isolation": {
+    "sql_initialization_is_fatal": false,
+    "diagnostic_is_required": true,
+    "non_sql_analysis_is_preserved": true
+  },
+  "behavioral_evidence": [
+    "crates/sifr_package/src/host_tools_tests.rs",
+    "crates/sifr/tests/host_tool_cli.rs",
+    "crates/sifr_analysis/src/host/tests/sql_editor_tests.rs",
+    "crates/sifr_sql_contract/tests/provision_contract.rs"
+  ]
+}

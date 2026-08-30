@@ -18,6 +18,7 @@ mod normalization;
 mod profile;
 mod profile_registry;
 mod provider;
+mod provision;
 mod query;
 mod query_signature;
 mod schema;
@@ -76,6 +77,10 @@ pub use profile_registry::{ProfileModuleRegistry, RegisteredProfileModule};
 pub use provider::{
     DialectSemantics, ProviderAnalysis, ProviderAnalysisError, ProviderDiagnosticSpan,
     ProviderParameter, ProviderResultField, ProviderSemanticDiagnostic,
+};
+pub use provision::{
+    ProvisionedCleanup, ProvisionedConnection, ProvisionedCredential,
+    TEST_CONNECTION_MANIFEST_VERSION, TestConnectionManifest,
 };
 pub use query::{
     QueryAdapter, QueryContractError, QueryContractErrorKind, QueryOrigin, QueryParameterSlot,

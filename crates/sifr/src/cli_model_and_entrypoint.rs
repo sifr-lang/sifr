@@ -7,6 +7,7 @@ use super::diagnostic_rendering_and_run::{
 };
 use super::explain_cli::cmd_explain;
 use super::formatter_cli::FmtArgs;
+use super::host_tool_cli::{cmd_host_tool, cmd_host_tools_lock};
 use super::lint_cli::{LintArgs, cmd_lint};
 use super::python_cli::{PythonArgs, cmd_python};
 use super::self_update_cli::{SelfArgs, cmd_self};
@@ -326,9 +327,27 @@ pub(crate) enum Commands {
         #[arg(default_value = ".")]
         dir: PathBuf,
     },
+    /// Manage package-provided host tools
+    Tools {
+        #[command(subcommand)]
+        command: ToolsCommands,
+    },
     /// Manage a standalone Sifr installation
     #[command(name = "self")]
     SelfCommand(SelfArgs),
+    /// Execute a package-provided host tool namespace
+    #[command(external_subcommand)]
+    HostTool(Vec<String>),
+}
+
+#[derive(Subcommand)]
+pub(crate) enum ToolsCommands {
+    /// Write or verify the committed host-tool lock artifact
+    Lock {
+        /// Verify the artifact without changing it
+        #[arg(long)]
+        check: bool,
+    },
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, ValueEnum)]
@@ -620,7 +639,11 @@ fn run_cli(cli: Cli) -> i32 {
         Commands::Trace { file } => cmd_trace(&file, diagnostic_format),
         Commands::Emit { file } => cmd_emit(&file, diagnostic_format),
         Commands::Test { dir } => cmd_test(&dir, diagnostic_format),
+        Commands::Tools { command } => match command {
+            ToolsCommands::Lock { check } => cmd_host_tools_lock(check, diagnostic_format),
+        },
         Commands::SelfCommand(args) => cmd_self(&args, diagnostic_format),
+        Commands::HostTool(words) => cmd_host_tool(&words, diagnostic_format),
     }
 }
 

@@ -85,7 +85,8 @@ fn default_workspace_run_session(
         let package_id = match classification {
             sifr_package::PackageClassification::SifrSource(package_id)
             | sifr_package::PackageClassification::RustBackedSifr(package_id) => package_id,
-            sifr_package::PackageClassification::BackendRust => continue,
+            sifr_package::PackageClassification::BackendRust
+            | sifr_package::PackageClassification::HostTools => continue,
         };
         let Some(package) = context.graph.packages.get(package_id) else {
             continue;

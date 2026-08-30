@@ -6,7 +6,29 @@ use std::collections::{BTreeMap, BTreeSet};
 
 #[must_use]
 pub fn selected_workspace_members(metadata: &NormalizedCargoMetadata) -> Vec<CargoPackageId> {
-    metadata.workspace_members.iter().cloned().collect()
+    let tools_package_id = metadata
+        .workspace_sifr
+        .tools_package
+        .as_deref()
+        .and_then(|name| {
+            let matches = metadata
+                .workspace_members
+                .iter()
+                .filter(|id| {
+                    metadata
+                        .packages
+                        .get(*id)
+                        .is_some_and(|package| package.name == name)
+                })
+                .collect::<Vec<_>>();
+            (matches.len() == 1).then(|| matches[0].clone())
+        });
+    metadata
+        .workspace_members
+        .iter()
+        .filter(|id| tools_package_id.as_ref() != Some(*id))
+        .cloned()
+        .collect()
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
@@ -35,6 +57,7 @@ pub fn select_sifr_workspace_members(
                     .selected_backend_packages
                     .insert(cargo_package_id.clone());
             }
+            Some(PackageClassification::HostTools) => {}
             None => {}
         }
     }
@@ -81,8 +104,14 @@ pub fn explicit_package_selection(
             ) => {
                 selection.selected_sifr_packages.insert(package_id.clone());
             }
-            Some(PackageClassification::BackendRust) => diagnostics.push(
-                PackageDiagnostic::selected_rust_only(cargo_package_id, name),
+            Some(PackageClassification::BackendRust) => {
+                diagnostics.push(PackageDiagnostic::selected_rust_only(
+                    cargo_package_id,
+                    name,
+                ));
+            }
+            Some(PackageClassification::HostTools) => diagnostics.push(
+                PackageDiagnostic::selected_host_tools(cargo_package_id, name),
             ),
             None => diagnostics.push(PackageDiagnostic::selector_ambiguous(name, &[])),
         }

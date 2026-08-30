@@ -52,3 +52,91 @@ fn sql_templates_route_through_virtual_document_editor_queries() {
     assert!(hints.iter().any(|hint| hint.label.contains("$1")));
     assert!(hints.iter().any(|hint| hint.label.contains("zero-or-one")));
 }
+
+#[test]
+fn sql_profile_load_failure_preserves_non_sql_package_analysis() {
+    let dir = temp_project_dir("sql_profile_failure_isolation");
+    std::fs::create_dir_all(dir.join("src")).expect("source directory");
+    std::fs::write(
+        dir.join("Cargo.toml"),
+        "[package]\nname = \"editor-app\"\nversion = \"0.1.0\"\nedition = \"2024\"\n\n[dependencies]\nserde = \"1\"\n",
+    )
+    .expect("Cargo manifest");
+    std::fs::write(dir.join("sifr.toml"), "[source]\nroot = \"src\"\n").expect("Sifr manifest");
+    let entrypoint = dir.join("src/main.sifr");
+    let source = "def answer() -> int:\n    return 42\n";
+    std::fs::write(&entrypoint, source).expect("entrypoint");
+    let root = ProjectRoot {
+        root: SourcePath::new(dir.clone()),
+        entrypoint: SourcePath::new(entrypoint.clone()),
+    };
+    let mut host = AnalysisHost::open_project_with_overlays(
+        &root,
+        vec![(
+            SourcePath::new(entrypoint),
+            Some("file:///editor-app/src/main.sifr".to_string()),
+            DocumentVersion::new(1),
+            SourceText::new(source),
+        )],
+    )
+    .expect("SQL initialization must not abort the analysis host");
+    let file = host.files()[0];
+    let symbols = host
+        .document_symbols(file)
+        .expect("ordinary analysis should remain available")
+        .into_value();
+    assert!(symbols.iter().any(|symbol| symbol.name == "answer"));
+    let diagnostics = host
+        .diagnostics(file)
+        .expect("diagnostics should query")
+        .into_value();
+    assert!(
+        diagnostics.iter().any(|diagnostic| {
+            diagnostic.message.contains("cargo metadata")
+                || diagnostic.message.contains("SQL editor package graph")
+        }),
+        "diagnostics={:?}",
+        diagnostics
+            .iter()
+            .map(|diagnostic| diagnostic.message.as_str())
+            .collect::<Vec<_>>()
+    );
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
+fn sql_profile_load_failure_preserves_direct_open_project_analysis() {
+    let dir = temp_project_dir("sql_profile_failure_direct_open");
+    std::fs::create_dir_all(dir.join("src")).expect("source directory");
+    std::fs::write(
+        dir.join("Cargo.toml"),
+        "[package]\nname = \"editor-app\"\nversion = \"0.1.0\"\nedition = \"2024\"\n\n[dependencies]\nserde = \"1\"\n",
+    )
+    .expect("Cargo manifest");
+    std::fs::write(dir.join("sifr.toml"), "[source]\nroot = \"src\"\n").expect("Sifr manifest");
+    let entrypoint = dir.join("src/main.sifr");
+    std::fs::write(&entrypoint, "def answer() -> int:\n    return 42\n").expect("entrypoint");
+    let root = ProjectRoot {
+        root: SourcePath::new(dir.clone()),
+        entrypoint: SourcePath::new(entrypoint),
+    };
+    let mut host = AnalysisHost::open_project(&root)
+        .expect("SQL initialization must not abort direct project analysis");
+    let file = host.files()[0];
+    assert!(
+        host.document_symbols(file)
+            .expect("ordinary symbols")
+            .into_value()
+            .iter()
+            .any(|symbol| symbol.name == "answer")
+    );
+    assert!(
+        host.diagnostics(file)
+            .expect("initialization diagnostics")
+            .into_value()
+            .iter()
+            .any(|diagnostic| diagnostic.message.contains("cargo metadata")
+                || diagnostic.message.contains("SQL editor package graph"))
+    );
+    let _ = std::fs::remove_dir_all(dir);
+}

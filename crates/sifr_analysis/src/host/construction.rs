@@ -7,7 +7,8 @@ use std::collections::BTreeMap;
 impl AnalysisHost {
     pub fn open_project(root: &ProjectRoot) -> Result<Self, Vec<RenderedDiagnostic>> {
         let profiles =
-            sifr_driver::load_sql_editor_profiles(root.root.as_path(), root.entrypoint.as_path())?;
+            sifr_driver::load_sql_editor_profiles(root.root.as_path(), root.entrypoint.as_path())
+                .unwrap_or_else(sifr_driver::PreparedSqlProfiles::from_initialization_failure);
         let session = WorkspaceSession::open_project_with_external_defs_and_auxiliary_sources(
             root.clone(),
             sifr_driver::stdlib_external_defs()?,

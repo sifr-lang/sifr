@@ -23,6 +23,7 @@ pub(super) struct SqlEditorRuntime {
     cancellation: Option<Arc<AtomicBool>>,
     diagnostics: BTreeMap<String, Vec<RenderedDiagnostic>>,
     slice_keys: BTreeMap<CacheKeyFingerprint, CacheKeyFingerprint>,
+    initialization_diagnostics: Vec<RenderedDiagnostic>,
 }
 
 pub(super) fn sql_editor_initialization_diagnostic(error: &ComponentError) -> RenderedDiagnostic {
@@ -51,6 +52,7 @@ impl SqlEditorRuntime {
             fuel: 100_000_000,
             ..ComponentHostLimits::default()
         };
+        let initialization_diagnostics = profiles.initialization_diagnostics().to_vec();
         Ok(Self {
             profiles,
             host: ComponentHost::new(limits, None)?,
@@ -58,6 +60,7 @@ impl SqlEditorRuntime {
             cancellation: None,
             diagnostics: BTreeMap::new(),
             slice_keys: BTreeMap::new(),
+            initialization_diagnostics,
         })
     }
 
@@ -66,7 +69,11 @@ impl SqlEditorRuntime {
     }
 
     pub(super) fn diagnostics_for_source(&self, source: &str) -> Vec<RenderedDiagnostic> {
-        self.diagnostics.get(source).cloned().unwrap_or_default()
+        self.initialization_diagnostics
+            .iter()
+            .cloned()
+            .chain(self.diagnostics.get(source).into_iter().flatten().cloned())
+            .collect()
     }
 
     pub(super) fn enrich(
