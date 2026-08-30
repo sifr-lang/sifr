@@ -261,7 +261,7 @@ fn infer_function_types(
     };
     analyze_block(stmts, &mut env, &mut states, None, ctx);
     let function_captures = collect_nested_function_captures(stmts, &env, &states);
-    let function_mutated_captures = states
+    let mut function_mutated_captures: HashMap<String, Vec<String>> = states
         .iter()
         .map(|(name, state)| {
             let candidate_names = function_captures
@@ -277,6 +277,41 @@ fn infer_function_types(
             (name.clone(), mutated)
         })
         .collect();
+    let call_graph = states
+        .iter()
+        .map(|(name, state)| {
+            (
+                name.clone(),
+                super::call_effects::nested_function_call_effects(
+                    &state.func.body,
+                    &states,
+                    function_captures
+                        .get(name)
+                        .map(Vec::as_slice)
+                        .unwrap_or_default(),
+                    &state.params,
+                ),
+            )
+        })
+        .collect::<HashMap<_, _>>();
+    loop {
+        let previous = function_mutated_captures.clone();
+        for (name, call_effects) in &call_graph {
+            let mut mutations = previous.get(name).cloned().unwrap_or_default();
+            for called in &call_effects.called_functions {
+                mutations.extend(previous.get(called).into_iter().flatten().cloned());
+            }
+            if call_effects.may_call_nested_alias {
+                mutations.extend(previous.values().flatten().cloned());
+            }
+            mutations.sort();
+            mutations.dedup();
+            function_mutated_captures.insert(name.clone(), mutations);
+        }
+        if function_mutated_captures == previous {
+            break;
+        }
+    }
 
     NestedFunctionInference {
         function_types: finalize_nested_function_types(&mut states, ctx),

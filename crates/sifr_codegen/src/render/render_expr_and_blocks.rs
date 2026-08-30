@@ -648,7 +648,7 @@ impl Renderer {
             if token.is_empty() {
                 return;
             }
-            if matches!(token.as_str(), "mut" | "ref") {
+            if matches!(token.as_str(), "mut" | "ref" | "true" | "false") {
                 out.push_str(token);
             } else {
                 out.push_str(&Self::render_identifier(token));

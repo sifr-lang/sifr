@@ -1,6 +1,6 @@
 use super::cancellation_scope::cleanup_scope_call;
 use super::outcome::{cause_label, cause_variant};
-use super::sync::rewrite_context_control_flow;
+use super::sync::{rewrite_context_control_flow, rust_stmts_always_exit};
 use crate::python_interop_async::{async_output_value, output_schema};
 use crate::python_interop_callbacks::failure_reconciliation_stmt;
 use crate::rust_interop_error_mapping::bridge_error_expr;
@@ -86,14 +86,16 @@ impl RustEmitter {
             })?,
             0,
         );
-        rewritten.push(RustStmt::Return(Some(RustExpr::Verbatim(
-            if can_return {
-                "Ok(Ok(None))"
-            } else {
-                "Ok(Ok(()))"
-            }
-            .to_string(),
-        ))));
+        if !rust_stmts_always_exit(&rewritten) {
+            rewritten.push(RustStmt::Return(Some(RustExpr::Verbatim(
+                if can_return {
+                    "Ok(Ok(None))"
+                } else {
+                    "Ok(Ok(()))"
+                }
+                .to_string(),
+            ))));
+        }
         let body = crate::render_stmts(&rewritten);
 
         let internal_error = mapped_internal_error(active_error_type);

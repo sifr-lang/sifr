@@ -1,3 +1,6 @@
+SHADOWED: int = 8
+
+
 def main() -> None:
     while_values: list[str] = []
     value: int = 0
@@ -32,3 +35,31 @@ def main() -> None:
             assert False, str(error)
         value = value + 2
     assert for_values == ["2:4:6", "3:6:9", "4:8:12"]
+
+    nonlocal_values: list[float] = []
+    captured: int = 0
+    while captured < 3:
+        try:
+            converted: float = float(captured)
+            nonlocal_values.append(converted)
+        except FloatOverflowError as error:
+            assert False, str(error)
+        except FloatPrecisionLossError as error:
+            assert False, str(error)
+
+        def advance() -> None:
+            nonlocal captured
+            captured = captured + 1
+
+        advance()
+    assert nonlocal_values == [0.0, 1.0, 2.0]
+
+    SHADOWED: int = 1
+    SHADOWED = SHADOWED + 1
+    try:
+        shadowed_value: float = float(SHADOWED)
+        assert shadowed_value == 2
+    except FloatOverflowError as error:
+        assert False, str(error)
+    except FloatPrecisionLossError as error:
+        assert False, str(error)

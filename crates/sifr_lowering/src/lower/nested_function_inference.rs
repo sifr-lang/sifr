@@ -5,6 +5,7 @@ use sifr_python_ast::{CmpOp, Expr, ExprCall, Operator};
 use sifr_type_system::{FunctionType, Type, type_check_binary_op};
 use std::collections::HashMap;
 
+mod call_effects;
 mod state_collection;
 pub(in crate::lower) use state_collection::*;
 mod expression_inference;
@@ -37,3 +38,4 @@ use compound_statement_inference::{
 mod capture_collection;
 pub(in crate::lower) use capture_collection::collect_referenced_names_in_expr;
 mod mutation_collection;
+pub(in crate::lower) use mutation_collection::collect_nested_function_mutated_nonlocals;

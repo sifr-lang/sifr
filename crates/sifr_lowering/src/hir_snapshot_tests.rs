@@ -393,12 +393,14 @@ fn project_stmt(stmt: &HirStmt) -> Value {
                             enter_error_type,
                             exit_error_type,
                             entered_is_opaque_borrow,
+                            body_may_raise,
                         } => json!({
                             "kind": "Python",
                             "entered_type": type_name(entered_type),
                             "enter_error_type": type_name(enter_error_type),
                             "exit_error_type": type_name(exit_error_type),
                             "entered_is_opaque_borrow": entered_is_opaque_borrow,
+                            "body_may_raise": body_may_raise,
                         }),
                     };
                     json!({

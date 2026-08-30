@@ -176,14 +176,24 @@ fn stmt_summary(stmt: &HirStmt) -> FlowSummary {
             flow_summary(body).sequence(flow_summary(finalbody))
         }
         HirStmt::With { items, body }
-            if items
-                .iter()
-                .any(|item| matches!(item.kind, HirWithItemKind::Python { .. })) =>
+            if items.iter().any(|item| {
+                matches!(
+                    item.kind,
+                    HirWithItemKind::Python {
+                        body_may_raise: true,
+                        ..
+                    }
+                )
+            }) =>
         {
             python_context_flow_summary(body)
         }
         HirStmt::AsyncWith {
-            kind: crate::HirAsyncWithKind::Python { .. },
+            kind:
+                crate::HirAsyncWithKind::Python {
+                    body_may_raise: true,
+                    ..
+                },
             body,
             ..
         } => python_context_flow_summary(body),
@@ -194,8 +204,7 @@ fn stmt_summary(stmt: &HirStmt) -> FlowSummary {
 
 fn python_context_flow_summary(body: &[HirStmt]) -> FlowSummary {
     let mut summary = flow_summary(body);
-    if summary.has_raise {
-        summary.falls_through = true;
-    }
+    // A declared Python exit can suppress an error propagated by this body.
+    summary.falls_through = true;
     summary
 }

@@ -573,4 +573,16 @@ mod tests {
         res % r#mod;
         "###);
     }
+
+    #[test]
+    fn pattern_renderer_preserves_boolean_literals() {
+        assert_eq!(
+            Renderer::render_pattern_string("Ok(Err(false))"),
+            "Ok(Err(false))"
+        );
+        assert_eq!(
+            Renderer::render_pattern_string("Ok(Err(true))"),
+            "Ok(Err(true))"
+        );
+    }
 }

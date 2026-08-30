@@ -1,6 +1,6 @@
 //! Control-flow graph construction and flow-truth queries for HIR statement blocks.
 
-use crate::{HirExpr, HirStmt};
+use crate::{HirAsyncWithKind, HirExpr, HirStmt, HirWithItemKind};
 use sifr_ir::{
     CfgBlock, CfgBlockId, CfgBlockLabel, CfgInvariantError, CfgTerminator, ControlFlowGraph,
     FlowExitEffect, FlowFacts,
@@ -229,10 +229,39 @@ impl CfgBuilder {
                 self.set_terminator(block, CfgTerminator::Goto(body_entry));
                 block
             }
-            HirStmt::With { body, .. } => {
+            HirStmt::With { items, body } => {
                 let body_entry = self.build_stmt_list(body, next, loop_targets, false);
                 let block = self.new_block(CfgBlockLabel::Statement("with"), top_level_stmt_index);
-                self.set_terminator(block, CfgTerminator::Goto(body_entry));
+                if items.iter().any(|item| {
+                    matches!(
+                        item.kind,
+                        HirWithItemKind::Python {
+                            body_may_raise: true,
+                            ..
+                        }
+                    )
+                }) {
+                    self.set_terminator(block, CfgTerminator::Branch(vec![body_entry, next]));
+                } else {
+                    self.set_terminator(block, CfgTerminator::Goto(body_entry));
+                }
+                block
+            }
+            HirStmt::AsyncWith { kind, body, .. } => {
+                let body_entry = self.build_stmt_list(body, next, loop_targets, false);
+                let block =
+                    self.new_block(CfgBlockLabel::Statement("async_with"), top_level_stmt_index);
+                if matches!(
+                    kind,
+                    HirAsyncWithKind::Python {
+                        body_may_raise: true,
+                        ..
+                    }
+                ) {
+                    self.set_terminator(block, CfgTerminator::Branch(vec![body_entry, next]));
+                } else {
+                    self.set_terminator(block, CfgTerminator::Goto(body_entry));
+                }
                 block
             }
             _ => {
@@ -431,6 +460,67 @@ mod tests {
 
         let facts = valid_flow_facts(&stmts);
         assert_eq!(facts.reachable_return_types(), &[Type::Int]);
+    }
+
+    #[test]
+    fn suppressible_python_context_return_body_does_not_close_cfg_fallthrough() {
+        let statements = vec![HirStmt::With {
+            items: vec![sifr_ir::HirWithItem {
+                target: "value".to_string(),
+                context: HirExpr::Name {
+                    name: "manager".to_string(),
+                    binding_id: None,
+                    ty: Type::Unknown,
+                },
+                kind: HirWithItemKind::Python {
+                    entered_type: Type::Unknown,
+                    enter_error_type: Type::Unknown,
+                    exit_error_type: Type::Unknown,
+                    entered_is_opaque_borrow: false,
+                    body_may_raise: true,
+                },
+            }],
+            body: vec![HirStmt::Return {
+                value: Some(HirExpr::IntLiteral(1)),
+            }],
+        }];
+
+        let facts = valid_flow_facts(&statements);
+        assert_eq!(facts.exit_effect(), FlowExitEffect::FallsThrough);
+        assert!(facts.has_reachable_return());
+    }
+
+    #[test]
+    fn suppressible_python_async_context_return_body_keeps_following_code_reachable() {
+        let statements = vec![
+            HirStmt::AsyncWith {
+                kind: HirAsyncWithKind::Python {
+                    context: HirExpr::Name {
+                        name: "manager".to_string(),
+                        binding_id: None,
+                        ty: Type::Unknown,
+                    },
+                    manager_class: "Manager".to_string(),
+                    entered_type: Type::Unknown,
+                    enter_error_type: Type::Unknown,
+                    exit_error_type: Type::Unknown,
+                    entered_is_opaque_borrow: false,
+                    active_error_type: Type::Unknown,
+                    body_may_raise: true,
+                },
+                target: None,
+                body: vec![HirStmt::Return {
+                    value: Some(HirExpr::IntLiteral(1)),
+                }],
+            },
+            HirStmt::Return {
+                value: Some(HirExpr::IntLiteral(2)),
+            },
+        ];
+
+        let facts = valid_flow_facts(&statements);
+        assert_eq!(facts.reachable_top_level_stmt_indices(), &[0, 1]);
+        assert_eq!(facts.exit_effect(), FlowExitEffect::AlwaysReturns);
     }
 
     #[test]

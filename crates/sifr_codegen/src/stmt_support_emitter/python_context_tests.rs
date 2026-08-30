@@ -36,6 +36,7 @@ fn python_item(target: &str, manager: &str) -> HirWithItem {
             enter_error_type: class_type("PythonError"),
             exit_error_type: class_type("PythonError"),
             entered_is_opaque_borrow: true,
+            body_may_raise: false,
         },
     }
 }
@@ -194,6 +195,14 @@ fn let_else_control_flow_is_rewritten_for_context_cleanup() {
         RustStmt::LetElse { else_body, .. }
             if matches!(else_body.as_slice(), [RustStmt::Return(Some(_))])
     ));
+}
+
+#[test]
+fn rewritten_terminal_context_control_does_not_require_a_dead_fallback() {
+    for statement in [RustStmt::Break, RustStmt::Continue] {
+        let rewritten = rewrite_context_control_flow(vec![statement], 0);
+        assert!(super::sync::rust_stmts_always_exit(&rewritten));
+    }
 }
 
 #[test]

@@ -478,10 +478,18 @@ fn collect_mutated_vars_ignores_nested_function_scope() {
         name: "inner".to_string(),
         params: vec![],
         return_type: Type::None,
-        body: vec![HirStmt::Assign {
-            name: "inside".to_string(),
-            value: HirExpr::IntLiteral(1),
-        }],
+        body: vec![
+            HirStmt::Let {
+                name: "inside".to_string(),
+                ty: Type::Int,
+                value: HirExpr::IntLiteral(0),
+                is_mutable: true,
+            },
+            HirStmt::Assign {
+                name: "inside".to_string(),
+                value: HirExpr::IntLiteral(1),
+            },
+        ],
         is_async: false,
         method_kind: MethodKind::Regular,
         receiver: None,
@@ -793,56 +801,6 @@ fn body_contains_return_ignores_unreachable_return() {
         },
     ];
     assert!(!body_contains_return(&stmts));
-}
-
-#[test]
-fn python_async_context_suppression_keeps_following_return_reachable() {
-    let error_type = Type::Class {
-        identity: None,
-        type_args: Vec::new(),
-        name: "PythonError".to_string(),
-        fields: vec![],
-        methods: vec![],
-        parent_class: None,
-    };
-    let stmts = vec![
-        HirStmt::AsyncWith {
-            kind: sifr_ir::HirAsyncWithKind::Python {
-                context: HirExpr::Name {
-                    name: "manager".to_string(),
-                    binding_id: None,
-                    ty: Type::Unknown,
-                },
-                manager_class: "Manager".to_string(),
-                entered_type: Type::Unknown,
-                enter_error_type: error_type.clone(),
-                exit_error_type: error_type.clone(),
-                entered_is_opaque_borrow: false,
-                active_error_type: error_type,
-            },
-            target: None,
-            body: vec![HirStmt::Raise {
-                value: HirExpr::Name {
-                    name: "error".to_string(),
-                    binding_id: None,
-                    ty: Type::Unknown,
-                },
-            }],
-        },
-        HirStmt::Return {
-            value: Some(HirExpr::BoolLiteral(false)),
-        },
-    ];
-
-    assert_eq!(
-        block_control_flow_effect(&stmts[..1]),
-        ControlFlowEffect::FallsThrough
-    );
-    assert!(body_contains_return(&stmts));
-    assert_eq!(
-        block_control_flow_effect(&stmts),
-        ControlFlowEffect::AlwaysExits
-    );
 }
 
 #[test]

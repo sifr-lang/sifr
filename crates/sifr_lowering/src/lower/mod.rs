@@ -144,6 +144,8 @@ mod python_buffer_contract_tests;
 #[cfg(test)]
 mod python_context_expression_tests;
 #[cfg(test)]
+mod python_context_flow_tests;
+#[cfg(test)]
 mod python_coroutine_contract_tests;
 #[cfg(test)]
 mod python_dlpack_contract_tests;

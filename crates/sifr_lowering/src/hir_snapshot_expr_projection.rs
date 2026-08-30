@@ -476,6 +476,7 @@ pub(super) fn async_with_kind_name(kind: &HirAsyncWithKind) -> Value {
             exit_error_type,
             entered_is_opaque_borrow,
             active_error_type,
+            body_may_raise,
         } => json!({
             "kind": "Python",
             "context": project_expr(context),
@@ -485,6 +486,7 @@ pub(super) fn async_with_kind_name(kind: &HirAsyncWithKind) -> Value {
             "exit_error_type": type_name(exit_error_type),
             "entered_is_opaque_borrow": entered_is_opaque_borrow,
             "active_error_type": type_name(active_error_type),
+            "body_may_raise": body_may_raise,
         }),
     }
 }
