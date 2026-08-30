@@ -182,7 +182,9 @@ keeps escapes and multiline strings unambiguous without inventing byte offsets.
 Generated Rust uses one private `__SifrTemplate` carrier. It stores ordered
 strings and ordered interpolation records. Each record stores its owned value,
 source metadata, conversion, format specification, and Sifr type name. The
-carrier erases runtime value types behind `Box<dyn Any>`. The compiler never
+format specification remains a recursive literal/interpolation tree, so nested
+conversions and specifications cannot be flattened or discarded. The carrier
+erases runtime value types behind `Box<dyn Any>`. The compiler never
 downcasts these values during ordinary execution.
 
 Compiler processors consume typed HIR before ordinary runtime code generation.

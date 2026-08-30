@@ -163,4 +163,59 @@ mod tests {
             );
         }
     }
+
+    #[test]
+    fn generated_template_documents_preserve_ordered_bidirectional_ranges() {
+        let bodies = [
+            "t\"plain {first} text {second!r:>8}\"",
+            "t\"\"\"α\\nline {first}\\n{second}\nend\"\"\"",
+            "tr\"raw\\t{first}{second}\"",
+            "t\"left {first}\" t\" right {second}\"",
+            "t\"{first}{second}\"",
+        ];
+
+        for body in bodies {
+            let source =
+                format!("def query(first: int, second: str) -> Template:\n    return {body}\n");
+            let document = TemplateDocumentView::from_hir(&lowered_template(&source));
+
+            for pair in document.mappings.windows(2) {
+                assert!(pair[0].source_range.end() <= pair[1].source_range.start());
+                assert!(pair[0].virtual_range.end() <= pair[1].virtual_range.start());
+            }
+
+            for mapping in &document.mappings {
+                for source_offset in offsets(mapping.source_range) {
+                    let virtual_range = document
+                        .virtual_range_for_source(source_offset)
+                        .expect("every source offset must resolve");
+                    assert_eq!(virtual_range, mapping.virtual_range);
+                    assert_eq!(
+                        document.source_range_for_virtual(virtual_range.start()),
+                        Some(mapping.source_range)
+                    );
+                }
+                for virtual_offset in offsets(mapping.virtual_range) {
+                    let source_range = document
+                        .source_range_for_virtual(virtual_offset)
+                        .expect("every virtual offset must resolve");
+                    assert_eq!(source_range, mapping.source_range);
+                    assert_eq!(
+                        document.virtual_range_for_source(source_range.start()),
+                        Some(mapping.virtual_range)
+                    );
+                    if let TemplateSourceMapKind::Interpolation { index } = mapping.kind {
+                        assert_eq!(
+                            document.interpolation_at_virtual_offset(virtual_offset),
+                            Some(index)
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    fn offsets(range: TextRange) -> impl Iterator<Item = TextSize> {
+        (range.start().to_u32()..range.end().to_u32()).map(TextSize::new)
+    }
 }

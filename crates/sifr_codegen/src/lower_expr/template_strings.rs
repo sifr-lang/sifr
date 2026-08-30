@@ -29,8 +29,11 @@ impl RustEmitter {
                 name: format_spec_name.clone(),
                 ty: None,
                 value: match interpolation.format_spec.as_ref() {
-                    Some(spec) => self.lower_template_format_spec(spec, &format!("t{index}"))?,
-                    None => RustExpr::Literal(RustLiteral::Str(String::new())),
+                    Some(spec) => RustExpr::FnCall {
+                        func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
+                        args: vec![self.lower_template_format_spec(spec, &format!("t{index}"))?],
+                    },
+                    None => RustExpr::Literal(RustLiteral::None),
                 },
             });
 
@@ -103,20 +106,25 @@ impl RustEmitter {
         prefix: &str,
     ) -> Option<RustExpr> {
         let mut stmts = Vec::new();
-        let mut format_string = String::new();
-        let mut arguments = Vec::new();
+        let mut lowered_parts = Vec::new();
 
         for (index, part) in spec.parts.iter().enumerate() {
             match part {
                 HirTemplateFormatSpecPart::Literal(value) => {
-                    push_escaped_format_literal(&mut format_string, value);
+                    lowered_parts.push(RustExpr::StructInit {
+                        name: "__SifrTemplateFormatSpecPart::Literal".to_string(),
+                        fields: vec![(
+                            "value".to_string(),
+                            RustExpr::Literal(RustLiteral::Str(value.clone())),
+                        )],
+                    });
                 }
                 HirTemplateFormatSpecPart::Interpolation {
                     value,
                     clone_from_borrow,
+                    source_range,
                     conversion,
                     format_spec,
-                    ..
                 } => {
                     let value_name = format!("__sifr_template_spec_{prefix}_{index}");
                     let lowered_value = self.try_lower_registry_expr_strict(value)?;
@@ -130,43 +138,65 @@ impl RustEmitter {
                             lowered_value
                         },
                     });
-                    if let Some(nested) = format_spec {
-                        stmts.push(RustStmt::Let {
-                            mutable: false,
-                            name: format!("__sifr_template_nested_spec_{prefix}_{index}"),
-                            ty: None,
-                            value: self
-                                .lower_template_format_spec(nested, &format!("{prefix}_{index}"))?,
-                        });
-                    }
-                    format_string.push_str(if matches!(conversion, Some('r' | 'a')) {
-                        "{:?}"
-                    } else {
-                        "{}"
+                    let nested_name = format!("__sifr_template_nested_spec_{prefix}_{index}");
+                    stmts.push(RustStmt::Let {
+                        mutable: false,
+                        name: nested_name.clone(),
+                        ty: None,
+                        value: match format_spec {
+                            Some(nested) => RustExpr::FnCall {
+                                func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
+                                args: vec![RustExpr::FnCall {
+                                    func: Box::new(RustExpr::Path(vec![
+                                        "Box".to_string(),
+                                        "new".to_string(),
+                                    ])),
+                                    args: vec![self.lower_template_format_spec(
+                                        nested,
+                                        &format!("{prefix}_{index}"),
+                                    )?],
+                                }],
+                            },
+                            None => RustExpr::Literal(RustLiteral::None),
+                        },
                     });
-                    arguments.push(RustExpr::Ident(value_name));
+                    lowered_parts.push(RustExpr::StructInit {
+                        name: "__SifrTemplateFormatSpecPart::Interpolation".to_string(),
+                        fields: vec![
+                            (
+                                "value".to_string(),
+                                RustExpr::Cast {
+                                    expr: Box::new(RustExpr::FnCall {
+                                        func: Box::new(RustExpr::Path(vec![
+                                            "Box".to_string(),
+                                            "new".to_string(),
+                                        ])),
+                                        args: vec![RustExpr::Ident(value_name)],
+                                    }),
+                                    ty: boxed_any_type(),
+                                },
+                            ),
+                            (
+                                "value_type".to_string(),
+                                RustExpr::Literal(RustLiteral::Str(value.ty().display_name())),
+                            ),
+                            ("conversion".to_string(), option_char(*conversion)),
+                            ("format_spec".to_string(), RustExpr::Ident(nested_name)),
+                            range_field("source_start", source_range.start()),
+                            range_field("source_end", source_range.end()),
+                        ],
+                    });
                 }
             }
         }
 
         Some(RustExpr::Block {
             stmts,
-            expr: Some(Box::new(RustExpr::FormatMacro {
-                name: "format".to_string(),
-                format_str: format_string,
-                args: arguments,
+            expr: Some(Box::new(RustExpr::StructInit {
+                name: "__SifrTemplateFormatSpec".to_string(),
+                fields: vec![("parts".to_string(), RustExpr::Vec(lowered_parts))],
             })),
         })
-    }
-}
-
-fn push_escaped_format_literal(target: &mut String, value: &str) {
-    for character in value.chars() {
-        match character {
-            '{' => target.push_str("{{"),
-            '}' => target.push_str("}}"),
-            _ => target.push(character),
-        }
     }
 }
 

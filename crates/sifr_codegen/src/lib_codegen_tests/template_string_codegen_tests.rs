@@ -34,3 +34,19 @@ fn template_runtime_is_not_emitted_without_template_types() {
     let rust = generated("def main() -> int:\n    return 1\n");
     assert!(!rust.contains("struct __SifrTemplate"));
 }
+
+#[test]
+fn nested_format_specs_remain_recursive_runtime_metadata() {
+    let rust = generated(
+        "def consume(value: Template) -> int:\n    return 1\n\ndef make(amount: float, width: int) -> int:\n    return consume(t\"{amount:>{width:03}}\")\n",
+    );
+    assert!(rust.contains("enum __SifrTemplateFormatSpecPart"));
+    assert!(rust.contains("struct __SifrTemplateFormatSpec"));
+    assert!(rust.contains("__SifrTemplateFormatSpecPart::Interpolation"));
+    assert_eq!(rust.matches("let __sifr_template_spec_t0_1").count(), 1);
+    assert_eq!(
+        rust.matches("let __sifr_template_nested_spec_t0_1").count(),
+        1
+    );
+    assert!(rust.contains("value: \"03\".to_string()"));
+}
