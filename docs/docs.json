@@ -292,6 +292,19 @@
                 ]
               },
               {
+                "group": "SQL",
+                "pages": [
+                  "errors/SIFR-SQL-0001",
+                  "errors/SIFR-SQL-0002",
+                  "errors/SIFR-SQL-0003",
+                  "errors/SIFR-SQL-0004",
+                  "errors/SIFR-SQL-0005",
+                  "errors/SIFR-SQL-0006",
+                  "errors/SIFR-SQL-0007",
+                  "errors/SIFR-SQL-0008"
+                ]
+              },
+              {
                 "group": "PYENV",
                 "pages": [
                   "errors/SIFR-PYENV-0001",

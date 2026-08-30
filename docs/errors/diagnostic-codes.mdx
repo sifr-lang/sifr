@@ -19,6 +19,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `META` | `SIFR-META-0000` | Deterministic package metaprogramming and const-specialization diagnostics. |
 | `ASYNC` | `SIFR-ASYNC-0000` | Async effect, awaitability, and blocking-offload diagnostics. |
 | `COMPONENT` | `SIFR-COMPONENT-0000` | Sandboxed compiler-component registration, protocol, and execution diagnostics. |
+| `SQL` | `SIFR-SQL-0000` | Provider-neutral SQL type, bind, codec, cardinality, effect, and ownership diagnostics. |
 | `PYENV` | `SIFR-PYENV-0000` | Embedded CPython environment selection, probing, and ABI diagnostics. |
 | `PYIMP` | `SIFR-PYIMP-0000` | Embedded Python import and module-loading diagnostics. |
 | `PYCALL` | `SIFR-PYCALL-0000` | Embedded Python callable, attribute, item, and coroutine diagnostics. |
@@ -184,6 +185,14 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-COMPONENT-0007`](/errors/SIFR-COMPONENT-0007) | Error | Compiler component execution failed. |
 | [`SIFR-COMPONENT-0008`](/errors/SIFR-COMPONENT-0008) | Error | Compiler component cache operation failed. |
 | [`SIFR-COMPONENT-0009`](/errors/SIFR-COMPONENT-0009) | Error | Compiler component diagnostic registry is invalid. |
+| [`SIFR-SQL-0001`](/errors/SIFR-SQL-0001) | Error | Database type has no common SQL mapping. |
+| [`SIFR-SQL-0002`](/errors/SIFR-SQL-0002) | Error | SQL parameter bind types are incompatible. |
+| [`SIFR-SQL-0003`](/errors/SIFR-SQL-0003) | Error | Nullable value cannot bind to a non-null SQL parameter. |
+| [`SIFR-SQL-0004`](/errors/SIFR-SQL-0004) | Error | SQL codec contract is invalid or missing. |
+| [`SIFR-SQL-0005`](/errors/SIFR-SQL-0005) | Error | Execution method conflicts with query cardinality. |
+| [`SIFR-SQL-0006`](/errors/SIFR-SQL-0006) | Error | Query effect is not permitted by this SQL API. |
+| [`SIFR-SQL-0007`](/errors/SIFR-SQL-0007) | Error | Provider analysis violates the common SQL contract. |
+| [`SIFR-SQL-0008`](/errors/SIFR-SQL-0008) | Error | SQL handle ownership or lifetime is invalid. |
 | [`SIFR-IO-0801`](/errors/SIFR-IO-0801) | Error | Text-mode open requires an explicit encoding. |
 | [`SIFR-IO-0802`](/errors/SIFR-IO-0802) | Error | Open mode must be statically known. |
 | [`SIFR-ENCODING-0803`](/errors/SIFR-ENCODING-0803) | Error | Encoding error handler must be statically known. |
@@ -292,6 +301,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-META-0000`](/errors/diagnostic-codes) | `META` | Reserved family base; not emitted as a diagnostic. |
 | [`SIFR-ASYNC-0000`](/errors/diagnostic-codes) | `ASYNC` | Reserved family base; not emitted as a diagnostic. |
 | [`SIFR-COMPONENT-0000`](/errors/diagnostic-codes) | `COMPONENT` | Reserved family base; not emitted as a diagnostic. |
+| [`SIFR-SQL-0000`](/errors/diagnostic-codes) | `SQL` | Reserved family base; not emitted as a diagnostic. |
 | [`SIFR-PYENV-0000`](/errors/diagnostic-codes) | `PYENV` | Reserved family base; not emitted as a diagnostic. |
 | [`SIFR-PYIMP-0000`](/errors/diagnostic-codes) | `PYIMP` | Reserved family base; not emitted as a diagnostic. |
 | [`SIFR-PYCALL-0000`](/errors/diagnostic-codes) | `PYCALL` | Reserved family base; not emitted as a diagnostic. |

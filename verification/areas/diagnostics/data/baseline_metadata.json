@@ -2781,6 +2781,22 @@
       "suite": "baselines"
     },
     {
+      "bless_reason": "Synthetic compact baseline coverage for stable common SQL contract diagnostics.",
+      "bless_reference": "sql_5_common_contracts",
+      "fixture_id": "common_sql_rules_cases",
+      "normalizers": [
+        "workspace-path",
+        "tmp-path",
+        "crlf",
+        "artifact-cache-lines"
+      ],
+      "owner": "compiler/sql-platform",
+      "renderer": "compact",
+      "source_hash": "sha256:0708f194b3be8851a7ca2a245af48f49b1e71f875a13bd88f190436888381151",
+      "suite": "synthetic_baselines",
+      "synthetic": true
+    },
+    {
       "bless_reason": "Synthetic compact baseline coverage for stable compiler-component platform diagnostics.",
       "bless_reference": "sql_3_compiler_components",
       "fixture_id": "compiler_component_rules_cases",

@@ -7861,6 +7861,7 @@ dependencies = [
  "serde_json",
  "sha2 0.11.0",
  "sifr_compiler_component",
+ "sifr_diagnostics",
  "sifr_structural_identity",
 ]
 
@@ -7883,6 +7884,14 @@ dependencies = [
  "tokio-postgres-rustls",
  "tokio-rustls",
  "wasmtime",
+]
+
+[[package]]
+name = "sifr_sql_runtime"
+version = "0.0.0"
+dependencies = [
+ "sifr_runtime",
+ "static_assertions",
 ]
 
 [[package]]

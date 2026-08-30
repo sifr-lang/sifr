@@ -1,0 +1,9 @@
+8 errors, 0 warnings, 0 notes
+E SIFR-SQL-0001 <unknown> database type has no common SQL mapping
+E SIFR-SQL-0002 <unknown> SQL parameter bind types are incompatible
+E SIFR-SQL-0003 <unknown> nullable value cannot bind to a non-null SQL parameter
+E SIFR-SQL-0004 <unknown> SQL codec contract is invalid or missing
+E SIFR-SQL-0005 <unknown> execution method conflicts with query cardinality
+E SIFR-SQL-0006 <unknown> query effect is not permitted by this SQL API
+E SIFR-SQL-0007 <unknown> provider analysis violates the common SQL contract
+E SIFR-SQL-0008 <unknown> SQL handle ownership or lifetime is invalid

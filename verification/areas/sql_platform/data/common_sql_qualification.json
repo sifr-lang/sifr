@@ -1,0 +1,131 @@
+{
+  "schema_version": 1,
+  "analysis_artifact": "sifr_sql_contract",
+  "runtime_artifact": "sifr_sql_runtime",
+  "database_type_families": [
+    "array",
+    "binary",
+    "boolean",
+    "calendar-interval",
+    "composite",
+    "custom",
+    "date",
+    "decimal",
+    "domain",
+    "enum",
+    "float32",
+    "float64",
+    "integer",
+    "ip-address",
+    "ip-network",
+    "json",
+    "local-date-time",
+    "local-time",
+    "mac-address",
+    "offset-time",
+    "range-and-multirange",
+    "sqlite-dynamic",
+    "text",
+    "timestamp-instant",
+    "uuid"
+  ],
+  "bind_results": [
+    "exact",
+    "fallible-array-shape",
+    "fallible-binary-length",
+    "fallible-decimal-precision-and-scale",
+    "fallible-exact-integer-range",
+    "fallible-float32-range-and-precision",
+    "fallible-text-length",
+    "reject-array-element",
+    "reject-integer-sign",
+    "reject-integer-width",
+    "reject-missing-codec",
+    "reject-nominal-identity",
+    "reject-nullability",
+    "reject-unsupported-pair"
+  ],
+  "compiler_diagnostics": [
+    "SIFR-SQL-0001",
+    "SIFR-SQL-0002",
+    "SIFR-SQL-0003",
+    "SIFR-SQL-0004",
+    "SIFR-SQL-0005",
+    "SIFR-SQL-0006",
+    "SIFR-SQL-0007",
+    "SIFR-SQL-0008"
+  ],
+  "runtime_errors": [
+    "authentication",
+    "cancelled",
+    "cardinality",
+    "configuration",
+    "connection",
+    "constraint",
+    "deadlock",
+    "decode",
+    "encode",
+    "migration",
+    "provider",
+    "resource-limit",
+    "schema-contract",
+    "serialization",
+    "timeout"
+  ],
+  "cardinality": {
+    "bottom": "empty",
+    "named_intervals": ["zero", "at-most-one", "exactly-one", "one-or-more", "many"],
+    "operations": ["join", "meet"],
+    "container_selection": "explicit-fetch-method-only"
+  },
+  "effects": [
+    "read",
+    "write",
+    "read-write",
+    "schema-change",
+    "session-change",
+    "transaction-control"
+  ],
+  "ownership": {
+    "pool": ["clone", "send", "share-safe"],
+    "connection": ["owned", "non-clone", "non-send"],
+    "transaction": ["exclusive-connection-borrow", "non-send"],
+    "row-stream": ["owner-borrow-or-owned-lease", "non-send"],
+    "bound-parameters": ["owned", "ordered", "duplicate-free"]
+  },
+  "provider_boundary": {
+    "common_owns": [
+      "cancellation-reasons",
+      "execution-shapes",
+      "handle-states",
+      "panic-containment",
+      "redacted-errors",
+      "resource-accounting"
+    ],
+    "provider_owns": [
+      "database-driver",
+      "dialect-semantics",
+      "native-codecs",
+      "protocol-cancellation",
+      "session-reset"
+    ],
+    "runtime_forbidden_dependencies": [
+      "libsqlite3-sys",
+      "mysql_async",
+      "mysql_common",
+      "postgres-types",
+      "rusqlite",
+      "sqlx",
+      "tokio-postgres"
+    ]
+  },
+  "evidence": [
+    "bind-matrix",
+    "cardinality-lattice-properties",
+    "codec-round-trip-and-malformed-values",
+    "ownership-compile-fail-doctests",
+    "panic-boundary-tests",
+    "redaction-tests",
+    "type-mapping-matrix"
+  ]
+}

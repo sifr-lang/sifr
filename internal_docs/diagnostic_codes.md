@@ -24,6 +24,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `META` | `SIFR-META-0000` | Deterministic package metaprogramming and const-specialization diagnostics. |
 | `ASYNC` | `SIFR-ASYNC-0000` | Async effect, awaitability, and blocking-offload diagnostics. |
 | `COMPONENT` | `SIFR-COMPONENT-0000` | Sandboxed compiler-component registration, protocol, and execution diagnostics. |
+| `SQL` | `SIFR-SQL-0000` | Provider-neutral SQL type, bind, codec, cardinality, effect, and ownership diagnostics. |
 | `PYENV` | `SIFR-PYENV-0000` | Embedded CPython environment selection, probing, and ABI diagnostics. |
 | `PYIMP` | `SIFR-PYIMP-0000` | Embedded Python import and module-loading diagnostics. |
 | `PYCALL` | `SIFR-PYCALL-0000` | Embedded Python callable, attribute, item, and coroutine diagnostics. |
@@ -76,6 +77,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `SIFR-META-0000` | `META` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-ASYNC-0000` | `ASYNC` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-COMPONENT-0000` | `COMPONENT` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
+| `SIFR-SQL-0000` | `SQL` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-PYENV-0000` | `PYENV` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-PYIMP-0000` | `PYIMP` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
 | `SIFR-PYCALL-0000` | `PYCALL` | Reserved | n/a | `docs/errors/diagnostic-codes.md` | n/a | n/a | n/a | n/a | n/a | n/a | false |
@@ -249,6 +251,14 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | `SIFR-COMPONENT-0007` | `COMPONENT` | Active | Error | `docs/errors/SIFR-COMPONENT-0007.mdx` | `crates/sifr_compiler_component/src/tests.rs` | `sifr_compiler_component` | `compiler component execution failed` | n/a | n/a | n/a | false |
 | `SIFR-COMPONENT-0008` | `COMPONENT` | Active | Error | `docs/errors/SIFR-COMPONENT-0008.mdx` | `crates/sifr_compiler_component/src/tests.rs` | `sifr_compiler_component` | `compiler component cache operation failed` | n/a | n/a | n/a | false |
 | `SIFR-COMPONENT-0009` | `COMPONENT` | Active | Error | `docs/errors/SIFR-COMPONENT-0009.mdx` | `crates/sifr_compiler_component/src/tests.rs` | `sifr_compiler_component` | `compiler component diagnostic registry is invalid` | n/a | n/a | n/a | false |
+| `SIFR-SQL-0001` | `SQL` | Active | Error | `docs/errors/SIFR-SQL-0001.mdx` | `crates/sifr_sql_contract/tests/common_sql_contracts.rs` | `sifr_sql_contract::sql_type` | `database type has no common SQL mapping` | n/a | n/a | n/a | false |
+| `SIFR-SQL-0002` | `SQL` | Active | Error | `docs/errors/SIFR-SQL-0002.mdx` | `crates/sifr_sql_contract/tests/common_sql_contracts.rs` | `sifr_sql_contract::bind` | `SQL parameter bind types are incompatible` | n/a | n/a | n/a | false |
+| `SIFR-SQL-0003` | `SQL` | Active | Error | `docs/errors/SIFR-SQL-0003.mdx` | `crates/sifr_sql_contract/tests/common_sql_contracts.rs` | `sifr_sql_contract::bind` | `nullable value cannot bind to a non-null SQL parameter` | n/a | n/a | n/a | false |
+| `SIFR-SQL-0004` | `SQL` | Active | Error | `docs/errors/SIFR-SQL-0004.mdx` | `crates/sifr_sql_contract/tests/common_sql_contracts.rs` | `sifr_sql_contract::codec` | `SQL codec contract is invalid or missing` | n/a | n/a | n/a | false |
+| `SIFR-SQL-0005` | `SQL` | Active | Error | `docs/errors/SIFR-SQL-0005.mdx` | `crates/sifr_sql_contract/tests/common_sql_contracts.rs` | `sifr_sql_contract::cardinality` | `execution method conflicts with query cardinality` | n/a | n/a | n/a | false |
+| `SIFR-SQL-0006` | `SQL` | Active | Error | `docs/errors/SIFR-SQL-0006.mdx` | `crates/sifr_sql_contract/tests/common_sql_contracts.rs` | `sifr_sql_contract::effect` | `query effect is not permitted by this SQL API` | n/a | n/a | n/a | false |
+| `SIFR-SQL-0007` | `SQL` | Active | Error | `docs/errors/SIFR-SQL-0007.mdx` | `crates/sifr_sql_contract/tests/common_sql_contracts.rs` | `sifr_sql_contract::provider` | `provider analysis violates the common SQL contract` | n/a | n/a | n/a | false |
+| `SIFR-SQL-0008` | `SQL` | Active | Error | `docs/errors/SIFR-SQL-0008.mdx` | `crates/sifr_sql_contract/tests/common_sql_contracts.rs` | `sifr_sql_runtime::handles` | `SQL handle ownership or lifetime is invalid` | n/a | n/a | n/a | false |
 | `SIFR-IO-0801` | `IO` | Active | Error | `docs/errors/SIFR-IO-0801.mdx` | `crates/sifr/tests/e2e/fail/text_i18n_open_without_encoding.sifr` | `sifr_lowering::lower::expressions::call_shadowable_builtins` | `text-mode open requires an explicit encoding; Sifr does not use locale-derived default encodings` | n/a | n/a | n/a | false |
 | `SIFR-IO-0802` | `IO` | Active | Error | `docs/errors/SIFR-IO-0802.mdx` | `crates/sifr/tests/e2e/fail/text_i18n_open_dynamic_mode.sifr` | `sifr_lowering::lower::expressions::call_shadowable_builtins` | `open mode must be a string literal so Sifr can choose a binary or text handle type` | n/a | n/a | n/a | false |
 | `SIFR-ENCODING-0803` | `ENCODING` | Active | Error | `docs/errors/SIFR-ENCODING-0803.mdx` | `crates/sifr/tests/e2e/fail/text_i18n_dynamic_errors_handler.sifr` | `sifr_lowering::lower::bytes_methods` | `encoding error handlers must be statically known typed values` | n/a | n/a | n/a | false |

@@ -562,6 +562,9 @@ It does not use absolute paths or diagnostic rendering.
 
 ## SQL and Sifr types
 
+The implemented common compiler and runtime boundary is specified in
+[`sql_common_contracts.md`](./sql_common_contracts.md).
+
 ### General rule
 
 Database storage types map to representation-aware Sifr types. Reading and
@@ -1544,7 +1547,7 @@ The SQL package family uses these internal layers:
 
 | Layer | Responsibility |
 | --- | --- |
-| `sifr_sql_contract` | Closed compiler protocol, `SchemaIR`, capability manifests, and conformance records. |
+| `sifr_sql_contract` | Closed compiler protocol, `SchemaIR`, common type, bind, codec, cardinality, effect, provider-analysis, capability, and conformance records. |
 | `sifr_sql_runtime` | Package-neutral SQL pool machinery, verified leases, session reset, statement-cache policy, cancellation budgets, and resource accounting. |
 | Provider compiler component | Dialect parser, semantic analyzer, schema normalizer, formatter support, and source maps. |
 | Provider runtime bridge | Driver adaptation, codecs, protocol errors, cancellation, and provider-specific connection reset. |
@@ -1830,6 +1833,11 @@ The implemented schema-profile and canonical graph contract is detailed in
 profile providers through the locked package graph. `sifr_sql_contract` owns
 normalization, fingerprints, semantic diffs, dependency slices, generated
 profile modules, and runtime verification manifests.
+
+The implemented common type, bind, codec, cardinality, effect, error, provider,
+and ownership contracts are detailed in
+[`sql_common_contracts.md`](./sql_common_contracts.md). The common runtime uses
+only `sifr_runtime`; no compiler contract or raw database driver enters it.
 
 A new `sifr_sql_runtime` crate owns package-neutral SQL pooling, verified leases,
 session reset coordination, statement-cache policy, and cancellation cleanup. It

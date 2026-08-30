@@ -76,6 +76,33 @@
       ]
     },
     {
+      "name": "common-sql",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "sql-common-qualification",
+          "entry": "verification/areas/sql_platform/data/common_sql_qualification.json",
+          "command": "sql-common-qualification",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-common-contract-tests",
+          "entry": "crates/sifr_sql_contract/tests/common_sql_contracts.rs",
+          "command": "sql-common-contract-tests",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-common-runtime-tests",
+          "entry": "crates/sifr_sql_runtime/tests/runtime_contracts.rs",
+          "command": "sql-common-runtime-tests",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
       "name": "mutation",
       "kind": "adapter",
       "cases": [
@@ -104,6 +131,13 @@
           "id": "sql-schema-profile-qualification-mutations",
           "entry": "verification/areas/sql_platform/data/schema_profile_qualification.json",
           "command": "sql-schema-profile-qualification-mutations",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-common-qualification-mutations",
+          "entry": "verification/areas/sql_platform/data/common_sql_qualification.json",
+          "command": "sql-common-qualification-mutations",
           "expect_exit_code": 0,
           "diagnostic_formats": []
         }

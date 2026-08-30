@@ -45,6 +45,21 @@ COMMANDS = {
     "sql-schema-profile-driver-tests": [
         "cargo", "test", "--locked", "-p", "sifr_driver", "sql_profiles_tests",
     ],
+    "sql-common-qualification": [
+        sys.executable,
+        str(AREA_ROOT / "tools" / "check_common_sql.py"),
+    ],
+    "sql-common-qualification-mutations": [
+        sys.executable,
+        str(AREA_ROOT / "tools" / "check_common_sql.py"),
+        "--self-test",
+    ],
+    "sql-common-contract-tests": [
+        "cargo", "test", "--locked", "-p", "sifr_sql_contract", "--test", "common_sql_contracts",
+    ],
+    "sql-common-runtime-tests": [
+        "cargo", "test", "--locked", "-p", "sifr_sql_runtime",
+    ],
 }
 
 
