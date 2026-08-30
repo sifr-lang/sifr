@@ -22,7 +22,7 @@ pub use diagnostics::{DiagnosticCodeDeclaration, DiagnosticRegistry, DiagnosticR
 pub use error::{ComponentError, ComponentErrorKind};
 pub use host::{ComponentHost, ComponentHostLimits, ComponentRun};
 pub use protocol::{
-    AnalysisContext, COMPONENT_PROTOCOL_MAJOR, ClosedType, DependencyDescriptor,
+    AnalysisContext, COMPONENT_PROTOCOL_MAJOR, ClosedType, ContextArtifact, DependencyDescriptor,
     DiagnosticLifecycle, DiagnosticSeverity, EmbeddedAnalysisRequest, EmbeddedAnalysisResponse,
     EmbeddedDiagnostic, EmbeddedPlan, HoleDescriptor, PlanKind, RecordField, RuntimeLowering,
     SemanticOperation, SourceMapEntry, SourceSpan, TemplatePart,

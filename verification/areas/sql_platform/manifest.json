@@ -49,6 +49,33 @@
       ]
     },
     {
+      "name": "schema-profiles",
+      "kind": "adapter",
+      "cases": [
+        {
+          "id": "sql-schema-profile-qualification",
+          "entry": "verification/areas/sql_platform/data/schema_profile_qualification.json",
+          "command": "sql-schema-profile-qualification",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-schema-profile-rust-tests",
+          "entry": "crates/sifr_sql_contract/tests/schema_profiles.rs",
+          "command": "sql-schema-profile-rust-tests",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-schema-profile-driver-tests",
+          "entry": "crates/sifr_driver/src/build/sql_profiles_tests.rs",
+          "command": "sql-schema-profile-driver-tests",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
       "name": "mutation",
       "kind": "adapter",
       "cases": [
@@ -70,6 +97,13 @@
           "id": "sql-component-qualification-mutations",
           "entry": "verification/areas/sql_platform/tools/check_component_qualification.py",
           "command": "sql-component-qualification-mutations",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-schema-profile-qualification-mutations",
+          "entry": "verification/areas/sql_platform/data/schema_profile_qualification.json",
+          "command": "sql-schema-profile-qualification-mutations",
           "expect_exit_code": 0,
           "diagnostic_formats": []
         }

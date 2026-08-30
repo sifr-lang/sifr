@@ -11,6 +11,7 @@ mod projection_bridge;
 mod projection_rust_keywords;
 pub mod python;
 pub mod source;
+mod sql_profiles;
 
 pub use crate::cargo::commands::{
     CargoCommandPlan, CargoFeatureSelection, CargoPackageArchiveOptions, CargoPackageMutation,
@@ -72,6 +73,7 @@ pub use crate::manifest::sifr::{
     CompilerRequirement, ImportRoot, PackageSourceRoot, PythonConfig, RustInteropConfig,
     SifrEdition, SifrManifest, SifrPackageName, TrustPolicy,
 };
+pub use crate::manifest::{SchemaSourceKind, SqlConfig, SqlProfileConfig};
 pub use crate::ops::publish::{
     PublishPlan, VendorPlan, package_plan, publish_plan, publish_plan_with_options, vendor_plan,
     vendor_plan_with_options,
@@ -112,6 +114,7 @@ pub use crate::python::{
     write_python_certifications,
 };
 pub use crate::source::layout::{MarkerValidation, validate_pure_marker_source};
+pub use crate::sql_profiles::{ResolvedSqlProfile, resolve_sql_profiles};
 
 #[cfg(test)]
 mod cargo_backend_integration_tests;
@@ -135,6 +138,8 @@ mod package_source_map_tests;
 mod package_verification_matrix_tests;
 #[cfg(test)]
 mod package_workspace_query_tests;
+#[cfg(test)]
+mod sql_profile_tests;
 
 #[cfg(test)]
 mod tests {

@@ -7625,11 +7625,13 @@ dependencies = [
  "serde_json",
  "sha2 0.11.0",
  "sifr_codegen",
+ "sifr_compiler_component",
  "sifr_diagnostics",
  "sifr_frontend",
  "sifr_ir",
  "sifr_lowering",
  "sifr_package",
+ "sifr_sql_contract",
  "sifr_stdlib_imports",
  "sifr_stdlib_manifest",
  "sifr_syntax",
@@ -7637,6 +7639,7 @@ dependencies = [
  "sifr_type_system",
  "syn 3.0.4",
  "toml",
+ "wat",
 ]
 
 [[package]]
@@ -7751,6 +7754,7 @@ dependencies = [
  "sifr_compiler_component",
  "sifr_diagnostics",
  "sifr_frontend",
+ "sifr_sql_contract",
  "sifr_syntax",
  "toml",
 ]
@@ -7845,6 +7849,19 @@ name = "sifr_source"
 version = "0.0.0"
 dependencies = [
  "ruff_text_size",
+]
+
+[[package]]
+name = "sifr_sql_contract"
+version = "0.0.0"
+dependencies = [
+ "insta",
+ "semver",
+ "serde",
+ "serde_json",
+ "sha2 0.11.0",
+ "sifr_compiler_component",
+ "sifr_structural_identity",
 ]
 
 [[package]]

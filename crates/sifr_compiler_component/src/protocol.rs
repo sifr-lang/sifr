@@ -57,6 +57,17 @@ pub struct AnalysisContext {
     pub schema_fingerprint: Option<String>,
     pub semantic_profile: BTreeMap<String, String>,
     pub imported_signatures: Vec<String>,
+    pub artifacts: Vec<ContextArtifact>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ContextArtifact {
+    pub kind: String,
+    pub identity: String,
+    pub format_version: u32,
+    pub fingerprint: String,
+    pub payload: Vec<u8>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]

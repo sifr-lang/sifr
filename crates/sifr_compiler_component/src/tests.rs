@@ -438,6 +438,15 @@ fn cache_identity_changes_for_every_semantic_input_family() {
     changed.context.schema_fingerprint = Some("b".repeat(64));
     variants.push(changed);
     let mut changed = base.clone();
+    changed.context.artifacts.push(ContextArtifact {
+        kind: "fixture.schema".to_string(),
+        identity: "fixture".to_string(),
+        format_version: 1,
+        fingerprint: "c".repeat(64),
+        payload: vec![1],
+    });
+    variants.push(changed);
+    let mut changed = base.clone();
     changed.component.processor = "fixture.other".to_string();
     variants.push(changed);
     let mut changed = base.clone();
@@ -482,6 +491,47 @@ fn closed_envelopes_reject_unknown_fields_and_noncanonical_records() {
             .kind,
         ComponentErrorKind::ProtocolEnvelope
     );
+
+    let mut bad = request();
+    bad.context.artifacts.push(ContextArtifact {
+        kind: "fixture.schema".to_string(),
+        identity: "fixture".to_string(),
+        format_version: 1,
+        fingerprint: "not-a-fingerprint".to_string(),
+        payload: vec![1],
+    });
+    assert_eq!(
+        validate_request(&bad, &ComponentHostLimits::default())
+            .expect_err("context artifacts must have canonical identities")
+            .kind,
+        ComponentErrorKind::ProtocolEnvelope
+    );
+
+    let mut limits = ComponentHostLimits::default();
+    limits.max_context_artifacts = 0;
+    let mut bounded = request();
+    bounded.context.artifacts.push(ContextArtifact {
+        kind: "fixture.schema".to_string(),
+        identity: "fixture".to_string(),
+        format_version: 1,
+        fingerprint: "a".repeat(64),
+        payload: vec![1],
+    });
+    assert_eq!(
+        validate_request(&bounded, &limits)
+            .expect_err("context artifact count must be bounded")
+            .kind,
+        ComponentErrorKind::ResourceLimit
+    );
+
+    let mut limits = ComponentHostLimits::default();
+    limits.max_context_artifact_bytes = 0;
+    assert_eq!(
+        validate_request(&bounded, &limits)
+            .expect_err("context artifact bytes must be bounded")
+            .kind,
+        ComponentErrorKind::ResourceLimit
+    );
 }
 
 fn request() -> EmbeddedAnalysisRequest {
@@ -515,6 +565,7 @@ fn request() -> EmbeddedAnalysisRequest {
             schema_fingerprint: None,
             semantic_profile: BTreeMap::from([("language".to_string(), "words".to_string())]),
             imported_signatures: vec!["fixture.token".to_string()],
+            artifacts: Vec::new(),
         },
         plan_kind: PlanKind::Document,
     }

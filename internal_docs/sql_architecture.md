@@ -317,7 +317,7 @@ version = "1.0.0"
 sha256 = "<64 lowercase hexadecimal characters>"
 protocol-min = 1
 protocol-max = 1
-processors = ["sifr.sql.postgresql.sql"]
+processors = ["sifr.sql.postgresql.schema", "sifr.sql.postgresql.sql"]
 diagnostic-namespace = "SQL-POSTGRESQL"
 diagnostics = [
   { code = "SIFR-SQL-POSTGRESQL-0001", lifecycle = "active" },
@@ -1825,6 +1825,12 @@ A new `sifr_sql_contract` crate owns compiler-facing SQL envelopes, `SchemaIR`
 interfaces, common type descriptors, capability manifests, and conformance data.
 It contains no dialect parser or runtime driver.
 
+The implemented schema-profile and canonical graph contract is detailed in
+[`sql_schema_profiles.md`](./sql_schema_profiles.md). `sifr_package` resolves
+profile providers through the locked package graph. `sifr_sql_contract` owns
+normalization, fingerprints, semantic diffs, dependency slices, generated
+profile modules, and runtime verification manifests.
+
 A new `sifr_sql_runtime` crate owns package-neutral SQL pooling, verified leases,
 session reset coordination, statement-cache policy, and cancellation cleanup. It
 depends on `sifr_runtime` and contains no provider driver or dialect semantics.
@@ -1832,6 +1838,10 @@ depends on `sifr_runtime` and contains no provider driver or dialect semantics.
 Dialect packages own their parser, analyzer, schema normalizer, WebAssembly
 component, Sifr API declarations, audited Rust runtime bridge, tools, migration
 rules, and provider qualification fixtures.
+
+Each dialect package exposes one schema-normalization processor whose canonical
+identity ends in `.schema`. The driver selects that processor from the exact
+provider package. Profile authors do not configure an internal processor name.
 
 The driver and language server cannot implement dialect semantics. They consume
 the same frontend queries and validated provider plans.

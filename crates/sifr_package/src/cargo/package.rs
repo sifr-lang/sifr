@@ -155,6 +155,14 @@ pub fn required_archive_entries(
             .values()
             .map(|component| component.artifact.clone()),
     );
+    required.extend(
+        package
+            .manifest
+            .sql
+            .profiles
+            .values()
+            .flat_map(|profile| profile.sources.iter().cloned()),
+    );
     required.extend(required_python_bridge_archive_entries(
         &package.package_root,
     ));

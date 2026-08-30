@@ -18,6 +18,8 @@ sifr_frontend = { workspace = true }
 sifr_syntax = { workspace = true }
 sifr_codegen = { workspace = true }
 sifr_package = { workspace = true }
+sifr_compiler_component = { workspace = true }
+sifr_sql_contract = { workspace = true }
 sifr_sysroot = { workspace = true }
 sifr_type_system = { workspace = true }
 ruff_text_size = { workspace = true }
@@ -28,6 +30,7 @@ syn = { workspace = true }
 toml = { workspace = true }
 
 [dev-dependencies]
+wat = { workspace = true }
 
 [lints]
 workspace = true

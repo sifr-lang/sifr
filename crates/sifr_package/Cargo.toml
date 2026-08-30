@@ -10,6 +10,7 @@ license = { workspace = true }
 sifr_compiler_component = { workspace = true }
 sifr_diagnostics = { workspace = true }
 sifr_frontend = { workspace = true }
+sifr_sql_contract = { workspace = true }
 sifr_python_ast = { workspace = true }
 sifr_syntax = { workspace = true }
 serde = { workspace = true }
