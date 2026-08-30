@@ -63,7 +63,10 @@ def validate_record(text: str) -> None:
         require(re.search(r"^Purpose: .+", chunk, re.MULTILINE) is not None, f"milestone {index} has no purpose")
         require("\nOwned scope:\n" in chunk, f"milestone {index} has no owned scope")
         require("\nAcceptance criteria:\n" in chunk, f"milestone {index} has no acceptance list")
-        require("- [ ] " in chunk, f"milestone {index} has an empty acceptance list")
+        require(
+            re.search(r"^- \[[ x]\] ", chunk, re.MULTILINE) is not None,
+            f"milestone {index} has an empty acceptance list",
+        )
         validation_label = "Closure validation:" if index == 18 else "Focused validation:"
         require(f"\n{validation_label}\n" in chunk, f"milestone {index} has no {validation_label.lower()}")
     require(found_ids == EXPECTED_IDS, "milestone IDs do not match the locked sequence")

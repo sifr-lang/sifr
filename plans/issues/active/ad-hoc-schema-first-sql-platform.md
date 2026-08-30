@@ -279,7 +279,7 @@ verification inventory. This phase does not reimplement those capabilities.
 | 1 | completed | Template-string language foundation | Template strings preserve static segments, typed holes, evaluation order, and exact source maps through the full compiler pipeline. |
 | 2 | completed | Structural record type system | Immutable records have order-independent canonical identity, width subtyping, deterministic diagnostics, and interned Rust layouts. |
 | 3 | completed | Compiler component platform | Resolved packages can provide deterministic sandboxed embedded-language analysis through one closed, versioned, cacheable protocol. |
-| 4 | pending | Schema profiles and canonical `SchemaIR` | Configuration sources produce exact provider-owned schema graphs, nominal profile types, fingerprints, dependency slices, diffs, and runtime contracts. |
+| 4 | completed | Schema profiles and canonical `SchemaIR` | Configuration sources produce exact provider-owned schema graphs, nominal profile types, fingerprints, dependency slices, diffs, and runtime contracts. |
 | 5 | pending | Common SQL contracts | Shared query kinds, complete type and bind mappings, codecs, errors, cardinality, effects, ownership, and provider interfaces have one final contract. |
 | 6 | pending | Query and fragment substrate | Query templates, owned bound queries, typed fragments, composition, safe interpolation, and cardinality adapters integrate with Sifr typing and HIR. |
 | 7 | pending | PostgreSQL schema and query compiler | PostgreSQL catalogs, grammar, resolution, typing, nullability, result records, writes, dependencies, and diagnostics work offline. |
@@ -1254,7 +1254,7 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 | 1 | completed | [#3585](https://github.com/sifr-lang/sifr/pull/3585) | `1173cd9e20` | type system 140/140; focused template 13/13; property 15/15; fuzz 26/26; SQL and repository checks pass | Opus remediation `SATISFIED` on `56f131e1b` | Typed template strings; also corrects the Milestone 0 verification integration |
 | 2 | completed | [#3588](https://github.com/sifr-lang/sifr/pull/3588) | `955e97f6db` | affected packages, native fixture, HIR guard, and file-size guard pass | Opus round 2 closed both original blockers on `dd7ac3cdc`; one new mechanism defect is deferred | Structural record type system |
 | 3 | completed | [#3592](https://github.com/sifr-lang/sifr/pull/3592) | `9badcfc4aa` | component 14/14; diagnostics 32/32; package resolution 4/4; SQL 6/6; coverage 5/5; four-target qualification pass | Opus round 2 closed the original sandbox and diagnostics blockers on `3d97d7e35`; two new mechanism defects are deferred | Compiler component platform |
-| 4 | pending | — | — | — | — | Schema profiles and canonical `SchemaIR` |
+| 4 | completed | [#3595](https://github.com/sifr-lang/sifr/pull/3595) | `40facaf98d` | contract 9/9; component 14/14; driver 2/2; package 149; SQL 10/10; coverage, Clippy, formatting, HIR, and file-size checks pass | Opus round 2 verified the original pipeline and credential fixes on `04e00c51b`; two new mechanisms are deferred | Canonical schema profiles, provider authority pipeline, generated modules, fingerprints, slices, diffs, and runtime manifests |
 | 5 | pending | — | — | — | — | Common SQL contracts |
 | 6 | pending | — | — | — | — | Query and fragment substrate |
 | 7 | pending | — | — | — | — | PostgreSQL schema and query compiler |
@@ -1286,6 +1286,8 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 | Milestone 2 remediation review | Record fields with `Callable` or union types can produce invalid generated Rust. | Milestone 18 | Complete these record field layouts before integrated qualification. Add native positive fixtures for both field types. |
 | Milestone 3 remediation review | A warm component-cache hit can bypass the current request's `max_input_bytes` limit. | Milestone 18 | Validate the input envelope and its byte limit before cache lookup. Add a warm-cache mutation test with a lower request limit. |
 | Milestone 3 remediation review | Component response diagnostics and source maps can name document identities that were not present in the request. | Milestone 18 | Restrict primary, related, and source-map spans to request-owned template documents. Add forged-document rejection tests. |
+| Milestone 4 remediation review | Generated schema paths, language-keyword escapes, enum variants, and composite fields can collapse to the same emitted identifier. | Milestone 6 | Replace the flattening and escaping rules with one injective, reversible encoding. Add collision properties before queries consume generated schema types. |
+| Milestone 4 remediation review | The qualification record claims a compiler profile registry, but production code only consumes a cache fragment and exposes generated modules to tests. | Milestone 6 | Add one production-queryable profile-module registry for frontend and query compilation. Bind its qualification evidence to an executable consumer. |
 
 ### Milestone 0 closure record
 
@@ -1468,6 +1470,68 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
   a third review.
 - Next action: implement Milestone 4 from the merged and recorded mainline.
 
+### Milestone 4 closure record
+
+- Status: completed and merged.
+- Starting commit: `aedf70bf95698338abaaee6c758d363f8e19db37`.
+- Initial reviewed candidate: `cf8cad6b3735a51c922f662993c624ee94f49578`.
+- Remediation reviewed candidate:
+  `04e00c51b4cc5413bcd10675696455bcaec4cf3a`.
+- Final candidate: `99ad2269d9eae60a5319167d033dc86266306c9c`.
+- Pull request: [#3595](https://github.com/sifr-lang/sifr/pull/3595).
+- Merge commit: `40facaf98de8014e3976f5165db59dd478c8dfb9`.
+- Acceptance disposition: all eight Milestone 4 criteria are satisfied for the
+  merged authority contract. The two newly found consumer-hardening mechanisms
+  are explicitly assigned to Milestone 6.
+- Owned result: packages declare named profiles with one exact locked provider,
+  checked-in schema sources, schema evidence, strictness, and closed session
+  modes. Resolution proves package containment and stable source identity.
+- Authority result: package build and check read and hash the sources. They send
+  bounded artifacts to the provider's exact `.schema` component without WASI.
+  The driver validates the response, builds canonical authority, parses the
+  generated Sifr module, and includes its identities in the build cache.
+- Contract result: `sifr_sql_contract` owns immutable `SchemaIR`, normalized
+  fingerprints, object diffs, minimum compatible slices, profile identities,
+  nominal generated modules, static symbol lookup, and runtime manifests.
+- Focused validation: all nine contract tests, all 14 component tests, both
+  driver schema-profile tests, and 149 package tests passed. The unavailable
+  external demo-subrepository test was excluded and remains owned by the
+  pre-v1 compatibility-removal issue.
+- Verification result: all ten schema-profile variants and the coverage matrix
+  passed. Strict contract, driver, and package Clippy passed. Formatting, diff
+  hygiene, HIR maintainability, and the file-size guard passed.
+- Create-PR gate: the one allowed run used
+  `04e00c51b4cc5413bcd10675696455bcaec4cf3a`. It stopped before compilation
+  because all four profiles omitted the required `schema-profiles` suite.
+  `99ad2269d9eae60a5319167d033dc86266306c9c` added the four assignments, and
+  the focused profile-assignment matrix passed. The gate did not run again.
+- Merge gate: the one allowed run used the exact final candidate
+  `99ad2269d9eae60a5319167d033dc86266306c9c`. SQL and repository static checks,
+  core language, CPython differential, Rust interop, and coverage passed. The
+  gate reached 29 of 30 Python-interop library examples, then stopped on the
+  existing `sqlite-context` typed-continuation compiler failure. The emitted
+  Rust excellence issue assigns this exact defect to its active Item 3A. The
+  gate did not run again.
+- Review round 1: Opus found local-name collisions, an arbitrary session-mode
+  value channel, no production source-to-provider authority path, and
+  unsupported verification claims. The [published review](https://github.com/sifr-lang/sifr/pull/3595#issuecomment-5467626475)
+  records the exact evidence.
+- Remediation: generated types use qualified paths; session modes are bounded
+  identifiers; package build and check execute the offline authority pipeline;
+  source identities are portable; verification uses executable component and
+  driver cases; slice, overload, static-symbol, and host-limit behavior is
+  stricter.
+- Review round 2: Opus verified the original authority and credential
+  mechanisms. It found two new mechanisms: emitted-name encoding is not
+  injective, and the claimed compiler profile registry has no production
+  queryable consumer. The [published review](https://github.com/sifr-lang/sifr/pull/3595#issuecomment-5467626559)
+  records both cases. The phase rule assigns them to Milestone 6 and prohibits
+  a third review.
+- Architecture update: the architecture overview and SQL documents now name the
+  profile authority pipeline, its ownership boundary, and its runtime contract.
+  The roadmap status did not change because the phase remains active.
+- Next action: implement Milestone 5 from the merged and recorded mainline.
+
 ## Closure evidence template
 
 Each milestone appends one progress record with:
@@ -1499,5 +1563,5 @@ Complete this section after Milestone 18 merges:
 - Final capability and verification inventory: pending.
 - Deferred out-of-scope work: pending.
 - Archive destination: `plans/issues/archive/ad-hoc-schema-first-sql-platform.md`.
-- Exact next action: implement Milestone 4 in a new session from current
+- Exact next action: implement Milestone 5 from current
   `origin/main`.
