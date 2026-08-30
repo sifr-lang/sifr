@@ -126,6 +126,22 @@ fn stmts_reference_var_with_config(
                     sifr_ir::HirTupleTargetBinding::Field { object, .. } => object == var_name,
                 })
             }
+            HirStmt::StarUnpack {
+                before,
+                star,
+                after,
+                ..
+            } => before
+                .iter()
+                .chain(std::iter::once(star))
+                .chain(after)
+                .any(|target| {
+                    matches!(
+                        &target.binding,
+                        sifr_ir::HirTupleTargetBinding::Name(name)
+                            if target.rebind_existing && name == var_name
+                    )
+                }),
             _ => false,
         };
         if target_references_var {
@@ -245,6 +261,35 @@ pub(crate) fn collect_mutated_vars(
                 .filter(|name| !param_names.contains(name) && !locally_defined.contains(name))
                 .collect::<Vec<_>>();
             mutated.borrow_mut().extend(captured_mutated);
+        }
+        HirStmt::TupleUnpack { targets, .. } => {
+            mutated.borrow_mut().extend(targets.iter().filter_map(
+                |target| match &target.binding {
+                    sifr_ir::HirTupleTargetBinding::Name(name) if target.rebind_existing => {
+                        Some(name.clone())
+                    }
+                    _ => None,
+                },
+            ));
+        }
+        HirStmt::StarUnpack {
+            before,
+            star,
+            after,
+            ..
+        } => {
+            mutated.borrow_mut().extend(
+                before
+                    .iter()
+                    .chain(std::iter::once(star))
+                    .chain(after)
+                    .filter_map(|target| match &target.binding {
+                        sifr_ir::HirTupleTargetBinding::Name(name) if target.rebind_existing => {
+                            Some(name.clone())
+                        }
+                        _ => None,
+                    }),
+            );
         }
         HirStmt::SubscriptAssign { object, .. }
         | HirStmt::NestedSubscriptAssign { object, .. }
@@ -446,12 +491,13 @@ pub(crate) fn collect_locally_defined_vars(stmts: &[HirStmt]) -> HashSet<String>
             after,
             ..
         } => {
-            for (name, _) in before {
-                defined.insert(name.clone());
-            }
-            defined.insert(star.0.clone());
-            for (name, _) in after {
-                defined.insert(name.clone());
+            for target in before.iter().chain(std::iter::once(star)).chain(after) {
+                if target.rebind_existing {
+                    continue;
+                }
+                if let sifr_ir::HirTupleTargetBinding::Name(name) = &target.binding {
+                    defined.insert(name.clone());
+                }
             }
         }
         HirStmt::NestedFunction { func, .. } => {

@@ -1492,7 +1492,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.readable()) {
+            if !self.readable() {
                 return Err(IOError::new("stream is not readable".to_string()));
             }
             file_read(&self._handle)
@@ -1503,7 +1503,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.writable()) {
+            if !self.writable() {
                 return Err(IOError::new("stream is not writable".to_string()));
             }
             file_write(&self._handle, data)
@@ -1514,7 +1514,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.readable()) {
+            if !self.readable() {
                 return Err(IOError::new("stream is not readable".to_string()));
             }
             file_readline(&self._handle)
@@ -1525,7 +1525,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.readable()) {
+            if !self.readable() {
                 return Err(IOError::new("stream is not readable".to_string()));
             }
             file_readlines(&self._handle)
@@ -1536,7 +1536,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.readable()) {
+            if !self.readable() {
                 return Err(IOError::new("stream is not readable".to_string()));
             }
             file_read_bytes(&self._handle)
@@ -1547,7 +1547,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.writable()) {
+            if !self.writable() {
                 return Err(IOError::new("stream is not writable".to_string()));
             }
             file_write_bytes(&self._handle, data)
@@ -1644,7 +1644,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.readable()) {
+            if !self.readable() {
                 return Err(IOError::new("stream is not readable".to_string()));
             }
             file_read_bytes(&self._handle)
@@ -1655,7 +1655,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.writable()) {
+            if !self.writable() {
                 return Err(IOError::new("stream is not writable".to_string()));
             }
             file_write_bytes(&self._handle, data)
@@ -2050,9 +2050,9 @@ mod __sifr_project_nominals {
             let mut end: SifrInt = SifrInt::from(self._buffer.chars().count());
             if let Some(size) = size.as_ref() {
                 let maybe_size: SifrInt = size.clone();
-                if &maybe_size >= &SifrInt::from_i64(0) {
+                if (&maybe_size >= &SifrInt::from_i64(0)) {
                     let requested: SifrInt = &start + &maybe_size;
-                    if &requested < &end {
+                    if (&requested < &end) {
                         end = requested;
                     }
                 }
@@ -2151,7 +2151,7 @@ mod __sifr_project_nominals {
                 }
             }
             let mut next_pos: SifrInt = &origin + offset;
-            if &next_pos < &SifrInt::from_i64(0) {
+            if (&next_pos < &SifrInt::from_i64(0)) {
                 return Err(IOError::new(_negative_seek_error((next_pos).clone())));
             }
             let end: SifrInt = SifrInt::from(self._buffer.chars().count());
@@ -2238,9 +2238,9 @@ mod __sifr_project_nominals {
             let mut end: SifrInt = SifrInt::from(self._buffer.len());
             if let Some(size) = size.as_ref() {
                 let maybe_size: SifrInt = size.clone();
-                if &maybe_size >= &SifrInt::from_i64(0) {
+                if (&maybe_size >= &SifrInt::from_i64(0)) {
                     let requested: SifrInt = &start + &maybe_size;
-                    if &requested < &end {
+                    if (&requested < &end) {
                         end = requested;
                     }
                 }
@@ -2354,7 +2354,7 @@ mod __sifr_project_nominals {
                 }
             }
             let mut next_pos: SifrInt = &origin + offset;
-            if &next_pos < &SifrInt::from_i64(0) {
+            if (&next_pos < &SifrInt::from_i64(0)) {
                 return Err(IOError::new(_negative_seek_error((next_pos).clone())));
             }
             let end: SifrInt = SifrInt::from(self._buffer.len());
@@ -2487,7 +2487,7 @@ mod __sifr_project_nominals {
         path: &String,
         mode: &String,
     ) -> Result<__SifrIoBinaryFileHandle, IOError> {
-        if !(mode.contains(&"b".to_string())) {
+        if !mode.contains(&"b".to_string()) {
             return Err(IOError::new("open_binary requires binary mode".to_string()));
         }
         let __sifr_try_res: Result<Result<__SifrIoBinaryFileHandle, IOError>, IOError> = (|| {
@@ -2640,7 +2640,7 @@ mod __sifr_project_nominals {
     impl __SifrStdlib_sifr_x2elogging_x2eStreamHandler {
         pub fn emit(&self, level: &String, name: &String, msg: &String) {
             let level_num: SifrInt = _level_name_to_num(level);
-            if !(self._allows(&level_num)) {
+            if !self._allows(&level_num) {
                 return;
             }
             let line: String = self._formatter.format(level, name, msg);
@@ -2717,7 +2717,7 @@ mod __sifr_project_nominals {
     impl __SifrStdlib_sifr_x2elogging_x2eFileHandler {
         pub fn emit(&self, level: &String, name: &String, msg: &String) {
             let level_num: SifrInt = _level_name_to_num(level);
-            if !(self._allows(&level_num)) {
+            if !self._allows(&level_num) {
                 return;
             }
             let line: String = {
@@ -3321,7 +3321,7 @@ mod __sifr_project_nominals {
     pub fn timeit(stmt: impl Fn(), number: SifrInt) -> f64 {
         let start: f64 = perf_counter();
         let mut i: SifrInt = SifrInt::from_i64(0);
-        while &i < &number {
+        while (&i < &number) {
             stmt();
             i = &i + &SifrInt::from_i64(1);
         }
@@ -3331,10 +3331,10 @@ mod __sifr_project_nominals {
     pub fn repeat(stmt: impl Fn(), count: SifrInt, number: SifrInt) -> Vec<f64> {
         let mut results: Vec<f64> = vec![];
         let mut r: SifrInt = SifrInt::from_i64(0);
-        while &r < &count {
+        while (&r < &count) {
             let start: f64 = perf_counter();
             let mut i: SifrInt = SifrInt::from_i64(0);
-            while &i < &number {
+            while (&i < &number) {
                 stmt();
                 i = &i + &SifrInt::from_i64(1);
             }
@@ -3521,6 +3521,40 @@ pub use __sifr_project_nominals::__SifrStdlib_sifr_x2etime_x2estruct__time;
 pub use __sifr_project_nominals::__SifrStdlib_sifr_x2etimeit_x2eTimer;
 
 mod __sifr_project_unions {
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub enum __SifrUnion_8_x3asequence5_x3aunion1_x3a323_x3a5_x3aclass10_x3aValueError1_x3a031_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a0 {
+        __SifrUnionVariant_5_x3aclass18_x3aFloatOverflowError1_x3a0(
+            crate::__sifr_project_nominals::FloatOverflowError,
+        ),
+        __SifrUnionVariant_5_x3aclass23_x3aFloatPrecisionLossError1_x3a0(
+            crate::__sifr_project_nominals::FloatPrecisionLossError,
+        ),
+        __SifrUnionVariant_5_x3aclass10_x3aValueError1_x3a0(
+            crate::__sifr_project_nominals::ValueError,
+        ),
+    }
+    impl ::std::fmt::Display
+    for __SifrUnion_8_x3asequence5_x3aunion1_x3a323_x3a5_x3aclass10_x3aValueError1_x3a031_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a0 {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match self {
+                __SifrUnion_8_x3asequence5_x3aunion1_x3a323_x3a5_x3aclass10_x3aValueError1_x3a031_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a0::__SifrUnionVariant_5_x3aclass18_x3aFloatOverflowError1_x3a0(
+                    v,
+                ) => {
+                    return write!(f, "{}", v);
+                }
+                __SifrUnion_8_x3asequence5_x3aunion1_x3a323_x3a5_x3aclass10_x3aValueError1_x3a031_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a0::__SifrUnionVariant_5_x3aclass23_x3aFloatPrecisionLossError1_x3a0(
+                    v,
+                ) => {
+                    return write!(f, "{}", v);
+                }
+                __SifrUnion_8_x3asequence5_x3aunion1_x3a323_x3a5_x3aclass10_x3aValueError1_x3a031_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a0::__SifrUnionVariant_5_x3aclass10_x3aValueError1_x3a0(
+                    v,
+                ) => {
+                    return write!(f, "{}", v);
+                }
+            }
+        }
+    }
     #[derive(Debug, Clone)]
     pub enum __SifrUnion_8_x3asequence5_x3aunion1_x3a523_x3a5_x3aclass10_x3aValueError1_x3a031_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a017_x3a5_x3aclass5_x3aError1_x3a019_x3a5_x3aclass7_x3aIOError1_x3a0 {
         __SifrUnionVariant_5_x3aclass5_x3aError1_x3a0(crate::__sifr_project_nominals::Error),
@@ -3610,6 +3644,7 @@ mod __sifr_project_unions {
         }
     }
 }
+pub use __sifr_project_unions::__SifrUnion_8_x3asequence5_x3aunion1_x3a323_x3a5_x3aclass10_x3aValueError1_x3a031_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a0;
 pub use __sifr_project_unions::__SifrUnion_8_x3asequence5_x3aunion1_x3a523_x3a5_x3aclass10_x3aValueError1_x3a031_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a017_x3a5_x3aclass5_x3aError1_x3a019_x3a5_x3aclass7_x3aIOError1_x3a0;
 use ::sifr_runtime::SifrInt;
 fn _encoding_is_supported_impl(label: &String) -> bool {
@@ -4665,7 +4700,7 @@ fn open_binary(
     path: &String,
     mode: &String,
 ) -> Result<__SifrIoBinaryFileHandle, IOError> {
-    if !(mode.contains(&"b".to_string())) {
+    if !mode.contains(&"b".to_string()) {
         return Err(IOError::new("open_binary requires binary mode".to_string()));
     }
     let __sifr_try_res: Result<Result<__SifrIoBinaryFileHandle, IOError>, IOError> = (|| {
@@ -4908,36 +4943,6 @@ for __SifrUnion_8_x3asequence5_x3aunion1_x3a231_x3a5_x3aclass18_x3aFloatOverflow
         }
     }
 }
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-enum __SifrUnion_8_x3asequence5_x3aunion1_x3a323_x3a5_x3aclass10_x3aValueError1_x3a031_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a0 {
-    __SifrUnionVariant_5_x3aclass18_x3aFloatOverflowError1_x3a0(FloatOverflowError),
-    __SifrUnionVariant_5_x3aclass23_x3aFloatPrecisionLossError1_x3a0(
-        FloatPrecisionLossError,
-    ),
-    __SifrUnionVariant_5_x3aclass10_x3aValueError1_x3a0(ValueError),
-}
-impl ::std::fmt::Display
-for __SifrUnion_8_x3asequence5_x3aunion1_x3a323_x3a5_x3aclass10_x3aValueError1_x3a031_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a0 {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        match self {
-            __SifrUnion_8_x3asequence5_x3aunion1_x3a323_x3a5_x3aclass10_x3aValueError1_x3a031_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a0::__SifrUnionVariant_5_x3aclass18_x3aFloatOverflowError1_x3a0(
-                v,
-            ) => {
-                return write!(f, "{}", v);
-            }
-            __SifrUnion_8_x3asequence5_x3aunion1_x3a323_x3a5_x3aclass10_x3aValueError1_x3a031_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a0::__SifrUnionVariant_5_x3aclass23_x3aFloatPrecisionLossError1_x3a0(
-                v,
-            ) => {
-                return write!(f, "{}", v);
-            }
-            __SifrUnion_8_x3asequence5_x3aunion1_x3a323_x3a5_x3aclass10_x3aValueError1_x3a031_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a0::__SifrUnionVariant_5_x3aclass10_x3aValueError1_x3a0(
-                v,
-            ) => {
-                return write!(f, "{}", v);
-            }
-        }
-    }
-}
 fn __const_TIMEZONE() -> SifrInt {
     SifrInt::from_i64(0)
 }
@@ -4966,11 +4971,11 @@ fn _days_in_month(year: SifrInt, month: SifrInt) -> SifrInt {
     ];
     let idx: SifrInt = &month - &SifrInt::from_i64(1);
     let d: Option<SifrInt> = {
-        let __sifr_index_list = &month_days;
-        let __sifr_index_i = idx.clone();
-        let __sifr_index_norm = __sifr_index_i
-            .normalize_index_or_len(__sifr_index_list.len());
-        __sifr_index_list.get(__sifr_index_norm).cloned()
+        let __sifr_checked_read_collection = &month_days;
+        let __sifr_checked_read_index = idx.clone();
+        let __sifr_checked_read_normalized = __sifr_checked_read_index
+            .normalize_index_or_len(__sifr_checked_read_collection.len());
+        __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
     };
     if (&month == &SifrInt::from_i64(2)) && _is_leap_year((year).clone()) {
         return SifrInt::from_i64(29);
@@ -4984,9 +4989,13 @@ fn _substring(value: &String, start: SifrInt, end: SifrInt) -> String {
     let __sifr_chars_value: Vec<char> = value.chars().collect::<Vec<char>>();
     let mut result: String = "".to_string();
     let mut i: SifrInt = start.clone();
-    while &i < &end {
-        let ch: Option<String> = __sifr_chars_value
-            .get(::sifr_runtime::to_usize_proven(&(i.clone())))
+    while (&i < &end) {
+        let ch: Option<String> = ({
+            let __sifr_string_index = i.clone();
+            let __sifr_string_index_normalized = __sifr_string_index
+                .normalize_index_or_len(__sifr_chars_value.len());
+            __sifr_chars_value.get(__sifr_string_index_normalized)
+        })
             .map(|c| c.to_string());
         if let Some(ch) = ch {
             result.push_str((ch).as_str());
@@ -5036,12 +5045,13 @@ fn _parse_decimal(text: &String) -> Option<SifrInt> {
     let mut out: SifrInt = SifrInt::from_i64(0);
     let mut i: SifrInt = SifrInt::from_i64(0);
     while (&i < &SifrInt::from(__sifr_chars_text.len())) {
-        let ch_opt: Option<String> = Some({
-            let __indexed_char_option = __sifr_chars_text
-                .get(::sifr_runtime::to_usize_proven(&(i)))
-                .map(|c| c.to_string());
-            __indexed_char_option.as_slice()[0_usize].clone()
-        });
+        let ch_opt: Option<String> = ({
+            let __sifr_string_index = i.clone();
+            let __sifr_string_index_normalized = __sifr_string_index
+                .normalize_index_or_len(__sifr_chars_text.len());
+            __sifr_chars_text.get(__sifr_string_index_normalized)
+        })
+            .map(|c| c.to_string());
         let Some(ch_opt) = ch_opt else {
             return None;
         };
@@ -5065,7 +5075,7 @@ fn _int_or_negative_one(value: Option<SifrInt>) -> SifrInt {
 fn _day_of_year(year: SifrInt, month: SifrInt, day: SifrInt) -> SifrInt {
     let mut yday: SifrInt = SifrInt::from_i64(0);
     let mut m: SifrInt = SifrInt::from_i64(1);
-    while &m < &month {
+    while (&m < &month) {
         yday = &yday + &_days_in_month((year).clone(), (m).clone());
         m = &m + &SifrInt::from_i64(1);
     }
@@ -5073,21 +5083,21 @@ fn _day_of_year(year: SifrInt, month: SifrInt, day: SifrInt) -> SifrInt {
 }
 fn _weekday(year: SifrInt, month: SifrInt, day: SifrInt) -> SifrInt {
     let mut days_since_epoch: SifrInt = SifrInt::from_i64(0);
-    if &year >= &SifrInt::from_i64(1970) {
+    if (&year >= &SifrInt::from_i64(1970)) {
         let mut y: SifrInt = SifrInt::from_i64(1970);
-        while &y < &year {
+        while (&y < &year) {
             days_since_epoch = &days_since_epoch + &_days_in_year((y).clone());
             y = &y + &SifrInt::from_i64(1);
         }
     } else {
         let mut y: SifrInt = SifrInt::from_i64(1969);
-        while &y >= &year {
+        while (&y >= &year) {
             days_since_epoch = &days_since_epoch - &_days_in_year((y).clone());
             y = &y - &SifrInt::from_i64(1);
         }
     }
     let mut m: SifrInt = SifrInt::from_i64(1);
-    while &m < &month {
+    while (&m < &month) {
         days_since_epoch = &days_since_epoch
             + &_days_in_month((year).clone(), (m).clone());
         m = &m + &SifrInt::from_i64(1);
@@ -5125,39 +5135,56 @@ fn _invalid_struct_time() -> __SifrStdlib_sifr_x2etime_x2estruct__time {
 }
 fn _to_struct_time(rendered: &String) -> __SifrStdlib_sifr_x2etime_x2estruct__time {
     let __sifr_chars_rendered: Vec<char> = rendered.chars().collect::<Vec<char>>();
-    if (&SifrInt::from(__sifr_chars_rendered.len()) < &SifrInt::from_i64(19)) {
+    let Some(__sifr_checked_value_3) = ({
+        let __sifr_string_index = SifrInt::from_i64(4);
+        let __sifr_string_index_normalized = __sifr_string_index
+            .normalize_index_or_len(__sifr_chars_rendered.len());
+        __sifr_chars_rendered.get(__sifr_string_index_normalized)
+    })
+        .map(|c| c.to_string()) else {
         return _invalid_struct_time();
-    }
-    if ((((({
-        let __indexed_char_option = __sifr_chars_rendered
-            .get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(4))))
-            .map(|c| c.to_string());
-        __indexed_char_option.as_slice()[0_usize].clone()
-    }) != "-")
-        || (({
-            let __indexed_char_option = __sifr_chars_rendered
-                .get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(7))))
-                .map(|c| c.to_string());
-            __indexed_char_option.as_slice()[0_usize].clone()
-        }) != "-"))
-        || (({
-            let __indexed_char_option = __sifr_chars_rendered
-                .get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(10))))
-                .map(|c| c.to_string());
-            __indexed_char_option.as_slice()[0_usize].clone()
-        }) != "T"))
-        || (({
-            let __indexed_char_option = __sifr_chars_rendered
-                .get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(13))))
-                .map(|c| c.to_string());
-            __indexed_char_option.as_slice()[0_usize].clone()
-        }) != ":"))
-        || (({
-            let __indexed_char_option = __sifr_chars_rendered
-                .get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(16))))
-                .map(|c| c.to_string());
-            __indexed_char_option.as_slice()[0_usize].clone()
-        }) != ":")
+    };
+    let Some(__sifr_checked_value_4) = ({
+        let __sifr_string_index = SifrInt::from_i64(7);
+        let __sifr_string_index_normalized = __sifr_string_index
+            .normalize_index_or_len(__sifr_chars_rendered.len());
+        __sifr_chars_rendered.get(__sifr_string_index_normalized)
+    })
+        .map(|c| c.to_string()) else {
+        return _invalid_struct_time();
+    };
+    let Some(__sifr_checked_value_5) = ({
+        let __sifr_string_index = SifrInt::from_i64(10);
+        let __sifr_string_index_normalized = __sifr_string_index
+            .normalize_index_or_len(__sifr_chars_rendered.len());
+        __sifr_chars_rendered.get(__sifr_string_index_normalized)
+    })
+        .map(|c| c.to_string()) else {
+        return _invalid_struct_time();
+    };
+    let Some(__sifr_checked_value_6) = ({
+        let __sifr_string_index = SifrInt::from_i64(13);
+        let __sifr_string_index_normalized = __sifr_string_index
+            .normalize_index_or_len(__sifr_chars_rendered.len());
+        __sifr_chars_rendered.get(__sifr_string_index_normalized)
+    })
+        .map(|c| c.to_string()) else {
+        return _invalid_struct_time();
+    };
+    let Some(__sifr_checked_value_7) = ({
+        let __sifr_string_index = SifrInt::from_i64(16);
+        let __sifr_string_index_normalized = __sifr_string_index
+            .normalize_index_or_len(__sifr_chars_rendered.len());
+        __sifr_chars_rendered.get(__sifr_string_index_normalized)
+    })
+        .map(|c| c.to_string()) else {
+        return _invalid_struct_time();
+    };
+    if ((((__sifr_checked_value_3.clone() != "-")
+        || (__sifr_checked_value_4.clone() != "-"))
+        || (__sifr_checked_value_5.clone() != "T"))
+        || (__sifr_checked_value_6.clone() != ":"))
+        || (__sifr_checked_value_7.clone() != ":")
     {
         return _invalid_struct_time();
     }
@@ -5193,7 +5220,7 @@ fn _to_struct_time(rendered: &String) -> __SifrStdlib_sifr_x2etime_x2estruct__ti
     {
         return _invalid_struct_time();
     }
-    if !(_valid_date((year).clone(), (month).clone(), (day).clone())) {
+    if !_valid_date((year).clone(), (month).clone(), (day).clone()) {
         return _invalid_struct_time();
     }
     let wday: SifrInt = _weekday((year).clone(), (month).clone(), (day).clone());
@@ -5220,7 +5247,7 @@ fn mktime(
     f64,
     __SifrUnion_8_x3asequence5_x3aunion1_x3a323_x3a5_x3aclass10_x3aValueError1_x3a031_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a0,
 > {
-    if !(_valid_date(t.tm_year.clone(), t.tm_mon.clone(), t.tm_mday.clone())) {
+    if !_valid_date(t.tm_year.clone(), t.tm_mon.clone(), t.tm_mday.clone()) {
         return Err(
             __SifrUnion_8_x3asequence5_x3aunion1_x3a323_x3a5_x3aclass10_x3aValueError1_x3a031_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a0::__SifrUnionVariant_5_x3aclass10_x3aValueError1_x3a0(
                 ValueError::new("mktime() received an invalid calendar date".to_string()),
@@ -5297,7 +5324,7 @@ fn _elapsed_non_negative(start: f64, end: f64) -> f64 {
 fn timeit(stmt: impl Fn(), number: SifrInt) -> f64 {
     let start: f64 = perf_counter();
     let mut i: SifrInt = SifrInt::from_i64(0);
-    while &i < &number {
+    while (&i < &number) {
         stmt();
         i = &i + &SifrInt::from_i64(1);
     }
@@ -5307,10 +5334,10 @@ fn timeit(stmt: impl Fn(), number: SifrInt) -> f64 {
 fn repeat(stmt: impl Fn(), count: SifrInt, number: SifrInt) -> Vec<f64> {
     let mut results: Vec<f64> = vec![];
     let mut r: SifrInt = SifrInt::from_i64(0);
-    while &r < &count {
+    while (&r < &count) {
         let start: f64 = perf_counter();
         let mut i: SifrInt = SifrInt::from_i64(0);
-        while &i < &number {
+        while (&i < &number) {
             stmt();
             i = &i + &SifrInt::from_i64(1);
         }
@@ -5409,16 +5436,17 @@ fn main() {
                     )
                 }
             })?;
-        let epoch_ok: bool = epoch_stamp == (0.0_f64);
+        let epoch_ok: bool = (epoch_stamp == (0.0_f64));
         let timer: __SifrStdlib_sifr_x2etimeit_x2eTimer = __SifrStdlib_sifr_x2etimeit_x2eTimer::new();
         let elapsed: f64 = timer.__call__(workload, &SifrInt::from_i64(4));
         let content: String = (read_text(&log_path))
             .map_err(|__e| __SifrUnion_8_x3asequence5_x3aunion1_x3a523_x3a5_x3aclass10_x3aValueError1_x3a031_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a017_x3a5_x3aclass5_x3aError1_x3a019_x3a5_x3aclass7_x3aIOError1_x3a0::__SifrUnionVariant_5_x3aclass7_x3aIOError1_x3a0(
                 __e,
             ))?;
-        demo_ok = ((((((content == "INFO:logging_and_timers-demo:hello\n")
+        demo_ok = (((((((content == "INFO:logging_and_timers-demo:hello\n"))
             && ((&gmt.tm_year.clone() == &SifrInt::from_i64(1970)))) && (epoch_ok))
-            && (elapsed >= (0.0_f64))) && (&__const_TIMEZONE() == &SifrInt::from_i64(0)))
+            && ((elapsed >= (0.0_f64))))
+            && ((&__const_TIMEZONE() == &SifrInt::from_i64(0))))
             && (((__const_TZNAME()).0.clone() == "UTC")));
         Ok(())
     })();

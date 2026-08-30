@@ -126,13 +126,17 @@ def main():
     except ValueError as e:
         print(f"from_timestamp(invalid) -> ValueError: {e.message}")
 
-    # 9. SubscriptAssign: bounds-checked, safe no-op on out-of-bounds
-    print("=== 9. SubscriptAssign: Bounds-checked (safe no-op) ===")
+    # 9. SubscriptAssign: bounds-checked with a typed out-of-bounds error
+    print("=== 9. SubscriptAssign: Bounds-checked (IndexError) ===")
     nums: list[int] = [10, 20, 30]
     print("before: " + str(nums))
-    nums[99] = 999
-    print("after out-of-bounds assign: " + str(nums))
-    nums[1] = 99
+    try:
+        nums[99] = 999
+    except IndexError:
+        print("out-of-bounds assign -> IndexError")
+    print("after out-of-bounds error: " + str(nums))
+    if len(nums) > 1:
+        nums[1] = 99
     print("after valid assign: " + str(nums))
 
     print("demo complete!")

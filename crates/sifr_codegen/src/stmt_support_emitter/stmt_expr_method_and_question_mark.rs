@@ -514,6 +514,14 @@ impl RustEmitter {
         &mut self,
         expr: &HirExpr,
     ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
+        if let HirExpr::Index {
+            object, index, ty, ..
+        } = expr
+        {
+            if let Some(witness) = self.checked_place_read_witness(object, index, ty) {
+                return Ok(Some(witness));
+            }
+        }
         if let HirExpr::Lambda { params, body, .. } = expr {
             let Some(lowered_body) = self.lower_stmt_expr_for_ir(body)? else {
                 return Ok(None);

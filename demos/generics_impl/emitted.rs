@@ -7,10 +7,10 @@ fn identity<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(x: &T) -> T {
 
 fn first<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(items: &Vec<T>) -> Option<T> {
     {
-    let __sifr_index_list = &items;
-    let __sifr_index_i = SifrInt::from_i64(0);
-    let __sifr_index_norm = __sifr_index_i.normalize_index_or_len(__sifr_index_list.len());
-    __sifr_index_list.get(__sifr_index_norm).cloned()
+    let __sifr_checked_read_collection = &items;
+    let __sifr_checked_read_index = SifrInt::from_i64(0);
+    let __sifr_checked_read_normalized = __sifr_checked_read_index.normalize_index_or_len(__sifr_checked_read_collection.len());
+    __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
 }
 }
 
@@ -51,7 +51,7 @@ fn main() {
         println!("{}", first_word);
     }
     let missing_word: Option<String> = first(&empty_words);
-    if missing_word.is_none() {
+    if (missing_word == None) {
         println!("empty list -> None");
     } else {
         if let Some(missing_word) = missing_word {

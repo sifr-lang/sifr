@@ -93,7 +93,7 @@ fn test_recursive_nested_helper_infers_int_signature_from_usage() {
 #[test]
 fn test_recursive_nested_helper_infers_mutable_collection_param_from_usage() {
     let module = lower_source(
-        "def accumulate_items(items: list[int], limit: int) -> list[list[int]]:\n    snapshots = []\n\n    def visit(index, current, total):\n        if total == limit:\n            snapshots.append(current.copy())\n            return\n        if index >= len(items) or total > limit:\n            return\n        current.append(items[index])\n        visit(index, current, total + items[index])\n        current.pop()\n        visit(index + 1, current, total)\n\n    visit(0, [], 0)\n    return snapshots\n",
+        "def accumulate_items(items: list[int], limit: int) -> list[list[int]]:\n    snapshots = []\n\n    def visit(index, current, total):\n        if total == limit:\n            snapshots.append(current.copy())\n            return\n        if index < 0 or index >= len(items) or total > limit:\n            return\n        current.append(items[index])\n        visit(index, current, total + items[index])\n        current.pop()\n        visit(index + 1, current, total)\n\n    visit(0, [], 0)\n    return snapshots\n",
     )
     .expect("recursive local helpers should infer mutable collection params from usage");
 
@@ -330,7 +330,7 @@ fn test_nested_ambiguous_return_inference_has_code_and_primary_range() {
 #[test]
 fn test_recursive_memoized_nested_helper_infers_deterministic_int_return() {
     let result = lower_source(
-        "def schedule_score(weights: list[int]) -> int:\n    memo = {}\n\n    def score(index, enabled):\n        if index >= len(weights):\n            return 0\n        if (index, enabled) in memo:\n            return memo[(index, enabled)]\n\n        skipped = score(index + 1, enabled)\n        if enabled:\n            accepted = score(index + 1, not enabled) + weights[index]\n            memo[(index, enabled)] = max(accepted, skipped)\n        else:\n            delayed = score(index + 2, not enabled) + weights[index]\n            memo[(index, enabled)] = max(delayed, skipped)\n        return memo[(index, enabled)]\n\n    return score(0, True)\n",
+        "def schedule_score(weights: list[int]) -> int:\n    memo = {}\n\n    def score(index, enabled):\n        if index < 0 or index >= len(weights):\n            return 0\n        if (index, enabled) in memo:\n            return memo[(index, enabled)]\n\n        skipped = score(index + 1, enabled)\n        if enabled:\n            accepted = score(index + 1, not enabled) + weights[index]\n            memo[(index, enabled)] = max(accepted, skipped)\n        else:\n            delayed = score(index + 2, not enabled) + weights[index]\n            memo[(index, enabled)] = max(delayed, skipped)\n        return memo[(index, enabled)]\n\n    return score(0, True)\n",
     );
     assert!(
         result.is_ok(),

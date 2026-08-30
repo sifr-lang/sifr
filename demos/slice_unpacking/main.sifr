@@ -9,10 +9,13 @@ def main():
     print(scores["x"])
     print(scores["z"])
 
-    a, *mid, b = nums
-    print(a)
-    print(mid)
-    print(b)
+    try:
+        a, *mid, b = nums
+        print(a)
+        print(mid)
+        print(b)
+    except ValueError as error:
+        print(error.message)
 
     print(nums[::2])
     print(len(nums))

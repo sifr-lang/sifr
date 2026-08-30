@@ -1543,15 +1543,16 @@ fn mktemp_path(prefix: &String) -> String {
         root = "/tmp".to_string();
         __sifr_chars_root = root.chars().collect::<Vec<char>>();
     } else {
-        let last: Option<String> = __sifr_chars_root
-            .get(
-                ::sifr_runtime::to_usize_proven(
-                    &(SifrInt::from(root.chars().count()) - SifrInt::from_i64(1)),
-                ),
-            )
+        let last: Option<String> = ({
+            let __sifr_string_index = SifrInt::from(root.chars().count())
+                - SifrInt::from_i64(1);
+            let __sifr_string_index_normalized = __sifr_string_index
+                .normalize_index_or_len(__sifr_chars_root.len());
+            __sifr_chars_root.get(__sifr_string_index_normalized)
+        })
             .map(|c| c.to_string());
         if let Some(last) = last {
-            if last == "/" {
+            if (last == "/") {
                 return {
                     let mut __sifr_concat: String = String::with_capacity(
                         (root.len() + prefix.len()) + suffix.len(),
@@ -1580,8 +1581,14 @@ fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
     let mut i: SifrInt = SifrInt::from_i64(0);
     while &i < &SifrInt::from(actual.len()) {
         assert!(
-            Some(actual[::sifr_runtime::to_usize_proven(& (i))]) == expected
-            .get(::sifr_runtime::to_usize_proven(& (i))).copied()
+            ({ let __sifr_condition_list = & actual; let __sifr_condition_index = i
+            .clone(); let __sifr_condition_normalized = __sifr_condition_index
+            .normalize_index_or_len(__sifr_condition_list.len()); __sifr_condition_list
+            .get(__sifr_condition_normalized).copied() }) == ({ let __sifr_condition_list
+            = & expected; let __sifr_condition_index = i.clone(); let
+            __sifr_condition_normalized = __sifr_condition_index
+            .normalize_index_or_len(__sifr_condition_list.len()); __sifr_condition_list
+            .get(__sifr_condition_normalized).copied() })
         );
         i = &i + &SifrInt::from_i64(1);
     }
@@ -1711,7 +1718,7 @@ fn collect_copy_move_tree_actual() -> Vec<bool> {
         let mut copied_content_ok: bool = false;
         let __sifr_try_res: Result<(), IOError> = (|| {
             let copied_content: String = read_text(&copied)?;
-            copied_content_ok = copied_content == "demo";
+            copied_content_ok = (copied_content == "demo");
             Ok(())
         })();
         if let Err(__sifr_try_err) = __sifr_try_res {
@@ -1720,7 +1727,7 @@ fn collect_copy_move_tree_actual() -> Vec<bool> {
         }
         copy_ok = (((exists(&src)) && (exists(&copied))) && (copied_content_ok));
         let _mv: () = move_file(&copied, &moved)?;
-        move_ok = ((exists(&moved)) && (!(exists(&copied))));
+        move_ok = ((exists(&moved)) && (!exists(&copied)));
         let _mk_tree: () = mkdir(&tree)?;
         let _w_nested: () = write_text(&nested, &"nested".to_string())?;
         let _rm_tree: () = rmtree(&tree)?;
@@ -1758,11 +1765,15 @@ fn collect_tooling_and_cleanup_actual() -> Vec<bool> {
     let usage: Vec<SifrInt> = disk_usage(&format!("{}{}", base, ""));
     let mut usage_ok: bool = false;
     if (&SifrInt::from(usage.len()) == &SifrInt::from_i64(3)) {
-        let total: Option<SifrInt> = Some(
-            usage[::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(0)))].clone(),
-        );
+        let total: Option<SifrInt> = {
+            let __sifr_checked_read_collection = &usage;
+            let __sifr_checked_read_index = SifrInt::from_i64(0);
+            let __sifr_checked_read_normalized = __sifr_checked_read_index
+                .normalize_index_or_len(__sifr_checked_read_collection.len());
+            __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+        };
         if let Some(total) = total.clone() {
-            usage_ok = &total > &SifrInt::from_i64(0);
+            usage_ok = (&total > &SifrInt::from_i64(0));
         }
     }
     usage_ok = usage_ok && base_ready;

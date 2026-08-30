@@ -675,6 +675,10 @@ impl RustEmitter {
         let saved_sifr_int_result_local_bindings =
             self.sifr_int_result_local_bindings.borrow().clone();
         let saved_current_sifr_int_result_return = self.current_sifr_int_result_return.get();
+        let saved_checked_place_read_witnesses =
+            std::mem::take(&mut self.checked_place_read_witnesses);
+        let saved_nonempty_list_bindings = std::mem::take(&mut self.nonempty_list_bindings);
+        let saved_option_unwrapped_vars = std::mem::take(&mut self.option_unwrapped_vars);
 
         self.current_return_type = Some(method.return_type.clone());
         self.mutated_vars = collect_mutated_vars_with_sigs(&method.body, &self.func_signatures);
@@ -823,6 +827,9 @@ impl RustEmitter {
         *self.sifr_int_result_local_bindings.borrow_mut() = saved_sifr_int_result_local_bindings;
         self.current_sifr_int_result_return
             .set(saved_current_sifr_int_result_return);
+        self.checked_place_read_witnesses = saved_checked_place_read_witnesses;
+        self.nonempty_list_bindings = saved_nonempty_list_bindings;
+        self.option_unwrapped_vars = saved_option_unwrapped_vars;
 
         RustItem::Fn {
             name: method.name.clone(),

@@ -9,7 +9,7 @@ fn main() {
             for i in items.iter().cloned() {
             }
             if !(_broke) {
-                if &n > &SifrInt::from_i64(0) {
+                if (&n > &SifrInt::from_i64(0)) {
                     return rec(&n - &SifrInt::from_i64(1));
                 }
             }

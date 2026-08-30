@@ -33,6 +33,8 @@ use sifr_type_system::{ParamConvention, Type};
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::fmt::Write as _;
 
+mod project_imports;
+
 pub(crate) type FuncSignature = (Vec<(Type, ParamConvention)>, Type);
 pub(crate) type ModuleFuncSignatures = HashMap<String, FuncSignature>;
 pub(crate) type UnionVariantTypes = Vec<(String, Type)>;
@@ -328,6 +330,15 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
     emitter.emit_named_module(module, false, false, module_name);
     emitter.emit_imported_stdlib_structural_impls(module, stdlib_code);
     // Expression lowering can introduce canonical intermediate error unions.
+    if let Some(owned_union_enums) = owned_union_enums {
+        emitter.suppressed_union_enum_definitions.extend(
+            emitter
+                .union_enums
+                .keys()
+                .filter(|name| !owned_union_enums.contains(*name))
+                .cloned(),
+        );
+    }
     emitter.generate_enum_definitions();
 
     // Build stdlib preamble first so we can check for error type references
@@ -344,13 +355,10 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
         infra_skip_types.insert(error_name.to_string());
     }
     infra_skip_types.insert("__io_err".to_string());
-    infra_skip_types.extend(
-        emitter
-            .union_enums
-            .keys()
-            .filter(|name| !emitter.suppressed_union_enum_definitions.contains(*name))
-            .cloned(),
-    );
+    // Every known union has one canonical owner: this module's structured
+    // prelude in single-module mode, or the project prelude in project mode.
+    // Never retain a second definition copied from filtered stdlib source.
+    infra_skip_types.extend(emitter.union_enums.keys().cloned());
     let mut all_needed: Vec<String> = Vec::new();
     let mut transitive_dependency_modules: HashSet<String> = HashSet::new();
     let mut stdlib_needs_file_handles = false;
@@ -708,6 +716,11 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
         || stdlib_import_needs.runtime.needs_mutex;
 
     let mut import_items: Vec<RustItem> = Vec::new();
+    if project_structural_record_identities.is_some() {
+        import_items.extend(project_imports::structural_layout_import_items(
+            &emitter.structural_record_types,
+        ));
+    }
     if needs_hashmap {
         import_items.push(RustItem::Use(vec![
             "std".to_string(),

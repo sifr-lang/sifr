@@ -26,10 +26,10 @@ fn evaluate(seed: SifrInt) -> SifrInt {
         seed.clone(),
         SifrInt::from_i64(1),
     ) {
-        if &n == &SifrInt::from_i64(1) {
+        if (&n == &SifrInt::from_i64(1)) {
             continue;
         }
-        if &n == &SifrInt::from_i64(6) {
+        if (&n == &SifrInt::from_i64(6)) {
             break;
         }
         if (&n.floor_mod_known_nonzero(&SifrInt::from_i64(2)) == &SifrInt::from_i64(0)) {
@@ -43,7 +43,7 @@ fn evaluate(seed: SifrInt) -> SifrInt {
 fn safe(seed: SifrInt) -> SifrInt {
     let __sifr_try_res: Result<SifrInt, ValueError> = (|| {
         let value: SifrInt = evaluate((seed).clone());
-        if &value > &SifrInt::from_i64(3) {
+        if (&value > &SifrInt::from_i64(3)) {
             return Ok(value);
         }
         Err(ValueError::new("too small".to_string()))

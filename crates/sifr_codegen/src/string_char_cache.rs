@@ -94,39 +94,10 @@ impl RustEmitter {
         lowered_object: RustExpr,
         lowered_index: RustExpr,
     ) -> RustExpr {
-        let index = RustExpr::Cast {
-            expr: Box::new(lowered_index),
-            ty: RustType::Named("usize".to_string()),
-        };
         if let Some(cache_name) = self.string_char_cache_for_expr(object) {
-            return char_option_to_string(RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Ident(cache_name)),
-                method: "get".to_string(),
-                args: vec![index],
-            });
+            return char_option_to_string(normalized_string_cache_get(cache_name, lowered_index));
         }
-        char_option_to_string(RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::MethodCall {
-                receiver: Box::new(lowered_object),
-                method: "chars".to_string(),
-                args: vec![],
-            }),
-            method: "nth".to_string(),
-            args: vec![index],
-        })
-    }
-
-    pub(crate) fn lower_string_index_unwrapped_with_cache(
-        &self,
-        object: &HirExpr,
-        lowered_object: RustExpr,
-        lowered_index: RustExpr,
-    ) -> RustExpr {
-        Self::lower_proven_index_option_expr_for_ir(
-            self.lower_string_index_option_with_cache(object, lowered_object, lowered_index),
-            "__indexed_char",
-            "compiler-verified string index should be in range",
-        )
+        char_option_to_string(normalized_string_nth(lowered_object, lowered_index))
     }
 
     pub(crate) fn try_lower_dict_indexed_list_append_expr(
@@ -436,59 +407,7 @@ impl RustEmitter {
         if crate::helpers::is_option_type(expr.ty()) {
             return Some(option_pop_expr);
         }
-        Some(RustExpr::Block {
-            stmts: vec![
-                RustStmt::Let {
-                    mutable: true,
-                    name: "__sifr_bucket_option".to_string(),
-                    ty: None,
-                    value: bucket_option_expr,
-                },
-                RustStmt::Let {
-                    mutable: false,
-                    name: "__sifr_bucket".to_string(),
-                    ty: None,
-                    value: RustExpr::Ref {
-                        mutable: true,
-                        expr: Box::new(RustExpr::Index {
-                            expr: Box::new(RustExpr::MethodCall {
-                                receiver: Box::new(RustExpr::Ident(
-                                    "__sifr_bucket_option".to_string(),
-                                )),
-                                method: "as_mut_slice".to_string(),
-                                args: vec![],
-                            }),
-                            index: Box::new(RustExpr::Cast {
-                                expr: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
-                                ty: RustType::Named("usize".to_string()),
-                            }),
-                        }),
-                    },
-                },
-                RustStmt::Let {
-                    mutable: false,
-                    name: "__sifr_pop_index".to_string(),
-                    ty: None,
-                    value: RustExpr::BinOp {
-                        left: Box::new(RustExpr::MethodCall {
-                            receiver: Box::new(RustExpr::Ident("__sifr_bucket".to_string())),
-                            method: "len".to_string(),
-                            args: vec![],
-                        }),
-                        op: "-".to_string(),
-                        right: Box::new(RustExpr::Cast {
-                            expr: Box::new(RustExpr::Literal(RustLiteral::Int(1))),
-                            ty: RustType::Named("usize".to_string()),
-                        }),
-                    },
-                },
-            ],
-            expr: Some(Box::new(RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Ident("__sifr_bucket".to_string())),
-                method: "remove".to_string(),
-                args: vec![RustExpr::Ident("__sifr_pop_index".to_string())],
-            })),
-        })
+        None
     }
 
     pub(crate) fn try_lower_dict_indexed_list_len_expr(
@@ -602,11 +521,45 @@ impl RustEmitter {
             return None;
         };
 
+        let lowered_element_index = self.try_lower_registry_expr_strict(element_index)?;
+        let projection_method = crate::helpers::option_projection_method_for_owned_type(element_ty);
+        if let Some(bucket) = self.checked_place_read_borrow_witness(dict_object, dict_index) {
+            return Some(RustExpr::Block {
+                stmts: vec![
+                    RustStmt::Let {
+                        mutable: false,
+                        name: "__sifr_index_i".to_string(),
+                        ty: None,
+                        value: lowered_element_index,
+                    },
+                    RustStmt::Let {
+                        mutable: false,
+                        name: "__sifr_index_norm".to_string(),
+                        ty: None,
+                        value: crate::build_normalized_index_expr(
+                            "__sifr_index_i",
+                            RustExpr::MethodCall {
+                                receiver: Box::new(bucket.clone()),
+                                method: "len".to_string(),
+                                args: vec![],
+                            },
+                        ),
+                    },
+                ],
+                expr: Some(Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(bucket),
+                        method: "get".to_string(),
+                        args: vec![RustExpr::Ident("__sifr_index_norm".to_string())],
+                    }),
+                    method: projection_method.to_string(),
+                    args: vec![],
+                })),
+            });
+        }
         let lowered_object = self.try_lower_dict_indexed_list_mutation_object(dict_object)?;
         let lowered_dict_index = self.try_lower_registry_expr_strict(dict_index)?;
-        let lowered_element_index = self.try_lower_registry_expr_strict(element_index)?;
         let key_arg = Self::list_indexed_dict_lookup_key_arg(dict_index, lowered_dict_index);
-        let projection_method = crate::helpers::option_projection_method_for_owned_type(element_ty);
         Some(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {
                 receiver: Box::new(lowered_object),
@@ -768,5 +721,88 @@ fn char_option_to_string(option_expr: RustExpr) -> RustExpr {
             }),
             is_move: false,
         }],
+    }
+}
+
+fn normalized_string_cache_get(cache_name: String, lowered_index: RustExpr) -> RustExpr {
+    RustExpr::Block {
+        stmts: vec![
+            RustStmt::Let {
+                mutable: false,
+                name: "__sifr_string_index".to_string(),
+                ty: None,
+                value: lowered_index,
+            },
+            RustStmt::Let {
+                mutable: false,
+                name: "__sifr_string_index_normalized".to_string(),
+                ty: None,
+                value: crate::build_normalized_index_expr(
+                    "__sifr_string_index",
+                    RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident(cache_name.clone())),
+                        method: "len".to_string(),
+                        args: Vec::new(),
+                    },
+                ),
+            },
+        ],
+        expr: Some(Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Ident(cache_name)),
+            method: "get".to_string(),
+            args: vec![RustExpr::Ident(
+                "__sifr_string_index_normalized".to_string(),
+            )],
+        })),
+    }
+}
+
+fn normalized_string_nth(lowered_object: RustExpr, lowered_index: RustExpr) -> RustExpr {
+    RustExpr::Block {
+        stmts: vec![
+            RustStmt::Let {
+                mutable: false,
+                name: "__sifr_string_source".to_string(),
+                ty: None,
+                value: RustExpr::Ref {
+                    mutable: false,
+                    expr: Box::new(lowered_object),
+                },
+            },
+            RustStmt::Let {
+                mutable: false,
+                name: "__sifr_string_index".to_string(),
+                ty: None,
+                value: lowered_index,
+            },
+            RustStmt::Let {
+                mutable: false,
+                name: "__sifr_string_index_normalized".to_string(),
+                ty: None,
+                value: crate::build_normalized_index_expr(
+                    "__sifr_string_index",
+                    RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Ident("__sifr_string_source".to_string())),
+                            method: "chars".to_string(),
+                            args: Vec::new(),
+                        }),
+                        method: "count".to_string(),
+                        args: Vec::new(),
+                    },
+                ),
+            },
+        ],
+        expr: Some(Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("__sifr_string_source".to_string())),
+                method: "chars".to_string(),
+                args: Vec::new(),
+            }),
+            method: "nth".to_string(),
+            args: vec![RustExpr::Ident(
+                "__sifr_string_index_normalized".to_string(),
+            )],
+        })),
     }
 }

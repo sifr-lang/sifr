@@ -141,7 +141,7 @@
       "owner_item": 4,
       "mechanism": "Direct Rust indexing coexists with guarded access, including nested access and lowering-specific paths.",
       "evidence": ["crates/sifr_codegen/src/lower_expr", "crates/sifr_codegen/src/stmt_support_emitter", "demos/**/emitted.rs"],
-      "semantic_anchor": {"kind": "text", "revision": "current", "path": "crates/sifr_codegen/src/lower_expr/collections_and_comprehensions.rs", "contains": "RustExpr::Index"},
+      "semantic_anchor": {"kind": "text", "revision": "baseline", "path": "crates/sifr_codegen/src/lower_expr/collections_and_comprehensions.rs", "contains": "RustExpr::Index"},
       "sources": ["internal", "external"]
     },
     {
@@ -152,7 +152,7 @@
       "owner_item": 4,
       "mechanism": "Some assignment lowering guards mutation with get_mut/if-let and omits the required IndexError branch.",
       "evidence": ["crates/sifr_codegen/src/lower_stmt/subscript_assignment.rs", "crates/sifr_codegen/src/stmt_support_emitter/nested_subscript_assignment.rs"],
-      "semantic_anchor": {"kind": "text", "revision": "current", "path": "crates/sifr_codegen/src/lower_stmt/subscript_assignment.rs", "contains": "method: \"get_mut\".to_string()"},
+      "semantic_anchor": {"kind": "text", "revision": "baseline", "path": "crates/sifr_codegen/src/lower_stmt/subscript_assignment.rs", "contains": "method: \"get_mut\".to_string()"},
       "sources": ["internal", "external"]
     },
     {

@@ -38,7 +38,7 @@ fn fizzbuzz(n: SifrInt) {
 
 fn countdown(n: SifrInt) {
     let mut i: SifrInt = n.clone();
-    while &i > &SifrInt::from_i64(0) {
+    while (&i > &SifrInt::from_i64(0)) {
         println!("{}", i);
         i = &i - &SifrInt::from_i64(1);
     }
@@ -62,12 +62,12 @@ fn main() {
     }
     println!("=== Break/Continue ===");
     let mut i: SifrInt = SifrInt::from_i64(0);
-    while &i < &SifrInt::from_i64(10) {
+    while (&i < &SifrInt::from_i64(10)) {
         i = &i + &SifrInt::from_i64(1);
-        if &i == &SifrInt::from_i64(3) {
+        if (&i == &SifrInt::from_i64(3)) {
             continue;
         }
-        if &i == &SifrInt::from_i64(7) {
+        if (&i == &SifrInt::from_i64(7)) {
             break;
         }
         println!("{}", i);
@@ -76,19 +76,19 @@ fn main() {
     let nums: Vec<SifrInt> = vec![SifrInt::from_i64(10), SifrInt::from_i64(20), SifrInt::from_i64(30), SifrInt::from_i64(40), SifrInt::from_i64(50)];
     println!("Length: {}", SifrInt::from(nums.len()));
     let first: Option<SifrInt> = {
-    let __sifr_index_list = &nums;
-    let __sifr_index_i = SifrInt::from_i64(0);
-    let __sifr_index_norm = __sifr_index_i.normalize_index_or_len(__sifr_index_list.len());
-    __sifr_index_list.get(__sifr_index_norm).cloned()
+    let __sifr_checked_read_collection = &nums;
+    let __sifr_checked_read_index = SifrInt::from_i64(0);
+    let __sifr_checked_read_normalized = __sifr_checked_read_index.normalize_index_or_len(__sifr_checked_read_collection.len());
+    __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
 };
     if let Some(first) = first.clone() {
         println!("First: {}", first);
     }
     let last: Option<SifrInt> = {
-    let __sifr_index_list = &nums;
-    let __sifr_index_i = SifrInt::from_i64(4);
-    let __sifr_index_norm = __sifr_index_i.normalize_index_or_len(__sifr_index_list.len());
-    __sifr_index_list.get(__sifr_index_norm).cloned()
+    let __sifr_checked_read_collection = &nums;
+    let __sifr_checked_read_index = SifrInt::from_i64(4);
+    let __sifr_checked_read_normalized = __sifr_checked_read_index.normalize_index_or_len(__sifr_checked_read_collection.len());
+    __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
 };
     if let Some(last) = last.clone() {
         println!("Last: {}", last);

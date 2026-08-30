@@ -22,7 +22,7 @@ def topological_sort(num_nodes: int, from_nodes: list[int], to_nodes: list[int])
     while processed < num_nodes:
         found_any: bool = False
         node: int = 0
-        while node < num_nodes:
+        while 0 <= node and node < len(visited):
             v: int | None = visited[node]
             if v is not None:
                 if v == 0:

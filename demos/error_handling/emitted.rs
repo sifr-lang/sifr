@@ -76,16 +76,16 @@ fn validate_range(
     lo: SifrInt,
     hi: SifrInt,
 ) -> Result<SifrInt, ValidationError> {
-    if &x < &lo {
+    if (&x < &lo) {
         return Err(ValidationError::new(format!("value out of range: {}", x)));
     }
-    if &x > &hi {
+    if (&x > &hi) {
         return Err(ValidationError::new(format!("value out of range: {}", x)));
     }
     Ok(x.clone())
 }
 fn safe_divide(a: SifrInt, b: SifrInt) -> Result<SifrInt, DivisionError> {
-    if &b == &SifrInt::from_i64(0) {
+    if (&b == &SifrInt::from_i64(0)) {
         return Err(DivisionError::new("division by zero".to_string()));
     }
     Ok(a.floor_div_known_nonzero(&b))

@@ -49,7 +49,10 @@ fn borrowed_string_defaultdict_set_operations_use_owned_storage_and_direct_looku
     );
 
     assert!(rust_code.contains(".or_insert(HashSet::new()).insert(text.clone())"));
-    assert!(rust_code.contains(".or_insert(HashSet::new()).contains(text)"));
+    assert!(rust_code.contains(
+        ".get(&SifrInt::from_i64(1)).is_some_and(|__sifr_defaultdict_bucket| __sifr_defaultdict_bucket.contains(text))"
+    ));
+    assert!(!rust_code.contains(".or_insert(HashSet::new()).contains(text)"));
     assert!(!rust_code.contains(".contains(&(text))"));
 }
 

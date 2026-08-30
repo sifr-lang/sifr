@@ -7,15 +7,16 @@ fn fnmatch(name: &String, pattern: &String) -> bool {
 }
 fn _match(name: &String, mut ni: SifrInt, pattern: &String, mut pi: SifrInt) -> bool {
     while (&pi < &SifrInt::from(pattern.chars().count())) {
-        let pc: Option<String> = Some({
-            let __indexed_char_option = pattern
-                .chars()
-                .nth(::sifr_runtime::to_usize_proven(&(pi)))
-                .map(|c| c.to_string());
-            __indexed_char_option.as_slice()[0_usize].clone()
-        });
+        let pc: Option<String> = ({
+            let __sifr_string_source = &pattern;
+            let __sifr_string_index = pi.clone();
+            let __sifr_string_index_normalized = __sifr_string_index
+                .normalize_index_or_len(__sifr_string_source.chars().count());
+            __sifr_string_source.chars().nth(__sifr_string_index_normalized)
+        })
+            .map(|c| c.to_string());
         if let Some(pc) = pc {
-            if pc == "*" {
+            if (pc == "*") {
                 pi = &pi + &SifrInt::from_i64(1);
                 if (&pi == &SifrInt::from(pattern.chars().count())) {
                     return true;
@@ -29,7 +30,7 @@ fn _match(name: &String, mut ni: SifrInt, pattern: &String, mut pi: SifrInt) -> 
                 }
                 return false;
             } else {
-                if pc == "?" {
+                if (pc == "?") {
                     if (&ni >= &SifrInt::from(name.chars().count())) {
                         return false;
                     }
@@ -39,15 +40,18 @@ fn _match(name: &String, mut ni: SifrInt, pattern: &String, mut pi: SifrInt) -> 
                     if (&ni >= &SifrInt::from(name.chars().count())) {
                         return false;
                     }
-                    let nc: Option<String> = Some({
-                        let __indexed_char_option = name
-                            .chars()
-                            .nth(::sifr_runtime::to_usize_proven(&(ni)))
-                            .map(|c| c.to_string());
-                        __indexed_char_option.as_slice()[0_usize].clone()
-                    });
+                    let nc: Option<String> = ({
+                        let __sifr_string_source = &name;
+                        let __sifr_string_index = ni.clone();
+                        let __sifr_string_index_normalized = __sifr_string_index
+                            .normalize_index_or_len(
+                                __sifr_string_source.chars().count(),
+                            );
+                        __sifr_string_source.chars().nth(__sifr_string_index_normalized)
+                    })
+                        .map(|c| c.to_string());
                     if let Some(nc) = nc {
-                        if nc != pc {
+                        if (nc != pc) {
                             return false;
                         }
                     } else {
@@ -79,8 +83,14 @@ fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
     let mut i: SifrInt = SifrInt::from_i64(0);
     while &i < &SifrInt::from(actual.len()) {
         assert!(
-            Some(actual[::sifr_runtime::to_usize_proven(& (i))]) == expected
-            .get(::sifr_runtime::to_usize_proven(& (i))).copied()
+            ({ let __sifr_condition_list = & actual; let __sifr_condition_index = i
+            .clone(); let __sifr_condition_normalized = __sifr_condition_index
+            .normalize_index_or_len(__sifr_condition_list.len()); __sifr_condition_list
+            .get(__sifr_condition_normalized).copied() }) == ({ let __sifr_condition_list
+            = & expected; let __sifr_condition_index = i.clone(); let
+            __sifr_condition_normalized = __sifr_condition_index
+            .normalize_index_or_len(__sifr_condition_list.len()); __sifr_condition_list
+            .get(__sifr_condition_normalized).copied() })
         );
         i = &i + &SifrInt::from_i64(1);
     }

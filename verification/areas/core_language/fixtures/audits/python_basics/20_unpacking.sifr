@@ -15,9 +15,12 @@ def main():
     print(b)
 
     # Star unpacking
-    first, *rest = [1, 2, 3, 4, 5]
-    print(first)
-    print(rest)
+    try:
+        first, *rest = [1, 2, 3, 4, 5]
+        print(first)
+        print(rest)
+    except ValueError:
+        assert False
 
     # From function return
     x, y = (10, 20)

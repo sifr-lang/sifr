@@ -588,7 +588,7 @@ where
                 return TraversalControl::Stop;
             }
         }
-        HirStmt::Delete { object, index } => {
+        HirStmt::Delete { object, index, .. } => {
             if matches!(walk_expr_until(object, on_expr), TraversalControl::Stop) {
                 return TraversalControl::Stop;
             }

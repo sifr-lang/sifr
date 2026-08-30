@@ -38,7 +38,10 @@ def borrowed_total(store: Store) -> int:
     assert!(!generated.contains("self.items.clone().len()"));
     assert!(!generated.contains("self.lookup.clone().get"));
     assert!(!generated.contains("head(&self.items.clone())"));
-    assert!(generated.contains("let __sifr_index_list = &self.items"));
+    assert!(
+        generated.contains("let __sifr_checked_read_collection = &self.items"),
+        "{generated}"
+    );
     assert!(!generated.contains("&self.items.clone()"));
     assert!(generated.contains("SifrInt::from(store.items.len())"));
     assert!(!generated.contains("store.items.clone().len()"));
@@ -152,11 +155,13 @@ fn test_structured_stmt_path_lowers_collection_truthiness_inside_boolop_conditio
     let captured = emitter.capture_structured_stmts(|inner| inner.emit_stmt(&stmt));
 
     let Some(RustStmt::While { cond, .. }) = captured.first() else {
-        panic!("expected while stmt");
+        panic!("expected checked while stmt: {captured:#?}");
     };
     let rendered = crate::render_expr(cond);
     assert!(rendered.contains("is_empty"));
     assert!(rendered.contains("&&"));
+    assert!(rendered.contains(".get("));
+    assert!(rendered.contains(".is_some_and("));
 }
 
 #[test]

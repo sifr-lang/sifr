@@ -1491,7 +1491,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.readable()) {
+            if !self.readable() {
                 return Err(IOError::new("stream is not readable".to_string()));
             }
             file_read(&self._handle)
@@ -1502,7 +1502,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.writable()) {
+            if !self.writable() {
                 return Err(IOError::new("stream is not writable".to_string()));
             }
             file_write(&self._handle, data)
@@ -1513,7 +1513,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.readable()) {
+            if !self.readable() {
                 return Err(IOError::new("stream is not readable".to_string()));
             }
             file_readline(&self._handle)
@@ -1524,7 +1524,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.readable()) {
+            if !self.readable() {
                 return Err(IOError::new("stream is not readable".to_string()));
             }
             file_readlines(&self._handle)
@@ -1535,7 +1535,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.readable()) {
+            if !self.readable() {
                 return Err(IOError::new("stream is not readable".to_string()));
             }
             file_read_bytes(&self._handle)
@@ -1546,7 +1546,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.writable()) {
+            if !self.writable() {
                 return Err(IOError::new("stream is not writable".to_string()));
             }
             file_write_bytes(&self._handle, data)
@@ -1643,7 +1643,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.readable()) {
+            if !self.readable() {
                 return Err(IOError::new("stream is not readable".to_string()));
             }
             file_read_bytes(&self._handle)
@@ -1654,7 +1654,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            if !(self.writable()) {
+            if !self.writable() {
                 return Err(IOError::new("stream is not writable".to_string()));
             }
             file_write_bytes(&self._handle, data)
@@ -2049,9 +2049,9 @@ mod __sifr_project_nominals {
             let mut end: SifrInt = SifrInt::from(self._buffer.chars().count());
             if let Some(size) = size.as_ref() {
                 let maybe_size: SifrInt = size.clone();
-                if &maybe_size >= &SifrInt::from_i64(0) {
+                if (&maybe_size >= &SifrInt::from_i64(0)) {
                     let requested: SifrInt = &start + &maybe_size;
-                    if &requested < &end {
+                    if (&requested < &end) {
                         end = requested;
                     }
                 }
@@ -2150,7 +2150,7 @@ mod __sifr_project_nominals {
                 }
             }
             let mut next_pos: SifrInt = &origin + offset;
-            if &next_pos < &SifrInt::from_i64(0) {
+            if (&next_pos < &SifrInt::from_i64(0)) {
                 return Err(IOError::new(_negative_seek_error((next_pos).clone())));
             }
             let end: SifrInt = SifrInt::from(self._buffer.chars().count());
@@ -2237,9 +2237,9 @@ mod __sifr_project_nominals {
             let mut end: SifrInt = SifrInt::from(self._buffer.len());
             if let Some(size) = size.as_ref() {
                 let maybe_size: SifrInt = size.clone();
-                if &maybe_size >= &SifrInt::from_i64(0) {
+                if (&maybe_size >= &SifrInt::from_i64(0)) {
                     let requested: SifrInt = &start + &maybe_size;
-                    if &requested < &end {
+                    if (&requested < &end) {
                         end = requested;
                     }
                 }
@@ -2353,7 +2353,7 @@ mod __sifr_project_nominals {
                 }
             }
             let mut next_pos: SifrInt = &origin + offset;
-            if &next_pos < &SifrInt::from_i64(0) {
+            if (&next_pos < &SifrInt::from_i64(0)) {
                 return Err(IOError::new(_negative_seek_error((next_pos).clone())));
             }
             let end: SifrInt = SifrInt::from(self._buffer.len());
@@ -2486,7 +2486,7 @@ mod __sifr_project_nominals {
         path: &String,
         mode: &String,
     ) -> Result<__SifrIoBinaryFileHandle, IOError> {
-        if !(mode.contains(&"b".to_string())) {
+        if !mode.contains(&"b".to_string()) {
             return Err(IOError::new("open_binary requires binary mode".to_string()));
         }
         let __sifr_try_res: Result<Result<__SifrIoBinaryFileHandle, IOError>, IOError> = (|| {
@@ -2646,7 +2646,7 @@ mod __sifr_project_nominals {
     }
     impl __SifrStdlib_sifr_x2etomllib_x2eTomlValue {
         pub fn as_array(&self) -> Option<Vec<__SifrStdlib_sifr_x2etomllib_x2eTomlValue>> {
-            if !(self.is_array()) {
+            if !self.is_array() {
                 return None;
             }
             let mut result: Vec<__SifrStdlib_sifr_x2etomllib_x2eTomlValue> = vec![];
@@ -2660,7 +2660,7 @@ mod __sifr_project_nominals {
         pub fn as_table(
             &self,
         ) -> Option<Vec<(String, __SifrStdlib_sifr_x2etomllib_x2eTomlValue)>> {
-            if !(self.is_table()) {
+            if !self.is_table() {
                 return None;
             }
             let mut result: Vec<(String, __SifrStdlib_sifr_x2etomllib_x2eTomlValue)> = vec![];
@@ -2675,7 +2675,7 @@ mod __sifr_project_nominals {
             &self,
             index: &SifrInt,
         ) -> Option<__SifrStdlib_sifr_x2etomllib_x2eTomlValue> {
-            if !(self.is_array()) {
+            if !self.is_array() {
                 return None;
             }
             if (&index.clone() < &SifrInt::from_i64(0))
@@ -2683,12 +2683,13 @@ mod __sifr_project_nominals {
             {
                 return None;
             }
-            let value: Option<__SifrStdlib_sifr_x2etomllib_x2eTomlValue> = Some(
-                (self.array_items)
-                    .as_ref()
-                    .clone()[::sifr_runtime::to_usize_proven(&(index))]
-                    .clone(),
-            );
+            let value: Option<__SifrStdlib_sifr_x2etomllib_x2eTomlValue> = {
+                let __sifr_checked_read_collection = &self.array_items;
+                let __sifr_checked_read_index = index.clone();
+                let __sifr_checked_read_normalized = __sifr_checked_read_index
+                    .normalize_index_or_len(__sifr_checked_read_collection.len());
+                __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+            };
             value
         }
     }
@@ -2697,7 +2698,7 @@ mod __sifr_project_nominals {
             &self,
             key: &String,
         ) -> Option<__SifrStdlib_sifr_x2etomllib_x2eTomlValue> {
-            if !(self.is_table()) {
+            if !self.is_table() {
                 return None;
             }
             for (item_key, item_value) in (self.table_items).as_ref().clone().iter().cloned()
@@ -2712,7 +2713,7 @@ mod __sifr_project_nominals {
     impl __SifrStdlib_sifr_x2etomllib_x2eTomlValue {
         pub fn keys(&self) -> Vec<String> {
             let mut result: Vec<String> = vec![];
-            if !(self.is_table()) {
+            if !self.is_table() {
                 return result;
             }
             for (item_key, _item_value) in (self.table_items)
@@ -2729,7 +2730,7 @@ mod __sifr_project_nominals {
     impl __SifrStdlib_sifr_x2etomllib_x2eTomlValue {
         pub fn values(&self) -> Vec<__SifrStdlib_sifr_x2etomllib_x2eTomlValue> {
             let mut result: Vec<__SifrStdlib_sifr_x2etomllib_x2eTomlValue> = vec![];
-            if !(self.is_table()) {
+            if !self.is_table() {
                 return result;
             }
             for (_item_key, item_value) in (self.table_items)
@@ -2745,7 +2746,7 @@ mod __sifr_project_nominals {
     }
     impl __SifrStdlib_sifr_x2etomllib_x2eTomlValue {
         pub fn items(&self) -> Vec<(String, __SifrStdlib_sifr_x2etomllib_x2eTomlValue)> {
-            if !(self.is_table()) {
+            if !self.is_table() {
                 return vec![];
             }
             let mut result: Vec<(String, __SifrStdlib_sifr_x2etomllib_x2eTomlValue)> = vec![];
@@ -3982,7 +3983,7 @@ pub fn open_binary(
     path: &String,
     mode: &String,
 ) -> Result<__SifrIoBinaryFileHandle, IOError> {
-    if !(mode.contains(&"b".to_string())) {
+    if !mode.contains(&"b".to_string()) {
         return Err(IOError::new("open_binary requires binary mode".to_string()));
     }
     let __sifr_try_res: Result<Result<__SifrIoBinaryFileHandle, IOError>, IOError> = (|| {
@@ -4073,11 +4074,11 @@ pub fn _token_at(
     index: SifrInt,
 ) -> Result<String, TOMLDecodeError> {
     let value: Option<String> = {
-        let __sifr_index_list = &tokens;
-        let __sifr_index_i = index.clone();
-        let __sifr_index_norm = __sifr_index_i
-            .normalize_index_or_len(__sifr_index_list.len());
-        __sifr_index_list.get(__sifr_index_norm).cloned()
+        let __sifr_checked_read_collection = &tokens;
+        let __sifr_checked_read_index = index.clone();
+        let __sifr_checked_read_normalized = __sifr_checked_read_index
+            .normalize_index_or_len(__sifr_checked_read_collection.len());
+        __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
     };
     let Some(value) = value else {
         return Err(
@@ -4211,7 +4212,7 @@ pub fn _decode_toml_value_at(
     > = (|| {
         let tag: String = _token_at(tokens, (index).clone())?;
         let payload_index: SifrInt = &index + &SifrInt::from_i64(1);
-        if tag == "bool" {
+        if (tag == "bool") {
             let bool_token: String = _token_at(tokens, (payload_index).clone())?;
             let bool_value: bool = _decode_bool_token(&bool_token)?;
             return Ok(
@@ -4228,7 +4229,7 @@ pub fn _decode_toml_value_at(
                 )),
             );
         }
-        if tag == "int" {
+        if (tag == "int") {
             let int_value: SifrInt = _token_int(tokens, (payload_index).clone())?;
             return Ok(
                 Ok((
@@ -4244,7 +4245,7 @@ pub fn _decode_toml_value_at(
                 )),
             );
         }
-        if tag == "float" {
+        if (tag == "float") {
             let float_value: f64 = _token_float(tokens, (payload_index).clone())?;
             return Ok(
                 Ok((
@@ -4260,7 +4261,7 @@ pub fn _decode_toml_value_at(
                 )),
             );
         }
-        if tag == "str" {
+        if (tag == "str") {
             let str_value: String = _token_at(tokens, (payload_index).clone())?;
             return Ok(
                 Ok((
@@ -4276,7 +4277,7 @@ pub fn _decode_toml_value_at(
                 )),
             );
         }
-        if tag == "datetime" {
+        if (tag == "datetime") {
             let datetime_value: String = _token_at(tokens, (payload_index).clone())?;
             return Ok(
                 Ok((
@@ -4292,9 +4293,9 @@ pub fn _decode_toml_value_at(
                 )),
             );
         }
-        if tag == "array" {
+        if (tag == "array") {
             let array_count: SifrInt = _token_int(tokens, (payload_index).clone())?;
-            if &array_count < &SifrInt::from_i64(0) {
+            if (&array_count < &SifrInt::from_i64(0)) {
                 return Err(
                     TOMLDecodeError::new(
                         "TOML bridge payload has invalid array length".to_string(),
@@ -4311,7 +4312,7 @@ pub fn _decode_toml_value_at(
             );
             let mut next_index: SifrInt = &payload_index + &SifrInt::from_i64(1);
             let mut consumed: SifrInt = SifrInt::from_i64(0);
-            while &consumed < &array_count {
+            while (&consumed < &array_count) {
                 let item_result: (__SifrStdlib_sifr_x2etomllib_x2eTomlValue, SifrInt) = _decode_toml_value_at(
                     tokens,
                     (next_index).clone(),
@@ -4322,9 +4323,9 @@ pub fn _decode_toml_value_at(
             }
             return Ok(Ok((array_value, next_index.clone())));
         }
-        if tag == "table" {
+        if (tag == "table") {
             let table_count: SifrInt = _token_int(tokens, (payload_index).clone())?;
-            if &table_count < &SifrInt::from_i64(0) {
+            if (&table_count < &SifrInt::from_i64(0)) {
                 return Err(
                     TOMLDecodeError::new(
                         "TOML bridge payload has invalid table length".to_string(),
@@ -4341,7 +4342,7 @@ pub fn _decode_toml_value_at(
             );
             let mut next_index: SifrInt = &payload_index + &SifrInt::from_i64(1);
             let mut consumed: SifrInt = SifrInt::from_i64(0);
-            while &consumed < &table_count {
+            while (&consumed < &table_count) {
                 let key: String = _token_at(tokens, (next_index).clone())?;
                 let item_result: (__SifrStdlib_sifr_x2etomllib_x2eTomlValue, SifrInt) = _decode_toml_value_at(
                     tokens,

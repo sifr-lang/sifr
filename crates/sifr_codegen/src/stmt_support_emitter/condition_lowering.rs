@@ -4,6 +4,27 @@ impl RustEmitter {
         &mut self,
         condition: &HirExpr,
     ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
+        // Preserve boolean short-circuiting around checked reads. Guarding an
+        // entire `not (a and indexed_read)` would incorrectly make a missing
+        // read force the outer expression to false instead of negating the
+        // short-circuited inner result.
+        if let HirExpr::UnaryOp { op, operand, .. } = condition
+            && op == "not"
+        {
+            let Some(lowered_operand) = self.lower_condition_expr_for_ir(operand)? else {
+                return Ok(None);
+            };
+            return Ok(Some(crate::RustExpr::UnaryOp {
+                op: "!".to_string(),
+                operand: Box::new(lowered_operand),
+            }));
+        }
+        if !matches!(condition, HirExpr::BoolOp { .. })
+            && let Some(lowered) =
+                self.lower_condition_with_checked_place_reads_for_ir(condition)?
+        {
+            return Ok(Some(lowered));
+        }
         if let HirExpr::BoolOp { op, values, .. } = condition {
             let lowered_op = match op.as_str() {
                 "and" => "&&",
@@ -43,18 +64,6 @@ impl RustEmitter {
                 method: "is_none".to_string(),
                 args: vec![],
             }));
-        }
-        if let HirExpr::UnaryOp { op, operand, .. } = condition {
-            if op == "not" && Self::option_inner_type_for_ir(operand.ty()).is_some() {
-                let Some(lowered_option_expr) = self.lower_stmt_expr_for_ir(operand)? else {
-                    return Ok(None);
-                };
-                return Ok(Some(crate::RustExpr::MethodCall {
-                    receiver: Box::new(lowered_option_expr),
-                    method: "is_none".to_string(),
-                    args: vec![],
-                }));
-            }
         }
         if let Some(option_inner_ty) = Self::option_inner_type_for_ir(condition.ty()) {
             let Some(lowered_option_expr) = self.lower_stmt_expr_for_ir(condition)? else {

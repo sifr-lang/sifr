@@ -12,83 +12,111 @@ fn _sift_down_max<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
         let mut largest: SifrInt = pos.clone();
         let left: SifrInt = &(&SifrInt::from_i64(2) * &pos) + &SifrInt::from_i64(1);
         let right: SifrInt = &(&SifrInt::from_i64(2) * &pos) + &SifrInt::from_i64(2);
-        if &left < &n {
+        if (&left < &n) {
             let current_val: Option<T> = {
-                let __sifr_index_list = &data;
-                let __sifr_index_i = largest.clone();
-                let __sifr_index_norm = __sifr_index_i
-                    .normalize_index_or_len(__sifr_index_list.len());
-                __sifr_index_list.get(__sifr_index_norm).cloned()
+                let __sifr_checked_read_collection = &data;
+                let __sifr_checked_read_index = largest.clone();
+                let __sifr_checked_read_normalized = __sifr_checked_read_index
+                    .normalize_index_or_len(__sifr_checked_read_collection.len());
+                __sifr_checked_read_collection
+                    .get(__sifr_checked_read_normalized)
+                    .cloned()
             };
             let left_val: Option<T> = {
-                let __sifr_index_list = &data;
-                let __sifr_index_i = left.clone();
-                let __sifr_index_norm = __sifr_index_i
-                    .normalize_index_or_len(__sifr_index_list.len());
-                __sifr_index_list.get(__sifr_index_norm).cloned()
+                let __sifr_checked_read_collection = &data;
+                let __sifr_checked_read_index = left.clone();
+                let __sifr_checked_read_normalized = __sifr_checked_read_index
+                    .normalize_index_or_len(__sifr_checked_read_collection.len());
+                __sifr_checked_read_collection
+                    .get(__sifr_checked_read_normalized)
+                    .cloned()
             };
             if let Some(current_val) = current_val {
                 if let Some(left_val) = left_val {
-                    if left_val > current_val {
+                    if (left_val > current_val) {
                         largest = left;
                     }
                 }
             }
         }
-        if &right < &n {
+        if (&right < &n) {
             let current_val2: Option<T> = {
-                let __sifr_index_list = &data;
-                let __sifr_index_i = largest.clone();
-                let __sifr_index_norm = __sifr_index_i
-                    .normalize_index_or_len(__sifr_index_list.len());
-                __sifr_index_list.get(__sifr_index_norm).cloned()
+                let __sifr_checked_read_collection = &data;
+                let __sifr_checked_read_index = largest.clone();
+                let __sifr_checked_read_normalized = __sifr_checked_read_index
+                    .normalize_index_or_len(__sifr_checked_read_collection.len());
+                __sifr_checked_read_collection
+                    .get(__sifr_checked_read_normalized)
+                    .cloned()
             };
             let right_val: Option<T> = {
-                let __sifr_index_list = &data;
-                let __sifr_index_i = right.clone();
-                let __sifr_index_norm = __sifr_index_i
-                    .normalize_index_or_len(__sifr_index_list.len());
-                __sifr_index_list.get(__sifr_index_norm).cloned()
+                let __sifr_checked_read_collection = &data;
+                let __sifr_checked_read_index = right.clone();
+                let __sifr_checked_read_normalized = __sifr_checked_read_index
+                    .normalize_index_or_len(__sifr_checked_read_collection.len());
+                __sifr_checked_read_collection
+                    .get(__sifr_checked_read_normalized)
+                    .cloned()
             };
             if let Some(current_val2) = current_val2 {
                 if let Some(right_val) = right_val {
-                    if right_val > current_val2 {
+                    if (right_val > current_val2) {
                         largest = right;
                     }
                 }
             }
         }
-        if &largest == &pos {
+        if (&largest == &pos) {
             done = true;
         } else {
             let tmp_pos: Option<T> = {
-                let __sifr_index_list = &data;
-                let __sifr_index_i = pos.clone();
-                let __sifr_index_norm = __sifr_index_i
-                    .normalize_index_or_len(__sifr_index_list.len());
-                __sifr_index_list.get(__sifr_index_norm).cloned()
+                let __sifr_checked_read_collection = &data;
+                let __sifr_checked_read_index = pos.clone();
+                let __sifr_checked_read_normalized = __sifr_checked_read_index
+                    .normalize_index_or_len(__sifr_checked_read_collection.len());
+                __sifr_checked_read_collection
+                    .get(__sifr_checked_read_normalized)
+                    .cloned()
             };
             let tmp_largest: Option<T> = {
-                let __sifr_index_list = &data;
-                let __sifr_index_i = largest.clone();
-                let __sifr_index_norm = __sifr_index_i
-                    .normalize_index_or_len(__sifr_index_list.len());
-                __sifr_index_list.get(__sifr_index_norm).cloned()
+                let __sifr_checked_read_collection = &data;
+                let __sifr_checked_read_index = largest.clone();
+                let __sifr_checked_read_normalized = __sifr_checked_read_index
+                    .normalize_index_or_len(__sifr_checked_read_collection.len());
+                __sifr_checked_read_collection
+                    .get(__sifr_checked_read_normalized)
+                    .cloned()
             };
             if let Some(tmp_pos) = tmp_pos {
                 if let Some(tmp_largest) = tmp_largest {
+                    if (&SifrInt::from_i64(0) <= &pos)
+                        && (&pos < &SifrInt::from(data.len()))
                     {
-                        let __idx_raw = pos.clone();
-                        let __idx_norm = __idx_raw.normalize_index_or_len(data.len());
-                        if let Some(__elem) = data.get_mut(__idx_norm) {
-                            *__elem = tmp_largest.clone();
+                        {
+                            let __assign_value = tmp_largest.clone();
+                            {
+                                let __index_raw = pos.clone();
+                                let __index_normalized = __index_raw
+                                    .normalize_index_or_len(data.len());
+                                if let Some(__elem) = data.get_mut(__index_normalized) {
+                                    *__elem = __assign_value;
+                                }
+                            }
                         }
                     }
+                    if (&SifrInt::from_i64(0) <= &largest)
+                        && (&largest < &SifrInt::from(data.len()))
                     {
-                        let __idx_raw = largest.clone();
-                        let __idx_norm = __idx_raw.normalize_index_or_len(data.len());
-                        if let Some(__elem) = data.get_mut(__idx_norm) {
-                            *__elem = tmp_pos.clone();
+                        {
+                            let __assign_value = tmp_pos.clone();
+                            {
+                                let __index_raw = largest.clone();
+                                let __index_normalized = __index_raw
+                                    .normalize_index_or_len(data.len());
+                                if let Some(__elem) = data.get_mut(__index_normalized) {
+                                    *__elem = __assign_value;
+                                }
+                            }
                         }
                     }
                 }
@@ -104,7 +132,7 @@ fn _heapify_max<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     let n: SifrInt = SifrInt::from(data.len());
     let mut i: SifrInt = &n.floor_div_known_nonzero(&SifrInt::from_i64(2))
         - &SifrInt::from_i64(1);
-    while &i >= &SifrInt::from_i64(0) {
+    while (&i >= &SifrInt::from_i64(0)) {
         _sift_down_max(data, (i).clone(), (n).clone());
         i = &i - &SifrInt::from_i64(1);
     }
@@ -118,25 +146,33 @@ fn _heappop_max<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     if &n == &SifrInt::from_i64(0) {
         return None;
     }
-    let top: Option<T> = Some(
-        heap[::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(0)))].clone(),
-    );
+    let top: Option<T> = {
+        let __sifr_checked_read_collection = &heap;
+        let __sifr_checked_read_index = SifrInt::from_i64(0);
+        let __sifr_checked_read_normalized = __sifr_checked_read_index
+            .normalize_index_or_len(__sifr_checked_read_collection.len());
+        __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+    };
     let last: Option<T> = {
-        let __sifr_index_list = &heap;
-        let __sifr_index_i = &n - &SifrInt::from_i64(1);
-        let __sifr_index_norm = __sifr_index_i
-            .normalize_index_or_len(__sifr_index_list.len());
-        __sifr_index_list.get(__sifr_index_norm).cloned()
+        let __sifr_checked_read_collection = &heap;
+        let __sifr_checked_read_index = &n - &SifrInt::from_i64(1);
+        let __sifr_checked_read_normalized = __sifr_checked_read_index
+            .normalize_index_or_len(__sifr_checked_read_collection.len());
+        __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
     };
     heap.remove(heap.len() - (1_usize));
     let n2: SifrInt = SifrInt::from(heap.len());
-    if &n2 > &SifrInt::from_i64(0) {
+    if (&n2 > &SifrInt::from_i64(0)) {
         if let Some(last) = last {
             {
-                let __idx_raw = SifrInt::from_i64(0);
-                let __idx_norm = __idx_raw.normalize_index_or_len(heap.len());
-                if let Some(__elem) = heap.get_mut(__idx_norm) {
-                    *__elem = last.clone();
+                let __assign_value = last.clone();
+                {
+                    let __index_raw = SifrInt::from_i64(0);
+                    let __index_normalized = __index_raw
+                        .normalize_index_or_len(heap.len());
+                    if let Some(__elem) = heap.get_mut(__index_normalized) {
+                        *__elem = __assign_value;
+                    }
                 }
             }
         }
@@ -153,14 +189,21 @@ fn _heapreplace_max<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     if &SifrInt::from(heap.len()) == &SifrInt::from_i64(0) {
         return None;
     }
-    let top: Option<T> = Some(
-        heap[::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(0)))].clone(),
-    );
+    let top: Option<T> = {
+        let __sifr_checked_read_collection = &heap;
+        let __sifr_checked_read_index = SifrInt::from_i64(0);
+        let __sifr_checked_read_normalized = __sifr_checked_read_index
+            .normalize_index_or_len(__sifr_checked_read_collection.len());
+        __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+    };
     {
-        let __idx_raw = SifrInt::from_i64(0);
-        let __idx_norm = __idx_raw.normalize_index_or_len(heap.len());
-        if let Some(__elem) = heap.get_mut(__idx_norm) {
-            *__elem = item.clone();
+        let __assign_value = item.clone();
+        {
+            let __index_raw = SifrInt::from_i64(0);
+            let __index_normalized = __index_raw.normalize_index_or_len(heap.len());
+            if let Some(__elem) = heap.get_mut(__index_normalized) {
+                *__elem = __assign_value;
+            }
         }
     }
     let heap_len: SifrInt = SifrInt::from(heap.len());

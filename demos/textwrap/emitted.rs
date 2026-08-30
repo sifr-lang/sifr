@@ -23,8 +23,14 @@ fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
     let mut i: SifrInt = SifrInt::from_i64(0);
     while &i < &SifrInt::from(actual.len()) {
         assert!(
-            Some(actual[::sifr_runtime::to_usize_proven(& (i))]) == expected
-            .get(::sifr_runtime::to_usize_proven(& (i))).copied()
+            ({ let __sifr_condition_list = & actual; let __sifr_condition_index = i
+            .clone(); let __sifr_condition_normalized = __sifr_condition_index
+            .normalize_index_or_len(__sifr_condition_list.len()); __sifr_condition_list
+            .get(__sifr_condition_normalized).copied() }) == ({ let __sifr_condition_list
+            = & expected; let __sifr_condition_index = i.clone(); let
+            __sifr_condition_normalized = __sifr_condition_index
+            .normalize_index_or_len(__sifr_condition_list.len()); __sifr_condition_list
+            .get(__sifr_condition_normalized).copied() })
         );
         i = &i + &SifrInt::from_i64(1);
     }
@@ -46,29 +52,30 @@ fn _expand_tabs_impl(text: &String, tabsize: SifrInt) -> String {
     if &effective_tabsize <= &SifrInt::from_i64(0) {
         effective_tabsize = SifrInt::from_i64(1);
     }
-    if &effective_tabsize == &SifrInt::from_i64(0) {
+    if (&effective_tabsize == &SifrInt::from_i64(0)) {
         return text.clone();
     }
     let mut result: String = "".to_string();
     let mut column: SifrInt = SifrInt::from_i64(0);
     let mut i: SifrInt = SifrInt::from_i64(0);
     while (&i < &SifrInt::from(__sifr_chars_text.len())) {
-        let ch_opt: Option<String> = Some({
-            let __indexed_char_option = __sifr_chars_text
-                .get(::sifr_runtime::to_usize_proven(&(i)))
-                .map(|c| c.to_string());
-            __indexed_char_option.as_slice()[0_usize].clone()
-        });
+        let ch_opt: Option<String> = ({
+            let __sifr_string_index = i.clone();
+            let __sifr_string_index_normalized = __sifr_string_index
+                .normalize_index_or_len(__sifr_chars_text.len());
+            __sifr_chars_text.get(__sifr_string_index_normalized)
+        })
+            .map(|c| c.to_string());
         if let Some(ch_opt) = ch_opt {
             let ch: String = ch_opt;
-            if ch == "\t" {
+            if (ch == "\t") {
                 let mut spaces: SifrInt = &effective_tabsize
                     - &column.floor_mod_known_nonzero(&effective_tabsize);
-                if &spaces <= &SifrInt::from_i64(0) {
+                if (&spaces <= &SifrInt::from_i64(0)) {
                     spaces = effective_tabsize.clone();
                 }
                 let mut j: SifrInt = SifrInt::from_i64(0);
-                while &j < &spaces {
+                while (&j < &spaces) {
                     result.push(' ');
                     j = &j + &SifrInt::from_i64(1);
                 }
@@ -114,19 +121,20 @@ fn _has_non_whitespace(text: &String) -> bool {
     let __sifr_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
     let mut i: SifrInt = SifrInt::from_i64(0);
     while (&i < &SifrInt::from(__sifr_chars_text.len())) {
-        let ch: Option<String> = Some({
-            let __indexed_char_option = __sifr_chars_text
-                .get(::sifr_runtime::to_usize_proven(&(i)))
-                .map(|c| c.to_string());
-            __indexed_char_option.as_slice()[0_usize].clone()
-        });
+        let ch: Option<String> = ({
+            let __sifr_string_index = i.clone();
+            let __sifr_string_index_normalized = __sifr_string_index
+                .normalize_index_or_len(__sifr_chars_text.len());
+            __sifr_chars_text.get(__sifr_string_index_normalized)
+        })
+            .map(|c| c.to_string());
         if let Some(ch) = ch {
-            if ch != " " {
-                if ch != "\t" {
-                    if ch != "\n" {
-                        if ch != "\r" {
-                            if ch != "\u{b}" {
-                                if ch != "\u{c}" {
+            if (ch != " ") {
+                if (ch != "\t") {
+                    if (ch != "\n") {
+                        if (ch != "\r") {
+                            if (ch != "\u{b}") {
+                                if (ch != "\u{c}") {
                                     return true;
                                 }
                             }
@@ -186,19 +194,27 @@ fn _trim_line(line: &String) -> String {
     let __sifr_chars_line: Vec<char> = line.chars().collect::<Vec<char>>();
     let mut start: SifrInt = SifrInt::from_i64(0);
     while (&start < &SifrInt::from(__sifr_chars_line.len()))
-        && (({
-            let __indexed_char_option = __sifr_chars_line
-                .get(::sifr_runtime::to_usize_proven(&(start)))
-                .map(|c| c.to_string());
-            __indexed_char_option.as_slice()[0_usize].clone()
-        }) == " ")
+        && ({
+            let __sifr_string_index = start.clone();
+            let __sifr_string_index_normalized = __sifr_string_index
+                .normalize_index_or_len(__sifr_chars_line.len());
+            __sifr_chars_line.get(__sifr_string_index_normalized)
+        })
+            .map(|c| c.to_string())
+            .is_some_and(|__sifr_checked_value_2| {
+                (__sifr_checked_value_2.clone() == " ")
+            })
     {
         start = &start + &SifrInt::from_i64(1);
     }
     let mut end: SifrInt = SifrInt::from(__sifr_chars_line.len());
     while (&end > &start)
-        && (__sifr_chars_line
-            .get(::sifr_runtime::to_usize_proven(&(&end - &SifrInt::from_i64(1))))
+        && (({
+            let __sifr_string_index = &end - &SifrInt::from_i64(1);
+            let __sifr_string_index_normalized = __sifr_string_index
+                .normalize_index_or_len(__sifr_chars_line.len());
+            __sifr_chars_line.get(__sifr_string_index_normalized)
+        })
             .map(|c| c.to_string()) == Some(" ".to_string()))
     {
         end = &end - &SifrInt::from_i64(1);
@@ -351,20 +367,20 @@ fn _wrap_with_indents(
     result
 }
 fn wrap(text: &String, width: SifrInt) -> Result<Vec<String>, ValueError> {
-    if &width <= &SifrInt::from_i64(0) {
+    if (&width <= &SifrInt::from_i64(0)) {
         return Err(ValueError::new("wrap: width must be > 0".to_string()));
     }
     Ok(_wrap_impl(text, (width).clone()))
 }
 fn fill(text: &String, width: SifrInt) -> Result<String, ValueError> {
-    if &width <= &SifrInt::from_i64(0) {
+    if (&width <= &SifrInt::from_i64(0)) {
         return Err(ValueError::new("fill: width must be > 0".to_string()));
     }
     let lines: Vec<String> = _wrap_impl(text, (width).clone());
     let mut result: String = "".to_string();
     let mut i: SifrInt = SifrInt::from_i64(0);
     for line in lines.iter().cloned() {
-        if &i > &SifrInt::from_i64(0) {
+        if (&i > &SifrInt::from_i64(0)) {
             result.push('\n');
         }
         result.push_str((line).as_str());
@@ -386,15 +402,25 @@ fn dedent(text: &String) -> String {
             let mut j: SifrInt = SifrInt::from_i64(0);
             let mut done: bool = false;
             while (&j < &SifrInt::from(__sifr_chars_line.len())) {
+                let Some(__sifr_checked_value_9) = ({
+                    let __sifr_string_index = j.clone();
+                    let __sifr_string_index_normalized = __sifr_string_index
+                        .normalize_index_or_len(__sifr_chars_line.len());
+                    __sifr_chars_line.get(__sifr_string_index_normalized)
+                })
+                    .map(|c| c.to_string()) else {
+                    break;
+                };
                 if !done {
-                    let ch: Option<String> = Some({
-                        let __indexed_char_option = __sifr_chars_line
-                            .get(::sifr_runtime::to_usize_proven(&(j)))
-                            .map(|c| c.to_string());
-                        __indexed_char_option.as_slice()[0_usize].clone()
-                    });
+                    let ch: Option<String> = ({
+                        let __sifr_string_index = j.clone();
+                        let __sifr_string_index_normalized = __sifr_string_index
+                            .normalize_index_or_len(__sifr_chars_line.len());
+                        __sifr_chars_line.get(__sifr_string_index_normalized)
+                    })
+                        .map(|c| c.to_string());
                     if let Some(ch) = ch {
-                        if ch == " " {
+                        if (ch == " ") {
                             spaces = &spaces + &SifrInt::from_i64(1);
                         } else {
                             done = true;
@@ -407,7 +433,7 @@ fn dedent(text: &String) -> String {
                 min_indent = spaces;
                 have_indent = true;
             } else {
-                if &spaces < &min_indent {
+                if (&spaces < &min_indent) {
                     min_indent = spaces;
                 }
             }

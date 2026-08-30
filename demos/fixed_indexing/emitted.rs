@@ -4,61 +4,71 @@ use ::sifr_runtime::SifrInt;
 use ::sifr_runtime::SifrRange;
 
 fn second_or_zero(values: &Vec<SifrInt>) -> SifrInt {
-    if &SifrInt::from(values.len()) < &SifrInt::from_i64(2) {
+    let Some(__sifr_checked_value_0) = ({
+    let __sifr_checked_read_collection = &values;
+    let __sifr_checked_read_index = SifrInt::from_i64(1);
+    let __sifr_checked_read_normalized = __sifr_checked_read_index.normalize_index_or_len(__sifr_checked_read_collection.len());
+    __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+}) else {
         return SifrInt::from_i64(0);
-    }
-    values[::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(1)))].clone()
+    };
+    __sifr_checked_value_0.clone()
 }
 
 fn neighbor_min_cost(cost: &mut Vec<SifrInt>) -> SifrInt {
-    if &SifrInt::from(cost.len()) < &SifrInt::from_i64(2) {
+    let Some(__sifr_checked_value_1) = ({
+    let __sifr_checked_read_collection = &cost;
+    let __sifr_checked_read_index = SifrInt::from_i64(0);
+    let __sifr_checked_read_normalized = __sifr_checked_read_index.normalize_index_or_len(__sifr_checked_read_collection.len());
+    __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+}) else {
         return SifrInt::from_i64(0);
-    }
+    };
+    let Some(__sifr_checked_value_2) = ({
+    let __sifr_checked_read_collection = &cost;
+    let __sifr_checked_read_index = SifrInt::from_i64(1);
+    let __sifr_checked_read_normalized = __sifr_checked_read_index.normalize_index_or_len(__sifr_checked_read_collection.len());
+    __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+}) else {
+        return SifrInt::from_i64(0);
+    };
     for i in SifrRange::new_known_nonzero(&SifrInt::from(cost.len()) - &SifrInt::from_i64(3), -(SifrInt::from_i64(1)), -(SifrInt::from_i64(1))) {
+        let Some(__sifr_checked_value_3) = ({
+    let __sifr_checked_read_collection = &cost;
+    let __sifr_checked_read_index = i.clone();
+    let __sifr_checked_read_normalized = __sifr_checked_read_index.normalize_index_or_len(__sifr_checked_read_collection.len());
+    __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+}) else {
+            break;
+        };
+        let Some(__sifr_checked_value_4) = ({
+    let __sifr_checked_read_collection = &cost;
+    let __sifr_checked_read_index = &i + &SifrInt::from_i64(1);
+    let __sifr_checked_read_normalized = __sifr_checked_read_index.normalize_index_or_len(__sifr_checked_read_collection.len());
+    __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+}) else {
+            break;
+        };
+        let Some(__sifr_checked_value_5) = ({
+    let __sifr_checked_read_collection = &cost;
+    let __sifr_checked_read_index = &i + &SifrInt::from_i64(2);
+    let __sifr_checked_read_normalized = __sifr_checked_read_index.normalize_index_or_len(__sifr_checked_read_collection.len());
+    __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+}) else {
+            break;
+        };
         {
-            let __assign_value = &cost[::sifr_runtime::to_usize_proven(&(i))].clone() + &::std::cmp::min({
-    let __sifr_index_value_option = {
-    let __sifr_index_list = &cost;
-    let __sifr_index_i = &i + &SifrInt::from_i64(1);
-    let __sifr_index_norm = __sifr_index_i.normalize_index_or_len(__sifr_index_list.len());
-    __sifr_index_list.get(__sifr_index_norm).cloned()
-};
-    __sifr_index_value_option.as_slice()[0_usize].clone()
-}, {
-    let __sifr_index_value_option = {
-    let __sifr_index_list = &cost;
-    let __sifr_index_i = &i + &SifrInt::from_i64(2);
-    let __sifr_index_norm = __sifr_index_i.normalize_index_or_len(__sifr_index_list.len());
-    __sifr_index_list.get(__sifr_index_norm).cloned()
-};
-    __sifr_index_value_option.as_slice()[0_usize].clone()
-});
+            let __assign_value = &__sifr_checked_value_3.clone() + &::std::cmp::min(__sifr_checked_value_4.clone(), __sifr_checked_value_5.clone());
             {
-                let __idx_raw = i.clone();
-                let __idx_norm = __idx_raw.normalize_index_or_len(cost.len());
-                if let Some(__elem) = cost.get_mut(__idx_norm) {
+                let __index_raw = i.clone();
+                let __index_normalized = __index_raw.normalize_index_or_len(cost.len());
+                if let Some(__elem) = cost.get_mut(__index_normalized) {
                     *__elem = __assign_value;
                 }
             }
         }
     }
-    ::std::cmp::min({
-    let __sifr_index_value_option = {
-    let __sifr_index_list = &cost;
-    let __sifr_index_i = SifrInt::from_i64(0);
-    let __sifr_index_norm = __sifr_index_i.normalize_index_or_len(__sifr_index_list.len());
-    __sifr_index_list.get(__sifr_index_norm).cloned()
-};
-    __sifr_index_value_option.as_slice()[0_usize].clone()
-}, {
-    let __sifr_index_value_option = {
-    let __sifr_index_list = &cost;
-    let __sifr_index_i = SifrInt::from_i64(1);
-    let __sifr_index_norm = __sifr_index_i.normalize_index_or_len(__sifr_index_list.len());
-    __sifr_index_list.get(__sifr_index_norm).cloned()
-};
-    __sifr_index_value_option.as_slice()[0_usize].clone()
-})
+    ::std::cmp::min(__sifr_checked_value_1.clone(), __sifr_checked_value_2.clone())
 }
 
 fn main() {

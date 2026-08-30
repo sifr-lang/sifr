@@ -105,7 +105,7 @@ class Random:
 
     def _twist(mut self) -> None:
         i: int = 0
-        while i < _MT_N:
+        while 0 <= i and i < len(self._state_words):
             y: int = (
                 (_state_word_at(self._state_words, i) & _MT_UPPER_MASK)
                 + (_state_word_at(self._state_words, (i + 1) % _MT_N) & _MT_LOWER_MASK)
@@ -456,7 +456,8 @@ def sample[T](items: list[T], k: int) -> Result[list[T], ValueError]:
 
         last: T | None = pool[remaining - 1]
         if last is not None:
-            pool[pick_index] = last
+            if 0 <= pick_index and pick_index < len(pool):
+                pool[pick_index] = last
 
         remaining = remaining - 1
         i = i + 1
@@ -479,8 +480,10 @@ def shuffle[T](mut items: list[T]) -> None:
             right: T | None = items[j]
             if left is not None:
                 if right is not None:
-                    items[i] = right
-                    items[j] = left
+                    if 0 <= i and i < len(items):
+                        items[i] = right
+                    if 0 <= j and j < len(items):
+                        items[j] = left
             i = i - 1
 
     _sync_module_random(generator)

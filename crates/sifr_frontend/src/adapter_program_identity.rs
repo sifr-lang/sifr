@@ -184,7 +184,7 @@ fn strip_stmt_locations(statements: &mut [HirStmt]) {
                 strip_expr_locations(inner_index);
                 strip_expr_locations(value);
             }
-            HirStmt::Delete { object, index } => {
+            HirStmt::Delete { object, index, .. } => {
                 strip_expr_locations(object);
                 strip_expr_locations(index);
             }

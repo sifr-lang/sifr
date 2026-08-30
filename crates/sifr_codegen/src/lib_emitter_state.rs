@@ -120,6 +120,18 @@ pub struct RustEmitter {
     pub(crate) imported_project_functions: HashSet<String>,
     /// Rust locals that checked mutable places require to remain mutable.
     pub(crate) protected_mutable_place_roots: HashSet<String>,
+    /// Values established by structurally lowered checked-place guards.
+    /// Keys describe the original HIR collection place and index expression.
+    pub(crate) checked_place_read_witnesses:
+        HashMap<String, crate::checked_place::CheckedPlaceReadWitness>,
+    /// Monotonic identifier for collision-free checked-place witness locals.
+    pub(crate) next_checked_place_read_witness: usize,
+    /// Prevents recursive re-entry while an atomic checked-read statement is
+    /// lowered under the witnesses established for that statement.
+    pub(crate) checked_place_atomic_guard_suppressed: bool,
+    /// Local list comprehensions represented by `SifrNonEmptyVec`, keyed by
+    /// binding name with their statically non-empty nesting depth.
+    pub(crate) nonempty_list_bindings: HashMap<String, usize>,
     /// Whether we're inside a generator closure (yield -> return Some(val))
     pub(crate) emission_ctx: EmissionContext,
     /// Whether we're inside a `Display::fmt` implementation (for __str__ methods)
@@ -282,6 +294,10 @@ impl RustEmitter {
             imported_stdlib_names: HashMap::new(),
             imported_project_functions: HashSet::new(),
             protected_mutable_place_roots: HashSet::new(),
+            checked_place_read_witnesses: HashMap::new(),
+            next_checked_place_read_witness: 0,
+            checked_place_atomic_guard_suppressed: false,
+            nonempty_list_bindings: HashMap::new(),
             emission_ctx: EmissionContext::default(),
             try_enum_counter: 0,
             try_closure_depth: 0,
@@ -423,26 +439,43 @@ impl RustEmitter {
             }
         }
 
+        if self.try_capture_checked_place_control_stmt(stmt, following_stmts)? {
+            return Ok(true);
+        }
+
         let should_bypass_simple_lowering = matches!(
             stmt,
-            HirStmt::NestedFunction { .. } | HirStmt::Assign { .. }
-        ) || matches!(
-            stmt,
-            HirStmt::AsyncWith {
-                kind: sifr_ir::HirAsyncWithKind::TaskTimeout { .. }
-                    | sifr_ir::HirAsyncWithKind::UserDefined { .. }
-                    | sifr_ir::HirAsyncWithKind::Python { .. },
-                body,
-                ..
-            } if body_contains_await(body)
-        ) || matches!(
-            stmt,
-            HirStmt::AsyncWith {
-                kind: sifr_ir::HirAsyncWithKind::UserDefined { .. }
-                    | sifr_ir::HirAsyncWithKind::Python { .. },
-                ..
-            }
-        ) || matches!(stmt, HirStmt::Let { ty, .. } if self.type_contains_generic_class(ty))
+            HirStmt::NestedFunction { .. }
+                | HirStmt::Assign { .. }
+                | HirStmt::Delete { .. }
+                | HirStmt::SubscriptAssign { .. }
+                | HirStmt::NestedSubscriptAssign { .. }
+                | HirStmt::AttributeNestedSubscriptAssign { .. }
+                | HirStmt::AttributeSubscriptAssign { .. }
+                | HirStmt::SubscriptAugAssign { .. }
+                | HirStmt::StarUnpack { .. }
+        ) || self.stmt_uses_checked_place_read_witness(stmt)
+            || Self::stmt_defines_nonempty_list(stmt)
+            || self.stmt_uses_checked_option_target(stmt)
+            || matches!(
+                stmt,
+                HirStmt::AsyncWith {
+                    kind: sifr_ir::HirAsyncWithKind::TaskTimeout { .. }
+                        | sifr_ir::HirAsyncWithKind::UserDefined { .. }
+                        | sifr_ir::HirAsyncWithKind::Python { .. },
+                    body,
+                    ..
+                } if body_contains_await(body)
+            )
+            || matches!(
+                stmt,
+                HirStmt::AsyncWith {
+                    kind: sifr_ir::HirAsyncWithKind::UserDefined { .. }
+                        | sifr_ir::HirAsyncWithKind::Python { .. },
+                    ..
+                }
+            )
+            || matches!(stmt, HirStmt::Let { ty, .. } if self.type_contains_generic_class(ty))
             || matches!(stmt, HirStmt::Let { name, .. } if self.hoistable_static_dict_locals.contains(name))
             || stmt_needs_performance_lowering(stmt);
         if !should_bypass_simple_lowering {
@@ -508,35 +541,14 @@ impl RustEmitter {
             }
         }
 
-        if let HirStmt::TupleUnpack { targets, value } = stmt {
-            if let Some(lowered_value) = self.lower_stmt_expr_for_ir(value)? {
-                let lowered_stmts = crate::lower_tuple_unpack_targets(
-                    targets,
-                    value,
-                    self.rewrite_stdlib_constant_idents_in_expr(lowered_value),
-                    &self.mutated_vars,
-                    crate::tuple_unpack_source_is_borrowed(
-                        value,
-                        &self.borrowed_params,
-                        &self.mut_borrowed_params,
-                    ),
-                );
+        if let Some(lowered_stmts) = self.try_lower_tuple_unpack_stmt_for_block(stmt)? {
+            if matches!(
+                stmt,
+                HirStmt::TupleUnpack { .. } | HirStmt::StarUnpack { .. }
+            ) {
                 for lowered_stmt in lowered_stmts {
+                    let lowered_stmt = self.rewrite_stdlib_constant_idents_in_stmt(lowered_stmt);
                     self.push_captured_stmt(&lowered_stmt);
-                }
-                for target in targets {
-                    let sifr_ir::HirTupleTargetBinding::Name(name) = &target.binding else {
-                        continue;
-                    };
-                    let cache_stmt = if target.rebind_existing {
-                        self.string_char_cache_rebuild_stmt_for_local(name)
-                    } else {
-                        self.force_string_char_cache_init_stmt_for_local(name, &target.ty)
-                    };
-                    if let Some(cache_stmt) = cache_stmt {
-                        let cache_stmt = self.rewrite_stdlib_constant_idents_in_stmt(cache_stmt);
-                        self.push_captured_stmt(&cache_stmt);
-                    }
                 }
                 self.lowering_stats.stmt_structured += 1;
                 self.lowering_stats.stmt_candidate_structured += 1;
@@ -590,7 +602,18 @@ impl RustEmitter {
                 }
             };
             let borrowed_dict_get = None;
-            let lowered_value = if let Some(lowered) = borrowed_dict_get.clone() {
+            let nonempty_list_value = self.lower_nonempty_list_binding_value_for_ir(name, value)?;
+            let checked_option_value = if nonempty_list_value.is_none() {
+                self.lower_checked_place_option_value_for_target(&effective_ty, value)?
+            } else {
+                None
+            };
+            let value_is_nonempty_list = nonempty_list_value.is_some();
+            let lowered_value = if let Some(lowered) = nonempty_list_value {
+                lowered
+            } else if let Some(lowered) = checked_option_value {
+                lowered
+            } else if let Some(lowered) = borrowed_dict_get.clone() {
                 lowered
             } else if let Some(clone_expr) = lowered_value {
                 clone_expr
@@ -616,6 +639,7 @@ impl RustEmitter {
                 ty: if name == "_"
                     || generic_class_needs_inference
                     || borrowed_dict_get.is_some()
+                    || value_is_nonempty_list
                     || Self::is_borrowed_empty_list_get_expr_for_ir(&lowered_value)
                     || match (&effective_ty, value) {
                         (resolved_ty, HirExpr::Call { func, args, .. })
@@ -680,15 +704,23 @@ impl RustEmitter {
                 self.lowering_stats.stmt_candidate_structured += 1;
                 return Ok(true);
             }
-            let lowered_value = if let Some(lowered) = self.lower_rendered_expr_for_ir(value)? {
-                if let Some(target_ty) = self.local_binding_types.get(name).cloned() {
+            let target_ty = self.local_binding_types.get(name).cloned();
+            let checked_option_value = if let Some(target_ty) = target_ty.as_ref() {
+                self.lower_checked_place_option_value_for_target(target_ty, value)?
+            } else {
+                None
+            };
+            let lowered_value = if let Some(lowered) = checked_option_value {
+                lowered
+            } else if let Some(lowered) = self.lower_rendered_expr_for_ir(value)? {
+                if let Some(target_ty) = target_ty.clone() {
                     Self::validate_assignment_source_type_for_ir(name, &target_ty, value)?;
                     self.coerce_local_value_for_target_type_for_ir(&target_ty, value, lowered)?
                 } else {
                     lowered
                 }
             } else if let Some(lowered) = self.lower_stmt_expr_for_ir(value)? {
-                if let Some(target_ty) = self.local_binding_types.get(name).cloned() {
+                if let Some(target_ty) = target_ty {
                     Self::validate_assignment_source_type_for_ir(name, &target_ty, value)?;
                     self.coerce_local_value_for_target_type_for_ir(&target_ty, value, lowered)?
                 } else {

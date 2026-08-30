@@ -1349,8 +1349,14 @@ fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
     let mut i: SifrInt = SifrInt::from_i64(0);
     while &i < &SifrInt::from(actual.len()) {
         assert!(
-            Some(actual[::sifr_runtime::to_usize_proven(& (i))]) == expected
-            .get(::sifr_runtime::to_usize_proven(& (i))).copied()
+            ({ let __sifr_condition_list = & actual; let __sifr_condition_index = i
+            .clone(); let __sifr_condition_normalized = __sifr_condition_index
+            .normalize_index_or_len(__sifr_condition_list.len()); __sifr_condition_list
+            .get(__sifr_condition_normalized).copied() }) == ({ let __sifr_condition_list
+            = & expected; let __sifr_condition_index = i.clone(); let
+            __sifr_condition_normalized = __sifr_condition_index
+            .normalize_index_or_len(__sifr_condition_list.len()); __sifr_condition_list
+            .get(__sifr_condition_normalized).copied() })
         );
         i = &i + &SifrInt::from_i64(1);
     }
@@ -1422,7 +1428,7 @@ fn collect_runtime_actual() -> Vec<bool> {
     let mut shell_ok: bool = false;
     let __sifr_try_res: Result<(), IOError> = (|| {
         let output: String = run_command(&"echo sifr_os_demo".to_string())?;
-        shell_ok = output == "sifr_os_demo";
+        shell_ok = (output == "sifr_os_demo");
         Ok(())
     })();
     if let Err(__sifr_try_err) = __sifr_try_res {
@@ -1457,7 +1463,7 @@ fn collect_filesystem_actual() -> Vec<bool> {
         let entries: Vec<String> = listdir(&base)?;
         list_ok = (&SifrInt::from(entries.len()) >= &SifrInt::from_i64(1));
         let size: SifrInt = stat(&file_path)?;
-        stat_ok = &size > &SifrInt::from_i64(0);
+        stat_ok = (&size > &SifrInt::from_i64(0));
         let _rm: () = remove_file(&file_path)?;
         let _rd: () = rmdir(&base)?;
         cleanup_ok = !(is_dir(&base));

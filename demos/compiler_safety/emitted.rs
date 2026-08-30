@@ -119,7 +119,7 @@ fn main() {
     }
     events.push("=== Context Manager: Break in Loop ===".to_string());
     let mut i: SifrInt = SifrInt::from_i64(0);
-    while &i < &SifrInt::from_i64(3) {
+    while (&i < &SifrInt::from_i64(3)) {
         events.push("Connecting: db".to_string());
         let mut should_break: bool = false;
         {
@@ -130,7 +130,7 @@ fn main() {
             }
             let mut __guard_0 = __WithGuard0 { ctx: __ctx_0 };
             let conn = __guard_0.ctx.__enter__();
-            if &i == &SifrInt::from_i64(1) {
+            if (&i == &SifrInt::from_i64(1)) {
                 should_break = true;
             } else {
                 events.push(format!("{}{}", "Query on: ", conn.name.clone()));
@@ -168,7 +168,7 @@ fn main() {
     let c: Config = Config::new(SifrInt::from_i64(21), double);
     events.push(format!("{}", c.value.clone()));
     events.push("=== Compiler Hardening Demo Complete ===".to_string());
-    assert!(events == vec!["=== Context Manager: Normal Exit ===".to_string(), "Opening: config.json".to_string(), "Using: config.json".to_string(), "Closing: config.json".to_string(), "=== Context Manager: Early Return ===".to_string(), "Opening: data.csv".to_string(), "Reading: data.csv".to_string(), "Closing: data.csv".to_string(), "42".to_string(), "=== Context Manager: Break in Loop ===".to_string(), "Connecting: db".to_string(), "Query on: db".to_string(), "Disconnecting: db".to_string(), "Connecting: db".to_string(), "Disconnecting: db".to_string(), "=== Multiple Context Managers ===".to_string(), "Opening: input.txt".to_string(), "Connecting: postgres".to_string(), "Processing with: input.txt and postgres".to_string(), "Disconnecting: postgres".to_string(), "Closing: input.txt".to_string(), "=== Callable Struct Field ===".to_string(), "21".to_string(), "=== Compiler Hardening Demo Complete ===".to_string()]);
+    assert!((events == vec!["=== Context Manager: Normal Exit ===".to_string(), "Opening: config.json".to_string(), "Using: config.json".to_string(), "Closing: config.json".to_string(), "=== Context Manager: Early Return ===".to_string(), "Opening: data.csv".to_string(), "Reading: data.csv".to_string(), "Closing: data.csv".to_string(), "42".to_string(), "=== Context Manager: Break in Loop ===".to_string(), "Connecting: db".to_string(), "Query on: db".to_string(), "Disconnecting: db".to_string(), "Connecting: db".to_string(), "Disconnecting: db".to_string(), "=== Multiple Context Managers ===".to_string(), "Opening: input.txt".to_string(), "Connecting: postgres".to_string(), "Processing with: input.txt and postgres".to_string(), "Disconnecting: postgres".to_string(), "Closing: input.txt".to_string(), "=== Callable Struct Field ===".to_string(), "21".to_string(), "=== Compiler Hardening Demo Complete ===".to_string()]));
     println!("Compiler hardening demo trace:");
     for entry in events.iter().cloned() {
         println!("{}", entry);

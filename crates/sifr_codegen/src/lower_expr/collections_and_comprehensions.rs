@@ -29,17 +29,10 @@ pub(super) fn try_lower_simple_index_expr(
             if is_option_like_simple(result_ty) {
                 Some(projected)
             } else {
-                let direct = RustExpr::Index {
-                    expr: Box::new(try_lower_leaf_or_name_expr(object)?),
-                    index: Box::new(try_lower_dict_get_key_expr(index)?),
-                };
-                Some(RustExpr::Clone(Box::new(direct)))
+                None
             }
         }
-        Type::Any => Some(RustExpr::Index {
-            expr: Box::new(try_lower_leaf_or_name_expr(object)?),
-            index: Box::new(try_lower_leaf_or_name_expr(index)?),
-        }),
+        Type::Any => None,
         _ => None,
     }
 }

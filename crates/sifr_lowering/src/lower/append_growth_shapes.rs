@@ -32,6 +32,7 @@ fn range_anchor_sequence(for_stmt: &StmtFor, target_name: &str, ctx: &LowerCtx) 
                 max_offset,
             } if index_var == target_name && max_offset == 0 => Some(sequence),
             SequenceGuard::MinLength { .. }
+            | SequenceGuard::IndexVarNonNegative { .. }
             | SequenceGuard::DictContains { .. }
             | SequenceGuard::SubscriptPresent { .. }
             | SequenceGuard::IndexVarInRange { .. } => None,

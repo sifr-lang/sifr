@@ -11,7 +11,7 @@ fn lowers_simple_list_subscript_augassign_floor_div_equal_stmt() {
             ty: Type::Int,
         },
         object_ty: Type::List(Box::new(Type::Int)),
-        missing_key_error: None,
+        failure: None,
     };
     assert!(try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new()).is_none());
     let mut emitter = crate::RustEmitter::new();
@@ -32,22 +32,11 @@ fn lowers_simple_list_subscript_augassign_floor_div_equal_stmt() {
         )
         .expect("typed floor-div lowering should succeed")
         .expect("typed floor-div augassign should lower");
-    let RustStmt::Block(stmts) = &lowered else {
-        panic!("expected block-lowered list subscript floor-div augassign");
-    };
-    assert!(matches!(
-        &stmts[2],
-        RustStmt::IfLet { then_body, .. } if matches!(
-            then_body.first(),
-            Some(RustStmt::Assign {
-                target: RustExpr::Deref(target),
-                value: RustExpr::MethodCall { receiver, method, args },
-            }) if matches!(target.as_ref(), RustExpr::Ident(name) if name == "__elem")
-                && matches!(receiver.as_ref(), RustExpr::Ident(name) if name == "__elem")
-                && method == "floor_div_known_nonzero"
-                && matches!(args.first(), Some(RustExpr::Ref { expr, .. }) if matches!(expr.as_ref(), RustExpr::Clone(inner) if matches!(inner.as_ref(), RustExpr::Ident(name) if name == "d")))
-        )
-    ));
+    let rendered = crate::render_stmts(std::slice::from_ref(&lowered));
+    assert!(
+        rendered.contains("*__elem = __elem.floor_div_known_nonzero(&__assign_value)"),
+        "{rendered}"
+    );
 }
 
 #[test]
@@ -58,7 +47,7 @@ fn lowers_simple_list_subscript_augassign_power_equal_stmt() {
         op: "**=".to_string(),
         value: HirExpr::IntLiteral(2),
         object_ty: Type::List(Box::new(Type::Int)),
-        missing_key_error: None,
+        failure: None,
     };
     assert!(try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new()).is_none());
     let mut emitter = crate::RustEmitter::new();
@@ -79,26 +68,11 @@ fn lowers_simple_list_subscript_augassign_power_equal_stmt() {
         )
         .expect("typed power lowering should succeed")
         .expect("typed power augassign should lower");
-    let RustStmt::Block(stmts) = &lowered else {
-        panic!("expected block-lowered list subscript power augassign");
-    };
-    assert!(matches!(
-        &stmts[2],
-        RustStmt::IfLet { then_body, .. } if matches!(
-            then_body.first(),
-            Some(RustStmt::Assign {
-                target: RustExpr::Deref(target),
-                value: RustExpr::MethodCall { receiver, method, args },
-            }) if matches!(target.as_ref(), RustExpr::Ident(name) if name == "__elem")
-                && matches!(receiver.as_ref(), RustExpr::Ident(name) if name == "__elem")
-                && method == "pow_known_valid"
-                && matches!(
-                    args.first(),
-                    Some(RustExpr::Cast { expr, .. })
-                        if matches!(expr.as_ref(), RustExpr::Literal(crate::RustLiteral::Int(2)))
-                )
-        )
-    ));
+    let rendered = crate::render_stmts(std::slice::from_ref(&lowered));
+    assert!(
+        rendered.contains("*__elem = __elem.pow_known_valid(2_u32)"),
+        "{rendered}"
+    );
 }
 
 #[test]
@@ -109,7 +83,7 @@ fn lowers_simple_alias_list_subscript_augassign_stmt() {
         op: "+=".to_string(),
         value: HirExpr::IntLiteral(1),
         object_ty: Type::alias("IntList", Type::List(Box::new(Type::Int))),
-        missing_key_error: None,
+        failure: None,
     };
     assert!(try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new()).is_none());
 }
@@ -127,7 +101,7 @@ fn does_not_lower_subscript_augassign_with_non_leaf_value() {
             ty: Type::Int,
         },
         object_ty: Type::List(Box::new(Type::Int)),
-        missing_key_error: None,
+        failure: None,
     };
 
     assert!(try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new()).is_none());

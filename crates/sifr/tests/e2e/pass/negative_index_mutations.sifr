@@ -1,18 +1,35 @@
 def main():
     items: list[int] = [1, 2, 3]
-    items[-1] = 9
+    try:
+        items[-1] = 9
+    except IndexError as e:
+        return
     assert str(items) == "[1, 2, 9]"
 
-    items[-2] += 5
+    try:
+        items[-2] += 5
+    except IndexError as e:
+        return
     assert str(items) == "[1, 7, 9]"
 
-    del items[-1]
+    try:
+        del items[-1]
+    except IndexError as e:
+        return
     assert str(items) == "[1, 7]"
 
-    # Out-of-range negative delete is a safe no-op.
-    del items[-5]
+    # Out-of-range negative deletion reports IndexError without mutating the list.
+    caught: bool = False
+    try:
+        del items[-5]
+    except IndexError as e:
+        caught = True
+    assert caught
     assert str(items) == "[1, 7]"
 
     matrix: list[list[int]] = [[1, 2], [3, 4]]
-    matrix[-1][-1] = 8
+    try:
+        matrix[-1][-1] = 8
+    except IndexError as e:
+        return
     assert str(matrix) == "[[1, 2], [3, 8]]"

@@ -3,12 +3,14 @@
 # Part 2 demo: borrow and mutability semantics for the four parameter modes.
 
 def mutate_and_return(own mut items: list[int]) -> list[int]:
-    items[0] = 9
-    items[1] = 10
+    if len(items) > 1:
+        items[0] = 9
+        items[1] = 10
     return items
 
 def mutate_borrowed(mut items: list[int]) -> int:
-    items[0] = 14
+    if len(items) > 0:
+        items[0] = 14
     return len(items)
 
 def main():

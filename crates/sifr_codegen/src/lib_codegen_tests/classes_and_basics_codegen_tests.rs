@@ -213,7 +213,7 @@ fn test_guarded_non_option_compare_does_not_emit_some_wrapping() {
 
     assert!(!rust_code.contains("first == Some("));
     assert!(!rust_code.contains("first == \"-\".to_string()"));
-    assert!(rust_code.contains("first == \"-\""));
+    assert!(rust_code.contains("first == \"-\""), "{rust_code}");
 }
 
 #[test]

@@ -19,6 +19,7 @@ use super::{
     should_rebind_simple_name, statement_diagnostics, str, task_group_spawn_owner,
     then_body_always_exits, validate_control_flow_condition, validate_subscript_assignment_target,
 };
+use crate::HirCollectionMutation;
 use crate::lower::defaultdict_refinement::order_independent_defaultdict_hint;
 use crate::lower::expressions::{consume_affine_value_name, consume_owned_value};
 use crate::lower::must_use_obligations;
@@ -108,39 +109,8 @@ pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) ->
     if let Expr::Subscript(sub) = &assign.targets[0] {
         // Handle nested subscript: matrix[i][j] = val
         if let Expr::Subscript(inner_sub) = sub.value.as_ref() {
-            let (obj_name, field_name, obj_ty) = if let Expr::Name(n) = inner_sub.value.as_ref() {
-                let obj_ty = ctx
-                    .scope
-                    .lookup(&n.id)
-                    .map(|info| info.effective_type().clone())
-                    .unwrap_or(Type::Unknown);
-                (n.id.to_string(), None, obj_ty)
-            } else if let Expr::Attribute(attr) = inner_sub.value.as_ref() {
-                let obj_name = if let Expr::Name(n) = attr.value.as_ref() {
-                    n.id.to_string()
-                } else {
-                    statement_diagnostics::invalid_assignment_target(
-                        ctx,
-                        "nested subscript assignment target must be a simple name",
-                        attr.value.range(),
-                    );
-                    return None;
-                };
-                let field_name = attr.attr.to_string();
-                let field_ty = resolve_object_field_type(ctx, &obj_name, &field_name);
-                (obj_name, Some(field_name), field_ty)
-            } else {
-                statement_diagnostics::invalid_assignment_target(
-                    ctx,
-                    "nested subscript assignment target must be a simple name",
-                    inner_sub.value.range(),
-                );
-                return None;
-            };
-            let obj_range = inner_sub.value.range();
-            if !ensure_mutable_parameter_binding(ctx, &obj_name, obj_range) {
-                return None;
-            }
+            let (obj_name, field_name, obj_ty) =
+                super::collection_assignment::resolve_nested_assignment_root(inner_sub, ctx)?;
             if matches!(obj_ty.resolve_alias(), Type::Bytes) {
                 super::ownership_diagnostics::immutable_bytes_subscript_assignment(
                     ctx,
@@ -152,6 +122,21 @@ pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) ->
             let inner_index = lower_expr(&sub.slice, ctx)?;
             let value = pyinterop::lower_python_context_owned_expr(&assign.value, ctx)?;
             consume_affine_value_name(&value, assign.value.range(), ctx);
+            let outer_failure = super::checked_place_subscript_failure(
+                ctx,
+                &obj_ty,
+                true,
+                "nested subscript assignment",
+                inner_sub,
+            );
+            let inner_container_ty = super::checked_place_value_type(&obj_ty)?;
+            let inner_failure = super::checked_place_subscript_failure(
+                ctx,
+                &inner_container_ty,
+                false,
+                "nested subscript assignment",
+                sub,
+            );
             if let Some(field) = field_name {
                 return Some(HirStmt::AttributeNestedSubscriptAssign {
                     object: obj_name,
@@ -160,6 +145,9 @@ pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) ->
                     inner_index,
                     value,
                     field_ty: obj_ty,
+                    outer_failure,
+                    inner_failure,
+                    operation: HirCollectionMutation::Assign,
                 });
             }
             return Some(HirStmt::NestedSubscriptAssign {
@@ -168,6 +156,9 @@ pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) ->
                 inner_index,
                 value,
                 object_ty: obj_ty,
+                outer_failure,
+                inner_failure,
+                operation: HirCollectionMutation::Assign,
             });
         }
         // Handle attribute subscript assignment: self.field[key] = val
@@ -198,12 +189,21 @@ pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) ->
             let index = lower_expr(&sub.slice, ctx)?;
             let value = pyinterop::lower_python_context_owned_expr(&assign.value, ctx)?;
             consume_affine_value_name(&value, assign.value.range(), ctx);
+            let failure = super::checked_place_subscript_failure(
+                ctx,
+                &field_ty,
+                false,
+                "subscript assignment",
+                sub,
+            );
             return Some(HirStmt::AttributeSubscriptAssign {
                 object: obj_name,
                 field: field_name,
                 index,
                 value,
                 field_ty,
+                failure,
+                operation: HirCollectionMutation::Assign,
             });
         }
         let obj_name = if let Expr::Name(n) = sub.value.as_ref() {
@@ -241,11 +241,19 @@ pub(in crate::lower) fn lower_assign(assign: &StmtAssign, ctx: &mut LowerCtx) ->
         );
         maybe_record_dict_assignment_guard(ctx, &object_ty, &obj_name, &sub.slice);
         consume_affine_value_name(&value, assign.value.range(), ctx);
+        let failure = super::checked_place_subscript_failure(
+            ctx,
+            &object_ty,
+            false,
+            "subscript assignment",
+            sub,
+        );
         return Some(HirStmt::SubscriptAssign {
             object: obj_name,
             index,
             value,
             object_ty,
+            failure,
         });
     }
 

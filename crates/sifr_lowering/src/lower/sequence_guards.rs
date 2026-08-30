@@ -13,6 +13,9 @@ pub(in crate::lower) enum SequenceGuard {
         index_var: String,
         max_offset: usize,
     },
+    IndexVarNonNegative {
+        index_var: String,
+    },
     DictContains {
         dict: String,
         key_expr_debug: String,
@@ -65,6 +68,19 @@ impl LowerCtx {
                     index_var,
                     max_offset,
                 });
+            }
+            SequenceGuard::IndexVarNonNegative { index_var } => {
+                if !self.sequence_guards.iter().any(|existing| {
+                    matches!(
+                        existing,
+                        SequenceGuard::IndexVarNonNegative {
+                            index_var: existing_index,
+                        } if existing_index == &index_var
+                    )
+                }) {
+                    self.sequence_guards
+                        .push(SequenceGuard::IndexVarNonNegative { index_var });
+                }
             }
             SequenceGuard::DictContains {
                 dict,
@@ -151,7 +167,7 @@ impl LowerCtx {
         index_var: &str,
         offset: usize,
     ) -> bool {
-        self.sequence_guards.iter().any(|guard| {
+        let has_upper_bound = self.sequence_guards.iter().any(|guard| {
             matches!(
                 guard,
                 SequenceGuard::IndexVarInRange {
@@ -162,7 +178,17 @@ impl LowerCtx {
                     && guard_index_var == index_var
                     && *max_offset >= offset
             )
-        })
+        });
+        let has_lower_bound = self.is_zero_based_pointer(index_var)
+            || self.sequence_guards.iter().any(|guard| {
+                matches!(
+                    guard,
+                    SequenceGuard::IndexVarNonNegative {
+                        index_var: guard_index,
+                    } if guard_index == index_var
+                )
+            });
+        has_upper_bound && has_lower_bound
     }
 
     pub(in crate::lower) fn has_dict_key_guard(&self, dict: &str, key_expr: &Expr) -> bool {
@@ -204,6 +230,7 @@ fn guard_depends_on_binding(guard: &SequenceGuard, binding: &str) -> bool {
             index_var,
             ..
         } => path_depends_on_binding(sequence, binding) || index_var == binding,
+        SequenceGuard::IndexVarNonNegative { index_var } => index_var == binding,
         SequenceGuard::DictContains {
             dict,
             key_expr_debug,
@@ -225,6 +252,7 @@ fn guard_depends_on_target(guard: &SequenceGuard, target: &str) -> bool {
         | SequenceGuard::SubscriptPresent { sequence, .. } => {
             path_depends_on_target(sequence, target)
         }
+        SequenceGuard::IndexVarNonNegative { index_var } => index_var == target,
         SequenceGuard::DictContains { dict, .. } => path_depends_on_target(dict, target),
     }
 }

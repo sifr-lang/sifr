@@ -119,30 +119,14 @@ pub(crate) fn callback_setup(
         error_type,
     );
     if let Some(provisional) = &provisional_var {
-        statements.push(RustStmt::Assign {
-            target: RustExpr::Ident(provisional.clone()),
-            value: RustExpr::FnCall {
-                func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
-                args: vec![factory],
-            },
-        });
         statements.push(RustStmt::Let {
             mutable: false,
             name: callback_var.clone(),
             ty: None,
-            value: RustExpr::Ref {
-                mutable: false,
-                expr: Box::new(RustExpr::Index {
-                    expr: Box::new(RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::Ident(provisional.clone())),
-                        method: "as_slice".to_string(),
-                        args: Vec::new(),
-                    }),
-                    index: Box::new(RustExpr::Cast {
-                        expr: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
-                        ty: RustType::Named("usize".to_string()),
-                    }),
-                }),
+            value: RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident(provisional.clone())),
+                method: "insert".to_string(),
+                args: vec![factory],
             },
         });
     } else {
@@ -541,20 +525,37 @@ fn decoder(
 ) -> Option<RustExpr> {
     let mut body = Vec::new();
     let mut converted = Vec::new();
-    for (index, ty) in callback.argument_types.iter().enumerate() {
-        let handle = format!("__sifr_callback_arg_{index}");
-        body.push(RustStmt::Let {
-            mutable: false,
-            name: handle.clone(),
-            ty: None,
-            value: RustExpr::Clone(Box::new(RustExpr::Index {
-                expr: Box::new(RustExpr::Ident("__sifr_callback_args".to_string())),
-                index: Box::new(RustExpr::Literal(RustLiteral::Int(
-                    i64::try_from(index).ok()?,
-                ))),
-            })),
-        });
-        converted.push(callback_output_value_expr(&handle, ty, opaque_classes)?);
+    let handles = callback
+        .argument_types
+        .iter()
+        .enumerate()
+        .map(|(index, _)| format!("__sifr_callback_arg_{index}"))
+        .collect::<Vec<_>>();
+    body.push(RustStmt::LetElse {
+        pattern: format!("Ok([{}])", handles.join(", ")),
+        value: RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Ident("__sifr_callback_args".to_string())),
+            method: "try_into".to_string(),
+            args: Vec::new(),
+        },
+        else_body: vec![RustStmt::Return(Some(RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec!["Err".to_string()])),
+            args: vec![RustExpr::FnCall {
+                func: Box::new(callback_runtime_path("PythonError::without_replay")),
+                args: vec![
+                    RustExpr::Literal(RustLiteral::Str("trust".to_string())),
+                    RustExpr::Literal(RustLiteral::Str("SIFR-PYTRUST".to_string())),
+                    RustExpr::Literal(RustLiteral::Str(
+                        "validated callback arity changed before decoding".to_string(),
+                    )),
+                    RustExpr::Literal(RustLiteral::Str(String::new())),
+                    RustExpr::Literal(RustLiteral::Str("callback decoder".to_string())),
+                ],
+            }],
+        }))],
+    });
+    for (handle, ty) in handles.iter().zip(&callback.argument_types) {
+        converted.push(callback_output_value_expr(handle, ty, opaque_classes)?);
     }
     body.push(RustStmt::Return(Some(RustExpr::FnCall {
         func: Box::new(RustExpr::Path(vec!["Ok".to_string()])),

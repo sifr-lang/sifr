@@ -431,7 +431,7 @@ fn test_structured_stmt_path_handles_copy_typed_return_expr() {
 }
 
 #[test]
-fn test_structured_stmt_path_wraps_non_optional_string_index_into_option_local() {
+fn test_structured_stmt_path_lowers_non_optional_string_index_for_optional_target() {
     let stmt = HirStmt::Let {
         name: "part".to_string(),
         ty: Type::Union(vec![Type::Str, Type::None]),
@@ -453,29 +453,16 @@ fn test_structured_stmt_path_wraps_non_optional_string_index_into_option_local()
     let mut emitter = RustEmitter::new();
 
     let captured = emitter.capture_structured_stmts(|inner| inner.emit_stmt(&stmt));
-    let Some(RustStmt::Let {
-        name, ty, value, ..
-    }) = captured.first()
-    else {
-        panic!("expected structured let for optional local");
-    };
-    assert_eq!(name, "part");
-    assert!(
-        matches!(
-            ty,
-            Some(RustType::Option(inner)) if matches!(inner.as_ref(), RustType::String_)
-        ) || matches!(ty, Some(RustType::Named(named)) if named == "Option<String>")
-    );
-    assert!(matches!(
-        value,
-        RustExpr::FnCall { func, args }
-            if matches!(func.as_ref(), RustExpr::Path(path) if path == &vec!["Some".to_string()])
-                && matches!(args.as_slice(), [RustExpr::Block { .. }])
-    ));
+    assert_eq!(captured.len(), 1, "{captured:#?}");
+    let rendered = crate::render_stmts(&captured);
+    assert!(rendered.contains(".chars().nth("), "{rendered}");
+    assert!(rendered.contains(".map(|c| c.to_string())"), "{rendered}");
+    assert!(!rendered.contains("compile_error!"), "{rendered}");
+    assert!(!rendered.contains("[j]"), "{rendered}");
 }
 
 #[test]
-fn test_structured_stmt_path_handles_non_optional_string_index_return_expr() {
+fn test_codegen_does_not_discharge_non_optional_string_index_without_witness() {
     let module = HirModule {
         functions: vec![HirFunction {
             name: "char_at".to_string(),
@@ -533,21 +520,8 @@ fn test_structured_stmt_path_handles_non_optional_string_index_return_expr() {
             .rust_source
             .contains("let __sifr_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();")
     );
-    assert!(generated.rust_source.contains(
-        "let __indexed_char_option = __sifr_chars_text.get(::sifr_runtime::to_usize_proven(&(j))).map(|c| c.to_string())"
-    ));
-    assert!(
-        generated
-            .rust_source
-            .contains("__indexed_char_option.as_slice()[0_usize].clone()"),
-        "{}",
-        generated.rust_source
-    );
+    assert!(!generated.rust_source.contains("as_slice()["));
     assert!(!generated.rust_source.contains("unreachable!"));
-    assert!(
-        generated.lowering_stats.stmt_structured >= 1,
-        "non-optional string index return should stay on the structured stmt path"
-    );
 }
 
 #[test]
@@ -789,7 +763,7 @@ fn test_structured_stmt_path_handles_nested_subscript_augassign_inside_loop_if()
                 op: "*=".to_string(),
                 value: HirExpr::IntLiteral(2),
                 object_ty: Type::List(Box::new(Type::Int)),
-                missing_key_error: None,
+                failure: None,
             }],
             elif_clauses: vec![],
             else_body: None,
@@ -831,6 +805,8 @@ fn test_structured_stmt_path_handles_attribute_list_subscript_assign_inside_if()
                 ty: Type::Str,
             },
             field_ty: Type::List(Box::new(Type::Str)),
+            failure: None,
+            operation: sifr_ir::HirCollectionMutation::Assign,
         }],
         elif_clauses: vec![],
         else_body: None,
@@ -854,6 +830,8 @@ fn test_structured_stmt_path_handles_top_level_attribute_list_subscript_assign()
         },
         value: HirExpr::StringLiteral("page".to_string()),
         field_ty: Type::List(Box::new(Type::Str)),
+        failure: None,
+        operation: sifr_ir::HirCollectionMutation::Assign,
     };
 
     let mut emitter = RustEmitter::new();

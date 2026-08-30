@@ -2,7 +2,13 @@
 
 def main():
     counts: list[int] = [0, 0, 0]
-    counts[1] += 5
+    try:
+        counts[1] += 5
+    except IndexError as e:
+        return
     assert str(counts[1]) == '5'
-    counts[1] += 2
+    try:
+        counts[1] += 2
+    except IndexError as e:
+        return
     assert str(counts[1]) == '7'

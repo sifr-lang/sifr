@@ -28,7 +28,7 @@ fn range_for_after(source: &str, after: &str, needle: &str) -> TextRange {
 #[test]
 fn test_own_mut_parameter_allows_mutation_and_return() {
     let result = lower_source(
-        "def mutate_and_return(own mut items: list[int]) -> list[int]:\n    items[0] = 7\n    return items\n",
+        "def mutate_and_return(own mut items: list[int]) -> list[int]:\n    items.append(7)\n    return items\n",
     );
 
     assert!(

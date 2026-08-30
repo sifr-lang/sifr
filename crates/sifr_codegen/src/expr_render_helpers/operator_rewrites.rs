@@ -92,7 +92,11 @@ impl RustEmitter {
         index: &HirExpr,
         result_ty: &Type,
     ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
-        let object_ty = crate::resolve_alias_type_for_plain_call(object.ty());
+        if let Some(witness) = self.checked_place_read_witness(object, index, result_ty) {
+            return Ok(Some(witness));
+        }
+        let effective_object_ty = self.effective_registry_expr_ty(object);
+        let object_ty = crate::resolve_alias_type_for_plain_call(&effective_object_ty);
         let option_inner_ty = if let Type::Union(members) = object_ty {
             let mut inner = None;
             for member in members {
@@ -466,18 +470,7 @@ impl RustEmitter {
                 if crate::helpers::is_option_type(result_ty) {
                     return Ok(Some(option_expr));
                 }
-                if matches!(inner_ty, Type::Tuple(_)) {
-                    return Ok(Some(Self::lower_proven_index_option_expr_for_ir(
-                        option_expr,
-                        "__sifr_index_value",
-                        "compiler-verified tuple index should be in range",
-                    )));
-                }
-                return Ok(Some(Self::lower_proven_index_option_expr_for_ir(
-                    option_expr,
-                    "__sifr_index_value",
-                    "compiler-verified optional index should be in range",
-                )));
+                return Ok(None);
             }
 
             let Some(lowered_expr) = build_inner_index(lowered_object) else {
@@ -487,23 +480,7 @@ impl RustEmitter {
             {
                 return Ok(Some(lowered_expr));
             }
-            match index_base_ty {
-                Type::List(_) | Type::Bytes | Type::Str => {
-                    Ok(Some(Self::lower_proven_index_option_expr_for_ir(
-                        lowered_expr,
-                        "__sifr_index_value",
-                        "compiler-verified index should be in range",
-                    )))
-                }
-                Type::Dict(_, _) => Ok(Some(Self::lower_proven_index_option_expr_for_ir(
-                    lowered_expr,
-                    "__sifr_index_value",
-                    "compiler-verified dict key should be present",
-                ))),
-                _ => Err(crate::CodegenError::new(
-                    "internal codegen invariant violated: list/dict/bytes/str index produced non-optional result type",
-                )),
-            }
+            Ok(None)
         })()
     }
 }

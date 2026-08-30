@@ -20,5 +20,5 @@ fn main() {
     for item in output.iter().cloned() {
         println!("{}", item);
     }
-    assert!(output == vec!["h".to_string(), "e".to_string(), "l".to_string(), "l".to_string(), "o".to_string(), "a".to_string(), "b".to_string()]);
+    assert!((output == vec!["h".to_string(), "e".to_string(), "l".to_string(), "l".to_string(), "o".to_string(), "a".to_string(), "b".to_string()]));
 }

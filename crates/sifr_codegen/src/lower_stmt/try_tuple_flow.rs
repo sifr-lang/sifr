@@ -123,7 +123,7 @@ pub(super) fn stmt_has_result_flow(stmt: &HirStmt) -> bool {
         HirStmt::TupleUnpack { value, .. } | HirStmt::StarUnpack { value, .. } => {
             expr_has_result_flow(value)
         }
-        HirStmt::Delete { object, index } => {
+        HirStmt::Delete { object, index, .. } => {
             expr_has_result_flow(object) || expr_has_result_flow(index)
         }
         HirStmt::Pass => false,
@@ -427,118 +427,4 @@ pub(crate) fn lower_tuple_unpack_targets(
     ));
 
     lowered
-}
-
-pub(super) fn try_lower_simple_star_unpack_stmt(
-    before: &[(String, Type)],
-    star: &(String, Type),
-    after: &[(String, Type)],
-    value: &HirExpr,
-) -> Option<Vec<RustStmt>> {
-    let lowered_value = try_lower_leaf_or_name_expr(value)?;
-    let source_plan = crate::helpers::plan_iterator_ownership(value);
-    let mut lowered = vec![RustStmt::Let {
-        mutable: false,
-        name: "_star_tmp".to_string(),
-        ty: None,
-        value: match source_plan.source_access_mode {
-            crate::helpers::SourceAccessMode::Preserve => RustExpr::Ref {
-                mutable: false,
-                expr: Box::new(lowered_value),
-            },
-            crate::helpers::SourceAccessMode::Consume => lowered_value,
-        },
-    }];
-
-    let tmp_ident = || RustExpr::Ident("_star_tmp".to_string());
-    let tmp_len = || RustExpr::MethodCall {
-        receiver: Box::new(tmp_ident()),
-        method: "len".to_string(),
-        args: vec![],
-    };
-
-    for (idx, (name, element_ty)) in before.iter().enumerate() {
-        let indexed_expr = RustExpr::Index {
-            expr: Box::new(tmp_ident()),
-            index: Box::new(RustExpr::Literal(RustLiteral::Int(
-                i64::try_from(idx).ok()?,
-            ))),
-        };
-        let extracted_expr = if crate::helpers::is_copy_type_for_codegen(element_ty) {
-            indexed_expr
-        } else {
-            RustExpr::MethodCall {
-                receiver: Box::new(indexed_expr),
-                method: "clone".to_string(),
-                args: vec![],
-            }
-        };
-        lowered.push(RustStmt::Let {
-            mutable: false,
-            name: name.clone(),
-            ty: None,
-            value: extracted_expr,
-        });
-    }
-
-    let (star_name, _) = star;
-    let slice_end = if after.is_empty() {
-        tmp_len()
-    } else {
-        RustExpr::BinOp {
-            left: Box::new(tmp_len()),
-            op: "-".to_string(),
-            right: Box::new(RustExpr::Literal(RustLiteral::Int(
-                i64::try_from(after.len()).ok()?,
-            ))),
-        }
-    };
-    lowered.push(RustStmt::Let {
-        mutable: false,
-        name: star_name.clone(),
-        ty: None,
-        value: RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::Index {
-                expr: Box::new(tmp_ident()),
-                index: Box::new(RustExpr::Range {
-                    start: Box::new(RustExpr::Literal(RustLiteral::Int(
-                        i64::try_from(before.len()).ok()?,
-                    ))),
-                    end: Box::new(slice_end),
-                }),
-            }),
-            method: "to_vec".to_string(),
-            args: vec![],
-        },
-    });
-
-    for (idx, (name, element_ty)) in after.iter().enumerate() {
-        let indexed_expr = RustExpr::Index {
-            expr: Box::new(tmp_ident()),
-            index: Box::new(RustExpr::BinOp {
-                left: Box::new(tmp_len()),
-                op: "-".to_string(),
-                right: Box::new(RustExpr::Literal(RustLiteral::Int(
-                    i64::try_from(after.len() - idx).ok()?,
-                ))),
-            }),
-        };
-        let extracted_expr = if crate::helpers::is_copy_type_for_codegen(element_ty) {
-            indexed_expr
-        } else {
-            RustExpr::MethodCall {
-                receiver: Box::new(indexed_expr),
-                method: "clone".to_string(),
-                args: vec![],
-            }
-        };
-        lowered.push(RustStmt::Let {
-            mutable: false,
-            name: name.clone(),
-            ty: None,
-            value: extracted_expr,
-        });
-    }
-
-    Some(lowered)
 }

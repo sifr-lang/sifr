@@ -19,7 +19,12 @@ fn main() {
     __v
 };
     assert!(&SifrInt::from(combined.len()) == &SifrInt::from_i64(6));
-    let head: Option<u8> = combined.get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(0)))).map(|__byte| *__byte as u8);
+    let head: Option<u8> = {
+    let __sifr_checked_read_collection = &combined;
+    let __sifr_checked_read_index = SifrInt::from_i64(0);
+    let __sifr_checked_read_normalized = __sifr_checked_read_index.normalize_index_or_len(__sifr_checked_read_collection.len());
+    __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+};
     if let Some(head) = head {
         let expected_head: u8 = 115u8;
         assert!(head == expected_head);
@@ -35,5 +40,5 @@ fn main() {
 };
     assert!((&total(&window) == &SifrInt::from_i64(321)));
     let raw: Vec<SifrInt> = window.iter().map(|__byte| SifrInt::from(*__byte)).collect::<Vec<SifrInt>>();
-    assert!(raw == vec![SifrInt::from_i64(105), SifrInt::from_i64(102), SifrInt::from_i64(114)]);
+    assert!((raw == vec![SifrInt::from_i64(105), SifrInt::from_i64(102), SifrInt::from_i64(114)]));
 }

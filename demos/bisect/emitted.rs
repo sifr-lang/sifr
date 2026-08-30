@@ -13,11 +13,11 @@ fn bisect_left<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
         left = SifrInt::from_i64(0);
     }
     let mut right: SifrInt = SifrInt::from(a.len());
-    if hi.is_none() {
+    if (hi == None) {
         right = SifrInt::from(a.len());
     } else {
         if let Some(hi) = hi.clone() {
-            if &hi < &SifrInt::from_i64(0) {
+            if (&hi < &SifrInt::from_i64(0)) {
                 right = SifrInt::from_i64(0);
             } else {
                 if (&hi > &SifrInt::from(a.len())) {
@@ -28,15 +28,15 @@ fn bisect_left<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
             }
         }
     }
-    while &left < &right {
+    while (&left < &right) {
         let mid: SifrInt = (&left + &right)
             .floor_div_known_nonzero(&SifrInt::from_i64(2));
         let val: Option<T> = {
-            let __sifr_index_list = &a;
-            let __sifr_index_i = mid.clone();
-            let __sifr_index_norm = __sifr_index_i
-                .normalize_index_or_len(__sifr_index_list.len());
-            __sifr_index_list.get(__sifr_index_norm).cloned()
+            let __sifr_checked_read_collection = &a;
+            let __sifr_checked_read_index = mid.clone();
+            let __sifr_checked_read_normalized = __sifr_checked_read_index
+                .normalize_index_or_len(__sifr_checked_read_collection.len());
+            __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
         };
         if let Some(val) = val {
             if val < *x {
@@ -61,11 +61,11 @@ fn bisect_right<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
         left = SifrInt::from_i64(0);
     }
     let mut right: SifrInt = SifrInt::from(a.len());
-    if hi.is_none() {
+    if (hi == None) {
         right = SifrInt::from(a.len());
     } else {
         if let Some(hi) = hi.clone() {
-            if &hi < &SifrInt::from_i64(0) {
+            if (&hi < &SifrInt::from_i64(0)) {
                 right = SifrInt::from_i64(0);
             } else {
                 if (&hi > &SifrInt::from(a.len())) {
@@ -76,15 +76,15 @@ fn bisect_right<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
             }
         }
     }
-    while &left < &right {
+    while (&left < &right) {
         let mid: SifrInt = (&left + &right)
             .floor_div_known_nonzero(&SifrInt::from_i64(2));
         let val: Option<T> = {
-            let __sifr_index_list = &a;
-            let __sifr_index_i = mid.clone();
-            let __sifr_index_norm = __sifr_index_i
-                .normalize_index_or_len(__sifr_index_list.len());
-            __sifr_index_list.get(__sifr_index_norm).cloned()
+            let __sifr_checked_read_collection = &a;
+            let __sifr_checked_read_index = mid.clone();
+            let __sifr_checked_read_normalized = __sifr_checked_read_index
+                .normalize_index_or_len(__sifr_checked_read_collection.len());
+            __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
         };
         if let Some(val) = val {
             if *x < val {
@@ -123,8 +123,14 @@ fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
     let mut i: SifrInt = SifrInt::from_i64(0);
     while &i < &SifrInt::from(actual.len()) {
         assert!(
-            Some(actual[::sifr_runtime::to_usize_proven(& (i))]) == expected
-            .get(::sifr_runtime::to_usize_proven(& (i))).copied()
+            ({ let __sifr_condition_list = & actual; let __sifr_condition_index = i
+            .clone(); let __sifr_condition_normalized = __sifr_condition_index
+            .normalize_index_or_len(__sifr_condition_list.len()); __sifr_condition_list
+            .get(__sifr_condition_normalized).copied() }) == ({ let __sifr_condition_list
+            = & expected; let __sifr_condition_index = i.clone(); let
+            __sifr_condition_normalized = __sifr_condition_index
+            .normalize_index_or_len(__sifr_condition_list.len()); __sifr_condition_list
+            .get(__sifr_condition_normalized).copied() })
         );
         i = &i + &SifrInt::from_i64(1);
     }

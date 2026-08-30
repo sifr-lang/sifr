@@ -20,7 +20,7 @@ pub use __sifr_project_nominals::ValueError;
 use ::sifr_runtime::SifrInt;
 fn classify(n: SifrInt) -> SifrInt {
     let __sifr_try_res: Result<SifrInt, ValueError> = (|| {
-        if &n > &SifrInt::from_i64(0) {
+        if (&n > &SifrInt::from_i64(0)) {
             return Ok(n);
         } else {
             return Err(ValueError::new("non-positive".to_string()));

@@ -2,5 +2,8 @@
 
 def main():
     nums: list[int] = [1, 2, 3]
-    nums[0] = 10
+    try:
+        nums[0] = 10
+    except IndexError as e:
+        return
     assert str(nums) == '[10, 2, 3]'

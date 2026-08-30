@@ -383,13 +383,26 @@ fn collect_locally_defined_vars_includes_else_and_star_unpack() {
             }]),
         },
         HirStmt::StarUnpack {
-            before: vec![("first".to_string(), Type::Int)],
-            star: ("rest".to_string(), Type::List(Box::new(Type::Int))),
-            after: vec![("last".to_string(), Type::Int)],
+            before: vec![sifr_ir::HirTupleTarget {
+                binding: sifr_ir::HirTupleTargetBinding::Name("first".to_string()),
+                ty: Type::Int,
+                rebind_existing: false,
+            }],
+            star: sifr_ir::HirTupleTarget {
+                binding: sifr_ir::HirTupleTargetBinding::Name("rest".to_string()),
+                ty: Type::List(Box::new(Type::Int)),
+                rebind_existing: false,
+            },
+            after: vec![sifr_ir::HirTupleTarget {
+                binding: sifr_ir::HirTupleTargetBinding::Name("last".to_string()),
+                ty: Type::Int,
+                rebind_existing: false,
+            }],
             value: HirExpr::ListLiteral {
                 elements: vec![HirExpr::IntLiteral(1)],
                 ty: Type::List(Box::new(Type::Int)),
             },
+            failure: None,
         },
     ];
 

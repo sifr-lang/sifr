@@ -26,9 +26,12 @@ def main():
     print(b)
 
     # Star unpacking
-    first, *rest = [1, 2, 3, 4]
-    print(first)
-    print(rest)
+    try:
+        first, *rest = [1, 2, 3, 4]
+        print(first)
+        print(rest)
+    except ValueError:
+        assert False
 
     # Swap
     a, b = b, a

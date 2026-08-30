@@ -181,7 +181,7 @@ fn hir_stmt_calls_function(stmt: &HirStmt, func_name: &str) -> bool {
                 || hir_expr_calls_function(inner_index, func_name)
                 || hir_expr_calls_function(value, func_name)
         }
-        HirStmt::Delete { object, index } => {
+        HirStmt::Delete { object, index, .. } => {
             hir_expr_calls_function(object, func_name) || hir_expr_calls_function(index, func_name)
         }
         HirStmt::With { items, body } => {

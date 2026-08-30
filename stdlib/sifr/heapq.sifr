@@ -38,8 +38,10 @@ def _sift_down[T: Comparable](mut data: list[T], mut pos: int, n: int) -> None:
             tmp_sm: T | None = data[smallest]
             if tmp_pos is not None:
                 if tmp_sm is not None:
-                    data[pos] = tmp_sm
-                    data[smallest] = tmp_pos
+                    if 0 <= pos and pos < len(data):
+                        data[pos] = tmp_sm
+                    if 0 <= smallest and smallest < len(data):
+                        data[smallest] = tmp_pos
             pos = smallest
 
 def _sift_up[T: Comparable](mut heap: list[T], mut pos: int) -> None:
@@ -54,8 +56,10 @@ def _sift_up[T: Comparable](mut heap: list[T], mut pos: int) -> None:
             if p_val is not None:
                 if c_val is not None:
                     if c_val < p_val:
-                        heap[parent] = c_val
-                        heap[pos] = p_val
+                        if 0 <= parent and parent < len(heap):
+                            heap[parent] = c_val
+                        if 0 <= pos and pos < len(heap):
+                            heap[pos] = p_val
                         pos = parent
                     else:
                         done = True
@@ -91,8 +95,10 @@ def _sift_down_max[T: Comparable](mut data: list[T], mut pos: int, n: int) -> No
             tmp_largest: T | None = data[largest]
             if tmp_pos is not None:
                 if tmp_largest is not None:
-                    data[pos] = tmp_largest
-                    data[largest] = tmp_pos
+                    if 0 <= pos and pos < len(data):
+                        data[pos] = tmp_largest
+                    if 0 <= largest and largest < len(data):
+                        data[largest] = tmp_pos
             pos = largest
 
 def _sift_up_max[T: Comparable](mut heap: list[T], mut pos: int) -> None:
@@ -107,8 +113,10 @@ def _sift_up_max[T: Comparable](mut heap: list[T], mut pos: int) -> None:
             if parent_val is not None:
                 if child_val is not None:
                     if child_val > parent_val:
-                        heap[parent] = child_val
-                        heap[pos] = parent_val
+                        if 0 <= parent and parent < len(heap):
+                            heap[parent] = child_val
+                        if 0 <= pos and pos < len(heap):
+                            heap[pos] = parent_val
                         pos = parent
                     else:
                         done = True
@@ -247,7 +255,8 @@ def merge[T: Comparable](*iterables: list[T]) -> list[T]:
                         selected_value: T | None = selected_values[selected_pos]
                         if selected_value is not None:
                             result.append(selected_value)
-                        positions[best_index] = selected_pos + 1
+                        if 0 <= best_index and best_index < len(positions):
+                            positions[best_index] = selected_pos + 1
     return result
 
 def nsmallest[T: Comparable](n: int, data: list[T]) -> list[T]:

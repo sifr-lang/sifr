@@ -11,9 +11,24 @@ fn main() {
 };
     assert!(a == c);
     assert!(&SifrInt::from(a.len()) == &SifrInt::from_i64(3));
-    let idx0: Option<u8> = a.get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(0)))).map(|__byte| *__byte as u8);
-    let idx1: Option<u8> = a.get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(1)))).map(|__byte| *__byte as u8);
-    let idx2: Option<u8> = a.get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(2)))).map(|__byte| *__byte as u8);
+    let idx0: Option<u8> = {
+    let __sifr_checked_read_collection = &a;
+    let __sifr_checked_read_index = SifrInt::from_i64(0);
+    let __sifr_checked_read_normalized = __sifr_checked_read_index.normalize_index_or_len(__sifr_checked_read_collection.len());
+    __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+};
+    let idx1: Option<u8> = {
+    let __sifr_checked_read_collection = &a;
+    let __sifr_checked_read_index = SifrInt::from_i64(1);
+    let __sifr_checked_read_normalized = __sifr_checked_read_index.normalize_index_or_len(__sifr_checked_read_collection.len());
+    __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+};
+    let idx2: Option<u8> = {
+    let __sifr_checked_read_collection = &a;
+    let __sifr_checked_read_index = SifrInt::from_i64(2);
+    let __sifr_checked_read_normalized = __sifr_checked_read_index.normalize_index_or_len(__sifr_checked_read_collection.len());
+    __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+};
     if let Some(idx0) = idx0 {
         let expected0: u8 = 1u8;
         assert!(idx0 == expected0);

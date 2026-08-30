@@ -447,7 +447,7 @@ pub(super) fn does_not_lower_non_path_constructor_call() {
 }
 
 #[test]
-pub(super) fn lowers_simple_index_on_any_with_leaf_index() {
+pub(super) fn does_not_lower_unchecked_index_on_any() {
     let expr = HirExpr::Index {
         object: Box::new(HirExpr::Name {
             name: "data".to_string(),
@@ -458,14 +458,7 @@ pub(super) fn lowers_simple_index_on_any_with_leaf_index() {
         ty: Type::Any,
     };
 
-    let lowered = try_lower_leaf_expr(&expr).expect("index lowered");
-    assert!(matches!(
-        lowered,
-        RustExpr::Index { expr, index }
-            if matches!(expr.as_ref(), RustExpr::Ident(name) if name == "data")
-                && matches!(index.as_ref(), RustExpr::FnCall { func, .. }
-                    if matches!(func.as_ref(), RustExpr::Path(path) if path == &["SifrInt", "from_i64"]))
-    ));
+    assert!(try_lower_leaf_expr(&expr).is_none());
 }
 
 #[test]
@@ -502,7 +495,7 @@ pub(super) fn lowers_dict_index_to_optional_projection_for_optional_hir_type() {
 }
 
 #[test]
-pub(super) fn lowers_dict_index_to_proven_some_block_for_non_optional_hir_type() {
+pub(super) fn does_not_discharge_non_optional_dict_index_without_a_witness() {
     let expr = HirExpr::Index {
         object: Box::new(HirExpr::Name {
             name: "table".to_string(),
@@ -513,12 +506,7 @@ pub(super) fn lowers_dict_index_to_proven_some_block_for_non_optional_hir_type()
         ty: Type::Int,
     };
 
-    let lowered = try_lower_leaf_expr(&expr).expect("dict index lowered");
-    assert!(matches!(
-        lowered,
-        RustExpr::Clone(inner)
-            if matches!(inner.as_ref(), RustExpr::Index { .. })
-    ));
+    assert!(try_lower_leaf_expr(&expr).is_none());
 }
 
 #[test]

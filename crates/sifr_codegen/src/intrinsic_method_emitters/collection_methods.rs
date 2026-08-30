@@ -745,7 +745,7 @@ impl RustEmitter {
         else {
             return None;
         };
-        let (alias_name, key_ty, _) = registry_defaultdict_alias_parts(base_object.ty())?;
+        let (alias_name, _key_ty, _) = registry_defaultdict_alias_parts(base_object.ty())?;
         if !crate::intrinsics::is_collection_defaultdict_storage_alias(alias_name) {
             return None;
         }
@@ -765,19 +765,28 @@ impl RustEmitter {
                 expr: Box::new(crate::RustExpr::Paren(Box::new(lowered_element))),
             }
         };
-        let entry_expr = crate::RustExpr::MethodCall {
-            receiver: Box::new(crate::RustExpr::MethodCall {
-                receiver: Box::new(lowered_object),
-                method: "entry".to_string(),
-                args: vec![registry_defaultdict_key_arg(index, lowered_index, key_ty)],
-            }),
-            method: "or_insert".to_string(),
-            args: vec![registry_defaultdict_default_expr(alias_name)],
+        let lookup = crate::RustExpr::MethodCall {
+            receiver: Box::new(lowered_object),
+            method: "get".to_string(),
+            args: vec![self.checked_dict_key_arg_for_ir(index, lowered_index)],
         };
         Some(crate::RustExpr::MethodCall {
-            receiver: Box::new(entry_expr),
-            method: "contains".to_string(),
-            args: vec![element_arg],
+            receiver: Box::new(lookup),
+            method: "is_some_and".to_string(),
+            args: vec![crate::RustExpr::Closure {
+                params: vec![crate::RustParam::Named {
+                    name: "__sifr_defaultdict_bucket".to_string(),
+                    ty: crate::RustType::Named("_".to_string()),
+                }],
+                body: Box::new(crate::RustExpr::MethodCall {
+                    receiver: Box::new(crate::RustExpr::Ident(
+                        "__sifr_defaultdict_bucket".to_string(),
+                    )),
+                    method: "contains".to_string(),
+                    args: vec![element_arg],
+                }),
+                is_move: false,
+            }],
         })
     }
 

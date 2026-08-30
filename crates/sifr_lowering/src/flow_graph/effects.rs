@@ -122,11 +122,14 @@ pub(super) fn stmt_effects(stmt: &HirStmt) -> Vec<FlowEffect> {
             star,
             after,
             value,
+            ..
         } => {
-            for (name, _) in before.iter().chain(std::iter::once(star)).chain(after) {
-                effects.push(FlowEffect::Assign {
-                    binding: name.clone(),
-                });
+            for target in before.iter().chain(std::iter::once(star)).chain(after) {
+                if let HirTupleTargetBinding::Name(name) = &target.binding {
+                    effects.push(FlowEffect::Assign {
+                        binding: name.clone(),
+                    });
+                }
             }
             expr_effects(value, &mut effects);
         }
@@ -218,7 +221,7 @@ pub(super) fn stmt_effects(stmt: &HirStmt) -> Vec<FlowEffect> {
             expr_effects(index, &mut effects);
             expr_effects(value, &mut effects);
         }
-        HirStmt::Delete { object, index } => {
+        HirStmt::Delete { object, index, .. } => {
             if let Some(target) = expr_target_name(object) {
                 effects.push(FlowEffect::Mutation {
                     target,

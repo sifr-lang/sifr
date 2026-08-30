@@ -35,6 +35,7 @@ fn test_structured_stmt_path_handles_delete_with_name_key_inside_loop_if() {
                     binding_id: None,
                     ty: Type::Str,
                 },
+                failure: None,
             }],
             elif_clauses: vec![],
             else_body: None,

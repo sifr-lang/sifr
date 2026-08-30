@@ -62,7 +62,7 @@ impl RustEmitter {
             return Ok(false);
         };
 
-        let Some(lowered_test) = self.lower_rendered_expr_for_ir(test)? else {
+        let Some(lowered_test) = self.lower_condition_expr_for_ir(test)? else {
             return Ok(false);
         };
         let lowered_msg = if let Some(msg_expr) = msg {

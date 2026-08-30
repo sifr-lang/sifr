@@ -703,7 +703,7 @@ fn _build_hash(
     data: &Vec<u8>,
 ) -> __SifrStdlib_sifr_x2ehashlib_x2eHashObject {
     let alg: String = algorithm.to_lowercase();
-    if alg == "md5" {
+    if (alg == "md5") {
         return __SifrStdlib_sifr_x2ehashlib_x2eHashObject::new(
             alg,
             (data.clone()).clone(),
@@ -712,7 +712,7 @@ fn _build_hash(
             SifrInt::from_i64(64),
         );
     } else {
-        if alg == "sha1" {
+        if (alg == "sha1") {
             return __SifrStdlib_sifr_x2ehashlib_x2eHashObject::new(
                 alg,
                 (data.clone()).clone(),
@@ -721,7 +721,7 @@ fn _build_hash(
                 SifrInt::from_i64(64),
             );
         } else {
-            if alg == "sha224" {
+            if (alg == "sha224") {
                 return __SifrStdlib_sifr_x2ehashlib_x2eHashObject::new(
                     alg,
                     (data.clone()).clone(),
@@ -730,7 +730,7 @@ fn _build_hash(
                     SifrInt::from_i64(64),
                 );
             } else {
-                if alg == "sha256" {
+                if (alg == "sha256") {
                     return __SifrStdlib_sifr_x2ehashlib_x2eHashObject::new(
                         alg,
                         (data.clone()).clone(),
@@ -739,7 +739,7 @@ fn _build_hash(
                         SifrInt::from_i64(64),
                     );
                 } else {
-                    if alg == "sha384" {
+                    if (alg == "sha384") {
                         return __SifrStdlib_sifr_x2ehashlib_x2eHashObject::new(
                             alg,
                             (data.clone()).clone(),
@@ -748,7 +748,7 @@ fn _build_hash(
                             SifrInt::from_i64(128),
                         );
                     } else {
-                        if alg == "sha512" {
+                        if (alg == "sha512") {
                             return __SifrStdlib_sifr_x2ehashlib_x2eHashObject::new(
                                 alg,
                                 (data.clone()).clone(),
@@ -757,7 +757,7 @@ fn _build_hash(
                                 SifrInt::from_i64(128),
                             );
                         } else {
-                            if alg == "blake2b" {
+                            if (alg == "blake2b") {
                                 return __SifrStdlib_sifr_x2ehashlib_x2eHashObject::new(
                                     alg,
                                     (data.clone()).clone(),
@@ -766,7 +766,7 @@ fn _build_hash(
                                     SifrInt::from_i64(128),
                                 );
                             } else {
-                                if alg == "blake2s" {
+                                if (alg == "blake2s") {
                                     return __SifrStdlib_sifr_x2ehashlib_x2eHashObject::new(
                                         alg,
                                         (data.clone()).clone(),
@@ -1195,11 +1195,11 @@ fn _days_in_month(year: SifrInt, month: SifrInt) -> SifrInt {
     ];
     let idx: SifrInt = &month - &SifrInt::from_i64(1);
     let d: Option<SifrInt> = {
-        let __sifr_index_list = &month_days;
-        let __sifr_index_i = idx.clone();
-        let __sifr_index_norm = __sifr_index_i
-            .normalize_index_or_len(__sifr_index_list.len());
-        __sifr_index_list.get(__sifr_index_norm).cloned()
+        let __sifr_checked_read_collection = &month_days;
+        let __sifr_checked_read_index = idx.clone();
+        let __sifr_checked_read_normalized = __sifr_checked_read_index
+            .normalize_index_or_len(__sifr_checked_read_collection.len());
+        __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
     };
     if (&month == &SifrInt::from_i64(2)) && _is_leap_year((year).clone()) {
         return SifrInt::from_i64(29);
@@ -1213,9 +1213,13 @@ fn _substring(value: &String, start: SifrInt, end: SifrInt) -> String {
     let __sifr_chars_value: Vec<char> = value.chars().collect::<Vec<char>>();
     let mut result: String = "".to_string();
     let mut i: SifrInt = start.clone();
-    while &i < &end {
-        let ch: Option<String> = __sifr_chars_value
-            .get(::sifr_runtime::to_usize_proven(&(i.clone())))
+    while (&i < &end) {
+        let ch: Option<String> = ({
+            let __sifr_string_index = i.clone();
+            let __sifr_string_index_normalized = __sifr_string_index
+                .normalize_index_or_len(__sifr_chars_value.len());
+            __sifr_chars_value.get(__sifr_string_index_normalized)
+        })
             .map(|c| c.to_string());
         if let Some(ch) = ch {
             result.push_str((ch).as_str());
@@ -1265,12 +1269,13 @@ fn _parse_decimal(text: &String) -> Option<SifrInt> {
     let mut out: SifrInt = SifrInt::from_i64(0);
     let mut i: SifrInt = SifrInt::from_i64(0);
     while (&i < &SifrInt::from(__sifr_chars_text.len())) {
-        let ch_opt: Option<String> = Some({
-            let __indexed_char_option = __sifr_chars_text
-                .get(::sifr_runtime::to_usize_proven(&(i)))
-                .map(|c| c.to_string());
-            __indexed_char_option.as_slice()[0_usize].clone()
-        });
+        let ch_opt: Option<String> = ({
+            let __sifr_string_index = i.clone();
+            let __sifr_string_index_normalized = __sifr_string_index
+                .normalize_index_or_len(__sifr_chars_text.len());
+            __sifr_chars_text.get(__sifr_string_index_normalized)
+        })
+            .map(|c| c.to_string());
         let Some(ch_opt) = ch_opt else {
             return None;
         };
@@ -1294,7 +1299,7 @@ fn _int_or_negative_one(value: Option<SifrInt>) -> SifrInt {
 fn _day_of_year(year: SifrInt, month: SifrInt, day: SifrInt) -> SifrInt {
     let mut yday: SifrInt = SifrInt::from_i64(0);
     let mut m: SifrInt = SifrInt::from_i64(1);
-    while &m < &month {
+    while (&m < &month) {
         yday = &yday + &_days_in_month((year).clone(), (m).clone());
         m = &m + &SifrInt::from_i64(1);
     }
@@ -1302,21 +1307,21 @@ fn _day_of_year(year: SifrInt, month: SifrInt, day: SifrInt) -> SifrInt {
 }
 fn _weekday(year: SifrInt, month: SifrInt, day: SifrInt) -> SifrInt {
     let mut days_since_epoch: SifrInt = SifrInt::from_i64(0);
-    if &year >= &SifrInt::from_i64(1970) {
+    if (&year >= &SifrInt::from_i64(1970)) {
         let mut y: SifrInt = SifrInt::from_i64(1970);
-        while &y < &year {
+        while (&y < &year) {
             days_since_epoch = &days_since_epoch + &_days_in_year((y).clone());
             y = &y + &SifrInt::from_i64(1);
         }
     } else {
         let mut y: SifrInt = SifrInt::from_i64(1969);
-        while &y >= &year {
+        while (&y >= &year) {
             days_since_epoch = &days_since_epoch - &_days_in_year((y).clone());
             y = &y - &SifrInt::from_i64(1);
         }
     }
     let mut m: SifrInt = SifrInt::from_i64(1);
-    while &m < &month {
+    while (&m < &month) {
         days_since_epoch = &days_since_epoch
             + &_days_in_month((year).clone(), (m).clone());
         m = &m + &SifrInt::from_i64(1);
@@ -1354,39 +1359,56 @@ fn _invalid_struct_time() -> __SifrStdlib_sifr_x2etime_x2estruct__time {
 }
 fn _to_struct_time(rendered: &String) -> __SifrStdlib_sifr_x2etime_x2estruct__time {
     let __sifr_chars_rendered: Vec<char> = rendered.chars().collect::<Vec<char>>();
-    if (&SifrInt::from(__sifr_chars_rendered.len()) < &SifrInt::from_i64(19)) {
+    let Some(__sifr_checked_value_3) = ({
+        let __sifr_string_index = SifrInt::from_i64(4);
+        let __sifr_string_index_normalized = __sifr_string_index
+            .normalize_index_or_len(__sifr_chars_rendered.len());
+        __sifr_chars_rendered.get(__sifr_string_index_normalized)
+    })
+        .map(|c| c.to_string()) else {
         return _invalid_struct_time();
-    }
-    if ((((({
-        let __indexed_char_option = __sifr_chars_rendered
-            .get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(4))))
-            .map(|c| c.to_string());
-        __indexed_char_option.as_slice()[0_usize].clone()
-    }) != "-")
-        || (({
-            let __indexed_char_option = __sifr_chars_rendered
-                .get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(7))))
-                .map(|c| c.to_string());
-            __indexed_char_option.as_slice()[0_usize].clone()
-        }) != "-"))
-        || (({
-            let __indexed_char_option = __sifr_chars_rendered
-                .get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(10))))
-                .map(|c| c.to_string());
-            __indexed_char_option.as_slice()[0_usize].clone()
-        }) != "T"))
-        || (({
-            let __indexed_char_option = __sifr_chars_rendered
-                .get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(13))))
-                .map(|c| c.to_string());
-            __indexed_char_option.as_slice()[0_usize].clone()
-        }) != ":"))
-        || (({
-            let __indexed_char_option = __sifr_chars_rendered
-                .get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(16))))
-                .map(|c| c.to_string());
-            __indexed_char_option.as_slice()[0_usize].clone()
-        }) != ":")
+    };
+    let Some(__sifr_checked_value_4) = ({
+        let __sifr_string_index = SifrInt::from_i64(7);
+        let __sifr_string_index_normalized = __sifr_string_index
+            .normalize_index_or_len(__sifr_chars_rendered.len());
+        __sifr_chars_rendered.get(__sifr_string_index_normalized)
+    })
+        .map(|c| c.to_string()) else {
+        return _invalid_struct_time();
+    };
+    let Some(__sifr_checked_value_5) = ({
+        let __sifr_string_index = SifrInt::from_i64(10);
+        let __sifr_string_index_normalized = __sifr_string_index
+            .normalize_index_or_len(__sifr_chars_rendered.len());
+        __sifr_chars_rendered.get(__sifr_string_index_normalized)
+    })
+        .map(|c| c.to_string()) else {
+        return _invalid_struct_time();
+    };
+    let Some(__sifr_checked_value_6) = ({
+        let __sifr_string_index = SifrInt::from_i64(13);
+        let __sifr_string_index_normalized = __sifr_string_index
+            .normalize_index_or_len(__sifr_chars_rendered.len());
+        __sifr_chars_rendered.get(__sifr_string_index_normalized)
+    })
+        .map(|c| c.to_string()) else {
+        return _invalid_struct_time();
+    };
+    let Some(__sifr_checked_value_7) = ({
+        let __sifr_string_index = SifrInt::from_i64(16);
+        let __sifr_string_index_normalized = __sifr_string_index
+            .normalize_index_or_len(__sifr_chars_rendered.len());
+        __sifr_chars_rendered.get(__sifr_string_index_normalized)
+    })
+        .map(|c| c.to_string()) else {
+        return _invalid_struct_time();
+    };
+    if ((((__sifr_checked_value_3.clone() != "-")
+        || (__sifr_checked_value_4.clone() != "-"))
+        || (__sifr_checked_value_5.clone() != "T"))
+        || (__sifr_checked_value_6.clone() != ":"))
+        || (__sifr_checked_value_7.clone() != ":")
     {
         return _invalid_struct_time();
     }
@@ -1422,7 +1444,7 @@ fn _to_struct_time(rendered: &String) -> __SifrStdlib_sifr_x2etime_x2estruct__ti
     {
         return _invalid_struct_time();
     }
-    if !(_valid_date((year).clone(), (month).clone(), (day).clone())) {
+    if !_valid_date((year).clone(), (month).clone(), (day).clone()) {
         return _invalid_struct_time();
     }
     let wday: SifrInt = _weekday((year).clone(), (month).clone(), (day).clone());
@@ -1516,11 +1538,11 @@ fn demo_math() {
     );
     let fp: Vec<f64> = frexp(8.0_f64);
     let mantissa: Option<f64> = {
-        let __sifr_index_list = &fp;
-        let __sifr_index_i = SifrInt::from_i64(0);
-        let __sifr_index_norm = __sifr_index_i
-            .normalize_index_or_len(__sifr_index_list.len());
-        __sifr_index_list.get(__sifr_index_norm).copied()
+        let __sifr_checked_read_collection = &fp;
+        let __sifr_checked_read_index = SifrInt::from_i64(0);
+        let __sifr_checked_read_normalized = __sifr_checked_read_index
+            .normalize_index_or_len(__sifr_checked_read_collection.len());
+        __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
     };
     if let Some(mantissa) = mantissa {
         println!(
@@ -1537,11 +1559,11 @@ fn demo_math() {
     );
     let md: Vec<f64> = modf(3.7_f64);
     let frac: Option<f64> = {
-        let __sifr_index_list = &md;
-        let __sifr_index_i = SifrInt::from_i64(0);
-        let __sifr_index_norm = __sifr_index_i
-            .normalize_index_or_len(__sifr_index_list.len());
-        __sifr_index_list.get(__sifr_index_norm).copied()
+        let __sifr_checked_read_collection = &md;
+        let __sifr_checked_read_index = SifrInt::from_i64(0);
+        let __sifr_checked_read_normalized = __sifr_checked_read_index
+            .normalize_index_or_len(__sifr_checked_read_collection.len());
+        __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
     };
     if let Some(frac) = frac {
         println!(
@@ -1698,11 +1720,11 @@ fn demo_shutil() {
     println!("=== shutil new intrinsics ===");
     let usage: Vec<SifrInt> = disk_usage(&"/".to_string());
     let total: Option<SifrInt> = {
-        let __sifr_index_list = &usage;
-        let __sifr_index_i = SifrInt::from_i64(0);
-        let __sifr_index_norm = __sifr_index_i
-            .normalize_index_or_len(__sifr_index_list.len());
-        __sifr_index_list.get(__sifr_index_norm).cloned()
+        let __sifr_checked_read_collection = &usage;
+        let __sifr_checked_read_index = SifrInt::from_i64(0);
+        let __sifr_checked_read_normalized = __sifr_checked_read_index
+            .normalize_index_or_len(__sifr_checked_read_collection.len());
+        __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
     };
     if let Some(total) = total.clone() {
         println!(

@@ -290,8 +290,14 @@ fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
     let mut i: SifrInt = SifrInt::from_i64(0);
     while &i < &SifrInt::from(actual.len()) {
         assert!(
-            Some(actual[::sifr_runtime::to_usize_proven(& (i))]) == expected
-            .get(::sifr_runtime::to_usize_proven(& (i))).copied()
+            ({ let __sifr_condition_list = & actual; let __sifr_condition_index = i
+            .clone(); let __sifr_condition_normalized = __sifr_condition_index
+            .normalize_index_or_len(__sifr_condition_list.len()); __sifr_condition_list
+            .get(__sifr_condition_normalized).copied() }) == ({ let __sifr_condition_list
+            = & expected; let __sifr_condition_index = i.clone(); let
+            __sifr_condition_normalized = __sifr_condition_index
+            .normalize_index_or_len(__sifr_condition_list.len()); __sifr_condition_list
+            .get(__sifr_condition_normalized).copied() })
         );
         i = &i + &SifrInt::from_i64(1);
     }
@@ -333,7 +339,7 @@ fn collect_primary_actual() -> Vec<bool> {
             &"-".to_string(),
             &"hello   world".to_string(),
         )?;
-        replace_ok = replaced == "hello-world";
+        replace_ok = (replaced == "hello-world");
         let all_alpha: Vec<String> = findall(
             &"[a-z]+".to_string(),
             &"ab 12 cd".to_string(),
@@ -346,7 +352,7 @@ fn collect_primary_actual() -> Vec<bool> {
             &"HELLO".to_string(),
             __const_IGNORECASE(),
         )?;
-        case_fold_ok = case_fold.is_some();
+        case_fold_ok = (case_fold != None);
         Ok(())
     })();
     if let Err(__sifr_try_err) = __sifr_try_res {

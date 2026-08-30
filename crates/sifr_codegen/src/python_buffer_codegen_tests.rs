@@ -62,15 +62,21 @@ fn affine_list_append_moves_buffer_without_cloning() {
 
 #[test]
 fn affine_storage_assignments_move_buffers_without_cloning() {
-    let source = "class Holder:\n    view: python.Buffer[uint8]\n\ndef replace_list(mut values: list[python.Buffer[uint8]], own view: python.Buffer[uint8]) -> None:\n    values[0] = view\n\ndef replace_dict(mut values: dict[str, python.Buffer[uint8]], own view: python.Buffer[uint8]) -> None:\n    values[\"key\"] = view\n\ndef replace_nested(mut values: list[list[python.Buffer[uint8]]], own view: python.Buffer[uint8]) -> None:\n    values[0][0] = view\n\ndef replace_field(mut holder: Holder, own view: python.Buffer[uint8]) -> None:\n    holder.view = view\n";
+    let source = "class Holder:\n    view: python.Buffer[uint8]\n\ndef replace_list(mut values: list[python.Buffer[uint8]], own view: python.Buffer[uint8]) -> None:\n    try:\n        values[0] = view\n    except IndexError:\n        pass\n\ndef replace_dict(mut values: dict[str, python.Buffer[uint8]], own view: python.Buffer[uint8]) -> None:\n    values[\"key\"] = view\n\ndef replace_nested(mut values: list[list[python.Buffer[uint8]]], own view: python.Buffer[uint8]) -> None:\n    try:\n        values[0][0] = view\n    except IndexError:\n        pass\n\ndef replace_field(mut holder: Holder, own view: python.Buffer[uint8]) -> None:\n    holder.view = view\n";
     let parsed = sifr_python_parser::parse_module(source).expect("source should parse");
     let lowered = sifr_lowering::lower_module(parsed.suite()).expect("source should lower");
     let rust = generate_rust(&lowered.module);
 
     assert!(!rust.contains("view.clone()"), "{rust}");
-    assert!(rust.matches("= view;").count() >= 3, "{rust}");
+    assert!(rust.contains("let __assign_value = view;"), "{rust}");
+    assert!(rust.contains("let __nested_assign_value = view;"), "{rust}");
+    assert!(rust.contains("holder.view = view;"), "{rust}");
     assert!(
-        rust.contains("values.insert(\"key\".to_string(), view)"),
+        rust.contains("let __assign_key = \"key\".to_string();"),
+        "{rust}"
+    );
+    assert!(
+        rust.contains("values.insert(__assign_key, __assign_value)"),
         "{rust}"
     );
     syn::parse_file(&rust).expect("generated affine storage Rust should parse");

@@ -25,12 +25,6 @@ pub(crate) fn is_simple_stmt_candidate(stmt: &HirStmt) -> bool {
         | HirStmt::Break
         | HirStmt::TupleUnpack { .. }
         | HirStmt::StarUnpack { .. }
-        | HirStmt::SubscriptAssign { .. }
-        | HirStmt::NestedSubscriptAssign { .. }
-        | HirStmt::AttributeNestedSubscriptAssign { .. }
-        | HirStmt::SubscriptAugAssign { .. }
-        | HirStmt::AttributeSubscriptAssign { .. }
-        | HirStmt::Delete { .. }
         | HirStmt::Yield { .. }
         | HirStmt::With { .. }
         | HirStmt::AsyncWith { .. }
@@ -38,6 +32,12 @@ pub(crate) fn is_simple_stmt_candidate(stmt: &HirStmt) -> bool {
         | HirStmt::NestedFunction { .. }
         | HirStmt::TryExcept { .. }
         | HirStmt::TryFinally { .. } => true,
+        HirStmt::SubscriptAssign { .. }
+        | HirStmt::NestedSubscriptAssign { .. }
+        | HirStmt::AttributeNestedSubscriptAssign { .. }
+        | HirStmt::SubscriptAugAssign { .. }
+        | HirStmt::AttributeSubscriptAssign { .. }
+        | HirStmt::Delete { .. } => false,
     }
 }
 
@@ -340,7 +340,7 @@ pub(super) fn validate_stmt_lowering_shape(stmt: &HirStmt) -> Result<(), Codegen
             validate_expr_lowering_shape(inner_index)?;
             validate_expr_lowering_shape(value)
         }
-        HirStmt::Delete { object, index } => {
+        HirStmt::Delete { object, index, .. } => {
             validate_expr_lowering_shape(object)?;
             validate_expr_lowering_shape(index)
         }

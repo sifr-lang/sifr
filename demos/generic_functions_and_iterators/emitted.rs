@@ -288,7 +288,7 @@ fn repeat<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
 ) -> Vec<T> {
     let mut result: Vec<T> = vec![];
     let mut i: SifrInt = SifrInt::from_i64(0);
-    while &i < &n {
+    while (&i < &n) {
         result.push(x.clone());
         i = &i + &SifrInt::from_i64(1);
     }

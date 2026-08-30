@@ -541,15 +541,16 @@ mod __sifr_project_nominals {
             root = "/tmp".to_string();
             __sifr_chars_root = root.chars().collect::<Vec<char>>();
         } else {
-            let last: Option<String> = __sifr_chars_root
-                .get(
-                    ::sifr_runtime::to_usize_proven(
-                        &(SifrInt::from(root.chars().count()) - SifrInt::from_i64(1)),
-                    ),
-                )
+            let last: Option<String> = ({
+                let __sifr_string_index = SifrInt::from(root.chars().count())
+                    - SifrInt::from_i64(1);
+                let __sifr_string_index_normalized = __sifr_string_index
+                    .normalize_index_or_len(__sifr_chars_root.len());
+                __sifr_chars_root.get(__sifr_string_index_normalized)
+            })
                 .map(|c| c.to_string());
             if let Some(last) = last {
-                if last == "/" {
+                if (last == "/") {
                     return {
                         let mut __sifr_concat: String = String::with_capacity(
                             (root.len() + prefix.len()) + suffix.len(),
@@ -692,11 +693,11 @@ mod __sifr_project_nominals {
             let mut end: SifrInt = SifrInt::from(self._data.len());
             if let Some(size) = size.as_ref() {
                 let requested_size: SifrInt = size.clone();
-                if &requested_size < &SifrInt::from_i64(0) {
+                if (&requested_size < &SifrInt::from_i64(0)) {
                     end = SifrInt::from(self._data.len());
                 } else {
                     let requested_end: SifrInt = &self._cursor.clone() + &requested_size;
-                    if &requested_end < &end {
+                    if (&requested_end < &end) {
                         end = requested_end;
                     }
                 }
@@ -759,7 +760,7 @@ mod __sifr_project_nominals {
     }
     impl __SifrStdlib_sifr_x2ezipfile_x2eZipFile {
         pub fn write(&self, name: &String, content: &String) -> Result<(), IOError> {
-            if !(self._writable_mode()) {
+            if !self._writable_mode() {
                 return Err(IOError::new(_zip_read_only_error()));
             }
             zip_add_file(&self.path, name, content)
@@ -767,7 +768,7 @@ mod __sifr_project_nominals {
     }
     impl __SifrStdlib_sifr_x2ezipfile_x2eZipFile {
         pub fn write_bytes(&self, name: &String, content: &Vec<u8>) -> Result<(), IOError> {
-            if !(self._writable_mode()) {
+            if !self._writable_mode() {
                 return Err(IOError::new(_zip_read_only_error()));
             }
             zip_add_file_bytes(&self.path, name, content)
@@ -2425,15 +2426,16 @@ fn mktemp_path(prefix: &String) -> String {
         root = "/tmp".to_string();
         __sifr_chars_root = root.chars().collect::<Vec<char>>();
     } else {
-        let last: Option<String> = __sifr_chars_root
-            .get(
-                ::sifr_runtime::to_usize_proven(
-                    &(SifrInt::from(root.chars().count()) - SifrInt::from_i64(1)),
-                ),
-            )
+        let last: Option<String> = ({
+            let __sifr_string_index = SifrInt::from(root.chars().count())
+                - SifrInt::from_i64(1);
+            let __sifr_string_index_normalized = __sifr_string_index
+                .normalize_index_or_len(__sifr_chars_root.len());
+            __sifr_chars_root.get(__sifr_string_index_normalized)
+        })
             .map(|c| c.to_string());
         if let Some(last) = last {
-            if last == "/" {
+            if (last == "/") {
                 return {
                     let mut __sifr_concat: String = String::with_capacity(
                         (root.len() + prefix.len()) + suffix.len(),

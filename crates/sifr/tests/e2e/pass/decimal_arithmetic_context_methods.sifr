@@ -2,8 +2,15 @@ def main():
     d: decimal = Decimal("-1.9")
     one_d: decimal = Decimal("1")
 
-    assert str(d // one_d) == '-2'
-    assert str(d % one_d) == '0.1'
+    try:
+        d_floor: decimal = d // one_d
+        d_remainder: decimal = d % one_d
+        assert str(d_floor) == '-2'
+        assert str(d_remainder) == '0.1'
+    except DivisionError as error:
+        assert False, str(error)
+    except DecimalConversionError as error:
+        assert False, str(error)
     assert str(Decimal("2.5").round(0)) == '2'
     assert str(Decimal("2.5").quantize(0)) == '2'
     assert str(Decimal("4").sqrt()) == 'Ok(2)'
@@ -14,8 +21,13 @@ def main():
     bd: bigdecimal = BigDecimal("-1.9")
     one_bd: bigdecimal = BigDecimal("1")
 
-    assert str(bd // one_bd) == '-2.000000000000000000000000000'
-    assert str(bd % one_bd) == '0.1000000000000000000000000000'
+    try:
+        bd_floor: bigdecimal = bd // one_bd
+        bd_remainder: bigdecimal = bd % one_bd
+        assert str(bd_floor) == '-2.000000000000000000000000000'
+        assert str(bd_remainder) == '0.1000000000000000000000000000'
+    except DivisionError as error:
+        assert False, str(error)
     assert str(BigDecimal("2.5").round(0)) == '2.000000000000000000000000000'
     assert str(BigDecimal("2.5").quantize(0)) == '2.000000000000000000000000000'
     assert str(BigDecimal("1.234567890123456789012345678901") + BigDecimal("0")) == '1.234567890123456789012345679'

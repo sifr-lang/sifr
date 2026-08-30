@@ -2,6 +2,8 @@ use sifr_ir::{HirExpr, HirFStringPart, HirModule, HirStmt};
 use sifr_type_system::Type;
 use std::collections::HashSet;
 
+mod checked_places;
+
 pub(crate) fn collect_referenced_builtin_error_classes(
     module: &HirModule,
     stdlib_preamble: &str,
@@ -268,6 +270,13 @@ fn collect_stmt_error_refs(
     builtin_error_classes: &[&str],
 ) {
     for stmt in stmts {
+        if checked_places::collect_checked_place_stmt_error_refs(
+            stmt,
+            referenced,
+            builtin_error_classes,
+        ) {
+            continue;
+        }
         match stmt {
             HirStmt::Let { value, .. }
             | HirStmt::Assign { value, .. }
@@ -340,9 +349,16 @@ fn collect_stmt_error_refs(
                     collect_stmt_error_refs(else_body, referenced, builtin_error_classes);
                 }
             }
-            HirStmt::TupleUnpack { value, .. } | HirStmt::StarUnpack { value, .. } => {
+            HirStmt::TupleUnpack { value, .. } => {
                 collect_expr_error_refs(value, referenced, builtin_error_classes);
             }
+            HirStmt::StarUnpack { .. }
+            | HirStmt::SubscriptAssign { .. }
+            | HirStmt::NestedSubscriptAssign { .. }
+            | HirStmt::AttributeNestedSubscriptAssign { .. }
+            | HirStmt::SubscriptAugAssign { .. }
+            | HirStmt::AttributeSubscriptAssign { .. }
+            | HirStmt::Delete { .. } => {}
             HirStmt::Assert { test, msg } => {
                 collect_expr_error_refs(test, referenced, builtin_error_classes);
                 if let Some(msg) = msg {
@@ -363,47 +379,6 @@ fn collect_stmt_error_refs(
             HirStmt::TryFinally { body, finalbody } => {
                 collect_stmt_error_refs(body, referenced, builtin_error_classes);
                 collect_stmt_error_refs(finalbody, referenced, builtin_error_classes);
-            }
-            HirStmt::SubscriptAssign { index, value, .. }
-            | HirStmt::AttributeSubscriptAssign { index, value, .. } => {
-                collect_expr_error_refs(index, referenced, builtin_error_classes);
-                collect_expr_error_refs(value, referenced, builtin_error_classes);
-            }
-            HirStmt::SubscriptAugAssign {
-                index,
-                value,
-                missing_key_error,
-                ..
-            } => {
-                collect_expr_error_refs(index, referenced, builtin_error_classes);
-                collect_expr_error_refs(value, referenced, builtin_error_classes);
-                if let Some(error_ty) = missing_key_error {
-                    collect_type_error_refs(error_ty, referenced, builtin_error_classes);
-                }
-            }
-            HirStmt::NestedSubscriptAssign {
-                outer_index,
-                inner_index,
-                value,
-                ..
-            } => {
-                collect_expr_error_refs(outer_index, referenced, builtin_error_classes);
-                collect_expr_error_refs(inner_index, referenced, builtin_error_classes);
-                collect_expr_error_refs(value, referenced, builtin_error_classes);
-            }
-            HirStmt::AttributeNestedSubscriptAssign {
-                outer_index,
-                inner_index,
-                value,
-                ..
-            } => {
-                collect_expr_error_refs(outer_index, referenced, builtin_error_classes);
-                collect_expr_error_refs(inner_index, referenced, builtin_error_classes);
-                collect_expr_error_refs(value, referenced, builtin_error_classes);
-            }
-            HirStmt::Delete { object, index } => {
-                collect_expr_error_refs(object, referenced, builtin_error_classes);
-                collect_expr_error_refs(index, referenced, builtin_error_classes);
             }
             HirStmt::With { items, body } => {
                 for item in items {

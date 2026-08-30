@@ -414,7 +414,7 @@ pub(super) fn test_attribute_subscript_augassign_lowers_for_class_fields() {
     );
     assert!(
         result.is_err(),
-        "fixture should still fail due optional indexing semantics"
+        "both unchecked list projections should require handling"
     );
     let errors = result.unwrap_err();
     assert!(
@@ -451,12 +451,16 @@ pub(super) fn test_nested_subscript_augassign_lowers_for_name_targets() {
         }),
         "nested subscript augassign should lower past target-shape validation: {errors:?}"
     );
-    assert!(
-        errors.iter().any(
-            |error| error.code == Some(DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR)
-                && error.message.contains("unsupported operand type(s) for +")
-        ),
-        "lowering should reach operand typing for nested subscript augassign: {errors:?}"
+    assert_eq!(
+        errors
+            .iter()
+            .filter(|error| {
+                error.code == Some(DiagnosticCode::RESULT_UNUSED_VALUE)
+                    && error.message.contains("may fail with 'IndexError'")
+            })
+            .count(),
+        2,
+        "each nested list projection should have its own checked failure: {errors:?}"
     );
 }
 

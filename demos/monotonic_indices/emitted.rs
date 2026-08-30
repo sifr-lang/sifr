@@ -6,7 +6,15 @@ use ::sifr_runtime::SifrRange;
 fn active_indices(flags: &Vec<bool>) -> Vec<SifrInt> {
     let mut out: Vec<SifrInt> = vec![];
     for index in SifrRange::new_known_nonzero(SifrInt::from_i64(0), SifrInt::from(flags.len()), SifrInt::from_i64(1)) {
-        if flags[::sifr_runtime::to_usize_proven(&(index))] {
+        let Some(__sifr_checked_value_0) = ({
+    let __sifr_checked_read_collection = &flags;
+    let __sifr_checked_read_index = index.clone();
+    let __sifr_checked_read_normalized = __sifr_checked_read_index.normalize_index_or_len(__sifr_checked_read_collection.len());
+    __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+}) else {
+            continue;
+        };
+        if __sifr_checked_value_0 {
             out.push(index.clone());
         }
     }

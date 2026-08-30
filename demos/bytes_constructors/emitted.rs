@@ -297,12 +297,20 @@ fn main() {
             }
             Ok::<Vec<u8>, ValueError>(__out)
         })?;
-        let first: Option<u8> = from_list
-            .get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(0))))
-            .map(|__byte| *__byte as u8);
-        let last: Option<u8> = from_list
-            .get(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(3))))
-            .map(|__byte| *__byte as u8);
+        let first: Option<u8> = {
+            let __sifr_checked_read_collection = &from_list;
+            let __sifr_checked_read_index = SifrInt::from_i64(0);
+            let __sifr_checked_read_normalized = __sifr_checked_read_index
+                .normalize_index_or_len(__sifr_checked_read_collection.len());
+            __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+        };
+        let last: Option<u8> = {
+            let __sifr_checked_read_collection = &from_list;
+            let __sifr_checked_read_index = SifrInt::from_i64(3);
+            let __sifr_checked_read_normalized = __sifr_checked_read_index
+                .normalize_index_or_len(__sifr_checked_read_collection.len());
+            __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+        };
         if let Some(first) = first {
             let expected_first: u8 = 83u8;
             assert!(first == expected_first);

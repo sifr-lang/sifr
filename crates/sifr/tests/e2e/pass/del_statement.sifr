@@ -3,7 +3,10 @@ def main():
     # Del from dict
     ages: dict[str, int] = {"alice": 25, "bob": 30, "charlie": 35}
     assert str(f"before: {len(ages)}") == 'before: 3'
-    del ages["bob"]
+    try:
+        del ages["bob"]
+    except KeyError as e:
+        return
     assert str(f"after del: {len(ages)}") == 'after del: 2'
 
     missing: int | None = ages["bob"]

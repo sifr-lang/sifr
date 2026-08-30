@@ -10,7 +10,7 @@ def expand_keyed_strings(keys: str) -> list[str]:
     }
 
     def backtrack(i: int, cur: str) -> None:
-        if i >= len(keys):
+        if i < 0 or i >= len(keys):
             res.append(str(cur))
             return
         key = keys[i]
@@ -55,7 +55,7 @@ def find_root(n: int, par: list[int]) -> int:
 def union_nodes(n1: int, n2: int, mut par: list[int], mut rank: list[int]) -> bool:
     p1 = find_root(n1, par)
     p2 = find_root(n2, par)
-    if p1 < 0 or p1 >= len(rank) or p2 < 0 or p2 >= len(rank):
+    if p1 < 0 or p1 >= len(rank) or p1 >= len(par) or p2 < 0 or p2 >= len(rank) or p2 >= len(par):
         return False
     if p1 == p2:
         return False
