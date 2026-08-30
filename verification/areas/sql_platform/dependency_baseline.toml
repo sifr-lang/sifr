@@ -5,6 +5,17 @@ root_lock_package = "sifr_sql_dependency_lock"
 rust_version = "1.98"
 sqlite_amalgamation = "3.53.2"
 
+[[tool]]
+name = "wasi-virt"
+display_name = "WASI-Virt"
+version = "0.2.0"
+policy = "latest-stable-source"
+commit = "448f6df8f688cee5d6995e96b1ffc31f9bf00742"
+source_content_sha256 = "47c1ca1cc80df330c93c4797f6748d5330c2804001bdcff0342c4001920d1d2e"
+release_authority = "https://github.com/bytecodealliance/WASI-Virt/tree/448f6df8f688cee5d6995e96b1ffc31f9bf00742"
+api_authority = "https://api.github.com/repos/bytecodealliance/WASI-Virt/commits/448f6df8f688cee5d6995e96b1ffc31f9bf00742"
+license = "Apache-2.0 WITH LLVM-exception"
+
 [[crate]]
 name = "wasmtime"
 display_name = "Wasmtime"
@@ -15,6 +26,18 @@ api_authority = "https://crates.io/api/v1/crates/wasmtime"
 checksum = "1bd39f78fe9bc82cee4025ec9d52118269e9a1498016cc60119b14f2e1d86a8d"
 license = "Apache-2.0 WITH LLVM-exception"
 published_at = "2026-08-24T19:59:18Z"
+yanked = false
+
+[[crate]]
+name = "wit-bindgen"
+display_name = "WIT Bindgen"
+version = "0.61.1"
+policy = "latest-stable"
+release_authority = "https://crates.io/crates/wit-bindgen/0.61.1"
+api_authority = "https://crates.io/api/v1/crates/wit-bindgen"
+checksum = "e473fd0095479f9689ac7d2a52c427cc96bb2b973ace50238dfcc1ab1cd52d93"
+license = "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT"
+published_at = "2026-08-25T15:28:20.240314Z"
 yanked = false
 
 [[crate]]

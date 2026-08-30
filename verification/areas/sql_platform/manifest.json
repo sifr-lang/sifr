@@ -210,6 +210,26 @@
           "diagnostic_formats": []
         }
       ]
+    },
+    {
+      "name": "postgresql-live-differential",
+      "kind": "adapter",
+      "resource_classes": [
+        "container-runtime",
+        "network",
+        "platform-specific"
+      ],
+      "network_mode": "live",
+      "timeout_seconds": 1800,
+      "cases": [
+        {
+          "id": "sql-postgresql-live-differential",
+          "entry": "verification/areas/sql_platform/tools/run_postgresql_server_matrix.py",
+          "command": "sql-postgresql-live-differential",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
     }
   ],
   "network_mode": "offline",

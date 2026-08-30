@@ -3,6 +3,7 @@
   "component_crate": "sifr_sql_postgresql",
   "component_family": "sifr.sql.postgresql.sql",
   "source_manifest": "crates/sifr_sql_postgresql/component-sources.json",
+  "artifact_manifest": "crates/sifr_sql_postgresql/component-artifacts.json",
   "supported_server_majors": [13, 14, 15, 16, 17, 18],
   "parser_boundary": {
     "strict_parser": "libpg_query",
@@ -58,6 +59,9 @@
   "evidence": {
     "architecture": "internal_docs/sql_postgresql_compiler.md",
     "component_tests": "crates/sifr_sql_postgresql/tests/postgresql_compiler.rs",
+    "regression_tests": "crates/sifr_sql_postgresql/tests/postgresql_regressions.rs",
+    "artifact_builder": "verification/areas/sql_platform/tools/build_postgresql_components.py",
+    "artifact_manifest": "crates/sifr_sql_postgresql/component-artifacts.json",
     "live_server_matrix": "verification/areas/sql_platform/data/postgresql_server_matrix.json",
     "parser_matrix_runner": "verification/areas/sql_platform/tools/run_postgresql_parser_matrix.py",
     "server_matrix_runner": "verification/areas/sql_platform/tools/run_postgresql_server_matrix.py"

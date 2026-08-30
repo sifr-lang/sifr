@@ -25,7 +25,7 @@ runtime = [
     "dep:tokio",
     "dep:tokio-rustls",
 ]
-components = ["dep:cc", "dep:wasmtime"]
+components = ["dep:cc", "dep:wasmtime", "dep:wit-bindgen"]
 all = ["postgresql", "mysql", "sqlite", "runtime", "components"]
 
 [dependencies]
@@ -45,6 +45,7 @@ tokio-postgres = { workspace = true, optional = true, features = ["runtime"] }
 tokio-postgres-rustls = { workspace = true, optional = true, features = ["aws-lc-rs"] }
 tokio-rustls = { workspace = true, optional = true, default-features = false, features = ["aws_lc_rs", "logging", "tls12"] }
 wasmtime = { workspace = true, optional = true }
+wit-bindgen = { workspace = true, optional = true }
 
 [lints]
 workspace = true

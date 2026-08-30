@@ -1,27 +1,17 @@
 use crate::ast::{
     Expression, ExpressionKind, FromItem, JoinKind, SelectItem, SelectStatement, SetOperator,
-    StatementKind,
 };
 use crate::catalog::{CatalogColumn, PostgresCatalog};
 use crate::diagnostic::{PostgresDiagnostic, PostgresDiagnosticCode};
-use crate::raw_adapter::{PostgresParseError, PostgresParser};
+use crate::raw_adapter::PostgresParseError;
 use crate::scope::{binding_for_relation, frame_for_results, resolve_column};
 use crate::semantic_helpers::{
-    expression_has_aggregate, integer_type, integer64_type, is_numeric, limit_is_one, text_type,
-    type_fact, unique_result_names,
+    arithmetic_result, expression_has_aggregate, integer_type, integer64_type, is_numeric,
+    is_textual, limit_is_one, text_type, type_fact, unique_result_names,
 };
-use sifr_sql_contract::{
-    Cardinality, DatabaseType, DialectSemantics, EffectContract, Nullability, ObjectId,
-    ProviderAnalysis, ProviderAnalysisError, ProviderParameter, ProviderResultField, QueryEffect,
-    canonical_read_type_with_nullability_in,
-};
+use sifr_sql_contract::{Cardinality, DatabaseType, ObjectId, QueryEffect};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
-
-pub struct PostgresAnalyzer<P> {
-    parser: P,
-    catalog: PostgresCatalog,
-}
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PostgresAnalysisError {
@@ -50,7 +40,7 @@ impl PostgresAnalysisError {
         }
     }
 
-    fn with_sifr_span(mut self, document: &str, start: u32, end: u32) -> Self {
+    pub(crate) fn with_sifr_span(mut self, document: &str, start: u32, end: u32) -> Self {
         self.diagnostic = self
             .diagnostic
             .with_sifr_span(document.to_string(), start, end);
@@ -73,139 +63,6 @@ impl From<PostgresParseError> for PostgresAnalysisError {
         }
     }
 }
-
-impl<P: PostgresParser> PostgresAnalyzer<P> {
-    #[must_use]
-    pub fn new(parser: P, catalog: PostgresCatalog) -> Self {
-        Self { parser, catalog }
-    }
-
-    pub fn analyze_query(&self, source: &str) -> Result<ProviderAnalysis, PostgresAnalysisError> {
-        self.analyze_query_with_sifr_span(source, "sifr://unknown", 0, 0)
-    }
-
-    pub fn analyze_query_with_sifr_span(
-        &self,
-        source: &str,
-        sifr_document: &str,
-        sifr_start: u32,
-        sifr_end: u32,
-    ) -> Result<ProviderAnalysis, PostgresAnalysisError> {
-        self.analyze_query_inner(source)
-            .map_err(|error| error.with_sifr_span(sifr_document, sifr_start, sifr_end))
-    }
-
-    fn analyze_query_inner(&self, source: &str) -> Result<ProviderAnalysis, PostgresAnalysisError> {
-        let statements = self.parser.parse(source)?;
-        if statements.len() != 1 {
-            return Err(PostgresAnalysisError::at_start(
-                PostgresDiagnosticCode::UnsupportedCoreSyntax,
-                "a reusable PostgreSQL query must contain exactly one statement",
-            ));
-        }
-        let statement = &statements[0];
-        let mut context = AnalysisContext::new(&self.catalog);
-        let analyzed = match &statement.kind {
-            StatementKind::Select(select) => context.analyze_select(select, Vec::new())?,
-            StatementKind::Insert(insert) => context.analyze_insert(insert)?,
-            StatementKind::Update(update) => context.analyze_update(update)?,
-            StatementKind::Delete(delete) => context.analyze_delete(delete)?,
-            _ => {
-                return Err(PostgresAnalysisError::at_start(
-                    PostgresDiagnosticCode::UnsupportedCoreSyntax,
-                    "DDL is valid only in a schema profile source",
-                ));
-            }
-        };
-        let codecs = self
-            .catalog
-            .types
-            .codec_registry()
-            .map_err(|error| type_error(error.to_string()))?;
-        let parameters = context
-            .finish_parameters()?
-            .into_iter()
-            .map(|(slot, database_type)| {
-                Ok(ProviderParameter {
-                    slot,
-                    codec: self
-                        .catalog
-                        .types
-                        .codec_identity(&database_type)
-                        .map_err(|error| type_error(error.to_string()))?,
-                    database_type,
-                    nullability: Nullability::NonNull,
-                })
-            })
-            .collect::<Result<Vec<_>, PostgresAnalysisError>>()?;
-        let result_fields = analyzed
-            .fields
-            .into_iter()
-            .map(|field| {
-                let nullability = if field.nullable {
-                    Nullability::Nullable
-                } else {
-                    Nullability::NonNull
-                };
-                Ok(ProviderResultField {
-                    name: field.name,
-                    sifr_type: canonical_read_type_with_nullability_in(
-                        &field.database_type,
-                        nullability,
-                        &codecs,
-                    )
-                    .map_err(|error| type_error(error.to_string()))?,
-                    codec: self
-                        .catalog
-                        .types
-                        .codec_identity(&field.database_type)
-                        .map_err(|error| type_error(error.to_string()))?,
-                    database_type: field.database_type,
-                    nullability,
-                    source_object: field.source_object,
-                })
-            })
-            .collect::<Result<Vec<_>, PostgresAnalysisError>>()?;
-        let analysis = ProviderAnalysis {
-            server_profile: self.catalog.types.server_profile().to_string(),
-            normalized_statement: self.parser.normalize(source)?,
-            parameters,
-            result_fields,
-            cardinality: analyzed.cardinality,
-            effects: EffectContract::new(analyzed.effect, analyzed.referenced, analyzed.affected)
-                .map_err(|error| type_error(error.to_string()))?,
-            semantic_flags: analyzed.flags,
-        };
-        analysis
-            .validate(&codecs)
-            .map_err(|error| type_error(error.to_string()))?;
-        Ok(analysis)
-    }
-
-    #[must_use]
-    pub fn catalog(&self) -> &PostgresCatalog {
-        &self.catalog
-    }
-}
-
-impl<P: PostgresParser> DialectSemantics for PostgresAnalyzer<P> {
-    fn family(&self) -> &'static str {
-        "postgresql"
-    }
-
-    fn analyze(
-        &self,
-        schema_fingerprint: &str,
-        source: &str,
-    ) -> Result<ProviderAnalysis, ProviderAnalysisError> {
-        if schema_fingerprint != self.catalog.schema_fingerprint {
-            return Err(ProviderAnalysisError::InvalidDialectSemantics);
-        }
-        self.analyze_query(source)
-            .map_err(|_| ProviderAnalysisError::InvalidDialectSemantics)
-    }
-}
-
 #[derive(Clone)]
 pub(crate) struct ScopeBinding {
     pub(crate) alias: String,
@@ -245,12 +102,12 @@ pub(crate) struct AnalyzedStatement {
 
 pub(crate) struct AnalysisContext<'a> {
     pub(crate) catalog: &'a PostgresCatalog,
-    parameters: BTreeMap<u32, DatabaseType>,
+    pub(crate) parameters: BTreeMap<u32, DatabaseType>,
     pub(crate) referenced: BTreeSet<ObjectId>,
 }
 
 impl<'a> AnalysisContext<'a> {
-    fn new(catalog: &'a PostgresCatalog) -> Self {
+    pub(crate) fn new(catalog: &'a PostgresCatalog) -> Self {
         Self {
             catalog,
             parameters: BTreeMap::new(),
@@ -258,7 +115,9 @@ impl<'a> AnalysisContext<'a> {
         }
     }
 
-    fn finish_parameters(self) -> Result<Vec<(u32, DatabaseType)>, PostgresAnalysisError> {
+    pub(crate) fn finish_parameters(
+        self,
+    ) -> Result<Vec<(u32, DatabaseType)>, PostgresAnalysisError> {
         let mut output = Vec::with_capacity(self.parameters.len());
         for (index, (number, ty)) in self.parameters.into_iter().enumerate() {
             let expected = u32::try_from(index).unwrap_or(u32::MAX).saturating_add(1);
@@ -278,9 +137,19 @@ impl<'a> AnalysisContext<'a> {
         select: &SelectStatement,
         outer: Vec<ScopeFrame>,
     ) -> Result<AnalyzedStatement, PostgresAnalysisError> {
+        self.analyze_select_with_expected(select, outer, None)
+    }
+
+    pub(crate) fn analyze_select_with_expected(
+        &mut self,
+        select: &SelectStatement,
+        outer: Vec<ScopeFrame>,
+        expected_fields: Option<&[DatabaseType]>,
+    ) -> Result<AnalyzedStatement, PostgresAnalysisError> {
         if let Some(set) = &select.set_operation {
-            let left = self.analyze_select(&set.left, outer.clone())?;
-            let right = self.analyze_select(&set.right, outer)?;
+            let left =
+                self.analyze_select_with_expected(&set.left, outer.clone(), expected_fields)?;
+            let right = self.analyze_select_with_expected(&set.right, outer, expected_fields)?;
             if left.fields.len() != right.fields.len() {
                 return Err(PostgresAnalysisError::at_start(
                     PostgresDiagnosticCode::TypeMismatch,
@@ -339,7 +208,7 @@ impl<'a> AnalysisContext<'a> {
             self.require_boolean(predicate, &frames)?;
         }
         let mut fields = if select.values.is_empty() {
-            self.result_fields(&select.targets, &frames)?
+            self.result_fields_with_expected(&select.targets, &frames, expected_fields)?
         } else {
             self.value_fields(&select.values, &frames)?
         };
@@ -492,11 +361,27 @@ impl<'a> AnalysisContext<'a> {
         targets: &[SelectItem],
         frames: &[ScopeFrame],
     ) -> Result<Vec<ResultFact>, PostgresAnalysisError> {
+        self.result_fields_with_expected(targets, frames, None)
+    }
+
+    fn result_fields_with_expected(
+        &mut self,
+        targets: &[SelectItem],
+        frames: &[ScopeFrame],
+        expected_fields: Option<&[DatabaseType]>,
+    ) -> Result<Vec<ResultFact>, PostgresAnalysisError> {
+        if expected_fields.is_some_and(|fields| fields.len() != targets.len()) {
+            return Err(PostgresAnalysisError::at_start(
+                PostgresDiagnosticCode::TypeMismatch,
+                "SELECT result width does not match its assignment context",
+            ));
+        }
         targets
             .iter()
             .enumerate()
             .map(|(index, target)| {
-                let fact = self.infer(&target.expression, frames, None)?;
+                let expected = expected_fields.and_then(|fields| fields.get(index));
+                let fact = self.infer(&target.expression, frames, expected)?;
                 Ok(ResultFact {
                     name: target
                         .alias
@@ -616,7 +501,7 @@ impl<'a> AnalysisContext<'a> {
                 let target = self.catalog.types.resolve(ty).ok_or_else(|| {
                     PostgresAnalysisError::new(
                         PostgresDiagnosticCode::TypeMismatch,
-                        format!("unknown PostgreSQL type '{}'", ty.join(".")),
+                        format!("unknown PostgreSQL type '{}'", ty.display()),
                         expression,
                     )
                 })?;
@@ -643,6 +528,48 @@ impl<'a> AnalysisContext<'a> {
                 left,
                 right,
             } => self.infer_binary(operator, left, right, frames, expression),
+            ExpressionKind::InList {
+                expression: left,
+                values,
+                ..
+            } => {
+                let Some(first) = values.first() else {
+                    return Err(PostgresAnalysisError::new(
+                        PostgresDiagnosticCode::TypeMismatch,
+                        "PostgreSQL IN list cannot be empty",
+                        expression,
+                    ));
+                };
+                let left_is_untyped = matches!(
+                    left.kind,
+                    ExpressionKind::Parameter { .. } | ExpressionKind::Null
+                );
+                let (left_fact, first_fact) = if left_is_untyped {
+                    let first_fact = self.infer(first, frames, None)?;
+                    let left_fact = self.infer(left, frames, Some(&first_fact.database_type))?;
+                    (left_fact, first_fact)
+                } else {
+                    let left_fact = self.infer(left, frames, None)?;
+                    let first_fact = self.infer(first, frames, Some(&left_fact.database_type))?;
+                    (left_fact, first_fact)
+                };
+                let mut nullable = left_fact.nullable || first_fact.nullable;
+                for value in values.iter().skip(1) {
+                    let fact = self.infer(value, frames, Some(&left_fact.database_type))?;
+                    if !self
+                        .catalog
+                        .can_cast(&fact.database_type, &left_fact.database_type, true)
+                    {
+                        return Err(PostgresAnalysisError::new(
+                            PostgresDiagnosticCode::TypeMismatch,
+                            "PostgreSQL IN value has an incompatible type",
+                            value,
+                        ));
+                    }
+                    nullable |= fact.nullable;
+                }
+                Ok(type_fact(DatabaseType::Boolean, nullable))
+            }
             ExpressionKind::Unary {
                 operator,
                 expression: inner,
@@ -700,6 +627,45 @@ impl<'a> AnalysisContext<'a> {
                     name_hint: Some(field.name.clone()),
                 })
             }
+            ExpressionKind::Exists { query } => {
+                self.analyze_select(query, frames.to_vec())?;
+                Ok(type_fact(DatabaseType::Boolean, false))
+            }
+            ExpressionKind::SubqueryComparison {
+                operator,
+                left,
+                query,
+                ..
+            } => {
+                let analyzed = self.analyze_select(query, frames.to_vec())?;
+                if analyzed.fields.len() != 1 {
+                    return Err(PostgresAnalysisError::new(
+                        PostgresDiagnosticCode::InvalidResult,
+                        "quantified subquery must return exactly one column",
+                        expression,
+                    ));
+                }
+                let field = &analyzed.fields[0];
+                let left = self.infer(left, frames, Some(&field.database_type))?;
+                if !matches!(operator.as_str(), "=" | "<>" | "<" | ">" | "<=" | ">=")
+                    || !(self
+                        .catalog
+                        .can_cast(&left.database_type, &field.database_type, true)
+                        || self
+                            .catalog
+                            .can_cast(&field.database_type, &left.database_type, true))
+                {
+                    return Err(PostgresAnalysisError::new(
+                        PostgresDiagnosticCode::UnknownOperator,
+                        "quantified subquery comparison has incompatible operands",
+                        expression,
+                    ));
+                }
+                Ok(type_fact(
+                    DatabaseType::Boolean,
+                    left.nullable || field.nullable,
+                ))
+            }
             ExpressionKind::Default => {
                 expected
                     .cloned()
@@ -746,6 +712,17 @@ impl<'a> AnalysisContext<'a> {
             )
         };
         let nullable = left_fact.nullable || right_fact.nullable;
+        if matches!(operator, "IS DISTINCT FROM" | "IS NOT DISTINCT FROM")
+            && (left_fact.database_type == right_fact.database_type
+                || self
+                    .catalog
+                    .can_cast(&left_fact.database_type, &right_fact.database_type, true)
+                || self
+                    .catalog
+                    .can_cast(&right_fact.database_type, &left_fact.database_type, true))
+        {
+            return Ok(type_fact(DatabaseType::Boolean, false));
+        }
         if matches!(operator, "=" | "<>" | "<" | ">" | "<=" | ">=")
             && (left_fact.database_type == right_fact.database_type
                 || self
@@ -758,16 +735,23 @@ impl<'a> AnalysisContext<'a> {
             return Ok(type_fact(DatabaseType::Boolean, nullable));
         }
         if operator == "||"
-            && matches!(left_fact.database_type, DatabaseType::Text { .. })
-            && matches!(right_fact.database_type, DatabaseType::Text { .. })
+            && is_textual(&left_fact.database_type)
+            && is_textual(&right_fact.database_type)
         {
             return Ok(type_fact(text_type(), nullable));
         }
-        if matches!(operator, "+" | "-" | "*" | "/")
-            && left_fact.database_type == right_fact.database_type
-            && is_numeric(&left_fact.database_type)
+        if matches!(operator, "LIKE" | "NOT LIKE")
+            && is_textual(&left_fact.database_type)
+            && is_textual(&right_fact.database_type)
         {
-            return Ok(type_fact(left_fact.database_type, nullable));
+            return Ok(type_fact(DatabaseType::Boolean, nullable));
+        }
+        if let Some(result) = arithmetic_result(
+            operator,
+            &left_fact.database_type,
+            &right_fact.database_type,
+        ) {
+            return Ok(type_fact(result, nullable));
         }
         if let Some(found) = self.catalog.operators(operator).iter().find(|candidate| {
             self.catalog
@@ -806,7 +790,7 @@ impl<'a> AnalysisContext<'a> {
         }
         if matches!(short.as_str(), "lower" | "upper") && arguments.len() == 1 {
             let argument = self.infer(&arguments[0], frames, Some(&text_type()))?;
-            if !matches!(argument.database_type, DatabaseType::Text { .. }) {
+            if !is_textual(&argument.database_type) {
                 return Err(PostgresAnalysisError::new(
                     PostgresDiagnosticCode::UnknownFunction,
                     "lower/upper needs a text argument",
@@ -817,6 +801,61 @@ impl<'a> AnalysisContext<'a> {
         }
         if short == "now" && arguments.is_empty() {
             return Ok(type_fact(DatabaseType::Instant { precision: 6 }, false));
+        }
+        if matches!(short.as_str(), "sum" | "avg" | "min" | "max") && arguments.len() == 1 {
+            let argument = self.infer(&arguments[0], frames, None)?;
+            let result = match short.as_str() {
+                "sum" => match &argument.database_type {
+                    DatabaseType::Integer {
+                        width:
+                            sifr_sql_contract::IntegerWidth::Bits16
+                            | sifr_sql_contract::IntegerWidth::Bits32,
+                        ..
+                    } => integer64_type(),
+                    DatabaseType::Integer {
+                        width: sifr_sql_contract::IntegerWidth::Bits64,
+                        ..
+                    } => DatabaseType::Decimal {
+                        precision: None,
+                        scale: None,
+                        representation: sifr_sql_contract::DecimalRepresentation::Numeric,
+                    },
+                    value if is_numeric(value) => value.clone(),
+                    _ => {
+                        return Err(PostgresAnalysisError::new(
+                            PostgresDiagnosticCode::UnknownFunction,
+                            "sum needs a numeric argument",
+                            expression,
+                        ));
+                    }
+                },
+                "avg" => match &argument.database_type {
+                    DatabaseType::Integer { .. } | DatabaseType::Decimal { .. } => {
+                        DatabaseType::Decimal {
+                            precision: None,
+                            scale: None,
+                            representation: sifr_sql_contract::DecimalRepresentation::Numeric,
+                        }
+                    }
+                    DatabaseType::Float32 | DatabaseType::Float64 => argument.database_type.clone(),
+                    _ => {
+                        return Err(PostgresAnalysisError::new(
+                            PostgresDiagnosticCode::UnknownFunction,
+                            "avg needs a numeric argument",
+                            expression,
+                        ));
+                    }
+                },
+                "min" | "max" => argument.database_type,
+                _ => {
+                    return Err(PostgresAnalysisError::new(
+                        PostgresDiagnosticCode::UnknownFunction,
+                        "unknown PostgreSQL aggregate",
+                        expression,
+                    ));
+                }
+            };
+            return Ok(type_fact(result, true));
         }
         let candidates = self.catalog.functions(name);
         for candidate in candidates {
@@ -853,6 +892,6 @@ pub(crate) fn write_error(message: impl Into<String>) -> PostgresAnalysisError {
     PostgresAnalysisError::at_start(PostgresDiagnosticCode::InvalidWrite, message)
 }
 
-fn type_error(message: impl Into<String>) -> PostgresAnalysisError {
+pub(crate) fn type_error(message: impl Into<String>) -> PostgresAnalysisError {
     PostgresAnalysisError::at_start(PostgresDiagnosticCode::TypeMismatch, message)
 }

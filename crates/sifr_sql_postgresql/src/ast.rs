@@ -126,6 +126,33 @@ pub struct Expression {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PostgresTypeName {
+    pub path: Vec<String>,
+    pub modifiers: Vec<i64>,
+}
+
+impl PostgresTypeName {
+    #[must_use]
+    pub fn display(&self) -> String {
+        let mut value = self.path.join(".");
+        if !self.modifiers.is_empty() {
+            value.push('(');
+            value.push_str(
+                &self
+                    .modifiers
+                    .iter()
+                    .map(i64::to_string)
+                    .collect::<Vec<_>>()
+                    .join(","),
+            );
+            value.push(')');
+        }
+        value
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum ExpressionKind {
     Column {
@@ -149,12 +176,17 @@ pub enum ExpressionKind {
     Null,
     Cast {
         expression: Box<Expression>,
-        ty: Vec<String>,
+        ty: PostgresTypeName,
     },
     Binary {
         operator: String,
         left: Box<Expression>,
         right: Box<Expression>,
+    },
+    InList {
+        expression: Box<Expression>,
+        values: Vec<Expression>,
+        negated: bool,
     },
     Unary {
         operator: String,
@@ -176,7 +208,23 @@ pub enum ExpressionKind {
     Subquery {
         query: Box<SelectStatement>,
     },
+    Exists {
+        query: Box<SelectStatement>,
+    },
+    SubqueryComparison {
+        operator: String,
+        left: Box<Expression>,
+        query: Box<SelectStatement>,
+        quantifier: SubqueryQuantifier,
+    },
     Default,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SubqueryQuantifier {
+    Any,
+    All,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -203,8 +251,9 @@ pub struct InsertStatement {
 pub struct ConflictClause {
     pub action: ConflictAction,
     pub target_columns: Vec<String>,
+    pub target_predicate: Option<Expression>,
     pub assignments: Vec<Assignment>,
-    pub predicate: Option<Expression>,
+    pub update_predicate: Option<Expression>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -247,7 +296,7 @@ pub struct CreateTableStatement {
 #[serde(deny_unknown_fields)]
 pub struct ColumnDefinition {
     pub name: String,
-    pub ty: Vec<String>,
+    pub ty: PostgresTypeName,
     pub nullable: bool,
     pub has_default: bool,
     pub generated: bool,
@@ -287,7 +336,7 @@ pub struct CreateEnumStatement {
 #[serde(deny_unknown_fields)]
 pub struct CreateDomainStatement {
     pub name: Vec<String>,
-    pub base_type: Vec<String>,
+    pub base_type: PostgresTypeName,
     pub nullable: bool,
 }
 
@@ -318,8 +367,8 @@ pub struct CreateSequenceStatement {
 #[serde(deny_unknown_fields)]
 pub struct CreateFunctionStatement {
     pub name: Vec<String>,
-    pub arguments: Vec<Vec<String>>,
-    pub result: Vec<String>,
+    pub arguments: Vec<PostgresTypeName>,
+    pub result: PostgresTypeName,
     pub strict: bool,
     pub aggregate: bool,
 }

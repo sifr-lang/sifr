@@ -1,11 +1,12 @@
+use crate::analysis::AnalysisContext;
 use crate::ast::{CreateTableStatement, PostgresStatement, StatementKind, TableConstraint};
 use crate::ddl_constraints::{TableConstraintInput, add_table_constraints};
 use crate::diagnostic::{PostgresDiagnostic, PostgresDiagnosticCode};
 use crate::types::PostgresTypeRegistry;
-use serde::{Deserialize, Serialize};
+use semver::Version;
 use sifr_sql_contract::{
-    DatabaseType, ObjectId, SchemaDocument, SchemaDocumentKind, SchemaIr, SchemaObject,
-    SchemaObjectKind, SchemaSourceLocation, SemanticValue,
+    DatabaseType, DialectIdentity, ObjectId, ProviderIdentity, SchemaDocument, SchemaDocumentKind,
+    SchemaIr, SchemaObject, SchemaObjectKind, SchemaSourceLocation, SemanticValue,
 };
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -24,6 +25,7 @@ pub struct CatalogColumn {
 pub struct CatalogRelation {
     pub identity: ObjectId,
     pub columns: BTreeMap<String, CatalogColumn>,
+    pub column_order: Vec<String>,
     pub primary_key: BTreeSet<String>,
     pub unique_sets: BTreeSet<Vec<String>>,
     pub source: Option<SchemaSourceLocation>,
@@ -147,23 +149,22 @@ impl PostgresCatalog {
             )
         }) {
             let column_ids = object_id_list_property(object, "columns")?;
-            let relation_columns = column_ids
-                .into_iter()
-                .map(|identity| {
-                    columns
-                        .get(&identity)
-                        .cloned()
-                        .map(|column| (column.name.clone(), column))
-                        .ok_or_else(|| {
-                            schema_error(object, "relation references an unknown column")
-                        })
-                })
-                .collect::<Result<BTreeMap<_, _>, _>>()?;
+            let mut relation_columns = BTreeMap::new();
+            let mut column_order = Vec::with_capacity(column_ids.len());
+            for identity in column_ids {
+                let column = columns
+                    .get(&identity)
+                    .cloned()
+                    .ok_or_else(|| schema_error(object, "relation references an unknown column"))?;
+                column_order.push(column.name.clone());
+                relation_columns.insert(column.name.clone(), column);
+            }
             relations.insert(
                 object.identity.clone(),
                 CatalogRelation {
                     identity: object.identity.clone(),
                     columns: relation_columns,
+                    column_order,
                     primary_key: string_set_property(object, "primary-key").unwrap_or_default(),
                     unique_sets: nested_string_set_property(object, "unique-sets")
                         .unwrap_or_default(),
@@ -244,7 +245,7 @@ impl PostgresCatalog {
             || self.casts.iter().any(|cast| {
                 &cast.source == source && &cast.target == target && (!implicit || cast.implicit)
             })
-            || builtin_cast(source, target, implicit)
+            || crate::semantic_helpers::can_builtin_cast(source, target, implicit)
     }
 
     #[must_use]
@@ -253,35 +254,38 @@ impl PostgresCatalog {
     }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct CatalogSnapshot {
-    pub document: String,
-    pub objects: Vec<SchemaObject>,
-}
-
-impl CatalogSnapshot {
-    #[must_use]
-    pub fn into_document(self) -> SchemaDocument {
-        SchemaDocument {
-            kind: SchemaDocumentKind::ProviderMetadata,
-            document: self.document,
-            objects: self.objects,
-        }
-    }
-}
-
 pub(crate) fn ddl_document(
     document: impl Into<String>,
     statements: &[PostgresStatement],
     types: &PostgresTypeRegistry,
+    prior_objects: &BTreeMap<ObjectId, SchemaObject>,
 ) -> Result<SchemaDocument, PostgresDiagnostic> {
     let document = document.into();
-    let mut objects = BTreeMap::new();
+    let prior_identities = prior_objects.keys().cloned().collect::<BTreeSet<_>>();
+    let mut objects = prior_objects.clone();
+    let mut working_types = types.clone();
+    for object in prior_objects.values() {
+        match object.kind {
+            SchemaObjectKind::Enum => working_types.add_nominal(
+                &split_identity(&object.identity),
+                DatabaseType::Enum {
+                    identity: object.identity.clone(),
+                },
+            ),
+            SchemaObjectKind::Domain => working_types.add_nominal(
+                &split_identity(&object.identity),
+                DatabaseType::Domain {
+                    identity: object.identity.clone(),
+                    base: Box::new(database_type_property(object, "base-database-type")?),
+                },
+            ),
+            _ => {}
+        }
+    }
     for statement in statements {
         match &statement.kind {
             StatementKind::CreateTable(table) => {
-                add_table(&document, statement, table, types, &mut objects)?;
+                add_table(&document, statement, table, &working_types, &mut objects)?;
             }
             StatementKind::CreateEnum(value) => {
                 add_namespace(&document, &value.name, &mut objects);
@@ -306,13 +310,19 @@ pub(crate) fn ddl_document(
                         source: Some(source_location(&document, statement)),
                     },
                 );
+                working_types.add_nominal(
+                    &value.name,
+                    DatabaseType::Enum {
+                        identity: ObjectId::new(qualified_name(&value.name)),
+                    },
+                );
             }
             StatementKind::CreateDomain(value) => {
                 add_namespace(&document, &value.name, &mut objects);
                 let base = types.resolve(&value.base_type).ok_or_else(|| {
                     schema_error_message(format!(
                         "unknown PostgreSQL domain base type '{}'",
-                        value.base_type.join(".")
+                        value.base_type.display()
                     ))
                 })?;
                 let identity = ObjectId::new(qualified_name(&value.name));
@@ -330,6 +340,13 @@ pub(crate) fn ddl_document(
                         ]),
                         dependencies: namespace_dependency(&value.name),
                         source: Some(source_location(&document, statement)),
+                    },
+                );
+                working_types.add_nominal(
+                    &value.name,
+                    DatabaseType::Domain {
+                        identity: ObjectId::new(qualified_name(&value.name)),
+                        base: Box::new(base.database_type),
                     },
                 );
             }
@@ -373,28 +390,7 @@ pub(crate) fn ddl_document(
                 );
             }
             StatementKind::CreateView(value) => {
-                add_namespace(&document, &value.name, &mut objects);
-                let identity = ObjectId::new(qualified_name(&value.name));
-                objects.insert(
-                    identity.clone(),
-                    SchemaObject {
-                        identity,
-                        kind: if value.materialized {
-                            SchemaObjectKind::MaterializedView
-                        } else {
-                            SchemaObjectKind::View
-                        },
-                        semantic: BTreeMap::from([
-                            ("columns".to_string(), SemanticValue::List(Vec::new())),
-                            (
-                                "provider-query".to_string(),
-                                SemanticValue::Text("libpg-query-ast".to_string()),
-                            ),
-                        ]),
-                        dependencies: namespace_dependency(&value.name),
-                        source: Some(source_location(&document, statement)),
-                    },
-                );
+                add_view(&document, statement, value, &working_types, &mut objects)?;
             }
             StatementKind::CreateFunction(value) => {
                 add_namespace(&document, &value.name, &mut objects);
@@ -443,8 +439,112 @@ pub(crate) fn ddl_document(
     Ok(SchemaDocument {
         kind: SchemaDocumentKind::SqlDdl,
         document,
-        objects: objects.into_values().collect(),
+        objects: objects
+            .into_iter()
+            .filter_map(|(identity, object)| {
+                (!prior_identities.contains(&identity)).then_some(object)
+            })
+            .collect(),
     })
+}
+
+fn add_view(
+    document: &str,
+    statement: &PostgresStatement,
+    view: &crate::ast::CreateViewStatement,
+    types: &PostgresTypeRegistry,
+    objects: &mut BTreeMap<ObjectId, SchemaObject>,
+) -> Result<(), PostgresDiagnostic> {
+    add_namespace(document, &view.name, objects);
+    let identity = ObjectId::new(qualified_name(&view.name));
+    let schema = SchemaIr {
+        format_version: 1,
+        provider: ProviderIdentity {
+            package_id: "sifr-sql-postgresql@0.0.0#ddl".to_string(),
+            package_version: Version::new(0, 0, 0),
+            package_source: "embedded-ddl".to_string(),
+            package_graph_digest: "0".repeat(64),
+            compiler_components: BTreeMap::new(),
+        },
+        dialect: DialectIdentity {
+            family: "postgresql".to_string(),
+            server_version: types
+                .server_profile()
+                .strip_prefix("postgresql-")
+                .unwrap_or_default()
+                .to_string(),
+            modes: BTreeSet::new(),
+            features: BTreeSet::new(),
+        },
+        objects: objects.clone(),
+    };
+    let catalog = PostgresCatalog::from_schema(&schema, types.clone())?;
+    let mut context = AnalysisContext::new(&catalog);
+    let analyzed = context
+        .analyze_select(&view.query, Vec::new())
+        .map_err(|error| error.diagnostic)?;
+    let mut column_ids = Vec::with_capacity(analyzed.fields.len());
+    for field in &analyzed.fields {
+        let column_identity = ObjectId::new(format!("{identity}.{}", field.name));
+        column_ids.push(column_identity.clone());
+        objects.insert(
+            column_identity.clone(),
+            SchemaObject {
+                identity: column_identity,
+                kind: SchemaObjectKind::Column,
+                semantic: BTreeMap::from([
+                    ("name".to_string(), SemanticValue::Text(field.name.clone())),
+                    (
+                        "database-type".to_string(),
+                        database_value(&field.database_type)?,
+                    ),
+                    ("nullable".to_string(), SemanticValue::Bool(field.nullable)),
+                    ("has-default".to_string(), SemanticValue::Bool(false)),
+                    ("generated".to_string(), SemanticValue::Bool(false)),
+                ]),
+                dependencies: BTreeSet::from([identity.clone()]),
+                source: Some(source_location(document, statement)),
+            },
+        );
+    }
+    let provider_query = serde_json::to_string(&view.query)
+        .map_err(|_| schema_error_message("cannot serialize PostgreSQL view query"))?;
+    let mut dependencies = namespace_dependency(&view.name);
+    dependencies.extend(analyzed.referenced);
+    objects.insert(
+        identity.clone(),
+        SchemaObject {
+            identity,
+            kind: if view.materialized {
+                SchemaObjectKind::MaterializedView
+            } else {
+                SchemaObjectKind::View
+            },
+            semantic: BTreeMap::from([
+                (
+                    "columns".to_string(),
+                    SemanticValue::List(
+                        column_ids
+                            .iter()
+                            .map(|column| SemanticValue::Text(column.as_str().to_string()))
+                            .collect(),
+                    ),
+                ),
+                (
+                    "provider-query".to_string(),
+                    SemanticValue::Text(provider_query),
+                ),
+                (
+                    "primary-key".to_string(),
+                    SemanticValue::Set(BTreeSet::new()),
+                ),
+                ("unique-sets".to_string(), SemanticValue::List(Vec::new())),
+            ]),
+            dependencies,
+            source: Some(source_location(document, statement)),
+        },
+    );
+    Ok(())
 }
 
 fn add_table(
@@ -461,7 +561,7 @@ fn add_table(
     let mut unique_sets = BTreeSet::new();
     for column in &table.columns {
         let ty = types.resolve(&column.ty).ok_or_else(|| {
-            schema_error_message(format!("unknown PostgreSQL type '{}'", column.ty.join(".")))
+            schema_error_message(format!("unknown PostgreSQL type '{}'", column.ty.display()))
         })?;
         let identity = ObjectId::new(format!("{}.{}", table_identity, column.name));
         column_ids.push(identity.clone());
@@ -732,27 +832,6 @@ fn operator_from_object(object: &SchemaObject) -> Result<CatalogOperator, Postgr
         right: database_type_property(object, "right")?,
         result: database_type_property(object, "result")?,
     })
-}
-
-fn builtin_cast(source: &DatabaseType, target: &DatabaseType, implicit: bool) -> bool {
-    if source == target {
-        return true;
-    }
-    matches!(
-        (source, target, implicit),
-        (
-            DatabaseType::Integer { .. },
-            DatabaseType::Decimal { .. } | DatabaseType::Float32 | DatabaseType::Float64,
-            true
-        ) | (
-            DatabaseType::Integer { .. }
-                | DatabaseType::Decimal { .. }
-                | DatabaseType::Float32
-                | DatabaseType::Float64,
-            DatabaseType::Text { .. },
-            false
-        )
-    )
 }
 
 fn split_identity(identity: &ObjectId) -> Vec<String> {

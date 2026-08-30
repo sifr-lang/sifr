@@ -121,12 +121,24 @@ def error_sqlstate(container: str, sql: str) -> str:
 
 def wait_ready(container: str) -> None:
     for _ in range(120):
-        result = subprocess.run(
-            ["docker", "exec", container, "pg_isready", "--username", "postgres"],
+        logs = subprocess.run(
+            ["docker", "logs", container],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        log_text = logs.stdout + logs.stderr
+        init_complete = "PostgreSQL init process complete; ready for start up." in log_text
+        probe = subprocess.run(
+            [
+                "docker", "exec", "--env", f"PGPASSWORD={PASSWORD}", container,
+                "psql", "--username", "postgres", "--dbname", "postgres",
+                "--no-psqlrc", "--quiet", "--command", "SELECT 1;",
+            ],
             check=False,
             capture_output=True,
         )
-        if result.returncode == 0:
+        if init_complete and probe.returncode == 0:
             return
         time.sleep(0.5)
     raise RuntimeError(f"PostgreSQL container did not become ready: {container}")

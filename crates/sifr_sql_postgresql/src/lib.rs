@@ -1,31 +1,38 @@
 mod analysis;
+mod analyzer;
 mod ast;
 mod catalog;
+mod catalog_snapshot;
 mod component;
 mod ddl_constraints;
 mod diagnostic;
 mod ffi;
+#[cfg(target_family = "wasm")]
+mod guest;
 mod parameters;
 mod raw_adapter;
+mod raw_helpers;
 mod scope;
 mod semantic_helpers;
 mod source;
 mod types;
 mod writes;
 
-pub use analysis::{PostgresAnalysisError, PostgresAnalyzer};
+pub use analysis::PostgresAnalysisError;
+pub use analyzer::PostgresAnalyzer;
 pub use ast::{
-    Assignment, ConflictAction, Expression, FromItem, JoinKind, OrderDirection, PostgresStatement,
-    SelectItem, SetOperator, StatementKind,
+    Assignment, ConflictAction, ConflictClause, Expression, ExpressionKind, FromItem, JoinKind,
+    OrderDirection, PostgresStatement, PostgresTypeName, SelectItem, SetOperator, StatementKind,
+    SubqueryQuantifier,
 };
 pub use catalog::{
-    CatalogCast, CatalogColumn, CatalogFunction, CatalogOperator, CatalogRelation, CatalogSnapshot,
-    PostgresCatalog,
+    CatalogCast, CatalogColumn, CatalogFunction, CatalogOperator, CatalogRelation, PostgresCatalog,
 };
+pub use catalog_snapshot::CatalogSnapshot;
 pub use component::{
-    POSTGRESQL_QUERY_OPERATION, PostgresCompilerComponent, PostgresComponentRequest,
-    PostgresComponentResponse, component_registration, into_embedded_response,
-    provider_diagnostics,
+    POSTGRESQL_QUERY_OPERATION, POSTGRESQL_SCHEMA_ARTIFACT_KIND, PostgresCompilerComponent,
+    PostgresComponentRequest, PostgresComponentResponse, component_artifact_path,
+    component_registration, execute_embedded_request, into_embedded_response, provider_diagnostics,
 };
 pub use diagnostic::{
     PostgresDiagnostic, PostgresDiagnosticCode, PostgresDiagnosticSpan, PostgresSpanKind,

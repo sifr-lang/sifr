@@ -20,13 +20,31 @@ def main() -> int:
             "--locked",
             "-p",
             "sifr_sql_postgresql",
-            "--test",
-            "postgresql_compiler",
+            "--tests",
+            "--",
+            "--skip",
+            "every_checked_in_component_executes_in_the_capability_free_host",
         ]
         print(f"PostgreSQL {major}: {' '.join(command)}", flush=True)
         result = subprocess.run(command, cwd=REPO_ROOT, env=environment, check=False)
         if result.returncode != 0:
             return result.returncode
+    component_command = [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "sifr_sql_postgresql",
+        "--test",
+        "postgresql_compiler",
+        "every_checked_in_component_executes_in_the_capability_free_host",
+        "--",
+        "--exact",
+    ]
+    print(f"PostgreSQL components: {' '.join(component_command)}", flush=True)
+    result = subprocess.run(component_command, cwd=REPO_ROOT, check=False)
+    if result.returncode != 0:
+        return result.returncode
     print("PostgreSQL parser matrix ok: majors=6", flush=True)
     return 0
 

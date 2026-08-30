@@ -62,8 +62,8 @@ pub use profile::{
 };
 pub use profile_registry::{ProfileModuleRegistry, RegisteredProfileModule};
 pub use provider::{
-    DialectSemantics, ProviderAnalysis, ProviderAnalysisError, ProviderParameter,
-    ProviderResultField,
+    DialectSemantics, ProviderAnalysis, ProviderAnalysisError, ProviderDiagnosticSpan,
+    ProviderParameter, ProviderResultField, ProviderSemanticDiagnostic,
 };
 pub use query::{
     QueryAdapter, QueryContractError, QueryContractErrorKind, QueryOrigin, QueryParameterSlot,

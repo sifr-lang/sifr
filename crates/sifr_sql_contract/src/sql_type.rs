@@ -106,6 +106,11 @@ pub enum DatabaseType {
     IpAddress,
     IpNetwork,
     MacAddress,
+    Named {
+        identity: ObjectId,
+        parameters: Vec<i64>,
+        canonical: Box<DatabaseType>,
+    },
     Custom {
         identity: ObjectId,
         codec: CodecIdentity,
@@ -219,6 +224,9 @@ fn canonical_read_type_with_registry(
         DatabaseType::IpAddress => SifrType::IpAddress,
         DatabaseType::IpNetwork => SifrType::IpNetwork,
         DatabaseType::MacAddress => SifrType::MacAddress,
+        DatabaseType::Named { canonical, .. } => {
+            canonical_read_type_with_registry(canonical, codecs)?
+        }
         DatabaseType::Custom { .. } => {
             let Some(codecs) = codecs else {
                 return Err(SchemaContractError::new(
@@ -326,6 +334,16 @@ fn validate_database_type(database: &DatabaseType) -> Result<(), SchemaContractE
             validate_database_type(element)?;
         }
         DatabaseType::Domain { base, .. } => validate_database_type(base)?,
+        DatabaseType::Named {
+            identity,
+            canonical,
+            ..
+        } => {
+            if identity.as_str().trim().is_empty() {
+                return Err(invalid("named database type identity cannot be empty"));
+            }
+            validate_database_type(canonical)?;
+        }
         DatabaseType::Range { element, .. } => validate_database_type(element)?,
         DatabaseType::SqliteDynamic { storage_classes } if storage_classes.is_empty() => {
             return Err(invalid(

@@ -91,6 +91,10 @@ COMMANDS = {
         sys.executable,
         str(AREA_ROOT / "tools" / "run_postgresql_parser_matrix.py"),
     ],
+    "sql-postgresql-live-differential": [
+        sys.executable,
+        str(AREA_ROOT / "tools" / "run_postgresql_server_matrix.py"),
+    ],
 }
 
 

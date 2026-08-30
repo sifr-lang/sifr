@@ -83,6 +83,7 @@ fn database_family(database: &DatabaseType) -> &'static str {
         DatabaseType::IpAddress => "ip-address",
         DatabaseType::IpNetwork => "ip-network",
         DatabaseType::MacAddress => "mac-address",
+        DatabaseType::Named { .. } => "named",
         DatabaseType::Custom { .. } => "custom",
         DatabaseType::SqliteDynamic { .. } => "sqlite-dynamic",
     }

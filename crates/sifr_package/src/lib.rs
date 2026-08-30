@@ -115,7 +115,7 @@ pub use crate::python::{
     write_python_certifications,
 };
 pub use crate::source::layout::{MarkerValidation, validate_pure_marker_source};
-pub use crate::sql_capabilities::ResolvedPackageCapabilities;
+pub use crate::sql_capabilities::{PackageCapabilityResolutionError, ResolvedPackageCapabilities};
 pub use crate::sql_profiles::{ResolvedSqlProfile, resolve_sql_profiles};
 
 #[cfg(test)]

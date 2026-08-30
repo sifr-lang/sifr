@@ -36,23 +36,62 @@ exact source commit for each supported PostgreSQL major.
 | 17 | `17-6.2.2` | `7be1aed1f1f968a36cf541319f71e845850f0381` |
 | 18 | `18.0.0` | `204fbdbd3ed5f8691ab358e49f1fc5397b4679e2` |
 
-`component-sources.json` records each tag, commit, tree archive checksum, and
-source path. Qualification recalculates each checksum from the checked-in git
-object.
+`component-sources.json` records each tag, commit, deterministic tracked-content
+checksum, and source path. Qualification hashes each tracked path and file
+content. The result does not depend on a Git archive implementation.
 
-The build uses `cc` `1.4.4`. The workspace and dependency qualification records
-pin this build-only adapter to its latest stable release.
+The build uses `cc` `1.4.4`, `wit-bindgen` `0.61.1`, WASI SDK `33`, and
+WASI-Virt `0.2.0`. The workspace and qualification records pin these latest
+stable tools. WASI SDK provides the C headers and Clang target for the checked
+`wasm32-wasip2` build. WASI-Virt is pinned at source commit
+`448f6df8f688cee5d6995e96b1ffc31f9bf00742` with a tracked-content checksum.
 
-These tools are not Sifr standard-library modules. They remain private
-implementation dependencies of the provider component.
+`build_postgresql_components.py` builds all six component artifacts. Each guest
+exports the `embedded-language-provider.analyze` WIT function. It reads the
+canonical `SchemaIR` context artifact, reconstructs `$n` holes, runs the same
+owned parser and semantic analyzer as native qualification, and returns the
+closed compiler protocol response. Component registration reads the artifact
+and derives its SHA-256; callers cannot supply an unrelated hash.
+
+`component-artifacts.json` is the artifact authority. It records the exact
+parser commit, output size, SHA-256, WIT world, protocol, target, and toolchain
+for each server major. It also records one deterministic digest of the Cargo
+lock, manifests, Rust sources, WIT files, and WASI compatibility sources that
+form the guest. Qualification rejects a stale artifact when any input changes.
+The build script replaces this manifest only after all six artifacts build
+successfully.
+
+The component build requires the Rust `wasm32-wasip2` target and this exact
+environment:
+
+```bash
+git submodule update --init third_party/wasi-virt
+export WASI_SDK_PATH=/absolute/path/to/wasi-sdk-33.0
+python3 verification/areas/sql_platform/tools/build_postgresql_components.py
+```
+
+The WASI compatibility layer supplies only facilities required by extracted
+PostgreSQL parser code. It uses compiler atomics for spinlocks. It uses WASI
+SDK libraries for signals, non-local jumps, memory mapping, process identity,
+and process clocks. It excludes server, socket, and postmaster units that the
+parser archive does not use. WASI-Virt then composes deny-by-default
+implementations of every remaining WASI interface into the artifact. The
+finished component has no host imports, so the compiler host still grants no
+WASI capability. Any unexpected environment, file, network, clock, random,
+process, or standard-I/O access traps inside the component.
+
+These tools are not Sifr standard-library modules. `cc` and `wit-bindgen` are
+pinned workspace dependencies. WASI SDK and WASI-Virt are private build tools.
+`libpg_query` and WASI-Virt are exact checked-in submodule sources. None of
+these names enters the Sifr user API.
 
 ## Parser selection
 
 `SIFR_POSTGRESQL_MAJOR` selects one parser source during the component build.
 The default selection is PostgreSQL 18.
 
-The build compiles only files listed by the selected upstream build layout. It
-does not link a system PostgreSQL library.
+The build follows the selected upstream build layout, with the documented
+WASI-only exclusions. It does not link a system PostgreSQL library.
 
 The adapter checks the version number in every returned parse tree. A version
 mismatch is a provider diagnostic.
@@ -114,6 +153,9 @@ supported value has one exact codec identity for the selected server profile.
 
 The core registry covers Boolean, fixed integers, numeric values, floats, text,
 binary values, temporal values, UUID, JSON, network values, and MAC addresses.
+`inet` and `cidr` keep different codec identities. Character and varying
+character types use `DatabaseType::Named`. This type preserves the qualified
+database identity and all modifiers while mapping the value to Sifr `str`.
 
 Enums, domains, and composites use stable schema object identities. Catalog
 metadata can extend functions, operators, and casts without exposing raw server
@@ -142,8 +184,9 @@ composed result after rewriting.
 The analyzer resolves casts, operators, scalar functions, aggregates, aliases,
 correlations, and set operations against the catalog.
 
-Built-in rules cover common arithmetic, comparisons, text concatenation,
-`count`, `lower`, `upper`, and `now`. Catalog metadata supplies other overloads.
+Built-in rules cover common arithmetic, modulo, comparisons, `LIKE`, `IN`, text
+concatenation, `count`, `sum`, `avg`, `min`, `max`, `lower`, `upper`, and `now`.
+Catalog metadata supplies other overloads.
 
 Result fields must have unique names. Unnamed expressions receive deterministic
 `column_N` names.
@@ -163,8 +206,10 @@ plans carry those objects as schema-fingerprinted dependencies.
 `INSERT` checks required columns, row widths, assignment casts, generated
 columns, and `INSERT SELECT` widths.
 
-`ON CONFLICT` targets must match a primary or unique key. The `excluded`
-pseudo-relation uses the target table column types.
+`ON CONFLICT` targets must match a primary or unique key. Conflict-target and
+update predicates remain distinct. The `excluded` pseudo-relation uses the
+target table column types. SQL `NULL` cannot be assigned to a non-nullable
+column.
 
 `UPDATE` checks each assignment once and includes `FROM` relations in scope.
 `DELETE` includes `USING` relations in scope.
@@ -188,8 +233,11 @@ Parser failures copy the upstream message before the FFI result is freed.
 The package manifest can grant `sql.unsafe-syntax` through
 `trust.security-capabilities`.
 
-`sifr_package` resolves that grant for one exact package identity.
-`UnsafeSyntaxGrant` consumes the resolver directly.
+`sifr_package` resolves that grant for one exact root package identity in the
+resolved package graph. A connected dependency cannot present itself as the
+root and consume its capability. `UnsafeSyntaxGrant` consumes the resolver
+directly. The production fragment compiler accepts no caller-constructed
+grant.
 
 An absent capability, empty audit reason, wrong package identity, or `deny`
 lint policy rejects the fragment.
@@ -198,15 +246,21 @@ lint policy rejects the fragment.
 
 The `postgresql-compiler` SQL suite owns this component.
 
-It validates source tags, commits, archive checksums, provider registrations,
-schema objects, semantics, spans, placeholders, and exact codecs.
+It validates source tags, commits, tracked-content checksums, artifact hashes,
+provider registrations, schema objects, semantics, spans, placeholders, and
+exact codecs. Snapshot tests preserve provider analysis and diagnostic shape.
 
 The parser matrix rebuilds and runs the same Rust tests for PostgreSQL 13
 through 18. This proves that each embedded parser crosses the owned adapter.
 
 The live matrix starts each supported PostgreSQL server. It compares version,
 parameter types, result types, nullability, writes, and diagnostic SQLSTATEs.
+The checked provider regression also replays those facts through the offline
+analyzer and compares its parameter, result, nullability, write, and diagnostic
+answers.
 
 The checked-in live evidence records exact server image digests and observed
 results. Ordinary offline gates validate that evidence without opening a
-database connection.
+database connection. The live differential suite is registered in the SQL
+manifest and nightly profile. The evidence cannot remain an unexecuted side
+record.

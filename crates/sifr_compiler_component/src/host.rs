@@ -13,6 +13,9 @@ pub struct ComponentHostLimits {
     pub max_component_bytes: usize,
     pub max_memory_bytes: usize,
     pub max_wasm_stack_bytes: usize,
+    pub max_instances: usize,
+    pub max_memories: usize,
+    pub max_tables: usize,
     pub max_input_bytes: usize,
     pub max_output_bytes: usize,
     pub max_template_parts: usize,
@@ -37,6 +40,9 @@ impl Default for ComponentHostLimits {
             max_component_bytes: 64 * 1024 * 1024,
             max_memory_bytes: 256 * 1024 * 1024,
             max_wasm_stack_bytes: 2 * 1024 * 1024,
+            max_instances: 32,
+            max_memories: 16,
+            max_tables: 32,
             max_input_bytes: 64 * 1024 * 1024,
             max_output_bytes: 64 * 1024 * 1024,
             max_template_parts: 16_384,
@@ -81,8 +87,9 @@ impl ComponentHost {
         let mut config = Config::new();
         config.consume_fuel(true);
         config.wasm_component_model(true);
+        config.wasm_exceptions(true);
         config.wasm_memory64(false);
-        config.wasm_multi_memory(false);
+        config.wasm_multi_memory(true);
         config.wasm_relaxed_simd(false);
         config.max_wasm_stack(limits.max_wasm_stack_bytes);
         config.cranelift_nan_canonicalization(true);
@@ -205,9 +212,9 @@ impl ComponentHost {
         let linker = Linker::<HostState>::new(&self.engine);
         let store_limits = StoreLimitsBuilder::new()
             .memory_size(self.limits.max_memory_bytes)
-            .instances(1)
-            .memories(1)
-            .tables(4)
+            .instances(self.limits.max_instances)
+            .memories(self.limits.max_memories)
+            .tables(self.limits.max_tables)
             .build();
         let mut store = Store::new(
             &self.engine,

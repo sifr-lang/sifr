@@ -21,7 +21,7 @@ impl AnalysisContext<'_> {
             .map_err(|diagnostic| PostgresAnalysisError { diagnostic })?
             .clone();
         let target_columns = if insert.columns.is_empty() {
-            relation.columns.keys().cloned().collect::<Vec<_>>()
+            relation.column_order.clone()
         } else {
             insert.columns.clone()
         };
@@ -45,11 +45,25 @@ impl AnalysisContext<'_> {
             }
             for (expression, column_name) in row.iter().zip(&target_columns) {
                 let column = writable_column(&relation, column_name)?;
-                self.infer(expression, &[], Some(&column.database_type))?;
+                let fact = self.infer(expression, &[], Some(&column.database_type))?;
+                if fact.nullable && !column.nullable {
+                    return Err(write_error(format!(
+                        "nullable expression cannot be assigned to '{}.{}'",
+                        relation.identity, column.name
+                    )));
+                }
             }
         }
         if let Some(source) = &insert.source {
-            let analyzed = self.analyze_select(source, Vec::new())?;
+            let expected_types = target_columns
+                .iter()
+                .map(|column_name| {
+                    writable_column(&relation, column_name)
+                        .map(|column| column.database_type.clone())
+                })
+                .collect::<Result<Vec<_>, _>>()?;
+            let analyzed =
+                self.analyze_select_with_expected(source, Vec::new(), Some(&expected_types))?;
             if analyzed.fields.len() != target_columns.len() {
                 return Err(write_error(
                     "INSERT SELECT width does not match its column list",
@@ -60,9 +74,10 @@ impl AnalysisContext<'_> {
                 if !self
                     .catalog
                     .can_cast(&field.database_type, &column.database_type, true)
+                    || (field.nullable && !column.nullable)
                 {
                     return Err(write_error(
-                        "INSERT SELECT type is not assignment-compatible",
+                        "INSERT SELECT value is not assignment-compatible",
                     ));
                 }
             }
@@ -81,6 +96,14 @@ impl AnalysisContext<'_> {
             if !target.is_empty() && target != relation.primary_key && !matches_unique {
                 return Err(write_error("ON CONFLICT target is not a unique key"));
             }
+            if let Some(predicate) = &conflict.target_predicate {
+                self.require_boolean(
+                    predicate,
+                    std::slice::from_ref(&ScopeFrame {
+                        bindings: vec![target_binding.clone()],
+                    }),
+                )?;
+            }
             if conflict.action == ConflictAction::Update {
                 let conflict_frames = vec![ScopeFrame {
                     bindings: vec![
@@ -93,7 +116,7 @@ impl AnalysisContext<'_> {
                     ],
                 }];
                 self.check_assignments(&relation, &conflict.assignments, &conflict_frames)?;
-                if let Some(predicate) = &conflict.predicate {
+                if let Some(predicate) = &conflict.update_predicate {
                     self.require_boolean(predicate, &conflict_frames)?;
                 }
             }

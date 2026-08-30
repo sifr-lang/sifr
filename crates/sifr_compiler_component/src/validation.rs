@@ -1,10 +1,11 @@
 use crate::protocol::{
-    ClosedType, EmbeddedAnalysisRequest, EmbeddedAnalysisResponse, EmbeddedPlan, RuntimeLowering,
+    ClosedType, EmbeddedAnalysisRequest, EmbeddedAnalysisResponse, RuntimeLowering,
     SemanticOperation, SourceSpan, TemplatePart,
 };
-use crate::registration::hex_digest;
-use crate::{ComponentError, ComponentErrorKind, ComponentHostLimits, DiagnosticRegistry};
-use sha2::{Digest, Sha256};
+use crate::{
+    ComponentError, ComponentErrorKind, ComponentHostLimits, DiagnosticRegistry,
+    compute_plan_fingerprint,
+};
 use std::collections::BTreeSet;
 
 pub fn validate_request(
@@ -237,15 +238,6 @@ pub fn validate_response(
         ));
     }
     Ok(())
-}
-
-pub fn compute_plan_fingerprint(plan: &EmbeddedPlan) -> Result<String, ComponentError> {
-    let mut canonical = plan.clone();
-    canonical.stable_fingerprint.clear();
-    let bytes = serde_json::to_vec(&canonical).map_err(|error| {
-        ComponentError::new(ComponentErrorKind::ProtocolEnvelope, error.to_string())
-    })?;
-    Ok(hex_digest(Sha256::digest(bytes).as_slice()))
 }
 
 fn validate_dependencies(response: &EmbeddedAnalysisResponse) -> Result<(), ComponentError> {

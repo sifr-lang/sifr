@@ -9,7 +9,7 @@ pub struct LibpgQuerySource {
     pub server_major: u16,
     pub tag: String,
     pub commit: String,
-    pub archive_sha256: String,
+    pub source_content_sha256: String,
     pub path: String,
 }
 
@@ -48,9 +48,9 @@ pub fn embedded_sources() -> Result<Vec<LibpgQuerySource>, serde_json::Error> {
         && manifest.sources.iter().all(|source| {
             source.commit.len() == 40
                 && source.commit.bytes().all(|value| value.is_ascii_hexdigit())
-                && source.archive_sha256.len() == 64
+                && source.source_content_sha256.len() == 64
                 && source
-                    .archive_sha256
+                    .source_content_sha256
                     .bytes()
                     .all(|value| value.is_ascii_hexdigit())
                 && source.tag.starts_with(&source.server_major.to_string())

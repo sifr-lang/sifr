@@ -60,6 +60,10 @@ fn read_manifest() -> Result<Value, Box<dyn Error>> {
 
 fn compile_libpg_query(source: &Path) -> Result<(), Box<dyn Error>> {
     let mut build = cc::Build::new();
+    configure_wasi_compiler(&mut build)?;
+    if is_wasm_target() {
+        build.include(wasi_compatibility_headers()?);
+    }
     build
         .include(source)
         .include(source.join("vendor"))
@@ -85,8 +89,73 @@ fn compile_libpg_query(source: &Path) -> Result<(), Box<dyn Error>> {
     ] {
         build.file(source.join(relative));
     }
+    if is_wasm_target() {
+        build.file(wasi_compatibility_headers()?.join("postgresql_runtime.c"));
+    }
     build.compile("sifr_pg_query");
+    configure_wasi_linker()?;
     Ok(())
+}
+
+fn wasi_compatibility_headers() -> Result<PathBuf, Box<dyn Error>> {
+    let crate_dir = PathBuf::from(
+        env::var_os("CARGO_MANIFEST_DIR")
+            .ok_or_else(|| io::Error::other("Cargo did not provide CARGO_MANIFEST_DIR"))?,
+    );
+    Ok(crate_dir.join("wasi_compat"))
+}
+
+fn configure_wasi_compiler(build: &mut cc::Build) -> Result<(), Box<dyn Error>> {
+    if !is_wasm_target() {
+        return Ok(());
+    }
+    let sdk = env::var_os("WASI_SDK_PATH")
+        .map(PathBuf::from)
+        .ok_or_else(|| io::Error::other("WASI_SDK_PATH is required for PostgreSQL components"))?;
+    let compiler = sdk.join("bin/clang");
+    let sysroot = sdk.join("share/wasi-sysroot");
+    if !compiler.is_file() || !sysroot.is_dir() {
+        return Err(io::Error::other(format!(
+            "WASI_SDK_PATH does not contain bin/clang and share/wasi-sysroot: {}",
+            sdk.display()
+        ))
+        .into());
+    }
+    build.compiler(compiler);
+    build.target("wasm32-wasip2");
+    build.flag(format!("--sysroot={}", sysroot.display()));
+    build.flag("-mllvm");
+    build.flag("-wasm-enable-sjlj");
+    build.flag("-mllvm");
+    build.flag("-wasm-use-legacy-eh=false");
+    build.define("_WASI_EMULATED_SIGNAL", "1");
+    build.define("_WASI_EMULATED_MMAN", "1");
+    build.define("_WASI_EMULATED_PROCESS_CLOCKS", "1");
+    Ok(())
+}
+
+fn configure_wasi_linker() -> Result<(), Box<dyn Error>> {
+    if !is_wasm_target() {
+        return Ok(());
+    }
+    let sdk = PathBuf::from(
+        env::var_os("WASI_SDK_PATH")
+            .ok_or_else(|| io::Error::other("WASI_SDK_PATH is required for components"))?,
+    );
+    println!(
+        "cargo:rustc-link-search=native={}",
+        sdk.join("share/wasi-sysroot/lib/wasm32-wasip2").display()
+    );
+    println!("cargo:rustc-link-lib=static=setjmp");
+    println!("cargo:rustc-link-lib=static=wasi-emulated-signal");
+    println!("cargo:rustc-link-lib=static=wasi-emulated-mman");
+    println!("cargo:rustc-link-lib=static=wasi-emulated-getpid");
+    println!("cargo:rustc-link-lib=static=wasi-emulated-process-clocks");
+    Ok(())
+}
+
+fn is_wasm_target() -> bool {
+    env::var("CARGO_CFG_TARGET_FAMILY").as_deref() == Ok("wasm")
 }
 
 fn add_c_files(build: &mut cc::Build, directory: &Path) -> Result<(), io::Error> {
@@ -97,12 +166,28 @@ fn add_c_files(build: &mut cc::Build, directory: &Path) -> Result<(), io::Error>
     for entry in entries {
         if entry.extension().and_then(|value| value.to_str()) == Some("c")
             && !is_included_translation_unit(&entry)
+            && !is_unused_wasi_server_translation_unit(&entry)
         {
             println!("cargo:rerun-if-changed={}", entry.display());
             build.file(entry);
         }
     }
     Ok(())
+}
+
+fn is_unused_wasi_server_translation_unit(path: &Path) -> bool {
+    if !is_wasm_target() {
+        return false;
+    }
+    matches!(
+        path.file_name().and_then(|value| value.to_str()),
+        Some(
+            "src_backend_libpq_pqcomm.c"
+                | "src_backend_postmaster_postmaster.c"
+                | "src_backend_storage_lmgr_s_lock.c"
+                | "src_backend_tcop_postgres.c"
+        )
+    )
 }
 
 fn is_included_translation_unit(path: &Path) -> bool {

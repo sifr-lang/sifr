@@ -30,8 +30,11 @@ pub fn rewrite_parameter_slots(
     let mut cursor = 0;
     while cursor < bytes.len() {
         match bytes[cursor] {
-            b'\'' => copy_quoted(source, &mut output, &mut cursor, b'\''),
-            b'"' => copy_quoted(source, &mut output, &mut cursor, b'"'),
+            b'\'' => {
+                let backslash_escapes = is_escape_string_prefix(bytes, cursor);
+                copy_quoted(source, &mut output, &mut cursor, b'\'', backslash_escapes);
+            }
+            b'"' => copy_quoted(source, &mut output, &mut cursor, b'"', false),
             b'-' if bytes.get(cursor + 1) == Some(&b'-') => {
                 copy_line_comment(source, &mut output, &mut cursor);
             }
@@ -69,13 +72,21 @@ pub fn rewrite_parameter_slots(
     Ok(output)
 }
 
-fn copy_quoted(source: &str, output: &mut String, cursor: &mut usize, quote: u8) {
+fn copy_quoted(
+    source: &str,
+    output: &mut String,
+    cursor: &mut usize,
+    quote: u8,
+    backslash_escapes: bool,
+) {
     let bytes = source.as_bytes();
     copy_char(source, output, cursor);
     while *cursor < bytes.len() {
         let current = bytes[*cursor];
         copy_char(source, output, cursor);
-        if current == quote {
+        if backslash_escapes && current == b'\\' && *cursor < bytes.len() {
+            copy_char(source, output, cursor);
+        } else if current == quote {
             if bytes.get(*cursor) == Some(&quote) {
                 copy_char(source, output, cursor);
             } else {
@@ -83,6 +94,12 @@ fn copy_quoted(source: &str, output: &mut String, cursor: &mut usize, quote: u8)
             }
         }
     }
+}
+
+fn is_escape_string_prefix(bytes: &[u8], quote: usize) -> bool {
+    quote > 0
+        && matches!(bytes[quote - 1], b'e' | b'E')
+        && (quote == 1 || !bytes[quote - 2].is_ascii_alphanumeric() && bytes[quote - 2] != b'_')
 }
 
 fn copy_line_comment(source: &str, output: &mut String, cursor: &mut usize) {

@@ -2,12 +2,16 @@ use crate::ast::{
     Assignment, ColumnDefinition, ConflictAction, ConflictClause, CreateDomainStatement,
     CreateEnumStatement, CreateFunctionStatement, CreateIndexStatement, CreateSequenceStatement,
     CreateTableStatement, CreateViewStatement, DeleteStatement, Expression, ExpressionKind,
-    FromItem, InsertStatement, JoinKind, OrderDirection, OrderItem, PostgresStatement, SelectItem,
-    SelectStatement, SetOperation, SetOperator, SqlSpan, StatementKind, TableConstraint,
-    UpdateStatement,
+    FromItem, InsertStatement, JoinKind, OrderDirection, OrderItem, PostgresStatement,
+    PostgresTypeName, SelectItem, SelectStatement, SetOperation, SetOperator, SqlSpan,
+    StatementKind, TableConstraint, UpdateStatement,
 };
 use crate::diagnostic::{PostgresDiagnostic, PostgresDiagnosticCode};
 use crate::ffi;
+use crate::raw_helpers::{
+    alias, array, bool_field, name_list, object, object_field, optional_array,
+    optional_object_field, relation_name, string_field, string_node, tagged, type_name, u32_field,
+};
 use serde_json::{Map, Value};
 use std::fmt;
 
@@ -52,7 +56,7 @@ impl PostgresParseError {
         }
     }
 
-    fn unsupported(message: impl Into<String>, span: SqlSpan) -> Self {
+    pub(crate) fn unsupported(message: impl Into<String>, span: SqlSpan) -> Self {
         Self {
             diagnostic: PostgresDiagnostic::at_sql(
                 PostgresDiagnosticCode::UnsupportedCoreSyntax,
@@ -311,18 +315,33 @@ impl<'a> RawAdapter<'a> {
                 expression: Box::new(self.expression_object(object_field(body, "arg")?)?),
                 ty: type_name(object_field(body, "typeName")?),
             },
-            "A_Expr" => ExpressionKind::Binary {
-                operator: name_list(body, "name").join("."),
-                left: Box::new(self.expression_object(object_field(body, "lexpr")?)?),
-                right: Box::new(self.expression_object(object_field(body, "rexpr")?)?),
-            },
-            "BoolExpr" => ExpressionKind::BooleanList {
-                and: string_field(body, "boolop").unwrap_or("AND_EXPR") == "AND_EXPR",
-                expressions: optional_array(body, "args")
+            "A_Expr" => self.operator_expression(body)?,
+            "BoolExpr" => {
+                let mut expressions = optional_array(body, "args")
                     .iter()
                     .map(|argument| self.expression(argument))
-                    .collect::<Result<_, _>>()?,
-            },
+                    .collect::<Result<Vec<_>, _>>()?;
+                match string_field(body, "boolop").unwrap_or("AND_EXPR") {
+                    "AND_EXPR" => ExpressionKind::BooleanList {
+                        and: true,
+                        expressions,
+                    },
+                    "OR_EXPR" => ExpressionKind::BooleanList {
+                        and: false,
+                        expressions,
+                    },
+                    "NOT_EXPR" if expressions.len() == 1 => ExpressionKind::Unary {
+                        operator: "NOT".to_string(),
+                        expression: Box::new(expressions.remove(0)),
+                    },
+                    other => {
+                        return Err(self.invalid(
+                            format!("unsupported PostgreSQL boolean expression {other}"),
+                            body,
+                        ));
+                    }
+                }
+            }
             "FuncCall" => ExpressionKind::Function {
                 name: name_list(body, "funcname"),
                 arguments: optional_array(body, "args")
@@ -335,13 +354,7 @@ impl<'a> RawAdapter<'a> {
                 expression: Box::new(self.expression_object(object_field(body, "arg")?)?),
                 is_not: string_field(body, "nulltesttype").unwrap_or("IS_NULL") == "IS_NOT_NULL",
             },
-            "SubLink" => {
-                let subselect = object_field(body, "subselect")?;
-                let (_, select) = tagged(subselect, "subquery")?;
-                ExpressionKind::Subquery {
-                    query: Box::new(self.select(select)?),
-                }
-            }
+            "SubLink" => self.subquery_expression(body)?,
             "SetToDefault" => ExpressionKind::Default,
             other => {
                 return Err(PostgresParseError::unsupported(
@@ -351,6 +364,82 @@ impl<'a> RawAdapter<'a> {
             }
         };
         Ok(Expression { kind, span })
+    }
+
+    fn operator_expression(
+        &self,
+        body: &Map<String, Value>,
+    ) -> Result<ExpressionKind, PostgresParseError> {
+        let kind = string_field(body, "kind").unwrap_or("AEXPR_OP");
+        let operator = name_list(body, "name").join(".");
+        match kind {
+            "AEXPR_OP" | "AEXPR_LIKE" | "AEXPR_DISTINCT" | "AEXPR_NOT_DISTINCT" => {
+                let operator = match (kind, operator.as_str()) {
+                    ("AEXPR_LIKE", "~~") => "LIKE".to_string(),
+                    ("AEXPR_LIKE", "!~~") => "NOT LIKE".to_string(),
+                    ("AEXPR_DISTINCT", _) => "IS DISTINCT FROM".to_string(),
+                    ("AEXPR_NOT_DISTINCT", _) => "IS NOT DISTINCT FROM".to_string(),
+                    _ => operator,
+                };
+                Ok(ExpressionKind::Binary {
+                    operator,
+                    left: Box::new(self.expression_object(object_field(body, "lexpr")?)?),
+                    right: Box::new(self.expression_object(object_field(body, "rexpr")?)?),
+                })
+            }
+            "AEXPR_IN" => {
+                let list = object_field(body, "rexpr")?;
+                let (tag, list) = tagged(list, "IN expression list")?;
+                if tag != "List" {
+                    return Err(self.invalid("PostgreSQL IN right operand is not a list", body));
+                }
+                Ok(ExpressionKind::InList {
+                    expression: Box::new(self.expression_object(object_field(body, "lexpr")?)?),
+                    values: optional_array(list, "items")
+                        .iter()
+                        .map(|item| self.expression(item))
+                        .collect::<Result<_, _>>()?,
+                    negated: operator == "<>",
+                })
+            }
+            other => Err(self.invalid(
+                format!("unsupported PostgreSQL operator expression {other}"),
+                body,
+            )),
+        }
+    }
+
+    fn subquery_expression(
+        &self,
+        body: &Map<String, Value>,
+    ) -> Result<ExpressionKind, PostgresParseError> {
+        let subselect = object_field(body, "subselect")?;
+        let (_, select) = tagged(subselect, "subquery")?;
+        let query = Box::new(self.select(select)?);
+        match string_field(body, "subLinkType").unwrap_or("EXPR_SUBLINK") {
+            "EXPR_SUBLINK" => Ok(ExpressionKind::Subquery { query }),
+            "EXISTS_SUBLINK" => Ok(ExpressionKind::Exists { query }),
+            kind @ ("ANY_SUBLINK" | "ALL_SUBLINK" | "ROWCOMPARE_SUBLINK") => {
+                let left = self.expression_object(object_field(body, "testexpr")?)?;
+                Ok(ExpressionKind::SubqueryComparison {
+                    operator: name_list(body, "operName")
+                        .first()
+                        .cloned()
+                        .unwrap_or_else(|| "=".to_string()),
+                    left: Box::new(left),
+                    query,
+                    quantifier: if kind == "ALL_SUBLINK" {
+                        crate::ast::SubqueryQuantifier::All
+                    } else {
+                        crate::ast::SubqueryQuantifier::Any
+                    },
+                })
+            }
+            other => Err(self.invalid(
+                format!("unsupported PostgreSQL subquery expression {other}"),
+                body,
+            )),
+        }
     }
 
     fn constant(&self, body: &Map<String, Value>) -> Result<ExpressionKind, PostgresParseError> {
@@ -459,9 +548,12 @@ impl<'a> RawAdapter<'a> {
         Ok(ConflictClause {
             action,
             target_columns,
-            assignments: assignments(body, "targetList", self)?,
-            predicate: infer
+            target_predicate: infer
                 .and_then(|value| optional_object_field(value, "whereClause"))
+                .map(|value| self.expression_object(value))
+                .transpose()?,
+            assignments: assignments(body, "targetList", self)?,
+            update_predicate: optional_object_field(body, "whereClause")
                 .map(|value| self.expression_object(value))
                 .transpose()?,
         })
@@ -693,19 +785,41 @@ impl<'a> RawAdapter<'a> {
             arguments,
             result: object_field(body, "returnType")
                 .map(type_name)
-                .unwrap_or_else(|_| vec!["void".to_string()]),
+                .unwrap_or_else(|_| PostgresTypeName {
+                    path: vec!["void".to_string()],
+                    modifiers: Vec::new(),
+                }),
             strict,
             aggregate: false,
         })
     }
 
     fn span(&self, body: &Map<String, Value>) -> SqlSpan {
-        let start = u32_field(body, "location").unwrap_or(0);
+        let source_len = u32::try_from(self.source.len()).unwrap_or(u32::MAX);
+        let start = body
+            .get("location")
+            .and_then(Value::as_i64)
+            .and_then(|value| u32::try_from(value).ok())
+            .unwrap_or(0)
+            .min(source_len);
+        let mut end = usize::try_from(start).unwrap_or(self.source.len());
+        let bytes = self.source.as_bytes();
+        if end < bytes.len() {
+            end += self.source[end..]
+                .chars()
+                .next()
+                .map(char::len_utf8)
+                .unwrap_or(0);
+            while end < bytes.len()
+                && !bytes[end].is_ascii_whitespace()
+                && !matches!(bytes[end], b',' | b')' | b'(' | b';')
+            {
+                end += 1;
+            }
+        }
         SqlSpan {
             start,
-            end: start
-                .saturating_add(1)
-                .min(u32::try_from(self.source.len()).unwrap_or(u32::MAX)),
+            end: u32::try_from(end).unwrap_or(source_len).min(source_len),
         }
     }
 
@@ -747,115 +861,4 @@ fn returning_items(
         clause_items
     };
     items.iter().map(|item| adapter.select_item(item)).collect()
-}
-
-fn relation_name(body: &Map<String, Value>) -> Vec<String> {
-    [
-        string_field(body, "catalogname"),
-        string_field(body, "schemaname"),
-    ]
-    .into_iter()
-    .flatten()
-    .chain(string_field(body, "relname"))
-    .map(str::to_string)
-    .collect()
-}
-
-fn alias(body: &Map<String, Value>) -> Option<String> {
-    optional_object_field(body, "alias")
-        .and_then(|alias| string_field(alias, "aliasname"))
-        .map(str::to_string)
-}
-
-fn type_name(body: &Map<String, Value>) -> Vec<String> {
-    name_list(body, "names")
-}
-
-fn name_list(body: &Map<String, Value>, key: &str) -> Vec<String> {
-    optional_array(body, key)
-        .iter()
-        .filter_map(string_node)
-        .collect()
-}
-
-fn string_node(value: &Value) -> Option<String> {
-    let object = value.as_object()?;
-    let (_, body) = tagged(object, "string node").ok()?;
-    string_field(body, "sval")
-        .or_else(|| string_field(body, "str"))
-        .map(str::to_string)
-}
-
-fn tagged<'a>(
-    object: &'a Map<String, Value>,
-    label: &str,
-) -> Result<(&'a str, &'a Map<String, Value>), PostgresParseError> {
-    if object.len() != 1 {
-        return Err(simple_error(format!("{label} is not a tagged parser node")));
-    }
-    let Some((name, value)) = object.iter().next() else {
-        return Err(simple_error(format!("{label} is empty")));
-    };
-    let Some(body) = value.as_object() else {
-        return Err(simple_error(format!("{label} body is not an object")));
-    };
-    Ok((name, body))
-}
-
-fn object<'a>(value: &'a Value, label: &str) -> Result<&'a Map<String, Value>, PostgresParseError> {
-    value
-        .as_object()
-        .ok_or_else(|| simple_error(format!("{label} is not an object")))
-}
-
-fn object_field<'a>(
-    object: &'a Map<String, Value>,
-    key: &str,
-) -> Result<&'a Map<String, Value>, PostgresParseError> {
-    object
-        .get(key)
-        .and_then(Value::as_object)
-        .ok_or_else(|| simple_error(format!("PostgreSQL parser node has no {key}")))
-}
-
-fn optional_object_field<'a>(
-    object: &'a Map<String, Value>,
-    key: &str,
-) -> Option<&'a Map<String, Value>> {
-    object.get(key).and_then(Value::as_object)
-}
-
-fn array<'a>(value: &'a Value, key: &str) -> Result<&'a [Value], PostgresParseError> {
-    value
-        .get(key)
-        .and_then(Value::as_array)
-        .map(Vec::as_slice)
-        .ok_or_else(|| simple_error(format!("PostgreSQL parser result has no {key}")))
-}
-
-fn optional_array<'a>(object: &'a Map<String, Value>, key: &str) -> &'a [Value] {
-    object
-        .get(key)
-        .and_then(Value::as_array)
-        .map(Vec::as_slice)
-        .unwrap_or_default()
-}
-
-fn string_field<'a>(object: &'a Map<String, Value>, key: &str) -> Option<&'a str> {
-    object.get(key).and_then(Value::as_str)
-}
-
-fn bool_field(object: &Map<String, Value>, key: &str) -> Option<bool> {
-    object.get(key).and_then(Value::as_bool)
-}
-
-fn u32_field(object: &Map<String, Value>, key: &str) -> Option<u32> {
-    object
-        .get(key)
-        .and_then(Value::as_u64)
-        .and_then(|value| u32::try_from(value).ok())
-}
-
-fn simple_error(message: impl Into<String>) -> PostgresParseError {
-    PostgresParseError::unsupported(message, SqlSpan::default())
 }

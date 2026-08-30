@@ -1,4 +1,5 @@
-use crate::analysis::{PostgresAnalysisError, PostgresAnalyzer};
+use crate::analysis::PostgresAnalysisError;
+use crate::analyzer::PostgresAnalyzer;
 use crate::catalog::{PostgresCatalog, ddl_document};
 use crate::diagnostic::{PostgresDiagnostic, PostgresDiagnosticCode};
 use crate::raw_adapter::PostgresParser;
@@ -9,17 +10,20 @@ use sha2::{Digest, Sha256};
 use sifr_compiler_component::{
     COMPONENT_PROTOCOL_MAJOR, ClosedType, ComponentIdentity, ComponentRegistration,
     DependencyDescriptor, DiagnosticCodeDeclaration, DiagnosticLifecycle, DiagnosticRegistry,
-    DiagnosticRegistryOwner, EmbeddedAnalysisResponse, EmbeddedPlan, PlanKind, ProtocolRange,
-    RecordField, RuntimeLowering, SemanticOperation,
+    DiagnosticRegistryOwner, EmbeddedAnalysisRequest, EmbeddedAnalysisResponse, EmbeddedPlan,
+    PlanKind, ProtocolRange, RecordField, RuntimeLowering, SemanticOperation, TemplatePart,
 };
 use sifr_sql_contract::{
-    DialectIdentity, ProviderAnalysis, ProviderIdentity, SchemaIr, SchemaNormalizationOutput,
-    SifrType, normalize_schema,
+    DialectIdentity, ObjectId, ProviderAnalysis, ProviderIdentity, SchemaIr,
+    SchemaNormalizationOutput, SchemaObject, SifrType, normalize_schema,
 };
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
+use std::fs;
+use std::path::{Path, PathBuf};
 
 pub const POSTGRESQL_QUERY_OPERATION: &str = "sifr.sql.postgresql.sql";
 pub(crate) const POSTGRESQL_QUERY_PAYLOAD_TAG: &str = "sifr.sql.postgresql.analysis";
+pub const POSTGRESQL_SCHEMA_ARTIFACT_KIND: &str = "sifr.sql.schema-ir";
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
@@ -81,12 +85,20 @@ impl<P: PostgresParser> PostgresCompilerComponent<P> {
                 }
                 let types = PostgresTypeRegistry::new(server_major);
                 let mut normalized = Vec::with_capacity(documents.len());
+                let mut prior_objects = BTreeMap::<ObjectId, SchemaObject>::new();
                 for (document, source) in documents {
                     let statements = self.parser.parse(&source)?;
-                    normalized.push(
-                        ddl_document(document, &statements, &types)
-                            .map_err(|diagnostic| PostgresAnalysisError { diagnostic })?,
+                    let normalized_document =
+                        ddl_document(document, &statements, &types, &prior_objects)
+                            .map_err(|diagnostic| PostgresAnalysisError { diagnostic })?;
+                    prior_objects.extend(
+                        normalized_document
+                            .objects
+                            .iter()
+                            .cloned()
+                            .map(|object| (object.identity.clone(), object)),
                     );
+                    normalized.push(normalized_document);
                 }
                 let dialect = dialect(server_major);
                 normalize_schema(provider, dialect.clone(), normalized.clone())
@@ -145,7 +157,6 @@ impl<T: PostgresParser + ?Sized> PostgresParser for &T {
 
 pub fn component_registration(
     server_major: u16,
-    artifact_sha256: impl Into<String>,
 ) -> Result<ComponentRegistration, PostgresDiagnostic> {
     if !crate::SUPPORTED_POSTGRESQL_MAJORS.contains(&server_major) {
         return Err(PostgresDiagnostic::at_sql(
@@ -155,12 +166,19 @@ pub fn component_registration(
             1,
         ));
     }
+    let artifact_path = component_artifact_path(server_major);
+    let artifact = fs::read(&artifact_path).map_err(|error| {
+        component_diagnostic(format!(
+            "cannot read PostgreSQL compiler component '{}': {error}",
+            artifact_path.display()
+        ))
+    })?;
     Ok(ComponentRegistration {
         identity: ComponentIdentity {
             package: "sifr-sql-postgresql".to_string(),
             processor: format!("{POSTGRESQL_QUERY_OPERATION}.v{server_major}"),
             version: Version::new(0, 0, 0),
-            sha256: artifact_sha256.into(),
+            sha256: lower_hex(&Sha256::digest(artifact)),
         },
         protocol: ProtocolRange {
             minimum: COMPONENT_PROTOCOL_MAJOR,
@@ -169,6 +187,117 @@ pub fn component_registration(
         artifact: format!("components/postgresql-{server_major}.wasm"),
         diagnostics: provider_diagnostics(),
     })
+}
+
+#[must_use]
+pub fn component_artifact_path(server_major: u16) -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("components")
+        .join(format!("postgresql-{server_major}.wasm"))
+}
+
+pub fn execute_embedded_request(
+    request: EmbeddedAnalysisRequest,
+) -> Result<EmbeddedAnalysisResponse, PostgresDiagnostic> {
+    if request.protocol_major != COMPONENT_PROTOCOL_MAJOR {
+        return Err(component_diagnostic(
+            "PostgreSQL component protocol major does not match the compiler",
+        ));
+    }
+    let mut schema_artifacts = request
+        .context
+        .artifacts
+        .iter()
+        .filter(|artifact| artifact.kind == POSTGRESQL_SCHEMA_ARTIFACT_KIND);
+    let schema_artifact = schema_artifacts.next().ok_or_else(|| {
+        component_diagnostic("PostgreSQL analysis requires one SchemaIR artifact")
+    })?;
+    if schema_artifacts.next().is_some() {
+        return Err(component_diagnostic(
+            "PostgreSQL analysis accepts exactly one SchemaIR artifact",
+        ));
+    }
+    let schema: SchemaIr = serde_json::from_slice(&schema_artifact.payload)
+        .map_err(|_| component_diagnostic("PostgreSQL SchemaIR artifact is invalid"))?;
+    let server_major = schema
+        .dialect
+        .server_version
+        .split('.')
+        .next()
+        .and_then(|value| value.parse::<u16>().ok())
+        .ok_or_else(|| component_diagnostic("PostgreSQL SchemaIR has no server major"))?;
+    if request.component.processor != format!("{POSTGRESQL_QUERY_OPERATION}.v{server_major}") {
+        return Err(component_diagnostic(
+            "PostgreSQL component identity and SchemaIR server major differ",
+        ));
+    }
+    let (source, document, start, end) = embedded_sql_source(&request)?;
+    let response = PostgresCompilerComponent::new(crate::LibpgQueryParser).execute(
+        PostgresComponentRequest::AnalyzeQuery {
+            schema,
+            source,
+            sifr_document: document,
+            sifr_start: start,
+            sifr_end: end,
+        },
+    );
+    into_embedded_response(
+        server_major,
+        request.context.schema_profile,
+        request
+            .context
+            .schema_fingerprint
+            .as_deref()
+            .unwrap_or(&schema_artifact.fingerprint),
+        &response,
+    )
+}
+
+fn embedded_sql_source(
+    request: &EmbeddedAnalysisRequest,
+) -> Result<(String, String, u32, u32), PostgresDiagnostic> {
+    let mut source = String::new();
+    let mut document = None::<String>;
+    let mut start = u32::MAX;
+    let mut end = 0_u32;
+    for part in &request.parts {
+        let span = match part {
+            TemplatePart::Static { text, span } => {
+                source.push_str(text);
+                span
+            }
+            TemplatePart::Hole { index, span } => {
+                let number = index.checked_add(1).ok_or_else(|| {
+                    component_diagnostic("PostgreSQL template hole index overflows $n syntax")
+                })?;
+                source.push('$');
+                source.push_str(&number.to_string());
+                span
+            }
+        };
+        if let Some(previous) = &document {
+            if previous != &span.document {
+                return Err(component_diagnostic(
+                    "PostgreSQL template parts must belong to one source document",
+                ));
+            }
+        } else {
+            document = Some(span.document.clone());
+        }
+        start = start.min(span.start);
+        end = end.max(span.end);
+    }
+    if source.trim().is_empty() || request.parts.is_empty() {
+        return Err(component_diagnostic(
+            "PostgreSQL template has no SQL source",
+        ));
+    }
+    Ok((
+        source,
+        document.unwrap_or_else(|| "sifr://sql/query".to_string()),
+        start,
+        end,
+    ))
 }
 
 #[must_use]
@@ -213,9 +342,6 @@ pub fn into_embedded_response(
             1,
         )
     })?;
-    let fingerprint = lower_hex(&Sha256::digest(
-        [schema_fingerprint.as_bytes(), payload.as_slice()].concat(),
-    ));
     let (plan_kind, result_type, runtime, dependencies, diagnostics) = match response {
         PostgresComponentResponse::Query(analysis) => (
             PlanKind::Expression,
@@ -292,10 +418,10 @@ pub fn into_embedded_response(
             )
         }
     };
-    Ok(EmbeddedAnalysisResponse {
+    let mut response = EmbeddedAnalysisResponse {
         protocol_major: COMPONENT_PROTOCOL_MAJOR,
         plan: EmbeddedPlan {
-            provider_identity: format!("sifr.sql.postgresql.{server_major}"),
+            provider_identity: format!("{POSTGRESQL_QUERY_OPERATION}.v{server_major}"),
             protocol_major: COMPONENT_PROTOCOL_MAJOR,
             plan_kind,
             schema_identity,
@@ -308,9 +434,13 @@ pub fn into_embedded_response(
             dependencies,
             diagnostics,
             source_map: Vec::new(),
-            stable_fingerprint: fingerprint,
+            stable_fingerprint: String::new(),
         },
-    })
+    };
+    response.plan.stable_fingerprint =
+        sifr_compiler_component::compute_plan_fingerprint(&response.plan)
+            .map_err(|error| component_diagnostic(error.to_string()))?;
+    Ok(response)
 }
 
 fn closed_type(ty: &SifrType) -> ClosedType {
@@ -373,6 +503,10 @@ fn component_error(message: impl Into<String>) -> PostgresAnalysisError {
             1,
         ),
     }
+}
+
+fn component_diagnostic(message: impl Into<String>) -> PostgresDiagnostic {
+    PostgresDiagnostic::at_sql(PostgresDiagnosticCode::UnsupportedCoreSyntax, message, 0, 1)
 }
 
 fn lower_hex(bytes: &[u8]) -> String {

@@ -12,14 +12,19 @@
 mod cache;
 mod diagnostics;
 mod error;
+mod fingerprint;
+#[cfg(not(target_family = "wasm"))]
 mod host;
 mod protocol;
 mod registration;
+#[cfg(not(target_family = "wasm"))]
 mod validation;
 
 pub use cache::{AnalysisCache, CacheKey, DEFAULT_COMPONENT_CACHE_CAPACITY_BYTES};
 pub use diagnostics::{DiagnosticCodeDeclaration, DiagnosticRegistry, DiagnosticRegistryOwner};
 pub use error::{ComponentError, ComponentErrorKind};
+pub use fingerprint::compute_plan_fingerprint;
+#[cfg(not(target_family = "wasm"))]
 pub use host::{ComponentHost, ComponentHostLimits, ComponentRun};
 pub use protocol::{
     AnalysisContext, COMPONENT_PROTOCOL_MAJOR, ClosedType, ContextArtifact, DependencyDescriptor,
@@ -31,7 +36,8 @@ pub use registration::{
     ComponentIdentity, ComponentRegistration, ComponentRequirement, ProtocolRange,
     ResolvedComponent, resolve_component,
 };
-pub use validation::{compute_plan_fingerprint, validate_request, validate_response};
+#[cfg(not(target_family = "wasm"))]
+pub use validation::{validate_request, validate_response};
 
 pub const COMPILER_COMPONENT_WIT: &str = include_str!("../wit/compiler-component.wit");
 
