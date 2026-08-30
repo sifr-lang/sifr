@@ -112,6 +112,8 @@ mod module_constants_lowering;
 mod module_function_inference;
 mod module_function_registry;
 mod must_use_obligations;
+#[cfg(test)]
+mod mutable_call_sequence_guard_tests;
 mod mutating_methods;
 mod name_diagnostics;
 #[cfg(test)]

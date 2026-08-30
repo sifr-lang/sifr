@@ -51,7 +51,24 @@ def list_exit_guard_refreshes_after_mut_borrow_call() -> int:
     if len(values) == 0:
         return -1
     replace_first(values)
+    if len(values) == 0:
+        return -1
     return values[0]
+
+
+def nested_mutation_renews_outer_while_witness() -> int:
+    values: list[int] = [1]
+    if len(values) == 0:
+        return -1
+    total: int = 0
+    while values[0] < 3:
+        for index in range(1):
+            if index == 0:
+                values[0] += 1
+                total += values[0]
+    else:
+        total += 100
+    return total
 
 
 def list_witness_refreshes_on_for_back_edge() -> int:
@@ -86,6 +103,37 @@ def list_witness_refreshes_before_while_condition() -> int:
     return values[0]
 
 
+def clear_values(mut values: list[int]):
+    values.clear()
+
+
+def branch_witness_missing_breaks_while() -> int:
+    values: list[int] = [7]
+    if values:
+        total: int = 0
+        i: int = 0
+        while i < 2:
+            total += values[0]
+            clear_values(values)
+            i += 1
+        else:
+            total = 99
+        return total
+    return -1
+
+
+def condition_witness_missing_breaks_while() -> int:
+    values: list[int] = [1]
+    result: int = 7
+    if len(values) == 0:
+        return -1
+    while values[0] < 3:
+        clear_values(values)
+    else:
+        result = 99
+    return result
+
+
 def main():
     assert list_exit_guard_refreshes_after_assignment() == 5
     assert list_exit_guard_refreshes_after_augmented_assignment() == 5
@@ -93,9 +141,12 @@ def main():
     assert dict_exit_guard_refreshes_after_assignment() == 99
     assert positive_dict_guard_refreshes_after_assignment() == 99
     assert list_exit_guard_refreshes_after_mut_borrow_call() == 42
+    assert nested_mutation_renews_outer_while_witness() == 105
     assert list_witness_refreshes_on_for_back_edge() == 33
     assert dict_witness_refreshes_on_for_back_edge() == 101
     assert list_witness_refreshes_before_while_condition() == 3
+    assert branch_witness_missing_breaks_while() == 7
+    assert condition_witness_missing_breaks_while() == 7
 
     short: list[int] = [1]
     assert not (len(short) > 3 and short[3] != 0)

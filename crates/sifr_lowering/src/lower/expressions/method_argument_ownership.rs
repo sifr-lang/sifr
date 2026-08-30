@@ -106,6 +106,14 @@ pub(super) fn try_lower_super_method_call(
         return Some(None);
     };
     consume_owned_method_arguments(&args, call, &function_type, ctx);
+    super::super::sequence_guards::invalidate_mutable_call_sequence_guards(
+        ctx,
+        &args,
+        function_type
+            .params
+            .iter()
+            .map(|(_, _, convention)| *convention),
+    );
     let return_type = *function_type.return_type;
     Some(Some(HirExpr::SuperCall {
         parent_class: defining_name,
@@ -165,6 +173,14 @@ pub(super) fn try_lower_class_method_call(
         return Some(None);
     };
     consume_owned_method_arguments(&args, call, &function_type, ctx);
+    super::super::sequence_guards::invalidate_mutable_call_sequence_guards(
+        ctx,
+        &args,
+        function_type
+            .params
+            .iter()
+            .map(|(_, _, convention)| *convention),
+    );
     Some(Some(HirExpr::Call {
         mutable_arg_places: Vec::new(),
         func: format!("{class_name}::{method_name}"),

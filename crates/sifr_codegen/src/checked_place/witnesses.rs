@@ -1,6 +1,6 @@
 use std::collections::BTreeSet;
 
-use crate::{RustExpr, RustStmt};
+use crate::RustExpr;
 
 pub(super) fn checked_place_expr_token(expr: &crate::HirExpr) -> Option<String> {
     match expr {
@@ -82,7 +82,6 @@ pub(crate) struct CheckedPlaceReadWitness {
     pub(super) binding: String,
     pub(super) borrowed: bool,
     pub(super) option: RustExpr,
-    pub(super) missing: Option<Vec<RustStmt>>,
     pub(super) dependencies: Vec<String>,
     pub(super) order: usize,
 }
@@ -93,16 +92,8 @@ impl CheckedDictReadGuard {
             binding: self.binding.clone(),
             borrowed: self.borrowed,
             option: self.option.clone(),
-            missing: None,
             dependencies: self.dependencies.clone(),
             order: self.order,
-        }
-    }
-
-    pub(super) fn witness_with_missing(&self, missing: Vec<RustStmt>) -> CheckedPlaceReadWitness {
-        CheckedPlaceReadWitness {
-            missing: Some(missing),
-            ..self.witness()
         }
     }
 }

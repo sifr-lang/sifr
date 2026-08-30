@@ -150,7 +150,8 @@ It does not broaden the active item.
 | 3 | complete | Checked failure and impossible-state model | Generated user paths use typed errors; abort/exit/unreachable discharge and silent value fallbacks are removed; compiler invariants fail before materialization. |
 | 4 | merged | Collection access and mutation architecture | Reads, writes, deletes, nested access, augassign, membership, and unpacking share checked place semantics with no panic or silent no-op path. |
 | 4A | merged | Residual checked-place lifecycle closure | Loop-carried witnesses, post-mutation missing behavior, and callback argument decoding preserve exact semantics and compile on every generated surface. |
-| 4B | pending | Structured-loop witness state closure | Async-for guard state cannot escape a possibly empty loop, and missing loop-carried witnesses take the loop-kind's terminating control-flow path instead of skipping progress. |
+| 4B | merged | Structured-loop witness state closure | Async-for guard state cannot escape a possibly empty loop, and missing loop-carried witnesses take the loop-kind's terminating control-flow path instead of skipping progress. |
+| 4C | merged | Mutation-tail witness continuation closure | Refreshed witnesses use region-scoped continuations and current typed failure semantics across nested and straight-line mutation tails. |
 | 5 | pending | Lazy iterator and generator architecture | Yield, generator state, `count`, `islice`, chained adapters, and errors are lazy and semantically unbounded where required. |
 | 6 | pending | Stdlib emitted-semantics closure | String widths, IO reads/seeks/errors, decimal precision, iteration arguments, and every inventory-owned stdlib defect have exact behavior and resource safety. |
 | 7 | pending | Ownership, borrowing, and clone quality | Signatures and expressions use idiomatic borrowing; avoidable container, row, tree, and scalar clones are eliminated without weakening ownership safety. |
@@ -237,16 +238,30 @@ It does not broaden the active item.
 
 ### Item 4B: Structured-loop witness state closure
 
-- [ ] Async-for saves and restores sequence-guard state like `for` and `while`,
+- [x] Async-for saves and restores sequence-guard state like `for` and `while`,
   so a proof established only in its body cannot escape a zero-iteration loop.
-- [ ] Loop-carried refresh assigns loop-kind-specific missing control flow:
+- [x] Loop-carried refresh assigns loop-kind-specific missing control flow:
   `break` for `while` and `continue` for `for`/`async for`, including witnesses
   originally established by an enclosing branch without a missing action.
-- [ ] Focused diagnostics assert the checked-place error identity rather than
+- [x] Focused diagnostics assert the checked-place error identity rather than
   accepting an arbitrary lowering failure.
-- [ ] Native regressions cover ordinary and closable async-for refresh, empty
+- [x] Native regressions cover ordinary and closable async-for refresh, empty
   async-for guard restoration, and terminating `while` behavior after an
   indirect mutable call invalidates a witnessed place.
+
+### Item 4C: Mutation-tail witness continuation closure
+
+- [x] A witness refresh nested under another loop or branch derives control
+  flow from its current structured region, never from an outer witness's stored
+  `break`, `continue`, return, or fallback payload.
+- [x] Straight-line mutation tails cannot silently skip following statements or
+  replay proof-establishment exits; mutable-call invalidation exposes the
+  operation's current optional/typed-failure contract before codegen.
+- [x] Simple and structured loop lowering share one canonical break/loop-else
+  marker constructor.
+- [x] Native and codegen regressions cover outer `while ... else` with nested
+  `for`/`if` mutation and read, straight-line positive-branch mutation tails,
+  and condition-refresh loop-else marker emission.
 
 ### Item 5: Lazy iterator and generator architecture
 
@@ -328,6 +343,8 @@ It does not broaden the active item.
 | 3A | merged | [#3591](https://github.com/sifr-lang/sifr/pull/3591) | `d88192be94823a6e1c0f30b712d2f7440ac2c6b4` | Compiler candidate `719bd96ad5b4d11c507b356bd6fece2ab6d4ac3f`: 4 IR, 1,167 codegen, and 1,072 lowering tests passed with one intentional ignore; all non-E2E Sifr test groups, focused sync/async/SQLite runtime regressions, formatting, HIR, file-size, and item-owned Clippy checks passed. The sole create-PR run passed every functional check but exceeded the runtime-platform step budget after the required cold-cache cleanup; its later warm merge run passed that area in 24.5 seconds. The sole merge run passed core language, CPython differential, Rust/Python interop, diagnostics, runtime, algorithmic, tooling, and all emitted-Rust corpus, panic-scan, rustfmt, Clippy, determinism, and freshness checks. Its only failure was a pre-existing surface inventory record: both base and candidate contain the same 704 E2E paths and digest while the record expects 701. Neither gate was repeated. | [Initial review](https://github.com/sifr-lang/sifr/pull/3591#issuecomment-5467141026) on `8b7b46cd629e6530d693462e10590ec287b931c3` was NOT SATISFIED; [sole remediation review](https://github.com/sifr-lang/sifr/pull/3591#issuecomment-5467149668) on `719bd96ad5b4d11c507b356bd6fece2ab6d4ac3f` was SATISFIED with no blockers. The imported-constant proof regression was fixed through lexical module-frame resolution. | Suppressible Python contexts now rejoin typed carriers; exact-integer facts respect lexical binding identity and nested-call mutation; loop/context emitted fallthrough agrees with static flow; sync, async-for, and SQLite regressions merged. |
 | 4 | merged | [#3601](https://github.com/sifr-lang/sifr/pull/3601) | `ab1bd8371faf090f3f7549524147b0fbabbd3b7a` | Compiler candidate `a91f43d2bace42c5579d02cf0a9bce57e4962300`: 1,172 codegen, 1,073 lowering with one intentional ignore, 84 runtime, and 8 exact-integer architecture tests passed; E2E passed 705/705 with signature `9f98912689339124`; workspace Clippy, formatting, HIR, file-size, generated inventory, demo freshness, governed corpus, and panic scan passed. The full generated-quality run's 91 rustfmt-classified cases passed individually, but its exact aggregate debt signature changed and remains Item 8-owned. The sole create-PR gate passed every reached guardrail plus Rust interop, coverage, diagnostics, and 23 of 24 Python-interop variants. The sole merge gate passed all guardrails, Rust interop, coverage, core language, CPython differential, and 29 of 30 Python-interop variants. Both gates stopped only on the same underconstrained callback-decoder array conversion assigned to Item 4A, and neither was repeated. | [Initial review](https://github.com/sifr-lang/sifr/pull/3601#issuecomment-5470119120) on `054c14f728ed13f6ed548647a5669504a36d729f` was NOT SATISFIED; [sole remediation review](https://github.com/sifr-lang/sifr/pull/3601#issuecomment-5470119110) on `a91f43d2bace42c5579d02cf0a9bce57e4962300` was NOT SATISFIED. The straight-line stale-value and E0502 blocker was fixed. The remediation review's new loop-back-edge and post-deletion failure-semantics defects are assigned to Item 4A under the no-third-review rule. | One typed checked-place architecture now covers negative and nested reads, writes, deletes, augmented assignment, membership, unpacking, optional targets, and generated direct-index removal. Mutation-aware straight-line witness refresh, checked non-empty vectors, typed failure plans, and regenerated companions merged; bounded residual lifecycle defects are owned by Item 4A. |
 | 4A | merged | [#3608](https://github.com/sifr-lang/sifr/pull/3608) | `9af05a15e1d2eaae6866b7976f425dc5b3077ca4` | Reviewed compiler candidate `13fc41d0d8e4465305b6bd4402f6f0557be91260`: 1,078 lowering tests passed with one intentional ignore; targeted codegen/lowering Clippy, native checked-place E2E, all seven callback examples, demo freshness, panic scans, formatting, HIR, and file-size checks passed. The one create-PR gate and one merge gate each stopped at the same profile preflight defect because the profile omitted required `postgresql-live-differential`; neither was repeated. After concurrent async-cleanup work reached `main`, integration commit `f8869ebc24647364e3c9d0862d53a18c43030885` preserved both ordinary and closable async-for witness refresh; 1,180 codegen plus lowering/runtime suites, targeted Clippy, two native fixtures, demo freshness, formatting, HIR, and file-size checks passed. | [Initial review](https://github.com/sifr-lang/sifr/pull/3608#issuecomment-5470878459) on `91fe545fcbe75a99bb8b75002fb68d9692a9fdd8` was NOT SATISFIED; [sole remediation review](https://github.com/sifr-lang/sifr/pull/3608#issuecomment-5470912500) on `13fc41d0d8e4465305b6bd4402f6f0557be91260` was SATISFIED. The async-for invalidation blocker was fixed. Its newly identified async-for guard leak and non-terminating missing-witness fallback are assigned to Item 4B under the no-third-review rule. | Loop-carried and while-condition witnesses now refresh at repeat boundaries; mutation dependencies invalidate before sync/async loop lowering; post-delete reads use current typed failure semantics; unused witness scaffolding is demand-driven; callback arrays are explicit and panic-free. The two bounded second-review defects are owned by Item 4B. |
+| 4B | merged | [#3612](https://github.com/sifr-lang/sifr/pull/3612) | `67c1804df84d0367e380ebef1ee14845ec1971fb` | Reviewed compiler candidate `68981d07cb6d088803d199e8924ecc9ab06d0a91`: 1,181 codegen and 1,079 lowering tests passed with one intentional ignore; strict targeted Clippy, native checked-place plus ordinary/closable async-for fixtures, demo freshness, formatting, HIR, and file-size checks passed. The sole create-PR and merge gates each stopped before tests because their then-current profiles omitted required `postgresql-live-differential`; neither was repeated. Concurrent PostgreSQL work then repaired the profiles and merged conflict-free as integration commit `5b1739b4853523b7a9b81bf1c8f1a6af28497a4c`; full codegen/lowering suites, targeted Clippy, formatting, diff, and 3,488-file guardrails passed after integration. | [Initial review](https://github.com/sifr-lang/sifr/pull/3612#issuecomment-5471106525) on `0e8bdd33af00c6bab5d43c02b614ee1f8052c70a` was SATISFIED; [sole remediation review](https://github.com/sifr-lang/sifr/pull/3612#issuecomment-5471132474) on `68981d07cb6d088803d199e8924ecc9ab06d0a91` was SATISFIED. Compiler-inserted while witness exits now use the canonical loop-else marker. The remediation review's new deeply nested mutation-tail continuation defect is assigned to Item 4C under the no-third-review rule. | Async-for body guards restore at loop exit; loop-carried witnesses use loop-kind progress/termination; body and condition refreshes preserve loop-else semantics; precise lowering diagnostics and native sync/async regressions merged. Remaining non-back-edge continuation scoping is owned by Item 4C. |
+| 4C | merged | [#3615](https://github.com/sifr-lang/sifr/pull/3615) | `2579fcd198acd105da4a93b794a82601524541a8` | Compiler candidate `6a849e8d9d8457b7e463486e52f6e629d5da6b86`: 1,183 codegen and 1,082 lowering tests passed with one intentional ignore; focused mutable-call invalidation, checked-place shape, native nested-loop, workspace Clippy, formatting, HIR, diff, and file-size checks passed. The non-E2E Sifr sweep's `numeric_sentinels.sifr` type diagnostic reproduced identically on exact base `6862b4a21ebd0917a54f5744c6e22960242bf00b` and is Item 8-owned. The sole create-PR and merge gates each stopped before tests because their current profiles omitted required `postgresql-live-differential` and `postgresql-live-runtime`; neither was repeated. | [Initial exact-SHA review](https://github.com/sifr-lang/sifr/pull/3615#issuecomment-5471369789) on `6a849e8d9d8457b7e463486e52f6e629d5da6b86` was SATISFIED with no blockers. Its non-blocking receiver-effect and clone-bound findings are assigned to Item 7; refresh-default evidence and wider loop-else scaffold deduplication are assigned to Item 8. | Stored witness exit payloads are eliminated; straight-line renewal cannot skip tails or replay outer control flow; mutable-call guards invalidate before codegen; simple and structured exits share one constructor; nested while/for/if and condition-marker regressions merged. |
 
 ## Deferred Findings
 
@@ -373,23 +390,36 @@ It does not broaden the active item.
 | Item 4A remediation review | A key read in both a while condition and body can be refreshed twice per iteration. | Item 9 | Deduplicate condition and body refresh plans and include the operation count in emitted-complexity evidence. |
 | Item 4A direct full E2E | `parsers_and_encoders` and `structured_data_formats` deterministically disagree on JSON object order because the isolated generated group enables `serde_json` without `preserve_order`. | Item 6 | Reconcile generated JSON map-order semantics with the language contract and add deterministic isolated-group coverage. |
 | Item 4A create-PR and merge gates | Both generated verification profiles omit the required `postgresql-live-differential` suite and therefore fail before running tests. | Item 12 | Repair or reconcile final qualification profile composition so required platform suites are selected and preflight passes. |
+| Item 4B initial review | Straight-line mutation-tail refresh still replays an earlier witness missing action or wraps the remaining tail in body-skipping `if let` when no action exists. | Item 4C | Invalidate mutable-call dependencies before lowering and derive the fresh read from its current operation contract; never skip or replay the proof-establishment path. |
+| Item 4B remediation review | An outer loop witness's stored missing action can be emitted inside a deeply nested inner loop/branch mutation tail, targeting the wrong loop and, after Item 4B, assigning the outer `_broke` marker. | Item 4C | Scope refresh continuations to the current structured region and prove outer `while ... else` plus inner `for`/`if` mutation/read behavior. |
+| Item 4B remediation review | Simple loop lowering independently constructs `_broke = true; break` instead of sharing the structured emitter's canonical helper. | Item 4C | Route simple and structured loop breaks through one canonical constructor and cross-path regressions. |
+| Item 4B remediation review | Condition-refresh plus `while ... else` has native evidence but no direct codegen shape assertion. | Item 4C | Add a unit assertion for `_broke = true` before the condition-refresh break and preserve the natural condition-false bare break. |
+| Item 4B remediation review | Loop-invalidated optional reads report the downstream unsupported operator rather than a dedicated proof-invalidation diagnostic. | Item 8 | Decide the canonical user-facing diagnostic during structured emission cleanup and add governed rendering evidence if a dedicated code is warranted. |
+| Item 4B native remediation fixture | A `while ... else` whose else body returns and is followed by another return can emit a non-exhaustive Rust `if` in value position (E0317). | Item 8 | Normalize loop-else tail/control-flow representation in structured Rust IR and add the return-ending else regression. |
+| Item 4C exact-SHA review | Receiver-mutating calls are not represented by `mutable_arg_places`; checked-place invalidation therefore depends on lowering's currently incomplete fixed builtin receiver-mutation list. | Item 7 | Unify mutable receiver and argument effect summaries with the explicit ownership plan, then add user-defined `mut self`, class-method, and builtin shrinking-method checked-place regressions. |
+| Item 4C exact-SHA review | Borrowed witness preparation inserts element clones before mutation without proving or diagnosing a `Clone` requirement for non-copy class elements. | Item 7 | Make witness preservation participate in the explicit ownership/clone plan and add a `list[NonCopyClass]` regression that either borrows safely or reports a Sifr diagnostic before Rust compilation. |
+| Item 4C exact-SHA review | Straight-line renewal uses the previous binding as the absent fallback; current lowering makes absence unreachable for surviving guard-preserving mutations, but the reachability invariant is implicit. | Item 8 | Encode the refresh precondition structurally or validate it before rendering, and add negative mutation evidence so a future new mutation form cannot silently retain stale data. |
+| Item 4C exact-SHA review | Loop-else setup and dispatch scaffolds remain duplicated across structured loop emitters even though the break-marker constructor is now canonical. | Item 8 | Give canonical Rust IR one loop-else scaffold constructor and prove sync, async, and statement-block paths render the same structure. |
+| Item 4C broad validation | `numeric_sentinels.sifr` is still classified as an E2E pass fixture although `nums[l]` lacks a statically established index proof and fails with `None | int`; exact Item 4C base and candidate agree. | Item 8 | Reconcile the fixture with the checked-place contract or implement a sound proof mechanism, then restore the non-E2E Sifr sweep without weakening optional-read diagnostics. |
+| Item 4C create-PR and merge gates | Both current verification profiles omit required `postgresql-live-differential` and `postgresql-live-runtime` suites and stop at preflight before running tests. | Item 12 | Repair final profile composition and retain a mutation test proving every required SQL platform suite is selected before the one final qualification run. |
 
 New out-of-scope findings must name a concrete active owner before the current
 item can close.
 
 ## Current Handoff
 
-- Active item: Item 4B, structured-loop witness state closure, based on Item 4A
-  merge `9af05a15e1d2eaae6866b7976f425dc5b3077ca4`.
-- Item 4A state: merged with loop-carried and while-condition witness refresh,
-  pre-lowering mutation invalidation for every structured loop, current typed
-  post-mutation failure behavior, demand-driven witness scaffolding, and
-  type-directed panic-free callback argument decoding.
-- Item 4B scope is limited to the sole remediation review's two new mechanism
-  defects: async-for guard-state restoration after a possibly empty loop and
-  loop-kind missing control flow for branch-established witnesses. Stronger
-  diagnostics and ordinary/closable async-for runtime evidence close those
-  mechanisms; duplicate refresh efficiency remains Item 9-owned.
-- Next action: implement Item 4B completely without testing, then run focused
-  loop/lowering/runtime validation, the bounded exact-SHA Opus review, and the
-  single exact candidate gate sequence before Item 5 starts.
+- Active item: Item 5, lazy iterator and generator architecture, based on Item
+  4C merge `2579fcd198acd105da4a93b794a82601524541a8`.
+- Item 4C state: merged with region-scoped witness renewal, lowering-time
+  mutable-call invalidation, one canonical loop-break constructor, and native
+  plus codegen nested/straight-line/condition-refresh evidence. Its exact-SHA
+  Opus review was SATISFIED with no blockers.
+- Item 5 scope is the inventory-owned eager generator, finite infinite-iterator,
+  adapter validation/error-timing, partial-consumption, side-effect, and memory
+  defects. Item 4C's ownership/effect follow-ups remain Item 7-owned, canonical
+  refresh/scaffold and baseline-fixture follow-ups remain Item 8-owned, and SQL
+  profile composition remains Item 12-owned.
+- Next action: re-audit the Item 5 inventory and current generator/iterator
+  lowering on latest `origin/main`, implement the complete lazy architecture
+  without testing, then run focused and required validation, bounded exact-SHA
+  Opus review, and the single exact-candidate gate sequence.

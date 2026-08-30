@@ -269,8 +269,16 @@ def dict_value(mut mapping: dict[str, int], key: str) -> int:
     return mapping[key]
 "#,
     );
+    assert_eq!(
+        generated.matches("let Some(__sifr_checked_value_").count(),
+        2,
+        "{generated}"
+    );
     assert!(
-        generated.matches("let Some(__sifr_checked_value_").count() >= 4,
+        generated
+            .matches(".unwrap_or(__sifr_checked_value_")
+            .count()
+            >= 2,
         "{generated}"
     );
     assert!(generated.matches("mapping.get(key)").count() >= 2);
@@ -302,11 +310,18 @@ def dict_value(mut mapping: dict[str, int], key: str) -> int:
     return -1
 "#,
     );
-    assert!(
+    assert_eq!(
         generated
             .matches("if let Some(__sifr_checked_value_")
+            .count(),
+        2,
+        "{generated}"
+    );
+    assert!(
+        generated
+            .matches(".unwrap_or(__sifr_checked_value_")
             .count()
-            >= 4
+            >= 2
     );
     assert!(generated.matches("mapping.get(key)").count() >= 2);
     assert!(!generated.contains("mapping["), "{generated}");
@@ -327,6 +342,8 @@ def value_after_call(mut values: list[int]) -> int:
     if len(values) == 0:
         return -1
     replace_first(values)
+    if len(values) == 0:
+        return -1
     return values[0]
 "#,
     );
@@ -340,13 +357,82 @@ def value_after_call(mut values: list[int]) -> int:
         panic!("{generated}");
     };
     let Some(returned) = generated[refreshed..]
-        .find("__sifr_checked_value_0.clone()")
+        .find("\n    __sifr_checked_value_")
         .map(|offset| refreshed + offset)
     else {
         panic!("{generated}");
     };
     assert!(call < refreshed && refreshed < returned, "{generated}");
     assert!(!generated.contains("values["), "{generated}");
+    assert!(!generated.contains("compile_error!"), "{generated}");
+}
+
+#[test]
+fn nested_mutation_renews_outer_witness_without_replaying_loop_exit() {
+    let generated = generate_rust_from_source(
+        r#"
+def nested_value(mut values: list[int]) -> int:
+    if len(values) == 0:
+        return -1
+    total: int = 0
+    while values[0] < 3:
+        for index in range(1):
+            if index == 0:
+                values[0] += 1
+                total += values[0]
+    else:
+        total += 100
+    return total
+"#,
+    );
+    assert!(
+        generated
+            .matches(".unwrap_or(__sifr_checked_value_")
+            .count()
+            >= 1,
+        "{generated}"
+    );
+    assert!(!generated.contains("compile_error!"), "{generated}");
+}
+
+#[test]
+fn condition_refresh_uses_current_while_else_break_marker() {
+    let generated = generate_rust_from_source(
+        r#"
+def count_down(mut values: list[int]) -> int:
+    if len(values) == 0:
+        return -1
+    result: int = 0
+    while values[0] > 0:
+        values[0] -= 1
+    else:
+        result = 7
+    return result
+"#,
+    );
+    assert_eq!(
+        generated.matches("_broke = true;").count(),
+        1,
+        "{generated}"
+    );
+    let marker = generated.find("_broke = true;").expect("loop-else marker");
+    let condition = generated[marker..]
+        .find("if !(")
+        .map(|offset| marker + offset)
+        .expect("natural condition exit");
+    let natural_break = generated[condition..]
+        .find("break;")
+        .map(|offset| condition + offset)
+        .expect("natural condition break");
+    let loop_else = generated[natural_break..]
+        .find("if !(_broke)")
+        .map(|offset| natural_break + offset)
+        .expect("loop-else dispatch");
+    assert!(marker < condition && condition < natural_break && natural_break < loop_else);
+    assert!(
+        !generated[condition..natural_break].contains("_broke = true;"),
+        "{generated}"
+    );
     assert!(!generated.contains("compile_error!"), "{generated}");
 }
 
@@ -364,7 +450,7 @@ def neighbor_min_cost(mut cost: list[int]) -> int:
     );
     assert_eq!(
         generated.matches("let Some(__sifr_checked_value_").count(),
-        7,
+        5,
         "{generated}"
     );
     assert!(!generated.contains("to_usize_proven"), "{generated}");
@@ -444,6 +530,53 @@ def increment_to_three(mut values: list[int]) -> int:
     assert!(refresh < condition, "{generated}");
     assert!(!generated.contains("values["), "{generated}");
     assert!(!generated.contains("compile_error!"), "{generated}");
+}
+
+#[test]
+fn loop_carried_branch_witness_uses_break_instead_of_skipping_while_progress() {
+    let generated = generate_rust_from_source(
+        r#"
+def clear_values(mut values: list[int]):
+    values.clear()
+
+def total(mut values: list[int]) -> int:
+    if values:
+        result: int = 0
+        i: int = 0
+        while i < 2:
+            result += values[0]
+            clear_values(values)
+            i += 1
+        else:
+            result = 99
+        return result
+    return -1
+"#,
+    );
+    let Some(loop_start) = generated.find("while ") else {
+        panic!("missing while loop: {generated}");
+    };
+    let loop_body = &generated[loop_start..];
+    let Some(refresh) = loop_body.find("let Some(__sifr_checked_value_") else {
+        panic!("missing loop-carried refresh: {generated}");
+    };
+    let Some(missing_break) = loop_body[refresh..].find("break;") else {
+        panic!("missing terminating refresh action: {generated}");
+    };
+    let Some(broke_marker) = loop_body[refresh..].find("_broke = true") else {
+        panic!("missing loop-else suppression marker: {generated}");
+    };
+    let Some(progress) = loop_body[refresh..].find("i = &i +") else {
+        panic!("missing while progress update: {generated}");
+    };
+    assert!(
+        broke_marker < missing_break && missing_break < progress,
+        "{generated}"
+    );
+    assert!(
+        !loop_body.contains("if let Some(__sifr_checked_value_"),
+        "a missing witness must not skip the entire while body: {generated}"
+    );
 }
 
 #[test]
