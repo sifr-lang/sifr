@@ -58,6 +58,12 @@ same milestone must update both records and explain the resolved contract.
     data, malformed metadata, or ordinary application input.
 14. No milestone adds backward compatibility, a silent fallback, or a temporary
     public API that contradicts the final architecture.
+15. SQL ships as first-party Cargo-backed Sifr packages, not as core standard
+    library modules. Provider packages select parsers, drivers, and tools.
+16. Sifr owns pooling, schema verification, sessions, statement caches,
+    cancellation cleanup, migrations, and public codecs above raw drivers.
+17. Compiler and editor semantics use one strict provider parser. A generic SQL
+    parser cannot become a second semantic authority.
 
 ## Scope
 
@@ -156,6 +162,10 @@ same milestone must update both records and explain the resolved contract.
   diagnostic registries have approved language contracts before SQL work begins.
 - [ ] A machine-readable ownership map assigns each architecture surface to one
   milestone and one repository owner.
+- [ ] A dependency qualification manifest locks parser sources, runtime crates,
+  TLS adapters, feature sets, licenses, checksums, target support, and audits.
+- [ ] Package metadata separates public Sifr APIs, WebAssembly components,
+  runtime bridges, and host-only tools in the resolved graph.
 - [ ] A capability matrix lists required PostgreSQL, MySQL, and SQLite grammar,
   schema, runtime, tool, migration, and editor behavior.
 - [ ] A verification inventory maps every locked invariant to positive,
@@ -277,6 +287,8 @@ same milestone must update both records and explain the resolved contract.
 
 ### Milestone 7: PostgreSQL schema and query compiler
 
+- [ ] The provider embeds tagged `libpg_query` source for each supported server
+  major and maps its raw tree into provider-owned syntax nodes.
 - [ ] Catalog ingestion and DDL sources normalize every supported PostgreSQL
   object into `SchemaIR`.
 - [ ] The provider implements PostgreSQL parsing, name resolution, casts,
@@ -313,6 +325,10 @@ same milestone must update both records and explain the resolved contract.
 
 ### Milestone 9: PostgreSQL runtime
 
+- [ ] The runtime uses raw `tokio-postgres`, `postgres-types`, and
+  `tokio-postgres-rustls` clients with an explicit feature allowlist.
+- [ ] `sifr_sql_runtime` owns pooling, verified leases, session reset,
+  statement-cache policy, cancellation budgets, and resource accounting.
 - [ ] Pool verification combines one evidence mode with one strictness mode.
 - [ ] Compatible verification compares every recorded property and absence fact
   in the referenced schema slice.
@@ -445,6 +461,12 @@ same milestone must update both records and explain the resolved contract.
 
 ### Milestone 16: MySQL provider completion
 
+- [ ] A provider-owned LALRPOP grammar, lexer, AST, recovery mode, and version
+  gates pass differential parsing against each supported MySQL server.
+- [ ] The runtime uses raw `mysql_async` connections without constructing its
+  pool. Its tracing feature stays disabled. Rustls and minimal features are explicit.
+- [ ] Cancellation uses a bounded `KILL QUERY` control path, then closes and
+  discards the target connection when cancellation cannot complete safely.
 - [ ] MySQL grammar, name resolution, coercions, collations, unsigned types,
   generated columns, conflict forms, modes, and schema objects are exact.
 - [ ] SQL mode and collation inputs participate in fingerprints and caches.
@@ -458,6 +480,10 @@ same milestone must update both records and explain the resolved contract.
 
 ### Milestone 17: SQLite provider completion
 
+- [ ] The component pins syntaqlite and its SQLite grammar for each supported
+  SQLite version and qualified compile-flag set.
+- [ ] The runtime uses bundled `rusqlite` on dedicated blocking workers. It uses
+  `InterruptHandle` for bounded cancellation and Sifr-owned pooling.
 - [ ] SQLite grammar, affinity, strict tables, rowid, generated columns, conflict
   forms, attached scope, and schema objects are exact.
 - [ ] Required SQLite features and minimum library version participate in profile
@@ -473,6 +499,10 @@ same milestone must update both records and explain the resolved contract.
 
 ### Milestone 18: Integrated qualification and phase closure
 
+- [ ] Automated checks reject unlocked parser or driver sources, unapproved
+  features, missing license records, and parser-runtime version mismatches.
+- [ ] SQLx, generic SQL parsers, generic pools, and ORM migration engines do not
+  appear in first-party provider dependency graphs.
 - [ ] The non-SQL component fixture and all three SQL providers pass the complete
   compiler component protocol qualification.
 - [ ] Full clean, incremental, offline, reproducibility, and cross-compilation
