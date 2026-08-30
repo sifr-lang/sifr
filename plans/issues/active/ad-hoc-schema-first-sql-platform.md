@@ -281,7 +281,7 @@ verification inventory. This phase does not reimplement those capabilities.
 | 3 | completed | Compiler component platform | Resolved packages can provide deterministic sandboxed embedded-language analysis through one closed, versioned, cacheable protocol. |
 | 4 | completed | Schema profiles and canonical `SchemaIR` | Configuration sources produce exact provider-owned schema graphs, nominal profile types, fingerprints, dependency slices, diffs, and runtime contracts. |
 | 5 | completed | Common SQL contracts | Shared query kinds, complete type and bind mappings, codecs, errors, cardinality, effects, ownership, and provider interfaces have one final contract. |
-| 6 | pending | Query and fragment substrate | Query templates, owned bound queries, typed fragments, composition, safe interpolation, and cardinality adapters integrate with Sifr typing and HIR. |
+| 6 | completed | Query and fragment substrate | Query templates, owned bound queries, typed fragments, composition, safe interpolation, and cardinality adapters integrate with Sifr typing and HIR. |
 | 7 | pending | PostgreSQL schema and query compiler | PostgreSQL catalogs, grammar, resolution, typing, nullability, result records, writes, dependencies, and diagnostics work offline. |
 | 8 | pending | PostgreSQL semantic completion | Advanced PostgreSQL constructs, fragment scope changes, cardinality proofs, custom codecs, and exported-query stability rules are complete. |
 | 9 | pending | PostgreSQL runtime | Verified pools, session contracts, transactions, streaming, automatic statement caching, explicit fetch methods, bounded cleanup, tests, and panic-safe protocol handling are complete. |
@@ -552,34 +552,34 @@ Owned scope:
 
 Acceptance criteria:
 
-- [ ] `QueryTemplate` and `BoundQuery` are the only public query states.
-- [ ] `@profile.query` creates a callable reusable template with a statically
+- [x] `QueryTemplate` and `BoundQuery` are the only public query states.
+- [x] `@profile.query` creates a callable reusable template with a statically
   unique template identity and supports `RowOf`.
-- [ ] Binding evaluates each expression once, left to right, and owns encoded
+- [x] Binding evaluates each expression once, left to right, and owns encoded
   values after construction.
-- [ ] Execution consumes a bound query. Clone support depends on every captured
+- [x] Execution consumes a bound query. Clone support depends on every captured
   value.
-- [ ] Ordinary values always become parameters with exact provider type checks.
-- [ ] Fragments carry profile, dialect, category, relation scope, aliases,
+- [x] Ordinary values always become parameters with exact provider type checks.
+- [x] Fragments carry profile, dialect, category, relation scope, aliases,
   parameters, result transformation, effect transformation, and precedence.
-- [ ] Relation aliases and fragment identities are static inside a query
+- [x] Relation aliases and fragment identities are static inside a query
   definition. They cannot escape, depend on runtime control flow, or enter a
   runtime container.
-- [ ] `RowOf` accepts only a top-level reusable query symbol. Exported signatures
+- [x] `RowOf` accepts only a top-level reusable query symbol. Exported signatures
   resolve it to a stable structural type alias.
-- [ ] Canonical predicate combinators cover optional filters without string
+- [x] Canonical predicate combinators cover optional filters without string
   assembly.
-- [ ] `expect_at_most_one()` narrows cardinality by runtime validation.
-- [ ] `first()` is explicit and warns when ordering is not deterministic.
-- [ ] Branching and generic code unify changing query and structural record types
+- [x] `expect_at_most_one()` narrows cardinality by runtime validation.
+- [x] `first()` is explicit and warns when ordering is not deterministic.
+- [x] Branching and generic code unify changing query and structural record types
   through normal Sifr typing.
-- [ ] Unsafe syntax escape requires the complete security capability and lint
+- [x] Unsafe syntax escape requires the complete security capability and lint
   contract.
-- [ ] Generated schema identifiers use one injective, reversible encoding across
+- [x] Generated schema identifiers use one injective, reversible encoding across
   paths, keywords, enum variants, and composite fields.
-- [ ] Frontend and query compilation consume a production-queryable profile-module
+- [x] Frontend and query compilation consume a production-queryable profile-module
   registry; qualification invokes that production consumer.
-- [ ] Query lowering preserves the compile-time cardinality and effect records in
+- [x] Query lowering preserves the compile-time cardinality and effect records in
   the runtime request. Executable round-trip tests prove both views are equal.
 
 Focused validation:
@@ -1266,7 +1266,7 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 | 3 | completed | [#3592](https://github.com/sifr-lang/sifr/pull/3592) | `9badcfc4aa` | component 14/14; diagnostics 32/32; package resolution 4/4; SQL 6/6; coverage 5/5; four-target qualification pass | Opus round 2 closed the original sandbox and diagnostics blockers on `3d97d7e35`; two new mechanism defects are deferred | Compiler component platform |
 | 4 | completed | [#3595](https://github.com/sifr-lang/sifr/pull/3595) | `40facaf98d` | contract 9/9; component 14/14; driver 2/2; package 149; SQL 10/10; coverage, Clippy, formatting, HIR, and file-size checks pass | Opus round 2 verified the original pipeline and credential fixes on `04e00c51b`; two new mechanisms are deferred | Canonical schema profiles, provider authority pipeline, generated modules, fingerprints, slices, diffs, and runtime manifests |
 | 5 | completed | [#3597](https://github.com/sifr-lang/sifr/pull/3597) | `7f2382ae68` | contract 9/9; runtime 9/9 plus 2 compile-fail doctests; diagnostics 32/32; SQL common qualification; strict Clippy and guards pass | Final exact-SHA Opus `SATISFIED` on `f7a3e5a35` | Provider-neutral type, bind, codec, cardinality, effect, error, runtime, and ownership contracts |
-| 6 | pending | — | — | — | — | Query and fragment substrate |
+| 6 | completed | [#3599](https://github.com/sifr-lang/sifr/pull/3599) | `9944bdd450` | SQL 19/19; coverage 4/4; contract 23/23; runtime 12/12 plus two doctests; frontend 3/3; driver 2/2; strict Clippy and guards pass | Opus remediation `SATISFIED` on `0abd5109f` | Query and fragment substrate, registry, generated identifier codec, HIR, runtime binding, and execution request lowering |
 | 7 | pending | — | — | — | — | PostgreSQL schema and query compiler |
 | 8 | pending | — | — | — | — | PostgreSQL semantic completion |
 | 9 | pending | — | — | — | — | PostgreSQL runtime |
@@ -1300,6 +1300,11 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 | Milestone 4 remediation review | The qualification record claims a compiler profile registry, but production code only consumes a cache fragment and exposes generated modules to tests. | Milestone 6 | Add one production-queryable profile-module registry for frontend and query compilation. Bind its qualification evidence to an executable consumer. |
 | Milestone 5 initial review | The common ownership model cannot prove a provider transaction's commit, rollback, poison, and drop transitions against a real runtime implementation. | Milestone 9 | Implement the explicit transaction state machine in the PostgreSQL runtime and test every terminal, cleanup, cancellation, and invalid-reuse transition. |
 | Milestone 5 initial review | Compile-time cardinality and effect analysis has no executable lowering round trip into the runtime request. | Milestone 6 | Lower both records with each bound query and prove compiler/runtime equality for reads, writes, adapters, and fragment transformations. |
+| Milestone 6 initial review | Fragment composition renumbers parameter slots without a provider placeholder-rewrite contract. | Milestone 7 | Define the PostgreSQL placeholder representation and prove that composed syntax and parameter metadata stay aligned. |
+| Milestone 6 initial review | Unsafe syntax accepts an already-verified grant but does not yet consume the package capability resolver directly. | Milestone 7 | Connect the first production provider query entry point to package capability resolution and test denied, warned, and allowed uses. |
+| Milestone 6 initial review | The driver profile cache silently skips a registry entry if its context artifact map is inconsistent. | Milestone 18 | Collapse or explicitly validate the two-map invariant during integrated hardening. |
+| Milestone 6 initial review | The reverse generated-identifier codec has no production consumer yet. | Milestone 10 | Use the reverse map in editor and source-display paths and qualify real generated modules. |
+| Milestone 6 remediation review | The identifier documentation's trigger bullet list does not name all boundary-underscore escapes. | Milestone 7 | Correct the list when the PostgreSQL generated-schema documentation is extended. |
 
 ### Milestone 0 closure record
 
@@ -1613,6 +1618,69 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
   not change because the phase remains active.
 - Next action: implement Milestone 6 from the merged and recorded mainline.
 
+### Milestone 6 closure record
+
+- Status: completed and merged.
+- Starting commit: `381e6f454027b74d6f95a5fd74d65868314d4204`.
+- Initial reviewed candidate: `9daf4a9c3a88125b94da2819153cdfbc936534f5`.
+- Remediation reviewed and final candidate:
+  `0abd5109f52d4f0fcf7ce45763d1e11aa95f809c`.
+- Pull request: [#3599](https://github.com/sifr-lang/sifr/pull/3599).
+- Merge commit: `9944bdd4509fb6a32dd3528c9de93a01509e226f`.
+- Acceptance disposition: all 16 Milestone 6 criteria are satisfied. Provider
+  placeholder rewriting, package capability lookup, editor reverse-name use,
+  and integrated registry hardening are assigned to their first production
+  consumers in Milestones 7, 10, and 18.
+- Contract result: `sifr_sql_contract` owns stable template identities, callable
+  template signatures, `RowOf`, explicit cardinality adapters, full fragment
+  context and transformations, scope and alias hygiene, predicate combinators,
+  unsafe-syntax audit grants, a production profile registry, and one reversible
+  generated-identifier codec.
+- Compiler result: `sifr_frontend` consumes the registry and provider analysis,
+  validates exact parameter codecs, uses normal nominal and structural Sifr
+  types, and lowers templates, ordered captures, adapters, cardinality, and
+  effects into closed `sifr_ir` query nodes.
+- Runtime result: `sifr_sql_runtime` exposes only `QueryTemplate` and
+  `BoundQuery` as query states. Binding evaluates and encodes once in source
+  order, stores owned values, conditionally supports `Clone`, and consumes the
+  bound query to produce an execution request with the compiler's exact
+  cardinality and effect records.
+- Generated-name remediation: Opus found that boundary underscores could make
+  two different generated paths collapse. The final codec escapes leading and
+  trailing underscores, and the exact collision pair now has injectivity and
+  round-trip regression coverage.
+- Focused validation: all 23 contract tests, 12 runtime tests, two ownership
+  doctests, three frontend query tests, and two driver profile tests passed. The
+  SQL area passed 19 of 19 variants, and coverage readiness passed four of four.
+  Strict Clippy passed for every changed Rust target. Formatting, diff hygiene,
+  file-size, HIR maintainability, and driver maintainability checks passed.
+- Create-PR gate: the one allowed run used the exact final candidate. Every
+  reached area passed, but the required cold-cache cleanup made runtime-platform
+  take 264 seconds against a 120-second host-time budget. The repository rule
+  prohibits using the first cold-cache run as host-sensitive performance
+  evidence. The gate did not run again.
+- Merge gate: the one allowed run used the exact final candidate. Repository
+  guardrails, Rust interop 10/10, coverage 4/4, core language 5/5, CPython
+  differential 2/2, Python interop 30/30, diagnostics 184/184, and runtime
+  platform all passed. Warm runtime-platform took 30 seconds, confirming the
+  cold-cache artifact. The gate then stopped on the externally owned LeetCode
+  corpus-root configuration before algorithmic compatibility. This is the same
+  uninitialized-corpus repository-state failure already recorded by the owning
+  verification phase. The gate did not run again.
+- Review round 1: Opus returned `NOT SATISFIED` because generated paths ending
+  and starting with underscores were not injective.
+- Remediation: the codec now escapes every boundary underscore and tests the
+  exact colliding paths. The [published exact-SHA review](https://github.com/sifr-lang/sifr/pull/3599#issuecomment-5468661005)
+  records the remediation and validation evidence.
+- Review round 2: Opus returned `SATISFIED` on the exact final candidate with no
+  blocking findings. The remaining suggestions are assigned in the deferred
+  reviewer table, and the phase rule prohibits a third review.
+- Architecture update: the architecture overview and SQL documents now define
+  query states, binding and execution ownership, fragment hygiene, profile
+  lookup, generated names, and the compiler/runtime cardinality-effect round
+  trip. The roadmap status did not change because the phase remains active.
+- Next action: implement Milestone 7 from the merged and recorded mainline.
+
 ## Closure evidence template
 
 Each milestone appends one progress record with:
@@ -1644,5 +1712,5 @@ Complete this section after Milestone 18 merges:
 - Final capability and verification inventory: pending.
 - Deferred out-of-scope work: pending.
 - Archive destination: `plans/issues/archive/ad-hoc-schema-first-sql-platform.md`.
-- Exact next action: implement Milestone 6 from current
+- Exact next action: implement Milestone 7 from current
   `origin/main`.
