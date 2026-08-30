@@ -40,7 +40,12 @@
       "issue": "async-cleanup-completion",
       "owner": "core-language/async-runtime",
       "required_before": "postgresql_runtime",
-      "merge_evidence": "pending-owner-merge",
+      "merge_evidence": "sifr-lang/sifr#3607@0f01971c4d00cdf7e888360fc79c2703cbafb327",
+      "review_evidence": [
+        "sifr-lang/sifr#3607-comment-5470681745",
+        "sifr-lang/sifr#3607-comment-5470776353"
+      ],
+      "status": "complete",
       "capabilities": ["abnormal async-with exit", "cancellation-specific AsyncExitCause", "secondary cleanup evidence", "early async-for aclose"]
     }
   ]

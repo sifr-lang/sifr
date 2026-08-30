@@ -244,6 +244,11 @@ Before Milestone 9 starts, that track must merge these capabilities:
 Milestone 0 must record the owning issue, owner, and merged evidence in the
 verification inventory. This phase does not reimplement those capabilities.
 
+The prerequisite merged in [PR #3607](https://github.com/sifr-lang/sifr/pull/3607).
+Its final candidate is `46bbd40c8bca7538c8331f2ff3f891a98b2e9c88`, and its
+merge commit is `0f01971c4d00cdf7e888360fc79c2703cbafb327`. Milestone 9
+can use these contracts.
+
 ## Execution rules
 
 1. Execute one milestone at a time in the exact order below.
@@ -318,7 +323,7 @@ Acceptance criteria:
 - [ ] Structural records, fixed-width integers, canonical temporal types, network
   address value types, replay-safe callbacks, bounded cancellation cleanup, and
   diagnostic registries have approved language contracts before SQL work begins.
-- [ ] The verification inventory names the external issue, owner, and merge
+- [x] The verification inventory names the external issue, owner, and merge
   evidence for abnormal async cleanup and iterator close behavior before
   Milestone 9 starts.
 - [ ] A machine-readable ownership map assigns each architecture surface to one
@@ -1834,6 +1839,23 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
   codecs, and query-signature behavior. The roadmap status did not change
   because the phase remains active.
 - Next action: implement Milestone 9 from the merged and recorded mainline.
+
+### External async prerequisite closure record
+
+- Status: complete and merged before Milestone 9.
+- Owning issue:
+  `plans/issues/archive/ad-hoc-async-cleanup-completion.md`.
+- Final candidate: `46bbd40c8bca7538c8331f2ff3f891a98b2e9c88`.
+- Pull request: [#3607](https://github.com/sifr-lang/sifr/pull/3607).
+- Merge commit: `0f01971c4d00cdf7e888360fc79c2703cbafb327`.
+- Runtime, codegen, and lowering suites passed on the reconciled candidate.
+- All 19 native cleanup fixtures passed on the reconciled candidate.
+- Both exact-SHA Opus reviews returned `SATISFIED` with no blocking findings.
+- SQL Milestone 18 owns the repository profile contradiction that stopped both
+  allowed gates before tests.
+- Non-blocking hardening work remains in
+  `plans/issues/active/ad-hoc-async-cleanup-review-follow-ups.md`.
+- Exact next action: implement Milestone 9 from this recorded mainline.
 
 ## Closure evidence template
 
