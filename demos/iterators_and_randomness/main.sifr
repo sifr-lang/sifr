@@ -19,11 +19,15 @@ class Doubler:
 
 def main():
     print("chain(*iterables) = " + str(list(chain([1], [2], [3], [4]))))
-    print("islice(start, stop, step) = " + str(list(islice([10, 20, 30, 40, 50], 1, 5, 2))))
+    try:
+        sliced: Iterator[int] = islice(iter([10, 20, 30, 40, 50]), 1, 5, 2)
+        print("islice(start, stop, step) = " + str(list(sliced)))
+    except ValueError as e:
+        print("islice error: " + e.message)
     print("product(repeat=2) = " + str(list(product([1, 2], repeat=2))))
-    print("permutations(r=2) = " + str(list(permutations([1, 2, 3], 2))))
-    print("combinations(r=2) = " + str(list(combinations([1, 2, 3], 2))))
-    print("starmap(add, pairs) = " + str(list(starmap(add, [(2, 3), (4, 5)]))))
+    print("permutations(r=2) = " + str(list(permutations(iter([1, 2, 3]), 2))))
+    print("combinations(r=2) = " + str(list(combinations(iter([1, 2, 3]), 2))))
+    print("starmap(add, pairs) = " + str(list(starmap(add, iter([(2, 3), (4, 5)])))))
 
     doubler: Doubler = Doubler()
     print("callable object direct = " + str(doubler(4)))

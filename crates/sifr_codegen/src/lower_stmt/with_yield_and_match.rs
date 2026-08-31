@@ -148,22 +148,22 @@ pub(super) fn try_lower_simple_yield_stmt(
     value: &HirExpr,
     ctx: SimpleStmtLoweringCtx<'_>,
 ) -> Option<Vec<RustStmt>> {
+    if !ctx.in_generator_closure {
+        return None;
+    }
     let lowered_value = crate::RustEmitter::clone_non_copy_name_expr_for_ir(
         value,
         try_lower_leaf_or_name_expr(value)?,
     );
-    if ctx.in_generator_closure {
-        return Some(vec![RustStmt::Return(Some(RustExpr::FnCall {
-            func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
-            args: vec![lowered_value],
-        }))]);
-    }
+    Some(vec![lower_suspended_yield_stmt(lowered_value)])
+}
 
-    Some(vec![RustStmt::Expr(RustExpr::MethodCall {
-        receiver: Box::new(RustExpr::Ident("_yields".to_string())),
-        method: "push".to_string(),
+pub(crate) fn lower_suspended_yield_stmt(lowered_value: RustExpr) -> RustStmt {
+    RustStmt::Expr(RustExpr::Await(Box::new(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::Ident("__sifr_yielder".to_string())),
+        method: "suspend".to_string(),
         args: vec![lowered_value],
-    })])
+    })))
 }
 
 pub(super) fn try_lower_simple_match_stmt(

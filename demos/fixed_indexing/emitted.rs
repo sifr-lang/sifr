@@ -68,22 +68,18 @@ fn neighbor_min_cost(cost: &mut Vec<SifrInt>) -> SifrInt {
             }
         }
     }
-    let Some(__sifr_checked_value_1) = ({
+    let __sifr_checked_value_1 = ({
     let __sifr_checked_read_collection = &cost;
     let __sifr_checked_read_index = SifrInt::from_i64(0);
     let __sifr_checked_read_normalized = __sifr_checked_read_index.normalize_index_or_len(__sifr_checked_read_collection.len());
     __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
-}) else {
-        return SifrInt::from_i64(0);
-    };
-    let Some(__sifr_checked_value_2) = ({
+}).unwrap_or(__sifr_checked_value_1);
+    let __sifr_checked_value_2 = ({
     let __sifr_checked_read_collection = &cost;
     let __sifr_checked_read_index = SifrInt::from_i64(1);
     let __sifr_checked_read_normalized = __sifr_checked_read_index.normalize_index_or_len(__sifr_checked_read_collection.len());
     __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
-}) else {
-        return SifrInt::from_i64(0);
-    };
+}).unwrap_or(__sifr_checked_value_2);
     ::std::cmp::min(__sifr_checked_value_1.clone(), __sifr_checked_value_2.clone())
 }
 

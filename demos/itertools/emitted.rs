@@ -18,34 +18,111 @@ mod __sifr_project_nominals {
 }
 pub use __sifr_project_nominals::ValueError;
 use ::sifr_runtime::SifrInt;
-fn _collect_iterable<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    data: Vec<T>,
-) -> Vec<T> {
-    let mut collected: Vec<T> = vec![];
-    for item in data.iter().cloned() {
-        collected.push(item.clone());
+struct __SifrYielder<T> {
+    slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+}
+struct __SifrYieldFuture<T> {
+    slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+    value: Option<T>,
+}
+impl<T> Unpin for __SifrYieldFuture<T> {}
+impl<T> ::std::future::Future for __SifrYieldFuture<T> {
+    type Output = ();
+    fn poll(
+        self: ::std::pin::Pin<&mut Self>,
+        _cx: &mut ::std::task::Context<'_>,
+    ) -> ::std::task::Poll<()> {
+        let state = self.get_mut();
+        let Some(value) = state.value.take() else {
+            return ::std::task::Poll::Ready(());
+        };
+        __sifr_store_suspended(&state.slot, value);
+        ::std::task::Poll::Pending
     }
-    collected
+}
+impl<T> __SifrYielder<T> {
+    fn suspend(&self, value: T) -> __SifrYieldFuture<T> {
+        __SifrYieldFuture {
+            slot: ::std::sync::Arc::clone(&self.slot),
+            value: Some(value),
+        }
+    }
+}
+fn __sifr_store_suspended<T>(
+    slot: &::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+    value: T,
+) {
+    match slot.lock() {
+        Ok(mut state) => *state = Some(value),
+        Err(poisoned) => *poisoned.into_inner() = Some(value),
+    }
+}
+fn __sifr_take_suspended<T>(
+    slot: &::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+) -> Option<T> {
+    match slot.lock() {
+        Ok(mut state) => state.take(),
+        Err(poisoned) => poisoned.into_inner().take(),
+    }
+}
+struct __SifrGenerator<T> {
+    producer: Option<
+        ::std::pin::Pin<Box<dyn ::std::future::Future<Output = ()> + 'static>>,
+    >,
+    yielded: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+    complete: bool,
+}
+impl<T> __SifrGenerator<T> {
+    fn new<
+        F: FnOnce(__SifrYielder<T>) -> Fut + 'static,
+        Fut: ::std::future::Future<Output = ()> + 'static,
+    >(factory: F) -> Self {
+        let yielded = ::std::sync::Arc::new(::std::sync::Mutex::new(None));
+        let producer = factory(__SifrYielder {
+            slot: ::std::sync::Arc::clone(&yielded),
+        });
+        Self {
+            producer: Some(Box::pin(producer)),
+            yielded,
+            complete: false,
+        }
+    }
+}
+impl<T> Iterator for __SifrGenerator<T> {
+    type Item = T;
+    fn next(&mut self) -> Option<T> {
+        if self.complete {
+            return None;
+        }
+        let completed = {
+            let Some(producer) = self.producer.as_mut() else {
+                self.complete = true;
+                return None;
+            };
+            let mut context = ::std::task::Context::from_waker(
+                ::std::task::Waker::noop(),
+            );
+            ::std::future::Future::poll(producer.as_mut(), &mut context).is_ready()
+        };
+        let yielded = __sifr_take_suspended(&self.yielded);
+        if completed {
+            self.complete = true;
+            self.producer = None;
+        }
+        yielded
+    }
 }
 fn chain<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     iterables: &Vec<Vec<T>>,
 ) -> Box<dyn Iterator<Item = T>> {
     let iterables = iterables.clone();
-    let mut __sifr_generator_initialized: bool = false;
-    let mut __sifr_generator_iter: ::std::vec::IntoIter<T> = Vec::new().into_iter();
     Box::new(
-        ::std::iter::from_fn(move || {
-            if !__sifr_generator_initialized {
-                let mut _yields: Vec<T> = Vec::new();
-                for iterable in iterables.iter().cloned() {
-                    for item in iterable.iter().cloned() {
-                        _yields.push(item.clone());
-                    }
+        __SifrGenerator::new(async move |__sifr_yielder: __SifrYielder<T>| {
+            for iterable in iterables.iter().cloned() {
+                for item in iterable.iter().cloned() {
+                    __sifr_yielder.suspend(item.clone()).await;
                 }
-                __sifr_generator_iter = _yields.into_iter();
-                __sifr_generator_initialized = true;
             }
-            __sifr_generator_iter.next()
         }),
     )
 }
@@ -71,16 +148,23 @@ fn pairwise<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
             }
             pair.push(value.clone());
             result.push(pair.clone());
-            {
-                let __assign_value = value.clone();
+            let __sifr_try_res: Result<(), IndexError> = (|| {
                 {
-                    let __index_raw = SifrInt::from_i64(0);
-                    let __index_normalized = __index_raw
-                        .normalize_index_or_len(prev_values.len());
-                    if let Some(__elem) = prev_values.get_mut(__index_normalized) {
-                        *__elem = __assign_value;
+                    let __assign_value = value.clone();
+                    {
+                        let __index_raw = SifrInt::from_i64(0);
+                        let __index_normalized = __index_raw
+                            .normalize_index_or_len(prev_values.len());
+                        if let Some(__elem) = prev_values.get_mut(__index_normalized) {
+                            *__elem = __assign_value;
+                        }
                     }
                 }
+                Ok(())
+            })();
+            if let Err(__sifr_try_err) = __sifr_try_res {
+                let _e = __sifr_try_err.clone();
+                return result;
             }
         } else {
             prev_values.push(value.clone());
@@ -111,59 +195,130 @@ fn batched<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
 }
 fn accumulate<
     T: Clone + ::std::fmt::Display + PartialOrd + 'static + ::std::ops::Add<Output = T>,
->(data: &Vec<T>, initial: Option<T>) -> Box<dyn Iterator<Item = T>> {
-    let mut result: Vec<T> = vec![];
-    if let Some(initial) = initial {
-        result.push(initial.clone());
-    }
-    for item in data.iter().cloned() {
-        if (&SifrInt::from(result.len()) == &SifrInt::from_i64(0)) {
-            result.push(item.clone());
-        } else {
-            let prev: Option<T> = {
-                let __sifr_index_list = &result;
-                let __sifr_index_i = SifrInt::from(result.len()) - SifrInt::from_i64(1);
-                let __sifr_index_norm = __sifr_index_i
-                    .normalize_index_or_len(__sifr_index_list.len());
-                __sifr_index_list.get(__sifr_index_norm).cloned()
-            };
-            if let Some(prev) = prev {
-                let next_val: T = prev + item;
-                result.push(next_val.clone());
+>(data: Box<dyn Iterator<Item = T>>, initial: Option<T>) -> Box<dyn Iterator<Item = T>> {
+    Box::new(
+        __SifrGenerator::new(async move |__sifr_yielder: __SifrYielder<T>| {
+            let mut state: Vec<T> = vec![];
+            if let Some(initial) = initial {
+                state.push(initial.clone());
+                let initial_value: Option<T> = {
+                    let __sifr_checked_read_collection = &state;
+                    let __sifr_checked_read_index = SifrInt::from_i64(0);
+                    let __sifr_checked_read_normalized = __sifr_checked_read_index
+                        .normalize_index_or_len(__sifr_checked_read_collection.len());
+                    __sifr_checked_read_collection
+                        .get(__sifr_checked_read_normalized)
+                        .cloned()
+                };
+                if let Some(initial_value) = initial_value {
+                    __sifr_yielder.suspend(initial_value.clone()).await;
+                }
             }
-        }
-    }
-    Box::new(result.into_iter())
+            for item in data {
+                if (&SifrInt::from(state.len()) == &SifrInt::from_i64(0)) {
+                    state.push(item.clone());
+                } else {
+                    let prev: Option<T> = {
+                        let __sifr_checked_read_collection = &state;
+                        let __sifr_checked_read_index = SifrInt::from_i64(0);
+                        let __sifr_checked_read_normalized = __sifr_checked_read_index
+                            .normalize_index_or_len(
+                                __sifr_checked_read_collection.len(),
+                            );
+                        __sifr_checked_read_collection
+                            .get(__sifr_checked_read_normalized)
+                            .cloned()
+                    };
+                    if let Some(prev) = prev {
+                        let next_val: T = prev + item;
+                        let __sifr_try_res: Result<(), IndexError> = (|| {
+                            {
+                                let __assign_value = next_val.clone();
+                                {
+                                    let __index_raw = SifrInt::from_i64(0);
+                                    let __index_normalized = __index_raw
+                                        .normalize_index_or_len(state.len());
+                                    if let Some(__elem) = state.get_mut(__index_normalized) {
+                                        *__elem = __assign_value;
+                                    } else {
+                                        return Err(
+                                            IndexError::new("collection index out of range".to_string()),
+                                        );
+                                    }
+                                }
+                            }
+                            Ok(())
+                        })();
+                        if let Err(__sifr_try_err) = __sifr_try_res {
+                            let _e = __sifr_try_err.clone();
+                            return;
+                        }
+                    }
+                }
+                let current: Option<T> = {
+                    let __sifr_checked_read_collection = &state;
+                    let __sifr_checked_read_index = SifrInt::from_i64(0);
+                    let __sifr_checked_read_normalized = __sifr_checked_read_index
+                        .normalize_index_or_len(__sifr_checked_read_collection.len());
+                    __sifr_checked_read_collection
+                        .get(__sifr_checked_read_normalized)
+                        .cloned()
+                };
+                if let Some(current) = current {
+                    __sifr_yielder.suspend(current.clone()).await;
+                }
+            }
+        }),
+    )
 }
 fn cycle<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    data: &Vec<T>,
+    data: Box<dyn Iterator<Item = T>>,
     n: SifrInt,
 ) -> Box<dyn Iterator<Item = T>> {
-    let materialized: Vec<T> = _collect_iterable(
-        ((data).iter().cloned().collect::<Vec<_>>()).clone(),
-    );
-    let mut result: Vec<T> = vec![];
-    let size: SifrInt = SifrInt::from(materialized.len());
-    if (&size > &SifrInt::from_i64(0)) {
-        let mut i: SifrInt = SifrInt::from_i64(0);
-        while (&i < &n) {
-            let idx: SifrInt = i.floor_mod_known_nonzero(&size);
-            let val: Option<T> = {
-                let __sifr_checked_read_collection = &materialized;
-                let __sifr_checked_read_index = idx.clone();
-                let __sifr_checked_read_normalized = __sifr_checked_read_index
-                    .normalize_index_or_len(__sifr_checked_read_collection.len());
-                __sifr_checked_read_collection
-                    .get(__sifr_checked_read_normalized)
-                    .cloned()
-            };
-            if let Some(val) = val {
-                result.push(val.clone());
+    Box::new(
+        __SifrGenerator::new(async move |__sifr_yielder: __SifrYielder<T>| {
+            let mut saved: Vec<T> = vec![];
+            let mut emitted: SifrInt = SifrInt::from_i64(0);
+            if &n <= &SifrInt::from_i64(0) {
+                return;
             }
-            i = &i + &SifrInt::from_i64(1);
-        }
-    }
-    Box::new(result.into_iter())
+            for value in data {
+                saved.push(value.clone());
+                let current: Option<T> = {
+                    let __sifr_index_list = &saved;
+                    let __sifr_index_i = SifrInt::from(saved.len())
+                        - SifrInt::from_i64(1);
+                    let __sifr_index_norm = __sifr_index_i
+                        .normalize_index_or_len(__sifr_index_list.len());
+                    __sifr_index_list.get(__sifr_index_norm).cloned()
+                };
+                if let Some(current) = current {
+                    __sifr_yielder.suspend(current.clone()).await;
+                    emitted = &emitted + &SifrInt::from_i64(1);
+                    if (&emitted >= &n) {
+                        return;
+                    }
+                }
+            }
+            let size: SifrInt = SifrInt::from(saved.len());
+            while (&emitted < &n) && (&size > &SifrInt::from_i64(0)) {
+                let index: SifrInt = emitted.floor_mod_known_nonzero(&size);
+                let repeated: Option<T> = {
+                    let __sifr_checked_read_collection = &saved;
+                    let __sifr_checked_read_index = index.clone();
+                    let __sifr_checked_read_normalized = __sifr_checked_read_index
+                        .normalize_index_or_len(__sifr_checked_read_collection.len());
+                    __sifr_checked_read_collection
+                        .get(__sifr_checked_read_normalized)
+                        .cloned()
+                };
+                if let Some(repeated) = repeated {
+                    __sifr_yielder.suspend(repeated.clone()).await;
+                }
+                emitted = &emitted + &SifrInt::from_i64(1);
+            }
+        }),
+    )
 }
 fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
     assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
@@ -182,6 +337,21 @@ fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
         i = &i + &SifrInt::from_i64(1);
     }
 }
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+struct IndexError {
+    message: String,
+}
+impl IndexError {
+    fn new(message: String) -> Self {
+        Self { message }
+    }
+}
+impl ::std::fmt::Display for IndexError {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::std::fmt::Display::fmt(&self.message, f)
+    }
+}
+impl ::std::error::Error for IndexError {}
 fn collect_core_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![];
     actual
@@ -223,8 +393,8 @@ fn collect_core_actual() -> Vec<bool> {
     actual
         .push(
             (format!(
-                "{:?}", accumulate(& (vec![SifrInt::from_i64(1), SifrInt::from_i64(2),
-                SifrInt::from_i64(3)]).into_iter().collect::< Vec < _ >> (), None)
+                "{:?}", accumulate(Box::new(vec![SifrInt::from_i64(1),
+                SifrInt::from_i64(2), SifrInt::from_i64(3)] .into_iter()), None)
                 .collect::< Vec < _ >> ()
             ))
                 .as_str() == ("[1, 3, 6]".to_string()).as_str(),
@@ -232,9 +402,8 @@ fn collect_core_actual() -> Vec<bool> {
     actual
         .push(
             (format!(
-                "{:?}", cycle(& (vec![SifrInt::from_i64(5), SifrInt::from_i64(6)])
-                .into_iter().collect::< Vec < _ >> (), SifrInt::from_i64(5)).collect::<
-                Vec < _ >> ()
+                "{:?}", cycle(Box::new(vec![SifrInt::from_i64(5), SifrInt::from_i64(6)]
+                .into_iter()), SifrInt::from_i64(5)).collect::< Vec < _ >> ()
             ))
                 .as_str() == ("[5, 6, 5, 6, 5]".to_string()).as_str(),
         );

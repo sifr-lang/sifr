@@ -445,6 +445,17 @@ impl RustEmitter {
                     method: "into_iter".to_string(),
                     args: vec![],
                 },
+                crate::helpers::SourceAccessMode::Preserve if prefer_boxed_iterator => {
+                    crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::MethodCall {
+                            receiver: Box::new(lowered_source),
+                            method: "clone".to_string(),
+                            args: vec![],
+                        }),
+                        method: "into_iter".to_string(),
+                        args: vec![],
+                    }
+                }
                 crate::helpers::SourceAccessMode::Preserve => {
                     Self::apply_copy_clone_yield_mode_for_ir(
                         crate::RustExpr::MethodCall {

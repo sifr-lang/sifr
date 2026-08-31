@@ -254,6 +254,7 @@ pub(in crate::lower) fn lower_function(
     // Lower body
     let previous_owner = ctx.current_owner.replace(func.name.to_string());
     let previous_async = ctx.current_function_is_async;
+    let previous_generator = ctx.current_function_is_generator;
     let previous_async_generator = ctx.current_function_is_async_generator;
     let previous_dynamic_python = ctx.current_function_trusts_dynamic_python;
     let previous_return_type = ctx
@@ -264,6 +265,7 @@ pub(in crate::lower) fn lower_function(
     let previous_join_set_terminal_awaitables =
         std::mem::take(&mut ctx.join_set_terminal_awaitables);
     ctx.current_function_is_async = effective_is_async;
+    ctx.current_function_is_generator = has_generator_body;
     ctx.current_function_is_async_generator = is_async_generator;
     ctx.current_function_trusts_dynamic_python = has_decorator(func, "trust_python_dynamic");
     if !skips_normal_body_lowering {
@@ -284,6 +286,7 @@ pub(in crate::lower) fn lower_function(
     ctx.live_must_use_bindings = previous_must_use_bindings;
     ctx.join_set_terminal_awaitables = previous_join_set_terminal_awaitables;
     ctx.current_function_is_async = previous_async;
+    ctx.current_function_is_generator = previous_generator;
     ctx.current_function_is_async_generator = previous_async_generator;
     ctx.current_function_trusts_dynamic_python = previous_dynamic_python;
     ctx.current_function_return_type = previous_return_type;

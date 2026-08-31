@@ -159,6 +159,8 @@ pub(in crate::lower) struct LowerCtx {
     pub(in crate::lower) in_try_block: bool,
     /// Whether the currently lowered function body is async.
     pub(in crate::lower) current_function_is_async: bool,
+    /// Whether the currently lowered function body contains `yield`.
+    pub(in crate::lower) current_function_is_generator: bool,
     /// Whether the currently lowered function body is an `async def` containing `yield`.
     pub(in crate::lower) current_function_is_async_generator: bool,
     /// Return type of the currently lowered function body.
@@ -327,6 +329,7 @@ impl LowerCtx {
             current_parent_type: None,
             in_try_block: false,
             current_function_is_async: false,
+            current_function_is_generator: false,
             current_function_is_async_generator: false,
             current_function_return_type: None,
             try_block_error_types: std::collections::HashSet::new(),

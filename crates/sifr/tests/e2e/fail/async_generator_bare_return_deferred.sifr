@@ -1,5 +1,0 @@
-# expect-error[col=5]: SIFR-TYPE-0002
-
-async def numbers() -> AsyncGenerator[int, GeneratorCloseError]:
-    yield 1
-    return

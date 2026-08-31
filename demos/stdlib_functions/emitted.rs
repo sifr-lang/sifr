@@ -88,16 +88,23 @@ fn pairwise<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
             }
             pair.push(value.clone());
             result.push(pair.clone());
-            {
-                let __assign_value = value.clone();
+            let __sifr_try_res: Result<(), IndexError> = (|| {
                 {
-                    let __index_raw = SifrInt::from_i64(0);
-                    let __index_normalized = __index_raw
-                        .normalize_index_or_len(prev_values.len());
-                    if let Some(__elem) = prev_values.get_mut(__index_normalized) {
-                        *__elem = __assign_value;
+                    let __assign_value = value.clone();
+                    {
+                        let __index_raw = SifrInt::from_i64(0);
+                        let __index_normalized = __index_raw
+                            .normalize_index_or_len(prev_values.len());
+                        if let Some(__elem) = prev_values.get_mut(__index_normalized) {
+                            *__elem = __assign_value;
+                        }
                     }
                 }
+                Ok(())
+            })();
+            if let Err(__sifr_try_err) = __sifr_try_res {
+                let _e = __sifr_try_err.clone();
+                return result;
             }
         } else {
             prev_values.push(value.clone());
@@ -1214,6 +1221,21 @@ impl ::std::fmt::Display for FloatPrecisionLossError {
     }
 }
 impl ::std::error::Error for FloatPrecisionLossError {}
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+struct IndexError {
+    message: String,
+}
+impl IndexError {
+    fn new(message: String) -> Self {
+        Self { message }
+    }
+}
+impl ::std::fmt::Display for IndexError {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::std::fmt::Display::fmt(&self.message, f)
+    }
+}
+impl ::std::error::Error for IndexError {}
 impl From<IOError> for Error {
     fn from(err: IOError) -> Self {
         Self::new(err.message)
@@ -1231,6 +1253,11 @@ impl From<FloatOverflowError> for Error {
 }
 impl From<FloatPrecisionLossError> for Error {
     fn from(err: FloatPrecisionLossError) -> Self {
+        Self::new(err.message)
+    }
+}
+impl From<IndexError> for Error {
+    fn from(err: IndexError) -> Self {
         Self::new(err.message)
     }
 }

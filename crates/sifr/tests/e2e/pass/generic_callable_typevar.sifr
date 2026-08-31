@@ -23,7 +23,7 @@ def concat_strs(a: str, b: str) -> str:
 def main():
     # --- dropwhile with int (Copy type) ---
     nums: list[int] = [1, 3, 7, 2, 8]
-    dw_int: list[int] = list(dropwhile(is_small, nums))
+    dw_int: list[int] = list(dropwhile(is_small, iter(nums)))
     assert_eq(len(dw_int), 3)
     first_dw: int | None = dw_int[0]
     if first_dw is not None:
@@ -31,25 +31,25 @@ def main():
 
     # --- dropwhile with str (Move type) ---
     words: list[str] = ["hi", "yo", "hello", "a", "world"]
-    dw_str: list[str] = list(dropwhile(is_long, words))
+    dw_str: list[str] = list(dropwhile(is_long, iter(words)))
     assert_eq(len(dw_str), 5)
 
     # --- takewhile with int ---
-    tw_int: list[int] = list(takewhile(is_small, nums))
+    tw_int: list[int] = list(takewhile(is_small, iter(nums)))
     assert_eq(len(tw_int), 2)
 
     # --- takewhile with str ---
     long_words: list[str] = ["hello", "world", "hi", "yo"]
-    tw_str: list[str] = list(takewhile(is_long, long_words))
+    tw_str: list[str] = list(takewhile(is_long, iter(long_words)))
     assert_eq(len(tw_str), 2)
 
     # --- filterfalse with int (keeps elements where is_small is False, i.e. >= 5) ---
-    ff_int: list[int] = list(filterfalse(is_small, nums))
+    ff_int: list[int] = list(filterfalse(is_small, iter(nums)))
     assert_eq(len(ff_int), 2)
 
     # --- filterfalse with float ---
     floats: list[float] = [1.0, 3.0, 2.0, 4.5]
-    ff_float: list[float] = list(filterfalse(is_big_float, floats))
+    ff_float: list[float] = list(filterfalse(is_big_float, iter(floats)))
     assert_eq(len(ff_float), 2)
 
     # --- reduce with int (Copy type) ---

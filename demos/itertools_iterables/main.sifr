@@ -12,7 +12,11 @@ def lt3(x: int) -> bool:
 
 def main():
     nums: list[int] = [1, 2, 3, 4]
-    print(list(islice(iter(nums), 1, 4, 2)))
+    try:
+        sliced: Iterator[int] = islice(iter(nums), 1, 4, 2)
+        print(list(sliced))
+    except ValueError as e:
+        print("islice error: " + e.message)
     print(list(accumulate(iter(nums))))
     print(list(compress(iter(nums), iter([True, False, True, False]))))
     print(list(takewhile(lt3, iter(nums))))
@@ -25,9 +29,12 @@ def main():
 
         root: Path = Path(base + "")
         entries_it: Iterator[str] = root.iterdir()
-        print(len(list(islice(entries_it, 1))))
+        sliced_entries: Iterator[str] = islice(iter(entries_it), 1)
+        print(len(list(sliced_entries)))
     except IOError as e:
         print("ioerror: " + str(e.message))
+    except ValueError as e:
+        print("islice error: " + e.message)
 
     try:
         _rm: str = run_command("rm -rf " + base)
