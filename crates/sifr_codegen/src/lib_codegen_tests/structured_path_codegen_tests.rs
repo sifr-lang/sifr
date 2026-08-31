@@ -88,7 +88,7 @@ def run() -> Result[Subscription, SubscriptionError | RustPanicError]:
 
     assert!(
         generated.contains("let prefix = prefix.clone();")
-            && generated.contains("move |event: &String|")
+            && generated.contains("move |event: &str|")
             && generated.contains("prefix = \"outer-after\".to_string();"),
         "{generated}"
     );
@@ -131,7 +131,7 @@ def run() -> Result[Subscription, SubscriptionError | RustPanicError]:
     assert!(
         generated.contains("for label in labels.iter().cloned()")
             && generated.contains("let label = label.clone();")
-            && generated.contains("move |event: &String|"),
+            && generated.contains("move |event: &str|"),
         "{generated}"
     );
 }
@@ -159,7 +159,7 @@ def main():
     );
 
     assert!(generated.contains(
-        "fn dfs(i: SifrInt, res: &mut Vec<Vec<SifrInt>>, subset: &mut Vec<SifrInt>, values: &Vec<SifrInt>)"
+        "fn dfs(i: SifrInt, res: &mut Vec<Vec<SifrInt>>, subset: &mut Vec<SifrInt>, values: &[SifrInt])"
     ));
     assert!(generated.contains("dfs(SifrInt::from_i64(0), &mut res, &mut subset, &values);"));
     assert!(generated.contains("dfs(&i + &SifrInt::from_i64(1), res, subset, values);"));

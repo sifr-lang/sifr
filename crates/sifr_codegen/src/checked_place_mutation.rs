@@ -403,13 +403,10 @@ impl RustEmitter {
                         RustStmt::Expr(RustExpr::MethodCall {
                             receiver: Box::new(RustExpr::Ident("__elem".to_string())),
                             method: "push_str".to_string(),
-                            args: vec![RustExpr::MethodCall {
-                                receiver: Box::new(RustExpr::Paren(Box::new(RustExpr::Ident(
-                                    value_binding.to_string(),
-                                )))),
-                                method: "as_str".to_string(),
-                                args: Vec::new(),
-                            }],
+                            args: vec![self.string_view_expr(
+                                value,
+                                RustExpr::Ident(value_binding.to_string()),
+                            )],
                         }),
                         lowered_value,
                     ));

@@ -362,9 +362,13 @@ fn collect_type(ty: &RustType, needs: &mut IrImportNeeds) {
         | RustType::F64
         | RustType::Bool
         | RustType::String_
+        | RustType::Str
         | RustType::Unit
         | RustType::Never => {}
-        RustType::Vec(inner) | RustType::Option(inner) | RustType::Boxed(inner) => {
+        RustType::Vec(inner)
+        | RustType::Slice(inner)
+        | RustType::Option(inner)
+        | RustType::Boxed(inner) => {
             collect_type(inner, needs);
         }
         RustType::HashSet(inner) => {

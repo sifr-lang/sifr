@@ -266,9 +266,10 @@ macro_rules! stmt_expr_binop {
                             mutable: true,
                             name: "__v".to_string(),
                             ty: None,
-                            value: crate::RustExpr::Clone(Box::new(crate::RustExpr::Paren(
-                                Box::new(lowered_left.clone()),
-                            ))),
+                            value: crate::ownership_plan::materialize_owned_value(
+                                &resolved_left_ty,
+                                crate::RustExpr::Paren(Box::new(lowered_left.clone())),
+                            ),
                         },
                         crate::RustStmt::Expr(crate::RustExpr::MethodCall {
                             receiver: Box::new(crate::RustExpr::Ident("__v".to_string())),
@@ -451,6 +452,16 @@ macro_rules! stmt_expr_binop {
                         right: Box::new(lowered_right),
                     },
                 )));
+            }
+
+            if op == "+" && matches!(resolved_result_ty, Type::TypeVar(_)) {
+                return Ok(Some(crate::RustExpr::FnCall {
+                    func: Box::new(crate::RustExpr::Path(vec![
+                        "__SifrAdd".to_string(),
+                        "__sifr_add".to_string(),
+                    ])),
+                    args: vec![lowered_left, lowered_right],
+                }));
             }
 
             if op == "**" {

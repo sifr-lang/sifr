@@ -17,9 +17,9 @@ impl Shape {
     fn describe(&self) -> String {
         {
     let mut __sifr_concat: String = String::with_capacity(((0usize + 2usize) + 0usize) + 1usize);
-    __sifr_concat.push_str((self.name.clone()).as_str());
+    __sifr_concat.push_str(self.name.clone().as_str());
     __sifr_concat.push_str(" (");
-    __sifr_concat.push_str((self.color.clone()).as_str());
+    __sifr_concat.push_str(self.color.clone().as_str());
     __sifr_concat.push(')');
     __sifr_concat
 }
@@ -75,9 +75,9 @@ impl Circle {
     fn describe(&self) -> String {
         {
     let mut __sifr_concat: String = String::with_capacity((0usize + 3usize) + 0usize);
-    __sifr_concat.push_str((self.shape.name.clone()).as_str());
+    __sifr_concat.push_str(self.shape.name.clone().as_str());
     __sifr_concat.push_str(" r=");
-    __sifr_concat.push_str((format!("{}", self.radius)).as_str());
+    __sifr_concat.push_str(format!("{}", self.radius).as_str());
     __sifr_concat
 }
     }
@@ -134,11 +134,11 @@ impl Rectangle {
     fn describe(&self) -> String {
         {
     let mut __sifr_concat: String = String::with_capacity((((0usize + 1usize) + 0usize) + 1usize) + 0usize);
-    __sifr_concat.push_str((self.shape.name.clone()).as_str());
+    __sifr_concat.push_str(self.shape.name.clone().as_str());
     __sifr_concat.push(' ');
-    __sifr_concat.push_str((format!("{}", self.width)).as_str());
+    __sifr_concat.push_str(format!("{}", self.width).as_str());
     __sifr_concat.push('x');
-    __sifr_concat.push_str((format!("{}", self.height)).as_str());
+    __sifr_concat.push_str(format!("{}", self.height).as_str());
     __sifr_concat
 }
     }

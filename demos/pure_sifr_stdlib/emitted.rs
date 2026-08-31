@@ -267,7 +267,7 @@ fn random_module_state_gauss_next() -> Option<f64> {
     ::sifr_stdlib::random::random_module_state_gauss_next()
 }
 fn random_module_set_state(
-    words: &Vec<SifrInt>,
+    words: &[SifrInt],
     index: SifrInt,
     gauss_next: Option<f64>,
 ) -> Result<(), ValueError> {
@@ -285,20 +285,20 @@ fn random_module_set_state(
             message: __sifr_bridge_error.to_string(),
         })
 }
-fn base64_encode(s: &String) -> String {
+fn base64_encode(s: &str) -> String {
     ::sifr_stdlib::base64::base64_encode(s)
 }
-fn base64_encode_bytes(data: &Vec<u8>) -> Vec<u8> {
+fn base64_encode_bytes(data: &[u8]) -> Vec<u8> {
     ::sifr_stdlib::base64::base64_encode_bytes(data)
 }
-fn base64_decode(s: &String) -> Result<String, ParseError> {
+fn base64_decode(s: &str) -> Result<String, ParseError> {
     ::sifr_stdlib::base64::base64_decode(s)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| ParseError {
             message: __sifr_bridge_error.to_string(),
         })
 }
-fn base64_decode_bytes(data: &Vec<u8>) -> Result<Vec<u8>, ParseError> {
+fn base64_decode_bytes(data: &[u8]) -> Result<Vec<u8>, ParseError> {
     ::sifr_stdlib::base64::base64_decode_bytes(data)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| ParseError {
@@ -306,8 +306,8 @@ fn base64_decode_bytes(data: &Vec<u8>) -> Result<Vec<u8>, ParseError> {
         })
 }
 fn base64_encode_opts(
-    s: &String,
-    altchars: &String,
+    s: &str,
+    altchars: &str,
     wrapcol: SifrInt,
 ) -> Result<String, ParseError> {
     ::sifr_stdlib::base64::base64_encode_opts(
@@ -321,10 +321,10 @@ fn base64_encode_opts(
         })
 }
 fn base64_decode_opts(
-    s: &String,
-    altchars: &String,
+    s: &str,
+    altchars: &str,
     validate: bool,
-    ignorechars: &String,
+    ignorechars: &str,
 ) -> Result<String, ParseError> {
     ::sifr_stdlib::base64::base64_decode_opts(s, altchars, validate, ignorechars)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
@@ -332,74 +332,74 @@ fn base64_decode_opts(
             message: __sifr_bridge_error.to_string(),
         })
 }
-fn urlsafe_b64encode(s: &String) -> String {
+fn urlsafe_b64encode(s: &str) -> String {
     ::sifr_stdlib::base64::urlsafe_b64encode(s)
 }
-fn urlsafe_b64encode_bytes(data: &Vec<u8>) -> Vec<u8> {
+fn urlsafe_b64encode_bytes(data: &[u8]) -> Vec<u8> {
     ::sifr_stdlib::base64::urlsafe_b64encode_bytes(data)
 }
-fn urlsafe_b64decode(s: &String) -> Result<String, ParseError> {
+fn urlsafe_b64decode(s: &str) -> Result<String, ParseError> {
     ::sifr_stdlib::base64::urlsafe_b64decode(s)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| ParseError {
             message: __sifr_bridge_error.to_string(),
         })
 }
-fn urlsafe_b64decode_bytes(data: &Vec<u8>) -> Result<Vec<u8>, ParseError> {
+fn urlsafe_b64decode_bytes(data: &[u8]) -> Result<Vec<u8>, ParseError> {
     ::sifr_stdlib::base64::urlsafe_b64decode_bytes(data)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| ParseError {
             message: __sifr_bridge_error.to_string(),
         })
 }
-fn b32encode(s: &String) -> String {
+fn b32encode(s: &str) -> String {
     ::sifr_stdlib::base64::b32encode(s)
 }
-fn b32decode(s: &String) -> Result<String, ParseError> {
+fn b32decode(s: &str) -> Result<String, ParseError> {
     ::sifr_stdlib::base64::b32decode(s)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| ParseError {
             message: __sifr_bridge_error.to_string(),
         })
 }
-fn b32hexencode(s: &String) -> String {
+fn b32hexencode(s: &str) -> String {
     ::sifr_stdlib::base64::b32hexencode(s)
 }
-fn b32hexdecode(s: &String) -> Result<String, ParseError> {
+fn b32hexdecode(s: &str) -> Result<String, ParseError> {
     ::sifr_stdlib::base64::b32hexdecode(s)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| ParseError {
             message: __sifr_bridge_error.to_string(),
         })
 }
-fn sha256_bytes(data: &Vec<u8>) -> Vec<u8> {
+fn sha256_bytes(data: &[u8]) -> Vec<u8> {
     ::sifr_stdlib::hash::sha256_bytes(data)
 }
-fn md5_bytes(data: &Vec<u8>) -> Vec<u8> {
+fn md5_bytes(data: &[u8]) -> Vec<u8> {
     ::sifr_stdlib::hash::md5_bytes(data)
 }
-fn sha1_bytes(data: &Vec<u8>) -> Vec<u8> {
+fn sha1_bytes(data: &[u8]) -> Vec<u8> {
     ::sifr_stdlib::hash::sha1_bytes(data)
 }
-fn sha224_bytes(data: &Vec<u8>) -> Vec<u8> {
+fn sha224_bytes(data: &[u8]) -> Vec<u8> {
     ::sifr_stdlib::hash::sha224_bytes(data)
 }
-fn sha384_bytes(data: &Vec<u8>) -> Vec<u8> {
+fn sha384_bytes(data: &[u8]) -> Vec<u8> {
     ::sifr_stdlib::hash::sha384_bytes(data)
 }
-fn sha512_bytes(data: &Vec<u8>) -> Vec<u8> {
+fn sha512_bytes(data: &[u8]) -> Vec<u8> {
     ::sifr_stdlib::hash::sha512_bytes(data)
 }
-fn blake2b_bytes(data: &Vec<u8>) -> Vec<u8> {
+fn blake2b_bytes(data: &[u8]) -> Vec<u8> {
     ::sifr_stdlib::hash::blake2b_bytes(data)
 }
-fn blake2s_bytes(data: &Vec<u8>) -> Vec<u8> {
+fn blake2s_bytes(data: &[u8]) -> Vec<u8> {
     ::sifr_stdlib::hash::blake2s_bytes(data)
 }
-fn b64encode(s: &String) -> String {
+fn b64encode(s: &str) -> String {
     base64_encode(s)
 }
-fn b64decode(s: &String) -> Result<String, ParseError> {
+fn b64decode(s: &str) -> Result<String, ParseError> {
     base64_decode(s)
 }
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -418,58 +418,58 @@ impl ::std::fmt::Display for __SifrIoNativeFileHandle {
         write!(f, "NativeFileHandle(_id={})", self._id)
     }
 }
-fn read_text(path: &String) -> Result<String, IOError> {
+fn read_text(path: &str) -> Result<String, IOError> {
     ::sifr_stdlib::fs::read_text(path)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn write_text(path: &String, content: &String) -> Result<(), IOError> {
+fn write_text(path: &str, content: &str) -> Result<(), IOError> {
     ::sifr_stdlib::fs::write_text(path, content)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn exists(path: &String) -> bool {
+fn exists(path: &str) -> bool {
     ::sifr_stdlib::fs::exists(path)
 }
-fn read_lines(path: &String) -> Result<Vec<String>, IOError> {
+fn read_lines(path: &str) -> Result<Vec<String>, IOError> {
     ::sifr_stdlib::fs::read_lines(path)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn append_text(path: &String, content: &String) -> Result<(), IOError> {
+fn append_text(path: &str, content: &str) -> Result<(), IOError> {
     ::sifr_stdlib::fs::append_text(path, content)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn _open_file(path: &String, mode: &String) -> Result<String, IOError> {
+fn _open_file(path: &str, mode: &str) -> Result<String, IOError> {
     ::sifr_stdlib::fs::open_file(path, mode)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn _file_read(handle: &String) -> Result<String, IOError> {
+fn _file_read(handle: &str) -> Result<String, IOError> {
     ::sifr_stdlib::fs::file_read(handle)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn _file_write(handle: &String, data: &String) -> Result<(), IOError> {
+fn _file_write(handle: &str, data: &str) -> Result<(), IOError> {
     ::sifr_stdlib::fs::file_write(handle, data)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn _file_readline(handle: &String) -> Result<Option<String>, IOError> {
+fn _file_readline(handle: &str) -> Result<Option<String>, IOError> {
     ::sifr_stdlib::fs::file_readline(handle)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn _file_readlines(handle: &String) -> Result<Vec<String>, IOError> {
+fn _file_readlines(handle: &str) -> Result<Vec<String>, IOError> {
     ::sifr_stdlib::fs::file_readlines(handle)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn _file_close(handle: &String) {
+fn _file_close(handle: &str) {
     ::sifr_stdlib::fs::file_close(handle);
 }
-fn _file_read_bytes(handle: &String, size: Option<SifrInt>) -> Result<Vec<u8>, IOError> {
+fn _file_read_bytes(handle: &str, size: Option<SifrInt>) -> Result<Vec<u8>, IOError> {
     ::sifr_stdlib::fs::file_read_bytes(
             handle,
             size.map(::sifr_runtime::interop::SifrIntBridge::from),
@@ -477,18 +477,18 @@ fn _file_read_bytes(handle: &String, size: Option<SifrInt>) -> Result<Vec<u8>, I
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn _file_write_bytes(handle: &String, data: &Vec<u8>) -> Result<(), IOError> {
+fn _file_write_bytes(handle: &str, data: &[u8]) -> Result<(), IOError> {
     ::sifr_stdlib::fs::file_write_bytes(handle, data)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn _file_flush(handle: &String) -> Result<(), IOError> {
+fn _file_flush(handle: &str) -> Result<(), IOError> {
     ::sifr_stdlib::fs::file_flush(handle)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
 fn _file_seek(
-    handle: &String,
+    handle: &str,
     offset: SifrInt,
     whence: SifrInt,
 ) -> Result<SifrInt, IOError> {
@@ -500,12 +500,12 @@ fn _file_seek(
         .map(|__sifr_bridge_ok| __sifr_bridge_ok.into_sifr_int())
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn _file_tell(handle: &String) -> Result<SifrInt, IOError> {
+fn _file_tell(handle: &str) -> Result<SifrInt, IOError> {
     ::sifr_stdlib::fs::file_tell(handle)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok.into_sifr_int())
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn open_file(path: &String, mode: &String) -> Result<__SifrIoNativeFileHandle, IOError> {
+fn open_file(path: &str, mode: &str) -> Result<__SifrIoNativeFileHandle, IOError> {
     let __sifr_try_res: Result<Result<__SifrIoNativeFileHandle, IOError>, IOError> = (|| {
         let handle_id: String = _open_file(path, mode)?;
         Ok(Ok(__SifrIoNativeFileHandle::new(handle_id)))
@@ -523,7 +523,7 @@ fn open_file(path: &String, mode: &String) -> Result<__SifrIoNativeFileHandle, I
 fn file_read(handle: &__SifrIoNativeFileHandle) -> Result<String, IOError> {
     _file_read(&handle._id.clone())
 }
-fn file_write(handle: &__SifrIoNativeFileHandle, data: &String) -> Result<(), IOError> {
+fn file_write(handle: &__SifrIoNativeFileHandle, data: &str) -> Result<(), IOError> {
     _file_write(&handle._id.clone(), data)
 }
 fn file_readline(handle: &__SifrIoNativeFileHandle) -> Result<Option<String>, IOError> {
@@ -539,11 +539,11 @@ fn file_read_bytes(
     handle: &__SifrIoNativeFileHandle,
     size: Option<SifrInt>,
 ) -> Result<Vec<u8>, IOError> {
-    _file_read_bytes(&handle._id.clone(), (size).clone())
+    _file_read_bytes(&handle._id.clone(), size.clone())
 }
 fn file_write_bytes(
     handle: &__SifrIoNativeFileHandle,
-    data: &Vec<u8>,
+    data: &[u8],
 ) -> Result<(), IOError> {
     _file_write_bytes(&handle._id.clone(), data)
 }
@@ -555,7 +555,7 @@ fn file_seek(
     offset: SifrInt,
     whence: SifrInt,
 ) -> Result<SifrInt, IOError> {
-    _file_seek(&handle._id.clone(), (offset).clone(), (whence).clone())
+    _file_seek(&handle._id.clone(), offset.clone(), whence.clone())
 }
 fn file_tell(handle: &__SifrIoNativeFileHandle) -> Result<SifrInt, IOError> {
     _file_tell(&handle._id.clone())
@@ -565,64 +565,64 @@ fn getcwd() -> Result<String, IOError> {
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn listdir(path: &String) -> Result<Vec<String>, IOError> {
+fn listdir(path: &str) -> Result<Vec<String>, IOError> {
     ::sifr_stdlib::fs::listdir(path)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn mkdir(path: &String) -> Result<(), IOError> {
+fn mkdir(path: &str) -> Result<(), IOError> {
     ::sifr_stdlib::fs::mkdir(path)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn rmdir(path: &String) -> Result<(), IOError> {
+fn rmdir(path: &str) -> Result<(), IOError> {
     ::sifr_stdlib::fs::rmdir(path)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn remove_file(path: &String) -> Result<(), IOError> {
+fn remove_file(path: &str) -> Result<(), IOError> {
     ::sifr_stdlib::fs::remove_file(path)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn rename(src: &String, dst: &String) -> Result<(), IOError> {
+fn rename(src: &str, dst: &str) -> Result<(), IOError> {
     ::sifr_stdlib::fs::rename(src, dst)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn chdir(path: &String) -> Result<(), IOError> {
+fn chdir(path: &str) -> Result<(), IOError> {
     ::sifr_stdlib::fs::chdir(path)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn stat_size(path: &String) -> Result<SifrInt, IOError> {
+fn stat_size(path: &str) -> Result<SifrInt, IOError> {
     ::sifr_stdlib::fs::stat_size(path)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok.into_sifr_int())
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn disk_usage(path: &String) -> Vec<SifrInt> {
+fn disk_usage(path: &str) -> Vec<SifrInt> {
     ::sifr_stdlib::fs::disk_usage(path)
         .into_iter()
         .map(|__sifr_bridge_value| __sifr_bridge_value.into_sifr_int())
         .collect()
 }
-fn is_file(path: &String) -> bool {
+fn is_file(path: &str) -> bool {
     ::sifr_stdlib::fs::is_file(path)
 }
-fn is_dir(path: &String) -> bool {
+fn is_dir(path: &str) -> bool {
     ::sifr_stdlib::fs::is_dir(path)
 }
-fn copy_file(src: &String, dst: &String) -> Result<(), IOError> {
+fn copy_file(src: &str, dst: &str) -> Result<(), IOError> {
     ::sifr_stdlib::fs::copy_file(src, dst)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn walk_dir(path: &String) -> Result<Vec<String>, IOError> {
+fn walk_dir(path: &str) -> Result<Vec<String>, IOError> {
     ::sifr_stdlib::fs::walk_dir(path)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn rmdir_all(path: &String) -> Result<(), IOError> {
+fn rmdir_all(path: &str) -> Result<(), IOError> {
     ::sifr_stdlib::fs::rmdir_all(path)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
@@ -630,32 +630,32 @@ fn rmdir_all(path: &String) -> Result<(), IOError> {
 fn gettempdir() -> String {
     ::sifr_stdlib::fs::gettempdir()
 }
-fn makedirs(path: &String) -> Result<(), IOError> {
+fn makedirs(path: &str) -> Result<(), IOError> {
     ::sifr_stdlib::fs::makedirs(path)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn touch(path: &String) -> Result<(), IOError> {
+fn touch(path: &str) -> Result<(), IOError> {
     ::sifr_stdlib::fs::touch(path)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn resolve_path(path: &String) -> Result<String, IOError> {
+fn resolve_path(path: &str) -> Result<String, IOError> {
     ::sifr_stdlib::fs::resolve_path(path)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn iterdir(path: &String) -> Result<Vec<String>, IOError> {
+fn iterdir(path: &str) -> Result<Vec<String>, IOError> {
     ::sifr_stdlib::fs::iterdir(path)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn glob_pattern(dir: &String, pattern: &String) -> Result<Vec<String>, IOError> {
+fn glob_pattern(dir: &str, pattern: &str) -> Result<Vec<String>, IOError> {
     ::sifr_stdlib::fs::glob_pattern(dir, pattern)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn rglob_pattern(dir: &String, pattern: &String) -> Result<Vec<String>, IOError> {
+fn rglob_pattern(dir: &str, pattern: &str) -> Result<Vec<String>, IOError> {
     ::sifr_stdlib::fs::rglob_pattern(dir, pattern)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
@@ -691,9 +691,9 @@ impl __SifrStdlib_sifr_x2ehashlib_x2eHashObject {
     }
 }
 impl __SifrStdlib_sifr_x2ehashlib_x2eHashObject {
-    fn update(&mut self, data: &Vec<u8>) {
+    fn update(&mut self, data: &[u8]) {
         self._data = {
-            let mut __v = (self._data.clone()).clone();
+            let mut __v = (self._data.clone()).to_vec();
             __v.extend((data).iter().cloned());
             __v
         };
@@ -710,14 +710,14 @@ impl __SifrStdlib_sifr_x2ehashlib_x2eHashObject {
     }
 }
 fn _build_hash(
-    algorithm: &String,
-    data: &Vec<u8>,
+    algorithm: &str,
+    data: &[u8],
 ) -> __SifrStdlib_sifr_x2ehashlib_x2eHashObject {
     let alg: String = algorithm.to_lowercase();
     if (alg == "md5") {
         return __SifrStdlib_sifr_x2ehashlib_x2eHashObject::new(
             alg,
-            (data.clone()).clone(),
+            data.to_vec(),
             "md5".to_string(),
             SifrInt::from_i64(16),
             SifrInt::from_i64(64),
@@ -726,7 +726,7 @@ fn _build_hash(
         if (alg == "sha1") {
             return __SifrStdlib_sifr_x2ehashlib_x2eHashObject::new(
                 alg,
-                (data.clone()).clone(),
+                data.to_vec(),
                 "sha1".to_string(),
                 SifrInt::from_i64(20),
                 SifrInt::from_i64(64),
@@ -735,7 +735,7 @@ fn _build_hash(
             if (alg == "sha224") {
                 return __SifrStdlib_sifr_x2ehashlib_x2eHashObject::new(
                     alg,
-                    (data.clone()).clone(),
+                    data.to_vec(),
                     "sha224".to_string(),
                     SifrInt::from_i64(28),
                     SifrInt::from_i64(64),
@@ -744,7 +744,7 @@ fn _build_hash(
                 if (alg == "sha256") {
                     return __SifrStdlib_sifr_x2ehashlib_x2eHashObject::new(
                         alg,
-                        (data.clone()).clone(),
+                        data.to_vec(),
                         "sha256".to_string(),
                         SifrInt::from_i64(32),
                         SifrInt::from_i64(64),
@@ -753,7 +753,7 @@ fn _build_hash(
                     if (alg == "sha384") {
                         return __SifrStdlib_sifr_x2ehashlib_x2eHashObject::new(
                             alg,
-                            (data.clone()).clone(),
+                            data.to_vec(),
                             "sha384".to_string(),
                             SifrInt::from_i64(48),
                             SifrInt::from_i64(128),
@@ -762,7 +762,7 @@ fn _build_hash(
                         if (alg == "sha512") {
                             return __SifrStdlib_sifr_x2ehashlib_x2eHashObject::new(
                                 alg,
-                                (data.clone()).clone(),
+                                data.to_vec(),
                                 "sha512".to_string(),
                                 SifrInt::from_i64(64),
                                 SifrInt::from_i64(128),
@@ -771,7 +771,7 @@ fn _build_hash(
                             if (alg == "blake2b") {
                                 return __SifrStdlib_sifr_x2ehashlib_x2eHashObject::new(
                                     alg,
-                                    (data.clone()).clone(),
+                                    data.to_vec(),
                                     "blake2b".to_string(),
                                     SifrInt::from_i64(64),
                                     SifrInt::from_i64(128),
@@ -780,7 +780,7 @@ fn _build_hash(
                                 if (alg == "blake2s") {
                                     return __SifrStdlib_sifr_x2ehashlib_x2eHashObject::new(
                                         alg,
-                                        (data.clone()).clone(),
+                                        data.to_vec(),
                                         "blake2s".to_string(),
                                         SifrInt::from_i64(32),
                                         SifrInt::from_i64(64),
@@ -795,35 +795,35 @@ fn _build_hash(
     }
     __SifrStdlib_sifr_x2ehashlib_x2eHashObject::new(
         alg,
-        (data.clone()).clone(),
+        data.to_vec(),
         "unknown".to_string(),
         SifrInt::from_i64(0),
         SifrInt::from_i64(0),
     )
 }
-fn _hash_bytes(algorithm: &String, data: &Vec<u8>) -> Vec<u8> {
-    if (algorithm).as_str() == "md5" {
+fn _hash_bytes(algorithm: &str, data: &[u8]) -> Vec<u8> {
+    if algorithm == "md5" {
         return md5_bytes(data);
     } else {
-        if (algorithm).as_str() == "sha1" {
+        if algorithm == "sha1" {
             return sha1_bytes(data);
         } else {
-            if (algorithm).as_str() == "sha224" {
+            if algorithm == "sha224" {
                 return sha224_bytes(data);
             } else {
-                if (algorithm).as_str() == "sha256" {
+                if algorithm == "sha256" {
                     return sha256_bytes(data);
                 } else {
-                    if (algorithm).as_str() == "sha384" {
+                    if algorithm == "sha384" {
                         return sha384_bytes(data);
                     } else {
-                        if (algorithm).as_str() == "sha512" {
+                        if algorithm == "sha512" {
                             return sha512_bytes(data);
                         } else {
-                            if (algorithm).as_str() == "blake2b" {
+                            if algorithm == "blake2b" {
                                 return blake2b_bytes(data);
                             } else {
-                                if (algorithm).as_str() == "blake2s" {
+                                if algorithm == "blake2s" {
                                     return blake2s_bytes(data);
                                 }
                             }
@@ -838,7 +838,7 @@ fn _hash_bytes(algorithm: &String, data: &Vec<u8>) -> Vec<u8> {
         __sifr_empty_bytes_literal
     }
 }
-fn _hash_hex(algorithm: &String, data: &Vec<u8>) -> String {
+fn _hash_hex(algorithm: &str, data: &[u8]) -> String {
     {
         let __bytes_receiver = &_hash_bytes(algorithm, data);
         let mut __hex = String::with_capacity(
@@ -850,7 +850,7 @@ fn _hash_hex(algorithm: &String, data: &Vec<u8>) -> String {
         __hex
     }
 }
-fn sha256(data: &Vec<u8>) -> __SifrStdlib_sifr_x2ehashlib_x2eHashObject {
+fn sha256(data: &[u8]) -> __SifrStdlib_sifr_x2ehashlib_x2eHashObject {
     _build_hash(&"sha256".to_string(), data)
 }
 const PI: f64 = 3.141592653589793_f64;

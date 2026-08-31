@@ -7,6 +7,7 @@ pub(crate) use registry_helpers::*;
 mod borrowing_call_args;
 mod builtin_core_methods;
 mod builtin_numeric;
+mod collection_defaultdict_methods;
 mod collection_methods;
 mod collection_type_resolution;
 mod defaultdict_iterable_mutations;

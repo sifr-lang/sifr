@@ -310,7 +310,10 @@ impl RustEmitter {
                     Type::Str | Type::LiteralStr(_)
                 ) {
                     let lowered_object = self.try_lower_registry_expr_strict(object)?;
-                    let lowered_index = self.try_lower_registry_expr_strict(index)?;
+                    let lowered_index = Self::clone_non_copy_name_expr_for_ir(
+                        index,
+                        self.try_lower_registry_expr_strict(index)?,
+                    );
                     let option_expr = self.lower_string_index_option_with_cache(
                         object,
                         lowered_object,
@@ -384,13 +387,7 @@ impl RustEmitter {
                                 {
                                     crate::RustExpr::Literal(crate::RustLiteral::Str(value.clone()))
                                 } else if key_is_string_like {
-                                    crate::RustExpr::MethodCall {
-                                        receiver: Box::new(crate::RustExpr::Paren(Box::new(
-                                            lowered_index,
-                                        ))),
-                                        method: "as_str".to_string(),
-                                        args: vec![],
-                                    }
+                                    self.string_view_expr(index, lowered_index)
                                 } else {
                                     crate::RustExpr::Ref {
                                         mutable: false,
@@ -518,13 +515,7 @@ impl RustEmitter {
                             let key_arg = if let HirExpr::StringLiteral(value) = index.as_ref() {
                                 crate::RustExpr::Literal(crate::RustLiteral::Str(value.clone()))
                             } else if key_is_string_like {
-                                crate::RustExpr::MethodCall {
-                                    receiver: Box::new(crate::RustExpr::Paren(Box::new(
-                                        lowered_index,
-                                    ))),
-                                    method: "as_str".to_string(),
-                                    args: vec![],
-                                }
+                                self.string_view_expr(index, lowered_index)
                             } else {
                                 crate::RustExpr::Ref {
                                     mutable: false,

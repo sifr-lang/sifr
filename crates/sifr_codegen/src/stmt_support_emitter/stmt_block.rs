@@ -116,18 +116,27 @@ impl RustEmitter {
                     None
                 };
                 let value_is_nonempty_list = nonempty_list_value.is_some();
+                let recursive_borrowed_view = !self.mutated_vars.contains(name)
+                    && self.recursive_option_borrowed_type(&effective_ty).is_some()
+                    && self.expr_is_recursive_option_borrowed_view(value);
                 let lowered_value = if let Some(lowered) = nonempty_list_value {
                     lowered
                 } else if let Some(lowered) = checked_option_value {
                     lowered
                 } else if let Some(lowered) = borrowed_dict_get.clone() {
                     lowered
-                } else if let Some(clone_expr) =
-                    self.try_lower_borrowed_move_name_clone_for_ir(&effective_ty, value)
+                } else if !recursive_borrowed_view
+                    && let Some(clone_expr) =
+                        self.try_lower_borrowed_move_name_clone_for_ir(&effective_ty, value)
                 {
                     clone_expr
                 } else {
-                    let lowered = if let Some(lowered) = self.lower_rendered_expr_for_ir(value)? {
+                    let lowered = if recursive_borrowed_view {
+                        let Some(lowered) = self.lower_stmt_expr_for_ir(value)? else {
+                            return Ok(None);
+                        };
+                        lowered
+                    } else if let Some(lowered) = self.lower_rendered_expr_for_ir(value)? {
                         lowered
                     } else {
                         let Some(lowered) = self.lower_stmt_expr_for_ir(value)? else {
@@ -135,10 +144,20 @@ impl RustEmitter {
                         };
                         lowered
                     };
-                    self.coerce_local_value_for_target_type_for_ir(&effective_ty, value, lowered)?
+                    if recursive_borrowed_view {
+                        lowered
+                    } else {
+                        self.coerce_local_value_for_target_type_for_ir(
+                            &effective_ty,
+                            value,
+                            lowered,
+                        )?
+                    }
                 };
                 let lowered_value = self.rewrite_stdlib_constant_idents_in_expr(lowered_value);
-                let lowered_ty = if name == "_"
+                let lowered_ty = if recursive_borrowed_view {
+                    self.recursive_option_borrowed_type(&effective_ty)
+                } else if name == "_"
                     || generic_class_needs_inference
                     || borrowed_dict_get.is_some()
                     || value_is_nonempty_list
@@ -166,6 +185,9 @@ impl RustEmitter {
                     ty: lowered_ty,
                     value: lowered_value,
                 }];
+                if recursive_borrowed_view {
+                    self.recursive_option_borrowed_views.insert(name.clone());
+                }
                 if let Some(cache_stmt) =
                     self.string_char_cache_init_stmt_for_local(name, &effective_ty)
                 {
@@ -248,13 +270,8 @@ impl RustEmitter {
                                     ty: None,
                                     value: value_expr,
                                 });
-                                let as_str = crate::RustExpr::MethodCall {
-                                    receiver: Box::new(crate::RustExpr::Paren(Box::new(
-                                        crate::RustExpr::Ident(temp_name),
-                                    ))),
-                                    method: "as_str".to_string(),
-                                    args: vec![],
-                                };
+                                let as_str =
+                                    self.string_view_expr(value, crate::RustExpr::Ident(temp_name));
                                 (as_str.clone(), as_str)
                             } else if let HirExpr::StringLiteral(val) = value {
                                 let literal = crate::RustExpr::Verbatim(format!("{val:?}"));
@@ -263,13 +280,7 @@ impl RustEmitter {
                                 let Some(value_expr) = self.lower_stmt_expr_for_ir(value)? else {
                                     return Ok(None);
                                 };
-                                let as_str = crate::RustExpr::MethodCall {
-                                    receiver: Box::new(crate::RustExpr::Paren(Box::new(
-                                        value_expr,
-                                    ))),
-                                    method: "as_str".to_string(),
-                                    args: vec![],
-                                };
+                                let as_str = self.string_view_expr(value, value_expr);
                                 (as_str.clone(), as_str)
                             };
                             stmts.push(crate::RustStmt::Expr(crate::RustExpr::MethodCall {

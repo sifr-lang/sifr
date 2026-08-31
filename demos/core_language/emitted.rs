@@ -18,11 +18,11 @@ fn fibonacci(n: SifrInt) -> SifrInt {
     &fibonacci(&n - &SifrInt::from_i64(1)) + &fibonacci(&n - &SifrInt::from_i64(2))
 }
 
-fn greet(name: &String) -> String {
+fn greet(name: &str) -> String {
     {
     let mut __sifr_concat: String = String::with_capacity((7usize + name.len()) + 1usize);
     __sifr_concat.push_str("Hello, ");
-    __sifr_concat.push_str((name).as_str());
+    __sifr_concat.push_str(name);
     __sifr_concat.push('!');
     __sifr_concat
 }
@@ -58,7 +58,7 @@ fn main() {
     let flag: bool = true;
     let name: String = "Sifr".to_string();
     let sum: SifrInt = &x + &SifrInt::from_i64(8);
-    let product: SifrInt = double((sum).clone());
+    let product: SifrInt = double(sum.clone());
     println!("{}", product);
     let fact: SifrInt = factorial(SifrInt::from_i64(5));
     println!("{}", fact);
@@ -66,7 +66,7 @@ fn main() {
     println!("{}", fib);
     let msg: String = greet(&name);
     println!("{}", msg);
-    let label: String = classify((x).clone());
+    let label: String = classify(x.clone());
     println!("{}", label);
     let neg_label: String = classify(-&SifrInt::from_i64(7));
     println!("{}", neg_label);

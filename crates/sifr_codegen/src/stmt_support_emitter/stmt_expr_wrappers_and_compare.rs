@@ -451,13 +451,7 @@ macro_rules! stmt_expr_contains_unary_compare_bool {
                             || $emitter.mut_borrowed_params.contains(name)
                         {
                             if matches!(crate::resolve_alias_type_for_plain_call(ty), Type::Str) {
-                                crate::RustExpr::MethodCall {
-                                    receiver: Box::new(crate::RustExpr::Paren(Box::new(
-                                        lowered_element,
-                                    ))),
-                                    method: "as_str".to_string(),
-                                    args: vec![],
-                                }
+                                $emitter.string_view_expr(element, lowered_element)
                             } else {
                                 lowered_element
                             }
@@ -479,22 +473,28 @@ macro_rules! stmt_expr_contains_unary_compare_bool {
                         args: vec![key_arg],
                     }
                 }
-                Type::List(_) | Type::Set(_) | Type::Range => crate::RustExpr::MethodCall {
-                    receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_collection))),
-                    method: "contains".to_string(),
-                    args: vec![crate::RustExpr::Ref {
-                        mutable: false,
-                        expr: Box::new(crate::RustExpr::Paren(Box::new(lowered_element))),
-                    }],
-                },
+                Type::List(_) | Type::Set(_) | Type::Range => {
+                    let element_arg = if matches!(element.as_ref(), HirExpr::Name { name, .. }
+                        if $emitter.borrowed_params.contains(name)
+                            || $emitter.mut_borrowed_params.contains(name))
+                    {
+                        lowered_element
+                    } else {
+                        crate::RustExpr::Ref {
+                            mutable: false,
+                            expr: Box::new(crate::RustExpr::Paren(Box::new(lowered_element))),
+                        }
+                    };
+                    crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_collection))),
+                        method: "contains".to_string(),
+                        args: vec![element_arg],
+                    }
+                }
                 Type::Str => crate::RustExpr::MethodCall {
                     receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_collection))),
                     method: "contains".to_string(),
-                    args: vec![crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_element))),
-                        method: "as_str".to_string(),
-                        args: vec![],
-                    }],
+                    args: vec![$emitter.string_view_expr(element, lowered_element)],
                 },
                 Type::Bytes => crate::RustExpr::Block {
                     stmts: vec![crate::RustStmt::Let {
@@ -658,9 +658,9 @@ macro_rules! stmt_expr_contains_unary_compare_bool {
                         let borrowed_right =
                             $emitter.try_lower_borrowed_string_lookup_for_compare(rhs_expr)?;
                         let borrowed_left_name =
-                            crate::RustEmitter::lower_borrowed_string_name_for_compare(lhs_expr);
+                            $emitter.lower_borrowed_string_name_for_compare(lhs_expr);
                         let borrowed_right_name =
-                            crate::RustEmitter::lower_borrowed_string_name_for_compare(rhs_expr);
+                            $emitter.lower_borrowed_string_name_for_compare(rhs_expr);
                         if let Some((lowered_left, lowered_right)) = borrowed_left
                             .clone()
                             .zip(borrowed_right.clone())
@@ -690,22 +690,6 @@ macro_rules! stmt_expr_contains_unary_compare_bool {
                     };
                     let Some(lowered_right) = $emitter.lower_stmt_expr_for_ir(rhs_expr)? else {
                         return Ok(None);
-                    };
-                    let lowered_left = if matches!(lhs_expr, HirExpr::Name { name, ty, .. }
-                        if ($emitter.borrowed_params.contains(name) || $emitter.mut_borrowed_params.contains(name))
-                            && !crate::helpers::is_copy_type_for_codegen(ty))
-                    {
-                        crate::RustExpr::Clone(Box::new(lowered_left))
-                    } else {
-                        lowered_left
-                    };
-                    let lowered_right = if matches!(rhs_expr, HirExpr::Name { name, ty, .. }
-                        if ($emitter.borrowed_params.contains(name) || $emitter.mut_borrowed_params.contains(name))
-                            && !crate::helpers::is_copy_type_for_codegen(ty))
-                    {
-                        crate::RustExpr::Clone(Box::new(lowered_right))
-                    } else {
-                        lowered_right
                     };
                     let left_witness_ty = match lhs_expr {
                         HirExpr::Index {
@@ -758,20 +742,59 @@ macro_rules! stmt_expr_contains_unary_compare_bool {
                             )
                         } else {
                             (lowered_left, lowered_right)
-                        };
+                    };
                     if matches!(lowered_op.as_str(), "==" | "!=") {
+                        let mut right_representation_was_wrapped = false;
+                        let mut left_representation_was_wrapped = false;
                         if let Some(wrapped) = crate::helpers::wrap_union_member_expr(
                             lhs_expr.ty(),
                             rhs_expr.ty(),
                             lowered_right.clone(),
                         ) {
                             lowered_right = wrapped;
+                            right_representation_was_wrapped = true;
                         } else if let Some(wrapped) = crate::helpers::wrap_union_member_expr(
                             rhs_expr.ty(),
                             lhs_expr.ty(),
                             lowered_left.clone(),
                         ) {
                             lowered_left = wrapped;
+                            left_representation_was_wrapped = true;
+                        }
+                        let left_is_shared_borrow =
+                            $emitter.comparison_operand_is_shared_borrow(lhs_expr);
+                        let right_is_shared_borrow =
+                            $emitter.comparison_operand_is_shared_borrow(rhs_expr);
+                        if left_is_shared_borrow && !right_is_shared_borrow {
+                            lowered_right = $emitter.borrow_comparison_operand(
+                                rhs_expr,
+                                lowered_right,
+                                right_representation_was_wrapped,
+                            );
+                        } else if right_is_shared_borrow && !left_is_shared_borrow {
+                            lowered_left = $emitter.borrow_comparison_operand(
+                                lhs_expr,
+                                lowered_left,
+                                left_representation_was_wrapped,
+                            );
+                        }
+                    } else {
+                        let left_is_shared_borrow =
+                            $emitter.comparison_operand_is_shared_borrow(lhs_expr);
+                        let right_is_shared_borrow =
+                            $emitter.comparison_operand_is_shared_borrow(rhs_expr);
+                        if left_is_shared_borrow && !right_is_shared_borrow {
+                            lowered_right = $emitter.borrow_comparison_operand(
+                                rhs_expr,
+                                lowered_right,
+                                false,
+                            );
+                        } else if right_is_shared_borrow && !left_is_shared_borrow {
+                            lowered_left = $emitter.borrow_comparison_operand(
+                                lhs_expr,
+                                lowered_left,
+                                false,
+                            );
                         }
                     }
                     if let Some(lowered_cmp) = crate::lower_exact_integer_float_compare(
@@ -849,21 +872,15 @@ macro_rules! stmt_expr_contains_unary_compare_bool {
             let Some(first) = iter.next() else {
                 return Ok(None);
             };
-            let lower_boolop_operand =
-                |this: &mut Self,
-                 operand: &HirExpr|
-                 -> Result<Option<crate::RustExpr>, crate::CodegenError> {
-                    if matches!(crate::resolve_alias_type_for_plain_call(ty), Type::Bool) {
-                        this.lower_condition_expr_for_ir(operand)
-                    } else {
-                        this.lower_stmt_expr_for_ir(operand)
-                    }
-                };
-            let Some(mut acc) = lower_boolop_operand($emitter, first)? else {
+            let Some(mut acc) = $crate::stmt_support_emitter::boolop_operand::lower_boolop_operand(
+                $emitter, first, ty,
+            )? else {
                 return Ok(None);
             };
             for value in iter {
-                let Some(lowered_value) = lower_boolop_operand($emitter, value)? else {
+                let Some(lowered_value) = $crate::stmt_support_emitter::boolop_operand::lower_boolop_operand(
+                    $emitter, value, ty,
+                )? else {
                     return Ok(None);
                 };
                 acc = crate::RustExpr::BinOp {

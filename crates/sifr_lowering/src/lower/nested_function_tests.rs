@@ -565,3 +565,31 @@ fn annotated_initializer_context_specializes_zero_argument_generic_return() {
     )
     .expect("the declared initializer type should specialize an otherwise unbound return type");
 }
+
+#[test]
+fn nested_context_target_is_local_instead_of_an_outer_capture() {
+    lower_source(
+        "class Resource:\n    value: int\n\n    def __enter__(self) -> int:\n        return self.value\n\n    def __exit__(self) -> None:\n        pass\n\ndef outer(resource: Resource) -> int:\n    def read() -> int:\n        with resource as entered:\n            return entered\n    return read()\n",
+    )
+    .expect("a with-item target must be a local binding in the nested function");
+}
+
+#[test]
+fn nested_async_context_target_is_local_instead_of_an_outer_capture() {
+    lower_source(
+        "async def worker() -> int:\n    await task.sleep(0.0)\n    return 1\n\nasync def outer() -> Result[None, ScopeFailure]:\n    async def run() -> Result[None, ScopeFailure]:\n        async with task.TaskGroup() as group:\n            handle = group.spawn(worker())\n            result = await handle.join()\n        return None\n    await task.sleep(0.0)\n    return None\n",
+    )
+    .expect("an async-with target must be a local binding in the nested function");
+}
+
+#[test]
+fn indexed_non_clone_class_value_is_rejected_before_rust_codegen() {
+    let diagnostics = lower_source(
+        "class Token(NonSend):\n    value: int\n\ndef head(values: list[Token]) -> Token | None:\n    if len(values) == 0:\n        return None\n    return values[0]\n",
+    )
+    .expect_err("non-clone aggregate projection must be a Sifr diagnostic");
+    assert!(diagnostics.iter().any(|diagnostic| {
+        diagnostic.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && diagnostic.message.contains("not clone-capable")
+    }));
+}

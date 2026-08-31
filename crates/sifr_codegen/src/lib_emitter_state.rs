@@ -1,7 +1,7 @@
 use super::{
     Cell, ClassScope, HashMap, HashSet, HirExpr, HirFunction, HirModule, HirStmt, LoweringStats,
-    NestedFnCapture, ParamConvention, RefCell, RustExpr, RustItem, RustStmt, RustType,
-    ScopeContext, Type, body_contains_await, collect_locally_defined_vars,
+    NestedFnCapture, ParamConvention, RefCell, RuntimeNeeds, RustExpr, RustItem, RustStmt,
+    RustType, ScopeContext, Type, body_contains_await, collect_locally_defined_vars,
     collect_mutated_vars_with_sigs, collect_referenced_vars_with_types, default_param_convention,
     hir_analysis, resolve_alias_type_for_plain_call,
     try_lower_simple_stmt_with_scope_result_and_bindings,
@@ -113,6 +113,10 @@ pub struct RustEmitter {
     /// Used to avoid double-borrowing: when a &mut param is passed to another &mut param,
     /// we must NOT emit `&mut name` (it's already &mut T); just pass `name` directly.
     pub(crate) mut_borrowed_params: HashSet<String>,
+    /// Bindings represented as `Option<&RecursiveClass>` instead of owned
+    /// source-level recursive options. This includes shared parameters and
+    /// immutable local aliases of borrowed recursive fields.
+    pub(crate) recursive_option_borrowed_views: HashSet<String>,
     /// Set of function names that are generators (contain yield statements)
     /// Used to emit .`collect()` when assigning generator results to list[T]
     pub(crate) generator_functions: HashSet<String>,
@@ -210,35 +214,11 @@ pub(crate) struct CollectionNeeds {
     pub(crate) needs_vecdeque: bool,
 }
 
-#[derive(Default)]
-pub(crate) struct RuntimeNeeds {
-    pub(crate) flags: HashSet<RuntimeNeed>,
-}
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum TryClosureReturnWrap {
     Direct,
     Optional,
     ControlFlow { continue_type: String },
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub(crate) enum RuntimeNeed {
-    FileHandles,
-}
-
-impl RuntimeNeeds {
-    pub(crate) fn require(&mut self, need: RuntimeNeed) {
-        self.flags.insert(need);
-    }
-
-    pub(crate) fn contains(&self, need: RuntimeNeed) -> bool {
-        self.flags.contains(&need)
-    }
-
-    pub(crate) fn file_handles(&self) -> bool {
-        self.contains(RuntimeNeed::FileHandles)
-    }
 }
 
 #[derive(Default)]
@@ -297,6 +277,7 @@ impl RustEmitter {
             python_retained_callback_errors: HashMap::new(),
             borrowed_params: HashSet::new(),
             mut_borrowed_params: HashSet::new(),
+            recursive_option_borrowed_views: HashSet::new(),
             generator_functions: HashSet::new(),
             imported_stdlib_names: HashMap::new(),
             imported_project_functions: HashSet::new(),
@@ -592,6 +573,9 @@ impl RustEmitter {
                     ..
                 } if self.generic_classes.contains(class_name) && type_args.is_empty()
             );
+            let recursive_borrowed_view = !self.mutated_vars.contains(name)
+                && self.recursive_option_borrowed_type(&effective_ty).is_some()
+                && self.expr_is_recursive_option_borrowed_view(value);
             let lowered_value = if crate::helpers::is_copy_type_for_codegen(&effective_ty) {
                 None
             } else {
@@ -599,12 +583,14 @@ impl RustEmitter {
                     name: value_name, ..
                 } = value
                 {
-                    if self.borrowed_params.contains(value_name)
-                        || self.mut_borrowed_params.contains(value_name)
+                    if !recursive_borrowed_view
+                        && (self.borrowed_params.contains(value_name)
+                            || self.mut_borrowed_params.contains(value_name))
                     {
-                        Some(crate::RustExpr::Clone(Box::new(crate::RustExpr::Ident(
-                            value_name.clone(),
-                        ))))
+                        Some(crate::ownership_plan::materialize_owned_value(
+                            &effective_ty,
+                            crate::RustExpr::Ident(value_name.clone()),
+                        ))
                     } else {
                         None
                     }
@@ -647,7 +633,9 @@ impl RustEmitter {
                     )
                     || matches!(effective_ty.resolve_alias(), Type::Iterator(_)),
                 name: name.clone(),
-                ty: if name == "_"
+                ty: if recursive_borrowed_view {
+                    self.recursive_option_borrowed_type(&effective_ty)
+                } else if name == "_"
                     || generic_class_needs_inference
                     || borrowed_dict_get.is_some()
                     || value_is_nonempty_list
@@ -682,7 +670,8 @@ impl RustEmitter {
                             }
                         }
                         _ => false,
-                    } {
+                    }
+                {
                     None
                 } else {
                     Some(self.rust_ir_type_with_generics(&effective_ty))
@@ -691,6 +680,9 @@ impl RustEmitter {
             };
             let lowered_stmt = self.rewrite_stdlib_constant_idents_in_stmt(lowered_stmt);
             self.push_captured_stmt(&lowered_stmt);
+            if recursive_borrowed_view {
+                self.recursive_option_borrowed_views.insert(name.clone());
+            }
             if let Some(cache_stmt) =
                 self.string_char_cache_init_stmt_for_local(name, &effective_ty)
             {

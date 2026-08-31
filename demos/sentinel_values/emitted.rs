@@ -1,7 +1,7 @@
 // src/main.rs
 use ::sifr_runtime::SifrInt;
 
-fn smallest_or_zero(values: &Vec<SifrInt>) -> SifrInt {
+fn smallest_or_zero(values: &[SifrInt]) -> SifrInt {
     let mut best: SifrInt = SifrInt::from_i64(9223372036854775807);
     for value in values.iter().cloned() {
         if &value < &best {

@@ -525,8 +525,8 @@ impl From<ScopeFailure> for Error {
         Self::new(err.message)
     }
 }
-fn parse_num(s: &String) -> Result<SifrInt, ValueError> {
-    if (s).as_str() == "bad" {
+fn parse_num(s: &str) -> Result<SifrInt, ValueError> {
+    if s == "bad" {
         return Err(ValueError::new("parse failure".to_string()));
     }
     Ok(SifrInt::from_i64(10))

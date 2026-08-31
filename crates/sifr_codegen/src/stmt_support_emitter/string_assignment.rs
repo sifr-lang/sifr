@@ -29,36 +29,31 @@ impl RustEmitter {
                 HirExpr::StringLiteral(value) => Self::single_char_string_literal(value),
                 _ => None,
             };
-            let (push_method, push_arg, cache_chars_source) =
-                if mentions_target || materialize_for_cache {
-                    let Some(part_expr) = self.lower_stmt_expr_for_ir(part)? else {
-                        return Err(crate::CodegenError::new(
-                            "could not lower string concat assignment part",
-                        ));
-                    };
-                    let temp_name = format!("__sifr_string_concat_{name}_{index}");
-                    stmts.push(RustStmt::Let {
-                        mutable: false,
-                        name: temp_name.clone(),
-                        ty: None,
-                        value: if mentions_target {
-                            crate::RustExpr::Clone(Box::new(part_expr))
-                        } else {
-                            part_expr
-                        },
-                    });
-                    let as_str = crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::Paren(Box::new(
-                            crate::RustExpr::Ident(temp_name.clone()),
-                        ))),
-                        method: "as_str".to_string(),
-                        args: vec![],
-                    };
-                    ("push_str".to_string(), as_str.clone(), as_str)
-                } else {
-                    let (method, arg) = self.lower_string_push_method_and_arg_for_ir(part)?;
-                    (method, arg.clone(), arg)
+            let (push_method, push_arg, cache_chars_source) = if mentions_target
+                || materialize_for_cache
+            {
+                let Some(part_expr) = self.lower_stmt_expr_for_ir(part)? else {
+                    return Err(crate::CodegenError::new(
+                        "could not lower string concat assignment part",
+                    ));
                 };
+                let temp_name = format!("__sifr_string_concat_{name}_{index}");
+                stmts.push(RustStmt::Let {
+                    mutable: false,
+                    name: temp_name.clone(),
+                    ty: None,
+                    value: if mentions_target {
+                        crate::RustExpr::Clone(Box::new(part_expr))
+                    } else {
+                        part_expr
+                    },
+                });
+                let as_str = self.string_view_expr(part, crate::RustExpr::Ident(temp_name.clone()));
+                ("push_str".to_string(), as_str.clone(), as_str)
+            } else {
+                let (method, arg) = self.lower_string_push_method_and_arg_for_ir(part)?;
+                (method, arg.clone(), arg)
+            };
             stmts.push(RustStmt::Expr(crate::RustExpr::MethodCall {
                 receiver: Box::new(crate::RustExpr::Ident(name.to_string())),
                 method: push_method,
@@ -291,11 +286,7 @@ impl RustEmitter {
                 "could not lower string concat assignment part",
             ));
         };
-        Ok(crate::RustExpr::MethodCall {
-            receiver: Box::new(crate::RustExpr::Paren(Box::new(value_expr))),
-            method: "as_str".to_string(),
-            args: vec![],
-        })
+        Ok(self.string_view_expr(value, value_expr))
     }
 
     pub(crate) fn lower_string_push_method_and_arg_for_ir(

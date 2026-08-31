@@ -18,7 +18,7 @@ impl RustEmitter {
             || self.borrowed_params.contains(name)
             || self.mut_borrowed_params.contains(name)
         {
-            crate::RustExpr::Clone(Box::new(lowered))
+            crate::ownership_plan::materialize_owned_value(expr.ty(), lowered)
         } else {
             lowered
         }
@@ -35,7 +35,7 @@ impl RustEmitter {
             && !crate::helpers::is_copy_type_for_codegen(expr.ty())
             && Self::rust_expr_is_reusable_place_for_ir(&lowered)
         {
-            crate::RustExpr::Clone(Box::new(lowered))
+            crate::ownership_plan::materialize_owned_value(expr.ty(), lowered)
         } else {
             lowered
         }
@@ -63,7 +63,7 @@ impl RustEmitter {
             && !crate::helpers::is_copy_type_for_codegen(expr.ty())
             && Self::rust_expr_is_reusable_place_for_ir(&lowered)
         {
-            crate::RustExpr::Clone(Box::new(lowered))
+            crate::ownership_plan::materialize_owned_value(expr.ty(), lowered)
         } else {
             lowered
         }

@@ -1,6 +1,33 @@
 use super::{HirExpr, RustEmitter};
 
 impl RustEmitter {
+    pub(crate) fn materialize_explicit_borrowed_clone(
+        &self,
+        object: &HirExpr,
+        method: &str,
+        args: &[HirExpr],
+        lowered_object: crate::RustExpr,
+    ) -> Option<crate::RustExpr> {
+        if !matches!(method, "clone" | "copy" | "cloned") || !args.is_empty() {
+            return None;
+        }
+        let HirExpr::Name { name, ty, .. } = object else {
+            return None;
+        };
+        if !(self.borrowed_params.contains(name) || self.mut_borrowed_params.contains(name)) {
+            return None;
+        }
+        matches!(
+            ty.resolve_alias(),
+            sifr_type_system::Type::Str
+                | sifr_type_system::Type::LiteralStr(_)
+                | sifr_type_system::Type::Bytes
+                | sifr_type_system::Type::List(_)
+                | sifr_type_system::Type::Iterable(_)
+        )
+        .then(|| crate::ownership_plan::materialize_owned_value(ty, lowered_object))
+    }
+
     pub(crate) fn clone_moved_names_in_borrowed_aggregate(
         arg: &HirExpr,
         lowered: crate::RustExpr,
@@ -46,11 +73,7 @@ impl RustEmitter {
                             if method == "clone" && args.is_empty()
                     ) =>
             {
-                crate::RustExpr::MethodCall {
-                    receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_expr))),
-                    method: "clone".to_string(),
-                    args: vec![],
-                }
+                crate::ownership_plan::materialize_owned_value(ty, lowered_expr)
             }
             (_, lowered_expr) => lowered_expr,
         }

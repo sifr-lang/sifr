@@ -9,11 +9,11 @@ use ::sifr_runtime::SifrRange;
 
 static __SIFR_HOISTED_DICT_0: ::std::sync::LazyLock<HashMap<String, Vec<String>>> = ::std::sync::LazyLock::new(|| HashMap::from([("L".to_string(), vec!["a".to_string(), "b".to_string(), "c".to_string()]), ("R".to_string(), vec!["d".to_string(), "e".to_string(), "f".to_string()])]));
 
-fn expand_keyed_strings(keys: &String) -> Vec<String> {
+fn expand_keyed_strings(keys: &str) -> Vec<String> {
     let __sifr_chars_keys: Vec<char> = keys.chars().collect::<Vec<char>>();
     let mut res: Vec<String> = vec![];
     let key_to_suffixes = &*__SIFR_HOISTED_DICT_0;
-    fn backtrack(i: SifrInt, cur: &String, key_to_suffixes: &HashMap<String, Vec<String>>, keys: &String, res: &mut Vec<String>) {
+    fn backtrack(i: SifrInt, cur: &str, key_to_suffixes: &HashMap<String, Vec<String>>, keys: &str, res: &mut Vec<String>) {
         if (&i < &SifrInt::from_i64(0)) || (&i >= &SifrInt::from(keys.chars().count())) {
             res.push(format!("{}", cur));
             return;
@@ -64,7 +64,7 @@ fn count_configurations(n: SifrInt) -> SifrInt {
     backtrack(SifrInt::from_i64(0), &mut HashSet::new(), &mut HashSet::new(), &mut HashSet::new(), n.clone())
 }
 
-fn find_root(n: SifrInt, par: &Vec<SifrInt>) -> SifrInt {
+fn find_root(n: SifrInt, par: &[SifrInt]) -> SifrInt {
     if (&n < &SifrInt::from_i64(0)) || (&n >= &SifrInt::from(par.len())) {
         return SifrInt::from_i64(0);
     }
@@ -89,8 +89,8 @@ fn find_root(n: SifrInt, par: &Vec<SifrInt>) -> SifrInt {
 }
 
 fn union_nodes(n1: SifrInt, n2: SifrInt, par: &mut Vec<SifrInt>, rank: &mut Vec<SifrInt>) -> bool {
-    let p1: SifrInt = find_root((n1).clone(), par);
-    let p2: SifrInt = find_root((n2).clone(), par);
+    let p1: SifrInt = find_root(n1.clone(), par);
+    let p2: SifrInt = find_root(n2.clone(), par);
     if (((((&p1 < &SifrInt::from_i64(0)) || (&p1 >= &SifrInt::from(rank.len()))) || (&p1 >= &SifrInt::from(par.len()))) || (&p2 < &SifrInt::from_i64(0))) || (&p2 >= &SifrInt::from(rank.len()))) || (&p2 >= &SifrInt::from(par.len())) {
         return false;
     }
@@ -159,7 +159,7 @@ fn union_nodes(n1: SifrInt, n2: SifrInt, par: &mut Vec<SifrInt>, rank: &mut Vec<
     true
 }
 
-fn detect_first_cycle(edges: &Vec<(SifrInt, SifrInt)>) -> Vec<SifrInt> {
+fn detect_first_cycle(edges: &[(SifrInt, SifrInt)]) -> Vec<SifrInt> {
     let mut par: Vec<SifrInt> = {
     let mut __sifr_list_comp = vec![];
     for i in SifrRange::new_known_nonzero(SifrInt::from_i64(0), &SifrInt::from(edges.len()) + &SifrInt::from_i64(1), SifrInt::from_i64(1)) {
@@ -175,7 +175,7 @@ fn detect_first_cycle(edges: &Vec<(SifrInt, SifrInt)>) -> Vec<SifrInt> {
     __sifr_list_comp
 };
     for (n1, n2) in edges.iter().cloned() {
-        if !union_nodes((n1).clone(), (n2).clone(), &mut par, &mut rank) {
+        if !union_nodes(n1.clone(), n2.clone(), &mut par, &mut rank) {
             return vec![n1.clone(), n2.clone()];
         }
     }

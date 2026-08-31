@@ -124,7 +124,7 @@ pub(crate) fn file_handle_write_bytes_method() -> RustItem {
                 name: "data".to_string(),
                 ty: RustType::Ref {
                     mutable: false,
-                    inner: Box::new(RustType::Vec(Box::new(RustType::Named("u8".to_string())))),
+                    inner: Box::new(RustType::Slice(Box::new(RustType::Named("u8".to_string())))),
                 },
             },
         ],
@@ -173,10 +173,7 @@ pub(crate) fn file_handle_write_bytes_method() -> RustItem {
                                     ])),
                                     args: vec![
                                         RustExpr::Ident("__w".to_string()),
-                                        RustExpr::Ref {
-                                            mutable: false,
-                                            expr: Box::new(RustExpr::Ident("data".to_string())),
-                                        },
+                                        RustExpr::Ident("data".to_string()),
                                     ],
                                 }),
                                 method: "map_err".to_string(),

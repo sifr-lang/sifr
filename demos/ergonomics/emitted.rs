@@ -39,7 +39,7 @@ fn classify(n: SifrInt) -> String {
         "non-positive".to_string()
     }
 }
-fn greet(name: &String, greeting: &String, punctuation: &String) -> String {
+fn greet(name: &str, greeting: &str, punctuation: &str) -> String {
     format!("{}, {}{}", greeting, name, punctuation)
 }
 fn demo_negative_indexing() {
@@ -173,7 +173,7 @@ fn demo_dict_methods() {
         ("b".to_string(), SifrInt::from_i64(2)),
         ("c".to_string(), SifrInt::from_i64(3)),
     ]);
-    println!("Dict contains \'a\': {}", d.contains_key(("a".to_string()).as_str()));
+    println!("Dict contains \'a\': {}", d.contains_key("a".to_string().as_str()));
     println!("Dict length: {}", SifrInt::from(d.len()));
     d.clear();
     println!("After clear: {}", SifrInt::from(d.len()));

@@ -120,6 +120,81 @@ fn lowers_match_with_class_patterns_and_captures() {
 }
 
 #[test]
+fn lowers_borrowed_union_match_with_string_concat_returns() {
+    let csv_error = Type::Class {
+        identity: Some("sifr.csv.Error".to_string()),
+        type_args: Vec::new(),
+        name: "Error".to_string(),
+        fields: vec![("message".to_string(), Type::Str)],
+        methods: Vec::new(),
+        parent_class: None,
+    };
+    let config_error = Type::Class {
+        identity: Some("sifr.configparser.Error".to_string()),
+        type_args: Vec::new(),
+        name: "Error".to_string(),
+        fields: vec![("message".to_string(), Type::Str)],
+        methods: Vec::new(),
+        parent_class: None,
+    };
+    let union = Type::Union(vec![config_error.clone(), csv_error.clone()]);
+    let arm = |class_name: &str, class_type: Type, prefix: &str| sifr_ir::HirMatchArm {
+        pattern: HirPattern::Class {
+            class_name: class_name.to_string(),
+            class_type,
+            fields: vec![(
+                "message".to_string(),
+                HirPattern::Capture {
+                    name: "message".to_string(),
+                    ty: Type::Str,
+                },
+            )],
+        },
+        guard: None,
+        body: vec![HirStmt::Return {
+            value: Some(HirExpr::BinOp {
+                left: Box::new(HirExpr::StringLiteral(prefix.to_string())),
+                op: "+".to_string(),
+                right: Box::new(HirExpr::Name {
+                    name: "message".to_string(),
+                    binding_id: None,
+                    ty: Type::Str,
+                }),
+                ty: Type::Str,
+            }),
+        }],
+    };
+    let stmt = HirStmt::Match {
+        subject: HirExpr::Name {
+            name: "value".to_string(),
+            binding_id: None,
+            ty: union.clone(),
+        },
+        subject_ty: union,
+        arms: vec![
+            arm("CsvError", csv_error, "csv:"),
+            arm("ConfigError", config_error, "config:"),
+        ],
+    };
+
+    let lowered = try_lower_simple_stmt_with_ctx(
+        &stmt,
+        false,
+        &HashSet::new(),
+        &HashSet::from(["value".to_string()]),
+        SimpleStmtLoweringCtx {
+            return_type: Some(&Type::Str),
+            in_display_impl: false,
+            in_class_scope: false,
+            in_generator_closure: false,
+        },
+    )
+    .expect("borrowed nominal union match lowered");
+
+    assert!(matches!(lowered.as_slice(), [RustStmt::Match { arms, .. }] if arms.len() == 2));
+}
+
+#[test]
 fn lowers_result_error_union_class_pattern() {
     let handler_error = Type::Class {
         identity: None,
@@ -208,7 +283,13 @@ fn lowers_match_with_string_literal_patterns() {
         RustStmt::Match { ref arms, .. }
             if arms.len() == 2
                 && arms[0].pattern == "__s"
-                && arms[0].guard.is_some()
+                && arms[0].guard == Some(crate::RustExpr::BinOp {
+                    left: Box::new(crate::RustExpr::Ident("__s".to_string())),
+                    op: "==".to_string(),
+                    right: Box::new(crate::RustExpr::Literal(crate::RustLiteral::StaticStr(
+                        "GET".to_string(),
+                    ))),
+                })
     ));
 }
 

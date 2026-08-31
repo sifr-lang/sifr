@@ -42,7 +42,7 @@ fn evaluate(seed: SifrInt) -> SifrInt {
 }
 fn safe(seed: SifrInt) -> SifrInt {
     let __sifr_try_res: Result<SifrInt, ValueError> = (|| {
-        let value: SifrInt = evaluate((seed).clone());
+        let value: SifrInt = evaluate(seed.clone());
         if (&value > &SifrInt::from_i64(3)) {
             return Ok(value);
         }

@@ -96,8 +96,27 @@ impl<T> Iterator for __SifrGenerator<T> {
         yielded
     }
 }
-fn chain<T: Clone + 'static>(iterables: &Vec<Vec<T>>) -> Box<dyn Iterator<Item = T>> {
-    let iterables = iterables.clone();
+pub trait __SifrAdd: Sized {
+    fn __sifr_add(self, rhs: Self) -> Self;
+}
+impl __SifrAdd for ::sifr_runtime::SifrInt {
+    fn __sifr_add(self, rhs: Self) -> Self {
+        self + rhs
+    }
+}
+impl __SifrAdd for f64 {
+    fn __sifr_add(self, rhs: Self) -> Self {
+        self + rhs
+    }
+}
+impl __SifrAdd for String {
+    fn __sifr_add(mut self, rhs: Self) -> Self {
+        self.push_str(&rhs);
+        self
+    }
+}
+fn chain<T: Clone + 'static>(iterables: &[Vec<T>]) -> Box<dyn Iterator<Item = T>> {
+    let iterables = iterables.to_vec();
     Box::new(
         __SifrGenerator::new(async move |__sifr_yielder: __SifrYielder<T>| {
             for iterable in iterables.iter().cloned() {

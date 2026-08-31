@@ -8,7 +8,7 @@ fn power_two(exp: SifrInt) -> SifrInt {
         }
         return &SifrInt::from_i64(2) * &helper(&n - &SifrInt::from_i64(1));
     }
-    helper((exp).clone())
+    helper(exp.clone())
 }
 
 fn sum_to(limit: SifrInt) -> SifrInt {

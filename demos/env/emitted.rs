@@ -2,12 +2,12 @@
 use ::sifr_runtime::SifrInt;
 
 // --- stdlib: _sifr.sys ---
-fn run_command(cmd: &String) -> Result<String, IOError> {
+fn run_command(cmd: &str) -> Result<String, IOError> {
     ::sifr_stdlib::sys::run_command(cmd)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn env_get(key: &String) -> Option<String> {
+fn env_get(key: &str) -> Option<String> {
     ::sifr_stdlib::sys::env_get(key)
 }
 fn env_keys() -> Vec<String> {
@@ -40,7 +40,7 @@ fn getpid() -> SifrInt {
 fn cpu_count() -> SifrInt {
     ::sifr_stdlib::sys::cpu_count().into_sifr_int()
 }
-fn which(name: &String) -> Option<String> {
+fn which(name: &str) -> Option<String> {
     ::sifr_stdlib::sys::which(name)
 }
 fn os_sep() -> String {
@@ -54,17 +54,17 @@ fn os_name() -> String {
 }
 
 // --- stdlib: sifr.env ---
-fn getenv_opt(key: &String) -> Option<String> {
+fn getenv_opt(key: &str) -> Option<String> {
     env_get(key)
 }
-fn getenv(key: &String, default_value: &String) -> String {
+fn getenv(key: &str, default_value: &str) -> String {
     let val: Option<String> = env_get(key);
     let Some(val) = val else {
         return {
             let mut __sifr_concat: String = String::with_capacity(
                 default_value.len() + 0usize,
             );
-            __sifr_concat.push_str((default_value).as_str());
+            __sifr_concat.push_str((default_value).as_ref());
             __sifr_concat.push_str("");
             __sifr_concat
         };
@@ -82,7 +82,7 @@ fn items() -> Vec<String> {
 }
 
 // --- stdlib: sifr.test ---
-fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
+fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
     assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
     let mut i: SifrInt = SifrInt::from_i64(0);
     while &i < &SifrInt::from(actual.len()) {

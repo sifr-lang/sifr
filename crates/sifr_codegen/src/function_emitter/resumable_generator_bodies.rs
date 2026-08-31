@@ -6,25 +6,24 @@ impl RustEmitter {
         mutable_param_shadows: &[(String, RustExpr)],
     ) -> (Vec<RustStmt>, Vec<String>) {
         let mut body = Self::emit_mutable_param_shadow_stmts(mutable_param_shadows);
-        let cloned_borrowed_params = func
-            .params
-            .iter()
-            .filter(|param| {
-                !mutable_param_shadows
-                    .iter()
-                    .any(|(name, _)| name == &param.name)
-                    && param.convention.is_borrowed()
-                    && !crate::helpers::is_copy_type_for_codegen(&param.ty)
-            })
-            .map(|param| param.name.clone())
-            .collect::<Vec<_>>();
-        for name in &cloned_borrowed_params {
+        let mut cloned_borrowed_params = Vec::new();
+        for param in func.params.iter().filter(|param| {
+            !mutable_param_shadows
+                .iter()
+                .any(|(name, _)| name == &param.name)
+                && param.convention.is_borrowed()
+                && !crate::helpers::is_copy_type_for_codegen(&param.ty)
+        }) {
             body.push(RustStmt::Let {
                 mutable: false,
-                name: name.clone(),
+                name: param.name.clone(),
                 ty: None,
-                value: RustExpr::Clone(Box::new(RustExpr::Ident(name.clone()))),
+                value: crate::ownership_plan::materialize_owned_value(
+                    &param.ty,
+                    RustExpr::Ident(param.name.clone()),
+                ),
             });
+            cloned_borrowed_params.push(param.name.clone());
         }
         (body, cloned_borrowed_params)
     }

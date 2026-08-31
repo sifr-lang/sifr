@@ -270,7 +270,7 @@ fn main() {
         println!(
             "{}", { let mut __sifr_concat : String = String::with_capacity(23usize +
             0usize); __sifr_concat.push_str("unexpected ValueError: "); __sifr_concat
-            .push_str((e.message.clone()).as_str()); __sifr_concat }
+            .push_str(e.message.clone().as_str()); __sifr_concat }
         );
     }
     assert!(size_ok);
@@ -331,7 +331,7 @@ fn main() {
         println!(
             "{}", { let mut __sifr_concat : String = String::with_capacity(23usize +
             0usize); __sifr_concat.push_str("unexpected ValueError: "); __sifr_concat
-            .push_str((e.message.clone()).as_str()); __sifr_concat }
+            .push_str(e.message.clone().as_str()); __sifr_concat }
         );
     }
     assert!(from_ints_ok);
@@ -389,7 +389,7 @@ fn main() {
         println!(
             "{}", { let mut __sifr_concat : String = String::with_capacity(23usize +
             0usize); __sifr_concat.push_str("unexpected ParseError: "); __sifr_concat
-            .push_str((e.message.clone()).as_str()); __sifr_concat }
+            .push_str(e.message.clone().as_str()); __sifr_concat }
         );
     }
     assert!(from_hex_ok);
@@ -416,7 +416,7 @@ fn main() {
         println!(
             "{}", { let mut __sifr_concat : String = String::with_capacity(23usize +
             0usize); __sifr_concat.push_str("unexpected ParseError: "); __sifr_concat
-            .push_str((e.message.clone()).as_str()); __sifr_concat }
+            .push_str(e.message.clone().as_str()); __sifr_concat }
         );
     }
     assert!(encode_ok);

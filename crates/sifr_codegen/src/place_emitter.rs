@@ -218,7 +218,7 @@ impl RustEmitter {
                 if (self.borrowed_params.contains(name) || self.mut_borrowed_params.contains(name))
                     && !crate::helpers::is_copy_type_for_codegen(ty))
         {
-            RustExpr::Clone(Box::new(lowered))
+            crate::ownership_plan::materialize_owned_value(argument.ty(), lowered)
         } else {
             lowered
         }

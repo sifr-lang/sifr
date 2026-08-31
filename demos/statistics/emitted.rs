@@ -221,7 +221,7 @@ fn lcm(a: SifrInt, b: SifrInt) -> SifrInt {
     if &b == &SifrInt::from_i64(0) {
         return SifrInt::from_i64(0);
     }
-    let g: SifrInt = gcd((a).clone(), (b).clone());
+    let g: SifrInt = gcd(a.clone(), b.clone());
     if &g == &SifrInt::from_i64(0) {
         return SifrInt::from_i64(0);
     }
@@ -321,27 +321,27 @@ fn isclose(a: f64, b: f64, rel_tol: f64, abs_tol: f64) -> bool {
     }
     diff <= rel_bound
 }
-fn prod(data: &Vec<SifrInt>) -> SifrInt {
+fn prod(data: &[SifrInt]) -> SifrInt {
     let mut result: SifrInt = SifrInt::from_i64(1);
     for val in data.iter().cloned() {
         result = &result * &val;
     }
     result.clone()
 }
-fn _copy_float_list(data: &Vec<f64>) -> Vec<f64> {
+fn _copy_float_list(data: &[f64]) -> Vec<f64> {
     let mut out: Vec<f64> = vec![];
     for value in data.iter().copied() {
         out.push(value);
     }
     out
 }
-fn dist(p: &Vec<f64>, q: &Vec<f64>) -> f64 {
+fn dist(p: &[f64], q: &[f64]) -> f64 {
     dist_impl(_copy_float_list(p), _copy_float_list(q))
 }
-fn fsum(data: &Vec<f64>) -> f64 {
+fn fsum(data: &[f64]) -> f64 {
     fsum_impl(_copy_float_list(data))
 }
-fn sumprod(p: &Vec<f64>, q: &Vec<f64>) -> f64 {
+fn sumprod(p: &[f64], q: &[f64]) -> f64 {
     sumprod_impl(_copy_float_list(p), _copy_float_list(q))
 }
 fn frexp_mantissa(x: f64) -> f64 {
@@ -458,7 +458,7 @@ impl ::std::fmt::Display for __SifrStdlib_sifr_x2estatistics_x2eStatisticsError 
     }
 }
 impl ::std::error::Error for __SifrStdlib_sifr_x2estatistics_x2eStatisticsError {}
-fn _sum(data: &Vec<f64>) -> f64 {
+fn _sum(data: &[f64]) -> f64 {
     let mut total: f64 = 0.0_f64;
     for val in data.iter().copied() {
         total += val;
@@ -532,7 +532,7 @@ fn _divide_by_int(
         Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError>,
         __SifrStdlib_sifr_x2estatistics_x2eStatisticsError,
     > = (|| {
-        let divisor: f64 = _float_int((denominator).clone())?;
+        let divisor: f64 = _float_int(denominator.clone())?;
         Ok(Ok(numerator / divisor))
     })();
     match __sifr_try_res {
@@ -550,7 +550,7 @@ fn _divide_by_int(
     }
 }
 fn mean(
-    data: &Vec<f64>,
+    data: &[f64],
 ) -> Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
     let count: SifrInt = SifrInt::from(data.len());
     if (&count == &SifrInt::from_i64(0)) {
@@ -561,10 +561,10 @@ fn mean(
         );
     }
     let total: f64 = _sum(data);
-    _divide_by_int(total, (count).clone())
+    _divide_by_int(total, count.clone())
 }
 fn median(
-    data: &Vec<f64>,
+    data: &[f64],
 ) -> Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
     let n: SifrInt = SifrInt::from(data.len());
     if (&n == &SifrInt::from_i64(0)) {
@@ -624,7 +624,7 @@ fn median(
     }
 }
 fn variance(
-    data: &Vec<f64>,
+    data: &[f64],
 ) -> Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
     let n: SifrInt = SifrInt::from(data.len());
     if (&n < &SifrInt::from_i64(2)) {
@@ -638,7 +638,7 @@ fn variance(
         (f64,),
         __SifrStdlib_sifr_x2estatistics_x2eStatisticsError,
     > = (|| {
-        let avg: f64 = _divide_by_int(_sum(data), (n).clone())?;
+        let avg: f64 = _divide_by_int(_sum(data), n.clone())?;
         Ok((avg,))
     })();
     let (avg,) = match __sifr_try_res {
@@ -660,7 +660,7 @@ fn variance(
     _divide_by_int(total, &n - &SifrInt::from_i64(1))
 }
 fn stdev(
-    data: &Vec<f64>,
+    data: &[f64],
 ) -> Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
     let n: SifrInt = SifrInt::from(data.len());
     if (&n < &SifrInt::from_i64(2)) {
@@ -674,7 +674,7 @@ fn stdev(
         (f64,),
         __SifrStdlib_sifr_x2estatistics_x2eStatisticsError,
     > = (|| {
-        let avg: f64 = _divide_by_int(_sum(data), (n).clone())?;
+        let avg: f64 = _divide_by_int(_sum(data), n.clone())?;
         Ok((avg,))
     })();
     let (avg,) = match __sifr_try_res {
@@ -714,7 +714,7 @@ fn stdev(
     Ok(sqrt(v))
 }
 fn harmonic_mean(
-    data: &Vec<f64>,
+    data: &[f64],
 ) -> Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
     let n: SifrInt = SifrInt::from(data.len());
     if (&n == &SifrInt::from_i64(0)) {
@@ -739,7 +739,7 @@ fn harmonic_mean(
         Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError>,
         __SifrStdlib_sifr_x2estatistics_x2eStatisticsError,
     > = (|| {
-        let numerator: f64 = _float_int((n).clone())?;
+        let numerator: f64 = _float_int(n.clone())?;
         Ok(Ok(numerator / total))
     })();
     match __sifr_try_res {
@@ -757,7 +757,7 @@ fn harmonic_mean(
     }
 }
 fn geometric_mean(
-    data: &Vec<f64>,
+    data: &[f64],
 ) -> Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
     let n: SifrInt = SifrInt::from(data.len());
     if (&n == &SifrInt::from_i64(0)) {
@@ -782,7 +782,7 @@ fn geometric_mean(
         Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError>,
         __SifrStdlib_sifr_x2estatistics_x2eStatisticsError,
     > = (|| {
-        let mean_log: f64 = _divide_by_int(log_sum, (n).clone())?;
+        let mean_log: f64 = _divide_by_int(log_sum, n.clone())?;
         Ok(Ok(exp(mean_log)))
     })();
     match __sifr_try_res {
@@ -800,7 +800,7 @@ fn geometric_mean(
     }
 }
 fn mode(
-    data: &Vec<SifrInt>,
+    data: &[SifrInt],
 ) -> Result<SifrInt, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
     if (&SifrInt::from(data.len()) == &SifrInt::from_i64(0)) {
         return Err(
@@ -855,7 +855,7 @@ fn mode(
     )
 }
 fn multimode(
-    data: &Vec<SifrInt>,
+    data: &[SifrInt],
 ) -> Result<Vec<SifrInt>, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
     if (&SifrInt::from(data.len()) == &SifrInt::from_i64(0)) {
         return Err(
@@ -925,7 +925,7 @@ fn multimode(
     Ok(result)
 }
 fn quantiles(
-    data: &Vec<f64>,
+    data: &[f64],
     n: SifrInt,
 ) -> Result<Vec<f64>, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
     if (&SifrInt::from(data.len()) < &SifrInt::from_i64(2)) {
@@ -955,9 +955,9 @@ fn quantiles(
             (f64, f64, f64),
             __SifrStdlib_sifr_x2estatistics_x2eStatisticsError,
         > = (|| {
-            let i_float: f64 = _float_int((i).clone())?;
-            let m_float: f64 = _float_int((m).clone())?;
-            let n_float: f64 = _float_int((n).clone())?;
+            let i_float: f64 = _float_int(i.clone())?;
+            let m_float: f64 = _float_int(m.clone())?;
+            let n_float: f64 = _float_int(n.clone())?;
             Ok((i_float, m_float, n_float))
         })();
         let (i_float, m_float, n_float) = match __sifr_try_res {
@@ -993,7 +993,7 @@ fn quantiles(
             (f64,),
             __SifrStdlib_sifr_x2estatistics_x2eStatisticsError,
         > = (|| {
-            let idx_float: f64 = _float_int((idx).clone())?;
+            let idx_float: f64 = _float_int(idx.clone())?;
             Ok((idx_float,))
         })();
         let (idx_float,) = match __sifr_try_res {
@@ -1048,8 +1048,8 @@ fn quantiles(
     Ok(result)
 }
 fn covariance(
-    x: &Vec<f64>,
-    y: &Vec<f64>,
+    x: &[f64],
+    y: &[f64],
 ) -> Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
     let n: SifrInt = SifrInt::from(x.len());
     if (&n < &SifrInt::from_i64(2)) {
@@ -1070,8 +1070,8 @@ fn covariance(
         (f64, f64),
         __SifrStdlib_sifr_x2estatistics_x2eStatisticsError,
     > = (|| {
-        let mx: f64 = _divide_by_int(_sum(x), (n).clone())?;
-        let my: f64 = _divide_by_int(_sum(y), (n).clone())?;
+        let mx: f64 = _divide_by_int(_sum(x), n.clone())?;
+        let my: f64 = _divide_by_int(_sum(y), n.clone())?;
         Ok((mx, my))
     })();
     let (mx, my) = match __sifr_try_res {
@@ -1112,8 +1112,8 @@ fn covariance(
     _divide_by_int(total, &n - &SifrInt::from_i64(1))
 }
 fn correlation(
-    x: &Vec<f64>,
-    y: &Vec<f64>,
+    x: &[f64],
+    y: &[f64],
 ) -> Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
     let n: SifrInt = SifrInt::from(x.len());
     if (&n < &SifrInt::from_i64(2)) {
@@ -1134,8 +1134,8 @@ fn correlation(
         (f64, f64),
         __SifrStdlib_sifr_x2estatistics_x2eStatisticsError,
     > = (|| {
-        let mx: f64 = _divide_by_int(_sum(x), (n).clone())?;
-        let my: f64 = _divide_by_int(_sum(y), (n).clone())?;
+        let mx: f64 = _divide_by_int(_sum(x), n.clone())?;
+        let my: f64 = _divide_by_int(_sum(y), n.clone())?;
         Ok((mx, my))
     })();
     let (mx, my) = match __sifr_try_res {
@@ -1234,8 +1234,8 @@ fn correlation(
     }
 }
 fn linear_regression(
-    x: &Vec<f64>,
-    y: &Vec<f64>,
+    x: &[f64],
+    y: &[f64],
 ) -> Result<Vec<f64>, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
     let n: SifrInt = SifrInt::from(x.len());
     if (&n < &SifrInt::from_i64(2)) {
@@ -1256,8 +1256,8 @@ fn linear_regression(
         (f64, f64),
         __SifrStdlib_sifr_x2estatistics_x2eStatisticsError,
     > = (|| {
-        let mx: f64 = _divide_by_int(_sum(x), (n).clone())?;
-        let my: f64 = _divide_by_int(_sum(y), (n).clone())?;
+        let mx: f64 = _divide_by_int(_sum(x), n.clone())?;
+        let my: f64 = _divide_by_int(_sum(y), n.clone())?;
         Ok((mx, my))
     })();
     let (mx, my) = match __sifr_try_res {
@@ -1313,7 +1313,7 @@ fn linear_regression(
 }
 
 // --- stdlib: sifr.test ---
-fn assert_vector_eq(actual: &Vec<String>, expected: &Vec<String>) {
+fn assert_vector_eq(actual: &[String], expected: &[String]) {
     assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
     let mut i: SifrInt = SifrInt::from_i64(0);
     while &i < &SifrInt::from(actual.len()) {
@@ -1330,7 +1330,7 @@ fn assert_vector_eq(actual: &Vec<String>, expected: &Vec<String>) {
         i = &i + &SifrInt::from_i64(1);
     }
 }
-fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
+fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
     assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
     let mut i: SifrInt = SifrInt::from_i64(0);
     while &i < &SifrInt::from(actual.len()) {

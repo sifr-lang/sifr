@@ -112,11 +112,7 @@ impl RustEmitter {
                         let Some(value_expr) = self.lower_stmt_expr_for_ir(value)? else {
                             return Ok(false);
                         };
-                        crate::RustExpr::MethodCall {
-                            receiver: Box::new(crate::RustExpr::Paren(Box::new(value_expr))),
-                            method: "as_str".to_string(),
-                            args: vec![],
-                        }
+                        self.string_view_expr(value, value_expr)
                     };
                     let lowered = crate::RustStmt::Expr(crate::RustExpr::MethodCall {
                         receiver: Box::new(crate::RustExpr::Ident(name.clone())),

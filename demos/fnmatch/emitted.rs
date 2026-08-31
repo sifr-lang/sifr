@@ -2,10 +2,10 @@
 use ::sifr_runtime::SifrInt;
 
 // --- stdlib: sifr.fnmatch ---
-fn fnmatch(name: &String, pattern: &String) -> bool {
+fn fnmatch(name: &str, pattern: &str) -> bool {
     _match(name, SifrInt::from_i64(0), pattern, SifrInt::from_i64(0))
 }
-fn _match(name: &String, mut ni: SifrInt, pattern: &String, mut pi: SifrInt) -> bool {
+fn _match(name: &str, mut ni: SifrInt, pattern: &str, mut pi: SifrInt) -> bool {
     while (&pi < &SifrInt::from(pattern.chars().count())) {
         let pc: Option<String> = ({
             let __sifr_string_source = &pattern;
@@ -23,7 +23,7 @@ fn _match(name: &String, mut ni: SifrInt, pattern: &String, mut pi: SifrInt) -> 
                 }
                 let mut j: SifrInt = ni.clone();
                 while (&j <= &SifrInt::from(name.chars().count())) {
-                    if _match(name, (j).clone(), pattern, (pi).clone()) {
+                    if _match(name, j.clone(), pattern, pi.clone()) {
                         return true;
                     }
                     j = &j + &SifrInt::from_i64(1);
@@ -67,18 +67,18 @@ fn _match(name: &String, mut ni: SifrInt, pattern: &String, mut pi: SifrInt) -> 
     }
     (&ni == &SifrInt::from(name.chars().count()))
 }
-fn filter(names: &Vec<String>, pattern: &String) -> Vec<String> {
+fn filter(names: &[String], pattern: &str) -> Vec<String> {
     let mut result: Vec<String> = vec![];
     for name in names.iter().cloned() {
         if fnmatch(&name, pattern) {
-            result.push(name.clone());
+            result.push(name.to_owned());
         }
     }
     result
 }
 
 // --- stdlib: sifr.test ---
-fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
+fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
     assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
     let mut i: SifrInt = SifrInt::from_i64(0);
     while &i < &SifrInt::from(actual.len()) {
@@ -111,12 +111,12 @@ fn collect_match_actual() -> Vec<bool> {
 fn collect_filter_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![];
     let names: Vec<String> = vec!["main.py".to_string(), "notes.txt".to_string(), "lib.py".to_string()];
-    actual.push((format!("{:?}", filter(&names, &"*.py".to_string()))).as_str() == ("[\"main.py\", \"lib.py\"]".to_string()).as_str());
-    actual.push((format!("{:?}", filter(&names, &"README*".to_string()))).as_str() == ("[]".to_string()).as_str());
+    actual.push(format!("{:?}", filter(&names, &"*.py".to_string())).as_str() == "[\"main.py\", \"lib.py\"]".to_string().as_str());
+    actual.push(format!("{:?}", filter(&names, &"README*".to_string())).as_str() == "[]".to_string().as_str());
     actual
 }
 
-fn append_all(target: &mut Vec<bool>, values: &Vec<bool>) {
+fn append_all(target: &mut Vec<bool>, values: &[bool]) {
     for value in values.iter().copied() {
         target.push(value);
     }

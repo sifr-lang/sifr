@@ -96,6 +96,25 @@ impl<T> Iterator for __SifrGenerator<T> {
         yielded
     }
 }
+pub trait __SifrAdd: Sized {
+    fn __sifr_add(self, rhs: Self) -> Self;
+}
+impl __SifrAdd for ::sifr_runtime::SifrInt {
+    fn __sifr_add(self, rhs: Self) -> Self {
+        self + rhs
+    }
+}
+impl __SifrAdd for f64 {
+    fn __sifr_add(self, rhs: Self) -> Self {
+        self + rhs
+    }
+}
+impl __SifrAdd for String {
+    fn __sifr_add(mut self, rhs: Self) -> Self {
+        self.push_str(&rhs);
+        self
+    }
+}
 fn _collect_iterator<T: Clone + 'static>(data: Box<dyn Iterator<Item = T>>) -> Vec<T> {
     let mut collected: Vec<T> = vec![];
     for item in data {
@@ -104,10 +123,10 @@ fn _collect_iterator<T: Clone + 'static>(data: Box<dyn Iterator<Item = T>>) -> V
     collected
 }
 fn product<T: Clone + 'static>(
-    iterables: &Vec<Vec<T>>,
+    iterables: &[Vec<T>],
     repeat: SifrInt,
 ) -> Box<dyn Iterator<Item = Vec<T>>> {
-    let iterables = iterables.clone();
+    let iterables = iterables.to_vec();
     Box::new(
         __SifrGenerator::new(async move |__sifr_yielder: __SifrYielder<Vec<T>>| {
             if &repeat < &SifrInt::from_i64(0) {
@@ -117,7 +136,7 @@ fn product<T: Clone + 'static>(
             let mut repetition: SifrInt = SifrInt::from_i64(0);
             while (&repetition < &repeat) {
                 for iterable in iterables.iter().cloned() {
-                    pools.push(iterable.clone());
+                    pools.push(iterable.to_vec());
                 }
                 repetition = &repetition + &SifrInt::from_i64(1);
             }
@@ -184,7 +203,7 @@ fn product<T: Clone + 'static>(
                     row.push(value.clone());
                     pool_index = &pool_index + &SifrInt::from_i64(1);
                 }
-                __sifr_yielder.suspend(row.clone()).await;
+                __sifr_yielder.suspend(row.to_vec()).await;
                 let mut position: SifrInt = &SifrInt::from(pools.len())
                     - &SifrInt::from_i64(1);
                 let mut advanced: bool = false;
@@ -336,7 +355,7 @@ fn permutations<T: Clone + 'static>(
                 first.push(value.clone());
                 index = &index + &SifrInt::from_i64(1);
             }
-            __sifr_yielder.suspend(first.clone()).await;
+            __sifr_yielder.suspend(first.to_vec()).await;
             loop {
                 let mut position: SifrInt = &target - &SifrInt::from_i64(1);
                 let mut produced: bool = false;
@@ -575,7 +594,7 @@ fn permutations<T: Clone + 'static>(
                             row.push(item.clone());
                             row_index = &row_index + &SifrInt::from_i64(1);
                         }
-                        __sifr_yielder.suspend(row.clone()).await;
+                        __sifr_yielder.suspend(row.to_vec()).await;
                         produced = true;
                     }
                 }
@@ -626,7 +645,7 @@ fn combinations<T: Clone + 'static>(
                     };
                     row.push(value.clone());
                 }
-                __sifr_yielder.suspend(row.clone()).await;
+                __sifr_yielder.suspend(row.to_vec()).await;
                 let mut position: SifrInt = &r - &SifrInt::from_i64(1);
                 while (&position >= &SifrInt::from_i64(0)) {
                     let current: Option<SifrInt> = {
@@ -774,7 +793,7 @@ fn combinations_with_replacement<T: Clone + 'static>(
                     };
                     row.push(value.clone());
                 }
-                __sifr_yielder.suspend(row.clone()).await;
+                __sifr_yielder.suspend(row.to_vec()).await;
                 let mut position: SifrInt = &r - &SifrInt::from_i64(1);
                 while (&position >= &SifrInt::from_i64(0)) {
                     let current: Option<SifrInt> = {
@@ -854,7 +873,7 @@ fn starmap<A: Clone + 'static, B: Clone + 'static, R: Clone + 'static>(
         }),
     )
 }
-fn accumulate<T: Clone + 'static + ::std::ops::Add<Output = T>>(
+fn accumulate<T: Clone + 'static + __SifrAdd>(
     data: Box<dyn Iterator<Item = T>>,
     initial: Option<T>,
 ) -> Box<dyn Iterator<Item = T>> {
@@ -892,7 +911,7 @@ fn accumulate<T: Clone + 'static + ::std::ops::Add<Output = T>>(
                             .cloned()
                     };
                     if let Some(prev) = prev {
-                        let next_val: T = prev + item;
+                        let next_val: T = __SifrAdd::__sifr_add(prev, item);
                         let __sifr_try_res: Result<(), IndexError> = (|| {
                             {
                                 let __assign_value = next_val.clone();
@@ -1025,7 +1044,7 @@ fn zip_longest<T: Clone + 'static>(
                 } else {
                     pair.push(fill.clone());
                 }
-                __sifr_yielder.suspend(pair.clone()).await;
+                __sifr_yielder.suspend(pair.to_vec()).await;
             }
         }),
     )

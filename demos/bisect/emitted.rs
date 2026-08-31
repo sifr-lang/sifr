@@ -3,7 +3,7 @@ use ::sifr_runtime::SifrInt;
 
 // --- stdlib: sifr.bisect ---
 fn bisect_left<T: Clone + 'static + PartialOrd>(
-    a: &Vec<T>,
+    a: &[T],
     x: &T,
     lo: SifrInt,
     hi: Option<SifrInt>,
@@ -51,7 +51,7 @@ fn bisect_left<T: Clone + 'static + PartialOrd>(
     left.clone()
 }
 fn bisect_right<T: Clone + 'static + PartialOrd>(
-    a: &Vec<T>,
+    a: &[T],
     x: &T,
     lo: SifrInt,
     hi: Option<SifrInt>,
@@ -104,7 +104,7 @@ fn insort_left<T: Clone + 'static + PartialOrd>(
     lo: SifrInt,
     hi: Option<SifrInt>,
 ) {
-    let pos: SifrInt = bisect_left(a, x, (lo).clone(), (hi).clone());
+    let pos: SifrInt = bisect_left(a, x, lo.clone(), hi.clone());
     a.insert(::sifr_runtime::to_usize_proven(&pos), x.clone());
 }
 fn insort_right<T: Clone + 'static + PartialOrd>(
@@ -113,12 +113,12 @@ fn insort_right<T: Clone + 'static + PartialOrd>(
     lo: SifrInt,
     hi: Option<SifrInt>,
 ) {
-    let pos: SifrInt = bisect_right(a, x, (lo).clone(), (hi).clone());
+    let pos: SifrInt = bisect_right(a, x, lo.clone(), hi.clone());
     a.insert(::sifr_runtime::to_usize_proven(&pos), x.clone());
 }
 
 // --- stdlib: sifr.test ---
-fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
+fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
     assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
     let mut i: SifrInt = SifrInt::from_i64(0);
     while &i < &SifrInt::from(actual.len()) {
@@ -146,14 +146,14 @@ fn collect_actual() -> Vec<bool> {
     actual.push(&bisect_right(&data, &SifrInt::from_i64(4), SifrInt::from_i64(0), None) == &SifrInt::from_i64(4));
     let mut left_mut: Vec<SifrInt> = vec![SifrInt::from_i64(1), SifrInt::from_i64(3), SifrInt::from_i64(3), SifrInt::from_i64(5)];
     insort_left(&mut left_mut, &SifrInt::from_i64(3), SifrInt::from_i64(0), None);
-    actual.push((format!("{:?}", left_mut)).as_str() == ("[1, 3, 3, 3, 5]".to_string()).as_str());
+    actual.push(format!("{:?}", left_mut).as_str() == "[1, 3, 3, 3, 5]".to_string().as_str());
     let mut right_mut: Vec<SifrInt> = vec![SifrInt::from_i64(1), SifrInt::from_i64(3), SifrInt::from_i64(3), SifrInt::from_i64(5)];
     insort_right(&mut right_mut, &SifrInt::from_i64(3), SifrInt::from_i64(0), None);
-    actual.push((format!("{:?}", right_mut)).as_str() == ("[1, 3, 3, 3, 5]".to_string()).as_str());
+    actual.push(format!("{:?}", right_mut).as_str() == "[1, 3, 3, 3, 5]".to_string().as_str());
     let mut empty: Vec<SifrInt> = vec![];
     actual.push(&bisect_left(&empty, &SifrInt::from_i64(10), SifrInt::from_i64(0), None) == &SifrInt::from_i64(0));
     insort_right(&mut empty, &SifrInt::from_i64(10), SifrInt::from_i64(0), None);
-    actual.push((format!("{:?}", empty)).as_str() == ("[10]".to_string()).as_str());
+    actual.push(format!("{:?}", empty).as_str() == "[10]".to_string().as_str());
     actual
 }
 

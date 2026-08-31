@@ -1,7 +1,7 @@
 // src/main.rs
 use ::sifr_runtime::SifrInt;
 
-fn summarize(values: &Vec<SifrInt>) -> SifrInt {
+fn summarize(values: &[SifrInt]) -> SifrInt {
     let mut total: SifrInt = SifrInt::from_i64(0);
     for value in values.iter().cloned() {
         if &value > &SifrInt::from_i64(10) {

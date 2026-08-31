@@ -106,7 +106,7 @@ impl ::std::fmt::Display for Employee {
     }
 }
 
-fn sum_items(values: &Vec<SifrInt>) -> SifrInt {
+fn sum_items(values: &[SifrInt]) -> SifrInt {
     let mut total: SifrInt = SifrInt::from_i64(0);
     for value in values.iter().cloned() {
         total = &total + &value;

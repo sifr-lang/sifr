@@ -79,8 +79,8 @@ pub use __sifr_project_unions::__SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_
 pub use __sifr_project_unions::__SifrUnion_8_x3asequence5_x3aunion1_x3a311_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool;
 use ::sifr_runtime::SifrInt;
 
-fn find_user(name: &String) -> Option<String> {
-    if (name).as_str() == "alice" {
+fn find_user(name: &str) -> Option<String> {
+    if name == "alice" {
         return Some("Alice Smith".to_string());
     }
     None
@@ -131,12 +131,12 @@ fn main() {
     if missing.is_none() {
         println!("not found");
     }
-    println!("{}", process(&__SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr::__SifrUnionVariant_4_x3aatom3_x3aint((SifrInt::from_i64(42)).clone())));
-    println!("{}", process(&__SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr::__SifrUnionVariant_4_x3aatom3_x3astr(("hello".to_string()).clone())));
-    println!("{}", classify(&__SifrUnion_8_x3asequence5_x3aunion1_x3a311_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool::__SifrUnionVariant_4_x3aatom3_x3aint((SifrInt::from_i64(1)).clone())));
-    println!("{}", classify(&__SifrUnion_8_x3asequence5_x3aunion1_x3a311_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool::__SifrUnionVariant_4_x3aatom3_x3astr(("hi".to_string()).clone())));
+    println!("{}", process(&__SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr::__SifrUnionVariant_4_x3aatom3_x3aint(SifrInt::from_i64(42))));
+    println!("{}", process(&__SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr::__SifrUnionVariant_4_x3aatom3_x3astr("hello".to_string().to_owned())));
+    println!("{}", classify(&__SifrUnion_8_x3asequence5_x3aunion1_x3a311_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool::__SifrUnionVariant_4_x3aatom3_x3aint(SifrInt::from_i64(1))));
+    println!("{}", classify(&__SifrUnion_8_x3asequence5_x3aunion1_x3a311_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool::__SifrUnionVariant_4_x3aatom3_x3astr("hi".to_string().to_owned())));
     println!("{}", classify(&__SifrUnion_8_x3asequence5_x3aunion1_x3a311_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr12_x3a4_x3aatom4_x3abool::__SifrUnionVariant_4_x3aatom4_x3abool(true)));
-    println!("{}", process_optional(&Some(("world".to_string()).clone())));
+    println!("{}", process_optional(&Some("world".to_string().to_owned())));
     println!("{}", process_optional(&None));
     let mut s: String = "hello".to_string();
     let x: String = consume(s);

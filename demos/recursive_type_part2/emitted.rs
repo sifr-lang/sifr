@@ -1,7 +1,7 @@
 // src/main.rs
 use ::sifr_runtime::SifrInt;
 
-fn payload_size(data: &Vec<SifrInt>) -> SifrInt {
+fn payload_size(data: &[SifrInt]) -> SifrInt {
     SifrInt::from(data.len())
 }
 

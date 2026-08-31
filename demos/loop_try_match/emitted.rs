@@ -28,13 +28,13 @@ fn normalize(n: SifrInt) -> SifrInt {
         }
     }
 }
-fn compute(values: &Vec<SifrInt>) -> SifrInt {
+fn compute(values: &[SifrInt]) -> SifrInt {
     let mut total: SifrInt = SifrInt::from_i64(0);
     {
         let _broke: bool = false;
         for value in values.iter().cloned() {
             let __sifr_try_res: Result<(), Error> = (|| {
-                total = &total + &normalize((value).clone());
+                total = &total + &normalize(value.clone());
                 Ok(())
             })();
             if let Err(__sifr_try_err) = __sifr_try_res {

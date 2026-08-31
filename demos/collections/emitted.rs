@@ -174,7 +174,7 @@ mod __sifr_project_nominals {
             let Some(n) = n.as_ref() else {
                 return result;
             };
-            if (&n.clone() <= &SifrInt::from_i64(0)) {
+            if (n <= &SifrInt::from_i64(0)) {
                 return vec![];
             }
             let mut top: Vec<(T, SifrInt)> = vec![];
@@ -590,7 +590,7 @@ mod __sifr_project_nominals {
         }
     }
     impl<T: Clone> __SifrStdlib_sifr_x2ecollections_x2edeque<T> {
-        pub fn extend(&mut self, items: &Vec<T>) {
+        pub fn extend(&mut self, items: &[T]) {
             for v in items.iter().cloned() {
                 self._data.push_back(v.clone());
             }
@@ -604,7 +604,7 @@ mod __sifr_project_nominals {
         }
     }
     impl<T: Clone> __SifrStdlib_sifr_x2ecollections_x2edeque<T> {
-        pub fn extendleft(&mut self, items: &Vec<T>) {
+        pub fn extendleft(&mut self, items: &[T]) {
             for v in items.iter().cloned() {
                 self._data.push_front(v.clone());
             }
@@ -753,7 +753,7 @@ use ::std::collections::HashSet;
 use ::std::collections::VecDeque;
 use ::sifr_runtime::SifrInt;
 fn from_list<T: Clone + ::std::hash::Hash + Eq + 'static>(
-    items: &Vec<T>,
+    items: &[T],
 ) -> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
     let mut counts: HashMap<T, SifrInt> = HashMap::from([]);
     for item in items.iter().cloned() {
@@ -778,7 +778,7 @@ fn from_list<T: Clone + ::std::hash::Hash + Eq + 'static>(
     }
     __SifrStdlib_sifr_x2ecollections_x2eCounter::new(Some(counts), None)
 }
-fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
+fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
     assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
     let mut i: SifrInt = SifrInt::from_i64(0);
     while &i < &SifrInt::from(actual.len()) {
@@ -839,8 +839,8 @@ fn collect_set_and_counter_actual() -> Vec<bool> {
         );
     actual
         .push(
-            (format!("{:?}", counts.most_common(& Some((SifrInt::from_i64(2)).clone()))))
-                .as_str() == ("[(\"x\", 3), (\"y\", 2)]".to_string()).as_str(),
+            format!("{:?}", counts.most_common(& Some((SifrInt::from_i64(2)).clone())))
+                .as_str() == "[(\"x\", 3), (\"y\", 2)]".to_string().as_str(),
         );
     actual
 }
@@ -862,7 +862,7 @@ fn collect_deque_actual() -> Vec<bool> {
     actual.push(d.pop() == None);
     actual
 }
-fn append_all(target: &mut Vec<bool>, values: &Vec<bool>) {
+fn append_all(target: &mut Vec<bool>, values: &[bool]) {
     for value in values.iter().copied() {
         target.push(value);
     }

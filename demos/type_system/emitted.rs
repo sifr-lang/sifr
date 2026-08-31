@@ -27,12 +27,12 @@ mod __sifr_project_unions {
 pub use __sifr_project_unions::__SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr;
 use ::sifr_runtime::SifrInt;
 
-fn create_user(id: SifrInt, name: &String) -> SifrInt {
+fn create_user(id: SifrInt, name: &str) -> SifrInt {
     id.clone()
 }
 
-fn handle_command(cmd: &String) -> String {
-    if (cmd).as_str() == "start" {
+fn handle_command(cmd: &str) -> String {
+    if cmd == "start" {
         return "Starting...".to_string();
     } else {
         return "Unknown command".to_string();
@@ -50,8 +50,8 @@ fn describe(x: &__SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint
     }
 }
 
-fn find_user(name: &String) -> Option<String> {
-    if (name).as_str() == "alice" {
+fn find_user(name: &str) -> Option<String> {
+    if name == "alice" {
         return Some("Alice Smith".to_string());
     }
     None
@@ -62,8 +62,8 @@ fn main() {
     println!("{}", uid);
     println!("{}", handle_command(&"start".to_string()));
     println!("{}", handle_command(&"stop".to_string()));
-    println!("{}", describe(&__SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr::__SifrUnionVariant_4_x3aatom3_x3aint((SifrInt::from_i64(42)).clone())));
-    println!("{}", describe(&__SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr::__SifrUnionVariant_4_x3aatom3_x3astr(("hello".to_string()).clone())));
+    println!("{}", describe(&__SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr::__SifrUnionVariant_4_x3aatom3_x3aint(SifrInt::from_i64(42))));
+    println!("{}", describe(&__SifrUnion_8_x3asequence5_x3aunion1_x3a211_x3a4_x3aatom3_x3aint11_x3a4_x3aatom3_x3astr::__SifrUnionVariant_4_x3aatom3_x3astr("hello".to_string().to_owned())));
     let user: Option<String> = find_user(&"alice".to_string());
     if let Some(user) = user {
         println!("{}", user);

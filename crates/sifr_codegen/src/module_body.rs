@@ -19,6 +19,13 @@ impl RustEmitter {
             })
             .collect();
         self.python_retained_callback_errors = collect_retained_callback_errors(module);
+        if crate::function_generic_bounds::module_requires_addable_support(
+            module,
+            &self.function_type_param_bounds,
+        ) {
+            self.body_items
+                .extend(crate::ownership_plan::addable_support_items());
+        }
         self.emit_module_classes(module, module_public);
         self.emit_module_functions(module, module_public, test_mode);
     }

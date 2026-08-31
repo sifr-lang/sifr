@@ -191,8 +191,8 @@ fn main() {
     println!("{}", (a == b));
     let circle: Circle = Circle::new(5.0_f64);
     let square: Square = Square::new(4.0_f64);
-    println!("{}", area(&__SifrUnion_8_x3asequence5_x3aunion1_x3a224_x3a5_x3aclass11_x3amain_x2eCircle1_x3a024_x3a5_x3aclass11_x3amain_x2eSquare1_x3a0::__SifrUnionVariant_5_x3aclass11_x3amain_x2eCircle1_x3a0((circle).clone())));
-    println!("{}", area(&__SifrUnion_8_x3asequence5_x3aunion1_x3a224_x3a5_x3aclass11_x3amain_x2eCircle1_x3a024_x3a5_x3aclass11_x3amain_x2eSquare1_x3a0::__SifrUnionVariant_5_x3aclass11_x3amain_x2eSquare1_x3a0((square).clone())));
+    println!("{}", area(&__SifrUnion_8_x3asequence5_x3aunion1_x3a224_x3a5_x3aclass11_x3amain_x2eCircle1_x3a024_x3a5_x3aclass11_x3amain_x2eSquare1_x3a0::__SifrUnionVariant_5_x3aclass11_x3amain_x2eCircle1_x3a0(circle.clone())));
+    println!("{}", area(&__SifrUnion_8_x3asequence5_x3aunion1_x3a224_x3a5_x3aclass11_x3amain_x2eCircle1_x3a024_x3a5_x3aclass11_x3amain_x2eSquare1_x3a0::__SifrUnionVariant_5_x3aclass11_x3amain_x2eSquare1_x3a0(square.clone())));
     let port: Port = Port::new(SifrInt::from_i64(8080));
     println!("{}", port);
     println!("{}", port.value());

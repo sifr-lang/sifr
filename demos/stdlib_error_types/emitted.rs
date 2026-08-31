@@ -237,7 +237,7 @@ mod __sifr_project_nominals {
         if &b == &SifrInt::from_i64(0) {
             return SifrInt::from_i64(0);
         }
-        let g: SifrInt = gcd((a).clone(), (b).clone());
+        let g: SifrInt = gcd(a.clone(), b.clone());
         if &g == &SifrInt::from_i64(0) {
             return SifrInt::from_i64(0);
         }
@@ -337,27 +337,27 @@ mod __sifr_project_nominals {
         }
         diff <= rel_bound
     }
-    pub fn prod(data: &Vec<SifrInt>) -> SifrInt {
+    pub fn prod(data: &[SifrInt]) -> SifrInt {
         let mut result: SifrInt = SifrInt::from_i64(1);
         for val in data.iter().cloned() {
             result = &result * &val;
         }
         result.clone()
     }
-    pub fn _copy_float_list(data: &Vec<f64>) -> Vec<f64> {
+    pub fn _copy_float_list(data: &[f64]) -> Vec<f64> {
         let mut out: Vec<f64> = vec![];
         for value in data.iter().copied() {
             out.push(value);
         }
         out
     }
-    pub fn dist(p: &Vec<f64>, q: &Vec<f64>) -> f64 {
+    pub fn dist(p: &[f64], q: &[f64]) -> f64 {
         dist_impl(_copy_float_list(p), _copy_float_list(q))
     }
-    pub fn fsum(data: &Vec<f64>) -> f64 {
+    pub fn fsum(data: &[f64]) -> f64 {
         fsum_impl(_copy_float_list(data))
     }
-    pub fn sumprod(p: &Vec<f64>, q: &Vec<f64>) -> f64 {
+    pub fn sumprod(p: &[f64], q: &[f64]) -> f64 {
         sumprod_impl(_copy_float_list(p), _copy_float_list(q))
     }
     pub fn frexp_mantissa(x: f64) -> f64 {
@@ -831,7 +831,7 @@ fn lcm(a: SifrInt, b: SifrInt) -> SifrInt {
     if &b == &SifrInt::from_i64(0) {
         return SifrInt::from_i64(0);
     }
-    let g: SifrInt = gcd((a).clone(), (b).clone());
+    let g: SifrInt = gcd(a.clone(), b.clone());
     if &g == &SifrInt::from_i64(0) {
         return SifrInt::from_i64(0);
     }
@@ -931,27 +931,27 @@ fn isclose(a: f64, b: f64, rel_tol: f64, abs_tol: f64) -> bool {
     }
     diff <= rel_bound
 }
-fn prod(data: &Vec<SifrInt>) -> SifrInt {
+fn prod(data: &[SifrInt]) -> SifrInt {
     let mut result: SifrInt = SifrInt::from_i64(1);
     for val in data.iter().cloned() {
         result = &result * &val;
     }
     result.clone()
 }
-fn _copy_float_list(data: &Vec<f64>) -> Vec<f64> {
+fn _copy_float_list(data: &[f64]) -> Vec<f64> {
     let mut out: Vec<f64> = vec![];
     for value in data.iter().copied() {
         out.push(value);
     }
     out
 }
-fn dist(p: &Vec<f64>, q: &Vec<f64>) -> f64 {
+fn dist(p: &[f64], q: &[f64]) -> f64 {
     dist_impl(_copy_float_list(p), _copy_float_list(q))
 }
-fn fsum(data: &Vec<f64>) -> f64 {
+fn fsum(data: &[f64]) -> f64 {
     fsum_impl(_copy_float_list(data))
 }
-fn sumprod(p: &Vec<f64>, q: &Vec<f64>) -> f64 {
+fn sumprod(p: &[f64], q: &[f64]) -> f64 {
     sumprod_impl(_copy_float_list(p), _copy_float_list(q))
 }
 fn frexp_mantissa(x: f64) -> f64 {
@@ -1014,7 +1014,7 @@ fn pow(x: f64, y: f64) -> f64 {
     pow_val(x, y)
 }
 fn compute_mean(
-    data: &Vec<f64>,
+    data: &[f64],
 ) -> Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
     if (&SifrInt::from(data.len()) == &SifrInt::from_i64(0)) {
         return Err(

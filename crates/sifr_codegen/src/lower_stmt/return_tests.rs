@@ -88,6 +88,67 @@ fn lowers_simple_return_with_leaf_expr() {
 }
 
 #[test]
+fn lowers_simple_string_concat_return_to_owned_builder() {
+    let stmt = HirStmt::Return {
+        value: Some(HirExpr::BinOp {
+            left: Box::new(HirExpr::StringLiteral("csv:".to_string())),
+            op: "+".to_string(),
+            right: Box::new(HirExpr::Name {
+                name: "message".to_string(),
+                binding_id: None,
+                ty: Type::Str,
+            }),
+            ty: Type::Str,
+        }),
+    };
+    let lowered = try_lower_simple_stmt(&stmt, false, &HashSet::new(), &HashSet::new())
+        .expect("string concat return lowered");
+    let [RustStmt::Return(Some(RustExpr::Block { stmts, expr }))] = lowered.as_slice() else {
+        panic!("expected a string builder return, got {lowered:?}");
+    };
+    assert!(matches!(expr.as_deref(), Some(RustExpr::Ident(name)) if name == "__sifr_concat"));
+    assert!(stmts.iter().any(|stmt| matches!(
+        stmt,
+        RustStmt::Expr(RustExpr::MethodCall { method, .. }) if method == "push_str"
+    )));
+}
+
+#[test]
+fn wraps_simple_string_concat_for_optional_return() {
+    let value = HirExpr::BinOp {
+        left: Box::new(HirExpr::StringLiteral("prefix:".to_string())),
+        op: "+".to_string(),
+        right: Box::new(HirExpr::Name {
+            name: "value".to_string(),
+            binding_id: None,
+            ty: Type::Str,
+        }),
+        ty: Type::Str,
+    };
+    let return_ty = Type::Union(vec![Type::Str, Type::None]);
+    let lowered = try_lower_simple_stmt_with_ctx(
+        &HirStmt::Return { value: Some(value) },
+        false,
+        &HashSet::new(),
+        &HashSet::new(),
+        SimpleStmtLoweringCtx {
+            return_type: Some(&return_ty),
+            in_display_impl: false,
+            in_class_scope: false,
+            in_generator_closure: false,
+        },
+    )
+    .expect("optional string concat return lowered");
+
+    assert!(matches!(
+        lowered.as_slice(),
+        [RustStmt::Return(Some(RustExpr::FnCall { func, args }))]
+            if matches!(func.as_ref(), RustExpr::Path(path) if path == &["Some".to_string()])
+                && matches!(args.as_slice(), [RustExpr::Block { .. }])
+    ));
+}
+
+#[test]
 fn lowers_simple_return_name_in_plain_context() {
     let stmt = HirStmt::Return {
         value: Some(HirExpr::Name {

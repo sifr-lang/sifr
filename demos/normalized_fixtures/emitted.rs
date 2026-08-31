@@ -1,41 +1,41 @@
 // src/main.rs
 use ::sifr_runtime::SifrInt;
 
-fn parseDigit(ch: &String) -> SifrInt {
-    if (ch).as_str() == "0" {
+fn parseDigit(ch: &str) -> SifrInt {
+    if ch == "0" {
         return SifrInt::from_i64(0);
     }
-    if (ch).as_str() == "1" {
+    if ch == "1" {
         return SifrInt::from_i64(1);
     }
-    if (ch).as_str() == "2" {
+    if ch == "2" {
         return SifrInt::from_i64(2);
     }
-    if (ch).as_str() == "3" {
+    if ch == "3" {
         return SifrInt::from_i64(3);
     }
-    if (ch).as_str() == "4" {
+    if ch == "4" {
         return SifrInt::from_i64(4);
     }
-    if (ch).as_str() == "5" {
+    if ch == "5" {
         return SifrInt::from_i64(5);
     }
-    if (ch).as_str() == "6" {
+    if ch == "6" {
         return SifrInt::from_i64(6);
     }
-    if (ch).as_str() == "7" {
+    if ch == "7" {
         return SifrInt::from_i64(7);
     }
-    if (ch).as_str() == "8" {
+    if ch == "8" {
         return SifrInt::from_i64(8);
     }
-    if (ch).as_str() == "9" {
+    if ch == "9" {
         return SifrInt::from_i64(9);
     }
     -&SifrInt::from_i64(1)
 }
 
-fn parseNumber(s: &String) -> SifrInt {
+fn parseNumber(s: &str) -> SifrInt {
     let __sifr_chars_s: Vec<char> = s.chars().collect::<Vec<char>>();
     let mut value: SifrInt = SifrInt::from_i64(0);
     let mut i: SifrInt = SifrInt::from_i64(0);
@@ -58,7 +58,7 @@ fn parseNumber(s: &String) -> SifrInt {
     value.clone()
 }
 
-fn multiply(num1: &String, num2: &String) -> String {
+fn multiply(num1: &str, num2: &str) -> String {
     let n1: SifrInt = parseNumber(num1);
     let n2: SifrInt = parseNumber(num2);
     if (&n1 < &SifrInt::from_i64(0)) || (&n2 < &SifrInt::from_i64(0)) {

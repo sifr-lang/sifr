@@ -48,7 +48,7 @@ fn borrowed_string_defaultdict_set_operations_use_owned_storage_and_direct_looku
         "from sifr.collections import defaultdict\n\ndef solve(text: str) -> int:\n    groups = defaultdict(set)\n    groups[1].add(text)\n    if text in groups[1]:\n        return 1\n    return 0\n",
     );
 
-    assert!(rust_code.contains(".or_insert(HashSet::new()).insert(text.clone())"));
+    assert!(rust_code.contains(".or_insert(HashSet::new()).insert(text.to_owned())"));
     assert!(rust_code.contains(
         ".get(&SifrInt::from_i64(1)).is_some_and(|__sifr_defaultdict_bucket| __sifr_defaultdict_bucket.contains(text))"
     ));
@@ -63,10 +63,10 @@ fn borrowed_string_iterable_literals_store_owned_values() {
     );
 
     assert!(
-        rust_code.contains("let chunk: Vec<String> = vec![text.clone()];"),
+        rust_code.contains("let chunk: Vec<String> = vec![text.to_owned()];"),
         "{rust_code}"
     );
-    assert!(rust_code.contains("HashSet::from([text.clone()])"));
+    assert!(rust_code.contains("HashSet::from([text.to_owned()])"));
     assert!(rust_code.contains("(chunk).iter().cloned().collect::<Vec<_>>()"));
 }
 

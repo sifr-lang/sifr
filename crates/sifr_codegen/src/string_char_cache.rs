@@ -142,7 +142,7 @@ impl RustEmitter {
         let lowered_object = self.emit_checked_place(index_object, base_place)?;
         let lowered_index = self.try_lower_registry_expr_strict(index)?;
         let lowered_arg = self.try_lower_registry_expr_strict(&args[0])?;
-        let key_arg = Self::list_indexed_dict_lookup_key_arg(index, lowered_index);
+        let key_arg = self.list_indexed_dict_lookup_key_arg(index, lowered_index);
         let pushed_arg = Self::clone_owned_append_arg_expr_for_ir(&args[0], lowered_arg);
         Some(RustExpr::Block {
             stmts: vec![RustStmt::IfLet {
@@ -196,7 +196,7 @@ impl RustEmitter {
         let lowered_object = self.try_lower_registry_expr_strict(list_object)?;
         let lowered_list_index = self.try_lower_registry_expr_strict(list_index)?;
         let lowered_dict_index = self.try_lower_registry_expr_strict(dict_index)?;
-        let key_arg = Self::list_indexed_dict_lookup_key_arg(dict_index, lowered_dict_index);
+        let key_arg = self.list_indexed_dict_lookup_key_arg(dict_index, lowered_dict_index);
         let projection_method = if crate::helpers::is_copy_type_for_codegen(value_ty.as_ref()) {
             "copied"
         } else {
@@ -275,7 +275,7 @@ impl RustEmitter {
 
         let lowered_object = self.try_lower_registry_expr_strict(list_object)?;
         let lowered_list_index = self.try_lower_registry_expr_strict(list_index)?;
-        let key_arg = Self::list_indexed_dict_lookup_key_arg(element, lowered_element);
+        let key_arg = self.list_indexed_dict_lookup_key_arg(element, lowered_element);
         Some(RustExpr::Block {
             stmts: vec![
                 RustStmt::Let {
@@ -320,7 +320,11 @@ impl RustEmitter {
         })
     }
 
-    pub(crate) fn list_indexed_dict_lookup_key_arg(expr: &HirExpr, lowered: RustExpr) -> RustExpr {
+    pub(crate) fn list_indexed_dict_lookup_key_arg(
+        &self,
+        expr: &HirExpr,
+        lowered: RustExpr,
+    ) -> RustExpr {
         if let HirExpr::StringLiteral(value) = expr {
             return RustExpr::Verbatim(format!("{value:?}"));
         }
@@ -332,11 +336,7 @@ impl RustEmitter {
                     Type::Str | Type::LiteralStr(_)
                 )
         ) {
-            return RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Paren(Box::new(lowered))),
-                method: "as_str".to_string(),
-                args: vec![],
-            };
+            return self.string_view_expr(expr, lowered);
         }
         Self::build_dict_lookup_key_arg_for_ir(lowered)
     }
@@ -382,7 +382,7 @@ impl RustEmitter {
 
         let lowered_object = self.emit_checked_place(index_object, base_place)?;
         let lowered_index = self.try_lower_registry_expr_strict(index)?;
-        let key_arg = Self::list_indexed_dict_lookup_key_arg(index, lowered_index);
+        let key_arg = self.list_indexed_dict_lookup_key_arg(index, lowered_index);
         let bucket_option_expr = RustExpr::MethodCall {
             receiver: Box::new(lowered_object),
             method: "get_mut".to_string(),
@@ -449,7 +449,7 @@ impl RustEmitter {
 
         let lowered_object = self.try_lower_dict_indexed_list_mutation_object(index_object)?;
         let lowered_index = self.try_lower_registry_expr_strict(index)?;
-        let key_arg = Self::list_indexed_dict_lookup_key_arg(index, lowered_index);
+        let key_arg = self.list_indexed_dict_lookup_key_arg(index, lowered_index);
         Some(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {
                 receiver: Box::new(lowered_object),
@@ -559,7 +559,7 @@ impl RustEmitter {
         }
         let lowered_object = self.try_lower_dict_indexed_list_mutation_object(dict_object)?;
         let lowered_dict_index = self.try_lower_registry_expr_strict(dict_index)?;
-        let key_arg = Self::list_indexed_dict_lookup_key_arg(dict_index, lowered_dict_index);
+        let key_arg = self.list_indexed_dict_lookup_key_arg(dict_index, lowered_dict_index);
         Some(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {
                 receiver: Box::new(lowered_object),

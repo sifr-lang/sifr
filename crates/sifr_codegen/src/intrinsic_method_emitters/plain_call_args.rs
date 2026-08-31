@@ -23,11 +23,7 @@ impl RustEmitter {
             && matches!(arg, HirExpr::Name { .. })
             && !crate::helpers::is_copy_type_for_codegen(effective_arg_ty)
         {
-            RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Paren(Box::new(lowered_arg))),
-                method: "clone".to_string(),
-                args: Vec::new(),
-            }
+            crate::ownership_plan::materialize_owned_value(effective_arg_ty, lowered_arg)
         } else {
             lowered_arg
         };
@@ -81,6 +77,16 @@ impl RustEmitter {
             let borrowed_name_arg = matches!(arg, HirExpr::Name { name, .. }
                 if self.borrowed_params.contains(name)
                     || self.mut_borrowed_params.contains(name));
+            if let Some(borrowed_view) = self.adapt_recursive_option_borrowed_argument(
+                param_ty,
+                *convention,
+                arg,
+                &effective_arg_ty,
+                lowered_arg.clone(),
+            ) {
+                lowered_args.push(borrowed_view);
+                continue;
+            }
             if let Some(aligned_callable) = self
                 .try_build_registry_callable_convention_alignment_expr(
                     arg,
@@ -133,11 +139,10 @@ impl RustEmitter {
                 );
             } else if needs_borrowed_structural_coercion {
                 if !crate::helpers::is_copy_type_for_codegen(&effective_arg_ty) {
-                    lowered_arg = crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_arg))),
-                        method: "clone".to_string(),
-                        args: Vec::new(),
-                    };
+                    lowered_arg = crate::ownership_plan::materialize_owned_value(
+                        &effective_arg_ty,
+                        lowered_arg,
+                    );
                 }
                 lowered_arg = self.consuming_value_conversion_for_ir(
                     param_ty,
@@ -203,11 +208,10 @@ impl RustEmitter {
                         && !needs_borrowed_structural_coercion
                         && !crate::helpers::is_copy_type_for_codegen(&effective_arg_ty)
                     {
-                        lowered_arg = crate::RustExpr::MethodCall {
-                            receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_arg))),
-                            method: "clone".to_string(),
-                            args: vec![],
-                        };
+                        lowered_arg = crate::ownership_plan::materialize_owned_value(
+                            &effective_arg_ty,
+                            lowered_arg,
+                        );
                     }
                     lowered_arg = RustExpr::FnCall {
                         func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
@@ -216,11 +220,10 @@ impl RustEmitter {
                 }
             } else if arg_is_option && !option_value_adapted {
                 if !crate::helpers::is_copy_type_for_codegen(&effective_arg_ty) {
-                    lowered_arg = crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_arg))),
-                        method: "clone".to_string(),
-                        args: vec![],
-                    };
+                    lowered_arg = crate::ownership_plan::materialize_owned_value(
+                        &effective_arg_ty,
+                        lowered_arg,
+                    );
                 }
             }
 
@@ -294,11 +297,8 @@ impl RustEmitter {
                         )
                         && Self::rust_expr_is_reusable_place_for_ir(&lowered_arg)))
             {
-                lowered_arg = crate::RustExpr::MethodCall {
-                    receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_arg))),
-                    method: "clone".to_string(),
-                    args: vec![],
-                };
+                lowered_arg =
+                    crate::ownership_plan::materialize_owned_value(&effective_arg_ty, lowered_arg);
             }
 
             let requires_shared_borrow = convention.is_shared_borrow()
@@ -397,7 +397,7 @@ impl RustEmitter {
         param_ty: &Type,
         lowered_arg: crate::RustExpr,
     ) -> Option<crate::RustExpr> {
-        let Type::Callable(_, expected_conventions, _) =
+        let Type::Callable(expected_params, expected_conventions, _) =
             crate::resolve_alias_type_for_plain_call(param_ty)
         else {
             return None;
@@ -413,18 +413,34 @@ impl RustEmitter {
         if provided_params.len() != expected_conventions.len() {
             return None;
         }
-        if !provided_params
-            .iter()
-            .zip(expected_conventions.iter())
-            .any(|((_, provided), expected)| *provided != *expected)
+        let needs_storage_view_adapter = provided_params.iter().zip(expected_params.iter()).any(
+            |((provided_ty, provided), expected_ty)| {
+                provided.is_shared_borrow()
+                    && matches!(expected_ty.resolve_alias(), Type::TypeVar(_))
+                    && matches!(
+                        provided_ty.resolve_alias(),
+                        Type::Str
+                            | Type::LiteralStr(_)
+                            | Type::Bytes
+                            | Type::List(_)
+                            | Type::Iterable(_)
+                    )
+            },
+        );
+        if !needs_storage_view_adapter
+            && !provided_params
+                .iter()
+                .zip(expected_conventions.iter())
+                .any(|((_, provided), expected)| *provided != *expected)
         {
             return None;
         }
 
         let mut closure_params = Vec::with_capacity(provided_params.len());
         let mut call_args = Vec::with_capacity(provided_params.len());
-        for (idx, ((_, provided), expected)) in provided_params
+        for (idx, (((provided_ty, provided), expected_ty), expected)) in provided_params
             .iter()
+            .zip(expected_params.iter())
             .zip(expected_conventions.iter())
             .enumerate()
         {
@@ -435,7 +451,26 @@ impl RustEmitter {
             });
 
             let base_arg = crate::RustExpr::Ident(arg_name.clone());
-            let adapted = if provided.is_owned() && expected.is_borrowed() {
+            let adapted = if provided.is_shared_borrow()
+                && expected.is_shared_borrow()
+                && matches!(expected_ty.resolve_alias(), Type::TypeVar(_))
+            {
+                match provided_ty.resolve_alias() {
+                    Type::Str | Type::LiteralStr(_) => crate::RustExpr::MethodCall {
+                        receiver: Box::new(base_arg),
+                        method: "as_str".to_string(),
+                        args: Vec::new(),
+                    },
+                    Type::Bytes | Type::List(_) | Type::Iterable(_) => {
+                        crate::RustExpr::MethodCall {
+                            receiver: Box::new(base_arg),
+                            method: "as_slice".to_string(),
+                            args: Vec::new(),
+                        }
+                    }
+                    _ => base_arg,
+                }
+            } else if provided.is_owned() && expected.is_borrowed() {
                 crate::RustExpr::MethodCall {
                     receiver: Box::new(crate::RustExpr::Paren(Box::new(base_arg))),
                     method: "clone".to_string(),
@@ -597,16 +632,8 @@ impl RustEmitter {
                 };
             } else if registry_is_string_like_type(&lhs_ty) && registry_is_string_like_type(&rhs_ty)
             {
-                lowered_left = crate::RustExpr::MethodCall {
-                    receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_left))),
-                    method: "as_str".to_string(),
-                    args: vec![],
-                };
-                lowered_right = crate::RustExpr::MethodCall {
-                    receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_right))),
-                    method: "as_str".to_string(),
-                    args: vec![],
-                };
+                lowered_left = self.string_view_expr(lhs_expr, lowered_left);
+                lowered_right = self.string_view_expr(rhs_expr, lowered_right);
             }
             let comparison = crate::RustExpr::BinOp {
                 left: Box::new(lowered_left),

@@ -2,11 +2,11 @@
 use ::sifr_runtime::SifrInt;
 
 // @log
-fn greet(name: &String) -> String {
+fn greet(name: &str) -> String {
     {
     let mut __sifr_concat: String = String::with_capacity((7usize + name.len()) + 1usize);
     __sifr_concat.push_str("Hello, ");
-    __sifr_concat.push_str((name).as_str());
+    __sifr_concat.push_str(name);
     __sifr_concat.push('!');
     __sifr_concat
 }
@@ -18,7 +18,7 @@ fn process(x: SifrInt) -> SifrInt {
     &x * &SifrInt::from_i64(2)
 }
 
-fn sum_all(nums: &Vec<SifrInt>) -> SifrInt {
+fn sum_all(nums: &[SifrInt]) -> SifrInt {
     let mut total: SifrInt = SifrInt::from_i64(0);
     for n in nums.iter().cloned() {
         total = &total + &n;
@@ -26,7 +26,7 @@ fn sum_all(nums: &Vec<SifrInt>) -> SifrInt {
     total.clone()
 }
 
-fn max_of(values: &Vec<SifrInt>) -> SifrInt {
+fn max_of(values: &[SifrInt]) -> SifrInt {
     let result: Option<SifrInt> = (values).iter().cloned().max();
     if let Some(result) = result.clone() {
         return result;
@@ -34,14 +34,14 @@ fn max_of(values: &Vec<SifrInt>) -> SifrInt {
     SifrInt::from_i64(0)
 }
 
-fn join_strings(sep: &String, parts: &Vec<String>) -> String {
+fn join_strings(sep: &str, parts: &[String]) -> String {
     let mut result: String = "".to_string();
     let mut i: SifrInt = SifrInt::from_i64(0);
     for p in parts.iter().cloned() {
         if (&i > &SifrInt::from_i64(0)) {
-            result.push_str((sep).as_str());
+            result.push_str(sep);
         }
-        result.push_str((p).as_str());
+        result.push_str(p.as_str());
         i = &i + &SifrInt::from_i64(1);
     }
     result

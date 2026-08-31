@@ -2,15 +2,14 @@ use super::{
     DEFAULTDICT_INT_ALIAS, DEFAULTDICT_LIST_ALIAS, DEFAULTDICT_SET_ALIAS, DiagnosticCode,
     ExprAttribute, ExprCall, HirExpr, LowerCtx, Ranged, TextRange, Type,
     canonicalize_class_surface_type, consume_affine_collection_method_arguments,
-    consume_owned_method_arguments, invalidate_collection_flow_facts_for_method,
-    is_task_handle_type, lower_expr, lower_task_handle_method_call, method_function_type,
-    refine_defaultdict_binding_expr, refine_empty_list_binding_expr, refine_empty_set_binding_expr,
-    refine_generic_class_binding_expr, refine_nonempty_method_return_type,
-    reject_immutable_method_mut_borrow_arguments, reject_immutable_parameter_method_mutation,
-    reject_no_method_args, resolve_bytes_method_type, resolve_class_method_on_type,
-    resolve_decimal_method_type, resolve_dict_method_type, resolve_enum_method_type,
-    resolve_fixed_width_method_type, resolve_list_method_type, resolve_newtype_method_type,
-    resolve_protocol_method_type, resolve_python_arrow_method_type,
+    consume_owned_method_arguments, is_task_handle_type, lower_expr, lower_task_handle_method_call,
+    method_function_type, refine_defaultdict_binding_expr, refine_empty_list_binding_expr,
+    refine_empty_set_binding_expr, refine_generic_class_binding_expr,
+    refine_nonempty_method_return_type, reject_immutable_method_mut_borrow_arguments,
+    reject_immutable_parameter_method_mutation, reject_no_method_args, resolve_bytes_method_type,
+    resolve_class_method_on_type, resolve_decimal_method_type, resolve_dict_method_type,
+    resolve_enum_method_type, resolve_fixed_width_method_type, resolve_list_method_type,
+    resolve_newtype_method_type, resolve_protocol_method_type, resolve_python_arrow_method_type,
     resolve_python_buffer_method_type, resolve_python_dlpack_method_type, resolve_set_method_type,
     resolve_str_method_type, resolve_tuple_method_type, str, try_lower_class_method_call,
     try_lower_super_method_call, tsc,
@@ -153,14 +152,6 @@ pub(in crate::lower) fn lower_method_call(
     )?;
     if let Some(function_type) = &method_type {
         consume_owned_method_arguments(&args, call, function_type, ctx);
-        super::super::sequence_guards::invalidate_mutable_call_sequence_guards(
-            ctx,
-            &args,
-            function_type
-                .params
-                .iter()
-                .map(|(_, _, convention)| *convention),
-        );
     }
     consume_affine_collection_method_arguments(
         &object_ty,
@@ -177,6 +168,35 @@ pub(in crate::lower) fn lower_method_call(
         &resolved_method_type,
         ctx,
     );
+    let receiver_convention = method_type.as_ref().map_or_else(
+        || {
+            super::super::mutating_methods::receiver_convention_for_non_class_method(
+                &object_ty,
+                &method_name,
+            )
+        },
+        |function_type| {
+            function_type
+                .receiver
+                .unwrap_or(sifr_type_system::ReceiverConvention::SharedBorrow)
+        },
+    );
+    super::super::sequence_guards::invalidate_mutable_receiver_sequence_guards(
+        ctx,
+        &object,
+        Some(receiver_convention),
+        &method_name,
+    );
+    if let Some(function_type) = &method_type {
+        super::super::sequence_guards::invalidate_mutable_call_sequence_guards(
+            ctx,
+            &args,
+            function_type
+                .params
+                .iter()
+                .map(|(_, _, convention)| *convention),
+        );
+    }
     tsc::validate_channel_send_element(
         &object_ty,
         &method_name,
@@ -185,7 +205,6 @@ pub(in crate::lower) fn lower_method_call(
         call,
         ctx,
     );
-    invalidate_collection_flow_facts_for_method(ctx, &object, &object_ty, &method_name);
     if matches!(object_ty.resolve_alias(), Type::Str) && method_name == "encode" {
         let mut intrinsic_args = vec![object];
         let intrinsic = if args.is_empty() {

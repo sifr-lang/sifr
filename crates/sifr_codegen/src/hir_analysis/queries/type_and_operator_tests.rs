@@ -68,6 +68,44 @@ fn collect_typevar_operator_requirements_detects_equality() {
 }
 
 #[test]
+fn collect_typevar_operator_requirements_detects_collection_contains() {
+    let items = HirExpr::Name {
+        name: "items".to_string(),
+        binding_id: None,
+        ty: Type::List(Box::new(Type::TypeVar("T".to_string()))),
+    };
+    let value = HirExpr::Name {
+        name: "value".to_string(),
+        binding_id: None,
+        ty: Type::TypeVar("T".to_string()),
+    };
+    let stmts = vec![
+        HirStmt::Expr {
+            expr: HirExpr::MethodCall {
+                object: Box::new(items.clone()),
+                method: "contains".to_string(),
+                args: vec![value.clone()],
+                receiver_convention: Some(sifr_type_system::ReceiverConvention::SharedBorrow),
+                receiver_target: None,
+                mutable_arg_places: Vec::new(),
+                source: None,
+                ty: Type::Bool,
+            },
+        },
+        HirStmt::Expr {
+            expr: HirExpr::ContainsOp {
+                element: Box::new(value),
+                collection: Box::new(items),
+                ty: Type::Bool,
+            },
+        },
+    ];
+
+    let req = collect_typevar_operator_requirements(&stmts, "T");
+    assert!(req.needs_partial_eq);
+}
+
+#[test]
 fn collect_typevar_operator_requirements_detects_display_calls() {
     let stmts = vec![HirStmt::Expr {
         expr: HirExpr::Call {

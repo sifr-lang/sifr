@@ -215,7 +215,7 @@ pub use __sifr_project_nominals::TOMLDecodeError;
 pub use __sifr_project_nominals::TimeoutError;
 pub use __sifr_project_nominals::ValueError;
 use ::sifr_runtime::SifrInt;
-fn parse_flag(args: &Vec<String>, flag: &String) -> bool {
+fn parse_flag(args: &[String], flag: &str) -> bool {
     for arg in args.iter().cloned() {
         if arg == *flag {
             return true;
@@ -223,7 +223,7 @@ fn parse_flag(args: &Vec<String>, flag: &String) -> bool {
     }
     false
 }
-fn _split_inline_option(token: &String) -> (bool, String, String) {
+fn _split_inline_option(token: &str) -> (bool, String, String) {
     let __sifr_chars_token: Vec<char> = token.chars().collect::<Vec<char>>();
     let mut key: String = "".to_string();
     let mut i: SifrInt = SifrInt::from_i64(0);
@@ -247,14 +247,14 @@ fn _split_inline_option(token: &String) -> (bool, String, String) {
                 })
                     .map(|c| c.to_string());
                 if let Some(part) = part {
-                    value.push_str((part).as_str());
+                    value.push_str(part.as_str());
                 }
                 j = &j + &SifrInt::from_i64(1);
             }
             return (true, key, value);
         }
         if let Some(ch) = ch {
-            key.push_str((ch).as_str());
+            key.push_str(ch.as_str());
         }
         i = &i + &SifrInt::from_i64(1);
     }
@@ -262,14 +262,14 @@ fn _split_inline_option(token: &String) -> (bool, String, String) {
         false,
         {
             let mut __sifr_concat: String = String::with_capacity(token.len() + 0usize);
-            __sifr_concat.push_str((token).as_str());
+            __sifr_concat.push_str(token);
             __sifr_concat.push_str("");
             __sifr_concat
         },
         "".to_string(),
     )
 }
-fn parse_option(args: &Vec<String>, name: &String, default: &String) -> String {
+fn parse_option(args: &[String], name: &str, default: &str) -> String {
     let mut i: SifrInt = SifrInt::from_i64(0);
     while (&i < &SifrInt::from(args.len())) {
         let arg: Option<String> = {
@@ -298,7 +298,7 @@ fn parse_option(args: &Vec<String>, name: &String, default: &String) -> String {
                             let mut __sifr_concat: String = String::with_capacity(
                                 next_val.len() + 0usize,
                             );
-                            __sifr_concat.push_str((next_val).as_str());
+                            __sifr_concat.push_str(next_val.as_str());
                             __sifr_concat.push_str("");
                             __sifr_concat
                         };
@@ -319,7 +319,7 @@ fn parse_option(args: &Vec<String>, name: &String, default: &String) -> String {
                     let mut __sifr_concat: String = String::with_capacity(
                         inline_value.len() + 0usize,
                     );
-                    __sifr_concat.push_str((inline_value).as_str());
+                    __sifr_concat.push_str(inline_value.as_str());
                     __sifr_concat.push_str("");
                     __sifr_concat
                 };
@@ -329,13 +329,13 @@ fn parse_option(args: &Vec<String>, name: &String, default: &String) -> String {
     }
     {
         let mut __sifr_concat: String = String::with_capacity(default.len() + 0usize);
-        __sifr_concat.push_str((default).as_str());
+        __sifr_concat.push_str(default);
         __sifr_concat.push_str("");
         __sifr_concat
     }
 }
 fn bisect_left<T: Clone + 'static + PartialOrd>(
-    a: &Vec<T>,
+    a: &[T],
     x: &T,
     lo: SifrInt,
     hi: Option<SifrInt>,
@@ -382,10 +382,10 @@ fn bisect_left<T: Clone + 'static + PartialOrd>(
     }
     left.clone()
 }
-fn _encoding_is_supported_impl(label: &String) -> bool {
+fn _encoding_is_supported_impl(label: &str) -> bool {
     ::sifr_stdlib::encoding::encoding_is_supported(label)
 }
-fn _encoding_canonical_label_impl(label: &String) -> Result<String, ParseError> {
+fn _encoding_canonical_label_impl(label: &str) -> Result<String, ParseError> {
     ::sifr_stdlib::encoding::encoding_canonical_label(label)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| ParseError {
@@ -393,9 +393,9 @@ fn _encoding_canonical_label_impl(label: &String) -> Result<String, ParseError> 
         })
 }
 fn _encoding_decode_text_impl(
-    data: &Vec<u8>,
-    encoding: &String,
-    errors: &String,
+    data: &[u8],
+    encoding: &str,
+    errors: &str,
 ) -> Result<String, ParseError> {
     ::sifr_stdlib::encoding::encoding_decode_text(data, encoding, errors)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
@@ -404,9 +404,9 @@ fn _encoding_decode_text_impl(
         })
 }
 fn _encoding_decode_recoveries_impl(
-    data: &Vec<u8>,
-    encoding: &String,
-    errors: &String,
+    data: &[u8],
+    encoding: &str,
+    errors: &str,
 ) -> Result<Vec<String>, ParseError> {
     ::sifr_stdlib::encoding::encoding_decode_recoveries(data, encoding, errors)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
@@ -415,10 +415,10 @@ fn _encoding_decode_recoveries_impl(
         })
 }
 fn _encoding_decode_incremental_text_impl(
-    data: &Vec<u8>,
-    pending: &Vec<u8>,
-    encoding: &String,
-    errors: &String,
+    data: &[u8],
+    pending: &[u8],
+    encoding: &str,
+    errors: &str,
     r#final: bool,
 ) -> Result<String, ParseError> {
     ::sifr_stdlib::encoding::encoding_decode_incremental_text(
@@ -434,10 +434,10 @@ fn _encoding_decode_incremental_text_impl(
         })
 }
 fn _encoding_decode_incremental_recoveries_impl(
-    data: &Vec<u8>,
-    pending: &Vec<u8>,
-    encoding: &String,
-    errors: &String,
+    data: &[u8],
+    pending: &[u8],
+    encoding: &str,
+    errors: &str,
     r#final: bool,
 ) -> Result<Vec<String>, ParseError> {
     ::sifr_stdlib::encoding::encoding_decode_incremental_recoveries(
@@ -453,9 +453,9 @@ fn _encoding_decode_incremental_recoveries_impl(
         })
 }
 fn _encoding_decode_incremental_pending_impl(
-    data: &Vec<u8>,
-    pending: &Vec<u8>,
-    encoding: &String,
+    data: &[u8],
+    pending: &[u8],
+    encoding: &str,
     r#final: bool,
 ) -> Result<Vec<u8>, ParseError> {
     ::sifr_stdlib::encoding::encoding_decode_incremental_pending(
@@ -470,9 +470,9 @@ fn _encoding_decode_incremental_pending_impl(
         })
 }
 fn _encoding_encode_bytes_impl(
-    text: &String,
-    encoding: &String,
-    errors: &String,
+    text: &str,
+    encoding: &str,
+    errors: &str,
 ) -> Result<Vec<u8>, ParseError> {
     ::sifr_stdlib::encoding::encoding_encode_bytes(text, encoding, errors)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
@@ -481,9 +481,9 @@ fn _encoding_encode_bytes_impl(
         })
 }
 fn _encoding_encode_recoveries_impl(
-    text: &String,
-    encoding: &String,
-    errors: &String,
+    text: &str,
+    encoding: &str,
+    errors: &str,
 ) -> Result<Vec<String>, ParseError> {
     ::sifr_stdlib::encoding::encoding_encode_recoveries(text, encoding, errors)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
@@ -507,58 +507,58 @@ impl ::std::fmt::Display for __SifrIoNativeFileHandle {
         write!(f, "NativeFileHandle(_id={})", self._id)
     }
 }
-fn read_text(path: &String) -> Result<String, IOError> {
+fn read_text(path: &str) -> Result<String, IOError> {
     ::sifr_stdlib::fs::read_text(path)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn write_text(path: &String, content: &String) -> Result<(), IOError> {
+fn write_text(path: &str, content: &str) -> Result<(), IOError> {
     ::sifr_stdlib::fs::write_text(path, content)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn exists(path: &String) -> bool {
+fn exists(path: &str) -> bool {
     ::sifr_stdlib::fs::exists(path)
 }
-fn read_lines(path: &String) -> Result<Vec<String>, IOError> {
+fn read_lines(path: &str) -> Result<Vec<String>, IOError> {
     ::sifr_stdlib::fs::read_lines(path)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn append_text(path: &String, content: &String) -> Result<(), IOError> {
+fn append_text(path: &str, content: &str) -> Result<(), IOError> {
     ::sifr_stdlib::fs::append_text(path, content)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn _open_file(path: &String, mode: &String) -> Result<String, IOError> {
+fn _open_file(path: &str, mode: &str) -> Result<String, IOError> {
     ::sifr_stdlib::fs::open_file(path, mode)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn _file_read(handle: &String) -> Result<String, IOError> {
+fn _file_read(handle: &str) -> Result<String, IOError> {
     ::sifr_stdlib::fs::file_read(handle)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn _file_write(handle: &String, data: &String) -> Result<(), IOError> {
+fn _file_write(handle: &str, data: &str) -> Result<(), IOError> {
     ::sifr_stdlib::fs::file_write(handle, data)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn _file_readline(handle: &String) -> Result<Option<String>, IOError> {
+fn _file_readline(handle: &str) -> Result<Option<String>, IOError> {
     ::sifr_stdlib::fs::file_readline(handle)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn _file_readlines(handle: &String) -> Result<Vec<String>, IOError> {
+fn _file_readlines(handle: &str) -> Result<Vec<String>, IOError> {
     ::sifr_stdlib::fs::file_readlines(handle)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn _file_close(handle: &String) {
+fn _file_close(handle: &str) {
     ::sifr_stdlib::fs::file_close(handle);
 }
-fn _file_read_bytes(handle: &String, size: Option<SifrInt>) -> Result<Vec<u8>, IOError> {
+fn _file_read_bytes(handle: &str, size: Option<SifrInt>) -> Result<Vec<u8>, IOError> {
     ::sifr_stdlib::fs::file_read_bytes(
             handle,
             size.map(::sifr_runtime::interop::SifrIntBridge::from),
@@ -566,18 +566,18 @@ fn _file_read_bytes(handle: &String, size: Option<SifrInt>) -> Result<Vec<u8>, I
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn _file_write_bytes(handle: &String, data: &Vec<u8>) -> Result<(), IOError> {
+fn _file_write_bytes(handle: &str, data: &[u8]) -> Result<(), IOError> {
     ::sifr_stdlib::fs::file_write_bytes(handle, data)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn _file_flush(handle: &String) -> Result<(), IOError> {
+fn _file_flush(handle: &str) -> Result<(), IOError> {
     ::sifr_stdlib::fs::file_flush(handle)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
 fn _file_seek(
-    handle: &String,
+    handle: &str,
     offset: SifrInt,
     whence: SifrInt,
 ) -> Result<SifrInt, IOError> {
@@ -589,12 +589,12 @@ fn _file_seek(
         .map(|__sifr_bridge_ok| __sifr_bridge_ok.into_sifr_int())
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn _file_tell(handle: &String) -> Result<SifrInt, IOError> {
+fn _file_tell(handle: &str) -> Result<SifrInt, IOError> {
     ::sifr_stdlib::fs::file_tell(handle)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok.into_sifr_int())
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn open_file(path: &String, mode: &String) -> Result<__SifrIoNativeFileHandle, IOError> {
+fn open_file(path: &str, mode: &str) -> Result<__SifrIoNativeFileHandle, IOError> {
     let __sifr_try_res: Result<Result<__SifrIoNativeFileHandle, IOError>, IOError> = (|| {
         let handle_id: String = _open_file(path, mode)?;
         Ok(Ok(__SifrIoNativeFileHandle::new(handle_id)))
@@ -612,7 +612,7 @@ fn open_file(path: &String, mode: &String) -> Result<__SifrIoNativeFileHandle, I
 fn file_read(handle: &__SifrIoNativeFileHandle) -> Result<String, IOError> {
     _file_read(&handle._id.clone())
 }
-fn file_write(handle: &__SifrIoNativeFileHandle, data: &String) -> Result<(), IOError> {
+fn file_write(handle: &__SifrIoNativeFileHandle, data: &str) -> Result<(), IOError> {
     _file_write(&handle._id.clone(), data)
 }
 fn file_readline(handle: &__SifrIoNativeFileHandle) -> Result<Option<String>, IOError> {
@@ -628,11 +628,11 @@ fn file_read_bytes(
     handle: &__SifrIoNativeFileHandle,
     size: Option<SifrInt>,
 ) -> Result<Vec<u8>, IOError> {
-    _file_read_bytes(&handle._id.clone(), (size).clone())
+    _file_read_bytes(&handle._id.clone(), size.clone())
 }
 fn file_write_bytes(
     handle: &__SifrIoNativeFileHandle,
-    data: &Vec<u8>,
+    data: &[u8],
 ) -> Result<(), IOError> {
     _file_write_bytes(&handle._id.clone(), data)
 }
@@ -644,7 +644,7 @@ fn file_seek(
     offset: SifrInt,
     whence: SifrInt,
 ) -> Result<SifrInt, IOError> {
-    _file_seek(&handle._id.clone(), (offset).clone(), (whence).clone())
+    _file_seek(&handle._id.clone(), offset.clone(), whence.clone())
 }
 fn file_tell(handle: &__SifrIoNativeFileHandle) -> Result<SifrInt, IOError> {
     _file_tell(&handle._id.clone())
@@ -654,64 +654,64 @@ fn getcwd() -> Result<String, IOError> {
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn listdir(path: &String) -> Result<Vec<String>, IOError> {
+fn listdir(path: &str) -> Result<Vec<String>, IOError> {
     ::sifr_stdlib::fs::listdir(path)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn mkdir(path: &String) -> Result<(), IOError> {
+fn mkdir(path: &str) -> Result<(), IOError> {
     ::sifr_stdlib::fs::mkdir(path)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn rmdir(path: &String) -> Result<(), IOError> {
+fn rmdir(path: &str) -> Result<(), IOError> {
     ::sifr_stdlib::fs::rmdir(path)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn remove_file(path: &String) -> Result<(), IOError> {
+fn remove_file(path: &str) -> Result<(), IOError> {
     ::sifr_stdlib::fs::remove_file(path)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn rename(src: &String, dst: &String) -> Result<(), IOError> {
+fn rename(src: &str, dst: &str) -> Result<(), IOError> {
     ::sifr_stdlib::fs::rename(src, dst)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn chdir(path: &String) -> Result<(), IOError> {
+fn chdir(path: &str) -> Result<(), IOError> {
     ::sifr_stdlib::fs::chdir(path)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn stat_size(path: &String) -> Result<SifrInt, IOError> {
+fn stat_size(path: &str) -> Result<SifrInt, IOError> {
     ::sifr_stdlib::fs::stat_size(path)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok.into_sifr_int())
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn disk_usage(path: &String) -> Vec<SifrInt> {
+fn disk_usage(path: &str) -> Vec<SifrInt> {
     ::sifr_stdlib::fs::disk_usage(path)
         .into_iter()
         .map(|__sifr_bridge_value| __sifr_bridge_value.into_sifr_int())
         .collect()
 }
-fn is_file(path: &String) -> bool {
+fn is_file(path: &str) -> bool {
     ::sifr_stdlib::fs::is_file(path)
 }
-fn is_dir(path: &String) -> bool {
+fn is_dir(path: &str) -> bool {
     ::sifr_stdlib::fs::is_dir(path)
 }
-fn copy_file(src: &String, dst: &String) -> Result<(), IOError> {
+fn copy_file(src: &str, dst: &str) -> Result<(), IOError> {
     ::sifr_stdlib::fs::copy_file(src, dst)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn walk_dir(path: &String) -> Result<Vec<String>, IOError> {
+fn walk_dir(path: &str) -> Result<Vec<String>, IOError> {
     ::sifr_stdlib::fs::walk_dir(path)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn rmdir_all(path: &String) -> Result<(), IOError> {
+fn rmdir_all(path: &str) -> Result<(), IOError> {
     ::sifr_stdlib::fs::rmdir_all(path)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
@@ -719,32 +719,32 @@ fn rmdir_all(path: &String) -> Result<(), IOError> {
 fn gettempdir() -> String {
     ::sifr_stdlib::fs::gettempdir()
 }
-fn makedirs(path: &String) -> Result<(), IOError> {
+fn makedirs(path: &str) -> Result<(), IOError> {
     ::sifr_stdlib::fs::makedirs(path)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn touch(path: &String) -> Result<(), IOError> {
+fn touch(path: &str) -> Result<(), IOError> {
     ::sifr_stdlib::fs::touch(path)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn resolve_path(path: &String) -> Result<String, IOError> {
+fn resolve_path(path: &str) -> Result<String, IOError> {
     ::sifr_stdlib::fs::resolve_path(path)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn iterdir(path: &String) -> Result<Vec<String>, IOError> {
+fn iterdir(path: &str) -> Result<Vec<String>, IOError> {
     ::sifr_stdlib::fs::iterdir(path)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn glob_pattern(dir: &String, pattern: &String) -> Result<Vec<String>, IOError> {
+fn glob_pattern(dir: &str, pattern: &str) -> Result<Vec<String>, IOError> {
     ::sifr_stdlib::fs::glob_pattern(dir, pattern)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn rglob_pattern(dir: &String, pattern: &String) -> Result<Vec<String>, IOError> {
+fn rglob_pattern(dir: &str, pattern: &str) -> Result<Vec<String>, IOError> {
     ::sifr_stdlib::fs::rglob_pattern(dir, pattern)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
@@ -874,7 +874,7 @@ impl __SifrStdlib_sifr_x2eencoding_x2eEncoding {
     fn new(label: String) -> Self {
         let __sifr_field_init_0: String = {
             let mut __sifr_concat: String = String::with_capacity(label.len() + 0usize);
-            __sifr_concat.push_str((label).as_str());
+            __sifr_concat.push_str(label.as_str());
             __sifr_concat.push_str("");
             __sifr_concat
         };
@@ -906,7 +906,7 @@ impl __SifrStdlib_sifr_x2eencoding_x2eDecodeErrorHandler {
     fn new(name: String) -> Self {
         let __sifr_field_init_0: String = {
             let mut __sifr_concat: String = String::with_capacity(name.len() + 0usize);
-            __sifr_concat.push_str((name).as_str());
+            __sifr_concat.push_str(name.as_str());
             __sifr_concat.push_str("");
             __sifr_concat
         };
@@ -927,7 +927,7 @@ impl __SifrStdlib_sifr_x2eencoding_x2eEncodeErrorHandler {
     fn new(name: String) -> Self {
         let __sifr_field_init_0: String = {
             let mut __sifr_concat: String = String::with_capacity(name.len() + 0usize);
-            __sifr_concat.push_str((name).as_str());
+            __sifr_concat.push_str(name.as_str());
             __sifr_concat.push_str("");
             __sifr_concat
         };
@@ -949,7 +949,7 @@ impl __SifrStdlib_sifr_x2eencoding_x2eDecodeOutcome {
     fn new(text: String, recoveries: Vec<String>) -> Self {
         let __sifr_field_init_0: String = {
             let mut __sifr_concat: String = String::with_capacity(text.len() + 0usize);
-            __sifr_concat.push_str((text).as_str());
+            __sifr_concat.push_str(text.as_str());
             __sifr_concat.push_str("");
             __sifr_concat
         };
@@ -964,7 +964,7 @@ impl __SifrStdlib_sifr_x2eencoding_x2eDecodeOutcome {
     fn get_text(&self) -> String {
         {
             let mut __sifr_concat: String = String::with_capacity(0usize + 0usize);
-            __sifr_concat.push_str((self.text.clone()).as_str());
+            __sifr_concat.push_str(self.text.clone().as_str());
             __sifr_concat.push_str("");
             __sifr_concat
         }
@@ -1032,7 +1032,7 @@ impl __SifrStdlib_sifr_x2eencoding_x2eDecoder {
 impl __SifrStdlib_sifr_x2eencoding_x2eDecoder {
     fn decode(
         &mut self,
-        data: &Vec<u8>,
+        data: &[u8],
         r#final: bool,
     ) -> Result<
         __SifrStdlib_sifr_x2eencoding_x2eDecodeOutcome,
@@ -1114,7 +1114,7 @@ impl __SifrStdlib_sifr_x2eencoding_x2eEncoder {
 impl __SifrStdlib_sifr_x2eencoding_x2eEncoder {
     fn encode(
         &mut self,
-        text: &String,
+        text: &str,
         r#final: bool,
     ) -> Result<
         __SifrStdlib_sifr_x2eencoding_x2eEncodeOutcome,
@@ -1137,7 +1137,7 @@ impl __SifrStdlib_sifr_x2eencoding_x2eEncoder {
             let outcome: __SifrStdlib_sifr_x2eencoding_x2eEncodeOutcome = encode_outcome(
                 text,
                 &self._encoding,
-                &Some((self._errors.clone()).clone()),
+                &Some(self._errors.clone()),
             )?;
             if r#final {
                 self._exhausted = true;
@@ -1165,11 +1165,11 @@ impl ::std::fmt::Display for __SifrStdlib_sifr_x2eencoding_x2eEncoder {
         )
     }
 }
-fn _encoding_is_supported(label: &String) -> bool {
+fn _encoding_is_supported(label: &str) -> bool {
     _encoding_is_supported_impl(label)
 }
 fn _encoding_canonical_label(
-    label: &String,
+    label: &str,
 ) -> Result<String, __SifrStdlib_sifr_x2eencoding_x2eDecodeError> {
     let __sifr_try_res: Result<
         Result<String, __SifrStdlib_sifr_x2eencoding_x2eDecodeError>,
@@ -1191,9 +1191,9 @@ fn _encoding_canonical_label(
     }
 }
 fn _encoding_decode_text(
-    data: &Vec<u8>,
-    encoding: &String,
-    errors: &String,
+    data: &[u8],
+    encoding: &str,
+    errors: &str,
 ) -> Result<String, __SifrStdlib_sifr_x2eencoding_x2eDecodeError> {
     let __sifr_try_res: Result<
         Result<String, __SifrStdlib_sifr_x2eencoding_x2eDecodeError>,
@@ -1215,9 +1215,9 @@ fn _encoding_decode_text(
     }
 }
 fn _encoding_decode_recoveries(
-    data: &Vec<u8>,
-    encoding: &String,
-    errors: &String,
+    data: &[u8],
+    encoding: &str,
+    errors: &str,
 ) -> Result<Vec<String>, __SifrStdlib_sifr_x2eencoding_x2eDecodeError> {
     let __sifr_try_res: Result<
         Result<Vec<String>, __SifrStdlib_sifr_x2eencoding_x2eDecodeError>,
@@ -1243,9 +1243,9 @@ fn _encoding_decode_recoveries(
     }
 }
 fn _encoding_decode_outcome(
-    data: &Vec<u8>,
-    encoding: &String,
-    errors: &String,
+    data: &[u8],
+    encoding: &str,
+    errors: &str,
 ) -> Result<
     __SifrStdlib_sifr_x2eencoding_x2eDecodeOutcome,
     __SifrStdlib_sifr_x2eencoding_x2eDecodeError,
@@ -1278,10 +1278,10 @@ fn _encoding_decode_outcome(
     }
 }
 fn _encoding_decode_incremental_outcome(
-    data: &Vec<u8>,
-    pending: &Vec<u8>,
-    encoding: &String,
-    errors: &String,
+    data: &[u8],
+    pending: &[u8],
+    encoding: &str,
+    errors: &str,
     r#final: bool,
 ) -> Result<
     __SifrStdlib_sifr_x2eencoding_x2eDecodeOutcome,
@@ -1323,9 +1323,9 @@ fn _encoding_decode_incremental_outcome(
     }
 }
 fn _encoding_decode_incremental_pending(
-    data: &Vec<u8>,
-    pending: &Vec<u8>,
-    encoding: &String,
+    data: &[u8],
+    pending: &[u8],
+    encoding: &str,
     r#final: bool,
 ) -> Result<Vec<u8>, __SifrStdlib_sifr_x2eencoding_x2eDecodeError> {
     let __sifr_try_res: Result<
@@ -1353,9 +1353,9 @@ fn _encoding_decode_incremental_pending(
     }
 }
 fn _encoding_encode_bytes(
-    text: &String,
-    encoding: &String,
-    errors: &String,
+    text: &str,
+    encoding: &str,
+    errors: &str,
 ) -> Result<Vec<u8>, __SifrStdlib_sifr_x2eencoding_x2eEncodeError> {
     let __sifr_try_res: Result<
         Result<Vec<u8>, __SifrStdlib_sifr_x2eencoding_x2eEncodeError>,
@@ -1377,9 +1377,9 @@ fn _encoding_encode_bytes(
     }
 }
 fn _encoding_encode_recoveries(
-    text: &String,
-    encoding: &String,
-    errors: &String,
+    text: &str,
+    encoding: &str,
+    errors: &str,
 ) -> Result<Vec<String>, __SifrStdlib_sifr_x2eencoding_x2eEncodeError> {
     let __sifr_try_res: Result<
         Result<Vec<String>, __SifrStdlib_sifr_x2eencoding_x2eEncodeError>,
@@ -1405,9 +1405,9 @@ fn _encoding_encode_recoveries(
     }
 }
 fn _encoding_encode_outcome(
-    text: &String,
-    encoding: &String,
-    errors: &String,
+    text: &str,
+    encoding: &str,
+    errors: &str,
 ) -> Result<
     __SifrStdlib_sifr_x2eencoding_x2eEncodeOutcome,
     __SifrStdlib_sifr_x2eencoding_x2eEncodeError,
@@ -1439,8 +1439,8 @@ fn _encoding_encode_outcome(
         }
     }
 }
-fn encoding(label: &String) -> __SifrStdlib_sifr_x2eencoding_x2eEncoding {
-    __SifrStdlib_sifr_x2eencoding_x2eEncoding::new((label.clone()).clone())
+fn encoding(label: &str) -> __SifrStdlib_sifr_x2eencoding_x2eEncoding {
+    __SifrStdlib_sifr_x2eencoding_x2eEncoding::new(label.to_owned())
 }
 fn utf8() -> __SifrStdlib_sifr_x2eencoding_x2eEncoding {
     __SifrStdlib_sifr_x2eencoding_x2eEncoding::new(__const_ENCODING_UTF8())
@@ -1519,7 +1519,7 @@ fn _decode_handler_name(
     if let Some(errors) = errors.as_ref() {
         return {
             let mut __sifr_concat: String = String::with_capacity(0usize + 0usize);
-            __sifr_concat.push_str((errors.name.clone()).as_str());
+            __sifr_concat.push_str(errors.name.clone().as_str());
             __sifr_concat.push_str("");
             __sifr_concat
         };
@@ -1532,7 +1532,7 @@ fn _encode_handler_name(
     if let Some(errors) = errors.as_ref() {
         return {
             let mut __sifr_concat: String = String::with_capacity(0usize + 0usize);
-            __sifr_concat.push_str((errors.name.clone()).as_str());
+            __sifr_concat.push_str(errors.name.clone().as_str());
             __sifr_concat.push_str("");
             __sifr_concat
         };
@@ -1560,7 +1560,7 @@ fn _encode_handler_or_strict(
     strict_encode_handler()
 }
 fn decode_outcome(
-    data: &Vec<u8>,
+    data: &[u8],
     enc: &__SifrStdlib_sifr_x2eencoding_x2eEncoding,
     errors: &Option<__SifrStdlib_sifr_x2eencoding_x2eDecodeErrorHandler>,
 ) -> Result<
@@ -1588,7 +1588,7 @@ fn decode_outcome(
     }
 }
 fn decode(
-    data: &Vec<u8>,
+    data: &[u8],
     enc: &__SifrStdlib_sifr_x2eencoding_x2eEncoding,
     errors: &Option<__SifrStdlib_sifr_x2eencoding_x2eDecodeErrorHandler>,
 ) -> Result<String, __SifrStdlib_sifr_x2eencoding_x2eDecodeError> {
@@ -1616,7 +1616,7 @@ fn decode(
     }
 }
 fn encode_outcome(
-    text: &String,
+    text: &str,
     enc: &__SifrStdlib_sifr_x2eencoding_x2eEncoding,
     errors: &Option<__SifrStdlib_sifr_x2eencoding_x2eEncodeErrorHandler>,
 ) -> Result<
@@ -1644,7 +1644,7 @@ fn encode_outcome(
     }
 }
 fn encode(
-    text: &String,
+    text: &str,
     enc: &__SifrStdlib_sifr_x2eencoding_x2eEncoding,
     errors: &Option<__SifrStdlib_sifr_x2eencoding_x2eEncodeErrorHandler>,
 ) -> Result<Vec<u8>, __SifrStdlib_sifr_x2eencoding_x2eEncodeError> {
@@ -1902,7 +1902,7 @@ impl __SifrIoFileHandle {
     }
 }
 impl __SifrIoFileHandle {
-    fn write(&self, data: &String) -> Result<(), IOError> {
+    fn write(&self, data: &str) -> Result<(), IOError> {
         if self._closed {
             return Err(IOError::new(_closed_stream_error()));
         }
@@ -1942,11 +1942,11 @@ impl __SifrIoFileHandle {
         if !self.readable() {
             return Err(IOError::new("stream is not readable".to_string()));
         }
-        file_read_bytes(&self._handle, (size.clone()).clone())
+        file_read_bytes(&self._handle, size.clone())
     }
 }
 impl __SifrIoFileHandle {
-    fn write_bytes(&self, data: &Vec<u8>) -> Result<(), IOError> {
+    fn write_bytes(&self, data: &[u8]) -> Result<(), IOError> {
         if self._closed {
             return Err(IOError::new(_closed_stream_error()));
         }
@@ -1961,7 +1961,7 @@ impl __SifrIoFileHandle {
         if self._closed {
             return Err(IOError::new(_closed_stream_error()));
         }
-        file_seek(&self._handle, (offset.clone()).clone(), (whence.clone()).clone())
+        file_seek(&self._handle, offset.clone(), whence.clone())
     }
 }
 impl __SifrIoFileHandle {
@@ -2053,11 +2053,11 @@ impl __SifrIoBinaryFileHandle {
         if !self.readable() {
             return Err(IOError::new("stream is not readable".to_string()));
         }
-        file_read_bytes(&self._handle, (size.clone()).clone())
+        file_read_bytes(&self._handle, size.clone())
     }
 }
 impl __SifrIoBinaryFileHandle {
-    fn write_bytes(&self, data: &Vec<u8>) -> Result<(), IOError> {
+    fn write_bytes(&self, data: &[u8]) -> Result<(), IOError> {
         if self._closed {
             return Err(IOError::new(_closed_stream_error()));
         }
@@ -2072,7 +2072,7 @@ impl __SifrIoBinaryFileHandle {
         if self._closed {
             return Err(IOError::new(_closed_stream_error()));
         }
-        file_seek(&self._handle, (offset.clone()).clone(), (whence.clone()).clone())
+        file_seek(&self._handle, offset.clone(), whence.clone())
     }
 }
 impl __SifrIoBinaryFileHandle {
@@ -2170,7 +2170,7 @@ impl __SifrIoTextFileHandle {
             let text: String = (decode(
                 &data,
                 &self._encoding,
-                &Some((self._decode_errors.clone()).clone()),
+                &Some(self._decode_errors.clone()),
             ))
                 .map_err(|__e| __SifrUnion_8_x3asequence5_x3aunion1_x3a238_x3a5_x3aclass25_x3asifr_x2eencoding_x2eDecodeError1_x3a019_x3a5_x3aclass7_x3aIOError1_x3a0::__SifrUnionVariant_5_x3aclass25_x3asifr_x2eencoding_x2eDecodeError1_x3a0(
                     __e,
@@ -2199,7 +2199,7 @@ impl __SifrIoTextFileHandle {
                                     20usize + 0usize,
                                 );
                                 __sifr_concat.push_str("text decode failed: ");
-                                __sifr_concat.push_str((e.message.clone()).as_str());
+                                __sifr_concat.push_str(e.message.clone().as_str());
                                 __sifr_concat
                             }),
                         );
@@ -2210,7 +2210,7 @@ impl __SifrIoTextFileHandle {
     }
 }
 impl __SifrIoTextFileHandle {
-    fn write(&self, text: &String) -> Result<(), IOError> {
+    fn write(&self, text: &str) -> Result<(), IOError> {
         let __sifr_try_res: Result<
             Result<(), IOError>,
             __SifrUnion_8_x3asequence5_x3aunion1_x3a238_x3a5_x3aclass25_x3asifr_x2eencoding_x2eEncodeError1_x3a019_x3a5_x3aclass7_x3aIOError1_x3a0,
@@ -2218,7 +2218,7 @@ impl __SifrIoTextFileHandle {
             let data: Vec<u8> = (encode(
                 text,
                 &self._encoding,
-                &Some((self._encode_errors.clone()).clone()),
+                &Some(self._encode_errors.clone()),
             ))
                 .map_err(|__e| __SifrUnion_8_x3asequence5_x3aunion1_x3a238_x3a5_x3aclass25_x3asifr_x2eencoding_x2eEncodeError1_x3a019_x3a5_x3aclass7_x3aIOError1_x3a0::__SifrUnionVariant_5_x3aclass25_x3asifr_x2eencoding_x2eEncodeError1_x3a0(
                     __e,
@@ -2251,7 +2251,7 @@ impl __SifrIoTextFileHandle {
                                     20usize + 0usize,
                                 );
                                 __sifr_concat.push_str("text encode failed: ");
-                                __sifr_concat.push_str((e.message.clone()).as_str());
+                                __sifr_concat.push_str(e.message.clone().as_str());
                                 __sifr_concat
                             }),
                         );
@@ -2398,8 +2398,8 @@ impl ::std::default::Default for __SifrStdlib_sifr_x2eio_x2eTextWriter {
     }
 }
 impl __SifrStdlib_sifr_x2eio_x2eTextWriter {
-    fn write(&self, text: &String) -> Result<(), IOError> {
-        let _ = (text).clone();
+    fn write(&self, text: &str) -> Result<(), IOError> {
+        let _ = text.to_owned();
         Err(
             IOError::new(
                 "TextWriter direct construction is unsupported; use open_text"
@@ -2430,7 +2430,7 @@ impl __SifrStdlib_sifr_x2eio_x2eStringIO {
             let mut __sifr_concat: String = String::with_capacity(
                 initial.len() + 0usize,
             );
-            __sifr_concat.push_str((initial).as_str());
+            __sifr_concat.push_str(initial.as_str());
             __sifr_concat.push_str("");
             __sifr_concat
         };
@@ -2494,7 +2494,7 @@ impl __SifrStdlib_sifr_x2eio_x2eStringIO {
     }
 }
 impl __SifrStdlib_sifr_x2eio_x2eStringIO {
-    fn write(&mut self, data: &String) -> Result<(), IOError> {
+    fn write(&mut self, data: &str) -> Result<(), IOError> {
         if self._closed {
             return Err(IOError::new(_closed_stream_error()));
         }
@@ -2531,9 +2531,9 @@ impl __SifrStdlib_sifr_x2eio_x2eStringIO {
             let mut __sifr_concat: String = String::with_capacity(
                 (left.len() + data.len()) + right.len(),
             );
-            __sifr_concat.push_str((left).as_str());
-            __sifr_concat.push_str((data).as_str());
-            __sifr_concat.push_str((right).as_str());
+            __sifr_concat.push_str(left.as_str());
+            __sifr_concat.push_str(data);
+            __sifr_concat.push_str(right.as_str());
             __sifr_concat
         };
         self._cursor = &self._cursor.clone() + &SifrInt::from(data.chars().count());
@@ -2551,24 +2551,22 @@ impl __SifrStdlib_sifr_x2eio_x2eStringIO {
             return Err(IOError::new(_closed_stream_error()));
         }
         let mut origin: SifrInt = SifrInt::from_i64(0);
-        if (&whence.clone() == &SifrInt::from_i64(0)) {
+        if (whence == &SifrInt::from_i64(0)) {
             origin = SifrInt::from_i64(0);
         } else {
-            if (&whence.clone() == &SifrInt::from_i64(1)) {
+            if (whence == &SifrInt::from_i64(1)) {
                 origin = self._cursor.clone();
             } else {
-                if (&whence.clone() == &SifrInt::from_i64(2)) {
+                if (whence == &SifrInt::from_i64(2)) {
                     origin = SifrInt::from(self._buffer.chars().count());
                 } else {
-                    return Err(
-                        IOError::new(_invalid_whence_error((whence.clone()).clone())),
-                    );
+                    return Err(IOError::new(_invalid_whence_error(whence.clone())));
                 }
             }
         }
         let mut next_pos: SifrInt = &origin + offset;
         if (&next_pos < &SifrInt::from_i64(0)) {
-            return Err(IOError::new(_negative_seek_error((next_pos).clone())));
+            return Err(IOError::new(_negative_seek_error(next_pos.clone())));
         }
         let end: SifrInt = SifrInt::from(self._buffer.chars().count());
         if &next_pos > &end {
@@ -2679,13 +2677,13 @@ impl __SifrStdlib_sifr_x2eio_x2eBytesIO {
     }
 }
 impl __SifrStdlib_sifr_x2eio_x2eBytesIO {
-    fn write_bytes(&mut self, data: &Vec<u8>) -> Result<(), IOError> {
+    fn write_bytes(&mut self, data: &[u8]) -> Result<(), IOError> {
         if self._closed {
             return Err(IOError::new(_closed_stream_error()));
         }
         if (&self._cursor.clone() == &SifrInt::from(self._buffer.len())) {
             self._buffer = {
-                let mut __v = (self._buffer.clone()).clone();
+                let mut __v = (self._buffer.clone()).to_vec();
                 __v.extend((data).iter().cloned());
                 __v
             };
@@ -2727,11 +2725,11 @@ impl __SifrStdlib_sifr_x2eio_x2eBytesIO {
         }
         self._buffer = {
             let mut __v = ({
-                let mut __v = (left).clone();
+                let mut __v = (left).to_vec();
                 __v.extend((data).iter().cloned());
                 __v
             })
-                .clone();
+                .to_vec();
             __v.extend((right).iter().cloned());
             __v
         };
@@ -2750,24 +2748,22 @@ impl __SifrStdlib_sifr_x2eio_x2eBytesIO {
             return Err(IOError::new(_closed_stream_error()));
         }
         let mut origin: SifrInt = SifrInt::from_i64(0);
-        if (&whence.clone() == &SifrInt::from_i64(0)) {
+        if (whence == &SifrInt::from_i64(0)) {
             origin = SifrInt::from_i64(0);
         } else {
-            if (&whence.clone() == &SifrInt::from_i64(1)) {
+            if (whence == &SifrInt::from_i64(1)) {
                 origin = self._cursor.clone();
             } else {
-                if (&whence.clone() == &SifrInt::from_i64(2)) {
+                if (whence == &SifrInt::from_i64(2)) {
                     origin = SifrInt::from(self._buffer.len());
                 } else {
-                    return Err(
-                        IOError::new(_invalid_whence_error((whence.clone()).clone())),
-                    );
+                    return Err(IOError::new(_invalid_whence_error(whence.clone())));
                 }
             }
         }
         let mut next_pos: SifrInt = &origin + offset;
         if (&next_pos < &SifrInt::from_i64(0)) {
-            return Err(IOError::new(_negative_seek_error((next_pos).clone())));
+            return Err(IOError::new(_negative_seek_error(next_pos.clone())));
         }
         let end: SifrInt = SifrInt::from(self._buffer.len());
         if &next_pos > &end {
@@ -2807,7 +2803,7 @@ fn _invalid_whence_error(whence: SifrInt) -> String {
     {
         let mut __sifr_concat: String = String::with_capacity(16usize + 0usize);
         __sifr_concat.push_str("invalid whence: ");
-        __sifr_concat.push_str((format!("{}", whence)).as_str());
+        __sifr_concat.push_str(format!("{}", whence).as_str());
         __sifr_concat
     }
 }
@@ -2815,40 +2811,40 @@ fn _negative_seek_error(offset: SifrInt) -> String {
     {
         let mut __sifr_concat: String = String::with_capacity(24usize + 0usize);
         __sifr_concat.push_str("negative seek position: ");
-        __sifr_concat.push_str((format!("{}", offset)).as_str());
+        __sifr_concat.push_str(format!("{}", offset).as_str());
         __sifr_concat
     }
 }
 fn _unsupported_seek_tell_error() -> String {
     "seek/tell is unsupported for this stream".to_string()
 }
-fn _mode_is_readable(mode: &String) -> bool {
+fn _mode_is_readable(mode: &str) -> bool {
     mode.contains(&"r".to_string()) || mode.contains(&"+".to_string())
 }
-fn _mode_is_writable(mode: &String) -> bool {
+fn _mode_is_writable(mode: &str) -> bool {
     (mode.contains(&"w".to_string()) || mode.contains(&"a".to_string()))
         || mode.contains(&"+".to_string())
 }
-fn _text_binary_mode(mode: &String) -> Result<String, IOError> {
+fn _text_binary_mode(mode: &str) -> Result<String, IOError> {
     if mode.contains(&"b".to_string()) {
         return Err(
             IOError::new("open_text requires a text mode without \'b\'".to_string()),
         );
     }
-    if ((mode).as_str() == "r") || ((mode).as_str() == "rt") {
+    if (mode == "r") || (mode == "rt") {
         return Ok("rb".to_string());
     }
-    if ((mode).as_str() == "w") || ((mode).as_str() == "wt") {
+    if (mode == "w") || (mode == "wt") {
         return Ok("wb".to_string());
     }
-    if ((mode).as_str() == "a") || ((mode).as_str() == "at") {
+    if (mode == "a") || (mode == "at") {
         return Ok("ab".to_string());
     }
     Err(
         IOError::new({
             let mut __sifr_concat: String = String::with_capacity(19usize + mode.len());
             __sifr_concat.push_str("invalid text mode: ");
-            __sifr_concat.push_str((mode).as_str());
+            __sifr_concat.push_str(mode);
             __sifr_concat
         }),
     )
@@ -2880,10 +2876,10 @@ fn _encode_errors_from_decode_errors(
         format!("{}{}", errors.name.clone(), ""),
     )
 }
-fn open(path: &String, mode: &String) -> Result<__SifrIoFileHandle, IOError> {
+fn open(path: &str, mode: &str) -> Result<__SifrIoFileHandle, IOError> {
     let __sifr_try_res: Result<Result<__SifrIoFileHandle, IOError>, IOError> = (|| {
         let handle: __SifrIoNativeFileHandle = open_file(path, mode)?;
-        Ok(Ok(__SifrIoFileHandle::new(handle, (mode.clone()).clone())))
+        Ok(Ok(__SifrIoFileHandle::new(handle, mode.to_owned())))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -2895,16 +2891,13 @@ fn open(path: &String, mode: &String) -> Result<__SifrIoFileHandle, IOError> {
         }
     }
 }
-fn open_binary(
-    path: &String,
-    mode: &String,
-) -> Result<__SifrIoBinaryFileHandle, IOError> {
+fn open_binary(path: &str, mode: &str) -> Result<__SifrIoBinaryFileHandle, IOError> {
     if !mode.contains(&"b".to_string()) {
         return Err(IOError::new("open_binary requires binary mode".to_string()));
     }
     let __sifr_try_res: Result<Result<__SifrIoBinaryFileHandle, IOError>, IOError> = (|| {
         let handle: __SifrIoNativeFileHandle = open_file(path, mode)?;
-        Ok(Ok(__SifrIoBinaryFileHandle::new(handle, (mode.clone()).clone())))
+        Ok(Ok(__SifrIoBinaryFileHandle::new(handle, mode.to_owned())))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -2917,8 +2910,8 @@ fn open_binary(
     }
 }
 fn open_text(
-    path: &String,
-    mode: &String,
+    path: &str,
+    mode: &str,
     encoding: &Option<__SifrStdlib_sifr_x2eencoding_x2eEncoding>,
     errors: &Option<__SifrStdlib_sifr_x2eencoding_x2eDecodeErrorHandler>,
 ) -> Result<__SifrIoTextFileHandle, IOError> {
@@ -3043,37 +3036,37 @@ fn _copy_dialect(
         dialect.quoting.clone(),
     )
 }
-fn _validate_char(name: &String, value: &String) {
-    let _ = (name).clone();
-    let _ = (value).clone();
+fn _validate_char(name: &str, value: &str) {
+    let _ = name.to_owned();
+    let _ = value.to_owned();
 }
 fn _resolve_dialect(
     dialect: &Option<__SifrStdlib_sifr_x2ecsv_x2eDialect>,
-    delimiter: &String,
-    quotechar: &String,
-    escapechar: &String,
+    delimiter: &str,
+    quotechar: &str,
+    escapechar: &str,
     doublequote: bool,
     skipinitialspace: bool,
-    lineterminator: &String,
+    lineterminator: &str,
     quoting: SifrInt,
 ) -> __SifrStdlib_sifr_x2ecsv_x2eDialect {
     if let Some(dialect) = dialect.as_ref() {
         return _copy_dialect(dialect);
     }
     __SifrStdlib_sifr_x2ecsv_x2eDialect::new(
-        (delimiter.clone()).clone(),
-        (quotechar.clone()).clone(),
-        (escapechar.clone()).clone(),
+        delimiter.to_owned(),
+        quotechar.to_owned(),
+        escapechar.to_owned(),
         doublequote,
         skipinitialspace,
-        (lineterminator.clone()).clone(),
-        (quoting).clone(),
+        lineterminator.to_owned(),
+        quoting.clone(),
     )
 }
 fn _quotechar_value(dialect: &__SifrStdlib_sifr_x2ecsv_x2eDialect) -> String {
     let quotechar: String = {
         let mut __sifr_concat: String = String::with_capacity(0usize + 0usize);
-        __sifr_concat.push_str((dialect.quotechar.clone()).as_str());
+        __sifr_concat.push_str(dialect.quotechar.clone().as_str());
         __sifr_concat.push_str("");
         __sifr_concat
     };
@@ -3086,9 +3079,9 @@ fn _append_field(row: &mut Vec<String>, field: String) {
     row.push(format!("{}{}", field, ""));
 }
 fn _append_row(rows: &mut Vec<Vec<String>>, row: Vec<String>) {
-    rows.push(row.clone());
+    rows.push(row.to_vec());
 }
-fn _char_at(text: &String, index: SifrInt) -> String {
+fn _char_at(text: &str, index: SifrInt) -> String {
     let __sifr_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
     if (&index < &SifrInt::from_i64(0))
         || (&index >= &SifrInt::from(__sifr_chars_text.len()))
@@ -3107,19 +3100,19 @@ fn _char_at(text: &String, index: SifrInt) -> String {
     };
     ch
 }
-fn _first_char(text: &String) -> String {
+fn _first_char(text: &str) -> String {
     _char_at(text, SifrInt::from_i64(0))
 }
-fn _last_char(text: &String) -> String {
+fn _last_char(text: &str) -> String {
     let __sifr_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
     _char_at(text, SifrInt::from(text.chars().count()) - SifrInt::from_i64(1))
 }
 fn parse_row(
-    line: &String,
+    line: &str,
     dialect: &Option<__SifrStdlib_sifr_x2ecsv_x2eDialect>,
-    delimiter: &String,
-    quotechar: &String,
-    escapechar: &String,
+    delimiter: &str,
+    quotechar: &str,
+    escapechar: &str,
     doublequote: bool,
     skipinitialspace: bool,
     quoting: SifrInt,
@@ -3132,7 +3125,7 @@ fn parse_row(
         escapechar,
         doublequote,
         skipinitialspace,
-        (quoting).clone(),
+        quoting.clone(),
     );
     if &SifrInt::from(rows.len()) == &SifrInt::from_i64(0) {
         return vec![];
@@ -3155,25 +3148,26 @@ fn parse_row(
     vec![]
 }
 fn parse_csv(
-    text: &String,
+    text: &str,
     dialect: &Option<__SifrStdlib_sifr_x2ecsv_x2eDialect>,
-    delimiter: &String,
-    quotechar: &String,
-    escapechar: &String,
+    delimiter: &str,
+    quotechar: &str,
+    escapechar: &str,
     doublequote: bool,
     skipinitialspace: bool,
     quoting: SifrInt,
 ) -> Vec<Vec<String>> {
+    let quotechar = quotechar.to_owned();
     let __sifr_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
     let resolved: __SifrStdlib_sifr_x2ecsv_x2eDialect = _resolve_dialect(
         dialect,
         delimiter,
-        quotechar,
+        &quotechar,
         escapechar,
         doublequote,
         skipinitialspace,
         &"\n".to_string(),
-        (quoting).clone(),
+        quoting.clone(),
     );
     let mut rows: Vec<Vec<String>> = vec![];
     let mut row: Vec<String> = vec![];
@@ -3182,7 +3176,7 @@ fn parse_csv(
     let mut field_started: bool = false;
     let mut i: SifrInt = SifrInt::from_i64(0);
     while (&i < &SifrInt::from(__sifr_chars_text.len())) {
-        let ch_value: String = _char_at(text, (i).clone());
+        let ch_value: String = _char_at(text, i.clone());
         if in_quotes {
             if (resolved.escapechar.clone() != "")
                 && (ch_value == resolved.escapechar.clone())
@@ -3194,11 +3188,11 @@ fn parse_csv(
                         text,
                         &i + &SifrInt::from_i64(1),
                     );
-                    field.push_str((escaped_value).as_str());
+                    field.push_str(escaped_value.as_str());
                     i = &i + &SifrInt::from_i64(2);
                     continue;
                 }
-                field.push_str((ch_value).as_str());
+                field.push_str(ch_value.as_str());
                 i = &i + &SifrInt::from_i64(1);
                 continue;
             }
@@ -3209,9 +3203,9 @@ fn parse_csv(
                 if (resolved.doublequote
                     && (&(&i + &SifrInt::from_i64(1))
                         < &SifrInt::from(__sifr_chars_text.len())))
-                    && (_char_at(text, &i + &SifrInt::from_i64(1)) == quotechar.clone())
+                    && (_char_at(text, &i + &SifrInt::from_i64(1)) == quotechar)
                 {
-                    field.push_str((quotechar).as_str());
+                    field.push_str(quotechar.as_str());
                     i = &i + &SifrInt::from_i64(2);
                     continue;
                 }
@@ -3219,7 +3213,7 @@ fn parse_csv(
                 i = &i + &SifrInt::from_i64(1);
                 continue;
             }
-            field.push_str((ch_value).as_str());
+            field.push_str(ch_value.as_str());
             i = &i + &SifrInt::from_i64(1);
             continue;
         }
@@ -3236,12 +3230,12 @@ fn parse_csv(
                     text,
                     &i + &SifrInt::from_i64(1),
                 );
-                field.push_str((escaped_plain_value).as_str());
+                field.push_str(escaped_plain_value.as_str());
                 field_started = true;
                 i = &i + &SifrInt::from_i64(2);
                 continue;
             }
-            field.push_str((ch_value).as_str());
+            field.push_str(ch_value.as_str());
             field_started = true;
             i = &i + &SifrInt::from_i64(1);
             continue;
@@ -3284,7 +3278,7 @@ fn parse_csv(
             i = &i + &SifrInt::from_i64(1);
             continue;
         }
-        field.push_str((ch_value).as_str());
+        field.push_str(ch_value.as_str());
         field_started = true;
         i = &i + &SifrInt::from_i64(1);
     }
@@ -3297,7 +3291,7 @@ fn parse_csv(
     }
     rows
 }
-fn _needs_quote(field: &String, dialect: &__SifrStdlib_sifr_x2ecsv_x2eDialect) -> bool {
+fn _needs_quote(field: &str, dialect: &__SifrStdlib_sifr_x2ecsv_x2eDialect) -> bool {
     let __sifr_chars_field: Vec<char> = field.chars().collect::<Vec<char>>();
     if (&dialect.quoting.clone() == &__const_QUOTE_ALL()) {
         return true;
@@ -3314,7 +3308,7 @@ fn _needs_quote(field: &String, dialect: &__SifrStdlib_sifr_x2ecsv_x2eDialect) -
     if (&dialect.quoting.clone() == &__const_QUOTE_NONE()) {
         return false;
     }
-    if (field).contains((dialect.delimiter.clone()).as_str()) {
+    if (field).contains(dialect.delimiter.clone().as_str()) {
         return true;
     }
     if field.contains(&"\n".to_string()) || field.contains(&"\r".to_string()) {
@@ -3338,14 +3332,11 @@ fn _needs_quote(field: &String, dialect: &__SifrStdlib_sifr_x2ecsv_x2eDialect) -
     }
     false
 }
-fn _quote_field(
-    field: &String,
-    dialect: &__SifrStdlib_sifr_x2ecsv_x2eDialect,
-) -> String {
+fn _quote_field(field: &str, dialect: &__SifrStdlib_sifr_x2ecsv_x2eDialect) -> String {
     let quotechar: String = _quotechar_value(dialect);
     let mut escaped: String = {
         let mut __sifr_concat: String = String::with_capacity(field.len() + 0usize);
-        __sifr_concat.push_str((field).as_str());
+        __sifr_concat.push_str(field);
         __sifr_concat.push_str("");
         __sifr_concat
     };
@@ -3359,7 +3350,7 @@ fn _quote_field(
                     let mut __sifr_concat: String = String::with_capacity(
                         0usize + 0usize,
                     );
-                    __sifr_concat.push_str((dialect.escapechar.clone()).as_str());
+                    __sifr_concat.push_str(dialect.escapechar.clone().as_str());
                     __sifr_concat.push_str("");
                     __sifr_concat
                 };
@@ -3375,23 +3366,23 @@ fn _quote_field(
         let mut __sifr_concat: String = String::with_capacity(
             (quotechar.len() + escaped.len()) + quotechar.len(),
         );
-        __sifr_concat.push_str((quotechar).as_str());
-        __sifr_concat.push_str((escaped).as_str());
-        __sifr_concat.push_str((quotechar).as_str());
+        __sifr_concat.push_str(quotechar.as_str());
+        __sifr_concat.push_str(escaped.as_str());
+        __sifr_concat.push_str(quotechar.as_str());
         __sifr_concat
     }
 }
 fn _escape_unquoted_field(
-    field: &String,
+    field: &str,
     dialect: &__SifrStdlib_sifr_x2ecsv_x2eDialect,
 ) -> String {
     let mut result: String = {
         let mut __sifr_concat: String = String::with_capacity(field.len() + 0usize);
-        __sifr_concat.push_str((field).as_str());
+        __sifr_concat.push_str(field);
         __sifr_concat.push_str("");
         __sifr_concat
     };
-    if (result).contains((dialect.delimiter.clone()).as_str()) {
+    if (result).contains(dialect.delimiter.clone().as_str()) {
         if (dialect.escapechar.clone() != "") {
             result = result
                 .replace(
@@ -3432,11 +3423,11 @@ fn _escape_unquoted_field(
     result
 }
 fn format_row(
-    fields: &Vec<String>,
+    fields: &[String],
     dialect: &Option<__SifrStdlib_sifr_x2ecsv_x2eDialect>,
-    delimiter: &String,
-    quotechar: &String,
-    escapechar: &String,
+    delimiter: &str,
+    quotechar: &str,
+    escapechar: &str,
     doublequote: bool,
     skipinitialspace: bool,
     quoting: SifrInt,
@@ -3449,7 +3440,7 @@ fn format_row(
         doublequote,
         skipinitialspace,
         &"\n".to_string(),
-        (quoting).clone(),
+        quoting.clone(),
     );
     let mut parts: Vec<String> = vec![];
     for field in fields.iter().cloned() {
@@ -3461,10 +3452,10 @@ fn format_row(
     }
     parts.join(&resolved.delimiter)
 }
-fn fnmatch(name: &String, pattern: &String) -> bool {
+fn fnmatch(name: &str, pattern: &str) -> bool {
     _match(name, SifrInt::from_i64(0), pattern, SifrInt::from_i64(0))
 }
-fn _match(name: &String, mut ni: SifrInt, pattern: &String, mut pi: SifrInt) -> bool {
+fn _match(name: &str, mut ni: SifrInt, pattern: &str, mut pi: SifrInt) -> bool {
     while (&pi < &SifrInt::from(pattern.chars().count())) {
         let pc: Option<String> = ({
             let __sifr_string_source = &pattern;
@@ -3482,7 +3473,7 @@ fn _match(name: &String, mut ni: SifrInt, pattern: &String, mut pi: SifrInt) -> 
                 }
                 let mut j: SifrInt = ni.clone();
                 while (&j <= &SifrInt::from(name.chars().count())) {
-                    if _match(name, (j).clone(), pattern, (pi).clone()) {
+                    if _match(name, j.clone(), pattern, pi.clone()) {
                         return true;
                     }
                     j = &j + &SifrInt::from_i64(1);
@@ -3526,21 +3517,21 @@ fn _match(name: &String, mut ni: SifrInt, pattern: &String, mut pi: SifrInt) -> 
     }
     (&ni == &SifrInt::from(name.chars().count()))
 }
-fn filter(names: &Vec<String>, pattern: &String) -> Vec<String> {
+fn filter(names: &[String], pattern: &str) -> Vec<String> {
     let mut result: Vec<String> = vec![];
     for name in names.iter().cloned() {
         if fnmatch(&name, pattern) {
-            result.push(name.clone());
+            result.push(name.to_owned());
         }
     }
     result
 }
 fn reduce<T: Clone + 'static, U: Clone + 'static>(
     func: impl Fn(&U, &T) -> U,
-    data: &Vec<T>,
+    data: &[T],
     initial: &U,
 ) -> U {
-    let mut result: U = (initial).clone();
+    let mut result: U = initial.clone();
     for val in data.iter().cloned() {
         result = func(&result, &val);
     }
@@ -3747,7 +3738,7 @@ fn heapify<T: Clone + 'static + PartialOrd>(data: &mut Vec<T>) {
     let mut i: SifrInt = &n.floor_div_known_nonzero(&SifrInt::from_i64(2))
         - &SifrInt::from_i64(1);
     while (&i >= &SifrInt::from_i64(0)) {
-        _sift_down(data, (i).clone(), (n).clone());
+        _sift_down(data, i.clone(), n.clone());
         i = &i - &SifrInt::from_i64(1);
     }
 }
@@ -3755,7 +3746,7 @@ fn heappush<T: Clone + 'static + PartialOrd>(heap: &mut Vec<T>, item: &T) {
     "Push item onto the heap in-place. O(log n) time.".to_string();
     heap.push(item.clone());
     let pos: SifrInt = &SifrInt::from(heap.len()) - &SifrInt::from_i64(1);
-    _sift_up(heap, (pos).clone());
+    _sift_up(heap, pos.clone());
 }
 fn heappop<T: Clone + 'static + PartialOrd>(heap: &mut Vec<T>) -> Option<T> {
     "Pop and return the smallest item. Heap is modified in-place. O(log n) time.\n    Returns None if the heap is empty."
@@ -3794,12 +3785,12 @@ fn heappop<T: Clone + 'static + PartialOrd>(heap: &mut Vec<T>) -> Option<T> {
                 }
             }
         }
-        _sift_down(heap, SifrInt::from_i64(0), (n2).clone());
+        _sift_down(heap, SifrInt::from_i64(0), n2.clone());
     }
     top
 }
-fn nsmallest<T: Clone + 'static + PartialOrd>(n: SifrInt, data: &Vec<T>) -> Vec<T> {
-    let mut heap: Vec<T> = data.clone();
+fn nsmallest<T: Clone + 'static + PartialOrd>(n: SifrInt, data: &[T]) -> Vec<T> {
+    let mut heap: Vec<T> = data.to_vec();
     heapify(&mut heap);
     let mut result: Vec<T> = vec![];
     let mut count: SifrInt = SifrInt::from_i64(0);
@@ -3909,8 +3900,27 @@ impl<T> Iterator for __SifrGenerator<T> {
         yielded
     }
 }
-fn chain<T: Clone + 'static>(iterables: &Vec<Vec<T>>) -> Box<dyn Iterator<Item = T>> {
-    let iterables = iterables.clone();
+pub trait __SifrAdd: Sized {
+    fn __sifr_add(self, rhs: Self) -> Self;
+}
+impl __SifrAdd for ::sifr_runtime::SifrInt {
+    fn __sifr_add(self, rhs: Self) -> Self {
+        self + rhs
+    }
+}
+impl __SifrAdd for f64 {
+    fn __sifr_add(self, rhs: Self) -> Self {
+        self + rhs
+    }
+}
+impl __SifrAdd for String {
+    fn __sifr_add(mut self, rhs: Self) -> Self {
+        self.push_str(&rhs);
+        self
+    }
+}
+fn chain<T: Clone + 'static>(iterables: &[Vec<T>]) -> Box<dyn Iterator<Item = T>> {
+    let iterables = iterables.to_vec();
     Box::new(
         __SifrGenerator::new(async move |__sifr_yielder: __SifrYielder<T>| {
             for iterable in iterables.iter().cloned() {
@@ -3921,7 +3931,7 @@ fn chain<T: Clone + 'static>(iterables: &Vec<Vec<T>>) -> Box<dyn Iterator<Item =
         }),
     )
 }
-fn take<T: Clone + 'static>(n: SifrInt, data: &Vec<T>) -> Vec<T> {
+fn take<T: Clone + 'static>(n: SifrInt, data: &[T]) -> Vec<T> {
     let mut result: Vec<T> = vec![];
     let mut count: SifrInt = SifrInt::from_i64(0);
     for item in data.iter().cloned() {
@@ -3933,7 +3943,7 @@ fn take<T: Clone + 'static>(n: SifrInt, data: &Vec<T>) -> Vec<T> {
     }
     result
 }
-fn flatten<T: Clone + 'static>(lists: &Vec<Vec<T>>) -> Vec<T> {
+fn flatten<T: Clone + 'static>(lists: &[Vec<T>]) -> Vec<T> {
     let mut result: Vec<T> = vec![];
     for inner in lists.iter().cloned() {
         for val in inner.iter().cloned() {
@@ -3994,7 +4004,7 @@ fn random_module_state_gauss_next() -> Option<f64> {
     ::sifr_stdlib::random::random_module_state_gauss_next()
 }
 fn random_module_set_state(
-    words: &Vec<SifrInt>,
+    words: &[SifrInt],
     index: SifrInt,
     gauss_next: Option<f64>,
 ) -> Result<(), ValueError> {
@@ -4012,20 +4022,20 @@ fn random_module_set_state(
             message: __sifr_bridge_error.to_string(),
         })
 }
-fn base64_encode(s: &String) -> String {
+fn base64_encode(s: &str) -> String {
     ::sifr_stdlib::base64::base64_encode(s)
 }
-fn base64_encode_bytes(data: &Vec<u8>) -> Vec<u8> {
+fn base64_encode_bytes(data: &[u8]) -> Vec<u8> {
     ::sifr_stdlib::base64::base64_encode_bytes(data)
 }
-fn base64_decode(s: &String) -> Result<String, ParseError> {
+fn base64_decode(s: &str) -> Result<String, ParseError> {
     ::sifr_stdlib::base64::base64_decode(s)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| ParseError {
             message: __sifr_bridge_error.to_string(),
         })
 }
-fn base64_decode_bytes(data: &Vec<u8>) -> Result<Vec<u8>, ParseError> {
+fn base64_decode_bytes(data: &[u8]) -> Result<Vec<u8>, ParseError> {
     ::sifr_stdlib::base64::base64_decode_bytes(data)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| ParseError {
@@ -4033,8 +4043,8 @@ fn base64_decode_bytes(data: &Vec<u8>) -> Result<Vec<u8>, ParseError> {
         })
 }
 fn base64_encode_opts(
-    s: &String,
-    altchars: &String,
+    s: &str,
+    altchars: &str,
     wrapcol: SifrInt,
 ) -> Result<String, ParseError> {
     ::sifr_stdlib::base64::base64_encode_opts(
@@ -4048,10 +4058,10 @@ fn base64_encode_opts(
         })
 }
 fn base64_decode_opts(
-    s: &String,
-    altchars: &String,
+    s: &str,
+    altchars: &str,
     validate: bool,
-    ignorechars: &String,
+    ignorechars: &str,
 ) -> Result<String, ParseError> {
     ::sifr_stdlib::base64::base64_decode_opts(s, altchars, validate, ignorechars)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
@@ -4059,68 +4069,68 @@ fn base64_decode_opts(
             message: __sifr_bridge_error.to_string(),
         })
 }
-fn urlsafe_b64encode(s: &String) -> String {
+fn urlsafe_b64encode(s: &str) -> String {
     ::sifr_stdlib::base64::urlsafe_b64encode(s)
 }
-fn urlsafe_b64encode_bytes(data: &Vec<u8>) -> Vec<u8> {
+fn urlsafe_b64encode_bytes(data: &[u8]) -> Vec<u8> {
     ::sifr_stdlib::base64::urlsafe_b64encode_bytes(data)
 }
-fn urlsafe_b64decode(s: &String) -> Result<String, ParseError> {
+fn urlsafe_b64decode(s: &str) -> Result<String, ParseError> {
     ::sifr_stdlib::base64::urlsafe_b64decode(s)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| ParseError {
             message: __sifr_bridge_error.to_string(),
         })
 }
-fn urlsafe_b64decode_bytes(data: &Vec<u8>) -> Result<Vec<u8>, ParseError> {
+fn urlsafe_b64decode_bytes(data: &[u8]) -> Result<Vec<u8>, ParseError> {
     ::sifr_stdlib::base64::urlsafe_b64decode_bytes(data)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| ParseError {
             message: __sifr_bridge_error.to_string(),
         })
 }
-fn b32encode(s: &String) -> String {
+fn b32encode(s: &str) -> String {
     ::sifr_stdlib::base64::b32encode(s)
 }
-fn b32decode(s: &String) -> Result<String, ParseError> {
+fn b32decode(s: &str) -> Result<String, ParseError> {
     ::sifr_stdlib::base64::b32decode(s)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| ParseError {
             message: __sifr_bridge_error.to_string(),
         })
 }
-fn b32hexencode(s: &String) -> String {
+fn b32hexencode(s: &str) -> String {
     ::sifr_stdlib::base64::b32hexencode(s)
 }
-fn b32hexdecode(s: &String) -> Result<String, ParseError> {
+fn b32hexdecode(s: &str) -> Result<String, ParseError> {
     ::sifr_stdlib::base64::b32hexdecode(s)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| ParseError {
             message: __sifr_bridge_error.to_string(),
         })
 }
-fn sha256_bytes(data: &Vec<u8>) -> Vec<u8> {
+fn sha256_bytes(data: &[u8]) -> Vec<u8> {
     ::sifr_stdlib::hash::sha256_bytes(data)
 }
-fn md5_bytes(data: &Vec<u8>) -> Vec<u8> {
+fn md5_bytes(data: &[u8]) -> Vec<u8> {
     ::sifr_stdlib::hash::md5_bytes(data)
 }
-fn sha1_bytes(data: &Vec<u8>) -> Vec<u8> {
+fn sha1_bytes(data: &[u8]) -> Vec<u8> {
     ::sifr_stdlib::hash::sha1_bytes(data)
 }
-fn sha224_bytes(data: &Vec<u8>) -> Vec<u8> {
+fn sha224_bytes(data: &[u8]) -> Vec<u8> {
     ::sifr_stdlib::hash::sha224_bytes(data)
 }
-fn sha384_bytes(data: &Vec<u8>) -> Vec<u8> {
+fn sha384_bytes(data: &[u8]) -> Vec<u8> {
     ::sifr_stdlib::hash::sha384_bytes(data)
 }
-fn sha512_bytes(data: &Vec<u8>) -> Vec<u8> {
+fn sha512_bytes(data: &[u8]) -> Vec<u8> {
     ::sifr_stdlib::hash::sha512_bytes(data)
 }
-fn blake2b_bytes(data: &Vec<u8>) -> Vec<u8> {
+fn blake2b_bytes(data: &[u8]) -> Vec<u8> {
     ::sifr_stdlib::hash::blake2b_bytes(data)
 }
-fn blake2s_bytes(data: &Vec<u8>) -> Vec<u8> {
+fn blake2s_bytes(data: &[u8]) -> Vec<u8> {
     ::sifr_stdlib::hash::blake2s_bytes(data)
 }
 const PI: f64 = 3.141592653589793_f64;
@@ -4338,7 +4348,7 @@ fn lcm(a: SifrInt, b: SifrInt) -> SifrInt {
     if &b == &SifrInt::from_i64(0) {
         return SifrInt::from_i64(0);
     }
-    let g: SifrInt = gcd((a).clone(), (b).clone());
+    let g: SifrInt = gcd(a.clone(), b.clone());
     if &g == &SifrInt::from_i64(0) {
         return SifrInt::from_i64(0);
     }
@@ -4438,27 +4448,27 @@ fn isclose(a: f64, b: f64, rel_tol: f64, abs_tol: f64) -> bool {
     }
     diff <= rel_bound
 }
-fn prod(data: &Vec<SifrInt>) -> SifrInt {
+fn prod(data: &[SifrInt]) -> SifrInt {
     let mut result: SifrInt = SifrInt::from_i64(1);
     for val in data.iter().cloned() {
         result = &result * &val;
     }
     result.clone()
 }
-fn _copy_float_list(data: &Vec<f64>) -> Vec<f64> {
+fn _copy_float_list(data: &[f64]) -> Vec<f64> {
     let mut out: Vec<f64> = vec![];
     for value in data.iter().copied() {
         out.push(value);
     }
     out
 }
-fn dist(p: &Vec<f64>, q: &Vec<f64>) -> f64 {
+fn dist(p: &[f64], q: &[f64]) -> f64 {
     dist_impl(_copy_float_list(p), _copy_float_list(q))
 }
-fn fsum(data: &Vec<f64>) -> f64 {
+fn fsum(data: &[f64]) -> f64 {
     fsum_impl(_copy_float_list(data))
 }
-fn sumprod(p: &Vec<f64>, q: &Vec<f64>) -> f64 {
+fn sumprod(p: &[f64], q: &[f64]) -> f64 {
     sumprod_impl(_copy_float_list(p), _copy_float_list(q))
 }
 fn frexp_mantissa(x: f64) -> f64 {
@@ -4576,9 +4586,9 @@ struct __SifrStdlib_sifr_x2erandom_x2eRandom {
 }
 impl __SifrStdlib_sifr_x2erandom_x2eRandom {
     fn new(seed_value: Option<SifrInt>) -> Self {
-        let normalized_seed: SifrInt = _normalize_seed_input((seed_value).clone());
+        let normalized_seed: SifrInt = _normalize_seed_input(seed_value.clone());
         let __sifr_field_init_0: Vec<SifrInt> = _seed_words_from_seed(
-            (normalized_seed).clone(),
+            normalized_seed.clone(),
         );
         let __sifr_field_init_1: SifrInt = __const__MT_N().clone();
         let __sifr_field_init_2: Option<f64> = None;
@@ -4591,10 +4601,8 @@ impl __SifrStdlib_sifr_x2erandom_x2eRandom {
 }
 impl __SifrStdlib_sifr_x2erandom_x2eRandom {
     fn seed(&mut self, seed_value: &Option<SifrInt>) {
-        let normalized_seed: SifrInt = _normalize_seed_input(
-            (seed_value.clone()).clone(),
-        );
-        self._state_words = _seed_words_from_seed((normalized_seed).clone());
+        let normalized_seed: SifrInt = _normalize_seed_input(seed_value.clone());
+        self._state_words = _seed_words_from_seed(normalized_seed.clone());
         self._index = __const__MT_N().clone();
         self._gauss_next = None;
     }
@@ -4605,7 +4613,7 @@ impl __SifrStdlib_sifr_x2erandom_x2eRandom {
         while (&SifrInt::from_i64(0) <= &i)
             && (&i < &SifrInt::from(self._state_words.len()))
         {
-            let y: SifrInt = &(&_state_word_at(&self._state_words, (i).clone())
+            let y: SifrInt = &(&_state_word_at(&self._state_words, i.clone())
                 & &__const__MT_UPPER_MASK())
                 + &(&_state_word_at(
                     &self._state_words,
@@ -4669,7 +4677,7 @@ impl __SifrStdlib_sifr_x2erandom_x2eRandom {
         stop: &Option<SifrInt>,
         step: &SifrInt,
     ) -> Result<SifrInt, ValueError> {
-        if (&step.clone() == &SifrInt::from_i64(0)) {
+        if (step == &SifrInt::from_i64(0)) {
             return Err(ValueError::new("randrange: step must not be zero".to_string()));
         }
         let mut actual_start: SifrInt = start.clone();
@@ -4682,7 +4690,7 @@ impl __SifrStdlib_sifr_x2erandom_x2eRandom {
             }
         }
         let width: SifrInt = &actual_stop - &actual_start;
-        if (&step.clone() > &SifrInt::from_i64(0)) {
+        if (step > &SifrInt::from_i64(0)) {
             if (&width <= &SifrInt::from_i64(0)) {
                 return Err(ValueError::new("randrange: empty range".to_string()));
             }
@@ -4732,7 +4740,7 @@ impl __SifrStdlib_sifr_x2erandom_x2eRandom {
 }
 impl __SifrStdlib_sifr_x2erandom_x2eRandom {
     fn getrandbits(&mut self, k: &SifrInt) -> Result<SifrInt, ValueError> {
-        if (&k.clone() < &SifrInt::from_i64(0)) {
+        if (k < &SifrInt::from_i64(0)) {
             return Err(
                 ValueError::new("getrandbits: number of bits must be >= 0".to_string()),
             );
@@ -4761,7 +4769,7 @@ impl __SifrStdlib_sifr_x2erandom_x2eRandom {
 }
 impl __SifrStdlib_sifr_x2erandom_x2eRandom {
     fn randbytes(&mut self, n: &SifrInt) -> Result<Vec<u8>, ValueError> {
-        if (&n.clone() < &SifrInt::from_i64(0)) {
+        if (n < &SifrInt::from_i64(0)) {
             return Err(ValueError::new("randbytes: n must be >= 0".to_string()));
         }
         let mut values: Vec<SifrInt> = vec![];
@@ -4911,11 +4919,7 @@ impl __SifrStdlib_sifr_x2erandom_x2eSystemRandom {
                 actual_stop = stop.clone();
             }
         }
-        random_randrange(
-            (actual_start).clone(),
-            (actual_stop).clone(),
-            (step.clone()).clone(),
-        )
+        random_randrange(actual_start.clone(), actual_stop.clone(), step.clone())
     }
 }
 impl __SifrStdlib_sifr_x2erandom_x2eSystemRandom {
@@ -4927,12 +4931,12 @@ impl __SifrStdlib_sifr_x2erandom_x2eSystemRandom {
         if *minimum > *maximum {
             return Err(ValueError::new("randint: min must be <= max".to_string()));
         }
-        Ok(random_int((minimum.clone()).clone(), (maximum.clone()).clone()))
+        Ok(random_int(minimum.clone(), maximum.clone()))
     }
 }
 impl __SifrStdlib_sifr_x2erandom_x2eSystemRandom {
     fn getrandbits(&self, k: &SifrInt) -> Result<SifrInt, ValueError> {
-        if (&k.clone() < &SifrInt::from_i64(0)) {
+        if (k < &SifrInt::from_i64(0)) {
             return Err(
                 ValueError::new("getrandbits: number of bits must be >= 0".to_string()),
             );
@@ -4957,7 +4961,7 @@ impl __SifrStdlib_sifr_x2erandom_x2eSystemRandom {
 }
 impl __SifrStdlib_sifr_x2erandom_x2eSystemRandom {
     fn randbytes(&self, n: &SifrInt) -> Result<Vec<u8>, ValueError> {
-        if (&n.clone() < &SifrInt::from_i64(0)) {
+        if (n < &SifrInt::from_i64(0)) {
             return Err(ValueError::new("randbytes: n must be >= 0".to_string()));
         }
         let mut values: Vec<SifrInt> = vec![];
@@ -4990,7 +4994,7 @@ impl __SifrStdlib_sifr_x2erandom_x2eSystemRandom {
         }
     }
 }
-fn _state_word_at(words: &Vec<SifrInt>, index: SifrInt) -> SifrInt {
+fn _state_word_at(words: &[SifrInt], index: SifrInt) -> SifrInt {
     let value: Option<SifrInt> = {
         let __sifr_checked_read_collection = &words;
         let __sifr_checked_read_index = index.clone();
@@ -5003,7 +5007,7 @@ fn _state_word_at(words: &Vec<SifrInt>, index: SifrInt) -> SifrInt {
     }
     SifrInt::from_i64(0)
 }
-fn _clone_words(words: &Vec<SifrInt>) -> Vec<SifrInt> {
+fn _clone_words(words: &[SifrInt]) -> Vec<SifrInt> {
     let mut copied: Vec<SifrInt> = vec![];
     for word in words.iter().cloned() {
         copied.push(word.clone());
@@ -5078,7 +5082,7 @@ fn _sync_module_random(generator: &mut __SifrStdlib_sifr_x2erandom_x2eRandom) {
 }
 fn seed(seed_value: Option<SifrInt>) {
     let mut generator: __SifrStdlib_sifr_x2erandom_x2eRandom = __SifrStdlib_sifr_x2erandom_x2eRandom::new(
-        (seed_value).clone(),
+        seed_value.clone(),
     );
     _sync_module_random(&mut generator);
 }
@@ -5136,7 +5140,7 @@ fn gauss(mu: f64, sigma: f64) -> f64 {
     _sync_module_random(&mut generator);
     value
 }
-fn choice<T: Clone + 'static>(items: &Vec<T>) -> Result<T, ValueError> {
+fn choice<T: Clone + 'static>(items: &[T]) -> Result<T, ValueError> {
     let item_count: SifrInt = SifrInt::from(items.len());
     if (&item_count == &SifrInt::from_i64(0)) {
         return Err(ValueError::new("choice: items must not be empty".to_string()));
@@ -5156,10 +5160,7 @@ fn choice<T: Clone + 'static>(items: &Vec<T>) -> Result<T, ValueError> {
     }
     Err(ValueError::new("choice: index out of range".to_string()))
 }
-fn choices<T: Clone + 'static>(
-    items: &Vec<T>,
-    k: SifrInt,
-) -> Result<Vec<T>, ValueError> {
+fn choices<T: Clone + 'static>(items: &[T], k: SifrInt) -> Result<Vec<T>, ValueError> {
     if &k <= &SifrInt::from_i64(0) {
         return Ok(vec![]);
     }
@@ -5189,7 +5190,7 @@ fn choices<T: Clone + 'static>(
     _sync_module_random(&mut generator);
     Ok(result)
 }
-fn sample<T: Clone + 'static>(items: &Vec<T>, k: SifrInt) -> Result<Vec<T>, ValueError> {
+fn sample<T: Clone + 'static>(items: &[T], k: SifrInt) -> Result<Vec<T>, ValueError> {
     if (&k < &SifrInt::from_i64(0)) {
         return Err(ValueError::new("sample: k must be >= 0".to_string()));
     }
@@ -5340,7 +5341,7 @@ fn token_hex(nbytes: SifrInt) -> String {
         })
             .map(|c| c.to_string());
         if let Some(ch) = ch {
-            result.push_str((ch).as_str());
+            result.push_str(ch.as_str());
         }
         i = &i + &SifrInt::from_i64(1);
     }
@@ -5399,7 +5400,7 @@ impl ::std::fmt::Display for __SifrStdlib_sifr_x2estatistics_x2eStatisticsError 
     }
 }
 impl ::std::error::Error for __SifrStdlib_sifr_x2estatistics_x2eStatisticsError {}
-fn _sum(data: &Vec<f64>) -> f64 {
+fn _sum(data: &[f64]) -> f64 {
     let mut total: f64 = 0.0_f64;
     for val in data.iter().copied() {
         total += val;
@@ -5473,7 +5474,7 @@ fn _divide_by_int(
         Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError>,
         __SifrStdlib_sifr_x2estatistics_x2eStatisticsError,
     > = (|| {
-        let divisor: f64 = _float_int((denominator).clone())?;
+        let divisor: f64 = _float_int(denominator.clone())?;
         Ok(Ok(numerator / divisor))
     })();
     match __sifr_try_res {
@@ -5491,7 +5492,7 @@ fn _divide_by_int(
     }
 }
 fn mean(
-    data: &Vec<f64>,
+    data: &[f64],
 ) -> Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
     let count: SifrInt = SifrInt::from(data.len());
     if (&count == &SifrInt::from_i64(0)) {
@@ -5502,7 +5503,7 @@ fn mean(
         );
     }
     let total: f64 = _sum(data);
-    _divide_by_int(total, (count).clone())
+    _divide_by_int(total, count.clone())
 }
 fn __const_ascii_lowercase() -> String {
     "abcdefghijklmnopqrstuvwxyz".to_string().to_string()
@@ -5510,7 +5511,7 @@ fn __const_ascii_lowercase() -> String {
 fn __const_digits() -> String {
     "0123456789".to_string().to_string()
 }
-fn _replace_whitespace_chars(text: &String, replace_tabs: bool) -> String {
+fn _replace_whitespace_chars(text: &str, replace_tabs: bool) -> String {
     let normalized: String = text
         .replace('\n', " ")
         .replace('\r', " ")
@@ -5521,14 +5522,14 @@ fn _replace_whitespace_chars(text: &String, replace_tabs: bool) -> String {
     }
     normalized
 }
-fn _expand_tabs_impl(text: &String, tabsize: SifrInt) -> String {
+fn _expand_tabs_impl(text: &str, tabsize: SifrInt) -> String {
     let __sifr_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
     let mut effective_tabsize: SifrInt = tabsize.clone();
     if &effective_tabsize <= &SifrInt::from_i64(0) {
         effective_tabsize = SifrInt::from_i64(1);
     }
     if (&effective_tabsize == &SifrInt::from_i64(0)) {
-        return text.clone();
+        return text.to_owned();
     }
     let mut result: String = "".to_string();
     let mut column: SifrInt = SifrInt::from_i64(0);
@@ -5557,10 +5558,10 @@ fn _expand_tabs_impl(text: &String, tabsize: SifrInt) -> String {
                 column = &column + &spaces;
             } else {
                 if (ch == "\n") || (ch == "\r") {
-                    result.push_str((ch).as_str());
+                    result.push_str(ch.as_str());
                     column = SifrInt::from_i64(0);
                 } else {
-                    result.push_str((ch).as_str());
+                    result.push_str(ch.as_str());
                     column = &column + &SifrInt::from_i64(1);
                 }
             }
@@ -5570,29 +5571,29 @@ fn _expand_tabs_impl(text: &String, tabsize: SifrInt) -> String {
     result
 }
 fn _prepare_text(
-    text: &String,
+    text: &str,
     expand_tabs: bool,
     tabsize: SifrInt,
     replace_whitespace: bool,
 ) -> String {
     let mut prepared: String = {
         let mut __sifr_concat: String = String::with_capacity(text.len() + 0usize);
-        __sifr_concat.push_str((text).as_str());
+        __sifr_concat.push_str(text);
         __sifr_concat.push_str("");
         __sifr_concat
     };
     if expand_tabs {
-        prepared = _expand_tabs_impl(&prepared, (tabsize).clone());
+        prepared = _expand_tabs_impl(&prepared, tabsize.clone());
     }
     if replace_whitespace {
         prepared = _replace_whitespace_chars(&prepared, true);
     }
     prepared
 }
-fn _normalize_whitespace(text: &String) -> String {
+fn _normalize_whitespace(text: &str) -> String {
     _prepare_text(text, true, SifrInt::from_i64(8), true)
 }
-fn _has_non_whitespace(text: &String) -> bool {
+fn _has_non_whitespace(text: &str) -> bool {
     let __sifr_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
     let mut i: SifrInt = SifrInt::from_i64(0);
     while (&i < &SifrInt::from(__sifr_chars_text.len())) {
@@ -5622,11 +5623,11 @@ fn _has_non_whitespace(text: &String) -> bool {
     }
     false
 }
-fn _split_word_units(word: &String, break_on_hyphens: bool) -> Vec<String> {
+fn _split_word_units(word: &str, break_on_hyphens: bool) -> Vec<String> {
     if !break_on_hyphens {
         return vec![
             { let mut __sifr_concat : String = String::with_capacity(word.len() +
-            0usize); __sifr_concat.push_str((word).as_str()); __sifr_concat.push_str("");
+            0usize); __sifr_concat.push_str(word); __sifr_concat.push_str("");
             __sifr_concat }
         ];
     }
@@ -5637,7 +5638,7 @@ fn _split_word_units(word: &String, break_on_hyphens: bool) -> Vec<String> {
     if (&SifrInt::from(parts.len()) <= &SifrInt::from_i64(1)) {
         return vec![
             { let mut __sifr_concat : String = String::with_capacity(word.len() +
-            0usize); __sifr_concat.push_str((word).as_str()); __sifr_concat.push_str("");
+            0usize); __sifr_concat.push_str(word); __sifr_concat.push_str("");
             __sifr_concat }
         ];
     }
@@ -5649,7 +5650,7 @@ fn _split_word_units(word: &String, break_on_hyphens: bool) -> Vec<String> {
             == &(&SifrInt::from(parts.len()) - &SifrInt::from_i64(1)));
         if is_last {
             if (&SifrInt::from(__sifr_chars_part.len()) > &SifrInt::from_i64(0)) {
-                units.push(part.clone());
+                units.push(part.to_owned());
             }
         } else {
             if (&SifrInt::from(__sifr_chars_part.len()) == &SifrInt::from_i64(0)) {
@@ -5665,7 +5666,7 @@ fn _split_word_units(word: &String, break_on_hyphens: bool) -> Vec<String> {
     }
     units
 }
-fn _trim_line(line: &String) -> String {
+fn _trim_line(line: &str) -> String {
     let __sifr_chars_line: Vec<char> = line.chars().collect::<Vec<char>>();
     let mut start: SifrInt = SifrInt::from_i64(0);
     while (&start < &SifrInt::from(__sifr_chars_line.len()))
@@ -5708,29 +5709,29 @@ fn _trim_line(line: &String) -> String {
         )
     }
 }
-fn _finalize_line(line: &String, drop_whitespace: bool) -> String {
+fn _finalize_line(line: &str, drop_whitespace: bool) -> String {
     if drop_whitespace {
         return _trim_line(line);
     }
     {
         let mut __sifr_concat: String = String::with_capacity(line.len() + 0usize);
-        __sifr_concat.push_str((line).as_str());
+        __sifr_concat.push_str(line);
         __sifr_concat.push_str("");
         __sifr_concat
     }
 }
-fn _wrap_impl(text: &String, width: SifrInt) -> Vec<String> {
+fn _wrap_impl(text: &str, width: SifrInt) -> Vec<String> {
     let normalized: String = _normalize_whitespace(text);
     _wrap_with_indents(
         &normalized,
-        (width).clone(),
+        width.clone(),
         &"".to_string(),
         &"".to_string(),
         true,
         true,
     )
 }
-fn _effective_content_width(total_width: SifrInt, indent: &String) -> SifrInt {
+fn _effective_content_width(total_width: SifrInt, indent: &str) -> SifrInt {
     let __sifr_chars_indent: Vec<char> = indent.chars().collect::<Vec<char>>();
     let available: SifrInt = &total_width - &SifrInt::from(__sifr_chars_indent.len());
     if &available <= &SifrInt::from_i64(0) {
@@ -5740,8 +5741,8 @@ fn _effective_content_width(total_width: SifrInt, indent: &String) -> SifrInt {
 }
 fn _push_current_line(
     result: &mut Vec<String>,
-    line: &String,
-    indent: &String,
+    line: &str,
+    indent: &str,
     drop_whitespace: bool,
 ) {
     let candidate: String = _finalize_line(
@@ -5751,17 +5752,17 @@ fn _push_current_line(
     let __sifr_chars_candidate: Vec<char> = candidate.chars().collect::<Vec<char>>();
     if drop_whitespace {
         if (&SifrInt::from(__sifr_chars_candidate.len()) > &SifrInt::from_i64(0)) {
-            result.push(candidate.clone());
+            result.push(candidate.to_owned());
         }
     } else {
-        result.push(candidate.clone());
+        result.push(candidate.to_owned());
     }
 }
 fn _wrap_with_indents(
-    text: &String,
+    text: &str,
     total_width: SifrInt,
-    initial_indent: &String,
-    subsequent_indent: &String,
+    initial_indent: &str,
+    subsequent_indent: &str,
     break_on_hyphens: bool,
     drop_whitespace: bool,
 ) -> Vec<String> {
@@ -5773,7 +5774,7 @@ fn _wrap_with_indents(
     let mut current: String = "".to_string();
     let mut first_line: bool = true;
     let mut current_limit: SifrInt = _effective_content_width(
-        (total_width).clone(),
+        total_width.clone(),
         initial_indent,
     );
     for raw_word in words.iter().cloned() {
@@ -5800,7 +5801,7 @@ fn _wrap_with_indents(
                     + &SifrInt::from(__sifr_chars_word.len())) <= &current_limit)
                 {
                     current.push(' ');
-                    current.push_str((word).as_str());
+                    current.push_str(word.as_str());
                 } else {
                     if first_line {
                         _push_current_line(
@@ -5811,7 +5812,7 @@ fn _wrap_with_indents(
                         );
                         first_line = false;
                         current_limit = _effective_content_width(
-                            (total_width).clone(),
+                            total_width.clone(),
                             subsequent_indent,
                         );
                     } else {
@@ -5841,23 +5842,23 @@ fn _wrap_with_indents(
     }
     result
 }
-fn fill(text: &String, width: SifrInt) -> Result<String, ValueError> {
+fn fill(text: &str, width: SifrInt) -> Result<String, ValueError> {
     if (&width <= &SifrInt::from_i64(0)) {
         return Err(ValueError::new("fill: width must be > 0".to_string()));
     }
-    let lines: Vec<String> = _wrap_impl(text, (width).clone());
+    let lines: Vec<String> = _wrap_impl(text, width.clone());
     let mut result: String = "".to_string();
     let mut i: SifrInt = SifrInt::from_i64(0);
     for line in lines.iter().cloned() {
         if (&i > &SifrInt::from_i64(0)) {
             result.push('\n');
         }
-        result.push_str((line).as_str());
+        result.push_str(line.as_str());
         i = &i + &SifrInt::from_i64(1);
     }
     Ok(result)
 }
-fn indent(text: &String, prefix: &String) -> String {
+fn indent(text: &str, prefix: &str) -> String {
     let lines: Vec<String> = text
         .split('\n')
         .map(|s| s.to_string())
@@ -5870,10 +5871,10 @@ fn indent(text: &String, prefix: &String) -> String {
         }
         first = false;
         if _has_non_whitespace(&line) {
-            result.push_str((prefix).as_str());
-            result.push_str((line).as_str());
+            result.push_str(prefix);
+            result.push_str(line.as_str());
         } else {
-            result.push_str((line).as_str());
+            result.push_str(line.as_str());
         }
     }
     result
@@ -6052,7 +6053,7 @@ fn main() {
         println!(
             "{}", { let mut __sifr_concat : String = String::with_capacity(18usize +
             0usize); __sifr_concat.push_str("statistics error: "); __sifr_concat
-            .push_str((se.message.clone()).as_str()); __sifr_concat }
+            .push_str(se.message.clone().as_str()); __sifr_concat }
         );
         assert!(
             (format!("{}", format!("{}{}", "statistics error: ", se.message.clone())) ==

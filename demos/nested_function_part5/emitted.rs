@@ -2,7 +2,7 @@
 use ::sifr_runtime::SifrInt;
 
 fn apply_twice(f: impl Fn(SifrInt) -> SifrInt, value: SifrInt) -> SifrInt {
-    f(f((value).clone()))
+    f(f(value.clone()))
 }
 
 fn score(base: SifrInt) -> SifrInt {
@@ -13,11 +13,11 @@ fn score(base: SifrInt) -> SifrInt {
     let amplify = |x: SifrInt| {
     &x * &SifrInt::from_i64(2)
 };
-    let adjusted: SifrInt = apply_twice(add_offset, (base).clone());
-    amplify((adjusted).clone())
+    let adjusted: SifrInt = apply_twice(add_offset, base.clone());
+    amplify(adjusted.clone())
 }
 
-fn accumulate(values: &Vec<SifrInt>) -> SifrInt {
+fn accumulate(values: &[SifrInt]) -> SifrInt {
     let mut total: SifrInt = SifrInt::from_i64(0);
     let mut apply = || {
     for value in values.iter().cloned() {
@@ -28,10 +28,10 @@ fn accumulate(values: &Vec<SifrInt>) -> SifrInt {
     total.clone()
 }
 
-fn collect_prefixes(nums: &Vec<SifrInt>) -> Vec<Vec<SifrInt>> {
+fn collect_prefixes(nums: &[SifrInt]) -> Vec<Vec<SifrInt>> {
     let mut res: Vec<Vec<SifrInt>> = vec![];
     let mut subset: Vec<SifrInt> = vec![];
-    fn dfs(i: SifrInt, nums: &Vec<SifrInt>, res: &mut Vec<Vec<SifrInt>>, subset: &mut Vec<SifrInt>) {
+    fn dfs(i: SifrInt, nums: &[SifrInt], res: &mut Vec<Vec<SifrInt>>, subset: &mut Vec<SifrInt>) {
         if (&i < &SifrInt::from_i64(0)) || (&i >= &SifrInt::from(nums.len())) {
             res.push(subset.clone());
             return;
@@ -54,9 +54,9 @@ fn collect_prefixes(nums: &Vec<SifrInt>) -> Vec<Vec<SifrInt>> {
     res
 }
 
-fn collect_value_groups(items: &Vec<SifrInt>, limit: SifrInt) -> Vec<Vec<SifrInt>> {
+fn collect_value_groups(items: &[SifrInt], limit: SifrInt) -> Vec<Vec<SifrInt>> {
     let mut res: Vec<Vec<SifrInt>> = vec![];
-    fn dfs(i: SifrInt, cur: &mut Vec<SifrInt>, total: SifrInt, items: &Vec<SifrInt>, limit: SifrInt, res: &mut Vec<Vec<SifrInt>>) {
+    fn dfs(i: SifrInt, cur: &mut Vec<SifrInt>, total: SifrInt, items: &[SifrInt], limit: SifrInt, res: &mut Vec<Vec<SifrInt>>) {
         if (&total == &limit) {
             res.push(cur.clone());
             return;
@@ -73,9 +73,9 @@ fn collect_value_groups(items: &Vec<SifrInt>, limit: SifrInt) -> Vec<Vec<SifrInt
             return;
         };
         cur.push(__sifr_checked_value_1.clone());
-        dfs((i).clone(), cur, &total + __sifr_checked_value_1.clone(), items, limit.clone(), res);
+        dfs(i.clone(), cur, &total + __sifr_checked_value_1.clone(), items, limit.clone(), res);
         cur.pop();
-        dfs(&i + &SifrInt::from_i64(1), cur, (total).clone(), items, limit.clone(), res);
+        dfs(&i + &SifrInt::from_i64(1), cur, total.clone(), items, limit.clone(), res);
     }
     dfs(SifrInt::from_i64(0), &mut vec![], SifrInt::from_i64(0), items, limit.clone(), &mut res);
     res

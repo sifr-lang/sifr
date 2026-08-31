@@ -1,7 +1,7 @@
 // src/main.rs
 use ::sifr_runtime::SifrInt;
 
-fn total(data: &Vec<u8>) -> SifrInt {
+fn total(data: &[u8]) -> SifrInt {
     let mut out: SifrInt = SifrInt::from_i64(0);
     let values: Vec<SifrInt> = data.iter().map(|__byte| SifrInt::from(*__byte)).collect::<Vec<SifrInt>>();
     for value in values.iter().cloned() {
@@ -14,7 +14,7 @@ fn main() {
     let payload: Vec<u8> = vec![115u8, 105u8, 102u8, 114u8];
     let suffix: Vec<u8> = vec![0u8, 1u8];
     let combined: Vec<u8> = {
-    let mut __v = (payload).clone();
+    let mut __v = (payload).to_vec();
     __v.extend((suffix).iter().cloned());
     __v
 };

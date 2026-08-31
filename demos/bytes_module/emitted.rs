@@ -215,7 +215,7 @@ pub use __sifr_project_nominals::TOMLDecodeError;
 pub use __sifr_project_nominals::TimeoutError;
 pub use __sifr_project_nominals::ValueError;
 use ::sifr_runtime::SifrInt;
-fn assert_vector_eq(actual: &Vec<String>, expected: &Vec<String>) {
+fn assert_vector_eq(actual: &[String], expected: &[String]) {
     assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
     let mut i: SifrInt = SifrInt::from_i64(0);
     while &i < &SifrInt::from(actual.len()) {
@@ -232,7 +232,7 @@ fn assert_vector_eq(actual: &Vec<String>, expected: &Vec<String>) {
         i = &i + &SifrInt::from_i64(1);
     }
 }
-fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
+fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
     assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
     let mut i: SifrInt = SifrInt::from_i64(0);
     while &i < &SifrInt::from(actual.len()) {
@@ -277,7 +277,7 @@ fn render_opt_int(value: Option<SifrInt>) -> String {
     };
     format!("{}", value)
 }
-fn collect_primary_actual(payload: &Vec<u8>) -> Vec<String> {
+fn collect_primary_actual(payload: &[u8]) -> Vec<String> {
     let mut actual: Vec<String> = vec![];
     actual
         .push(
@@ -323,7 +323,7 @@ fn collect_primary_actual(payload: &Vec<u8>) -> Vec<String> {
     actual.push(format!("{}", payload.ends_with(& vec![101u8, 51u8, 48u8])));
     actual
 }
-fn bytes_to_hex_or_empty(payload: &Vec<u8>) -> String {
+fn bytes_to_hex_or_empty(payload: &[u8]) -> String {
     let __sifr_try_res: Result<String, ParseError> = (|| {
         let hx: String = {
             let __bytes_receiver = &payload;
@@ -348,7 +348,7 @@ fn bytes_to_hex_or_empty(payload: &Vec<u8>) -> String {
         }
     }
 }
-fn bytes_from_hex_to_text_or_empty(payload: &String) -> String {
+fn bytes_from_hex_to_text_or_empty(payload: &str) -> String {
     let __sifr_try_res: Result<String, ParseError> = (|| {
         let parsed: Vec<u8> = ({
             let s: String = payload.to_string();

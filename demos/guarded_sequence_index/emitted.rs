@@ -3,7 +3,7 @@ use ::sifr_runtime::SifrInt;
 
 use ::sifr_runtime::SifrRange;
 
-fn collect_vowels(text: &String) -> String {
+fn collect_vowels(text: &str) -> String {
     let __sifr_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
     let mut result: String = "".to_string();
     let mut i: SifrInt = SifrInt::from_i64(0);
@@ -17,14 +17,14 @@ fn collect_vowels(text: &String) -> String {
         };
         let ch: String = __sifr_checked_value_0.clone();
         if "aeiou".to_string().contains(&ch) {
-            result.push_str((ch).as_str());
+            result.push_str(ch.as_str());
         }
         i = &i + &SifrInt::from_i64(1);
     }
     result
 }
 
-fn sum_all(values: &Vec<SifrInt>) -> SifrInt {
+fn sum_all(values: &[SifrInt]) -> SifrInt {
     let mut total: SifrInt = SifrInt::from_i64(0);
     for i in SifrRange::new_known_nonzero(SifrInt::from_i64(0), SifrInt::from(values.len()), SifrInt::from_i64(1)) {
         let Some(__sifr_checked_value_1) = ({
@@ -40,7 +40,7 @@ fn sum_all(values: &Vec<SifrInt>) -> SifrInt {
     total.clone()
 }
 
-fn head_or_zero(values: &Vec<SifrInt>) -> SifrInt {
+fn head_or_zero(values: &[SifrInt]) -> SifrInt {
     let Some(__sifr_checked_value_2) = ({
     let __sifr_checked_read_collection = &values;
     let __sifr_checked_read_index = SifrInt::from_i64(0);

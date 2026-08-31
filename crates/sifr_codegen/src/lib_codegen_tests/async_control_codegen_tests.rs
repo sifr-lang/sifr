@@ -186,7 +186,7 @@ fn test_generate_rust_preserves_loop_else_recursion_and_try_except_returns() {
     return total
 "#,
     );
-    assert!(loop_guard_narrowing.contains("fn summarize(values: &Vec<SifrInt>) -> SifrInt"));
+    assert!(loop_guard_narrowing.contains("fn summarize(values: &[SifrInt]) -> SifrInt"));
     assert!(loop_guard_narrowing.contains("if &value > &SifrInt::from_i64(10)"));
 }
 
@@ -475,15 +475,15 @@ fn test_mut_on_reassigned_variable() {
 }
 
 #[test]
-fn test_generate_rust_recursive_tree_traversal_uses_option_let_else_and_cloned_box_reads() {
+fn test_generate_rust_recursive_tree_traversal_uses_borrowed_option_views() {
     let rust_code = generate_rust_from_source(
         "class TreeNode:\n    val: int\n    left: TreeNode | None\n    right: TreeNode | None\n\n    def __init__(self, val: int, left: TreeNode | None, right: TreeNode | None):\n        self.val = val\n        self.left = left\n        self.right = right\n\ndef tree_value_sum(node: TreeNode | None) -> int:\n    if not node:\n        return 0\n    left: TreeNode | None = node.left\n    right: TreeNode | None = node.right\n    return node.val + tree_value_sum(left) + tree_value_sum(right)\n\ndef paired_tree_value_sum(p: TreeNode | None, q: TreeNode | None) -> int:\n    if not p and not q:\n        return 0\n    if not p or not q:\n        return -1\n    return p.val + q.val + paired_tree_value_sum(p.left, q.left) + paired_tree_value_sum(p.right, q.right)\n",
     );
 
-    assert!(rust_code.contains("let Some(node) = node.as_ref() else {"));
-    assert!(rust_code.contains("(node.left).as_deref().cloned()"));
-    assert!(rust_code.contains("let (Some(p), Some(q)) = (p.as_ref(), q.as_ref()) else {"));
-    assert!(rust_code.contains("(p.left).as_deref().cloned()"));
+    assert!(rust_code.contains("let Some(node) = node else {"));
+    assert!(rust_code.contains("(node.left).as_deref()"));
+    assert!(!rust_code.contains("as_deref().cloned()"));
+    assert!(rust_code.contains("let (Some(p), Some(q)) = (p, q) else {"));
 }
 
 #[test]
@@ -506,10 +506,8 @@ fn test_generate_rust_recursive_generic_node_preserves_instantiated_type_argumen
 
     assert!(rust_code.contains("next: Option<Box<Node<T>>>"));
     assert!(rust_code.contains("fn new(value: T, next: Option<Box<Node<T>>>) -> Self"));
-    assert!(rust_code.contains("fn total(node: &Option<Node<SifrInt>>) -> SifrInt"));
-    assert!(
-        rust_code.contains("let rest: Option<Node<SifrInt>> = (node.next).as_deref().cloned();")
-    );
+    assert!(rust_code.contains("fn total(node: Option<&Node<SifrInt>>) -> SifrInt"));
+    assert!(rust_code.contains("let rest: Option<&Node<SifrInt>> = (node.next).as_deref();"));
 }
 
 #[test]

@@ -3,7 +3,7 @@ use ::sifr_runtime::SifrInt;
 
 use ::sifr_runtime::SifrRange;
 
-fn reversed_values(values: &Vec<SifrInt>) -> Vec<SifrInt> {
+fn reversed_values(values: &[SifrInt]) -> Vec<SifrInt> {
     let mut out: Vec<SifrInt> = vec![];
     for i in SifrRange::new_known_nonzero(&SifrInt::from(values.len()) - &SifrInt::from_i64(1), -(SifrInt::from_i64(1)), -(SifrInt::from_i64(1))) {
         let Some(__sifr_checked_value_0) = ({

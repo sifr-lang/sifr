@@ -91,9 +91,9 @@ impl ::std::fmt::Display for Rectangle {
         write!(f, "{}", {
     let mut __sifr_concat: String = String::with_capacity((((10usize + 0usize) + 1usize) + 0usize) + 1usize);
     __sifr_concat.push_str("Rectangle(");
-    __sifr_concat.push_str((format!("{}", self.width.clone())).as_str());
+    __sifr_concat.push_str(format!("{}", self.width.clone()).as_str());
     __sifr_concat.push('x');
-    __sifr_concat.push_str((format!("{}", self.height.clone())).as_str());
+    __sifr_concat.push_str(format!("{}", self.height.clone()).as_str());
     __sifr_concat.push(')');
     __sifr_concat
 })
@@ -105,19 +105,19 @@ fn main() {
     println!("{}", {
     let mut __sifr_concat: String = String::with_capacity(10usize + 0usize);
     __sifr_concat.push_str("point x = ");
-    __sifr_concat.push_str((format!("{}", p.x.clone())).as_str());
+    __sifr_concat.push_str(format!("{}", p.x.clone()).as_str());
     __sifr_concat
 });
     println!("{}", {
     let mut __sifr_concat: String = String::with_capacity(10usize + 0usize);
     __sifr_concat.push_str("point y = ");
-    __sifr_concat.push_str((format!("{}", p.y.clone())).as_str());
+    __sifr_concat.push_str(format!("{}", p.y.clone()).as_str());
     __sifr_concat
 });
     println!("{}", {
     let mut __sifr_concat: String = String::with_capacity(12usize + 0usize);
     __sifr_concat.push_str("point str = ");
-    __sifr_concat.push_str((format!("{}", p)).as_str());
+    __sifr_concat.push_str(format!("{}", p).as_str());
     __sifr_concat
 });
     let p2: Point = Point::new(SifrInt::from_i64(3), SifrInt::from_i64(4));
@@ -125,71 +125,71 @@ fn main() {
     println!("{}", {
     let mut __sifr_concat: String = String::with_capacity(11usize + 0usize);
     __sifr_concat.push_str("point eq = ");
-    __sifr_concat.push_str((format!("{}", p == p2)).as_str());
+    __sifr_concat.push_str(format!("{}", p == p2).as_str());
     __sifr_concat
 });
     println!("{}", {
     let mut __sifr_concat: String = String::with_capacity(12usize + 0usize);
     __sifr_concat.push_str("point neq = ");
-    __sifr_concat.push_str((format!("{}", p == p3)).as_str());
+    __sifr_concat.push_str(format!("{}", p == p3).as_str());
     __sifr_concat
 });
     let c1: Config = Config::new(false, SifrInt::from_i64(30), "default".to_string());
     println!("{}", {
     let mut __sifr_concat: String = String::with_capacity(23usize + 0usize);
     __sifr_concat.push_str("config debug default = ");
-    __sifr_concat.push_str((format!("{}", c1.debug)).as_str());
+    __sifr_concat.push_str(format!("{}", c1.debug).as_str());
     __sifr_concat
 });
     println!("{}", {
     let mut __sifr_concat: String = String::with_capacity(25usize + 0usize);
     __sifr_concat.push_str("config timeout default = ");
-    __sifr_concat.push_str((format!("{}", c1.timeout.clone())).as_str());
+    __sifr_concat.push_str(format!("{}", c1.timeout.clone()).as_str());
     __sifr_concat
 });
     println!("{}", {
     let mut __sifr_concat: String = String::with_capacity(22usize + 0usize);
     __sifr_concat.push_str("config name default = ");
-    __sifr_concat.push_str((c1.name.clone()).as_str());
+    __sifr_concat.push_str(c1.name.clone().as_str());
     __sifr_concat
 });
     let c2: Config = Config::new(true, SifrInt::from_i64(60), "production".to_string());
     println!("{}", {
     let mut __sifr_concat: String = String::with_capacity(22usize + 0usize);
     __sifr_concat.push_str("config debug custom = ");
-    __sifr_concat.push_str((format!("{}", c2.debug)).as_str());
+    __sifr_concat.push_str(format!("{}", c2.debug).as_str());
     __sifr_concat
 });
     println!("{}", {
     let mut __sifr_concat: String = String::with_capacity(24usize + 0usize);
     __sifr_concat.push_str("config timeout custom = ");
-    __sifr_concat.push_str((format!("{}", c2.timeout.clone())).as_str());
+    __sifr_concat.push_str(format!("{}", c2.timeout.clone()).as_str());
     __sifr_concat
 });
     println!("{}", {
     let mut __sifr_concat: String = String::with_capacity(21usize + 0usize);
     __sifr_concat.push_str("config name custom = ");
-    __sifr_concat.push_str((c2.name.clone()).as_str());
+    __sifr_concat.push_str(c2.name.clone().as_str());
     __sifr_concat
 });
     let person: Person = Person::new("Alice".to_string(), "Smith".to_string(), SifrInt::from_i64(30));
     println!("{}", {
     let mut __sifr_concat: String = String::with_capacity(13usize + 0usize);
     __sifr_concat.push_str("person str = ");
-    __sifr_concat.push_str((format!("{}", person)).as_str());
+    __sifr_concat.push_str(format!("{}", person).as_str());
     __sifr_concat
 });
     let r: Rectangle = Rectangle::new(SifrInt::from_i64(5), SifrInt::from_i64(3));
     println!("{}", {
     let mut __sifr_concat: String = String::with_capacity(12usize + 0usize);
     __sifr_concat.push_str("rect area = ");
-    __sifr_concat.push_str((format!("{}", r.area())).as_str());
+    __sifr_concat.push_str(format!("{}", r.area()).as_str());
     __sifr_concat
 });
     println!("{}", {
     let mut __sifr_concat: String = String::with_capacity(11usize + 0usize);
     __sifr_concat.push_str("rect str = ");
-    __sifr_concat.push_str((format!("{}", r)).as_str());
+    __sifr_concat.push_str(format!("{}", r).as_str());
     __sifr_concat
 });
 }

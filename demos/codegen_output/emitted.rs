@@ -51,7 +51,7 @@ impl Item {
         {
     let mut __sifr_concat: String = String::with_capacity(6usize + 0usize);
     __sifr_concat.push_str("Item: ");
-    __sifr_concat.push_str((self.name.clone()).as_str());
+    __sifr_concat.push_str(self.name.clone().as_str());
     __sifr_concat
 }
     }
@@ -98,7 +98,7 @@ fn main() {
     let greeting: String = {
     let mut __sifr_concat: String = String::with_capacity((7usize + name.len()) + 1usize);
     __sifr_concat.push_str("Hello, ");
-    __sifr_concat.push_str((name).as_str());
+    __sifr_concat.push_str(name.as_str());
     __sifr_concat.push('!');
     __sifr_concat
 };

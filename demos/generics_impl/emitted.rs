@@ -5,7 +5,7 @@ fn identity<T: Clone + 'static>(x: &T) -> T {
     x.clone()
 }
 
-fn first<T: Clone + 'static>(items: &Vec<T>) -> Option<T> {
+fn first<T: Clone + 'static>(items: &[T]) -> Option<T> {
     {
     let __sifr_checked_read_collection = &items;
     let __sifr_checked_read_index = SifrInt::from_i64(0);
@@ -15,11 +15,11 @@ fn first<T: Clone + 'static>(items: &Vec<T>) -> Option<T> {
 }
 
 fn apply(f: impl Fn(SifrInt) -> SifrInt, x: SifrInt) -> SifrInt {
-    f((x).clone())
+    f(x.clone())
 }
 
 fn apply_twice(f: impl Fn(SifrInt) -> SifrInt, x: SifrInt) -> SifrInt {
-    f(f((x).clone()))
+    f(f(x.clone()))
 }
 
 fn double(x: SifrInt) -> SifrInt {

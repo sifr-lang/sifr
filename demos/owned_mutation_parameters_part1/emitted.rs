@@ -1,7 +1,7 @@
 // src/main.rs
 use ::sifr_runtime::SifrInt;
 
-fn borrowed_view(items: &Vec<SifrInt>) -> SifrInt {
+fn borrowed_view(items: &[SifrInt]) -> SifrInt {
     SifrInt::from(items.len())
 }
 

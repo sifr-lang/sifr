@@ -3,11 +3,11 @@ use ::sifr_runtime::SifrInt;
 
 use ::sifr_runtime::SifrRange;
 
-fn get_length(items: &Vec<SifrInt>) -> SifrInt {
+fn get_length(items: &[SifrInt]) -> SifrInt {
     SifrInt::from(items.len())
 }
 
-fn get_sum(items: &Vec<SifrInt>) -> SifrInt {
+fn get_sum(items: &[SifrInt]) -> SifrInt {
     let mut total: SifrInt = SifrInt::from_i64(0);
     for item in items.iter().cloned() {
         total = &total + &item;
@@ -19,7 +19,7 @@ fn consume_and_reverse(items: Vec<SifrInt>) -> Vec<SifrInt> {
     Box::new((items).iter().cloned().rev()).collect::<Vec<_>>()
 }
 
-fn add_lengths(a: &Vec<SifrInt>, b: &Vec<SifrInt>) -> SifrInt {
+fn add_lengths(a: &[SifrInt], b: &[SifrInt]) -> SifrInt {
     &SifrInt::from(a.len()) + &SifrInt::from(b.len())
 }
 
@@ -46,7 +46,7 @@ fn main() {
     println!("{}", combined);
     println!("{:?}", nums);
     let x: SifrInt = SifrInt::from_i64(42);
-    let d: SifrInt = double((x).clone());
+    let d: SifrInt = double(x.clone());
     println!("{}", d);
     println!("{}", x);
     let pi: f64 = 3.14_f64;
