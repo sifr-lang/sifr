@@ -3,7 +3,7 @@
   "target": "wasm32-wasip2",
   "wit_world": "embedded-language-provider",
   "protocol_major": 1,
-  "guest_source_sha256": "440d933497830efa558ac7f1439a43334cdf7a970652380329e4febc398457fe",
+  "guest_source_sha256": "6647fcef1ccfda23b105c8cc83dd5a9e9181c25fa4a69b5ade0938fbb5134c96",
   "toolchain": {
     "wasi_sdk": "33.0",
     "wasi_sdk_asset_sha256": "85c997a2665ead91673b5bb88b7d0df3fc8900df3bfa244f720d478187bbdc78",
@@ -16,48 +16,48 @@
     {
       "server_major": 13,
       "path": "components/postgresql-13.wasm",
-      "sha256": "25d487b3e4905e43245b3b5ff4aad6089d468cdc17ecc5ecd3607c8cc52462b2",
-      "size_bytes": 3397343,
+      "sha256": "631cea007bf3e42f41860e2388009254516eb2cca4241516a6ffc60a6dc18442",
+      "size_bytes": 3397727,
       "parser_tag": "13-2.2.0",
       "parser_commit": "1097b2c33e54a37c0d2c0f2d498c7d1cf967eae9"
     },
     {
       "server_major": 14,
       "path": "components/postgresql-14.wasm",
-      "sha256": "449b601b374050f0f0dcec716c2176281ae2987917624a46fb19a6dfecfbba02",
-      "size_bytes": 3436093,
+      "sha256": "185cba94a8ece8404b0a4a32230a580898ce3d2dc8a8fd6d2593fa2a83bbb0db",
+      "size_bytes": 3436477,
       "parser_tag": "14-3.0.0",
       "parser_commit": "397cbb9c1b188b8a5c6e1a9633461b2d01903abc"
     },
     {
       "server_major": 15,
       "path": "components/postgresql-15.wasm",
-      "sha256": "9ca41cea4921ee33f26cf5f4d1b20e93cd2709ccb8898c7033b52c3e48cf13d5",
-      "size_bytes": 3471551,
+      "sha256": "690a8b42932372472097b71e85e03d931f015fa7574cf6a6fa852fd8ac6bc24d",
+      "size_bytes": 3471935,
       "parser_tag": "15-4.2.4",
       "parser_commit": "db39825bc7c1ddd45962ec6a626d740b7f8f027a"
     },
     {
       "server_major": 16,
       "path": "components/postgresql-16.wasm",
-      "sha256": "79977eb249f77a93296c54c8fda9f84665a53387a4d50cbb81a751b9453f42b2",
-      "size_bytes": 3545207,
+      "sha256": "7c12bc750f9506c113c80611ee2ee1163c616003d627bd0fcb396e85198e83de",
+      "size_bytes": 3545591,
       "parser_tag": "16-5.2.0",
       "parser_commit": "fce106abf41205e5d0db47bea7de44ad1e36f7a5"
     },
     {
       "server_major": 17,
       "path": "components/postgresql-17.wasm",
-      "sha256": "282ee0b26921676ce4905d478b31e615b9abf8ac3eed1750493147e45fc7199d",
-      "size_bytes": 3795175,
+      "sha256": "89b21dfb97977f0679def3eab14324262aa3b57e17c4ef18e6a08221068c3ee1",
+      "size_bytes": 3795559,
       "parser_tag": "17-6.2.2",
       "parser_commit": "7be1aed1f1f968a36cf541319f71e845850f0381"
     },
     {
       "server_major": 18,
       "path": "components/postgresql-18.wasm",
-      "sha256": "d0a5d057d99a05126d74f3b5f293e37092f48a966ca45a8f322c5526a96f0ecc",
-      "size_bytes": 3820117,
+      "sha256": "5e0a4dfaa92d9654c52c17f51c97daa39c1195d9a8dca4990380536a70f66715",
+      "size_bytes": 3820501,
       "parser_tag": "18.0.0",
       "parser_commit": "204fbdbd3ed5f8691ab358e49f1fc5397b4679e2"
     }

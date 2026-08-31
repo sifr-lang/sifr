@@ -12,12 +12,34 @@ use sifr_sql_contract::{
     SchemaDocumentKind, SchemaEvidence, SchemaIr, SchemaNormalizationOutput, SchemaObject,
     SchemaObjectKind, SchemaProfile, SchemaSlice, SchemaSourceInput, SchemaSourceLocation,
     SchemaStrictness, SemanticValue, SessionContract, build_profile_authority,
-    generate_profile_module, minimum_schema_slice, normalize_schema,
+    dialect_modes_for_session, generate_profile_module, minimum_schema_slice, normalize_schema,
     normalized_schema_from_response, schema_context_artifact, schema_fingerprint,
     schema_normalization_request, schema_source_fingerprint, semantic_diff,
     verify_compatible_slice,
 };
 use std::collections::{BTreeMap, BTreeSet};
+
+#[test]
+fn session_character_inputs_are_mysql_dialect_modes_only() {
+    let session = SessionContract {
+        sql_modes: BTreeSet::from(["strict".to_string()]),
+        collation: Some("utf8mb4_0900_ai_ci".to_string()),
+        character_set: Some("utf8mb4".to_string()),
+        ..SessionContract::default()
+    };
+    assert_eq!(
+        dialect_modes_for_session("postgresql", &session),
+        BTreeSet::from(["strict".to_string()])
+    );
+    assert_eq!(
+        dialect_modes_for_session("mysql", &session),
+        BTreeSet::from([
+            "character-set:utf8mb4".to_string(),
+            "collation:utf8mb4_0900_ai_ci".to_string(),
+            "strict".to_string(),
+        ])
+    );
+}
 
 #[test]
 fn all_provider_source_forms_normalize_into_one_canonical_graph() {

@@ -58,7 +58,10 @@ impl ResolvedSqlProfile {
         if schema.dialect.server_version != self.config.server_version
             || schema.dialect.features != self.config.extensions
             || schema.dialect.modes
-                != sifr_sql_contract::dialect_modes_for_session(&self.config.session)
+                != sifr_sql_contract::dialect_modes_for_session(
+                    &schema.dialect.family,
+                    &self.config.session,
+                )
         {
             return Err(SchemaContractError::new(
                 SchemaContractErrorKind::InvalidProfile,

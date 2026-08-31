@@ -44,24 +44,26 @@ pub struct SessionContract {
 }
 
 #[must_use]
-pub fn dialect_modes_for_session(session: &SessionContract) -> BTreeSet<String> {
-    session
-        .sql_modes
-        .iter()
-        .cloned()
-        .chain(
+pub fn dialect_modes_for_session(
+    dialect_family: &str,
+    session: &SessionContract,
+) -> BTreeSet<String> {
+    let mut modes = session.sql_modes.clone();
+    if dialect_family == "mysql" {
+        modes.extend(
             session
                 .character_set
                 .iter()
                 .map(|value| format!("character-set:{value}")),
-        )
-        .chain(
+        );
+        modes.extend(
             session
                 .collation
                 .iter()
                 .map(|value| format!("collation:{value}")),
-        )
-        .collect()
+        );
+    }
+    modes
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

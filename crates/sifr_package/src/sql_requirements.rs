@@ -50,6 +50,7 @@ impl ResolvedSqlRequirementProvider {
             || normalized.dialect.features != self.config.extensions
             || normalized.dialect.modes
                 != sifr_sql_contract::dialect_modes_for_session(
+                    &normalized.dialect.family,
                     &sifr_sql_contract::SessionContract {
                         sql_modes: self.config.sql_modes.clone(),
                         collation: self.config.collation.clone(),
