@@ -32,7 +32,7 @@ pub async fn pull_live_catalog(
     provider: ProviderIdentity,
     expected_dialect: DialectIdentity,
 ) -> Result<SchemaIr, PostgresCatalogError> {
-    let expected_server_major = expected_major(&expected_dialect)?;
+    expected_major(&expected_dialect)?;
     let config = connection_url
         .parse::<Config>()
         .map_err(|_| catalog_error("PostgreSQL connection configuration is invalid"))?;
@@ -58,22 +58,50 @@ pub async fn pull_live_catalog(
             tokio::spawn(async move { connection.await.map_err(|_| ()) }),
         )
     };
-    let result = pull_from_client(&client, provider, expected_dialect, expected_server_major).await;
+    let result = pull_catalog_from_client(&client, provider, expected_dialect, true).await;
     drop(client);
     let _ = connection_task.await;
     result
 }
 
-async fn pull_from_client(
+pub async fn pull_catalog_from_client(
+    client: &Client,
+    provider: ProviderIdentity,
+    expected_dialect: DialectIdentity,
+    manage_snapshot: bool,
+) -> Result<SchemaIr, PostgresCatalogError> {
+    let expected_server_major = expected_major(&expected_dialect)?;
+    if !manage_snapshot {
+        return pull_catalog_snapshot(client, provider, expected_dialect, expected_server_major)
+            .await;
+    }
+    client
+        .batch_execute("BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY")
+        .await
+        .map_err(|_| catalog_error("cannot start a consistent PostgreSQL catalog snapshot"))?;
+    let result =
+        pull_catalog_snapshot(client, provider, expected_dialect, expected_server_major).await;
+    match result {
+        Ok(schema) => {
+            client
+                .batch_execute("COMMIT")
+                .await
+                .map_err(|_| catalog_error("cannot finish the PostgreSQL catalog snapshot"))?;
+            Ok(schema)
+        }
+        Err(primary) => {
+            let _rollback = client.batch_execute("ROLLBACK").await;
+            Err(primary)
+        }
+    }
+}
+
+async fn pull_catalog_snapshot(
     client: &Client,
     provider: ProviderIdentity,
     expected_dialect: DialectIdentity,
     expected_server_major: u16,
 ) -> Result<SchemaIr, PostgresCatalogError> {
-    client
-        .batch_execute("BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY")
-        .await
-        .map_err(|_| catalog_error("cannot start a consistent PostgreSQL catalog snapshot"))?;
     let version = client
         .query_one("SHOW server_version_num", &[])
         .await
@@ -100,10 +128,6 @@ async fn pull_from_client(
                 })?,
         );
     }
-    client
-        .batch_execute("COMMIT")
-        .await
-        .map_err(|_| catalog_error("cannot finish the PostgreSQL catalog snapshot"))?;
     schema_from_rows(provider, expected_dialect, rows)
 }
 

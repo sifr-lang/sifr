@@ -186,7 +186,7 @@ async fn live_schema(
     .map_err(|failure| command_error(failure.message))
 }
 
-fn load_authority(
+pub(crate) fn load_authority(
     workspace_root: &Path,
     profile_name: &str,
 ) -> Result<ProfileAuthority, CommandError> {
@@ -257,7 +257,7 @@ fn migration_schema_path(workspace_root: &Path, profile: &str) -> PathBuf {
         .join("schema.json")
 }
 
-fn required_connection(connection_url: Option<&str>) -> Result<&str, CommandError> {
+pub(crate) fn required_connection(connection_url: Option<&str>) -> Result<&str, CommandError> {
     connection_url
         .filter(|value| !value.trim().is_empty())
         .ok_or_else(|| command_error(format!("{CONNECTION_ENVIRONMENT} is required")))
@@ -294,7 +294,7 @@ fn parse_command(arguments: &[String]) -> Result<SchemaCommand, CommandError> {
     }
 }
 
-fn json_line(value: &impl Serialize) -> Result<String, CommandError> {
+pub(crate) fn json_line(value: &impl Serialize) -> Result<String, CommandError> {
     serde_json::to_string_pretty(value)
         .map(|value| format!("{value}\n"))
         .map_err(|_| command_error("cannot serialize schema command output"))
@@ -310,7 +310,7 @@ fn usage() -> CommandError {
     )
 }
 
-fn command_error(message: impl Into<String>) -> CommandError {
+pub(crate) fn command_error(message: impl Into<String>) -> CommandError {
     CommandError {
         message: message.into(),
     }

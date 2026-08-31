@@ -3,13 +3,14 @@
   "compiler_owner": "sifr_sql_contract",
   "hir_owner": "sifr_frontend",
   "runtime_owner": "sifr_sql_runtime",
-  "format_version": 1,
+  "format_version": 2,
   "graph_invariants": [
     "canonical-target",
     "checked-dag",
     "explicit-head",
     "parent-fingerprints",
     "provider-constraints",
+    "sequencable-branches",
     "stable-checksums"
   ],
   "step_invariants": [
@@ -28,8 +29,11 @@
     "checksum-drift-rejected",
     "explicit-rollback-only",
     "head-record",
+    "incomplete-merge-rejected",
     "panic-contained",
+    "provider-identity-rejected",
     "recovery-point-record",
+    "rollback-prefix-checked",
     "schema-drift-rejected",
     "step-duration-record"
   ],
@@ -42,6 +46,7 @@
     "runtime": "crates/sifr_sql_runtime/src/migration/engine.rs",
     "runtime-manifest": "crates/sifr_sql_runtime/Cargo.toml",
     "runtime-plan": "crates/sifr_sql_runtime/src/migration/plan.rs",
+    "runtime-rollback": "crates/sifr_sql_runtime/src/migration/rollback.rs",
     "runtime-tests": "crates/sifr_sql_runtime/tests/migration_engine.rs",
     "tool-artifacts": "crates/sifr_sql_tool/src/migration_artifacts.rs",
     "tool-tests": "crates/sifr_sql_tool/tests/migration_artifacts.rs"

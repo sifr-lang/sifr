@@ -1,11 +1,13 @@
 mod engine;
 mod plan;
+mod rollback;
 
 pub use engine::MigrationEngine;
 pub use plan::{
-    MigrationExecutionNode, MigrationExecutionPath, MigrationExecutionPlan, MigrationExecutionStep,
-    MigrationExecutionStepKind, MigrationId, MigrationReplayPolicy, MigrationStateId,
-    MigrationTransactionBoundary,
+    MIGRATION_EXECUTION_PLAN_FORMAT_VERSION, MigrationExecutionNode, MigrationExecutionPath,
+    MigrationExecutionPlan, MigrationExecutionStep, MigrationExecutionStepKind, MigrationId,
+    MigrationReplayPolicy, MigrationRuntimeConstraint, MigrationStateId,
+    MigrationTransactionBoundary, MigrationTransactionRequirement,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
@@ -16,6 +18,8 @@ use std::fmt;
 pub struct AppliedMigrationRecord {
     pub migration: MigrationId,
     pub checksum: String,
+    pub path_parent: MigrationId,
+    pub prior_heads: BTreeSet<MigrationId>,
     pub output_fingerprint: String,
     pub duration_millis: u64,
 }
@@ -23,6 +27,7 @@ pub struct AppliedMigrationRecord {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct InProgressMigrationRecord {
+    pub direction: MigrationDirection,
     pub migration: MigrationId,
     pub parent: MigrationId,
     pub migration_checksum: String,
@@ -34,10 +39,19 @@ pub struct InProgressMigrationRecord {
     pub duration_millis: u64,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum MigrationDirection {
+    Forward,
+    Rollback,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct MigrationLedgerSnapshot {
     pub provider_family: String,
+    pub provider_server_version: String,
+    pub provider_capabilities: BTreeSet<String>,
     pub heads: BTreeSet<MigrationId>,
     pub schema_fingerprint: String,
     pub applied: BTreeMap<MigrationId, AppliedMigrationRecord>,
@@ -77,7 +91,15 @@ pub enum MigrationStepResult {
     },
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MigrationRuntimeIdentity {
+    pub family: String,
+    pub server_version: String,
+    pub capabilities: BTreeSet<String>,
+}
+
 pub trait MigrationRuntime {
+    fn identity(&mut self) -> Result<MigrationRuntimeIdentity, String>;
     fn acquire_lock(&mut self, plan: &MigrationExecutionPlan) -> Result<MigrationLock, String>;
     fn release_lock(&mut self, lock: MigrationLock) -> Result<(), String>;
     fn load_ledger(&mut self) -> Result<MigrationLedgerSnapshot, String>;
@@ -119,6 +141,7 @@ pub enum MigrationExecutionEvent {
         identity: String,
     },
     MigrationStarted {
+        direction: MigrationDirection,
         migration: MigrationId,
         parent: MigrationId,
         input_fingerprint: String,
@@ -149,6 +172,7 @@ pub enum MigrationExecutionEvent {
         duration_millis: u64,
     },
     MigrationCompleted {
+        direction: MigrationDirection,
         migration: MigrationId,
         fingerprint: String,
         duration_millis: u64,
@@ -182,7 +206,9 @@ pub enum MigrationExecutionErrorKind {
     SchemaDrift,
     ChecksumDrift,
     AmbiguousRecovery,
-    AmbiguousPath,
+    NoMatchingPath,
+    IncompleteMerge,
+    ForwardOnly,
     Transaction,
     Step,
     AssertionFalse,

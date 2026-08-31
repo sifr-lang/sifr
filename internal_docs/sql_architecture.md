@@ -2231,8 +2231,10 @@ migrations for changes that occurred before import.
 [`sql_migrations.md`](./sql_migrations.md) records the implemented
 provider-neutral graph compiler, nominal intermediate states, affine plan and
 callback types, impact reports, execution ledger, bounded backfills, and
-recovery rules. Provider-specific migration qualification remains in each
-provider tool.
+recovery rules. [`sql_postgresql_migrations.md`](./sql_postgresql_migrations.md)
+records PostgreSQL reflection, transaction classes, live execution, and the
+PostgreSQL 13 through 18 migration matrix. Other provider tools own their
+qualification.
 
 ## Security and trust
 

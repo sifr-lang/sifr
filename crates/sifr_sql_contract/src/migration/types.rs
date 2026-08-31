@@ -296,7 +296,7 @@ pub struct MigrationCompileError {
 }
 
 impl MigrationCompileError {
-    pub(crate) fn new(kind: MigrationCompileErrorKind, message: impl Into<String>) -> Self {
+    pub fn new(kind: MigrationCompileErrorKind, message: impl Into<String>) -> Self {
         Self {
             kind,
             message: message.into(),

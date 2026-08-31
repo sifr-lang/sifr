@@ -2,6 +2,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 
+pub const MIGRATION_EXECUTION_PLAN_FORMAT_VERSION: u32 = 2;
+
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct MigrationId(String);
@@ -45,6 +47,22 @@ impl MigrationStateId {
 pub enum MigrationTransactionBoundary {
     Begin,
     Commit,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum MigrationTransactionRequirement {
+    Required,
+    Optional,
+    Forbidden,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct MigrationRuntimeConstraint {
+    pub family: String,
+    pub minimum_server_version: Option<String>,
+    pub required_capabilities: BTreeSet<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -109,8 +127,12 @@ pub struct MigrationExecutionPath {
 pub struct MigrationExecutionNode {
     pub id: MigrationId,
     pub parents: BTreeSet<MigrationId>,
+    pub provider: MigrationRuntimeConstraint,
+    pub transaction_requirement: MigrationTransactionRequirement,
     pub checksum: String,
     pub paths: BTreeMap<MigrationId, MigrationExecutionPath>,
+    pub author: String,
+    pub created_at: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

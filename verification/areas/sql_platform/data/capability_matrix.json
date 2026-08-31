@@ -51,7 +51,7 @@
       "acceptance": "qualified PostgreSQL migration graphs and recovery",
       "behaviors": ["fresh, upgrade, merge, and resume paths", "transactional and non-transactional DDL", "advisory locks and concurrent-start exclusion", "imports, baselines, checksums, drift, recovery, and explicit rollback", "every supported PostgreSQL major"],
       "required_evidence": ["integration", "negative", "positive", "property"],
-      "status": "planned"
+      "status": "active"
     },
     {
       "id": "postgresql.editor",

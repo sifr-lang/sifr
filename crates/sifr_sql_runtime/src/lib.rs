@@ -30,13 +30,14 @@ pub use handles::{
     VerificationEvidence, Verified,
 };
 pub use migration::{
-    AppliedMigrationRecord, InProgressMigrationRecord, MigrationEngine, MigrationExecutionError,
-    MigrationExecutionErrorKind, MigrationExecutionEvent, MigrationExecutionLimits,
-    MigrationExecutionNode, MigrationExecutionPath, MigrationExecutionPlan,
-    MigrationExecutionReport, MigrationExecutionStatus, MigrationExecutionStep,
-    MigrationExecutionStepKind, MigrationId, MigrationLedgerSnapshot, MigrationLock,
-    MigrationReplayPolicy, MigrationRuntime, MigrationStateId, MigrationStepRequest,
-    MigrationStepResult, MigrationTransactionBoundary,
+    AppliedMigrationRecord, InProgressMigrationRecord, MIGRATION_EXECUTION_PLAN_FORMAT_VERSION,
+    MigrationDirection, MigrationEngine, MigrationExecutionError, MigrationExecutionErrorKind,
+    MigrationExecutionEvent, MigrationExecutionLimits, MigrationExecutionNode,
+    MigrationExecutionPath, MigrationExecutionPlan, MigrationExecutionReport,
+    MigrationExecutionStatus, MigrationExecutionStep, MigrationExecutionStepKind, MigrationId,
+    MigrationLedgerSnapshot, MigrationLock, MigrationReplayPolicy, MigrationRuntime,
+    MigrationRuntimeConstraint, MigrationRuntimeIdentity, MigrationStateId, MigrationStepRequest,
+    MigrationStepResult, MigrationTransactionBoundary, MigrationTransactionRequirement,
 };
 pub use parameter::{
     BoundParameters, OwnedParameter, OwnedSqlValue, ParameterError, RuntimeCodecIdentity,

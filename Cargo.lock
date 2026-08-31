@@ -7941,9 +7941,11 @@ dependencies = [
  "semver",
  "serde",
  "serde_json",
+ "sha2 0.11.0",
  "sifr_driver",
  "sifr_sql_contract",
  "sifr_sql_postgresql",
+ "sifr_sql_runtime",
  "sifr_sql_tool",
  "tempfile",
  "tokio",
@@ -7955,6 +7957,7 @@ dependencies = [
 name = "sifr_sql_runtime"
 version = "0.0.0"
 dependencies = [
+ "semver",
  "serde",
  "sifr_runtime",
  "static_assertions",

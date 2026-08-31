@@ -67,6 +67,11 @@
   The migration compiler checks every baseline path and creates one nominal state
   for each step. The runtime records exact recovery evidence and never creates a
   rollback plan. [`sql_migrations.md`](./sql_migrations.md) records this boundary.
+  The PostgreSQL host tool reflects provider DDL, validates transaction classes,
+  owns the advisory lock and ledger, imports truthful baselines, and qualifies
+  recovery against PostgreSQL 13 through 18.
+  [`sql_postgresql_migrations.md`](./sql_postgresql_migrations.md) records this
+  provider boundary.
   Host tools use one Cargo-locked workspace member that stays outside every application dependency closure. `sifr_package` owns exact entry-point identity, the committed `sifr-tools.lock.json`, capability grants, lock fingerprints, and host-target build plans. The CLI builds then directly executes the binary in a fail-closed native sandbox, exposes direct namespaces, and validates the common SQL test connection manifest. [`sql_host_tools.md`](./sql_host_tools.md) records this boundary.
 - The core type system owns immutable structural records independently of SQL.
   Field names and canonical field types define identity. Declaration order affects diagnostics only.

@@ -15,6 +15,7 @@ mod ffi;
 #[cfg(target_family = "wasm")]
 mod guest;
 mod locking_analysis;
+mod migration;
 mod nullability_analysis;
 mod parameters;
 mod raw_adapter;
@@ -50,6 +51,7 @@ pub use component::{
 pub use diagnostic::{
     PostgresDiagnostic, PostgresDiagnosticCode, PostgresDiagnosticSpan, PostgresSpanKind,
 };
+pub use migration::{PostgresDdlExecutionClass, PostgresMigrationDialect, classify_migration_ddl};
 pub use parameters::{ParameterRewriteError, rewrite_parameter_slots};
 pub use raw_adapter::{LibpgQueryParser, PostgresParseError, PostgresParser};
 pub use source::{
