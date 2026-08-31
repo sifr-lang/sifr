@@ -5,10 +5,11 @@ use sifr_sql_contract::{
     CompiledMigrationGraph, DialectIdentity, MigrationNodeId, ProviderIdentity, SchemaIr,
     schema_fingerprint,
 };
+use sifr_sql_runtime::MigrationExecutionPlan;
 use sifr_sql_tool::{
     MIGRATION_ARTIFACT_MANIFEST_PATH, MIGRATION_GRAPH_PATH, MIGRATION_IMPACT_PATH,
     MIGRATION_SCHEMA_PATH, SchemaLifecycleErrorKind, build_migration_artifacts,
-    write_migration_artifacts_atomically,
+    lower_migration_execution_plan, write_migration_artifacts_atomically,
 };
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -55,6 +56,15 @@ fn migration_artifacts_are_deterministic_complete_and_atomic() {
     let first = build_migration_artifacts(&graph, &target).expect("first build should pass");
     let second = build_migration_artifacts(&graph, &target).expect("second build should pass");
     assert_eq!(first, second);
+    let execution_plan = lower_migration_execution_plan(&graph);
+    let emitted_plan: MigrationExecutionPlan = serde_json::from_slice(
+        first
+            .files()
+            .get(MIGRATION_GRAPH_PATH)
+            .expect("execution plan should exist"),
+    )
+    .expect("execution plan should deserialize without compiler contracts");
+    assert_eq!(emitted_plan, execution_plan);
     for path in [
         MIGRATION_GRAPH_PATH,
         MIGRATION_SCHEMA_PATH,

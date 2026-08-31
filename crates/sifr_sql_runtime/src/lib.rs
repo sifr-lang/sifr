@@ -32,8 +32,11 @@ pub use handles::{
 pub use migration::{
     AppliedMigrationRecord, InProgressMigrationRecord, MigrationEngine, MigrationExecutionError,
     MigrationExecutionErrorKind, MigrationExecutionEvent, MigrationExecutionLimits,
-    MigrationExecutionReport, MigrationExecutionStatus, MigrationLedgerSnapshot, MigrationLock,
-    MigrationRuntime, MigrationStepRequest, MigrationStepResult,
+    MigrationExecutionNode, MigrationExecutionPath, MigrationExecutionPlan,
+    MigrationExecutionReport, MigrationExecutionStatus, MigrationExecutionStep,
+    MigrationExecutionStepKind, MigrationId, MigrationLedgerSnapshot, MigrationLock,
+    MigrationReplayPolicy, MigrationRuntime, MigrationStateId, MigrationStepRequest,
+    MigrationStepResult, MigrationTransactionBoundary,
 };
 pub use parameter::{
     BoundParameters, OwnedParameter, OwnedSqlValue, ParameterError, RuntimeCodecIdentity,

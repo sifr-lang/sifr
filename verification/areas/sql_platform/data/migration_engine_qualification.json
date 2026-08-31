@@ -40,6 +40,8 @@
     "frontend": "crates/sifr_frontend/src/sql_migrations.rs",
     "frontend-tests": "crates/sifr_frontend/tests/sql_migrations.rs",
     "runtime": "crates/sifr_sql_runtime/src/migration/engine.rs",
+    "runtime-manifest": "crates/sifr_sql_runtime/Cargo.toml",
+    "runtime-plan": "crates/sifr_sql_runtime/src/migration/plan.rs",
     "runtime-tests": "crates/sifr_sql_runtime/tests/migration_engine.rs",
     "tool-artifacts": "crates/sifr_sql_tool/src/migration_artifacts.rs",
     "tool-tests": "crates/sifr_sql_tool/tests/migration_artifacts.rs"

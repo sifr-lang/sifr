@@ -1,17 +1,20 @@
 mod engine;
+mod plan;
 
 pub use engine::MigrationEngine;
-use serde::{Deserialize, Serialize};
-use sifr_sql_contract::{
-    CompiledMigrationGraph, CompiledMigrationStep, MigrationNodeId, MigrationStateIdentity,
+pub use plan::{
+    MigrationExecutionNode, MigrationExecutionPath, MigrationExecutionPlan, MigrationExecutionStep,
+    MigrationExecutionStepKind, MigrationId, MigrationReplayPolicy, MigrationStateId,
+    MigrationTransactionBoundary,
 };
+use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct AppliedMigrationRecord {
-    pub migration: MigrationNodeId,
+    pub migration: MigrationId,
     pub checksum: String,
     pub output_fingerprint: String,
     pub duration_millis: u64,
@@ -20,10 +23,10 @@ pub struct AppliedMigrationRecord {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct InProgressMigrationRecord {
-    pub migration: MigrationNodeId,
-    pub parent: MigrationNodeId,
+    pub migration: MigrationId,
+    pub parent: MigrationId,
     pub migration_checksum: String,
-    pub completed_steps: BTreeMap<MigrationNodeId, String>,
+    pub completed_steps: BTreeMap<MigrationId, String>,
     pub current_fingerprint: String,
     pub recovery_point: Option<String>,
     pub backfill_progress: Option<String>,
@@ -35,9 +38,9 @@ pub struct InProgressMigrationRecord {
 #[serde(deny_unknown_fields)]
 pub struct MigrationLedgerSnapshot {
     pub provider_family: String,
-    pub heads: BTreeSet<MigrationNodeId>,
+    pub heads: BTreeSet<MigrationId>,
     pub schema_fingerprint: String,
-    pub applied: BTreeMap<MigrationNodeId, AppliedMigrationRecord>,
+    pub applied: BTreeMap<MigrationId, AppliedMigrationRecord>,
     pub in_progress: Option<InProgressMigrationRecord>,
 }
 
@@ -48,8 +51,8 @@ pub struct MigrationLock {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct MigrationStepRequest<'a> {
-    pub migration: &'a MigrationNodeId,
-    pub step: &'a CompiledMigrationStep,
+    pub migration: &'a MigrationId,
+    pub step: &'a MigrationExecutionStep,
     pub backfill_progress: Option<&'a str>,
 }
 
@@ -75,7 +78,7 @@ pub enum MigrationStepResult {
 }
 
 pub trait MigrationRuntime {
-    fn acquire_lock(&mut self, graph: &CompiledMigrationGraph) -> Result<MigrationLock, String>;
+    fn acquire_lock(&mut self, plan: &MigrationExecutionPlan) -> Result<MigrationLock, String>;
     fn release_lock(&mut self, lock: MigrationLock) -> Result<(), String>;
     fn load_ledger(&mut self) -> Result<MigrationLedgerSnapshot, String>;
     fn store_ledger(&mut self, ledger: &MigrationLedgerSnapshot) -> Result<(), String>;
@@ -116,44 +119,44 @@ pub enum MigrationExecutionEvent {
         identity: String,
     },
     MigrationStarted {
-        migration: MigrationNodeId,
-        parent: MigrationNodeId,
+        migration: MigrationId,
+        parent: MigrationId,
         input_fingerprint: String,
     },
     StepStarted {
-        migration: MigrationNodeId,
-        step: MigrationNodeId,
-        state: MigrationStateIdentity,
+        migration: MigrationId,
+        step: MigrationId,
+        state: MigrationStateId,
         checksum: String,
     },
     BackfillProgress {
-        migration: MigrationNodeId,
-        step: MigrationNodeId,
+        migration: MigrationId,
+        step: MigrationId,
         progress: String,
         processed_rows: u64,
     },
     RecoveryPoint {
-        migration: MigrationNodeId,
-        step: MigrationNodeId,
+        migration: MigrationId,
+        step: MigrationId,
         name: String,
         fingerprint: String,
     },
     StepCompleted {
-        migration: MigrationNodeId,
-        step: MigrationNodeId,
-        state: MigrationStateIdentity,
+        migration: MigrationId,
+        step: MigrationId,
+        state: MigrationStateId,
         fingerprint: String,
         duration_millis: u64,
     },
     MigrationCompleted {
-        migration: MigrationNodeId,
+        migration: MigrationId,
         fingerprint: String,
         duration_millis: u64,
-        heads: BTreeSet<MigrationNodeId>,
+        heads: BTreeSet<MigrationId>,
     },
     Paused {
-        migration: MigrationNodeId,
-        step: MigrationNodeId,
+        migration: MigrationId,
+        step: MigrationId,
         recovery_point: Option<String>,
     },
     LockReleased {
@@ -165,7 +168,7 @@ pub enum MigrationExecutionEvent {
 #[serde(deny_unknown_fields)]
 pub struct MigrationExecutionReport {
     pub status: MigrationExecutionStatus,
-    pub heads: BTreeSet<MigrationNodeId>,
+    pub heads: BTreeSet<MigrationId>,
     pub schema_fingerprint: String,
     pub events: Vec<MigrationExecutionEvent>,
 }
@@ -192,8 +195,8 @@ pub enum MigrationExecutionErrorKind {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct MigrationExecutionError {
     pub kind: MigrationExecutionErrorKind,
-    pub migration: Option<MigrationNodeId>,
-    pub step: Option<MigrationNodeId>,
+    pub migration: Option<MigrationId>,
+    pub step: Option<MigrationId>,
     pub recovery_point: Option<String>,
     pub rollback_error: bool,
     pub lock_release_error: bool,
@@ -213,7 +216,7 @@ impl MigrationExecutionError {
         }
     }
 
-    pub(crate) fn at_step(mut self, migration: &MigrationNodeId, step: &MigrationNodeId) -> Self {
+    pub(crate) fn at_step(mut self, migration: &MigrationId, step: &MigrationId) -> Self {
         self.migration = Some(migration.clone());
         self.step = Some(step.clone());
         self

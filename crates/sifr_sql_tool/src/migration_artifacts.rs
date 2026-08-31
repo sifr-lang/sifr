@@ -2,7 +2,15 @@ use crate::lifecycle::error;
 use crate::{SchemaArtifactRecord, SchemaLifecycleError, SchemaLifecycleErrorKind};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use sifr_sql_contract::{CompiledMigrationGraph, SchemaIr, schema_fingerprint};
+use sifr_sql_contract::{
+    CompiledMigrationGraph, CompiledMigrationStep, CompiledStepKind, ReplayPolicy, SchemaIr,
+    TransactionBoundary, schema_fingerprint,
+};
+use sifr_sql_runtime::{
+    MigrationExecutionNode, MigrationExecutionPath, MigrationExecutionPlan, MigrationExecutionStep,
+    MigrationExecutionStepKind, MigrationId, MigrationReplayPolicy, MigrationStateId,
+    MigrationTransactionBoundary,
+};
 use std::collections::BTreeMap;
 
 pub const MIGRATION_GRAPH_PATH: &str = "graph.json";
@@ -48,6 +56,52 @@ pub fn build_migration_artifacts(
     Ok(first)
 }
 
+#[must_use]
+pub fn lower_migration_execution_plan(graph: &CompiledMigrationGraph) -> MigrationExecutionPlan {
+    MigrationExecutionPlan {
+        format_version: graph.format_version,
+        provider_family: graph.provider_family.clone(),
+        target_fingerprint: graph.target_fingerprint.clone(),
+        head: runtime_id(&graph.head),
+        topological_order: graph.topological_order.iter().map(runtime_id).collect(),
+        baseline_fingerprints: graph
+            .baseline_fingerprints
+            .iter()
+            .map(|(id, fingerprint)| (runtime_id(id), fingerprint.clone()))
+            .collect(),
+        migrations: graph
+            .migrations
+            .iter()
+            .map(|(id, migration)| {
+                (
+                    runtime_id(id),
+                    MigrationExecutionNode {
+                        id: runtime_id(&migration.id),
+                        parents: migration.parents.iter().map(runtime_id).collect(),
+                        checksum: migration.checksum.clone(),
+                        paths: migration
+                            .paths
+                            .iter()
+                            .map(|(parent, path)| {
+                                (
+                                    runtime_id(parent),
+                                    MigrationExecutionPath {
+                                        parent: runtime_id(&path.parent),
+                                        input_fingerprint: path.input_fingerprint.clone(),
+                                        output_fingerprint: path.output_fingerprint.clone(),
+                                        steps: lower_steps(&path.steps),
+                                        rollback: path.rollback.as_deref().map(lower_steps),
+                                    },
+                                )
+                            })
+                            .collect(),
+                    },
+                )
+            })
+            .collect(),
+    }
+}
+
 fn build_once(
     graph: &CompiledMigrationGraph,
     target_schema: &SchemaIr,
@@ -64,8 +118,12 @@ fn build_once(
             "compiled migration head does not match the artifact target schema",
         ));
     }
+    let execution_plan = lower_migration_execution_plan(graph);
     let mut files = BTreeMap::from([
-        (MIGRATION_GRAPH_PATH.to_string(), canonical_json(graph)?),
+        (
+            MIGRATION_GRAPH_PATH.to_string(),
+            canonical_json(&execution_plan)?,
+        ),
         (
             MIGRATION_SCHEMA_PATH.to_string(),
             canonical_json(target_schema)?,
@@ -99,6 +157,73 @@ fn build_once(
         canonical_json(&manifest)?,
     );
     Ok(MigrationBuildArtifacts { files, manifest })
+}
+
+fn lower_steps(steps: &[CompiledMigrationStep]) -> Vec<MigrationExecutionStep> {
+    steps
+        .iter()
+        .map(|step| MigrationExecutionStep {
+            id: runtime_id(&step.id),
+            input_state: MigrationStateId::new(step.input_state.as_str()),
+            output_state: MigrationStateId::new(step.output_state.as_str()),
+            input_fingerprint: step.input_fingerprint.clone(),
+            output_fingerprint: step.output_fingerprint.clone(),
+            checksum: step.checksum.clone(),
+            kind: lower_step_kind(&step.kind),
+        })
+        .collect()
+}
+
+fn lower_step_kind(kind: &CompiledStepKind) -> MigrationExecutionStepKind {
+    match kind {
+        CompiledStepKind::ReflectedDdl { statement }
+        | CompiledStepKind::DeclaredDdl { statement } => MigrationExecutionStepKind::Ddl {
+            statement: statement.clone(),
+        },
+        CompiledStepKind::SqlData {
+            normalized_statement,
+        } => MigrationExecutionStepKind::SqlData {
+            normalized_statement: normalized_statement.clone(),
+        },
+        CompiledStepKind::SifrData { callback } => MigrationExecutionStepKind::SifrData {
+            callback: callback.clone(),
+        },
+        CompiledStepKind::Assertion {
+            normalized_statement,
+        } => MigrationExecutionStepKind::Assertion {
+            normalized_statement: normalized_statement.clone(),
+        },
+        CompiledStepKind::Backfill {
+            normalized_statement,
+            maximum_batch_rows,
+            replay,
+        } => MigrationExecutionStepKind::Backfill {
+            normalized_statement: normalized_statement.clone(),
+            maximum_batch_rows: *maximum_batch_rows,
+            replay: match replay {
+                ReplayPolicy::Never => MigrationReplayPolicy::Never,
+                ReplayPolicy::Idempotent { progress_key } => MigrationReplayPolicy::Idempotent {
+                    progress_keys: progress_key
+                        .iter()
+                        .map(|object| object.as_str().to_string())
+                        .collect(),
+                },
+            },
+        },
+        CompiledStepKind::Transaction { boundary } => MigrationExecutionStepKind::Transaction {
+            boundary: match boundary {
+                TransactionBoundary::Begin => MigrationTransactionBoundary::Begin,
+                TransactionBoundary::Commit => MigrationTransactionBoundary::Commit,
+            },
+        },
+        CompiledStepKind::RecoveryPoint { name } => {
+            MigrationExecutionStepKind::RecoveryPoint { name: name.clone() }
+        }
+    }
+}
+
+fn runtime_id(id: &sifr_sql_contract::MigrationNodeId) -> MigrationId {
+    MigrationId::new(id.as_str())
 }
 
 fn canonical_json<T: Serialize>(value: &T) -> Result<Vec<u8>, SchemaLifecycleError> {

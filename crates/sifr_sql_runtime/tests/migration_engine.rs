@@ -1,36 +1,36 @@
 #![allow(clippy::expect_used)]
 
-use sifr_sql_contract::{
-    CompiledMigration, CompiledMigrationGraph, CompiledMigrationPath, CompiledMigrationStep,
-    CompiledStepKind, MigrationNodeId, MigrationProviderConstraint, MigrationStateIdentity,
-    ReplayPolicy, TransactionBoundary, TransactionRequirement,
-};
 use sifr_sql_runtime::{
     AppliedMigrationRecord, MigrationEngine, MigrationExecutionErrorKind, MigrationExecutionLimits,
-    MigrationExecutionStatus, MigrationLedgerSnapshot, MigrationLock, MigrationRuntime,
-    MigrationStepRequest, MigrationStepResult,
+    MigrationExecutionNode, MigrationExecutionPath, MigrationExecutionPlan,
+    MigrationExecutionStatus, MigrationExecutionStep, MigrationExecutionStepKind, MigrationId,
+    MigrationLedgerSnapshot, MigrationLock, MigrationReplayPolicy, MigrationRuntime,
+    MigrationStateId, MigrationStepRequest, MigrationStepResult, MigrationTransactionBoundary,
 };
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
-fn id(value: &str) -> MigrationNodeId {
-    MigrationNodeId::new(value).expect("test migration identity should be valid")
+fn id(value: &str) -> MigrationId {
+    MigrationId::new(value)
 }
 
-fn step(value: &str, input: &str, output: &str, kind: CompiledStepKind) -> CompiledMigrationStep {
-    CompiledMigrationStep {
+fn step(
+    value: &str,
+    input: &str,
+    output: &str,
+    kind: MigrationExecutionStepKind,
+) -> MigrationExecutionStep {
+    MigrationExecutionStep {
         id: id(value),
-        input_state: MigrationStateIdentity::new(format!("state.{value}.input")),
-        output_state: MigrationStateIdentity::new(format!("state.{value}.output")),
+        input_state: MigrationStateId::new(format!("state.{value}.input")),
+        output_state: MigrationStateId::new(format!("state.{value}.output")),
         input_fingerprint: input.to_string(),
         output_fingerprint: output.to_string(),
         checksum: value.bytes().cycle().take(64).map(char::from).collect(),
-        referenced_objects: BTreeSet::new(),
-        affected_objects: BTreeSet::new(),
         kind,
     }
 }
 
-fn graph(with_backfill: bool) -> CompiledMigrationGraph {
+fn graph(with_backfill: bool) -> MigrationExecutionPlan {
     let before = "a".repeat(64);
     let after = "b".repeat(64);
     let baseline = id("baseline");
@@ -39,7 +39,7 @@ fn graph(with_backfill: bool) -> CompiledMigrationGraph {
         "ddl",
         &before,
         &after,
-        CompiledStepKind::ReflectedDdl {
+        MigrationExecutionStepKind::Ddl {
             statement: "ALTER".to_string(),
         },
     )];
@@ -48,7 +48,7 @@ fn graph(with_backfill: bool) -> CompiledMigrationGraph {
             "recovery",
             &after,
             &after,
-            CompiledStepKind::RecoveryPoint {
+            MigrationExecutionStepKind::RecoveryPoint {
                 name: "after-ddl".to_string(),
             },
         ));
@@ -56,11 +56,11 @@ fn graph(with_backfill: bool) -> CompiledMigrationGraph {
             "backfill",
             &after,
             &after,
-            CompiledStepKind::Backfill {
+            MigrationExecutionStepKind::Backfill {
                 normalized_statement: "UPDATE".to_string(),
                 maximum_batch_rows: 10,
-                replay: ReplayPolicy::Idempotent {
-                    progress_key: vec![],
+                replay: MigrationReplayPolicy::Idempotent {
+                    progress_keys: vec![],
                 },
             },
         ));
@@ -69,52 +69,42 @@ fn graph(with_backfill: bool) -> CompiledMigrationGraph {
         "assert",
         &after,
         &after,
-        CompiledStepKind::Assertion {
+        MigrationExecutionStepKind::Assertion {
             normalized_statement: "SELECT true AS valid".to_string(),
         },
     ));
-    let path = CompiledMigrationPath {
+    let path = MigrationExecutionPath {
         parent: baseline.clone(),
         input_fingerprint: before.clone(),
         output_fingerprint: after.clone(),
         steps,
         rollback: None,
     };
-    CompiledMigrationGraph {
+    MigrationExecutionPlan {
         format_version: 1,
         provider_family: "postgresql".to_string(),
-        target_fingerprint: after,
+        target_fingerprint: after.clone(),
         head: migration_id.clone(),
         topological_order: vec![migration_id.clone()],
-        baseline_fingerprints: BTreeMap::from([(baseline.clone(), before)]),
+        baseline_fingerprints: BTreeMap::from([(baseline.clone(), before.clone())]),
         migrations: BTreeMap::from([(
             migration_id.clone(),
-            CompiledMigration {
+            MigrationExecutionNode {
                 id: migration_id,
                 parents: BTreeSet::from([baseline.clone()]),
-                provider: MigrationProviderConstraint {
-                    family: "postgresql".to_string(),
-                    minimum_server_version: None,
-                    required_capabilities: BTreeSet::new(),
-                },
-                transaction_requirement: TransactionRequirement::Optional,
                 checksum: "c".repeat(64),
                 paths: BTreeMap::from([(baseline, path)]),
-                author: "test".to_string(),
-                created_at: "2026-08-31T00:00:00Z".to_string(),
             },
         )]),
-        impacts: Vec::new(),
     }
 }
 
-fn transactional_graph() -> CompiledMigrationGraph {
+fn transactional_graph() -> MigrationExecutionPlan {
     let mut graph = graph(false);
     let migration = graph
         .migrations
         .get_mut(&id("m1"))
         .expect("test migration should exist");
-    migration.transaction_requirement = TransactionRequirement::Required;
     let path = migration
         .paths
         .get_mut(&id("baseline"))
@@ -127,8 +117,8 @@ fn transactional_graph() -> CompiledMigrationGraph {
             "begin",
             &before,
             &before,
-            CompiledStepKind::Transaction {
-                boundary: TransactionBoundary::Begin,
+            MigrationExecutionStepKind::Transaction {
+                boundary: MigrationTransactionBoundary::Begin,
             },
         ),
     );
@@ -136,11 +126,89 @@ fn transactional_graph() -> CompiledMigrationGraph {
         "commit",
         &after,
         &after,
-        CompiledStepKind::Transaction {
-            boundary: TransactionBoundary::Commit,
+        MigrationExecutionStepKind::Transaction {
+            boundary: MigrationTransactionBoundary::Commit,
         },
     ));
     graph
+}
+
+fn branching_graph() -> MigrationExecutionPlan {
+    let before = "a".repeat(64);
+    let after = "b".repeat(64);
+    let baseline = id("baseline");
+    let left = id("left");
+    let right = id("right");
+    let merge = id("merge");
+    let branch_path = |migration: &str| MigrationExecutionPath {
+        parent: baseline.clone(),
+        input_fingerprint: before.clone(),
+        output_fingerprint: before.clone(),
+        steps: vec![step(
+            &format!("{migration}-point"),
+            &before,
+            &before,
+            MigrationExecutionStepKind::RecoveryPoint {
+                name: format!("{migration}-complete"),
+            },
+        )],
+        rollback: None,
+    };
+    let merge_step = step(
+        "merge-ddl",
+        &before,
+        &after,
+        MigrationExecutionStepKind::Ddl {
+            statement: "ALTER".to_string(),
+        },
+    );
+    let merge_path = |parent: MigrationId| MigrationExecutionPath {
+        parent,
+        input_fingerprint: before.clone(),
+        output_fingerprint: after.clone(),
+        steps: vec![merge_step.clone()],
+        rollback: None,
+    };
+    MigrationExecutionPlan {
+        format_version: 1,
+        provider_family: "postgresql".to_string(),
+        target_fingerprint: after.clone(),
+        head: merge.clone(),
+        topological_order: vec![left.clone(), right.clone(), merge.clone()],
+        baseline_fingerprints: BTreeMap::from([(baseline.clone(), before.clone())]),
+        migrations: BTreeMap::from([
+            (
+                left.clone(),
+                MigrationExecutionNode {
+                    id: left.clone(),
+                    parents: BTreeSet::from([baseline.clone()]),
+                    checksum: "c".repeat(64),
+                    paths: BTreeMap::from([(baseline.clone(), branch_path("left"))]),
+                },
+            ),
+            (
+                right.clone(),
+                MigrationExecutionNode {
+                    id: right.clone(),
+                    parents: BTreeSet::from([baseline.clone()]),
+                    checksum: "d".repeat(64),
+                    paths: BTreeMap::from([(baseline.clone(), branch_path("right"))]),
+                },
+            ),
+            (
+                merge.clone(),
+                MigrationExecutionNode {
+                    id: merge,
+                    parents: BTreeSet::from([left.clone(), right.clone()]),
+                    checksum: "e".repeat(64),
+                    paths: BTreeMap::from([
+                        (left.clone(), merge_path(left)),
+                        (right.clone(), merge_path(right)),
+                    ]),
+                },
+            ),
+        ]),
+    }
 }
 
 struct FakeRuntime {
@@ -154,7 +222,7 @@ struct FakeRuntime {
 }
 
 impl FakeRuntime {
-    fn new(graph: &CompiledMigrationGraph, results: Vec<MigrationStepResult>) -> Self {
+    fn new(graph: &MigrationExecutionPlan, results: Vec<MigrationStepResult>) -> Self {
         let (baseline, fingerprint) = graph
             .baseline_fingerprints
             .first_key_value()
@@ -178,7 +246,7 @@ impl FakeRuntime {
 }
 
 impl MigrationRuntime for FakeRuntime {
-    fn acquire_lock(&mut self, _graph: &CompiledMigrationGraph) -> Result<MigrationLock, String> {
+    fn acquire_lock(&mut self, _plan: &MigrationExecutionPlan) -> Result<MigrationLock, String> {
         if self.locked {
             return Err("already locked".to_string());
         }
@@ -398,4 +466,26 @@ fn failed_transaction_rolls_back_before_lock_release() {
     assert_eq!(runtime.rollback_count, 1);
     assert!(!runtime.transaction_open);
     assert!(!runtime.locked);
+}
+
+#[test]
+fn branching_plan_uses_stable_topological_order_and_reaches_merge_head() {
+    let graph = branching_graph();
+    let after = graph.target_fingerprint.clone();
+    let mut runtime = FakeRuntime::new(&graph, vec![complete(&after)]);
+    let report = MigrationEngine::new(MigrationExecutionLimits::default())
+        .execute(&graph, &mut runtime)
+        .expect("branching migration should complete");
+    assert_eq!(report.heads, BTreeSet::from([id("merge")]));
+    let started = report
+        .events
+        .iter()
+        .filter_map(|event| match event {
+            sifr_sql_runtime::MigrationExecutionEvent::MigrationStarted { migration, .. } => {
+                Some(migration.as_str())
+            }
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(started, vec!["left", "right", "merge"]);
 }

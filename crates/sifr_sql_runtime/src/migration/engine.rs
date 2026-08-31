@@ -1,12 +1,10 @@
 use super::{
     AppliedMigrationRecord, InProgressMigrationRecord, MigrationExecutionError,
     MigrationExecutionErrorKind, MigrationExecutionEvent, MigrationExecutionLimits,
-    MigrationExecutionReport, MigrationExecutionStatus, MigrationLedgerSnapshot, MigrationRuntime,
-    MigrationStepRequest, MigrationStepResult,
-};
-use sifr_sql_contract::{
-    CompiledMigration, CompiledMigrationGraph, CompiledMigrationPath, CompiledMigrationStep,
-    CompiledStepKind, ReplayPolicy, TransactionBoundary,
+    MigrationExecutionNode, MigrationExecutionPath, MigrationExecutionPlan,
+    MigrationExecutionReport, MigrationExecutionStatus, MigrationExecutionStep,
+    MigrationExecutionStepKind, MigrationLedgerSnapshot, MigrationReplayPolicy, MigrationRuntime,
+    MigrationStepRequest, MigrationStepResult, MigrationTransactionBoundary,
 };
 use std::collections::BTreeMap;
 use std::panic::{AssertUnwindSafe, catch_unwind};
@@ -23,7 +21,7 @@ impl MigrationEngine {
 
     pub fn execute<R: MigrationRuntime>(
         &self,
-        graph: &CompiledMigrationGraph,
+        graph: &MigrationExecutionPlan,
         runtime: &mut R,
     ) -> Result<MigrationExecutionReport, MigrationExecutionError> {
         if self.limits.maximum_backfill_batches == 0 {
@@ -64,7 +62,7 @@ impl MigrationEngine {
 
     fn execute_locked<R: MigrationRuntime>(
         &self,
-        graph: &CompiledMigrationGraph,
+        graph: &MigrationExecutionPlan,
         runtime: &mut R,
         events: &mut Vec<MigrationExecutionEvent>,
     ) -> Result<MigrationExecutionReport, MigrationExecutionError> {
@@ -120,8 +118,8 @@ impl MigrationEngine {
         &self,
         runtime: &mut R,
         ledger: &mut MigrationLedgerSnapshot,
-        migration: &CompiledMigration,
-        path: &CompiledMigrationPath,
+        migration: &MigrationExecutionNode,
+        path: &MigrationExecutionPath,
         events: &mut Vec<MigrationExecutionEvent>,
     ) -> Result<bool, MigrationExecutionError> {
         let mut progress = if let Some(progress) = ledger.in_progress.take() {
@@ -224,22 +222,22 @@ impl MigrationEngine {
         &self,
         runtime: &mut R,
         ledger: &mut MigrationLedgerSnapshot,
-        migration: &CompiledMigration,
-        step: &CompiledMigrationStep,
+        migration: &MigrationExecutionNode,
+        step: &MigrationExecutionStep,
         progress: &mut InProgressMigrationRecord,
         events: &mut Vec<MigrationExecutionEvent>,
     ) -> Result<bool, MigrationExecutionError> {
         match &step.kind {
-            CompiledStepKind::Transaction {
-                boundary: TransactionBoundary::Begin,
+            MigrationExecutionStepKind::Transaction {
+                boundary: MigrationTransactionBoundary::Begin,
             } => {
                 safe_call(MigrationExecutionErrorKind::Transaction, || {
                     runtime.begin_transaction()
                 })?;
                 progress.transaction_open = true;
             }
-            CompiledStepKind::Transaction {
-                boundary: TransactionBoundary::Commit,
+            MigrationExecutionStepKind::Transaction {
+                boundary: MigrationTransactionBoundary::Commit,
             } => {
                 safe_call(MigrationExecutionErrorKind::Transaction, || {
                     runtime.commit_transaction()
@@ -248,7 +246,7 @@ impl MigrationEngine {
             }
             _ => {}
         }
-        if let CompiledStepKind::RecoveryPoint { name } = &step.kind {
+        if let MigrationExecutionStepKind::RecoveryPoint { name } = &step.kind {
             progress.recovery_point = Some(name.clone());
             ledger.in_progress = Some(progress.clone());
             store(runtime, ledger)?;
@@ -261,20 +259,21 @@ impl MigrationEngine {
         }
         if matches!(
             &step.kind,
-            CompiledStepKind::Transaction { .. } | CompiledStepKind::RecoveryPoint { .. }
+            MigrationExecutionStepKind::Transaction { .. }
+                | MigrationExecutionStepKind::RecoveryPoint { .. }
         ) {
             complete_step_event(migration, step, 0, events);
             return Ok(false);
         }
 
         let maximum_rows = match &step.kind {
-            CompiledStepKind::Backfill {
+            MigrationExecutionStepKind::Backfill {
                 maximum_batch_rows, ..
             } => Some(*maximum_batch_rows),
             _ => None,
         };
         let replay = match &step.kind {
-            CompiledStepKind::Backfill { replay, .. } => Some(replay),
+            MigrationExecutionStepKind::Backfill { replay, .. } => Some(replay),
             _ => None,
         };
         let mut batches = 0_u64;
@@ -342,7 +341,7 @@ impl MigrationEngine {
                         .at_step(&migration.id, &step.id));
                     }
                     if !complete {
-                        let ReplayPolicy::Idempotent { .. } = replay.ok_or_else(|| {
+                        let MigrationReplayPolicy::Idempotent { .. } = replay.ok_or_else(|| {
                             error(
                                 MigrationExecutionErrorKind::Backfill,
                                 "backfill replay policy is missing",
@@ -419,7 +418,7 @@ impl MigrationEngine {
 }
 
 fn validate_ledger(
-    graph: &CompiledMigrationGraph,
+    graph: &MigrationExecutionPlan,
     ledger: &MigrationLedgerSnapshot,
 ) -> Result<(), MigrationExecutionError> {
     if ledger.provider_family != graph.provider_family {
@@ -460,9 +459,9 @@ fn validate_ledger(
 }
 
 fn select_path<'a>(
-    graph: &'a CompiledMigrationGraph,
+    graph: &'a MigrationExecutionPlan,
     ledger: &MigrationLedgerSnapshot,
-) -> Result<(&'a CompiledMigration, &'a CompiledMigrationPath), MigrationExecutionError> {
+) -> Result<(&'a MigrationExecutionNode, &'a MigrationExecutionPath), MigrationExecutionError> {
     if let Some(progress) = &ledger.in_progress {
         let migration = graph.migrations.get(&progress.migration).ok_or_else(|| {
             error(
@@ -478,7 +477,6 @@ fn select_path<'a>(
         })?;
         return Ok((migration, path));
     }
-    let mut candidates = Vec::new();
     for id in &graph.topological_order {
         if ledger.applied.contains_key(id) {
             continue;
@@ -496,26 +494,19 @@ fn select_path<'a>(
             if path.input_fingerprint == ledger.schema_fingerprint
                 && (parent_is_current || parent_was_applied || parent_is_baseline)
             {
-                candidates.push((migration, path));
+                return Ok((migration, path));
             }
         }
     }
-    if candidates.len() != 1 {
-        return Err(error(
-            MigrationExecutionErrorKind::AmbiguousPath,
-            if candidates.is_empty() {
-                "no checked migration path matches the current heads and schema"
-            } else {
-                "multiple checked migration paths match the current heads and schema"
-            },
-        ));
-    }
-    Ok(candidates.remove(0))
+    Err(error(
+        MigrationExecutionErrorKind::AmbiguousPath,
+        "no checked migration path matches the current heads and schema",
+    ))
 }
 
 fn validate_progress(
-    migration: &CompiledMigration,
-    path: &CompiledMigrationPath,
+    migration: &MigrationExecutionNode,
+    path: &MigrationExecutionPath,
     progress: InProgressMigrationRecord,
 ) -> Result<InProgressMigrationRecord, MigrationExecutionError> {
     if progress.migration != migration.id
@@ -559,11 +550,11 @@ fn validate_progress(
         }
         if completed {
             match &step.kind {
-                CompiledStepKind::Transaction {
-                    boundary: TransactionBoundary::Begin,
+                MigrationExecutionStepKind::Transaction {
+                    boundary: MigrationTransactionBoundary::Begin,
                 } => transaction_open = true,
-                CompiledStepKind::Transaction {
-                    boundary: TransactionBoundary::Commit,
+                MigrationExecutionStepKind::Transaction {
+                    boundary: MigrationTransactionBoundary::Commit,
                 } => transaction_open = false,
                 _ => {}
             }
@@ -602,8 +593,8 @@ fn safe_call<T>(
 }
 
 fn complete_step_event(
-    migration: &CompiledMigration,
-    step: &CompiledMigrationStep,
+    migration: &MigrationExecutionNode,
+    step: &MigrationExecutionStep,
     duration_millis: u64,
     events: &mut Vec<MigrationExecutionEvent>,
 ) {

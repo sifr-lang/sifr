@@ -110,8 +110,10 @@ requires the file. The migration result is outside the generated artifact
 directory, so atomic artifact replacement cannot delete its own input.
 
 The migration compiler publishes this file with `graph.json`, `impact.json`, and
-`artifact-manifest.json`. It replaces the complete profile directory as one
-transaction. [`sql_migrations.md`](./sql_migrations.md) defines these artifacts.
+`artifact-manifest.json`. The `graph.json` file contains the closed runtime
+execution plan. It contains no compiler-only contract types. The tool replaces
+the complete profile directory as one transaction.
+[`sql_migrations.md`](./sql_migrations.md) defines these artifacts.
 
 Validation is read-only. It reports provider changes, dialect changes, and each
 added, removed, or changed object. If the application query signature artifact

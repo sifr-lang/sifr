@@ -17,6 +17,10 @@ callback receives `MigrationDb[S]` for the exact input state.
 progress, assertion outcomes, bounded backfill progress, and recovery errors.
 Provider tools implement the runtime interface.
 
+`sifr_sql_tool` converts the checked compiler graph to a closed execution plan.
+The `MigrationExecutionPlan` contains only runtime-owned types. The
+application runtime does not link `sifr_sql_contract` or compiler components.
+
 ## Graph contract
 
 Each graph contains one or more named baselines and one explicit head. Every
@@ -34,7 +38,8 @@ migration declares these values:
 The compiler uses a deterministic topological order. It rejects unknown parents,
 cycles, disconnected baselines, duplicate identities, and multiple terminal
 heads. A merge migration compiles once for each parent. All parent paths must
-produce the same schema.
+produce the same schema. Thus, a merge joins equivalent parent schemas. It does
+not apply a different reconciliation program for each parent.
 
 The canonical checked-in schema is the target. The only graph head must reproduce
 its exact semantic graph and fingerprint. A migration history cannot become a
@@ -99,6 +104,11 @@ rewrite objects. The compiler never creates a reverse plan.
 
 ## Execution and recovery
 
+The compiler graph remains in the host tool process. The tool emits the closed
+execution plan as `graph.json`. It emits schema and impact evidence in separate
+files. This split keeps compiler analysis and Wasmtime out of application
+runtime targets.
+
 The engine acquires one provider lock before it reads the migration ledger. It
 releases the lock on success and error paths. A provider panic becomes a typed
 runtime error.
@@ -109,8 +119,9 @@ engine compares the ledger fingerprint with an independent live observation
 before it runs a step.
 
 The engine rejects unknown heads, schema drift, changed applied checksums, and
-an in-progress step that does not match its compiled state. It also rejects an
-ambiguous path. It does not guess a recovery action.
+an in-progress step that does not match its compiled state. It selects the first
+valid path in the compiler's stable topological order. It does not guess a path
+outside that checked order.
 
 Before each step, the engine stores its in-progress record. After each step, it
 stores the checksum, duration, output state, and fingerprint. A bounded run can
@@ -119,7 +130,8 @@ the stored progress key.
 
 During an explicit transaction, the provider stores ledger changes in that same
 transaction. An error causes an explicit rollback. The engine rejects a ledger
-that claims an uncommitted transaction prefix.
+that claims an uncommitted transaction prefix. An operator must inspect and
+repair that state before execution can continue.
 
 The provider runtime returns the observed schema fingerprint for every step.
 The engine accepts only the compiled output fingerprint.
@@ -136,4 +148,6 @@ The permanent `migration-engine` SQL suite contains these checks:
 - graph and metadata property or fuzz-smoke tests.
 
 PostgreSQL DDL reflection, advisory locks, live interruption, and server-major
-qualification belong to Milestone 14.
+qualification belong to Milestone 14. That milestone also owns execution of
+explicit reverse plans. Final source-to-tool command wiring belongs to the
+integrated closure milestone.

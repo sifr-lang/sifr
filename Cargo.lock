@@ -7957,7 +7957,6 @@ version = "0.0.0"
 dependencies = [
  "serde",
  "sifr_runtime",
- "sifr_sql_contract",
  "static_assertions",
  "tokio",
 ]
@@ -7971,6 +7970,7 @@ dependencies = [
  "serde_json",
  "sha2 0.11.0",
  "sifr_sql_contract",
+ "sifr_sql_runtime",
  "tempfile",
 ]
 

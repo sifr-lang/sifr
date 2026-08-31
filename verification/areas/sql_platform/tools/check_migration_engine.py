@@ -55,7 +55,8 @@ def validate(payload: Any) -> None:
     evidence = payload.get("evidence")
     if not isinstance(evidence, dict) or set(evidence) != {
         "compiler", "contract-tests", "documentation", "frontend", "frontend-tests",
-        "runtime", "runtime-tests", "tool-artifacts", "tool-tests",
+        "runtime", "runtime-manifest", "runtime-plan", "runtime-tests",
+        "tool-artifacts", "tool-tests",
     }:
         raise ContractError("migration evidence map is incomplete")
     if any(not (REPO_ROOT / str(path)).is_file() for path in evidence.values()):
@@ -69,14 +70,23 @@ def validate(payload: Any) -> None:
         "contract-tests": ["opaque DDL", "nullable assertions", "affine_plan"],
         "frontend": ["MigrationPlan", "MigrationDb", "input_state_identity"],
         "runtime": ["acquire_lock", "validate_progress", "AssertionZeroRows"],
-        "runtime-tests": ["pauses_and_resumes", "provider_panics_fail_closed"],
-        "tool-artifacts": ["MIGRATION_SCHEMA_PATH", "build_migration_artifacts"],
+        "runtime-manifest": ["sifr_runtime", "tokio"],
+        "runtime-plan": ["MigrationExecutionPlan", "MigrationExecutionStepKind"],
+        "runtime-tests": [
+            "pauses_and_resumes", "provider_panics_fail_closed", "branching_plan",
+        ],
+        "tool-artifacts": [
+            "MIGRATION_SCHEMA_PATH", "build_migration_artifacts",
+            "lower_migration_execution_plan",
+        ],
         "tool-tests": ["deterministic_complete_and_atomic", "target_authority_mismatch"],
-        "documentation": ["explicit reverse", "private callback lifetime", "does not guess"],
+        "documentation": ["explicit reverse", "private callback lifetime", "closed execution plan"],
     }
     for owner, tokens in required.items():
         if any(token not in sources[owner] for token in tokens):
             raise ContractError(f"{owner} is missing a required migration mechanism")
+    if "sifr_sql_contract" in sources["runtime-manifest"]:
+        raise ContractError("application runtime links the compiler-only SQL contract crate")
 
 
 def self_test(payload: dict[str, Any]) -> None:
