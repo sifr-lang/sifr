@@ -196,6 +196,26 @@ def reusable_default(mut defaults: dict[str, str]) -> str:
 }
 
 #[test]
+fn setdefault_copy_values_are_moved_and_dereferenced_without_clone() {
+    let generated = generate_rust_from_source(
+        r#"
+def copy_default(mut flags: dict[str, bool], key: str, flag: bool) -> bool:
+    return flags.setdefault(key, flag)
+"#,
+    );
+
+    assert!(
+        generated.contains("*flags.entry(key.to_owned()).or_insert(flag)"),
+        "{generated}"
+    );
+    assert!(!generated.contains("flag.clone()"), "{generated}");
+    assert!(
+        !generated.contains("or_insert(flag).clone()"),
+        "{generated}"
+    );
+}
+
+#[test]
 fn recursive_and_dynamic_programming_shapes_have_clone_budgets() {
     let generated = generate_rust_from_source(
         r#"

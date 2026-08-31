@@ -30,6 +30,10 @@ def reusable_owned_default(mut values: dict[str, str]) -> str:
     return selected
 
 
+def copy_default(mut values: dict[str, bool], key: str, default: bool) -> bool:
+    return values.setdefault(key, default)
+
+
 def main():
     numbers: list[int] = [0]
     assert read_after_growth_and_reorder(numbers) == 4
@@ -42,3 +46,6 @@ def main():
 
     owned: dict[str, str] = {}
     assert reusable_owned_default(owned) == "owned-value"
+
+    flags: dict[str, bool] = {}
+    assert copy_default(flags, "enabled", True)

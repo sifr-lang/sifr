@@ -27,6 +27,9 @@ fn render_key_arg_expr(arg: &RustExpr) -> RustExpr {
 }
 
 fn materialize_setdefault_storage_arg(ty: &Type, arg: &RustExpr) -> RustExpr {
+    if crate::helpers::is_copy_type_for_codegen(ty) || ty.contains_affine_resource() {
+        return arg.clone();
+    }
     let reusable_place = match arg {
         RustExpr::Ident(_) | RustExpr::Field { .. } | RustExpr::Index { .. } => true,
         RustExpr::Paren(inner) => matches!(
@@ -250,10 +253,30 @@ pub(super) fn lower_setdefault(
                 method: "or_insert".to_string(),
                 args: vec![default],
             };
-            Some(crate::ownership_plan::materialize_owned_value(
-                value_ty, inserted,
-            ))
+            Some(if crate::helpers::is_copy_type_for_codegen(value_ty) {
+                RustExpr::Deref(Box::new(inserted))
+            } else {
+                crate::ownership_plan::materialize_owned_value(value_ty, inserted)
+            })
         }
         _ => None,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn setdefault_storage_materialization_preserves_copy_and_affine_places() {
+        let place = RustExpr::Ident("value".to_string());
+        assert_eq!(
+            materialize_setdefault_storage_arg(&Type::Bool, &place),
+            place
+        );
+
+        let affine =
+            Type::PythonBuffer(Box::new(Type::FixedInt(sifr_type_system::FixedIntType::U8)));
+        assert_eq!(materialize_setdefault_storage_arg(&affine, &place), place);
     }
 }

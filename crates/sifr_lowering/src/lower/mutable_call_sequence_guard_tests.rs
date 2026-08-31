@@ -121,6 +121,19 @@ def read_after_growth_and_reorder(mut values: list[int]) -> int:
 }
 
 #[test]
+fn append_preserves_non_none_subscript_fact() {
+    let source = r#"
+def read_after_append(mut values: list[int | None]) -> int:
+    if values[0] is not None:
+        values.append(None)
+        return values[0] + 1
+    return 0
+"#;
+    let result = lower_source(source);
+    assert!(result.is_ok(), "{result:?}");
+}
+
+#[test]
 fn dict_value_mutation_preserves_existing_membership_guard() {
     let source = r#"
 def read_after_setdefault(mut values: dict[str, int]) -> int:
@@ -154,4 +167,52 @@ def read_after_remove(mut values: list[int]) -> int:
         diagnostic.code == Some(DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR)
             && diagnostic.message.contains("None")
     }));
+}
+
+#[test]
+fn shifting_reordering_and_value_replacement_invalidate_non_none_facts() {
+    let cases = [
+        (
+            "insert",
+            r#"
+def read_after_insert(mut values: list[int | None]) -> int:
+    if values[0] is not None:
+        values.insert(0, None)
+        return values[0] + 1
+    return 0
+"#,
+        ),
+        (
+            "reverse",
+            r#"
+def read_after_reverse(mut values: list[int | None]) -> int:
+    if values[0] is not None:
+        values.reverse()
+        return values[0] + 1
+    return 0
+"#,
+        ),
+        (
+            "dict update",
+            r#"
+def read_after_update(mut values: dict[str, int | None]) -> int:
+    if values["a"] is not None:
+        values.update({"a": None})
+        return values["a"] + 1
+    return 0
+"#,
+        ),
+    ];
+
+    for (operation, source) in cases {
+        let diagnostics = lower_source(source)
+            .expect_err(&format!("{operation} must invalidate the non-None fact"));
+        assert!(
+            diagnostics.iter().any(|diagnostic| {
+                diagnostic.code == Some(DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR)
+                    && diagnostic.message.contains("None")
+            }),
+            "{operation}: {diagnostics:?}"
+        );
+    }
 }
