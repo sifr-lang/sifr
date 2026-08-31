@@ -3,6 +3,7 @@ def main():
     try:
         s: str = "x"
         centered: str = s.center(5)
+        odd_margin: str = "ab".center(5)
         left: str = s.ljust(4)
         right: str = s.rjust(4)
         zeroed: str = "7".zfill(4)
@@ -10,6 +11,7 @@ def main():
         unicode: str = "é".ljust(3)
         unchanged: str = s.center(-100)
         assert str("center = [" + centered + "]") == 'center = [  x  ]'
+        assert odd_margin == "  ab "
         assert str("ljust = [" + left + "]") == 'ljust = [x   ]'
         assert str("rjust = [" + right + "]") == 'rjust = [   x]'
         assert str("zfill = [" + zeroed + "]") == 'zfill = [0007]'

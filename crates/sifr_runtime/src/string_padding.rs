@@ -53,7 +53,10 @@ fn checked_pad(value: &str, width: &SifrInt, alignment: Alignment) -> Result<Str
     let (left, right) = match alignment {
         Alignment::Left => (0, padding),
         Alignment::Right => (padding, 0),
-        Alignment::Center => (padding / 2, padding - (padding / 2)),
+        Alignment::Center => {
+            let left = padding / 2 + (padding & width & 1);
+            (left, padding - left)
+        }
     };
     let mut output = reserved_string(value.len(), padding)?;
     push_repeated(&mut output, ' ', left);
@@ -106,6 +109,10 @@ mod tests {
         assert_eq!(
             checked_center("x", &SifrInt::from_i64(4)),
             Ok(" x  ".into())
+        );
+        assert_eq!(
+            checked_center("ab", &SifrInt::from_i64(5)),
+            Ok("  ab ".into())
         );
         assert_eq!(
             checked_zfill("-7", &SifrInt::from_i64(4)),

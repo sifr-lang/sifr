@@ -1,6 +1,65 @@
 use crate::{HirExpr, HirFunction, HirModule, HirStmt, RustEmitter, Type};
 use std::collections::{HashMap, HashSet};
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub(crate) enum FunctionTypeParamBound {
+    Trait(String),
+    OutputSelf(&'static str),
+}
+
+pub(crate) type FunctionTypeParamBounds =
+    HashMap<String, HashMap<String, HashSet<FunctionTypeParamBound>>>;
+
+impl FunctionTypeParamBound {
+    pub(crate) fn render_for(&self, type_param: &str) -> String {
+        match self {
+            Self::Trait(bound) => bound.clone(),
+            Self::OutputSelf(trait_path) => {
+                format!("{trait_path}<Output = {type_param}>")
+            }
+        }
+    }
+}
+
+pub(crate) fn direct_type_param_bounds(
+    type_param: &str,
+    body: &[HirStmt],
+) -> Vec<FunctionTypeParamBound> {
+    let requirements =
+        crate::hir_analysis::queries::collect_typevar_operator_requirements(body, type_param);
+    let mut bounds = Vec::new();
+    if requirements.needs_add {
+        bounds.push(FunctionTypeParamBound::OutputSelf("std::ops::Add"));
+    }
+    if requirements.needs_sub {
+        bounds.push(FunctionTypeParamBound::OutputSelf("std::ops::Sub"));
+    }
+    if requirements.needs_mul {
+        bounds.push(FunctionTypeParamBound::OutputSelf("std::ops::Mul"));
+    }
+    if requirements.needs_div {
+        bounds.push(FunctionTypeParamBound::OutputSelf("std::ops::Div"));
+    }
+    if requirements.needs_rem {
+        bounds.push(FunctionTypeParamBound::OutputSelf("std::ops::Rem"));
+    }
+    if requirements.needs_neg {
+        bounds.push(FunctionTypeParamBound::OutputSelf("std::ops::Neg"));
+    }
+    if requirements.needs_partial_eq {
+        bounds.push(FunctionTypeParamBound::Trait("PartialEq".to_string()));
+    }
+    if requirements.needs_partial_ord {
+        bounds.push(FunctionTypeParamBound::Trait("PartialOrd".to_string()));
+    }
+    if requirements.needs_display {
+        bounds.push(FunctionTypeParamBound::Trait(
+            "std::fmt::Display".to_string(),
+        ));
+    }
+    bounds
+}
+
 #[derive(Debug, Clone)]
 struct GenericCallSite {
     function: String,
@@ -17,7 +76,7 @@ impl RustEmitter {
     /// parameters.
     pub(crate) fn closed_function_type_param_bounds(
         module: &HirModule,
-    ) -> HashMap<String, HashMap<String, HashSet<String>>> {
+    ) -> HashMap<String, HashMap<String, HashSet<FunctionTypeParamBound>>> {
         let functions = module
             .functions
             .iter()
@@ -32,13 +91,14 @@ impl RustEmitter {
                     .type_params
                     .iter()
                     .map(|type_param| {
-                        let mut bounds =
-                            Self::extra_bound_items_for_type_param(type_param, &function.body)
-                                .into_iter()
-                                .collect::<HashSet<_>>();
+                        let mut bounds = direct_type_param_bounds(type_param, &function.body)
+                            .into_iter()
+                            .collect::<HashSet<_>>();
                         if function_type_param_needs_hash_eq(function, type_param) {
-                            bounds.insert("std::hash::Hash".to_string());
-                            bounds.insert("Eq".to_string());
+                            bounds.insert(FunctionTypeParamBound::Trait(
+                                "std::hash::Hash".to_string(),
+                            ));
+                            bounds.insert(FunctionTypeParamBound::Trait("Eq".to_string()));
                         }
                         if let Some(declared) = module
                             .type_param_bounds
@@ -46,10 +106,7 @@ impl RustEmitter {
                             .and_then(|by_param| by_param.get(type_param))
                         {
                             for specification in declared {
-                                bounds.extend(rust_bounds_for_typevar_spec(
-                                    type_param,
-                                    specification,
-                                ));
+                                bounds.extend(rust_bounds_for_typevar_spec(specification));
                             }
                         }
                         (type_param.clone(), bounds)
@@ -98,11 +155,14 @@ impl RustEmitter {
     }
 }
 
-fn rust_bounds_for_typevar_spec(type_param: &str, specification: &str) -> Vec<String> {
+fn rust_bounds_for_typevar_spec(specification: &str) -> Vec<FunctionTypeParamBound> {
     match specification {
-        "Comparable" => vec!["PartialOrd".to_string()],
-        "Addable" => vec![format!("std::ops::Add<Output = {type_param}>")],
-        "Hashable" => vec!["std::hash::Hash".to_string(), "Eq".to_string()],
+        "Comparable" => vec![FunctionTypeParamBound::Trait("PartialOrd".to_string())],
+        "Addable" => vec![FunctionTypeParamBound::OutputSelf("std::ops::Add")],
+        "Hashable" => vec![
+            FunctionTypeParamBound::Trait("std::hash::Hash".to_string()),
+            FunctionTypeParamBound::Trait("Eq".to_string()),
+        ],
         _ => Vec::new(),
     }
 }
@@ -411,7 +471,10 @@ mod tests {
         let closed =
             RustEmitter::closed_function_type_param_bounds(&module(vec![passthrough], bounds));
 
-        assert!(closed["passthrough"]["T"].contains("PartialOrd"));
+        assert!(
+            closed["passthrough"]["T"]
+                .contains(&FunctionTypeParamBound::Trait("PartialOrd".to_string()))
+        );
     }
 
     #[test]
@@ -499,10 +562,78 @@ mod tests {
             vec![compare, display, hash, forward, outer_forward],
             HashMap::new(),
         ));
-        let outer_bounds = &closed["outer_forward"]["Outer"];
+        let outer_bounds = closed["outer_forward"]["Outer"]
+            .iter()
+            .map(|bound| bound.render_for("Outer"))
+            .collect::<HashSet<_>>();
 
         for expected in ["PartialOrd", "std::fmt::Display", "std::hash::Hash", "Eq"] {
             assert!(outer_bounds.contains(expected), "missing {expected}");
         }
+    }
+
+    #[test]
+    fn generic_call_graph_renders_output_traits_for_the_receiving_parameter() {
+        let callee_type = Type::TypeVar("T".to_string());
+        let add_same = function(
+            "add_same",
+            "T",
+            vec![
+                parameter("left", callee_type.clone()),
+                parameter("right", callee_type.clone()),
+            ],
+            callee_type.clone(),
+            vec![HirStmt::Return {
+                value: Some(HirExpr::BinOp {
+                    left: Box::new(name("left", callee_type.clone())),
+                    op: "+".to_string(),
+                    right: Box::new(name("right", callee_type.clone())),
+                    ty: callee_type,
+                }),
+            }],
+        );
+        let caller_type = Type::TypeVar("U".to_string());
+        let relay_add = function(
+            "relay_add",
+            "U",
+            vec![
+                parameter("left", caller_type.clone()),
+                parameter("right", caller_type.clone()),
+            ],
+            caller_type.clone(),
+            vec![HirStmt::Return {
+                value: Some(HirExpr::Call {
+                    func: "add_same".to_string(),
+                    args: vec![
+                        name("left", caller_type.clone()),
+                        name("right", caller_type.clone()),
+                    ],
+                    mutable_arg_places: Vec::new(),
+                    ty: caller_type,
+                }),
+            }],
+        );
+        let bounds = HashMap::from([
+            (
+                "add_same".to_string(),
+                HashMap::from([("T".to_string(), vec!["Addable".to_string()])]),
+            ),
+            (
+                "relay_add".to_string(),
+                HashMap::from([("U".to_string(), vec!["Addable".to_string()])]),
+            ),
+        ]);
+
+        let closed = RustEmitter::closed_function_type_param_bounds(&module(
+            vec![add_same, relay_add],
+            bounds,
+        ));
+        let rendered = closed["relay_add"]["U"]
+            .iter()
+            .map(|bound| bound.render_for("U"))
+            .collect::<HashSet<_>>();
+
+        assert!(rendered.contains("std::ops::Add<Output = U>"));
+        assert!(rendered.iter().all(|bound| !bound.contains("Output = T")));
     }
 }
