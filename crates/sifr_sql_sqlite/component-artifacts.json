@@ -1,0 +1,21 @@
+{
+  "artifacts": [
+    {
+      "path": "components/sqlite-3.53.2.wasm",
+      "series": "3.53.2",
+      "sha256": "476159cdcbd435143477b251144946cc443ab9ef3de7f09327d2c48f12b3d2df",
+      "size_bytes": 1823498
+    }
+  ],
+  "parser": {
+    "compile_flags": [],
+    "name": "syntaqlite",
+    "sqlite_version": "3.53.2",
+    "sqlite_version_number": 3053002,
+    "version": "0.9.0"
+  },
+  "protocol_major": 1,
+  "schema_version": 1,
+  "target": "wasm32-wasip2",
+  "wit_world": "embedded-language-provider"
+}

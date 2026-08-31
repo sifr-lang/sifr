@@ -604,6 +604,57 @@
       ]
     },
     {
+      "name": "sqlite-provider",
+      "kind": "adapter",
+      "resource_classes": ["cpu"],
+      "network_mode": "offline",
+      "timeout_seconds": 1800,
+      "cases": [
+        {
+          "id": "sql-sqlite-qualification",
+          "entry": "verification/areas/sql_platform/data/sqlite_qualification.json",
+          "command": "sql-sqlite-qualification",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-sqlite-qualification-mutations",
+          "entry": "verification/areas/sql_platform/tools/check_sqlite.py",
+          "command": "sql-sqlite-qualification-mutations",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-sqlite-compiler-tests",
+          "entry": "crates/sifr_sql_sqlite/tests/sqlite_compiler.rs",
+          "command": "sql-sqlite-compiler-tests",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-sqlite-runtime-tests",
+          "entry": "crates/sifr_sql_sqlite_runtime/tests/runtime_types.rs",
+          "command": "sql-sqlite-runtime-tests",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-sqlite-tool-tests",
+          "entry": "crates/sifr_sql_sqlite_tools/tests/migration_qualification.rs",
+          "command": "sql-sqlite-tool-tests",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-sqlite-library-matrix",
+          "entry": "verification/areas/sql_platform/tools/run_sqlite_library_matrix.py",
+          "command": "sql-sqlite-library-matrix",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
       "name": "postgresql-live-runtime",
       "kind": "adapter",
       "resource_classes": [

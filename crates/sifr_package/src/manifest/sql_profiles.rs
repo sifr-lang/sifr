@@ -242,6 +242,8 @@ fn parse_requirement_provider(
             "server-version",
             "extensions",
             "sql-modes",
+            "compile-flags",
+            "required-features",
             "collation",
             "character-set",
         ],
@@ -271,14 +273,28 @@ fn parse_requirement_provider(
             "expected a numeric dotted server version",
         ));
     }
-    let extensions = string_set(
+    let mut extensions = string_set(
         cargo_package_id,
         manifest_path,
         table,
         &prefix,
         "extensions",
     )?;
-    let sql_modes = string_set(cargo_package_id, manifest_path, table, &prefix, "sql-modes")?;
+    extensions.extend(string_set(
+        cargo_package_id,
+        manifest_path,
+        table,
+        &prefix,
+        "required-features",
+    )?);
+    let mut sql_modes = string_set(cargo_package_id, manifest_path, table, &prefix, "sql-modes")?;
+    sql_modes.extend(string_set(
+        cargo_package_id,
+        manifest_path,
+        table,
+        &prefix,
+        "compile-flags",
+    )?);
     if sql_modes.iter().any(|mode| !valid_sql_mode(mode)) {
         return Err(invalid(
             cargo_package_id,
@@ -359,6 +375,8 @@ fn parse_profile(
             "schema-evidence",
             "schema-strictness",
             "sql-modes",
+            "compile-flags",
+            "required-features",
             "session",
             "accepted-signers",
         ],
@@ -392,13 +410,20 @@ fn parse_profile(
         &prefix,
         "server-version",
     )?;
-    let extensions = string_set(
+    let mut extensions = string_set(
         cargo_package_id,
         manifest_path,
         table,
         &prefix,
         "extensions",
     )?;
+    extensions.extend(string_set(
+        cargo_package_id,
+        manifest_path,
+        table,
+        &prefix,
+        "required-features",
+    )?);
     let search_path = string_list(
         cargo_package_id,
         manifest_path,
@@ -461,7 +486,14 @@ fn parse_profile(
             ));
         }
     };
-    let sql_modes = string_set(cargo_package_id, manifest_path, table, &prefix, "sql-modes")?;
+    let mut sql_modes = string_set(cargo_package_id, manifest_path, table, &prefix, "sql-modes")?;
+    sql_modes.extend(string_set(
+        cargo_package_id,
+        manifest_path,
+        table,
+        &prefix,
+        "compile-flags",
+    )?);
     if sql_modes.iter().any(|mode| !valid_sql_mode(mode)) {
         return Err(invalid(
             cargo_package_id,

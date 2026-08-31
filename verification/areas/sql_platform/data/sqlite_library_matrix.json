@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "provider": "sqlite",
+  "surface": "all",
+  "libraries": [
+    {
+      "version": "3.53.2",
+      "version_number": 3053002,
+      "compile_flags": [],
+      "status": "passed",
+      "surfaces": ["grammar", "schema", "runtime", "tools", "migrations", "editor", "portable-requirements", "corruption", "locking", "performance"]
+    }
+  ]
+}

@@ -143,23 +143,39 @@ pub fn build_provider_schema_requirement(
             ),
         ));
     }
-    if normalized.objects.is_empty()
-        || normalized.objects.values().any(|object| {
+    let declared = normalized
+        .objects
+        .iter()
+        .filter_map(|(identity, object)| {
             object
                 .source
                 .as_ref()
-                .is_none_or(|source| source.document != source_document)
+                .filter(|source| source.document == source_document)
+                .map(|_| (identity, object))
         })
-    {
+        .collect::<Vec<_>>();
+    let invalid_source = normalized
+        .objects
+        .values()
+        .any(|object| match &object.source {
+            Some(source) => source.document != source_document,
+            None => !matches!(
+                object.kind,
+                crate::SchemaObjectKind::Catalog
+                    | crate::SchemaObjectKind::Namespace
+                    | crate::SchemaObjectKind::ServerCapability
+                    | crate::SchemaObjectKind::DialectMetadata
+            ),
+        });
+    if declared.is_empty() || invalid_source {
         return Err(invalid(
             "normalized requirement objects must come from the declared DDL artifact",
         ));
     }
     let schema = minimum_schema_slice(
         normalized,
-        normalized
-            .objects
-            .iter()
+        declared
+            .into_iter()
             .map(|(identity, object)| SchemaDependencyRequest {
                 identity: identity.clone(),
                 properties: object.semantic.keys().cloned().collect(),

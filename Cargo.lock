@@ -7019,6 +7019,7 @@ dependencies = [
  "bitflags 2.13.1",
  "fallible-iterator 0.3.0",
  "fallible-streaming-iterator",
+ "hashlink 0.12.1",
  "libsqlite3-sys",
  "smallvec",
 ]
@@ -8013,6 +8014,54 @@ dependencies = [
  "serde",
  "sifr_runtime",
  "static_assertions",
+ "tokio",
+]
+
+[[package]]
+name = "sifr_sql_sqlite"
+version = "0.0.0"
+dependencies = [
+ "insta",
+ "rusqlite",
+ "semver",
+ "serde",
+ "serde_json",
+ "sha2 0.11.0",
+ "sifr_compiler_component",
+ "sifr_sql_contract",
+ "syntaqlite",
+ "wit-bindgen 0.61.1",
+]
+
+[[package]]
+name = "sifr_sql_sqlite_runtime"
+version = "0.0.0"
+dependencies = [
+ "rusqlite",
+ "sha2 0.11.0",
+ "sifr_runtime",
+ "sifr_sql_runtime",
+ "static_assertions",
+ "tempfile",
+ "tokio",
+]
+
+[[package]]
+name = "sifr_sql_sqlite_tools"
+version = "0.0.0"
+dependencies = [
+ "rusqlite",
+ "semver",
+ "serde",
+ "serde_json",
+ "sha2 0.11.0",
+ "sifr_driver",
+ "sifr_sql_contract",
+ "sifr_sql_runtime",
+ "sifr_sql_sqlite",
+ "sifr_sql_sqlite_runtime",
+ "sifr_sql_tool",
+ "tempfile",
  "tokio",
 ]
 

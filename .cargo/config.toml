@@ -1,2 +1,6 @@
 # Source-tree sysroot placeholder. Sifr-managed generated builds pass
 # invocation-scoped vendor configuration with `cargo --config`.
+
+[env]
+# Syntaqlite compiles the exact grammar shipped by bundled SQLite 3.53.2.
+SYNTAQLITE_SQLITE_VERSION = "3053002"

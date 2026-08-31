@@ -131,7 +131,7 @@
       "acceptance": "versioned SQLite grammar and exact affinity semantics",
       "behaviors": ["syntaqlite parser pinned to SQLite version and flags", "queries, writes, CTEs, windows, generated columns, and conflict forms", "affinity, strict tables, rowid, attached scope, and version gates", "provider-owned semantic nodes and recovery tokens"],
       "required_evidence": ["fuzz", "integration", "negative", "positive"],
-      "status": "planned"
+      "status": "active"
     },
     {
       "id": "sqlite.schema",
@@ -141,7 +141,7 @@
       "acceptance": "exact SQLite schema and file profile normalization",
       "behaviors": ["tables, views, indexes, triggers, generated columns, keys, and constraints", "strictness, affinity, rowid, attached database, version, and compile flags", "canonical snapshots, dependency slices, semantic diffs, and required features"],
       "required_evidence": ["integration", "negative", "positive", "property"],
-      "status": "planned"
+      "status": "active"
     },
     {
       "id": "sqlite.runtime",
@@ -151,7 +151,7 @@
       "acceptance": "verified bundled SQLite execution on dedicated workers",
       "behaviors": ["bundled rusqlite and pinned SQLite amalgamation", "one dedicated blocking worker per connection", "Sifr-owned pooling, statements, transactions, streams, codecs, and errors", "InterruptHandle cancellation with worker disposal", "bounds, corruption handling, locking, and panic safety"],
       "required_evidence": ["fuzz", "integration", "negative", "performance", "positive"],
-      "status": "planned"
+      "status": "active"
     },
     {
       "id": "sqlite.tool",
@@ -161,7 +161,7 @@
       "acceptance": "host-only SQLite schema and test lifecycle commands",
       "behaviors": ["schema pull, validate, and deterministic build", "file authority and compile-flag validation", "semantic diffs and affected-query reports", "test provision with common connection manifest", "credential and path redaction with explicit capabilities"],
       "required_evidence": ["integration", "mutation", "negative", "positive"],
-      "status": "planned"
+      "status": "active"
     },
     {
       "id": "sqlite.migration",
@@ -171,7 +171,7 @@
       "acceptance": "truthful SQLite migration graphs and table rebuilds",
       "behaviors": ["provider DDL reflection and intermediate schemas", "table-rebuild plans with data and constraint preservation", "transactions, locks, corruption, interruption, recovery, and resume", "drift, checksums, import, baseline, and explicit rollback"],
       "required_evidence": ["integration", "negative", "positive", "property"],
-      "status": "planned"
+      "status": "active"
     },
     {
       "id": "sqlite.editor",
@@ -181,7 +181,7 @@
       "acceptance": "lossless SQLite embedded editing",
       "behaviors": ["versioned virtual SQL documents and source maps", "completion, navigation, rename, parameters, results, affinity, nullability, and cardinality", "flag-aware formatting, fixes, and provider documentation", "cancellation and latency budgets"],
       "required_evidence": ["integration", "performance", "positive", "property"],
-      "status": "planned"
+      "status": "active"
     }
   ]
 }

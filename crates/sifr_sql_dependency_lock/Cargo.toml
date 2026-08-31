@@ -36,7 +36,7 @@ libsqlite3-sys = { workspace = true, optional = true, features = ["bundled"] }
 mysql_async = { workspace = true, optional = true, features = ["aws-lc-rs", "minimal-rust", "rustls-tls", "tls12"] }
 mysql_common = { workspace = true, optional = true, features = ["derive"] }
 postgres-types = { workspace = true, optional = true, features = ["derive"] }
-rusqlite = { workspace = true, optional = true, features = ["bundled", "hooks", "limits", "unlock_notify"] }
+rusqlite = { workspace = true, optional = true, features = ["bundled", "cache", "hooks", "limits", "unlock_notify"] }
 rustls = { workspace = true, optional = true, default-features = false, features = ["aws_lc_rs", "logging", "prefer-post-quantum", "std", "tls12"] }
 rustls-platform-verifier = { workspace = true, optional = true }
 syntaqlite = { workspace = true, optional = true, features = ["analysis", "fmt", "pin-cflags", "pin-version", "serde", "sqlite"] }

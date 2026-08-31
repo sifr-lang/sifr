@@ -160,6 +160,28 @@ COMMANDS = {
         sys.executable,
         str(AREA_ROOT / "tools" / "run_mysql_server_matrix.py"),
     ],
+    "sql-sqlite-qualification": [
+        sys.executable,
+        str(AREA_ROOT / "tools" / "check_sqlite.py"),
+    ],
+    "sql-sqlite-qualification-mutations": [
+        sys.executable,
+        str(AREA_ROOT / "tools" / "check_sqlite.py"),
+        "--self-test",
+    ],
+    "sql-sqlite-compiler-tests": [
+        "cargo", "test", "--locked", "-p", "sifr_sql_sqlite",
+    ],
+    "sql-sqlite-runtime-tests": [
+        "cargo", "test", "--locked", "-p", "sifr_sql_sqlite_runtime",
+    ],
+    "sql-sqlite-tool-tests": [
+        "cargo", "test", "--locked", "-p", "sifr_sql_sqlite_tools",
+    ],
+    "sql-sqlite-library-matrix": [
+        sys.executable,
+        str(AREA_ROOT / "tools" / "run_sqlite_library_matrix.py"),
+    ],
     "sql-incremental-editor-qualification": [
         sys.executable,
         str(AREA_ROOT / "tools" / "check_incremental_editor.py"),
@@ -191,6 +213,7 @@ COMMANDS = {
     "sql-schema-tool-tests": [
         "cargo", "test", "--locked", "-p", "sifr_sql_tool",
         "-p", "sifr_sql_postgresql_tools", "-p", "sifr_sql_mysql_tools",
+        "-p", "sifr_sql_sqlite_tools",
     ],
     "sql-migration-engine-qualification": [
         sys.executable,

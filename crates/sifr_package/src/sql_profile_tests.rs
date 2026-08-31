@@ -40,6 +40,35 @@ fn manifest_parses_complete_offline_profile_contract() {
 }
 
 #[test]
+fn sqlite_profile_aliases_compile_flags_and_required_features_into_identity_inputs() {
+    let source = app_manifest("sifr_sql_sqlite")
+        .replace("server-version = \"18\"", "server-version = \"3.53.2\"")
+        .replace(
+            "search-path = [\"app\", \"public\"]",
+            "search-path = [\"main\", \"analytics\"]",
+        )
+        .replace(
+            "extensions = [\"citext\"]",
+            "extensions = []\nrequired-features = [\"json\", \"fts5\"]",
+        )
+        .replace(
+            "sql-modes = [\"standard\"]",
+            "sql-modes = []\ncompile-flags = [\"ENABLE_FTS5\"]",
+        );
+    let manifest = parse(&source);
+    let profile = &manifest.sql.profiles["app"];
+    assert_eq!(profile.server_version, "3.53.2");
+    assert_eq!(
+        profile.extensions,
+        BTreeSet::from(["fts5".to_string(), "json".to_string()])
+    );
+    assert_eq!(
+        profile.session.sql_modes,
+        BTreeSet::from(["ENABLE_FTS5".to_string()])
+    );
+}
+
+#[test]
 fn manifest_rejects_credentials_and_live_connection_inputs() {
     for forbidden in [
         "database-url = \"postgresql://secret@localhost/app\"",

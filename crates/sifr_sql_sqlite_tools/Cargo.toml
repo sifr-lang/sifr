@@ -1,0 +1,36 @@
+[package]
+name = "sifr_sql_sqlite_tools"
+version = "0.0.0"
+publish = false
+edition = { workspace = true }
+rust-version = { workspace = true }
+license = { workspace = true }
+
+[[bin]]
+name = "sifr-sql-sqlite"
+path = "src/main.rs"
+
+[package.metadata.sifr_sql]
+artifact-role = "sqlite-host-tools"
+supported-servers = ["3.53.2"]
+connection-manifest-version = 1
+
+[dependencies]
+rusqlite = { workspace = true, features = ["bundled", "hooks", "limits", "unlock_notify"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sha2 = { workspace = true }
+sifr_driver = { workspace = true }
+sifr_sql_contract = { workspace = true }
+sifr_sql_sqlite = { workspace = true }
+sifr_sql_sqlite_runtime = { workspace = true }
+sifr_sql_runtime = { workspace = true }
+sifr_sql_tool = { workspace = true }
+tokio = { workspace = true, features = ["macros", "rt", "sync", "time"] }
+
+[dev-dependencies]
+semver = { workspace = true }
+tempfile = "3.27.0"
+
+[lints]
+workspace = true
