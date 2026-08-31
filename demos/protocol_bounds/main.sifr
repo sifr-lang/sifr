@@ -8,7 +8,14 @@ def keep_comparable[T: Comparable](x: T) -> T:
 def relay_comparable[U: Comparable](x: U) -> U:
     return keep_comparable(x)
 
+def add_same[T: Addable](left: T, right: T) -> T:
+    return left + right
+
+def relay_add[U: Addable](left: U, right: U) -> U:
+    return add_same(left, right)
+
 def main():
     print('protocol_bounds protocol bound strictness closure demo:')
     print(relay_comparable(9))
     print(relay_comparable("ok"))
+    print(relay_add(4, 5))

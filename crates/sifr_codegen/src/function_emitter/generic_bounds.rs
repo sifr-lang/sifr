@@ -92,8 +92,8 @@ impl RustEmitter {
                     .and_then(|by_param| by_param.get(type_param))
                     .into_iter()
                     .flatten()
+                    .map(|bound| bound.render_for(type_param))
                     .filter(|bound| !extra_bounds.contains(bound))
-                    .cloned()
                     .collect::<Vec<_>>();
                 closed_bounds.sort();
                 extra_bounds.extend(closed_bounds);

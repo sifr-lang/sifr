@@ -74,7 +74,7 @@ pub struct RustEmitter {
     /// Caller-context type parameters for each structural bridge function.
     pub(crate) context_type_params: HashMap<String, HashSet<String>>,
     /// Closed Rust trait requirements for each module-level generic function.
-    pub(crate) function_type_param_bounds: HashMap<String, HashMap<String, HashSet<String>>>,
+    pub(crate) function_type_param_bounds: crate::function_generic_bounds::FunctionTypeParamBounds,
     /// Set of stdlib/intrinsic modules used (for Cargo dependency injection)
     pub used_stdlib_modules: HashSet<String>,
     /// Set of intrinsic function names (for codegen dispatch)
