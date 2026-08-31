@@ -330,6 +330,11 @@ fn compile_query(
                 )
                 .unwrap(),
                 semantic_flags: BTreeSet::new(),
+                required_capabilities: BTreeSet::from([
+                    "sql.bind.parameters".to_string(),
+                    "sql.expression.equality".to_string(),
+                    "sql.query.select".to_string(),
+                ]),
             },
             parameter_types: vec![SifrType::Bool],
             deterministic_order: false,
@@ -404,6 +409,7 @@ fn authority(name: &str) -> sifr_sql_contract::ProfileAuthority {
         pooling: PoolingMode::Session,
         session: SessionContract::default(),
         accepted_signers: BTreeSet::new(),
+        capabilities: BTreeSet::from(["sql.query.select".to_string()]),
         schema,
     })
     .unwrap()

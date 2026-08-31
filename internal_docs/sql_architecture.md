@@ -1423,8 +1423,14 @@ Reusable libraries declare schema requirements in provider-owned DDL artifacts:
 
 ```toml
 [sql.requirements.has_users]
+capabilities = ["sql.bind.parameters", "sql.expression.equality", "sql.query.select"]
+
+[sql.requirements.has_users.providers.postgresql]
 provider = "sifr-sql-postgresql"
 source = "db/requirements/has_users.postgresql.sql"
+server-version = "13"
+extensions = []
+sql-modes = []
 ```
 
 The provider normalizes this artifact into a `SchemaIR` subset. It does not become
@@ -1466,6 +1472,22 @@ provider normalizes and validates its own artifact.
 
 Schema-polymorphic queries cannot depend on undeclared objects or provider behavior.
 The compiler specializes and validates the SQL for every concrete use.
+
+Each provider normalizer also returns a closed capability set. The requirement
+lists every capability that portable code can use. Specialization rejects a
+missing capability without rewriting the query.
+
+Provider query analysis owns the exact capability account for each statement.
+The frontend compares that account with the requirement. Callers cannot declare
+a smaller capability set than the analyzed SQL uses.
+
+`SqlSchema` witnesses are compile-time-only. They can occur only as the direct
+`schema` export of a profile namespace or as a constrained generic parameter.
+The compiler rejects storage, return, capture, selection, and unconstrained uses.
+Specialization erases the witness and retains the concrete profile on the query.
+
+The full manifest, proof, witness, execution, and diagnostic contract is in
+[`sql_schema_polymorphism.md`](sql_schema_polymorphism.md).
 
 ## Dialect packages
 

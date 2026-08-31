@@ -281,7 +281,7 @@ fn required_string(
 pub(crate) fn validate_relative_path(
     cargo_package_id: &CargoPackageId,
     manifest_path: &Path,
-    key: &'static str,
+    key: &str,
     path: &str,
 ) -> Result<PathBuf, PackageDiagnostic> {
     if path.is_empty() {

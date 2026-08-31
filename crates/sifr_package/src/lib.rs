@@ -14,6 +14,7 @@ pub mod python;
 pub mod source;
 mod sql_capabilities;
 mod sql_profiles;
+mod sql_requirements;
 
 pub use crate::cargo::commands::{
     CargoCommandPlan, CargoFeatureSelection, CargoPackageArchiveOptions, CargoPackageMutation,
@@ -81,7 +82,10 @@ pub use crate::manifest::sifr::{
     CompilerRequirement, ImportRoot, PackageSourceRoot, PythonConfig, RustInteropConfig,
     SifrEdition, SifrManifest, SifrPackageName, TrustPolicy,
 };
-pub use crate::manifest::{SchemaSourceKind, SqlConfig, SqlProfileConfig};
+pub use crate::manifest::{
+    SchemaSourceKind, SqlConfig, SqlProfileConfig, SqlRequirementConfig,
+    SqlRequirementProviderConfig,
+};
 pub use crate::ops::publish::{
     PublishPlan, VendorPlan, package_plan, publish_plan, publish_plan_with_options, vendor_plan,
     vendor_plan_with_options,
@@ -124,6 +128,9 @@ pub use crate::python::{
 pub use crate::source::layout::{MarkerValidation, validate_pure_marker_source};
 pub use crate::sql_capabilities::{PackageCapabilityResolutionError, ResolvedPackageCapabilities};
 pub use crate::sql_profiles::{ResolvedSqlProfile, resolve_sql_profiles};
+pub use crate::sql_requirements::{
+    ResolvedSqlRequirement, ResolvedSqlRequirementProvider, resolve_sql_requirements,
+};
 
 #[cfg(test)]
 mod cargo_backend_integration_tests;

@@ -781,6 +781,10 @@ fn provider_analysis_exposes_only_validated_common_semantics() {
         effects: EffectContract::new(QueryEffect::Read, BTreeSet::new(), BTreeSet::new())
             .expect("read effect should validate"),
         semantic_flags: BTreeSet::from(["stable-result-name".to_string()]),
+        required_capabilities: BTreeSet::from([
+            "sql.bind.parameters".to_string(),
+            "sql.query.select".to_string(),
+        ]),
     };
     assert!(analysis.validate(&registry).is_ok());
 
@@ -833,6 +837,7 @@ fn provider_analysis_exposes_only_validated_common_semantics() {
         effects: EffectContract::new(QueryEffect::Read, BTreeSet::new(), BTreeSet::new())
             .expect("read effect should validate"),
         semantic_flags: BTreeSet::new(),
+        required_capabilities: BTreeSet::from(["sql.query.select".to_string()]),
     };
     assert!(nullable_custom.validate(&custom_registry).is_err());
 }

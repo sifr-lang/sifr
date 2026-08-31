@@ -47,10 +47,30 @@ impl<P: PostgresParser> PostgresAnalyzer<P> {
         let statement = &statements[0];
         let mut context = AnalysisContext::new(&self.catalog);
         let mut analyzed = match &statement.kind {
-            StatementKind::Select(select) => context.analyze_select(select, Vec::new())?,
-            StatementKind::Insert(insert) => context.analyze_insert(insert)?,
-            StatementKind::Update(update) => context.analyze_update(update)?,
-            StatementKind::Delete(delete) => context.analyze_delete(delete)?,
+            StatementKind::Select(select) => {
+                context
+                    .required_capabilities
+                    .insert("sql.query.select".to_string());
+                context.analyze_select(select, Vec::new())?
+            }
+            StatementKind::Insert(insert) => {
+                context
+                    .required_capabilities
+                    .insert("sql.query.insert".to_string());
+                context.analyze_insert(insert)?
+            }
+            StatementKind::Update(update) => {
+                context
+                    .required_capabilities
+                    .insert("sql.query.update".to_string());
+                context.analyze_update(update)?
+            }
+            StatementKind::Delete(delete) => {
+                context
+                    .required_capabilities
+                    .insert("sql.query.delete".to_string());
+                context.analyze_delete(delete)?
+            }
             _ => {
                 return Err(PostgresAnalysisError::at_start(
                     crate::PostgresDiagnosticCode::UnsupportedCoreSyntax,
@@ -62,7 +82,11 @@ impl<P: PostgresParser> PostgresAnalyzer<P> {
         if !context.star_expansions.is_empty() {
             analyzed.flags.insert("expanded-select-star".to_string());
         }
+        let mut required_capabilities = context.required_capabilities.clone();
         let parameter_types = context.finish_parameters()?;
+        if !parameter_types.is_empty() {
+            required_capabilities.insert("sql.bind.parameters".to_string());
+        }
         let used_types = parameter_types
             .iter()
             .map(|(_, database_type)| database_type)
@@ -125,6 +149,7 @@ impl<P: PostgresParser> PostgresAnalyzer<P> {
             effects: EffectContract::new(analyzed.effect, analyzed.referenced, analyzed.affected)
                 .map_err(|error| type_error(error.to_string()))?,
             semantic_flags: analyzed.flags,
+            required_capabilities,
         };
         analysis
             .validate(&codecs)

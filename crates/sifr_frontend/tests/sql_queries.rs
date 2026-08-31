@@ -1,7 +1,10 @@
 #![allow(clippy::expect_used, clippy::unwrap_used)]
 
 use semver::Version;
-use sifr_frontend::{QueryCompilationInput, SqlQueryCompiler, unify_query_value_types};
+use sifr_frontend::{
+    QueryCompilationInput, SqlExecutionResourceKind, SqlQueryCompiler,
+    VerifiedSqlExecutionResource, unify_query_value_types,
+};
 use sifr_ir::{HirExpr, HirSqlEffectKind, HirSqlExecutionMethod};
 use sifr_sql_contract::{
     Cardinality, CodecContract, CodecIdentity, CodecRegistry, DatabaseType, DialectIdentity,
@@ -62,8 +65,12 @@ fn binding_keeps_capture_order_and_execution_round_trips_effects_and_cardinality
         .expect("exact capture should bind");
     assert_eq!(bound.captures.len(), 1);
     assert_eq!(bound.effects.effect, HirSqlEffectKind::Read);
+    let resource = VerifiedSqlExecutionResource::from_profile(
+        compiler.profile("app").unwrap(),
+        SqlExecutionResourceKind::Connection,
+    );
     let execution = compiler
-        .execution(bound, HirSqlExecutionMethod::FetchOptional)
+        .execution(bound, &resource, HirSqlExecutionMethod::FetchOptional)
         .expect("cardinality supports optional fetch");
     assert_eq!(execution.runtime_cardinality, execution.query.cardinality);
     assert_eq!(execution.runtime_effects, execution.query.effects);
@@ -125,9 +132,13 @@ fn execution_method_never_uses_cardinality_to_choose_a_container() {
     let bound = compiler
         .bind(&compiled, vec![HirExpr::BoolLiteral(true)])
         .unwrap();
+    let resource = VerifiedSqlExecutionResource::from_profile(
+        compiler.profile("app").unwrap(),
+        SqlExecutionResourceKind::Pool,
+    );
     assert!(
         compiler
-            .execution(bound, HirSqlExecutionMethod::FetchOptional)
+            .execution(bound, &resource, HirSqlExecutionMethod::FetchOptional)
             .is_err()
     );
     let bound = compiler
@@ -135,7 +146,11 @@ fn execution_method_never_uses_cardinality_to_choose_a_container() {
         .unwrap();
     assert!(
         compiler
-            .execution(bound, HirSqlExecutionMethod::FetchAll { maximum_rows: 100 },)
+            .execution(
+                bound,
+                &resource,
+                HirSqlExecutionMethod::FetchAll { maximum_rows: 100 },
+            )
             .is_ok()
     );
 }
@@ -177,6 +192,11 @@ fn query_input(codecs: &CodecRegistry, cardinality: Cardinality) -> QueryCompila
             )
             .unwrap(),
             semantic_flags: BTreeSet::new(),
+            required_capabilities: BTreeSet::from([
+                "sql.bind.parameters".to_string(),
+                "sql.expression.equality".to_string(),
+                "sql.query.select".to_string(),
+            ]),
         },
         codecs,
         parameter_types: vec![SifrType::Bool],
@@ -260,6 +280,7 @@ fn authority() -> sifr_sql_contract::ProfileAuthority {
         pooling: PoolingMode::Session,
         session: SessionContract::default(),
         accepted_signers: BTreeSet::new(),
+        capabilities: BTreeSet::from(["sql.query.select".to_string()]),
         schema,
     })
     .unwrap()

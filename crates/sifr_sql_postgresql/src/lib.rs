@@ -12,6 +12,7 @@ mod ddl_constraints;
 mod diagnostic;
 mod expression_operators;
 mod ffi;
+mod from_analysis;
 #[cfg(target_family = "wasm")]
 mod guest;
 mod locking_analysis;
@@ -46,7 +47,8 @@ pub use catalog_snapshot::CatalogSnapshot;
 pub use component::{
     POSTGRESQL_QUERY_OPERATION, POSTGRESQL_SCHEMA_ARTIFACT_KIND, PostgresCompilerComponent,
     PostgresComponentRequest, PostgresComponentResponse, component_artifact_path,
-    component_registration, execute_embedded_request, into_embedded_response, provider_diagnostics,
+    component_registration, execute_embedded_request, into_embedded_response,
+    postgresql_capabilities, provider_diagnostics,
 };
 pub use diagnostic::{
     PostgresDiagnostic, PostgresDiagnosticCode, PostgresDiagnosticSpan, PostgresSpanKind,

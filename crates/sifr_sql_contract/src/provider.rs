@@ -36,6 +36,10 @@ pub struct ProviderAnalysis {
     pub cardinality: Cardinality,
     pub effects: EffectContract,
     pub semantic_flags: BTreeSet<String>,
+    /// Closed provider-owned account of every SQL capability used by the
+    /// analyzed statement. Portable specialization treats this set as
+    /// authoritative; callers cannot supply or narrow it.
+    pub required_capabilities: BTreeSet<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -86,6 +90,11 @@ impl ProviderAnalysis {
                 .semantic_flags
                 .iter()
                 .any(|flag| !valid_semantic_flag(flag))
+            || self.required_capabilities.is_empty()
+            || self
+                .required_capabilities
+                .iter()
+                .any(|capability| !valid_capability(capability))
         {
             return Err(ProviderAnalysisError::InvalidDialectSemantics);
         }
@@ -150,6 +159,14 @@ fn valid_semantic_flag(value: &str) -> bool {
         && value
             .bytes()
             .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_'))
+}
+
+fn valid_capability(value: &str) -> bool {
+    value.starts_with("sql.")
+        && value.len() <= 96
+        && value.bytes().all(|byte| {
+            byte.is_ascii_lowercase() || byte.is_ascii_digit() || matches!(byte, b'.' | b'-')
+        })
 }
 
 impl fmt::Display for ProviderAnalysisError {

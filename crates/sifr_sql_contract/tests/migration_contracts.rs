@@ -95,6 +95,7 @@ fn data_analysis() -> ProviderAnalysis {
             &["public.orders"],
         ),
         semantic_flags: BTreeSet::new(),
+        required_capabilities: BTreeSet::from(["sql.query.update".to_string()]),
     }
 }
 
@@ -115,6 +116,7 @@ fn assertion_analysis() -> ProviderAnalysis {
         cardinality: Cardinality::MANY,
         effects: effect(QueryEffect::Read, &["public.orders.status"], &[]),
         semantic_flags: BTreeSet::new(),
+        required_capabilities: BTreeSet::from(["sql.query.select".to_string()]),
     }
 }
 

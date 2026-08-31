@@ -171,6 +171,66 @@
       ]
     },
     {
+      "name": "schema-polymorphism",
+      "kind": "adapter",
+      "resource_classes": [
+        "cpu"
+      ],
+      "network_mode": "offline",
+      "timeout_seconds": 900,
+      "cases": [
+        {
+          "id": "sql-schema-polymorphism-qualification",
+          "entry": "verification/areas/sql_platform/data/schema_polymorphism_qualification.json",
+          "command": "sql-schema-polymorphism-qualification",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-schema-polymorphism-mutations",
+          "entry": "verification/areas/sql_platform/tools/check_schema_polymorphism.py",
+          "command": "sql-schema-polymorphism-mutations",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-schema-polymorphism-contract-tests",
+          "entry": "crates/sifr_sql_contract/tests/schema_polymorphism.rs",
+          "command": "sql-schema-polymorphism-contract-tests",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-schema-polymorphism-frontend-tests",
+          "entry": "crates/sifr_frontend/tests/sql_schema_polymorphism.rs",
+          "command": "sql-schema-polymorphism-frontend-tests",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-schema-polymorphism-package-tests",
+          "entry": "crates/sifr_package/src/sql_profile_tests.rs",
+          "command": "sql-schema-polymorphism-package-tests",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-schema-polymorphism-driver-tests",
+          "entry": "crates/sifr_driver/src/build/sql_profiles_tests.rs",
+          "command": "sql-schema-polymorphism-driver-tests",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-schema-polymorphism-postgresql-tests",
+          "entry": "crates/sifr_sql_postgresql/tests/postgresql_compiler.rs",
+          "command": "sql-schema-polymorphism-postgresql-tests",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
       "name": "postgresql-runtime",
       "kind": "adapter",
       "cases": [

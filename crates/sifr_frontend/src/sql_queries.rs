@@ -26,6 +26,34 @@ pub struct CompiledSqlQuery {
     pub hir: HirSqlQueryTemplate,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SqlExecutionResourceKind {
+    Pool,
+    Connection,
+    Transaction,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct VerifiedSqlExecutionResource {
+    profile_identity: String,
+    pub kind: SqlExecutionResourceKind,
+}
+
+impl VerifiedSqlExecutionResource {
+    #[must_use]
+    pub fn from_profile(profile: &RegisteredProfileModule, kind: SqlExecutionResourceKind) -> Self {
+        Self {
+            profile_identity: profile.authority().nominal_identity.clone(),
+            kind,
+        }
+    }
+
+    #[must_use]
+    pub fn profile_identity(&self) -> &str {
+        &self.profile_identity
+    }
+}
+
 /// Production frontend consumer for generated profile modules and common SQL
 /// query contracts. Dialect components produce `ProviderAnalysis`; this type
 /// resolves the selected profile and lowers the validated result to closed HIR.
@@ -97,6 +125,9 @@ impl<'a> SqlQueryCompiler<'a> {
         }
         Ok(HirSqlBoundQuery {
             template_identity: query.hir.identity.clone(),
+            profile_identity: query.hir.profile_identity.clone(),
+            profile_fingerprint: query.hir.profile_fingerprint.clone(),
+            schema_fingerprint: query.hir.schema_fingerprint.clone(),
             captures,
             cardinality: query.hir.cardinality.clone(),
             effects: query.hir.effects.clone(),
@@ -107,8 +138,15 @@ impl<'a> SqlQueryCompiler<'a> {
     pub fn execution(
         &self,
         query: HirSqlBoundQuery,
+        resource: &VerifiedSqlExecutionResource,
         method: HirSqlExecutionMethod,
     ) -> Result<HirSqlExecution, QueryContractError> {
+        if query.profile_identity != resource.profile_identity {
+            return Err(QueryContractError::new(
+                QueryContractErrorKind::ProfileMismatch,
+                "only a verified pool, connection, or transaction with the proving profile can execute this query",
+            ));
+        }
         let fetch = match method {
             HirSqlExecutionMethod::Execute => FetchMethod::Execute,
             HirSqlExecutionMethod::FetchOne => FetchMethod::FetchOne,

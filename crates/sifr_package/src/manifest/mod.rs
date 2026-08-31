@@ -6,5 +6,8 @@ mod production;
 pub mod sifr;
 mod sifr_fields;
 mod sql_profiles;
-pub use sql_profiles::{SchemaSourceKind, SqlConfig, SqlProfileConfig};
+pub use sql_profiles::{
+    SchemaSourceKind, SqlConfig, SqlProfileConfig, SqlRequirementConfig,
+    SqlRequirementProviderConfig,
+};
 pub mod validate;

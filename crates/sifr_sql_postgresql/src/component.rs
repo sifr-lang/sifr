@@ -107,6 +107,7 @@ impl<P: PostgresParser> PostgresCompilerComponent<P> {
                 Ok(PostgresComponentResponse::Schema(
                     SchemaNormalizationOutput {
                         dialect,
+                        capabilities: postgresql_capabilities(),
                         documents: normalized,
                     },
                 ))
@@ -137,6 +138,31 @@ impl<P: PostgresParser> PostgresCompilerComponent<P> {
             }
         }
     }
+}
+
+#[must_use]
+pub fn postgresql_capabilities() -> BTreeSet<String> {
+    [
+        "sql.bind.parameters",
+        "sql.expression.case",
+        "sql.expression.equality",
+        "sql.query.aggregate",
+        "sql.query.common-table-expression",
+        "sql.query.delete",
+        "sql.query.insert",
+        "sql.query.join",
+        "sql.query.row-locking",
+        "sql.query.select",
+        "sql.query.set-operation",
+        "sql.query.subquery",
+        "sql.query.update",
+        "sql.query.window",
+        "sql.write.conflict",
+        "sql.write.returning",
+    ]
+    .into_iter()
+    .map(str::to_string)
+    .collect()
 }
 
 impl<T: PostgresParser + ?Sized> PostgresParser for &T {

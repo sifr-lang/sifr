@@ -15,6 +15,14 @@ impl AnalysisContext<'_> {
         &mut self,
         insert: &InsertStatement,
     ) -> Result<AnalyzedStatement, PostgresAnalysisError> {
+        if insert.conflict.is_some() {
+            self.required_capabilities
+                .insert("sql.write.conflict".to_string());
+        }
+        if !insert.returning.is_empty() {
+            self.required_capabilities
+                .insert("sql.write.returning".to_string());
+        }
         let relation = self
             .catalog
             .relation(&insert.relation)
@@ -163,6 +171,10 @@ impl AnalysisContext<'_> {
         &mut self,
         update: &UpdateStatement,
     ) -> Result<AnalyzedStatement, PostgresAnalysisError> {
+        if !update.returning.is_empty() {
+            self.required_capabilities
+                .insert("sql.write.returning".to_string());
+        }
         let relation = self
             .catalog
             .relation(&update.relation)
@@ -199,6 +211,10 @@ impl AnalysisContext<'_> {
         &mut self,
         delete: &DeleteStatement,
     ) -> Result<AnalyzedStatement, PostgresAnalysisError> {
+        if !delete.returning.is_empty() {
+            self.required_capabilities
+                .insert("sql.write.returning".to_string());
+        }
         let relation = self
             .catalog
             .relation(&delete.relation)
