@@ -15,38 +15,28 @@ pub(in crate::lower) fn lower_return(
     func_type: &FunctionType,
     ctx: &mut LowerCtx,
 ) -> HirStmt {
-    if ctx.current_function_is_async_generator {
+    if ctx.current_function_is_generator {
         if let Some(val) = &ret.value {
             let Some(expr) = lower_expr(val, ctx) else {
-                return HirStmt::Return {
-                    value: Some(HirExpr::NoneLiteral),
-                };
+                return HirStmt::Return { value: None };
             };
             let expr_ty = expr.ty().clone();
             if matches!(expr_ty.resolve_alias(), Type::None) {
-                ctx.error_with_code_at(
-                    DiagnosticCode::TYPE_MISMATCH,
-                    "return with a value inside async generator bodies requires async generator state-machine lowering and is not supported yet"
-                        .to_string(),
-                    val.range(),
-                );
-            } else {
-                ctx.error_with_code_at(
-                    DiagnosticCode::TYPE_MISMATCH,
-                    "non-None async generator return values are rejected in v1; async generators expose yielded items through AsyncGenerator[T, E]"
-                        .to_string(),
-                    val.range(),
-                );
+                return HirStmt::Return { value: None };
             }
-            return HirStmt::Return { value: Some(expr) };
+            let generator_kind = if ctx.current_function_is_async_generator {
+                "async generator"
+            } else {
+                "generator"
+            };
+            ctx.error_with_code_at(
+                DiagnosticCode::TYPE_MISMATCH,
+                format!(
+                    "non-None {generator_kind} return values are rejected; yielded items are exposed through the iterator protocol"
+                ),
+                val.range(),
+            );
         }
-
-        ctx.error_with_code_at(
-            DiagnosticCode::TYPE_MISMATCH,
-            "return inside async generator bodies requires async generator state-machine lowering and is not supported yet"
-                .to_string(),
-            ret.range(),
-        );
         return HirStmt::Return { value: None };
     }
 

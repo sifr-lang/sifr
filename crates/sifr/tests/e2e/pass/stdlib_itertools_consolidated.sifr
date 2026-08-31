@@ -8,6 +8,13 @@ from sifr.test import assert_bool_vector_eq
 def is_small(x: int) -> bool:
     return x < 3
 
+def collect_islice(own data: Iterator[int], start_or_stop: int) -> list[int]:
+    try:
+        sliced: Iterator[int] = islice(iter(data), start_or_stop)
+        return list(sliced)
+    except ValueError:
+        return []
+
 def collect_core_actual() -> list[bool]:
     actual: list[bool] = []
     actual.append(str(list(chain([1, 2], [3, 4]))) == "[1, 2, 3, 4]")
@@ -23,13 +30,13 @@ def collect_core_actual() -> list[bool]:
     except ValueError as e:
         _ = str(e.message)
     actual.append(batched_ok)
-    actual.append(str(list(islice([10, 20, 30, 40, 50], 3))) == "[10, 20, 30]")
+    actual.append(str(collect_islice(iter([10, 20, 30, 40, 50]), 3)) == "[10, 20, 30]")
     return actual
 
 def collect_extended_actual() -> list[bool]:
     actual: list[bool] = []
     data: list[int] = [1, 2, 3, 4, 5]
-    acc: list[int] = list(accumulate(data))
+    acc: list[int] = list(accumulate(iter(data)))
     acc_last_ok: bool = False
     acc_last: int | None = acc[4]
     if acc_last is not None:
@@ -37,13 +44,13 @@ def collect_extended_actual() -> list[bool]:
     actual.append(len(acc) == 5 and acc_last_ok)
 
     selectors: list[bool] = [True, False, True, False, True]
-    comp: list[int] = list(compress(data, selectors))
+    comp: list[int] = list(compress(iter(data), iter(selectors)))
     actual.append(len(comp) == 3)
-    actual.append(len(list(dropwhile(is_small, data))) == 3)
-    actual.append(len(list(takewhile(is_small, data))) == 2)
-    actual.append(len(list(filterfalse(is_small, data))) == 3)
+    actual.append(len(list(dropwhile(is_small, iter(data)))) == 3)
+    actual.append(len(list(takewhile(is_small, iter(data)))) == 2)
+    actual.append(len(list(filterfalse(is_small, iter(data)))) == 3)
 
-    zl: list[list[int]] = list(zip_longest([1, 2, 3], [4, 5], 0))
+    zl: list[list[int]] = list(zip_longest(iter([1, 2, 3]), iter([4, 5]), 0))
     actual.append(len(zl) == 3)
 
     cf: list[int] = list(count_from(0, 2, 5))
@@ -64,7 +71,7 @@ def collect_extended_actual() -> list[bool]:
     c4: int | None = next(ctr)
     actual.append(c0 == 0 and c1 == 2 and c2 == 4 and c3 == 6 and c4 == 8)
 
-    cyc: list[int] = list(cycle([1, 2, 3], 7))
+    cyc: list[int] = list(cycle(iter([1, 2, 3]), 7))
     cyc_first_ok: bool = False
     cyc_fourth_ok: bool = False
     cyc_first: int | None = cyc[0]

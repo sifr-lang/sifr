@@ -15,25 +15,25 @@ def add2(a: int, b: int) -> int:
 
 
 def main():
-    acc_it: Iterator[int] = accumulate([1, 2, 3, 4])
+    acc_it: Iterator[int] = accumulate(iter([1, 2, 3, 4]))
     assert next(acc_it) == 1
     assert str(list(acc_it)) == "[3, 6, 10]"
 
-    assert str(list(compress([1, 2, 3, 4], [True, False, True, False]))) == "[1, 3]"
-    assert str(list(dropwhile(lt3, [1, 2, 3, 1]))) == "[3, 1]"
-    assert str(list(takewhile(lt3, [1, 2, 3, 1]))) == "[1, 2]"
-    assert str(list(filterfalse(lt3, [1, 2, 3, 1]))) == "[3]"
-    assert str(list(zip_longest([1, 2], [9], 0))) == "[[1, 9], [2, 0]]"
+    assert str(list(compress(iter([1, 2, 3, 4]), iter([True, False, True, False])))) == "[1, 3]"
+    assert str(list(dropwhile(lt3, iter([1, 2, 3, 1])))) == "[3, 1]"
+    assert str(list(takewhile(lt3, iter([1, 2, 3, 1])))) == "[1, 2]"
+    assert str(list(filterfalse(lt3, iter([1, 2, 3, 1])))) == "[3]"
+    assert str(list(zip_longest(iter([1, 2]), iter([9]), 0))) == "[[1, 9], [2, 0]]"
 
-    cyc: Iterator[int] = cycle([1, 2, 3], 5)
+    cyc: Iterator[int] = cycle(iter([1, 2, 3]), 5)
     assert next(cyc) == 1
     assert str(list(cyc)) == "[2, 3, 1, 2]"
 
-    assert str(list(starmap(add2, [(2, 3), (4, 5)]))) == "[5, 9]"
+    assert str(list(starmap(add2, iter([(2, 3), (4, 5)])))) == "[5, 9]"
     assert str(list(product([1, 2], repeat=2))) == "[[1, 1], [1, 2], [2, 1], [2, 2]]"
     assert str(list(product([1, 2], repeat=-1))) == "[]"
-    assert str(list(permutations([1, 2, 3], 2))) == "[[1, 2], [1, 3], [2, 1], [2, 3], [3, 1], [3, 2]]"
-    assert str(list(combinations([1, 2, 3], 2))) == "[[1, 2], [1, 3], [2, 3]]"
-    assert str(list(combinations_with_replacement([1, 2], 2))) == "[[1, 1], [1, 2], [2, 2]]"
+    assert str(list(permutations(iter([1, 2, 3]), 2))) == "[[1, 2], [1, 3], [2, 1], [2, 3], [3, 1], [3, 2]]"
+    assert str(list(combinations(iter([1, 2, 3]), 2))) == "[[1, 2], [1, 3], [2, 3]]"
+    assert str(list(combinations_with_replacement(iter([1, 2]), 2))) == "[[1, 1], [1, 2], [2, 2]]"
 
     print("parity_ext_extended_itertools_lazy_surface_demo: ok")

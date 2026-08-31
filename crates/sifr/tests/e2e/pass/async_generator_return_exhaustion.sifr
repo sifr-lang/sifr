@@ -1,0 +1,23 @@
+async def bare_return() -> AsyncGenerator[int, GeneratorCloseError]:
+    yield 1
+    return
+
+
+async def return_none() -> AsyncGenerator[int, GeneratorCloseError]:
+    yield 2
+    return None
+
+
+async def main() -> Result[None, GeneratorCloseError]:
+    bare = bare_return()
+    bare_first: Result[Option[int], GeneratorCloseError] = await anext(bare)
+    bare_done: Result[Option[int], GeneratorCloseError] = await anext(bare)
+    assert str(bare_first) == "Ok(Some(1))"
+    assert str(bare_done) == "Ok(None)"
+
+    explicit = return_none()
+    explicit_first: Result[Option[int], GeneratorCloseError] = await anext(explicit)
+    explicit_done: Result[Option[int], GeneratorCloseError] = await anext(explicit)
+    assert str(explicit_first) == "Ok(Some(2))"
+    assert str(explicit_done) == "Ok(None)"
+    return None

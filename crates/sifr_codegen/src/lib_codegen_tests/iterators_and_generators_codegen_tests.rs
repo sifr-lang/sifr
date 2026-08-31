@@ -1,15 +1,5 @@
 use super::*;
 
-fn test_error_type(name: &str) -> Type {
-    Type::Class {
-        identity: None,
-        type_args: Vec::new(),
-        name: name.to_string(),
-        fields: Vec::new(),
-        methods: Vec::new(),
-        parent_class: Some("Error".to_string()),
-    }
-}
 use sifr_ir::CompilerIntrinsicId;
 #[test]
 fn test_generate_rust_while_else_with_borrowed_condition_uses_broke_marker() {
@@ -91,90 +81,6 @@ fn test_generate_rust_while_else_with_borrowed_condition_uses_broke_marker() {
 }
 
 #[test]
-fn test_generate_rust_generator_try_except_materializes_without_shape_panic() {
-    let module = HirModule {
-        functions: vec![
-            HirFunction {
-                name: "gen".to_string(),
-                params: vec![],
-                return_type: Type::Iterator(Box::new(Type::Int)),
-                body: vec![HirStmt::TryExcept {
-                    body: vec![HirStmt::Yield {
-                        value: HirExpr::IntLiteral(1),
-                    }],
-                    handlers: vec![HirExceptHandler {
-                        error_type: Some("Error".to_string()),
-                        error_resolved_type: None,
-                        name: Some("e".to_string()),
-                        body: vec![HirStmt::Yield {
-                            value: HirExpr::IntLiteral(2),
-                        }],
-                    }],
-                    body_error_types: vec![test_error_type("Error")],
-                }],
-                is_async: false,
-                method_kind: MethodKind::Regular,
-                receiver: None,
-                decorators: vec![],
-                rust_interop: Vec::new(),
-                python_interop: Vec::new(),
-                compiler_intrinsic: None,
-                type_params: vec![],
-            },
-            HirFunction {
-                name: "main".to_string(),
-                params: vec![],
-                return_type: Type::None,
-                body: vec![HirStmt::For {
-                    target: "v".to_string(),
-                    target_ty: Type::Int,
-                    iter: HirExpr::Call {
-                        mutable_arg_places: Vec::new(),
-                        func: "gen".to_string(),
-                        args: vec![],
-                        ty: Type::Iterator(Box::new(Type::Int)),
-                    },
-                    body: vec![HirStmt::Expr {
-                        expr: HirExpr::Call {
-                            mutable_arg_places: Vec::new(),
-                            func: "print".to_string(),
-                            args: vec![HirExpr::Name {
-                                name: "v".to_string(),
-                                binding_id: None,
-                                ty: Type::Int,
-                            }],
-                            ty: Type::None,
-                        },
-                    }],
-                    else_body: None,
-                }],
-                is_async: false,
-                method_kind: MethodKind::Regular,
-                receiver: None,
-                decorators: vec![],
-                rust_interop: Vec::new(),
-                python_interop: Vec::new(),
-                compiler_intrinsic: None,
-                type_params: vec![],
-            },
-        ],
-        classes: vec![],
-        imports: vec![],
-        constants: vec![],
-        generic_functions: std::collections::HashMap::new(),
-        type_param_bounds: std::collections::HashMap::new(),
-    };
-
-    let rust_code = generate_rust(&module);
-    assert!(rust_code.contains("fn r#gen()"));
-    assert!(rust_code.contains("r#gen()"));
-    assert!(rust_code.contains("if !__sifr_generator_initialized {"));
-    assert!(rust_code.contains("_yields.push(SifrInt::from_i64(1));"));
-    assert!(rust_code.contains("_yields.push(SifrInt::from_i64(2));"));
-    assert!(rust_code.contains("__sifr_generator_iter.next()"));
-}
-
-#[test]
 fn test_generate_rust_generator_conditional_yield_preserves_else_branch() {
     let rust_code = generate_rust_from_source(
         "def gen() -> Iterator[int]:\n    i: int = 0\n    while i < 4:\n        if i < 3:\n            yield i\n            i = i + 1\n        else:\n            i = i + 1\n\ndef main():\n    g: Iterator[int] = gen()\n    print(next(g))\n",
@@ -186,7 +92,7 @@ fn test_generate_rust_generator_conditional_yield_preserves_else_branch() {
     let cond_region = &rust_code[cond_idx..];
 
     assert!(
-        cond_region.contains("_yields.push(i.clone());"),
+        cond_region.contains("__sifr_yielder.suspend(i.clone()).await;"),
         "{rust_code}"
     );
     assert!(
@@ -337,6 +243,9 @@ fn test_generate_rust_generator_clones_borrowed_params_into_owned_locals_before_
     assert!(rust_code.contains("let directory = directory.clone();"));
     assert!(rust_code.contains("let pattern = pattern.clone();"));
     assert!(rust_code.contains("let matches: Vec<String> = glob(&directory, &pattern);"));
+    assert!(rust_code.contains("__SifrGenerator::new"));
+    assert!(!rust_code.contains("_yields"));
+    syn::parse_file(&rust_code).expect("borrowed-parameter generator Rust should parse");
 }
 
 #[test]

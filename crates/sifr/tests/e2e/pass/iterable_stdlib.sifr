@@ -14,7 +14,11 @@ def collect_iterable_input_actual() -> list[bool]:
     actual: list[bool] = []
     nums: list[int] = [1, 2, 3, 4]
 
-    actual.append(str(list(islice(iter(nums), 1, 4, 2))) == "[2, 4]")
+    try:
+        sliced_nums: Iterator[int] = islice(iter(nums), 1, 4, 2)
+        actual.append(str(list(sliced_nums)) == "[2, 4]")
+    except ValueError:
+        actual.append(False)
     actual.append(str(list(accumulate(iter(nums)))) == "[1, 3, 6, 10]")
     actual.append(str(list(compress(iter(nums), iter([True, False, True, False])))) == "[1, 3]")
     actual.append(str(list(dropwhile(lt3, iter(nums)))) == "[3, 4]")
@@ -43,11 +47,16 @@ def collect_runtime_iterator_actual() -> list[bool]:
 
         root: Path = Path(base + "")
         entries_it: Iterator[str] = root.iterdir()
-        actual.append(len(list(islice(entries_it, 1))) == 1)
+        sliced_entries: Iterator[str] = islice(iter(entries_it), 1)
+        actual.append(len(list(sliced_entries)) == 1)
 
         recursive_it: Iterator[str] = root.rglob("*.txt")
-        actual.append(len(list(islice(recursive_it, 2))) == 2)
+        sliced_recursive: Iterator[str] = islice(iter(recursive_it), 2)
+        actual.append(len(list(sliced_recursive)) == 2)
     except IOError as e:
+        _ = str(e.message)
+        actual = [False, False]
+    except ValueError as e:
         _ = str(e.message)
         actual = [False, False]
     finally:

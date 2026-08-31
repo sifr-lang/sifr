@@ -41,27 +41,27 @@ def main():
     flat_int: list[int] = flatten(nested_int)
     print(flat_int)
 
-    # --- 4. Generic accumulate (Addable bound: works with int, float, str) ---
+    # --- 4. Generic accumulate (iter(Addable bound: works with int), float, str) ---
     print("=== Generic accumulate ===")
-    sums: list[int] = list(accumulate([1, 2, 3, 4, 5]))
+    sums: list[int] = list(accumulate(iter([1, 2, 3, 4, 5])))
     print(sums)
-    float_sums: list[float] = list(accumulate([1.0, 2.5, 3.5]))
+    float_sums: list[float] = list(accumulate(iter([1.0, 2.5, 3.5])))
     print(float_sums)
 
     # --- 5. Predicate-based dropwhile ---
     print("=== Predicate-based dropwhile ===")
     data: list[int] = [1, 3, 7, 2, 8]
-    dropped: list[int] = list(dropwhile(is_small, data))
+    dropped: list[int] = list(dropwhile(is_small, iter(data)))
     print(dropped)
 
     # --- 6. Predicate-based takewhile ---
     print("=== Predicate-based takewhile ===")
-    taken: list[int] = list(takewhile(is_small, data))
+    taken: list[int] = list(takewhile(is_small, iter(data)))
     print(taken)
 
     # --- 7. Predicate-based filterfalse ---
     print("=== Predicate-based filterfalse ===")
-    odds: list[int] = list(filterfalse(is_even, [1, 2, 3, 4, 5, 6]))
+    odds: list[int] = list(filterfalse(is_even, iter([1, 2, 3, 4, 5, 6])))
     print(odds)
 
     # --- 8. Generic heapq (Comparable bound) ---
@@ -108,12 +108,12 @@ def main():
     print("=== Generic compress ===")
     data_c: list[str] = ["a", "b", "c", "d", "e"]
     sel: list[bool] = [True, False, True, False, True]
-    compressed: list[str] = list(compress(data_c, sel))
+    compressed: list[str] = list(compress(iter(data_c), iter(sel)))
     print(compressed)
 
     # --- 13. Generic zip_longest ---
     print("=== Generic zip_longest ===")
-    zl_str: list[list[str]] = list(zip_longest(["a", "b", "c"], ["x", "y"], "-"))
+    zl_str: list[list[str]] = list(zip_longest(iter(["a", "b", "c"]), iter(["x", "y"]), "-"))
     for pair in zl_str:
         print(pair)
 

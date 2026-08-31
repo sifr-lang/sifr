@@ -93,6 +93,8 @@ mod receiver_codegen_tests;
 #[cfg(test)]
 mod recursive_node_codegen_tests;
 #[cfg(test)]
+mod resumable_generator_codegen_tests;
+#[cfg(test)]
 mod sequential_try_binding_codegen_tests;
 #[cfg(test)]
 mod string_char_cache_branch_codegen_tests;

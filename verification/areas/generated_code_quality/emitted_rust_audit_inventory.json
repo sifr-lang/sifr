@@ -185,8 +185,8 @@
       "severity": "blocking",
       "owner_item": 5,
       "mechanism": "Generator lowering buffers yielded values in Vec-backed output instead of preserving resumable execution.",
-      "evidence": ["crates/sifr_codegen/src/function_emitter/generator_bodies.rs", "demos/generators/emitted.rs"],
-      "semantic_anchor": {"kind": "text", "revision": "current", "path": "crates/sifr_codegen/src/function_emitter/generator_bodies.rs", "contains": "name: \"_yields\".to_string()"},
+      "evidence": ["crates/sifr_codegen/src/function_emitter/generator_bodies.rs", "demos/generators/emitted.rs", "crates/sifr/tests/e2e/pass/generator_resumption_and_lazy_itertools.sifr"],
+      "semantic_anchor": {"kind": "text", "revision": "baseline", "path": "crates/sifr_codegen/src/function_emitter/generator_bodies.rs", "contains": "name: \"_yields\".to_string()"},
       "sources": ["internal", "external"]
     },
     {
@@ -196,8 +196,8 @@
       "severity": "blocking",
       "owner_item": 5,
       "mechanism": "The count() implementation delegates to count_from(start, step, 10000), so an API that must be unbounded stops after a fixed finite prefix.",
-      "evidence": ["stdlib/sifr/itertools.sifr", "demos/itertools/emitted.rs"],
-      "semantic_anchor": {"kind": "text", "revision": "current", "path": "stdlib/sifr/itertools.sifr", "contains": "return count_from(start, step, 10000)"},
+      "evidence": ["stdlib/sifr/itertools.sifr", "demos/itertools/emitted.rs", "crates/sifr/tests/e2e/pass/generator_resumption_and_lazy_itertools.sifr"],
+      "semantic_anchor": {"kind": "text", "revision": "baseline", "path": "stdlib/sifr/itertools.sifr", "contains": "return count_from(start, step, 10000)"},
       "sources": ["internal", "external"]
     },
     {
@@ -208,7 +208,7 @@
       "owner_item": 5,
       "mechanism": "The islice implementation rewrites a non-positive stride to one and truncates the stop boundary to the start instead of raising the canonical error.",
       "evidence": ["stdlib/sifr/itertools.sifr", "crates/sifr/tests/e2e/pass/cpython_itertools.sifr", "demos/itertools/emitted.rs"],
-      "semantic_anchor": {"kind": "text", "revision": "current", "path": "stdlib/sifr/itertools.sifr", "contains": "if stride <= 0:\n        stride = 1\n        actual_stop = actual_start"},
+      "semantic_anchor": {"kind": "text", "revision": "baseline", "path": "stdlib/sifr/itertools.sifr", "contains": "if stride <= 0:\n        stride = 1\n        actual_stop = actual_start"},
       "sources": ["internal", "external"]
     },
     {

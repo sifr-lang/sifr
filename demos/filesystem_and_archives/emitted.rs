@@ -229,6 +229,100 @@ mod __sifr_project_nominals {
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
     }
+    pub struct __SifrYielder<T> {
+        pub slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+    }
+    pub struct __SifrYieldFuture<T> {
+        pub slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+        pub value: Option<T>,
+    }
+    impl<T> Unpin for __SifrYieldFuture<T> {}
+    impl<T> ::std::future::Future for __SifrYieldFuture<T> {
+        type Output = ();
+        fn poll(
+            self: ::std::pin::Pin<&mut Self>,
+            _cx: &mut ::std::task::Context<'_>,
+        ) -> ::std::task::Poll<()> {
+            let state = self.get_mut();
+            let Some(value) = state.value.take() else {
+                return ::std::task::Poll::Ready(());
+            };
+            __sifr_store_suspended(&state.slot, value);
+            ::std::task::Poll::Pending
+        }
+    }
+    impl<T> __SifrYielder<T> {
+        pub fn suspend(&self, value: T) -> __SifrYieldFuture<T> {
+            __SifrYieldFuture {
+                slot: ::std::sync::Arc::clone(&self.slot),
+                value: Some(value),
+            }
+        }
+    }
+    pub fn __sifr_store_suspended<T>(
+        slot: &::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+        value: T,
+    ) {
+        match slot.lock() {
+            Ok(mut state) => *state = Some(value),
+            Err(poisoned) => *poisoned.into_inner() = Some(value),
+        }
+    }
+    pub fn __sifr_take_suspended<T>(
+        slot: &::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+    ) -> Option<T> {
+        match slot.lock() {
+            Ok(mut state) => state.take(),
+            Err(poisoned) => poisoned.into_inner().take(),
+        }
+    }
+    pub struct __SifrGenerator<T> {
+        pub producer: Option<
+            ::std::pin::Pin<Box<dyn ::std::future::Future<Output = ()> + 'static>>,
+        >,
+        pub yielded: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+        pub complete: bool,
+    }
+    impl<T> __SifrGenerator<T> {
+        pub fn new<
+            F: FnOnce(__SifrYielder<T>) -> Fut + 'static,
+            Fut: ::std::future::Future<Output = ()> + 'static,
+        >(factory: F) -> Self {
+            let yielded = ::std::sync::Arc::new(::std::sync::Mutex::new(None));
+            let producer = factory(__SifrYielder {
+                slot: ::std::sync::Arc::clone(&yielded),
+            });
+            Self {
+                producer: Some(Box::pin(producer)),
+                yielded,
+                complete: false,
+            }
+        }
+    }
+    impl<T> Iterator for __SifrGenerator<T> {
+        type Item = T;
+        fn next(&mut self) -> Option<T> {
+            if self.complete {
+                return None;
+            }
+            let completed = {
+                let Some(producer) = self.producer.as_mut() else {
+                    self.complete = true;
+                    return None;
+                };
+                let mut context = ::std::task::Context::from_waker(
+                    ::std::task::Waker::noop(),
+                );
+                ::std::future::Future::poll(producer.as_mut(), &mut context).is_ready()
+            };
+            let yielded = __sifr_take_suspended(&self.yielded);
+            if completed {
+                self.complete = true;
+                self.producer = None;
+            }
+            yielded
+        }
+    }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct __SifrStdlib_sifr_x2epathlib_x2ePath {
         pub _path: String,
@@ -604,34 +698,24 @@ mod __sifr_project_nominals {
         false
     }
     pub fn _iter_list_str(entries: Vec<String>) -> Box<dyn Iterator<Item = String>> {
-        let mut __sifr_generator_initialized: bool = false;
-        let mut __sifr_generator_iter: ::std::vec::IntoIter<String> = Vec::new().into_iter();
         Box::new(
-            ::std::iter::from_fn(move || {
-                if !__sifr_generator_initialized {
-                    let mut _yields: Vec<String> = Vec::new();
-                    let mut i: SifrInt = SifrInt::from_i64(0);
-                    while (&i < &SifrInt::from(entries.len())) {
-                        let Some(__sifr_checked_value_7) = ({
-                            let __sifr_checked_read_collection = &entries;
-                            let __sifr_checked_read_index = i.clone();
-                            let __sifr_checked_read_normalized = __sifr_checked_read_index
-                                .normalize_index_or_len(
-                                    __sifr_checked_read_collection.len(),
-                                );
-                            __sifr_checked_read_collection
-                                .get(__sifr_checked_read_normalized)
-                                .cloned()
-                        }) else {
-                            break;
-                        };
-                        _yields.push(__sifr_checked_value_7.clone());
-                        i = &i + &SifrInt::from_i64(1);
-                    }
-                    __sifr_generator_iter = _yields.into_iter();
-                    __sifr_generator_initialized = true;
+            __SifrGenerator::new(async move |__sifr_yielder: __SifrYielder<String>| {
+                let mut i: SifrInt = SifrInt::from_i64(0);
+                while (&i < &SifrInt::from(entries.len())) {
+                    let Some(__sifr_checked_value_7) = ({
+                        let __sifr_checked_read_collection = &entries;
+                        let __sifr_checked_read_index = i.clone();
+                        let __sifr_checked_read_normalized = __sifr_checked_read_index
+                            .normalize_index_or_len(__sifr_checked_read_collection.len());
+                        __sifr_checked_read_collection
+                            .get(__sifr_checked_read_normalized)
+                            .cloned()
+                    }) else {
+                        break;
+                    };
+                    __sifr_yielder.suspend(__sifr_checked_value_7.clone()).await;
+                    i = &i + &SifrInt::from_i64(1);
                 }
-                __sifr_generator_iter.next()
             }),
         )
     }
@@ -2600,6 +2684,100 @@ fn os_linesep() -> String {
 fn os_name() -> String {
     ::sifr_stdlib::sys::os_name()
 }
+struct __SifrYielder<T> {
+    slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+}
+struct __SifrYieldFuture<T> {
+    slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+    value: Option<T>,
+}
+impl<T> Unpin for __SifrYieldFuture<T> {}
+impl<T> ::std::future::Future for __SifrYieldFuture<T> {
+    type Output = ();
+    fn poll(
+        self: ::std::pin::Pin<&mut Self>,
+        _cx: &mut ::std::task::Context<'_>,
+    ) -> ::std::task::Poll<()> {
+        let state = self.get_mut();
+        let Some(value) = state.value.take() else {
+            return ::std::task::Poll::Ready(());
+        };
+        __sifr_store_suspended(&state.slot, value);
+        ::std::task::Poll::Pending
+    }
+}
+impl<T> __SifrYielder<T> {
+    fn suspend(&self, value: T) -> __SifrYieldFuture<T> {
+        __SifrYieldFuture {
+            slot: ::std::sync::Arc::clone(&self.slot),
+            value: Some(value),
+        }
+    }
+}
+fn __sifr_store_suspended<T>(
+    slot: &::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+    value: T,
+) {
+    match slot.lock() {
+        Ok(mut state) => *state = Some(value),
+        Err(poisoned) => *poisoned.into_inner() = Some(value),
+    }
+}
+fn __sifr_take_suspended<T>(
+    slot: &::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+) -> Option<T> {
+    match slot.lock() {
+        Ok(mut state) => state.take(),
+        Err(poisoned) => poisoned.into_inner().take(),
+    }
+}
+struct __SifrGenerator<T> {
+    producer: Option<
+        ::std::pin::Pin<Box<dyn ::std::future::Future<Output = ()> + 'static>>,
+    >,
+    yielded: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+    complete: bool,
+}
+impl<T> __SifrGenerator<T> {
+    fn new<
+        F: FnOnce(__SifrYielder<T>) -> Fut + 'static,
+        Fut: ::std::future::Future<Output = ()> + 'static,
+    >(factory: F) -> Self {
+        let yielded = ::std::sync::Arc::new(::std::sync::Mutex::new(None));
+        let producer = factory(__SifrYielder {
+            slot: ::std::sync::Arc::clone(&yielded),
+        });
+        Self {
+            producer: Some(Box::pin(producer)),
+            yielded,
+            complete: false,
+        }
+    }
+}
+impl<T> Iterator for __SifrGenerator<T> {
+    type Item = T;
+    fn next(&mut self) -> Option<T> {
+        if self.complete {
+            return None;
+        }
+        let completed = {
+            let Some(producer) = self.producer.as_mut() else {
+                self.complete = true;
+                return None;
+            };
+            let mut context = ::std::task::Context::from_waker(
+                ::std::task::Waker::noop(),
+            );
+            ::std::future::Future::poll(producer.as_mut(), &mut context).is_ready()
+        };
+        let yielded = __sifr_take_suspended(&self.yielded);
+        if completed {
+            self.complete = true;
+            self.producer = None;
+        }
+        yielded
+    }
+}
 fn join_path(base: &String, child: &String) -> String {
     let __sifr_chars_base: Vec<char> = base.chars().collect::<Vec<char>>();
     if (&SifrInt::from(__sifr_chars_base.len()) == &SifrInt::from_i64(0)) {
@@ -2826,34 +3004,24 @@ fn is_absolute(path: &String) -> bool {
     false
 }
 fn _iter_list_str(entries: Vec<String>) -> Box<dyn Iterator<Item = String>> {
-    let mut __sifr_generator_initialized: bool = false;
-    let mut __sifr_generator_iter: ::std::vec::IntoIter<String> = Vec::new().into_iter();
     Box::new(
-        ::std::iter::from_fn(move || {
-            if !__sifr_generator_initialized {
-                let mut _yields: Vec<String> = Vec::new();
-                let mut i: SifrInt = SifrInt::from_i64(0);
-                while (&i < &SifrInt::from(entries.len())) {
-                    let Some(__sifr_checked_value_7) = ({
-                        let __sifr_checked_read_collection = &entries;
-                        let __sifr_checked_read_index = i.clone();
-                        let __sifr_checked_read_normalized = __sifr_checked_read_index
-                            .normalize_index_or_len(
-                                __sifr_checked_read_collection.len(),
-                            );
-                        __sifr_checked_read_collection
-                            .get(__sifr_checked_read_normalized)
-                            .cloned()
-                    }) else {
-                        break;
-                    };
-                    _yields.push(__sifr_checked_value_7.clone());
-                    i = &i + &SifrInt::from_i64(1);
-                }
-                __sifr_generator_iter = _yields.into_iter();
-                __sifr_generator_initialized = true;
+        __SifrGenerator::new(async move |__sifr_yielder: __SifrYielder<String>| {
+            let mut i: SifrInt = SifrInt::from_i64(0);
+            while (&i < &SifrInt::from(entries.len())) {
+                let Some(__sifr_checked_value_7) = ({
+                    let __sifr_checked_read_collection = &entries;
+                    let __sifr_checked_read_index = i.clone();
+                    let __sifr_checked_read_normalized = __sifr_checked_read_index
+                        .normalize_index_or_len(__sifr_checked_read_collection.len());
+                    __sifr_checked_read_collection
+                        .get(__sifr_checked_read_normalized)
+                        .cloned()
+                }) else {
+                    break;
+                };
+                __sifr_yielder.suspend(__sifr_checked_value_7.clone()).await;
+                i = &i + &SifrInt::from_i64(1);
             }
-            __sifr_generator_iter.next()
         }),
     )
 }

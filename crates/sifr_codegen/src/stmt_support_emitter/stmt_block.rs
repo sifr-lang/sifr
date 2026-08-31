@@ -614,7 +614,12 @@ impl RustEmitter {
                     RustStmt::Return(Some(
                         self.try_closure_unit_return_for_ir(return_ty_snapshot.as_ref()),
                     ))
-                } else if self.emission_ctx.in_display_impl {
+                } else if self.emission_ctx.in_display_impl
+                    || (self.emission_ctx.in_generator_closure
+                        && return_ty_snapshot.as_ref().is_some_and(|ty| {
+                            matches!(ty.resolve_alias(), Type::Result(ok, _) if matches!(ok.resolve_alias(), Type::None))
+                        }))
+                {
                     RustStmt::Return(Some(crate::RustExpr::FnCall {
                         func: Box::new(crate::RustExpr::Path(vec!["Ok".to_string()])),
                         args: vec![crate::RustExpr::Literal(crate::RustLiteral::Unit)],
@@ -628,14 +633,7 @@ impl RustEmitter {
                     return Ok(None);
                 };
                 let lowered_value = Self::clone_non_copy_name_expr_for_ir(value, lowered_value);
-                (
-                    vec![RustStmt::Expr(crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::Ident("_yields".to_string())),
-                        method: "push".to_string(),
-                        args: vec![lowered_value],
-                    })],
-                    true,
-                )
+                (vec![crate::lower_suspended_yield_stmt(lowered_value)], true)
             } else if let HirStmt::Raise { value } = stmt {
                 let Some(lowered) = self.lower_stmt_expr_for_ir(value)? else {
                     return Ok(None);

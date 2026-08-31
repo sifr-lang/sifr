@@ -94,6 +94,19 @@ impl RustEmitter {
             if matches!(resolved_param, Type::Iterable(_)) {
                 lowered_arg = registry_iterable_to_vec_expr(self, arg)?;
             }
+            if matches!(resolved_param, Type::Iterator(_)) && convention.is_owned() {
+                let iterator_source = match arg {
+                    HirExpr::IteratorCall {
+                        op: sifr_ir::HirIteratorOp::Iter,
+                        args,
+                        ..
+                    } if args.len() == 1 => &args[0],
+                    _ => arg,
+                };
+                lowered_arg = self
+                    .lower_iter_source_expr_for_ir_with_mode(iterator_source, true, None, None)
+                    .ok()??;
+            }
 
             if matches!(arg, HirExpr::NoneLiteral)
                 && matches!(resolved_param, Type::None | Type::TypeVar(_))

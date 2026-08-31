@@ -2,7 +2,7 @@ from sifr.itertools import accumulate
 
 def main():
     data: list[int] = [1, 2, 3, 4, 5]
-    result: list[int] = list(accumulate(data))
+    result: list[int] = list(accumulate(iter(data)))
     outputs: list[int] = []
     for v in result:
         outputs.append(v)

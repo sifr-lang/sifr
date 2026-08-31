@@ -6,9 +6,11 @@ mod lib_modules_and_codegen;
 pub use lib_modules_and_codegen::*;
 mod builtin_errors;
 pub(crate) use builtin_errors::BUILTIN_ERROR_CLASSES;
+mod generator_runtime_needs;
 mod lib_async_main_cancellation;
 mod lib_native_async_cleanup_needs;
 mod lib_runtime_needs;
+pub(crate) use generator_runtime_needs::build_generator_runtime_items_for_module;
 pub(crate) use lib_async_main_cancellation::scope_async_main_cancellation;
 pub(crate) use lib_native_async_cleanup_needs::module_uses_native_async_cleanup;
 pub(crate) use lib_runtime_needs::{

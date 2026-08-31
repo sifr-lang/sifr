@@ -45,11 +45,14 @@ def main():
 
         root: Path = Path(base + "")
         entries_it: Iterator[str] = root.iterdir()
-        print(len(list(islice(entries_it, 2))))
+        sliced_entries: Iterator[str] = islice(iter(entries_it), 2)
+        print(len(list(sliced_entries)))
 
         recursive_it: Iterator[str] = root.rglob("*.txt")
         print(len(list(recursive_it)))
     except IOError as e:
+        print(e.message)
+    except ValueError as e:
         print(e.message)
 
     try:

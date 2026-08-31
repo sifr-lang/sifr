@@ -1,0 +1,61 @@
+from sifr.io import read_text, write_text
+from sifr.itertools import count, islice
+from sifr.os import getpid, is_file, remove_file
+from sifr.test import assert_true
+
+
+def staged(path: str) -> Iterator[int]:
+    try:
+        _first_write: None = write_text(path, "first")
+        yield 1
+        _second_write: None = write_text(path, "second")
+        yield 2
+    except IOError:
+        return
+
+
+def main():
+    path: str = "/tmp/sifr_generator_resumption_" + str(getpid()) + ".txt"
+    try:
+        if is_file(path):
+            _removed_existing: None = remove_file(path)
+
+        values: Iterator[int] = staged(path)
+        assert_true(not is_file(path))
+
+        first: int | None = next(values)
+        assert_true(first == 1)
+        first_marker: str = read_text(path)
+        assert_true(first_marker == "first")
+
+        second: int | None = next(values)
+        assert_true(second == 2)
+        second_marker: str = read_text(path)
+        assert_true(second_marker == "second")
+        assert_true(next(values) is None)
+
+        unbounded: Iterator[int] = count()
+        index: int = 0
+        current: int | None = None
+        while index <= 10000:
+            current = next(unbounded)
+            index = index + 1
+        assert_true(current == 10000)
+
+        sliced: Iterator[int] = islice(iter(count(50, 3)), 10000, 10005)
+        assert_true(str(list(sliced)) == "[30050, 30053, 30056, 30059, 30062]")
+    except IOError as e:
+        _io_message: str = e.message
+        assert_true(False)
+    except ValueError as e:
+        _value_message: str = e.message
+        assert_true(False)
+    finally:
+        try:
+            if is_file(path):
+                _removed: None = remove_file(path)
+        except IOError as e:
+            _cleanup_message: str = e.message
+
+
+main()

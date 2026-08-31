@@ -172,6 +172,34 @@ pub(super) fn test_generator_accepts_trailing_statements_after_loop() {
 }
 
 #[test]
+pub(super) fn test_generators_accept_bare_return_as_exhaustion() {
+    let module = lower_source(
+        "def sync_values() -> Iterator[int]:\n    yield 1\n    return\n\nasync def async_values() -> AsyncGenerator[int, GeneratorCloseError]:\n    yield 1\n    return\n",
+    )
+    .unwrap();
+    assert!(matches!(
+        module.functions[0].body.last(),
+        Some(HirStmt::Return { value: None })
+    ));
+    assert!(matches!(
+        module.functions[1].body.last(),
+        Some(HirStmt::Return { value: None })
+    ));
+}
+
+#[test]
+pub(super) fn test_generator_rejects_non_none_return_value() {
+    let result = lower_source("def values() -> Iterator[int]:\n    yield 1\n    return 2\n");
+    let errors = result.expect_err("generator return value should be rejected");
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && error
+                .message
+                .contains("non-None generator return values are rejected")
+    }));
+}
+
+#[test]
 pub(super) fn test_reversed_enumerate_zip_are_typed_as_iterators() {
     let module = lower_source(
         "def main():\n    nums: list[int] = [1, 2, 3]\n    labels: list[str] = [\"a\", \"b\", \"c\"]\n    rev: Iterator[int] = reversed(nums)\n    indexed: Iterator[tuple[int, int]] = enumerate(nums, start=1)\n    paired: Iterator[tuple[int, str]] = zip(nums, labels)\n    _rev_list: list[int] = list(rev)\n    _indexed_list: list[tuple[int, int]] = list(indexed)\n    _paired_list: list[tuple[int, str]] = list(paired)\n",

@@ -8,6 +8,13 @@ def lt3(x: int) -> bool:
 def add2(a: int, b: int) -> int:
     return a + b
 
+def collect_islice(own data: Iterator[int], start_or_stop: int, stop: int | None = None, step: int = 1) -> list[int]:
+    try:
+        sliced: Iterator[int] = islice(iter(data), start_or_stop, stop, step)
+        return list(sliced)
+    except ValueError:
+        return []
+
 def collect_core_actual() -> list[bool]:
     actual: list[bool] = []
     actual.append(str(list(chain([1, 2], [3, 4]))) == "[1, 2, 3, 4]")
@@ -24,14 +31,14 @@ def collect_core_actual() -> list[bool]:
         _ = str(e.message)
     actual.append(batched_ok)
 
-    actual.append(str(list(islice([10, 20, 30, 40], 3))) == "[10, 20, 30]")
-    actual.append(str(list(accumulate([1, 2, 3, 4]))) == "[1, 3, 6, 10]")
-    actual.append(str(list(accumulate([1, 2, 3], initial=0))) == "[0, 1, 3, 6]")
-    actual.append(str(list(compress([1, 2, 3], [True, False, True]))) == "[1, 3]")
-    actual.append(str(list(dropwhile(lt3, [1, 2, 3, 1]))) == "[3, 1]")
-    actual.append(str(list(takewhile(lt3, [1, 2, 3, 1]))) == "[1, 2]")
-    actual.append(str(list(filterfalse(lt3, [1, 2, 3, 1]))) == "[3]")
-    actual.append(str(list(zip_longest([1, 2], [9], 0))) == "[[1, 9], [2, 0]]")
+    actual.append(str(collect_islice(iter([10, 20, 30, 40]), 3)) == "[10, 20, 30]")
+    actual.append(str(list(accumulate(iter([1, 2, 3, 4])))) == "[1, 3, 6, 10]")
+    actual.append(str(list(accumulate(iter([1, 2, 3]), initial=0))) == "[0, 1, 3, 6]")
+    actual.append(str(list(compress(iter([1, 2, 3]), iter([True, False, True])))) == "[1, 3]")
+    actual.append(str(list(dropwhile(lt3, iter([1, 2, 3, 1])))) == "[3, 1]")
+    actual.append(str(list(takewhile(lt3, iter([1, 2, 3, 1])))) == "[1, 2]")
+    actual.append(str(list(filterfalse(lt3, iter([1, 2, 3, 1])))) == "[3]")
+    actual.append(str(list(zip_longest(iter([1, 2]), iter([9]), 0))) == "[[1, 9], [2, 0]]")
     actual.append(str(list(count_from(5, 2, 4))) == "[5, 7, 9, 11]")
     ctr: Iterator[int] = count(5, 2)
     c0: int | None = next(ctr)
@@ -39,21 +46,19 @@ def collect_core_actual() -> list[bool]:
     c2: int | None = next(ctr)
     c3: int | None = next(ctr)
     actual.append(c0 == 5 and c1 == 7 and c2 == 9 and c3 == 11)
-    actual.append(str(list(cycle([1, 2, 3], 5))) == "[1, 2, 3, 1, 2]")
+    actual.append(str(list(cycle(iter([1, 2, 3]), 5))) == "[1, 2, 3, 1, 2]")
     actual.append(str(list(product([1, 2], [3, 4]))) == "[[1, 3], [1, 4], [2, 3], [2, 4]]")
     actual.append(str(list(product([1, 2], repeat=-1))) == "[]")
-    actual.append(str(list(permutations([1, 2, 3], 2))) == "[[1, 2], [1, 3], [2, 1], [2, 3], [3, 1], [3, 2]]")
-    actual.append(str(list(permutations([1, 2, 3], 4))) == "[]")
-    actual.append(str(list(combinations([1, 2, 3], 2))) == "[[1, 2], [1, 3], [2, 3]]")
-    actual.append(str(list(combinations([1, 2, 3], 4))) == "[]")
-    actual.append(str(list(combinations_with_replacement([1, 2], 2))) == "[[1, 1], [1, 2], [2, 2]]")
+    actual.append(str(list(permutations(iter([1, 2, 3]), 2))) == "[[1, 2], [1, 3], [2, 1], [2, 3], [3, 1], [3, 2]]")
+    actual.append(str(list(permutations(iter([1, 2, 3]), 4))) == "[]")
+    actual.append(str(list(combinations(iter([1, 2, 3]), 2))) == "[[1, 2], [1, 3], [2, 3]]")
+    actual.append(str(list(combinations(iter([1, 2, 3]), 4))) == "[]")
+    actual.append(str(list(combinations_with_replacement(iter([1, 2]), 2))) == "[[1, 1], [1, 2], [2, 2]]")
     empty_ints: list[int] = []
-    actual.append(str(list(combinations_with_replacement(empty_ints, 2))) == "[]")
-    actual.append(str(list(starmap(add2, [(2, 3), (4, 5)]))) == "[5, 9]")
+    actual.append(str(list(combinations_with_replacement(iter(empty_ints), 2))) == "[]")
+    actual.append(str(list(starmap(add2, iter([(2, 3), (4, 5)])))) == "[5, 9]")
     empty_pairs: list[tuple[int, int]] = []
-    actual.append(str(list(starmap(add2, empty_pairs))) == "[]")
-    actual.append(str(list(islice([10, 20, 30], 0, 3, 0))) == "[]")
-    actual.append(str(list(islice([10, 20, 30], 0, 3, -1))) == "[]")
+    actual.append(str(list(starmap(add2, iter(empty_pairs)))) == "[]")
     return actual
 
 def collect_negative_actual() -> list[bool]:
@@ -65,6 +70,20 @@ def collect_negative_actual() -> list[bool]:
     except ValueError as e:
         invalid_batch_rejected = len(e.message) > 0
     actual.append(invalid_batch_rejected)
+    invalid_zero_step: bool = False
+    try:
+        _zero_step: Iterator[int] = islice(iter([10, 20, 30]), 0, 3, 0)
+        _ = _zero_step
+    except ValueError:
+        invalid_zero_step = True
+    actual.append(invalid_zero_step)
+    invalid_negative_step: bool = False
+    try:
+        _negative_step: Iterator[int] = islice(iter([10, 20, 30]), 0, 3, -1)
+        _ = _negative_step
+    except ValueError:
+        invalid_negative_step = True
+    actual.append(invalid_negative_step)
     return actual
 
 def append_all(mut target: list[bool], values: list[bool]):

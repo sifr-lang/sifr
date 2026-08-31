@@ -3,5 +3,5 @@ from sifr.itertools import zip_longest
 def main():
     a: list[str] = ["a", "b", "c"]
     b: list[str] = ["x", "y"]
-    result: list[list[str]] = list(zip_longest(a, b, "-"))
+    result: list[list[str]] = list(zip_longest(iter(a), iter(b), "-"))
     assert result == [["a", "x"], ["b", "y"], ["c", "-"]]

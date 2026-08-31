@@ -3,5 +3,5 @@ from sifr.itertools import accumulate
 
 
 def main():
-    values: list[int] = accumulate([1, 2, 3])
+    values: list[int] = accumulate(iter([1, 2, 3]))
     assert str(values) == "[1, 3, 6]"

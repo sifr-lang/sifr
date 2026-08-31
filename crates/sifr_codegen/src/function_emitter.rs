@@ -18,6 +18,7 @@ mod generic_bounds;
 mod local_binding_registry;
 mod nested_function_block;
 mod python_callback_bounds;
+mod resumable_generator_bodies;
 mod scope_and_function_types;
 mod sifr_int_analysis;
 pub(crate) use sifr_int_analysis::*;

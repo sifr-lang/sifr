@@ -23,4 +23,8 @@ def main() -> None:
     assert str(list(reversed(nums))) == "[4, 3, 2, 1]"
 
     assert str(list(chain([1, 2], [3, 4]))) == "[1, 2, 3, 4]"
-    assert str(list(islice([10, 20, 30, 40, 50], 1, 5, 2))) == "[20, 40]"
+    try:
+        sliced: Iterator[int] = islice(iter([10, 20, 30, 40, 50]), 1, 5, 2)
+        assert str(list(sliced)) == "[20, 40]"
+    except ValueError as e:
+        assert False, e.message
