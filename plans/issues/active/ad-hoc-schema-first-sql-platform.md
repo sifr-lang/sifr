@@ -295,7 +295,7 @@ can use these contracts.
 | 12 | completed | Schema lifecycle tools | Pull, validate, and build commands produce deterministic snapshots, fingerprints, manifests, modules, semantic diffs, and affected-query reports. |
 | 13 | completed | Migration compiler and engine | Typed migration DAGs, intermediate schemas, DDL reflection, data steps, assertions, offline validation, recovery, and explicit rollback are complete. |
 | 14 | completed | PostgreSQL migration qualification | PostgreSQL DDL, locks, transactional limits, imports, baselines, recovery, and supported-version execution pass full migration qualification. |
-| 15 | pending | Schema polymorphism and portable constraints | Structural schema requirements specialize safely, while explicit capability constraints validate portable code for every declared provider. |
+| 15 | completed | Schema polymorphism and portable constraints | Structural schema requirements specialize safely, while explicit capability constraints validate portable code for every declared provider. |
 | 16 | pending | MySQL provider completion | MySQL query, schema, runtime, tooling, migration, editor, safety, and conformance surfaces satisfy the common and provider-specific contracts. |
 | 17 | pending | SQLite provider completion | SQLite query, schema, runtime, tooling, migration, editor, safety, and conformance surfaces satisfy the common and provider-specific contracts. |
 | 18 | pending | Integrated qualification and phase closure | All providers, tools, migrations, compiler paths, runtime paths, editor paths, security gates, budgets, examples, and documents pass as one final system. |
@@ -943,24 +943,24 @@ Owned scope:
 
 Acceptance criteria:
 
-- [ ] Provider-normalized checked-in DDL artifacts define requirements through a
+- [x] Provider-normalized checked-in DDL artifacts define requirements through a
   declared `SchemaIR` subset. Sifr does not add a second schema language.
-- [ ] Requirement artifacts describe tables, columns, keys, types, nullability,
+- [x] Requirement artifacts describe tables, columns, keys, types, nullability,
   and required provider capabilities.
-- [ ] A concrete profile must prove every requirement before specialization.
-- [ ] Each profile namespace exports one compile-time `SqlSchema[Profile]`
+- [x] A concrete profile must prove every requirement before specialization.
+- [x] Each profile namespace exports one compile-time `SqlSchema[Profile]`
   witness. Specialization erases the witness and gives the query the proving
   profile parameter.
-- [ ] A witness can occur only as a direct namespace export or a constrained
+- [x] A witness can occur only as a direct namespace export or a constrained
   generic parameter. Runtime storage, return, capture, and selection are errors.
-- [ ] Only a verified pool, connection, or transaction with the proving profile
+- [x] Only a verified pool, connection, or transaction with the proving profile
   can execute the specialized query.
-- [ ] Specialized queries cannot reach undeclared schema objects or provider
+- [x] Specialized queries cannot reach undeclared schema objects or provider
   behavior.
-- [ ] Portable code declares provider capability constraints explicitly.
-- [ ] The provider-neutral specialization harness and PostgreSQL implementation
+- [x] Portable code declares provider capability constraints explicitly.
+- [x] The provider-neutral specialization harness and PostgreSQL implementation
   pass in this milestone. Milestones 16 and 17 own the MySQL and SQLite evidence.
-- [ ] There is no silent lowest-common-denominator rewrite or runtime provider
+- [x] There is no silent lowest-common-denominator rewrite or runtime provider
   dispatch for a statically known profile.
 
 Focused validation:
@@ -1284,7 +1284,7 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 | 12 | completed | [#3621](https://github.com/sifr-lang/sifr/pull/3621) | `73a69f691d` | schema-tool 6/6; provider 20/20; PostgreSQL 13-18 live catalog, artifact, and parity matrix; strict Clippy and guards pass | Opus remediation `SATISFIED` on `ba3629d63` | Deterministic pull, validation, build, canonical catalog normalization, and atomic artifact publication |
 | 13 | completed | [#3625](https://github.com/sifr-lang/sifr/pull/3625) | `6d28649ff9` | migration-engine 6/6; affected crates; workspace Clippy; formatting; HIR, file-size, SQL contract, metadata, and dependency guards pass | Opus remediation `SATISFIED` on `c6acf3da7`; one new merge mechanism is deferred under the continuation rule | Checked compiler graph, nominal migration HIR, closed runtime plan, recovery engine, and atomic artifacts |
 | 14 | completed | [#3627](https://github.com/sifr-lang/sifr/pull/3627) | `5b2aa585f4` | migration and PostgreSQL suites 9/9; live PostgreSQL 13-18 migration matrix; strict Clippy, formatting, guards, qualification, and mutation checks pass | Opus remediation `SATISFIED` on `a8f02da62`; two new mechanisms are deferred under the continuation rule | PostgreSQL DDL reflection, runtime plan v2, imports, locking, recovery, rollback, operator commands, and supported-major qualification |
-| 15 | pending | — | — | — | — | Schema polymorphism and portable constraints |
+| 15 | completed | [#3630](https://github.com/sifr-lang/sifr/pull/3630) | `d878ecfe1a` | schema-polymorphism 7/7; PostgreSQL 13-18 component sandbox; affected tests, strict Clippy, formatting, and guards pass | Two exact-SHA Opus reviews; round 2 verified object accounting and deferred the new positional constraint-identity mechanism under the continuation rule | Structural requirements, compile-time witnesses, specialization, execution binding, and provider-owned capability and object accounts |
 | 16 | pending | — | — | — | — | MySQL provider completion |
 | 17 | pending | — | — | — | — | SQLite provider completion |
 | 18 | pending | — | — | — | — | Integrated qualification and phase closure |
@@ -1351,6 +1351,12 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 | Milestone 13 initial review | Migration contracts and HIR have no complete `.sifr` source-to-tool command path. | Milestone 18 | Wire migration source discovery, checked lowering, artifact build, and command execution through the integrated compiler and tool path. |
 | Milestone 14 initial review | Schema observation excludes `sifr_internal`, which can silently hide a user-owned schema with the same name. | Milestone 18 | Define the reserved namespace authority, reject user collisions, expose the policy through schema lifecycle tools, and add live collision evidence. |
 | Milestone 14 remediation review | PostgreSQL escape string constants such as `E'it\\'s'` can end quoted-literal scanning early and re-enter migration keyword classification. | Milestone 18 | Parse escape-string constants without scanning their contents as SQL keywords. Add transactional statements whose escape strings contain every autocommit family. |
+| Milestone 15 remediation review | PostgreSQL-generated constraint identities are positional. An application-only UNIQUE, CHECK, or foreign key declared before a required constraint can rename the required object and reject a valid structural superset. | Milestone 18 | Derive stable constraint identities from normalized content or match constraint objects structurally. Add earlier-extra UNIQUE, CHECK, and foreign-key regressions. |
+| Milestone 15 review follow-up | The permanent portable `.sifr` fixture and qualification checker prove the harness contract but do not compile a complete source-level `SqlSchema` constrained-generic program. | Milestone 18 | Wire the language surface through parsing, typing, lowering, and application build. Replace token-only evidence with executable positive and negative fixtures. |
+| Milestone 15 review follow-up | The PostgreSQL portable-capability vocabulary does not yet account for every supported cast, array, function, `LATERAL`, and aggregate `FILTER` behavior. | Milestone 18 | Complete provider-owned capability classification and add one negative portability case for every capability family. |
+| Milestone 15 review follow-up | `ProviderAnalysis::validate` proves that the object account contains effects and result sources, but it cannot independently prove that a provider reported every predicate-only object. | Milestone 18 | Add provider-side statement-to-catalog property tests that require every referenced catalog object in the closed account. |
+| Milestone 15 review follow-up | A column-list-free INSERT accounts for every concrete relation column, so specialization against a narrower structural requirement rejects it. | Milestone 18 | Specify and test this intentional strictness, or define a provider-neutral declared-column rule without hiding application-only write behavior. |
+| Milestone 15 review follow-up | The compatibility normalization response shim has no production consumer. | Milestone 18 | Remove the unused shim after integrated source-level schema requirement loading uses the authoritative response path. |
 
 ### Milestone 0 closure record
 
@@ -2241,6 +2247,68 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
   operator contracts. It pins latest stable tooling through the phase records.
 - Exact next action: implement Milestone 15 schema polymorphism and portable
   constraints from the merged and recorded mainline.
+
+### Milestone 15 closure record
+
+- Status: completed and merged under the phase continuation rule.
+- Starting commit: `868e86f27c77456d0c91a3678b2213d725c0836b`.
+- Initial reviewed candidate: `26cac063c4ec85a31daa0cfd56bdfc797ed6c7bd`.
+- Remediation reviewed and final candidate:
+  `31eb20ff2e634bd299bc620b76705a141f702244`.
+- Pull request: [#3630](https://github.com/sifr-lang/sifr/pull/3630).
+- Merge commit: `d878ecfe1a39befe49106d1018b93ac6fcb07610`.
+- Requirement result: provider-normalized DDL produces one canonical structural
+  requirement. Proofs bind provider identity, minimum server version, declared
+  objects, exact scalar semantics, table-membership containment, and explicit
+  capabilities without adding a second schema language.
+- Specialization result: every profile exports a compile-time-only schema
+  witness. Constrained generic specialization erases the witness, selects one
+  concrete profile, and binds execution to a verified pool, connection, or
+  transaction with the same nominal profile identity.
+- Envelope result: PostgreSQL analysis owns the closed capability and schema
+  object accounts. Predicate-only, join-only, conflict-target, assignment, and
+  result objects participate in undeclared-object rejection. Callers cannot
+  narrow the provider account or request runtime provider dispatch.
+- Integration result: package manifests resolve requirement artifacts through
+  the locked provider component. The driver prepares proofs and generated
+  profile modules offline. The provider-neutral harness and PostgreSQL 13-18
+  components use the same common contracts.
+- Focused validation: the permanent schema-polymorphism suite passed 7/7. The
+  affected contract, frontend, package, driver, and PostgreSQL tests passed.
+  Every regenerated PostgreSQL 13-18 component executed in the
+  capability-free host. PostgreSQL qualification and its mutation check passed.
+- Repository validation: workspace Clippy and PostgreSQL all-target Clippy with
+  warnings denied, formatting, HIR maintainability, the 900-line source guard,
+  and diff hygiene passed.
+- Review round 1: Opus returned `NOT SATISFIED` on the initial candidate. It
+  found exact table-membership comparison and an incomplete effect-derived
+  object envelope. The
+  [published review](https://github.com/sifr-lang/sifr/pull/3630#issuecomment-5476737851)
+  records the two blockers and non-blocking language-integration follow-ups.
+- Remediation: table columns, constraints, and unique sets use containment while
+  scalar and primary-key properties stay exact. Provider analysis now returns a
+  complete accessed-object account, with normalized PostgreSQL and undeclared
+  predicate/assignment regression evidence. All six checked-in components were
+  regenerated from the pinned toolchain.
+- Review round 2: Opus verified the provider-owned object account and returned
+  `NOT SATISFIED` for a newly discovered positional constraint-identity
+  mechanism. The
+  [published review](https://github.com/sifr-lang/sifr/pull/3630#issuecomment-5477033586)
+  assigns stable constraint identity and the remaining qualification hardening
+  to Milestone 18. The user rule prohibits a third review.
+- Create-PR gate: the one allowed run used the exact final candidate. It stopped
+  before tests because the profile omits nine required SQL platform suites. It
+  did not run again.
+- Merge gate: the one allowed run used the same exact final candidate. It
+  stopped before tests on the same profile-composition defect and did not run
+  again. The
+  [published gate evidence](https://github.com/sifr-lang/sifr/pull/3630#issuecomment-5477046866)
+  records both commands. Milestone 18 owns the existing profile-model repair.
+- Documentation result: the SQL architecture and schema-polymorphism document
+  define the normalized requirement, structural proof, witness, specialization,
+  capability, object-account, and execution contracts in direct language.
+- Exact next action: implement Milestone 16 MySQL provider completion from the
+  merged and recorded mainline.
 
 ### External async prerequisite closure record
 
