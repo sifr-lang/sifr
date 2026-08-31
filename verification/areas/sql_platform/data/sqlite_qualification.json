@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "milestone": "sql_17_sqlite_provider",
+  "provider": "sqlite",
+  "supported_libraries": [
+    {"version": "3.53.2", "version_number": 3053002, "compile_flags": []}
+  ],
+  "toolchain": {
+    "syntaqlite": "0.9.0",
+    "rusqlite": "0.40.2",
+    "libsqlite3-sys": "0.38.2",
+    "sqlite": "3.53.2",
+    "wasi-sdk": "33",
+    "wit-bindgen": "0.61.1",
+    "tokio": "1.53.1"
+  },
+  "runtime_features": ["bundled", "cache", "hooks", "limits", "unlock_notify"],
+  "surfaces": [
+    {"id": "grammar", "owner": "sifr_sql_sqlite", "evidence": ["crates/sifr_sql_sqlite/src/parser.rs", "crates/sifr_sql_sqlite/tests/sqlite_compiler.rs", "crates/sifr_sql_sqlite/tests/sqlite_properties.rs"]},
+    {"id": "schema", "owner": "sifr_sql_sqlite", "evidence": ["crates/sifr_sql_sqlite/src/schema.rs", "crates/sifr_sql_sqlite_tools/src/catalog.rs", "crates/sifr_sql_sqlite_tools/tests/catalog_qualification.rs"]},
+    {"id": "runtime", "owner": "sifr_sql_sqlite_runtime", "evidence": ["crates/sifr_sql_sqlite_runtime/src/worker.rs", "crates/sifr_sql_sqlite_runtime/src/pool.rs", "crates/sifr_sql_sqlite_runtime/src/stream.rs", "crates/sifr_sql_sqlite_runtime/tests/runtime_types.rs"]},
+    {"id": "tools", "owner": "sifr_sql_sqlite_tools", "evidence": ["crates/sifr_sql_sqlite_tools/src/command.rs", "crates/sifr_sql_sqlite_tools/src/provision.rs"]},
+    {"id": "migrations", "owner": "sifr_sql_sqlite_tools", "evidence": ["crates/sifr_sql_sqlite/src/migration.rs", "crates/sifr_sql_sqlite_tools/src/migration_plan.rs", "crates/sifr_sql_sqlite_tools/src/migration_runtime.rs", "crates/sifr_sql_sqlite_tools/tests/migration_qualification.rs"]},
+    {"id": "editor", "owner": "sifr_sql_sqlite", "evidence": ["crates/sifr_sql_sqlite/src/editor.rs", "crates/sifr_frontend/src/sql_editor.rs", "crates/sifr_sql_sqlite/tests/sqlite_compiler.rs"]},
+    {"id": "portable-requirements", "owner": "sifr_sql_sqlite", "evidence": ["crates/sifr_sql_sqlite/tests/sqlite_compiler.rs", "crates/sifr_sql_contract/tests/schema_polymorphism.rs"]},
+    {"id": "corruption-locking-performance", "owner": "sifr_sql_sqlite_runtime", "evidence": ["crates/sifr_sql_sqlite_runtime/tests/runtime_types.rs", "verification/areas/sql_platform/tools/run_sqlite_library_matrix.py"]}
+  ],
+  "required_contracts": [
+    "syntaqlite-exact-version-and-flags",
+    "provider-owned-semantic-nodes",
+    "sqlite-affinity-and-dynamic-storage",
+    "strict-rowid-generated-conflict-semantics",
+    "attached-scope-and-required-feature-fingerprints",
+    "bundled-rusqlite-dedicated-workers",
+    "sifr-owned-bounded-pool",
+    "interrupt-handle-then-worker-discard",
+    "bounded-parameters-rows-cache-and-locks",
+    "panic-safe-codecs-and-redacted-errors",
+    "schema-pull-validate-build",
+    "common-file-connection-manifest",
+    "transactional-table-rebuild-and-foreign-key-check",
+    "corruption-locking-and-recovery",
+    "portable-requirement-specialization",
+    "sqlite-editor-documentation"
+  ],
+  "library_matrix": "verification/areas/sql_platform/tools/run_sqlite_library_matrix.py",
+  "library_evidence": "verification/areas/sql_platform/data/sqlite_library_matrix.json",
+  "component_manifest": "crates/sifr_sql_sqlite/component-artifacts.json",
+  "documentation": "internal_docs/sql_sqlite_provider.md"
+}

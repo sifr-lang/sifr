@@ -1,0 +1,29 @@
+[package]
+name = "sifr_sql_sqlite_runtime"
+version = "0.0.0"
+publish = false
+edition = { workspace = true }
+rust-version = { workspace = true }
+license = { workspace = true }
+
+[package.metadata.sifr_sql]
+artifact-role = "sqlite-runtime"
+raw-driver = "rusqlite::Connection"
+upstream-pool = false
+tracing-feature = false
+cancellation = "interrupt-handle-then-discard"
+sqlite-version = "3.53.2"
+
+[dependencies]
+rusqlite = { workspace = true, features = ["bundled", "cache", "hooks", "limits", "unlock_notify"] }
+sifr_runtime = { workspace = true }
+sifr_sql_runtime = { workspace = true }
+tokio = { workspace = true, features = ["macros", "rt", "sync", "time"] }
+
+[dev-dependencies]
+sha2 = { workspace = true }
+static_assertions = { workspace = true }
+tempfile = "3.27.0"
+
+[lints]
+workspace = true

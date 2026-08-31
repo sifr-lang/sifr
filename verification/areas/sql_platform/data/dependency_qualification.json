@@ -258,7 +258,7 @@
       "checksum": "23f2a97da3e3873c73cb2a2e71b35c40ff95e0b1eefa8d72d8499a6928c3b5b3",
       "license": "MIT",
       "default_features": false,
-      "features": ["bundled", "hooks", "limits", "unlock_notify"],
+      "features": ["bundled", "cache", "hooks", "limits", "unlock_notify"],
       "artifacts": ["sqlite-runtime"],
       "targets": ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu"],
       "platform_part": "sqlite_provider",

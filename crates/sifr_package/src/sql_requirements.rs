@@ -6,7 +6,8 @@ use crate::{
 use sifr_sql_contract::{
     ProviderIdentity, ProviderSchemaRequirement, SchemaContractError, SchemaContractErrorKind,
     SchemaDocumentKind, SchemaIr, SchemaRequirementIdentity, SchemaSourceInput,
-    build_provider_schema_requirement, schema_source_fingerprint,
+    build_provider_schema_requirement, project_provider_requirement_schema,
+    schema_source_fingerprint,
 };
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::path::PathBuf;
@@ -66,11 +67,15 @@ impl ResolvedSqlRequirementProvider {
                 "normalized schema does not match the declared requirement provider artifact",
             ));
         }
+        let projected =
+            project_provider_requirement_schema(normalized, &source.document).map_err(|error| {
+                SchemaContractError::new(SchemaContractErrorKind::InvalidSchema, error.message)
+            })?;
         build_provider_schema_requirement(
             identity,
             source.document.clone(),
             source.fingerprint.clone(),
-            normalized,
+            &projected,
             required_capabilities,
             provider_capabilities,
         )

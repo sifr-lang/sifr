@@ -195,11 +195,21 @@ pub fn schema_normalization_from_response(
     let observed = output
         .documents
         .iter()
+        .filter(|document| document.kind != SchemaDocumentKind::ProviderMetadata)
         .map(|document| (document.document.clone(), document.kind))
         .collect::<BTreeMap<_, _>>();
+    let metadata = output
+        .documents
+        .iter()
+        .filter(|document| document.kind == SchemaDocumentKind::ProviderMetadata)
+        .collect::<Vec<_>>();
     if expected.len() != sources.len()
-        || observed.len() != output.documents.len()
+        || observed.len().saturating_add(metadata.len()) != output.documents.len()
         || expected != observed
+        || metadata.len() > 1
+        || metadata
+            .iter()
+            .any(|document| !document.document.starts_with("sifr://"))
     {
         return Err(invalid(
             "schema normalizer changed, omitted, or duplicated a source identity or kind",

@@ -70,6 +70,8 @@
     "crates/sifr_analysis/src/host/tests/sql_editor_tests.rs",
     "crates/sifr_sql_contract/tests/provision_contract.rs",
     "crates/sifr_sql_mysql_tools/src/command.rs",
-    "crates/sifr_sql_mysql_tools/src/provision.rs"
+    "crates/sifr_sql_mysql_tools/src/provision.rs",
+    "crates/sifr_sql_sqlite_tools/src/command.rs",
+    "crates/sifr_sql_sqlite_tools/src/provision.rs"
   ]
 }

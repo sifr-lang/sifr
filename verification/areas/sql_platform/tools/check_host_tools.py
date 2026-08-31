@@ -81,6 +81,8 @@ def validate_evidence_paths(payload: dict[str, Any]) -> None:
         "crates/sifr_sql_contract/tests/provision_contract.rs",
         "crates/sifr_sql_mysql_tools/src/command.rs",
         "crates/sifr_sql_mysql_tools/src/provision.rs",
+        "crates/sifr_sql_sqlite_tools/src/command.rs",
+        "crates/sifr_sql_sqlite_tools/src/provision.rs",
     }, "host-tool behavioral evidence inventory drift")
     for relative in evidence:
         path = REPO_ROOT / relative

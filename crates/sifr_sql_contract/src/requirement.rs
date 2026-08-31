@@ -1,13 +1,73 @@
 use crate::{
     ObjectId, ProfileAuthority, ProviderIdentity, SchemaDependencyRequest, SchemaIr, SchemaSlice,
-    minimum_schema_slice, schema_fingerprint, verify_compatible_slice,
+    SchemaSourceLocation, minimum_schema_slice, schema_fingerprint, verify_compatible_slice,
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::fmt;
 
 pub const SCHEMA_REQUIREMENT_FORMAT_VERSION: u32 = 1;
+
+pub fn project_provider_requirement_schema(
+    normalized: &SchemaIr,
+    source_document: &str,
+) -> Result<SchemaIr, SchemaRequirementError> {
+    if !valid_relative_document(source_document) {
+        return Err(invalid("schema requirement source path is invalid"));
+    }
+    let mut pending = normalized
+        .objects
+        .iter()
+        .filter_map(|(identity, object)| {
+            object
+                .source
+                .as_ref()
+                .is_some_and(|source| source.document == source_document)
+                .then_some(identity.clone())
+        })
+        .collect::<VecDeque<_>>();
+    if pending.is_empty() {
+        return Err(invalid(
+            "normalized requirement has no objects from its declared DDL artifact",
+        ));
+    }
+    let mut objects = BTreeMap::new();
+    while let Some(identity) = pending.pop_front() {
+        if objects.contains_key(&identity) {
+            continue;
+        }
+        let mut object = normalized
+            .objects
+            .get(&identity)
+            .cloned()
+            .ok_or_else(|| invalid("schema requirement has a missing dependency"))?;
+        if object
+            .source
+            .as_ref()
+            .is_some_and(|source| source.document != source_document)
+        {
+            return Err(invalid(
+                "schema requirement reaches an object from another DDL artifact",
+            ));
+        }
+        if object.source.is_none() {
+            object.source = Some(SchemaSourceLocation {
+                document: source_document.to_string(),
+                start: 0,
+                end: 0,
+            });
+        }
+        pending.extend(object.dependencies.iter().cloned());
+        objects.insert(identity, object);
+    }
+    Ok(SchemaIr {
+        format_version: normalized.format_version,
+        provider: normalized.provider.clone(),
+        dialect: normalized.dialect.clone(),
+        objects,
+    })
+}
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
