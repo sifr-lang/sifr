@@ -293,7 +293,7 @@ can use these contracts.
 | 10 | completed | Incremental compiler and editor experience | Fine-grained caching, invalidation, virtual SQL documents, source maps, completion, navigation, rename, formatting, and quick fixes are complete. |
 | 11 | completed | Host tool graph and command runner | Cargo-locked host-only tool packages execute direct command namespaces without entering application code generation. |
 | 12 | completed | Schema lifecycle tools | Pull, validate, and build commands produce deterministic snapshots, fingerprints, manifests, modules, semantic diffs, and affected-query reports. |
-| 13 | pending | Migration compiler and engine | Typed migration DAGs, intermediate schemas, DDL reflection, data steps, assertions, offline validation, recovery, and explicit rollback are complete. |
+| 13 | completed | Migration compiler and engine | Typed migration DAGs, intermediate schemas, DDL reflection, data steps, assertions, offline validation, recovery, and explicit rollback are complete. |
 | 14 | pending | PostgreSQL migration qualification | PostgreSQL DDL, locks, transactional limits, imports, baselines, recovery, and supported-version execution pass full migration qualification. |
 | 15 | pending | Schema polymorphism and portable constraints | Structural schema requirements specialize safely, while explicit capability constraints validate portable code for every declared provider. |
 | 16 | pending | MySQL provider completion | MySQL query, schema, runtime, tooling, migration, editor, safety, and conformance surfaces satisfy the common and provider-specific contracts. |
@@ -868,24 +868,24 @@ Owned scope:
 
 Acceptance criteria:
 
-- [ ] Migrations form a checked DAG with stable identities, parents, checksums,
+- [x] Migrations form a checked DAG with stable identities, parents, checksums,
   provider constraints, input fingerprints, and output fingerprints.
-- [ ] Every DDL step produces an intermediate typed schema state.
-- [ ] `MigrationPlan[S]` is affine. Each step consumes its plan and returns a
+- [x] Every DDL step produces an intermediate typed schema state.
+- [x] `MigrationPlan[S]` is affine. Each step consumes its plan and returns a
   compiler-generated nominal state type.
-- [ ] Typed Sifr and SQL data steps can use only the objects in their declared
+- [x] Typed Sifr and SQL data steps can use only the objects in their declared
   intermediate state.
-- [ ] Data callbacks receive a contextually typed, nonescaping `MigrationDb[S]`.
-- [ ] SQL assertions require one non-null Boolean field and distinguish false,
+- [x] Data callbacks receive a contextually typed, nonescaping `MigrationDb[S]`.
+- [x] SQL assertions require one non-null Boolean field and distinguish false,
   zero-row, and multiple-row failures.
-- [ ] Raw DDL is reflected into schema effects or requires an explicit effect that
+- [x] Raw DDL is reflected into schema effects or requires an explicit effect that
   validates against the canonical schema.
-- [ ] Assertions, bounded backfills, progress keys, idempotent replay, and explicit
+- [x] Assertions, bounded backfills, progress keys, idempotent replay, and explicit
   transaction boundaries have checked semantics.
-- [ ] Offline graph validation reproduces the canonical schema from every supported
+- [x] Offline graph validation reproduces the canonical schema from every supported
   baseline and reports destructive changes, lock risk, and data rewrites.
-- [ ] Rollback is explicit. The engine never synthesizes destructive reversal.
-- [ ] Execution records locks, step state, recovery points, checksums, duration,
+- [x] Rollback is explicit. The engine never synthesizes destructive reversal.
+- [x] Execution records locks, step state, recovery points, checksums, duration,
   heads, and fingerprints without panic or ambiguous recovery.
 
 Focused validation:
@@ -1282,7 +1282,7 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 | 10 | completed | [#3617](https://github.com/sifr-lang/sifr/pull/3617) | `35926da677` | incremental-editor 2/2; SQL mutation 9/9; frontend 134; analysis 51; LSP 81; PostgreSQL component 14/14; strict Clippy and guards pass | Opus round 2 closed all four original blockers on `08e864bf6`; one new failure-isolation defect is deferred | Incremental compiler and editor experience |
 | 11 | completed | [#3619](https://github.com/sifr-lang/sifr/pull/3619) | `a20219da54` | host-tools 7/7; direct CLI 1/1; provisioning 1/1; analysis isolation 2/2; strict Clippy and guards pass | Two exact-SHA Opus reviews; round 2 verified the original blockers and deferred one Linux prerequisite plus new follow-ups under the continuation rule | Locked and confined host tool runner, structured provisioning, and inherited M10 failure isolation |
 | 12 | completed | [#3621](https://github.com/sifr-lang/sifr/pull/3621) | `73a69f691d` | schema-tool 6/6; provider 20/20; PostgreSQL 13-18 live catalog, artifact, and parity matrix; strict Clippy and guards pass | Opus remediation `SATISFIED` on `ba3629d63` | Deterministic pull, validation, build, canonical catalog normalization, and atomic artifact publication |
-| 13 | pending | — | — | — | — | Migration compiler and engine |
+| 13 | completed | [#3625](https://github.com/sifr-lang/sifr/pull/3625) | `6d28649ff9` | migration-engine 6/6; affected crates; workspace Clippy; formatting; HIR, file-size, SQL contract, metadata, and dependency guards pass | Opus remediation `SATISFIED` on `c6acf3da7`; one new merge mechanism is deferred under the continuation rule | Checked compiler graph, nominal migration HIR, closed runtime plan, recovery engine, and atomic artifacts |
 | 14 | pending | — | — | — | — | PostgreSQL migration qualification |
 | 15 | pending | — | — | — | — | Schema polymorphism and portable constraints |
 | 16 | pending | — | — | — | — | MySQL provider completion |
@@ -1344,6 +1344,11 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 | Milestone 12 remediation review | Generated array forms of domains and composites fail closed even when their canonical element forms are representable. | Milestone 18 | Add canonical generated-array handling and live round-trip evidence without fabricating fallback types. |
 | Milestone 12 remediation review | Catalog SQL still selects dead fabricated `sifr_type` and composite-field literals that normalization always replaces. | Milestone 18 | Remove the dead literals and keep one authoritative type-normalization path. |
 | Milestone 12 review follow-up | Pull acceptance rebuilds live authority while retaining declarative source paths and fingerprints, which can misstate the resulting profile authority. | Milestone 18 | Define and enforce the accepted pull authority transition, including source and fingerprint metadata. |
+| Milestone 13 remediation review | A schema-changing diamond can apply a merge after only one parent because the engine does not require every merge parent in applied history. | Milestone 14 | Reject an incomplete merge or reject the graph at compile time. Add a live schema-changing diamond that proves every parent is applied. |
+| Milestone 13 remediation review | The closed runtime plan omits minimum server version, required capabilities, transaction requirement, author, and creation time. | Milestone 14 | Emit the runtime fields needed for server-major and operator qualification. Change the format version if the artifact shape changes. |
+| Milestone 13 remediation review | `AmbiguousPath` now reports only the absence of a matching path. | Milestone 14 | Rename or split the error before provider migration diagnostics become public. |
+| Milestone 13 initial review | Explicit reverse plans compile but have no runtime execution entry point. | Milestone 14 | Execute only declared reverse plans and report exact operator actions in the PostgreSQL rollback matrix. |
+| Milestone 13 initial review | Migration contracts and HIR have no complete `.sifr` source-to-tool command path. | Milestone 18 | Wire migration source discovery, checked lowering, artifact build, and command execution through the integrated compiler and tool path. |
 
 ### Milestone 0 closure record
 
@@ -2108,6 +2113,75 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 - Exact next action: implement Milestone 13 migration compiler and engine from
   the merged and recorded mainline.
 
+### Milestone 13 closure record
+
+- Status: completed and merged under the phase continuation rule.
+- Starting commit: `22a205317448696306cd34631fe88ccb16876f8e`.
+- Initial reviewed candidate: `8e51ecb0bd56be522e9b7530feae7566c0f8b8ff`.
+- Remediation reviewed and final candidate:
+  `c6acf3da7518c2c67a844036c183f45e91440a15`.
+- Pull request: [#3625](https://github.com/sifr-lang/sifr/pull/3625).
+- Merge commit: `6d28649ff935d880516b7cf5fabe03a9c4e85a39`.
+- Acceptance disposition: all 11 Milestone 13 criteria are satisfied.
+- Compiler result: the compiler validates stable DAG identities, parents,
+  checksums, provider constraints, and input and output fingerprints. It proves
+  every baseline path reaches the canonical head.
+- State result: each DDL step produces an exact intermediate `SchemaIR` state.
+  Nominal `MigrationPlan[S]` transitions are affine. Data callbacks receive a
+  scoped `MigrationDb[S]` and can use only objects in state `S`.
+- Step result: SQL and Sifr data steps, Boolean assertions, bounded resumable
+  backfills, progress keys, recovery points, and transaction boundaries have
+  checked contracts. Raw DDL requires reflection or an explicit verified effect.
+- Recovery result: the engine records locks, heads, checksums, fingerprints,
+  step states, duration, recovery points, and backfill progress. It rejects
+  drift, changed checksums, invalid assertion results, provider panics, and
+  ambiguous recovery.
+- Rollback result: reverse plans exist only when the migration declares them.
+  The compiler proves that each reverse path returns to its parent fingerprint.
+  The engine never synthesizes a destructive reverse operation.
+- Boundary result: the host tool lowers the compiler graph to a closed,
+  runtime-owned `MigrationExecutionPlan`. The application runtime does not link
+  `sifr_sql_contract`, `sifr_compiler_component`, or Wasmtime.
+- Artifact result: the host tool emits deterministic `graph.json`,
+  `schema.json`, `impact.json`, and `artifact-manifest.json` files. It publishes
+  the complete set with one atomic directory replacement.
+- Focused validation: the permanent migration suite passed 6/6 variants. All
+  tests passed in `sifr_sql_contract`, `sifr_sql_runtime`, `sifr_sql_tool`, and
+  `sifr_frontend`. This includes six compiler contracts, one frontend test, six
+  engine tests, two artifact tests, graph properties, and identity fuzz smoke.
+- Repository validation: workspace Clippy, strict changed-crate Clippy,
+  formatting, locked metadata, SQL contracts, qualification mutation tests,
+  HIR maintainability, diff hygiene, and the 3,543-file size guard passed.
+  Runtime dependency inspection found only Serde, `sifr_runtime`, and Tokio in
+  the normal closure.
+- Review round 1: Opus returned `NOT SATISFIED` because the application runtime
+  linked the compiler-only SQL contract and pulled Wasmtime into its dependency
+  closure. The [published review](https://github.com/sifr-lang/sifr/pull/3625#issuecomment-5472602197)
+  records the exact initial candidate.
+- Remediation: one batch added the closed runtime plan, host-side lowering,
+  closed artifact serialization, a dependency regression guard, and stable
+  topological branch execution evidence.
+- Review round 2: Opus verified the original blocker and returned `SATISFIED`
+  with no blocking finding. The
+  [published review](https://github.com/sifr-lang/sifr/pull/3625#issuecomment-5472663451)
+  records the exact final candidate. It found one new schema-changing merge
+  mechanism and three suggestions. They are assigned to Milestone 14 under the
+  continuation rule. No third review ran.
+- Create-PR gate: the one allowed run used the exact final candidate. It stopped
+  before tests because the profile omits six required SQL suites, including the
+  new `migration-engine` suite. It did not run again.
+- Merge gate: the one allowed run used the same exact final candidate. It
+  stopped before tests on the same profile contradiction and did not run again.
+  The [published gate evidence](https://github.com/sifr-lang/sifr/pull/3625#issuecomment-5472666358)
+  records both commands. Milestone 18 owns the profile-model correction.
+- Documentation result: the migration document defines graph, type, step,
+  recovery, artifact, and dependency boundaries. It also records equivalent
+  merge schemas and fail-closed transaction recovery.
+- Exact next action: implement Milestone 14 PostgreSQL migration qualification
+  from the merged and recorded mainline. Start with the deferred merge-parent
+  mechanism, then complete explicit reverse execution and runtime provider
+  metadata before the live matrix.
+
 ### External async prerequisite closure record
 
 - Status: complete and merged before Milestone 9.
@@ -2156,5 +2230,5 @@ Complete this section after Milestone 18 merges:
 - Final capability and verification inventory: pending.
 - Deferred out-of-scope work: pending.
 - Archive destination: `plans/issues/archive/ad-hoc-schema-first-sql-platform.md`.
-- Exact next action: implement Milestone 13 from current
+- Exact next action: implement Milestone 14 from current
   `origin/main`.
