@@ -78,6 +78,33 @@ COMMANDS = {
     "sql-query-frontend-tests": [
         "cargo", "test", "--locked", "-p", "sifr_frontend", "--test", "sql_queries",
     ],
+    "sql-schema-polymorphism-qualification": [
+        sys.executable,
+        str(AREA_ROOT / "tools" / "check_schema_polymorphism.py"),
+    ],
+    "sql-schema-polymorphism-mutations": [
+        sys.executable,
+        str(AREA_ROOT / "tools" / "check_schema_polymorphism.py"),
+        "--self-test",
+    ],
+    "sql-schema-polymorphism-contract-tests": [
+        "cargo", "test", "--locked", "-p", "sifr_sql_contract", "--test",
+        "schema_polymorphism",
+    ],
+    "sql-schema-polymorphism-frontend-tests": [
+        "cargo", "test", "--locked", "-p", "sifr_frontend", "--test",
+        "sql_schema_polymorphism",
+    ],
+    "sql-schema-polymorphism-package-tests": [
+        "cargo", "test", "--locked", "-p", "sifr_package", "sql_profile_tests",
+    ],
+    "sql-schema-polymorphism-driver-tests": [
+        "cargo", "test", "--locked", "-p", "sifr_driver", "sql_profiles_tests",
+    ],
+    "sql-schema-polymorphism-postgresql-tests": [
+        "cargo", "test", "--locked", "-p", "sifr_sql_postgresql", "--test",
+        "postgresql_compiler", "postgresql_normalizes_portable_requirement",
+    ],
     "sql-postgresql-compiler-qualification": [
         sys.executable,
         str(AREA_ROOT / "tools" / "check_postgresql_compiler.py"),

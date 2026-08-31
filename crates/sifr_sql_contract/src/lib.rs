@@ -22,6 +22,7 @@ mod provider;
 mod provision;
 mod query;
 mod query_signature;
+mod requirement;
 mod schema;
 mod slice;
 mod sql_type;
@@ -42,8 +43,9 @@ pub use diagnostic::CommonSqlDiagnostic;
 
 pub use component::{
     PROVIDER_ANALYSIS_PAYLOAD_TAG, SCHEMA_NORMALIZATION_OPERATION,
-    SCHEMA_NORMALIZATION_PAYLOAD_TAG, SchemaNormalizationOutput, SchemaSourceArtifact,
-    SchemaSourceInput, normalized_schema_from_response, provider_analysis_from_response,
+    SCHEMA_NORMALIZATION_PAYLOAD_TAG, SchemaNormalizationOutput, SchemaNormalizationResult,
+    SchemaSourceArtifact, SchemaSourceInput, normalized_schema_from_response,
+    provider_analysis_from_response, schema_normalization_from_response,
     schema_normalization_request, schema_source_fingerprint,
 };
 pub use diff::{ObjectChange, ObjectChangeKind, SchemaDiff, semantic_diff};
@@ -62,7 +64,7 @@ pub use fragment_batches::{
 };
 pub use generated::{
     COMPILER_KNOWN_PROFILE_EXPORTS, GeneratedProfileModule, GeneratedSchemaType,
-    ProfileModuleMetadata, generate_profile_module,
+    ProfileModuleMetadata, SchemaWitnessMetadata, generate_profile_module,
 };
 pub use identifier::{
     decode_generated_identifier, decode_generated_path, encode_generated_identifier,
@@ -102,6 +104,11 @@ pub use query_signature::{
     ProjectionPolicy, ProjectionStability, PublicQueryChange, PublicQueryChangeKind,
     QUERY_SIGNATURE_FORMAT_VERSION, QuerySignatureArtifact, QuerySignatureEntry,
     QuerySignatureError, QuerySignatureFormat, compare_query_signatures,
+};
+pub use requirement::{
+    ProviderSchemaRequirement, SCHEMA_REQUIREMENT_FORMAT_VERSION, SchemaRequirement,
+    SchemaRequirementError, SchemaRequirementErrorKind, SchemaRequirementIdentity,
+    SchemaRequirementProof, SchemaRequirementRegistry, build_provider_schema_requirement,
 };
 pub use schema::{
     DialectIdentity, ObjectId, ProviderIdentity, SchemaIr, SchemaObject, SchemaObjectKind,

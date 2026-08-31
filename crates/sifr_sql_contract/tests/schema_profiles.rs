@@ -265,6 +265,7 @@ fn schema_component_round_trip_binds_source_bytes_and_source_kinds() {
     );
     let output = SchemaNormalizationOutput {
         dialect: dialect(),
+        capabilities: BTreeSet::from(["sql.query.select".to_string()]),
         documents: vec![document(
             SchemaDocumentKind::SqlDdl,
             "db/schema.sql",
@@ -345,6 +346,7 @@ fn authority(name: &str, schema: SchemaIr) -> sifr_sql_contract::ProfileAuthorit
             ..SessionContract::default()
         },
         accepted_signers: BTreeSet::new(),
+        capabilities: BTreeSet::from(["sql.query.select".to_string()]),
         schema,
     })
     .expect("profile authority")

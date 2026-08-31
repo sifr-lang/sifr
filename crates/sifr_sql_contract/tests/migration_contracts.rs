@@ -94,7 +94,12 @@ fn data_analysis() -> ProviderAnalysis {
             &["public.orders.status"],
             &["public.orders"],
         ),
+        accessed_objects: BTreeSet::from([
+            ObjectId::new("public.orders"),
+            ObjectId::new("public.orders.status"),
+        ]),
         semantic_flags: BTreeSet::new(),
+        required_capabilities: BTreeSet::from(["sql.query.update".to_string()]),
     }
 }
 
@@ -114,7 +119,9 @@ fn assertion_analysis() -> ProviderAnalysis {
         }],
         cardinality: Cardinality::MANY,
         effects: effect(QueryEffect::Read, &["public.orders.status"], &[]),
+        accessed_objects: BTreeSet::from([ObjectId::new("public.orders.status")]),
         semantic_flags: BTreeSet::new(),
+        required_capabilities: BTreeSet::from(["sql.query.select".to_string()]),
     }
 }
 

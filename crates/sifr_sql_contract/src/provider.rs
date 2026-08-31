@@ -35,7 +35,14 @@ pub struct ProviderAnalysis {
     pub result_fields: Vec<ProviderResultField>,
     pub cardinality: Cardinality,
     pub effects: EffectContract,
+    /// Complete provider-owned set of schema objects reached anywhere in the
+    /// statement, including predicate-only and write-target columns.
+    pub accessed_objects: BTreeSet<ObjectId>,
     pub semantic_flags: BTreeSet<String>,
+    /// Closed provider-owned account of every SQL capability used by the
+    /// analyzed statement. Portable specialization treats this set as
+    /// authoritative; callers cannot supply or narrow it.
+    pub required_capabilities: BTreeSet<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -86,10 +93,35 @@ impl ProviderAnalysis {
                 .semantic_flags
                 .iter()
                 .any(|flag| !valid_semantic_flag(flag))
+            || self.required_capabilities.is_empty()
+            || self
+                .required_capabilities
+                .iter()
+                .any(|capability| !valid_capability(capability))
         {
             return Err(ProviderAnalysisError::InvalidDialectSemantics);
         }
         if self.cardinality.validate().is_err() || self.effects.validate().is_err() {
+            return Err(ProviderAnalysisError::InvalidDialectSemantics);
+        }
+        let accounted_objects = self
+            .effects
+            .referenced_objects
+            .iter()
+            .chain(&self.effects.affected_objects)
+            .chain(
+                self.result_fields
+                    .iter()
+                    .filter_map(|field| field.source_object.as_ref()),
+            );
+        if self
+            .accessed_objects
+            .iter()
+            .any(|object| object.as_str().is_empty())
+            || accounted_objects
+                .into_iter()
+                .any(|object| !self.accessed_objects.contains(object))
+        {
             return Err(ProviderAnalysisError::InvalidDialectSemantics);
         }
         for (expected_slot, parameter) in self.parameters.iter().enumerate() {
@@ -150,6 +182,14 @@ fn valid_semantic_flag(value: &str) -> bool {
         && value
             .bytes()
             .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_'))
+}
+
+fn valid_capability(value: &str) -> bool {
+    value.starts_with("sql.")
+        && value.len() <= 96
+        && value.bytes().all(|byte| {
+            byte.is_ascii_lowercase() || byte.is_ascii_digit() || matches!(byte, b'.' | b'-')
+        })
 }
 
 impl fmt::Display for ProviderAnalysisError {

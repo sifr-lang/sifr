@@ -40,6 +40,20 @@ fn package_compilation_prepares_profiles_offline_and_binds_source_bytes() {
         .cache_fragment();
     assert_ne!(first, second);
     assert!(first.contains("sifr.sql.schemas.app"));
+    assert_eq!(prepared.requirements().len(), 1);
+    let requirement_name = format!("{}::has_users", fixture.owner_id.0);
+    let requirement = prepared
+        .requirements()
+        .requirement(&requirement_name)
+        .expect("prepared requirement");
+    let profile = prepared
+        .registry()
+        .profile("app")
+        .expect("prepared profile");
+    let proof = requirement
+        .prove(profile.authority())
+        .expect("profile must prove requirement");
+    assert_eq!(proof.provider_family, "postgresql");
 }
 
 #[test]
@@ -159,6 +173,16 @@ sql-modes = ["standard"]
 pooling = "session"
 schema-evidence = "migration-head"
 schema-strictness = "compatible"
+
+[sql.requirements.has_users]
+capabilities = ["sql.bind.parameters", "sql.expression.equality", "sql.query.select"]
+
+[sql.requirements.has_users.providers.postgresql]
+provider = "postgres"
+source = "db/schema.sql"
+server-version = "18"
+extensions = ["citext"]
+sql-modes = ["standard"]
 "#
     .to_string()
 }
@@ -192,6 +216,11 @@ fn schema_response() -> Vec<u8> {
             modes: BTreeSet::from(["standard".to_string()]),
             features: BTreeSet::from(["citext".to_string()]),
         },
+        capabilities: BTreeSet::from([
+            "sql.bind.parameters".to_string(),
+            "sql.expression.equality".to_string(),
+            "sql.query.select".to_string(),
+        ]),
         documents: vec![SchemaDocument {
             kind: SchemaDocumentKind::SqlDdl,
             document: "db/schema.sql".to_string(),

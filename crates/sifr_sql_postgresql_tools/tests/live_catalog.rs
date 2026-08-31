@@ -119,6 +119,7 @@ fn authority(schema: sifr_sql_contract::SchemaIr) -> sifr_sql_contract::ProfileA
         pooling: PoolingMode::Session,
         session: SessionContract::default(),
         accepted_signers: BTreeSet::new(),
+        capabilities: sifr_sql_postgresql::postgresql_capabilities(),
         schema,
     })
     .expect("authority")

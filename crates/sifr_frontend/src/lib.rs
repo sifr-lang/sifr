@@ -71,12 +71,14 @@ mod source_provider;
 mod sql_editor;
 mod sql_migrations;
 mod sql_queries;
+mod sql_schema_polymorphism;
 #[cfg(test)]
 mod structural_shape_import_tests;
 pub use source_provider::*;
 pub use sql_editor::*;
 pub use sql_migrations::*;
 pub use sql_queries::*;
+pub use sql_schema_polymorphism::*;
 mod source_maps;
 pub use source_maps::*;
 mod workspace_session;

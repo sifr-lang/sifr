@@ -5,11 +5,11 @@ use sifr_compiler_component::{
 };
 use sifr_package::{
     SifrPackageGraph, SifrPackageId, compiler_component_registrations, resolve_package_component,
-    resolve_sql_profiles,
+    resolve_sql_profiles, resolve_sql_requirements,
 };
 use sifr_sql_contract::{
-    ProfileModuleRegistry, generate_profile_module, normalized_schema_from_response,
-    schema_context_artifact, schema_normalization_request,
+    ProfileModuleRegistry, SchemaRequirement, SchemaRequirementRegistry, generate_profile_module,
+    schema_context_artifact, schema_normalization_from_response, schema_normalization_request,
 };
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
@@ -25,6 +25,7 @@ struct PreparedSqlProfile {
 pub struct PreparedSqlProfiles {
     profiles: BTreeMap<String, PreparedSqlProfile>,
     registry: ProfileModuleRegistry,
+    requirements: SchemaRequirementRegistry,
     initialization_diagnostics: Vec<RenderedDiagnostic>,
 }
 
@@ -56,6 +57,11 @@ impl PreparedSqlProfiles {
     #[must_use]
     pub fn registry(&self) -> &ProfileModuleRegistry {
         &self.registry
+    }
+
+    #[must_use]
+    pub fn requirements(&self) -> &SchemaRequirementRegistry {
+        &self.requirements
     }
 
     #[must_use]
@@ -95,6 +101,15 @@ impl PreparedSqlProfiles {
                 registered.module().module_path,
                 prepared.context.fingerprint
             );
+        }
+        for (name, requirement) in self.requirements.entries() {
+            for (family, artifact) in &requirement.providers {
+                let _ = writeln!(
+                    fragment,
+                    "requirement\t{name}\t{family}\t{}",
+                    artifact.artifact_fingerprint,
+                );
+            }
         }
         fragment
     }
@@ -158,7 +173,14 @@ pub fn prepare_sql_profiles(
             .map(render_package_diagnostic)
             .collect::<Vec<_>>()
     })?;
-    if resolved.is_empty() {
+    let resolved_requirements =
+        resolve_sql_requirements(graph, owner_package_id).map_err(|diagnostics| {
+            diagnostics
+                .into_iter()
+                .map(render_package_diagnostic)
+                .collect::<Vec<_>>()
+        })?;
+    if resolved.is_empty() && resolved_requirements.is_empty() {
         return Ok(PreparedSqlProfiles::default());
     }
     let registrations = compiler_component_registrations(graph).map_err(component_diagnostics)?;
@@ -166,6 +188,7 @@ pub fn prepare_sql_profiles(
         ComponentHost::new(ComponentHostLimits::default(), None).map_err(component_diagnostics)?;
     let mut profiles = BTreeMap::new();
     let mut registry = ProfileModuleRegistry::default();
+    let mut requirements = SchemaRequirementRegistry::default();
     for (name, profile) in resolved {
         let candidates = registrations
             .values()
@@ -229,11 +252,11 @@ pub fn prepare_sql_profiles(
         let run = host
             .analyze(&component.registration, &component.bytes, &request)
             .map_err(component_diagnostics)?;
-        let schema =
-            normalized_schema_from_response(profile.provider.clone(), &sources, &run.response)
+        let normalized =
+            schema_normalization_from_response(profile.provider.clone(), &sources, &run.response)
                 .map_err(schema_diagnostics)?;
         let authority = profile
-            .build_authority(schema, &sources)
+            .build_authority(normalized.schema, &sources, normalized.capabilities)
             .map_err(schema_diagnostics)?;
         let module = generate_profile_module(&authority).map_err(schema_diagnostics)?;
         crate::frontend::parse_source(&module.source)?;
@@ -249,6 +272,80 @@ pub fn prepare_sql_profiles(
             },
         );
     }
+    for requirement in resolved_requirements.values() {
+        let identity = requirement.identity().map_err(schema_diagnostics)?;
+        let mut artifacts = Vec::new();
+        for provider in requirement.providers.values() {
+            let candidates = registrations
+                .values()
+                .filter(|component| {
+                    component.package_id.0 == provider.provider.package_id
+                        && processor_kind(&component.registration.identity.processor)
+                            == Some("schema")
+                })
+                .collect::<Vec<_>>();
+            if candidates.len() != 1 {
+                return Err(vec![diagnostic_with_code(
+                    format!(
+                        "SQL requirement '{}::{}' provider '{}' needs one exact '.schema' processor; found {}",
+                        requirement.owner_package_id.0,
+                        requirement.name,
+                        provider.family,
+                        candidates.len()
+                    ),
+                    sifr_diagnostics::DiagnosticCode::COMPONENT_REGISTRATION,
+                )]);
+            }
+            let registration = &candidates[0].registration;
+            let component = resolve_package_component(
+                graph,
+                &ComponentRequirement {
+                    identity: registration.identity.clone(),
+                    protocol_major: COMPONENT_PROTOCOL_MAJOR,
+                },
+            )
+            .map_err(component_diagnostics)?;
+            let source = provider.load_source().map_err(schema_diagnostics)?;
+            let request = schema_normalization_request(
+                &component.registration,
+                env!("CARGO_PKG_VERSION"),
+                &format!(
+                    "{}::requirements::{}::{}",
+                    requirement.owner_package_id.0, requirement.name, provider.family
+                ),
+                &provider.config.server_version,
+                &provider.config.sql_modes,
+                &provider.config.extensions,
+                std::slice::from_ref(&source),
+            )
+            .map_err(schema_diagnostics)?;
+            let run = host
+                .analyze(&component.registration, &component.bytes, &request)
+                .map_err(component_diagnostics)?;
+            let normalized = schema_normalization_from_response(
+                provider.provider.clone(),
+                std::slice::from_ref(&source),
+                &run.response,
+            )
+            .map_err(schema_diagnostics)?;
+            artifacts.push(
+                provider
+                    .build_artifact(
+                        identity.clone(),
+                        requirement.config.capabilities.clone(),
+                        &source,
+                        &normalized.schema,
+                        &normalized.capabilities,
+                    )
+                    .map_err(schema_diagnostics)?,
+            );
+        }
+        let requirement =
+            SchemaRequirement::new(identity, artifacts).map_err(requirement_diagnostics)?;
+        requirements
+            .register(requirement)
+            .map_err(requirement_diagnostics)?;
+    }
     let compiler = sifr_frontend::SqlQueryCompiler::new(&registry);
     for name in profiles.keys() {
         compiler.profile(name).map_err(|error| {
@@ -259,8 +356,18 @@ pub fn prepare_sql_profiles(
     Ok(PreparedSqlProfiles {
         profiles,
         registry,
+        requirements,
         initialization_diagnostics: Vec::new(),
     })
+}
+
+fn requirement_diagnostics(
+    error: sifr_sql_contract::SchemaRequirementError,
+) -> Vec<RenderedDiagnostic> {
+    vec![diagnostic_with_code(
+        error.message,
+        sifr_diagnostics::DiagnosticCode::COMPONENT_PROTOCOL_ENVELOPE,
+    )]
 }
 
 fn processor_kind(identity: &str) -> Option<&str> {

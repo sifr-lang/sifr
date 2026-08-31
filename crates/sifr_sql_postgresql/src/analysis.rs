@@ -3,16 +3,15 @@ pub(crate) use crate::analysis_types::{
     AnalysisContext, AnalyzedStatement, ResultFact, ScopeBinding, ScopeFrame, StarExpansion,
     TypeFact,
 };
-use crate::ast::{Expression, ExpressionKind, FromItem, JoinKind, SelectStatement, SetOperator};
+use crate::ast::{Expression, ExpressionKind, SelectStatement, SetOperator};
 use crate::cardinality_analysis::{
     apply_limit_and_offset, group_expression_functionally_dependent, group_expression_valid,
-    make_frame_nullable, set_cardinality, unique_predicate_cardinality,
+    set_cardinality, unique_predicate_cardinality,
 };
-use crate::catalog::CatalogColumn;
 use crate::diagnostic::PostgresDiagnosticCode;
 use crate::locking_analysis::validate_locking;
 use crate::nullability_analysis::refine_for_null_test;
-use crate::scope::{binding_for_relation, frame_for_results, resolve_column};
+use crate::scope::{frame_for_results, resolve_column};
 use crate::semantic_helpers::{
     expression_has_aggregate, expression_has_window, integer_type, integer64_type, is_numeric,
     text_type, type_fact, unique_result_names,
@@ -20,7 +19,7 @@ use crate::semantic_helpers::{
 use crate::window_analysis::{
     reject_window_expression, validate_named_windows, validate_window_references,
 };
-use sifr_sql_contract::{Cardinality, DatabaseType, Nullability, ObjectId, QueryEffect};
+use sifr_sql_contract::{Cardinality, DatabaseType, Nullability, QueryEffect};
 use std::collections::BTreeSet;
 
 impl AnalysisContext<'_> {
@@ -38,8 +37,16 @@ impl AnalysisContext<'_> {
         outer: Vec<ScopeFrame>,
         expected_fields: Option<&[DatabaseType]>,
     ) -> Result<AnalyzedStatement, PostgresAnalysisError> {
+        self.required_capabilities
+            .insert("sql.query.select".to_string());
+        if !select.common_tables.is_empty() {
+            self.required_capabilities
+                .insert("sql.query.common-table-expression".to_string());
+        }
         let outer = self.scopes_with_ctes(select, outer)?;
         if let Some(set) = &select.set_operation {
+            self.required_capabilities
+                .insert("sql.query.set-operation".to_string());
             if !select.locking.is_empty() {
                 return Err(PostgresAnalysisError::at_start(
                     PostgresDiagnosticCode::InvalidResult,
@@ -152,6 +159,8 @@ impl AnalysisContext<'_> {
             .iter()
             .any(|target| expression_has_aggregate(&target.expression));
         if aggregate || !select.group_by.is_empty() {
+            self.required_capabilities
+                .insert("sql.query.aggregate".to_string());
             for target in &select.targets {
                 if !expression_has_aggregate(&target.expression)
                     && !group_expression_valid(&target.expression, &select.group_by)
@@ -201,9 +210,13 @@ impl AnalysisContext<'_> {
             BTreeSet::from(["deterministic-order".to_string()])
         };
         if !select.common_tables.is_empty() {
+            self.required_capabilities
+                .insert("sql.query.common-table-expression".to_string());
             flags.insert("common-table-expression".to_string());
         }
         if !select.locking.is_empty() {
+            self.required_capabilities
+                .insert("sql.query.row-locking".to_string());
             validate_locking(select, &frames, aggregate)?;
             flags.insert("row-locking".to_string());
         }
@@ -213,6 +226,8 @@ impl AnalysisContext<'_> {
                 .iter()
                 .any(|target| expression_has_window(&target.expression))
         {
+            self.required_capabilities
+                .insert("sql.query.window".to_string());
             flags.insert("window-function".to_string());
         }
         if select
@@ -285,135 +300,6 @@ impl AnalysisContext<'_> {
         Ok(frames)
     }
 
-    fn scope_from(
-        &mut self,
-        items: &[FromItem],
-        outer: &[ScopeFrame],
-    ) -> Result<ScopeFrame, PostgresAnalysisError> {
-        let mut frame = ScopeFrame::default();
-        for item in items {
-            self.add_from_item(item, outer, &mut frame)?;
-        }
-        Ok(frame)
-    }
-
-    pub(crate) fn add_from_item(
-        &mut self,
-        item: &FromItem,
-        outer: &[ScopeFrame],
-        frame: &mut ScopeFrame,
-    ) -> Result<(), PostgresAnalysisError> {
-        match item {
-            FromItem::Relation { name, alias, .. } => {
-                if name.len() == 1
-                    && let Some(binding) = outer
-                        .iter()
-                        .rev()
-                        .flat_map(|scope| scope.bindings.iter())
-                        .find(|binding| binding.alias == name[0] && binding.relation.is_none())
-                {
-                    let mut binding = binding.clone();
-                    if let Some(alias) = alias {
-                        binding.alias.clone_from(alias);
-                    }
-                    frame.bindings.push(binding);
-                    return Ok(());
-                }
-                let relation = self
-                    .catalog
-                    .relation(name)
-                    .map_err(|diagnostic| PostgresAnalysisError { diagnostic })?;
-                self.referenced.insert(relation.identity.clone());
-                frame
-                    .bindings
-                    .push(binding_for_relation(relation, alias.as_deref()));
-            }
-            FromItem::Subquery {
-                query,
-                alias,
-                lateral,
-                ..
-            } => {
-                let mut scopes = outer.to_vec();
-                if *lateral {
-                    scopes.push(frame.clone());
-                }
-                let analyzed = self.analyze_select(query, scopes)?;
-                frame.bindings.push(ScopeBinding {
-                    alias: alias.clone(),
-                    relation: None,
-                    column_order: analyzed
-                        .fields
-                        .iter()
-                        .map(|field| field.name.clone())
-                        .collect(),
-                    columns: analyzed
-                        .fields
-                        .into_iter()
-                        .enumerate()
-                        .map(|(index, field)| {
-                            let identity = ObjectId::new(format!("derived.{alias}.{index}"));
-                            (
-                                field.name.clone(),
-                                CatalogColumn {
-                                    identity,
-                                    name: field.name,
-                                    database_type: field.database_type,
-                                    nullable: field.nullable,
-                                    has_default: false,
-                                    generated: false,
-                                    source: None,
-                                },
-                            )
-                        })
-                        .collect(),
-                });
-            }
-            FromItem::Join {
-                join,
-                left,
-                right,
-                condition,
-                using_columns,
-                ..
-            } => {
-                let mut left_frame = ScopeFrame::default();
-                self.add_from_item(left, outer, &mut left_frame)?;
-                let mut right_outer = outer.to_vec();
-                right_outer.push(left_frame.clone());
-                let mut right_frame = ScopeFrame::default();
-                self.add_from_item(right, &right_outer, &mut right_frame)?;
-                if matches!(join, JoinKind::Right | JoinKind::Full) {
-                    make_frame_nullable(&mut left_frame);
-                }
-                if matches!(join, JoinKind::Left | JoinKind::Full) {
-                    make_frame_nullable(&mut right_frame);
-                }
-                frame.bindings.extend(left_frame.bindings);
-                frame.bindings.extend(right_frame.bindings);
-                if let Some(condition) = condition {
-                    let mut scopes = outer.to_vec();
-                    scopes.push(frame.clone());
-                    self.require_boolean(condition, &scopes)?;
-                }
-                for column in using_columns {
-                    let matches = frame
-                        .bindings
-                        .iter()
-                        .filter(|binding| binding.columns.contains_key(column))
-                        .count();
-                    if matches != 2 {
-                        return Err(PostgresAnalysisError::at_start(
-                            PostgresDiagnosticCode::UnknownColumn,
-                            format!("JOIN USING column '{column}' must exist on both sides"),
-                        ));
-                    }
-                }
-            }
-        }
-        Ok(())
-    }
-
     #[allow(clippy::too_many_lines)]
     pub(crate) fn infer(
         &mut self,
@@ -428,7 +314,11 @@ impl AnalysisContext<'_> {
                 expression,
             )),
             ExpressionKind::Column { path } => {
-                resolve_column(self.catalog, path, frames, expression)
+                let fact = resolve_column(self.catalog, path, frames, expression)?;
+                if let Some(object) = &fact.source_object {
+                    self.accessed_objects.insert(object.clone());
+                }
+                Ok(fact)
             }
             ExpressionKind::Parameter { number } => {
                 let expected = expected.ok_or_else(|| {
@@ -504,12 +394,20 @@ impl AnalysisContext<'_> {
                 operator,
                 left,
                 right,
-            } => self.infer_binary(operator, left, right, frames, expression),
+            } => {
+                if matches!(operator.as_str(), "=" | "<>") {
+                    self.required_capabilities
+                        .insert("sql.expression.equality".to_string());
+                }
+                self.infer_binary(operator, left, right, frames, expression)
+            }
             ExpressionKind::InList {
                 expression: left,
                 values,
                 ..
             } => {
+                self.required_capabilities
+                    .insert("sql.expression.equality".to_string());
                 let Some(first) = values.first() else {
                     return Err(PostgresAnalysisError::new(
                         PostgresDiagnosticCode::TypeMismatch,
@@ -611,6 +509,14 @@ impl AnalysisContext<'_> {
                         .functions(name)
                         .iter()
                         .any(|function| function.aggregate);
+                if aggregate_function {
+                    self.required_capabilities
+                        .insert("sql.query.aggregate".to_string());
+                }
+                if window.is_some() {
+                    self.required_capabilities
+                        .insert("sql.query.window".to_string());
+                }
                 if window_only && window.is_none() {
                     return Err(PostgresAnalysisError::new(
                         PostgresDiagnosticCode::InvalidResult,
@@ -684,6 +590,8 @@ impl AnalysisContext<'_> {
                 branches,
                 fallback,
             } => {
+                self.required_capabilities
+                    .insert("sql.expression.case".to_string());
                 let operand_fact = operand
                     .as_deref()
                     .map(|value| self.infer(value, frames, None))
@@ -780,6 +688,8 @@ impl AnalysisContext<'_> {
                 Ok(type_fact(DatabaseType::Boolean, false))
             }
             ExpressionKind::Subquery { query } => {
+                self.required_capabilities
+                    .insert("sql.query.subquery".to_string());
                 let analyzed = self.analyze_select(query, frames.to_vec())?;
                 if analyzed.fields.len() != 1 {
                     return Err(PostgresAnalysisError::new(
@@ -797,6 +707,8 @@ impl AnalysisContext<'_> {
                 })
             }
             ExpressionKind::Exists { query } => {
+                self.required_capabilities
+                    .insert("sql.query.subquery".to_string());
                 self.analyze_select(query, frames.to_vec())?;
                 Ok(type_fact(DatabaseType::Boolean, false))
             }
@@ -806,6 +718,8 @@ impl AnalysisContext<'_> {
                 query,
                 ..
             } => {
+                self.required_capabilities
+                    .insert("sql.query.subquery".to_string());
                 let analyzed = self.analyze_select(query, frames.to_vec())?;
                 if analyzed.fields.len() != 1 {
                     return Err(PostgresAnalysisError::new(

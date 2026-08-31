@@ -55,6 +55,7 @@ pub struct SchemaProfile {
     pub pooling: PoolingMode,
     pub session: SessionContract,
     pub accepted_signers: BTreeSet<String>,
+    pub capabilities: BTreeSet<String>,
     pub schema: SchemaIr,
 }
 
@@ -91,6 +92,7 @@ pub struct RuntimeSchemaManifest {
     pub session: SessionContract,
     pub dependency_slice: SchemaSlice,
     pub accepted_signers: BTreeSet<String>,
+    pub capabilities: BTreeSet<String>,
 }
 
 impl ProfileAuthority {
@@ -107,6 +109,7 @@ impl ProfileAuthority {
             session: self.profile.session.clone(),
             dependency_slice,
             accepted_signers: self.profile.accepted_signers.clone(),
+            capabilities: self.profile.capabilities.clone(),
         }
     }
 }
@@ -129,6 +132,7 @@ pub fn build_profile_authority(
         profile.pooling,
         &profile.session,
         &profile.accepted_signers,
+        &profile.capabilities,
     ))
     .map_err(|error| {
         SchemaContractError::new(
@@ -198,6 +202,22 @@ fn validate_profile(profile: &SchemaProfile) -> Result<(), SchemaContractError> 
         return Err(SchemaContractError::new(
             SchemaContractErrorKind::InvalidProfile,
             "signed-manifest evidence requires at least one accepted signer",
+        ));
+    }
+    if profile.capabilities.is_empty()
+        || profile.capabilities.iter().any(|capability| {
+            !capability.starts_with("sql.")
+                || capability.len() > 96
+                || capability.bytes().any(|byte| {
+                    !(byte.is_ascii_lowercase()
+                        || byte.is_ascii_digit()
+                        || matches!(byte, b'.' | b'-'))
+                })
+        })
+    {
+        return Err(SchemaContractError::new(
+            SchemaContractErrorKind::InvalidProfile,
+            "profile provider capabilities must be a non-empty canonical SQL capability set",
         ));
     }
     if profile.pooling == PoolingMode::Transaction && profile.session.role.is_some() {

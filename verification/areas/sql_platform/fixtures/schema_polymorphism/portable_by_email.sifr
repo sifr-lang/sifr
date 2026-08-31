@@ -1,0 +1,12 @@
+from sifr.sql.requirements import has_users
+
+
+def by_email[S: has_users.Schema](schema: SqlSchema[S], email: str):
+    return schema.sql(t"""
+        SELECT id, email
+        FROM public.users
+        WHERE email = {email}
+    """)
+
+
+query = by_email(app.schema, "dev@example.com")

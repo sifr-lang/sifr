@@ -26,9 +26,25 @@ pub struct SqlProfileConfig {
     pub accepted_signers: BTreeSet<String>,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SqlRequirementProviderConfig {
+    pub provider: String,
+    pub source: PathBuf,
+    pub server_version: String,
+    pub extensions: BTreeSet<String>,
+    pub sql_modes: BTreeSet<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SqlRequirementConfig {
+    pub capabilities: BTreeSet<String>,
+    pub providers: BTreeMap<String, SqlRequirementProviderConfig>,
+}
+
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct SqlConfig {
     pub profiles: BTreeMap<String, SqlProfileConfig>,
+    pub requirements: BTreeMap<String, SqlRequirementConfig>,
 }
 
 pub(super) fn parse_sql_config(
@@ -39,7 +55,13 @@ pub(super) fn parse_sql_config(
     let Some(table) = table else {
         return Ok(SqlConfig::default());
     };
-    reject_unknown(cargo_package_id, manifest_path, "sql", table, &["profiles"])?;
+    reject_unknown(
+        cargo_package_id,
+        manifest_path,
+        "sql",
+        table,
+        &["profiles", "requirements"],
+    )?;
     let profiles = optional_table(
         cargo_package_id,
         manifest_path,
@@ -67,15 +89,229 @@ pub(super) fn parse_sql_config(
     })
     .transpose()?
     .unwrap_or_default();
-    if profiles.is_empty() {
+    let requirements = parse_requirements(cargo_package_id, manifest_path, table)?;
+    if profiles.is_empty() && requirements.is_empty() {
         return Err(invalid(
             cargo_package_id,
             manifest_path,
-            "sql.profiles",
-            "expected at least one named profile",
+            "sql",
+            "expected at least one named profile or schema requirement",
         ));
     }
-    Ok(SqlConfig { profiles })
+    Ok(SqlConfig {
+        profiles,
+        requirements,
+    })
+}
+
+fn parse_requirements(
+    cargo_package_id: &CargoPackageId,
+    manifest_path: &Path,
+    sql: &toml::Table,
+) -> Result<BTreeMap<String, SqlRequirementConfig>, PackageDiagnostic> {
+    optional_table(
+        cargo_package_id,
+        manifest_path,
+        sql,
+        "sql.requirements",
+        "requirements",
+    )?
+    .map(|requirements| {
+        requirements
+            .iter()
+            .map(|(name, value)| {
+                validate_profile_name(cargo_package_id, manifest_path, name)?;
+                let table = value.as_table().ok_or_else(|| {
+                    invalid(
+                        cargo_package_id,
+                        manifest_path,
+                        format!("sql.requirements.{name}"),
+                        "expected a table",
+                    )
+                })?;
+                parse_requirement(cargo_package_id, manifest_path, name, table)
+                    .map(|requirement| (name.clone(), requirement))
+            })
+            .collect()
+    })
+    .transpose()
+    .map(Option::unwrap_or_default)
+}
+
+fn parse_requirement(
+    cargo_package_id: &CargoPackageId,
+    manifest_path: &Path,
+    name: &str,
+    table: &toml::Table,
+) -> Result<SqlRequirementConfig, PackageDiagnostic> {
+    let prefix = format!("sql.requirements.{name}");
+    reject_unknown(
+        cargo_package_id,
+        manifest_path,
+        &prefix,
+        table,
+        &["capabilities", "providers"],
+    )?;
+    let capabilities = string_set(
+        cargo_package_id,
+        manifest_path,
+        table,
+        &prefix,
+        "capabilities",
+    )?;
+    if capabilities.is_empty()
+        || capabilities.iter().any(|capability| {
+            !capability.starts_with("sql.")
+                || capability.len() > 96
+                || capability.bytes().any(|byte| {
+                    !(byte.is_ascii_lowercase()
+                        || byte.is_ascii_digit()
+                        || matches!(byte, b'.' | b'-'))
+                })
+        })
+    {
+        return Err(invalid(
+            cargo_package_id,
+            manifest_path,
+            format!("{prefix}.capabilities"),
+            "expected a non-empty set of canonical 'sql.*' capabilities",
+        ));
+    }
+    let providers = optional_table(
+        cargo_package_id,
+        manifest_path,
+        table,
+        &format!("{prefix}.providers"),
+        "providers",
+    )?
+    .ok_or_else(|| {
+        invalid(
+            cargo_package_id,
+            manifest_path,
+            format!("{prefix}.providers"),
+            "expected at least one provider artifact",
+        )
+    })?
+    .iter()
+    .map(|(family, value)| {
+        validate_provider_family(cargo_package_id, manifest_path, &prefix, family)?;
+        let provider = value.as_table().ok_or_else(|| {
+            invalid(
+                cargo_package_id,
+                manifest_path,
+                format!("{prefix}.providers.{family}"),
+                "expected a table",
+            )
+        })?;
+        parse_requirement_provider(cargo_package_id, manifest_path, &prefix, family, provider)
+            .map(|provider| (family.clone(), provider))
+    })
+    .collect::<Result<BTreeMap<_, _>, _>>()?;
+    if providers.is_empty() {
+        return Err(invalid(
+            cargo_package_id,
+            manifest_path,
+            format!("{prefix}.providers"),
+            "expected at least one provider artifact",
+        ));
+    }
+    Ok(SqlRequirementConfig {
+        capabilities,
+        providers,
+    })
+}
+
+fn parse_requirement_provider(
+    cargo_package_id: &CargoPackageId,
+    manifest_path: &Path,
+    requirement_prefix: &str,
+    family: &str,
+    table: &toml::Table,
+) -> Result<SqlRequirementProviderConfig, PackageDiagnostic> {
+    let prefix = format!("{requirement_prefix}.providers.{family}");
+    reject_unknown(
+        cargo_package_id,
+        manifest_path,
+        &prefix,
+        table,
+        &[
+            "provider",
+            "source",
+            "server-version",
+            "extensions",
+            "sql-modes",
+        ],
+    )?;
+    let provider = required_string(cargo_package_id, manifest_path, table, &prefix, "provider")?;
+    let source = required_string(cargo_package_id, manifest_path, table, &prefix, "source")?;
+    let source = validate_relative_path(
+        cargo_package_id,
+        manifest_path,
+        &format!("{prefix}.source"),
+        &source,
+    )?;
+    let server_version = required_string(
+        cargo_package_id,
+        manifest_path,
+        table,
+        &prefix,
+        "server-version",
+    )?;
+    if server_version.split('.').any(|part| {
+        part.is_empty() || part.len() > 8 || !part.bytes().all(|byte| byte.is_ascii_digit())
+    }) {
+        return Err(invalid(
+            cargo_package_id,
+            manifest_path,
+            format!("{prefix}.server-version"),
+            "expected a numeric dotted server version",
+        ));
+    }
+    let extensions = string_set(
+        cargo_package_id,
+        manifest_path,
+        table,
+        &prefix,
+        "extensions",
+    )?;
+    let sql_modes = string_set(cargo_package_id, manifest_path, table, &prefix, "sql-modes")?;
+    if sql_modes.iter().any(|mode| !valid_sql_mode(mode)) {
+        return Err(invalid(
+            cargo_package_id,
+            manifest_path,
+            format!("{prefix}.sql-modes"),
+            "expected canonical SQL mode identifiers",
+        ));
+    }
+    Ok(SqlRequirementProviderConfig {
+        provider,
+        source,
+        server_version,
+        extensions,
+        sql_modes,
+    })
+}
+
+fn validate_provider_family(
+    cargo_package_id: &CargoPackageId,
+    manifest_path: &Path,
+    prefix: &str,
+    family: &str,
+) -> Result<(), PackageDiagnostic> {
+    if !family.is_empty()
+        && family.len() <= 64
+        && family
+            .bytes()
+            .all(|byte| byte == b'_' || byte.is_ascii_lowercase())
+    {
+        return Ok(());
+    }
+    Err(invalid(
+        cargo_package_id,
+        manifest_path,
+        format!("{prefix}.providers.{family}"),
+        "provider family must contain lowercase letters or underscores",
+    ))
 }
 
 fn parse_profile(

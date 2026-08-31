@@ -139,6 +139,9 @@ fn validate_entry(
         || metadata.profile_fingerprint != authority.profile_fingerprint.as_str()
         || metadata.schema_fingerprint != authority.schema_fingerprint.as_str()
         || metadata.schema_symbols != expected_symbols
+        || metadata.schema_witness.export_name != "schema"
+        || metadata.schema_witness.profile_identity != authority.nominal_identity
+        || metadata.schema_witness.type_name != format!("SqlSchema[{}]", authority.nominal_identity)
         || module.module_path != expected_path
     {
         return Err(SchemaContractError::new(

@@ -59,6 +59,9 @@ pub struct HirSqlQueryTemplate {
 #[derive(Clone, Debug)]
 pub struct HirSqlBoundQuery {
     pub template_identity: String,
+    pub profile_identity: String,
+    pub profile_fingerprint: String,
+    pub schema_fingerprint: String,
     /// Captures remain normal typed HIR expressions in source evaluation order.
     pub captures: Vec<HirExpr>,
     pub cardinality: HirSqlCardinality,

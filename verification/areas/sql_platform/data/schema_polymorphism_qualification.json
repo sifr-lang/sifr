@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "requirement_language": "provider-normalized-ddl-to-schema-ir-subset",
+  "manifest_contract": [
+    "capabilities",
+    "provider",
+    "providers",
+    "server-version",
+    "source"
+  ],
+  "proof_contract": [
+    "capability-subset",
+    "minimum-server-version",
+    "provider-identity",
+    "schema-object-subset"
+  ],
+  "witness_allowed_uses": [
+    "constrained-generic-parameter",
+    "direct-profile-namespace-export"
+  ],
+  "witness_prohibited_uses": [
+    "capture",
+    "return",
+    "runtime-storage",
+    "selection",
+    "unconstrained-generic-parameter"
+  ],
+  "execution_resources": [
+    "verified-connection",
+    "verified-pool",
+    "verified-transaction"
+  ],
+  "specialization_rules": [
+    "concrete-profile-analysis",
+    "no-runtime-provider-dispatch",
+    "no-silent-capability-rewrite",
+    "provider-owned-capability-account",
+    "provider-owned-object-account",
+    "undeclared-behavior-rejection",
+    "undeclared-object-rejection",
+    "witness-erasure"
+  ],
+  "postgresql_capabilities": [
+    "sql.bind.parameters",
+    "sql.expression.case",
+    "sql.expression.equality",
+    "sql.query.aggregate",
+    "sql.query.common-table-expression",
+    "sql.query.delete",
+    "sql.query.insert",
+    "sql.query.join",
+    "sql.query.row-locking",
+    "sql.query.select",
+    "sql.query.set-operation",
+    "sql.query.subquery",
+    "sql.query.update",
+    "sql.query.window",
+    "sql.write.conflict",
+    "sql.write.returning"
+  ],
+  "provider_evidence": [
+    "postgresql",
+    "provider-neutral-harness"
+  ],
+  "evidence": [
+    "capability-negative",
+    "execution-profile-negative",
+    "fingerprint-property",
+    "manifest-resolution",
+    "postgresql-ddl-normalization",
+    "provider-mismatch-negative",
+    "schema-subset-property",
+    "undeclared-behavior-negative",
+    "undeclared-object-negative",
+    "witness-use-negative"
+  ]
+}

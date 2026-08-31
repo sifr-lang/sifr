@@ -33,7 +33,14 @@ pub struct SchemaSourceArtifact {
 #[serde(deny_unknown_fields)]
 pub struct SchemaNormalizationOutput {
     pub dialect: DialectIdentity,
+    pub capabilities: BTreeSet<String>,
     pub documents: Vec<SchemaDocument>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SchemaNormalizationResult {
+    pub schema: SchemaIr,
+    pub capabilities: BTreeSet<String>,
 }
 
 pub fn schema_source_fingerprint(contents: &[u8]) -> String {
@@ -124,6 +131,14 @@ pub fn normalized_schema_from_response(
     sources: &[SchemaSourceInput],
     response: &EmbeddedAnalysisResponse,
 ) -> Result<SchemaIr, SchemaContractError> {
+    Ok(schema_normalization_from_response(provider, sources, response)?.schema)
+}
+
+pub fn schema_normalization_from_response(
+    provider: ProviderIdentity,
+    sources: &[SchemaSourceInput],
+    response: &EmbeddedAnalysisResponse,
+) -> Result<SchemaNormalizationResult, SchemaContractError> {
     if response.plan.result_type != ClosedType::None
         || response.plan.runtime != RuntimeLowering::NoRuntime
         || response.plan.operations.len() != 1
@@ -142,6 +157,21 @@ pub fn normalized_schema_from_response(
     }
     let output: SchemaNormalizationOutput =
         serde_json::from_slice(payload).map_err(|error| serialization_error(&error))?;
+    if output.capabilities.is_empty()
+        || output.capabilities.iter().any(|capability| {
+            !capability.starts_with("sql.")
+                || capability.len() > 96
+                || capability.bytes().any(|byte| {
+                    !(byte.is_ascii_lowercase()
+                        || byte.is_ascii_digit()
+                        || matches!(byte, b'.' | b'-'))
+                })
+        })
+    {
+        return Err(invalid(
+            "schema normalizer returned an invalid provider capability set",
+        ));
+    }
     let expected = sources
         .iter()
         .map(|source| (source.document.clone(), source.kind))
@@ -159,7 +189,11 @@ pub fn normalized_schema_from_response(
             "schema normalizer changed, omitted, or duplicated a source identity or kind",
         ));
     }
-    normalize_schema(provider, output.dialect, output.documents)
+    let schema = normalize_schema(provider, output.dialect, output.documents)?;
+    Ok(SchemaNormalizationResult {
+        schema,
+        capabilities: output.capabilities,
+    })
 }
 
 pub fn provider_analysis_from_response(

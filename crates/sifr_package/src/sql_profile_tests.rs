@@ -1,7 +1,9 @@
 use crate::cargo::metadata::CargoPackageId;
 use crate::graph::derive::{SifrPackageGraph, SifrPackageId, SifrPackageMetadata};
 use crate::graph::scopes::{DirectDependencyScope, ScopedImport, ScopedImportSource};
-use crate::{ImportRoot, SchemaSourceKind, SifrManifest, resolve_sql_profiles};
+use crate::{
+    ImportRoot, SchemaSourceKind, SifrManifest, resolve_sql_profiles, resolve_sql_requirements,
+};
 use sifr_sql_contract::{DialectIdentity, SCHEMA_IR_FORMAT_VERSION, SchemaIr};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
@@ -19,6 +21,19 @@ fn manifest_parses_complete_offline_profile_contract() {
         BTreeSet::from(["standard".to_string()])
     );
     assert_eq!(profile.session.time_zone.as_deref(), Some("UTC"));
+    let requirement = &manifest.sql.requirements["has_users"];
+    assert_eq!(
+        requirement.capabilities,
+        BTreeSet::from([
+            "sql.bind.parameters".to_string(),
+            "sql.expression.equality".to_string(),
+            "sql.query.select".to_string(),
+        ])
+    );
+    assert_eq!(
+        requirement.providers["postgresql"].source,
+        PathBuf::from("db/requirements/has_users.postgresql.sql")
+    );
 }
 
 #[test]
@@ -45,6 +60,29 @@ fn manifest_rejects_credentials_and_live_connection_inputs() {
         .expect_err("SQL modes must not carry arbitrary credential strings");
     assert!(error.message.contains("SQL mode identifiers"));
     assert!(!error.message.contains("secret"));
+}
+
+#[test]
+fn reusable_library_can_declare_requirements_without_an_application_profile() {
+    let manifest = parse(
+        r#"[package]
+name = "library"
+edition = "2026"
+sifr-version = ">=0.3,<0.4"
+
+[sql.requirements.has_users]
+capabilities = ["sql.query.select"]
+
+[sql.requirements.has_users.providers.postgresql]
+provider = "postgres"
+source = "db/requirements/has_users.postgresql.sql"
+server-version = "13"
+extensions = []
+sql-modes = []
+"#,
+    );
+    assert!(manifest.sql.profiles.is_empty());
+    assert_eq!(manifest.sql.requirements.len(), 1);
 }
 
 #[test]
@@ -101,7 +139,23 @@ fn profile_provider_resolves_to_locked_package_and_component_identity() {
         },
         objects: BTreeMap::new(),
     };
-    assert!(profile.build_authority(wrong_schema, &[]).is_err());
+    assert!(
+        profile
+            .build_authority(
+                wrong_schema,
+                &[],
+                BTreeSet::from(["sql.query.select".to_string()]),
+            )
+            .is_err()
+    );
+    let requirements =
+        resolve_sql_requirements(&graph, &owner_id).expect("resolve schema requirements");
+    let requirement = &requirements[&format!("{}::has_users", owner_id.0)];
+    assert_eq!(
+        requirement.providers["postgresql"].provider,
+        profile.provider
+    );
+    assert_eq!(requirement.config.providers.len(), 1);
 }
 
 fn package(name: &str, manifest: SifrManifest) -> SifrPackageMetadata {
@@ -147,6 +201,16 @@ schema-strictness = "compatible"
 
 [sql.profiles.app.session]
 time-zone = "UTC"
+
+[sql.requirements.has_users]
+capabilities = ["sql.bind.parameters", "sql.expression.equality", "sql.query.select"]
+
+[sql.requirements.has_users.providers.postgresql]
+provider = "{provider}"
+source = "db/requirements/has_users.postgresql.sql"
+server-version = "13"
+extensions = []
+sql-modes = []
 "#
     )
 }

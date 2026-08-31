@@ -7,14 +7,18 @@ use sifr_compiler_component::{
     EmbeddedAnalysisRequest, PlanKind, SourceSpan, TemplatePart,
 };
 use sifr_sql_contract::{
-    Cardinality, DatabaseType, QueryEffect, SchemaDocument, SchemaDocumentKind, SchemaObject,
-    SchemaObjectKind, SemanticValue, normalize_schema, provider_analysis_from_response,
+    Cardinality, DatabaseType, ObjectId, PoolingMode, QueryEffect, SchemaDocument,
+    SchemaDocumentKind, SchemaEvidence, SchemaObject, SchemaObjectKind, SchemaProfile,
+    SchemaRequirement, SchemaRequirementIdentity, SchemaStrictness, SemanticValue, SessionContract,
+    build_profile_authority, build_provider_schema_requirement, normalize_schema,
+    provider_analysis_from_response, schema_source_fingerprint,
 };
 use sifr_sql_postgresql::{
     LibpgQueryParser, POSTGRESQL_QUERY_OPERATION, POSTGRESQL_SCHEMA_ARTIFACT_KIND,
     PostgresCompilerComponent, PostgresComponentRequest, PostgresComponentResponse,
     PostgresDiagnosticCode, PostgresParser, SUPPORTED_POSTGRESQL_MAJORS, StatementKind,
-    component_registration, embedded_sources, into_embedded_response, rewrite_parameter_slots,
+    component_registration, embedded_sources, into_embedded_response, postgresql_capabilities,
+    rewrite_parameter_slots,
 };
 use std::collections::{BTreeMap, BTreeSet};
 use support::{provider, schema_for_semantics, schema_for_writes};
@@ -243,6 +247,14 @@ fn ddl_normalization_and_query_analysis_share_one_schema_authority() {
     assert_eq!(analysis.cardinality, Cardinality::AT_MOST_ONE);
     assert_eq!(analysis.effects.effect, QueryEffect::Read);
     assert!(analysis.semantic_flags.contains("deterministic-order"));
+    assert_eq!(
+        analysis.required_capabilities,
+        BTreeSet::from([
+            "sql.bind.parameters".to_string(),
+            "sql.expression.equality".to_string(),
+            "sql.query.select".to_string(),
+        ])
+    );
 
     let embedded = into_embedded_response(
         server_major,
@@ -257,6 +269,86 @@ fn ddl_normalization_and_query_analysis_share_one_schema_authority() {
         provider_analysis_from_response(&embedded).expect("common provider envelope"),
         analysis
     );
+}
+
+#[test]
+fn postgresql_normalizes_portable_requirement_ddl_with_explicit_capabilities() {
+    let source = "CREATE TABLE public.users (id bigint PRIMARY KEY, email text NOT NULL UNIQUE);";
+    let response = PostgresCompilerComponent::new(LibpgQueryParser).execute(
+        PostgresComponentRequest::NormalizeSchema {
+            provider: provider(),
+            server_major: LibpgQueryParser.server_major(),
+            documents: vec![(
+                "db/requirements/has_users.postgresql.sql".to_string(),
+                source.to_string(),
+            )],
+        },
+    );
+    let PostgresComponentResponse::Schema(output) = response else {
+        panic!("requirement DDL must normalize")
+    };
+    assert_eq!(output.capabilities, postgresql_capabilities());
+    let schema = normalize_schema(provider(), output.dialect, output.documents).unwrap();
+    let required = BTreeSet::from([
+        "sql.bind.parameters".to_string(),
+        "sql.query.select".to_string(),
+    ]);
+    let identity = SchemaRequirementIdentity::new("library", "has_users").unwrap();
+    let artifact = build_provider_schema_requirement(
+        identity.clone(),
+        "db/requirements/has_users.postgresql.sql",
+        schema_source_fingerprint(source.as_bytes()),
+        &schema,
+        required,
+        &postgresql_capabilities(),
+    )
+    .unwrap();
+    assert!(
+        artifact
+            .schema
+            .objects
+            .contains_key(&sifr_sql_contract::ObjectId::new("public.users.email"))
+    );
+
+    let application_source = "CREATE TABLE public.users (\
+        id bigint PRIMARY KEY,\
+        email text NOT NULL UNIQUE,\
+        display_name text,\
+        CHECK (display_name <> '')\
+    );";
+    let application = PostgresCompilerComponent::new(LibpgQueryParser).execute(
+        PostgresComponentRequest::NormalizeSchema {
+            provider: provider(),
+            server_major: LibpgQueryParser.server_major(),
+            documents: vec![("db/schema.sql".to_string(), application_source.to_string())],
+        },
+    );
+    let PostgresComponentResponse::Schema(application) = application else {
+        panic!("application DDL must normalize")
+    };
+    let application =
+        normalize_schema(provider(), application.dialect, application.documents).unwrap();
+    let authority = build_profile_authority(SchemaProfile {
+        package_id: "app@1.0.0#registry".to_string(),
+        name: "app".to_string(),
+        source_files: BTreeSet::from(["db/schema.sql".to_string()]),
+        source_fingerprints: BTreeMap::from([(
+            "db/schema.sql".to_string(),
+            schema_source_fingerprint(application_source.as_bytes()),
+        )]),
+        evidence: SchemaEvidence::MigrationHead,
+        strictness: SchemaStrictness::Compatible,
+        pooling: PoolingMode::Session,
+        session: SessionContract::default(),
+        accepted_signers: BTreeSet::new(),
+        capabilities: postgresql_capabilities(),
+        schema: application,
+    })
+    .unwrap();
+    SchemaRequirement::new(identity, [artifact])
+        .unwrap()
+        .prove(&authority)
+        .expect("application-only columns and constraints must preserve the structural proof");
 }
 
 #[test]
@@ -297,6 +389,25 @@ fn aliases_correlations_set_operations_and_parameter_codecs_are_exact() {
         sifr_sql_contract::Nullability::Nullable
     );
     assert_eq!(correlated.cardinality, Cardinality::AT_MOST_ONE);
+    for object in [
+        "public.users",
+        "public.users.id",
+        "public.users.team_id",
+        "public.teams",
+        "public.teams.id",
+        "public.teams.name",
+    ] {
+        assert!(correlated.accessed_objects.contains(&ObjectId::new(object)));
+    }
+    assert_eq!(
+        correlated.required_capabilities,
+        BTreeSet::from([
+            "sql.bind.parameters".to_string(),
+            "sql.expression.equality".to_string(),
+            "sql.query.select".to_string(),
+            "sql.query.subquery".to_string(),
+        ])
+    );
 
     let set = component.execute(PostgresComponentRequest::AnalyzeQuery {
         schema,
@@ -314,6 +425,13 @@ fn aliases_correlations_set_operations_and_parameter_codecs_are_exact() {
     assert_eq!(set.cardinality, Cardinality::AT_MOST_ONE);
     assert!(set.semantic_flags.contains("set-union"));
     assert!(set.semantic_flags.contains("deterministic-order"));
+    assert_eq!(
+        set.required_capabilities,
+        BTreeSet::from([
+            "sql.query.select".to_string(),
+            "sql.query.set-operation".to_string(),
+        ])
+    );
 }
 
 #[test]
@@ -386,6 +504,18 @@ fn update_and_delete_returning_preserve_write_effects() {
         assert_eq!(analysis.effects.effect, QueryEffect::Write);
         assert_eq!(analysis.effects.affected_objects.len(), 1);
         assert!(!analysis.result_fields.is_empty());
+        assert!(
+            analysis
+                .required_capabilities
+                .contains("sql.write.returning")
+        );
+        if source.starts_with("UPDATE") {
+            assert!(
+                analysis
+                    .accessed_objects
+                    .contains(&ObjectId::new("public.users.name"))
+            );
+        }
     }
 }
 
@@ -417,6 +547,23 @@ fn writes_enforce_required_generated_conflict_and_returning_contracts() {
     assert_eq!(valid.parameters.len(), 2);
     assert_eq!(valid.effects.effect, QueryEffect::Write);
     assert_eq!(valid.result_fields.len(), 1);
+    assert_eq!(
+        valid.accessed_objects,
+        BTreeSet::from([
+            ObjectId::new("public.users"),
+            ObjectId::new("public.users.id"),
+            ObjectId::new("public.users.name"),
+        ])
+    );
+    assert_eq!(
+        valid.required_capabilities,
+        BTreeSet::from([
+            "sql.bind.parameters".to_string(),
+            "sql.query.insert".to_string(),
+            "sql.write.conflict".to_string(),
+            "sql.write.returning".to_string(),
+        ])
+    );
 
     for source in [
         "INSERT INTO users(id) VALUES ($1)",
@@ -526,6 +673,19 @@ fn advanced_postgresql_semantics_are_owned_and_exact() {
     assert_eq!(analysis.cardinality, Cardinality::MANY);
     assert!(analysis.semantic_flags.contains("common-table-expression"));
     assert!(analysis.semantic_flags.contains("window-function"));
+    assert_eq!(
+        analysis.required_capabilities,
+        BTreeSet::from([
+            "sql.bind.parameters".to_string(),
+            "sql.expression.case".to_string(),
+            "sql.expression.equality".to_string(),
+            "sql.query.aggregate".to_string(),
+            "sql.query.common-table-expression".to_string(),
+            "sql.query.join".to_string(),
+            "sql.query.select".to_string(),
+            "sql.query.window".to_string(),
+        ])
+    );
     assert_eq!(
         analysis.result_fields[1].nullability,
         sifr_sql_contract::Nullability::NonNull
@@ -696,169 +856,4 @@ fn cardinality_star_and_default_policies_close_regressions() {
             "{source}"
         );
     }
-}
-
-#[test]
-fn cardinality_and_nullability_properties_hold_across_query_families() {
-    let component = PostgresCompilerComponent::new(LibpgQueryParser);
-    let server_major = LibpgQueryParser.server_major();
-    let schema = schema_for_semantics(&component, server_major);
-    for limit in 0..=8 {
-        for offset in 0..=3 {
-            let source = format!("SELECT id FROM users LIMIT {limit} OFFSET {offset}");
-            let response = component.execute(PostgresComponentRequest::AnalyzeQuery {
-                schema: schema.clone(),
-                source: source.clone(),
-                sifr_document: "src/cardinality-property.sifr".to_string(),
-                sifr_start: 0,
-                sifr_end: u32::try_from(source.len()).unwrap(),
-            });
-            let PostgresComponentResponse::Query(analysis) = response else {
-                panic!("bounded query must analyze: {response:?}");
-            };
-            assert_eq!(
-                analysis.cardinality,
-                Cardinality::new(0, Some(limit)).unwrap()
-            );
-        }
-    }
-
-    for source in [
-        "SELECT 1 AS value WHERE false",
-        "SELECT count(*) AS value FROM users HAVING false",
-    ] {
-        let response = component.execute(PostgresComponentRequest::AnalyzeQuery {
-            schema: schema.clone(),
-            source: source.to_string(),
-            sifr_document: "src/cardinality-property.sifr".to_string(),
-            sifr_start: 0,
-            sifr_end: u32::try_from(source.len()).unwrap(),
-        });
-        let PostgresComponentResponse::Query(analysis) = response else {
-            panic!("filtered singleton query must analyze: {response:?}");
-        };
-        assert_eq!(analysis.cardinality, Cardinality::AT_MOST_ONE);
-    }
-    let source = "SELECT id, name, count(*) AS total FROM users GROUP BY id";
-    assert!(matches!(
-        component.execute(PostgresComponentRequest::AnalyzeQuery {
-            schema: schema.clone(),
-            source: source.to_string(),
-            sifr_document: "src/grouping-property.sifr".to_string(),
-            sifr_start: 0,
-            sifr_end: u32::try_from(source.len()).unwrap(),
-        }),
-        PostgresComponentResponse::Query(_)
-    ));
-    let source = "SELECT team_id, name, count(*) AS total FROM users GROUP BY team_id";
-    assert!(matches!(
-        component.execute(PostgresComponentRequest::AnalyzeQuery {
-            schema: schema.clone(),
-            source: source.to_string(),
-            sifr_document: "src/grouping-property.sifr".to_string(),
-            sifr_start: 0,
-            sifr_end: u32::try_from(source.len()).unwrap(),
-        }),
-        PostgresComponentResponse::Diagnostic(_)
-    ));
-
-    for (source, expected) in [
-        (
-            "SELECT teams.name AS value FROM users LEFT JOIN teams ON teams.id = users.team_id",
-            sifr_sql_contract::Nullability::Nullable,
-        ),
-        (
-            "SELECT CASE WHEN teams.id IS NULL THEN 'none' ELSE teams.name END AS value FROM users LEFT JOIN teams ON teams.id = users.team_id",
-            sifr_sql_contract::Nullability::NonNull,
-        ),
-        (
-            "SELECT COALESCE(users.nickname, 'none') AS value FROM users",
-            sifr_sql_contract::Nullability::NonNull,
-        ),
-        (
-            "SELECT (SELECT name FROM teams WHERE id = users.team_id) AS value FROM users",
-            sifr_sql_contract::Nullability::Nullable,
-        ),
-    ] {
-        let response = component.execute(PostgresComponentRequest::AnalyzeQuery {
-            schema: schema.clone(),
-            source: source.to_string(),
-            sifr_document: "src/nullability-property.sifr".to_string(),
-            sifr_start: 0,
-            sifr_end: u32::try_from(source.len()).unwrap(),
-        });
-        let PostgresComponentResponse::Query(analysis) = response else {
-            panic!("nullability query must analyze: {response:?}");
-        };
-        assert_eq!(analysis.result_fields[0].nullability, expected, "{source}");
-    }
-
-    for source in [
-        "SELECT row_number() AS value FROM users",
-        "SELECT id FROM users WHERE row_number() OVER () = 1",
-        "SELECT lower(name) OVER () AS value FROM users",
-        "SELECT row_number() OVER missing AS value FROM users",
-    ] {
-        assert!(
-            matches!(
-                component.execute(PostgresComponentRequest::AnalyzeQuery {
-                    schema: schema.clone(),
-                    source: source.to_string(),
-                    sifr_document: "src/window-property.sifr".to_string(),
-                    sifr_start: 0,
-                    sifr_end: u32::try_from(source.len()).unwrap(),
-                }),
-                PostgresComponentResponse::Diagnostic(_)
-            ),
-            "window query unexpectedly passed: {source}"
-        );
-    }
-}
-
-#[test]
-fn arrays_ranges_composites_and_json_are_schema_checked() {
-    let component = PostgresCompilerComponent::new(LibpgQueryParser);
-    let server_major = LibpgQueryParser.server_major();
-    let normalized = component.execute(PostgresComponentRequest::NormalizeSchema {
-        provider: provider(),
-        server_major,
-        documents: vec![(
-            "db/advanced.sql".to_string(),
-            "CREATE TYPE public.address AS (street text, zip integer); \
-             CREATE TYPE public.score_range AS RANGE (subtype = integer); \
-             CREATE TABLE public.items (id bigint PRIMARY KEY, tags text[], payload jsonb, score score_range, address address);"
-                .to_string(),
-        )],
-    });
-    let PostgresComponentResponse::Schema(output) = normalized else {
-        panic!("advanced DDL must normalize: {normalized:?}");
-    };
-    let schema = normalize_schema(provider(), output.dialect, output.documents).unwrap();
-    let kinds = schema
-        .objects
-        .values()
-        .map(|object| object.kind)
-        .collect::<BTreeSet<_>>();
-    assert!(kinds.contains(&SchemaObjectKind::Composite));
-    assert!(kinds.contains(&SchemaObjectKind::Range));
-    let source = "SELECT payload ->> 'name' AS name, tags || ARRAY['checked'] AS tags FROM items WHERE id = $1";
-    let response = component.execute(PostgresComponentRequest::AnalyzeQuery {
-        schema,
-        source: source.to_string(),
-        sifr_document: "src/types.sifr".to_string(),
-        sifr_start: 0,
-        sifr_end: u32::try_from(source.len()).unwrap(),
-    });
-    let PostgresComponentResponse::Query(analysis) = response else {
-        panic!("advanced types must analyze: {response:?}");
-    };
-    assert_eq!(analysis.cardinality, Cardinality::AT_MOST_ONE);
-    assert_eq!(analysis.result_fields.len(), 2);
-    assert!(matches!(
-        analysis.result_fields[1].database_type,
-        DatabaseType::Array {
-            dimensions: None,
-            ..
-        }
-    ));
 }

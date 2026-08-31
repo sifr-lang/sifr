@@ -143,6 +143,7 @@ fn authority(schema: SchemaIr) -> sifr_sql_contract::ProfileAuthority {
         pooling: PoolingMode::Session,
         session: SessionContract::default(),
         accepted_signers: BTreeSet::new(),
+        capabilities: BTreeSet::from(["sql.query.select".to_string()]),
         schema,
     })
     .expect("authority")
