@@ -296,7 +296,7 @@ can use these contracts.
 | 13 | completed | Migration compiler and engine | Typed migration DAGs, intermediate schemas, DDL reflection, data steps, assertions, offline validation, recovery, and explicit rollback are complete. |
 | 14 | completed | PostgreSQL migration qualification | PostgreSQL DDL, locks, transactional limits, imports, baselines, recovery, and supported-version execution pass full migration qualification. |
 | 15 | completed | Schema polymorphism and portable constraints | Structural schema requirements specialize safely, while explicit capability constraints validate portable code for every declared provider. |
-| 16 | pending | MySQL provider completion | MySQL query, schema, runtime, tooling, migration, editor, safety, and conformance surfaces satisfy the common and provider-specific contracts. |
+| 16 | completed | MySQL provider completion | MySQL query, schema, runtime, tooling, migration, editor, safety, and conformance surfaces satisfy the common and provider-specific contracts. |
 | 17 | pending | SQLite provider completion | SQLite query, schema, runtime, tooling, migration, editor, safety, and conformance surfaces satisfy the common and provider-specific contracts. |
 | 18 | pending | Integrated qualification and phase closure | All providers, tools, migrations, compiler paths, runtime paths, editor paths, security gates, budgets, examples, and documents pass as one final system. |
 
@@ -986,27 +986,27 @@ Owned scope:
 
 Acceptance criteria:
 
-- [ ] Component and runtime manifests use the exact Milestone 0 versions of
+- [x] Component and runtime manifests use the exact Milestone 0 versions of
   LALRPOP, `mysql_async`, `mysql_common`, Tokio, and Rustls.
-- [ ] A provider-owned LALRPOP grammar, lexer, AST, recovery mode, and version
+- [x] A provider-owned LALRPOP grammar, lexer, AST, recovery mode, and version
   gates pass differential parsing against each supported MySQL server.
-- [ ] The runtime uses raw `mysql_async` connections without constructing its
+- [x] The runtime uses raw `mysql_async` connections without constructing its
   pool. Its tracing feature stays disabled. Rustls and minimal features are explicit.
-- [ ] Cancellation uses a bounded `KILL QUERY` control path, then closes and
+- [x] Cancellation uses a bounded `KILL QUERY` control path, then closes and
   discards the target connection when cancellation cannot complete safely.
-- [ ] MySQL grammar, name resolution, coercions, collations, unsigned types,
+- [x] MySQL grammar, name resolution, coercions, collations, unsigned types,
   generated columns, conflict forms, modes, and schema objects are exact.
-- [ ] SQL mode and collation inputs participate in fingerprints and caches.
-- [ ] The runtime satisfies the common verification, ownership, execution,
+- [x] SQL mode and collation inputs participate in fingerprints and caches.
+- [x] The runtime satisfies the common verification, ownership, execution,
   streaming, statement-cache, cancellation, bound, error, and panic-safety
   contracts.
-- [ ] Schema tools and migration reflection cover the MySQL capability matrix.
-- [ ] The MySQL provider tool implements `sifr sql test provision` with the
+- [x] Schema tools and migration reflection cover the MySQL capability matrix.
+- [x] The MySQL provider tool implements `sifr sql test provision` with the
   common connection-manifest contract.
-- [ ] MySQL independently normalizes, proves, specializes, and validates portable
+- [x] MySQL independently normalizes, proves, specializes, and validates portable
   schema requirements through the Milestone 15 harness.
-- [ ] Language-server features use MySQL semantics and documentation.
-- [ ] Differential, conformance, migration, recovery, fuzz, property, and performance
+- [x] Language-server features use MySQL semantics and documentation.
+- [x] Differential, conformance, migration, recovery, fuzz, property, and performance
   suites pass on every supported MySQL version.
 
 Focused validation:
@@ -1285,7 +1285,7 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 | 13 | completed | [#3625](https://github.com/sifr-lang/sifr/pull/3625) | `6d28649ff9` | migration-engine 6/6; affected crates; workspace Clippy; formatting; HIR, file-size, SQL contract, metadata, and dependency guards pass | Opus remediation `SATISFIED` on `c6acf3da7`; one new merge mechanism is deferred under the continuation rule | Checked compiler graph, nominal migration HIR, closed runtime plan, recovery engine, and atomic artifacts |
 | 14 | completed | [#3627](https://github.com/sifr-lang/sifr/pull/3627) | `5b2aa585f4` | migration and PostgreSQL suites 9/9; live PostgreSQL 13-18 migration matrix; strict Clippy, formatting, guards, qualification, and mutation checks pass | Opus remediation `SATISFIED` on `a8f02da62`; two new mechanisms are deferred under the continuation rule | PostgreSQL DDL reflection, runtime plan v2, imports, locking, recovery, rollback, operator commands, and supported-major qualification |
 | 15 | completed | [#3630](https://github.com/sifr-lang/sifr/pull/3630) | `d878ecfe1a` | schema-polymorphism 7/7; PostgreSQL 13-18 component sandbox; affected tests, strict Clippy, formatting, and guards pass | Two exact-SHA Opus reviews; round 2 verified object accounting and deferred the new positional constraint-identity mechanism under the continuation rule | Structural requirements, compile-time witnesses, specialization, execution binding, and provider-owned capability and object accounts |
-| 16 | pending | — | — | — | — | MySQL provider completion |
+| 16 | completed | [#3635](https://github.com/sifr-lang/sifr/pull/3635) | `70de2f82bb` | SQL platform 62/62; MySQL 8.4, 9.7, and 26.7 live matrices; affected tests, strict Clippy, formatting, and guards pass | Opus remediation `SATISFIED` on `5d585f4b0`; new mechanism suggestions are deferred under the continuation rule | Complete MySQL compiler, runtime, tools, migrations, provisioning, editor integration, and qualification |
 | 17 | pending | — | — | — | — | SQLite provider completion |
 | 18 | pending | — | — | — | — | Integrated qualification and phase closure |
 
@@ -1357,6 +1357,12 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 | Milestone 15 review follow-up | `ProviderAnalysis::validate` proves that the object account contains effects and result sources, but it cannot independently prove that a provider reported every predicate-only object. | Milestone 18 | Add provider-side statement-to-catalog property tests that require every referenced catalog object in the closed account. |
 | Milestone 15 review follow-up | A column-list-free INSERT accounts for every concrete relation column, so specialization against a narrower structural requirement rejects it. | Milestone 18 | Specify and test this intentional strictness, or define a provider-neutral declared-column rule without hiding application-only write behavior. |
 | Milestone 15 review follow-up | The compatibility normalization response shim has no production consumer. | Milestone 18 | Remove the unused shim after integrated source-level schema requirement loading uses the authoritative response path. |
+| Milestone 16 initial review | MySQL schema validation reads the expected character set from the schema that it validates. | Milestone 18 | Give the parser an owned expected character set. Add a negative schema-input mismatch test. |
+| Milestone 16 initial review | A table-level character set without a collation inherits the profile collation instead of the character set default. | Milestone 18 | Model the server collation rule. Add differential DDL cases for character-set-only table declarations. |
+| Milestone 16 initial review | An abandoned MySQL savepoint records an unused completion flag and has no release behavior. | Milestone 18 | Define savepoint abandonment semantics. Remove the flag or add bounded release and poison behavior with live tests. |
+| Milestone 16 remediation review | Carrier cancellation uses a detached cleanup task. Evidence can arrive after the returned error, and a connection ID can retire first. | Milestone 18 | Join the bounded cleanup or add an explicit completion handoff. Attach cleanup evidence to the returned error and test the retirement race. |
+| Milestone 16 remediation review | SQL profile authority derives the expected dialect family from provider output instead of profile configuration. | Milestone 18 | Store the resolved provider family in the profile configuration. Compare it before dialect-mode validation. |
+| Milestone 16 remediation review | The `sifr_package` all-target strict Clippy run has existing test lint debt. | Milestone 18 | Remove the lint debt before the final workspace gate. Keep the Milestone 16 library target clean. |
 
 ### Milestone 0 closure record
 
@@ -2310,6 +2316,55 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 - Exact next action: implement Milestone 16 MySQL provider completion from the
   merged and recorded mainline.
 
+### Milestone 16 closure record
+
+- Status: completed and merged under the phase continuation rule.
+- Starting commit: `247b46580756ec92cafa4d13dff6a503835b7156`.
+- Initial reviewed candidate: `67360fcbcc79b57cff1ab5f235537d60bc01643b`.
+- Remediation reviewed and final candidate:
+  `5d585f4b0b05d3572a1cededcc81c0fc1823b40f`.
+- Pull request: [#3635](https://github.com/sifr-lang/sifr/pull/3635).
+- Merge commit: `70de2f82bb501c52443055933d1c2ba4ba53e05e`.
+- Compiler result: the MySQL package owns its LALRPOP grammar, lexer, AST,
+  recovery mode, semantic analysis, schema normalization, and diagnostics.
+- Runtime result: the runtime uses raw `mysql_async` connections and a
+  Sifr-owned pool. It supports verified sessions, streams, transactions,
+  statement caching, and bounded cancellation.
+- Tool result: the host package supports schema lifecycle commands, migration
+  commands, live catalog normalization, and safe test provisioning.
+- Dependency result: the manifests use LALRPOP 0.23.1, `mysql_async` 0.37.0,
+  `mysql_common` 0.37.3, Tokio 1.53.1, and Rustls 0.23.43.
+- Provider result: MySQL 8.4, 9.7, and 26.7 have separate component artifacts.
+  Each supported line passed the complete live provider matrix.
+- Focused validation: parser differential, compiler, property, runtime,
+  cancellation, catalog, migration, provisioning, and performance tests passed.
+- Integrated validation: the SQL platform adapter passed 62/62 variants.
+  Component qualification and mutation tests passed after each component rebuild.
+- Repository validation: strict Clippy passed for all M16 targets. Formatting,
+  diff hygiene, HIR maintainability, and the 900-line source guard passed.
+- Review round 1: Opus returned `NOT SATISFIED` on the initial candidate. It
+  found a non-MySQL session-mode regression and an unbounded cancellation path.
+  The [published review](https://github.com/sifr-lang/sifr/pull/3635#issuecomment-5480215882)
+  records both blockers.
+- Remediation: dialect-mode comparison now limits character inputs to MySQL.
+  Both cancellation paths use the same cleanup budget and evidence model.
+  New tests cover PostgreSQL profile authority and live carrier cancellation.
+- Review round 2: Opus verified both corrections and returned `SATISFIED`.
+  The [published review](https://github.com/sifr-lang/sifr/pull/3635#issuecomment-5480280529)
+  records the exact final candidate. New suggestions belong to Milestone 18.
+  No third review ran.
+- Create-PR gate: the one allowed run used the exact final candidate. It stopped
+  before tests because the profile omits eleven required SQL platform suites.
+  It did not run again.
+- Merge gate: the one allowed run used the same exact final candidate. It
+  stopped before tests on the same profile error and did not run again. The
+  [published gate evidence](https://github.com/sifr-lang/sifr/pull/3635#issuecomment-5480373044)
+  records both commands. Milestone 18 owns the profile correction.
+- Documentation result: the MySQL provider document defines compiler, runtime,
+  tool, migration, editor, safety, version, and qualification contracts.
+- Exact next action: implement Milestone 17 SQLite provider completion from the
+  merged and recorded mainline.
+
 ### External async prerequisite closure record
 
 - Status: complete and merged before Milestone 9.
@@ -2358,5 +2413,4 @@ Complete this section after Milestone 18 merges:
 - Final capability and verification inventory: pending.
 - Deferred out-of-scope work: pending.
 - Archive destination: `plans/issues/archive/ad-hoc-schema-first-sql-platform.md`.
-- Exact next action: implement Milestone 15 from current
-  `origin/main`.
+- Exact next action: implement Milestone 17 from current `origin/main`.
