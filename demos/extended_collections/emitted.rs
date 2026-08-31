@@ -692,9 +692,9 @@ pub use __sifr_project_nominals::__SifrStdlib_sifr_x2ecollections_x2eCounter;
 use ::std::collections::HashMap;
 use ::std::collections::HashSet;
 use ::sifr_runtime::SifrInt;
-fn from_list<
-    T: Clone + ::std::fmt::Display + PartialOrd + ::std::hash::Hash + Eq + 'static,
->(items: &Vec<T>) -> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
+fn from_list<T: Clone + ::std::hash::Hash + Eq + 'static>(
+    items: &Vec<T>,
+) -> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
     let mut counts: HashMap<T, SifrInt> = HashMap::from([]);
     for item in items.iter().cloned() {
         let val: Option<SifrInt> = counts.get(&item).cloned();

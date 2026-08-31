@@ -733,7 +733,7 @@ mod __sifr_project_nominals {
             }
             let mut actual_start: SifrInt = start.clone();
             let mut actual_stop: SifrInt = start.clone();
-            if (stop.clone() == None) {
+            if (stop.is_none()) {
                 actual_start = SifrInt::from_i64(0);
             } else {
                 if let Some(stop) = stop.as_ref() {

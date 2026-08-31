@@ -59,9 +59,9 @@ impl RustEmitter {
                 } else if attached_storage {
                     "Clone + 'static".to_string()
                 } else if needs_hash_eq {
-                    "Clone + std::fmt::Display + PartialOrd + std::hash::Hash + Eq + 'static".to_string()
+                    "Clone + std::hash::Hash + Eq + 'static".to_string()
                 } else {
-                    "Clone + std::fmt::Display + PartialOrd + 'static".to_string()
+                    "Clone + 'static".to_string()
                 };
                 if Self::returns_borrowed_type_param(func, type_param) {
                     Self::append_bound(&mut base, "Clone");
@@ -85,7 +85,19 @@ impl RustEmitter {
                 } else {
                     base
                 };
-                let extra = Self::extra_bound_items_for_type_param(type_param, &func.body)
+                let mut extra_bounds = Self::extra_bound_items_for_type_param(type_param, &func.body);
+                let mut closed_bounds = self
+                    .function_type_param_bounds
+                    .get(&func.name)
+                    .and_then(|by_param| by_param.get(type_param))
+                    .into_iter()
+                    .flatten()
+                    .map(|bound| bound.render_for(type_param))
+                    .filter(|bound| !extra_bounds.contains(bound))
+                    .collect::<Vec<_>>();
+                closed_bounds.sort();
+                extra_bounds.extend(closed_bounds);
+                let extra = extra_bounds
                     .into_iter()
                     .filter(|bound| !base.split(" + ").any(|existing| existing == bound))
                     .fold(String::new(), |mut rendered, bound| {

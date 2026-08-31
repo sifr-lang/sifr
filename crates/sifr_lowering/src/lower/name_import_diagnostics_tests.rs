@@ -325,6 +325,40 @@ fn builtin_open_preserves_an_aliased_imported_binary_handle_identity() {
 }
 
 #[test]
+fn builtin_binary_open_supplies_the_read_bytes_size_default() {
+    let source = "from sifr.io import FileHandle as Handle\n\ndef main():\n    handle: Handle = open(\"out.bin\", \"rb\")\n    payload: bytes = handle.read_bytes()\n";
+    let parsed = parse_module(source).expect("parse failed");
+    let mut externals = ExternalDefs::default();
+    externals.classes.insert(
+        "sifr.io".to_string(),
+        HashMap::from([(
+            "FileHandle".to_string(),
+            Type::Class {
+                identity: Some("sifr.io.FileHandle".to_string()),
+                type_args: Vec::new(),
+                name: "FileHandle".to_string(),
+                fields: Vec::new(),
+                methods: vec![(
+                    "read_bytes".to_string(),
+                    FunctionType::all_borrow(
+                        vec![(
+                            "size".to_string(),
+                            sifr_type_system::make_union(vec![Type::Int, Type::None]),
+                        )],
+                        Type::Bytes,
+                    )
+                    .with_receiver(sifr_type_system::ReceiverConvention::MutableBorrow),
+                )],
+                parent_class: None,
+            },
+        )]),
+    );
+
+    lower_module_with_externals(parsed.suite(), &externals)
+        .expect("compiler-special binary open should retain the no-size read_bytes form");
+}
+
+#[test]
 fn builtin_open_never_reuses_a_local_same_basename_handle() {
     for source in [
         "class TextFileHandle:\n    value: int\n\ndef main():\n    handle: TextFileHandle = open(\"out.txt\", \"w\", encoding=\"utf-8\")\n",

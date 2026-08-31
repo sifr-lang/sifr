@@ -54,6 +54,7 @@ mod expr_ref_emitter;
 mod expr_render_helpers;
 mod field_analysis_helpers;
 mod function_emitter;
+mod function_generic_bounds;
 mod function_like_lowering;
 mod generic_bounds_helpers;
 mod helpers;

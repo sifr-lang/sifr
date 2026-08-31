@@ -678,34 +678,10 @@ impl RustEmitter {
     }
 
     pub(crate) fn extra_bound_items_for_type_param(tp: &str, body: &[HirStmt]) -> Vec<String> {
-        let requirements =
-            crate::hir_analysis::queries::collect_typevar_operator_requirements(body, tp);
-        let mut extra = Vec::new();
-        if requirements.needs_add {
-            extra.push(format!("std::ops::Add<Output = {tp}>"));
-        }
-        if requirements.needs_sub {
-            extra.push(format!("std::ops::Sub<Output = {tp}>"));
-        }
-        if requirements.needs_mul {
-            extra.push(format!("std::ops::Mul<Output = {tp}>"));
-        }
-        if requirements.needs_div {
-            extra.push(format!("std::ops::Div<Output = {tp}>"));
-        }
-        if requirements.needs_rem {
-            extra.push(format!("std::ops::Rem<Output = {tp}>"));
-        }
-        if requirements.needs_neg {
-            extra.push(format!("std::ops::Neg<Output = {tp}>"));
-        }
-        if requirements.needs_partial_eq {
-            extra.push("PartialEq".to_string());
-        }
-        if requirements.needs_partial_ord {
-            extra.push("PartialOrd".to_string());
-        }
-        extra
+        crate::function_generic_bounds::direct_type_param_bounds(tp, body)
+            .iter()
+            .map(|bound| bound.render_for(tp))
+            .collect()
     }
 
     /// Rust trait requirements are transitive across calls on any instance of

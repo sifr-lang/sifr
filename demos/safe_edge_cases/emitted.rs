@@ -2156,7 +2156,7 @@ fn is_valid_ipv4(addr: &String) -> bool {
                 __sifr_chars_part.get(__sifr_string_index_normalized)
             })
                 .map(|c| c.to_string());
-            if (first_digit != None) && (first_digit == Some("0".to_string())) {
+            if (first_digit.is_some()) && (first_digit == Some("0".to_string())) {
                 return false;
             }
         }
@@ -2255,7 +2255,7 @@ fn ip_to_int(addr: &String) -> Result<SifrInt, ValueError> {
     }
     Ok(_ip_to_int_raw(addr))
 }
-fn batched<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
+fn batched<T: Clone + 'static>(
     data: &Vec<T>,
     n: SifrInt,
 ) -> Result<Vec<Vec<T>>, ValueError> {
@@ -3008,7 +3008,7 @@ impl __SifrStdlib_sifr_x2erandom_x2eRandom {
         }
         let mut actual_start: SifrInt = start.clone();
         let mut actual_stop: SifrInt = start.clone();
-        if (stop.clone() == None) {
+        if (stop.is_none()) {
             actual_start = SifrInt::from_i64(0);
         } else {
             if let Some(stop) = stop.as_ref() {
@@ -3238,7 +3238,7 @@ impl __SifrStdlib_sifr_x2erandom_x2eSystemRandom {
     ) -> Result<SifrInt, ValueError> {
         let mut actual_start: SifrInt = start.clone();
         let mut actual_stop: SifrInt = start.clone();
-        if (stop.clone() == None) {
+        if (stop.is_none()) {
             actual_start = SifrInt::from_i64(0);
         } else {
             if let Some(stop) = stop.as_ref() {
@@ -3470,9 +3470,7 @@ fn gauss(mu: f64, sigma: f64) -> f64 {
     _sync_module_random(&mut generator);
     value
 }
-fn choice<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    items: &Vec<T>,
-) -> Result<T, ValueError> {
+fn choice<T: Clone + 'static>(items: &Vec<T>) -> Result<T, ValueError> {
     let item_count: SifrInt = SifrInt::from(items.len());
     if (&item_count == &SifrInt::from_i64(0)) {
         return Err(ValueError::new("choice: items must not be empty".to_string()));
@@ -3492,7 +3490,7 @@ fn choice<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     }
     Err(ValueError::new("choice: index out of range".to_string()))
 }
-fn choices<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
+fn choices<T: Clone + 'static>(
     items: &Vec<T>,
     k: SifrInt,
 ) -> Result<Vec<T>, ValueError> {
@@ -3525,10 +3523,7 @@ fn choices<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     _sync_module_random(&mut generator);
     Ok(result)
 }
-fn sample<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    items: &Vec<T>,
-    k: SifrInt,
-) -> Result<Vec<T>, ValueError> {
+fn sample<T: Clone + 'static>(items: &Vec<T>, k: SifrInt) -> Result<Vec<T>, ValueError> {
     if (&k < &SifrInt::from_i64(0)) {
         return Err(ValueError::new("sample: k must be >= 0".to_string()));
     }
@@ -3590,7 +3585,7 @@ fn sample<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     _sync_module_random(&mut generator);
     Ok(result)
 }
-fn shuffle<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(items: &mut Vec<T>) {
+fn shuffle<T: Clone + 'static>(items: &mut Vec<T>) {
     let mut generator: __SifrStdlib_sifr_x2erandom_x2eRandom = _module_random();
     let n: SifrInt = SifrInt::from(items.len());
     if (&n > &SifrInt::from_i64(1)) {

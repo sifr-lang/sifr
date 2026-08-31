@@ -604,6 +604,54 @@ macro_rules! stmt_expr_contains_unary_compare_bool {
                         "is not" => "!=".to_string(),
                         _ => return Ok(None),
                     };
+                    let left_none_like = matches!(lhs_expr, HirExpr::NoneLiteral)
+                        || matches!(
+                            crate::resolve_alias_type_for_plain_call(lhs_expr.ty()),
+                            Type::None
+                        );
+                    let right_none_like = matches!(rhs_expr, HirExpr::NoneLiteral)
+                        || matches!(
+                            crate::resolve_alias_type_for_plain_call(rhs_expr.ty()),
+                            Type::None
+                        );
+                    let option_expr = if left_none_like
+                        && crate::helpers::is_option_type(rhs_expr.ty())
+                    {
+                        Some(rhs_expr)
+                    } else if right_none_like && crate::helpers::is_option_type(lhs_expr.ty()) {
+                        Some(lhs_expr)
+                    } else {
+                        None
+                    };
+                    if matches!(lowered_op.as_str(), "==" | "!=")
+                        && let Some(option_expr) = option_expr
+                    {
+                        let Some(lowered_option) =
+                            $emitter.lower_stmt_expr_for_ir(option_expr)?
+                        else {
+                            return Ok(None);
+                        };
+                        let lowered_cmp = crate::RustExpr::MethodCall {
+                            receiver: Box::new(lowered_option),
+                            method: if lowered_op == "==" {
+                                "is_none".to_string()
+                            } else {
+                                "is_some".to_string()
+                            },
+                            args: Vec::new(),
+                        };
+                        lowered_chain = Some(if let Some(existing) = lowered_chain {
+                            crate::RustExpr::BinOp {
+                                left: Box::new(existing),
+                                op: "&&".to_string(),
+                                right: Box::new(lowered_cmp),
+                            }
+                        } else {
+                            lowered_cmp
+                        });
+                        lhs_expr = rhs_expr;
+                        continue;
+                    }
                     if matches!(lowered_op.as_str(), "==" | "!=") {
                         let borrowed_left =
                             $emitter.try_lower_borrowed_string_lookup_for_compare(lhs_expr)?;
@@ -684,16 +732,6 @@ macro_rules! stmt_expr_contains_unary_compare_bool {
                         && right_witness_ty.is_none())
                         || crate::stmt_support_emitter::compiler_verified_pop_lowers_as_option_for_ir(
                             rhs_expr,
-                        );
-                    let left_none_like = matches!(lhs_expr, HirExpr::NoneLiteral)
-                        || matches!(
-                            crate::resolve_alias_type_for_plain_call(lhs_expr.ty()),
-                            Type::None
-                        );
-                    let right_none_like = matches!(rhs_expr, HirExpr::NoneLiteral)
-                        || matches!(
-                            crate::resolve_alias_type_for_plain_call(rhs_expr.ty()),
-                            Type::None
                         );
                     let left_ty = crate::resolve_alias_type_for_plain_call(
                         left_witness_ty.as_ref().unwrap_or_else(|| lhs_expr.ty()),

@@ -112,18 +112,14 @@ impl<T> Iterator for __SifrGenerator<T> {
         yielded
     }
 }
-fn _collect_iterator<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    data: Box<dyn Iterator<Item = T>>,
-) -> Vec<T> {
+fn _collect_iterator<T: Clone + 'static>(data: Box<dyn Iterator<Item = T>>) -> Vec<T> {
     let mut collected: Vec<T> = vec![];
     for item in data {
         collected.push(item.clone());
     }
     collected
 }
-fn chain<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    iterables: &Vec<Vec<T>>,
-) -> Box<dyn Iterator<Item = T>> {
+fn chain<T: Clone + 'static>(iterables: &Vec<Vec<T>>) -> Box<dyn Iterator<Item = T>> {
     let iterables = iterables.clone();
     Box::new(
         __SifrGenerator::new(async move |__sifr_yielder: __SifrYielder<T>| {
@@ -135,10 +131,7 @@ fn chain<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
         }),
     )
 }
-fn repeat<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    value: T,
-    times: SifrInt,
-) -> Box<dyn Iterator<Item = T>> {
+fn repeat<T: Clone + 'static>(value: T, times: SifrInt) -> Box<dyn Iterator<Item = T>> {
     Box::new(
         __SifrGenerator::new(async move |__sifr_yielder: __SifrYielder<T>| {
             let holder: Vec<T> = vec![value.clone()];
@@ -165,10 +158,11 @@ fn repeat<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
         }),
     )
 }
-fn _islice_impl<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
+fn _islice_impl<T: Clone + 'static>(
     data: Box<dyn Iterator<Item = T>>,
     start: SifrInt,
     stop: SifrInt,
+    unbounded: bool,
     step: SifrInt,
 ) -> Box<dyn Iterator<Item = T>> {
     Box::new(
@@ -176,7 +170,7 @@ fn _islice_impl<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
             let mut index: SifrInt = SifrInt::from_i64(0);
             let mut next_yield: SifrInt = start.clone();
             for value in data {
-                if &index >= &stop {
+                if !unbounded && (&index >= &stop) {
                     return;
                 }
                 if &index == &next_yield {
@@ -188,23 +182,47 @@ fn _islice_impl<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
         }),
     )
 }
-fn islice<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
+fn islice<T: Clone + 'static>(
     data: Box<dyn Iterator<Item = T>>,
     start_or_stop: SifrInt,
-    stop: Option<SifrInt>,
-    step: SifrInt,
+    slice_args: &Vec<Option<SifrInt>>,
 ) -> Result<Box<dyn Iterator<Item = T>>, ValueError> {
+    if (&SifrInt::from(slice_args.len()) > &SifrInt::from_i64(2)) {
+        return Err(
+            ValueError::new(
+                "islice: expected at most stop and step after start".to_string(),
+            ),
+        );
+    }
     let mut actual_start: SifrInt = SifrInt::from_i64(0);
     let mut actual_stop: SifrInt = start_or_stop.clone();
-    if let Some(stop) = stop.clone() {
-        actual_start = start_or_stop.clone();
-        actual_stop = stop.clone();
+    let mut unbounded: bool = false;
+    let mut actual_step: SifrInt = SifrInt::from_i64(1);
+    let mut argument_index: SifrInt = SifrInt::from_i64(0);
+    for argument in slice_args.iter().cloned() {
+        if (&argument_index == &SifrInt::from_i64(0)) {
+            actual_start = start_or_stop.clone();
+            if (argument.is_none()) {
+                unbounded = true;
+            } else {
+                if let Some(argument) = argument.clone() {
+                    actual_stop = argument.clone();
+                }
+            }
+        } else {
+            if let Some(argument) = argument.clone() {
+                actual_step = argument.clone();
+            }
+        }
+        argument_index = &argument_index + &SifrInt::from_i64(1);
     }
-    if (&actual_start < &SifrInt::from_i64(0)) || (&actual_stop < &SifrInt::from_i64(0))
-    {
+    if (&actual_start < &SifrInt::from_i64(0)) {
         return Err(ValueError::new("islice: indices must be non-negative".to_string()));
     }
-    if (&step <= &SifrInt::from_i64(0)) {
+    if !unbounded && (&actual_stop < &SifrInt::from_i64(0)) {
+        return Err(ValueError::new("islice: indices must be non-negative".to_string()));
+    }
+    if (&actual_step <= &SifrInt::from_i64(0)) {
         return Err(
             ValueError::new("islice: step must be greater than zero".to_string()),
         );
@@ -214,7 +232,8 @@ fn islice<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
             Box::new(data),
             (actual_start).clone(),
             (actual_stop).clone(),
-            (step).clone(),
+            unbounded,
+            (actual_step).clone(),
         ),
     )
 }
@@ -229,7 +248,7 @@ fn count(start: SifrInt, step: SifrInt) -> Box<dyn Iterator<Item = SifrInt>> {
         }),
     )
 }
-fn product<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
+fn product<T: Clone + 'static>(
     iterables: &Vec<Vec<T>>,
     repeat: SifrInt,
 ) -> Box<dyn Iterator<Item = Vec<T>>> {
@@ -401,7 +420,7 @@ fn product<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
         }),
     )
 }
-fn combinations<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
+fn combinations<T: Clone + 'static>(
     data: Box<dyn Iterator<Item = T>>,
     r: SifrInt,
 ) -> Box<dyn Iterator<Item = Vec<T>>> {
@@ -593,7 +612,7 @@ fn main() {
     assert!((odd_it.next() == Some(SifrInt::from_i64(1))));
     assert!((odd_it.next() == Some(SifrInt::from_i64(3))));
     assert!((odd_it.next() == Some(SifrInt::from_i64(5))));
-    assert!((odd_it.next() == None));
+    assert!((odd_it.next().is_none()));
     assert!(
         (format!("{:?}", Box::new((vec![SifrInt::from_i64(1), SifrInt::from_i64(2)])
         .into_iter().zip((vec!["a".to_string(), "b".to_string()]).into_iter()).map(|
@@ -628,8 +647,7 @@ fn main() {
                     .into_iter(),
             ),
             SifrInt::from_i64(1),
-            Some(SifrInt::from_i64(5)),
-            SifrInt::from_i64(2),
+            &vec![Some(SifrInt::from_i64(5)), Some(SifrInt::from_i64(2))],
         )?;
         assert!((format!("{:?}", sliced.collect::< Vec < _ >> ()) == "[20, 40]"));
         Ok(())

@@ -70,14 +70,43 @@ mod __sifr_project_nominals {
     pub fn _file_close(handle: &String) {
         ::sifr_stdlib::fs::file_close(handle);
     }
-    pub fn _file_read_bytes(handle: &String) -> Result<Vec<u8>, IOError> {
-        ::sifr_stdlib::fs::file_read_bytes(handle)
+    pub fn _file_read_bytes(
+        handle: &String,
+        size: Option<SifrInt>,
+    ) -> Result<Vec<u8>, IOError> {
+        ::sifr_stdlib::fs::file_read_bytes(
+                handle,
+                size.map(::sifr_runtime::interop::SifrIntBridge::from),
+            )
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
     }
     pub fn _file_write_bytes(handle: &String, data: &Vec<u8>) -> Result<(), IOError> {
         ::sifr_stdlib::fs::file_write_bytes(handle, data)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
+            .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
+    }
+    pub fn _file_flush(handle: &String) -> Result<(), IOError> {
+        ::sifr_stdlib::fs::file_flush(handle)
+            .map(|__sifr_bridge_ok| __sifr_bridge_ok)
+            .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
+    }
+    pub fn _file_seek(
+        handle: &String,
+        offset: SifrInt,
+        whence: SifrInt,
+    ) -> Result<SifrInt, IOError> {
+        ::sifr_stdlib::fs::file_seek(
+                handle,
+                ::sifr_runtime::interop::SifrIntBridge::from(offset),
+                ::sifr_runtime::interop::SifrIntBridge::from(whence),
+            )
+            .map(|__sifr_bridge_ok| __sifr_bridge_ok.into_sifr_int())
+            .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
+    }
+    pub fn _file_tell(handle: &String) -> Result<SifrInt, IOError> {
+        ::sifr_stdlib::fs::file_tell(handle)
+            .map(|__sifr_bridge_ok| __sifr_bridge_ok.into_sifr_int())
             .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
     }
     pub fn open_file(
@@ -94,7 +123,7 @@ mod __sifr_project_nominals {
             }
             Err(__sifr_try_err) => {
                 let e = __sifr_try_err.clone();
-                return Err(IOError::new(e.message.clone()));
+                return Err(e);
             }
         }
     }
@@ -120,14 +149,30 @@ mod __sifr_project_nominals {
     pub fn file_close(handle: &__SifrIoNativeFileHandle) {
         _file_close(&handle._id.clone());
     }
-    pub fn file_read_bytes(handle: &__SifrIoNativeFileHandle) -> Result<Vec<u8>, IOError> {
-        _file_read_bytes(&handle._id.clone())
+    pub fn file_read_bytes(
+        handle: &__SifrIoNativeFileHandle,
+        size: Option<SifrInt>,
+    ) -> Result<Vec<u8>, IOError> {
+        _file_read_bytes(&handle._id.clone(), (size).clone())
     }
     pub fn file_write_bytes(
         handle: &__SifrIoNativeFileHandle,
         data: &Vec<u8>,
     ) -> Result<(), IOError> {
         _file_write_bytes(&handle._id.clone(), data)
+    }
+    pub fn file_flush(handle: &__SifrIoNativeFileHandle) -> Result<(), IOError> {
+        _file_flush(&handle._id.clone())
+    }
+    pub fn file_seek(
+        handle: &__SifrIoNativeFileHandle,
+        offset: SifrInt,
+        whence: SifrInt,
+    ) -> Result<SifrInt, IOError> {
+        _file_seek(&handle._id.clone(), (offset).clone(), (whence).clone())
+    }
+    pub fn file_tell(handle: &__SifrIoNativeFileHandle) -> Result<SifrInt, IOError> {
+        _file_tell(&handle._id.clone())
     }
     pub fn getcwd() -> Result<String, IOError> {
         ::sifr_stdlib::fs::getcwd()
@@ -744,7 +789,7 @@ mod __sifr_project_nominals {
             }
             Err(__sifr_try_err) => {
                 let e = __sifr_try_err.clone();
-                return Err(IOError::new(e.message.clone()));
+                return Err(e);
             }
         }
     }
@@ -765,7 +810,7 @@ mod __sifr_project_nominals {
             }
             Err(__sifr_try_err) => {
                 let e = __sifr_try_err.clone();
-                return Err(IOError::new(e.message.clone()));
+                return Err(e);
             }
         }
     }
@@ -786,7 +831,7 @@ mod __sifr_project_nominals {
             }
             Err(__sifr_try_err) => {
                 let e = __sifr_try_err.clone();
-                return Err(IOError::new(e.message.clone()));
+                return Err(e);
             }
         }
     }
@@ -1377,14 +1422,40 @@ fn _file_readlines(handle: &String) -> Result<Vec<String>, IOError> {
 fn _file_close(handle: &String) {
     ::sifr_stdlib::fs::file_close(handle);
 }
-fn _file_read_bytes(handle: &String) -> Result<Vec<u8>, IOError> {
-    ::sifr_stdlib::fs::file_read_bytes(handle)
+fn _file_read_bytes(handle: &String, size: Option<SifrInt>) -> Result<Vec<u8>, IOError> {
+    ::sifr_stdlib::fs::file_read_bytes(
+            handle,
+            size.map(::sifr_runtime::interop::SifrIntBridge::from),
+        )
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
 fn _file_write_bytes(handle: &String, data: &Vec<u8>) -> Result<(), IOError> {
     ::sifr_stdlib::fs::file_write_bytes(handle, data)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
+        .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
+}
+fn _file_flush(handle: &String) -> Result<(), IOError> {
+    ::sifr_stdlib::fs::file_flush(handle)
+        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
+        .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
+}
+fn _file_seek(
+    handle: &String,
+    offset: SifrInt,
+    whence: SifrInt,
+) -> Result<SifrInt, IOError> {
+    ::sifr_stdlib::fs::file_seek(
+            handle,
+            ::sifr_runtime::interop::SifrIntBridge::from(offset),
+            ::sifr_runtime::interop::SifrIntBridge::from(whence),
+        )
+        .map(|__sifr_bridge_ok| __sifr_bridge_ok.into_sifr_int())
+        .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
+}
+fn _file_tell(handle: &String) -> Result<SifrInt, IOError> {
+    ::sifr_stdlib::fs::file_tell(handle)
+        .map(|__sifr_bridge_ok| __sifr_bridge_ok.into_sifr_int())
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
 fn open_file(path: &String, mode: &String) -> Result<__SifrIoNativeFileHandle, IOError> {
@@ -1398,7 +1469,7 @@ fn open_file(path: &String, mode: &String) -> Result<__SifrIoNativeFileHandle, I
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(IOError::new(e.message.clone()));
+            return Err(e);
         }
     }
 }
@@ -1417,14 +1488,30 @@ fn file_readlines(handle: &__SifrIoNativeFileHandle) -> Result<Vec<String>, IOEr
 fn file_close(handle: &__SifrIoNativeFileHandle) {
     _file_close(&handle._id.clone());
 }
-fn file_read_bytes(handle: &__SifrIoNativeFileHandle) -> Result<Vec<u8>, IOError> {
-    _file_read_bytes(&handle._id.clone())
+fn file_read_bytes(
+    handle: &__SifrIoNativeFileHandle,
+    size: Option<SifrInt>,
+) -> Result<Vec<u8>, IOError> {
+    _file_read_bytes(&handle._id.clone(), (size).clone())
 }
 fn file_write_bytes(
     handle: &__SifrIoNativeFileHandle,
     data: &Vec<u8>,
 ) -> Result<(), IOError> {
     _file_write_bytes(&handle._id.clone(), data)
+}
+fn file_flush(handle: &__SifrIoNativeFileHandle) -> Result<(), IOError> {
+    _file_flush(&handle._id.clone())
+}
+fn file_seek(
+    handle: &__SifrIoNativeFileHandle,
+    offset: SifrInt,
+    whence: SifrInt,
+) -> Result<SifrInt, IOError> {
+    _file_seek(&handle._id.clone(), (offset).clone(), (whence).clone())
+}
+fn file_tell(handle: &__SifrIoNativeFileHandle) -> Result<SifrInt, IOError> {
+    _file_tell(&handle._id.clone())
 }
 fn getcwd() -> Result<String, IOError> {
     ::sifr_stdlib::fs::getcwd()
@@ -2542,10 +2629,11 @@ impl<T> Iterator for __SifrGenerator<T> {
         yielded
     }
 }
-fn _islice_impl<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
+fn _islice_impl<T: Clone + 'static>(
     data: Box<dyn Iterator<Item = T>>,
     start: SifrInt,
     stop: SifrInt,
+    unbounded: bool,
     step: SifrInt,
 ) -> Box<dyn Iterator<Item = T>> {
     Box::new(
@@ -2553,7 +2641,7 @@ fn _islice_impl<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
             let mut index: SifrInt = SifrInt::from_i64(0);
             let mut next_yield: SifrInt = start.clone();
             for value in data {
-                if &index >= &stop {
+                if !unbounded && (&index >= &stop) {
                     return;
                 }
                 if &index == &next_yield {
@@ -2565,23 +2653,47 @@ fn _islice_impl<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
         }),
     )
 }
-fn islice<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
+fn islice<T: Clone + 'static>(
     data: Box<dyn Iterator<Item = T>>,
     start_or_stop: SifrInt,
-    stop: Option<SifrInt>,
-    step: SifrInt,
+    slice_args: &Vec<Option<SifrInt>>,
 ) -> Result<Box<dyn Iterator<Item = T>>, ValueError> {
+    if (&SifrInt::from(slice_args.len()) > &SifrInt::from_i64(2)) {
+        return Err(
+            ValueError::new(
+                "islice: expected at most stop and step after start".to_string(),
+            ),
+        );
+    }
     let mut actual_start: SifrInt = SifrInt::from_i64(0);
     let mut actual_stop: SifrInt = start_or_stop.clone();
-    if let Some(stop) = stop.clone() {
-        actual_start = start_or_stop.clone();
-        actual_stop = stop.clone();
+    let mut unbounded: bool = false;
+    let mut actual_step: SifrInt = SifrInt::from_i64(1);
+    let mut argument_index: SifrInt = SifrInt::from_i64(0);
+    for argument in slice_args.iter().cloned() {
+        if (&argument_index == &SifrInt::from_i64(0)) {
+            actual_start = start_or_stop.clone();
+            if (argument.is_none()) {
+                unbounded = true;
+            } else {
+                if let Some(argument) = argument.clone() {
+                    actual_stop = argument.clone();
+                }
+            }
+        } else {
+            if let Some(argument) = argument.clone() {
+                actual_step = argument.clone();
+            }
+        }
+        argument_index = &argument_index + &SifrInt::from_i64(1);
     }
-    if (&actual_start < &SifrInt::from_i64(0)) || (&actual_stop < &SifrInt::from_i64(0))
-    {
+    if (&actual_start < &SifrInt::from_i64(0)) {
         return Err(ValueError::new("islice: indices must be non-negative".to_string()));
     }
-    if (&step <= &SifrInt::from_i64(0)) {
+    if !unbounded && (&actual_stop < &SifrInt::from_i64(0)) {
+        return Err(ValueError::new("islice: indices must be non-negative".to_string()));
+    }
+    if (&actual_step <= &SifrInt::from_i64(0)) {
         return Err(
             ValueError::new("islice: step must be greater than zero".to_string()),
         );
@@ -2591,7 +2703,8 @@ fn islice<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
             Box::new(data),
             (actual_start).clone(),
             (actual_stop).clone(),
-            (step).clone(),
+            unbounded,
+            (actual_step).clone(),
         ),
     )
 }
@@ -2915,7 +3028,7 @@ fn _iterdir_to_iter(path: &String) -> Result<Box<dyn Iterator<Item = String>>, I
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(IOError::new(e.message.clone()));
+            return Err(e);
         }
     }
 }
@@ -2936,7 +3049,7 @@ fn _glob_to_iter(
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(IOError::new(e.message.clone()));
+            return Err(e);
         }
     }
 }
@@ -2957,7 +3070,7 @@ fn _rglob_to_iter(
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(IOError::new(e.message.clone()));
+            return Err(e);
         }
     }
 }
@@ -3506,8 +3619,10 @@ fn main() {
         let sliced_entries: Box<dyn Iterator<Item = String>> = (islice(
             Box::new(entries_it),
             SifrInt::from_i64(2),
-            None,
-            SifrInt::from_i64(1),
+            &({
+                let __sifr_empty_list_literal: Vec<Option<SifrInt>> = vec![];
+                __sifr_empty_list_literal
+            }),
         ))
             .map_err(|__e| __SifrUnion_8_x3asequence5_x3aunion1_x3a223_x3a5_x3aclass10_x3aValueError1_x3a019_x3a5_x3aclass7_x3aIOError1_x3a0::__SifrUnionVariant_5_x3aclass10_x3aValueError1_x3a0(
                 __e,

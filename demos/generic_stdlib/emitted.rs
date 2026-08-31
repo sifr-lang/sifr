@@ -751,9 +751,9 @@ pub use __sifr_project_nominals::__SifrStdlib_sifr_x2ecollections_x2edeque;
 use ::std::collections::HashMap;
 use ::std::collections::VecDeque;
 use ::sifr_runtime::SifrInt;
-fn from_list<
-    T: Clone + ::std::fmt::Display + PartialOrd + ::std::hash::Hash + Eq + 'static,
->(items: &Vec<T>) -> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
+fn from_list<T: Clone + ::std::hash::Hash + Eq + 'static>(
+    items: &Vec<T>,
+) -> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
     let mut counts: HashMap<T, SifrInt> = HashMap::from([]);
     for item in items.iter().cloned() {
         let val: Option<SifrInt> = counts.get(&item).cloned();
@@ -777,17 +777,18 @@ fn from_list<
     }
     __SifrStdlib_sifr_x2ecollections_x2eCounter::new(Some(counts), None)
 }
-fn reduce<
-    T: Clone + ::std::fmt::Display + PartialOrd + 'static,
-    U: Clone + ::std::fmt::Display + PartialOrd + 'static,
->(func: impl Fn(&U, &T) -> U, data: &Vec<T>, initial: &U) -> U {
+fn reduce<T: Clone + 'static, U: Clone + 'static>(
+    func: impl Fn(&U, &T) -> U,
+    data: &Vec<T>,
+    initial: &U,
+) -> U {
     let mut result: U = (initial).clone();
     for val in data.iter().cloned() {
         result = func(&result, &val);
     }
     result
 }
-fn _sift_down<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
+fn _sift_down<T: Clone + 'static + PartialOrd>(
     data: &mut Vec<T>,
     mut pos: SifrInt,
     n: SifrInt,
@@ -910,7 +911,7 @@ fn _sift_down<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
         }
     }
 }
-fn heapify<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(data: &mut Vec<T>) {
+fn heapify<T: Clone + 'static + PartialOrd>(data: &mut Vec<T>) {
     "Convert list to a min-heap in-place. O(n) time.".to_string();
     let n: SifrInt = SifrInt::from(data.len());
     let mut i: SifrInt = &n.floor_div_known_nonzero(&SifrInt::from_i64(2))
@@ -920,9 +921,7 @@ fn heapify<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(data: &mut Vec
         i = &i - &SifrInt::from_i64(1);
     }
 }
-fn heappop<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    heap: &mut Vec<T>,
-) -> Option<T> {
+fn heappop<T: Clone + 'static + PartialOrd>(heap: &mut Vec<T>) -> Option<T> {
     "Pop and return the smallest item. Heap is modified in-place. O(log n) time.\n    Returns None if the heap is empty."
         .to_string();
     let n: SifrInt = SifrInt::from(heap.len());
@@ -963,10 +962,7 @@ fn heappop<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     }
     top
 }
-fn nsmallest<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    n: SifrInt,
-    data: &Vec<T>,
-) -> Vec<T> {
+fn nsmallest<T: Clone + 'static + PartialOrd>(n: SifrInt, data: &Vec<T>) -> Vec<T> {
     let mut heap: Vec<T> = data.clone();
     heapify(&mut heap);
     let mut result: Vec<T> = vec![];
@@ -983,10 +979,7 @@ fn nsmallest<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     }
     result
 }
-fn nlargest<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    n: SifrInt,
-    data: &Vec<T>,
-) -> Vec<T> {
+fn nlargest<T: Clone + 'static + PartialOrd>(n: SifrInt, data: &Vec<T>) -> Vec<T> {
     if &n <= &SifrInt::from_i64(0) {
         return vec![];
     }
@@ -1122,9 +1115,7 @@ impl<T> Iterator for __SifrGenerator<T> {
         yielded
     }
 }
-fn chain<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    iterables: &Vec<Vec<T>>,
-) -> Box<dyn Iterator<Item = T>> {
+fn chain<T: Clone + 'static>(iterables: &Vec<Vec<T>>) -> Box<dyn Iterator<Item = T>> {
     let iterables = iterables.clone();
     Box::new(
         __SifrGenerator::new(async move |__sifr_yielder: __SifrYielder<T>| {
@@ -1136,10 +1127,7 @@ fn chain<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
         }),
     )
 }
-fn repeat<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    value: T,
-    times: SifrInt,
-) -> Box<dyn Iterator<Item = T>> {
+fn repeat<T: Clone + 'static>(value: T, times: SifrInt) -> Box<dyn Iterator<Item = T>> {
     Box::new(
         __SifrGenerator::new(async move |__sifr_yielder: __SifrYielder<T>| {
             let holder: Vec<T> = vec![value.clone()];
@@ -1166,10 +1154,7 @@ fn repeat<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
         }),
     )
 }
-fn take<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    n: SifrInt,
-    data: &Vec<T>,
-) -> Vec<T> {
+fn take<T: Clone + 'static>(n: SifrInt, data: &Vec<T>) -> Vec<T> {
     let mut result: Vec<T> = vec![];
     let mut count: SifrInt = SifrInt::from_i64(0);
     for item in data.iter().cloned() {
@@ -1181,9 +1166,7 @@ fn take<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     }
     result
 }
-fn flatten<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    lists: &Vec<Vec<T>>,
-) -> Vec<T> {
+fn flatten<T: Clone + 'static>(lists: &Vec<Vec<T>>) -> Vec<T> {
     let mut result: Vec<T> = vec![];
     for inner in lists.iter().cloned() {
         for val in inner.iter().cloned() {
@@ -1192,9 +1175,7 @@ fn flatten<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     }
     result
 }
-fn pairwise<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    data: &Vec<T>,
-) -> Vec<Vec<T>> {
+fn pairwise<T: Clone + 'static>(data: &Vec<T>) -> Vec<Vec<T>> {
     let mut result: Vec<Vec<T>> = vec![];
     let mut prev_values: Vec<T> = vec![];
     for value in data.iter().cloned() {
@@ -1238,10 +1219,11 @@ fn pairwise<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     }
     result
 }
-fn _islice_impl<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
+fn _islice_impl<T: Clone + 'static>(
     data: Box<dyn Iterator<Item = T>>,
     start: SifrInt,
     stop: SifrInt,
+    unbounded: bool,
     step: SifrInt,
 ) -> Box<dyn Iterator<Item = T>> {
     Box::new(
@@ -1249,7 +1231,7 @@ fn _islice_impl<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
             let mut index: SifrInt = SifrInt::from_i64(0);
             let mut next_yield: SifrInt = start.clone();
             for value in data {
-                if &index >= &stop {
+                if !unbounded && (&index >= &stop) {
                     return;
                 }
                 if &index == &next_yield {
@@ -1261,23 +1243,47 @@ fn _islice_impl<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
         }),
     )
 }
-fn islice<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
+fn islice<T: Clone + 'static>(
     data: Box<dyn Iterator<Item = T>>,
     start_or_stop: SifrInt,
-    stop: Option<SifrInt>,
-    step: SifrInt,
+    slice_args: &Vec<Option<SifrInt>>,
 ) -> Result<Box<dyn Iterator<Item = T>>, ValueError> {
+    if (&SifrInt::from(slice_args.len()) > &SifrInt::from_i64(2)) {
+        return Err(
+            ValueError::new(
+                "islice: expected at most stop and step after start".to_string(),
+            ),
+        );
+    }
     let mut actual_start: SifrInt = SifrInt::from_i64(0);
     let mut actual_stop: SifrInt = start_or_stop.clone();
-    if let Some(stop) = stop.clone() {
-        actual_start = start_or_stop.clone();
-        actual_stop = stop.clone();
+    let mut unbounded: bool = false;
+    let mut actual_step: SifrInt = SifrInt::from_i64(1);
+    let mut argument_index: SifrInt = SifrInt::from_i64(0);
+    for argument in slice_args.iter().cloned() {
+        if (&argument_index == &SifrInt::from_i64(0)) {
+            actual_start = start_or_stop.clone();
+            if (argument.is_none()) {
+                unbounded = true;
+            } else {
+                if let Some(argument) = argument.clone() {
+                    actual_stop = argument.clone();
+                }
+            }
+        } else {
+            if let Some(argument) = argument.clone() {
+                actual_step = argument.clone();
+            }
+        }
+        argument_index = &argument_index + &SifrInt::from_i64(1);
     }
-    if (&actual_start < &SifrInt::from_i64(0)) || (&actual_stop < &SifrInt::from_i64(0))
-    {
+    if (&actual_start < &SifrInt::from_i64(0)) {
         return Err(ValueError::new("islice: indices must be non-negative".to_string()));
     }
-    if (&step <= &SifrInt::from_i64(0)) {
+    if !unbounded && (&actual_stop < &SifrInt::from_i64(0)) {
+        return Err(ValueError::new("islice: indices must be non-negative".to_string()));
+    }
+    if (&actual_step <= &SifrInt::from_i64(0)) {
         return Err(
             ValueError::new("islice: step must be greater than zero".to_string()),
         );
@@ -1287,13 +1293,15 @@ fn islice<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
             Box::new(data),
             (actual_start).clone(),
             (actual_stop).clone(),
-            (step).clone(),
+            unbounded,
+            (actual_step).clone(),
         ),
     )
 }
-fn accumulate<
-    T: Clone + ::std::fmt::Display + PartialOrd + 'static + ::std::ops::Add<Output = T>,
->(data: Box<dyn Iterator<Item = T>>, initial: Option<T>) -> Box<dyn Iterator<Item = T>> {
+fn accumulate<T: Clone + 'static + ::std::ops::Add<Output = T>>(
+    data: Box<dyn Iterator<Item = T>>,
+    initial: Option<T>,
+) -> Box<dyn Iterator<Item = T>> {
     Box::new(
         __SifrGenerator::new(async move |__sifr_yielder: __SifrYielder<T>| {
             let mut state: Vec<T> = vec![];
@@ -1369,7 +1377,7 @@ fn accumulate<
         }),
     )
 }
-fn compress<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
+fn compress<T: Clone + 'static>(
     data: Box<dyn Iterator<Item = T>>,
     selectors: Box<dyn Iterator<Item = bool>>,
 ) -> Box<dyn Iterator<Item = T>> {
@@ -1385,7 +1393,7 @@ fn compress<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
         }),
     )
 }
-fn dropwhile<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
+fn dropwhile<T: Clone + 'static>(
     pred: impl Fn(&T) -> bool + Send + Sync + 'static,
     data: Box<dyn Iterator<Item = T>>,
 ) -> Box<dyn Iterator<Item = T>> {
@@ -1405,7 +1413,7 @@ fn dropwhile<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
         }),
     )
 }
-fn takewhile<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
+fn takewhile<T: Clone + 'static>(
     pred: impl Fn(&T) -> bool + Send + Sync + 'static,
     data: Box<dyn Iterator<Item = T>>,
 ) -> Box<dyn Iterator<Item = T>> {
@@ -1420,7 +1428,7 @@ fn takewhile<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
         }),
     )
 }
-fn filterfalse<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
+fn filterfalse<T: Clone + 'static>(
     pred: impl Fn(&T) -> bool + Send + Sync + 'static,
     data: Box<dyn Iterator<Item = T>>,
 ) -> Box<dyn Iterator<Item = T>> {
@@ -1434,7 +1442,7 @@ fn filterfalse<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
         }),
     )
 }
-fn zip_longest<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
+fn zip_longest<T: Clone + 'static>(
     a: Box<dyn Iterator<Item = T>>,
     b: Box<dyn Iterator<Item = T>>,
     fill: &T,
@@ -1447,7 +1455,7 @@ fn zip_longest<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
             loop {
                 let left_value: Option<T> = left.next();
                 let right_value: Option<T> = right.next();
-                if (left_value == None) && (right_value == None) {
+                if (left_value.is_none()) && (right_value.is_none()) {
                     return;
                 }
                 let mut pair: Vec<T> = vec![];
@@ -1466,7 +1474,7 @@ fn zip_longest<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
         }),
     )
 }
-fn cycle<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
+fn cycle<T: Clone + 'static>(
     data: Box<dyn Iterator<Item = T>>,
     n: SifrInt,
 ) -> Box<dyn Iterator<Item = T>> {
@@ -1479,38 +1487,22 @@ fn cycle<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
             }
             for value in data {
                 saved.push(value.clone());
-                let current: Option<T> = {
-                    let __sifr_index_list = &saved;
-                    let __sifr_index_i = SifrInt::from(saved.len())
-                        - SifrInt::from_i64(1);
-                    let __sifr_index_norm = __sifr_index_i
-                        .normalize_index_or_len(__sifr_index_list.len());
-                    __sifr_index_list.get(__sifr_index_norm).cloned()
-                };
-                if let Some(current) = current {
-                    __sifr_yielder.suspend(current.clone()).await;
+                __sifr_yielder.suspend(value.clone()).await;
+                emitted = &emitted + &SifrInt::from_i64(1);
+                if (&emitted >= &n) {
+                    return;
+                }
+            }
+            while (&emitted < &n)
+                && (&SifrInt::from(saved.len()) > &SifrInt::from_i64(0))
+            {
+                for repeated in saved.iter().cloned() {
+                    __sifr_yielder.suspend(repeated.clone()).await;
                     emitted = &emitted + &SifrInt::from_i64(1);
                     if (&emitted >= &n) {
                         return;
                     }
                 }
-            }
-            let size: SifrInt = SifrInt::from(saved.len());
-            while (&emitted < &n) && (&size > &SifrInt::from_i64(0)) {
-                let index: SifrInt = emitted.floor_mod_known_nonzero(&size);
-                let repeated: Option<T> = {
-                    let __sifr_checked_read_collection = &saved;
-                    let __sifr_checked_read_index = index.clone();
-                    let __sifr_checked_read_normalized = __sifr_checked_read_index
-                        .normalize_index_or_len(__sifr_checked_read_collection.len());
-                    __sifr_checked_read_collection
-                        .get(__sifr_checked_read_normalized)
-                        .cloned()
-                };
-                if let Some(repeated) = repeated {
-                    __sifr_yielder.suspend(repeated.clone()).await;
-                }
-                emitted = &emitted + &SifrInt::from_i64(1);
             }
         }),
     )
@@ -2247,7 +2239,7 @@ impl __SifrStdlib_sifr_x2erandom_x2eRandom {
         }
         let mut actual_start: SifrInt = start.clone();
         let mut actual_stop: SifrInt = start.clone();
-        if (stop.clone() == None) {
+        if (stop.is_none()) {
             actual_start = SifrInt::from_i64(0);
         } else {
             if let Some(stop) = stop.as_ref() {
@@ -2514,7 +2506,7 @@ fn _module_random() -> __SifrStdlib_sifr_x2erandom_x2eRandom {
 fn _sync_module_random(generator: &mut __SifrStdlib_sifr_x2erandom_x2eRandom) {
     _store_state_into_module_storage(&generator.getstate());
 }
-fn shuffle<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(items: &mut Vec<T>) {
+fn shuffle<T: Clone + 'static>(items: &mut Vec<T>) {
     let mut generator: __SifrStdlib_sifr_x2erandom_x2eRandom = _module_random();
     let n: SifrInt = SifrInt::from(items.len());
     if (&n > &SifrInt::from_i64(1)) {

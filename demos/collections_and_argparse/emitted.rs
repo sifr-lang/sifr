@@ -951,7 +951,7 @@ mod __sifr_project_nominals {
                 __sifr_chars_token.get(__sifr_string_index_normalized)
             })
                 .map(|c| c.to_string());
-            if (ch != None) && (ch == Some("=".to_string())) {
+            if (ch.is_some()) && (ch == Some("=".to_string())) {
                 let mut value: String = "".to_string();
                 let mut j: SifrInt = &i + &SifrInt::from_i64(1);
                 while (&j < &SifrInt::from(__sifr_chars_token.len())) {
@@ -1671,7 +1671,7 @@ fn _split_inline_option(token: &String) -> (bool, String, String) {
             __sifr_chars_token.get(__sifr_string_index_normalized)
         })
             .map(|c| c.to_string());
-        if (ch != None) && (ch == Some("=".to_string())) {
+        if (ch.is_some()) && (ch == Some("=".to_string())) {
             let mut value: String = "".to_string();
             let mut j: SifrInt = &i + &SifrInt::from_i64(1);
             while (&j < &SifrInt::from(__sifr_chars_token.len())) {

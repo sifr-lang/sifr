@@ -409,21 +409,19 @@ fn assert_not_almost_eq(actual: f64, expected: f64, tolerance: f64) {
     }
     assert!(diff > tolerance);
 }
-fn assert_ge<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(a: &T, b: &T) {
+fn assert_ge<T: Clone + 'static + PartialOrd>(a: &T, b: &T) {
     assert!(* a >= * b);
 }
-fn assert_le<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(a: &T, b: &T) {
+fn assert_le<T: Clone + 'static + PartialOrd>(a: &T, b: &T) {
     assert!(* a <= * b);
 }
-fn assert_some<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(value: Option<T>) {
+fn assert_some<T: Clone + 'static>(value: Option<T>) {
     assert!(value.is_some());
 }
-fn assert_none<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(value: Option<T>) {
+fn assert_none<T: Clone + 'static>(value: Option<T>) {
     assert!(value.is_none());
 }
-fn assert_ok<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    value: Result<T, Error>,
-) {
+fn assert_ok<T: Clone + 'static>(value: Result<T, Error>) {
     let __sifr_try_res: Result<(), Error> = (|| {
         let out: T = value?;
         Ok(())
@@ -432,9 +430,7 @@ fn assert_ok<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
         assert!(false);
     }
 }
-fn assert_err<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    value: Result<T, Error>,
-) {
+fn assert_err<T: Clone + 'static>(value: Result<T, Error>) {
     let __sifr_try_res: Result<(), Error> = (|| {
         let out: T = value?;
         assert!(false);

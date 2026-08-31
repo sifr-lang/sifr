@@ -751,7 +751,7 @@ pub use __sifr_project_nominals::__SifrStdlib_sifr_x2ecollections_x2edeque;
 use ::std::collections::HashMap;
 use ::std::collections::VecDeque;
 use ::sifr_runtime::SifrInt;
-fn bisect_right<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
+fn bisect_right<T: Clone + 'static + PartialOrd>(
     a: &Vec<T>,
     x: &T,
     lo: SifrInt,
@@ -762,7 +762,7 @@ fn bisect_right<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
         left = SifrInt::from_i64(0);
     }
     let mut right: SifrInt = SifrInt::from(a.len());
-    if (hi == None) {
+    if (hi.is_none()) {
         right = SifrInt::from(a.len());
     } else {
         if let Some(hi) = hi.clone() {
@@ -799,7 +799,7 @@ fn bisect_right<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     }
     left.clone()
 }
-fn insort_right<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
+fn insort_right<T: Clone + 'static + PartialOrd>(
     a: &mut Vec<T>,
     x: &T,
     lo: SifrInt,
@@ -808,9 +808,9 @@ fn insort_right<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     let pos: SifrInt = bisect_right(a, x, (lo).clone(), (hi).clone());
     a.insert(::sifr_runtime::to_usize_proven(&pos), x.clone());
 }
-fn from_list<
-    T: Clone + ::std::fmt::Display + PartialOrd + ::std::hash::Hash + Eq + 'static,
->(items: &Vec<T>) -> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
+fn from_list<T: Clone + ::std::hash::Hash + Eq + 'static>(
+    items: &Vec<T>,
+) -> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
     let mut counts: HashMap<T, SifrInt> = HashMap::from([]);
     for item in items.iter().cloned() {
         let val: Option<SifrInt> = counts.get(&item).cloned();
@@ -834,7 +834,7 @@ fn from_list<
     }
     __SifrStdlib_sifr_x2ecollections_x2eCounter::new(Some(counts), None)
 }
-fn _sift_down<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
+fn _sift_down<T: Clone + 'static + PartialOrd>(
     data: &mut Vec<T>,
     mut pos: SifrInt,
     n: SifrInt,
@@ -957,10 +957,7 @@ fn _sift_down<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
         }
     }
 }
-fn _sift_up<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    heap: &mut Vec<T>,
-    mut pos: SifrInt,
-) {
+fn _sift_up<T: Clone + 'static + PartialOrd>(heap: &mut Vec<T>, mut pos: SifrInt) {
     let mut done: bool = false;
     while !done {
         if (&pos <= &SifrInt::from_i64(0)) {
@@ -1032,7 +1029,7 @@ fn _sift_up<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
         }
     }
 }
-fn heapify<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(data: &mut Vec<T>) {
+fn heapify<T: Clone + 'static + PartialOrd>(data: &mut Vec<T>) {
     "Convert list to a min-heap in-place. O(n) time.".to_string();
     let n: SifrInt = SifrInt::from(data.len());
     let mut i: SifrInt = &n.floor_div_known_nonzero(&SifrInt::from_i64(2))
@@ -1042,18 +1039,13 @@ fn heapify<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(data: &mut Vec
         i = &i - &SifrInt::from_i64(1);
     }
 }
-fn heappush<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    heap: &mut Vec<T>,
-    item: &T,
-) {
+fn heappush<T: Clone + 'static + PartialOrd>(heap: &mut Vec<T>, item: &T) {
     "Push item onto the heap in-place. O(log n) time.".to_string();
     heap.push(item.clone());
     let pos: SifrInt = &SifrInt::from(heap.len()) - &SifrInt::from_i64(1);
     _sift_up(heap, (pos).clone());
 }
-fn heappop<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    heap: &mut Vec<T>,
-) -> Option<T> {
+fn heappop<T: Clone + 'static + PartialOrd>(heap: &mut Vec<T>) -> Option<T> {
     "Pop and return the smallest item. Heap is modified in-place. O(log n) time.\n    Returns None if the heap is empty."
         .to_string();
     let n: SifrInt = SifrInt::from(heap.len());
@@ -1094,7 +1086,7 @@ fn heappop<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     }
     top
 }
-fn heapreplace<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
+fn heapreplace<T: Clone + 'static + PartialOrd>(
     heap: &mut Vec<T>,
     item: T,
 ) -> Option<T> {
@@ -1122,7 +1114,7 @@ fn heapreplace<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     _sift_down(heap, SifrInt::from_i64(0), (heap_len).clone());
     top
 }
-fn heappushpop<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
+fn heappushpop<T: Clone + 'static + PartialOrd>(
     heap: &mut Vec<T>,
     item: &T,
 ) -> Option<T> {

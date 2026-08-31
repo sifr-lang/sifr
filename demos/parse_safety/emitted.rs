@@ -181,14 +181,43 @@ mod __sifr_project_nominals {
     pub fn _file_close(handle: &String) {
         ::sifr_stdlib::fs::file_close(handle);
     }
-    pub fn _file_read_bytes(handle: &String) -> Result<Vec<u8>, IOError> {
-        ::sifr_stdlib::fs::file_read_bytes(handle)
+    pub fn _file_read_bytes(
+        handle: &String,
+        size: Option<SifrInt>,
+    ) -> Result<Vec<u8>, IOError> {
+        ::sifr_stdlib::fs::file_read_bytes(
+                handle,
+                size.map(::sifr_runtime::interop::SifrIntBridge::from),
+            )
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
     }
     pub fn _file_write_bytes(handle: &String, data: &Vec<u8>) -> Result<(), IOError> {
         ::sifr_stdlib::fs::file_write_bytes(handle, data)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
+            .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
+    }
+    pub fn _file_flush(handle: &String) -> Result<(), IOError> {
+        ::sifr_stdlib::fs::file_flush(handle)
+            .map(|__sifr_bridge_ok| __sifr_bridge_ok)
+            .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
+    }
+    pub fn _file_seek(
+        handle: &String,
+        offset: SifrInt,
+        whence: SifrInt,
+    ) -> Result<SifrInt, IOError> {
+        ::sifr_stdlib::fs::file_seek(
+                handle,
+                ::sifr_runtime::interop::SifrIntBridge::from(offset),
+                ::sifr_runtime::interop::SifrIntBridge::from(whence),
+            )
+            .map(|__sifr_bridge_ok| __sifr_bridge_ok.into_sifr_int())
+            .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
+    }
+    pub fn _file_tell(handle: &String) -> Result<SifrInt, IOError> {
+        ::sifr_stdlib::fs::file_tell(handle)
+            .map(|__sifr_bridge_ok| __sifr_bridge_ok.into_sifr_int())
             .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
     }
     pub fn open_file(
@@ -205,7 +234,7 @@ mod __sifr_project_nominals {
             }
             Err(__sifr_try_err) => {
                 let e = __sifr_try_err.clone();
-                return Err(IOError::new(e.message.clone()));
+                return Err(e);
             }
         }
     }
@@ -231,14 +260,30 @@ mod __sifr_project_nominals {
     pub fn file_close(handle: &__SifrIoNativeFileHandle) {
         _file_close(&handle._id.clone());
     }
-    pub fn file_read_bytes(handle: &__SifrIoNativeFileHandle) -> Result<Vec<u8>, IOError> {
-        _file_read_bytes(&handle._id.clone())
+    pub fn file_read_bytes(
+        handle: &__SifrIoNativeFileHandle,
+        size: Option<SifrInt>,
+    ) -> Result<Vec<u8>, IOError> {
+        _file_read_bytes(&handle._id.clone(), (size).clone())
     }
     pub fn file_write_bytes(
         handle: &__SifrIoNativeFileHandle,
         data: &Vec<u8>,
     ) -> Result<(), IOError> {
         _file_write_bytes(&handle._id.clone(), data)
+    }
+    pub fn file_flush(handle: &__SifrIoNativeFileHandle) -> Result<(), IOError> {
+        _file_flush(&handle._id.clone())
+    }
+    pub fn file_seek(
+        handle: &__SifrIoNativeFileHandle,
+        offset: SifrInt,
+        whence: SifrInt,
+    ) -> Result<SifrInt, IOError> {
+        _file_seek(&handle._id.clone(), (offset).clone(), (whence).clone())
+    }
+    pub fn file_tell(handle: &__SifrIoNativeFileHandle) -> Result<SifrInt, IOError> {
+        _file_tell(&handle._id.clone())
     }
     pub fn getcwd() -> Result<String, IOError> {
         ::sifr_stdlib::fs::getcwd()
@@ -1478,7 +1523,7 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            Ok(())
+            file_flush(&self._handle)
         }
     }
     impl __SifrIoFileHandle {
@@ -1526,14 +1571,14 @@ mod __sifr_project_nominals {
         }
     }
     impl __SifrIoFileHandle {
-        pub fn read_bytes(&self) -> Result<Vec<u8>, IOError> {
+        pub fn read_bytes(&self, size: &Option<SifrInt>) -> Result<Vec<u8>, IOError> {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
             if !self.readable() {
                 return Err(IOError::new("stream is not readable".to_string()));
             }
-            file_read_bytes(&self._handle)
+            file_read_bytes(&self._handle, (size.clone()).clone())
         }
     }
     impl __SifrIoFileHandle {
@@ -1549,14 +1594,18 @@ mod __sifr_project_nominals {
     }
     impl __SifrIoFileHandle {
         pub fn seek(&self, offset: &SifrInt, whence: &SifrInt) -> Result<SifrInt, IOError> {
-            let _ = offset.clone();
-            let _ = whence.clone();
-            Err(IOError::new(_unsupported_seek_tell_error()))
+            if self._closed {
+                return Err(IOError::new(_closed_stream_error()));
+            }
+            file_seek(&self._handle, (offset.clone()).clone(), (whence.clone()).clone())
         }
     }
     impl __SifrIoFileHandle {
         pub fn tell(&self) -> Result<SifrInt, IOError> {
-            Err(IOError::new(_unsupported_seek_tell_error()))
+            if self._closed {
+                return Err(IOError::new(_closed_stream_error()));
+            }
+            file_tell(&self._handle)
         }
     }
     impl __SifrIoFileHandle {
@@ -1571,7 +1620,7 @@ mod __sifr_project_nominals {
     }
     impl __SifrIoFileHandle {
         pub fn seekable(&self) -> bool {
-            false
+            !(self._closed)
         }
     }
     impl __SifrIoFileHandle {
@@ -1629,19 +1678,18 @@ mod __sifr_project_nominals {
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
-            Ok(())
+            file_flush(&self._handle)
         }
     }
     impl __SifrIoBinaryFileHandle {
         pub fn read_bytes(&self, size: &Option<SifrInt>) -> Result<Vec<u8>, IOError> {
-            let _ = (size).clone();
             if self._closed {
                 return Err(IOError::new(_closed_stream_error()));
             }
             if !self.readable() {
                 return Err(IOError::new("stream is not readable".to_string()));
             }
-            file_read_bytes(&self._handle)
+            file_read_bytes(&self._handle, (size.clone()).clone())
         }
     }
     impl __SifrIoBinaryFileHandle {
@@ -1657,14 +1705,18 @@ mod __sifr_project_nominals {
     }
     impl __SifrIoBinaryFileHandle {
         pub fn seek(&self, offset: &SifrInt, whence: &SifrInt) -> Result<SifrInt, IOError> {
-            let _ = offset.clone();
-            let _ = whence.clone();
-            Err(IOError::new(_unsupported_seek_tell_error()))
+            if self._closed {
+                return Err(IOError::new(_closed_stream_error()));
+            }
+            file_seek(&self._handle, (offset.clone()).clone(), (whence.clone()).clone())
         }
     }
     impl __SifrIoBinaryFileHandle {
         pub fn tell(&self) -> Result<SifrInt, IOError> {
-            Err(IOError::new(_unsupported_seek_tell_error()))
+            if self._closed {
+                return Err(IOError::new(_closed_stream_error()));
+            }
+            file_tell(&self._handle)
         }
     }
     impl __SifrIoBinaryFileHandle {
@@ -1679,7 +1731,7 @@ mod __sifr_project_nominals {
     }
     impl __SifrIoBinaryFileHandle {
         pub fn seekable(&self) -> bool {
-            false
+            !(self._closed)
         }
     }
     impl __SifrIoBinaryFileHandle {
@@ -1771,7 +1823,7 @@ mod __sifr_project_nominals {
                             __sifr_try_variant_error,
                         ) => {
                             let e = __sifr_try_variant_error.clone();
-                            return Err(IOError::new(e.message.clone()));
+                            return Err(e);
                         }
                         __SifrUnion_8_x3asequence5_x3aunion1_x3a238_x3a5_x3aclass25_x3asifr_x2eencoding_x2eDecodeError1_x3a019_x3a5_x3aclass7_x3aIOError1_x3a0::__SifrUnionVariant_5_x3aclass25_x3asifr_x2eencoding_x2eDecodeError1_x3a0(
                             __sifr_try_variant_error,
@@ -1823,7 +1875,7 @@ mod __sifr_project_nominals {
                             __sifr_try_variant_error,
                         ) => {
                             let e = __sifr_try_variant_error.clone();
-                            return Err(IOError::new(e.message.clone()));
+                            return Err(e);
                         }
                         __SifrUnion_8_x3asequence5_x3aunion1_x3a238_x3a5_x3aclass25_x3asifr_x2eencoding_x2eEncodeError1_x3a019_x3a5_x3aclass7_x3aIOError1_x3a0::__SifrUnionVariant_5_x3aclass25_x3asifr_x2eencoding_x2eEncodeError1_x3a0(
                             __sifr_try_variant_error,
@@ -1863,6 +1915,16 @@ mod __sifr_project_nominals {
                         .to_string(),
                 ),
             )
+        }
+    }
+    impl __SifrIoTextFileHandle {
+        pub fn seek(&self, offset: &SifrInt, whence: &SifrInt) -> Result<SifrInt, IOError> {
+            self._binary.seek(offset, whence)
+        }
+    }
+    impl __SifrIoTextFileHandle {
+        pub fn tell(&self) -> Result<SifrInt, IOError> {
+            self._binary.tell()
         }
     }
     impl __SifrIoTextFileHandle {
@@ -2473,7 +2535,7 @@ mod __sifr_project_nominals {
             }
             Err(__sifr_try_err) => {
                 let e = __sifr_try_err.clone();
-                return Err(IOError::new(e.message.clone()));
+                return Err(e);
             }
         }
     }
@@ -2494,7 +2556,7 @@ mod __sifr_project_nominals {
             }
             Err(__sifr_try_err) => {
                 let e = __sifr_try_err.clone();
-                return Err(IOError::new(e.message.clone()));
+                return Err(e);
             }
         }
     }
@@ -2533,7 +2595,7 @@ mod __sifr_project_nominals {
             }
             Err(__sifr_try_err) => {
                 let e = __sifr_try_err.clone();
-                return Err(IOError::new(e.message.clone()));
+                return Err(e);
             }
         }
     }
@@ -3287,7 +3349,7 @@ mod __sifr_project_nominals {
         tokens.push(format!("{}{}", value.kind.clone(), ""));
         if (value.kind.clone() == "bool") {
             let bool_value: Option<bool> = value.bool_value;
-            if (bool_value == None) {
+            if (bool_value.is_none()) {
                 tokens.push("false".to_string());
             } else {
                 if let Some(bool_value) = bool_value {
@@ -3297,7 +3359,7 @@ mod __sifr_project_nominals {
         } else {
             if (value.kind.clone() == "int") {
                 let int_value: Option<SifrInt> = value.int_value.clone();
-                if (int_value == None) {
+                if (int_value.is_none()) {
                     tokens.push("0".to_string());
                 } else {
                     if let Some(int_value) = int_value.clone() {
@@ -3307,7 +3369,7 @@ mod __sifr_project_nominals {
             } else {
                 if (value.kind.clone() == "float") {
                     let float_value: Option<f64> = value.float_value;
-                    if (float_value == None) {
+                    if (float_value.is_none()) {
                         tokens.push("0.0".to_string());
                     } else {
                         if let Some(float_value) = float_value {
@@ -3317,7 +3379,7 @@ mod __sifr_project_nominals {
                 } else {
                     if (value.kind.clone() == "str") {
                         let str_value: Option<String> = value.as_str();
-                        if (str_value == None) {
+                        if (str_value.is_none()) {
                             tokens.push("".to_string());
                         } else {
                             if let Some(str_value) = str_value {
@@ -4346,14 +4408,40 @@ fn _file_readlines(handle: &String) -> Result<Vec<String>, IOError> {
 fn _file_close(handle: &String) {
     ::sifr_stdlib::fs::file_close(handle);
 }
-fn _file_read_bytes(handle: &String) -> Result<Vec<u8>, IOError> {
-    ::sifr_stdlib::fs::file_read_bytes(handle)
+fn _file_read_bytes(handle: &String, size: Option<SifrInt>) -> Result<Vec<u8>, IOError> {
+    ::sifr_stdlib::fs::file_read_bytes(
+            handle,
+            size.map(::sifr_runtime::interop::SifrIntBridge::from),
+        )
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
 fn _file_write_bytes(handle: &String, data: &Vec<u8>) -> Result<(), IOError> {
     ::sifr_stdlib::fs::file_write_bytes(handle, data)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
+        .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
+}
+fn _file_flush(handle: &String) -> Result<(), IOError> {
+    ::sifr_stdlib::fs::file_flush(handle)
+        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
+        .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
+}
+fn _file_seek(
+    handle: &String,
+    offset: SifrInt,
+    whence: SifrInt,
+) -> Result<SifrInt, IOError> {
+    ::sifr_stdlib::fs::file_seek(
+            handle,
+            ::sifr_runtime::interop::SifrIntBridge::from(offset),
+            ::sifr_runtime::interop::SifrIntBridge::from(whence),
+        )
+        .map(|__sifr_bridge_ok| __sifr_bridge_ok.into_sifr_int())
+        .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
+}
+fn _file_tell(handle: &String) -> Result<SifrInt, IOError> {
+    ::sifr_stdlib::fs::file_tell(handle)
+        .map(|__sifr_bridge_ok| __sifr_bridge_ok.into_sifr_int())
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
 fn open_file(path: &String, mode: &String) -> Result<__SifrIoNativeFileHandle, IOError> {
@@ -4367,7 +4455,7 @@ fn open_file(path: &String, mode: &String) -> Result<__SifrIoNativeFileHandle, I
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(IOError::new(e.message.clone()));
+            return Err(e);
         }
     }
 }
@@ -4386,14 +4474,30 @@ fn file_readlines(handle: &__SifrIoNativeFileHandle) -> Result<Vec<String>, IOEr
 fn file_close(handle: &__SifrIoNativeFileHandle) {
     _file_close(&handle._id.clone());
 }
-fn file_read_bytes(handle: &__SifrIoNativeFileHandle) -> Result<Vec<u8>, IOError> {
-    _file_read_bytes(&handle._id.clone())
+fn file_read_bytes(
+    handle: &__SifrIoNativeFileHandle,
+    size: Option<SifrInt>,
+) -> Result<Vec<u8>, IOError> {
+    _file_read_bytes(&handle._id.clone(), (size).clone())
 }
 fn file_write_bytes(
     handle: &__SifrIoNativeFileHandle,
     data: &Vec<u8>,
 ) -> Result<(), IOError> {
     _file_write_bytes(&handle._id.clone(), data)
+}
+fn file_flush(handle: &__SifrIoNativeFileHandle) -> Result<(), IOError> {
+    _file_flush(&handle._id.clone())
+}
+fn file_seek(
+    handle: &__SifrIoNativeFileHandle,
+    offset: SifrInt,
+    whence: SifrInt,
+) -> Result<SifrInt, IOError> {
+    _file_seek(&handle._id.clone(), (offset).clone(), (whence).clone())
+}
+fn file_tell(handle: &__SifrIoNativeFileHandle) -> Result<SifrInt, IOError> {
+    _file_tell(&handle._id.clone())
 }
 fn getcwd() -> Result<String, IOError> {
     ::sifr_stdlib::fs::getcwd()
@@ -5266,7 +5370,7 @@ fn open(path: &String, mode: &String) -> Result<__SifrIoFileHandle, IOError> {
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(IOError::new(e.message.clone()));
+            return Err(e);
         }
     }
 }
@@ -5287,7 +5391,7 @@ fn open_binary(
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(IOError::new(e.message.clone()));
+            return Err(e);
         }
     }
 }
@@ -5326,7 +5430,7 @@ fn open_text(
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(IOError::new(e.message.clone()));
+            return Err(e);
         }
     }
 }
@@ -5795,7 +5899,7 @@ fn _json_append_tokens(
     tokens.push(format!("{}{}", value.kind.clone(), ""));
     if (value.kind.clone() == "bool") {
         let bool_value: Option<bool> = value.bool_value;
-        if (bool_value == None) {
+        if (bool_value.is_none()) {
             tokens.push("false".to_string());
         } else {
             if let Some(bool_value) = bool_value {
@@ -5805,7 +5909,7 @@ fn _json_append_tokens(
     } else {
         if (value.kind.clone() == "int") {
             let int_value: Option<SifrInt> = value.int_value.clone();
-            if (int_value == None) {
+            if (int_value.is_none()) {
                 tokens.push("0".to_string());
             } else {
                 if let Some(int_value) = int_value.clone() {
@@ -5815,7 +5919,7 @@ fn _json_append_tokens(
         } else {
             if (value.kind.clone() == "float") {
                 let float_value: Option<f64> = value.float_value;
-                if (float_value == None) {
+                if (float_value.is_none()) {
                     tokens.push("0.0".to_string());
                 } else {
                     if let Some(float_value) = float_value {
@@ -5825,7 +5929,7 @@ fn _json_append_tokens(
             } else {
                 if (value.kind.clone() == "str") {
                     let str_value: Option<String> = value.as_str();
-                    if (str_value == None) {
+                    if (str_value.is_none()) {
                         tokens.push("".to_string());
                     } else {
                         if let Some(str_value) = str_value {
@@ -6646,7 +6750,7 @@ fn _load_json(
 fn has_match(pattern: &String, text: &String) -> Result<bool, RegexError> {
     let __sifr_try_res: Result<Result<bool, RegexError>, RegexError> = (|| {
         let found: Option<String> = search(pattern, text)?;
-        Ok(Ok((found != None)))
+        Ok(Ok((found.is_some())))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {

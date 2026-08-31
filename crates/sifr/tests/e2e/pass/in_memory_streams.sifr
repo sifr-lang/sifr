@@ -14,6 +14,7 @@ def main() -> None:
     bytesio_closed_rejects: bool = False
     bytesio_negative_seek_rejects: bool = False
     binary_file_ok: bool = False
+    binary_error_kind_ok: bool = False
     cleanup_ok: bool = False
 
     path: str = "/tmp/sifr_in_memory_streams_binary.bin"
@@ -74,14 +75,28 @@ def main() -> None:
         _seed: None = write_text(path, "")
         writer: BinaryFileHandle = open_binary(path, "wb")
         _w_file: None = writer.write_bytes(b"memory-stream-sample")
+        _flush_file: None = writer.flush()
         writer.close()
 
         reader: BinaryFileHandle = open_binary(path, "rb")
-        loaded: bytes = reader.read_bytes()
+        head_file: bytes = reader.read_bytes(6)
+        first_position: int = reader.tell()
+        stream_position: int = reader.seek(7)
+        middle_file: bytes = reader.read_bytes(6)
+        tail_position: int = reader.seek(-6, 2)
+        tail_file: bytes = reader.read_bytes()
         reader.close()
-        binary_file_ok = loaded == b"memory-stream-sample"
+        binary_file_ok = head_file == b"memory" and first_position == 6 and stream_position == 7 and middle_file == b"stream" and tail_position == 14 and tail_file == b"sample" and reader.closed()
     except IOError as e:
         _ = str(e.message)
+
+    try:
+        missing: BinaryFileHandle = open_binary(path + ".missing", "rb")
+        missing.close()
+    except FileNotFoundError:
+        binary_error_kind_ok = True
+    except IOError:
+        binary_error_kind_ok = False
 
     try:
         if exists(path):
@@ -97,7 +112,8 @@ def main() -> None:
     actual.append(bytesio_closed_rejects)
     actual.append(bytesio_negative_seek_rejects)
     actual.append(binary_file_ok)
+    actual.append(binary_error_kind_ok)
     actual.append(cleanup_ok)
 
-    expected: list[bool] = [True, True, True, True, True, True, True, True]
+    expected: list[bool] = [True, True, True, True, True, True, True, True, True]
     assert_bool_vector_eq(actual, expected)

@@ -522,9 +522,23 @@ fn lower_vararg_function_call_args(
     };
     let vararg_ty = ft.params.get(vararg_index).map(|(_, ty, _)| ty.clone());
     let vararg_elem_ty = if vararg_elements.is_empty() {
-        match vararg_ty {
+        match vararg_ty.clone() {
             Some(Type::List(elem_ty)) => *elem_ty,
             Some(_) | None => Type::Any,
+        }
+    } else if let Some(Type::List(expected_elem_ty)) = vararg_ty.as_ref() {
+        if vararg_elements
+            .iter()
+            .all(|element| element.ty().is_assignable_to(expected_elem_ty))
+        {
+            expected_elem_ty.as_ref().clone()
+        } else {
+            make_union(
+                vararg_elements
+                    .iter()
+                    .map(|element| element.ty().clone())
+                    .collect(),
+            )
         }
     } else {
         make_union(

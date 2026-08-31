@@ -717,133 +717,50 @@ pub(super) fn lower_islower(object: &RustExpr, args: &[RustExpr]) -> Option<Rust
 }
 
 pub(super) fn lower_center(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
-    if args.len() != 1 {
-        return None;
-    }
-    Some(RustExpr::Block {
-        stmts: vec![
-            RustStmt::Let {
-                mutable: false,
-                name: "_s".to_string(),
-                ty: None,
-                value: RustExpr::Clone(Box::new(object.clone())),
-            },
-            RustStmt::Let {
-                mutable: false,
-                name: "_w".to_string(),
-                ty: None,
-                value: exact_int_to_usize_expr(args[0].clone()),
-            },
-            RustStmt::Let {
-                mutable: false,
-                name: "_len".to_string(),
-                ty: None,
-                value: RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::Ident("_s".to_string())),
-                        method: "chars".to_string(),
-                        args: vec![],
-                    }),
-                    method: "count".to_string(),
-                    args: vec![],
-                },
-            },
-        ],
-        expr: Some(Box::new(RustExpr::If {
-            cond: Box::new(RustExpr::BinOp {
-                left: Box::new(RustExpr::Ident("_len".to_string())),
-                op: ">=".to_string(),
-                right: Box::new(RustExpr::Ident("_w".to_string())),
-            }),
-            then_expr: Box::new(RustExpr::Ident("_s".to_string())),
-            else_expr: Some(Box::new(RustExpr::Block {
-                stmts: vec![
-                    RustStmt::Let {
-                        mutable: false,
-                        name: "_pad".to_string(),
-                        ty: None,
-                        value: RustExpr::BinOp {
-                            left: Box::new(RustExpr::Ident("_w".to_string())),
-                            op: "-".to_string(),
-                            right: Box::new(RustExpr::Ident("_len".to_string())),
-                        },
-                    },
-                    RustStmt::Let {
-                        mutable: false,
-                        name: "_left".to_string(),
-                        ty: None,
-                        value: RustExpr::BinOp {
-                            left: Box::new(RustExpr::Ident("_pad".to_string())),
-                            op: "/".to_string(),
-                            right: Box::new(RustExpr::Literal(RustLiteral::Int(2))),
-                        },
-                    },
-                    RustStmt::Let {
-                        mutable: false,
-                        name: "_right".to_string(),
-                        ty: None,
-                        value: RustExpr::BinOp {
-                            left: Box::new(RustExpr::Ident("_pad".to_string())),
-                            op: "-".to_string(),
-                            right: Box::new(RustExpr::Ident("_left".to_string())),
-                        },
-                    },
-                ],
-                expr: Some(Box::new(RustExpr::FormatMacro {
-                    name: "format".to_string(),
-                    format_str: "{}{}{}".to_string(),
-                    args: vec![
-                        RustExpr::MethodCall {
-                            receiver: Box::new(RustExpr::Literal(RustLiteral::Str(
-                                " ".to_string(),
-                            ))),
-                            method: "repeat".to_string(),
-                            args: vec![RustExpr::Ident("_left".to_string())],
-                        },
-                        RustExpr::Ident("_s".to_string()),
-                        RustExpr::MethodCall {
-                            receiver: Box::new(RustExpr::Literal(RustLiteral::Str(
-                                " ".to_string(),
-                            ))),
-                            method: "repeat".to_string(),
-                            args: vec![RustExpr::Ident("_right".to_string())],
-                        },
-                    ],
-                })),
-            })),
-        })),
-    })
+    lower_checked_padding(object, args, "checked_center")
 }
 
 pub(super) fn lower_ljust(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
-    if args.len() != 1 {
-        return None;
-    }
-    Some(RustExpr::FormatMacro {
-        name: "format".to_string(),
-        format_str: "{:<1$}".to_string(),
-        args: vec![object.clone(), exact_int_to_usize_expr(args[0].clone())],
-    })
+    lower_checked_padding(object, args, "checked_ljust")
 }
 
 pub(super) fn lower_rjust(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
-    if args.len() != 1 {
-        return None;
-    }
-    Some(RustExpr::FormatMacro {
-        name: "format".to_string(),
-        format_str: "{:>1$}".to_string(),
-        args: vec![object.clone(), exact_int_to_usize_expr(args[0].clone())],
-    })
+    lower_checked_padding(object, args, "checked_rjust")
 }
 
 pub(super) fn lower_zfill(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
+    lower_checked_padding(object, args, "checked_zfill")
+}
+
+fn lower_checked_padding(object: &RustExpr, args: &[RustExpr], helper: &str) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
-    Some(RustExpr::FormatMacro {
-        name: "format".to_string(),
-        format_str: "{:0>1$}".to_string(),
-        args: vec![object.clone(), exact_int_to_usize_expr(args[0].clone())],
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec![
+                "sifr_runtime".to_string(),
+                helper.to_string(),
+            ])),
+            args: vec![
+                render_borrowed_arg_expr(object),
+                render_borrowed_arg_expr(&args[0]),
+            ],
+        }),
+        method: "map_err".to_string(),
+        args: vec![RustExpr::Closure {
+            params: vec![RustParam::Named {
+                name: "__padding_error".to_string(),
+                ty: RustType::Named("_".to_string()),
+            }],
+            body: Box::new(RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    "OverflowError".to_string(),
+                    "new".to_string(),
+                ])),
+                args: vec![RustExpr::Ident("__padding_error".to_string())],
+            }),
+            is_move: false,
+        }],
     })
 }
