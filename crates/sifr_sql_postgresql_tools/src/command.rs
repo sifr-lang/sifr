@@ -5,7 +5,7 @@ use sifr_sql_contract::{
     ProfileAuthority, QuerySignatureArtifact, SchemaEvidence, SchemaIr, build_profile_authority,
 };
 use sifr_sql_tool::{
-    AuthorityMergeRule, NamedProfileAuthority, NamedSchema, SchemaLifecycleError,
+    AuthorityMergeRule, NamedProfileAuthority, NamedSchema, SNAPSHOT_PATH, SchemaLifecycleError,
     build_schema_artifacts, plan_pull, resolve_build_authority, validate_schema_authorities,
     write_artifacts_atomically,
 };
@@ -45,6 +45,7 @@ pub async fn run_schema_command(
     arguments: &[String],
     workspace_root: &Path,
     connection_url: Option<&str>,
+    emit: &mut impl FnMut(&str) -> Result<(), CommandError>,
 ) -> Result<CommandOutcome, CommandError> {
     let command = parse_command(arguments)?;
     let profile_name = match &command {
@@ -56,7 +57,7 @@ pub async fn run_schema_command(
     let output = artifact_directory(workspace_root, profile_name);
     match command {
         SchemaCommand::Pull { accept, .. } => {
-            pull(&authority, &output, connection_url, accept).await
+            pull(&authority, &output, connection_url, accept, emit).await
         }
         SchemaCommand::Validate { live, .. } => {
             validate(&authority, &output, workspace_root, connection_url, live).await
@@ -70,16 +71,18 @@ async fn pull(
     output: &Path,
     connection_url: Option<&str>,
     accept: bool,
+    emit: &mut impl FnMut(&str) -> Result<(), CommandError>,
 ) -> Result<CommandOutcome, CommandError> {
     let connection_url = required_connection(connection_url)?;
     let live = live_schema(authority, connection_url).await?;
     let checked = read_snapshot(output)?.unwrap_or_else(|| authority.profile.schema.clone());
     let plan = plan_pull(&checked, live, accept);
     let stdout = json_line(&plan)?;
+    emit(&stdout)?;
     if plan.requires_acceptance {
         return Ok(CommandOutcome {
             exit_code: 2,
-            stdout,
+            stdout: String::new(),
         });
     }
     if let Some(schema) = plan.replacement {
@@ -89,7 +92,7 @@ async fn pull(
     }
     Ok(CommandOutcome {
         exit_code: 0,
-        stdout,
+        stdout: String::new(),
     })
 }
 
@@ -214,7 +217,7 @@ fn authority_with_schema(
 }
 
 fn read_snapshot(output: &Path) -> Result<Option<SchemaIr>, CommandError> {
-    let path = output.join("schema.json");
+    let path = output.join(SNAPSHOT_PATH);
     if !path.exists() {
         return Ok(None);
     }
@@ -281,7 +284,7 @@ fn parse_command(arguments: &[String]) -> Result<SchemaCommand, CommandError> {
         index += 1;
     }
     let profile = profile
-        .filter(|value| !value.is_empty())
+        .filter(|value| !value.is_empty() && !value.starts_with("--"))
         .ok_or_else(usage)?;
     match command {
         "pull" if !live => Ok(SchemaCommand::Pull { profile, accept }),
@@ -337,6 +340,7 @@ mod tests {
         );
         assert!(parse_command(&words("build --profile app --accept")).is_err());
         assert!(parse_command(&words("pull --profile app --unknown")).is_err());
+        assert!(parse_command(&words("pull --profile --accept")).is_err());
         assert!(parse_command(&words("build --profile")).is_err());
     }
 

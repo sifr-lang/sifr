@@ -11,12 +11,10 @@ name = "sifr-sql-postgresql"
 path = "src/main.rs"
 
 [dependencies]
-semver = { workspace = true }
 rustls = { workspace = true }
 rustls-platform-verifier = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-sha2 = { workspace = true }
 sifr_driver = { workspace = true }
 sifr_sql_contract = { workspace = true }
 sifr_sql_postgresql = { workspace = true }
@@ -26,6 +24,7 @@ tokio-postgres = { workspace = true, features = ["runtime"] }
 tokio-postgres-rustls = { workspace = true }
 
 [dev-dependencies]
+semver = { workspace = true }
 tempfile = "3.27.0"
 
 [lints]

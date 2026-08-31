@@ -7940,7 +7940,6 @@ dependencies = [
  "semver",
  "serde",
  "serde_json",
- "sha2 0.11.0",
  "sifr_driver",
  "sifr_sql_contract",
  "sifr_sql_postgresql",

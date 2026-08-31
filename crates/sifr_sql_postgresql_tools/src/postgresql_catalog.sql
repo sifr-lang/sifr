@@ -13,7 +13,7 @@ relations AS (
 ),
 catalog_objects AS (
     SELECT n.nspname AS identity, 'namespace' AS object_kind,
-           jsonb_build_object('name', n.nspname) AS semantic,
+           '{}'::jsonb AS semantic,
            '[]'::jsonb AS dependencies
     FROM user_namespaces n
 
@@ -50,10 +50,21 @@ catalog_objects AS (
     WHERE a.attnum > 0 AND NOT a.attisdropped
 
     UNION ALL
-    SELECT r.identity || '._constraint_' || con.conname,
+    SELECT r.nspname || '.' || con.conname,
            CASE con.contype WHEN 'p' THEN 'primary-key' WHEN 'u' THEN 'unique-constraint'
                 WHEN 'f' THEN 'foreign-key' ELSE 'check-constraint' END,
            jsonb_build_object('name', con.conname, 'definition', pg_catalog.pg_get_constraintdef(con.oid, true),
+                              'columns', COALESCE((
+                                  SELECT jsonb_agg(a.attname ORDER BY key.ordinality)
+                                  FROM unnest(con.conkey) WITH ORDINALITY AS key(attnum, ordinality)
+                                  JOIN pg_catalog.pg_attribute a ON a.attrelid = con.conrelid AND a.attnum = key.attnum
+                              ), '[]'::jsonb),
+                              'referenced-relation', CASE WHEN con.contype = 'f' THEN target_n.nspname || '.' || target.relname ELSE '' END,
+                              'referenced-columns', CASE WHEN con.contype = 'f' THEN COALESCE((
+                                  SELECT jsonb_agg(a.attname ORDER BY key.ordinality)
+                                  FROM unnest(con.confkey) WITH ORDINALITY AS key(attnum, ordinality)
+                                  JOIN pg_catalog.pg_attribute a ON a.attrelid = con.confrelid AND a.attnum = key.attnum
+                              ), '[]'::jsonb) ELSE '[]'::jsonb END,
                               'validated', con.convalidated, 'deferrable', con.condeferrable,
                               'initially-deferred', con.condeferred),
            CASE WHEN con.contype = 'f' AND target.oid IS NOT NULL
@@ -66,13 +77,21 @@ catalog_objects AS (
     WHERE con.contype IN ('p', 'u', 'f', 'c')
 
     UNION ALL
-    SELECT r.identity || '._index_' || i.relname, 'index',
+    SELECT r.nspname || '.' || i.relname, 'index',
            jsonb_build_object('name', i.relname, 'definition', pg_catalog.pg_get_indexdef(i.oid),
+                              'columns', COALESCE((
+                                  SELECT jsonb_agg(a.attname ORDER BY key.ordinality)
+                                  FROM unnest(x.indkey) WITH ORDINALITY AS key(attnum, ordinality)
+                                  JOIN pg_catalog.pg_attribute a ON a.attrelid = x.indrelid AND a.attnum = key.attnum
+                              ), '[]'::jsonb),
                               'unique', x.indisunique, 'valid', x.indisvalid, 'ready', x.indisready),
            jsonb_build_array(r.identity)
     FROM pg_catalog.pg_index x
     JOIN pg_catalog.pg_class i ON i.oid = x.indexrelid
     JOIN relations r ON r.oid = x.indrelid
+    WHERE NOT EXISTS (
+        SELECT 1 FROM pg_catalog.pg_constraint con WHERE con.conindid = x.indexrelid
+    )
 
     UNION ALL
     SELECT n.nspname || '.' || c.relname, 'sequence',
@@ -114,7 +133,9 @@ catalog_objects AS (
     UNION ALL
     SELECT n.nspname || '.' || t.typname, 'composite',
            jsonb_build_object('name', t.typname, 'attributes', COALESCE((
-               SELECT jsonb_agg(jsonb_build_object('name', a.attname, 'database-type-name', pg_catalog.format_type(a.atttypid, a.atttypmod)) ORDER BY a.attnum)
+               SELECT jsonb_agg(jsonb_build_object('name', a.attname,
+                                                   'database-type-name', pg_catalog.format_type(a.atttypid, a.atttypmod),
+                                                   'nullable', NOT a.attnotnull) ORDER BY a.attnum)
                FROM pg_catalog.pg_attribute a WHERE a.attrelid = t.typrelid AND a.attnum > 0 AND NOT a.attisdropped
            ), '[]'::jsonb), 'fields', COALESCE((
                SELECT jsonb_object_agg(a.attname, 'str')
@@ -128,6 +149,7 @@ catalog_objects AS (
     UNION ALL
     SELECT n.nspname || '.' || t.typname, 'range',
            jsonb_build_object('name', t.typname, 'subtype-database-type-name', pg_catalog.format_type(r.rngsubtype, NULL),
+                              'multirange', false,
                               'collation', CASE WHEN r.rngcollation = 0 THEN '' ELSE r.rngcollation::regcollation::text END),
            jsonb_build_array(n.nspname)
     FROM pg_catalog.pg_range r
@@ -144,12 +166,17 @@ catalog_objects AS (
     UNION ALL
     SELECT n.nspname || '.' || p.proname || '._overload_' || md5(pg_catalog.pg_get_function_identity_arguments(p.oid)), 'function',
            jsonb_build_object('name', p.proname, 'identity-arguments', pg_catalog.pg_get_function_identity_arguments(p.oid),
+                              'arguments', COALESCE((
+                                  SELECT jsonb_agg(pg_catalog.format_type(arg.oid, NULL) ORDER BY arg.ordinality)
+                                  FROM unnest(p.proargtypes) WITH ORDINALITY AS arg(oid, ordinality)
+                              ), '[]'::jsonb),
                               'result-type-name', pg_catalog.pg_get_function_result(p.oid), 'kind', p.prokind,
                               'volatility', p.provolatile, 'strict', p.proisstrict,
                               'security-definer', p.prosecdef, 'definition', pg_catalog.pg_get_functiondef(p.oid),
                               'overload_namespace', n.nspname, 'overload_name', p.proname),
            jsonb_build_array(n.nspname)
     FROM pg_catalog.pg_proc p JOIN user_namespaces n ON n.oid = p.pronamespace
+    WHERE p.prorettype NOT IN ('pg_catalog.trigger'::regtype, 'pg_catalog.event_trigger'::regtype)
 
     UNION ALL
     SELECT n.nspname || '._operator._overload_' || md5(o.oprname || ':' || o.oprleft::text || ':' || o.oprright::text), 'operator',

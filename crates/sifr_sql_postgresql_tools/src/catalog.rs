@@ -12,6 +12,7 @@ use tokio_postgres::{Client, Config, NoTls, Row};
 use tokio_postgres_rustls::MakeRustlsConnect;
 
 const CATALOG_QUERY: &str = include_str!("postgresql_catalog.sql");
+const MULTIRANGE_QUERY: &str = include_str!("postgresql_multirange.sql");
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PostgresCatalogError {
@@ -85,10 +86,20 @@ async fn pull_from_client(
             "PostgreSQL server major {major} does not match profile major {expected_server_major}"
         )));
     }
-    let rows = client
+    let mut rows = client
         .query(CATALOG_QUERY, &[])
         .await
         .map_err(|failure| postgres_error("cannot introspect the PostgreSQL catalog", &failure))?;
+    if major >= 14 {
+        rows.extend(
+            client
+                .query(MULTIRANGE_QUERY, &[])
+                .await
+                .map_err(|failure| {
+                    postgres_error("cannot introspect PostgreSQL multiranges", &failure)
+                })?,
+        );
+    }
     client
         .batch_execute("COMMIT")
         .await
@@ -119,9 +130,6 @@ fn schema_from_rows(
         let semantic = value_map(
             serde_json::from_str(&semantic_json).map_err(|_| incomplete("object semantic JSON"))?,
         )?;
-        if semantic.is_empty() {
-            return Err(incomplete("non-empty object semantics"));
-        }
         let dependencies = serde_json::from_str::<Vec<String>>(&dependencies_json)
             .map_err(|_| incomplete("object dependency JSON"))?
             .into_iter()
@@ -135,6 +143,7 @@ fn schema_from_rows(
             source: None,
         });
     }
+    crate::normalization::normalize_catalog_objects(expected_major(&dialect)?, &mut objects)?;
     normalize_schema(
         provider,
         dialect,

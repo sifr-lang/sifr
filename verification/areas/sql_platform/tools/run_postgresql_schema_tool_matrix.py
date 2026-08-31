@@ -17,7 +17,8 @@ PASSWORD = "sifr-schema-tool-qualification"
 SETUP_SQL = r"""
 CREATE TYPE mood AS ENUM ('sad', 'ok', 'happy');
 CREATE DOMAIN email_address AS text CHECK (VALUE LIKE '%@%');
-CREATE TYPE postal_address AS (street text, city text);
+CREATE DOMAIN positive_id AS integer CHECK (VALUE > 0);
+CREATE TYPE postal_address AS (street text, city text, unit_count integer, latitude numeric);
 CREATE TYPE price_range AS RANGE (subtype = numeric);
 CREATE COLLATION sifr_c (provider = libc, locale = 'C');
 CREATE SEQUENCE audit_sequence;
@@ -31,6 +32,7 @@ CREATE TABLE orders (
   id bigint PRIMARY KEY,
   account_id bigint REFERENCES accounts(id)
 );
+CREATE TABLE parity_users (id bigint PRIMARY KEY, name text NOT NULL);
 CREATE INDEX orders_account_idx ON orders(account_id);
 CREATE VIEW account_view AS SELECT id, email FROM accounts;
 CREATE MATERIALIZED VIEW account_count AS SELECT count(*) AS count FROM accounts;

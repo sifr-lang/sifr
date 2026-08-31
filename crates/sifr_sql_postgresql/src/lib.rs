@@ -55,4 +55,4 @@ pub use raw_adapter::{LibpgQueryParser, PostgresParseError, PostgresParser};
 pub use source::{
     LibpgQuerySource, SUPPORTED_POSTGRESQL_MAJORS, embedded_source, embedded_sources,
 };
-pub use types::{PostgresType, PostgresTypeRegistry};
+pub use types::{PostgresType, PostgresTypeRegistry, generated_sifr_type};

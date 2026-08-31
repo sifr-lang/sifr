@@ -1,7 +1,8 @@
 use crate::analysis::AnalysisContext;
 use crate::ast::{CreateTableStatement, PostgresStatement, StatementKind, TableConstraint};
 use crate::catalog_metadata::{
-    function_from_object, nested_string_set_property, operator_from_object, string_set_property,
+    enum_semantics, function_from_object, nested_string_set_property, operator_from_object,
+    string_set_property,
 };
 use crate::ddl_constraints::{TableConstraintInput, add_table_constraints};
 use crate::diagnostic::{PostgresDiagnostic, PostgresDiagnosticCode};
@@ -335,17 +336,7 @@ pub(crate) fn ddl_document(
                     SchemaObject {
                         identity,
                         kind: SchemaObjectKind::Enum,
-                        semantic: BTreeMap::from([(
-                            "values".to_string(),
-                            SemanticValue::List(
-                                value
-                                    .values
-                                    .iter()
-                                    .cloned()
-                                    .map(SemanticValue::Text)
-                                    .collect(),
-                            ),
-                        )]),
+                        semantic: enum_semantics(&value.values),
                         dependencies: namespace_dependency(&value.name),
                         source: Some(source_location(&document, statement)),
                     },
@@ -377,6 +368,13 @@ pub(crate) fn ddl_document(
                                 database_value(&base.database_type)?,
                             ),
                             ("nullable".to_string(), SemanticValue::Bool(value.nullable)),
+                            (
+                                "sifr_type".to_string(),
+                                SemanticValue::Text(
+                                    crate::generated_sifr_type(&base.database_type)
+                                        .map_err(|error| schema_error_message(error.to_string()))?,
+                                ),
+                            ),
                         ]),
                         dependencies: namespace_dependency(&value.name),
                         source: Some(source_location(&document, statement)),

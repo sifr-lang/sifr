@@ -78,11 +78,14 @@ metadata.
 The adapter excludes PostgreSQL internal namespaces. It keeps provider semantics
 as closed `SemanticValue` data. It rejects missing fields, null semantics,
 unknown object kinds, invalid object identities, and unresolved dependencies.
+The adapter uses the same structured `DatabaseType` values and property names as
+the declarative DDL normalizer. Generated domain and composite annotations come
+from the provider type registry. An unrepresentable type is an error.
 
 Pull compares the live graph with the checked snapshot. If no snapshot exists,
-it compares with the selected source authority. It prints the semantic diff
-before any write. A non-empty diff returns status 2 and does not write unless
-the caller supplies `--accept`.
+it compares with the selected source authority. It prints the semantic diff and
+flushes standard output before any write. A non-empty diff returns status 2.
+It does not write unless the caller supplies `--accept`.
 
 An accepted pull rebuilds all schema artifacts from the live graph. This keeps
 the snapshot, fingerprint, manifest, generated module, and dependency index in

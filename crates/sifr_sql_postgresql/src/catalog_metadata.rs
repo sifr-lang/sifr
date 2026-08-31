@@ -4,7 +4,16 @@ use crate::catalog::{
 };
 use crate::diagnostic::PostgresDiagnostic;
 use sifr_sql_contract::{SchemaObject, SemanticValue};
+use std::collections::BTreeMap;
 use std::collections::BTreeSet;
+
+pub(crate) fn enum_semantics(values: &[String]) -> BTreeMap<String, SemanticValue> {
+    let values = SemanticValue::List(values.iter().cloned().map(SemanticValue::Text).collect());
+    BTreeMap::from([
+        ("values".to_string(), values.clone()),
+        ("variants".to_string(), values),
+    ])
+}
 
 pub(crate) fn string_set_property(object: &SchemaObject, key: &str) -> Option<BTreeSet<String>> {
     match object.semantic.get(key) {

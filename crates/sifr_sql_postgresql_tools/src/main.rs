@@ -18,7 +18,23 @@ async fn main() -> ExitCode {
         return ExitCode::FAILURE;
     };
     let connection = std::env::var("SIFR_SQL_DATABASE_URL").ok();
-    match run_schema_command(&arguments, &workspace_root, connection.as_deref()).await {
+    let mut emit = |value: &str| {
+        let mut stdout = std::io::stdout();
+        stdout
+            .write_all(value.as_bytes())
+            .and_then(|()| stdout.flush())
+            .map_err(|_| sifr_sql_postgresql_tools::CommandError {
+                message: "cannot write schema command output".to_string(),
+            })
+    };
+    match run_schema_command(
+        &arguments,
+        &workspace_root,
+        connection.as_deref(),
+        &mut emit,
+    )
+    .await
+    {
         Ok(outcome) => {
             let _ = write!(std::io::stdout(), "{}", outcome.stdout);
             ExitCode::from(outcome.exit_code)
