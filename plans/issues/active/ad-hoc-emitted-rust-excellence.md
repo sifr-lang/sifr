@@ -312,13 +312,13 @@ It does not broaden the active item.
 
 ### Item 7B: End-relative receiver facts and affine boundary closure
 
-- [ ] Growth invalidation distinguishes stable absolute subscript facts from
+- [x] Growth invalidation distinguishes stable absolute subscript facts from
   end-relative negative-index facts whose referent changes after append/extend.
-- [ ] Negative-index append/extend regressions reject stale non-`None` facts,
+- [x] Negative-index append/extend regressions reject stale non-`None` facts,
   while nonnegative-index growth preservation remains covered.
-- [ ] Affine `setdefault` values have one explicit checked contract for both
+- [x] Affine `setdefault` values have one explicit checked contract for both
   insertion and returned-value ownership, with reaching emitted/native evidence.
-- [ ] Mutable non-collection receiver summaries preserve facts only when the
+- [x] Mutable non-collection receiver summaries preserve facts only when the
   receiver type cannot own a relevant sequence fact.
 
 ### Item 8: Canonical Rust IR and emission cleanup
@@ -384,6 +384,7 @@ It does not broaden the active item.
 | 6A | merged | [#3633](https://github.com/sifr-lang/sifr/pull/3633) | `035e71160470d4344851695addaaaecc2fb27f3e` | Compiler candidate `aff53a422ee8c55185d0110c51483be0d600375d`: 1,190 codegen, 89 runtime, and 8 exact-integer architecture tests passed; strict codegen/runtime Clippy, formatting, HIR, diff, 3,562-file guardrail, audit inventory, demo freshness, and standalone emitted metadata compilation passed. Differently named `Addable` forwarding and odd-center fixtures compiled and ran as release-native binaries; the authoritative companion emits `Add<Output = T>` for the callee and `Add<Output = U>` for its relay. The sole create-PR and merge gates each stopped before tests because both profiles omit required SQL suites `host-tools`, `migration-engine`, `postgresql-live-differential`, `postgresql-live-migrations`, `postgresql-live-runtime`, `postgresql-live-schema-tools`, `postgresql-migrations`, `schema-polymorphism`, and `schema-tools`; neither was repeated. | [Exact-SHA review](https://github.com/sifr-lang/sifr/pull/3633#issuecomment-5477506746) on `aff53a422ee8c55185d0110c51483be0d600375d` was SATISFIED with no blockers. It independently reproduced fresh emission, release-native fixtures, all self-output arithmetic substitutions, preserved ordinary closure, and exhaustive small CPython `center` parity. | One canonical structural bound constructor now separates ordinary traits from self-output traits, fixed-point propagation carries no parameter spelling, final rendering uses the receiving parameter, and CPython odd-margin centering is exact. |
 | 7 | merged | [#3637](https://github.com/sifr-lang/sifr/pull/3637) | `73465ce982b790094031d174151a8638cfbcf35b` | Compiler candidate `778e13268d0ff619791a44152e4e52c0df369053`: 1,213 codegen and 1,094 lowering tests passed with one intentional ignore; focused ownership, generic-class `Addable`, context capture, receiver mutation, checked witness, IO, recursive/DP, and clone-budget tests passed. The expanded protocol-bound fixture compiled and ran generic `Accumulator[str]`, `list.insert(&str)`, and `set.add(&str)`. Full E2E passed 717 fixtures; only exact-base `numeric_sentinels` failed under its existing Item 8 ownership. Workspace Clippy, formatting, diff, 3,612-file guardrail, HIR maintainability, audit inventory, regenerated demo freshness, and representative direct native builds passed. The sole create-PR and merge gates each stopped at preflight because both profiles omit required SQL suites `host-tools`, `migration-engine`, `mysql-live`, `mysql-provider`, `postgresql-live-differential`, `postgresql-live-migrations`, `postgresql-live-runtime`, `postgresql-live-schema-tools`, `postgresql-migrations`, `schema-polymorphism`, and `schema-tools`; neither was repeated. | [Initial exact-SHA review](https://github.com/sifr-lang/sifr/pull/3637#issuecomment-5481578415) on `27840aa67d438956b87f87f96822a4b868a69e2b` was NOT SATISFIED; [sole remediation review](https://github.com/sifr-lang/sifr/pull/3637#issuecomment-5481578704) on `778e13268d0ff619791a44152e4e52c0df369053` was NOT SATISFIED. The remediation fixed both original blockers: class-owned `__SifrAdd` support demand and raw borrowed-string clones at collection ownership boundaries. Its new receiver-effect precision regression and latent non-registry `setdefault` boundary gap are assigned to Item 7A under the no-third-review rule. | Explicit ownership/materialization planning, unsized views, clone-chain simplification and budgets, recursive borrowed options, callable-effect separation, context-target capture, checked clone diagnostics, IO clone cleanup, and ownership-correct numeric/string `Addable` support merged. The bounded second-review mechanism defects are owned by Item 7A. |
 | 7A | merged | [#3639](https://github.com/sifr-lang/sifr/pull/3639) | `917a4e898a881d7966d78e645c01143d9290eb54` | Final compiler candidate `e77bf60695f27cee1fa71a1e3eea2e8facad1b75`: 1,217 codegen and 1,101 lowering tests passed with one intentional ignore; focused receiver-summary, fact-splitting, local-binding fallback, Copy/affine ownership, emitted-shape, and release-native regressions passed. Full E2E passed 718 fixtures; only exact-base `numeric_sentinels` failed under Item 8 ownership. Workspace Clippy, formatting, diff, 3,613-file guardrail, HIR maintainability, audit inventory, regenerated demo freshness, and direct native execution passed. The sole create-PR and merge gates each stopped at preflight because both profiles omit required SQL suites `host-tools`, `migration-engine`, `mysql-live`, `mysql-provider`, `postgresql-live-differential`, `postgresql-live-migrations`, `postgresql-live-runtime`, `postgresql-live-schema-tools`, `postgresql-migrations`, `schema-polymorphism`, and `schema-tools`; neither was repeated. | [Initial exact-SHA review](https://github.com/sifr-lang/sifr/pull/3639#issuecomment-5482649819) on `57a09a3121c34f5e5504ac3c7b7791e665855e8a` was NOT SATISFIED; [sole remediation review](https://github.com/sifr-lang/sifr/pull/3639#issuecomment-5482650047) on `e77bf60695f27cee1fa71a1e3eea2e8facad1b75` was SATISFIED. The remediation split accessibility from non-`None` facts and restored Copy/affine `setdefault` ownership guards. Its new end-relative negative-index finding is assigned to Item 7B under the no-third-review rule. | One typed receiver summary now preserves length/key accessibility while invalidating exact positional/value facts; all `setdefault` entrypoints share an ownership-safe operation boundary; Copy values emit no redundant clones. Bounded end-relative and affine-return follow-ups are owned by Item 7B. |
+| 7B | merged | [#3643](https://github.com/sifr-lang/sifr/pull/3643) | `17c6e49d1be6d19834530d6475353539d0efb124` | Exact compiler candidate `5b6c68d0508c5e79b0ddfc8d598480314ef8ef14`: 1,218 codegen and 1,103 lowering tests passed with one intentional ignore; 569 E2E fail fixtures, focused negative-index append/extend, absolute-index preservation, affine `setdefault`, fact-domain, and release-native insertion/existing-return evidence passed. Full E2E passed 718 fixtures; only unchanged `numeric_sentinels` failed under Item 8 ownership. Workspace Clippy, formatting, diff, 3,614-file guardrail, HIR maintainability, audit inventory, and exact demo freshness passed. The sole create-PR and merge gates each stopped at preflight because both profiles omit required SQL suites `host-tools`, `migration-engine`, `mysql-live`, `mysql-provider`, `postgresql-live-differential`, `postgresql-live-migrations`, `postgresql-live-runtime`, `postgresql-live-schema-tools`, `postgresql-migrations`, `schema-polymorphism`, and `schema-tools`; neither was repeated. | [Exact-SHA review](https://github.com/sifr-lang/sifr/pull/3643#issuecomment-5483156923) on `5b6c68d0508c5e79b0ddfc8d598480314ef8ef14` was SATISFIED with no blockers. It independently traced literal-negative classification, growth-sensitive clearing, the affine insertion/return rejection, defensive codegen boundary, and non-collection fact domain. | Append/extend now preserve stable absolute facts while invalidating end-relative facts; affine `setdefault` is rejected before emission with one ownership contract; mutable buffers and join sets carry an explicit no-relevant-sequence-facts domain. |
 
 ## Deferred Findings
 
@@ -470,24 +471,31 @@ It does not broaden the active item.
 | Item 7A remediation review | Statement-position `setdefault` still computes a discarded cloned return value. | Item 9 | Make emission context and last-use planning avoid return-value materialization when the result is discarded, with clone/allocation budgets. |
 | Item 7A remediation review | `PythonBuffer.write` is classified as value mutation and preserves receiver facts without an explicit proof that no relevant sequence fact can target the buffer. | Item 7B | Prove the fact-domain exclusion or conservatively invalidate relevant facts, with a receiver-summary regression. |
 | Item 7A create-PR and merge gates | Both profiles omit required SQL suites `host-tools`, `migration-engine`, `mysql-live`, `mysql-provider`, `postgresql-live-differential`, `postgresql-live-migrations`, `postgresql-live-runtime`, `postgresql-live-schema-tools`, `postgresql-migrations`, `schema-polymorphism`, and `schema-tools`, so both one-shot gates stopped at preflight. | Item 12 | Reconcile final profile composition and prove every currently required SQL suite is selected before final qualification. |
+| Item 7B exact-SHA review | `JoinSet` shares the no-relevant-sequence-facts domain with `PythonBuffer`; this is sound for today's growth-only mutable methods but a future removal method could inherit preservation silently. | Item 8 | Make fact-domain eligibility structural and exhaustive per receiver operation, and cover every mutable non-collection method in the summary regression. |
+| Item 7B exact-SHA review | Growth stability is conservatively derived from literal index sign, so variable list indices over-invalidate and dict keys carry irrelevant growth metadata. | Item 8 | Derive reference stability from canonical typed index facts and receiver kind without weakening negative-index soundness. |
+| Item 7B exact-SHA review | The generic reusable-value method set retains an unreachable `setdefault` affine branch after the dedicated ownership rejection. | Item 8 | Give the affine `setdefault` contract one canonical diagnostic owner and remove the unreachable generic branch. |
+| Item 7B exact-SHA review | Defensive affine `setdefault` codegen declines with `None`, which would become a silent lowering miss if the frontend contract regressed. | Item 8 | Replace defensive silent decline with a structured internal codegen invariant diagnostic while preserving the source-facing rejection. |
+| Item 7B create-PR and merge gates | Both profiles omit required SQL suites `host-tools`, `migration-engine`, `mysql-live`, `mysql-provider`, `postgresql-live-differential`, `postgresql-live-migrations`, `postgresql-live-runtime`, `postgresql-live-schema-tools`, `postgresql-migrations`, `schema-polymorphism`, and `schema-tools`, so both one-shot gates stopped at preflight. | Item 12 | Reconcile final profile composition and prove every currently required SQL suite is selected before final qualification. |
 
 New out-of-scope findings must name a concrete active owner before the current
 item can close.
 
 ## Current Handoff
 
-- Active item: Item 7B, end-relative receiver facts and affine boundary closure,
-  based on Item 7A merge `917a4e898a881d7966d78e645c01143d9290eb54`.
-- Item 7A state: merged with one typed receiver summary, split accessibility and
-  non-`None` facts, proof-preserving growth/value mutation, precise
-  reorder/removal invalidation, one shared `setdefault` ownership boundary, and
-  Copy/affine storage guards across registry and local-binding fallback paths.
-- Item 7B scope is limited to the sole remediation review's new negative-index
-  growth defect, affine `setdefault` return contract/evidence, and the explicit
-  non-collection receiver fact-domain proof. Statement-position clone
-  elimination remains Item 9-owned; lookup-key/optional-place normalization
-  remains Item 8-owned; SQL profile composition remains Item 12-owned.
-- Next action: start Item 7B from current `origin/main`, implement all three
-  bounded follow-ups in one batch without testing, then run focused and required
-  validation, one exact-SHA Opus review with at most one remediation, and the
-  single exact-candidate gate sequence.
+- Active item: Item 8, canonical Rust IR and emission cleanup, based on Item 7B
+  merge `17c6e49d1be6d19834530d6475353539d0efb124`.
+- Item 7B state: merged with typed growth stability for subscript value facts,
+  conservative dynamic-index handling, an explicit affine `setdefault`
+  insertion/return rejection, a defensive codegen boundary, and an explicit
+  non-collection receiver fact domain.
+- Item 8 owns the accumulated canonical-IR, optional-place, diagnostics,
+  generated-name, generic-identity, stale companion, warning/dead-code, and
+  exact-base `numeric_sentinels` findings. Algorithmic allocation and last-use
+  promotion remain Item 9-owned; runtime bridge deduplication remains Item
+  10-owned; portability remains Item 11-owned; SQL profile composition and final
+  whole-phase qualification remain Item 12-owned.
+- Next action: start Item 8 from current `origin/main`, inventory every Item
+  8-owned deferred row against the current compiler and generated artifacts,
+  implement the complete canonical IR/emission solution in one batch without
+  testing, then run focused and required validation, one exact-SHA Opus review
+  with at most one remediation, and the single exact-candidate gate sequence.
