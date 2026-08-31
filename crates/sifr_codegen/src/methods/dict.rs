@@ -1,6 +1,7 @@
 //! Dict method lowerers for registry lowering.
 
 use crate::{RustExpr, RustParam, RustType};
+use sifr_type_system::Type;
 
 fn is_already_borrowed_rendered_expr(arg: &RustExpr) -> bool {
     match arg {
@@ -22,6 +23,22 @@ fn render_key_arg_expr(arg: &RustExpr) -> RustExpr {
             mutable: false,
             expr: Box::new(arg.clone()),
         },
+    }
+}
+
+fn materialize_setdefault_storage_arg(ty: &Type, arg: &RustExpr) -> RustExpr {
+    let reusable_place = match arg {
+        RustExpr::Ident(_) | RustExpr::Field { .. } | RustExpr::Index { .. } => true,
+        RustExpr::Paren(inner) => matches!(
+            inner.as_ref(),
+            RustExpr::Ident(_) | RustExpr::Field { .. } | RustExpr::Index { .. }
+        ),
+        _ => false,
+    };
+    if reusable_place {
+        crate::ownership_plan::materialize_owned_value(ty, arg.clone())
+    } else {
+        arg.clone()
     }
 }
 
@@ -214,21 +231,29 @@ pub(super) fn lower_pop(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr
     }
 }
 
-pub(super) fn lower_setdefault(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
+pub(super) fn lower_setdefault(
+    object: &RustExpr,
+    key_ty: &Type,
+    value_ty: &Type,
+    args: &[RustExpr],
+) -> Option<RustExpr> {
     match args {
-        [key, default] => Some(RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::MethodCall {
+        [key, default] => {
+            let key = materialize_setdefault_storage_arg(key_ty, key);
+            let default = materialize_setdefault_storage_arg(value_ty, default);
+            let inserted = RustExpr::MethodCall {
                 receiver: Box::new(RustExpr::MethodCall {
                     receiver: Box::new(object.clone()),
                     method: "entry".to_string(),
-                    args: vec![key.clone()],
+                    args: vec![key],
                 }),
                 method: "or_insert".to_string(),
-                args: vec![default.clone()],
-            }),
-            method: "clone".to_string(),
-            args: vec![],
-        }),
+                args: vec![default],
+            };
+            Some(crate::ownership_plan::materialize_owned_value(
+                value_ty, inserted,
+            ))
+        }
         _ => None,
     }
 }

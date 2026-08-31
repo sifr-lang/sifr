@@ -1,0 +1,44 @@
+def read_after_growth_and_reorder(mut values: list[int]) -> int:
+    if len(values) == 0:
+        return 0
+    values.append(4)
+    values.insert(0, 3)
+    values.extend([2, 1])
+    values.sort()
+    values.reverse()
+    return values[0]
+
+
+def read_after_value_mutation(mut values: dict[str, int]) -> int:
+    if "kept" not in values:
+        return 0
+    values.setdefault("added", 2)
+    values.update({"updated": 3})
+    return values["kept"]
+
+
+def borrowed_default(mut values: dict[str, str], key: str, default: str) -> str:
+    return values.setdefault(key, default)
+
+
+def reusable_owned_default(mut values: dict[str, str]) -> str:
+    key: str = "owned-key"
+    default: str = "owned-value"
+    selected: str = values.setdefault(key, default)
+    assert key == "owned-key"
+    assert default == "owned-value"
+    return selected
+
+
+def main():
+    numbers: list[int] = [0]
+    assert read_after_growth_and_reorder(numbers) == 4
+
+    mapped: dict[str, int] = {"kept": 7}
+    assert read_after_value_mutation(mapped) == 7
+
+    borrowed: dict[str, str] = {}
+    assert borrowed_default(borrowed, "borrowed-key", "borrowed-value") == "borrowed-value"
+
+    owned: dict[str, str] = {}
+    assert reusable_owned_default(owned) == "owned-value"

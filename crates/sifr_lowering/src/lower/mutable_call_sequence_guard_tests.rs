@@ -102,3 +102,56 @@ def read_after_pop(mut values: list[int]) -> int:
             && diagnostic.message.contains("None")
     }));
 }
+
+#[test]
+fn builtin_growth_and_reorder_preserve_nonempty_list_guard() {
+    let source = r#"
+def read_after_growth_and_reorder(mut values: list[int]) -> int:
+    if len(values) == 0:
+        return 0
+    values.append(4)
+    values.insert(0, 3)
+    values.extend([2, 1])
+    values.sort()
+    values.reverse()
+    return values[0] + 1
+"#;
+    let result = lower_source(source);
+    assert!(result.is_ok(), "{result:?}");
+}
+
+#[test]
+fn dict_value_mutation_preserves_existing_membership_guard() {
+    let source = r#"
+def read_after_setdefault(mut values: dict[str, int]) -> int:
+    if "a" not in values:
+        return 0
+    values.setdefault("b", 2)
+    values.update({"c": 3})
+    return values["a"] + 1
+"#;
+    let result = lower_source(source);
+    assert!(result.is_ok(), "{result:?}");
+}
+
+#[test]
+fn builtin_clear_and_remove_invalidate_sequence_guards() {
+    let source = r#"
+def read_after_clear(mut values: list[int]) -> int:
+    if len(values) == 0:
+        return 0
+    values.clear()
+    return values[0] + 1
+
+def read_after_remove(mut values: list[int]) -> int:
+    if len(values) == 0:
+        return 0
+    values.remove(values[0])
+    return values[0] + 1
+"#;
+    let diagnostics = lower_source(source).expect_err("removal must invalidate sequence guards");
+    assert!(diagnostics.iter().any(|diagnostic| {
+        diagnostic.code == Some(DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR)
+            && diagnostic.message.contains("None")
+    }));
+}
