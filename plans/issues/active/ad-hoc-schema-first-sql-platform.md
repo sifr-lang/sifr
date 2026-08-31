@@ -297,7 +297,7 @@ can use these contracts.
 | 14 | completed | PostgreSQL migration qualification | PostgreSQL DDL, locks, transactional limits, imports, baselines, recovery, and supported-version execution pass full migration qualification. |
 | 15 | completed | Schema polymorphism and portable constraints | Structural schema requirements specialize safely, while explicit capability constraints validate portable code for every declared provider. |
 | 16 | completed | MySQL provider completion | MySQL query, schema, runtime, tooling, migration, editor, safety, and conformance surfaces satisfy the common and provider-specific contracts. |
-| 17 | pending | SQLite provider completion | SQLite query, schema, runtime, tooling, migration, editor, safety, and conformance surfaces satisfy the common and provider-specific contracts. |
+| 17 | completed | SQLite provider completion | SQLite query, schema, runtime, tooling, migration, editor, safety, and conformance surfaces satisfy the common and provider-specific contracts. |
 | 18 | pending | Integrated qualification and phase closure | All providers, tools, migrations, compiler paths, runtime paths, editor paths, security gates, budgets, examples, and documents pass as one final system. |
 
 ## Milestone acceptance contracts
@@ -1033,27 +1033,27 @@ Owned scope:
 
 Acceptance criteria:
 
-- [ ] Component and runtime manifests use the exact Milestone 0 versions of
+- [x] Component and runtime manifests use the exact Milestone 0 versions of
   syntaqlite, `rusqlite`, `libsqlite3-sys`, and the bundled SQLite amalgamation.
-- [ ] The component pins syntaqlite and its SQLite grammar for each supported
+- [x] The component pins syntaqlite and its SQLite grammar for each supported
   SQLite version and qualified compile-flag set.
-- [ ] The runtime uses bundled `rusqlite` on dedicated blocking workers. It uses
+- [x] The runtime uses bundled `rusqlite` on dedicated blocking workers. It uses
   `InterruptHandle` for bounded cancellation and Sifr-owned pooling.
-- [ ] SQLite grammar, affinity, strict tables, rowid, generated columns, conflict
+- [x] SQLite grammar, affinity, strict tables, rowid, generated columns, conflict
   forms, attached scope, and schema objects are exact.
-- [ ] Required SQLite features and minimum library version participate in profile
+- [x] Required SQLite features and minimum library version participate in profile
   validation, fingerprints, and caches.
-- [ ] The file runtime satisfies the common verification, ownership, execution,
+- [x] The file runtime satisfies the common verification, ownership, execution,
   streaming, statement-cache, cancellation, bound, error, and panic-safety
   contracts.
-- [ ] Schema tools and migration reflection cover the SQLite capability matrix,
+- [x] Schema tools and migration reflection cover the SQLite capability matrix,
   including table-rebuild plans.
-- [ ] The SQLite provider tool implements `sifr sql test provision` with the
+- [x] The SQLite provider tool implements `sifr sql test provision` with the
   common connection-manifest contract.
-- [ ] SQLite independently normalizes, proves, specializes, and validates portable
+- [x] SQLite independently normalizes, proves, specializes, and validates portable
   schema requirements through the Milestone 15 harness.
-- [ ] Language-server features use SQLite semantics and documentation.
-- [ ] Conformance, migration, recovery, fuzz, property, corruption, locking, and
+- [x] Language-server features use SQLite semantics and documentation.
+- [x] Conformance, migration, recovery, fuzz, property, corruption, locking, and
   performance suites pass on every supported SQLite version.
 
 Focused validation:
@@ -1286,7 +1286,7 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 | 14 | completed | [#3627](https://github.com/sifr-lang/sifr/pull/3627) | `5b2aa585f4` | migration and PostgreSQL suites 9/9; live PostgreSQL 13-18 migration matrix; strict Clippy, formatting, guards, qualification, and mutation checks pass | Opus remediation `SATISFIED` on `a8f02da62`; two new mechanisms are deferred under the continuation rule | PostgreSQL DDL reflection, runtime plan v2, imports, locking, recovery, rollback, operator commands, and supported-major qualification |
 | 15 | completed | [#3630](https://github.com/sifr-lang/sifr/pull/3630) | `d878ecfe1a` | schema-polymorphism 7/7; PostgreSQL 13-18 component sandbox; affected tests, strict Clippy, formatting, and guards pass | Two exact-SHA Opus reviews; round 2 verified object accounting and deferred the new positional constraint-identity mechanism under the continuation rule | Structural requirements, compile-time witnesses, specialization, execution binding, and provider-owned capability and object accounts |
 | 16 | completed | [#3635](https://github.com/sifr-lang/sifr/pull/3635) | `70de2f82bb` | SQL platform 62/62; MySQL 8.4, 9.7, and 26.7 live matrices; affected tests, strict Clippy, formatting, and guards pass | Opus remediation `SATISFIED` on `5d585f4b0`; new mechanism suggestions are deferred under the continuation rule | Complete MySQL compiler, runtime, tools, migrations, provisioning, editor integration, and qualification |
-| 17 | pending | — | — | — | — | SQLite provider completion |
+| 17 | completed | [#3640](https://github.com/sifr-lang/sifr/pull/3640) | `4a64e163ae` | SQLite provider 6/6; contract and package tests; strict Clippy; formatting and guards pass | Opus remediation `SATISFIED` on `22a87c70d`; new suggestions are deferred to Milestone 18 | Complete SQLite compiler, worker runtime, tools, migrations, provisioning, editor integration, and qualification |
 | 18 | pending | — | — | — | — | Integrated qualification and phase closure |
 
 ## Deferred reviewer follow-up
@@ -1363,6 +1363,13 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 | Milestone 16 remediation review | Carrier cancellation uses a detached cleanup task. Evidence can arrive after the returned error, and a connection ID can retire first. | Milestone 18 | Join the bounded cleanup or add an explicit completion handoff. Attach cleanup evidence to the returned error and test the retirement race. |
 | Milestone 16 remediation review | SQL profile authority derives the expected dialect family from provider output instead of profile configuration. | Milestone 18 | Store the resolved provider family in the profile configuration. Compare it before dialect-mode validation. |
 | Milestone 16 remediation review | The `sifr_package` all-target strict Clippy run has existing test lint debt. | Milestone 18 | Remove the lint debt before the final workspace gate. Keep the Milestone 16 library target clean. |
+| Milestone 17 remediation review | SQLite migration scope validation applies the exact one-statement guard only to DDL steps. | Milestone 18 | Apply an execution-safe statement policy to SQL data, assertion, and backfill steps, even for a hand-edited `graph.json`. |
+| Milestone 17 remediation review | SQLite one-row cardinality probing can be constrained by a profile row limit of one. | Milestone 18 | Separate the two-row cardinality probe from collection limits, matching the common explicit cardinality overflow policy. |
+| Milestone 17 remediation review | SQLite `==` is retained as two operator tokens and normalizes differently from `=`. | Milestone 18 | Canonicalize the SQLite equality alias and add equivalent-query normalization evidence. |
+| Milestone 17 remediation review | Conflict-form detection scans the whole INSERT and can mistake an `OR replace(...)` expression for an INSERT conflict action. | Milestone 18 | Restrict conflict detection to the statement action prefix and add INSERT-SELECT predicate regressions. |
+| Milestone 17 remediation review | Two SQLite helper functions remain behind `#[allow(dead_code)]`. | Milestone 18 | Remove the unused compatibility helpers after the integrated component and editor paths prove they have no consumer. |
+| Milestone 17 remediation review | SQLite corruption evidence uses a wholly invalid byte blob rather than a damaged valid database. | Milestone 18 | Add truncated-page or page-corruption cases while retaining the existing malformed-file boundary test. |
+| Milestone 17 remediation review | The common migration compiler passes provider-normalized SQL into executable data and assertion steps even when literal normalization is lossy. | Milestone 18 | Separate executable SQL from semantic normalization and add literal-bearing migration cases across providers. |
 
 ### Milestone 0 closure record
 
@@ -2364,6 +2371,64 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
   tool, migration, editor, safety, version, and qualification contracts.
 - Exact next action: implement Milestone 17 SQLite provider completion from the
   merged and recorded mainline.
+
+### Milestone 17 closure record
+
+- Status: completed and merged under the phase continuation rule.
+- Starting commit: `02842e49020146f1b39a415f8b35347bd17c51e7`.
+- Initial reviewed candidate: `b76cdf19404c1e04e966243f813d497d95dc6fb2`.
+- Remediation reviewed and final candidate:
+  `22a87c70d2b41bdb76ec4dc2ebc51ae13f17e25e`.
+- Pull request: [#3640](https://github.com/sifr-lang/sifr/pull/3640).
+- Merge commit: `4a64e163aecf371738535294fe3daf855a2c9e99`.
+- Compiler result: the SQLite component owns pinned grammar validation, exact
+  lexical and semantic lowering, affinity, rowid, strict-table, attached-scope,
+  query, write, schema normalization, editor, and portable-requirement behavior.
+- Runtime result: bundled `rusqlite` connections stay on dedicated joined
+  workers. Sifr owns pooling, verification, limits, streaming, transactions,
+  statement caching, attached files, bounded interruption, and error mapping.
+- Tool result: catalog pull reuses the exact DDL normalizer. Lifecycle commands,
+  confined test provisioning, common `graph.json` migration execution, truthful
+  baseline import, ledger, drift checks, atomic recovery, and explicit rollback
+  are implemented.
+- Dependency result: Syntaqlite 0.9.0, `rusqlite` 0.40.2,
+  `libsqlite3-sys` 0.38.2, SQLite 3.53.2, Tokio 1.53.1, WASI SDK 33, and
+  `wit-bindgen` 0.61.1 are locked. The grammar pin is forced and the actual
+  bundled runtime reports version number 3053002 with 51 compile options.
+- Focused validation: the SQLite provider area passed 6/6 variants. Compiler,
+  property, runtime, catalog, tool, migration, and real bundled-library tests
+  passed. The common contract and 160 package tests also passed.
+- Repository validation: strict Clippy passed for SQLite compiler, runtime,
+  tools, common contracts, and the package library. Formatting, diff hygiene,
+  HIR maintainability, and the 900-line source guard passed. The checked-in
+  WebAssembly component was rebuilt and its digest, size, target, and identity
+  passed qualification.
+- Review round 1: Opus returned `NOT SATISFIED` on the initial candidate. It
+  found compiler/catalog divergence, missing common migration-engine behavior,
+  attached-scope, grammar, semantic, runtime-lifecycle, requirement-harness,
+  evidence, and documentation gaps.
+- Remediation: catalog and DDL use one normalizer; attached files are explicit;
+  SQLite parameters, operators, limits, returning, conflicts, DDL, types, and
+  rowid rules are exact; provider metadata is separate; open is non-blocking;
+  workers join; one-row reads report cardinality; migrations use the common
+  engine; and qualification measures the actual bundled library.
+- Review round 2: Opus verified every original correction and returned
+  `SATISFIED` with no blockers on the exact final candidate. The
+  [published review](https://github.com/sifr-lang/sifr/pull/3640#issuecomment-5482865565)
+  records the verdict. Its new suggestions and one pre-existing common migration
+  issue are assigned to Milestone 18. No third review ran.
+- Create-PR gate: the one allowed run used the exact final candidate. It stopped
+  before tests because the profile omits twelve required SQL platform suites.
+  It did not run again.
+- Merge gate: the one allowed run used the same exact final candidate. It
+  stopped before tests on the same profile error and did not run again. The
+  [published gate evidence](https://github.com/sifr-lang/sifr/pull/3640#issuecomment-5482888123)
+  records both commands. Milestone 18 owns the integrated profile correction.
+- Documentation result: the SQLite provider document defines package ownership,
+  locked tools, grammar, schema, runtime, catalog, migrations, editor behavior,
+  safety, and executable qualification evidence.
+- Exact next action: implement Milestone 18 integrated qualification and phase
+  closure from the merged and recorded mainline.
 
 ### External async prerequisite closure record
 
