@@ -292,11 +292,23 @@ It does not broaden the active item.
 
 ### Item 7: Ownership, borrowing, and clone quality
 
-- [ ] APIs prefer `str` and slices where ownership is not required.
-- [ ] Clone insertion is driven by an explicit ownership plan.
-- [ ] Clone counts and representative emitted shapes have regression budgets.
-- [ ] Recursive and dynamic-programming fixtures preserve linear work where the
+- [x] APIs prefer `str` and slices where ownership is not required.
+- [x] Clone insertion is driven by an explicit ownership plan.
+- [x] Clone counts and representative emitted shapes have regression budgets.
+- [x] Recursive and dynamic-programming fixtures preserve linear work where the
   source algorithm is linear.
+
+### Item 7A: Receiver-effect precision and owned-boundary closure
+
+- [ ] One receiver-effect summary distinguishes growth, removal, reordering,
+  and value mutation for every builtin and user-defined mutable receiver.
+- [ ] Length and membership guards survive operations that preserve their proof,
+  while shrinking/removing operations and positional reordering invalidate the
+  exact facts they can falsify.
+- [ ] Every `setdefault` emission entrypoint materializes owned key/default
+  values at the operation boundary, including local-binding fallback emission.
+- [ ] Focused shape and native regressions cover guard preservation/invalidation
+  and borrowed plus owned `setdefault` values without redundant clones.
 
 ### Item 8: Canonical Rust IR and emission cleanup
 
@@ -359,6 +371,7 @@ It does not broaden the active item.
 | 5 | merged | [#3622](https://github.com/sifr-lang/sifr/pull/3622) | `79b963aa6a909303b1152546a0f91e699cd8f1cf` | Final compiler candidate `cc63e5d4e86725543ed111b3c194d2e89ab5e629`: 1,183 codegen and 1,085 lowering tests passed with one intentional ignore; workspace Clippy, formatting, HIR, diff, 3,515-file guardrail, audit inventory, and exact demo freshness passed. Native evidence covered suspension-by-suspension side effects, 10,001 pulls from unbounded `count`, `islice` over that source, async lazy start/close/exhaustion, CPython/consolidated itertools behavior, and bounded `cycle` without an extra source effect. The 91-project generated corpus compiled on the initial candidate with panic, intrinsic-panic, determinism, demo, freshness, and every per-project rustfmt/Clippy classification passing; the exact remediation reran all affected lowering, native, Clippy, formatting, and freshness checks. The sole create-PR and merge gates each stopped before tests because both profiles omit required SQL suites `host-tools`, `postgresql-live-differential`, and `postgresql-live-runtime`; neither was repeated. | [Initial review](https://github.com/sifr-lang/sifr/pull/3622#issuecomment-5472340524) on `1029541fd69c9b1d6726f53331cc5319f17f3be3` was NOT SATISFIED; [sole remediation review](https://github.com/sifr-lang/sifr/pull/3622#issuecomment-5472360882) on `cc63e5d4e86725543ed111b3c194d2e89ab5e629` was SATISFIED with no blockers. The discarded `None`-typed return-expression defect and bounded-`cycle` over-pull were corrected. The remediation review's newly noted optional-element `cycle` semantics are assigned to Item 6 under the no-third-review rule. | Sync and async generators now own resumable producer futures; generator returns exhaust without silently discarding expressions; infinite and adapter iterators are consumer-driven; authoritative demos and native/codegen/lowering regressions are merged. |
 | 6 | merged | [#3629](https://github.com/sifr-lang/sifr/pull/3629) | `e3980da373afb250bf579ee6636a40bec81de64a` | Final compiler candidate `511ec05e3ff21295fc0ba725f39abbe9900b1cdb`: 1,189 codegen tests passed; strict codegen Clippy, formatting, HIR, diff, 3,554-file guardrail, audit inventory, and demo freshness passed. Ten regenerated generic-bound companions compiled directly. Focused lowering, runtime, exact-integer, stdlib API, E2E, seven native release fixtures, generated corpus, panic, determinism, and freshness evidence covered string padding, signed-zero division, JSON order, sized IO/seek/tell/flush/error kinds, owned iterators, optional-element `cycle`, optional-stop `islice`, contextual option typing, and decimal no-fallback behavior. The sole create-PR and merge gates each stopped before tests because both profiles omit required SQL suites `host-tools`, `migration-engine`, `postgresql-live-differential`, `postgresql-live-migrations`, `postgresql-live-runtime`, `postgresql-live-schema-tools`, `postgresql-migrations`, and `schema-tools`; neither was repeated. | [Initial review](https://github.com/sifr-lang/sifr/pull/3629#issuecomment-5477091120) on `1a11fcf55e578a57463148c0f53d7154f7accf9d` was NOT SATISFIED; [sole remediation review](https://github.com/sifr-lang/sifr/pull/3629#issuecomment-5477091342) on `511ec05e3ff21295fc0ba725f39abbe9900b1cdb` was NOT SATISFIED. The remediation fixed the original transitive `PartialOrd`/`Display`/`Hash + Eq` blocker across the authoritative surface. Its new arithmetic-bound alpha-renaming defect is assigned to Item 6A under the no-third-review rule. | Safe string padding, exact division sign, ordered JSON, complete IO bridges, owned iterator semantics, contextual option emission, demand-driven generic-bound closure, and governed decimal precision merged. Arithmetic bound substitution and odd-center parity are bounded Item 6A follow-ups. |
 | 6A | merged | [#3633](https://github.com/sifr-lang/sifr/pull/3633) | `035e71160470d4344851695addaaaecc2fb27f3e` | Compiler candidate `aff53a422ee8c55185d0110c51483be0d600375d`: 1,190 codegen, 89 runtime, and 8 exact-integer architecture tests passed; strict codegen/runtime Clippy, formatting, HIR, diff, 3,562-file guardrail, audit inventory, demo freshness, and standalone emitted metadata compilation passed. Differently named `Addable` forwarding and odd-center fixtures compiled and ran as release-native binaries; the authoritative companion emits `Add<Output = T>` for the callee and `Add<Output = U>` for its relay. The sole create-PR and merge gates each stopped before tests because both profiles omit required SQL suites `host-tools`, `migration-engine`, `postgresql-live-differential`, `postgresql-live-migrations`, `postgresql-live-runtime`, `postgresql-live-schema-tools`, `postgresql-migrations`, `schema-polymorphism`, and `schema-tools`; neither was repeated. | [Exact-SHA review](https://github.com/sifr-lang/sifr/pull/3633#issuecomment-5477506746) on `aff53a422ee8c55185d0110c51483be0d600375d` was SATISFIED with no blockers. It independently reproduced fresh emission, release-native fixtures, all self-output arithmetic substitutions, preserved ordinary closure, and exhaustive small CPython `center` parity. | One canonical structural bound constructor now separates ordinary traits from self-output traits, fixed-point propagation carries no parameter spelling, final rendering uses the receiving parameter, and CPython odd-margin centering is exact. |
+| 7 | merged | [#3637](https://github.com/sifr-lang/sifr/pull/3637) | `73465ce982b790094031d174151a8638cfbcf35b` | Compiler candidate `778e13268d0ff619791a44152e4e52c0df369053`: 1,213 codegen and 1,094 lowering tests passed with one intentional ignore; focused ownership, generic-class `Addable`, context capture, receiver mutation, checked witness, IO, recursive/DP, and clone-budget tests passed. The expanded protocol-bound fixture compiled and ran generic `Accumulator[str]`, `list.insert(&str)`, and `set.add(&str)`. Full E2E passed 717 fixtures; only exact-base `numeric_sentinels` failed under its existing Item 8 ownership. Workspace Clippy, formatting, diff, 3,612-file guardrail, HIR maintainability, audit inventory, regenerated demo freshness, and representative direct native builds passed. The sole create-PR and merge gates each stopped at preflight because both profiles omit required SQL suites `host-tools`, `migration-engine`, `mysql-live`, `mysql-provider`, `postgresql-live-differential`, `postgresql-live-migrations`, `postgresql-live-runtime`, `postgresql-live-schema-tools`, `postgresql-migrations`, `schema-polymorphism`, and `schema-tools`; neither was repeated. | [Initial exact-SHA review](https://github.com/sifr-lang/sifr/pull/3637#issuecomment-5481578415) on `27840aa67d438956b87f87f96822a4b868a69e2b` was NOT SATISFIED; [sole remediation review](https://github.com/sifr-lang/sifr/pull/3637#issuecomment-5481578704) on `778e13268d0ff619791a44152e4e52c0df369053` was NOT SATISFIED. The remediation fixed both original blockers: class-owned `__SifrAdd` support demand and raw borrowed-string clones at collection ownership boundaries. Its new receiver-effect precision regression and latent non-registry `setdefault` boundary gap are assigned to Item 7A under the no-third-review rule. | Explicit ownership/materialization planning, unsized views, clone-chain simplification and budgets, recursive borrowed options, callable-effect separation, context-target capture, checked clone diagnostics, IO clone cleanup, and ownership-correct numeric/string `Addable` support merged. The bounded second-review mechanism defects are owned by Item 7A. |
 
 ## Deferred Findings
 
@@ -434,26 +447,32 @@ It does not broaden the active item.
 | Item 6A exact-SHA review | `Addable` admits `str`, but generic `+` emits owned right-hand operands and therefore requires unavailable `String: Add<String>` instead of Rust's `String: Add<&str>`. | Item 7 | Make generic binary ownership and bounds agree with every admitted `Addable` member, and add a string instantiation beside the integer forwarding fixture. |
 | Item 6A exact-SHA review | The hand-authored, non-authoritative `demos/protocol_bounds/idiomatic.rs` no longer mirrors the source demo's added `relay_add` behavior. | Item 8 | Reconcile or retire non-authoritative idiomatic companions under the canonical generated-snapshot policy. |
 | Item 6A create-PR and merge gates | Both profiles omit required SQL suites `host-tools`, `migration-engine`, `postgresql-live-differential`, `postgresql-live-migrations`, `postgresql-live-runtime`, `postgresql-live-schema-tools`, `postgresql-migrations`, `schema-polymorphism`, and `schema-tools`, so both one-shot gates stopped at preflight. | Item 12 | Reconcile final profile composition and prove every currently required SQL suite is selected before final qualification. |
+| Item 7 initial review | Unguarded dictionary value reads and dictionary/set lookup-key borrowing retain a silent fallback and `Borrow<&str>`-family mismatch that reproduce on the exact base. | Item 8 | Normalize checked optional-place reads and borrowed lookup keys through canonical Rust IR without silent values or double-reference query types. |
+| Item 7 remediation review | Convention-driven receiver invalidation currently clears length and membership facts for growth-only and proof-preserving operations after the legacy shrinking-only summary was removed. | Item 7A | Introduce one typed receiver-effect summary that invalidates only facts an operation can falsify; prove growth, removal, and positional-reordering behavior. |
+| Item 7 remediation review | `methods/dict.rs::lower_setdefault` relies on registry callers to materialize key/default ownership, while the local-binding fallback emitter can reach the operation without that contract. | Item 7A | Put owned key/default materialization at the shared `setdefault` boundary or route every entrypoint through one prepared-argument plan, with reaching shape/native evidence. |
+| Item 7 remediation review | Registry literal and entry boundaries clone every non-copy named local even when the value is dead after the operation. | Item 9 | Add ownership-plan last-use move promotion and allocation budgets without weakening reuse semantics. |
+| Item 7 remediation review | Nested generic functions with source bounds are rejected before codegen, so support-demand closure has no nested bound source today. | Item 8 | Reconcile nested generic declaration support or preserve an explicit checked rejection while canonical generic callable identity is implemented. |
+| Item 7 create-PR and merge gates | Both profiles omit required SQL suites `host-tools`, `migration-engine`, `mysql-live`, `mysql-provider`, `postgresql-live-differential`, `postgresql-live-migrations`, `postgresql-live-runtime`, `postgresql-live-schema-tools`, `postgresql-migrations`, `schema-polymorphism`, and `schema-tools`, so both one-shot gates stopped at preflight. | Item 12 | Reconcile final profile composition and prove every currently required SQL suite is selected before final qualification. |
 
 New out-of-scope findings must name a concrete active owner before the current
 item can close.
 
 ## Current Handoff
 
-- Active item: Item 7, ownership, borrowing, and clone quality, based on Item 6A
-  merge `035e71160470d4344851695addaaaecc2fb27f3e`.
-- Item 6A state: merged with one structural ordinary/self-output bound model,
-  receiving-parameter rendering for all six arithmetic traits, authoritative
-  differently named `Addable` forwarding, and exact CPython odd-center parity.
-  Its exact-SHA Opus review was SATISFIED with no blockers.
-- Item 7 scope includes the four item criteria plus deferred callable-alias
-  effect separation, context-manager binding capture, mutating-receiver effect
-  summaries, checked-place clone planning, Item 6 IO nested clones, and the
-  Item 6A generic `Addable[str]` borrowed-operand mismatch. Canonical identity,
-  nested generic closure, and non-authoritative demo reconciliation remain
-  Item 8-owned; SQL profile composition remains Item 12-owned.
-- Next action: rebase Item 7 on current `origin/main`, inventory ownership and
-  clone sites against the external audit and all deferred Item 7 findings,
-  implement the complete explicit ownership plan without testing, then run
-  focused and required validation, bounded exact-SHA Opus review, and the
-  single exact-candidate gate sequence.
+- Active item: Item 7A, receiver-effect precision and owned-boundary closure,
+  based on Item 7 merge `73465ce982b790094031d174151a8638cfbcf35b`.
+- Item 7 state: merged with unsized generated views, one explicit ownership and
+  materialization plan, clone-chain simplification and budgets, recursive
+  borrowed options, callable-effect separation, complete context-target
+  capture, checked witness diagnostics, IO clone cleanup, and support-complete
+  `Addable` behavior for numbers, strings, free functions, and generic classes.
+- Item 7A scope is limited to the sole remediation review's new typed
+  receiver-effect precision defect and latent non-registry `setdefault`
+  ownership boundary. Lookup-key/optional-place normalization remains Item
+  8-owned; last-use move promotion remains Item 9-owned; SQL profile composition
+  remains Item 12-owned.
+- Next action: start Item 7A from current `origin/main`, implement the complete
+  receiver-effect lattice and shared `setdefault` owned-boundary contract in one
+  batch without testing, then run focused and required validation, one exact-SHA
+  Opus review with at most one remediation, and the single exact-candidate gate
+  sequence.
