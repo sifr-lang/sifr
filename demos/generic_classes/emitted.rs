@@ -86,26 +86,26 @@ fn main() {
     println!("{}", {
     let mut __sifr_concat: String = String::with_capacity(13usize + 0usize);
     __sifr_concat.push_str("pair first = ");
-    __sifr_concat.push_str((format!("{}", p.first.clone())).as_str());
+    __sifr_concat.push_str(format!("{}", p.first.clone()).as_str());
     __sifr_concat
 });
     println!("{}", {
     let mut __sifr_concat: String = String::with_capacity(14usize + 0usize);
     __sifr_concat.push_str("pair second = ");
-    __sifr_concat.push_str((format!("{}", p.second.clone())).as_str());
+    __sifr_concat.push_str(format!("{}", p.second.clone()).as_str());
     __sifr_concat
 });
     let p2: Pair<SifrInt> = p.swap();
     println!("{}", {
     let mut __sifr_concat: String = String::with_capacity(16usize + 0usize);
     __sifr_concat.push_str("swapped first = ");
-    __sifr_concat.push_str((format!("{}", p2.first.clone())).as_str());
+    __sifr_concat.push_str(format!("{}", p2.first.clone()).as_str());
     __sifr_concat
 });
     println!("{}", {
     let mut __sifr_concat: String = String::with_capacity(17usize + 0usize);
     __sifr_concat.push_str("swapped second = ");
-    __sifr_concat.push_str((format!("{}", p2.second.clone())).as_str());
+    __sifr_concat.push_str(format!("{}", p2.second.clone()).as_str());
     __sifr_concat
 });
     let sp: Pair<String> = Pair::new("hello".to_string(), "world".to_string());
@@ -118,7 +118,7 @@ fn main() {
     println!("{}", {
     let mut __sifr_concat: String = String::with_capacity(13usize + 0usize);
     __sifr_concat.push_str("stack size = ");
-    __sifr_concat.push_str((format!("{}", s.size())).as_str());
+    __sifr_concat.push_str(format!("{}", s.size()).as_str());
     __sifr_concat
 });
     let item: Option<SifrInt> = s.pop();
@@ -126,34 +126,34 @@ fn main() {
         println!("{}", {
     let mut __sifr_concat: String = String::with_capacity(9usize + 0usize);
     __sifr_concat.push_str("popped = ");
-    __sifr_concat.push_str((format!("{}", item)).as_str());
+    __sifr_concat.push_str(format!("{}", item).as_str());
     __sifr_concat
 });
     }
     println!("{}", {
     let mut __sifr_concat: String = String::with_capacity(23usize + 0usize);
     __sifr_concat.push_str("stack size after pop = ");
-    __sifr_concat.push_str((format!("{}", s.size())).as_str());
+    __sifr_concat.push_str(format!("{}", s.size()).as_str());
     __sifr_concat
 });
     let w: Wrapper<SifrInt> = Wrapper::new(SifrInt::from_i64(42));
     println!("{}", {
     let mut __sifr_concat: String = String::with_capacity(14usize + 0usize);
     __sifr_concat.push_str("wrapper get = ");
-    __sifr_concat.push_str((format!("{}", w.get())).as_str());
+    __sifr_concat.push_str(format!("{}", w.get()).as_str());
     __sifr_concat
 });
     let x: () = ();
     println!("{}", {
     let mut __sifr_concat: String = String::with_capacity(12usize + 0usize);
     __sifr_concat.push_str("x is None = ");
-    __sifr_concat.push_str((format!("{}", true)).as_str());
+    __sifr_concat.push_str(format!("{}", true).as_str());
     __sifr_concat
 });
     println!("{}", {
     let mut __sifr_concat: String = String::with_capacity(16usize + 0usize);
     __sifr_concat.push_str("x is not None = ");
-    __sifr_concat.push_str((format!("{}", false)).as_str());
+    __sifr_concat.push_str(format!("{}", false).as_str());
     __sifr_concat
 });
 }

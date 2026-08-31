@@ -227,6 +227,14 @@ macro_rules! stmt_expr_method_call {
             )? else {
                 return Ok(None);
             };
+            if let Some(materialized) = $emitter.materialize_explicit_borrowed_clone(
+                object,
+                method,
+                args,
+                lowered_object.clone(),
+            ) {
+                return Ok(Some(materialized));
+            }
             let effective_object_ty = $emitter.effective_method_object_ty(object);
             let method_params =
                 $emitter.resolve_registry_method_params(&effective_object_ty, method);

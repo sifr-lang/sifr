@@ -27,6 +27,7 @@ impl RustEmitter {
         let saved_mutated_vars = self.mutated_vars.clone();
         let saved_borrowed_params = self.borrowed_params.clone();
         let saved_mut_borrowed_params = self.mut_borrowed_params.clone();
+        let saved_recursive_option_borrowed_views = self.recursive_option_borrowed_views.clone();
         let saved_callable_var_conventions = self.callable_var_conventions.clone();
         let saved_local_binding_types = self.local_binding_types.clone();
         let saved_string_char_cache_vars = self.string_char_cache_vars.clone();
@@ -53,6 +54,7 @@ impl RustEmitter {
         self.mutated_vars = collect_mutated_vars_with_sigs(&func.body, &self.func_signatures);
         self.borrowed_params.clear();
         self.mut_borrowed_params.clear();
+        self.recursive_option_borrowed_views.clear();
         self.callable_var_conventions.clear();
         self.local_binding_types.clear();
         self.string_char_cache_vars.clear();
@@ -87,7 +89,17 @@ impl RustEmitter {
             self.generator_functions.insert(func.name.clone());
         }
 
-        let reassigned_vars = collect_reassigned_vars(&func.body);
+        let mut reassigned_vars = collect_reassigned_vars(&func.body);
+        let param_names = func
+            .params
+            .iter()
+            .map(|param| param.name.as_str())
+            .collect::<HashSet<_>>();
+        reassigned_vars.extend(
+            crate::helpers::collect_locally_defined_vars(&func.body)
+                .into_iter()
+                .filter(|name| param_names.contains(name.as_str())),
+        );
         let mutable_param_shadows =
             Self::lower_mutable_param_shadows(&func.params, &reassigned_vars);
         self.apply_mutable_param_shadowing(&mutable_param_shadows);
@@ -221,6 +233,7 @@ impl RustEmitter {
         self.mutated_vars = saved_mutated_vars;
         self.borrowed_params = saved_borrowed_params;
         self.mut_borrowed_params = saved_mut_borrowed_params;
+        self.recursive_option_borrowed_views = saved_recursive_option_borrowed_views;
         self.callable_var_conventions = saved_callable_var_conventions;
         self.local_binding_types = saved_local_binding_types;
         self.string_char_cache_vars = saved_string_char_cache_vars;

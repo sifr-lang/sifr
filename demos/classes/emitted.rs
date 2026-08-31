@@ -180,8 +180,8 @@ fn main() {
     println!("=== Union + isinstance ===");
     let c: Circle = Circle::new(10.0_f64);
     let s: Square = Square::new(7.0_f64);
-    describe_shape(&__SifrUnion_8_x3asequence5_x3aunion1_x3a224_x3a5_x3aclass11_x3amain_x2eCircle1_x3a024_x3a5_x3aclass11_x3amain_x2eSquare1_x3a0::__SifrUnionVariant_5_x3aclass11_x3amain_x2eCircle1_x3a0((c).clone()));
-    describe_shape(&__SifrUnion_8_x3asequence5_x3aunion1_x3a224_x3a5_x3aclass11_x3amain_x2eCircle1_x3a024_x3a5_x3aclass11_x3amain_x2eSquare1_x3a0::__SifrUnionVariant_5_x3aclass11_x3amain_x2eSquare1_x3a0((s).clone()));
+    describe_shape(&__SifrUnion_8_x3asequence5_x3aunion1_x3a224_x3a5_x3aclass11_x3amain_x2eCircle1_x3a024_x3a5_x3aclass11_x3amain_x2eSquare1_x3a0::__SifrUnionVariant_5_x3aclass11_x3amain_x2eCircle1_x3a0(c.clone()));
+    describe_shape(&__SifrUnion_8_x3asequence5_x3aunion1_x3a224_x3a5_x3aclass11_x3amain_x2eCircle1_x3a024_x3a5_x3aclass11_x3amain_x2eSquare1_x3a0::__SifrUnionVariant_5_x3aclass11_x3amain_x2eSquare1_x3a0(s.clone()));
     println!("=== Hash ===");
     let red: Color = Color::new(SifrInt::from_i64(255), SifrInt::from_i64(0), SifrInt::from_i64(0));
     let also_red: Color = Color::new(SifrInt::from_i64(255), SifrInt::from_i64(0), SifrInt::from_i64(0));

@@ -112,8 +112,27 @@ impl<T> Iterator for __SifrGenerator<T> {
         yielded
     }
 }
-fn chain<T: Clone + 'static>(iterables: &Vec<Vec<T>>) -> Box<dyn Iterator<Item = T>> {
-    let iterables = iterables.clone();
+pub trait __SifrAdd: Sized {
+    fn __sifr_add(self, rhs: Self) -> Self;
+}
+impl __SifrAdd for ::sifr_runtime::SifrInt {
+    fn __sifr_add(self, rhs: Self) -> Self {
+        self + rhs
+    }
+}
+impl __SifrAdd for f64 {
+    fn __sifr_add(self, rhs: Self) -> Self {
+        self + rhs
+    }
+}
+impl __SifrAdd for String {
+    fn __sifr_add(mut self, rhs: Self) -> Self {
+        self.push_str(&rhs);
+        self
+    }
+}
+fn chain<T: Clone + 'static>(iterables: &[Vec<T>]) -> Box<dyn Iterator<Item = T>> {
+    let iterables = iterables.to_vec();
     Box::new(
         __SifrGenerator::new(async move |__sifr_yielder: __SifrYielder<T>| {
             for iterable in iterables.iter().cloned() {
@@ -178,7 +197,7 @@ fn _islice_impl<T: Clone + 'static>(
 fn islice<T: Clone + 'static>(
     data: Box<dyn Iterator<Item = T>>,
     start_or_stop: SifrInt,
-    slice_args: &Vec<Option<SifrInt>>,
+    slice_args: &[Option<SifrInt>],
 ) -> Result<Box<dyn Iterator<Item = T>>, ValueError> {
     if (&SifrInt::from(slice_args.len()) > &SifrInt::from_i64(2)) {
         return Err(
@@ -223,10 +242,10 @@ fn islice<T: Clone + 'static>(
     Ok(
         _islice_impl(
             Box::new(data),
-            (actual_start).clone(),
-            (actual_stop).clone(),
+            actual_start.clone(),
+            actual_stop.clone(),
             unbounded,
-            (actual_step).clone(),
+            actual_step.clone(),
         ),
     )
 }
@@ -272,8 +291,8 @@ fn main() {
         let e = __sifr_try_err.clone();
         println!(
             "{}", { let mut __sifr_concat : String = String::with_capacity(14usize +
-            0usize); __sifr_concat.push_str("islice error: "); __sifr_concat.push_str((e
-            .message.clone()).as_str()); __sifr_concat }
+            0usize); __sifr_concat.push_str("islice error: "); __sifr_concat.push_str(e
+            .message.clone().as_str()); __sifr_concat }
         );
     }
     let mut counter: Box<dyn Iterator<Item = SifrInt>> = count(

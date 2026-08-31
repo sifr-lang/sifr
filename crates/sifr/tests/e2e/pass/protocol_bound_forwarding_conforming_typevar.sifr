@@ -12,10 +12,32 @@ def add_same[T: Addable](left: T, right: T) -> T:
 def relay_add[U: Addable](left: U, right: U) -> U:
     return add_same(left, right)
 
+class Accumulator[T: Addable]:
+    total: T
+
+    def __init__(self, total: T):
+        self.total = total
+
+    def add(self, extra: T) -> T:
+        return self.total + extra
+
+def store_strings(mut items: list[str], mut keys: set[str], value: str) -> None:
+    items.insert(0, value)
+    keys.add(value)
+
 def main():
     n: int = relay_comparable(7)
     s: str = relay_comparable("ok")
     total: int = relay_add(4, 5)
+    joined: str = relay_add("sifr", " rust")
     assert str(n) == '7'
     assert str(s) == 'ok'
     assert total == 9
+    assert joined == "sifr rust"
+    words: Accumulator[str] = Accumulator("explicit")
+    assert words.add(" ownership") == "explicit ownership"
+    items: list[str] = []
+    keys: set[str] = set()
+    store_strings(items, keys, "stored")
+    assert items == ["stored"]
+    assert "stored" in keys

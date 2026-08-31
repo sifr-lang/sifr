@@ -3,7 +3,7 @@ use ::sifr_runtime::SifrInt;
 
 use ::sifr_runtime::SifrRange;
 
-fn second_or_zero(values: &Vec<SifrInt>) -> SifrInt {
+fn second_or_zero(values: &[SifrInt]) -> SifrInt {
     let Some(__sifr_checked_value_0) = ({
     let __sifr_checked_read_collection = &values;
     let __sifr_checked_read_index = SifrInt::from_i64(1);

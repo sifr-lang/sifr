@@ -82,10 +82,7 @@ def code(value: str) -> int:
 "#,
     );
 
-    assert!(
-        generated.contains("if (value).as_str() == \"a\""),
-        "{generated}"
-    );
+    assert!(generated.contains("if value == \"a\""), "{generated}");
     assert!(!generated.contains("value.clone() == \"a\""), "{generated}");
 }
 
@@ -118,10 +115,7 @@ def is_pair_close(value: str) -> bool:
         !generated.contains("let pairs: HashMap<String, String> = HashMap::from"),
         "{generated}"
     );
-    assert!(
-        generated.contains("pairs.get((value).as_str())"),
-        "{generated}"
-    );
+    assert!(generated.contains("pairs.get(value)"), "{generated}");
     assert!(
         !generated.contains("stack.get(__sifr_index_norm).cloned()"),
         "{generated}"
@@ -172,11 +166,8 @@ def same(mapped: dict[str, str], key: str, value: str) -> bool:
 "#,
     );
 
-    assert!(
-        generated.contains("mapped.get((key).as_str()).map"),
-        "{generated}"
-    );
-    assert!(generated.contains("Some(value.as_str())"), "{generated}");
+    assert!(generated.contains("mapped.get(key).map"), "{generated}");
+    assert!(generated.contains("Some(value)"), "{generated}");
     assert!(generated.contains(".is_some_and("), "{generated}");
 }
 
@@ -372,14 +363,16 @@ def join_pair(left: str, right: str) -> str:
 
     assert!(generated.contains("String::with_capacity"), "{generated}");
     assert!(
-        generated.contains("__sifr_concat.push_str((left).as_str())"),
+        generated.contains("__sifr_concat.push_str(left)"),
         "{generated}"
     );
     assert!(generated.contains("__sifr_concat.push('@')"), "{generated}");
     assert!(
-        generated.contains("__sifr_concat.push_str((right).as_str())"),
+        generated.contains("__sifr_concat.push_str(right)"),
         "{generated}"
     );
+    assert!(!generated.contains("(left).as_str()"), "{generated}");
+    assert!(!generated.contains("(right).as_str()"), "{generated}");
     assert!(!generated.contains("format!(\"{}{}{}\""), "{generated}");
 }
 
@@ -547,7 +540,7 @@ def join_marked(parts: list[str]) -> str:
     );
 
     assert!(generated.contains("out.push('#')"), "{generated}");
-    assert!(generated.contains("out.push_str((part).as_str())"));
+    assert!(generated.contains("out.push_str(part.as_str())"));
     assert!(!generated.contains("out = format!"));
 }
 
@@ -566,10 +559,10 @@ def doubled(own mut value: str) -> str:
         "{generated}"
     );
     assert!(
-        generated.contains("value.push_str((__sifr_string_concat_value_0).as_str())"),
+        generated.contains("value.push_str(__sifr_string_concat_value_0.as_str())"),
         "{generated}"
     );
-    assert!(!generated.contains("value.push_str((value).as_str())"));
+    assert!(!generated.contains("value.push_str(value.as_str())"));
 }
 
 #[test]
@@ -729,11 +722,9 @@ class Store:
 "#,
     );
 
+    assert!(generated.contains("fn put(&mut self, key: &str, value: &str, timestamp: &SifrInt)"));
     assert!(
-        generated.contains("fn put(&mut self, key: &String, value: &String, timestamp: &SifrInt)")
-    );
-    assert!(
-        generated.contains("__elem.push(((value).clone(), timestamp.clone()))"),
+        generated.contains("__elem.push((value.to_owned(), timestamp.clone()))"),
         "{generated}"
     );
     assert!(

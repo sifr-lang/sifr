@@ -5,7 +5,7 @@ fn main() {
     let a: Vec<u8> = vec![1u8, 2u8, 3u8];
     let b: Vec<u8> = vec![1u8, 2u8];
     let c: Vec<u8> = {
-    let mut __v = (b).clone();
+    let mut __v = (b).to_vec();
     __v.extend((vec![3u8]).iter().cloned());
     __v
 };

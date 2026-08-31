@@ -21,6 +21,10 @@ pub(in crate::lower) enum SequenceGuard {
         dict: String,
         key_expr_debug: String,
     },
+    SubscriptAccessible {
+        sequence: String,
+        index_expr_debug: String,
+    },
     SubscriptPresent {
         sequence: String,
         index_expr_debug: String,
@@ -123,6 +127,27 @@ impl LowerCtx {
                     index_expr_debug,
                 });
             }
+            SequenceGuard::SubscriptAccessible {
+                sequence,
+                index_expr_debug,
+            } => {
+                if self.sequence_guards.iter().any(|existing| {
+                    matches!(
+                        existing,
+                        SequenceGuard::SubscriptAccessible {
+                            sequence: existing_sequence,
+                            index_expr_debug: existing_index,
+                        } if existing_sequence == &sequence && existing_index == &index_expr_debug
+                    )
+                }) {
+                    return;
+                }
+                self.sequence_guards
+                    .push(SequenceGuard::SubscriptAccessible {
+                        sequence,
+                        index_expr_debug,
+                    });
+            }
         }
     }
 
@@ -142,6 +167,16 @@ impl LowerCtx {
     pub(in crate::lower) fn clear_sequence_guards_for_target(&mut self, target: &str) {
         self.sequence_guards
             .retain(|guard| !guard_depends_on_target(guard, target));
+    }
+
+    pub(in crate::lower) fn clear_subscript_presence_guards_for_target(&mut self, target: &str) {
+        self.sequence_guards.retain(|guard| {
+            !matches!(
+                guard,
+                SequenceGuard::SubscriptPresent { sequence, .. }
+                    if path_depends_on_target(sequence, target)
+            )
+        });
     }
 
     pub(in crate::lower) fn min_length_guard(&self, sequence: &str) -> usize {
@@ -221,6 +256,25 @@ impl LowerCtx {
             )
         })
     }
+
+    pub(in crate::lower) fn has_subscript_access_guard(
+        &self,
+        sequence: &str,
+        index_expr: &Expr,
+    ) -> bool {
+        let Some(index_expr_debug) = key_guard_token(index_expr) else {
+            return false;
+        };
+        self.sequence_guards.iter().any(|guard| {
+            matches!(
+                guard,
+                SequenceGuard::SubscriptAccessible {
+                    sequence: guard_sequence,
+                    index_expr_debug: guard_index,
+                } if guard_sequence == sequence && guard_index == &index_expr_debug
+            )
+        })
+    }
 }
 
 fn guard_depends_on_binding(guard: &SequenceGuard, binding: &str) -> bool {
@@ -236,7 +290,11 @@ fn guard_depends_on_binding(guard: &SequenceGuard, binding: &str) -> bool {
             dict,
             key_expr_debug,
         } => path_depends_on_binding(dict, binding) || token_mentions_name(key_expr_debug, binding),
-        SequenceGuard::SubscriptPresent {
+        SequenceGuard::SubscriptAccessible {
+            sequence,
+            index_expr_debug,
+        }
+        | SequenceGuard::SubscriptPresent {
             sequence,
             index_expr_debug,
         } => {
@@ -250,6 +308,7 @@ fn guard_depends_on_target(guard: &SequenceGuard, target: &str) -> bool {
     match guard {
         SequenceGuard::MinLength { sequence, .. }
         | SequenceGuard::IndexVarInRange { sequence, .. }
+        | SequenceGuard::SubscriptAccessible { sequence, .. }
         | SequenceGuard::SubscriptPresent { sequence, .. } => {
             path_depends_on_target(sequence, target)
         }

@@ -16,7 +16,7 @@ fn expression_lookup(table: &HashMap<SifrInt, SifrInt>, base: SifrInt) -> SifrIn
     -&SifrInt::from_i64(1)
 }
 
-fn sum_known_keys(table: &HashMap<SifrInt, SifrInt>, keys: &Vec<SifrInt>) -> SifrInt {
+fn sum_known_keys(table: &HashMap<SifrInt, SifrInt>, keys: &[SifrInt]) -> SifrInt {
     let mut total: SifrInt = SifrInt::from_i64(0);
     for key in keys.iter().cloned() {
         if let Some(__sifr_checked_value_1) = table.get(&key) {

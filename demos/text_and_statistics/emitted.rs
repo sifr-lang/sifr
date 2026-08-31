@@ -34,7 +34,7 @@ mod __sifr_project_nominals {
                 let mut __sifr_concat: String = String::with_capacity(
                     initial_indent.len() + 0usize,
                 );
-                __sifr_concat.push_str((initial_indent).as_str());
+                __sifr_concat.push_str(initial_indent.as_str());
                 __sifr_concat.push_str("");
                 __sifr_concat
             };
@@ -42,7 +42,7 @@ mod __sifr_project_nominals {
                 let mut __sifr_concat: String = String::with_capacity(
                     subsequent_indent.len() + 0usize,
                 );
-                __sifr_concat.push_str((subsequent_indent).as_str());
+                __sifr_concat.push_str(subsequent_indent.as_str());
                 __sifr_concat.push_str("");
                 __sifr_concat
             };
@@ -61,7 +61,7 @@ mod __sifr_project_nominals {
                 let mut __sifr_concat: String = String::with_capacity(
                     placeholder.len() + 0usize,
                 );
-                __sifr_concat.push_str((placeholder).as_str());
+                __sifr_concat.push_str(placeholder.as_str());
                 __sifr_concat.push_str("");
                 __sifr_concat
             };
@@ -81,7 +81,7 @@ mod __sifr_project_nominals {
         }
     }
     impl __SifrStdlib_sifr_x2etextwrap_x2eTextWrapper {
-        pub fn wrap(&self, text: &String) -> Vec<String> {
+        pub fn wrap(&self, text: &str) -> Vec<String> {
             if (&self.width.clone() <= &SifrInt::from_i64(0)) {
                 return vec![];
             }
@@ -112,7 +112,7 @@ mod __sifr_project_nominals {
         }
     }
     impl __SifrStdlib_sifr_x2etextwrap_x2eTextWrapper {
-        pub fn fill(&self, text: &String) -> String {
+        pub fn fill(&self, text: &str) -> String {
             if (&self.width.clone() <= &SifrInt::from_i64(0)) {
                 return "".to_string();
             }
@@ -123,13 +123,13 @@ mod __sifr_project_nominals {
                 if (&i > &SifrInt::from_i64(0)) {
                     result.push('\n');
                 }
-                result.push_str((line).as_str());
+                result.push_str(line.as_str());
                 i = &i + &SifrInt::from_i64(1);
             }
             result
         }
     }
-    pub fn _replace_whitespace_chars(text: &String, replace_tabs: bool) -> String {
+    pub fn _replace_whitespace_chars(text: &str, replace_tabs: bool) -> String {
         let normalized: String = text
             .replace('\n', " ")
             .replace('\r', " ")
@@ -140,14 +140,14 @@ mod __sifr_project_nominals {
         }
         normalized
     }
-    pub fn _expand_tabs_impl(text: &String, tabsize: SifrInt) -> String {
+    pub fn _expand_tabs_impl(text: &str, tabsize: SifrInt) -> String {
         let __sifr_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
         let mut effective_tabsize: SifrInt = tabsize.clone();
         if &effective_tabsize <= &SifrInt::from_i64(0) {
             effective_tabsize = SifrInt::from_i64(1);
         }
         if (&effective_tabsize == &SifrInt::from_i64(0)) {
-            return text.clone();
+            return text.to_owned();
         }
         let mut result: String = "".to_string();
         let mut column: SifrInt = SifrInt::from_i64(0);
@@ -176,10 +176,10 @@ mod __sifr_project_nominals {
                     column = &column + &spaces;
                 } else {
                     if (ch == "\n") || (ch == "\r") {
-                        result.push_str((ch).as_str());
+                        result.push_str(ch.as_str());
                         column = SifrInt::from_i64(0);
                     } else {
-                        result.push_str((ch).as_str());
+                        result.push_str(ch.as_str());
                         column = &column + &SifrInt::from_i64(1);
                     }
                 }
@@ -189,30 +189,30 @@ mod __sifr_project_nominals {
         result
     }
     pub fn _prepare_text(
-        text: &String,
+        text: &str,
         expand_tabs: bool,
         tabsize: SifrInt,
         replace_whitespace: bool,
     ) -> String {
         let mut prepared: String = {
             let mut __sifr_concat: String = String::with_capacity(text.len() + 0usize);
-            __sifr_concat.push_str((text).as_str());
+            __sifr_concat.push_str(text);
             __sifr_concat.push_str("");
             __sifr_concat
         };
         if expand_tabs {
-            prepared = _expand_tabs_impl(&prepared, (tabsize).clone());
+            prepared = _expand_tabs_impl(&prepared, tabsize.clone());
         }
         if replace_whitespace {
             prepared = _replace_whitespace_chars(&prepared, true);
         }
         prepared
     }
-    pub fn _split_word_units(word: &String, break_on_hyphens: bool) -> Vec<String> {
+    pub fn _split_word_units(word: &str, break_on_hyphens: bool) -> Vec<String> {
         if !break_on_hyphens {
             return vec![
                 { let mut __sifr_concat : String = String::with_capacity(word.len() +
-                0usize); __sifr_concat.push_str((word).as_str()); __sifr_concat.push_str("");
+                0usize); __sifr_concat.push_str(word); __sifr_concat.push_str("");
                 __sifr_concat }
             ];
         }
@@ -223,7 +223,7 @@ mod __sifr_project_nominals {
         if (&SifrInt::from(parts.len()) <= &SifrInt::from_i64(1)) {
             return vec![
                 { let mut __sifr_concat : String = String::with_capacity(word.len() +
-                0usize); __sifr_concat.push_str((word).as_str()); __sifr_concat.push_str("");
+                0usize); __sifr_concat.push_str(word); __sifr_concat.push_str("");
                 __sifr_concat }
             ];
         }
@@ -235,7 +235,7 @@ mod __sifr_project_nominals {
                 == &(&SifrInt::from(parts.len()) - &SifrInt::from_i64(1)));
             if is_last {
                 if (&SifrInt::from(__sifr_chars_part.len()) > &SifrInt::from_i64(0)) {
-                    units.push(part.clone());
+                    units.push(part.to_owned());
                 }
             } else {
                 if (&SifrInt::from(__sifr_chars_part.len()) == &SifrInt::from_i64(0)) {
@@ -251,7 +251,7 @@ mod __sifr_project_nominals {
         }
         units
     }
-    pub fn _trim_line(line: &String) -> String {
+    pub fn _trim_line(line: &str) -> String {
         let __sifr_chars_line: Vec<char> = line.chars().collect::<Vec<char>>();
         let mut start: SifrInt = SifrInt::from_i64(0);
         while (&start < &SifrInt::from(__sifr_chars_line.len()))
@@ -294,18 +294,18 @@ mod __sifr_project_nominals {
             )
         }
     }
-    pub fn _finalize_line(line: &String, drop_whitespace: bool) -> String {
+    pub fn _finalize_line(line: &str, drop_whitespace: bool) -> String {
         if drop_whitespace {
             return _trim_line(line);
         }
         {
             let mut __sifr_concat: String = String::with_capacity(line.len() + 0usize);
-            __sifr_concat.push_str((line).as_str());
+            __sifr_concat.push_str(line);
             __sifr_concat.push_str("");
             __sifr_concat
         }
     }
-    pub fn _effective_content_width(total_width: SifrInt, indent: &String) -> SifrInt {
+    pub fn _effective_content_width(total_width: SifrInt, indent: &str) -> SifrInt {
         let __sifr_chars_indent: Vec<char> = indent.chars().collect::<Vec<char>>();
         let available: SifrInt = &total_width - &SifrInt::from(__sifr_chars_indent.len());
         if &available <= &SifrInt::from_i64(0) {
@@ -315,8 +315,8 @@ mod __sifr_project_nominals {
     }
     pub fn _push_current_line(
         result: &mut Vec<String>,
-        line: &String,
-        indent: &String,
+        line: &str,
+        indent: &str,
         drop_whitespace: bool,
     ) {
         let candidate: String = _finalize_line(
@@ -326,17 +326,17 @@ mod __sifr_project_nominals {
         let __sifr_chars_candidate: Vec<char> = candidate.chars().collect::<Vec<char>>();
         if drop_whitespace {
             if (&SifrInt::from(__sifr_chars_candidate.len()) > &SifrInt::from_i64(0)) {
-                result.push(candidate.clone());
+                result.push(candidate.to_owned());
             }
         } else {
-            result.push(candidate.clone());
+            result.push(candidate.to_owned());
         }
     }
     pub fn _wrap_with_indents(
-        text: &String,
+        text: &str,
         total_width: SifrInt,
-        initial_indent: &String,
-        subsequent_indent: &String,
+        initial_indent: &str,
+        subsequent_indent: &str,
         break_on_hyphens: bool,
         drop_whitespace: bool,
     ) -> Vec<String> {
@@ -348,7 +348,7 @@ mod __sifr_project_nominals {
         let mut current: String = "".to_string();
         let mut first_line: bool = true;
         let mut current_limit: SifrInt = _effective_content_width(
-            (total_width).clone(),
+            total_width.clone(),
             initial_indent,
         );
         for raw_word in words.iter().cloned() {
@@ -375,7 +375,7 @@ mod __sifr_project_nominals {
                         + &SifrInt::from(__sifr_chars_word.len())) <= &current_limit)
                     {
                         current.push(' ');
-                        current.push_str((word).as_str());
+                        current.push_str(word.as_str());
                     } else {
                         if first_line {
                             _push_current_line(
@@ -386,7 +386,7 @@ mod __sifr_project_nominals {
                             );
                             first_line = false;
                             current_limit = _effective_content_width(
-                                (total_width).clone(),
+                                total_width.clone(),
                                 subsequent_indent,
                             );
                         } else {
@@ -416,7 +416,7 @@ mod __sifr_project_nominals {
         }
         result
     }
-    pub fn _apply_sentence_endings_line(text: &String) -> String {
+    pub fn _apply_sentence_endings_line(text: &str) -> String {
         let __sifr_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
         let mut result: String = "".to_string();
         let mut i: SifrInt = SifrInt::from_i64(0);
@@ -430,7 +430,7 @@ mod __sifr_project_nominals {
                 .map(|c| c.to_string());
             if let Some(ch_opt) = ch_opt {
                 let ch: String = ch_opt;
-                result.push_str((ch).as_str());
+                result.push_str(ch.as_str());
                 if ((ch == ".") || (ch == "!")) || (ch == "?") {
                     let mut next_opt: Option<String> = None;
                     if (&(&i + &SifrInt::from_i64(1))
@@ -476,25 +476,25 @@ mod __sifr_project_nominals {
         }
         result
     }
-    pub fn _apply_sentence_endings_lines(lines: &Vec<String>) -> Vec<String> {
+    pub fn _apply_sentence_endings_lines(lines: &[String]) -> Vec<String> {
         let mut result: Vec<String> = vec![];
         for line in lines.iter().cloned() {
             result.push(_apply_sentence_endings_line(&line));
         }
         result
     }
-    pub fn _clone_lines(lines: &Vec<String>) -> Vec<String> {
+    pub fn _clone_lines(lines: &[String]) -> Vec<String> {
         let mut copied: Vec<String> = vec![];
         for line in lines.iter().cloned() {
-            copied.push(line.clone());
+            copied.push(line.to_owned());
         }
         copied
     }
     pub fn _apply_max_lines(
-        lines: &Vec<String>,
+        lines: &[String],
         width: SifrInt,
         max_lines: Option<SifrInt>,
-        placeholder: &String,
+        placeholder: &str,
         drop_whitespace: bool,
     ) -> Vec<String> {
         let Some(max_lines) = max_lines.clone() else {
@@ -518,7 +518,7 @@ mod __sifr_project_nominals {
                 __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
             };
             if let Some(line_opt) = line_opt {
-                result.push(line_opt.clone());
+                result.push(line_opt.to_owned());
             }
             i = &i + &SifrInt::from_i64(1);
         }
@@ -529,24 +529,31 @@ mod __sifr_project_nominals {
             let mut __sifr_concat: String = String::with_capacity(
                 placeholder.len() + 0usize,
             );
-            __sifr_concat.push_str((placeholder).as_str());
+            __sifr_concat.push_str(placeholder);
             __sifr_concat.push_str("");
             __sifr_concat
         };
+        let mut __sifr_chars_effective_placeholder: Vec<char> = effective_placeholder
+            .chars()
+            .collect::<Vec<char>>();
         if (&width > &SifrInt::from_i64(0)) {
-            if (&SifrInt::from(effective_placeholder.chars().count()) > &width) {
+            if (&SifrInt::from(__sifr_chars_effective_placeholder.len()) > &width) {
                 effective_placeholder = {
-                    let _slice_src = &effective_placeholder;
-                    let _slice_len = _slice_src.chars().count();
+                    let _slice_src = &__sifr_chars_effective_placeholder;
+                    let _slice_len = _slice_src.len();
                     let _slice_start = SifrInt::from_i64(0).clamp_slice_bound(_slice_len);
                     let _slice_stop = width.clamp_slice_bound(_slice_len);
                     String::from_iter(
                         _slice_src
-                            .chars()
+                            .iter()
                             .skip(_slice_start)
-                            .take(_slice_stop.saturating_sub(_slice_start)),
+                            .take(_slice_stop.saturating_sub(_slice_start))
+                            .copied(),
                     )
                 };
+                __sifr_chars_effective_placeholder = effective_placeholder
+                    .chars()
+                    .collect::<Vec<char>>();
             }
         }
         let last_index: SifrInt = &SifrInt::from(result.len()) - &SifrInt::from_i64(1);
@@ -562,7 +569,7 @@ mod __sifr_project_nominals {
             let mut base: String = _trim_line(&last);
             let mut __sifr_chars_base: Vec<char> = base.chars().collect::<Vec<char>>();
             let mut available: SifrInt = &width
-                - &SifrInt::from(effective_placeholder.chars().count());
+                - &SifrInt::from(__sifr_chars_effective_placeholder.len());
             if (&available < &SifrInt::from_i64(0)) {
                 available = SifrInt::from_i64(0);
             }
@@ -591,8 +598,8 @@ mod __sifr_project_nominals {
                         let mut __sifr_concat: String = String::with_capacity(
                             base.len() + effective_placeholder.len(),
                         );
-                        __sifr_concat.push_str((base).as_str());
-                        __sifr_concat.push_str((effective_placeholder).as_str());
+                        __sifr_concat.push_str(base.as_str());
+                        __sifr_concat.push_str(effective_placeholder.as_str());
                         __sifr_concat
                     };
                     {
@@ -611,13 +618,13 @@ mod __sifr_project_nominals {
 }
 pub use __sifr_project_nominals::__SifrStdlib_sifr_x2etextwrap_x2eTextWrapper;
 use ::sifr_runtime::SifrInt;
-fn html_escape(s: &String) -> String {
+fn html_escape(s: &str) -> String {
     ::sifr_stdlib::html::html_escape(s)
 }
-fn html_unescape(s: &String) -> String {
+fn html_unescape(s: &str) -> String {
     ::sifr_stdlib::html::html_unescape(s)
 }
-fn escape(s: &String, quote: bool) -> String {
+fn escape(s: &str, quote: bool) -> String {
     let escaped: String = html_escape(s);
     if quote {
         return escaped;
@@ -839,7 +846,7 @@ fn lcm(a: SifrInt, b: SifrInt) -> SifrInt {
     if &b == &SifrInt::from_i64(0) {
         return SifrInt::from_i64(0);
     }
-    let g: SifrInt = gcd((a).clone(), (b).clone());
+    let g: SifrInt = gcd(a.clone(), b.clone());
     if &g == &SifrInt::from_i64(0) {
         return SifrInt::from_i64(0);
     }
@@ -939,27 +946,27 @@ fn isclose(a: f64, b: f64, rel_tol: f64, abs_tol: f64) -> bool {
     }
     diff <= rel_bound
 }
-fn prod(data: &Vec<SifrInt>) -> SifrInt {
+fn prod(data: &[SifrInt]) -> SifrInt {
     let mut result: SifrInt = SifrInt::from_i64(1);
     for val in data.iter().cloned() {
         result = &result * &val;
     }
     result.clone()
 }
-fn _copy_float_list(data: &Vec<f64>) -> Vec<f64> {
+fn _copy_float_list(data: &[f64]) -> Vec<f64> {
     let mut out: Vec<f64> = vec![];
     for value in data.iter().copied() {
         out.push(value);
     }
     out
 }
-fn dist(p: &Vec<f64>, q: &Vec<f64>) -> f64 {
+fn dist(p: &[f64], q: &[f64]) -> f64 {
     dist_impl(_copy_float_list(p), _copy_float_list(q))
 }
-fn fsum(data: &Vec<f64>) -> f64 {
+fn fsum(data: &[f64]) -> f64 {
     fsum_impl(_copy_float_list(data))
 }
-fn sumprod(p: &Vec<f64>, q: &Vec<f64>) -> f64 {
+fn sumprod(p: &[f64], q: &[f64]) -> f64 {
     sumprod_impl(_copy_float_list(p), _copy_float_list(q))
 }
 fn frexp_mantissa(x: f64) -> f64 {
@@ -1134,7 +1141,7 @@ fn _float_int(
     }
 }
 fn median_grouped(
-    data: &Vec<f64>,
+    data: &[f64],
     interval: f64,
 ) -> Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
     let n: SifrInt = SifrInt::from(data.len());
@@ -1196,9 +1203,9 @@ fn median_grouped(
         Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError>,
         __SifrStdlib_sifr_x2estatistics_x2eStatisticsError,
     > = (|| {
-        let n_float: f64 = _float_int((n).clone())?;
-        let cf_float: f64 = _float_int((cf).clone())?;
-        let f_float: f64 = _float_int((f).clone())?;
+        let n_float: f64 = _float_int(n.clone())?;
+        let cf_float: f64 = _float_int(cf.clone())?;
+        let f_float: f64 = _float_int(f.clone())?;
         Ok(Ok(lower + (interval * (((n_float / (2.0_f64)) - cf_float) / f_float))))
     })();
     match __sifr_try_res {
@@ -1215,7 +1222,7 @@ fn median_grouped(
         }
     }
 }
-fn _replace_whitespace_chars(text: &String, replace_tabs: bool) -> String {
+fn _replace_whitespace_chars(text: &str, replace_tabs: bool) -> String {
     let normalized: String = text
         .replace('\n', " ")
         .replace('\r', " ")
@@ -1226,14 +1233,14 @@ fn _replace_whitespace_chars(text: &String, replace_tabs: bool) -> String {
     }
     normalized
 }
-fn _expand_tabs_impl(text: &String, tabsize: SifrInt) -> String {
+fn _expand_tabs_impl(text: &str, tabsize: SifrInt) -> String {
     let __sifr_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
     let mut effective_tabsize: SifrInt = tabsize.clone();
     if &effective_tabsize <= &SifrInt::from_i64(0) {
         effective_tabsize = SifrInt::from_i64(1);
     }
     if (&effective_tabsize == &SifrInt::from_i64(0)) {
-        return text.clone();
+        return text.to_owned();
     }
     let mut result: String = "".to_string();
     let mut column: SifrInt = SifrInt::from_i64(0);
@@ -1262,10 +1269,10 @@ fn _expand_tabs_impl(text: &String, tabsize: SifrInt) -> String {
                 column = &column + &spaces;
             } else {
                 if (ch == "\n") || (ch == "\r") {
-                    result.push_str((ch).as_str());
+                    result.push_str(ch.as_str());
                     column = SifrInt::from_i64(0);
                 } else {
-                    result.push_str((ch).as_str());
+                    result.push_str(ch.as_str());
                     column = &column + &SifrInt::from_i64(1);
                 }
             }
@@ -1275,30 +1282,30 @@ fn _expand_tabs_impl(text: &String, tabsize: SifrInt) -> String {
     result
 }
 fn _prepare_text(
-    text: &String,
+    text: &str,
     expand_tabs: bool,
     tabsize: SifrInt,
     replace_whitespace: bool,
 ) -> String {
     let mut prepared: String = {
         let mut __sifr_concat: String = String::with_capacity(text.len() + 0usize);
-        __sifr_concat.push_str((text).as_str());
+        __sifr_concat.push_str(text);
         __sifr_concat.push_str("");
         __sifr_concat
     };
     if expand_tabs {
-        prepared = _expand_tabs_impl(&prepared, (tabsize).clone());
+        prepared = _expand_tabs_impl(&prepared, tabsize.clone());
     }
     if replace_whitespace {
         prepared = _replace_whitespace_chars(&prepared, true);
     }
     prepared
 }
-fn _split_word_units(word: &String, break_on_hyphens: bool) -> Vec<String> {
+fn _split_word_units(word: &str, break_on_hyphens: bool) -> Vec<String> {
     if !break_on_hyphens {
         return vec![
             { let mut __sifr_concat : String = String::with_capacity(word.len() +
-            0usize); __sifr_concat.push_str((word).as_str()); __sifr_concat.push_str("");
+            0usize); __sifr_concat.push_str(word); __sifr_concat.push_str("");
             __sifr_concat }
         ];
     }
@@ -1309,7 +1316,7 @@ fn _split_word_units(word: &String, break_on_hyphens: bool) -> Vec<String> {
     if (&SifrInt::from(parts.len()) <= &SifrInt::from_i64(1)) {
         return vec![
             { let mut __sifr_concat : String = String::with_capacity(word.len() +
-            0usize); __sifr_concat.push_str((word).as_str()); __sifr_concat.push_str("");
+            0usize); __sifr_concat.push_str(word); __sifr_concat.push_str("");
             __sifr_concat }
         ];
     }
@@ -1321,7 +1328,7 @@ fn _split_word_units(word: &String, break_on_hyphens: bool) -> Vec<String> {
             == &(&SifrInt::from(parts.len()) - &SifrInt::from_i64(1)));
         if is_last {
             if (&SifrInt::from(__sifr_chars_part.len()) > &SifrInt::from_i64(0)) {
-                units.push(part.clone());
+                units.push(part.to_owned());
             }
         } else {
             if (&SifrInt::from(__sifr_chars_part.len()) == &SifrInt::from_i64(0)) {
@@ -1337,7 +1344,7 @@ fn _split_word_units(word: &String, break_on_hyphens: bool) -> Vec<String> {
     }
     units
 }
-fn _trim_line(line: &String) -> String {
+fn _trim_line(line: &str) -> String {
     let __sifr_chars_line: Vec<char> = line.chars().collect::<Vec<char>>();
     let mut start: SifrInt = SifrInt::from_i64(0);
     while (&start < &SifrInt::from(__sifr_chars_line.len()))
@@ -1380,18 +1387,18 @@ fn _trim_line(line: &String) -> String {
         )
     }
 }
-fn _finalize_line(line: &String, drop_whitespace: bool) -> String {
+fn _finalize_line(line: &str, drop_whitespace: bool) -> String {
     if drop_whitespace {
         return _trim_line(line);
     }
     {
         let mut __sifr_concat: String = String::with_capacity(line.len() + 0usize);
-        __sifr_concat.push_str((line).as_str());
+        __sifr_concat.push_str(line);
         __sifr_concat.push_str("");
         __sifr_concat
     }
 }
-fn _effective_content_width(total_width: SifrInt, indent: &String) -> SifrInt {
+fn _effective_content_width(total_width: SifrInt, indent: &str) -> SifrInt {
     let __sifr_chars_indent: Vec<char> = indent.chars().collect::<Vec<char>>();
     let available: SifrInt = &total_width - &SifrInt::from(__sifr_chars_indent.len());
     if &available <= &SifrInt::from_i64(0) {
@@ -1401,8 +1408,8 @@ fn _effective_content_width(total_width: SifrInt, indent: &String) -> SifrInt {
 }
 fn _push_current_line(
     result: &mut Vec<String>,
-    line: &String,
-    indent: &String,
+    line: &str,
+    indent: &str,
     drop_whitespace: bool,
 ) {
     let candidate: String = _finalize_line(
@@ -1412,17 +1419,17 @@ fn _push_current_line(
     let __sifr_chars_candidate: Vec<char> = candidate.chars().collect::<Vec<char>>();
     if drop_whitespace {
         if (&SifrInt::from(__sifr_chars_candidate.len()) > &SifrInt::from_i64(0)) {
-            result.push(candidate.clone());
+            result.push(candidate.to_owned());
         }
     } else {
-        result.push(candidate.clone());
+        result.push(candidate.to_owned());
     }
 }
 fn _wrap_with_indents(
-    text: &String,
+    text: &str,
     total_width: SifrInt,
-    initial_indent: &String,
-    subsequent_indent: &String,
+    initial_indent: &str,
+    subsequent_indent: &str,
     break_on_hyphens: bool,
     drop_whitespace: bool,
 ) -> Vec<String> {
@@ -1434,7 +1441,7 @@ fn _wrap_with_indents(
     let mut current: String = "".to_string();
     let mut first_line: bool = true;
     let mut current_limit: SifrInt = _effective_content_width(
-        (total_width).clone(),
+        total_width.clone(),
         initial_indent,
     );
     for raw_word in words.iter().cloned() {
@@ -1461,7 +1468,7 @@ fn _wrap_with_indents(
                     + &SifrInt::from(__sifr_chars_word.len())) <= &current_limit)
                 {
                     current.push(' ');
-                    current.push_str((word).as_str());
+                    current.push_str(word.as_str());
                 } else {
                     if first_line {
                         _push_current_line(
@@ -1472,7 +1479,7 @@ fn _wrap_with_indents(
                         );
                         first_line = false;
                         current_limit = _effective_content_width(
-                            (total_width).clone(),
+                            total_width.clone(),
                             subsequent_indent,
                         );
                     } else {
@@ -1502,7 +1509,7 @@ fn _wrap_with_indents(
     }
     result
 }
-fn _apply_sentence_endings_line(text: &String) -> String {
+fn _apply_sentence_endings_line(text: &str) -> String {
     let __sifr_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
     let mut result: String = "".to_string();
     let mut i: SifrInt = SifrInt::from_i64(0);
@@ -1516,7 +1523,7 @@ fn _apply_sentence_endings_line(text: &String) -> String {
             .map(|c| c.to_string());
         if let Some(ch_opt) = ch_opt {
             let ch: String = ch_opt;
-            result.push_str((ch).as_str());
+            result.push_str(ch.as_str());
             if ((ch == ".") || (ch == "!")) || (ch == "?") {
                 let mut next_opt: Option<String> = None;
                 if (&(&i + &SifrInt::from_i64(1))
@@ -1562,25 +1569,25 @@ fn _apply_sentence_endings_line(text: &String) -> String {
     }
     result
 }
-fn _apply_sentence_endings_lines(lines: &Vec<String>) -> Vec<String> {
+fn _apply_sentence_endings_lines(lines: &[String]) -> Vec<String> {
     let mut result: Vec<String> = vec![];
     for line in lines.iter().cloned() {
         result.push(_apply_sentence_endings_line(&line));
     }
     result
 }
-fn _clone_lines(lines: &Vec<String>) -> Vec<String> {
+fn _clone_lines(lines: &[String]) -> Vec<String> {
     let mut copied: Vec<String> = vec![];
     for line in lines.iter().cloned() {
-        copied.push(line.clone());
+        copied.push(line.to_owned());
     }
     copied
 }
 fn _apply_max_lines(
-    lines: &Vec<String>,
+    lines: &[String],
     width: SifrInt,
     max_lines: Option<SifrInt>,
-    placeholder: &String,
+    placeholder: &str,
     drop_whitespace: bool,
 ) -> Vec<String> {
     let Some(max_lines) = max_lines.clone() else {
@@ -1604,7 +1611,7 @@ fn _apply_max_lines(
             __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
         };
         if let Some(line_opt) = line_opt {
-            result.push(line_opt.clone());
+            result.push(line_opt.to_owned());
         }
         i = &i + &SifrInt::from_i64(1);
     }
@@ -1615,24 +1622,31 @@ fn _apply_max_lines(
         let mut __sifr_concat: String = String::with_capacity(
             placeholder.len() + 0usize,
         );
-        __sifr_concat.push_str((placeholder).as_str());
+        __sifr_concat.push_str(placeholder);
         __sifr_concat.push_str("");
         __sifr_concat
     };
+    let mut __sifr_chars_effective_placeholder: Vec<char> = effective_placeholder
+        .chars()
+        .collect::<Vec<char>>();
     if (&width > &SifrInt::from_i64(0)) {
-        if (&SifrInt::from(effective_placeholder.chars().count()) > &width) {
+        if (&SifrInt::from(__sifr_chars_effective_placeholder.len()) > &width) {
             effective_placeholder = {
-                let _slice_src = &effective_placeholder;
-                let _slice_len = _slice_src.chars().count();
+                let _slice_src = &__sifr_chars_effective_placeholder;
+                let _slice_len = _slice_src.len();
                 let _slice_start = SifrInt::from_i64(0).clamp_slice_bound(_slice_len);
                 let _slice_stop = width.clamp_slice_bound(_slice_len);
                 String::from_iter(
                     _slice_src
-                        .chars()
+                        .iter()
                         .skip(_slice_start)
-                        .take(_slice_stop.saturating_sub(_slice_start)),
+                        .take(_slice_stop.saturating_sub(_slice_start))
+                        .copied(),
                 )
             };
+            __sifr_chars_effective_placeholder = effective_placeholder
+                .chars()
+                .collect::<Vec<char>>();
         }
     }
     let last_index: SifrInt = &SifrInt::from(result.len()) - &SifrInt::from_i64(1);
@@ -1648,7 +1662,7 @@ fn _apply_max_lines(
         let mut base: String = _trim_line(&last);
         let mut __sifr_chars_base: Vec<char> = base.chars().collect::<Vec<char>>();
         let mut available: SifrInt = &width
-            - &SifrInt::from(effective_placeholder.chars().count());
+            - &SifrInt::from(__sifr_chars_effective_placeholder.len());
         if (&available < &SifrInt::from_i64(0)) {
             available = SifrInt::from_i64(0);
         }
@@ -1677,8 +1691,8 @@ fn _apply_max_lines(
                     let mut __sifr_concat: String = String::with_capacity(
                         base.len() + effective_placeholder.len(),
                     );
-                    __sifr_concat.push_str((base).as_str());
-                    __sifr_concat.push_str((effective_placeholder).as_str());
+                    __sifr_concat.push_str(base.as_str());
+                    __sifr_concat.push_str(effective_placeholder.as_str());
                     __sifr_concat
                 };
                 {

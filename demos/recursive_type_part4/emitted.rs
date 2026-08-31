@@ -20,23 +20,23 @@ impl TreeNode {
 impl TreeNode {
 }
 
-fn tree_value_sum(node: &Option<TreeNode>) -> SifrInt {
-    let Some(node) = node.as_ref() else {
+fn tree_value_sum(node: Option<&TreeNode>) -> SifrInt {
+    let Some(node) = node else {
         return SifrInt::from_i64(0);
     };
-    let left: Option<TreeNode> = (node.left).as_deref().cloned();
-    let right: Option<TreeNode> = (node.right).as_deref().cloned();
-    &(&node.val.clone() + &tree_value_sum(&left)) + &tree_value_sum(&right)
+    let left: Option<&TreeNode> = (node.left).as_deref();
+    let right: Option<&TreeNode> = (node.right).as_deref();
+    &(&node.val.clone() + &tree_value_sum(left)) + &tree_value_sum(right)
 }
 
-fn paired_tree_value_sum(p: &Option<TreeNode>, q: &Option<TreeNode>) -> SifrInt {
+fn paired_tree_value_sum(p: Option<&TreeNode>, q: Option<&TreeNode>) -> SifrInt {
     if !p.is_some() && !q.is_some() {
         return SifrInt::from_i64(0);
     }
-    let (Some(p), Some(q)) = (p.as_ref(), q.as_ref()) else {
+    let (Some(p), Some(q)) = (p, q) else {
         return -&SifrInt::from_i64(1);
     };
-    &(&(&p.val.clone() + &q.val.clone()) + &paired_tree_value_sum(&(p.left).as_deref().cloned(), &(q.left).as_deref().cloned())) + &paired_tree_value_sum(&(p.right).as_deref().cloned(), &(q.right).as_deref().cloned())
+    &(&(&p.val.clone() + &q.val.clone()) + &paired_tree_value_sum((p.left).as_deref(), (q.left).as_deref())) + &paired_tree_value_sum((p.right).as_deref(), (q.right).as_deref())
 }
 
 fn main() {
@@ -49,6 +49,6 @@ fn main() {
     let left_c: TreeNode = TreeNode::new(SifrInt::from_i64(2), None, None);
     let right_c: TreeNode = TreeNode::new(SifrInt::from_i64(3), None, None);
     let root_c: TreeNode = TreeNode::new(SifrInt::from_i64(1), Some(Box::new(left_c)), Some(Box::new(right_c)));
-    assert!((&tree_value_sum(&Some((root_a).clone())) == &SifrInt::from_i64(6)));
-    assert!((&paired_tree_value_sum(&Some((root_b).clone()), &Some((root_c).clone())) == &SifrInt::from_i64(12)));
+    assert!((&tree_value_sum(Some(&root_a)) == &SifrInt::from_i64(6)));
+    assert!((&paired_tree_value_sum(Some(&root_b), Some(&root_c)) == &SifrInt::from_i64(12)));
 }

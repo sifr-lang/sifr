@@ -43,9 +43,15 @@ impl RustEmitter {
                         if self.borrowed_params.contains(value_name)
                             || self.mut_borrowed_params.contains(value_name)
                         {
-                            crate::RustExpr::Clone(Box::new(crate::RustExpr::Paren(Box::new(
-                                crate::RustExpr::Ident(value_name.clone()),
-                            ))))
+                            self.local_binding_types.get(value_name).map_or_else(
+                                || value.clone(),
+                                |source_ty| {
+                                    crate::ownership_plan::materialize_owned_value(
+                                        source_ty,
+                                        crate::RustExpr::Ident(value_name.clone()),
+                                    )
+                                },
+                            )
                         } else {
                             value.clone()
                         }

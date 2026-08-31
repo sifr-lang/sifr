@@ -5,7 +5,10 @@ use crate::{
 };
 
 impl RustEmitter {
-    pub(crate) fn lower_borrowed_string_name_for_compare(expr: &HirExpr) -> Option<RustExpr> {
+    pub(crate) fn lower_borrowed_string_name_for_compare(
+        &self,
+        expr: &HirExpr,
+    ) -> Option<RustExpr> {
         let HirExpr::Name { name, ty, .. } = expr else {
             return None;
         };
@@ -17,11 +20,7 @@ impl RustEmitter {
         }
         Some(RustExpr::FnCall {
             func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
-            args: vec![RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Ident(name.clone())),
-                method: "as_str".to_string(),
-                args: vec![],
-            }],
+            args: vec![self.string_view_expr(expr, RustExpr::Ident(name.clone()))],
         })
     }
 
@@ -282,11 +281,7 @@ impl RustEmitter {
             resolve_alias_type_for_plain_call(index.ty()),
             Type::Str | Type::LiteralStr(_)
         ) {
-            RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Paren(Box::new(lowered_index))),
-                method: "as_str".to_string(),
-                args: Vec::new(),
-            }
+            self.string_view_expr(index, lowered_index)
         } else {
             RustExpr::Ref {
                 mutable: false,

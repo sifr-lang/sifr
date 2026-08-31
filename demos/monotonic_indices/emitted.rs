@@ -3,7 +3,7 @@ use ::sifr_runtime::SifrInt;
 
 use ::sifr_runtime::SifrRange;
 
-fn active_indices(flags: &Vec<bool>) -> Vec<SifrInt> {
+fn active_indices(flags: &[bool]) -> Vec<SifrInt> {
     let mut out: Vec<SifrInt> = vec![];
     for index in SifrRange::new_known_nonzero(SifrInt::from_i64(0), SifrInt::from(flags.len()), SifrInt::from_i64(1)) {
         let Some(__sifr_checked_value_0) = ({

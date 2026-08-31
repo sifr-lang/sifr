@@ -163,7 +163,7 @@ pub(crate) fn lower_method_with_context(
                 expr
             }
         }),
-        (Type::Dict(_, _), "setdefault") => dict::lower_setdefault(object, args),
+        (Type::Dict(key, value), "setdefault") => dict::lower_setdefault(object, key, value, args),
         (Type::Set(_), "add") => set::lower_add(object, args),
         (Type::Set(_), "remove") => set::lower_remove(object, args),
         (Type::Set(_), "discard") => set::lower_discard(object, args),
@@ -636,7 +636,7 @@ mod tests {
         .expect("dict setdefault lowers");
         assert_eq!(
             render_expr(&dict_setdefault.expr),
-            "d.entry(\"k\".clone()).or_insert(0.clone()).clone()"
+            "d.entry(\"k\".to_owned()).or_insert(0.clone()).clone()"
         );
 
         let set_ty = Type::Set(Box::new(Type::Int));

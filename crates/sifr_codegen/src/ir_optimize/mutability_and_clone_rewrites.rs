@@ -674,7 +674,7 @@ pub(super) fn optimize_expr(expr: &mut RustExpr) -> usize {
     match expr {
         RustExpr::Clone(inner) => {
             let mut removed = optimize_expr(inner);
-            if should_remove_clone(inner.as_ref()) {
+            if matches!(inner.as_ref(), RustExpr::Clone(_)) || should_remove_clone(inner.as_ref()) {
                 let replacement =
                     *std::mem::replace(inner, Box::new(RustExpr::Literal(RustLiteral::Unit)));
                 *expr = replacement;
@@ -692,7 +692,12 @@ pub(super) fn optimize_expr(expr: &mut RustExpr) -> usize {
             for arg in args.iter_mut() {
                 removed += optimize_expr(arg);
             }
-            if method == "skip" && args.len() == 1 && is_zero_usize_expr(&args[0]) {
+            if let Some(replacement) =
+                super::clone_chain_rewrite::take_compounded_method_clone(receiver, method, args)
+            {
+                *expr = replacement;
+                removed += 1;
+            } else if method == "skip" && args.len() == 1 && is_zero_usize_expr(&args[0]) {
                 let replacement =
                     *std::mem::replace(receiver, Box::new(RustExpr::Literal(RustLiteral::Unit)));
                 *expr = replacement;

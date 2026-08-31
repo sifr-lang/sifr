@@ -49,8 +49,14 @@ impl RustEmitter {
 
         let arg_is_option = crate::helpers::is_option_type(context.effective_arg_ty);
         let arg_is_non_copy = !crate::helpers::is_copy_type_for_codegen(context.effective_arg_ty);
+        let borrowed_option_view =
+            arg_is_option && self.expr_is_recursive_option_borrowed_view(context.arg);
+        if borrowed_option_view {
+            lowered_arg = crate::ownership_plan::materialize_borrowed_option_value(lowered_arg);
+        }
         let clone_before_adaptation = context.borrowed_name_arg
             && !context.borrowed_name_materialized
+            && !borrowed_option_view
             && arg_is_non_copy
             && (arg_is_option || !context.convention.is_owned());
         if clone_before_adaptation {

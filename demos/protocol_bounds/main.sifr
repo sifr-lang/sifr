@@ -19,3 +19,4 @@ def main():
     print(relay_comparable(9))
     print(relay_comparable("ok"))
     print(relay_add(4, 5))
+    print(relay_add("sifr", " rust"))

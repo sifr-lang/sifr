@@ -240,6 +240,11 @@ def subscribe(own handler: Callable[[str], Result[None, SubscriptionError]]) -> 
 def attach(
     own hook: Callable[[str], Result[None, SubscriptionError]],
 ) -> Result[Subscription, SubscriptionError | RustPanicError]:
+    counter: int = 0
+    def unrelated_mutator(event: str) -> Result[None, SubscriptionError]:
+        nonlocal counter
+        counter = counter + 1
+        return None
     def handler(event: str) -> Result[None, SubscriptionError]:
         return hook(event)
     return subscribe(handler)
@@ -256,6 +261,14 @@ def attach(
             && error
                 .message
                 .contains("captures cannot be proven thread-safe")
+    }));
+    assert!(errors.iter().all(|error| {
+        !error
+            .message
+            .contains("handler `handler` capture `counter`")
+            && !error
+                .message
+                .contains("handler `handler` capture `counter` of type `int` is mutated")
     }));
 }
 

@@ -51,9 +51,9 @@ impl RunningBounds {
         {
     let mut __sifr_concat: String = String::with_capacity((((1usize + 0usize) + 2usize) + 0usize) + 1usize);
     __sifr_concat.push('(');
-    __sifr_concat.push_str((format!("{}", self.left.clone())).as_str());
+    __sifr_concat.push_str(format!("{}", self.left.clone()).as_str());
     __sifr_concat.push_str(", ");
-    __sifr_concat.push_str((format!("{}", self.right.clone())).as_str());
+    __sifr_concat.push_str(format!("{}", self.right.clone()).as_str());
     __sifr_concat.push(')');
     __sifr_concat
 }
@@ -72,7 +72,7 @@ fn swap_pair(pair: &mut Pair) {
     pair.y = __sifr_tuple_unpack_1;
 }
 
-fn add_points(points: &Vec<(SifrInt, SifrInt)>) -> SifrInt {
+fn add_points(points: &[(SifrInt, SifrInt)]) -> SifrInt {
     let mut total: SifrInt = SifrInt::from_i64(0);
     for point in points.iter().cloned() {
         total = &total + &(&(point).0.clone() + &(point).1.clone());

@@ -10,7 +10,7 @@ fn nested_capture_call_result_refines_outer_list_codegen() {
         "{generated}"
     );
     assert!(
-        generated.contains("called.push(vec![value.clone()].join(\"\"));"),
+        generated.contains("called.push(vec![value.to_owned()].join(\"\"));"),
         "{generated}"
     );
     assert!(

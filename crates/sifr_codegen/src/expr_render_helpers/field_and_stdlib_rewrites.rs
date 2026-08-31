@@ -137,6 +137,20 @@ impl RustEmitter {
 
         if is_recursive_field {
             if crate::helpers::is_option_type(ty) {
+                if is_borrowed_parameter
+                    || self.expr_is_recursive_option_borrowed_view(object)
+                    || matches!(
+                        object,
+                        HirExpr::Name { name, .. }
+                            if self.recursive_option_borrowed_views.contains(name)
+                    )
+                {
+                    return crate::RustExpr::MethodCall {
+                        receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_field))),
+                        method: "as_deref".to_string(),
+                        args: vec![],
+                    };
+                }
                 if self.recursive_option_field_can_move(object) {
                     let moved_field = crate::RustExpr::MethodCall {
                         receiver: Box::new(lowered_field),
@@ -593,18 +607,18 @@ impl RustEmitter {
             crate::RustStmt::Assign { target, value } => {
                 let target = self.rewrite_stdlib_constant_idents_in_expr(target);
                 let value = self.rewrite_stdlib_constant_idents_in_expr(value);
-                let value = match &target {
-                    crate::RustExpr::Field { .. }
-                        if matches!(
-                            &value,
-                            crate::RustExpr::Ident(name)
-                                if self.borrowed_params.contains(name)
-                                    || self.mut_borrowed_params.contains(name)
-                        ) =>
+                let value = match (&target, &value) {
+                    (crate::RustExpr::Field { .. }, crate::RustExpr::Ident(name))
+                        if self.borrowed_params.contains(name)
+                            || self.mut_borrowed_params.contains(name) =>
                     {
-                        crate::RustExpr::Clone(Box::new(value))
+                        if let Some(source_ty) = self.local_binding_types.get(name) {
+                            crate::ownership_plan::materialize_owned_value(source_ty, value)
+                        } else {
+                            value
+                        }
                     }
-                    crate::RustExpr::Ident(name)
+                    (crate::RustExpr::Ident(name), _)
                         if self.is_registered_sifr_int_local(name)
                             || self.is_forced_sifr_int_local(name) =>
                     {
@@ -613,7 +627,7 @@ impl RustEmitter {
                             .insert(name.clone());
                         self.coerce_expr_to_sifr_int_value(value)
                     }
-                    crate::RustExpr::Ident(name)
+                    (crate::RustExpr::Ident(name), _)
                         if self.is_registered_sifr_int_result_local(name) =>
                     {
                         self.coerce_result_int_expr_to_sifr_int_value(value)

@@ -11,7 +11,7 @@ fn __const_digits() -> String {
 fn __const_whitespace() -> String {
     " \t\n\r\u{b}\u{c}".to_string().to_string()
 }
-fn capwords(s: &String) -> String {
+fn capwords(s: &str) -> String {
     let normalized: String = s
         .replace('\t', " ")
         .replace('\n', " ")
@@ -38,14 +38,14 @@ fn capwords(s: &String) -> String {
                     .map(|f| f.to_uppercase().to_string() + &_c.as_str().to_lowercase())
                     .unwrap_or_default()
             };
-            result.push_str((cap).as_str());
+            result.push_str(cap.as_str());
         }
     }
     result
 }
 
 // --- stdlib: sifr.test ---
-fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
+fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
     assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
     let mut i: SifrInt = SifrInt::from_i64(0);
     while &i < &SifrInt::from(actual.len()) {
@@ -66,11 +66,11 @@ fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
 
 fn collect_capwords_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![];
-    actual.push((capwords(&"hello world".to_string())).as_str() == ("Hello World".to_string()).as_str());
-    actual.push((capwords(&"hello\tworld".to_string())).as_str() == ("Hello World".to_string()).as_str());
-    actual.push((capwords(&"hello\nworld".to_string())).as_str() == ("Hello World".to_string()).as_str());
-    actual.push((capwords(&"one\u{b}two\u{c}three".to_string())).as_str() == ("One Two Three".to_string()).as_str());
-    actual.push((capwords(&"  one   two  ".to_string())).as_str() == ("One Two".to_string()).as_str());
+    actual.push(capwords(&"hello world".to_string()).as_str() == "Hello World".to_string().as_str());
+    actual.push(capwords(&"hello\tworld".to_string()).as_str() == "Hello World".to_string().as_str());
+    actual.push(capwords(&"hello\nworld".to_string()).as_str() == "Hello World".to_string().as_str());
+    actual.push(capwords(&"one\u{b}two\u{c}three".to_string()).as_str() == "One Two Three".to_string().as_str());
+    actual.push(capwords(&"  one   two  ".to_string()).as_str() == "One Two".to_string().as_str());
     actual
 }
 
@@ -82,7 +82,7 @@ fn collect_constants_actual() -> Vec<bool> {
     actual
 }
 
-fn append_all(target: &mut Vec<bool>, values: &Vec<bool>) {
+fn append_all(target: &mut Vec<bool>, values: &[bool]) {
     for value in values.iter().copied() {
         target.push(value);
     }

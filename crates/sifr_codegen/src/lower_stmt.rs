@@ -54,7 +54,7 @@ use condition_type_and_expr_helpers::{
     detect_option_truthiness_alias, is_alias_equivalent_type, is_none_type, is_okwrap_none_expr,
     is_option_like_type, lower_if_not_none_chain, option_binding_pattern,
     option_binding_value_expr, resolve_alias_type, try_lower_leaf_or_name_expr,
-    try_lower_name_ident_expr,
+    try_lower_name_ident_expr, try_lower_stmt_string_concat_expr,
 };
 mod return_and_assignment_values;
 use return_and_assignment_values::{

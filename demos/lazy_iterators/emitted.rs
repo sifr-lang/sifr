@@ -135,7 +135,7 @@ fn count_up(n: SifrInt) -> Box<dyn Iterator<Item = SifrInt>> {
 }))
 }
 
-fn format_int_list(values: &Vec<SifrInt>) -> String {
+fn format_int_list(values: &[SifrInt]) -> String {
     if &SifrInt::from(values.len()) == &SifrInt::from_i64(0) {
         return "[]".to_string();
     }
@@ -150,7 +150,7 @@ fn format_int_list(values: &Vec<SifrInt>) -> String {
 }) else {
             break;
         };
-        formatted.push_str((format!("{}", __sifr_checked_value_0.clone())).as_str());
+        formatted.push_str(format!("{}", __sifr_checked_value_0.clone()).as_str());
         if (&(&i + &SifrInt::from_i64(1)) < &SifrInt::from(values.len())) {
             formatted.push_str(", ");
         }

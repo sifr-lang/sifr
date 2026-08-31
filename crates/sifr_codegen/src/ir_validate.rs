@@ -458,10 +458,12 @@ fn validate_type(ty: &RustType, issues: &mut Vec<IrValidationIssue>) {
         | RustType::F64
         | RustType::Bool
         | RustType::String_
+        | RustType::Str
         | RustType::Unit
         | RustType::Never
         | RustType::Named(_) => {}
         RustType::Vec(inner)
+        | RustType::Slice(inner)
         | RustType::HashSet(inner)
         | RustType::VecDeque(inner)
         | RustType::Option(inner)

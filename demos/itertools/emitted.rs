@@ -112,8 +112,27 @@ impl<T> Iterator for __SifrGenerator<T> {
         yielded
     }
 }
-fn chain<T: Clone + 'static>(iterables: &Vec<Vec<T>>) -> Box<dyn Iterator<Item = T>> {
-    let iterables = iterables.clone();
+pub trait __SifrAdd: Sized {
+    fn __sifr_add(self, rhs: Self) -> Self;
+}
+impl __SifrAdd for ::sifr_runtime::SifrInt {
+    fn __sifr_add(self, rhs: Self) -> Self {
+        self + rhs
+    }
+}
+impl __SifrAdd for f64 {
+    fn __sifr_add(self, rhs: Self) -> Self {
+        self + rhs
+    }
+}
+impl __SifrAdd for String {
+    fn __sifr_add(mut self, rhs: Self) -> Self {
+        self.push_str(&rhs);
+        self
+    }
+}
+fn chain<T: Clone + 'static>(iterables: &[Vec<T>]) -> Box<dyn Iterator<Item = T>> {
+    let iterables = iterables.to_vec();
     Box::new(
         __SifrGenerator::new(async move |__sifr_yielder: __SifrYielder<T>| {
             for iterable in iterables.iter().cloned() {
@@ -124,7 +143,7 @@ fn chain<T: Clone + 'static>(iterables: &Vec<Vec<T>>) -> Box<dyn Iterator<Item =
         }),
     )
 }
-fn pairwise<T: Clone + 'static>(data: &Vec<T>) -> Vec<Vec<T>> {
+fn pairwise<T: Clone + 'static>(data: &[T]) -> Vec<Vec<T>> {
     let mut result: Vec<Vec<T>> = vec![];
     let mut prev_values: Vec<T> = vec![];
     for value in data.iter().cloned() {
@@ -143,7 +162,7 @@ fn pairwise<T: Clone + 'static>(data: &Vec<T>) -> Vec<Vec<T>> {
                 pair.push(prev.clone());
             }
             pair.push(value.clone());
-            result.push(pair.clone());
+            result.push(pair.to_vec());
             let __sifr_try_res: Result<(), IndexError> = (|| {
                 {
                     let __assign_value = value.clone();
@@ -169,7 +188,7 @@ fn pairwise<T: Clone + 'static>(data: &Vec<T>) -> Vec<Vec<T>> {
     result
 }
 fn batched<T: Clone + 'static>(
-    data: &Vec<T>,
+    data: &[T],
     n: SifrInt,
 ) -> Result<Vec<Vec<T>>, ValueError> {
     if (&n <= &SifrInt::from_i64(0)) {
@@ -180,16 +199,16 @@ fn batched<T: Clone + 'static>(
     for value in data.iter().cloned() {
         current_batch.push(value.clone());
         if (&SifrInt::from(current_batch.len()) == &n) {
-            result.push(current_batch.clone());
+            result.push(current_batch.to_vec());
             current_batch = vec![];
         }
     }
     if (&SifrInt::from(current_batch.len()) > &SifrInt::from_i64(0)) {
-        result.push(current_batch.clone());
+        result.push(current_batch.to_vec());
     }
     Ok(result)
 }
-fn accumulate<T: Clone + 'static + ::std::ops::Add<Output = T>>(
+fn accumulate<T: Clone + 'static + __SifrAdd>(
     data: Box<dyn Iterator<Item = T>>,
     initial: Option<T>,
 ) -> Box<dyn Iterator<Item = T>> {
@@ -227,7 +246,7 @@ fn accumulate<T: Clone + 'static + ::std::ops::Add<Output = T>>(
                             .cloned()
                     };
                     if let Some(prev) = prev {
-                        let next_val: T = prev + item;
+                        let next_val: T = __SifrAdd::__sifr_add(prev, item);
                         let __sifr_try_res: Result<(), IndexError> = (|| {
                             {
                                 let __assign_value = next_val.clone();
@@ -301,7 +320,7 @@ fn cycle<T: Clone + 'static>(
         }),
     )
 }
-fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
+fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
     assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
     let mut i: SifrInt = SifrInt::from_i64(0);
     while &i < &SifrInt::from(actual.len()) {
@@ -337,20 +356,20 @@ fn collect_core_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![];
     actual
         .push(
-            (format!(
+            format!(
                 "{:?}", chain(& vec![vec![SifrInt::from_i64(1), SifrInt::from_i64(2)],
                 vec![SifrInt::from_i64(3)]]).collect::< Vec < _ >> ()
-            ))
-                .as_str() == ("[1, 2, 3]".to_string()).as_str(),
+            )
+                .as_str() == "[1, 2, 3]".to_string().as_str(),
         );
     actual
         .push(
-            (format!(
+            format!(
                 "{:?}", pairwise(& (vec![SifrInt::from_i64(1), SifrInt::from_i64(2),
                 SifrInt::from_i64(3), SifrInt::from_i64(4)]).into_iter().collect::< Vec <
                 _ >> ())
-            ))
-                .as_str() == ("[[1, 2], [2, 3], [3, 4]]".to_string()).as_str(),
+            )
+                .as_str() == "[[1, 2], [2, 3], [3, 4]]".to_string().as_str(),
         );
     let mut batched_ok: bool = false;
     let __sifr_try_res: Result<(), ValueError> = (|| {
@@ -373,20 +392,20 @@ fn collect_core_actual() -> Vec<bool> {
     actual.push(batched_ok);
     actual
         .push(
-            (format!(
+            format!(
                 "{:?}", accumulate(Box::new(vec![SifrInt::from_i64(1),
                 SifrInt::from_i64(2), SifrInt::from_i64(3)] .into_iter()), None)
                 .collect::< Vec < _ >> ()
-            ))
-                .as_str() == ("[1, 3, 6]".to_string()).as_str(),
+            )
+                .as_str() == "[1, 3, 6]".to_string().as_str(),
         );
     actual
         .push(
-            (format!(
+            format!(
                 "{:?}", cycle(Box::new(vec![SifrInt::from_i64(5), SifrInt::from_i64(6)]
                 .into_iter()), SifrInt::from_i64(5)).collect::< Vec < _ >> ()
-            ))
-                .as_str() == ("[5, 6, 5, 6, 5]".to_string()).as_str(),
+            )
+                .as_str() == "[5, 6, 5, 6, 5]".to_string().as_str(),
         );
     actual
 }
@@ -409,7 +428,7 @@ fn collect_negative_actual() -> Vec<bool> {
     actual.push(invalid_batch_rejected);
     actual
 }
-fn append_all(target: &mut Vec<bool>, values: &Vec<bool>) {
+fn append_all(target: &mut Vec<bool>, values: &[bool]) {
     for value in values.iter().copied() {
         target.push(value);
     }

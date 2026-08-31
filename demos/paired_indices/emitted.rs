@@ -1,7 +1,7 @@
 // src/main.rs
 use ::sifr_runtime::SifrInt;
 
-fn edge_pairs_text(text: &String) -> String {
+fn edge_pairs_text(text: &str) -> String {
     let __sifr_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
     let mut left: SifrInt = SifrInt::from_i64(0);
     let mut right: SifrInt = &SifrInt::from(__sifr_chars_text.len()) - &SifrInt::from_i64(1);
@@ -22,9 +22,9 @@ fn edge_pairs_text(text: &String) -> String {
             break;
         };
         out.push('(');
-        out.push_str((__sifr_checked_value_0.clone()).as_str());
+        out.push_str(__sifr_checked_value_0.clone().as_str());
         out.push(',');
-        out.push_str((__sifr_checked_value_1.clone()).as_str());
+        out.push_str(__sifr_checked_value_1.clone().as_str());
         out.push(')');
         left = &left + &SifrInt::from_i64(1);
         right = &right - &SifrInt::from_i64(1);

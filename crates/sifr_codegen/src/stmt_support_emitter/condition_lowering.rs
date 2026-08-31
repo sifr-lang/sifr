@@ -139,7 +139,9 @@ impl RustEmitter {
 
     pub(crate) fn option_binding_value_expr_for_ir(&self, option_var: &str) -> crate::RustExpr {
         let base = crate::RustExpr::Ident(option_var.to_string());
-        if self.borrowed_params.contains(option_var)
+        if self.recursive_option_borrowed_views.contains(option_var) {
+            base
+        } else if self.borrowed_params.contains(option_var)
             || self.mut_borrowed_params.contains(option_var)
         {
             crate::RustExpr::MethodCall {
@@ -159,6 +161,9 @@ impl RustEmitter {
     }
 
     pub(crate) fn option_binding_pattern_for_ir(&self, option_var: &str) -> String {
+        if self.recursive_option_borrowed_views.contains(option_var) {
+            return format!("Some({option_var})");
+        }
         if crate::option_binding_mutability::option_binding_requires_mut(
             option_var,
             &self.mutated_vars,

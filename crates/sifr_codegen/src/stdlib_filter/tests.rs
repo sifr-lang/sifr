@@ -301,6 +301,33 @@ pub fn root() -> Builder {
 }
 
 #[test]
+fn filter_keeps_every_implementation_of_a_needed_trait() {
+    let code = r#"
+pub trait Addable {
+    fn add(self, rhs: Self) -> Self;
+}
+
+impl Addable for i64 {
+    fn add(self, rhs: Self) -> Self { self + rhs }
+}
+
+impl Addable for f64 {
+    fn add(self, rhs: Self) -> Self { self + rhs }
+}
+
+pub fn root<T: Addable>(left: T, right: T) -> T {
+    left.add(right)
+}
+"#;
+    let imported = HashSet::from(["root".to_string()]);
+    let filtered = filter_stdlib_ir_to_needed(code, &imported);
+
+    assert!(filtered.contains("pub trait Addable"));
+    assert!(filtered.contains("impl Addable for i64"));
+    assert!(filtered.contains("impl Addable for f64"));
+}
+
+#[test]
 fn dedup_uses_impl_signature_keys() {
     let code = r#"
 struct Item {}

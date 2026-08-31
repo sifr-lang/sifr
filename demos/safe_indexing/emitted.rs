@@ -98,17 +98,17 @@ fn main() {
     }
     println!("=== Dict get() and pop() ===");
     let mut data: HashMap<String, SifrInt> = HashMap::from([("alice".to_string(), SifrInt::from_i64(25)), ("bob".to_string(), SifrInt::from_i64(30))]);
-    let g: Option<SifrInt> = data.get(("alice".to_string()).as_str()).cloned();
+    let g: Option<SifrInt> = data.get("alice".to_string().as_str()).cloned();
     if let Some(g) = g.clone() {
         println!("get alice: {}", g);
     }
-    let gm: Option<SifrInt> = data.get(("missing".to_string()).as_str()).cloned();
+    let gm: Option<SifrInt> = data.get("missing".to_string().as_str()).cloned();
     if let Some(gm) = gm.clone() {
         println!("get missing: {}", gm);
     } else {
         println!("get missing: None");
     }
-    let p: Option<SifrInt> = data.remove(("bob".to_string()).as_str());
+    let p: Option<SifrInt> = data.remove("bob".to_string().as_str());
     if let Some(p) = p.clone() {
         println!("popped bob: {}", p);
     }

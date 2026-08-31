@@ -18,25 +18,25 @@ impl Entry {
 impl Entry {
 }
 
-fn chain_text(entry: &Option<Entry>) -> String {
+fn chain_text(entry: Option<&Entry>) -> String {
     let Some(entry) = entry.as_ref() else {
         return ".".to_string();
     };
-    let next_entry: Option<Entry> = (entry.next).as_deref().cloned();
+    let next_entry: Option<&Entry> = (entry.next).as_deref();
     {
     let mut __sifr_concat: String = String::with_capacity((0usize + 2usize) + 0usize);
-    __sifr_concat.push_str((format!("{}", entry.value.clone())).as_str());
+    __sifr_concat.push_str(format!("{}", entry.value.clone()).as_str());
     __sifr_concat.push_str("->");
-    __sifr_concat.push_str((chain_text(&next_entry)).as_str());
+    __sifr_concat.push_str(chain_text(next_entry).as_str());
     __sifr_concat
 }
 }
 
-fn second_value(entry: &Option<Entry>) -> SifrInt {
+fn second_value(entry: Option<&Entry>) -> SifrInt {
     let Some(entry) = entry.as_ref() else {
         return SifrInt::from_i64(0);
     };
-    let next_entry: Option<Entry> = (entry.next).as_deref().cloned();
+    let next_entry: Option<&Entry> = (entry.next).as_deref();
     let Some(mut next_entry) = next_entry else {
         return SifrInt::from_i64(0);
     };
@@ -46,9 +46,9 @@ fn second_value(entry: &Option<Entry>) -> SifrInt {
 fn main() {
     let chain: Option<Entry> = Some(Entry::new(SifrInt::from_i64(4), Some(Box::new(Entry::new(SifrInt::from_i64(2), Some(Box::new(Entry::new(SifrInt::from_i64(6), None))))))));
     let short: Option<Entry> = Some(Entry::new(SifrInt::from_i64(9), None));
-    assert!((chain_text(&chain) == "4->2->6->."));
-    assert!((chain_text(&None) == "."));
-    assert!((&second_value(&chain) == &SifrInt::from_i64(2)));
-    assert!((&second_value(&short) == &SifrInt::from_i64(0)));
+    assert!((chain_text(chain.as_ref()) == "4->2->6->."));
+    assert!((chain_text(None) == "."));
+    assert!((&second_value(chain.as_ref()) == &SifrInt::from_i64(2)));
+    assert!((&second_value(short.as_ref()) == &SifrInt::from_i64(0)));
     println!("recursive_records: ok");
 }

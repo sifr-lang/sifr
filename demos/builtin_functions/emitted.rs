@@ -15,7 +15,7 @@ fn main() {
         if (&SifrInt::from(result.chars().count()) > &SifrInt::from_i64(0)) {
             result.push(' ');
         }
-        result.push_str((format!("{}", i)).as_str());
+        result.push_str(format!("{}", i).as_str());
     }
     println!("{}", result);
     assert!((format!("{}", result) == "0 2 4 6 8"));

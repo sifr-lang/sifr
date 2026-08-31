@@ -21,7 +21,7 @@ fn safe_len(items: &Option<Vec<String>>) -> SifrInt {
 
 fn merge_lists(a: Vec<SifrInt>, b: Vec<SifrInt>) -> Vec<SifrInt> {
     {
-    let mut __v = (a).clone();
+    let mut __v = (a).to_vec();
     __v.extend((b).iter().cloned());
     __v
 }
@@ -29,7 +29,7 @@ fn merge_lists(a: Vec<SifrInt>, b: Vec<SifrInt>) -> Vec<SifrInt> {
 
 fn main() {
     let v: Option<SifrInt> = Some(SifrInt::from_i64(10));
-    println!("{}", increment((v).clone()));
+    println!("{}", increment(v.clone()));
     let f: Option<f64> = Some(3.14_f64);
     println!("{}", double(f));
     let names: Option<Vec<String>> = Some(vec!["alice".to_string(), "bob".to_string(), "charlie".to_string()]);

@@ -2,7 +2,7 @@
 use ::sifr_runtime::SifrInt;
 
 fn apply_twice(f: impl Fn(SifrInt) -> SifrInt, value: SifrInt) -> SifrInt {
-    f(f((value).clone()))
+    f(f(value.clone()))
 }
 
 fn score(base: SifrInt) -> SifrInt {
@@ -13,8 +13,8 @@ fn score(base: SifrInt) -> SifrInt {
     let amplify = |x: SifrInt| {
     &x * &SifrInt::from_i64(2)
 };
-    let adjusted: SifrInt = apply_twice(add_offset, (base).clone());
-    amplify((adjusted).clone())
+    let adjusted: SifrInt = apply_twice(add_offset, base.clone());
+    amplify(adjusted.clone())
 }
 
 fn bounded_sum(limit: SifrInt) -> SifrInt {

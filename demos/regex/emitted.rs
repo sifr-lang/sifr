@@ -26,17 +26,17 @@ type __SifrStdlib___sifr_x2eregex_x2eCompiledPattern = ::sifr_runtime::interop::
     ::sifr_stdlib::regex::CompiledPattern,
 >;
 trait __SifrOpaque__SifrStdlib___sifr_x2eregex_x2eCompiledPatternMethods {
-    fn search(&self, text: &String) -> Result<Option<String>, RegexError>;
-    fn is_match(&self, text: &String) -> Result<bool, RegexError>;
-    fn sub(&self, replacement: &String, text: &String) -> Result<String, RegexError>;
-    fn findall(&self, text: &String) -> Result<Vec<String>, RegexError>;
-    fn split(&self, text: &String) -> Result<Vec<String>, RegexError>;
+    fn search(&self, text: &str) -> Result<Option<String>, RegexError>;
+    fn is_match(&self, text: &str) -> Result<bool, RegexError>;
+    fn sub(&self, replacement: &str, text: &str) -> Result<String, RegexError>;
+    fn findall(&self, text: &str) -> Result<Vec<String>, RegexError>;
+    fn split(&self, text: &str) -> Result<Vec<String>, RegexError>;
     fn pattern(&self) -> Result<String, RegexError>;
     fn flags(&self) -> Result<SifrInt, RegexError>;
 }
 impl __SifrOpaque__SifrStdlib___sifr_x2eregex_x2eCompiledPatternMethods
 for __SifrStdlib___sifr_x2eregex_x2eCompiledPattern {
-    fn search(&self, text: &String) -> Result<Option<String>, RegexError> {
+    fn search(&self, text: &str) -> Result<Option<String>, RegexError> {
         ::sifr_stdlib::regex::compiled_pattern_search(self, text)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| RegexError {
@@ -44,7 +44,7 @@ for __SifrStdlib___sifr_x2eregex_x2eCompiledPattern {
                 detail: __sifr_bridge_error.to_string(),
             })
     }
-    fn is_match(&self, text: &String) -> Result<bool, RegexError> {
+    fn is_match(&self, text: &str) -> Result<bool, RegexError> {
         ::sifr_stdlib::regex::compiled_pattern_is_match(self, text)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| RegexError {
@@ -52,7 +52,7 @@ for __SifrStdlib___sifr_x2eregex_x2eCompiledPattern {
                 detail: __sifr_bridge_error.to_string(),
             })
     }
-    fn sub(&self, replacement: &String, text: &String) -> Result<String, RegexError> {
+    fn sub(&self, replacement: &str, text: &str) -> Result<String, RegexError> {
         ::sifr_stdlib::regex::compiled_pattern_replace(self, replacement, text)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| RegexError {
@@ -60,7 +60,7 @@ for __SifrStdlib___sifr_x2eregex_x2eCompiledPattern {
                 detail: __sifr_bridge_error.to_string(),
             })
     }
-    fn findall(&self, text: &String) -> Result<Vec<String>, RegexError> {
+    fn findall(&self, text: &str) -> Result<Vec<String>, RegexError> {
         ::sifr_stdlib::regex::compiled_pattern_findall(self, text)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| RegexError {
@@ -68,7 +68,7 @@ for __SifrStdlib___sifr_x2eregex_x2eCompiledPattern {
                 detail: __sifr_bridge_error.to_string(),
             })
     }
-    fn split(&self, text: &String) -> Result<Vec<String>, RegexError> {
+    fn split(&self, text: &str) -> Result<Vec<String>, RegexError> {
         ::sifr_stdlib::regex::compiled_pattern_split(self, text)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| RegexError {
@@ -94,7 +94,7 @@ for __SifrStdlib___sifr_x2eregex_x2eCompiledPattern {
     }
 }
 fn compile_pattern(
-    pattern: &String,
+    pattern: &str,
 ) -> Result<__SifrStdlib___sifr_x2eregex_x2eCompiledPattern, RegexError> {
     ::sifr_stdlib::regex::compile_pattern(pattern)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
@@ -104,7 +104,7 @@ fn compile_pattern(
         })
 }
 fn compile_pattern_flags(
-    pattern: &String,
+    pattern: &str,
     flags: SifrInt,
 ) -> Result<__SifrStdlib___sifr_x2eregex_x2eCompiledPattern, RegexError> {
     ::sifr_stdlib::regex::compile_pattern_flags(
@@ -117,7 +117,7 @@ fn compile_pattern_flags(
             detail: __sifr_bridge_error.to_string(),
         })
 }
-fn re_match(pattern: &String, text: &String) -> Result<bool, RegexError> {
+fn re_match(pattern: &str, text: &str) -> Result<bool, RegexError> {
     ::sifr_stdlib::regex::re_match(pattern, text)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| RegexError {
@@ -125,7 +125,7 @@ fn re_match(pattern: &String, text: &String) -> Result<bool, RegexError> {
             detail: __sifr_bridge_error.to_string(),
         })
 }
-fn re_find(pattern: &String, text: &String) -> Result<Option<String>, RegexError> {
+fn re_find(pattern: &str, text: &str) -> Result<Option<String>, RegexError> {
     ::sifr_stdlib::regex::re_find(pattern, text)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| RegexError {
@@ -134,9 +134,9 @@ fn re_find(pattern: &String, text: &String) -> Result<Option<String>, RegexError
         })
 }
 fn re_replace(
-    pattern: &String,
-    replacement: &String,
-    text: &String,
+    pattern: &str,
+    replacement: &str,
+    text: &str,
 ) -> Result<String, RegexError> {
     ::sifr_stdlib::regex::re_replace(pattern, replacement, text)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
@@ -145,7 +145,7 @@ fn re_replace(
             detail: __sifr_bridge_error.to_string(),
         })
 }
-fn re_findall(pattern: &String, text: &String) -> Result<Vec<String>, RegexError> {
+fn re_findall(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
     ::sifr_stdlib::regex::re_findall(pattern, text)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| RegexError {
@@ -153,7 +153,7 @@ fn re_findall(pattern: &String, text: &String) -> Result<Vec<String>, RegexError
             detail: __sifr_bridge_error.to_string(),
         })
 }
-fn re_split(pattern: &String, text: &String) -> Result<Vec<String>, RegexError> {
+fn re_split(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
     ::sifr_stdlib::regex::re_split(pattern, text)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| RegexError {
@@ -161,7 +161,7 @@ fn re_split(pattern: &String, text: &String) -> Result<Vec<String>, RegexError> 
             detail: __sifr_bridge_error.to_string(),
         })
 }
-fn re_find_start(pattern: &String, text: &String) -> Result<SifrInt, RegexError> {
+fn re_find_start(pattern: &str, text: &str) -> Result<SifrInt, RegexError> {
     ::sifr_stdlib::regex::re_find_start(pattern, text)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok.into_sifr_int())
         .map_err(|__sifr_bridge_error| RegexError {
@@ -169,7 +169,7 @@ fn re_find_start(pattern: &String, text: &String) -> Result<SifrInt, RegexError>
             detail: __sifr_bridge_error.to_string(),
         })
 }
-fn re_find_end(pattern: &String, text: &String) -> Result<SifrInt, RegexError> {
+fn re_find_end(pattern: &str, text: &str) -> Result<SifrInt, RegexError> {
     ::sifr_stdlib::regex::re_find_end(pattern, text)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok.into_sifr_int())
         .map_err(|__sifr_bridge_error| RegexError {
@@ -178,8 +178,8 @@ fn re_find_end(pattern: &String, text: &String) -> Result<SifrInt, RegexError> {
         })
 }
 fn re_match_flags(
-    pattern: &String,
-    text: &String,
+    pattern: &str,
+    text: &str,
     flags: SifrInt,
 ) -> Result<bool, RegexError> {
     ::sifr_stdlib::regex::re_match_flags(
@@ -194,8 +194,8 @@ fn re_match_flags(
         })
 }
 fn re_find_flags(
-    pattern: &String,
-    text: &String,
+    pattern: &str,
+    text: &str,
     flags: SifrInt,
 ) -> Result<Option<String>, RegexError> {
     ::sifr_stdlib::regex::re_find_flags(
@@ -210,9 +210,9 @@ fn re_find_flags(
         })
 }
 fn re_replace_flags(
-    pattern: &String,
-    replacement: &String,
-    text: &String,
+    pattern: &str,
+    replacement: &str,
+    text: &str,
     flags: SifrInt,
 ) -> Result<String, RegexError> {
     ::sifr_stdlib::regex::re_replace_flags(
@@ -228,8 +228,8 @@ fn re_replace_flags(
         })
 }
 fn re_findall_flags(
-    pattern: &String,
-    text: &String,
+    pattern: &str,
+    text: &str,
     flags: SifrInt,
 ) -> Result<Vec<String>, RegexError> {
     ::sifr_stdlib::regex::re_findall_flags(
@@ -244,8 +244,8 @@ fn re_findall_flags(
         })
 }
 fn re_split_flags(
-    pattern: &String,
-    text: &String,
+    pattern: &str,
+    text: &str,
     flags: SifrInt,
 ) -> Result<Vec<String>, RegexError> {
     ::sifr_stdlib::regex::re_split_flags(
@@ -262,30 +262,26 @@ fn re_split_flags(
 fn __const_IGNORECASE() -> SifrInt {
     SifrInt::from_i64(2)
 }
-fn search(pattern: &String, text: &String) -> Result<Option<String>, RegexError> {
+fn search(pattern: &str, text: &str) -> Result<Option<String>, RegexError> {
     re_find(pattern, text)
 }
 fn search_flags(
-    pattern: &String,
-    text: &String,
+    pattern: &str,
+    text: &str,
     flags: SifrInt,
 ) -> Result<Option<String>, RegexError> {
-    re_find_flags(pattern, text, (flags).clone())
+    re_find_flags(pattern, text, flags.clone())
 }
-fn sub(
-    pattern: &String,
-    replacement: &String,
-    text: &String,
-) -> Result<String, RegexError> {
+fn sub(pattern: &str, replacement: &str, text: &str) -> Result<String, RegexError> {
     re_replace(pattern, replacement, text)
 }
-fn findall(pattern: &String, text: &String) -> Result<Vec<String>, RegexError> {
+fn findall(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
     re_findall(pattern, text)
 }
-fn split(pattern: &String, text: &String) -> Result<Vec<String>, RegexError> {
+fn split(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
     re_split(pattern, text)
 }
-fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
+fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
     assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
     let mut i: SifrInt = SifrInt::from_i64(0);
     while &i < &SifrInt::from(actual.len()) {
@@ -302,7 +298,7 @@ fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
         i = &i + &SifrInt::from_i64(1);
     }
 }
-fn has_match(pattern: &String, text: &String) -> Result<bool, RegexError> {
+fn has_match(pattern: &str, text: &str) -> Result<bool, RegexError> {
     let __sifr_try_res: Result<Result<bool, RegexError>, RegexError> = (|| {
         let found: Option<String> = search(pattern, text)?;
         Ok(Ok((found.is_some())))

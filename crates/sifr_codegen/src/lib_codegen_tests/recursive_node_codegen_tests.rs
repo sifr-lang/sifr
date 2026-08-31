@@ -283,15 +283,15 @@ def wrapKeyword(node: TreeNode | None) -> TreeNode:
     );
     assert!(
         rust_code.contains(
-            "TreeNode::new(SifrInt::from_i64(5), node.clone().map(|__sifr_option_value| Box::new(__sifr_option_value)))"
+            "TreeNode::new(SifrInt::from_i64(5), node.cloned().map(|__sifr_option_value| Box::new(__sifr_option_value)))"
         ),
-        "borrowed optional parameters must be cloned before recursive constructor boxing:\n{rust_code}"
+        "borrowed optional parameters must materialize their values before recursive constructor boxing:\n{rust_code}"
     );
     assert!(
         rust_code.contains(
-            "nodes.push(TreeNode::new(SifrInt::from_i64(6), node.clone().map(|__sifr_option_value| Box::new(__sifr_option_value))))"
+            "nodes.push(TreeNode::new(SifrInt::from_i64(6), node.cloned().map(|__sifr_option_value| Box::new(__sifr_option_value))))"
         ),
-        "nested constructors must use the same clone-before-map adaptation:\n{rust_code}"
+        "nested constructors must use the same borrowed-option materialization:\n{rust_code}"
     );
     assert!(
         !rust_code.contains("TreeNode::new(SifrInt::from_i64(5), node.map(")
@@ -320,9 +320,9 @@ def wrapKeyword(node: TreeNode | None) -> TreeNode:
     );
     assert!(
         rust_code.contains(
-            "TreeNode::new(SifrInt::from_i64(10), node.clone().map(|__sifr_option_value| Box::new(__sifr_option_value)))"
+            "TreeNode::new(SifrInt::from_i64(10), node.cloned().map(|__sifr_option_value| Box::new(__sifr_option_value)))"
         ),
-        "keyword recursive option arguments must use the same clone-before-map adaptation:\n{rust_code}"
+        "keyword recursive option arguments must use the same borrowed-option materialization:\n{rust_code}"
     );
 }
 
@@ -343,7 +343,7 @@ def collect(value: int | None) -> list[Record]:
     );
 
     assert!(
-        rust_code.contains("records.push(Record::new((value).clone()));"),
+        rust_code.contains("records.push(Record::new(value.clone()));"),
         "ordinary optional constructor parameters should remain unboxed:\n{rust_code}"
     );
     assert!(
@@ -379,7 +379,7 @@ def make_holder(own entity: Greetable) -> Holder:
 }
 
 #[test]
-fn test_recursive_option_let_else_binding_is_mutable_for_child_moves() {
+fn test_recursive_option_let_else_binding_uses_borrowed_child_views() {
     let rust_code = generate_rust_from_source(
         r#"class Expr:
     value: int
@@ -409,12 +409,12 @@ def measure(expr: Expr | None) -> int:
     );
 
     assert!(
-        rust_code.contains("let Some(mut term) = term else"),
-        "recursive option narrowing must bind mutable locals when later field reads use .take():\n{rust_code}"
+        rust_code.contains("let Some(term) = term else"),
+        "borrowed recursive option narrowing must keep the binding immutable:\n{rust_code}"
     );
     assert!(
-        rust_code.contains("term.expr.take().map(|__sifr_boxed_recursive_value|"),
-        "owned recursive option field reads should still move boxed children:\n{rust_code}"
+        rust_code.contains("let parent: Option<&Expr> = (term.expr).as_deref();"),
+        "recursive field traversal must preserve a borrowed view:\n{rust_code}"
     );
 }
 
@@ -484,7 +484,7 @@ def valueOrZero(own value: Value | None) -> int:
 }
 
 #[test]
-fn test_borrowed_optional_wrapper_clones_recursive_node() {
+fn test_borrowed_optional_wrapper_borrows_recursive_node() {
     let rust_code = generate_rust_from_source(
         r#"class TreeNode:
     val: int
@@ -512,13 +512,12 @@ def read_then_store(own root: TreeNode | None) -> int:
     );
 
     assert!(
-        rust_code.contains("value_or_zero(&Some((root_node).clone()))")
-            || rust_code.contains("value_or_zero(&Some(root_node.clone()))"),
-        "borrowed optional helper call should not move a local recursive node:\n{rust_code}"
+        rust_code.contains("value_or_zero(Some(&root_node))"),
+        "borrowed optional helper call should pass a view without moving the local:\n{rust_code}"
     );
     assert!(
-        !rust_code.contains("value_or_zero(&Some(root_node));"),
-        "borrowed optional wrapper must clone before the local is reused:\n{rust_code}"
+        !rust_code.contains("value_or_zero(Some(&root_node.clone()))"),
+        "borrowed optional wrapper must not clone a reusable local:\n{rust_code}"
     );
 }
 

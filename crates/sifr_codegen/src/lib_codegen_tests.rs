@@ -83,6 +83,8 @@ mod nested_container_capture_codegen_tests;
 #[cfg(test)]
 mod nested_function_signature_scope_codegen_tests;
 #[cfg(test)]
+mod ownership_quality_codegen_tests;
+#[cfg(test)]
 mod performance_codegen_tests;
 #[cfg(test)]
 mod performance_collection_borrow_codegen_tests;

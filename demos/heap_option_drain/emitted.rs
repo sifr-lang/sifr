@@ -201,7 +201,7 @@ fn heappush<T: Clone + 'static + PartialOrd>(heap: &mut Vec<T>, item: &T) {
     "Push item onto the heap in-place. O(log n) time.".to_string();
     heap.push(item.clone());
     let pos: SifrInt = &SifrInt::from(heap.len()) - &SifrInt::from_i64(1);
-    _sift_up(heap, (pos).clone());
+    _sift_up(heap, pos.clone());
 }
 fn heappop<T: Clone + 'static + PartialOrd>(heap: &mut Vec<T>) -> Option<T> {
     "Pop and return the smallest item. Heap is modified in-place. O(log n) time.\n    Returns None if the heap is empty."
@@ -240,13 +240,13 @@ fn heappop<T: Clone + 'static + PartialOrd>(heap: &mut Vec<T>) -> Option<T> {
                 }
             }
         }
-        _sift_down(heap, SifrInt::from_i64(0), (n2).clone());
+        _sift_down(heap, SifrInt::from_i64(0), n2.clone());
     }
     top
 }
 // --- end stdlib ---
 
-fn drain_sorted(values: &Vec<SifrInt>) -> Vec<SifrInt> {
+fn drain_sorted(values: &[SifrInt]) -> Vec<SifrInt> {
     let mut heap: Vec<SifrInt> = vec![];
     let mut order: Vec<SifrInt> = vec![];
     for value in values.iter().cloned() {

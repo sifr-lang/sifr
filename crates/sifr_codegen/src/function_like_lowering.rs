@@ -21,6 +21,7 @@ impl RustEmitter {
         let saved_mutated_vars = self.mutated_vars.clone();
         let saved_borrowed_params = self.borrowed_params.clone();
         let saved_mut_borrowed_params = self.mut_borrowed_params.clone();
+        let saved_recursive_option_borrowed_views = self.recursive_option_borrowed_views.clone();
         let saved_local_binding_types = self.local_binding_types.clone();
         let saved_string_char_cache_vars = self.string_char_cache_vars.clone();
         let saved_sifr_int_local_bindings = self.sifr_int_local_bindings.borrow().clone();
@@ -35,6 +36,7 @@ impl RustEmitter {
         self.mutated_vars = collect_mutated_vars_with_sigs(&func.body, &self.func_signatures);
         self.borrowed_params.clear();
         self.mut_borrowed_params.clear();
+        self.recursive_option_borrowed_views.clear();
         self.local_binding_types.clear();
         self.string_char_cache_vars.clear();
         self.sifr_int_local_bindings.borrow_mut().clear();
@@ -44,6 +46,10 @@ impl RustEmitter {
                 && !crate::helpers::is_copy_type_for_codegen(&param.ty)
             {
                 self.borrowed_params.insert(param.name.clone());
+                if self.recursive_option_borrowed_type(&param.ty).is_some() {
+                    self.recursive_option_borrowed_views
+                        .insert(param.name.clone());
+                }
             }
             if param.convention.is_mut_borrow()
                 && !crate::helpers::is_copy_type_for_codegen(&param.ty)
@@ -130,6 +136,7 @@ impl RustEmitter {
         self.mutated_vars = saved_mutated_vars;
         self.borrowed_params = saved_borrowed_params;
         self.mut_borrowed_params = saved_mut_borrowed_params;
+        self.recursive_option_borrowed_views = saved_recursive_option_borrowed_views;
         self.local_binding_types = saved_local_binding_types;
         self.string_char_cache_vars = saved_string_char_cache_vars;
         *self.sifr_int_local_bindings.borrow_mut() = saved_sifr_int_local_bindings;

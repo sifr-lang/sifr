@@ -1,9 +1,10 @@
+use super::dedup_keys::dedup_impl_key;
 use proc_macro2::{Group, Ident, TokenStream, TokenTree};
 use sifr_type_system::{is_global_rust_nominal_identity, stdlib_class_rust_name};
 use std::collections::{HashMap, HashSet};
 use syn::visit::{self, Visit};
 use syn::visit_mut::{self, VisitMut};
-use syn::{Item, ItemImpl, ItemUse, Type, UseTree};
+use syn::{Item, ItemUse, Type, UseTree};
 
 #[derive(Clone)]
 struct StdlibIrItem {
@@ -432,11 +433,26 @@ pub(super) fn transitive_needed_items(
 }
 
 fn render_needed_ir_items(ir: &StdlibIrFile, needed: &HashSet<String>) -> String {
+    let needed_declared_traits: HashSet<String> = ir
+        .entries
+        .iter()
+        .filter_map(|entry| match entry {
+            StdlibIrEntry::Named(item)
+                if matches!(item.item, Item::Trait(_)) && needed.contains(&item.name) =>
+            {
+                Some(item.name.clone())
+            }
+            _ => None,
+        })
+        .collect();
     let mut kept_items: Vec<Item> = Vec::new();
     for entry in &ir.entries {
         match entry {
             StdlibIrEntry::Named(item) => {
-                if needed.contains(&item.name) {
+                if needed.contains(&item.name)
+                    || trait_impl_name(&item.item)
+                        .is_some_and(|name| needed_declared_traits.contains(&name))
+                {
                     kept_items.push(item.item.clone());
                 }
             }
@@ -444,6 +460,19 @@ fn render_needed_ir_items(ir: &StdlibIrFile, needed: &HashSet<String>) -> String
         }
     }
     render_items(&kept_items)
+}
+
+fn trait_impl_name(item: &Item) -> Option<String> {
+    let Item::Impl(item_impl) = item else {
+        return None;
+    };
+    item_impl
+        .trait_
+        .as_ref()?
+        .0
+        .segments
+        .last()
+        .map(|segment| segment.ident.to_string())
 }
 
 pub(super) fn derive_shared_needs(items: &[Item]) -> SharedPreludeNeeds {
@@ -808,71 +837,6 @@ pub(super) fn dedup_item_key(item: &Item) -> String {
     match item {
         Item::Impl(item_impl) => dedup_impl_key(item_impl),
         _ => parse_item_name(item).unwrap_or_else(|| "__unnamed_item__".to_string()),
-    }
-}
-
-pub(super) fn dedup_impl_key(item_impl: &ItemImpl) -> String {
-    let self_ty = dedup_type_key(item_impl.self_ty.as_ref());
-    if let Some((trait_path, _)) = &item_impl.trait_ {
-        let defaultness = if item_impl.modifiers.defaultness.is_some() {
-            "default "
-        } else {
-            ""
-        };
-        let polarity = if item_impl.modifiers.polarity.is_some() {
-            "!"
-        } else {
-            ""
-        };
-        format!(
-            "{defaultness}impl {polarity}{} for {}",
-            dedup_path_key(trait_path),
-            self_ty
-        )
-    } else {
-        let item_names = item_impl
-            .items
-            .iter()
-            .map(|item| match item {
-                syn::ImplItem::Const(item) => format!("const {}", item.ident),
-                syn::ImplItem::Fn(item) => format!("fn {}", item.sig.ident),
-                syn::ImplItem::Type(item) => format!("type {}", item.ident),
-                syn::ImplItem::Macro(item) => format!("macro {}", dedup_path_key(&item.mac.path)),
-                syn::ImplItem::Verbatim(tokens) => format!("verbatim {tokens}"),
-                _ => "unknown".to_string(),
-            })
-            .collect::<Vec<_>>()
-            .join(",");
-        format!("impl {self_ty} [{item_names}]")
-    }
-}
-
-pub(super) fn dedup_path_key(path: &syn::Path) -> String {
-    path.segments
-        .iter()
-        .map(|segment| segment.ident.to_string())
-        .collect::<Vec<String>>()
-        .join("::")
-}
-
-pub(super) fn dedup_type_key(ty: &Type) -> String {
-    match ty {
-        Type::Path(type_path) => dedup_path_key(&type_path.path),
-        Type::Reference(reference) => dedup_type_key(reference.elem.as_ref()),
-        Type::Paren(paren) => dedup_type_key(paren.elem.as_ref()),
-        Type::Group(group) => dedup_type_key(group.elem.as_ref()),
-        Type::Slice(slice) => format!("[{}]", dedup_type_key(slice.elem.as_ref())),
-        Type::Array(array) => format!("[{}]", dedup_type_key(array.elem.as_ref())),
-        Type::Tuple(tuple) => {
-            let elems = tuple
-                .elems
-                .iter()
-                .map(dedup_type_key)
-                .collect::<Vec<String>>()
-                .join(",");
-            format!("({elems})")
-        }
-        _ => "__unknown_type__".to_string(),
     }
 }
 

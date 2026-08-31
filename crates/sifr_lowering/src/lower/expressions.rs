@@ -41,8 +41,7 @@ use super::method_diagnostics::{
 };
 use super::min_max_validation::validate_variadic_min_max_operands;
 use super::mutating_methods::{
-    invalidate_collection_flow_facts_for_method, reject_immutable_method_mut_borrow_arguments,
-    reject_immutable_parameter_method_mutation,
+    reject_immutable_method_mut_borrow_arguments, reject_immutable_parameter_method_mutation,
 };
 use super::name_diagnostics;
 use super::nonempty_method_narrowing::refine_nonempty_method_return_type;

@@ -15,7 +15,7 @@ class Store:
 "#,
     );
 
-    assert!(generated.contains("let __assign_key = key.clone()"));
+    assert!(generated.contains("let __assign_key = key.to_owned()"));
     assert!(generated.contains("self.rows.insert(__assign_key, __assign_value)"));
     assert!(!generated.contains(".cloned()"));
 }
@@ -63,7 +63,7 @@ class Store:
         "{generated}"
     );
     assert!(
-        generated.contains("let __inner_key = key.clone()"),
+        generated.contains("let __inner_key = key.to_owned()"),
         "{generated}"
     );
     assert!(

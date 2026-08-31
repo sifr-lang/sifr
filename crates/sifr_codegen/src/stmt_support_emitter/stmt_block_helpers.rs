@@ -529,12 +529,14 @@ impl RustEmitter {
         let nested_fn_captures = self.nested_fn_captures.clone();
         let nonempty_list_bindings = self.nonempty_list_bindings.clone();
         let checked_place_read_witnesses = self.checked_place_read_witnesses.clone();
+        let recursive_option_borrowed_views = self.recursive_option_borrowed_views.clone();
         let result = self.try_lower_stmt_block_for_ir(stmts);
         self.string_char_cache_vars = string_char_cache_vars;
         self.callable_var_conventions = callable_var_conventions;
         self.nested_fn_captures = nested_fn_captures;
         self.nonempty_list_bindings = nonempty_list_bindings;
         self.checked_place_read_witnesses = checked_place_read_witnesses;
+        self.recursive_option_borrowed_views = recursive_option_borrowed_views;
         result
     }
 
@@ -610,10 +612,14 @@ impl RustEmitter {
         let HirExpr::Name { name, .. } = value else {
             return None;
         };
-        if self.borrowed_params.contains(name) || self.mut_borrowed_params.contains(name) {
-            Some(crate::RustExpr::Clone(Box::new(crate::RustExpr::Ident(
-                name.clone(),
-            ))))
+        if self.borrowed_params.contains(name)
+            || self.mut_borrowed_params.contains(name)
+            || self.recursive_option_borrowed_views.contains(name)
+        {
+            Some(crate::ownership_plan::materialize_owned_value(
+                effective_ty,
+                crate::RustExpr::Ident(name.clone()),
+            ))
         } else {
             None
         }

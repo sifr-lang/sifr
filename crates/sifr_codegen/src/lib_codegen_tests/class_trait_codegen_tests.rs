@@ -88,7 +88,7 @@ fn generic_method_bounds_follow_direct_self_calls() {
 
     assert_eq!(rust_code.matches("impl<T: Clone> Holder<T>").count(), 2);
     assert!(
-        rust_code.contains("impl<T: Clone + PartialEq> Holder<T>"),
+        rust_code.contains("impl<T: PartialEq> Holder<T>"),
         "{rust_code}"
     );
 }
@@ -131,7 +131,7 @@ class Math[T]:
     );
 
     assert!(
-        rust_code.contains("impl<T: Clone + PartialEq> Holder<T>"),
+        rust_code.contains("impl<T: PartialEq> Holder<T>"),
         "{rust_code}"
     );
     assert!(

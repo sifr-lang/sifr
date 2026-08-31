@@ -1,7 +1,7 @@
 // src/main.rs
 use ::sifr_runtime::SifrInt;
 
-fn accumulate(values: &Vec<SifrInt>) -> SifrInt {
+fn accumulate(values: &[SifrInt]) -> SifrInt {
     let mut total: SifrInt = SifrInt::from_i64(0);
     let mut apply = || {
     for value in values.iter().cloned() {

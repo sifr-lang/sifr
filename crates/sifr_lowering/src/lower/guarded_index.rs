@@ -17,6 +17,8 @@ pub(in crate::lower) fn guarded_sequence_index_result_type(
                     Some(*value_ty.clone())
                 } else if ctx.has_subscript_guard(sequence_name.as_str(), &sub.slice) {
                     Some(remove_none_from_union(value_ty.as_ref()))
+                } else if ctx.has_subscript_access_guard(sequence_name.as_str(), &sub.slice) {
+                    Some(*value_ty.clone())
                 } else {
                     None
                 }
@@ -97,7 +99,7 @@ fn guarded_bytes_index_type(
 }
 
 fn has_guarded_sequence_index(sequence_name: &str, index_expr: &Expr, ctx: &LowerCtx) -> bool {
-    if ctx.has_subscript_guard(sequence_name, index_expr) {
+    if ctx.has_subscript_access_guard(sequence_name, index_expr) {
         return true;
     }
     if index_expr_is_safe_for_anchor(index_expr, sequence_name, 0, ctx) {

@@ -3,11 +3,11 @@ use ::sifr_runtime::SifrInt;
 
 use ::sifr_runtime::SifrRange;
 
-fn get_length(items: &Vec<SifrInt>) -> SifrInt {
+fn get_length(items: &[SifrInt]) -> SifrInt {
     SifrInt::from(items.len())
 }
 
-fn get_first_char(s: &String) -> String {
+fn get_first_char(s: &str) -> String {
     let __sifr_chars_s: Vec<char> = s.chars().collect::<Vec<char>>();
     let result: Option<String> = ({
     let __sifr_string_index = SifrInt::from_i64(0);
@@ -32,7 +32,7 @@ fn is_positive(n: f64) -> bool {
     n > (0.0_f64)
 }
 
-fn process_data(data: &Vec<SifrInt>) -> SifrInt {
+fn process_data(data: &[SifrInt]) -> SifrInt {
     let mut total: SifrInt = SifrInt::from_i64(0);
     for item in data.iter().cloned() {
         total = &total + &item;
@@ -40,7 +40,7 @@ fn process_data(data: &Vec<SifrInt>) -> SifrInt {
     total.clone()
 }
 
-fn sum_multiple_times(items: &Vec<SifrInt>, times: SifrInt) -> SifrInt {
+fn sum_multiple_times(items: &[SifrInt], times: SifrInt) -> SifrInt {
     let mut total: SifrInt = SifrInt::from_i64(0);
     for i in SifrRange::new_known_nonzero(SifrInt::from_i64(0), times.clone(), SifrInt::from_i64(1)) {
         total = &total + &get_length(items);
@@ -48,11 +48,11 @@ fn sum_multiple_times(items: &Vec<SifrInt>, times: SifrInt) -> SifrInt {
     total.clone()
 }
 
-fn apply_and_return(f: impl Fn(&Vec<SifrInt>) -> SifrInt, items: &Vec<SifrInt>) -> SifrInt {
+fn apply_and_return(f: impl Fn(&[SifrInt]) -> SifrInt, items: &[SifrInt]) -> SifrInt {
     f(items)
 }
 
-fn compute_sum(nums: &Vec<SifrInt>) -> SifrInt {
+fn compute_sum(nums: &[SifrInt]) -> SifrInt {
     let mut total: SifrInt = SifrInt::from_i64(0);
     for n in nums.iter().cloned() {
         total = &total + &n;

@@ -3,7 +3,7 @@ use ::sifr_runtime::SifrInt;
 
 use ::sifr_runtime::SifrRange;
 
-fn sum_forward(nums: &Vec<SifrInt>) -> SifrInt {
+fn sum_forward(nums: &[SifrInt]) -> SifrInt {
     let n: SifrInt = SifrInt::from(nums.len());
     let mut total: SifrInt = SifrInt::from_i64(0);
     for i in SifrRange::new_known_nonzero(SifrInt::from_i64(0), n.clone(), SifrInt::from_i64(1)) {
@@ -20,7 +20,7 @@ fn sum_forward(nums: &Vec<SifrInt>) -> SifrInt {
     total.clone()
 }
 
-fn sum_reverse(nums: &Vec<SifrInt>) -> SifrInt {
+fn sum_reverse(nums: &[SifrInt]) -> SifrInt {
     let n: SifrInt = SifrInt::from(nums.len());
     let mut total: SifrInt = SifrInt::from_i64(0);
     for i in SifrRange::new_known_nonzero(&n - &SifrInt::from_i64(1), -(SifrInt::from_i64(1)), -(SifrInt::from_i64(1))) {
@@ -37,7 +37,7 @@ fn sum_reverse(nums: &Vec<SifrInt>) -> SifrInt {
     total.clone()
 }
 
-fn sum_reverse_while(nums: &Vec<SifrInt>) -> SifrInt {
+fn sum_reverse_while(nums: &[SifrInt]) -> SifrInt {
     let n: SifrInt = SifrInt::from(nums.len());
     let mut i: SifrInt = &n - &SifrInt::from_i64(1);
     let mut total: SifrInt = SifrInt::from_i64(0);
@@ -56,7 +56,7 @@ fn sum_reverse_while(nums: &Vec<SifrInt>) -> SifrInt {
     total.clone()
 }
 
-fn append_growth_product(nums: &Vec<SifrInt>) -> SifrInt {
+fn append_growth_product(nums: &[SifrInt]) -> SifrInt {
     let n: SifrInt = SifrInt::from(nums.len());
     let mut weights: Vec<SifrInt> = vec![];
     for i in SifrRange::new_known_nonzero(SifrInt::from_i64(0), n.clone(), SifrInt::from_i64(1)) {

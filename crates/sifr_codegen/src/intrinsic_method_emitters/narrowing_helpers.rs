@@ -10,6 +10,20 @@ impl RustEmitter {
         let source_ty = self.effective_registry_expr_ty(argument);
         self.consuming_value_conversion_for_ir(target_ty, &source_ty, lowered)
     }
+
+    pub(crate) fn materialize_borrowed_parameter_for_owned_boundary(
+        &self,
+        argument: &HirExpr,
+        lowered: RustExpr,
+    ) -> RustExpr {
+        if matches!(argument, HirExpr::Name { name, .. }
+            if self.borrowed_params.contains(name) || self.mut_borrowed_params.contains(name))
+        {
+            crate::ownership_plan::materialize_owned_value(argument.ty(), lowered)
+        } else {
+            lowered
+        }
+    }
 }
 
 pub(crate) fn supports_nonempty_pop_narrowing_type_for_codegen(object_ty: &Type) -> bool {

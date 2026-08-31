@@ -131,7 +131,7 @@ fn _heapify_max<T: Clone + 'static + PartialOrd>(data: &mut Vec<T>) {
     let mut i: SifrInt = &n.floor_div_known_nonzero(&SifrInt::from_i64(2))
         - &SifrInt::from_i64(1);
     while (&i >= &SifrInt::from_i64(0)) {
-        _sift_down_max(data, (i).clone(), (n).clone());
+        _sift_down_max(data, i.clone(), n.clone());
         i = &i - &SifrInt::from_i64(1);
     }
 }
@@ -172,7 +172,7 @@ fn _heappop_max<T: Clone + 'static + PartialOrd>(heap: &mut Vec<T>) -> Option<T>
                 }
             }
         }
-        _sift_down_max(heap, SifrInt::from_i64(0), (n2).clone());
+        _sift_down_max(heap, SifrInt::from_i64(0), n2.clone());
     }
     top
 }
@@ -203,7 +203,7 @@ fn _heapreplace_max<T: Clone + 'static + PartialOrd>(
         }
     }
     let heap_len: SifrInt = SifrInt::from(heap.len());
-    _sift_down_max(heap, SifrInt::from_i64(0), (heap_len).clone());
+    _sift_down_max(heap, SifrInt::from_i64(0), heap_len.clone());
     top
 }
 // --- end stdlib ---

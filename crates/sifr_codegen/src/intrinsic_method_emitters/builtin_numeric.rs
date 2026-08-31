@@ -267,11 +267,7 @@ impl RustEmitter {
                     if matches!(arg.ty().resolve_alias(), Type::Str)
                         && matches!(arg, HirExpr::Name { .. })
                     {
-                        if matches!(arg, HirExpr::Name { name, .. } if self.borrowed_params.contains(name))
-                        {
-                            lowered = RustExpr::Paren(Box::new(RustExpr::Deref(Box::new(lowered))));
-                        }
-                        lowered = RustExpr::Clone(Box::new(lowered));
+                        lowered = crate::ownership_plan::materialize_owned_value(arg.ty(), lowered);
                     } else {
                         lowered = Self::clone_non_copy_name_expr_for_ir(arg, lowered);
                     }
