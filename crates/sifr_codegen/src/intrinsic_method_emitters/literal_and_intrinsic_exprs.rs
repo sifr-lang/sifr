@@ -29,8 +29,14 @@ impl RustEmitter {
         }];
 
         for (key, value) in keys.iter().zip(values.iter()) {
-            let lowered_key = self.try_lower_registry_expr_strict(key)?;
-            let lowered_value = self.try_lower_registry_expr_strict(value)?;
+            let lowered_key = Self::clone_owned_append_arg_expr_for_ir(
+                key,
+                self.try_lower_registry_expr_strict(key)?,
+            );
+            let lowered_value = Self::clone_owned_append_arg_expr_for_ir(
+                value,
+                self.try_lower_registry_expr_strict(value)?,
+            );
             let (lowered_key, lowered_value) = match ty.resolve_alias() {
                 Type::Dict(key_ty, value_ty) => (
                     crate::helpers::adapt_collection_value_for_target(

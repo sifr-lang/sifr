@@ -577,7 +577,7 @@ fn nested_context_target_is_local_instead_of_an_outer_capture() {
 #[test]
 fn nested_async_context_target_is_local_instead_of_an_outer_capture() {
     lower_source(
-        "async def outer() -> Result[None, ScopeFailure]:\n    async def run() -> Result[None, ScopeFailure]:\n        async with task.TaskGroup() as group:\n            await task.sleep(0.0)\n        return None\n    await task.sleep(0.0)\n    return None\n",
+        "async def worker() -> int:\n    await task.sleep(0.0)\n    return 1\n\nasync def outer() -> Result[None, ScopeFailure]:\n    async def run() -> Result[None, ScopeFailure]:\n        async with task.TaskGroup() as group:\n            handle = group.spawn(worker())\n            result = await handle.join()\n        return None\n    await task.sleep(0.0)\n    return None\n",
     )
     .expect("an async-with target must be a local binding in the nested function");
 }

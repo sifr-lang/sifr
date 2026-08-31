@@ -114,6 +114,54 @@ def main():
 }
 
 #[test]
+fn generic_class_addable_methods_emit_their_support_contract() {
+    let generated = generate_rust_from_source(
+        r#"
+class Accumulator[T: Addable]:
+    total: T
+
+    def __init__(self, total: T):
+        self.total = total
+
+    def add(self, extra: T) -> T:
+        return self.total + extra
+"#,
+    );
+
+    assert!(generated.contains("trait __SifrAdd"), "{generated}");
+    assert!(generated.contains("T: Clone + __SifrAdd"), "{generated}");
+    assert!(generated.contains("__SifrAdd::__sifr_add"), "{generated}");
+}
+
+#[test]
+fn collection_owned_boundaries_materialize_borrowed_string_views() {
+    let generated = generate_rust_from_source(
+        r#"
+def store(mut items: list[str], mut keys: set[str], mut defaults: dict[str, str], value: str) -> None:
+    items.append(value)
+    items.insert(0, value)
+    keys.add(value)
+    defaults.setdefault(value, value)
+"#,
+    );
+
+    assert!(
+        generated.contains("items.push(value.to_owned())"),
+        "{generated}"
+    );
+    assert!(generated.contains("items.insert("), "{generated}");
+    assert!(
+        generated.contains("keys.insert(value.to_owned())"),
+        "{generated}"
+    );
+    assert!(
+        generated.matches("value.to_owned()").count() == 5,
+        "every owned key/value boundary must materialize its own value:\n{generated}"
+    );
+    assert!(!generated.contains("value.clone()"), "{generated}");
+}
+
+#[test]
 fn recursive_and_dynamic_programming_shapes_have_clone_budgets() {
     let generated = generate_rust_from_source(
         r#"

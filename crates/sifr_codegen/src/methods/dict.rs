@@ -221,18 +221,10 @@ pub(super) fn lower_setdefault(object: &RustExpr, args: &[RustExpr]) -> Option<R
                 receiver: Box::new(RustExpr::MethodCall {
                     receiver: Box::new(object.clone()),
                     method: "entry".to_string(),
-                    args: vec![RustExpr::MethodCall {
-                        receiver: Box::new(key.clone()),
-                        method: "clone".to_string(),
-                        args: vec![],
-                    }],
+                    args: vec![key.clone()],
                 }),
                 method: "or_insert".to_string(),
-                args: vec![RustExpr::MethodCall {
-                    receiver: Box::new(default.clone()),
-                    method: "clone".to_string(),
-                    args: vec![],
-                }],
+                args: vec![default.clone()],
             }),
             method: "clone".to_string(),
             args: vec![],

@@ -17,6 +17,10 @@ impl crate::RustEmitter {
         ) {
             return lowered;
         }
+        let lowered = match lowered {
+            RustExpr::Ref { .. } | RustExpr::Deref(_) => RustExpr::Paren(Box::new(lowered)),
+            other => other,
+        };
         method_call(lowered, "as_str")
     }
 

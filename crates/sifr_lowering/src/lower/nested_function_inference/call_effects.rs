@@ -1,4 +1,4 @@
-use super::state_collection::{LocalFunctionState, ParamState};
+use super::state_collection::LocalFunctionState;
 use sifr_python_ast::visitor::{self, Visitor};
 use sifr_python_ast::{Expr, Stmt};
 use std::collections::{HashMap, HashSet};
@@ -10,8 +10,6 @@ pub(super) struct NestedFunctionCallEffects {
 pub(super) fn nested_function_call_effects(
     body: &[Stmt],
     states: &HashMap<String, LocalFunctionState<'_>>,
-    _captures: &[(String, sifr_type_system::Type)],
-    _params: &[ParamState],
 ) -> NestedFunctionCallEffects {
     let mut visitor = DirectNestedCallVisitor {
         nested_names: states.keys().map(String::as_str).collect(),

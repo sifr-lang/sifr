@@ -247,14 +247,18 @@ impl RustEmitter {
             arg_exprs[0] = RustExpr::Literal(crate::RustLiteral::Int(scale));
         }
 
-        let collection_element_target = match (object_ty, method) {
-            (Type::List(element_ty), "append" | "appendleft") => Some((0, element_ty.as_ref())),
-            (Type::List(element_ty), "insert") => Some((1, element_ty.as_ref())),
-            (Type::Set(element_ty), "add") => Some((0, element_ty.as_ref())),
-            (Type::Dict(_, value_ty), "setdefault") => Some((1, value_ty.as_ref())),
-            _ => None,
+        let collection_element_targets = match (object_ty, method) {
+            (Type::List(element_ty), "append" | "appendleft") => {
+                vec![(0, element_ty.as_ref())]
+            }
+            (Type::List(element_ty), "insert") => vec![(1, element_ty.as_ref())],
+            (Type::Set(element_ty), "add") => vec![(0, element_ty.as_ref())],
+            (Type::Dict(key_ty, value_ty), "setdefault") => {
+                vec![(0, key_ty.as_ref()), (1, value_ty.as_ref())]
+            }
+            _ => Vec::new(),
         };
-        if let Some((index, target_ty)) = collection_element_target {
+        for (index, target_ty) in collection_element_targets {
             if let (Some(argument), Some(lowered_arg)) = (args.get(index), arg_exprs.get_mut(index))
             {
                 *lowered_arg = self.coerce_collection_element_for_registry(
@@ -262,42 +266,13 @@ impl RustEmitter {
                     argument,
                     lowered_arg.clone(),
                 );
-            }
-        }
-
-        if matches!(object_ty, Type::List(_))
-            && matches!(method, "append" | "appendleft")
-            && !args.is_empty()
-            && matches!(args[0].ty(), Type::TypeVar(_))
-        {
-            // Clone TypeVar list args to avoid move issues.
-            arg_exprs[0] = crate::RustExpr::MethodCall {
-                receiver: Box::new(arg_exprs[0].clone()),
-                method: "clone".to_string(),
-                args: vec![],
-            };
-        }
-        if matches!(object_ty, Type::List(_))
-            && matches!(method, "append" | "appendleft")
-            && !args.is_empty()
-        {
-            arg_exprs[0] = Self::clone_owned_append_arg_expr_for_ir(&args[0], arg_exprs[0].clone());
-        }
-
-        if matches!(object_ty, Type::List(_)) && method == "insert" && args.len() >= 2 {
-            // Clone borrowed/mut-borrowed move-owned values.
-            let needs_clone = if let HirExpr::Name { name, ty, .. } = &args[1] {
-                (self.borrowed_params.contains(name.as_str())
-                    || self.mut_borrowed_params.contains(name.as_str()))
-                    && !crate::helpers::is_copy_type_for_codegen(ty)
-            } else {
-                false
-            };
-            if needs_clone {
-                arg_exprs[1] = crate::RustExpr::MethodCall {
-                    receiver: Box::new(arg_exprs[1].clone()),
-                    method: "clone".to_string(),
-                    args: vec![],
+                *lowered_arg = if matches!((object_ty, method), (Type::Set(_), "add")) {
+                    self.materialize_borrowed_parameter_for_owned_boundary(
+                        argument,
+                        lowered_arg.clone(),
+                    )
+                } else {
+                    Self::clone_owned_append_arg_expr_for_ir(argument, lowered_arg.clone())
                 };
             }
         }

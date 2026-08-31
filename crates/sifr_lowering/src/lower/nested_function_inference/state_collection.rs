@@ -282,15 +282,7 @@ fn infer_function_types(
         .map(|(name, state)| {
             (
                 name.clone(),
-                super::call_effects::nested_function_call_effects(
-                    &state.func.body,
-                    &states,
-                    function_captures
-                        .get(name)
-                        .map(Vec::as_slice)
-                        .unwrap_or_default(),
-                    &state.params,
-                ),
+                super::call_effects::nested_function_call_effects(&state.func.body, &states),
             )
         })
         .collect::<HashMap<_, _>>();

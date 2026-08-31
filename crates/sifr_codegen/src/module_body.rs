@@ -19,19 +19,10 @@ impl RustEmitter {
             })
             .collect();
         self.python_retained_callback_errors = collect_retained_callback_errors(module);
-        if self
-            .function_type_param_bounds
-            .values()
-            .flat_map(std::collections::HashMap::values)
-            .flatten()
-            .any(|bound| {
-                matches!(
-                    bound,
-                    crate::function_generic_bounds::FunctionTypeParamBound::Trait(name)
-                        if name == "__SifrAdd"
-                )
-            })
-        {
+        if crate::function_generic_bounds::module_requires_addable_support(
+            module,
+            &self.function_type_param_bounds,
+        ) {
             self.body_items
                 .extend(crate::ownership_plan::addable_support_items());
         }

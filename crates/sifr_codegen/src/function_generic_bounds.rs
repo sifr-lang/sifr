@@ -19,6 +19,38 @@ impl FunctionTypeParamBound {
             }
         }
     }
+
+    fn requires_addable_support(&self) -> bool {
+        matches!(self, Self::Trait(bound) if bound == "__SifrAdd")
+    }
+}
+
+pub(crate) fn module_requires_addable_support(
+    module: &HirModule,
+    function_bounds: &FunctionTypeParamBounds,
+) -> bool {
+    function_bounds
+        .values()
+        .flat_map(HashMap::values)
+        .flatten()
+        .any(FunctionTypeParamBound::requires_addable_support)
+        || module.classes.iter().any(|class| {
+            class
+                .methods
+                .iter()
+                .chain(class.operator_impls.iter().map(|(_, method)| method))
+                .any(|method| {
+                    class
+                        .type_params
+                        .iter()
+                        .chain(&method.type_params)
+                        .any(|type_param| {
+                            direct_type_param_bounds(type_param, &method.body)
+                                .iter()
+                                .any(FunctionTypeParamBound::requires_addable_support)
+                        })
+                })
+        })
 }
 
 pub(crate) fn direct_type_param_bounds(

@@ -636,7 +636,7 @@ mod tests {
         .expect("dict setdefault lowers");
         assert_eq!(
             render_expr(&dict_setdefault.expr),
-            "d.entry(\"k\".clone()).or_insert(0.clone()).clone()"
+            "d.entry(\"k\").or_insert(0).clone()"
         );
 
         let set_ty = Type::Set(Box::new(Type::Int));
