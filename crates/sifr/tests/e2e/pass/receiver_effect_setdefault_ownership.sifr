@@ -34,6 +34,10 @@ def copy_default(mut values: dict[str, bool], key: str, default: bool) -> bool:
     return values.setdefault(key, default)
 
 
+def existing_default(mut values: dict[str, str], default: str) -> str:
+    return values.setdefault("key", default)
+
+
 def main():
     numbers: list[int] = [0]
     assert read_after_growth_and_reorder(numbers) == 4
@@ -49,3 +53,6 @@ def main():
 
     flags: dict[str, bool] = {}
     assert copy_default(flags, "enabled", True)
+
+    existing: dict[str, str] = {"key": "stored"}
+    assert existing_default(existing, "unused") == "stored"

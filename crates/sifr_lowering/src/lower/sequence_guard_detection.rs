@@ -1,5 +1,5 @@
 use super::LowerCtx;
-use super::sequence_guards::{SequenceGuard, key_guard_token};
+use super::sequence_guards::{SequenceGuard, SubscriptReferenceStability, key_guard_token};
 use sifr_python_ast::visitor::{self, Visitor};
 use sifr_python_ast::{
     BoolOp, CmpOp, Expr, Number, Operator, Stmt, StmtAssign, StmtAugAssign, StmtFor, StmtWhile,
@@ -266,8 +266,17 @@ fn subscript_present_guard(expr: &Expr) -> Vec<SequenceGuard> {
         SequenceGuard::SubscriptPresent {
             sequence,
             index_expr_debug,
+            reference_stability: subscript_reference_stability(subscript.slice.as_ref()),
         },
     ]
+}
+
+fn subscript_reference_stability(index: &Expr) -> SubscriptReferenceStability {
+    if literal_int(index).is_some_and(|value| value >= 0) {
+        SubscriptReferenceStability::StableAcrossGrowth
+    } else {
+        SubscriptReferenceStability::MayChangeOnGrowth
+    }
 }
 
 fn dict_contains_guard(key_expr: &Expr, haystack_expr: &Expr) -> Vec<SequenceGuard> {

@@ -318,6 +318,15 @@ pub(super) fn resolve_dict_method_type(
         method,
         "values" | "items" | "update" | "copy" | "get" | "setdefault"
     );
+    if method == "setdefault" && val_ty.contains_affine_resource() {
+        ctx.error_with_code_at(
+            DiagnosticCode::PYZC_INVALID_DECLARATION,
+            "dict.setdefault() is unavailable for values containing affine Python resources: insertion transfers the default into the dict, while returning the selected stored value would require a second owner"
+                .to_string(),
+            method_range,
+        );
+        return None;
+    }
     if requires_reusable_values
         && !unresolved_empty_get
         && !val_ty.supports_derived_clone()

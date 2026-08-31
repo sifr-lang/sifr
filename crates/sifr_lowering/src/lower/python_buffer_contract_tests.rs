@@ -443,6 +443,24 @@ fn affine_buffer_collection_capabilities_are_rejected_before_codegen() {
 }
 
 #[test]
+fn affine_buffer_setdefault_rejects_insertion_and_return_owner_conflict() {
+    let errors = lower_errors(
+        "def select(mut values: dict[str, python.Buffer[uint8]], own fallback: python.Buffer[uint8]) -> python.Buffer[uint8]:\n    return values.setdefault(\"key\", fallback)\n",
+    );
+    assert!(
+        errors.iter().any(|error| {
+            error.code == Some(DiagnosticCode::PYZC_INVALID_DECLARATION)
+                && error.message.contains("insertion transfers the default")
+                && error
+                    .message
+                    .contains("returning the selected stored value")
+                && error.message.contains("second owner")
+        }),
+        "{errors:?}"
+    );
+}
+
+#[test]
 fn affine_buffer_collection_insertion_consumes_the_source() {
     for source in [
         "def pack(own view: python.Buffer[uint8]) -> None:\n    values: list[python.Buffer[uint8]] = []\n    values.append(view)\n    print(view.length())\n",

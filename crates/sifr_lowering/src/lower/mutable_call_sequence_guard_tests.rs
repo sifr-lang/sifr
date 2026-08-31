@@ -134,6 +134,45 @@ def read_after_append(mut values: list[int | None]) -> int:
 }
 
 #[test]
+fn append_and_extend_invalidate_end_relative_non_none_subscript_facts() {
+    let cases = [
+        (
+            "append",
+            r#"
+def read_after_append(mut values: list[int | None]) -> int:
+    if values[-1] is not None:
+        values.append(None)
+        return values[-1] + 1
+    return 0
+"#,
+        ),
+        (
+            "extend",
+            r#"
+def read_after_extend(mut values: list[int | None]) -> int:
+    if values[-1] is not None:
+        values.extend([None])
+        return values[-1] + 1
+    return 0
+"#,
+        ),
+    ];
+
+    for (operation, source) in cases {
+        let diagnostics = lower_source(source).expect_err(&format!(
+            "{operation} must invalidate an end-relative non-None fact"
+        ));
+        assert!(
+            diagnostics.iter().any(|diagnostic| {
+                diagnostic.code == Some(DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR)
+                    && diagnostic.message.contains("None")
+            }),
+            "{operation}: {diagnostics:?}"
+        );
+    }
+}
+
+#[test]
 fn dict_value_mutation_preserves_existing_membership_guard() {
     let source = r#"
 def read_after_setdefault(mut values: dict[str, int]) -> int:

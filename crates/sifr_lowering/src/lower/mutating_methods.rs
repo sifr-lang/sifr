@@ -15,13 +15,21 @@ pub(in crate::lower) enum ReceiverMutationEffect {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum ReceiverFactInvalidation {
     None,
+    GrowthSensitiveSubscriptPresence,
     SubscriptPresence,
     All,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ReceiverFactDomain {
+    RelevantSequenceFacts,
+    NoRelevantSequenceFacts,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(in crate::lower) struct ReceiverMutationSummary {
     effect: ReceiverMutationEffect,
+    fact_domain: ReceiverFactDomain,
     fact_invalidation: ReceiverFactInvalidation,
 }
 
@@ -33,6 +41,7 @@ pub(in crate::lower) fn receiver_mutation_summary(
     if convention != ReceiverConvention::MutableBorrow {
         return ReceiverMutationSummary {
             effect: ReceiverMutationEffect::None,
+            fact_domain: receiver_fact_domain(object_ty),
             fact_invalidation: ReceiverFactInvalidation::None,
         };
     }
@@ -64,28 +73,44 @@ pub(in crate::lower) fn receiver_mutation_summary(
         Type::Class { .. } | Type::Protocol { .. } => ReceiverMutationEffect::Removal,
         _ => ReceiverMutationEffect::Removal,
     };
-    let fact_invalidation = match effect {
-        ReceiverMutationEffect::None => ReceiverFactInvalidation::None,
-        ReceiverMutationEffect::Removal => ReceiverFactInvalidation::All,
-        ReceiverMutationEffect::Reorder => ReceiverFactInvalidation::SubscriptPresence,
-        ReceiverMutationEffect::Growth
+    let fact_domain = receiver_fact_domain(object_ty);
+    let fact_invalidation = match (fact_domain, effect) {
+        (ReceiverFactDomain::NoRelevantSequenceFacts, _) => ReceiverFactInvalidation::None,
+        (_, ReceiverMutationEffect::None) => ReceiverFactInvalidation::None,
+        (_, ReceiverMutationEffect::Removal) => ReceiverFactInvalidation::All,
+        (_, ReceiverMutationEffect::Reorder) => ReceiverFactInvalidation::SubscriptPresence,
+        (_, ReceiverMutationEffect::Growth)
             if matches!(object_ty.resolve_alias(), Type::List(_))
                 && matches!(method, "insert" | "appendleft") =>
         {
             ReceiverFactInvalidation::SubscriptPresence
         }
-        ReceiverMutationEffect::ValueMutation
+        (_, ReceiverMutationEffect::Growth)
+            if matches!(object_ty.resolve_alias(), Type::List(_))
+                && matches!(method, "append" | "extend") =>
+        {
+            ReceiverFactInvalidation::GrowthSensitiveSubscriptPresence
+        }
+        (_, ReceiverMutationEffect::ValueMutation)
             if matches!(object_ty.resolve_alias(), Type::Dict(_, _)) && method == "update" =>
         {
             ReceiverFactInvalidation::SubscriptPresence
         }
-        ReceiverMutationEffect::Growth | ReceiverMutationEffect::ValueMutation => {
+        (_, ReceiverMutationEffect::Growth | ReceiverMutationEffect::ValueMutation) => {
             ReceiverFactInvalidation::None
         }
     };
     ReceiverMutationSummary {
         effect,
+        fact_domain,
         fact_invalidation,
+    }
+}
+
+fn receiver_fact_domain(object_ty: &Type) -> ReceiverFactDomain {
+    match object_ty.resolve_alias() {
+        Type::PythonBuffer(_) | Type::JoinSet(_, _) => ReceiverFactDomain::NoRelevantSequenceFacts,
+        _ => ReceiverFactDomain::RelevantSequenceFacts,
     }
 }
 
@@ -113,6 +138,9 @@ pub(in crate::lower) fn apply_receiver_mutation_effect(
     });
     match summary.fact_invalidation {
         ReceiverFactInvalidation::None => {}
+        ReceiverFactInvalidation::GrowthSensitiveSubscriptPresence => {
+            ctx.clear_growth_sensitive_subscript_presence_guards_for_target(&target);
+        }
         ReceiverFactInvalidation::SubscriptPresence => {
             ctx.clear_subscript_presence_guards_for_target(&target);
         }
@@ -414,7 +442,7 @@ mod tests {
 
         assert_eq!(
             summary(&list, "append").fact_invalidation,
-            ReceiverFactInvalidation::None
+            ReceiverFactInvalidation::GrowthSensitiveSubscriptPresence
         );
         for method in ["insert", "appendleft", "reverse", "sort"] {
             assert_eq!(
@@ -433,6 +461,21 @@ mod tests {
         assert_eq!(
             summary(&list, "pop").fact_invalidation,
             ReceiverFactInvalidation::All
+        );
+
+        let buffer =
+            Type::PythonBuffer(Box::new(Type::FixedInt(sifr_type_system::FixedIntType::U8)));
+        assert_eq!(
+            summary(&buffer, "write").fact_domain,
+            ReceiverFactDomain::NoRelevantSequenceFacts
+        );
+        assert_eq!(
+            summary(&buffer, "write").fact_invalidation,
+            ReceiverFactInvalidation::None
+        );
+        assert_eq!(
+            summary(&list, "append").fact_domain,
+            ReceiverFactDomain::RelevantSequenceFacts
         );
     }
 }
