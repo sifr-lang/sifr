@@ -2,6 +2,7 @@ WITH user_namespaces AS (
     SELECT oid, nspname
     FROM pg_catalog.pg_namespace
     WHERE nspname <> 'information_schema'
+      AND nspname <> 'sifr_internal'
       AND nspname NOT LIKE 'pg\_%' ESCAPE '\'
 ),
 relations AS (

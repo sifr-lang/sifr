@@ -535,3 +535,85 @@ fn topological_order_property_is_stable_for_linear_graphs() {
         );
     }
 }
+
+#[test]
+fn compiler_rejects_schema_changing_sibling_branches_that_cannot_be_sequenced() {
+    let before = schema(false);
+    let after = schema(true);
+    let before_fingerprint = fingerprint(&before);
+    let after_fingerprint = fingerprint(&after);
+    let baseline = id("baseline");
+    let left = id("left");
+    let right = id("right");
+    let merge = id("merge");
+    let provider = MigrationProviderConstraint {
+        family: "postgresql".to_string(),
+        minimum_server_version: Some("13.0.0".to_string()),
+        required_capabilities: BTreeSet::new(),
+    };
+    let branch = |identity: MigrationNodeId| MigrationDefinition {
+        id: identity,
+        parents: BTreeSet::from([baseline.clone()]),
+        input_fingerprints: BTreeMap::from([(baseline.clone(), before_fingerprint.clone())]),
+        output_fingerprint: after_fingerprint.clone(),
+        provider: provider.clone(),
+        transaction_requirement: TransactionRequirement::Optional,
+        steps: vec![step(
+            "add-status",
+            MigrationStepKind::Ddl {
+                statement: "ADD STATUS".to_string(),
+                declared_effect: None,
+            },
+        )],
+        rollback: None,
+        author: "test".to_string(),
+        created_at: "2026-08-31".to_string(),
+    };
+    let graph = MigrationGraphDefinition {
+        format_version: 1,
+        baselines: BTreeMap::from([(
+            baseline.clone(),
+            MigrationBaseline {
+                id: baseline.clone(),
+                schema: before.clone(),
+            },
+        )]),
+        migrations: BTreeMap::from([
+            (left.clone(), branch(left.clone())),
+            (right.clone(), branch(right.clone())),
+            (
+                merge.clone(),
+                MigrationDefinition {
+                    id: merge,
+                    parents: BTreeSet::from([left.clone(), right.clone()]),
+                    input_fingerprints: BTreeMap::from([
+                        (left, after_fingerprint.clone()),
+                        (right, after_fingerprint.clone()),
+                    ]),
+                    output_fingerprint: after_fingerprint,
+                    provider,
+                    transaction_requirement: TransactionRequirement::Optional,
+                    steps: vec![step(
+                        "merge-point",
+                        MigrationStepKind::RecoveryPoint {
+                            name: "branches-joined".to_string(),
+                        },
+                    )],
+                    rollback: None,
+                    author: "test".to_string(),
+                    created_at: "2026-08-31".to_string(),
+                },
+            ),
+        ]),
+        target_schema: after.clone(),
+    };
+    let failure = MigrationCompiler::new(&TestDialect {
+        before,
+        after,
+        capabilities: BTreeSet::new(),
+    })
+    .compile(&graph)
+    .expect_err("schema-changing sibling branches must be rejected");
+    assert_eq!(failure.kind, MigrationCompileErrorKind::InvalidGraph);
+    assert!(failure.message.contains("cannot be sequenced"));
+}

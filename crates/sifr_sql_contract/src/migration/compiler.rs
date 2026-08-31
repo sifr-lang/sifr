@@ -164,6 +164,7 @@ impl<'a, D: MigrationDialect> MigrationCompiler<'a, D> {
             );
             schemas.insert(migration.id.clone(), output);
         }
+        Self::validate_sequencable_branches(graph)?;
         let head = order.last().cloned().ok_or_else(|| {
             error(
                 MigrationCompileErrorKind::InvalidGraph,
@@ -197,6 +198,37 @@ impl<'a, D: MigrationDialect> MigrationCompiler<'a, D> {
             migrations: compiled,
             impacts,
         })
+    }
+
+    fn validate_sequencable_branches(
+        graph: &MigrationGraphDefinition,
+    ) -> Result<(), MigrationCompileError> {
+        let mut children = BTreeMap::<&MigrationNodeId, Vec<&MigrationDefinition>>::new();
+        for migration in graph.migrations.values() {
+            for parent in &migration.parents {
+                children.entry(parent).or_default().push(migration);
+            }
+        }
+        for (parent, siblings) in children {
+            if siblings.len() < 2 {
+                continue;
+            }
+            let changes_schema = siblings.iter().any(|migration| {
+                migration
+                    .input_fingerprints
+                    .get(parent)
+                    .is_none_or(|input| input != &migration.output_fingerprint)
+            });
+            if changes_schema {
+                return Err(error(
+                    MigrationCompileErrorKind::InvalidGraph,
+                    format!(
+                        "parallel migrations after '{parent}' change the schema and cannot be sequenced; use a linear path or schema-neutral branches"
+                    ),
+                ));
+            }
+        }
+        Ok(())
     }
 
     fn compile_path(

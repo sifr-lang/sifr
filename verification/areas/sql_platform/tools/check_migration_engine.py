@@ -14,7 +14,7 @@ RECORD = REPO_ROOT / "verification/areas/sql_platform/data/migration_engine_qual
 
 GRAPH = {
     "canonical-target", "checked-dag", "explicit-head", "parent-fingerprints",
-    "provider-constraints", "stable-checksums",
+    "provider-constraints", "sequencable-branches", "stable-checksums",
 }
 STEPS = {
     "affine-plan", "bounded-backfill", "checked-assertion",
@@ -23,8 +23,9 @@ STEPS = {
 }
 RUNTIME = {
     "advisory-lock-record", "ambiguous-recovery-rejected", "checksum-drift-rejected",
-    "explicit-rollback-only", "head-record", "panic-contained",
-    "recovery-point-record", "schema-drift-rejected", "step-duration-record",
+    "explicit-rollback-only", "head-record", "incomplete-merge-rejected", "panic-contained",
+    "provider-identity-rejected", "recovery-point-record", "rollback-prefix-checked",
+    "schema-drift-rejected", "step-duration-record",
 }
 
 
@@ -35,8 +36,8 @@ class ContractError(ValueError):
 def validate(payload: Any) -> None:
     if not isinstance(payload, dict) or payload.get("schema_version") != 1:
         raise ContractError("schema_version must be 1")
-    if payload.get("format_version") != 1:
-        raise ContractError("migration format_version must be 1")
+    if payload.get("format_version") != 2:
+        raise ContractError("migration format_version must be 2")
     owners = {
         "compiler_owner": "sifr_sql_contract",
         "hir_owner": "sifr_frontend",
@@ -56,7 +57,7 @@ def validate(payload: Any) -> None:
     if not isinstance(evidence, dict) or set(evidence) != {
         "compiler", "contract-tests", "documentation", "frontend", "frontend-tests",
         "runtime", "runtime-manifest", "runtime-plan", "runtime-tests",
-        "tool-artifacts", "tool-tests",
+        "runtime-rollback", "tool-artifacts", "tool-tests",
     }:
         raise ContractError("migration evidence map is incomplete")
     if any(not (REPO_ROOT / str(path)).is_file() for path in evidence.values()):
@@ -66,14 +67,19 @@ def validate(payload: Any) -> None:
         for name, path in evidence.items()
     }
     required = {
-        "compiler": ["pub trait MigrationDialect", "fn compile_path", "semantic_diff"],
+        "compiler": [
+            "pub trait MigrationDialect", "fn compile_path", "semantic_diff",
+            "validate_sequencable_branches",
+        ],
         "contract-tests": ["opaque DDL", "nullable assertions", "affine_plan"],
         "frontend": ["MigrationPlan", "MigrationDb", "input_state_identity"],
         "runtime": ["acquire_lock", "validate_progress", "AssertionZeroRows"],
         "runtime-manifest": ["sifr_runtime", "tokio"],
         "runtime-plan": ["MigrationExecutionPlan", "MigrationExecutionStepKind"],
+        "runtime-rollback": ["rollback_last", "validate_rollback_progress", "prior_heads"],
         "runtime-tests": [
             "pauses_and_resumes", "provider_panics_fail_closed", "branching_plan",
+            "schema_changing_merge_requires", "explicit_reverse_plan_rolls_back",
         ],
         "tool-artifacts": [
             "MIGRATION_SCHEMA_PATH", "build_migration_artifacts",

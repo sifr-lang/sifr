@@ -4,12 +4,13 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use sifr_sql_contract::{
     CompiledMigrationGraph, CompiledMigrationStep, CompiledStepKind, ReplayPolicy, SchemaIr,
-    TransactionBoundary, schema_fingerprint,
+    TransactionBoundary, TransactionRequirement, schema_fingerprint,
 };
 use sifr_sql_runtime::{
-    MigrationExecutionNode, MigrationExecutionPath, MigrationExecutionPlan, MigrationExecutionStep,
-    MigrationExecutionStepKind, MigrationId, MigrationReplayPolicy, MigrationStateId,
-    MigrationTransactionBoundary,
+    MIGRATION_EXECUTION_PLAN_FORMAT_VERSION, MigrationExecutionNode, MigrationExecutionPath,
+    MigrationExecutionPlan, MigrationExecutionStep, MigrationExecutionStepKind, MigrationId,
+    MigrationReplayPolicy, MigrationRuntimeConstraint, MigrationStateId,
+    MigrationTransactionBoundary, MigrationTransactionRequirement,
 };
 use std::collections::BTreeMap;
 
@@ -59,7 +60,7 @@ pub fn build_migration_artifacts(
 #[must_use]
 pub fn lower_migration_execution_plan(graph: &CompiledMigrationGraph) -> MigrationExecutionPlan {
     MigrationExecutionPlan {
-        format_version: graph.format_version,
+        format_version: MIGRATION_EXECUTION_PLAN_FORMAT_VERSION,
         provider_family: graph.provider_family.clone(),
         target_fingerprint: graph.target_fingerprint.clone(),
         head: runtime_id(&graph.head),
@@ -78,6 +79,25 @@ pub fn lower_migration_execution_plan(graph: &CompiledMigrationGraph) -> Migrati
                     MigrationExecutionNode {
                         id: runtime_id(&migration.id),
                         parents: migration.parents.iter().map(runtime_id).collect(),
+                        provider: MigrationRuntimeConstraint {
+                            family: migration.provider.family.clone(),
+                            minimum_server_version: migration
+                                .provider
+                                .minimum_server_version
+                                .clone(),
+                            required_capabilities: migration.provider.required_capabilities.clone(),
+                        },
+                        transaction_requirement: match migration.transaction_requirement {
+                            TransactionRequirement::Required => {
+                                MigrationTransactionRequirement::Required
+                            }
+                            TransactionRequirement::Optional => {
+                                MigrationTransactionRequirement::Optional
+                            }
+                            TransactionRequirement::Forbidden => {
+                                MigrationTransactionRequirement::Forbidden
+                            }
+                        },
                         checksum: migration.checksum.clone(),
                         paths: migration
                             .paths
@@ -95,6 +115,8 @@ pub fn lower_migration_execution_plan(graph: &CompiledMigrationGraph) -> Migrati
                                 )
                             })
                             .collect(),
+                        author: migration.author.clone(),
+                        created_at: migration.created_at.clone(),
                     },
                 )
             })
@@ -146,7 +168,7 @@ fn build_once(
         })
         .collect();
     let manifest = MigrationArtifactManifest {
-        format_version: graph.format_version,
+        format_version: MIGRATION_EXECUTION_PLAN_FORMAT_VERSION,
         provider_family: graph.provider_family.clone(),
         head: graph.head.to_string(),
         target_fingerprint: graph.target_fingerprint.clone(),

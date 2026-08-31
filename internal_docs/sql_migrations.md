@@ -147,7 +147,7 @@ The permanent `migration-engine` SQL suite contains these checks:
 - qualification-record mutation tests.
 - graph and metadata property or fuzz-smoke tests.
 
-PostgreSQL DDL reflection, advisory locks, live interruption, and server-major
-qualification belong to Milestone 14. That milestone also owns execution of
-explicit reverse plans. Final source-to-tool command wiring belongs to the
-integrated closure milestone.
+[`sql_postgresql_migrations.md`](./sql_postgresql_migrations.md) defines the
+PostgreSQL DDL, advisory lock, ledger, import, command, recovery, rollback, and
+PostgreSQL 13 through 18 qualification contracts. Integrated source-to-tool
+callback binding remains part of final platform integration.

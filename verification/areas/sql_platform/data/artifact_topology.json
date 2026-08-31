@@ -71,7 +71,7 @@
       "platform_part": "host_tools",
       "target": "host",
       "included_in_application": false,
-      "depends_on": ["postgresql-component", "postgresql-runtime"]
+      "depends_on": ["postgresql-component", "sql-runtime"]
     },
     {
       "id": "mysql-component",

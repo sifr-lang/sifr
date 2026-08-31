@@ -1,16 +1,18 @@
 use super::{
-    AppliedMigrationRecord, InProgressMigrationRecord, MigrationExecutionError,
-    MigrationExecutionErrorKind, MigrationExecutionEvent, MigrationExecutionLimits,
-    MigrationExecutionNode, MigrationExecutionPath, MigrationExecutionPlan,
-    MigrationExecutionReport, MigrationExecutionStatus, MigrationExecutionStep,
-    MigrationExecutionStepKind, MigrationLedgerSnapshot, MigrationReplayPolicy, MigrationRuntime,
+    AppliedMigrationRecord, InProgressMigrationRecord, MIGRATION_EXECUTION_PLAN_FORMAT_VERSION,
+    MigrationDirection, MigrationExecutionError, MigrationExecutionErrorKind,
+    MigrationExecutionEvent, MigrationExecutionLimits, MigrationExecutionNode,
+    MigrationExecutionPath, MigrationExecutionPlan, MigrationExecutionReport,
+    MigrationExecutionStatus, MigrationExecutionStep, MigrationExecutionStepKind,
+    MigrationLedgerSnapshot, MigrationReplayPolicy, MigrationRuntime, MigrationRuntimeIdentity,
     MigrationStepRequest, MigrationStepResult, MigrationTransactionBoundary,
 };
+use semver::Version;
 use std::collections::BTreeMap;
 use std::panic::{AssertUnwindSafe, catch_unwind};
 
 pub struct MigrationEngine {
-    limits: MigrationExecutionLimits,
+    pub(super) limits: MigrationExecutionLimits,
 }
 
 impl MigrationEngine {
@@ -69,7 +71,11 @@ impl MigrationEngine {
         let mut ledger = safe_call(MigrationExecutionErrorKind::Ledger, || {
             runtime.load_ledger()
         })?;
-        validate_ledger(graph, &ledger)?;
+        let identity = safe_call(MigrationExecutionErrorKind::ProviderMismatch, || {
+            runtime.identity()
+        })?;
+        validate_runtime_identity(graph, &identity)?;
+        validate_ledger(graph, &ledger, &identity)?;
         let observed = safe_call(MigrationExecutionErrorKind::SchemaDrift, || {
             runtime.inspect_schema_fingerprint()
         })?;
@@ -126,11 +132,13 @@ impl MigrationEngine {
             validate_progress(migration, path, progress)?
         } else {
             events.push(MigrationExecutionEvent::MigrationStarted {
+                direction: MigrationDirection::Forward,
                 migration: migration.id.clone(),
                 parent: path.parent.clone(),
                 input_fingerprint: path.input_fingerprint.clone(),
             });
             InProgressMigrationRecord {
+                direction: MigrationDirection::Forward,
                 migration: migration.id.clone(),
                 parent: path.parent.clone(),
                 migration_checksum: migration.checksum.clone(),
@@ -191,6 +199,7 @@ impl MigrationEngine {
                 "completed migration path has the wrong output fingerprint",
             ));
         }
+        let prior_heads = ledger.heads.clone();
         for parent in &migration.parents {
             ledger.heads.remove(parent);
         }
@@ -200,6 +209,8 @@ impl MigrationEngine {
             AppliedMigrationRecord {
                 migration: migration.id.clone(),
                 checksum: migration.checksum.clone(),
+                path_parent: path.parent.clone(),
+                prior_heads,
                 output_fingerprint: path.output_fingerprint.clone(),
                 duration_millis: progress.duration_millis,
             },
@@ -210,6 +221,7 @@ impl MigrationEngine {
             .clone_from(&path.output_fingerprint);
         store(runtime, ledger)?;
         events.push(MigrationExecutionEvent::MigrationCompleted {
+            direction: MigrationDirection::Forward,
             migration: migration.id.clone(),
             fingerprint: path.output_fingerprint.clone(),
             duration_millis: progress.duration_millis,
@@ -218,7 +230,7 @@ impl MigrationEngine {
         Ok(false)
     }
 
-    fn execute_step<R: MigrationRuntime>(
+    pub(super) fn execute_step<R: MigrationRuntime>(
         &self,
         runtime: &mut R,
         ledger: &mut MigrationLedgerSnapshot,
@@ -417,11 +429,22 @@ impl MigrationEngine {
     }
 }
 
-fn validate_ledger(
+pub(super) fn validate_ledger(
     graph: &MigrationExecutionPlan,
     ledger: &MigrationLedgerSnapshot,
+    identity: &MigrationRuntimeIdentity,
 ) -> Result<(), MigrationExecutionError> {
-    if ledger.provider_family != graph.provider_family {
+    if graph.format_version != MIGRATION_EXECUTION_PLAN_FORMAT_VERSION {
+        return Err(error(
+            MigrationExecutionErrorKind::Ledger,
+            "migration execution plan format is not supported",
+        ));
+    }
+    if ledger.provider_family != graph.provider_family
+        || ledger.provider_family != identity.family
+        || ledger.provider_server_version != identity.server_version
+        || ledger.provider_capabilities != identity.capabilities
+    {
         return Err(error(
             MigrationExecutionErrorKind::ProviderMismatch,
             "migration ledger provider does not match the compiled graph",
@@ -434,10 +457,29 @@ fn validate_ledger(
         ));
     }
     for head in &ledger.heads {
-        if !graph.baseline_fingerprints.contains_key(head) && !graph.migrations.contains_key(head) {
+        let expected = graph.baseline_fingerprints.get(head).cloned().or_else(|| {
+            graph
+                .migrations
+                .get(head)
+                .and_then(|migration| {
+                    let outputs = migration
+                        .paths
+                        .values()
+                        .map(|path| path.output_fingerprint.as_str())
+                        .collect::<std::collections::BTreeSet<_>>();
+                    (outputs.len() == 1)
+                        .then(|| outputs.first().copied())
+                        .flatten()
+                })
+                .map(str::to_string)
+        });
+        if expected.is_none()
+            || (ledger.in_progress.is_none()
+                && expected.as_deref() != Some(ledger.schema_fingerprint.as_str()))
+        {
             return Err(error(
                 MigrationExecutionErrorKind::HeadMismatch,
-                format!("migration ledger contains unknown head '{head}'"),
+                format!("migration ledger head '{head}' does not match its schema"),
             ));
         }
     }
@@ -448,7 +490,16 @@ fn validate_ledger(
                 format!("applied migration '{id}' is absent from the graph"),
             )
         })?;
-        if applied.migration != *id || applied.checksum != compiled.checksum {
+        let path = compiled.paths.get(&applied.path_parent);
+        if applied.migration != *id
+            || applied.checksum != compiled.checksum
+            || path.map(|path| &path.output_fingerprint) != Some(&applied.output_fingerprint)
+            || applied.prior_heads.is_empty()
+            || applied.prior_heads.iter().any(|head| {
+                !graph.baseline_fingerprints.contains_key(head)
+                    && !graph.migrations.contains_key(head)
+            })
+        {
             return Err(error(
                 MigrationExecutionErrorKind::ChecksumDrift,
                 format!("applied migration '{id}' checksum changed"),
@@ -477,6 +528,7 @@ fn select_path<'a>(
         })?;
         return Ok((migration, path));
     }
+    let mut incomplete_merge = false;
     for id in &graph.topological_order {
         if ledger.applied.contains_key(id) {
             continue;
@@ -494,12 +546,26 @@ fn select_path<'a>(
             if path.input_fingerprint == ledger.schema_fingerprint
                 && (parent_is_current || parent_was_applied || parent_is_baseline)
             {
-                return Ok((migration, path));
+                let all_migration_parents_present = migration.parents.iter().all(|parent| {
+                    graph.baseline_fingerprints.contains_key(parent)
+                        || ledger.heads.contains(parent)
+                        || ledger.applied.contains_key(parent)
+                });
+                if all_migration_parents_present {
+                    return Ok((migration, path));
+                }
+                incomplete_merge = true;
             }
         }
     }
+    if incomplete_merge {
+        return Err(error(
+            MigrationExecutionErrorKind::IncompleteMerge,
+            "migration merge requires every non-baseline parent in applied history",
+        ));
+    }
     Err(error(
-        MigrationExecutionErrorKind::AmbiguousPath,
+        MigrationExecutionErrorKind::NoMatchingPath,
         "no checked migration path matches the current heads and schema",
     ))
 }
@@ -510,6 +576,7 @@ fn validate_progress(
     progress: InProgressMigrationRecord,
 ) -> Result<InProgressMigrationRecord, MigrationExecutionError> {
     if progress.migration != migration.id
+        || progress.direction != MigrationDirection::Forward
         || progress.parent != path.parent
         || progress.migration_checksum != migration.checksum
         || !valid_fingerprint(&progress.current_fingerprint)
@@ -569,7 +636,58 @@ fn validate_progress(
     Ok(progress)
 }
 
-fn store<R: MigrationRuntime>(
+pub(super) fn validate_runtime_identity(
+    graph: &MigrationExecutionPlan,
+    identity: &MigrationRuntimeIdentity,
+) -> Result<(), MigrationExecutionError> {
+    if identity.family != graph.provider_family {
+        return Err(error(
+            MigrationExecutionErrorKind::ProviderMismatch,
+            "migration runtime provider family does not match the execution plan",
+        ));
+    }
+    let server_version = Version::parse(&identity.server_version).map_err(|_| {
+        error(
+            MigrationExecutionErrorKind::ProviderMismatch,
+            "migration runtime returned an invalid server version",
+        )
+    })?;
+    for migration in graph.migrations.values() {
+        if migration.provider.family != identity.family {
+            return Err(error(
+                MigrationExecutionErrorKind::ProviderMismatch,
+                "migration provider family differs from the runtime",
+            ));
+        }
+        if let Some(minimum) = &migration.provider.minimum_server_version {
+            let minimum = Version::parse(minimum).map_err(|_| {
+                error(
+                    MigrationExecutionErrorKind::ProviderMismatch,
+                    "migration plan contains an invalid minimum server version",
+                )
+            })?;
+            if server_version < minimum {
+                return Err(error(
+                    MigrationExecutionErrorKind::ProviderMismatch,
+                    "migration requires a newer server version",
+                ));
+            }
+        }
+        if !migration
+            .provider
+            .required_capabilities
+            .is_subset(&identity.capabilities)
+        {
+            return Err(error(
+                MigrationExecutionErrorKind::ProviderMismatch,
+                "migration runtime lacks a required provider capability",
+            ));
+        }
+    }
+    Ok(())
+}
+
+pub(super) fn store<R: MigrationRuntime>(
     runtime: &mut R,
     ledger: &MigrationLedgerSnapshot,
 ) -> Result<(), MigrationExecutionError> {
@@ -578,7 +696,7 @@ fn store<R: MigrationRuntime>(
     })
 }
 
-fn safe_call<T>(
+pub(super) fn safe_call<T>(
     kind: MigrationExecutionErrorKind,
     callback: impl FnOnce() -> Result<T, String>,
 ) -> Result<T, MigrationExecutionError> {
@@ -607,7 +725,10 @@ fn complete_step_event(
     });
 }
 
-fn checked_duration(current: u64, addition: u64) -> Result<u64, MigrationExecutionError> {
+pub(super) fn checked_duration(
+    current: u64,
+    addition: u64,
+) -> Result<u64, MigrationExecutionError> {
     current.checked_add(addition).ok_or_else(|| {
         error(
             MigrationExecutionErrorKind::Ledger,
@@ -616,7 +737,7 @@ fn checked_duration(current: u64, addition: u64) -> Result<u64, MigrationExecuti
     })
 }
 
-fn report(
+pub(super) fn report(
     status: MigrationExecutionStatus,
     ledger: MigrationLedgerSnapshot,
     events: &mut Vec<MigrationExecutionEvent>,
@@ -636,6 +757,9 @@ fn valid_fingerprint(value: &str) -> bool {
             .all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f'))
 }
 
-fn error(kind: MigrationExecutionErrorKind, message: impl Into<String>) -> MigrationExecutionError {
+pub(super) fn error(
+    kind: MigrationExecutionErrorKind,
+    message: impl Into<String>,
+) -> MigrationExecutionError {
     MigrationExecutionError::new(kind, message)
 }

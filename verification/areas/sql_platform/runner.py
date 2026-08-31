@@ -169,6 +169,23 @@ COMMANDS = {
         sys.executable,
         str(AREA_ROOT / "tools" / "run_postgresql_schema_tool_matrix.py"),
     ],
+    "sql-postgresql-migration-qualification": [
+        sys.executable,
+        str(AREA_ROOT / "tools" / "check_postgresql_migrations.py"),
+    ],
+    "sql-postgresql-migration-mutations": [
+        sys.executable,
+        str(AREA_ROOT / "tools" / "check_postgresql_migrations.py"),
+        "--self-test",
+    ],
+    "sql-postgresql-migration-tests": [
+        "cargo", "test", "--locked", "-p", "sifr_sql_postgresql_tools",
+        "--test", "migration_qualification",
+    ],
+    "sql-postgresql-live-migrations": [
+        sys.executable,
+        str(AREA_ROOT / "tools" / "run_postgresql_migration_matrix.py"),
+    ],
     "sql-query-signature-and-fragment-semantics": [
         "cargo", "test", "--locked", "-p", "sifr_sql_contract", "--test",
         "semantic_completion",

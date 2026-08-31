@@ -1,11 +1,13 @@
 #![allow(clippy::expect_used)]
 
 use sifr_sql_runtime::{
-    AppliedMigrationRecord, MigrationEngine, MigrationExecutionErrorKind, MigrationExecutionLimits,
-    MigrationExecutionNode, MigrationExecutionPath, MigrationExecutionPlan,
-    MigrationExecutionStatus, MigrationExecutionStep, MigrationExecutionStepKind, MigrationId,
-    MigrationLedgerSnapshot, MigrationLock, MigrationReplayPolicy, MigrationRuntime,
-    MigrationStateId, MigrationStepRequest, MigrationStepResult, MigrationTransactionBoundary,
+    AppliedMigrationRecord, MIGRATION_EXECUTION_PLAN_FORMAT_VERSION, MigrationEngine,
+    MigrationExecutionErrorKind, MigrationExecutionLimits, MigrationExecutionNode,
+    MigrationExecutionPath, MigrationExecutionPlan, MigrationExecutionStatus,
+    MigrationExecutionStep, MigrationExecutionStepKind, MigrationId, MigrationLedgerSnapshot,
+    MigrationLock, MigrationReplayPolicy, MigrationRuntime, MigrationRuntimeConstraint,
+    MigrationRuntimeIdentity, MigrationStateId, MigrationStepRequest, MigrationStepResult,
+    MigrationTransactionBoundary, MigrationTransactionRequirement,
 };
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
@@ -27,6 +29,28 @@ fn step(
         output_fingerprint: output.to_string(),
         checksum: value.bytes().cycle().take(64).map(char::from).collect(),
         kind,
+    }
+}
+
+fn node(
+    identity: MigrationId,
+    parents: BTreeSet<MigrationId>,
+    checksum: String,
+    paths: BTreeMap<MigrationId, MigrationExecutionPath>,
+) -> MigrationExecutionNode {
+    MigrationExecutionNode {
+        id: identity,
+        parents,
+        provider: MigrationRuntimeConstraint {
+            family: "postgresql".to_string(),
+            minimum_server_version: Some("13.0.0".to_string()),
+            required_capabilities: BTreeSet::new(),
+        },
+        transaction_requirement: MigrationTransactionRequirement::Optional,
+        checksum,
+        paths,
+        author: "test".to_string(),
+        created_at: "2026-08-31T00:00:00Z".to_string(),
     }
 }
 
@@ -81,7 +105,7 @@ fn graph(with_backfill: bool) -> MigrationExecutionPlan {
         rollback: None,
     };
     MigrationExecutionPlan {
-        format_version: 1,
+        format_version: MIGRATION_EXECUTION_PLAN_FORMAT_VERSION,
         provider_family: "postgresql".to_string(),
         target_fingerprint: after.clone(),
         head: migration_id.clone(),
@@ -89,12 +113,12 @@ fn graph(with_backfill: bool) -> MigrationExecutionPlan {
         baseline_fingerprints: BTreeMap::from([(baseline.clone(), before.clone())]),
         migrations: BTreeMap::from([(
             migration_id.clone(),
-            MigrationExecutionNode {
-                id: migration_id,
-                parents: BTreeSet::from([baseline.clone()]),
-                checksum: "c".repeat(64),
-                paths: BTreeMap::from([(baseline, path)]),
-            },
+            node(
+                migration_id,
+                BTreeSet::from([baseline.clone()]),
+                "c".repeat(64),
+                BTreeMap::from([(baseline, path)]),
+            ),
         )]),
     }
 }
@@ -170,7 +194,7 @@ fn branching_graph() -> MigrationExecutionPlan {
         rollback: None,
     };
     MigrationExecutionPlan {
-        format_version: 1,
+        format_version: MIGRATION_EXECUTION_PLAN_FORMAT_VERSION,
         provider_family: "postgresql".to_string(),
         target_fingerprint: after.clone(),
         head: merge.clone(),
@@ -179,33 +203,33 @@ fn branching_graph() -> MigrationExecutionPlan {
         migrations: BTreeMap::from([
             (
                 left.clone(),
-                MigrationExecutionNode {
-                    id: left.clone(),
-                    parents: BTreeSet::from([baseline.clone()]),
-                    checksum: "c".repeat(64),
-                    paths: BTreeMap::from([(baseline.clone(), branch_path("left"))]),
-                },
+                node(
+                    left.clone(),
+                    BTreeSet::from([baseline.clone()]),
+                    "c".repeat(64),
+                    BTreeMap::from([(baseline.clone(), branch_path("left"))]),
+                ),
             ),
             (
                 right.clone(),
-                MigrationExecutionNode {
-                    id: right.clone(),
-                    parents: BTreeSet::from([baseline.clone()]),
-                    checksum: "d".repeat(64),
-                    paths: BTreeMap::from([(baseline.clone(), branch_path("right"))]),
-                },
+                node(
+                    right.clone(),
+                    BTreeSet::from([baseline.clone()]),
+                    "d".repeat(64),
+                    BTreeMap::from([(baseline.clone(), branch_path("right"))]),
+                ),
             ),
             (
                 merge.clone(),
-                MigrationExecutionNode {
-                    id: merge,
-                    parents: BTreeSet::from([left.clone(), right.clone()]),
-                    checksum: "e".repeat(64),
-                    paths: BTreeMap::from([
+                node(
+                    merge,
+                    BTreeSet::from([left.clone(), right.clone()]),
+                    "e".repeat(64),
+                    BTreeMap::from([
                         (left.clone(), merge_path(left)),
                         (right.clone(), merge_path(right)),
                     ]),
-                },
+                ),
             ),
         ]),
     }
@@ -230,6 +254,8 @@ impl FakeRuntime {
         Self {
             ledger: MigrationLedgerSnapshot {
                 provider_family: graph.provider_family.clone(),
+                provider_server_version: "18.0.0".to_string(),
+                provider_capabilities: BTreeSet::new(),
                 heads: BTreeSet::from([baseline.clone()]),
                 schema_fingerprint: fingerprint.clone(),
                 applied: BTreeMap::new(),
@@ -246,6 +272,14 @@ impl FakeRuntime {
 }
 
 impl MigrationRuntime for FakeRuntime {
+    fn identity(&mut self) -> Result<MigrationRuntimeIdentity, String> {
+        Ok(MigrationRuntimeIdentity {
+            family: "postgresql".to_string(),
+            server_version: "18.0.0".to_string(),
+            capabilities: BTreeSet::new(),
+        })
+    }
+
     fn acquire_lock(&mut self, _plan: &MigrationExecutionPlan) -> Result<MigrationLock, String> {
         if self.locked {
             return Err("already locked".to_string());
@@ -427,6 +461,8 @@ fn checksum_drift_schema_drift_and_provider_panics_fail_closed() {
         AppliedMigrationRecord {
             migration: id("m1"),
             checksum: "d".repeat(64),
+            path_parent: id("baseline"),
+            prior_heads: BTreeSet::from([id("baseline")]),
             output_fingerprint: after.clone(),
             duration_millis: 1,
         },
@@ -488,4 +524,88 @@ fn branching_plan_uses_stable_topological_order_and_reaches_merge_head() {
         })
         .collect::<Vec<_>>();
     assert_eq!(started, vec!["left", "right", "merge"]);
+}
+
+#[test]
+fn schema_changing_merge_requires_every_parent_in_applied_history() {
+    let mut graph = branching_graph();
+    let before = "a".repeat(64);
+    let branch = "b".repeat(64);
+    let target = "c".repeat(64);
+    for name in ["left", "right"] {
+        let path = graph
+            .migrations
+            .get_mut(&id(name))
+            .and_then(|migration| migration.paths.get_mut(&id("baseline")))
+            .expect("branch path");
+        path.output_fingerprint = branch.clone();
+        path.steps = vec![step(
+            &format!("{name}-ddl"),
+            &before,
+            &branch,
+            MigrationExecutionStepKind::Ddl {
+                statement: "ALTER".to_string(),
+            },
+        )];
+    }
+    let merge = graph
+        .migrations
+        .get_mut(&id("merge"))
+        .expect("merge migration");
+    for path in merge.paths.values_mut() {
+        path.input_fingerprint = branch.clone();
+        path.output_fingerprint = target.clone();
+        path.steps = vec![step(
+            "merge-ddl",
+            &branch,
+            &target,
+            MigrationExecutionStepKind::Ddl {
+                statement: "ALTER".to_string(),
+            },
+        )];
+    }
+    graph.target_fingerprint = target;
+    let mut runtime = FakeRuntime::new(&graph, vec![complete(&branch)]);
+    let error = MigrationEngine::new(MigrationExecutionLimits::default())
+        .execute(&graph, &mut runtime)
+        .expect_err("incomplete merge must fail");
+    assert_eq!(error.kind, MigrationExecutionErrorKind::IncompleteMerge);
+}
+
+#[test]
+fn explicit_reverse_plan_rolls_back_to_the_recorded_prior_heads() {
+    let mut graph = graph(false);
+    let before = graph.baseline_fingerprints[&id("baseline")].clone();
+    let after = graph.target_fingerprint.clone();
+    graph
+        .migrations
+        .get_mut(&id("m1"))
+        .and_then(|migration| migration.paths.get_mut(&id("baseline")))
+        .expect("migration path")
+        .rollback = Some(vec![step(
+        "undo-ddl",
+        &after,
+        &before,
+        MigrationExecutionStepKind::Ddl {
+            statement: "DROP".to_string(),
+        },
+    )]);
+    let mut runtime = FakeRuntime::new(
+        &graph,
+        vec![
+            complete(&after),
+            assertion(&after, 1, Some(true)),
+            complete(&before),
+        ],
+    );
+    let engine = MigrationEngine::new(MigrationExecutionLimits::default());
+    engine
+        .execute(&graph, &mut runtime)
+        .expect("forward migration");
+    let report = engine
+        .rollback_last(&graph, &mut runtime)
+        .expect("explicit rollback");
+    assert_eq!(report.heads, BTreeSet::from([id("baseline")]));
+    assert_eq!(report.schema_fingerprint, before);
+    assert!(runtime.ledger.applied.is_empty());
 }

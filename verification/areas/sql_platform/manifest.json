@@ -405,6 +405,58 @@
       ]
     },
     {
+      "name": "postgresql-migrations",
+      "kind": "adapter",
+      "resource_classes": [
+        "cpu"
+      ],
+      "network_mode": "offline",
+      "timeout_seconds": 900,
+      "cases": [
+        {
+          "id": "sql-postgresql-migration-qualification",
+          "entry": "verification/areas/sql_platform/data/postgresql_migration_qualification.json",
+          "command": "sql-postgresql-migration-qualification",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-postgresql-migration-mutations",
+          "entry": "verification/areas/sql_platform/tools/check_postgresql_migrations.py",
+          "command": "sql-postgresql-migration-mutations",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-postgresql-migration-tests",
+          "entry": "crates/sifr_sql_postgresql_tools/tests/migration_qualification.rs",
+          "command": "sql-postgresql-migration-tests",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "postgresql-live-migrations",
+      "kind": "adapter",
+      "resource_classes": [
+        "container-runtime",
+        "network",
+        "platform-specific"
+      ],
+      "network_mode": "live",
+      "timeout_seconds": 3600,
+      "cases": [
+        {
+          "id": "sql-postgresql-live-migrations",
+          "entry": "verification/areas/sql_platform/tools/run_postgresql_migration_matrix.py",
+          "command": "sql-postgresql-live-migrations",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
       "name": "postgresql-live-differential",
       "kind": "adapter",
       "resource_classes": [
