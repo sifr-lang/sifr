@@ -1,11 +1,11 @@
 // src/main.rs
 use ::sifr_runtime::SifrInt;
 
-fn echo<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(x: &T) -> T {
+fn echo<T: Clone + 'static>(x: &T) -> T {
     x.clone()
 }
 
-fn smallest<U: Clone + ::std::fmt::Display + PartialOrd + 'static>(a: &U, b: &U) -> U {
+fn smallest<U: Clone + 'static + PartialOrd>(a: &U, b: &U) -> U {
     if *a < *b {
         return a.clone();
     }

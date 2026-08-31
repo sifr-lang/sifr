@@ -635,6 +635,18 @@ fn collection_target_coercion_does_not_flatten_a_simple_optional_index() {
 }
 
 #[test]
+fn collection_target_coercion_wraps_a_plain_value_for_optional_storage() {
+    let target = sifr_type_system::make_union(vec![Type::Int, Type::None]);
+    let expr = HirExpr::IntLiteral(3);
+    let rendered = crate::render_expr(&adapt_collection_value_for_target(
+        &target,
+        &expr,
+        RustExpr::Ident("value".to_string()),
+    ));
+    assert_eq!(rendered, "Some(value)");
+}
+
+#[test]
 fn collection_storage_coercion_maps_nested_optional_elements() {
     let target_element = sifr_type_system::make_union(vec![Type::Int, Type::Str, Type::None]);
     let source_element = Type::Union(vec![target_element.clone(), Type::None]);

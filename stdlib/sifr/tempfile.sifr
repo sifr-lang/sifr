@@ -54,7 +54,7 @@ def mkstemp(prefix: str) -> Result[str, IOError]:
             if exists(path_for_check):
                 attempts = attempts + 1
                 continue
-            raise IOError(e.message)
+            raise e
     raise IOError(_collision_message("mkstemp", max_attempts))
 
 
@@ -74,7 +74,7 @@ def mkdtemp(prefix: str) -> Result[str, IOError]:
             if exists(path_for_check):
                 attempts = attempts + 1
                 continue
-            raise IOError(e.message)
+            raise e
     raise IOError(_collision_message("mkdtemp", max_attempts))
 
 
@@ -110,7 +110,7 @@ class NamedTemporaryFile:
             try:
                 _rm_done: None = remove_file(self._path)
             except IOError as e:
-                raise IOError(e.message)
+                raise e
         self._cleaned = True
         return None
 
@@ -167,7 +167,7 @@ class TemporaryDirectory:
             try:
                 _rm_tree_done: None = rmdir_all(self._path)
             except IOError as e:
-                raise IOError(e.message)
+                raise e
         self._cleaned = True
         self._closed = True
         return None

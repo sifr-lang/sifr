@@ -1,7 +1,27 @@
 
 def main():
-    s: str = "x"
-    assert str("center = [" + s.center(5) + "]") == 'center = [  x  ]'
-    assert str("ljust = [" + s.ljust(4) + "]") == 'ljust = [x   ]'
-    assert str("rjust = [" + s.rjust(4) + "]") == 'rjust = [   x]'
-    assert str("zfill = [" + "7".zfill(4) + "]") == 'zfill = [0007]'
+    try:
+        s: str = "x"
+        centered: str = s.center(5)
+        left: str = s.ljust(4)
+        right: str = s.rjust(4)
+        zeroed: str = "7".zfill(4)
+        signed: str = "-7".zfill(4)
+        unicode: str = "é".ljust(3)
+        unchanged: str = s.center(-100)
+        assert str("center = [" + centered + "]") == 'center = [  x  ]'
+        assert str("ljust = [" + left + "]") == 'ljust = [x   ]'
+        assert str("rjust = [" + right + "]") == 'rjust = [   x]'
+        assert str("zfill = [" + zeroed + "]") == 'zfill = [0007]'
+        assert signed == "-007"
+        assert unicode == "é  "
+        assert unchanged == "x"
+    except OverflowError:
+        assert False
+
+    try:
+        impossible: str = "x".center(100000000000000000000000000000000000000)
+        _ = impossible
+        assert False
+    except OverflowError as error:
+        assert len(error.message) > 0

@@ -8,9 +8,19 @@ def lt3(x: int) -> bool:
 def add2(a: int, b: int) -> int:
     return a + b
 
-def collect_islice(own data: Iterator[int], start_or_stop: int, stop: int | None = None, step: int = 1) -> list[int]:
+def optional_int(value: int) -> int | None:
+    return value
+
+def collect_islice(own data: Iterator[int], stop: int) -> list[int]:
     try:
-        sliced: Iterator[int] = islice(iter(data), start_or_stop, stop, step)
+        sliced: Iterator[int] = islice(iter(data), stop)
+        return list(sliced)
+    except ValueError:
+        return []
+
+def collect_islice_range(own data: Iterator[int], start: int, stop: int | None, step: int | None = 1) -> list[int]:
+    try:
+        sliced: Iterator[int] = islice(iter(data), start, stop, step)
         return list(sliced)
     except ValueError:
         return []
@@ -32,6 +42,8 @@ def collect_core_actual() -> list[bool]:
     actual.append(batched_ok)
 
     actual.append(str(collect_islice(iter([10, 20, 30, 40]), 3)) == "[10, 20, 30]")
+    actual.append(str(collect_islice_range(iter([10, 20, 30, 40]), 1, None)) == "[20, 30, 40]")
+    actual.append(str(collect_islice_range(iter([10, 20, 30, 40]), 1, None, None)) == "[20, 30, 40]")
     actual.append(str(list(accumulate(iter([1, 2, 3, 4])))) == "[1, 3, 6, 10]")
     actual.append(str(list(accumulate(iter([1, 2, 3]), initial=0))) == "[0, 1, 3, 6]")
     actual.append(str(list(compress(iter([1, 2, 3]), iter([True, False, True])))) == "[1, 3]")
@@ -47,6 +59,17 @@ def collect_core_actual() -> list[bool]:
     c3: int | None = next(ctr)
     actual.append(c0 == 5 and c1 == 7 and c2 == 9 and c3 == 11)
     actual.append(str(list(cycle(iter([1, 2, 3]), 5))) == "[1, 2, 3, 1, 2]")
+    optional_values: list[int | None] = []
+    optional_values.append(optional_int(1))
+    optional_values.append(None)
+    optional_values.append(optional_int(2))
+    optional_expected: list[int | None] = []
+    optional_expected.append(optional_int(1))
+    optional_expected.append(None)
+    optional_expected.append(optional_int(2))
+    optional_expected.append(optional_int(1))
+    optional_expected.append(None)
+    actual.append(list(cycle(iter(optional_values), 5)) == optional_expected)
     actual.append(str(list(product([1, 2], [3, 4]))) == "[[1, 3], [1, 4], [2, 3], [2, 4]]")
     actual.append(str(list(product([1, 2], repeat=-1))) == "[]")
     actual.append(str(list(permutations(iter([1, 2, 3]), 2))) == "[[1, 2], [1, 3], [2, 1], [2, 3], [3, 1], [3, 2]]")
@@ -95,7 +118,8 @@ def main():
         True, True, True, True, True, True, True, True,
         True, True, True, True, True, True, True, True,
         True, True, True, True, True, True, True, True,
-        True, True, True, True, True, True
+        True, True, True, True, True, True, True, True,
+        True
     ]
     actual: list[bool] = []
     append_all(actual, collect_core_actual())

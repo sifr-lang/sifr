@@ -68,6 +68,25 @@ fn collect_typevar_operator_requirements_detects_equality() {
 }
 
 #[test]
+fn collect_typevar_operator_requirements_detects_display_calls() {
+    let stmts = vec![HirStmt::Expr {
+        expr: HirExpr::Call {
+            mutable_arg_places: Vec::new(),
+            func: "str".to_string(),
+            args: vec![HirExpr::Name {
+                name: "value".to_string(),
+                binding_id: None,
+                ty: Type::TypeVar("T".to_string()),
+            }],
+            ty: Type::Str,
+        },
+    }];
+
+    let req = collect_typevar_operator_requirements(&stmts, "T");
+    assert!(req.needs_display);
+}
+
+#[test]
 fn collect_let_declared_types_covers_nested_blocks() {
     let stmts = vec![HirStmt::If {
         condition: HirExpr::BoolLiteral(true),

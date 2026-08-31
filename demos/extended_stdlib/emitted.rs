@@ -308,14 +308,40 @@ fn _file_readlines(handle: &String) -> Result<Vec<String>, IOError> {
 fn _file_close(handle: &String) {
     ::sifr_stdlib::fs::file_close(handle);
 }
-fn _file_read_bytes(handle: &String) -> Result<Vec<u8>, IOError> {
-    ::sifr_stdlib::fs::file_read_bytes(handle)
+fn _file_read_bytes(handle: &String, size: Option<SifrInt>) -> Result<Vec<u8>, IOError> {
+    ::sifr_stdlib::fs::file_read_bytes(
+            handle,
+            size.map(::sifr_runtime::interop::SifrIntBridge::from),
+        )
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
 fn _file_write_bytes(handle: &String, data: &Vec<u8>) -> Result<(), IOError> {
     ::sifr_stdlib::fs::file_write_bytes(handle, data)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
+        .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
+}
+fn _file_flush(handle: &String) -> Result<(), IOError> {
+    ::sifr_stdlib::fs::file_flush(handle)
+        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
+        .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
+}
+fn _file_seek(
+    handle: &String,
+    offset: SifrInt,
+    whence: SifrInt,
+) -> Result<SifrInt, IOError> {
+    ::sifr_stdlib::fs::file_seek(
+            handle,
+            ::sifr_runtime::interop::SifrIntBridge::from(offset),
+            ::sifr_runtime::interop::SifrIntBridge::from(whence),
+        )
+        .map(|__sifr_bridge_ok| __sifr_bridge_ok.into_sifr_int())
+        .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
+}
+fn _file_tell(handle: &String) -> Result<SifrInt, IOError> {
+    ::sifr_stdlib::fs::file_tell(handle)
+        .map(|__sifr_bridge_ok| __sifr_bridge_ok.into_sifr_int())
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
 fn open_file(path: &String, mode: &String) -> Result<__SifrIoNativeFileHandle, IOError> {
@@ -329,7 +355,7 @@ fn open_file(path: &String, mode: &String) -> Result<__SifrIoNativeFileHandle, I
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(IOError::new(e.message.clone()));
+            return Err(e);
         }
     }
 }
@@ -348,14 +374,30 @@ fn file_readlines(handle: &__SifrIoNativeFileHandle) -> Result<Vec<String>, IOEr
 fn file_close(handle: &__SifrIoNativeFileHandle) {
     _file_close(&handle._id.clone());
 }
-fn file_read_bytes(handle: &__SifrIoNativeFileHandle) -> Result<Vec<u8>, IOError> {
-    _file_read_bytes(&handle._id.clone())
+fn file_read_bytes(
+    handle: &__SifrIoNativeFileHandle,
+    size: Option<SifrInt>,
+) -> Result<Vec<u8>, IOError> {
+    _file_read_bytes(&handle._id.clone(), (size).clone())
 }
 fn file_write_bytes(
     handle: &__SifrIoNativeFileHandle,
     data: &Vec<u8>,
 ) -> Result<(), IOError> {
     _file_write_bytes(&handle._id.clone(), data)
+}
+fn file_flush(handle: &__SifrIoNativeFileHandle) -> Result<(), IOError> {
+    _file_flush(&handle._id.clone())
+}
+fn file_seek(
+    handle: &__SifrIoNativeFileHandle,
+    offset: SifrInt,
+    whence: SifrInt,
+) -> Result<SifrInt, IOError> {
+    _file_seek(&handle._id.clone(), (offset).clone(), (whence).clone())
+}
+fn file_tell(handle: &__SifrIoNativeFileHandle) -> Result<SifrInt, IOError> {
+    _file_tell(&handle._id.clone())
 }
 fn getcwd() -> Result<String, IOError> {
     ::sifr_stdlib::fs::getcwd()
@@ -1204,7 +1246,7 @@ impl __SifrStdlib_sifr_x2erandom_x2eRandom {
         }
         let mut actual_start: SifrInt = start.clone();
         let mut actual_stop: SifrInt = start.clone();
-        if (stop.clone() == None) {
+        if (stop.is_none()) {
             actual_start = SifrInt::from_i64(0);
         } else {
             if let Some(stop) = stop.as_ref() {
@@ -1842,7 +1884,7 @@ fn __io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
 fn has_match(pattern: &String, text: &String) -> Result<bool, RegexError> {
     let __sifr_try_res: Result<Result<bool, RegexError>, RegexError> = (|| {
         let found: Option<String> = search(pattern, text)?;
-        Ok(Ok((found != None)))
+        Ok(Ok((found.is_some())))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {

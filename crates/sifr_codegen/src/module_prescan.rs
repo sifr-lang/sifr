@@ -51,6 +51,7 @@ impl RustEmitter {
         self.static_program_type_params = static_program;
         self.method_slot_type_params = method_slots;
         self.context_type_params = context;
+        self.function_type_param_bounds = Self::closed_function_type_param_bounds(module);
     }
 
     pub(crate) fn collect_import_metadata(&mut self, module: &HirModule) {

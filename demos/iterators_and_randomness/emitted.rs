@@ -112,18 +112,14 @@ impl<T> Iterator for __SifrGenerator<T> {
         yielded
     }
 }
-fn _collect_iterator<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    data: Box<dyn Iterator<Item = T>>,
-) -> Vec<T> {
+fn _collect_iterator<T: Clone + 'static>(data: Box<dyn Iterator<Item = T>>) -> Vec<T> {
     let mut collected: Vec<T> = vec![];
     for item in data {
         collected.push(item.clone());
     }
     collected
 }
-fn chain<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    iterables: &Vec<Vec<T>>,
-) -> Box<dyn Iterator<Item = T>> {
+fn chain<T: Clone + 'static>(iterables: &Vec<Vec<T>>) -> Box<dyn Iterator<Item = T>> {
     let iterables = iterables.clone();
     Box::new(
         __SifrGenerator::new(async move |__sifr_yielder: __SifrYielder<T>| {
@@ -135,10 +131,11 @@ fn chain<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
         }),
     )
 }
-fn _islice_impl<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
+fn _islice_impl<T: Clone + 'static>(
     data: Box<dyn Iterator<Item = T>>,
     start: SifrInt,
     stop: SifrInt,
+    unbounded: bool,
     step: SifrInt,
 ) -> Box<dyn Iterator<Item = T>> {
     Box::new(
@@ -146,7 +143,7 @@ fn _islice_impl<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
             let mut index: SifrInt = SifrInt::from_i64(0);
             let mut next_yield: SifrInt = start.clone();
             for value in data {
-                if &index >= &stop {
+                if !unbounded && (&index >= &stop) {
                     return;
                 }
                 if &index == &next_yield {
@@ -158,23 +155,47 @@ fn _islice_impl<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
         }),
     )
 }
-fn islice<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
+fn islice<T: Clone + 'static>(
     data: Box<dyn Iterator<Item = T>>,
     start_or_stop: SifrInt,
-    stop: Option<SifrInt>,
-    step: SifrInt,
+    slice_args: &Vec<Option<SifrInt>>,
 ) -> Result<Box<dyn Iterator<Item = T>>, ValueError> {
+    if (&SifrInt::from(slice_args.len()) > &SifrInt::from_i64(2)) {
+        return Err(
+            ValueError::new(
+                "islice: expected at most stop and step after start".to_string(),
+            ),
+        );
+    }
     let mut actual_start: SifrInt = SifrInt::from_i64(0);
     let mut actual_stop: SifrInt = start_or_stop.clone();
-    if let Some(stop) = stop.clone() {
-        actual_start = start_or_stop.clone();
-        actual_stop = stop.clone();
+    let mut unbounded: bool = false;
+    let mut actual_step: SifrInt = SifrInt::from_i64(1);
+    let mut argument_index: SifrInt = SifrInt::from_i64(0);
+    for argument in slice_args.iter().cloned() {
+        if (&argument_index == &SifrInt::from_i64(0)) {
+            actual_start = start_or_stop.clone();
+            if (argument.is_none()) {
+                unbounded = true;
+            } else {
+                if let Some(argument) = argument.clone() {
+                    actual_stop = argument.clone();
+                }
+            }
+        } else {
+            if let Some(argument) = argument.clone() {
+                actual_step = argument.clone();
+            }
+        }
+        argument_index = &argument_index + &SifrInt::from_i64(1);
     }
-    if (&actual_start < &SifrInt::from_i64(0)) || (&actual_stop < &SifrInt::from_i64(0))
-    {
+    if (&actual_start < &SifrInt::from_i64(0)) {
         return Err(ValueError::new("islice: indices must be non-negative".to_string()));
     }
-    if (&step <= &SifrInt::from_i64(0)) {
+    if !unbounded && (&actual_stop < &SifrInt::from_i64(0)) {
+        return Err(ValueError::new("islice: indices must be non-negative".to_string()));
+    }
+    if (&actual_step <= &SifrInt::from_i64(0)) {
         return Err(
             ValueError::new("islice: step must be greater than zero".to_string()),
         );
@@ -184,11 +205,12 @@ fn islice<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
             Box::new(data),
             (actual_start).clone(),
             (actual_stop).clone(),
-            (step).clone(),
+            unbounded,
+            (actual_step).clone(),
         ),
     )
 }
-fn product<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
+fn product<T: Clone + 'static>(
     iterables: &Vec<Vec<T>>,
     repeat: SifrInt,
 ) -> Box<dyn Iterator<Item = Vec<T>>> {
@@ -360,7 +382,7 @@ fn product<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
         }),
     )
 }
-fn permutations<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
+fn permutations<T: Clone + 'static>(
     data: Box<dyn Iterator<Item = T>>,
     r: Option<SifrInt>,
 ) -> Box<dyn Iterator<Item = Vec<T>>> {
@@ -671,7 +693,7 @@ fn permutations<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
         }),
     )
 }
-fn combinations<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
+fn combinations<T: Clone + 'static>(
     data: Box<dyn Iterator<Item = T>>,
     r: SifrInt,
 ) -> Box<dyn Iterator<Item = Vec<T>>> {
@@ -816,11 +838,7 @@ fn combinations<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
         }),
     )
 }
-fn starmap<
-    A: Clone + ::std::fmt::Display + PartialOrd + 'static,
-    B: Clone + ::std::fmt::Display + PartialOrd + 'static,
-    R: Clone + ::std::fmt::Display + PartialOrd + 'static,
->(
+fn starmap<A: Clone + 'static, B: Clone + 'static, R: Clone + 'static>(
     func: impl Fn(&A, &B) -> R + Send + Sync + 'static,
     pairs: Box<dyn Iterator<Item = (A, B)>>,
 ) -> Box<dyn Iterator<Item = R>> {
@@ -1564,7 +1582,7 @@ impl __SifrStdlib_sifr_x2erandom_x2eRandom {
         }
         let mut actual_start: SifrInt = start.clone();
         let mut actual_stop: SifrInt = start.clone();
-        if (stop.clone() == None) {
+        if (stop.is_none()) {
             actual_start = SifrInt::from_i64(0);
         } else {
             if let Some(stop) = stop.as_ref() {
@@ -1794,7 +1812,7 @@ impl __SifrStdlib_sifr_x2erandom_x2eSystemRandom {
     ) -> Result<SifrInt, ValueError> {
         let mut actual_start: SifrInt = start.clone();
         let mut actual_stop: SifrInt = start.clone();
-        if (stop.clone() == None) {
+        if (stop.is_none()) {
             actual_start = SifrInt::from_i64(0);
         } else {
             if let Some(stop) = stop.as_ref() {
@@ -2026,9 +2044,7 @@ fn gauss(mu: f64, sigma: f64) -> f64 {
     _sync_module_random(&mut generator);
     value
 }
-fn choice<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    items: &Vec<T>,
-) -> Result<T, ValueError> {
+fn choice<T: Clone + 'static>(items: &Vec<T>) -> Result<T, ValueError> {
     let item_count: SifrInt = SifrInt::from(items.len());
     if (&item_count == &SifrInt::from_i64(0)) {
         return Err(ValueError::new("choice: items must not be empty".to_string()));
@@ -2048,7 +2064,7 @@ fn choice<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     }
     Err(ValueError::new("choice: index out of range".to_string()))
 }
-fn choices<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
+fn choices<T: Clone + 'static>(
     items: &Vec<T>,
     k: SifrInt,
 ) -> Result<Vec<T>, ValueError> {
@@ -2081,10 +2097,7 @@ fn choices<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     _sync_module_random(&mut generator);
     Ok(result)
 }
-fn sample<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    items: &Vec<T>,
-    k: SifrInt,
-) -> Result<Vec<T>, ValueError> {
+fn sample<T: Clone + 'static>(items: &Vec<T>, k: SifrInt) -> Result<Vec<T>, ValueError> {
     if (&k < &SifrInt::from_i64(0)) {
         return Err(ValueError::new("sample: k must be >= 0".to_string()));
     }
@@ -2146,7 +2159,7 @@ fn sample<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     _sync_module_random(&mut generator);
     Ok(result)
 }
-fn shuffle<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(items: &mut Vec<T>) {
+fn shuffle<T: Clone + 'static>(items: &mut Vec<T>) {
     let mut generator: __SifrStdlib_sifr_x2erandom_x2eRandom = _module_random();
     let n: SifrInt = SifrInt::from(items.len());
     if (&n > &SifrInt::from_i64(1)) {
@@ -2326,8 +2339,7 @@ fn main() {
                     .into_iter(),
             ),
             SifrInt::from_i64(1),
-            Some(SifrInt::from_i64(5)),
-            SifrInt::from_i64(2),
+            &vec![Some(SifrInt::from_i64(5)), Some(SifrInt::from_i64(2))],
         )?;
         println!(
             "{}", { let mut __sifr_concat : String = String::with_capacity(28usize +

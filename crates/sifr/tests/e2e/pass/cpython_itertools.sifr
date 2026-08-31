@@ -17,9 +17,21 @@ def is_even(x: int) -> bool:
 def add2(a: int, b: int) -> int:
     return a + b
 
-def collect_islice(own data: Iterator[int], start_or_stop: int, stop: int | None = None, step: int = 1) -> list[int]:
+def optional_int(value: int) -> int | None:
+    return value
+
+def collect_islice(own data: Iterator[int], stop: int) -> list[int]:
     try:
-        sliced: Iterator[int] = islice(iter(data), start_or_stop, stop, step)
+        sliced: Iterator[int] = islice(iter(data), stop)
+        return list(sliced)
+    except ValueError as e:
+        _message: str = e.message
+        assert_true(False)
+        return []
+
+def collect_islice_range(own data: Iterator[int], start: int, stop: int | None, step: int | None = 1) -> list[int]:
+    try:
+        sliced: Iterator[int] = islice(iter(data), start, stop, step)
         return list(sliced)
     except ValueError as e:
         _message: str = e.message
@@ -74,9 +86,11 @@ def main():
 
     # islice validates invalid arguments at construction and consumes its source lazily.
     assert_true(str(collect_islice(iter([0, 1, 2, 3, 4]), 3)) == "[0, 1, 2]")
-    assert_true(str(collect_islice(iter([0, 1, 2, 3, 4]), 1, 4)) == "[1, 2, 3]")
-    assert_true(str(collect_islice(iter([0, 1, 2, 3, 4]), 1, 5, 2)) == "[1, 3]")
-    assert_true(str(collect_islice(iter([0, 1, 2, 3, 4]), 10, 110, 3)) == "[]")
+    assert_true(str(collect_islice_range(iter([0, 1, 2, 3, 4]), 1, 4)) == "[1, 2, 3]")
+    assert_true(str(collect_islice_range(iter([0, 1, 2, 3, 4]), 1, 5, 2)) == "[1, 3]")
+    assert_true(str(collect_islice_range(iter([0, 1, 2, 3, 4]), 10, 110, 3)) == "[]")
+    assert_true(str(collect_islice_range(iter([0, 1, 2, 3, 4]), 2, None)) == "[2, 3, 4]")
+    assert_true(str(collect_islice_range(iter([0, 1, 2, 3, 4]), 2, None, None)) == "[2, 3, 4]")
     invalid_zero_step: bool = False
     try:
         _zero_step: Iterator[int] = islice(iter([10, 20, 30]), 0, 3, 0)
@@ -143,6 +157,17 @@ def main():
     # cycle (intentional finite signature adaptation: cycle(data, n))
     empty_cycle: list[int] = []
     assert_true(str(list(cycle(iter([1, 2, 3]), 10))) == "[1, 2, 3, 1, 2, 3, 1, 2, 3, 1]")
+    optional_cycle: list[int | None] = []
+    optional_cycle.append(optional_int(1))
+    optional_cycle.append(None)
+    optional_cycle.append(optional_int(2))
+    optional_cycle_expected: list[int | None] = []
+    optional_cycle_expected.append(optional_int(1))
+    optional_cycle_expected.append(None)
+    optional_cycle_expected.append(optional_int(2))
+    optional_cycle_expected.append(optional_int(1))
+    optional_cycle_expected.append(None)
+    assert_true(list(cycle(iter(optional_cycle), 5)) == optional_cycle_expected)
     assert_true(str(list(cycle(iter(empty_cycle), 10))) == "[]")
     assert_true(str(list(cycle(iter([1, 2, 3]), 0))) == "[]")
 

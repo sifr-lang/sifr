@@ -1,4 +1,35 @@
 use super::*;
+
+#[test]
+pub(super) fn test_string_padding_methods_expose_typed_allocation_failure() {
+    let result = lower_source(
+        "def pad(value: str, width: int) -> Result[str, OverflowError]:\n    return value.center(width)\n",
+    );
+
+    assert!(result.is_ok(), "{result:?}");
+}
+
+#[test]
+pub(super) fn test_string_padding_width_requires_exact_integer() {
+    let source = "def main():\n    padded = \"x\".ljust(3.5)\n";
+    let errors = lower_source(source).expect_err("float padding width should be rejected");
+
+    assert!(errors.iter().any(|error| {
+        error.message.contains("str.ljust() width must be 'int'")
+            && error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+            && error.primary_range == Some(range_for(source, "3.5"))
+    }));
+}
+
+#[test]
+pub(super) fn test_varargs_adopt_declared_optional_element_type() {
+    let result = lower_source(
+        "def count_values(*values: int | None) -> int:\n    return len(values)\n\ndef main():\n    count: int = count_values(1, 2)\n",
+    );
+
+    assert!(result.is_ok(), "{result:?}");
+}
+
 #[test]
 pub(super) fn test_duplicate_optional_method_keyword_is_rejected() {
     let source = "def main():\n    data: dict[str, int] = {\"x\": 1}\n    value: int = data.get(\"x\", 1, default=2)\n";

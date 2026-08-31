@@ -84,11 +84,11 @@ def batched(data: Iterable[T], n: int) -> Result[list[list[T]], ValueError]:
     return result
 
 
-def _islice_impl[T](own data: Iterator[T], start: int, stop: int, step: int) -> Iterator[T]:
+def _islice_impl[T](own data: Iterator[T], start: int, stop: int, unbounded: bool, step: int) -> Iterator[T]:
     index: int = 0
     next_yield: int = start.clone()
     for value in data:
-        if index >= stop:
+        if not unbounded and index >= stop:
             return
         if index == next_yield:
             yield value
@@ -96,17 +96,32 @@ def _islice_impl[T](own data: Iterator[T], start: int, stop: int, step: int) -> 
         index = index + 1
 
 
-def islice(own data: Iterator[T], start_or_stop: int, stop: int | None = None, step: int = 1) -> Result[Iterator[T], ValueError]:
+def islice(own data: Iterator[T], start_or_stop: int, *slice_args: int | None) -> Result[Iterator[T], ValueError]:
+    if len(slice_args) > 2:
+        raise ValueError("islice: expected at most stop and step after start")
     actual_start: int = 0
     actual_stop: int = start_or_stop.clone()
-    if stop is not None:
-        actual_start = start_or_stop.clone()
-        actual_stop = stop.clone()
-    if actual_start < 0 or actual_stop < 0:
+    unbounded: bool = False
+    actual_step: int = 1
+    argument_index: int = 0
+    for argument in slice_args:
+        if argument_index == 0:
+            actual_start = start_or_stop.clone()
+            if argument is None:
+                unbounded = True
+            else:
+                actual_stop = argument.clone()
+        else:
+            if argument is not None:
+                actual_step = argument.clone()
+        argument_index = argument_index + 1
+    if actual_start < 0:
         raise ValueError("islice: indices must be non-negative")
-    if step <= 0:
+    if not unbounded and actual_stop < 0:
+        raise ValueError("islice: indices must be non-negative")
+    if actual_step <= 0:
         raise ValueError("islice: step must be greater than zero")
-    return _islice_impl(data, actual_start, actual_stop, step)
+    return _islice_impl(data, actual_start, actual_stop, unbounded, actual_step)
 
 def count(start: int = 0, step: int = 1) -> Iterator[int]:
     current: int = start.clone()
@@ -459,16 +474,13 @@ def cycle(own data: Iterator[T], n: int) -> Iterator[T]:
         return
     for value in data:
         saved.append(value)
-        current: T | None = saved[len(saved) - 1]
-        if current is not None:
-            yield current
+        yield value
+        emitted = emitted + 1
+        if emitted >= n:
+            return
+    while emitted < n and len(saved) > 0:
+        for repeated in saved:
+            yield repeated
             emitted = emitted + 1
             if emitted >= n:
                 return
-    size: int = len(saved)
-    while emitted < n and size > 0:
-        index: int = emitted % size
-        repeated: T | None = saved[index]
-        if repeated is not None:
-            yield repeated
-        emitted = emitted + 1

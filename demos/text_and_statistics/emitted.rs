@@ -465,8 +465,8 @@ mod __sifr_project_nominals {
                         })
                             .map(|c| c.to_string());
                     }
-                    if (next_opt != None) && (next_opt == Some(" ".to_string())) {
-                        if (next2_opt == None) || (next2_opt != Some(" ".to_string())) {
+                    if (next_opt.is_some()) && (next_opt == Some(" ".to_string())) {
+                        if (next2_opt.is_none()) || (next2_opt != Some(" ".to_string())) {
                             result.push(' ');
                         }
                     }
@@ -1551,8 +1551,8 @@ fn _apply_sentence_endings_line(text: &String) -> String {
                     })
                         .map(|c| c.to_string());
                 }
-                if (next_opt != None) && (next_opt == Some(" ".to_string())) {
-                    if (next2_opt == None) || (next2_opt != Some(" ".to_string())) {
+                if (next_opt.is_some()) && (next_opt == Some(" ".to_string())) {
+                    if (next2_opt.is_none()) || (next2_opt != Some(" ".to_string())) {
                         result.push(' ');
                     }
                 }

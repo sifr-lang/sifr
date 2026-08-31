@@ -96,9 +96,7 @@ impl<T> Iterator for __SifrGenerator<T> {
         yielded
     }
 }
-fn chain<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    iterables: &Vec<Vec<T>>,
-) -> Box<dyn Iterator<Item = T>> {
+fn chain<T: Clone + 'static>(iterables: &Vec<Vec<T>>) -> Box<dyn Iterator<Item = T>> {
     let iterables = iterables.clone();
     Box::new(
         __SifrGenerator::new(async move |__sifr_yielder: __SifrYielder<T>| {

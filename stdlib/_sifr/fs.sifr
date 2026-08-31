@@ -63,7 +63,7 @@ def _file_close(handle: str) -> None:
 
 
 @rust(sifr_stdlib.fs.file_read_bytes)
-def _file_read_bytes(handle: str) -> Result[bytes, IOError]:
+def _file_read_bytes(handle: str, size: int | None) -> Result[bytes, IOError]:
     ...
 
 
@@ -72,12 +72,27 @@ def _file_write_bytes(handle: str, data: bytes) -> Result[None, IOError]:
     ...
 
 
+@rust(sifr_stdlib.fs.file_flush)
+def _file_flush(handle: str) -> Result[None, IOError]:
+    ...
+
+
+@rust(sifr_stdlib.fs.file_seek)
+def _file_seek(handle: str, offset: int, whence: int) -> Result[int, IOError]:
+    ...
+
+
+@rust(sifr_stdlib.fs.file_tell)
+def _file_tell(handle: str) -> Result[int, IOError]:
+    ...
+
+
 def open_file(path: str, mode: str) -> Result[NativeFileHandle, IOError]:
     try:
         handle_id: str = _open_file(path, mode)
         return NativeFileHandle(handle_id)
     except IOError as e:
-        raise IOError(e.message)
+        raise e
 
 
 def file_read(handle: NativeFileHandle) -> Result[str, IOError]:
@@ -100,12 +115,24 @@ def file_close(handle: NativeFileHandle) -> None:
     _file_close(handle._id)
 
 
-def file_read_bytes(handle: NativeFileHandle) -> Result[bytes, IOError]:
-    return _file_read_bytes(handle._id)
+def file_read_bytes(handle: NativeFileHandle, size: int | None = None) -> Result[bytes, IOError]:
+    return _file_read_bytes(handle._id, size)
 
 
 def file_write_bytes(handle: NativeFileHandle, data: bytes) -> Result[None, IOError]:
     return _file_write_bytes(handle._id, data)
+
+
+def file_flush(handle: NativeFileHandle) -> Result[None, IOError]:
+    return _file_flush(handle._id)
+
+
+def file_seek(handle: NativeFileHandle, offset: int, whence: int = 0) -> Result[int, IOError]:
+    return _file_seek(handle._id, offset, whence)
+
+
+def file_tell(handle: NativeFileHandle) -> Result[int, IOError]:
+    return _file_tell(handle._id)
 
 
 @rust(sifr_stdlib.fs.getcwd)

@@ -305,7 +305,7 @@ fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
 fn has_match(pattern: &String, text: &String) -> Result<bool, RegexError> {
     let __sifr_try_res: Result<Result<bool, RegexError>, RegexError> = (|| {
         let found: Option<String> = search(pattern, text)?;
-        Ok(Ok((found != None)))
+        Ok(Ok((found.is_some())))
     })();
     match __sifr_try_res {
         Ok(__sifr_ret_val) => {
@@ -352,7 +352,7 @@ fn collect_primary_actual() -> Vec<bool> {
             &"HELLO".to_string(),
             __const_IGNORECASE(),
         )?;
-        case_fold_ok = (case_fold != None);
+        case_fold_ok = (case_fold.is_some());
         Ok(())
     })();
     if let Err(__sifr_try_err) = __sifr_try_res {

@@ -379,11 +379,10 @@ mod tests {
         )
         .expect("center lowers");
         let center_rendered = render_expr(&center.expr);
-        assert!(
-            center_rendered
-                .contains("let _w = ::sifr_runtime::to_usize_proven(&SifrInt::from_i64(5))"),
-            "{center_rendered}"
-        );
+        assert!(center_rendered.contains("sifr_runtime::checked_center"));
+        assert!(center_rendered.contains("map_err"));
+        assert!(center_rendered.contains("OverflowError::new"));
+        assert!(!center_rendered.contains("to_usize"));
 
         let ljust = lower_method(
             &Type::Str,
@@ -392,10 +391,10 @@ mod tests {
             &["SifrInt::from_i64(5)".to_string()],
         )
         .expect("ljust lowers");
-        assert_eq!(
-            render_expr(&ljust.expr),
-            "format!(\"{:<1$}\", s, ::sifr_runtime::to_usize_proven(&SifrInt::from_i64(5)))"
-        );
+        let ljust_rendered = render_expr(&ljust.expr);
+        assert!(ljust_rendered.contains("sifr_runtime::checked_ljust"));
+        assert!(ljust_rendered.contains("OverflowError::new"));
+        assert!(!ljust_rendered.contains("to_usize"));
 
         let rjust = lower_method(
             &Type::Str,
@@ -404,10 +403,10 @@ mod tests {
             &["SifrInt::from_i64(5)".to_string()],
         )
         .expect("rjust lowers");
-        assert_eq!(
-            render_expr(&rjust.expr),
-            "format!(\"{:>1$}\", s, ::sifr_runtime::to_usize_proven(&SifrInt::from_i64(5)))"
-        );
+        let rjust_rendered = render_expr(&rjust.expr);
+        assert!(rjust_rendered.contains("sifr_runtime::checked_rjust"));
+        assert!(rjust_rendered.contains("OverflowError::new"));
+        assert!(!rjust_rendered.contains("to_usize"));
 
         let zfill = lower_method(
             &Type::Str,
@@ -416,10 +415,10 @@ mod tests {
             &["SifrInt::from_i64(5)".to_string()],
         )
         .expect("zfill lowers");
-        assert_eq!(
-            render_expr(&zfill.expr),
-            "format!(\"{:0>1$}\", s, ::sifr_runtime::to_usize_proven(&SifrInt::from_i64(5)))"
-        );
+        let zfill_rendered = render_expr(&zfill.expr);
+        assert!(zfill_rendered.contains("sifr_runtime::checked_zfill"));
+        assert!(zfill_rendered.contains("OverflowError::new"));
+        assert!(!zfill_rendered.contains("to_usize"));
 
         let list_clear = lower_method(&Type::List(Box::new(Type::Int)), "clear", "xs", &[])
             .expect("list clear lowers");
@@ -799,12 +798,22 @@ mod tests {
         let big_quantize =
             lower_method(&Type::BigDecimal, "quantize", "bd", &["digits".to_string()])
                 .expect("bigdecimal quantize lowers");
-        assert!(render_expr(&big_quantize.expr).contains("round_decimal_ref"));
+        let big_quantize_rendered = render_expr(&big_quantize.expr);
+        assert!(big_quantize_rendered.contains("round_decimal_ref"));
+        assert!(big_quantize_rendered.contains("bigdecimal::Context::new"));
+        assert!(big_quantize_rendered.contains("NonZeroU64::MIN.saturating_add(27)"));
+        assert!(!big_quantize_rendered.contains("unwrap_or_else"));
+        assert!(!big_quantize_rendered.contains("with_prec"));
 
         let big_sqrt =
             lower_method(&Type::BigDecimal, "sqrt", "bd", &[]).expect("bigdecimal sqrt lowers");
-        assert!(render_expr(&big_sqrt.expr).contains("sqrt_with_context"));
-        assert!(render_expr(&big_sqrt.expr).contains("DecimalConversionError"));
+        let big_sqrt_rendered = render_expr(&big_sqrt.expr);
+        assert!(big_sqrt_rendered.contains("sqrt_with_context"));
+        assert!(big_sqrt_rendered.contains("DecimalConversionError"));
+        assert!(big_sqrt_rendered.contains("bigdecimal::Context::new"));
+        assert!(big_sqrt_rendered.contains("NonZeroU64::MIN.saturating_add(27)"));
+        assert!(!big_sqrt_rendered.contains("unwrap_or_else"));
+        assert!(!big_sqrt_rendered.contains("with_prec"));
 
         let big_round =
             lower_method(&Type::BigDecimal, "round", "bd", &[]).expect("bigdecimal round lowers");
