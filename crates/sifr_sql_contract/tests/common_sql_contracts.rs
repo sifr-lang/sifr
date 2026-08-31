@@ -780,6 +780,7 @@ fn provider_analysis_exposes_only_validated_common_semantics() {
         cardinality: Cardinality::EXACTLY_ONE,
         effects: EffectContract::new(QueryEffect::Read, BTreeSet::new(), BTreeSet::new())
             .expect("read effect should validate"),
+        accessed_objects: BTreeSet::new(),
         semantic_flags: BTreeSet::from(["stable-result-name".to_string()]),
         required_capabilities: BTreeSet::from([
             "sql.bind.parameters".to_string(),
@@ -836,6 +837,7 @@ fn provider_analysis_exposes_only_validated_common_semantics() {
         cardinality: Cardinality::MANY,
         effects: EffectContract::new(QueryEffect::Read, BTreeSet::new(), BTreeSet::new())
             .expect("read effect should validate"),
+        accessed_objects: BTreeSet::new(),
         semantic_flags: BTreeSet::new(),
         required_capabilities: BTreeSet::from(["sql.query.select".to_string()]),
     };

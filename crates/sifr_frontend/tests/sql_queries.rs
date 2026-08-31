@@ -191,6 +191,11 @@ fn query_input(codecs: &CodecRegistry, cardinality: Cardinality) -> QueryCompila
                 BTreeSet::new(),
             )
             .unwrap(),
+            accessed_objects: BTreeSet::from([
+                ObjectId::new("public.users"),
+                ObjectId::new("public.users.active"),
+                ObjectId::new("public.users.id"),
+            ]),
             semantic_flags: BTreeSet::new(),
             required_capabilities: BTreeSet::from([
                 "sql.bind.parameters".to_string(),

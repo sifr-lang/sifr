@@ -33,6 +33,10 @@ impl AnalysisContext<'_> {
         } else {
             insert.columns.clone()
         };
+        for column_name in &target_columns {
+            let column = writable_column(&relation, column_name)?;
+            self.accessed_objects.insert(column.identity.clone());
+        }
         for required in relation
             .columns
             .values()
@@ -101,6 +105,10 @@ impl AnalysisContext<'_> {
         }
         let target_binding = binding_for_relation(&relation, None);
         if let Some(conflict) = &insert.conflict {
+            for column_name in &conflict.target_columns {
+                let column = writable_column(&relation, column_name)?;
+                self.accessed_objects.insert(column.identity.clone());
+            }
             let target = conflict
                 .target_columns
                 .iter()
@@ -261,6 +269,7 @@ impl AnalysisContext<'_> {
                 )));
             }
             let column = writable_column(relation, &assignment.column)?;
+            self.accessed_objects.insert(column.identity.clone());
             if matches!(assignment.value.kind, ExpressionKind::Default) {
                 if !column.has_default && !column.nullable {
                     return Err(write_error(format!(

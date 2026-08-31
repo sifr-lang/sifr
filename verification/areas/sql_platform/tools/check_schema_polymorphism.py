@@ -35,7 +35,8 @@ RESOURCES = {"verified-connection", "verified-pool", "verified-transaction"}
 RULES = {
     "concrete-profile-analysis", "no-runtime-provider-dispatch",
     "no-silent-capability-rewrite", "undeclared-behavior-rejection",
-    "provider-owned-capability-account", "undeclared-object-rejection", "witness-erasure",
+    "provider-owned-capability-account", "provider-owned-object-account",
+    "undeclared-object-rejection", "witness-erasure",
 }
 POSTGRESQL_CAPABILITIES = {
     "sql.bind.parameters", "sql.expression.case", "sql.expression.equality",
@@ -98,6 +99,7 @@ def validate_sources() -> None:
         "MissingCapability", "UndeclaredObject", "UndeclaredBehavior",
     ))
     contains(PROVIDER, (
+        "pub accessed_objects: BTreeSet<ObjectId>",
         "pub required_capabilities: BTreeSet<String>",
         "callers cannot supply or narrow it",
     ))
@@ -106,6 +108,7 @@ def validate_sources() -> None:
         "pub struct SchemaPolymorphicQueryCompiler", "pub fn specialize",
         "validate_query_envelope", "SpecializedSqlQuery { query, proof }",
         "analysis.required_capabilities",
+        "analysis.accessed_objects",
     ))
     contains(QUERY, (
         "pub struct VerifiedSqlExecutionResource", "pub enum SqlExecutionResourceKind",

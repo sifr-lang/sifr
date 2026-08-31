@@ -35,6 +35,9 @@ pub struct ProviderAnalysis {
     pub result_fields: Vec<ProviderResultField>,
     pub cardinality: Cardinality,
     pub effects: EffectContract,
+    /// Complete provider-owned set of schema objects reached anywhere in the
+    /// statement, including predicate-only and write-target columns.
+    pub accessed_objects: BTreeSet<ObjectId>,
     pub semantic_flags: BTreeSet<String>,
     /// Closed provider-owned account of every SQL capability used by the
     /// analyzed statement. Portable specialization treats this set as
@@ -99,6 +102,26 @@ impl ProviderAnalysis {
             return Err(ProviderAnalysisError::InvalidDialectSemantics);
         }
         if self.cardinality.validate().is_err() || self.effects.validate().is_err() {
+            return Err(ProviderAnalysisError::InvalidDialectSemantics);
+        }
+        let accounted_objects = self
+            .effects
+            .referenced_objects
+            .iter()
+            .chain(&self.effects.affected_objects)
+            .chain(
+                self.result_fields
+                    .iter()
+                    .filter_map(|field| field.source_object.as_ref()),
+            );
+        if self
+            .accessed_objects
+            .iter()
+            .any(|object| object.as_str().is_empty())
+            || accounted_objects
+                .into_iter()
+                .any(|object| !self.accessed_objects.contains(object))
+        {
             return Err(ProviderAnalysisError::InvalidDialectSemantics);
         }
         for (expected_slot, parameter) in self.parameters.iter().enumerate() {

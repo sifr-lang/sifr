@@ -7,9 +7,11 @@ use sifr_compiler_component::{
     EmbeddedAnalysisRequest, PlanKind, SourceSpan, TemplatePart,
 };
 use sifr_sql_contract::{
-    Cardinality, DatabaseType, QueryEffect, SchemaDocument, SchemaDocumentKind, SchemaObject,
-    SchemaObjectKind, SchemaRequirementIdentity, SemanticValue, build_provider_schema_requirement,
-    normalize_schema, provider_analysis_from_response, schema_source_fingerprint,
+    Cardinality, DatabaseType, ObjectId, PoolingMode, QueryEffect, SchemaDocument,
+    SchemaDocumentKind, SchemaEvidence, SchemaObject, SchemaObjectKind, SchemaProfile,
+    SchemaRequirement, SchemaRequirementIdentity, SchemaStrictness, SemanticValue, SessionContract,
+    build_profile_authority, build_provider_schema_requirement, normalize_schema,
+    provider_analysis_from_response, schema_source_fingerprint,
 };
 use sifr_sql_postgresql::{
     LibpgQueryParser, POSTGRESQL_QUERY_OPERATION, POSTGRESQL_SCHEMA_ARTIFACT_KIND,
@@ -291,8 +293,9 @@ fn postgresql_normalizes_portable_requirement_ddl_with_explicit_capabilities() {
         "sql.bind.parameters".to_string(),
         "sql.query.select".to_string(),
     ]);
+    let identity = SchemaRequirementIdentity::new("library", "has_users").unwrap();
     let artifact = build_provider_schema_requirement(
-        SchemaRequirementIdentity::new("library", "has_users").unwrap(),
+        identity.clone(),
         "db/requirements/has_users.postgresql.sql",
         schema_source_fingerprint(source.as_bytes()),
         &schema,
@@ -306,6 +309,46 @@ fn postgresql_normalizes_portable_requirement_ddl_with_explicit_capabilities() {
             .objects
             .contains_key(&sifr_sql_contract::ObjectId::new("public.users.email"))
     );
+
+    let application_source = "CREATE TABLE public.users (\
+        id bigint PRIMARY KEY,\
+        email text NOT NULL UNIQUE,\
+        display_name text,\
+        CHECK (display_name <> '')\
+    );";
+    let application = PostgresCompilerComponent::new(LibpgQueryParser).execute(
+        PostgresComponentRequest::NormalizeSchema {
+            provider: provider(),
+            server_major: LibpgQueryParser.server_major(),
+            documents: vec![("db/schema.sql".to_string(), application_source.to_string())],
+        },
+    );
+    let PostgresComponentResponse::Schema(application) = application else {
+        panic!("application DDL must normalize")
+    };
+    let application =
+        normalize_schema(provider(), application.dialect, application.documents).unwrap();
+    let authority = build_profile_authority(SchemaProfile {
+        package_id: "app@1.0.0#registry".to_string(),
+        name: "app".to_string(),
+        source_files: BTreeSet::from(["db/schema.sql".to_string()]),
+        source_fingerprints: BTreeMap::from([(
+            "db/schema.sql".to_string(),
+            schema_source_fingerprint(application_source.as_bytes()),
+        )]),
+        evidence: SchemaEvidence::MigrationHead,
+        strictness: SchemaStrictness::Compatible,
+        pooling: PoolingMode::Session,
+        session: SessionContract::default(),
+        accepted_signers: BTreeSet::new(),
+        capabilities: postgresql_capabilities(),
+        schema: application,
+    })
+    .unwrap();
+    SchemaRequirement::new(identity, [artifact])
+        .unwrap()
+        .prove(&authority)
+        .expect("application-only columns and constraints must preserve the structural proof");
 }
 
 #[test]
@@ -346,6 +389,16 @@ fn aliases_correlations_set_operations_and_parameter_codecs_are_exact() {
         sifr_sql_contract::Nullability::Nullable
     );
     assert_eq!(correlated.cardinality, Cardinality::AT_MOST_ONE);
+    for object in [
+        "public.users",
+        "public.users.id",
+        "public.users.team_id",
+        "public.teams",
+        "public.teams.id",
+        "public.teams.name",
+    ] {
+        assert!(correlated.accessed_objects.contains(&ObjectId::new(object)));
+    }
     assert_eq!(
         correlated.required_capabilities,
         BTreeSet::from([
@@ -456,6 +509,13 @@ fn update_and_delete_returning_preserve_write_effects() {
                 .required_capabilities
                 .contains("sql.write.returning")
         );
+        if source.starts_with("UPDATE") {
+            assert!(
+                analysis
+                    .accessed_objects
+                    .contains(&ObjectId::new("public.users.name"))
+            );
+        }
     }
 }
 
@@ -487,6 +547,14 @@ fn writes_enforce_required_generated_conflict_and_returning_contracts() {
     assert_eq!(valid.parameters.len(), 2);
     assert_eq!(valid.effects.effect, QueryEffect::Write);
     assert_eq!(valid.result_fields.len(), 1);
+    assert_eq!(
+        valid.accessed_objects,
+        BTreeSet::from([
+            ObjectId::new("public.users"),
+            ObjectId::new("public.users.id"),
+            ObjectId::new("public.users.name"),
+        ])
+    );
     assert_eq!(
         valid.required_capabilities,
         BTreeSet::from([

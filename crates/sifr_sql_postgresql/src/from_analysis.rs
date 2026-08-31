@@ -134,6 +134,14 @@ impl AnalysisContext<'_> {
                             format!("JOIN USING column '{column}' must exist on both sides"),
                         ));
                     }
+                    self.accessed_objects.extend(
+                        frame
+                            .bindings
+                            .iter()
+                            .filter(|binding| binding.relation.is_some())
+                            .filter_map(|binding| binding.columns.get(column))
+                            .map(|column| column.identity.clone()),
+                    );
                 }
             }
         }

@@ -1,6 +1,6 @@
 use crate::{
-    ObjectId, ObjectRequirement, ProfileAuthority, ProviderIdentity, SchemaIr, SchemaSlice,
-    schema_fingerprint, verify_compatible_slice,
+    ObjectId, ProfileAuthority, ProviderIdentity, SchemaDependencyRequest, SchemaIr, SchemaSlice,
+    minimum_schema_slice, schema_fingerprint, verify_compatible_slice,
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -155,24 +155,18 @@ pub fn build_provider_schema_requirement(
             "normalized requirement objects must come from the declared DDL artifact",
         ));
     }
-    let schema = SchemaSlice {
-        objects: normalized
+    let schema = minimum_schema_slice(
+        normalized,
+        normalized
             .objects
             .iter()
-            .map(|(identity, object)| {
-                (
-                    identity.clone(),
-                    ObjectRequirement {
-                        identity: identity.clone(),
-                        kind: object.kind,
-                        properties: object.semantic.clone(),
-                        dependencies: object.dependencies.clone(),
-                    },
-                )
-            })
-            .collect(),
-        absence_facts: BTreeSet::new(),
-    };
+            .map(|(identity, object)| SchemaDependencyRequest {
+                identity: identity.clone(),
+                properties: object.semantic.keys().cloned().collect(),
+            }),
+        [],
+    )
+    .map_err(|error| invalid(error.message))?;
     let normalized_schema_fingerprint = schema_fingerprint(normalized)
         .map_err(|error| invalid(error.message))?
         .as_str()

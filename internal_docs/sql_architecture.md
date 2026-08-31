@@ -1450,7 +1450,9 @@ def by_email[S: has_users.Schema](schema: SqlSchema[S], email: str):
 ```
 
 A requirement is a structural contract over normalized database objects. The
-compiler proves the `SchemaIR` subset relation before specialization.
+compiler proves the `SchemaIR` subset relation before specialization. Table
+column, constraint, and unique-key membership use containment. Scalar
+properties and primary keys stay exact.
 
 A call supplies the witness from one configured profile:
 
@@ -1480,6 +1482,10 @@ missing capability without rewriting the query.
 Provider query analysis owns the exact capability account for each statement.
 The frontend compares that account with the requirement. Callers cannot declare
 a smaller capability set than the analyzed SQL uses.
+
+Provider query analysis also owns the complete schema-object account. It
+includes predicate-only and write-target columns. Specialization rejects each
+object that the structural requirement does not declare.
 
 `SqlSchema` witnesses are compile-time-only. They can occur only as the direct
 `schema` export of a profile namespace or as a constrained generic parameter.

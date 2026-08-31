@@ -119,6 +119,56 @@ fn undeclared_objects_and_provider_behavior_fail_before_query_lowering() {
         SchemaRequirementErrorKind::UndeclaredObject
     );
 
+    let mut predicate_query = query_input(&codecs, "app", ObjectId::new("public.users"));
+    predicate_query
+        .analysis
+        .accessed_objects
+        .insert(ObjectId::new("public.users.created_at"));
+    let predicate_error = compiler
+        .specialize(SchemaSpecializationInput {
+            requirement_name: "library::has_users",
+            profile_name: "app",
+            witness: &witness,
+            query: predicate_query,
+        })
+        .expect_err("predicate-only undeclared column must fail");
+    assert_eq!(
+        predicate_error.kind,
+        SchemaRequirementErrorKind::UndeclaredObject
+    );
+
+    let mut assignment_query = query_input(&codecs, "app", ObjectId::new("public.users"));
+    assignment_query.analysis.normalized_statement =
+        "UPDATE public.users SET last_login = $1".to_string();
+    assignment_query.analysis.result_fields.clear();
+    assignment_query.analysis.cardinality = Cardinality::ZERO;
+    assignment_query.analysis.effects = EffectContract::new(
+        QueryEffect::Write,
+        BTreeSet::from([ObjectId::new("public.users")]),
+        BTreeSet::from([ObjectId::new("public.users")]),
+    )
+    .unwrap();
+    assignment_query.analysis.accessed_objects = BTreeSet::from([
+        ObjectId::new("public.users"),
+        ObjectId::new("public.users.last_login"),
+    ]);
+    assignment_query.analysis.required_capabilities = BTreeSet::from([
+        "sql.bind.parameters".to_string(),
+        "sql.query.update".to_string(),
+    ]);
+    let assignment_error = compiler
+        .specialize(SchemaSpecializationInput {
+            requirement_name: "library::has_users",
+            profile_name: "app",
+            witness: &witness,
+            query: assignment_query,
+        })
+        .expect_err("assignment-only undeclared column must fail");
+    assert_eq!(
+        assignment_error.kind,
+        SchemaRequirementErrorKind::UndeclaredObject
+    );
+
     let mut behavior_query = query_input(&codecs, "app", ObjectId::new("public.users"));
     behavior_query
         .analysis
@@ -143,10 +193,11 @@ fn environment() -> (
     SchemaRequirementRegistry,
     CodecRegistry,
 ) {
-    let schema = schema();
+    let requirement_schema = schema(false);
+    let profile_schema = schema(true);
     let mut profiles = ProfileModuleRegistry::default();
     for name in ["app", "other"] {
-        let authority = authority(name, schema.clone());
+        let authority = authority(name, profile_schema.clone());
         profiles
             .register(
                 authority.clone(),
@@ -159,7 +210,7 @@ fn environment() -> (
         identity.clone(),
         "db/requirements/has_users.postgresql.sql",
         "a".repeat(64),
-        &schema,
+        &requirement_schema,
         capabilities(),
         &provider_capabilities(),
     )
@@ -205,10 +256,15 @@ fn query_input<'a>(
             cardinality: Cardinality::AT_MOST_ONE,
             effects: EffectContract::new(
                 QueryEffect::Read,
-                BTreeSet::from([relation]),
+                BTreeSet::from([relation.clone()]),
                 BTreeSet::new(),
             )
             .unwrap(),
+            accessed_objects: BTreeSet::from([
+                relation,
+                ObjectId::new("public.users.active"),
+                ObjectId::new("public.users.id"),
+            ]),
             semantic_flags: BTreeSet::new(),
             required_capabilities: capabilities(),
         },
@@ -239,8 +295,58 @@ fn authority(
     .unwrap()
 }
 
-fn schema() -> sifr_sql_contract::SchemaIr {
+fn schema(include_application_columns: bool) -> sifr_sql_contract::SchemaIr {
     let source = "db/requirements/has_users.postgresql.sql";
+    let mut objects = vec![
+        object(
+            "public",
+            SchemaObjectKind::Namespace,
+            BTreeMap::new(),
+            [],
+            source,
+        ),
+        object(
+            "public.users",
+            SchemaObjectKind::Table,
+            BTreeMap::new(),
+            ["public"],
+            source,
+        ),
+        object(
+            "public.users.id",
+            SchemaObjectKind::Column,
+            BTreeMap::from([
+                ("type".to_string(), SemanticValue::Text("int8".to_string())),
+                ("nullable".to_string(), SemanticValue::Bool(false)),
+            ]),
+            ["public.users"],
+            source,
+        ),
+        object(
+            "public.users.active",
+            SchemaObjectKind::Column,
+            BTreeMap::from([
+                ("type".to_string(), SemanticValue::Text("bool".to_string())),
+                ("nullable".to_string(), SemanticValue::Bool(false)),
+            ]),
+            ["public.users"],
+            source,
+        ),
+    ];
+    if include_application_columns {
+        for name in ["created_at", "last_login"] {
+            objects.push(object(
+                &format!("public.users.{name}"),
+                SchemaObjectKind::Column,
+                BTreeMap::from([
+                    ("type".to_string(), SemanticValue::Text("bool".to_string())),
+                    ("nullable".to_string(), SemanticValue::Bool(false)),
+                ]),
+                ["public.users"],
+                source,
+            ));
+        }
+    }
     normalize_schema(
         provider(),
         DialectIdentity {
@@ -252,42 +358,7 @@ fn schema() -> sifr_sql_contract::SchemaIr {
         [SchemaDocument {
             kind: SchemaDocumentKind::SqlDdl,
             document: source.to_string(),
-            objects: vec![
-                object(
-                    "public",
-                    SchemaObjectKind::Namespace,
-                    BTreeMap::new(),
-                    [],
-                    source,
-                ),
-                object(
-                    "public.users",
-                    SchemaObjectKind::Table,
-                    BTreeMap::new(),
-                    ["public"],
-                    source,
-                ),
-                object(
-                    "public.users.id",
-                    SchemaObjectKind::Column,
-                    BTreeMap::from([
-                        ("type".to_string(), SemanticValue::Text("int8".to_string())),
-                        ("nullable".to_string(), SemanticValue::Bool(false)),
-                    ]),
-                    ["public.users"],
-                    source,
-                ),
-                object(
-                    "public.users.active",
-                    SchemaObjectKind::Column,
-                    BTreeMap::from([
-                        ("type".to_string(), SemanticValue::Text("bool".to_string())),
-                        ("nullable".to_string(), SemanticValue::Bool(false)),
-                    ]),
-                    ["public.users"],
-                    source,
-                ),
-            ],
+            objects,
         }],
     )
     .unwrap()

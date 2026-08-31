@@ -35,6 +35,7 @@
     "no-runtime-provider-dispatch",
     "no-silent-capability-rewrite",
     "provider-owned-capability-account",
+    "provider-owned-object-account",
     "undeclared-behavior-rejection",
     "undeclared-object-rejection",
     "witness-erasure"

@@ -329,6 +329,10 @@ fn compile_query(
                     BTreeSet::new(),
                 )
                 .unwrap(),
+                accessed_objects: BTreeSet::from([
+                    ObjectId::new("public.users"),
+                    ObjectId::new("public.users.active"),
+                ]),
                 semantic_flags: BTreeSet::new(),
                 required_capabilities: BTreeSet::from([
                     "sql.bind.parameters".to_string(),

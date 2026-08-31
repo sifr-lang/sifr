@@ -137,6 +137,7 @@ pub(crate) struct AnalysisContext<'a> {
     pub(crate) catalog: &'a PostgresCatalog,
     pub(crate) parameters: BTreeMap<u32, DatabaseType>,
     pub(crate) referenced: BTreeSet<ObjectId>,
+    pub(crate) accessed_objects: BTreeSet<ObjectId>,
     pub(crate) star_expansions: BTreeMap<(u32, u32), StarExpansion>,
     pub(crate) required_capabilities: BTreeSet<String>,
 }
@@ -147,6 +148,7 @@ impl<'a> AnalysisContext<'a> {
             catalog,
             parameters: BTreeMap::new(),
             referenced: BTreeSet::new(),
+            accessed_objects: BTreeSet::new(),
             star_expansions: BTreeMap::new(),
             required_capabilities: BTreeSet::new(),
         }

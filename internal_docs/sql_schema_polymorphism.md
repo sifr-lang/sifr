@@ -19,7 +19,9 @@ The slice can contain tables, columns, keys, types, and nullability. It can also
 contain other provider objects that the DDL declares.
 
 The requirement slice does not contain absence facts. Extra objects in a
-concrete profile do not invalidate a structural requirement.
+concrete profile do not invalidate a structural requirement. Table membership
+properties use containment, so an application can add columns and constraints.
+Declared scalar properties and primary keys remain exact.
 
 ### Explicit capabilities
 
@@ -32,6 +34,10 @@ capability. It also rejects a profile that cannot prove that capability.
 Provider query analysis returns the exact capability set that the SQL uses.
 The frontend compares this provider-owned set with the requirement. A caller
 cannot supply, remove, or narrow capability use.
+
+Provider query analysis also returns every schema object that the SQL reaches.
+This set includes columns used only in predicates, joins, groups, and writes.
+The frontend rejects each object that is absent from the requirement.
 
 The compiler does not remove syntax or change behavior to satisfy another
 provider. There is no silent lowest-common-denominator rewrite.

@@ -314,7 +314,11 @@ impl AnalysisContext<'_> {
                 expression,
             )),
             ExpressionKind::Column { path } => {
-                resolve_column(self.catalog, path, frames, expression)
+                let fact = resolve_column(self.catalog, path, frames, expression)?;
+                if let Some(object) = &fact.source_object {
+                    self.accessed_objects.insert(object.clone());
+                }
+                Ok(fact)
             }
             ExpressionKind::Parameter { number } => {
                 let expected = expected.ok_or_else(|| {

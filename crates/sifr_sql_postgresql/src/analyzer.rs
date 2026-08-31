@@ -83,6 +83,7 @@ impl<P: PostgresParser> PostgresAnalyzer<P> {
             analyzed.flags.insert("expanded-select-star".to_string());
         }
         let mut required_capabilities = context.required_capabilities.clone();
+        let mut accessed_objects = context.accessed_objects.clone();
         let parameter_types = context.finish_parameters()?;
         if !parameter_types.is_empty() {
             required_capabilities.insert("sql.bind.parameters".to_string());
@@ -140,6 +141,13 @@ impl<P: PostgresParser> PostgresAnalyzer<P> {
                 })
             })
             .collect::<Result<Vec<_>, PostgresAnalysisError>>()?;
+        accessed_objects.extend(analyzed.referenced.iter().cloned());
+        accessed_objects.extend(analyzed.affected.iter().cloned());
+        accessed_objects.extend(
+            result_fields
+                .iter()
+                .filter_map(|field| field.source_object.clone()),
+        );
         let analysis = ProviderAnalysis {
             server_profile: self.catalog.types.server_profile().to_string(),
             normalized_statement: self.parser.normalize(&explicit_source)?,
@@ -148,6 +156,7 @@ impl<P: PostgresParser> PostgresAnalyzer<P> {
             cardinality: analyzed.cardinality,
             effects: EffectContract::new(analyzed.effect, analyzed.referenced, analyzed.affected)
                 .map_err(|error| type_error(error.to_string()))?,
+            accessed_objects,
             semantic_flags: analyzed.flags,
             required_capabilities,
         };

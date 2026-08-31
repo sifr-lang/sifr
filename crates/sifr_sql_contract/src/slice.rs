@@ -159,7 +159,9 @@ pub fn verify_compatible_slice(
             )));
         }
         for (name, value) in &requirement.properties {
-            if object.semantic.get(name) != Some(value) {
+            if !object.semantic.get(name).is_some_and(|observed| {
+                compatible_property(requirement.kind, name, observed, value)
+            }) {
                 return Err(incompatible(format!(
                     "required schema property '{}.{name}' changed",
                     requirement.identity
@@ -206,6 +208,21 @@ pub fn verify_compatible_slice(
         }
     }
     Ok(())
+}
+
+fn compatible_property(
+    kind: SchemaObjectKind,
+    name: &str,
+    observed: &SemanticValue,
+    required: &SemanticValue,
+) -> bool {
+    if kind == SchemaObjectKind::Table
+        && matches!(name, "columns" | "constraints" | "unique-sets")
+        && let (SemanticValue::List(observed), SemanticValue::List(required)) = (observed, required)
+    {
+        return required.iter().all(|value| observed.contains(value));
+    }
+    observed == required
 }
 
 fn incompatible(message: impl Into<String>) -> SchemaContractError {

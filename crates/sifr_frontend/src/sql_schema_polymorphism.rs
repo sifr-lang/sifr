@@ -4,7 +4,6 @@ use sifr_sql_contract::{
     SchemaRequirementErrorKind, SchemaRequirementIdentity, SchemaRequirementProof,
     SchemaRequirementRegistry,
 };
-use std::collections::BTreeSet;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SqlSchemaWitness {
@@ -146,20 +145,8 @@ fn validate_query_envelope(
     analysis: &ProviderAnalysis,
     proof: &SchemaRequirementProof,
 ) -> Result<(), SchemaRequirementError> {
-    let used_objects = analysis
-        .effects
-        .referenced_objects
-        .iter()
-        .chain(&analysis.effects.affected_objects)
-        .chain(
-            analysis
-                .result_fields
-                .iter()
-                .filter_map(|field| field.source_object.as_ref()),
-        )
-        .cloned()
-        .collect::<BTreeSet<_>>();
-    let undeclared = used_objects
+    let accessed_objects = &analysis.accessed_objects;
+    let undeclared = accessed_objects
         .difference(&proof.declared_objects)
         .map(ToString::to_string)
         .collect::<Vec<_>>();
