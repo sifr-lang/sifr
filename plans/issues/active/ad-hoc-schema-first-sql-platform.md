@@ -294,7 +294,7 @@ can use these contracts.
 | 11 | completed | Host tool graph and command runner | Cargo-locked host-only tool packages execute direct command namespaces without entering application code generation. |
 | 12 | completed | Schema lifecycle tools | Pull, validate, and build commands produce deterministic snapshots, fingerprints, manifests, modules, semantic diffs, and affected-query reports. |
 | 13 | completed | Migration compiler and engine | Typed migration DAGs, intermediate schemas, DDL reflection, data steps, assertions, offline validation, recovery, and explicit rollback are complete. |
-| 14 | pending | PostgreSQL migration qualification | PostgreSQL DDL, locks, transactional limits, imports, baselines, recovery, and supported-version execution pass full migration qualification. |
+| 14 | completed | PostgreSQL migration qualification | PostgreSQL DDL, locks, transactional limits, imports, baselines, recovery, and supported-version execution pass full migration qualification. |
 | 15 | pending | Schema polymorphism and portable constraints | Structural schema requirements specialize safely, while explicit capability constraints validate portable code for every declared provider. |
 | 16 | pending | MySQL provider completion | MySQL query, schema, runtime, tooling, migration, editor, safety, and conformance surfaces satisfy the common and provider-specific contracts. |
 | 17 | pending | SQLite provider completion | SQLite query, schema, runtime, tooling, migration, editor, safety, and conformance surfaces satisfy the common and provider-specific contracts. |
@@ -909,16 +909,16 @@ Owned scope:
 
 Acceptance criteria:
 
-- [ ] PostgreSQL DDL reflection covers every object in the provider capability
+- [x] PostgreSQL DDL reflection covers every object in the provider capability
   matrix.
-- [ ] Transactional and non-transactional operations use correct boundaries and
+- [x] Transactional and non-transactional operations use correct boundaries and
   explicit recovery points.
-- [ ] Advisory locking, concurrent-start rejection, checksum drift, head mismatch,
+- [x] Advisory locking, concurrent-start rejection, checksum drift, head mismatch,
   and schema drift fail closed.
-- [ ] Import creates a truthful baseline without inventing historical migrations.
-- [ ] Forward-only and explicitly reversible migrations report exact operator
+- [x] Import creates a truthful baseline without inventing historical migrations.
+- [x] Forward-only and explicitly reversible migrations report exact operator
   actions.
-- [ ] Fresh creation, multi-step upgrade, merge, interruption, resume, failure,
+- [x] Fresh creation, multi-step upgrade, merge, interruption, resume, failure,
   and rollback suites pass on every supported PostgreSQL version.
 
 Focused validation:
@@ -1283,7 +1283,7 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 | 11 | completed | [#3619](https://github.com/sifr-lang/sifr/pull/3619) | `a20219da54` | host-tools 7/7; direct CLI 1/1; provisioning 1/1; analysis isolation 2/2; strict Clippy and guards pass | Two exact-SHA Opus reviews; round 2 verified the original blockers and deferred one Linux prerequisite plus new follow-ups under the continuation rule | Locked and confined host tool runner, structured provisioning, and inherited M10 failure isolation |
 | 12 | completed | [#3621](https://github.com/sifr-lang/sifr/pull/3621) | `73a69f691d` | schema-tool 6/6; provider 20/20; PostgreSQL 13-18 live catalog, artifact, and parity matrix; strict Clippy and guards pass | Opus remediation `SATISFIED` on `ba3629d63` | Deterministic pull, validation, build, canonical catalog normalization, and atomic artifact publication |
 | 13 | completed | [#3625](https://github.com/sifr-lang/sifr/pull/3625) | `6d28649ff9` | migration-engine 6/6; affected crates; workspace Clippy; formatting; HIR, file-size, SQL contract, metadata, and dependency guards pass | Opus remediation `SATISFIED` on `c6acf3da7`; one new merge mechanism is deferred under the continuation rule | Checked compiler graph, nominal migration HIR, closed runtime plan, recovery engine, and atomic artifacts |
-| 14 | pending | — | — | — | — | PostgreSQL migration qualification |
+| 14 | completed | [#3627](https://github.com/sifr-lang/sifr/pull/3627) | `5b2aa585f4` | migration and PostgreSQL suites 9/9; live PostgreSQL 13-18 migration matrix; strict Clippy, formatting, guards, qualification, and mutation checks pass | Opus remediation `SATISFIED` on `a8f02da62`; two new mechanisms are deferred under the continuation rule | PostgreSQL DDL reflection, runtime plan v2, imports, locking, recovery, rollback, operator commands, and supported-major qualification |
 | 15 | pending | — | — | — | — | Schema polymorphism and portable constraints |
 | 16 | pending | — | — | — | — | MySQL provider completion |
 | 17 | pending | — | — | — | — | SQLite provider completion |
@@ -1349,6 +1349,8 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 | Milestone 13 remediation review | `AmbiguousPath` now reports only the absence of a matching path. | Milestone 14 | Rename or split the error before provider migration diagnostics become public. |
 | Milestone 13 initial review | Explicit reverse plans compile but have no runtime execution entry point. | Milestone 14 | Execute only declared reverse plans and report exact operator actions in the PostgreSQL rollback matrix. |
 | Milestone 13 initial review | Migration contracts and HIR have no complete `.sifr` source-to-tool command path. | Milestone 18 | Wire migration source discovery, checked lowering, artifact build, and command execution through the integrated compiler and tool path. |
+| Milestone 14 initial review | Schema observation excludes `sifr_internal`, which can silently hide a user-owned schema with the same name. | Milestone 18 | Define the reserved namespace authority, reject user collisions, expose the policy through schema lifecycle tools, and add live collision evidence. |
+| Milestone 14 remediation review | PostgreSQL escape string constants such as `E'it\\'s'` can end quoted-literal scanning early and re-enter migration keyword classification. | Milestone 18 | Parse escape-string constants without scanning their contents as SQL keywords. Add transactional statements whose escape strings contain every autocommit family. |
 
 ### Milestone 0 closure record
 
@@ -2182,6 +2184,64 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
   mechanism, then complete explicit reverse execution and runtime provider
   metadata before the live matrix.
 
+### Milestone 14 closure record
+
+- Status: completed and merged under the phase continuation rule.
+- Starting commit: `d65ce110dedefc2128857756eed1e9d46ffffdad`.
+- Initial reviewed candidate: `e3d90614fe3149b1f49e24f1743089c1b9a3af55`.
+- Remediation reviewed and final candidate:
+  `a8f02da6258f2938697cc696e316467c8a970902`.
+- Pull request: [#3627](https://github.com/sifr-lang/sifr/pull/3627).
+- Merge commit: `5b2aa585f4e52f400e73e6932d35140266a17948`.
+- Acceptance disposition: all six Milestone 14 criteria are satisfied.
+- Reflection result: PostgreSQL DDL reflection covers the provider capability
+  inventory. Statements that cannot add a new reflected object retain an exact
+  declared effect or become explicit opaque effects.
+- Plan result: the closed runtime plan v2 records provider constraints,
+  capabilities, minimum server version, transaction requirements, author,
+  creation time, checksums, parents, fingerprints, and declared reverse steps.
+  Runtime validation rejects plan tampering before database execution.
+- Execution result: transactional and autocommit-required DDL use separate
+  boundaries and exact recovery points. Forward execution rejects rollback
+  progress. Explicit rollback executes only declared reverse plans.
+- Safety result: profile and bootstrap advisory locks, incomplete merge parents,
+  concurrent starts, checksums, heads, schema fingerprints, and recovery state
+  fail closed. Import records a truthful baseline without fabricating history.
+- Operator result: `sifr sql migration plan`, `import`, `apply`, and `rollback`
+  report exact actions through the host-tool boundary. PostgreSQL migration
+  support remains outside the generated application runtime dependency closure.
+- Focused validation: the registered migration-engine and PostgreSQL migration
+  suites passed 9/9 variants. The pinned live matrix passed fresh creation,
+  multi-step upgrade, merge, interruption, resume, failure, rollback, import,
+  drift, locking, and cross-profile bootstrap cases on PostgreSQL 13 through 18.
+- Repository validation: workspace and changed-target Clippy with warnings
+  denied, formatting, HIR maintainability, the 900-line source guard,
+  qualification checks, and mutation checks passed.
+- Review round 1: Opus returned `SATISFIED` with no blocking finding on the
+  initial candidate. The
+  [published review](https://github.com/sifr-lang/sifr/pull/3627#issuecomment-5475270496)
+  records the exact SHA. One remediation batch hardened rollback direction,
+  quoted-literal classification, additional autocommit families, plan lowering,
+  exact qualification inventories, bootstrap locking, and dead reflection code.
+- Review round 2: Opus verified every remediation and returned `SATISFIED` with
+  no blocking finding. The
+  [published review](https://github.com/sifr-lang/sifr/pull/3627#issuecomment-5475270707)
+  records the exact final candidate. It found one new escape-string classifier
+  mechanism. The initial review also identified reserved-schema ownership. Both
+  are assigned to Milestone 18. No third review ran.
+- Create-PR gate: the one allowed run used the exact final candidate. It stopped
+  before tests because the profile omits eight required SQL platform suites. It
+  did not run again.
+- Merge gate: the one allowed run used the same exact final candidate. It
+  stopped before tests on the same profile contradiction and did not run again.
+  The [published gate evidence](https://github.com/sifr-lang/sifr/pull/3627#issuecomment-5475279278)
+  records both commands. Milestone 18 owns the profile-model correction.
+- Documentation result: the PostgreSQL migration document defines reflection,
+  plan, transaction, recovery, import, rollback, supported-major, tooling, and
+  operator contracts. It pins latest stable tooling through the phase records.
+- Exact next action: implement Milestone 15 schema polymorphism and portable
+  constraints from the merged and recorded mainline.
+
 ### External async prerequisite closure record
 
 - Status: complete and merged before Milestone 9.
@@ -2230,5 +2290,5 @@ Complete this section after Milestone 18 merges:
 - Final capability and verification inventory: pending.
 - Deferred out-of-scope work: pending.
 - Archive destination: `plans/issues/archive/ad-hoc-schema-first-sql-platform.md`.
-- Exact next action: implement Milestone 14 from current
+- Exact next action: implement Milestone 15 from current
   `origin/main`.
