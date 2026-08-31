@@ -172,19 +172,17 @@ pub(super) fn test_generator_accepts_trailing_statements_after_loop() {
 }
 
 #[test]
-pub(super) fn test_generators_accept_bare_return_as_exhaustion() {
+pub(super) fn test_generators_accept_bare_and_none_literal_return_as_exhaustion() {
     let module = lower_source(
-        "def sync_values() -> Iterator[int]:\n    yield 1\n    return\n\nasync def async_values() -> AsyncGenerator[int, GeneratorCloseError]:\n    yield 1\n    return\n",
+        "def sync_bare() -> Iterator[int]:\n    yield 1\n    return\n\ndef sync_none() -> Iterator[int]:\n    yield 1\n    return None\n\nasync def async_bare() -> AsyncGenerator[int, GeneratorCloseError]:\n    yield 1\n    return\n\nasync def async_none() -> AsyncGenerator[int, GeneratorCloseError]:\n    yield 1\n    return None\n",
     )
     .unwrap();
-    assert!(matches!(
-        module.functions[0].body.last(),
-        Some(HirStmt::Return { value: None })
-    ));
-    assert!(matches!(
-        module.functions[1].body.last(),
-        Some(HirStmt::Return { value: None })
-    ));
+    assert!(
+        module
+            .functions
+            .iter()
+            .all(|function| matches!(function.body.last(), Some(HirStmt::Return { value: None })))
+    );
 }
 
 #[test]
@@ -197,6 +195,26 @@ pub(super) fn test_generator_rejects_non_none_return_value() {
                 .message
                 .contains("non-None generator return values are rejected")
     }));
+}
+
+#[test]
+pub(super) fn test_generators_reject_none_typed_return_expressions() {
+    let result = lower_source(
+        "def note() -> None:\n    pass\n\ndef sync_values() -> Iterator[int]:\n    yield 1\n    return note()\n\nasync def async_values() -> AsyncGenerator[int, GeneratorCloseError]:\n    yield 1\n    return note()\n",
+    );
+    let errors = result.expect_err("None-typed generator return expressions should be rejected");
+    assert_eq!(
+        errors
+            .iter()
+            .filter(|error| {
+                error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+                    && error
+                        .message
+                        .contains("None-typed return expressions are rejected")
+            })
+            .count(),
+        2
+    );
 }
 
 #[test]

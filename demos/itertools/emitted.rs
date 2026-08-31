@@ -279,10 +279,10 @@ fn cycle<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
         __SifrGenerator::new(async move |__sifr_yielder: __SifrYielder<T>| {
             let mut saved: Vec<T> = vec![];
             let mut emitted: SifrInt = SifrInt::from_i64(0);
+            if &n <= &SifrInt::from_i64(0) {
+                return;
+            }
             for value in data {
-                if (&emitted >= &n) {
-                    return;
-                }
                 saved.push(value.clone());
                 let current: Option<T> = {
                     let __sifr_index_list = &saved;
@@ -295,6 +295,9 @@ fn cycle<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
                 if let Some(current) = current {
                     __sifr_yielder.suspend(current.clone()).await;
                     emitted = &emitted + &SifrInt::from_i64(1);
+                    if (&emitted >= &n) {
+                        return;
+                    }
                 }
             }
             let size: SifrInt = SifrInt::from(saved.len());

@@ -1,5 +1,5 @@
 from sifr.io import read_text, write_text
-from sifr.itertools import count, islice
+from sifr.itertools import count, cycle, islice
 from sifr.os import getpid, is_file, remove_file
 from sifr.test import assert_true
 
@@ -10,6 +10,18 @@ def staged(path: str) -> Iterator[int]:
         yield 1
         _second_write: None = write_text(path, "second")
         yield 2
+    except IOError:
+        return
+
+
+def cycle_source(path: str) -> Iterator[int]:
+    try:
+        _first_write: None = write_text(path, "cycle-first")
+        yield 10
+        _second_write: None = write_text(path, "cycle-second")
+        yield 20
+        _third_write: None = write_text(path, "cycle-third")
+        yield 30
     except IOError:
         return
 
@@ -33,6 +45,11 @@ def main():
         second_marker: str = read_text(path)
         assert_true(second_marker == "second")
         assert_true(next(values) is None)
+
+        cycled: list[int] = list(cycle(cycle_source(path), 2))
+        assert_true(str(cycled) == "[10, 20]")
+        cycle_marker: str = read_text(path)
+        assert_true(cycle_marker == "cycle-second")
 
         unbounded: Iterator[int] = count()
         index: int = 0

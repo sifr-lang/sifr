@@ -22,6 +22,21 @@ pub(in crate::lower) fn lower_return(
             };
             let expr_ty = expr.ty().clone();
             if matches!(expr_ty.resolve_alias(), Type::None) {
+                if matches!(expr, HirExpr::NoneLiteral) {
+                    return HirStmt::Return { value: None };
+                }
+                let generator_kind = if ctx.current_function_is_async_generator {
+                    "async generator"
+                } else {
+                    "generator"
+                };
+                ctx.error_with_code_at(
+                    DiagnosticCode::TYPE_MISMATCH,
+                    format!(
+                        "{generator_kind} exhaustion accepts only bare 'return' or 'return None'; None-typed return expressions are rejected because generators cannot expose a return value"
+                    ),
+                    val.range(),
+                );
                 return HirStmt::Return { value: None };
             }
             let generator_kind = if ctx.current_function_is_async_generator {

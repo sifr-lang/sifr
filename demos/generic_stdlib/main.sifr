@@ -41,7 +41,7 @@ def main():
     flat_int: list[int] = flatten(nested_int)
     print(flat_int)
 
-    # --- 4. Generic accumulate (iter(Addable bound: works with int), float, str) ---
+    # --- 4. Generic accumulate (Addable bound: works with int, float, str) ---
     print("=== Generic accumulate ===")
     sums: list[int] = list(accumulate(iter([1, 2, 3, 4, 5])))
     print(sums)

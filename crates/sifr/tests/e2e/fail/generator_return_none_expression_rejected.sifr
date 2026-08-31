@@ -1,0 +1,9 @@
+# expect-error[col=12]: SIFR-TYPE-0002
+
+def note() -> None:
+    pass
+
+
+def values() -> Iterator[int]:
+    yield 1
+    return note()

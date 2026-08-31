@@ -455,14 +455,16 @@ def count_from(start: int, step: int, n: int) -> Iterator[int]:
 def cycle(own data: Iterator[T], n: int) -> Iterator[T]:
     saved: list[T] = []
     emitted: int = 0
+    if n <= 0:
+        return
     for value in data:
-        if emitted >= n:
-            return
         saved.append(value)
         current: T | None = saved[len(saved) - 1]
         if current is not None:
             yield current
             emitted = emitted + 1
+            if emitted >= n:
+                return
     size: int = len(saved)
     while emitted < n and size > 0:
         index: int = emitted % size
