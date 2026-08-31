@@ -2089,6 +2089,10 @@ schema dependency index.
 Generated output is deterministic. The command fails when two inputs claim
 authority for the same object without an explicit merge rule.
 
+[`sql_schema_tools.md`](./sql_schema_tools.md) records the implemented lifecycle
+contracts, artifact transaction, PostgreSQL catalog adapter, command behavior,
+credential boundary, and exact Rust tooling selections.
+
 ## Migration architecture
 
 The checked-in canonical schema is the compile-time authority. The migration graph
