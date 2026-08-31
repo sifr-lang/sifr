@@ -152,7 +152,7 @@ It does not broaden the active item.
 | 4A | merged | Residual checked-place lifecycle closure | Loop-carried witnesses, post-mutation missing behavior, and callback argument decoding preserve exact semantics and compile on every generated surface. |
 | 4B | merged | Structured-loop witness state closure | Async-for guard state cannot escape a possibly empty loop, and missing loop-carried witnesses take the loop-kind's terminating control-flow path instead of skipping progress. |
 | 4C | merged | Mutation-tail witness continuation closure | Refreshed witnesses use region-scoped continuations and current typed failure semantics across nested and straight-line mutation tails. |
-| 5 | pending | Lazy iterator and generator architecture | Yield, generator state, `count`, `islice`, chained adapters, and errors are lazy and semantically unbounded where required. |
+| 5 | merged | Lazy iterator and generator architecture | Yield, generator state, `count`, `islice`, chained adapters, and errors are lazy and semantically unbounded where required. |
 | 6 | pending | Stdlib emitted-semantics closure | String widths, IO reads/seeks/errors, decimal precision, iteration arguments, and every inventory-owned stdlib defect have exact behavior and resource safety. |
 | 7 | pending | Ownership, borrowing, and clone quality | Signatures and expressions use idiomatic borrowing; avoidable container, row, tree, and scalar clones are eliminated without weakening ownership safety. |
 | 8 | pending | Canonical Rust IR and emission cleanup | Structured IR represents all maintained code; dead branches/tails, identity transforms, needless returns, stale snapshots, and generated ceremony are removed at the producer. |
@@ -265,11 +265,11 @@ It does not broaden the active item.
 
 ### Item 5: Lazy iterator and generator architecture
 
-- [ ] Generator bodies are resumable state machines or an equivalently lazy
+- [x] Generator bodies are resumable state machines or an equivalently lazy
   representation, not eager vectors.
-- [ ] Infinite iterators remain infinite and consumers control termination.
-- [ ] `islice` and related adapters validate arguments and preserve error timing.
-- [ ] Laziness, partial consumption, side effects, and memory use have native
+- [x] Infinite iterators remain infinite and consumers control termination.
+- [x] `islice` and related adapters validate arguments and preserve error timing.
+- [x] Laziness, partial consumption, side effects, and memory use have native
   runtime regressions.
 
 ### Item 6: Stdlib emitted-semantics closure
@@ -345,6 +345,7 @@ It does not broaden the active item.
 | 4A | merged | [#3608](https://github.com/sifr-lang/sifr/pull/3608) | `9af05a15e1d2eaae6866b7976f425dc5b3077ca4` | Reviewed compiler candidate `13fc41d0d8e4465305b6bd4402f6f0557be91260`: 1,078 lowering tests passed with one intentional ignore; targeted codegen/lowering Clippy, native checked-place E2E, all seven callback examples, demo freshness, panic scans, formatting, HIR, and file-size checks passed. The one create-PR gate and one merge gate each stopped at the same profile preflight defect because the profile omitted required `postgresql-live-differential`; neither was repeated. After concurrent async-cleanup work reached `main`, integration commit `f8869ebc24647364e3c9d0862d53a18c43030885` preserved both ordinary and closable async-for witness refresh; 1,180 codegen plus lowering/runtime suites, targeted Clippy, two native fixtures, demo freshness, formatting, HIR, and file-size checks passed. | [Initial review](https://github.com/sifr-lang/sifr/pull/3608#issuecomment-5470878459) on `91fe545fcbe75a99bb8b75002fb68d9692a9fdd8` was NOT SATISFIED; [sole remediation review](https://github.com/sifr-lang/sifr/pull/3608#issuecomment-5470912500) on `13fc41d0d8e4465305b6bd4402f6f0557be91260` was SATISFIED. The async-for invalidation blocker was fixed. Its newly identified async-for guard leak and non-terminating missing-witness fallback are assigned to Item 4B under the no-third-review rule. | Loop-carried and while-condition witnesses now refresh at repeat boundaries; mutation dependencies invalidate before sync/async loop lowering; post-delete reads use current typed failure semantics; unused witness scaffolding is demand-driven; callback arrays are explicit and panic-free. The two bounded second-review defects are owned by Item 4B. |
 | 4B | merged | [#3612](https://github.com/sifr-lang/sifr/pull/3612) | `67c1804df84d0367e380ebef1ee14845ec1971fb` | Reviewed compiler candidate `68981d07cb6d088803d199e8924ecc9ab06d0a91`: 1,181 codegen and 1,079 lowering tests passed with one intentional ignore; strict targeted Clippy, native checked-place plus ordinary/closable async-for fixtures, demo freshness, formatting, HIR, and file-size checks passed. The sole create-PR and merge gates each stopped before tests because their then-current profiles omitted required `postgresql-live-differential`; neither was repeated. Concurrent PostgreSQL work then repaired the profiles and merged conflict-free as integration commit `5b1739b4853523b7a9b81bf1c8f1a6af28497a4c`; full codegen/lowering suites, targeted Clippy, formatting, diff, and 3,488-file guardrails passed after integration. | [Initial review](https://github.com/sifr-lang/sifr/pull/3612#issuecomment-5471106525) on `0e8bdd33af00c6bab5d43c02b614ee1f8052c70a` was SATISFIED; [sole remediation review](https://github.com/sifr-lang/sifr/pull/3612#issuecomment-5471132474) on `68981d07cb6d088803d199e8924ecc9ab06d0a91` was SATISFIED. Compiler-inserted while witness exits now use the canonical loop-else marker. The remediation review's new deeply nested mutation-tail continuation defect is assigned to Item 4C under the no-third-review rule. | Async-for body guards restore at loop exit; loop-carried witnesses use loop-kind progress/termination; body and condition refreshes preserve loop-else semantics; precise lowering diagnostics and native sync/async regressions merged. Remaining non-back-edge continuation scoping is owned by Item 4C. |
 | 4C | merged | [#3615](https://github.com/sifr-lang/sifr/pull/3615) | `2579fcd198acd105da4a93b794a82601524541a8` | Compiler candidate `6a849e8d9d8457b7e463486e52f6e629d5da6b86`: 1,183 codegen and 1,082 lowering tests passed with one intentional ignore; focused mutable-call invalidation, checked-place shape, native nested-loop, workspace Clippy, formatting, HIR, diff, and file-size checks passed. The non-E2E Sifr sweep's `numeric_sentinels.sifr` type diagnostic reproduced identically on exact base `6862b4a21ebd0917a54f5744c6e22960242bf00b` and is Item 8-owned. The sole create-PR and merge gates each stopped before tests because their current profiles omitted required `postgresql-live-differential` and `postgresql-live-runtime`; neither was repeated. | [Initial exact-SHA review](https://github.com/sifr-lang/sifr/pull/3615#issuecomment-5471369789) on `6a849e8d9d8457b7e463486e52f6e629d5da6b86` was SATISFIED with no blockers. Its non-blocking receiver-effect and clone-bound findings are assigned to Item 7; refresh-default evidence and wider loop-else scaffold deduplication are assigned to Item 8. | Stored witness exit payloads are eliminated; straight-line renewal cannot skip tails or replay outer control flow; mutable-call guards invalidate before codegen; simple and structured exits share one constructor; nested while/for/if and condition-marker regressions merged. |
+| 5 | merged | [#3622](https://github.com/sifr-lang/sifr/pull/3622) | `79b963aa6a909303b1152546a0f91e699cd8f1cf` | Final compiler candidate `cc63e5d4e86725543ed111b3c194d2e89ab5e629`: 1,183 codegen and 1,085 lowering tests passed with one intentional ignore; workspace Clippy, formatting, HIR, diff, 3,515-file guardrail, audit inventory, and exact demo freshness passed. Native evidence covered suspension-by-suspension side effects, 10,001 pulls from unbounded `count`, `islice` over that source, async lazy start/close/exhaustion, CPython/consolidated itertools behavior, and bounded `cycle` without an extra source effect. The 91-project generated corpus compiled on the initial candidate with panic, intrinsic-panic, determinism, demo, freshness, and every per-project rustfmt/Clippy classification passing; the exact remediation reran all affected lowering, native, Clippy, formatting, and freshness checks. The sole create-PR and merge gates each stopped before tests because both profiles omit required SQL suites `host-tools`, `postgresql-live-differential`, and `postgresql-live-runtime`; neither was repeated. | [Initial review](https://github.com/sifr-lang/sifr/pull/3622#issuecomment-5472340524) on `1029541fd69c9b1d6726f53331cc5319f17f3be3` was NOT SATISFIED; [sole remediation review](https://github.com/sifr-lang/sifr/pull/3622#issuecomment-5472360882) on `cc63e5d4e86725543ed111b3c194d2e89ab5e629` was SATISFIED with no blockers. The discarded `None`-typed return-expression defect and bounded-`cycle` over-pull were corrected. The remediation review's newly noted optional-element `cycle` semantics are assigned to Item 6 under the no-third-review rule. | Sync and async generators now own resumable producer futures; generator returns exhaust without silently discarding expressions; infinite and adapter iterators are consumer-driven; authoritative demos and native/codegen/lowering regressions are merged. |
 
 ## Deferred Findings
 
@@ -402,24 +403,30 @@ It does not broaden the active item.
 | Item 4C exact-SHA review | Loop-else setup and dispatch scaffolds remain duplicated across structured loop emitters even though the break-marker constructor is now canonical. | Item 8 | Give canonical Rust IR one loop-else scaffold constructor and prove sync, async, and statement-block paths render the same structure. |
 | Item 4C broad validation | `numeric_sentinels.sifr` is still classified as an E2E pass fixture although `nums[l]` lacks a statically established index proof and fails with `None | int`; exact Item 4C base and candidate agree. | Item 8 | Reconcile the fixture with the checked-place contract or implement a sound proof mechanism, then restore the non-E2E Sifr sweep without weakening optional-read diagnostics. |
 | Item 4C create-PR and merge gates | Both current verification profiles omit required `postgresql-live-differential` and `postgresql-live-runtime` suites and stop at preflight before running tests. | Item 12 | Repair final profile composition and retain a mutation test proving every required SQL platform suite is selected before the one final qualification run. |
+| Item 5 initial review | Nested generator lowering can reach the statement-block yield path with `in_generator_closure` false and emit an undefined `__sifr_yielder`; the new architecture did not introduce the former dangling-support behavior. | Item 8 | Represent nested generator bodies through the canonical structured generator-emission path or reject the unsupported form before Rust emission, with direct nested-function coverage. |
+| Item 5 initial review | The owned-iterator adaptations deliberately require explicit `iter(...)`, and `islice(it, start, None)` does not yet model CPython's unbounded-tail form. | Item 6 | Decide and document the language-level iterator ownership/parity contract, then add differential coverage for explicit ownership and the optional-stop form. |
+| Item 5 remediation review | `cycle` advances its output count without yielding when an instantiated optional element is represented by `None`, so optional-element sources can be dropped or miscounted. | Item 6 | Give generic optional values an unambiguous element representation in `cycle` and add focused optional-element semantic coverage. |
+| Item 5 full generated-quality and direct E2E runs | The generated surface inventory expects 705 E2E paths while the current tree has 718; aggregate rustfmt debt also changed although every one of the 91 individual project classifications passed. | Item 8 | Reconcile the authoritative inventory and remove producer formatting debt through canonical emission; do not bless a changed aggregate debt signature. |
+| Item 5 direct full E2E | `sliding_window_narrowing.sifr` emits an `Option<String>` key into `HashSet<String>::remove`, causing one generated compile defect to fan out across 279 fixtures after a cold rebuild. | Item 8 | Normalize the checked optional index/place before method-argument emission and add an isolated native regression before restoring the broad E2E sweep. |
+| Item 5 create-PR and merge gates | Both profiles omit required SQL platform suites `host-tools`, `postgresql-live-differential`, and `postgresql-live-runtime`, so both one-shot gates stopped at preflight before tests. | Item 12 | Repair final profile composition and preserve mutation coverage proving every required SQL suite is selected before the phase's final qualification run. |
 
 New out-of-scope findings must name a concrete active owner before the current
 item can close.
 
 ## Current Handoff
 
-- Active item: Item 5, lazy iterator and generator architecture, based on Item
-  4C merge `2579fcd198acd105da4a93b794a82601524541a8`.
-- Item 4C state: merged with region-scoped witness renewal, lowering-time
-  mutable-call invalidation, one canonical loop-break constructor, and native
-  plus codegen nested/straight-line/condition-refresh evidence. Its exact-SHA
-  Opus review was SATISFIED with no blockers.
-- Item 5 scope is the inventory-owned eager generator, finite infinite-iterator,
-  adapter validation/error-timing, partial-consumption, side-effect, and memory
-  defects. Item 4C's ownership/effect follow-ups remain Item 7-owned, canonical
-  refresh/scaffold and baseline-fixture follow-ups remain Item 8-owned, and SQL
-  profile composition remains Item 12-owned.
-- Next action: re-audit the Item 5 inventory and current generator/iterator
-  lowering on latest `origin/main`, implement the complete lazy architecture
-  without testing, then run focused and required validation, bounded exact-SHA
-  Opus review, and the single exact-candidate gate sequence.
+- Active item: Item 6, stdlib emitted-semantics closure, based on Item 5 merge
+  `79b963aa6a909303b1152546a0f91e699cd8f1cf`.
+- Item 5 state: merged with resumable sync/async producer futures, demand-driven
+  support, unbounded `count`, eager adapter validation plus lazy consumption,
+  literal-only generator exhaustion, and native side-effect/partial-consumption
+  evidence. Its sole remediation review was SATISFIED with no blockers.
+- Item 6 scope includes every inventory-owned stdlib semantic defect plus the
+  deferred JSON map ordering, exact-integer signed-zero, iterator ownership and
+  optional-stop parity, and optional-element `cycle` semantics. Canonical HIR,
+  stale inventory/fixtures, nested-generator emission, and rustfmt debt remain
+  Item 8-owned; SQL profile composition remains Item 12-owned.
+- Next action: rebase Item 6 on current `origin/main`, re-audit all Item 6
+  inventory rows and deferred stdlib findings, implement the complete semantic
+  closure without testing, then run focused and required validation, bounded
+  exact-SHA Opus review, and the single exact-candidate gate sequence.
