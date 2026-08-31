@@ -7873,6 +7873,7 @@ dependencies = [
  "sifr_compiler_component",
  "sifr_diagnostics",
  "sifr_structural_identity",
+ "static_assertions",
 ]
 
 [[package]]
@@ -7954,7 +7955,9 @@ dependencies = [
 name = "sifr_sql_runtime"
 version = "0.0.0"
 dependencies = [
+ "serde",
  "sifr_runtime",
+ "sifr_sql_contract",
  "static_assertions",
  "tokio",
 ]

@@ -2228,6 +2228,12 @@ canonical fingerprint and provider metadata.
 Future migrations start from that baseline. The tool never invents historical
 migrations for changes that occurred before import.
 
+[`sql_migrations.md`](./sql_migrations.md) records the implemented
+provider-neutral graph compiler, nominal intermediate states, affine plan and
+callback types, impact reports, execution ledger, bounded backfills, and
+recovery rules. Provider-specific migration qualification remains in each
+provider tool.
+
 ## Security and trust
 
 SQL values are parameters by default. Text interpolation is unavailable for SQL

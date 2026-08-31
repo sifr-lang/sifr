@@ -332,6 +332,59 @@
       ]
     },
     {
+      "name": "migration-engine",
+      "kind": "adapter",
+      "resource_classes": [
+        "cpu"
+      ],
+      "network_mode": "offline",
+      "timeout_seconds": 900,
+      "cases": [
+        {
+          "id": "sql-migration-engine-qualification",
+          "entry": "verification/areas/sql_platform/data/migration_engine_qualification.json",
+          "command": "sql-migration-engine-qualification",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-migration-engine-mutations",
+          "entry": "verification/areas/sql_platform/tools/check_migration_engine.py",
+          "command": "sql-migration-engine-mutations",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-migration-contract-tests",
+          "entry": "crates/sifr_sql_contract/tests/migration_contracts.rs",
+          "command": "sql-migration-contract-tests",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-migration-frontend-tests",
+          "entry": "crates/sifr_frontend/tests/sql_migrations.rs",
+          "command": "sql-migration-frontend-tests",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-migration-runtime-tests",
+          "entry": "crates/sifr_sql_runtime/tests/migration_engine.rs",
+          "command": "sql-migration-runtime-tests",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-migration-tool-tests",
+          "entry": "crates/sifr_sql_tool/tests/migration_artifacts.rs",
+          "command": "sql-migration-tool-tests",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
       "name": "postgresql-live-schema-tools",
       "kind": "adapter",
       "resource_classes": [

@@ -140,6 +140,31 @@ COMMANDS = {
         "cargo", "test", "--locked", "-p", "sifr_sql_tool",
         "-p", "sifr_sql_postgresql_tools",
     ],
+    "sql-migration-engine-qualification": [
+        sys.executable,
+        str(AREA_ROOT / "tools" / "check_migration_engine.py"),
+    ],
+    "sql-migration-engine-mutations": [
+        sys.executable,
+        str(AREA_ROOT / "tools" / "check_migration_engine.py"),
+        "--self-test",
+    ],
+    "sql-migration-contract-tests": [
+        "cargo", "test", "--locked", "-p", "sifr_sql_contract", "--test",
+        "migration_contracts",
+    ],
+    "sql-migration-frontend-tests": [
+        "cargo", "test", "--locked", "-p", "sifr_frontend", "--test",
+        "sql_migrations",
+    ],
+    "sql-migration-runtime-tests": [
+        "cargo", "test", "--locked", "-p", "sifr_sql_runtime", "--test",
+        "migration_engine",
+    ],
+    "sql-migration-tool-tests": [
+        "cargo", "test", "--locked", "-p", "sifr_sql_tool", "--test",
+        "migration_artifacts",
+    ],
     "sql-postgresql-live-schema-tools": [
         sys.executable,
         str(AREA_ROOT / "tools" / "run_postgresql_schema_tool_matrix.py"),

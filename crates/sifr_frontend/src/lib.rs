@@ -69,11 +69,13 @@ mod query_diagnostics_behavior_tests;
 mod query_diagnostics_equivalence_tests;
 mod source_provider;
 mod sql_editor;
+mod sql_migrations;
 mod sql_queries;
 #[cfg(test)]
 mod structural_shape_import_tests;
 pub use source_provider::*;
 pub use sql_editor::*;
+pub use sql_migrations::*;
 pub use sql_queries::*;
 mod source_maps;
 pub use source_maps::*;
