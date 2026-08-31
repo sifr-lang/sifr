@@ -292,7 +292,7 @@ can use these contracts.
 | 9 | completed | PostgreSQL runtime | Verified pools, session contracts, transactions, streaming, automatic statement caching, explicit fetch methods, bounded cleanup, tests, and panic-safe protocol handling are complete. |
 | 10 | completed | Incremental compiler and editor experience | Fine-grained caching, invalidation, virtual SQL documents, source maps, completion, navigation, rename, formatting, and quick fixes are complete. |
 | 11 | completed | Host tool graph and command runner | Cargo-locked host-only tool packages execute direct command namespaces without entering application code generation. |
-| 12 | pending | Schema lifecycle tools | Pull, validate, and build commands produce deterministic snapshots, fingerprints, manifests, modules, semantic diffs, and affected-query reports. |
+| 12 | completed | Schema lifecycle tools | Pull, validate, and build commands produce deterministic snapshots, fingerprints, manifests, modules, semantic diffs, and affected-query reports. |
 | 13 | pending | Migration compiler and engine | Typed migration DAGs, intermediate schemas, DDL reflection, data steps, assertions, offline validation, recovery, and explicit rollback are complete. |
 | 14 | pending | PostgreSQL migration qualification | PostgreSQL DDL, locks, transactional limits, imports, baselines, recovery, and supported-version execution pass full migration qualification. |
 | 15 | pending | Schema polymorphism and portable constraints | Structural schema requirements specialize safely, while explicit capability constraints validate portable code for every declared provider. |
@@ -832,18 +832,18 @@ Owned scope:
 
 Acceptance criteria:
 
-- [ ] `schema pull` normalizes live provider catalogs and preserves semantic
+- [x] `schema pull` normalizes live provider catalogs and preserves semantic
   provider objects.
-- [ ] Pull displays a semantic diff before replacement unless an explicit
+- [x] Pull displays a semantic diff before replacement unless an explicit
   non-interactive acceptance flag is present.
-- [ ] `schema validate` compares sources, canonical snapshots, migrations, and
+- [x] `schema validate` compares sources, canonical snapshots, migrations, and
   optional live state according to profile policy.
-- [ ] Validation reports object differences and affected queries without silent
+- [x] Validation reports object differences and affected queries without silent
   file mutation.
-- [ ] `schema build` produces deterministic snapshots, fingerprints, runtime
+- [x] `schema build` produces deterministic snapshots, fingerprints, runtime
   manifests, generated modules, and schema dependency indexes. It does not emit
   application query signatures.
-- [ ] Conflicting authorities, credentials in output, nondeterminism, and incomplete
+- [x] Conflicting authorities, credentials in output, nondeterminism, and incomplete
   provider metadata fail closed.
 
 Focused validation:
@@ -1281,7 +1281,7 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 | 9 | completed | [#3611](https://github.com/sifr-lang/sifr/pull/3611) | `9dc0e55e09` | common and provider runtime tests; SQL compiler and runtime qualification; strict Clippy and guards; exact PostgreSQL 13-18 live matrix | Opus remediation `SATISFIED` on `258f13a9a`; one new malformed-BOOL classification defect is deferred | Verified PostgreSQL runtime, sessions, transactions, streaming, caching, cleanup, and resource bounds |
 | 10 | completed | [#3617](https://github.com/sifr-lang/sifr/pull/3617) | `35926da677` | incremental-editor 2/2; SQL mutation 9/9; frontend 134; analysis 51; LSP 81; PostgreSQL component 14/14; strict Clippy and guards pass | Opus round 2 closed all four original blockers on `08e864bf6`; one new failure-isolation defect is deferred | Incremental compiler and editor experience |
 | 11 | completed | [#3619](https://github.com/sifr-lang/sifr/pull/3619) | `a20219da54` | host-tools 7/7; direct CLI 1/1; provisioning 1/1; analysis isolation 2/2; strict Clippy and guards pass | Two exact-SHA Opus reviews; round 2 verified the original blockers and deferred one Linux prerequisite plus new follow-ups under the continuation rule | Locked and confined host tool runner, structured provisioning, and inherited M10 failure isolation |
-| 12 | pending | — | — | — | — | Schema lifecycle tools |
+| 12 | completed | [#3621](https://github.com/sifr-lang/sifr/pull/3621) | `73a69f691d` | schema-tool 6/6; provider 20/20; PostgreSQL 13-18 live catalog, artifact, and parity matrix; strict Clippy and guards pass | Opus remediation `SATISFIED` on `ba3629d63` | Deterministic pull, validation, build, canonical catalog normalization, and atomic artifact publication |
 | 13 | pending | — | — | — | — | Migration compiler and engine |
 | 14 | pending | — | — | — | — | PostgreSQL migration qualification |
 | 15 | pending | — | — | — | — | Schema polymorphism and portable constraints |
@@ -1337,6 +1337,13 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 | Milestone 11 remediation review | Cargo build scripts and procedural macros run before runtime confinement, but the host-tool trust document does not state that build-time boundary. | Milestone 18 | Document the reviewed-package build-time trust boundary or add build-time confinement evidence. |
 | Milestone 11 remediation review | SQL provision profile scanning counts `--profile` operands after a `--` separator. | Milestone 18 | Stop option recognition at `--` and add operand regressions. |
 | Milestone 11 remediation review | Host-tool qualification validates evidence-file presence but not the behavior contained in those files. | Milestone 18 | Bind qualification records to named executable tests and reject evidence removal or replacement. |
+| Milestone 12 remediation review | Function catalog keys use the final identity segment while live function, operator, and cast identities include generated overload suffixes. | Milestone 18 | Align lookup keys and canonical identities, then add overloaded function, operator, and cast live regressions. |
+| Milestone 12 remediation review | Live function result nullability is inferred from PostgreSQL `proisstrict`, which does not prove a non-null result and diverges from DDL normalization. | Milestone 18 | Use a sound canonical nullability rule and prove live-versus-DDL parity for strict and non-strict functions. |
+| Milestone 12 remediation review | Live and declarative view definitions, check expressions, constraint names, and identity-column facts do not yet normalize to one semantic representation. | Milestone 18 | Canonicalize these representations and expand live parity beyond the simple table, column, and primary-key case. |
+| Milestone 12 remediation review | Domains are registered before ranges, so a domain over a user-defined range can fail closed despite a representable base type. | Milestone 18 | Order registration by dependency or use a deterministic fixpoint, with domain-over-range live evidence. |
+| Milestone 12 remediation review | Generated array forms of domains and composites fail closed even when their canonical element forms are representable. | Milestone 18 | Add canonical generated-array handling and live round-trip evidence without fabricating fallback types. |
+| Milestone 12 remediation review | Catalog SQL still selects dead fabricated `sifr_type` and composite-field literals that normalization always replaces. | Milestone 18 | Remove the dead literals and keep one authoritative type-normalization path. |
+| Milestone 12 review follow-up | Pull acceptance rebuilds live authority while retaining declarative source paths and fingerprints, which can misstate the resulting profile authority. | Milestone 18 | Define and enforce the accepted pull authority transition, including source and fingerprint metadata. |
 
 ### Milestone 0 closure record
 
@@ -2034,6 +2041,73 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 - Exact next action: implement Milestone 12 schema lifecycle tools from the
   merged and recorded mainline.
 
+### Milestone 12 closure record
+
+- Status: completed and merged under the phase continuation rule.
+- Starting commit: `c560ae5da1e85f433df7e5bb6a034cd8e75c1f54`.
+- Initial reviewed candidate: `bd8b04dd28faab312d8527979a3e1096f72255d2`.
+- Remediation reviewed and final candidate:
+  `ba3629d634b15c192af46b66a4972c77683fd194`.
+- Pull request: [#3621](https://github.com/sifr-lang/sifr/pull/3621).
+- Merge commit: `73a69f691d3e6bbf49342f1901dfedf55782312a`.
+- Command result: the PostgreSQL host tool implements `schema pull`,
+  `schema validate`, and `schema build`. Pull shows the semantic diff before a
+  replacement. Non-interactive writes require `--accept`.
+  Validation is read-only and reports object-level changes plus affected query
+  identities. Build verifies deterministic double production before publication.
+- Authority result: source, snapshot, migration, and optional live authorities
+  resolve through one common policy and reject conflicts. Credentials are
+  rejected from inputs and generated values. Incomplete provider facts fail
+  closed instead of receiving fallback Sifr types.
+- Artifact result: one atomic directory transaction publishes the canonical
+  snapshot, fingerprint, runtime manifest, generated Sifr module and metadata,
+  dependency index, and artifact manifest. Schema tools never emit application
+  query signatures.
+- PostgreSQL result: catalog introspection covers namespaces, relations,
+  columns, constraints, indexes, sequences, identity metadata, views, enums,
+  domains, composites, ranges, and multiranges. It also covers functions,
+  operators, casts, collations, extensions, triggers, capabilities, and dialect
+  facts. Catalog type names pass through the provider parser and type registry.
+  This process produces the same canonical `SchemaIR` vocabulary as declarative
+  DDL.
+- Focused validation: common schema-tool tests passed 6/6. The complete
+  PostgreSQL provider suite passed 20/20. Strict focused Clippy, formatting,
+  diff hygiene, HIR maintainability, and the 3,522-file size guard passed.
+  The live matrix passed the exact PostgreSQL 13, 14, 15, 16, 17, and 18 image
+  digests. Every pull reloaded through `PostgresCatalog`. Every major built the
+  complete artifact set. The matrix asserted domain and composite Sifr types.
+  PostgreSQL 18 produced an empty live-versus-DDL semantic diff for a simple
+  table with a primary key.
+- Create-PR gate: the one allowed run used the exact final candidate. It stopped
+  before tests because the offline `create-pr` profile omits the required
+  `host-tools`, `schema-tools`, `postgresql-live-schema-tools`,
+  `postgresql-live-differential`, and `postgresql-live-runtime` suites. It did
+  not run again. Milestone 18 owns the profile-model correction.
+- Merge gate: the one allowed run used the same exact final candidate. It
+  stopped before tests on the same required-suite contradiction and did not run
+  again. The [published gate evidence](https://github.com/sifr-lang/sifr/pull/3621#issuecomment-5472348573)
+  records both exact invocations.
+- Review round 1: Opus returned `NOT SATISFIED` because live catalogs used a
+  parallel vocabulary instead of compiler-canonical `SchemaIR` types. They also
+  fabricated `str` fallbacks for domains and composites. The
+  [published review](https://github.com/sifr-lang/sifr/pull/3621#issuecomment-5472301449)
+  records the exact initial candidate.
+- Remediation: one batch added provider-owned catalog type normalization,
+  canonical enum, domain, composite, range, and multirange data, separate
+  PostgreSQL 14-or-newer multirange introspection, fail-closed unsupported-type
+  behavior, full graph reload evidence, and live-versus-DDL parity evidence.
+- Review round 2: Opus verified both original blockers and returned `SATISFIED`
+  on the final candidate. The
+  [published review](https://github.com/sifr-lang/sifr/pull/3621#issuecomment-5472337308)
+  records the result. Its new mechanism findings and suggestions are assigned
+  to Milestone 18 in the deferred-review ledger. No third review ran.
+- Documentation result: the schema-tool document and architecture index define
+  authority resolution, command ergonomics, atomic artifacts, provider catalog
+  ownership, deterministic behavior, secret rejection, and qualification. The
+  roadmap now records Milestones 0-12 complete while the phase remains active.
+- Exact next action: implement Milestone 13 migration compiler and engine from
+  the merged and recorded mainline.
+
 ### External async prerequisite closure record
 
 - Status: complete and merged before Milestone 9.
@@ -2082,5 +2156,5 @@ Complete this section after Milestone 18 merges:
 - Final capability and verification inventory: pending.
 - Deferred out-of-scope work: pending.
 - Archive destination: `plans/issues/archive/ad-hoc-schema-first-sql-platform.md`.
-- Exact next action: implement Milestone 12 from current
+- Exact next action: implement Milestone 13 from current
   `origin/main`.
