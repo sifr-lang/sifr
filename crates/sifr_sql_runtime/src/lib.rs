@@ -8,6 +8,7 @@ mod codec;
 mod error;
 mod future;
 mod handles;
+mod migration;
 mod parameter;
 mod pool;
 mod provider;
@@ -27,6 +28,15 @@ pub use future::ProviderFuture;
 pub use handles::{
     Connection, OwnedRowStream, Pool, ProviderLeaseToken, RowStream, Transaction, Unverified,
     VerificationEvidence, Verified,
+};
+pub use migration::{
+    AppliedMigrationRecord, InProgressMigrationRecord, MigrationEngine, MigrationExecutionError,
+    MigrationExecutionErrorKind, MigrationExecutionEvent, MigrationExecutionLimits,
+    MigrationExecutionNode, MigrationExecutionPath, MigrationExecutionPlan,
+    MigrationExecutionReport, MigrationExecutionStatus, MigrationExecutionStep,
+    MigrationExecutionStepKind, MigrationId, MigrationLedgerSnapshot, MigrationLock,
+    MigrationReplayPolicy, MigrationRuntime, MigrationStateId, MigrationStepRequest,
+    MigrationStepResult, MigrationTransactionBoundary,
 };
 pub use parameter::{
     BoundParameters, OwnedParameter, OwnedSqlValue, ParameterError, RuntimeCodecIdentity,

@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "compiler_owner": "sifr_sql_contract",
+  "hir_owner": "sifr_frontend",
+  "runtime_owner": "sifr_sql_runtime",
+  "format_version": 1,
+  "graph_invariants": [
+    "canonical-target",
+    "checked-dag",
+    "explicit-head",
+    "parent-fingerprints",
+    "provider-constraints",
+    "stable-checksums"
+  ],
+  "step_invariants": [
+    "affine-plan",
+    "bounded-backfill",
+    "checked-assertion",
+    "explicit-transaction-boundary",
+    "intermediate-schema",
+    "nonescaping-data-callback",
+    "reflected-or-declared-ddl",
+    "state-scoped-data"
+  ],
+  "runtime_invariants": [
+    "advisory-lock-record",
+    "ambiguous-recovery-rejected",
+    "checksum-drift-rejected",
+    "explicit-rollback-only",
+    "head-record",
+    "panic-contained",
+    "recovery-point-record",
+    "schema-drift-rejected",
+    "step-duration-record"
+  ],
+  "evidence": {
+    "compiler": "crates/sifr_sql_contract/src/migration/compiler.rs",
+    "contract-tests": "crates/sifr_sql_contract/tests/migration_contracts.rs",
+    "documentation": "internal_docs/sql_migrations.md",
+    "frontend": "crates/sifr_frontend/src/sql_migrations.rs",
+    "frontend-tests": "crates/sifr_frontend/tests/sql_migrations.rs",
+    "runtime": "crates/sifr_sql_runtime/src/migration/engine.rs",
+    "runtime-manifest": "crates/sifr_sql_runtime/Cargo.toml",
+    "runtime-plan": "crates/sifr_sql_runtime/src/migration/plan.rs",
+    "runtime-tests": "crates/sifr_sql_runtime/tests/migration_engine.rs",
+    "tool-artifacts": "crates/sifr_sql_tool/src/migration_artifacts.rs",
+    "tool-tests": "crates/sifr_sql_tool/tests/migration_artifacts.rs"
+  }
+}

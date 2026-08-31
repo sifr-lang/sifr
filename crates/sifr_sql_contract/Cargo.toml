@@ -17,6 +17,7 @@ sifr_compiler_component = { workspace = true }
 
 [dev-dependencies]
 insta = { workspace = true }
+static_assertions = { workspace = true }
 
 [lints]
 workspace = true

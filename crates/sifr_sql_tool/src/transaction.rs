@@ -1,5 +1,7 @@
 use crate::lifecycle::error;
-use crate::{SchemaBuildArtifacts, SchemaLifecycleError, SchemaLifecycleErrorKind};
+use crate::{
+    MigrationBuildArtifacts, SchemaBuildArtifacts, SchemaLifecycleError, SchemaLifecycleErrorKind,
+};
 use std::fs;
 use std::path::{Component, Path, PathBuf};
 use tempfile::Builder;
@@ -7,6 +9,20 @@ use tempfile::Builder;
 pub fn write_artifacts_atomically(
     output_directory: &Path,
     artifacts: &SchemaBuildArtifacts,
+) -> Result<(), SchemaLifecycleError> {
+    write_files_atomically(output_directory, artifacts.files())
+}
+
+pub fn write_migration_artifacts_atomically(
+    output_directory: &Path,
+    artifacts: &MigrationBuildArtifacts,
+) -> Result<(), SchemaLifecycleError> {
+    write_files_atomically(output_directory, artifacts.files())
+}
+
+fn write_files_atomically(
+    output_directory: &Path,
+    files: &std::collections::BTreeMap<String, Vec<u8>>,
 ) -> Result<(), SchemaLifecycleError> {
     validate_output_directory(output_directory)?;
     let parent = output_directory.parent().ok_or_else(|| {
@@ -23,7 +39,7 @@ pub fn write_artifacts_atomically(
         .prefix(".sifr-schema-stage-")
         .tempdir_in(parent)
         .map_err(file_error("create schema artifact staging directory"))?;
-    for (relative, bytes) in artifacts.files() {
+    for (relative, bytes) in files {
         validate_relative_path(relative)?;
         let destination = staging.path().join(relative);
         if let Some(parent) = destination.parent() {

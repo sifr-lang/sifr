@@ -14,6 +14,7 @@ mod fragment;
 mod fragment_batches;
 mod generated;
 mod identifier;
+mod migration;
 mod normalization;
 mod profile;
 mod profile_registry;
@@ -66,6 +67,16 @@ pub use generated::{
 pub use identifier::{
     decode_generated_identifier, decode_generated_path, encode_generated_identifier,
     encode_generated_path,
+};
+pub use migration::{
+    BackfillContract, CompiledMigration, CompiledMigrationGraph, CompiledMigrationPath,
+    CompiledMigrationStep, CompiledStepKind, DataCallbackContract, DdlReflection, DdlRisk,
+    MIGRATION_GRAPH_FORMAT_VERSION, MigrationBaseline, MigrationCompileError,
+    MigrationCompileErrorKind, MigrationCompiler, MigrationDb, MigrationDefinition,
+    MigrationDialect, MigrationGraphDefinition, MigrationImpact, MigrationNodeId, MigrationPlan,
+    MigrationProviderConstraint, MigrationState, MigrationStateIdentity, MigrationStepDefinition,
+    MigrationStepKind, ReplayPolicy, TransactionBoundary, TransactionRequirement,
+    topological_order,
 };
 pub use normalization::{SchemaDocument, SchemaDocumentKind, normalize_schema};
 pub use profile::{
