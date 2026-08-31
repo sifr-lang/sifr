@@ -34,6 +34,7 @@ fn range_anchor_sequence(for_stmt: &StmtFor, target_name: &str, ctx: &LowerCtx) 
             SequenceGuard::MinLength { .. }
             | SequenceGuard::IndexVarNonNegative { .. }
             | SequenceGuard::DictContains { .. }
+            | SequenceGuard::SubscriptAccessible { .. }
             | SequenceGuard::SubscriptPresent { .. }
             | SequenceGuard::IndexVarInRange { .. } => None,
         })

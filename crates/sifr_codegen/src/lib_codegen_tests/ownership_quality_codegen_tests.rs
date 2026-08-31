@@ -162,6 +162,60 @@ def store(mut items: list[str], mut keys: set[str], mut defaults: dict[str, str]
 }
 
 #[test]
+fn setdefault_materializes_places_but_moves_owned_temporaries() {
+    let generated = generate_rust_from_source(
+        r#"
+def literal_default(mut defaults: dict[str, str]) -> str:
+    return defaults.setdefault("key", "value")
+
+def reusable_default(mut defaults: dict[str, str]) -> str:
+    key: str = "key"
+    value: str = "value"
+    selected: str = defaults.setdefault(key, value)
+    print(key)
+    print(value)
+    return selected
+"#,
+    );
+
+    assert!(
+        generated.contains(
+            "defaults.entry(\"key\".to_string()).or_insert(\"value\".to_string()).to_owned()"
+        ),
+        "{generated}"
+    );
+    assert!(
+        generated.contains("defaults.entry(key.to_owned()).or_insert(value.to_owned()).to_owned()"),
+        "{generated}"
+    );
+    assert!(
+        !generated.contains(".to_string().to_owned()"),
+        "{generated}"
+    );
+    assert!(!generated.contains(".to_owned().to_owned()"), "{generated}");
+}
+
+#[test]
+fn setdefault_copy_values_are_moved_and_dereferenced_without_clone() {
+    let generated = generate_rust_from_source(
+        r#"
+def copy_default(mut flags: dict[str, bool], key: str, flag: bool) -> bool:
+    return flags.setdefault(key, flag)
+"#,
+    );
+
+    assert!(
+        generated.contains("*flags.entry(key.to_owned()).or_insert(flag)"),
+        "{generated}"
+    );
+    assert!(!generated.contains("flag.clone()"), "{generated}");
+    assert!(
+        !generated.contains("or_insert(flag).clone()"),
+        "{generated}"
+    );
+}
+
+#[test]
 fn recursive_and_dynamic_programming_shapes_have_clone_budgets() {
     let generated = generate_rust_from_source(
         r#"

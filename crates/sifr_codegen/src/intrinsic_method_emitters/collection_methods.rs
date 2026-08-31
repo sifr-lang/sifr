@@ -266,7 +266,9 @@ impl RustEmitter {
                     argument,
                     lowered_arg.clone(),
                 );
-                *lowered_arg = if matches!((object_ty, method), (Type::Set(_), "add")) {
+                *lowered_arg = if matches!((object_ty, method), (Type::Dict(_, _), "setdefault")) {
+                    lowered_arg.clone()
+                } else if matches!((object_ty, method), (Type::Set(_), "add")) {
                     self.materialize_borrowed_parameter_for_owned_boundary(
                         argument,
                         lowered_arg.clone(),

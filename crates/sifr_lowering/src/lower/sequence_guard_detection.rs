@@ -258,10 +258,16 @@ fn subscript_present_guard(expr: &Expr) -> Vec<SequenceGuard> {
     let Some(index_expr_debug) = key_guard_token(subscript.slice.as_ref()) else {
         return Vec::new();
     };
-    vec![SequenceGuard::SubscriptPresent {
-        sequence,
-        index_expr_debug,
-    }]
+    vec![
+        SequenceGuard::SubscriptAccessible {
+            sequence: sequence.clone(),
+            index_expr_debug: index_expr_debug.clone(),
+        },
+        SequenceGuard::SubscriptPresent {
+            sequence,
+            index_expr_debug,
+        },
+    ]
 }
 
 fn dict_contains_guard(key_expr: &Expr, haystack_expr: &Expr) -> Vec<SequenceGuard> {

@@ -181,11 +181,12 @@ pub(in crate::lower) fn lower_method_call(
                 .unwrap_or(sifr_type_system::ReceiverConvention::SharedBorrow)
         },
     );
-    super::super::sequence_guards::invalidate_mutable_receiver_sequence_guards(
+    super::super::mutating_methods::apply_receiver_mutation_effect(
         ctx,
         &object,
-        Some(receiver_convention),
+        &object_ty,
         &method_name,
+        receiver_convention,
     );
     if let Some(function_type) = &method_type {
         super::super::sequence_guards::invalidate_mutable_call_sequence_guards(

@@ -3,6 +3,126 @@ use crate::hir_nodes::HirExpr;
 use ruff_text_size::TextRange;
 use sifr_type_system::{ReceiverConvention, Type};
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(in crate::lower) enum ReceiverMutationEffect {
+    None,
+    Growth,
+    Removal,
+    Reorder,
+    ValueMutation,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ReceiverFactInvalidation {
+    None,
+    SubscriptPresence,
+    All,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(in crate::lower) struct ReceiverMutationSummary {
+    effect: ReceiverMutationEffect,
+    fact_invalidation: ReceiverFactInvalidation,
+}
+
+pub(in crate::lower) fn receiver_mutation_summary(
+    object_ty: &Type,
+    method: &str,
+    convention: ReceiverConvention,
+) -> ReceiverMutationSummary {
+    if convention != ReceiverConvention::MutableBorrow {
+        return ReceiverMutationSummary {
+            effect: ReceiverMutationEffect::None,
+            fact_invalidation: ReceiverFactInvalidation::None,
+        };
+    }
+
+    let effect = match object_ty.resolve_alias() {
+        Type::List(_) => match method {
+            "append" | "appendleft" | "extend" | "insert" => ReceiverMutationEffect::Growth,
+            "clear" | "pop" | "popleft" | "remove" => ReceiverMutationEffect::Removal,
+            "reverse" | "sort" => ReceiverMutationEffect::Reorder,
+            _ => ReceiverMutationEffect::Removal,
+        },
+        Type::Dict(_, _) => match method {
+            "update" | "setdefault" => ReceiverMutationEffect::ValueMutation,
+            "clear" | "pop" => ReceiverMutationEffect::Removal,
+            _ => ReceiverMutationEffect::Removal,
+        },
+        Type::Set(_) => match method {
+            "add" | "update" => ReceiverMutationEffect::Growth,
+            "remove"
+            | "discard"
+            | "clear"
+            | "intersection_update"
+            | "difference_update"
+            | "symmetric_difference_update" => ReceiverMutationEffect::Removal,
+            _ => ReceiverMutationEffect::Removal,
+        },
+        Type::PythonBuffer(_) => ReceiverMutationEffect::ValueMutation,
+        Type::JoinSet(_, _) if method == "add" => ReceiverMutationEffect::Growth,
+        Type::Class { .. } | Type::Protocol { .. } => ReceiverMutationEffect::Removal,
+        _ => ReceiverMutationEffect::Removal,
+    };
+    let fact_invalidation = match effect {
+        ReceiverMutationEffect::None => ReceiverFactInvalidation::None,
+        ReceiverMutationEffect::Removal => ReceiverFactInvalidation::All,
+        ReceiverMutationEffect::Reorder => ReceiverFactInvalidation::SubscriptPresence,
+        ReceiverMutationEffect::Growth
+            if matches!(object_ty.resolve_alias(), Type::List(_))
+                && matches!(method, "insert" | "appendleft") =>
+        {
+            ReceiverFactInvalidation::SubscriptPresence
+        }
+        ReceiverMutationEffect::ValueMutation
+            if matches!(object_ty.resolve_alias(), Type::Dict(_, _)) && method == "update" =>
+        {
+            ReceiverFactInvalidation::SubscriptPresence
+        }
+        ReceiverMutationEffect::Growth | ReceiverMutationEffect::ValueMutation => {
+            ReceiverFactInvalidation::None
+        }
+    };
+    ReceiverMutationSummary {
+        effect,
+        fact_invalidation,
+    }
+}
+
+pub(in crate::lower) fn apply_receiver_mutation_effect(
+    ctx: &mut LowerCtx,
+    receiver: &HirExpr,
+    object_ty: &Type,
+    method: &str,
+    convention: ReceiverConvention,
+) {
+    let summary = receiver_mutation_summary(object_ty, method, convention);
+    if summary.effect == ReceiverMutationEffect::None {
+        return;
+    }
+    let Some(target) = super::sequence_guards::hir_sequence_guard_target_name(receiver) else {
+        return;
+    };
+
+    ctx.record_flow_effect(sifr_ir::FlowEffect::Mutation {
+        target: target.clone(),
+        operation: format!("method {method}"),
+    });
+    ctx.record_flow_effect(sifr_ir::FlowEffect::ClearNarrowing {
+        binding: target.clone(),
+    });
+    match summary.fact_invalidation {
+        ReceiverFactInvalidation::None => {}
+        ReceiverFactInvalidation::SubscriptPresence => {
+            ctx.clear_subscript_presence_guards_for_target(&target);
+        }
+        ReceiverFactInvalidation::All => {
+            ctx.clear_sequence_guards_for_binding(&target);
+            ctx.clear_sequence_guards_for_target(&target);
+        }
+    }
+}
+
 /// Canonical receiver convention for successfully resolved non-class methods.
 ///
 /// Class and protocol methods carry their convention in `FunctionType`.
@@ -212,6 +332,107 @@ mod tests {
         assert_eq!(
             receiver_convention_for_non_class_method(&join_set, "__sifr_join_all"),
             ReceiverConvention::Owned
+        );
+    }
+
+    #[test]
+    fn receiver_effect_registry_distinguishes_collection_mutations() {
+        let list = Type::List(Box::new(Type::Int));
+        let dict = Type::Dict(Box::new(Type::Str), Box::new(Type::Int));
+        let set = Type::Set(Box::new(Type::Int));
+        let effect = |ty: &Type, method: &str, convention| {
+            receiver_mutation_summary(ty, method, convention).effect
+        };
+
+        for method in ["append", "appendleft", "extend", "insert"] {
+            assert_eq!(
+                effect(&list, method, ReceiverConvention::MutableBorrow),
+                ReceiverMutationEffect::Growth
+            );
+        }
+        for method in ["clear", "pop", "popleft", "remove"] {
+            assert_eq!(
+                effect(&list, method, ReceiverConvention::MutableBorrow),
+                ReceiverMutationEffect::Removal
+            );
+        }
+        for method in ["reverse", "sort"] {
+            assert_eq!(
+                effect(&list, method, ReceiverConvention::MutableBorrow),
+                ReceiverMutationEffect::Reorder
+            );
+        }
+        for method in ["update", "setdefault"] {
+            assert_eq!(
+                effect(&dict, method, ReceiverConvention::MutableBorrow),
+                ReceiverMutationEffect::ValueMutation
+            );
+        }
+        for method in ["clear", "pop"] {
+            assert_eq!(
+                effect(&dict, method, ReceiverConvention::MutableBorrow),
+                ReceiverMutationEffect::Removal
+            );
+        }
+        for method in ["add", "update"] {
+            assert_eq!(
+                effect(&set, method, ReceiverConvention::MutableBorrow),
+                ReceiverMutationEffect::Growth
+            );
+        }
+        for method in [
+            "remove",
+            "discard",
+            "clear",
+            "intersection_update",
+            "difference_update",
+            "symmetric_difference_update",
+        ] {
+            assert_eq!(
+                effect(&set, method, ReceiverConvention::MutableBorrow),
+                ReceiverMutationEffect::Removal
+            );
+        }
+        assert_eq!(
+            effect(&list, "append", ReceiverConvention::SharedBorrow),
+            ReceiverMutationEffect::None
+        );
+        assert_eq!(
+            effect(&list, "future_mutator", ReceiverConvention::MutableBorrow),
+            ReceiverMutationEffect::Removal
+        );
+    }
+
+    #[test]
+    fn receiver_summary_invalidates_only_falsified_sequence_facts() {
+        let optional_int = Type::Union(vec![Type::Int, Type::None]);
+        let list = Type::List(Box::new(optional_int.clone()));
+        let dict = Type::Dict(Box::new(Type::Str), Box::new(optional_int));
+        let summary = |ty: &Type, method: &str| {
+            receiver_mutation_summary(ty, method, ReceiverConvention::MutableBorrow)
+        };
+
+        assert_eq!(
+            summary(&list, "append").fact_invalidation,
+            ReceiverFactInvalidation::None
+        );
+        for method in ["insert", "appendleft", "reverse", "sort"] {
+            assert_eq!(
+                summary(&list, method).fact_invalidation,
+                ReceiverFactInvalidation::SubscriptPresence
+            );
+        }
+        assert_eq!(
+            summary(&dict, "setdefault").fact_invalidation,
+            ReceiverFactInvalidation::None
+        );
+        assert_eq!(
+            summary(&dict, "update").fact_invalidation,
+            ReceiverFactInvalidation::SubscriptPresence
+        );
+        assert_eq!(
+            summary(&list, "pop").fact_invalidation,
+            ReceiverFactInvalidation::All
         );
     }
 }
