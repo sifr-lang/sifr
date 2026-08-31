@@ -760,11 +760,7 @@ impl RustEmitter {
                 return Ok(false);
             };
             let lowered_value = Self::clone_non_copy_name_expr_for_ir(value, lowered_value);
-            self.push_captured_stmt(&RustStmt::Expr(RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Ident("_yields".to_string())),
-                method: "push".to_string(),
-                args: vec![lowered_value],
-            }));
+            self.push_captured_stmt(&crate::lower_suspended_yield_stmt(lowered_value));
             self.lowering_stats.stmt_structured += 1;
             self.lowering_stats.stmt_candidate_structured += 1;
             return Ok(true);

@@ -136,7 +136,16 @@ pub(super) fn try_lower_simple_stmt_with_ctx_and_bindings(
             if ctx.in_display_impl {
                 return None;
             }
-            if ctx.return_type.is_some_and(is_option_like_type) {
+            if ctx.in_generator_closure
+                && ctx.return_type.is_some_and(|ty| {
+                    matches!(resolve_alias_type(ty), Type::Result(ok, _) if matches!(ok.resolve_alias(), Type::None))
+                })
+            {
+                Some(vec![RustStmt::Return(Some(RustExpr::FnCall {
+                    func: Box::new(RustExpr::Path(vec!["Ok".to_string()])),
+                    args: vec![RustExpr::Literal(RustLiteral::Unit)],
+                }))])
+            } else if ctx.return_type.is_some_and(is_option_like_type) {
                 Some(vec![RustStmt::Return(Some(RustExpr::Literal(
                     RustLiteral::None,
                 )))])

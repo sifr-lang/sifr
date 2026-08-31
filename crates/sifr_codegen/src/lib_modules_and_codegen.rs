@@ -1,18 +1,17 @@
 use super::{
     BUILTIN_ERROR_CLASSES, Renderer, RustEmitter, RustExpr, RustFile, RustItem, RustLiteral,
     annotate_async_main_entrypoint, build_async_exit_cause_type_items,
-    build_async_generator_type_items, build_cancellation_error_type_items, build_cpu_offload_items,
-    build_error_into_error_impl, build_error_type_items, build_failure_type_items,
-    build_file_handle_infra_items, build_file_handle_struct_items, build_io_error_items,
+    build_cancellation_error_type_items, build_cpu_offload_items, build_error_into_error_impl,
+    build_error_type_items, build_failure_type_items, build_file_handle_infra_items,
+    build_file_handle_struct_items, build_generator_runtime_items_for_module, build_io_error_items,
     build_join_set_cpu_items, build_join_set_items, build_task_cancellation_items,
     build_task_context_scope_extension_items, build_task_current_context_items,
     build_task_scope_cpu_offload_items, build_task_scope_items, build_task_scope_offload_items,
     build_task_scope_process_items, build_task_supervisor_items, build_timeout_result_type_items,
     build_worker_panic_hook_items, module_uses_async_exit_cause_type,
-    module_uses_async_generator_type, module_uses_cancellation_error_type,
-    module_uses_failure_type, module_uses_join_set, module_uses_join_set_spawn_cpu,
-    module_uses_native_async_cleanup, module_uses_spawn_cpu, module_uses_task_scope,
-    module_uses_task_scope_offload, module_uses_task_scope_process,
+    module_uses_cancellation_error_type, module_uses_failure_type, module_uses_join_set,
+    module_uses_join_set_spawn_cpu, module_uses_native_async_cleanup, module_uses_spawn_cpu,
+    module_uses_task_scope, module_uses_task_scope_offload, module_uses_task_scope_process,
     module_uses_task_scope_spawn_cpu, module_uses_task_sleep, module_uses_timeout_result_type,
     replace_parallel_runtime_items, replace_sync_channel_runtime_items,
     scope_async_main_cancellation, sifr_type_to_rust_type, sync_channel_runtime_needed,
@@ -484,7 +483,6 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
         crate::python_interop_common::module_uses_async_python_declaration(module);
     let uses_native_async_cleanup = module_uses_native_async_cleanup(module);
     let uses_timeout_result_type = module_uses_timeout_result_type(module);
-    let uses_async_generator_type = module_uses_async_generator_type(module);
     let uses_template = crate::module_uses_template(module);
     let referenced_error_classes = collect_complete_referenced_builtin_error_classes(
         module,
@@ -622,9 +620,10 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
     if uses_timeout_result_type && !uses_task_scope {
         preamble_items.extend(build_timeout_result_type_items());
     }
-    if uses_async_generator_type {
-        preamble_items.extend(build_async_generator_type_items());
-    }
+    preamble_items.extend(build_generator_runtime_items_for_module(
+        module,
+        &stdlib_preamble,
+    ));
     if uses_template {
         preamble_items.extend(crate::build_template_runtime_items());
     }

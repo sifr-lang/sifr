@@ -120,25 +120,25 @@ def main():
     print("=== itertools additions ===")
     idata2: list[int] = [1, 2, 3, 4, 5]
 
-    acc: list[int] = list(accumulate(idata2))
+    acc: list[int] = list(accumulate(iter(idata2)))
     print("accumulate = " + str(acc))
 
     sel: list[bool] = [True, False, True, False, True]
-    comp: list[int] = list(compress(idata2, sel))
+    comp: list[int] = list(compress(iter(idata2), iter(sel)))
     print("compress = " + str(comp))
 
-    dw: list[int] = list(dropwhile(less_than_three, idata2))
+    dw: list[int] = list(dropwhile(less_than_three, iter(idata2)))
     print("dropwhile(<3) = " + str(dw))
 
-    tw: list[int] = list(takewhile(less_than_three, idata2))
+    tw: list[int] = list(takewhile(less_than_three, iter(idata2)))
     print("takewhile(<3) = " + str(tw))
 
-    ff: list[int] = list(filterfalse(less_than_three, idata2))
+    ff: list[int] = list(filterfalse(less_than_three, iter(idata2)))
     print("filterfalse(<3) = " + str(ff))
 
     a: list[int] = [1, 2, 3]
     b: list[int] = [4, 5]
-    zl: list[list[int]] = list(zip_longest(a, b, 0))
+    zl: list[list[int]] = list(zip_longest(iter(a), iter(b), 0))
     print("zip_longest len = " + str(len(zl)))
 
     cf: list[int] = list(count_from(0, 2, 5))
@@ -151,7 +151,7 @@ def main():
     count4: int | None = next(ctr)
     print("count(0,2) first 5 = " + str([count0, count1, count2, count3, count4]))
 
-    cyc: list[int] = list(cycle([1, 2, 3], 7))
+    cyc: list[int] = list(cycle(iter([1, 2, 3]), 7))
     print("cycle([1,2,3], 7) = " + str(cyc))
 
     # --- Counter enhancements ---

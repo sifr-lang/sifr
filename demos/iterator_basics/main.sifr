@@ -43,7 +43,11 @@ def main():
     # Conversion-Set-5 itertools lazy subset.
     assert str(list(chain([1, 2], [3]))) == "[1, 2, 3]"
     assert str(list(repeat(5, 3))) == "[5, 5, 5]"
-    assert str(list(islice([10, 20, 30, 40, 50], 1, 5, 2))) == "[20, 40]"
+    try:
+        sliced: Iterator[int] = islice(iter([10, 20, 30, 40, 50]), 1, 5, 2)
+        assert str(list(sliced)) == "[20, 40]"
+    except ValueError as e:
+        assert False, e.message
 
     counter: Iterator[int] = count(2, 3)
     assert next(counter) == 2
@@ -51,7 +55,7 @@ def main():
     assert next(counter) == 8
 
     # Extended itertools families are iterator-returning with explicit materialization.
-    combos: list[list[int]] = list(combinations([1, 2, 3], 2))
+    combos: list[list[int]] = list(combinations(iter([1, 2, 3]), 2))
     assert str(combos) == "[[1, 2], [1, 3], [2, 3]]"
     prods: list[list[int]] = list(product([1, 2], repeat=2))
     assert str(prods) == "[[1, 1], [1, 2], [2, 1], [2, 2]]"

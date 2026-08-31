@@ -102,14 +102,17 @@ fn async_callable_class_field_uses_a_boxed_future_adapter() {
 }
 
 #[test]
-fn test_async_generator_codegen_uses_lazy_materialization() {
+fn test_async_generator_codegen_uses_resumable_producer() {
     let rust_code = generate_rust_from_source(
         "async def numbers() -> AsyncGenerator[int, GeneratorCloseError]:\n    yield 1\n    yield 2\n",
     );
 
     assert!(rust_code.contains("AsyncGenerator::new_lazy"));
-    assert!(rust_code.contains("move ||"));
-    assert!(!rust_code.contains("AsyncGenerator::new(_yields)"));
+    assert!(rust_code.contains("async move |__sifr_yielder: __SifrYielder<SifrInt>|"));
+    assert!(rust_code.contains("__sifr_yielder.suspend(SifrInt::from_i64(1)).await;"));
+    assert!(rust_code.contains("__sifr_yielder.suspend(SifrInt::from_i64(2)).await;"));
+    assert!(!rust_code.contains("_yields"));
+    syn::parse_file(&rust_code).expect("resumable async generator Rust should parse");
 }
 
 #[test]

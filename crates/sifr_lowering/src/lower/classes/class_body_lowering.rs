@@ -169,10 +169,12 @@ pub(in crate::lower) fn lower_class(
                 let previous_method = ctx.current_method.replace(method_name.clone());
                 let previous_dynamic_python = ctx.current_function_trusts_dynamic_python;
                 let previous_async = ctx.current_function_is_async;
+                let previous_generator = ctx.current_function_is_generator;
                 let previous_async_generator = ctx.current_function_is_async_generator;
                 ctx.current_function_trusts_dynamic_python =
                     has_decorator(func, "trust_python_dynamic");
                 ctx.current_function_is_async = func.is_async;
+                ctx.current_function_is_generator = function_body_contains_yield(&func.body);
                 ctx.current_function_is_async_generator =
                     func.is_async && function_body_contains_yield(&func.body);
                 let body = if stub_body.skips_normal_body_lowering() {
@@ -181,6 +183,7 @@ pub(in crate::lower) fn lower_class(
                     lower_function_stmts(&func.body, &method_ft, ctx)
                 };
                 ctx.current_function_is_async = previous_async;
+                ctx.current_function_is_generator = previous_generator;
                 ctx.current_function_is_async_generator = previous_async_generator;
                 ctx.current_function_trusts_dynamic_python = previous_dynamic_python;
                 ctx.current_method = previous_method;
@@ -314,10 +317,12 @@ pub(in crate::lower) fn lower_class(
                 let previous_method = ctx.current_method.replace(method_name.clone());
                 let previous_dynamic_python = ctx.current_function_trusts_dynamic_python;
                 let previous_async = ctx.current_function_is_async;
+                let previous_generator = ctx.current_function_is_generator;
                 let previous_async_generator = ctx.current_function_is_async_generator;
                 ctx.current_function_trusts_dynamic_python =
                     has_decorator(func, "trust_python_dynamic");
                 ctx.current_function_is_async = func.is_async;
+                ctx.current_function_is_generator = function_body_contains_yield(&func.body);
                 ctx.current_function_is_async_generator =
                     func.is_async && function_body_contains_yield(&func.body);
                 let body = if stub_body.skips_normal_body_lowering() {
@@ -326,6 +331,7 @@ pub(in crate::lower) fn lower_class(
                     lower_function_stmts(&func.body, &method_ft, ctx)
                 };
                 ctx.current_function_is_async = previous_async;
+                ctx.current_function_is_generator = previous_generator;
                 ctx.current_function_is_async_generator = previous_async_generator;
                 ctx.current_function_trusts_dynamic_python = previous_dynamic_python;
                 ctx.current_method = previous_method;
@@ -597,10 +603,12 @@ pub(in crate::lower) fn lower_class(
             let previous_method = ctx.current_method.replace(method_name.clone());
             let previous_dynamic_python = ctx.current_function_trusts_dynamic_python;
             let previous_async = ctx.current_function_is_async;
+            let previous_generator = ctx.current_function_is_generator;
             let previous_async_generator = ctx.current_function_is_async_generator;
             ctx.current_function_trusts_dynamic_python =
                 has_decorator(func, "trust_python_dynamic");
             ctx.current_function_is_async = func.is_async;
+            ctx.current_function_is_generator = function_body_contains_yield(&func.body);
             ctx.current_function_is_async_generator =
                 func.is_async && function_body_contains_yield(&func.body);
             let previous_must_use_bindings = std::mem::take(&mut ctx.live_must_use_bindings);
@@ -653,6 +661,7 @@ pub(in crate::lower) fn lower_class(
             ctx.live_must_use_bindings = previous_must_use_bindings;
             ctx.borrowed_params = previous_borrowed_params;
             ctx.current_function_is_async = previous_async;
+            ctx.current_function_is_generator = previous_generator;
             ctx.current_function_is_async_generator = previous_async_generator;
             ctx.current_function_trusts_dynamic_python = previous_dynamic_python;
             ctx.current_method = previous_method;

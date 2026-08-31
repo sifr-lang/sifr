@@ -8,5 +8,5 @@ def add3(a: int, b: int, c: int) -> int:
 
 def main():
     triples: list[tuple[int, int, int]] = [(1, 2, 3)]
-    result = starmap(add3, triples)
+    result = starmap(add3, iter(triples))
     assert str(result) == "[6]"

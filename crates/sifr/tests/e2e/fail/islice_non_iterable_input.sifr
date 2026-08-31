@@ -4,5 +4,5 @@ from sifr.itertools import islice
 
 
 def main():
-    bad: Iterator[int] = islice(42, 2)
+    bad: Iterator[int] = islice(iter(42), 2)
     _ = bad

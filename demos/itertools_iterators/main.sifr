@@ -12,8 +12,11 @@ def main():
     repeated: Iterator[int] = repeat(7, 3)
     print(list(repeated))
 
-    sliced: Iterator[int] = islice([10, 20, 30, 40, 50], 1, 5, 2)
-    print(list(sliced))
+    try:
+        sliced: Iterator[int] = islice(iter([10, 20, 30, 40, 50]), 1, 5, 2)
+        print(list(sliced))
+    except ValueError as e:
+        print("islice error: " + e.message)
 
     counter: Iterator[int] = count(5, 2)
     print(next(counter))

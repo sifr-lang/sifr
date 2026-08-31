@@ -40,6 +40,7 @@ use try_tuple_flow::{
     try_lower_simple_tuple_unpack_stmt,
 };
 mod with_yield_and_match;
+pub(crate) use with_yield_and_match::lower_suspended_yield_stmt;
 use with_yield_and_match::{
     try_lower_loop_else_stmts, try_lower_simple_async_with_stmt, try_lower_simple_match_stmt,
     try_lower_simple_with_stmt, try_lower_simple_yield_stmt,

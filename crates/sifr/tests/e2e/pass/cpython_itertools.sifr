@@ -17,6 +17,15 @@ def is_even(x: int) -> bool:
 def add2(a: int, b: int) -> int:
     return a + b
 
+def collect_islice(own data: Iterator[int], start_or_stop: int, stop: int | None = None, step: int = 1) -> list[int]:
+    try:
+        sliced: Iterator[int] = islice(iter(data), start_or_stop, stop, step)
+        return list(sliced)
+    except ValueError as e:
+        _message: str = e.message
+        assert_true(False)
+        return []
+
 def main():
     # chain + basic slicing behavior (adapted from TestBasicOps.test_chain)
     empty_chain: list[int] = []
@@ -63,31 +72,43 @@ def main():
         invalid_batch_rejected = len(e.message) > 0
     assert_true(invalid_batch_rejected)
 
-    # islice (including explicit adaptation for non-positive step => empty iterator)
-    assert_true(str(list(islice([0, 1, 2, 3, 4], 3))) == "[0, 1, 2]")
-    assert_true(str(list(islice([0, 1, 2, 3, 4], 1, 4))) == "[1, 2, 3]")
-    assert_true(str(list(islice([0, 1, 2, 3, 4], 1, 5, 2))) == "[1, 3]")
-    assert_true(str(list(islice([0, 1, 2, 3, 4], 10, 110, 3))) == "[]")
-    assert_true(str(list(islice([10, 20, 30], 0, 3, 0))) == "[]")
-    assert_true(str(list(islice([10, 20, 30], 0, 3, -1))) == "[]")
+    # islice validates invalid arguments at construction and consumes its source lazily.
+    assert_true(str(collect_islice(iter([0, 1, 2, 3, 4]), 3)) == "[0, 1, 2]")
+    assert_true(str(collect_islice(iter([0, 1, 2, 3, 4]), 1, 4)) == "[1, 2, 3]")
+    assert_true(str(collect_islice(iter([0, 1, 2, 3, 4]), 1, 5, 2)) == "[1, 3]")
+    assert_true(str(collect_islice(iter([0, 1, 2, 3, 4]), 10, 110, 3)) == "[]")
+    invalid_zero_step: bool = False
+    try:
+        _zero_step: Iterator[int] = islice(iter([10, 20, 30]), 0, 3, 0)
+        _ = _zero_step
+    except ValueError as e:
+        invalid_zero_step = len(e.message) > 0
+    assert_true(invalid_zero_step)
+    invalid_negative_step: bool = False
+    try:
+        _negative_step: Iterator[int] = islice(iter([10, 20, 30]), 0, 3, -1)
+        _ = _negative_step
+    except ValueError as e:
+        invalid_negative_step = len(e.message) > 0
+    assert_true(invalid_negative_step)
 
     # accumulate (supported signature: optional initial)
     empty_acc: list[int] = []
-    assert_true(str(list(accumulate([1, 2, 3, 4, 5]))) == "[1, 3, 6, 10, 15]")
-    assert_true(str(list(accumulate(empty_acc))) == "[]")
-    assert_true(str(list(accumulate([7]))) == "[7]")
-    assert_true(str(list(accumulate([10, 5, 1], initial=None))) == "[10, 15, 16]")
-    assert_true(str(list(accumulate([10, 5, 1], initial=100))) == "[100, 110, 115, 116]")
-    assert_true(str(list(accumulate(empty_acc, initial=100))) == "[100]")
+    assert_true(str(list(accumulate(iter([1, 2, 3, 4, 5])))) == "[1, 3, 6, 10, 15]")
+    assert_true(str(list(accumulate(iter(empty_acc)))) == "[]")
+    assert_true(str(list(accumulate(iter([7])))) == "[7]")
+    assert_true(str(list(accumulate(iter([10, 5, 1]), initial=None))) == "[10, 15, 16]")
+    assert_true(str(list(accumulate(iter([10, 5, 1]), initial=100))) == "[100, 110, 115, 116]")
+    assert_true(str(list(accumulate(iter(empty_acc), initial=100))) == "[100]")
 
     # compress
-    assert_true(str(list(compress([1, 2, 3, 4, 5, 6], [True, False, True, False, True, True]))) == "[1, 3, 5, 6]")
-    assert_true(str(list(compress([1, 2, 3, 4, 5, 6], [False, False, False, False, False, False]))) == "[]")
-    assert_true(str(list(compress([1, 2, 3, 4, 5, 6], [True, True, True, True, True, True]))) == "[1, 2, 3, 4, 5, 6]")
-    assert_true(str(list(compress([1, 2, 3, 4, 5, 6], [True, False, True]))) == "[1, 3]")
-    assert_true(str(list(compress([1, 2, 3], [False, True, True, True, True, True]))) == "[2, 3]")
+    assert_true(str(list(compress(iter([1, 2, 3, 4, 5, 6]), iter([True, False, True, False, True, True])))) == "[1, 3, 5, 6]")
+    assert_true(str(list(compress(iter([1, 2, 3, 4, 5, 6]), iter([False, False, False, False, False, False])))) == "[]")
+    assert_true(str(list(compress(iter([1, 2, 3, 4, 5, 6]), iter([True, True, True, True, True, True])))) == "[1, 2, 3, 4, 5, 6]")
+    assert_true(str(list(compress(iter([1, 2, 3, 4, 5, 6]), iter([True, False, True])))) == "[1, 3]")
+    assert_true(str(list(compress(iter([1, 2, 3]), iter([False, True, True, True, True, True])))) == "[2, 3]")
 
-    # count (Sifr adaptation: bounded prefix stream; assert CPython-compatible leading values)
+    # count is unbounded; assert CPython-compatible leading values.
     ctr_default: Iterator[int] = count()
     assert_true(next(ctr_default) == 0)
     assert_true(next(ctr_default) == 1)
@@ -121,24 +142,24 @@ def main():
 
     # cycle (intentional finite signature adaptation: cycle(data, n))
     empty_cycle: list[int] = []
-    assert_true(str(list(cycle([1, 2, 3], 10))) == "[1, 2, 3, 1, 2, 3, 1, 2, 3, 1]")
-    assert_true(str(list(cycle(empty_cycle, 10))) == "[]")
-    assert_true(str(list(cycle([1, 2, 3], 0))) == "[]")
+    assert_true(str(list(cycle(iter([1, 2, 3]), 10))) == "[1, 2, 3, 1, 2, 3, 1, 2, 3, 1]")
+    assert_true(str(list(cycle(iter(empty_cycle), 10))) == "[]")
+    assert_true(str(list(cycle(iter([1, 2, 3]), 0))) == "[]")
 
     # predicate adapters
     empty_pred_data: list[int] = []
-    assert_true(str(list(dropwhile(lt5, [1, 3, 5, 20, 2, 4, 6, 8]))) == "[5, 20, 2, 4, 6, 8]")
-    assert_true(str(list(dropwhile(lt5, empty_pred_data))) == "[]")
-    assert_true(str(list(takewhile(lt5, [1, 3, 5, 20, 2, 4, 6, 8]))) == "[1, 3]")
-    assert_true(str(list(takewhile(lt5, empty_pred_data))) == "[]")
-    assert_true(str(list(filterfalse(is_even, [0, 1, 2, 3, 4, 5]))) == "[1, 3, 5]")
+    assert_true(str(list(dropwhile(lt5, iter([1, 3, 5, 20, 2, 4, 6, 8])))) == "[5, 20, 2, 4, 6, 8]")
+    assert_true(str(list(dropwhile(lt5, iter(empty_pred_data)))) == "[]")
+    assert_true(str(list(takewhile(lt5, iter([1, 3, 5, 20, 2, 4, 6, 8])))) == "[1, 3]")
+    assert_true(str(list(takewhile(lt5, iter(empty_pred_data)))) == "[]")
+    assert_true(str(list(filterfalse(is_even, iter([0, 1, 2, 3, 4, 5])))) == "[1, 3, 5]")
 
     # zip_longest
     empty_zip: list[int] = []
-    assert_true(str(list(zip_longest([1, 2, 3], [10], 0))) == "[[1, 10], [2, 0], [3, 0]]")
-    assert_true(str(list(zip_longest(empty_zip, empty_zip, 0))) == "[]")
-    assert_true(str(list(zip_longest([1, 2], [3, 4], 0))) == "[[1, 3], [2, 4]]")
-    assert_true(str(list(zip_longest([1], [2, 3, 4], 0))) == "[[1, 2], [0, 3], [0, 4]]")
+    assert_true(str(list(zip_longest(iter([1, 2, 3]), iter([10]), 0))) == "[[1, 10], [2, 0], [3, 0]]")
+    assert_true(str(list(zip_longest(iter(empty_zip), iter(empty_zip), 0))) == "[]")
+    assert_true(str(list(zip_longest(iter([1, 2]), iter([3, 4]), 0))) == "[[1, 3], [2, 4]]")
+    assert_true(str(list(zip_longest(iter([1]), iter([2, 3, 4]), 0))) == "[[1, 2], [0, 3], [0, 4]]")
 
     # product (including intentional repeat<0 adaptation => empty iterator)
     assert_true(str(list(product([1, 2], [3, 4]))) == "[[1, 3], [1, 4], [2, 3], [2, 4]]")
@@ -147,25 +168,25 @@ def main():
     assert_true(str(list(product([1, 2], repeat=-1))) == "[]")
 
     # permutations / combinations / combinations_with_replacement
-    assert_true(str(list(permutations([1, 2, 3], 2))) == "[[1, 2], [1, 3], [2, 1], [2, 3], [3, 1], [3, 2]]")
-    assert_true(str(list(permutations([1, 2, 3]))) == "[[1, 2, 3], [1, 3, 2], [2, 1, 3], [2, 3, 1], [3, 1, 2], [3, 2, 1]]")
-    assert_true(str(list(permutations([1, 2, 3], 4))) == "[]")
-    assert_true(str(list(permutations([1, 2, 3], 0))) == "[[]]")
+    assert_true(str(list(permutations(iter([1, 2, 3]), 2))) == "[[1, 2], [1, 3], [2, 1], [2, 3], [3, 1], [3, 2]]")
+    assert_true(str(list(permutations(iter([1, 2, 3])))) == "[[1, 2, 3], [1, 3, 2], [2, 1, 3], [2, 3, 1], [3, 1, 2], [3, 2, 1]]")
+    assert_true(str(list(permutations(iter([1, 2, 3]), 4))) == "[]")
+    assert_true(str(list(permutations(iter([1, 2, 3]), 0))) == "[[]]")
 
-    assert_true(str(list(combinations([1, 2, 3], 2))) == "[[1, 2], [1, 3], [2, 3]]")
-    assert_true(str(list(combinations([1, 2, 3], 4))) == "[]")
-    assert_true(str(list(combinations([1, 2, 3], 0))) == "[[]]")
+    assert_true(str(list(combinations(iter([1, 2, 3]), 2))) == "[[1, 2], [1, 3], [2, 3]]")
+    assert_true(str(list(combinations(iter([1, 2, 3]), 4))) == "[]")
+    assert_true(str(list(combinations(iter([1, 2, 3]), 0))) == "[[]]")
 
-    assert_true(str(list(combinations_with_replacement([1, 2], 2))) == "[[1, 1], [1, 2], [2, 2]]")
+    assert_true(str(list(combinations_with_replacement(iter([1, 2]), 2))) == "[[1, 1], [1, 2], [2, 2]]")
     empty_ints: list[int] = []
-    assert_true(str(list(combinations_with_replacement(empty_ints, 2))) == "[]")
-    assert_true(str(list(combinations_with_replacement([1, 2], 0))) == "[[]]")
-    assert_true(str(list(combinations_with_replacement([1, 2], -1))) == "[]")
+    assert_true(str(list(combinations_with_replacement(iter(empty_ints), 2))) == "[]")
+    assert_true(str(list(combinations_with_replacement(iter([1, 2]), 0))) == "[[]]")
+    assert_true(str(list(combinations_with_replacement(iter([1, 2]), -1))) == "[]")
 
     # starmap (binary callable rows; general-arity remains intentionally unsupported)
-    assert_true(str(list(starmap(add2, [(2, 5), (3, 2), (10, 3)]))) == "[7, 5, 13]")
+    assert_true(str(list(starmap(add2, iter([(2, 5), (3, 2), (10, 3)])))) == "[7, 5, 13]")
     empty_pairs: list[tuple[int, int]] = []
-    assert_true(str(list(starmap(add2, empty_pairs))) == "[]")
-    assert_true(str(list(islice(starmap(add2, zip([1, 2, 3], [10, 20, 30])), 2))) == "[11, 22]")
+    assert_true(str(list(starmap(add2, iter(empty_pairs)))) == "[]")
+    assert_true(str(collect_islice(starmap(add2, iter(zip([1, 2, 3], [10, 20, 30]))), 2)) == "[11, 22]")
 
     assert str("cpython_itertools: related assertions passed") == "cpython_itertools: related assertions passed"

@@ -20,10 +20,7 @@ fn lowers_simple_yield_inside_generator_closure() {
     )
     .expect("yield lowered");
 
-    assert!(matches!(
-        lowered[0],
-        RustStmt::Return(Some(RustExpr::FnCall { .. }))
-    ));
+    assert!(matches!(lowered[0], RustStmt::Expr(RustExpr::Await(_))));
 }
 
 #[test]
@@ -37,13 +34,9 @@ fn lowers_simple_yield_outside_generator_closure() {
         &HashSet::new(),
         &HashSet::new(),
         SimpleStmtLoweringCtx::default(),
-    )
-    .expect("yield lowered");
+    );
 
-    assert!(matches!(
-        lowered[0],
-        RustStmt::Expr(RustExpr::MethodCall { .. })
-    ));
+    assert!(lowered.is_none());
 }
 
 #[test]

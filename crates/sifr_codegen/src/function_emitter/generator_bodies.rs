@@ -12,232 +12,6 @@ use crate::python_interop_direct::python_interop_function_body_with_retained_err
 use crate::rust_interop_direct::rust_interop_function_body;
 use std::collections::HashSet;
 impl RustEmitter {
-    pub(crate) fn lower_generator_function_body(
-        &mut self,
-        func: &HirFunction,
-        mutable_param_shadows: &[(String, RustExpr)],
-    ) -> Vec<RustStmt> {
-        let yield_ty = if let Type::Iterator(elem) = func.return_type.resolve_alias() {
-            self.rust_ir_type_with_generics(elem)
-        } else {
-            RustType::I64
-        };
-
-        let mut body = Self::emit_mutable_param_shadow_stmts(mutable_param_shadows);
-        for param in &func.params {
-            if mutable_param_shadows
-                .iter()
-                .any(|(name, _)| name == &param.name)
-                || !param.convention.is_borrowed()
-                || crate::helpers::is_copy_type_for_codegen(&param.ty)
-            {
-                continue;
-            }
-            body.push(RustStmt::Let {
-                mutable: false,
-                name: param.name.clone(),
-                ty: None,
-                value: RustExpr::Clone(Box::new(RustExpr::Ident(param.name.clone()))),
-            });
-        }
-        let generator_iter_ty = RustType::Generic {
-            base: "std::vec::IntoIter".to_string(),
-            params: vec![yield_ty.clone()],
-        };
-        body.push(RustStmt::Let {
-            mutable: true,
-            name: "__sifr_generator_initialized".to_string(),
-            ty: Some(RustType::Bool),
-            value: RustExpr::Literal(RustLiteral::Bool(false)),
-        });
-        body.push(RustStmt::Let {
-            mutable: true,
-            name: "__sifr_generator_iter".to_string(),
-            ty: Some(generator_iter_ty),
-            value: RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::FnCall {
-                    func: Box::new(RustExpr::Path(vec!["Vec".to_string(), "new".to_string()])),
-                    args: vec![],
-                }),
-                method: "into_iter".to_string(),
-                args: vec![],
-            },
-        });
-
-        let cloned_borrowed_param_names: Vec<String> = func
-            .params
-            .iter()
-            .filter(|param| {
-                !mutable_param_shadows
-                    .iter()
-                    .any(|(name, _)| name == &param.name)
-                    && param.convention.is_borrowed()
-                    && !crate::helpers::is_copy_type_for_codegen(&param.ty)
-            })
-            .map(|param| param.name.clone())
-            .collect();
-
-        let saved_borrowed_params = self.borrowed_params.clone();
-        let saved_mut_borrowed_params = self.mut_borrowed_params.clone();
-        for name in &cloned_borrowed_param_names {
-            self.borrowed_params.remove(name);
-            self.mut_borrowed_params.remove(name);
-        }
-
-        let mut materialize_body = vec![RustStmt::Let {
-            mutable: true,
-            name: "_yields".to_string(),
-            ty: Some(RustType::Vec(Box::new(yield_ty))),
-            value: RustExpr::FnCall {
-                func: Box::new(RustExpr::Path(vec!["Vec".to_string(), "new".to_string()])),
-                args: vec![],
-            },
-        }];
-        for (stmt_index, stmt) in func.body.iter().enumerate() {
-            materialize_body.extend(self.lower_stmt_strict_for_function_with_following(
-                stmt,
-                Some(&func.body[stmt_index + 1..]),
-                "generator materialization statement lowering",
-            ));
-        }
-        self.borrowed_params = saved_borrowed_params;
-        self.mut_borrowed_params = saved_mut_borrowed_params;
-        materialize_body.push(RustStmt::Assign {
-            target: RustExpr::Ident("__sifr_generator_iter".to_string()),
-            value: RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Ident("_yields".to_string())),
-                method: "into_iter".to_string(),
-                args: vec![],
-            },
-        });
-        materialize_body.push(RustStmt::Assign {
-            target: RustExpr::Ident("__sifr_generator_initialized".to_string()),
-            value: RustExpr::Literal(RustLiteral::Bool(true)),
-        });
-
-        let closure_body = vec![
-            RustStmt::If {
-                cond: RustExpr::UnaryOp {
-                    op: "!".to_string(),
-                    operand: Box::new(RustExpr::Ident("__sifr_generator_initialized".to_string())),
-                },
-                then_body: materialize_body,
-                else_body: None,
-            },
-            RustStmt::Return(Some(RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Ident("__sifr_generator_iter".to_string())),
-                method: "next".to_string(),
-                args: vec![],
-            })),
-        ];
-
-        let from_fn_expr = RustExpr::FnCall {
-            func: Box::new(RustExpr::Path(vec![
-                "std".to_string(),
-                "iter".to_string(),
-                "from_fn".to_string(),
-            ])),
-            args: vec![RustExpr::ClosureBlock {
-                params: vec![],
-                body: closure_body,
-                is_move: true,
-                is_async: false,
-            }],
-        };
-
-        body.push(RustStmt::Return(Some(RustExpr::FnCall {
-            func: Box::new(RustExpr::Path(vec!["Box".to_string(), "new".to_string()])),
-            args: vec![from_fn_expr],
-        })));
-        body
-    }
-
-    pub(crate) fn lower_async_generator_function_body(
-        &mut self,
-        func: &HirFunction,
-        mutable_param_shadows: &[(String, RustExpr)],
-    ) -> Vec<RustStmt> {
-        let yield_ty = if let Type::AsyncGenerator(elem, _) = func.return_type.resolve_alias() {
-            self.rust_ir_type_with_generics(elem)
-        } else {
-            RustType::I64
-        };
-
-        let mut body = Self::emit_mutable_param_shadow_stmts(mutable_param_shadows);
-        for param in &func.params {
-            if mutable_param_shadows
-                .iter()
-                .any(|(name, _)| name == &param.name)
-                || !param.convention.is_borrowed()
-                || crate::helpers::is_copy_type_for_codegen(&param.ty)
-            {
-                continue;
-            }
-            body.push(RustStmt::Let {
-                mutable: false,
-                name: param.name.clone(),
-                ty: None,
-                value: RustExpr::Clone(Box::new(RustExpr::Ident(param.name.clone()))),
-            });
-        }
-
-        let cloned_borrowed_param_names: Vec<String> = func
-            .params
-            .iter()
-            .filter(|param| {
-                !mutable_param_shadows
-                    .iter()
-                    .any(|(name, _)| name == &param.name)
-                    && param.convention.is_borrowed()
-                    && !crate::helpers::is_copy_type_for_codegen(&param.ty)
-            })
-            .map(|param| param.name.clone())
-            .collect();
-
-        let saved_borrowed_params = self.borrowed_params.clone();
-        let saved_mut_borrowed_params = self.mut_borrowed_params.clone();
-        for name in &cloned_borrowed_param_names {
-            self.borrowed_params.remove(name);
-            self.mut_borrowed_params.remove(name);
-        }
-
-        let mut materialize_body = Vec::new();
-        materialize_body.push(RustStmt::Let {
-            mutable: true,
-            name: "_yields".to_string(),
-            ty: Some(RustType::Vec(Box::new(yield_ty))),
-            value: RustExpr::FnCall {
-                func: Box::new(RustExpr::Path(vec!["Vec".to_string(), "new".to_string()])),
-                args: vec![],
-            },
-        });
-        for (stmt_index, stmt) in func.body.iter().enumerate() {
-            materialize_body.extend(self.lower_stmt_strict_for_function_with_following(
-                stmt,
-                Some(&func.body[stmt_index + 1..]),
-                "async generator lazy materialization statement lowering",
-            ));
-        }
-        self.borrowed_params = saved_borrowed_params;
-        self.mut_borrowed_params = saved_mut_borrowed_params;
-        materialize_body.push(RustStmt::Return(Some(RustExpr::Ident(
-            "_yields".to_string(),
-        ))));
-        body.push(RustStmt::Return(Some(RustExpr::FnCall {
-            func: Box::new(RustExpr::Path(vec![
-                "AsyncGenerator".to_string(),
-                "new_lazy".to_string(),
-            ])),
-            args: vec![RustExpr::ClosureBlock {
-                params: vec![],
-                body: materialize_body,
-                is_move: true,
-                is_async: false,
-            }],
-        })));
-        body
-    }
-
     pub(crate) fn emit_function(
         &mut self,
         func: &HirFunction,
@@ -320,6 +94,17 @@ impl RustEmitter {
 
         let mut callback_bound_params = python_callback_bound_param_names(func);
         let mut callback_static_params = python_callback_static_param_names(func);
+        if is_generator {
+            let generator_callable_params = func.params.iter().filter_map(|param| {
+                matches!(
+                    param.ty.resolve_alias(),
+                    Type::Callable(..) | Type::AsyncCallable(..)
+                )
+                .then_some(param.name.clone())
+            });
+            callback_bound_params.extend(generator_callable_params.clone());
+            callback_static_params.extend(generator_callable_params);
+        }
         let rust_callback_params = rust_callback_bound_param_names(func);
         callback_bound_params.extend(rust_callback_params.iter().cloned());
         callback_static_params.extend(rust_callback_params);
@@ -371,9 +156,9 @@ impl RustEmitter {
         let mut lowered_body = if let Some(interop_body) = interop_body {
             interop_body
         } else if is_async_generator {
-            self.lower_async_generator_function_body(func, &mutable_param_shadows)
+            self.lower_resumable_async_generator_function_body(func, &mutable_param_shadows)
         } else if is_generator {
-            self.lower_generator_function_body(func, &mutable_param_shadows)
+            self.lower_resumable_generator_function_body(func, &mutable_param_shadows)
         } else {
             let mut lowered = Self::emit_mutable_param_shadow_stmts(&mutable_param_shadows);
             lowered.extend(self.prepare_string_char_cache_stmts(func, &reassigned_vars));
