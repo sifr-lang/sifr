@@ -1,6 +1,6 @@
 # sifr.io — File and stream I/O surfaces
 # Provides open(), open_binary(), file handle classes, and in-memory stream wrappers.
-from _sifr.fs import NativeFileHandle, open_file, file_read, file_write, file_readline, file_readlines, file_close, file_read_bytes, file_write_bytes
+from _sifr.fs import NativeFileHandle, open_file, file_read, file_write, file_readline, file_readlines, file_close, file_read_bytes, file_write_bytes, file_flush, file_seek, file_tell
 from _sifr.fs import read_text as _read_text_impl
 from _sifr.fs import write_text as _write_text_impl
 from _sifr.fs import exists as _exists_impl
@@ -129,7 +129,7 @@ class FileHandle:
     def flush(self) -> Result[None, IOError]:
         if self._closed:
             raise IOError(_closed_stream_error())
-        return None
+        return file_flush(self._handle)
 
     def read(self) -> Result[str, IOError]:
         if self._closed:
@@ -159,12 +159,12 @@ class FileHandle:
             raise IOError("stream is not readable")
         return file_readlines(self._handle)
 
-    def read_bytes(self) -> Result[bytes, IOError]:
+    def read_bytes(self, size: int | None = None) -> Result[bytes, IOError]:
         if self._closed:
             raise IOError(_closed_stream_error())
         if not self.readable():
             raise IOError("stream is not readable")
-        return file_read_bytes(self._handle)
+        return file_read_bytes(self._handle, size)
 
     def write_bytes(self, data: bytes) -> Result[None, IOError]:
         if self._closed:
@@ -174,12 +174,14 @@ class FileHandle:
         return file_write_bytes(self._handle, data)
 
     def seek(self, offset: int, whence: int = 0) -> Result[int, IOError]:
-        _ = offset
-        _ = whence
-        raise IOError(_unsupported_seek_tell_error())
+        if self._closed:
+            raise IOError(_closed_stream_error())
+        return file_seek(self._handle, offset, whence)
 
     def tell(self) -> Result[int, IOError]:
-        raise IOError(_unsupported_seek_tell_error())
+        if self._closed:
+            raise IOError(_closed_stream_error())
+        return file_tell(self._handle)
 
     def readable(self) -> bool:
         return _mode_is_readable(self._mode)
@@ -188,7 +190,7 @@ class FileHandle:
         return _mode_is_writable(self._mode)
 
     def seekable(self) -> bool:
-        return False
+        return not self._closed
 
     def __enter__(self) -> FileHandle:
         return self
@@ -219,15 +221,14 @@ class BinaryFileHandle:
     def flush(self) -> Result[None, IOError]:
         if self._closed:
             raise IOError(_closed_stream_error())
-        return None
+        return file_flush(self._handle)
 
     def read_bytes(self, size: int | None = None) -> Result[bytes, IOError]:
-        _ = size
         if self._closed:
             raise IOError(_closed_stream_error())
         if not self.readable():
             raise IOError("stream is not readable")
-        return file_read_bytes(self._handle)
+        return file_read_bytes(self._handle, size)
 
     def write_bytes(self, data: bytes) -> Result[None, IOError]:
         if self._closed:
@@ -237,12 +238,14 @@ class BinaryFileHandle:
         return file_write_bytes(self._handle, data)
 
     def seek(self, offset: int, whence: int = 0) -> Result[int, IOError]:
-        _ = offset
-        _ = whence
-        raise IOError(_unsupported_seek_tell_error())
+        if self._closed:
+            raise IOError(_closed_stream_error())
+        return file_seek(self._handle, offset, whence)
 
     def tell(self) -> Result[int, IOError]:
-        raise IOError(_unsupported_seek_tell_error())
+        if self._closed:
+            raise IOError(_closed_stream_error())
+        return file_tell(self._handle)
 
     def readable(self) -> bool:
         return _mode_is_readable(self._mode)
@@ -251,7 +254,7 @@ class BinaryFileHandle:
         return _mode_is_writable(self._mode)
 
     def seekable(self) -> bool:
-        return False
+        return not self._closed
 
     def __enter__(self) -> BinaryFileHandle:
         return self
@@ -315,7 +318,7 @@ class TextFileHandle:
             text: str = decode(data, self._encoding, self._decode_errors)
             return text
         except IOError as e:
-            raise IOError(e.message)
+            raise e
         except DecodeError as e:
             raise IOError("text decode failed: " + e.message)
 
@@ -327,13 +330,19 @@ class TextFileHandle:
         except EncodeError as e:
             raise IOError("text encode failed: " + e.message)
         except IOError as e:
-            raise IOError(e.message)
+            raise e
 
     def readline(self) -> Result[str | None, IOError]:
         raise IOError("TextFileHandle.readline is deferred; use read().split(\"\\n\")")
 
     def readlines(self) -> Result[list[str], IOError]:
         raise IOError("TextFileHandle.readlines is deferred; use read().split(\"\\n\")")
+
+    def seek(self, offset: int, whence: int = 0) -> Result[int, IOError]:
+        return self._binary.seek(offset, whence)
+
+    def tell(self) -> Result[int, IOError]:
+        return self._binary.tell()
 
     def readable(self) -> bool:
         return self._binary.readable()
@@ -569,7 +578,7 @@ def open(path: str, mode: str = "r") -> Result[FileHandle, IOError]:
         handle: NativeFileHandle = open_file(path, mode)
         return FileHandle(handle, mode)
     except IOError as e:
-        raise IOError(e.message)
+        raise e
 
 
 def open_binary(path: str, mode: str = "rb") -> Result[BinaryFileHandle, IOError]:
@@ -579,7 +588,7 @@ def open_binary(path: str, mode: str = "rb") -> Result[BinaryFileHandle, IOError
         handle: NativeFileHandle = open_file(path, mode)
         return BinaryFileHandle(handle, mode)
     except IOError as e:
-        raise IOError(e.message)
+        raise e
 
 
 def open_text(path: str, mode: str = "r", encoding: Encoding | None = None, errors: DecodeErrorHandler | None = None) -> Result[TextFileHandle, IOError]:
@@ -591,4 +600,4 @@ def open_text(path: str, mode: str = "r", encoding: Encoding | None = None, erro
         binary: BinaryFileHandle = open_binary(path, binary_mode)
         return TextFileHandle(binary, text_encoding, decode_errors, encode_errors)
     except IOError as e:
-        raise IOError(e.message)
+        raise e

@@ -59,9 +59,9 @@ impl RustEmitter {
                 } else if attached_storage {
                     "Clone + 'static".to_string()
                 } else if needs_hash_eq {
-                    "Clone + std::fmt::Display + PartialOrd + std::hash::Hash + Eq + 'static".to_string()
+                    "Clone + std::hash::Hash + Eq + 'static".to_string()
                 } else {
-                    "Clone + std::fmt::Display + PartialOrd + 'static".to_string()
+                    "Clone + 'static".to_string()
                 };
                 if Self::returns_borrowed_type_param(func, type_param) {
                     Self::append_bound(&mut base, "Clone");

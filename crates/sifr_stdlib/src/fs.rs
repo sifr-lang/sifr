@@ -1,7 +1,7 @@
 use std::{
     collections::HashMap,
     fs::{self, DirEntry, File, OpenOptions},
-    io::{BufRead as _, BufReader, BufWriter, Read as _, Write as _},
+    io::{BufRead as _, BufReader, BufWriter, Read as _, Seek as _, SeekFrom, Write as _},
     path::{Path, PathBuf},
     process::Command,
     sync::{
@@ -10,7 +10,7 @@ use std::{
     },
 };
 
-use sifr_runtime::interop::SifrIntBridge;
+use sifr_runtime::{SifrInt, interop::SifrIntBridge};
 
 enum FileHandleEntry {
     TextRead(BufReader<File>),
@@ -106,16 +106,61 @@ pub fn file_close(handle: &str) {
     file_handles().remove(handle);
 }
 
-pub fn file_read_bytes(handle: &str) -> Result<Vec<u8>, std::io::Error> {
+pub fn file_read_bytes(
+    handle: &str,
+    size: Option<SifrIntBridge>,
+) -> Result<Vec<u8>, std::io::Error> {
     with_binary_reader(handle, |reader| {
-        let mut bytes = Vec::new();
-        reader.read_to_end(&mut bytes)?;
-        Ok(bytes)
+        read_bytes_with_limit(reader, read_size_limit(size.as_ref()))
     })
 }
 
 pub fn file_write_bytes(handle: &str, data: &[u8]) -> Result<(), std::io::Error> {
     with_binary_writer(handle, |writer| writer.write_all(data))
+}
+
+pub fn file_flush(handle: &str) -> Result<(), std::io::Error> {
+    let mut handles = file_handles();
+    match handles.get_mut(handle) {
+        Some(FileHandleEntry::TextWrite(writer)) | Some(FileHandleEntry::BinaryWrite(writer)) => {
+            writer.flush()
+        }
+        Some(FileHandleEntry::TextRead(_) | FileHandleEntry::BinaryRead(_)) => Ok(()),
+        None => Err(std::io::Error::other("unknown file handle")),
+    }
+}
+
+pub fn file_seek(
+    handle: &str,
+    offset: SifrIntBridge,
+    whence: SifrIntBridge,
+) -> Result<SifrIntBridge, std::io::Error> {
+    let seek_from = seek_from(&offset, &whence)?;
+    let mut handles = file_handles();
+    let position = match handles.get_mut(handle) {
+        Some(FileHandleEntry::TextRead(reader)) | Some(FileHandleEntry::BinaryRead(reader)) => {
+            reader.seek(seek_from)
+        }
+        Some(FileHandleEntry::TextWrite(writer)) | Some(FileHandleEntry::BinaryWrite(writer)) => {
+            writer.seek(seek_from)
+        }
+        None => Err(std::io::Error::other("unknown file handle")),
+    }?;
+    Ok(SifrIntBridge::from(SifrInt::from(position)))
+}
+
+pub fn file_tell(handle: &str) -> Result<SifrIntBridge, std::io::Error> {
+    let mut handles = file_handles();
+    let position = match handles.get_mut(handle) {
+        Some(FileHandleEntry::TextRead(reader)) | Some(FileHandleEntry::BinaryRead(reader)) => {
+            reader.stream_position()
+        }
+        Some(FileHandleEntry::TextWrite(writer)) | Some(FileHandleEntry::BinaryWrite(writer)) => {
+            writer.stream_position()
+        }
+        None => Err(std::io::Error::other("unknown file handle")),
+    }?;
+    Ok(SifrIntBridge::from(SifrInt::from(position)))
 }
 
 pub fn getcwd() -> Result<String, std::io::Error> {
@@ -377,6 +422,68 @@ fn with_binary_writer<T>(
     match handles.get_mut(handle) {
         Some(FileHandleEntry::BinaryWrite(writer)) => write(writer),
         _ => Err(std::io::Error::other("file not open for binary writing")),
+    }
+}
+
+fn read_size_limit(size: Option<&SifrIntBridge>) -> Option<u64> {
+    let size = size?;
+    if size.as_sifr_int() < &SifrInt::from_i64(0) {
+        return None;
+    }
+    Some(size.try_to_u64().unwrap_or(u64::MAX))
+}
+
+fn read_bytes_with_limit(
+    reader: &mut BufReader<File>,
+    limit: Option<u64>,
+) -> Result<Vec<u8>, std::io::Error> {
+    const CHUNK_SIZE: usize = 8 * 1024;
+    const CHUNK_SIZE_U64: u64 = 8 * 1024;
+
+    let mut bytes = Vec::new();
+    let mut remaining = limit.unwrap_or(u64::MAX);
+    while remaining > 0 {
+        let chunk_len = usize::try_from(remaining.min(CHUNK_SIZE_U64)).map_err(|_| {
+            std::io::Error::new(std::io::ErrorKind::InvalidInput, "invalid read size")
+        })?;
+        let mut chunk = [0_u8; CHUNK_SIZE];
+        let read = reader.read(&mut chunk[..chunk_len])?;
+        if read == 0 {
+            break;
+        }
+        bytes.try_reserve(read).map_err(|error| {
+            std::io::Error::new(
+                std::io::ErrorKind::OutOfMemory,
+                format!("unable to allocate binary read buffer: {error}"),
+            )
+        })?;
+        bytes.extend_from_slice(&chunk[..read]);
+        let read_u64 = u64::try_from(read).map_err(|_| {
+            std::io::Error::new(std::io::ErrorKind::InvalidData, "invalid read length")
+        })?;
+        remaining -= read_u64;
+    }
+    Ok(bytes)
+}
+
+fn seek_from(offset: &SifrIntBridge, whence: &SifrIntBridge) -> Result<SeekFrom, std::io::Error> {
+    let whence = whence.try_to_i64().map_err(|error| {
+        std::io::Error::new(std::io::ErrorKind::InvalidInput, error.to_string())
+    })?;
+    match whence {
+        0 => offset.try_to_u64().map(SeekFrom::Start).map_err(|error| {
+            std::io::Error::new(std::io::ErrorKind::InvalidInput, error.to_string())
+        }),
+        1 => offset.try_to_i64().map(SeekFrom::Current).map_err(|error| {
+            std::io::Error::new(std::io::ErrorKind::InvalidInput, error.to_string())
+        }),
+        2 => offset.try_to_i64().map(SeekFrom::End).map_err(|error| {
+            std::io::Error::new(std::io::ErrorKind::InvalidInput, error.to_string())
+        }),
+        _ => Err(std::io::Error::new(
+            std::io::ErrorKind::InvalidInput,
+            format!("invalid whence: {whence}"),
+        )),
     }
 }
 

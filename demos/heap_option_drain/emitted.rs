@@ -2,7 +2,7 @@
 use ::sifr_runtime::SifrInt;
 
 // --- stdlib: sifr.heapq ---
-fn _sift_down<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
+fn _sift_down<T: Clone + 'static + PartialOrd>(
     data: &mut Vec<T>,
     mut pos: SifrInt,
     n: SifrInt,
@@ -125,10 +125,7 @@ fn _sift_down<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
         }
     }
 }
-fn _sift_up<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    heap: &mut Vec<T>,
-    mut pos: SifrInt,
-) {
+fn _sift_up<T: Clone + 'static + PartialOrd>(heap: &mut Vec<T>, mut pos: SifrInt) {
     let mut done: bool = false;
     while !done {
         if (&pos <= &SifrInt::from_i64(0)) {
@@ -200,18 +197,13 @@ fn _sift_up<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
         }
     }
 }
-fn heappush<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    heap: &mut Vec<T>,
-    item: &T,
-) {
+fn heappush<T: Clone + 'static>(heap: &mut Vec<T>, item: &T) {
     "Push item onto the heap in-place. O(log n) time.".to_string();
     heap.push(item.clone());
     let pos: SifrInt = &SifrInt::from(heap.len()) - &SifrInt::from_i64(1);
     _sift_up(heap, (pos).clone());
 }
-fn heappop<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    heap: &mut Vec<T>,
-) -> Option<T> {
+fn heappop<T: Clone + 'static>(heap: &mut Vec<T>) -> Option<T> {
     "Pop and return the smallest item. Heap is modified in-place. O(log n) time.\n    Returns None if the heap is empty."
         .to_string();
     let n: SifrInt = SifrInt::from(heap.len());
@@ -274,6 +266,6 @@ fn main() {
     let mut heap: Vec<SifrInt> = vec![];
     heappush(&mut heap, &SifrInt::from_i64(7));
     assert!((heappop(&mut heap) == Some(SifrInt::from_i64(7))));
-    assert!((heappop(&mut heap) == None));
+    assert!((heappop(&mut heap).is_none()));
     println!("heap_option_drain: ok");
 }

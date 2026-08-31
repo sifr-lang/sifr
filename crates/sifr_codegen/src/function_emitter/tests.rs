@@ -31,6 +31,39 @@ fn regular_int_function(params: Vec<HirParam>, body: Vec<HirStmt>) -> HirFunctio
     }
 }
 
+#[test]
+fn unconstrained_generic_functions_emit_only_ownership_bounds() {
+    let function = HirFunction {
+        name: "forward".to_string(),
+        params: vec![HirParam {
+            name: "value".to_string(),
+            ty: Type::TypeVar("T".to_string()),
+            default: None,
+            keyword_only: false,
+            convention: ParamConvention::own(),
+        }],
+        return_type: Type::TypeVar("T".to_string()),
+        body: vec![HirStmt::Return {
+            value: Some(HirExpr::Name {
+                name: "value".to_string(),
+                binding_id: None,
+                ty: Type::TypeVar("T".to_string()),
+            }),
+        }],
+        is_async: false,
+        method_kind: MethodKind::Regular,
+        receiver: None,
+        decorators: vec![],
+        rust_interop: Vec::new(),
+        python_interop: Vec::new(),
+        compiler_intrinsic: None,
+        type_params: vec!["T".to_string()],
+    };
+
+    let bounds = RustEmitter::new().lower_function_type_params(&function);
+    assert_eq!(bounds[0].bounds, vec!["Clone + 'static"]);
+}
+
 fn helper_returning_name(name: &str) -> HirFunction {
     HirFunction {
         name: "helper".to_string(),

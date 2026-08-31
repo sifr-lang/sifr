@@ -42,6 +42,9 @@ def main():
         quotient: float = exact_divide(3, divisor)
         assert quotient == 1.5
 
+        negative_zero: float = exact_divide(0, -2)
+        assert str(negative_zero).startswith("-")
+
         mixed: float = mixed_add(fitting, 0.5)
         assert mixed == 9007199254740992.0
     except Error:

@@ -56,6 +56,17 @@ fn prefer_complete_class_surface(fallback: Type, candidate: Option<Type>) -> Typ
     })
 }
 
+fn register_compiler_open_handle_defaults(ctx: &mut LowerCtx, class_name: &str) {
+    ctx.function_defaults
+        .entry(format!("{class_name}.seek"))
+        .or_insert_with(|| vec![(1, HirExpr::IntLiteral(0))]);
+    if class_name == "FileHandle" {
+        ctx.function_defaults
+            .entry("FileHandle.read_bytes".to_string())
+            .or_insert_with(|| vec![(0, HirExpr::NoneLiteral)]);
+    }
+}
+
 fn string_literal_value(expr: &Expr) -> Option<String> {
     match expr {
         Expr::StringLiteral(literal) => Some(literal.value.to_str().to_string()),
@@ -301,6 +312,7 @@ pub(super) fn lower_shadowable_builtin_call(
                 class_type_with_identity(ctx, TEXT_FILE_HANDLE_IDENTITY),
             );
             fill_file_handle_receiver_conventions(&mut text_handle_ty);
+            register_compiler_open_handle_defaults(ctx, "TextFileHandle");
             if let Some(error_ty) = ctx.class_types.get("IOError") {
                 ctx.try_block_error_types.insert(error_ty.clone());
             }
@@ -383,7 +395,10 @@ pub(super) fn lower_shadowable_builtin_call(
                 (
                     "read_bytes".to_string(),
                     FunctionType::all_borrow(
-                        vec![],
+                        vec![(
+                            "size".to_string(),
+                            sifr_type_system::make_union(vec![Type::Int, Type::None]),
+                        )],
                         Type::Result(Box::new(Type::Bytes), Box::new(io_err_ty.clone())),
                     ),
                 ),
@@ -423,6 +438,7 @@ pub(super) fn lower_shadowable_builtin_call(
             class_type_with_identity(ctx, FILE_HANDLE_IDENTITY),
         );
         fill_file_handle_receiver_conventions(&mut file_handle_ty);
+        register_compiler_open_handle_defaults(ctx, "FileHandle");
         // Register IOError as a possible exception from this call
         if let Some(error_ty) = ctx.class_types.get("IOError") {
             ctx.try_block_error_types.insert(error_ty.clone());

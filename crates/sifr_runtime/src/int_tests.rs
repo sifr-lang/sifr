@@ -210,6 +210,16 @@ fn exact_integer_converts_to_fitting_fixed_width_targets() {
 }
 
 #[test]
+fn exact_zero_divided_by_negative_integer_preserves_negative_zero() {
+    let quotient = SifrInt::from_i64(0)
+        .checked_true_div(&SifrInt::from_i64(-2))
+        .expect("nonzero exact divisor should succeed");
+
+    assert_eq!(quotient, 0.0);
+    assert!(quotient.is_sign_negative());
+}
+
+#[test]
 fn exact_integer_conversion_reports_typed_range_errors() {
     let too_large = SifrInt::parse_decimal(
         "340282366920938463463374607431768211456",

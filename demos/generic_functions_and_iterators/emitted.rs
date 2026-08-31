@@ -279,13 +279,10 @@ impl Printable for Product {
         Product::display(self)
     }
 }
-fn identity<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(x: &T) -> T {
+fn identity<T: Clone + 'static>(x: &T) -> T {
     x.clone()
 }
-fn repeat<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    x: &T,
-    n: SifrInt,
-) -> Vec<T> {
+fn repeat<T: Clone + 'static>(x: &T, n: SifrInt) -> Vec<T> {
     let mut result: Vec<T> = vec![];
     let mut i: SifrInt = SifrInt::from_i64(0);
     while (&i < &n) {

@@ -20,9 +20,7 @@ pub use __sifr_project_nominals::ValueError;
 use ::std::collections::HashMap;
 use ::sifr_runtime::SifrInt;
 use ::sifr_runtime::SifrRange;
-fn assert_ok<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    value: Result<T, Error>,
-) {
+fn assert_ok<T: Clone + 'static>(value: Result<T, Error>) {
     let __sifr_try_res: Result<(), Error> = (|| {
         let out: T = value?;
         Ok(())
@@ -31,9 +29,7 @@ fn assert_ok<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
         assert!(false);
     }
 }
-fn assert_err<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    value: Result<T, Error>,
-) {
+fn assert_err<T: Clone + 'static>(value: Result<T, Error>) {
     let __sifr_try_res: Result<(), Error> = (|| {
         let out: T = value?;
         assert!(false);

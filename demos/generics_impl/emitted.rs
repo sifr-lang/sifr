@@ -1,11 +1,11 @@
 // src/main.rs
 use ::sifr_runtime::SifrInt;
 
-fn identity<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(x: &T) -> T {
+fn identity<T: Clone + 'static>(x: &T) -> T {
     x.clone()
 }
 
-fn first<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(items: &Vec<T>) -> Option<T> {
+fn first<T: Clone + 'static>(items: &Vec<T>) -> Option<T> {
     {
     let __sifr_checked_read_collection = &items;
     let __sifr_checked_read_index = SifrInt::from_i64(0);
@@ -51,7 +51,7 @@ fn main() {
         println!("{}", first_word);
     }
     let missing_word: Option<String> = first(&empty_words);
-    if (missing_word == None) {
+    if (missing_word.is_none()) {
         println!("empty list -> None");
     } else {
         if let Some(missing_word) = missing_word {

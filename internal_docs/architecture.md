@@ -328,6 +328,12 @@ Several stdlib functions intentionally diverge from CPython names due to Rust ke
 | `sifr.itertools.take` | — (no CPython equivalent) | Sifr extension; returns first N elements from an `Iterable[T]`. Kept for ergonomics. |
 | `sifr.itertools.flatten` | `itertools.chain.from_iterable` | Sifr extension; flattens `Iterable[Iterable[T]]`. Simpler API than CPython's `chain.from_iterable`. |
 
+Iterator-taking `sifr.itertools` APIs own their `Iterator[T]` inputs. Callers
+that start with an iterable use an explicit `iter(...)` conversion, making
+single-pass consumption visible at the call site. `islice(data, stop)` treats
+the second argument as the stop bound, while `islice(data, start, None)` is
+unbounded and an explicit `None` step has the canonical unit-step meaning.
+
 **Removed type-specific duplicates (type-system architecture — stdlib generic rewrite):** `chain_str`, `chain_float`, `accumulate_float`, `accumulate_str`, `counter_add`, `counter_sub`, and other monomorphic variants have been deleted. All stdlib functions are now generic — e.g., `chain[T]`, `accumulate[T: Addable]`, `Counter[T: Hashable]`, `deque[T]`, `heapq` functions with `[T: Comparable]` bounds, `reduce[T, U]`, `shuffle[T]`, `sample[T]`.
 
 ## Compiler Pipeline

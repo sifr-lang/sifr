@@ -1,8 +1,9 @@
 use super::{
     DiagnosticCode, FunctionType, HirExpr, LowerCtx, TextRange, Type,
     canonicalize_class_surface_type, coroutine_result_type, expression_diagnostics,
-    method_count_range, reject_exact_method_arg_count, reject_method_arg_count,
-    reject_no_method_args, resolve_method_type, resolve_str_encode_method_type, str,
+    expression_operators, method_count_range, reject_exact_method_arg_count,
+    reject_method_arg_count, reject_no_method_args, resolve_method_type,
+    resolve_str_encode_method_type, str,
 };
 pub(super) fn resolve_str_method_type(
     method: &str,
@@ -123,7 +124,25 @@ pub(super) fn resolve_str_method_type(
                 );
                 return None;
             }
-            Some(Type::Str)
+            if args[0].ty() != &Type::Int {
+                expression_diagnostics::type_mismatch(
+                    ctx,
+                    format!(
+                        "str.{method}() width must be 'int', got '{}'",
+                        args[0].ty().display_name()
+                    ),
+                    arg_ranges[0],
+                );
+            }
+            Some(Type::Result(
+                Box::new(Type::Str),
+                Box::new(expression_operators::builtin_error_type(
+                    ctx,
+                    "OverflowError",
+                    "Error",
+                    vec![],
+                )),
+            ))
         }
         "find" | "rfind" => {
             if args.len() != 1 {

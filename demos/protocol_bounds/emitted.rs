@@ -1,11 +1,11 @@
 // src/main.rs
 use ::sifr_runtime::SifrInt;
 
-fn keep_comparable<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(x: &T) -> T {
+fn keep_comparable<T: Clone + 'static>(x: &T) -> T {
     x.clone()
 }
 
-fn relay_comparable<U: Clone + ::std::fmt::Display + PartialOrd + 'static>(x: &U) -> U {
+fn relay_comparable<U: Clone + 'static>(x: &U) -> U {
     keep_comparable(x)
 }
 

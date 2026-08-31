@@ -235,7 +235,7 @@ fn _split_inline_option(token: &String) -> (bool, String, String) {
             __sifr_chars_token.get(__sifr_string_index_normalized)
         })
             .map(|c| c.to_string());
-        if (ch != None) && (ch == Some("=".to_string())) {
+        if (ch.is_some()) && (ch == Some("=".to_string())) {
             let mut value: String = "".to_string();
             let mut j: SifrInt = &i + &SifrInt::from_i64(1);
             while (&j < &SifrInt::from(__sifr_chars_token.len())) {
@@ -334,7 +334,7 @@ fn parse_option(args: &Vec<String>, name: &String, default: &String) -> String {
         __sifr_concat
     }
 }
-fn bisect_left<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
+fn bisect_left<T: Clone + 'static + PartialOrd>(
     a: &Vec<T>,
     x: &T,
     lo: SifrInt,
@@ -345,7 +345,7 @@ fn bisect_left<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
         left = SifrInt::from_i64(0);
     }
     let mut right: SifrInt = SifrInt::from(a.len());
-    if (hi == None) {
+    if (hi.is_none()) {
         right = SifrInt::from(a.len());
     } else {
         if let Some(hi) = hi.clone() {
@@ -558,14 +558,40 @@ fn _file_readlines(handle: &String) -> Result<Vec<String>, IOError> {
 fn _file_close(handle: &String) {
     ::sifr_stdlib::fs::file_close(handle);
 }
-fn _file_read_bytes(handle: &String) -> Result<Vec<u8>, IOError> {
-    ::sifr_stdlib::fs::file_read_bytes(handle)
+fn _file_read_bytes(handle: &String, size: Option<SifrInt>) -> Result<Vec<u8>, IOError> {
+    ::sifr_stdlib::fs::file_read_bytes(
+            handle,
+            size.map(::sifr_runtime::interop::SifrIntBridge::from),
+        )
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
 fn _file_write_bytes(handle: &String, data: &Vec<u8>) -> Result<(), IOError> {
     ::sifr_stdlib::fs::file_write_bytes(handle, data)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
+        .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
+}
+fn _file_flush(handle: &String) -> Result<(), IOError> {
+    ::sifr_stdlib::fs::file_flush(handle)
+        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
+        .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
+}
+fn _file_seek(
+    handle: &String,
+    offset: SifrInt,
+    whence: SifrInt,
+) -> Result<SifrInt, IOError> {
+    ::sifr_stdlib::fs::file_seek(
+            handle,
+            ::sifr_runtime::interop::SifrIntBridge::from(offset),
+            ::sifr_runtime::interop::SifrIntBridge::from(whence),
+        )
+        .map(|__sifr_bridge_ok| __sifr_bridge_ok.into_sifr_int())
+        .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
+}
+fn _file_tell(handle: &String) -> Result<SifrInt, IOError> {
+    ::sifr_stdlib::fs::file_tell(handle)
+        .map(|__sifr_bridge_ok| __sifr_bridge_ok.into_sifr_int())
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
 fn open_file(path: &String, mode: &String) -> Result<__SifrIoNativeFileHandle, IOError> {
@@ -579,7 +605,7 @@ fn open_file(path: &String, mode: &String) -> Result<__SifrIoNativeFileHandle, I
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(IOError::new(e.message.clone()));
+            return Err(e);
         }
     }
 }
@@ -598,14 +624,30 @@ fn file_readlines(handle: &__SifrIoNativeFileHandle) -> Result<Vec<String>, IOEr
 fn file_close(handle: &__SifrIoNativeFileHandle) {
     _file_close(&handle._id.clone());
 }
-fn file_read_bytes(handle: &__SifrIoNativeFileHandle) -> Result<Vec<u8>, IOError> {
-    _file_read_bytes(&handle._id.clone())
+fn file_read_bytes(
+    handle: &__SifrIoNativeFileHandle,
+    size: Option<SifrInt>,
+) -> Result<Vec<u8>, IOError> {
+    _file_read_bytes(&handle._id.clone(), (size).clone())
 }
 fn file_write_bytes(
     handle: &__SifrIoNativeFileHandle,
     data: &Vec<u8>,
 ) -> Result<(), IOError> {
     _file_write_bytes(&handle._id.clone(), data)
+}
+fn file_flush(handle: &__SifrIoNativeFileHandle) -> Result<(), IOError> {
+    _file_flush(&handle._id.clone())
+}
+fn file_seek(
+    handle: &__SifrIoNativeFileHandle,
+    offset: SifrInt,
+    whence: SifrInt,
+) -> Result<SifrInt, IOError> {
+    _file_seek(&handle._id.clone(), (offset).clone(), (whence).clone())
+}
+fn file_tell(handle: &__SifrIoNativeFileHandle) -> Result<SifrInt, IOError> {
+    _file_tell(&handle._id.clone())
 }
 fn getcwd() -> Result<String, IOError> {
     ::sifr_stdlib::fs::getcwd()
@@ -1845,7 +1887,7 @@ impl __SifrIoFileHandle {
         if self._closed {
             return Err(IOError::new(_closed_stream_error()));
         }
-        Ok(())
+        file_flush(&self._handle)
     }
 }
 impl __SifrIoFileHandle {
@@ -1893,14 +1935,14 @@ impl __SifrIoFileHandle {
     }
 }
 impl __SifrIoFileHandle {
-    fn read_bytes(&self) -> Result<Vec<u8>, IOError> {
+    fn read_bytes(&self, size: &Option<SifrInt>) -> Result<Vec<u8>, IOError> {
         if self._closed {
             return Err(IOError::new(_closed_stream_error()));
         }
         if !self.readable() {
             return Err(IOError::new("stream is not readable".to_string()));
         }
-        file_read_bytes(&self._handle)
+        file_read_bytes(&self._handle, (size.clone()).clone())
     }
 }
 impl __SifrIoFileHandle {
@@ -1916,14 +1958,18 @@ impl __SifrIoFileHandle {
 }
 impl __SifrIoFileHandle {
     fn seek(&self, offset: &SifrInt, whence: &SifrInt) -> Result<SifrInt, IOError> {
-        let _ = offset.clone();
-        let _ = whence.clone();
-        Err(IOError::new(_unsupported_seek_tell_error()))
+        if self._closed {
+            return Err(IOError::new(_closed_stream_error()));
+        }
+        file_seek(&self._handle, (offset.clone()).clone(), (whence.clone()).clone())
     }
 }
 impl __SifrIoFileHandle {
     fn tell(&self) -> Result<SifrInt, IOError> {
-        Err(IOError::new(_unsupported_seek_tell_error()))
+        if self._closed {
+            return Err(IOError::new(_closed_stream_error()));
+        }
+        file_tell(&self._handle)
     }
 }
 impl __SifrIoFileHandle {
@@ -1938,7 +1984,7 @@ impl __SifrIoFileHandle {
 }
 impl __SifrIoFileHandle {
     fn seekable(&self) -> bool {
-        false
+        !(self._closed)
     }
 }
 impl __SifrIoFileHandle {
@@ -1996,19 +2042,18 @@ impl __SifrIoBinaryFileHandle {
         if self._closed {
             return Err(IOError::new(_closed_stream_error()));
         }
-        Ok(())
+        file_flush(&self._handle)
     }
 }
 impl __SifrIoBinaryFileHandle {
     fn read_bytes(&self, size: &Option<SifrInt>) -> Result<Vec<u8>, IOError> {
-        let _ = (size).clone();
         if self._closed {
             return Err(IOError::new(_closed_stream_error()));
         }
         if !self.readable() {
             return Err(IOError::new("stream is not readable".to_string()));
         }
-        file_read_bytes(&self._handle)
+        file_read_bytes(&self._handle, (size.clone()).clone())
     }
 }
 impl __SifrIoBinaryFileHandle {
@@ -2024,14 +2069,18 @@ impl __SifrIoBinaryFileHandle {
 }
 impl __SifrIoBinaryFileHandle {
     fn seek(&self, offset: &SifrInt, whence: &SifrInt) -> Result<SifrInt, IOError> {
-        let _ = offset.clone();
-        let _ = whence.clone();
-        Err(IOError::new(_unsupported_seek_tell_error()))
+        if self._closed {
+            return Err(IOError::new(_closed_stream_error()));
+        }
+        file_seek(&self._handle, (offset.clone()).clone(), (whence.clone()).clone())
     }
 }
 impl __SifrIoBinaryFileHandle {
     fn tell(&self) -> Result<SifrInt, IOError> {
-        Err(IOError::new(_unsupported_seek_tell_error()))
+        if self._closed {
+            return Err(IOError::new(_closed_stream_error()));
+        }
+        file_tell(&self._handle)
     }
 }
 impl __SifrIoBinaryFileHandle {
@@ -2046,7 +2095,7 @@ impl __SifrIoBinaryFileHandle {
 }
 impl __SifrIoBinaryFileHandle {
     fn seekable(&self) -> bool {
-        false
+        !(self._closed)
     }
 }
 impl __SifrIoBinaryFileHandle {
@@ -2138,7 +2187,7 @@ impl __SifrIoTextFileHandle {
                         __sifr_try_variant_error,
                     ) => {
                         let e = __sifr_try_variant_error.clone();
-                        return Err(IOError::new(e.message.clone()));
+                        return Err(e);
                     }
                     __SifrUnion_8_x3asequence5_x3aunion1_x3a238_x3a5_x3aclass25_x3asifr_x2eencoding_x2eDecodeError1_x3a019_x3a5_x3aclass7_x3aIOError1_x3a0::__SifrUnionVariant_5_x3aclass25_x3asifr_x2eencoding_x2eDecodeError1_x3a0(
                         __sifr_try_variant_error,
@@ -2190,7 +2239,7 @@ impl __SifrIoTextFileHandle {
                         __sifr_try_variant_error,
                     ) => {
                         let e = __sifr_try_variant_error.clone();
-                        return Err(IOError::new(e.message.clone()));
+                        return Err(e);
                     }
                     __SifrUnion_8_x3asequence5_x3aunion1_x3a238_x3a5_x3aclass25_x3asifr_x2eencoding_x2eEncodeError1_x3a019_x3a5_x3aclass7_x3aIOError1_x3a0::__SifrUnionVariant_5_x3aclass25_x3asifr_x2eencoding_x2eEncodeError1_x3a0(
                         __sifr_try_variant_error,
@@ -2230,6 +2279,16 @@ impl __SifrIoTextFileHandle {
                     .to_string(),
             ),
         )
+    }
+}
+impl __SifrIoTextFileHandle {
+    fn seek(&self, offset: &SifrInt, whence: &SifrInt) -> Result<SifrInt, IOError> {
+        self._binary.seek(offset, whence)
+    }
+}
+impl __SifrIoTextFileHandle {
+    fn tell(&self) -> Result<SifrInt, IOError> {
+        self._binary.tell()
     }
 }
 impl __SifrIoTextFileHandle {
@@ -2832,7 +2891,7 @@ fn open(path: &String, mode: &String) -> Result<__SifrIoFileHandle, IOError> {
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(IOError::new(e.message.clone()));
+            return Err(e);
         }
     }
 }
@@ -2853,7 +2912,7 @@ fn open_binary(
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(IOError::new(e.message.clone()));
+            return Err(e);
         }
     }
 }
@@ -2892,7 +2951,7 @@ fn open_text(
         }
         Err(__sifr_try_err) => {
             let e = __sifr_try_err.clone();
-            return Err(IOError::new(e.message.clone()));
+            return Err(e);
         }
     }
 }
@@ -3476,17 +3535,18 @@ fn filter(names: &Vec<String>, pattern: &String) -> Vec<String> {
     }
     result
 }
-fn reduce<
-    T: Clone + ::std::fmt::Display + PartialOrd + 'static,
-    U: Clone + ::std::fmt::Display + PartialOrd + 'static,
->(func: impl Fn(&U, &T) -> U, data: &Vec<T>, initial: &U) -> U {
+fn reduce<T: Clone + 'static, U: Clone + 'static>(
+    func: impl Fn(&U, &T) -> U,
+    data: &Vec<T>,
+    initial: &U,
+) -> U {
     let mut result: U = (initial).clone();
     for val in data.iter().cloned() {
         result = func(&result, &val);
     }
     result
 }
-fn _sift_down<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
+fn _sift_down<T: Clone + 'static + PartialOrd>(
     data: &mut Vec<T>,
     mut pos: SifrInt,
     n: SifrInt,
@@ -3609,10 +3669,7 @@ fn _sift_down<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
         }
     }
 }
-fn _sift_up<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    heap: &mut Vec<T>,
-    mut pos: SifrInt,
-) {
+fn _sift_up<T: Clone + 'static + PartialOrd>(heap: &mut Vec<T>, mut pos: SifrInt) {
     let mut done: bool = false;
     while !done {
         if (&pos <= &SifrInt::from_i64(0)) {
@@ -3684,7 +3741,7 @@ fn _sift_up<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
         }
     }
 }
-fn heapify<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(data: &mut Vec<T>) {
+fn heapify<T: Clone + 'static>(data: &mut Vec<T>) {
     "Convert list to a min-heap in-place. O(n) time.".to_string();
     let n: SifrInt = SifrInt::from(data.len());
     let mut i: SifrInt = &n.floor_div_known_nonzero(&SifrInt::from_i64(2))
@@ -3694,18 +3751,13 @@ fn heapify<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(data: &mut Vec
         i = &i - &SifrInt::from_i64(1);
     }
 }
-fn heappush<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    heap: &mut Vec<T>,
-    item: &T,
-) {
+fn heappush<T: Clone + 'static>(heap: &mut Vec<T>, item: &T) {
     "Push item onto the heap in-place. O(log n) time.".to_string();
     heap.push(item.clone());
     let pos: SifrInt = &SifrInt::from(heap.len()) - &SifrInt::from_i64(1);
     _sift_up(heap, (pos).clone());
 }
-fn heappop<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    heap: &mut Vec<T>,
-) -> Option<T> {
+fn heappop<T: Clone + 'static>(heap: &mut Vec<T>) -> Option<T> {
     "Pop and return the smallest item. Heap is modified in-place. O(log n) time.\n    Returns None if the heap is empty."
         .to_string();
     let n: SifrInt = SifrInt::from(heap.len());
@@ -3746,10 +3798,7 @@ fn heappop<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     }
     top
 }
-fn nsmallest<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    n: SifrInt,
-    data: &Vec<T>,
-) -> Vec<T> {
+fn nsmallest<T: Clone + 'static>(n: SifrInt, data: &Vec<T>) -> Vec<T> {
     let mut heap: Vec<T> = data.clone();
     heapify(&mut heap);
     let mut result: Vec<T> = vec![];
@@ -3860,9 +3909,7 @@ impl<T> Iterator for __SifrGenerator<T> {
         yielded
     }
 }
-fn chain<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    iterables: &Vec<Vec<T>>,
-) -> Box<dyn Iterator<Item = T>> {
+fn chain<T: Clone + 'static>(iterables: &Vec<Vec<T>>) -> Box<dyn Iterator<Item = T>> {
     let iterables = iterables.clone();
     Box::new(
         __SifrGenerator::new(async move |__sifr_yielder: __SifrYielder<T>| {
@@ -3874,10 +3921,7 @@ fn chain<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
         }),
     )
 }
-fn take<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    n: SifrInt,
-    data: &Vec<T>,
-) -> Vec<T> {
+fn take<T: Clone + 'static>(n: SifrInt, data: &Vec<T>) -> Vec<T> {
     let mut result: Vec<T> = vec![];
     let mut count: SifrInt = SifrInt::from_i64(0);
     for item in data.iter().cloned() {
@@ -3889,9 +3933,7 @@ fn take<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     }
     result
 }
-fn flatten<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    lists: &Vec<Vec<T>>,
-) -> Vec<T> {
+fn flatten<T: Clone + 'static>(lists: &Vec<Vec<T>>) -> Vec<T> {
     let mut result: Vec<T> = vec![];
     for inner in lists.iter().cloned() {
         for val in inner.iter().cloned() {
@@ -4632,7 +4674,7 @@ impl __SifrStdlib_sifr_x2erandom_x2eRandom {
         }
         let mut actual_start: SifrInt = start.clone();
         let mut actual_stop: SifrInt = start.clone();
-        if (stop.clone() == None) {
+        if (stop.is_none()) {
             actual_start = SifrInt::from_i64(0);
         } else {
             if let Some(stop) = stop.as_ref() {
@@ -4862,7 +4904,7 @@ impl __SifrStdlib_sifr_x2erandom_x2eSystemRandom {
     ) -> Result<SifrInt, ValueError> {
         let mut actual_start: SifrInt = start.clone();
         let mut actual_stop: SifrInt = start.clone();
-        if (stop.clone() == None) {
+        if (stop.is_none()) {
             actual_start = SifrInt::from_i64(0);
         } else {
             if let Some(stop) = stop.as_ref() {
@@ -5094,9 +5136,7 @@ fn gauss(mu: f64, sigma: f64) -> f64 {
     _sync_module_random(&mut generator);
     value
 }
-fn choice<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    items: &Vec<T>,
-) -> Result<T, ValueError> {
+fn choice<T: Clone + 'static>(items: &Vec<T>) -> Result<T, ValueError> {
     let item_count: SifrInt = SifrInt::from(items.len());
     if (&item_count == &SifrInt::from_i64(0)) {
         return Err(ValueError::new("choice: items must not be empty".to_string()));
@@ -5116,7 +5156,7 @@ fn choice<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     }
     Err(ValueError::new("choice: index out of range".to_string()))
 }
-fn choices<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
+fn choices<T: Clone + 'static>(
     items: &Vec<T>,
     k: SifrInt,
 ) -> Result<Vec<T>, ValueError> {
@@ -5149,10 +5189,7 @@ fn choices<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     _sync_module_random(&mut generator);
     Ok(result)
 }
-fn sample<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    items: &Vec<T>,
-    k: SifrInt,
-) -> Result<Vec<T>, ValueError> {
+fn sample<T: Clone + 'static>(items: &Vec<T>, k: SifrInt) -> Result<Vec<T>, ValueError> {
     if (&k < &SifrInt::from_i64(0)) {
         return Err(ValueError::new("sample: k must be >= 0".to_string()));
     }
@@ -5214,7 +5251,7 @@ fn sample<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     _sync_module_random(&mut generator);
     Ok(result)
 }
-fn shuffle<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(items: &mut Vec<T>) {
+fn shuffle<T: Clone + 'static>(items: &mut Vec<T>) {
     let mut generator: __SifrStdlib_sifr_x2erandom_x2eRandom = _module_random();
     let n: SifrInt = SifrInt::from(items.len());
     if (&n > &SifrInt::from_i64(1)) {

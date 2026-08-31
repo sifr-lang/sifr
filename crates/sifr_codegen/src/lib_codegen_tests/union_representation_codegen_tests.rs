@@ -1,6 +1,20 @@
 use super::*;
 
 #[test]
+fn generic_option_none_comparisons_use_option_predicates_without_partial_eq() {
+    let rust_code = generate_rust_from_source(
+        r#"def both_missing[T](left: T | None, right: T | None) -> bool:
+    return left is None and right == None
+"#,
+    );
+
+    assert!(rust_code.contains("left.is_none()"), "{rust_code}");
+    assert!(rust_code.contains("right.is_none()"), "{rust_code}");
+    assert!(!rust_code.contains("Option<T> == None"), "{rust_code}");
+    assert!(!rust_code.contains("T: PartialEq"), "{rust_code}");
+}
+
+#[test]
 fn owned_optional_argument_widening_is_not_force_unwrapped_after_conversion() {
     let target = sifr_type_system::make_union(vec![Type::Int, Type::Str, Type::None]);
     let rust_code = generate_rust_from_source(

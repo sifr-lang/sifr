@@ -501,15 +501,46 @@ fn fs_native_file_handles_match_text_and_binary_surfaces() {
         sifr_stdlib::fs::open_file(&binary_path, "wb").expect("binary writer should open");
     sifr_stdlib::fs::file_write_bytes(&binary_writer, b"bytes")
         .expect("binary writer should write");
+    sifr_stdlib::fs::file_flush(&binary_writer).expect("binary writer should flush");
     assert!(sifr_stdlib::fs::file_write(&binary_writer, "text").is_err());
     sifr_stdlib::fs::file_close(&binary_writer);
 
     let binary_reader =
         sifr_stdlib::fs::open_file(&binary_path, "rb").expect("binary reader should open");
     assert_eq!(
-        sifr_stdlib::fs::file_read_bytes(&binary_reader).expect("binary reader should read"),
-        b"bytes".to_vec()
+        sifr_stdlib::fs::file_read_bytes(&binary_reader, Some(2_i64.into()))
+            .expect("bounded binary read should succeed"),
+        b"by".to_vec()
     );
+    assert_eq!(
+        sifr_stdlib::fs::file_tell(&binary_reader)
+            .expect("binary position should be available")
+            .to_i64_saturating(),
+        2
+    );
+    assert_eq!(
+        sifr_stdlib::fs::file_seek(&binary_reader, 1_i64.into(), 1_i64.into())
+            .expect("relative seek should succeed")
+            .to_i64_saturating(),
+        3
+    );
+    assert_eq!(
+        sifr_stdlib::fs::file_read_bytes(&binary_reader, Some(1_i64.into()))
+            .expect("second bounded read should succeed"),
+        b"e".to_vec()
+    );
+    assert_eq!(
+        sifr_stdlib::fs::file_seek(&binary_reader, (-2_i64).into(), 2_i64.into())
+            .expect("end-relative seek should succeed")
+            .to_i64_saturating(),
+        3
+    );
+    assert_eq!(
+        sifr_stdlib::fs::file_read_bytes(&binary_reader, None)
+            .expect("unbounded binary read should succeed"),
+        b"es".to_vec()
+    );
+    assert!(sifr_stdlib::fs::file_seek(&binary_reader, 0_i64.into(), 3_i64.into()).is_err());
     sifr_stdlib::fs::file_close(&binary_reader);
 
     let invalid = sifr_stdlib::fs::open_file(&binary_path, "q")

@@ -13,7 +13,7 @@ fn main() {
     println!("Division 10/2: {}", result);
     assert!((format!("{}", format!("Division 10/2: {}", result)) == "Division 10/2: 5"));
     let val: Option<SifrInt> = None;
-    if (val == None) {
+    if (val.is_none()) {
         println!("None value: None");
     } else {
         if let Some(val) = val.clone() {

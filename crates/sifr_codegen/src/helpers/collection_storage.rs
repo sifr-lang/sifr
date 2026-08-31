@@ -48,7 +48,13 @@ pub(crate) fn adapt_collection_value_for_target(
     source_expr: &HirExpr,
     value: RustExpr,
 ) -> RustExpr {
-    flatten_option_value_for_target(target, source_expr.ty(), value)
+    let flattened = flatten_option_value_for_target(target, source_expr.ty(), value);
+    crate::RustEmitter::wrap_option_local_value_for_ir(
+        target,
+        source_expr,
+        source_expr.ty(),
+        flattened,
+    )
 }
 
 /// Adapt representation-significant optional wrappers inside an owned collection value.

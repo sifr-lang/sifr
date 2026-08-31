@@ -10,12 +10,14 @@ def main() -> None:
         bval: JsonValue = loads("true")
         nval: JsonValue = loads("null")
         sval: JsonValue = loads("\"hi\"")
+        ordered: JsonValue = loads("{\"z\":1,\"a\":2,\"m\":3}")
         assert str(obj) == "{\"a\":1}"
         assert str(arr) == "[1,2,3]"
         assert str(num) == "42"
         assert str(bval) == "true"
         assert str(nval) == "null"
         assert str(sval) == "\"hi\""
+        assert str(ordered) == "{\"z\":1,\"a\":2,\"m\":3}"
     except JSONDecodeError as e:
         assert False
 

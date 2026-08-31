@@ -164,7 +164,7 @@ mod __sifr_project_nominals {
             })
                 .map(|c| c.to_string());
             let mut next_value: String = "".to_string();
-            if (next_ch == None) {
+            if (next_ch.is_none()) {
                 if safe {
                     result.push('$');
                     i = &i + &SifrInt::from_i64(1);
@@ -320,7 +320,7 @@ mod __sifr_project_nominals {
                 }
                 let mapped_value: Option<String> = _mapping_lookup(mapping, &name);
                 let mut mapped_value_text: String = "".to_string();
-                if (mapped_value == None) {
+                if (mapped_value.is_none()) {
                     if safe {
                         result.push_str("${");
                         result.push_str((name).as_str());
@@ -391,7 +391,7 @@ mod __sifr_project_nominals {
             }
             let mapped_value2: Option<String> = _mapping_lookup(mapping, &name2);
             let mut mapped_value2_text: String = "".to_string();
-            if (mapped_value2 == None) {
+            if (mapped_value2.is_none()) {
                 if safe {
                     result.push('$');
                     result.push_str((name2).as_str());
@@ -454,7 +454,7 @@ mod __sifr_project_nominals {
                         __sifr_chars_format_string.get(__sifr_string_index_normalized)
                     })
                         .map(|c| c.to_string());
-                    if (escaped_next != None) && (escaped_next == Some("{".to_string())) {
+                    if (escaped_next.is_some()) && (escaped_next == Some("{".to_string())) {
                         result.push('{');
                         i = &i + &SifrInt::from_i64(2);
                         continue;
@@ -530,7 +530,8 @@ mod __sifr_project_nominals {
                         __sifr_chars_format_string.get(__sifr_string_index_normalized)
                     })
                         .map(|c| c.to_string());
-                    if (escaped_next2 != None) && (escaped_next2 == Some("}".to_string())) {
+                    if (escaped_next2.is_some()) && (escaped_next2 == Some("}".to_string()))
+                    {
                         result.push('}');
                         i = &i + &SifrInt::from_i64(2);
                         continue;
@@ -1009,8 +1010,8 @@ mod __sifr_project_nominals {
                         })
                             .map(|c| c.to_string());
                     }
-                    if (next_opt != None) && (next_opt == Some(" ".to_string())) {
-                        if (next2_opt == None) || (next2_opt != Some(" ".to_string())) {
+                    if (next_opt.is_some()) && (next_opt == Some(" ".to_string())) {
+                        if (next2_opt.is_none()) || (next2_opt != Some(" ".to_string())) {
                             result.push(' ');
                         }
                     }
@@ -2243,7 +2244,7 @@ fn _template_substitute_impl(
         })
             .map(|c| c.to_string());
         let mut next_value: String = "".to_string();
-        if (next_ch == None) {
+        if (next_ch.is_none()) {
             if safe {
                 result.push('$');
                 i = &i + &SifrInt::from_i64(1);
@@ -2399,7 +2400,7 @@ fn _template_substitute_impl(
             }
             let mapped_value: Option<String> = _mapping_lookup(mapping, &name);
             let mut mapped_value_text: String = "".to_string();
-            if (mapped_value == None) {
+            if (mapped_value.is_none()) {
                 if safe {
                     result.push_str("${");
                     result.push_str((name).as_str());
@@ -2470,7 +2471,7 @@ fn _template_substitute_impl(
         }
         let mapped_value2: Option<String> = _mapping_lookup(mapping, &name2);
         let mut mapped_value2_text: String = "".to_string();
-        if (mapped_value2 == None) {
+        if (mapped_value2.is_none()) {
             if safe {
                 result.push('$');
                 result.push_str((name2).as_str());
@@ -2533,7 +2534,7 @@ fn _formatter_format_impl(
                     __sifr_chars_format_string.get(__sifr_string_index_normalized)
                 })
                     .map(|c| c.to_string());
-                if (escaped_next != None) && (escaped_next == Some("{".to_string())) {
+                if (escaped_next.is_some()) && (escaped_next == Some("{".to_string())) {
                     result.push('{');
                     i = &i + &SifrInt::from_i64(2);
                     continue;
@@ -2609,7 +2610,8 @@ fn _formatter_format_impl(
                     __sifr_chars_format_string.get(__sifr_string_index_normalized)
                 })
                     .map(|c| c.to_string());
-                if (escaped_next2 != None) && (escaped_next2 == Some("}".to_string())) {
+                if (escaped_next2.is_some()) && (escaped_next2 == Some("}".to_string()))
+                {
                     result.push('}');
                     i = &i + &SifrInt::from_i64(2);
                     continue;
@@ -2960,8 +2962,8 @@ fn _apply_sentence_endings_line(text: &String) -> String {
                     })
                         .map(|c| c.to_string());
                 }
-                if (next_opt != None) && (next_opt == Some(" ".to_string())) {
-                    if (next2_opt == None) || (next2_opt != Some(" ".to_string())) {
+                if (next_opt.is_some()) && (next_opt == Some(" ".to_string())) {
+                    if (next2_opt.is_none()) || (next2_opt != Some(" ".to_string())) {
                         result.push(' ');
                     }
                 }

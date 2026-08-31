@@ -2,7 +2,7 @@
 use ::sifr_runtime::SifrInt;
 
 // --- stdlib: sifr.bisect ---
-fn bisect_left<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
+fn bisect_left<T: Clone + 'static + PartialOrd>(
     a: &Vec<T>,
     x: &T,
     lo: SifrInt,
@@ -13,7 +13,7 @@ fn bisect_left<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
         left = SifrInt::from_i64(0);
     }
     let mut right: SifrInt = SifrInt::from(a.len());
-    if (hi == None) {
+    if (hi.is_none()) {
         right = SifrInt::from(a.len());
     } else {
         if let Some(hi) = hi.clone() {
@@ -50,7 +50,7 @@ fn bisect_left<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     }
     left.clone()
 }
-fn bisect_right<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
+fn bisect_right<T: Clone + 'static + PartialOrd>(
     a: &Vec<T>,
     x: &T,
     lo: SifrInt,
@@ -61,7 +61,7 @@ fn bisect_right<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
         left = SifrInt::from_i64(0);
     }
     let mut right: SifrInt = SifrInt::from(a.len());
-    if (hi == None) {
+    if (hi.is_none()) {
         right = SifrInt::from(a.len());
     } else {
         if let Some(hi) = hi.clone() {
@@ -98,7 +98,7 @@ fn bisect_right<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     }
     left.clone()
 }
-fn insort_left<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
+fn insort_left<T: Clone + 'static>(
     a: &mut Vec<T>,
     x: &T,
     lo: SifrInt,
@@ -107,7 +107,7 @@ fn insort_left<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     let pos: SifrInt = bisect_left(a, x, (lo).clone(), (hi).clone());
     a.insert(::sifr_runtime::to_usize_proven(&pos), x.clone());
 }
-fn insort_right<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
+fn insort_right<T: Clone + 'static>(
     a: &mut Vec<T>,
     x: &T,
     lo: SifrInt,

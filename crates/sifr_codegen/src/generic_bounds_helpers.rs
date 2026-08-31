@@ -705,6 +705,9 @@ impl RustEmitter {
         if requirements.needs_partial_ord {
             extra.push("PartialOrd".to_string());
         }
+        if requirements.needs_display {
+            extra.push("std::fmt::Display".to_string());
+        }
         extra
     }
 

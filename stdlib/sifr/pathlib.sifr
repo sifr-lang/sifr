@@ -109,7 +109,7 @@ def _iterdir_to_iter(path: str) -> Result[Iterator[str], IOError]:
         entries: list[str] = _iterdir_list(path)
         return _iter_list_str(entries)
     except IOError as e:
-        raise IOError(e.message)
+        raise e
 
 
 def _glob_to_iter(path: str, pattern: str) -> Result[Iterator[str], IOError]:
@@ -117,7 +117,7 @@ def _glob_to_iter(path: str, pattern: str) -> Result[Iterator[str], IOError]:
         entries: list[str] = _glob_list(path, pattern)
         return _iter_list_str(entries)
     except IOError as e:
-        raise IOError(e.message)
+        raise e
 
 
 def _rglob_to_iter(path: str, pattern: str) -> Result[Iterator[str], IOError]:
@@ -125,7 +125,7 @@ def _rglob_to_iter(path: str, pattern: str) -> Result[Iterator[str], IOError]:
         entries: list[str] = _rglob_list(path, pattern)
         return _iter_list_str(entries)
     except IOError as e:
-        raise IOError(e.message)
+        raise e
 
 class Path:
     _path: str

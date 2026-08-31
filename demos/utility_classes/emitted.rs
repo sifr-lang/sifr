@@ -950,7 +950,7 @@ mod __sifr_project_nominals {
                 __sifr_chars_token.get(__sifr_string_index_normalized)
             })
                 .map(|c| c.to_string());
-            if (ch != None) && (ch == Some("=".to_string())) {
+            if (ch.is_some()) && (ch == Some("=".to_string())) {
                 let mut value: String = "".to_string();
                 let mut j: SifrInt = &i + &SifrInt::from_i64(1);
                 while (&j < &SifrInt::from(__sifr_chars_token.len())) {
@@ -1355,7 +1355,7 @@ mod __sifr_project_nominals {
                     .normalize_index_or_len(__sifr_checked_read_collection.len());
                 __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
             };
-            if (current != None) && (current == Some((*node).clone())) {
+            if (current.is_some()) && (current == Some((*node).clone())) {
                 self._next_index = &self._next_index.clone() + &SifrInt::from_i64(1);
             }
         }
@@ -1634,7 +1634,7 @@ mod __sifr_project_nominals {
                     __sifr_chars_part.get(__sifr_string_index_normalized)
                 })
                     .map(|c| c.to_string());
-                if (first_digit != None) && (first_digit == Some("0".to_string())) {
+                if (first_digit.is_some()) && (first_digit == Some("0".to_string())) {
                     return false;
                 }
             }
@@ -2193,7 +2193,7 @@ fn _split_inline_option(token: &String) -> (bool, String, String) {
             __sifr_chars_token.get(__sifr_string_index_normalized)
         })
             .map(|c| c.to_string());
-        if (ch != None) && (ch == Some("=".to_string())) {
+        if (ch.is_some()) && (ch == Some("=".to_string())) {
             let mut value: String = "".to_string();
             let mut j: SifrInt = &i + &SifrInt::from_i64(1);
             while (&j < &SifrInt::from(__sifr_chars_token.len())) {
@@ -2582,7 +2582,7 @@ fn is_valid_ipv4(addr: &String) -> bool {
                 __sifr_chars_part.get(__sifr_string_index_normalized)
             })
                 .map(|c| c.to_string());
-            if (first_digit != None) && (first_digit == Some("0".to_string())) {
+            if (first_digit.is_some()) && (first_digit == Some("0".to_string())) {
                 return false;
             }
         }

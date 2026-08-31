@@ -112,9 +112,7 @@ impl<T> Iterator for __SifrGenerator<T> {
         yielded
     }
 }
-fn chain<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    iterables: &Vec<Vec<T>>,
-) -> Box<dyn Iterator<Item = T>> {
+fn chain<T: Clone + 'static>(iterables: &Vec<Vec<T>>) -> Box<dyn Iterator<Item = T>> {
     let iterables = iterables.clone();
     Box::new(
         __SifrGenerator::new(async move |__sifr_yielder: __SifrYielder<T>| {
@@ -126,9 +124,7 @@ fn chain<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
         }),
     )
 }
-fn pairwise<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
-    data: &Vec<T>,
-) -> Vec<Vec<T>> {
+fn pairwise<T: Clone + 'static>(data: &Vec<T>) -> Vec<Vec<T>> {
     let mut result: Vec<Vec<T>> = vec![];
     let mut prev_values: Vec<T> = vec![];
     for value in data.iter().cloned() {
@@ -172,7 +168,7 @@ fn pairwise<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     }
     result
 }
-fn batched<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
+fn batched<T: Clone + 'static>(
     data: &Vec<T>,
     n: SifrInt,
 ) -> Result<Vec<Vec<T>>, ValueError> {
@@ -193,9 +189,10 @@ fn batched<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
     }
     Ok(result)
 }
-fn accumulate<
-    T: Clone + ::std::fmt::Display + PartialOrd + 'static + ::std::ops::Add<Output = T>,
->(data: Box<dyn Iterator<Item = T>>, initial: Option<T>) -> Box<dyn Iterator<Item = T>> {
+fn accumulate<T: Clone + 'static + ::std::ops::Add<Output = T>>(
+    data: Box<dyn Iterator<Item = T>>,
+    initial: Option<T>,
+) -> Box<dyn Iterator<Item = T>> {
     Box::new(
         __SifrGenerator::new(async move |__sifr_yielder: __SifrYielder<T>| {
             let mut state: Vec<T> = vec![];
@@ -271,7 +268,7 @@ fn accumulate<
         }),
     )
 }
-fn cycle<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
+fn cycle<T: Clone + 'static>(
     data: Box<dyn Iterator<Item = T>>,
     n: SifrInt,
 ) -> Box<dyn Iterator<Item = T>> {
@@ -284,38 +281,22 @@ fn cycle<T: Clone + ::std::fmt::Display + PartialOrd + 'static>(
             }
             for value in data {
                 saved.push(value.clone());
-                let current: Option<T> = {
-                    let __sifr_index_list = &saved;
-                    let __sifr_index_i = SifrInt::from(saved.len())
-                        - SifrInt::from_i64(1);
-                    let __sifr_index_norm = __sifr_index_i
-                        .normalize_index_or_len(__sifr_index_list.len());
-                    __sifr_index_list.get(__sifr_index_norm).cloned()
-                };
-                if let Some(current) = current {
-                    __sifr_yielder.suspend(current.clone()).await;
+                __sifr_yielder.suspend(value.clone()).await;
+                emitted = &emitted + &SifrInt::from_i64(1);
+                if (&emitted >= &n) {
+                    return;
+                }
+            }
+            while (&emitted < &n)
+                && (&SifrInt::from(saved.len()) > &SifrInt::from_i64(0))
+            {
+                for repeated in saved.iter().cloned() {
+                    __sifr_yielder.suspend(repeated.clone()).await;
                     emitted = &emitted + &SifrInt::from_i64(1);
                     if (&emitted >= &n) {
                         return;
                     }
                 }
-            }
-            let size: SifrInt = SifrInt::from(saved.len());
-            while (&emitted < &n) && (&size > &SifrInt::from_i64(0)) {
-                let index: SifrInt = emitted.floor_mod_known_nonzero(&size);
-                let repeated: Option<T> = {
-                    let __sifr_checked_read_collection = &saved;
-                    let __sifr_checked_read_index = index.clone();
-                    let __sifr_checked_read_normalized = __sifr_checked_read_index
-                        .normalize_index_or_len(__sifr_checked_read_collection.len());
-                    __sifr_checked_read_collection
-                        .get(__sifr_checked_read_normalized)
-                        .cloned()
-                };
-                if let Some(repeated) = repeated {
-                    __sifr_yielder.suspend(repeated.clone()).await;
-                }
-                emitted = &emitted + &SifrInt::from_i64(1);
             }
         }),
     )

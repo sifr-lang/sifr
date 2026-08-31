@@ -530,6 +530,7 @@ pub(crate) struct TypeVarOpRequirements {
     pub needs_neg: bool,
     pub needs_partial_eq: bool,
     pub needs_partial_ord: bool,
+    pub needs_display: bool,
 }
 
 fn type_mentions_type_var(ty: &Type, type_param_name: &str) -> bool {
@@ -598,7 +599,8 @@ pub(crate) fn collect_typevar_operator_requirements(
 ) -> TypeVarOpRequirements {
     let mut requirements = TypeVarOpRequirements::default();
     let mut on_stmt = |_stmt: &HirStmt| {};
-    let mut on_expr = |expr: &HirExpr| match expr {
+    let mut on_expr = |expr: &HirExpr| {
+        match expr {
         HirExpr::BinOp {
             left,
             op,
@@ -646,7 +648,23 @@ pub(crate) fn collect_typevar_operator_requirements(
                 requirements.needs_partial_ord = true;
             }
         }
+        HirExpr::Call { func, args, .. }
+            if matches!(func.as_str(), "print" | "str")
+                && args
+                    .iter()
+                    .any(|arg| type_mentions_type_var(arg.ty(), type_param_name)) =>
+        {
+            requirements.needs_display = true;
+        }
+        HirExpr::FString { parts, .. }
+            if parts.iter().any(|part| {
+                matches!(part, sifr_ir::HirFStringPart::Expr(value) if type_mentions_type_var(value.ty(), type_param_name))
+            }) =>
+        {
+            requirements.needs_display = true;
+        }
         _ => {}
+    }
     };
     traversal::walk_stmts(
         stmts,
