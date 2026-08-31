@@ -172,6 +172,52 @@ impl PostgresTypeRegistry {
     }
 }
 
+pub fn generated_sifr_type(database_type: &DatabaseType) -> Result<String, SchemaContractError> {
+    let ty = canonical_read_type(database_type)?;
+    match ty {
+        SifrType::Bool => Ok("bool".to_string()),
+        SifrType::FixedInteger { sign, width } => Ok(match (sign, width) {
+            (IntegerSign::Signed, IntegerWidth::Bits8) => "i8",
+            (IntegerSign::Signed, IntegerWidth::Bits16) => "i16",
+            (IntegerSign::Signed, IntegerWidth::Bits32) => "i32",
+            (IntegerSign::Signed, IntegerWidth::Bits64) => "i64",
+            (IntegerSign::Unsigned, IntegerWidth::Bits8) => "u8",
+            (IntegerSign::Unsigned, IntegerWidth::Bits16) => "u16",
+            (IntegerSign::Unsigned, IntegerWidth::Bits32) => "u32",
+            (IntegerSign::Unsigned, IntegerWidth::Bits64) => "u64",
+        }
+        .to_string()),
+        SifrType::ExactInteger => Ok("int".to_string()),
+        SifrType::Decimal => Ok("Decimal".to_string()),
+        SifrType::BigDecimal => Ok("BigDecimal".to_string()),
+        SifrType::Numeric => Ok("sifr.sql.Numeric".to_string()),
+        SifrType::Float => Ok("float".to_string()),
+        SifrType::Str => Ok("str".to_string()),
+        SifrType::Bytes => Ok("bytes".to_string()),
+        SifrType::Date => Ok("sifr.datetime.date".to_string()),
+        SifrType::LocalTime => Ok("sifr.datetime.time".to_string()),
+        SifrType::OffsetTime => Ok("sifr.datetime.offset_time".to_string()),
+        SifrType::LocalDateTime => Ok("sifr.datetime.datetime".to_string()),
+        SifrType::Instant => Ok("sifr.datetime.instant".to_string()),
+        SifrType::CalendarInterval => Ok("sifr.sql.CalendarInterval".to_string()),
+        SifrType::Uuid => Ok("sifr.uuid.UUID".to_string()),
+        SifrType::JsonValue => Ok("sifr.json.JsonValue".to_string()),
+        SifrType::None => Ok("None".to_string()),
+        SifrType::IpAddress => Ok("sifr.ipaddress.IPAddress".to_string()),
+        SifrType::IpNetwork => Ok("sifr.ipaddress.IPNetwork".to_string()),
+        SifrType::MacAddress => Ok("sifr.ipaddress.MacAddress".to_string()),
+        SifrType::Nominal { identity } => Ok(identity.as_str().to_string()),
+        SifrType::Custom { identity } => Ok(identity),
+        SifrType::List { .. }
+        | SifrType::SqlArray { .. }
+        | SifrType::Range { .. }
+        | SifrType::Union { .. } => Err(SchemaContractError::new(
+            sifr_sql_contract::SchemaContractErrorKind::InvalidProvider,
+            "PostgreSQL generated schema type cannot be represented by one static Sifr type path",
+        )),
+    }
+}
+
 fn codec_contract(
     server_profile: &str,
     database_type: DatabaseType,

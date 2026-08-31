@@ -18,6 +18,7 @@ pub(crate) fn add_composite(
     add_namespace(document, &value.name, objects);
     let identity = ObjectId::new(qualified_name(&value.name));
     let mut attributes = Vec::new();
+    let mut fields = BTreeMap::new();
     for attribute in &value.attributes {
         let ty = types.resolve(&attribute.ty).ok_or_else(|| {
             schema_error_message(format!(
@@ -39,13 +40,23 @@ pub(crate) fn add_composite(
                 SemanticValue::Bool(attribute.nullable),
             ),
         ])));
+        fields.insert(
+            attribute.name.clone(),
+            SemanticValue::Text(
+                crate::generated_sifr_type(&ty.database_type)
+                    .map_err(|error| schema_error_message(error.to_string()))?,
+            ),
+        );
     }
     objects.insert(
         identity.clone(),
         SchemaObject {
             identity: identity.clone(),
             kind: SchemaObjectKind::Composite,
-            semantic: BTreeMap::from([("attributes".to_string(), SemanticValue::List(attributes))]),
+            semantic: BTreeMap::from([
+                ("attributes".to_string(), SemanticValue::List(attributes)),
+                ("fields".to_string(), SemanticValue::Map(fields)),
+            ]),
             dependencies: namespace_dependency(&value.name),
             source: Some(source_location(document, statement)),
         },

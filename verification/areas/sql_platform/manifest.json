@@ -314,6 +314,44 @@
       ]
     },
     {
+      "name": "schema-tools",
+      "kind": "cargo",
+      "resource_classes": [
+        "cpu"
+      ],
+      "network_mode": "offline",
+      "timeout_seconds": 600,
+      "cases": [
+        {
+          "id": "sql-schema-tool-tests",
+          "entry": "crates/sifr_sql_tool",
+          "command": "sql-schema-tool-tests",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "postgresql-live-schema-tools",
+      "kind": "adapter",
+      "resource_classes": [
+        "container-runtime",
+        "network",
+        "platform-specific"
+      ],
+      "network_mode": "live",
+      "timeout_seconds": 1800,
+      "cases": [
+        {
+          "id": "sql-postgresql-live-schema-tools",
+          "entry": "verification/areas/sql_platform/tools/run_postgresql_schema_tool_matrix.py",
+          "command": "sql-postgresql-live-schema-tools",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
       "name": "postgresql-live-differential",
       "kind": "adapter",
       "resource_classes": [

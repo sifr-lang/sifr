@@ -7,9 +7,11 @@ members = [
     "crates/sifr_structural_identity",
     "crates/sifr_compiler_component",
     "crates/sifr_sql_contract",
+    "crates/sifr_sql_tool",
     "crates/sifr_sql_runtime",
     "crates/sifr_sql_postgresql",
     "crates/sifr_sql_postgresql_runtime",
+    "crates/sifr_sql_postgresql_tools",
     "crates/sifr_stdlib",
     "crates/sifr_type_system",
     "crates/sifr_ipc",
@@ -65,9 +67,11 @@ sifr_runtime = { path = "crates/sifr_runtime" }
 sifr_structural_identity = { path = "crates/sifr_structural_identity" }
 sifr_compiler_component = { path = "crates/sifr_compiler_component" }
 sifr_sql_contract = { path = "crates/sifr_sql_contract" }
+sifr_sql_tool = { path = "crates/sifr_sql_tool" }
 sifr_sql_runtime = { path = "crates/sifr_sql_runtime" }
 sifr_sql_postgresql = { path = "crates/sifr_sql_postgresql" }
 sifr_sql_postgresql_runtime = { path = "crates/sifr_sql_postgresql_runtime" }
+sifr_sql_postgresql_tools = { path = "crates/sifr_sql_postgresql_tools" }
 sifr_stdlib = { path = "crates/sifr_stdlib" }
 sifr_type_system = { path = "crates/sifr_type_system" }
 sifr_ipc = { path = "crates/sifr_ipc" }

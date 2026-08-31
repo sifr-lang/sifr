@@ -136,6 +136,14 @@ COMMANDS = {
     "sql-host-tool-cli-tests": [
         "cargo", "test", "--locked", "-p", "sifr", "--test", "host_tool_cli",
     ],
+    "sql-schema-tool-tests": [
+        "cargo", "test", "--locked", "-p", "sifr_sql_tool",
+        "-p", "sifr_sql_postgresql_tools",
+    ],
+    "sql-postgresql-live-schema-tools": [
+        sys.executable,
+        str(AREA_ROOT / "tools" / "run_postgresql_schema_tool_matrix.py"),
+    ],
     "sql-query-signature-and-fragment-semantics": [
         "cargo", "test", "--locked", "-p", "sifr_sql_contract", "--test",
         "semantic_completion",

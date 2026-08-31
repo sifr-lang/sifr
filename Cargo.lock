@@ -7932,12 +7932,43 @@ dependencies = [
 ]
 
 [[package]]
+name = "sifr_sql_postgresql_tools"
+version = "0.0.0"
+dependencies = [
+ "rustls",
+ "rustls-platform-verifier",
+ "semver",
+ "serde",
+ "serde_json",
+ "sifr_driver",
+ "sifr_sql_contract",
+ "sifr_sql_postgresql",
+ "sifr_sql_tool",
+ "tempfile",
+ "tokio",
+ "tokio-postgres",
+ "tokio-postgres-rustls",
+]
+
+[[package]]
 name = "sifr_sql_runtime"
 version = "0.0.0"
 dependencies = [
  "sifr_runtime",
  "static_assertions",
  "tokio",
+]
+
+[[package]]
+name = "sifr_sql_tool"
+version = "0.0.0"
+dependencies = [
+ "semver",
+ "serde",
+ "serde_json",
+ "sha2 0.11.0",
+ "sifr_sql_contract",
+ "tempfile",
 ]
 
 [[package]]

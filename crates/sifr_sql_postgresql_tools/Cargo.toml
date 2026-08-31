@@ -1,0 +1,31 @@
+[package]
+name = "sifr_sql_postgresql_tools"
+version = "0.0.0"
+publish = false
+edition = { workspace = true }
+rust-version = { workspace = true }
+license = { workspace = true }
+
+[[bin]]
+name = "sifr-sql-postgresql"
+path = "src/main.rs"
+
+[dependencies]
+rustls = { workspace = true }
+rustls-platform-verifier = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sifr_driver = { workspace = true }
+sifr_sql_contract = { workspace = true }
+sifr_sql_postgresql = { workspace = true }
+sifr_sql_tool = { workspace = true }
+tokio = { workspace = true, features = ["macros", "net", "rt", "time"] }
+tokio-postgres = { workspace = true, features = ["runtime"] }
+tokio-postgres-rustls = { workspace = true }
+
+[dev-dependencies]
+semver = { workspace = true }
+tempfile = "3.27.0"
+
+[lints]
+workspace = true
