@@ -1,7 +1,7 @@
 // src/main.rs
 use ::sifr_runtime::SifrInt;
 
-fn classify(items: &Vec<SifrInt>) -> String {
+fn classify(items: &[SifrInt]) -> String {
     let mut result: String = "init".to_string();
     {
         let mut _broke: bool = false;

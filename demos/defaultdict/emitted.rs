@@ -116,7 +116,7 @@ mod __sifr_project_nominals {
         }
     }
     impl<T: Clone> __SifrStdlib_sifr_x2ecollections_x2edeque<T> {
-        pub fn extend(&mut self, items: &Vec<T>) {
+        pub fn extend(&mut self, items: &[T]) {
             for v in items.iter().cloned() {
                 self._data.push_back(v.clone());
             }
@@ -130,7 +130,7 @@ mod __sifr_project_nominals {
         }
     }
     impl<T: Clone> __SifrStdlib_sifr_x2ecollections_x2edeque<T> {
-        pub fn extendleft(&mut self, items: &Vec<T>) {
+        pub fn extendleft(&mut self, items: &[T]) {
             for v in items.iter().cloned() {
                 self._data.push_front(v.clone());
             }

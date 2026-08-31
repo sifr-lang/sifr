@@ -38,18 +38,18 @@ fn pattern_recursive_capture() -> SifrInt {
 }
 
 fn pattern_multiple() -> String {
-    let greet = |name: &String| {
+    let greet = |name: &str| {
     {
     let mut __sifr_concat: String = String::with_capacity(7usize + name.len());
     __sifr_concat.push_str("Hello, ");
-    __sifr_concat.push_str((name).as_str());
+    __sifr_concat.push_str(name);
     __sifr_concat
 }
 };
-    let exclaim = |msg: &String| {
+    let exclaim = |msg: &str| {
     {
     let mut __sifr_concat: String = String::with_capacity(msg.len() + 1usize);
-    __sifr_concat.push_str((msg).as_str());
+    __sifr_concat.push_str(msg);
     __sifr_concat.push('!');
     __sifr_concat
 }
@@ -62,7 +62,7 @@ fn pattern_params() -> SifrInt {
         if &exp <= &SifrInt::from_i64(0) {
             return SifrInt::from_i64(1);
         }
-        return &base * &power((base).clone(), &exp - &SifrInt::from_i64(1));
+        return &base * &power(base.clone(), &exp - &SifrInt::from_i64(1));
     }
     let a: SifrInt = power(SifrInt::from_i64(2), SifrInt::from_i64(10));
     let b: SifrInt = power(SifrInt::from_i64(3), SifrInt::from_i64(4));

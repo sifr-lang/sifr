@@ -301,9 +301,6 @@ fn infer_function_types(
             for called in &call_effects.called_functions {
                 mutations.extend(previous.get(called).into_iter().flatten().cloned());
             }
-            if call_effects.may_call_nested_alias {
-                mutations.extend(previous.values().flatten().cloned());
-            }
             mutations.sort();
             mutations.dedup();
             function_mutated_captures.insert(name.clone(), mutations);

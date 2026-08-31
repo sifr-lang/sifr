@@ -330,10 +330,7 @@ impl RustEmitter {
                 let converted = self.rust_ir_type_with_generics(param);
                 if convention.is_shared_borrow() && !crate::helpers::is_copy_type_for_codegen(param)
                 {
-                    crate::RustType::Ref {
-                        mutable: false,
-                        inner: Box::new(converted),
-                    }
+                    crate::ownership_plan::shared_borrowed_param_type(param, converted)
                 } else if convention.is_mut_borrow()
                     && !crate::helpers::is_copy_type_for_codegen(param)
                 {

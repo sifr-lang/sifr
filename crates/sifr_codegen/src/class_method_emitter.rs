@@ -229,9 +229,17 @@ impl RustEmitter {
         }
 
         let rust_ty = self.rust_ir_type_with_generics(param_ty);
-        if !crate::helpers::is_copy_type_for_codegen(param_ty) && convention.is_borrowed() {
+        if convention.is_shared_borrow()
+            && let Some(view) = self.recursive_option_borrowed_type(param_ty)
+        {
+            return view;
+        }
+        if !crate::helpers::is_copy_type_for_codegen(param_ty) && convention.is_shared_borrow() {
+            crate::ownership_plan::shared_borrowed_param_type(param_ty, rust_ty)
+        } else if !crate::helpers::is_copy_type_for_codegen(param_ty) && convention.is_mut_borrow()
+        {
             RustType::Ref {
-                mutable: convention.is_mut_borrow(),
+                mutable: true,
                 inner: Box::new(rust_ty),
             }
         } else {
@@ -665,6 +673,7 @@ impl RustEmitter {
         let saved_mutated_vars = self.mutated_vars.clone();
         let saved_borrowed_params = self.borrowed_params.clone();
         let saved_mut_borrowed_params = self.mut_borrowed_params.clone();
+        let saved_recursive_option_borrowed_views = self.recursive_option_borrowed_views.clone();
         let saved_callable_var_conventions = self.callable_var_conventions.clone();
         let saved_local_binding_types = self.local_binding_types.clone();
         let saved_python_context_counter = self.python_context_counter;
@@ -684,6 +693,7 @@ impl RustEmitter {
         self.mutated_vars = collect_mutated_vars_with_sigs(&method.body, &self.func_signatures);
         self.borrowed_params.clear();
         self.mut_borrowed_params.clear();
+        self.recursive_option_borrowed_views.clear();
         self.callable_var_conventions.clear();
         self.local_binding_types.clear();
         self.python_context_counter = 0;
@@ -708,6 +718,10 @@ impl RustEmitter {
                 && !crate::helpers::is_copy_type_for_codegen(&param.ty)
             {
                 self.borrowed_params.insert(param.name.clone());
+                if self.recursive_option_borrowed_type(&param.ty).is_some() {
+                    self.recursive_option_borrowed_views
+                        .insert(param.name.clone());
+                }
             }
             if effective_convention.is_mut_borrow()
                 && !crate::helpers::is_copy_type_for_codegen(&param.ty)
@@ -818,6 +832,7 @@ impl RustEmitter {
         self.mutated_vars = saved_mutated_vars;
         self.borrowed_params = saved_borrowed_params;
         self.mut_borrowed_params = saved_mut_borrowed_params;
+        self.recursive_option_borrowed_views = saved_recursive_option_borrowed_views;
         self.callable_var_conventions = saved_callable_var_conventions;
         self.local_binding_types = saved_local_binding_types;
         self.python_context_counter = saved_python_context_counter;

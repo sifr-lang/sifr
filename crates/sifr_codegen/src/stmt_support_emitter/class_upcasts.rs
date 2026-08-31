@@ -13,11 +13,7 @@ impl RustEmitter {
             return (lowered, false);
         }
         let lowered = if borrowed_source && !crate::helpers::is_copy_type_for_codegen(source_ty) {
-            crate::RustExpr::MethodCall {
-                receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered))),
-                method: "clone".to_string(),
-                args: Vec::new(),
-            }
+            crate::ownership_plan::materialize_owned_value(source_ty, lowered)
         } else {
             lowered
         };

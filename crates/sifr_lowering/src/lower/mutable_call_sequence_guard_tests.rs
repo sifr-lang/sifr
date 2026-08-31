@@ -64,3 +64,41 @@ def read_after_reguard(mut values: list[int]) -> int:
     let result = lower_source(source);
     assert!(result.is_ok(), "{result:?}");
 }
+
+#[test]
+fn user_defined_mutable_receiver_invalidates_field_guard() {
+    let source = r#"
+class Bucket:
+    values: list[int]
+
+    def clear(mut self) -> None:
+        self.values.clear()
+
+def read_after_method(mut bucket: Bucket) -> int:
+    if len(bucket.values) == 0:
+        return 0
+    bucket.clear()
+    return bucket.values[0] + 1
+"#;
+    let diagnostics = lower_source(source).expect_err("mut self must invalidate field guards");
+    assert!(diagnostics.iter().any(|diagnostic| {
+        diagnostic.code == Some(DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR)
+            && diagnostic.message.contains("None")
+    }));
+}
+
+#[test]
+fn builtin_shrinking_receiver_invalidates_sequence_guard() {
+    let source = r#"
+def read_after_pop(mut values: list[int]) -> int:
+    if len(values) == 0:
+        return 0
+    values.pop()
+    return values[0] + 1
+"#;
+    let diagnostics = lower_source(source).expect_err("pop must invalidate sequence guards");
+    assert!(diagnostics.iter().any(|diagnostic| {
+        diagnostic.code == Some(DiagnosticCode::TYPE_UNSUPPORTED_OPERATOR)
+            && diagnostic.message.contains("None")
+    }));
+}

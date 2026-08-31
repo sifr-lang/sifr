@@ -29,7 +29,7 @@ pub(crate) fn direct_type_param_bounds(
         crate::hir_analysis::queries::collect_typevar_operator_requirements(body, type_param);
     let mut bounds = Vec::new();
     if requirements.needs_add {
-        bounds.push(FunctionTypeParamBound::OutputSelf("std::ops::Add"));
+        bounds.push(FunctionTypeParamBound::Trait("__SifrAdd".to_string()));
     }
     if requirements.needs_sub {
         bounds.push(FunctionTypeParamBound::OutputSelf("std::ops::Sub"));
@@ -158,7 +158,7 @@ impl RustEmitter {
 fn rust_bounds_for_typevar_spec(specification: &str) -> Vec<FunctionTypeParamBound> {
     match specification {
         "Comparable" => vec![FunctionTypeParamBound::Trait("PartialOrd".to_string())],
-        "Addable" => vec![FunctionTypeParamBound::OutputSelf("std::ops::Add")],
+        "Addable" => vec![FunctionTypeParamBound::Trait("__SifrAdd".to_string())],
         "Hashable" => vec![
             FunctionTypeParamBound::Trait("std::hash::Hash".to_string()),
             FunctionTypeParamBound::Trait("Eq".to_string()),
@@ -633,7 +633,7 @@ mod tests {
             .map(|bound| bound.render_for("U"))
             .collect::<HashSet<_>>();
 
-        assert!(rendered.contains("std::ops::Add<Output = U>"));
+        assert!(rendered.contains("__SifrAdd"));
         assert!(rendered.iter().all(|bound| !bound.contains("Output = T")));
     }
 }

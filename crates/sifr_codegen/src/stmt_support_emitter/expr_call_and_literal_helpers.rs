@@ -291,7 +291,7 @@ macro_rules! stmt_expr_constructor {
                         || $emitter.mut_borrowed_params.contains(name))
                         && !crate::helpers::is_copy_type_for_codegen(ty)
                     {
-                        crate::RustExpr::Clone(Box::new(lowered_arg))
+                        crate::ownership_plan::materialize_owned_value(ty, lowered_arg)
                     } else {
                         lowered_arg
                     }

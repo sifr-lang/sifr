@@ -261,7 +261,7 @@ pub(super) fn try_lower_stmt_string_concat_expr(expr: &HirExpr) -> Option<RustEx
                     receiver: Box::new(RustExpr::Paren(Box::new(try_lower_leaf_or_name_expr(
                         part,
                     )?))),
-                    method: "as_str".to_string(),
+                    method: "as_ref".to_string(),
                     args: vec![],
                 },
             )

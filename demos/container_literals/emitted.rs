@@ -3,7 +3,7 @@ use ::std::collections::HashMap;
 
 use ::sifr_runtime::SifrInt;
 
-fn frequency_score(nums: &Vec<SifrInt>) -> SifrInt {
+fn frequency_score(nums: &[SifrInt]) -> SifrInt {
     let mut counts: HashMap<SifrInt, SifrInt> = HashMap::from([]);
     for n in nums.iter().cloned() {
         {

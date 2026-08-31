@@ -656,6 +656,28 @@ pub(crate) fn collect_typevar_operator_requirements(
         {
             requirements.needs_display = true;
         }
+        HirExpr::MethodCall {
+            object,
+            method,
+            args,
+            ..
+        } if method == "contains"
+            && (type_mentions_type_var(object.ty(), type_param_name)
+                || args
+                    .iter()
+                    .any(|arg| type_mentions_type_var(arg.ty(), type_param_name))) =>
+        {
+            requirements.needs_partial_eq = true;
+        }
+        HirExpr::ContainsOp {
+            element,
+            collection,
+            ..
+        } if type_mentions_type_var(element.ty(), type_param_name)
+            || type_mentions_type_var(collection.ty(), type_param_name) =>
+        {
+            requirements.needs_partial_eq = true;
+        }
         HirExpr::FString { parts, .. }
             if parts.iter().any(|part| {
                 matches!(part, sifr_ir::HirFStringPart::Expr(value) if type_mentions_type_var(value.ty(), type_param_name))

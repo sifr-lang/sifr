@@ -118,14 +118,14 @@ impl ::std::fmt::Display for Bird {
     }
 }
 
-fn route_handler(method: &String) -> String {
-    if (method).as_str() == "GET" {
+fn route_handler(method: &str) -> String {
+    if method == "GET" {
         return "get handler".to_string();
     } else {
-        if (method).as_str() == "POST" {
+        if method == "POST" {
             return "post handler".to_string();
         } else {
-            if (method).as_str() == "PUT" {
+            if method == "PUT" {
                 return "put handler".to_string();
             }
         }
@@ -161,7 +161,7 @@ fn is_positive(x: Option<SifrInt>) -> bool {
     false
 }
 
-fn summarize(items: &Vec<String>) -> String {
+fn summarize(items: &[String]) -> String {
     if !!items.is_empty() {
         return "no items".to_string();
     }
@@ -173,13 +173,13 @@ fn main() {
     println!("{}", route_handler(&"POST".to_string()));
     println!("{}", route_handler(&"PUT".to_string()));
     println!("{}", route_handler(&"DELETE".to_string()));
-    println!("{}", describe_pet(&__SifrUnion_8_x3asequence5_x3aunion1_x3a320_x3a5_x3aclass8_x3amain_x2eCat1_x3a020_x3a5_x3aclass8_x3amain_x2eDog1_x3a021_x3a5_x3aclass9_x3amain_x2eBird1_x3a0::__SifrUnionVariant_5_x3aclass8_x3amain_x2eDog1_x3a0((Dog::new("Rex".to_string(), "Labrador".to_string())).clone())));
-    println!("{}", describe_pet(&__SifrUnion_8_x3asequence5_x3aunion1_x3a320_x3a5_x3aclass8_x3amain_x2eCat1_x3a020_x3a5_x3aclass8_x3amain_x2eDog1_x3a021_x3a5_x3aclass9_x3amain_x2eBird1_x3a0::__SifrUnionVariant_5_x3aclass8_x3amain_x2eCat1_x3a0((Cat::new("Whiskers".to_string(), "orange".to_string())).clone())));
-    println!("{}", describe_pet(&__SifrUnion_8_x3asequence5_x3aunion1_x3a320_x3a5_x3aclass8_x3amain_x2eCat1_x3a020_x3a5_x3aclass8_x3amain_x2eDog1_x3a021_x3a5_x3aclass9_x3amain_x2eBird1_x3a0::__SifrUnionVariant_5_x3aclass9_x3amain_x2eBird1_x3a0((Bird::new("Tweety".to_string(), 0.3_f64)).clone())));
+    println!("{}", describe_pet(&__SifrUnion_8_x3asequence5_x3aunion1_x3a320_x3a5_x3aclass8_x3amain_x2eCat1_x3a020_x3a5_x3aclass8_x3amain_x2eDog1_x3a021_x3a5_x3aclass9_x3amain_x2eBird1_x3a0::__SifrUnionVariant_5_x3aclass8_x3amain_x2eDog1_x3a0(Dog::new("Rex".to_string(), "Labrador".to_string()).clone())));
+    println!("{}", describe_pet(&__SifrUnion_8_x3asequence5_x3aunion1_x3a320_x3a5_x3aclass8_x3amain_x2eCat1_x3a020_x3a5_x3aclass8_x3amain_x2eDog1_x3a021_x3a5_x3aclass9_x3amain_x2eBird1_x3a0::__SifrUnionVariant_5_x3aclass8_x3amain_x2eCat1_x3a0(Cat::new("Whiskers".to_string(), "orange".to_string()).clone())));
+    println!("{}", describe_pet(&__SifrUnion_8_x3asequence5_x3aunion1_x3a320_x3a5_x3aclass8_x3amain_x2eCat1_x3a020_x3a5_x3aclass8_x3amain_x2eDog1_x3a021_x3a5_x3aclass9_x3amain_x2eBird1_x3a0::__SifrUnionVariant_5_x3aclass9_x3amain_x2eBird1_x3a0(Bird::new("Tweety".to_string(), 0.3_f64).clone())));
     let v: Option<SifrInt> = Some(SifrInt::from_i64(42));
-    println!("{}", find_value((v).clone(), SifrInt::from_i64(42)));
-    println!("{}", find_value((v).clone(), SifrInt::from_i64(99)));
-    println!("{}", is_positive((v).clone()));
+    println!("{}", find_value(v.clone(), SifrInt::from_i64(42)));
+    println!("{}", find_value(v.clone(), SifrInt::from_i64(99)));
+    println!("{}", is_positive(v.clone()));
     let empty: Vec<String> = vec![];
     println!("{}", summarize(&empty));
     let full: Vec<String> = vec!["a".to_string(), "b".to_string(), "c".to_string()];

@@ -1,7 +1,7 @@
 // src/main.rs
 use ::sifr_runtime::SifrInt;
 
-fn sum_iterable(values: &Vec<SifrInt>) -> SifrInt {
+fn sum_iterable(values: &[SifrInt]) -> SifrInt {
     let mut total: SifrInt = SifrInt::from_i64(0);
     for value in values.iter().cloned() {
         total = &total + &value;

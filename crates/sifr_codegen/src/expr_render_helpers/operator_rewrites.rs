@@ -178,13 +178,7 @@ impl RustEmitter {
                         let key_arg = if let HirExpr::StringLiteral(value) = index {
                             crate::RustExpr::Verbatim(format!("{value:?}"))
                         } else if key_is_string_like {
-                            crate::RustExpr::MethodCall {
-                                receiver: Box::new(crate::RustExpr::Paren(Box::new(
-                                    lowered_index.clone(),
-                                ))),
-                                method: "as_str".to_string(),
-                                args: vec![],
-                            }
+                            self.string_view_expr(index, lowered_index.clone())
                         } else {
                             crate::RustExpr::Ref {
                                 mutable: false,

@@ -74,7 +74,7 @@ fn test_generate_rust_while_else_with_borrowed_condition_uses_broke_marker() {
     };
 
     let rust_code = generate_rust(&module);
-    assert!(rust_code.contains("fn iterate(xs: &Vec<SifrInt>)"));
+    assert!(rust_code.contains("fn iterate(xs: &[SifrInt])"));
     assert!(rust_code.contains("let mut _broke: bool = false;"));
     assert!(rust_code.contains("_broke = true;"));
     assert!(rust_code.contains("if !(_broke) {"));
@@ -240,8 +240,8 @@ fn test_generate_rust_generator_clones_borrowed_params_into_owned_locals_before_
         "def glob(directory: str, pattern: str) -> list[str]:\n    return []\n\ndef iglob(directory: str, pattern: str) -> Iterator[str]:\n    matches: list[str] = glob(directory, pattern)\n    i: int = 0\n    while i < len(matches):\n        yield matches[i]\n        i = i + 1\n",
     );
 
-    assert!(rust_code.contains("let directory = directory.clone();"));
-    assert!(rust_code.contains("let pattern = pattern.clone();"));
+    assert!(rust_code.contains("let directory = directory.to_owned();"));
+    assert!(rust_code.contains("let pattern = pattern.to_owned();"));
     assert!(rust_code.contains("let matches: Vec<String> = glob(&directory, &pattern);"));
     assert!(rust_code.contains("__SifrGenerator::new"));
     assert!(!rust_code.contains("_yields"));
@@ -299,7 +299,7 @@ fn test_generate_rust_nested_string_function_closure_params_are_typed() {
     );
 
     assert!(
-        rust_code.contains("let greet = |name: &String|"),
+        rust_code.contains("let greet = |name: &str|"),
         "{rust_code}"
     );
     assert!(

@@ -23,9 +23,9 @@ pub fn joined() -> String {
         let mut __sifr_concat: String = String::with_capacity(
             (0usize + 1usize) + 0usize,
         );
-        __sifr_concat.push_str((a()).as_str());
+        __sifr_concat.push_str(a().as_str());
         __sifr_concat.push('-');
-        __sifr_concat.push_str((z()).as_str());
+        __sifr_concat.push_str(z().as_str());
         __sifr_concat
     }
 }

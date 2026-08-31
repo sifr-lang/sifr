@@ -28,7 +28,7 @@ mod __sifr_project_nominals {
             .map(|__sifr_bridge_value| __sifr_bridge_value.into_sifr_int())
             .collect()
     }
-    pub fn datetime_format(dt: &String, fmt: &String) -> String {
+    pub fn datetime_format(dt: &str, fmt: &str) -> String {
         ::sifr_stdlib::time::datetime_format(dt, fmt)
     }
     pub fn datetime_from_timestamp(ts: f64) -> Result<String, ValueError> {
@@ -41,7 +41,7 @@ mod __sifr_project_nominals {
     pub fn time_now() -> f64 {
         ::sifr_stdlib::time::time_now()
     }
-    pub fn time_format(epoch: f64, fmt: &String) -> String {
+    pub fn time_format(epoch: f64, fmt: &str) -> String {
         ::sifr_stdlib::time::time_format(epoch, fmt)
     }
     pub fn perf_counter() -> f64 {
@@ -53,14 +53,14 @@ mod __sifr_project_nominals {
     pub fn monotonic() -> f64 {
         ::sifr_stdlib::time::monotonic()
     }
-    pub fn strptime(s: &String, fmt: &String) -> Result<String, ValueError> {
+    pub fn strptime(s: &str, fmt: &str) -> Result<String, ValueError> {
         ::sifr_stdlib::time::strptime(s, fmt)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| ValueError {
                 message: __sifr_bridge_error.to_string(),
             })
     }
-    pub fn _strptime_intrinsic(s: &String, fmt: &String) -> Result<String, ValueError> {
+    pub fn _strptime_intrinsic(s: &str, fmt: &str) -> Result<String, ValueError> {
         ::sifr_stdlib::time::strptime(s, fmt)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| ValueError {
@@ -79,7 +79,7 @@ mod __sifr_project_nominals {
     pub fn _localtime_intrinsic(epoch: f64) -> String {
         ::sifr_stdlib::time::localtime(epoch)
     }
-    pub fn time_strptime(s: &String, fmt: &String) -> Result<Vec<SifrInt>, ValueError> {
+    pub fn time_strptime(s: &str, fmt: &str) -> Result<Vec<SifrInt>, ValueError> {
         ::sifr_stdlib::time::time_strptime(s, fmt)
             .map(|__sifr_bridge_ok| {
                 __sifr_bridge_ok
@@ -209,7 +209,7 @@ mod __sifr_project_nominals {
                 hs = {
                     let mut __sifr_concat: String = String::with_capacity(1usize + hs.len());
                     __sifr_concat.push('0');
-                    __sifr_concat.push_str((hs).as_str());
+                    __sifr_concat.push_str(hs.as_str());
                     __sifr_concat
                 };
             }
@@ -218,7 +218,7 @@ mod __sifr_project_nominals {
                 ms = {
                     let mut __sifr_concat: String = String::with_capacity(1usize + ms.len());
                     __sifr_concat.push('0');
-                    __sifr_concat.push_str((ms).as_str());
+                    __sifr_concat.push_str(ms.as_str());
                     __sifr_concat
                 };
             }
@@ -226,10 +226,10 @@ mod __sifr_project_nominals {
                 let mut __sifr_concat: String = String::with_capacity(
                     ((sign.len() + hs.len()) + 1usize) + ms.len(),
                 );
-                __sifr_concat.push_str((sign).as_str());
-                __sifr_concat.push_str((hs).as_str());
+                __sifr_concat.push_str(sign.as_str());
+                __sifr_concat.push_str(hs.as_str());
                 __sifr_concat.push(':');
-                __sifr_concat.push_str((ms).as_str());
+                __sifr_concat.push_str(ms.as_str());
                 __sifr_concat
             }
         }
@@ -246,8 +246,8 @@ mod __sifr_project_nominals {
             }
             write!(
                 f, "{}", { let mut __sifr_concat : String = String::with_capacity(3usize +
-                0usize); __sifr_concat.push_str("UTC"); __sifr_concat.push_str((self
-                .iso_suffix()).as_str()); __sifr_concat }
+                0usize); __sifr_concat.push_str("UTC"); __sifr_concat.push_str(self
+                .iso_suffix().as_str()); __sifr_concat }
             )
         }
     }
@@ -301,7 +301,7 @@ mod __sifr_project_nominals {
                 mo = {
                     let mut __sifr_concat: String = String::with_capacity(1usize + mo.len());
                     __sifr_concat.push('0');
-                    __sifr_concat.push_str((mo).as_str());
+                    __sifr_concat.push_str(mo.as_str());
                     __sifr_concat
                 };
             }
@@ -310,7 +310,7 @@ mod __sifr_project_nominals {
                 d = {
                     let mut __sifr_concat: String = String::with_capacity(1usize + d.len());
                     __sifr_concat.push('0');
-                    __sifr_concat.push_str((d).as_str());
+                    __sifr_concat.push_str(d.as_str());
                     __sifr_concat
                 };
             }
@@ -319,7 +319,7 @@ mod __sifr_project_nominals {
                 h = {
                     let mut __sifr_concat: String = String::with_capacity(1usize + h.len());
                     __sifr_concat.push('0');
-                    __sifr_concat.push_str((h).as_str());
+                    __sifr_concat.push_str(h.as_str());
                     __sifr_concat
                 };
             }
@@ -328,7 +328,7 @@ mod __sifr_project_nominals {
                 mi = {
                     let mut __sifr_concat: String = String::with_capacity(1usize + mi.len());
                     __sifr_concat.push('0');
-                    __sifr_concat.push_str((mi).as_str());
+                    __sifr_concat.push_str(mi.as_str());
                     __sifr_concat
                 };
             }
@@ -337,7 +337,7 @@ mod __sifr_project_nominals {
                 s = {
                     let mut __sifr_concat: String = String::with_capacity(1usize + s.len());
                     __sifr_concat.push('0');
-                    __sifr_concat.push_str((s).as_str());
+                    __sifr_concat.push_str(s.as_str());
                     __sifr_concat
                 };
             }
@@ -346,22 +346,22 @@ mod __sifr_project_nominals {
                     (((((((((y.len() + 1usize) + mo.len()) + 1usize) + d.len()) + 1usize)
                         + h.len()) + 1usize) + mi.len()) + 1usize) + s.len(),
                 );
-                __sifr_concat.push_str((y).as_str());
+                __sifr_concat.push_str(y.as_str());
                 __sifr_concat.push('-');
-                __sifr_concat.push_str((mo).as_str());
+                __sifr_concat.push_str(mo.as_str());
                 __sifr_concat.push('-');
-                __sifr_concat.push_str((d).as_str());
+                __sifr_concat.push_str(d.as_str());
                 __sifr_concat.push('T');
-                __sifr_concat.push_str((h).as_str());
+                __sifr_concat.push_str(h.as_str());
                 __sifr_concat.push(':');
-                __sifr_concat.push_str((mi).as_str());
+                __sifr_concat.push_str(mi.as_str());
                 __sifr_concat.push(':');
-                __sifr_concat.push_str((s).as_str());
+                __sifr_concat.push_str(s.as_str());
                 __sifr_concat
             };
             if (&self.microsecond.clone() != &SifrInt::from_i64(0)) {
                 base.push('.');
-                base.push_str((_six_digits(self.microsecond.clone())).as_str());
+                base.push_str(_six_digits(self.microsecond.clone()).as_str());
             }
             let tz_offset_opt: Option<SifrInt> = self._tz_offset.clone();
             if let Some(tz_offset_opt) = tz_offset_opt.clone() {
@@ -384,7 +384,7 @@ mod __sifr_project_nominals {
                             1usize + hs_off.len(),
                         );
                         __sifr_concat.push('0');
-                        __sifr_concat.push_str((hs_off).as_str());
+                        __sifr_concat.push_str(hs_off.as_str());
                         __sifr_concat
                     };
                 }
@@ -395,7 +395,7 @@ mod __sifr_project_nominals {
                             1usize + ms_off.len(),
                         );
                         __sifr_concat.push('0');
-                        __sifr_concat.push_str((ms_off).as_str());
+                        __sifr_concat.push_str(ms_off.as_str());
                         __sifr_concat
                     };
                 }
@@ -403,11 +403,11 @@ mod __sifr_project_nominals {
                     let mut __sifr_concat: String = String::with_capacity(
                         (((base.len() + sign.len()) + hs_off.len()) + 1usize) + ms_off.len(),
                     );
-                    __sifr_concat.push_str((base).as_str());
-                    __sifr_concat.push_str((sign).as_str());
-                    __sifr_concat.push_str((hs_off).as_str());
+                    __sifr_concat.push_str(base.as_str());
+                    __sifr_concat.push_str(sign.as_str());
+                    __sifr_concat.push_str(hs_off.as_str());
                     __sifr_concat.push(':');
-                    __sifr_concat.push_str((ms_off).as_str());
+                    __sifr_concat.push_str(ms_off.as_str());
                     __sifr_concat
                 };
             }
@@ -420,19 +420,19 @@ mod __sifr_project_nominals {
             if (&self.year.clone() >= &SifrInt::from_i64(1970)) {
                 let mut y: SifrInt = SifrInt::from_i64(1970);
                 while (&y < &self.year.clone()) {
-                    days = &days + &_days_in_year((y).clone());
+                    days = &days + &_days_in_year(y.clone());
                     y = &y + &SifrInt::from_i64(1);
                 }
             } else {
                 let mut y: SifrInt = SifrInt::from_i64(1969);
                 while (&y >= &self.year.clone()) {
-                    days = &days - &_days_in_year((y).clone());
+                    days = &days - &_days_in_year(y.clone());
                     y = &y - &SifrInt::from_i64(1);
                 }
             }
             let mut m: SifrInt = SifrInt::from_i64(1);
             while (&m < &self.month.clone()) {
-                days = &days + &_days_in_month(self.year.clone(), (m).clone());
+                days = &days + &_days_in_month(self.year.clone(), m.clone());
                 m = &m + &SifrInt::from_i64(1);
             }
             days = &(&days + &self.day.clone()) - &SifrInt::from_i64(1);
@@ -465,7 +465,7 @@ mod __sifr_project_nominals {
                     let tz_text: String = format!("{}", tz);
                     let target_offset: SifrInt = _timezone_offset_from_text(&tz_text)?;
                     target = __SifrStdlib_sifr_x2edatetime_x2etimezone::new(
-                        (target_offset).clone(),
+                        target_offset.clone(),
                     );
                     Ok(())
                 })();
@@ -476,7 +476,7 @@ mod __sifr_project_nominals {
             }
             _from_timestamp_microseconds_with_tz(
                 self.timestamp_microseconds(),
-                &Some((target).clone()),
+                &Some(target.clone()),
             )
         }
     }
@@ -505,7 +505,7 @@ mod __sifr_project_nominals {
                 == &SifrInt::from_i64(0))))
     }
     pub fn _days_in_year(year: SifrInt) -> SifrInt {
-        if _is_leap_year((year).clone()) {
+        if _is_leap_year(year.clone()) {
             return SifrInt::from_i64(366);
         }
         SifrInt::from_i64(365)
@@ -525,7 +525,7 @@ mod __sifr_project_nominals {
                 .normalize_index_or_len(__sifr_checked_read_collection.len());
             __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
         };
-        if (&month == &SifrInt::from_i64(2)) && _is_leap_year((year).clone()) {
+        if (&month == &SifrInt::from_i64(2)) && _is_leap_year(year.clone()) {
             return SifrInt::from_i64(29);
         }
         if let Some(d) = d.clone() {
@@ -533,7 +533,7 @@ mod __sifr_project_nominals {
         }
         SifrInt::from_i64(0)
     }
-    pub fn _substring(value: &String, start: SifrInt, end: SifrInt) -> String {
+    pub fn _substring(value: &str, start: SifrInt, end: SifrInt) -> String {
         let __sifr_chars_value: Vec<char> = value.chars().collect::<Vec<char>>();
         let mut result: String = "".to_string();
         let mut i: SifrInt = start.clone();
@@ -546,7 +546,7 @@ mod __sifr_project_nominals {
             })
                 .map(|c| c.to_string());
             if let Some(ch) = ch {
-                result.push_str((ch).as_str());
+                result.push_str(ch.as_str());
             }
             i = &i + &SifrInt::from_i64(1);
         }
@@ -561,7 +561,7 @@ mod __sifr_project_nominals {
                     1usize + rendered.len(),
                 );
                 __sifr_concat.push('0');
-                __sifr_concat.push_str((rendered).as_str());
+                __sifr_concat.push_str(rendered.as_str());
                 __sifr_concat
             };
             __sifr_chars_rendered = rendered.chars().collect::<Vec<char>>();
@@ -569,7 +569,7 @@ mod __sifr_project_nominals {
         rendered
     }
     pub fn _parse_datetime_iso(
-        value: &String,
+        value: &str,
     ) -> Result<(SifrInt, SifrInt, SifrInt, SifrInt, SifrInt, SifrInt), ValueError> {
         let __sifr_chars_value: Vec<char> = value.chars().collect::<Vec<char>>();
         let Some(__sifr_checked_value_2) = ({
@@ -692,9 +692,9 @@ mod __sifr_project_nominals {
             }
         }
     }
-    pub fn _timezone_offset_from_text(text: &String) -> Result<SifrInt, ValueError> {
+    pub fn _timezone_offset_from_text(text: &str) -> Result<SifrInt, ValueError> {
         let __sifr_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
-        if (text).as_str() == "UTC" {
+        if text == "UTC" {
             return Ok(SifrInt::from_i64(0));
         }
         if (&SifrInt::from(__sifr_chars_text.len()) != &SifrInt::from_i64(9)) {
@@ -910,13 +910,13 @@ mod __sifr_project_nominals {
                 return Ok(
                     Ok(
                         __SifrStdlib_sifr_x2edatetime_x2edatetime::new(
-                            (year).clone(),
-                            (month).clone(),
-                            (day).clone(),
-                            (hour).clone(),
-                            (minute).clone(),
-                            (second).clone(),
-                            (microsecond).clone(),
+                            year.clone(),
+                            month.clone(),
+                            day.clone(),
+                            hour.clone(),
+                            minute.clone(),
+                            second.clone(),
+                            microsecond.clone(),
                             Some(tz_offset_value),
                         ),
                     ),
@@ -925,13 +925,13 @@ mod __sifr_project_nominals {
             Ok(
                 Ok(
                     __SifrStdlib_sifr_x2edatetime_x2edatetime::new(
-                        (year).clone(),
-                        (month).clone(),
-                        (day).clone(),
-                        (hour).clone(),
-                        (minute).clone(),
-                        (second).clone(),
-                        (microsecond).clone(),
+                        year.clone(),
+                        month.clone(),
+                        day.clone(),
+                        hour.clone(),
+                        minute.clone(),
+                        second.clone(),
+                        microsecond.clone(),
                         None,
                     ),
                 ),
@@ -1029,7 +1029,7 @@ mod __sifr_project_nominals {
                         result.hour.clone(),
                         result.minute.clone(),
                         result.second.clone(),
-                        (microsecond).clone(),
+                        microsecond.clone(),
                         result._tz_offset.clone(),
                     ),
                 ),
@@ -1115,7 +1115,7 @@ mod __sifr_project_nominals {
         ::sifr_stdlib::random::random_module_state_gauss_next()
     }
     pub fn random_module_set_state(
-        words: &Vec<SifrInt>,
+        words: &[SifrInt],
         index: SifrInt,
         gauss_next: Option<f64>,
     ) -> Result<(), ValueError> {
@@ -1133,20 +1133,20 @@ mod __sifr_project_nominals {
                 message: __sifr_bridge_error.to_string(),
             })
     }
-    pub fn base64_encode(s: &String) -> String {
+    pub fn base64_encode(s: &str) -> String {
         ::sifr_stdlib::base64::base64_encode(s)
     }
-    pub fn base64_encode_bytes(data: &Vec<u8>) -> Vec<u8> {
+    pub fn base64_encode_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::base64::base64_encode_bytes(data)
     }
-    pub fn base64_decode(s: &String) -> Result<String, ParseError> {
+    pub fn base64_decode(s: &str) -> Result<String, ParseError> {
         ::sifr_stdlib::base64::base64_decode(s)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| ParseError {
                 message: __sifr_bridge_error.to_string(),
             })
     }
-    pub fn base64_decode_bytes(data: &Vec<u8>) -> Result<Vec<u8>, ParseError> {
+    pub fn base64_decode_bytes(data: &[u8]) -> Result<Vec<u8>, ParseError> {
         ::sifr_stdlib::base64::base64_decode_bytes(data)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| ParseError {
@@ -1154,8 +1154,8 @@ mod __sifr_project_nominals {
             })
     }
     pub fn base64_encode_opts(
-        s: &String,
-        altchars: &String,
+        s: &str,
+        altchars: &str,
         wrapcol: SifrInt,
     ) -> Result<String, ParseError> {
         ::sifr_stdlib::base64::base64_encode_opts(
@@ -1169,10 +1169,10 @@ mod __sifr_project_nominals {
             })
     }
     pub fn base64_decode_opts(
-        s: &String,
-        altchars: &String,
+        s: &str,
+        altchars: &str,
         validate: bool,
-        ignorechars: &String,
+        ignorechars: &str,
     ) -> Result<String, ParseError> {
         ::sifr_stdlib::base64::base64_decode_opts(s, altchars, validate, ignorechars)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
@@ -1180,123 +1180,123 @@ mod __sifr_project_nominals {
                 message: __sifr_bridge_error.to_string(),
             })
     }
-    pub fn urlsafe_b64encode(s: &String) -> String {
+    pub fn urlsafe_b64encode(s: &str) -> String {
         ::sifr_stdlib::base64::urlsafe_b64encode(s)
     }
-    pub fn urlsafe_b64encode_bytes(data: &Vec<u8>) -> Vec<u8> {
+    pub fn urlsafe_b64encode_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::base64::urlsafe_b64encode_bytes(data)
     }
-    pub fn urlsafe_b64decode(s: &String) -> Result<String, ParseError> {
+    pub fn urlsafe_b64decode(s: &str) -> Result<String, ParseError> {
         ::sifr_stdlib::base64::urlsafe_b64decode(s)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| ParseError {
                 message: __sifr_bridge_error.to_string(),
             })
     }
-    pub fn urlsafe_b64decode_bytes(data: &Vec<u8>) -> Result<Vec<u8>, ParseError> {
+    pub fn urlsafe_b64decode_bytes(data: &[u8]) -> Result<Vec<u8>, ParseError> {
         ::sifr_stdlib::base64::urlsafe_b64decode_bytes(data)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| ParseError {
                 message: __sifr_bridge_error.to_string(),
             })
     }
-    pub fn b32encode(s: &String) -> String {
+    pub fn b32encode(s: &str) -> String {
         ::sifr_stdlib::base64::b32encode(s)
     }
-    pub fn b32decode(s: &String) -> Result<String, ParseError> {
+    pub fn b32decode(s: &str) -> Result<String, ParseError> {
         ::sifr_stdlib::base64::b32decode(s)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| ParseError {
                 message: __sifr_bridge_error.to_string(),
             })
     }
-    pub fn b32hexencode(s: &String) -> String {
+    pub fn b32hexencode(s: &str) -> String {
         ::sifr_stdlib::base64::b32hexencode(s)
     }
-    pub fn b32hexdecode(s: &String) -> Result<String, ParseError> {
+    pub fn b32hexdecode(s: &str) -> Result<String, ParseError> {
         ::sifr_stdlib::base64::b32hexdecode(s)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| ParseError {
                 message: __sifr_bridge_error.to_string(),
             })
     }
-    pub fn sha256_bytes(data: &Vec<u8>) -> Vec<u8> {
+    pub fn sha256_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::hash::sha256_bytes(data)
     }
-    pub fn md5_bytes(data: &Vec<u8>) -> Vec<u8> {
+    pub fn md5_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::hash::md5_bytes(data)
     }
-    pub fn sha1_bytes(data: &Vec<u8>) -> Vec<u8> {
+    pub fn sha1_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::hash::sha1_bytes(data)
     }
-    pub fn sha224_bytes(data: &Vec<u8>) -> Vec<u8> {
+    pub fn sha224_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::hash::sha224_bytes(data)
     }
-    pub fn sha384_bytes(data: &Vec<u8>) -> Vec<u8> {
+    pub fn sha384_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::hash::sha384_bytes(data)
     }
-    pub fn sha512_bytes(data: &Vec<u8>) -> Vec<u8> {
+    pub fn sha512_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::hash::sha512_bytes(data)
     }
-    pub fn blake2b_bytes(data: &Vec<u8>) -> Vec<u8> {
+    pub fn blake2b_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::hash::blake2b_bytes(data)
     }
-    pub fn blake2s_bytes(data: &Vec<u8>) -> Vec<u8> {
+    pub fn blake2s_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::hash::blake2s_bytes(data)
     }
-    pub fn read_text(path: &String) -> Result<String, IOError> {
+    pub fn read_text(path: &str) -> Result<String, IOError> {
         ::sifr_stdlib::fs::read_text(path)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
     }
-    pub fn write_text(path: &String, content: &String) -> Result<(), IOError> {
+    pub fn write_text(path: &str, content: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::write_text(path, content)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
     }
-    pub fn exists(path: &String) -> bool {
+    pub fn exists(path: &str) -> bool {
         ::sifr_stdlib::fs::exists(path)
     }
-    pub fn read_lines(path: &String) -> Result<Vec<String>, IOError> {
+    pub fn read_lines(path: &str) -> Result<Vec<String>, IOError> {
         ::sifr_stdlib::fs::read_lines(path)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
     }
-    pub fn append_text(path: &String, content: &String) -> Result<(), IOError> {
+    pub fn append_text(path: &str, content: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::append_text(path, content)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
     }
-    pub fn _open_file(path: &String, mode: &String) -> Result<String, IOError> {
+    pub fn _open_file(path: &str, mode: &str) -> Result<String, IOError> {
         ::sifr_stdlib::fs::open_file(path, mode)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
     }
-    pub fn _file_read(handle: &String) -> Result<String, IOError> {
+    pub fn _file_read(handle: &str) -> Result<String, IOError> {
         ::sifr_stdlib::fs::file_read(handle)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
     }
-    pub fn _file_write(handle: &String, data: &String) -> Result<(), IOError> {
+    pub fn _file_write(handle: &str, data: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::file_write(handle, data)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
     }
-    pub fn _file_readline(handle: &String) -> Result<Option<String>, IOError> {
+    pub fn _file_readline(handle: &str) -> Result<Option<String>, IOError> {
         ::sifr_stdlib::fs::file_readline(handle)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
     }
-    pub fn _file_readlines(handle: &String) -> Result<Vec<String>, IOError> {
+    pub fn _file_readlines(handle: &str) -> Result<Vec<String>, IOError> {
         ::sifr_stdlib::fs::file_readlines(handle)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
     }
-    pub fn _file_close(handle: &String) {
+    pub fn _file_close(handle: &str) {
         ::sifr_stdlib::fs::file_close(handle);
     }
     pub fn _file_read_bytes(
-        handle: &String,
+        handle: &str,
         size: Option<SifrInt>,
     ) -> Result<Vec<u8>, IOError> {
         ::sifr_stdlib::fs::file_read_bytes(
@@ -1306,18 +1306,18 @@ mod __sifr_project_nominals {
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
     }
-    pub fn _file_write_bytes(handle: &String, data: &Vec<u8>) -> Result<(), IOError> {
+    pub fn _file_write_bytes(handle: &str, data: &[u8]) -> Result<(), IOError> {
         ::sifr_stdlib::fs::file_write_bytes(handle, data)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
     }
-    pub fn _file_flush(handle: &String) -> Result<(), IOError> {
+    pub fn _file_flush(handle: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::file_flush(handle)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
     }
     pub fn _file_seek(
-        handle: &String,
+        handle: &str,
         offset: SifrInt,
         whence: SifrInt,
     ) -> Result<SifrInt, IOError> {
@@ -1329,15 +1329,12 @@ mod __sifr_project_nominals {
             .map(|__sifr_bridge_ok| __sifr_bridge_ok.into_sifr_int())
             .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
     }
-    pub fn _file_tell(handle: &String) -> Result<SifrInt, IOError> {
+    pub fn _file_tell(handle: &str) -> Result<SifrInt, IOError> {
         ::sifr_stdlib::fs::file_tell(handle)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok.into_sifr_int())
             .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
     }
-    pub fn open_file(
-        path: &String,
-        mode: &String,
-    ) -> Result<__SifrIoNativeFileHandle, IOError> {
+    pub fn open_file(path: &str, mode: &str) -> Result<__SifrIoNativeFileHandle, IOError> {
         let __sifr_try_res: Result<Result<__SifrIoNativeFileHandle, IOError>, IOError> = (|| {
             let handle_id: String = _open_file(path, mode)?;
             Ok(Ok(__SifrIoNativeFileHandle::new(handle_id)))
@@ -1355,10 +1352,7 @@ mod __sifr_project_nominals {
     pub fn file_read(handle: &__SifrIoNativeFileHandle) -> Result<String, IOError> {
         _file_read(&handle._id.clone())
     }
-    pub fn file_write(
-        handle: &__SifrIoNativeFileHandle,
-        data: &String,
-    ) -> Result<(), IOError> {
+    pub fn file_write(handle: &__SifrIoNativeFileHandle, data: &str) -> Result<(), IOError> {
         _file_write(&handle._id.clone(), data)
     }
     pub fn file_readline(
@@ -1378,11 +1372,11 @@ mod __sifr_project_nominals {
         handle: &__SifrIoNativeFileHandle,
         size: Option<SifrInt>,
     ) -> Result<Vec<u8>, IOError> {
-        _file_read_bytes(&handle._id.clone(), (size).clone())
+        _file_read_bytes(&handle._id.clone(), size.clone())
     }
     pub fn file_write_bytes(
         handle: &__SifrIoNativeFileHandle,
-        data: &Vec<u8>,
+        data: &[u8],
     ) -> Result<(), IOError> {
         _file_write_bytes(&handle._id.clone(), data)
     }
@@ -1394,7 +1388,7 @@ mod __sifr_project_nominals {
         offset: SifrInt,
         whence: SifrInt,
     ) -> Result<SifrInt, IOError> {
-        _file_seek(&handle._id.clone(), (offset).clone(), (whence).clone())
+        _file_seek(&handle._id.clone(), offset.clone(), whence.clone())
     }
     pub fn file_tell(handle: &__SifrIoNativeFileHandle) -> Result<SifrInt, IOError> {
         _file_tell(&handle._id.clone())
@@ -1404,64 +1398,64 @@ mod __sifr_project_nominals {
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
     }
-    pub fn listdir(path: &String) -> Result<Vec<String>, IOError> {
+    pub fn listdir(path: &str) -> Result<Vec<String>, IOError> {
         ::sifr_stdlib::fs::listdir(path)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
     }
-    pub fn mkdir(path: &String) -> Result<(), IOError> {
+    pub fn mkdir(path: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::mkdir(path)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
     }
-    pub fn rmdir(path: &String) -> Result<(), IOError> {
+    pub fn rmdir(path: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::rmdir(path)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
     }
-    pub fn remove_file(path: &String) -> Result<(), IOError> {
+    pub fn remove_file(path: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::remove_file(path)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
     }
-    pub fn rename(src: &String, dst: &String) -> Result<(), IOError> {
+    pub fn rename(src: &str, dst: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::rename(src, dst)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
     }
-    pub fn chdir(path: &String) -> Result<(), IOError> {
+    pub fn chdir(path: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::chdir(path)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
     }
-    pub fn stat_size(path: &String) -> Result<SifrInt, IOError> {
+    pub fn stat_size(path: &str) -> Result<SifrInt, IOError> {
         ::sifr_stdlib::fs::stat_size(path)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok.into_sifr_int())
             .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
     }
-    pub fn disk_usage(path: &String) -> Vec<SifrInt> {
+    pub fn disk_usage(path: &str) -> Vec<SifrInt> {
         ::sifr_stdlib::fs::disk_usage(path)
             .into_iter()
             .map(|__sifr_bridge_value| __sifr_bridge_value.into_sifr_int())
             .collect()
     }
-    pub fn is_file(path: &String) -> bool {
+    pub fn is_file(path: &str) -> bool {
         ::sifr_stdlib::fs::is_file(path)
     }
-    pub fn is_dir(path: &String) -> bool {
+    pub fn is_dir(path: &str) -> bool {
         ::sifr_stdlib::fs::is_dir(path)
     }
-    pub fn copy_file(src: &String, dst: &String) -> Result<(), IOError> {
+    pub fn copy_file(src: &str, dst: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::copy_file(src, dst)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
     }
-    pub fn walk_dir(path: &String) -> Result<Vec<String>, IOError> {
+    pub fn walk_dir(path: &str) -> Result<Vec<String>, IOError> {
         ::sifr_stdlib::fs::walk_dir(path)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
     }
-    pub fn rmdir_all(path: &String) -> Result<(), IOError> {
+    pub fn rmdir_all(path: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::rmdir_all(path)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
@@ -1469,32 +1463,32 @@ mod __sifr_project_nominals {
     pub fn gettempdir() -> String {
         ::sifr_stdlib::fs::gettempdir()
     }
-    pub fn makedirs(path: &String) -> Result<(), IOError> {
+    pub fn makedirs(path: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::makedirs(path)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
     }
-    pub fn touch(path: &String) -> Result<(), IOError> {
+    pub fn touch(path: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::touch(path)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
     }
-    pub fn resolve_path(path: &String) -> Result<String, IOError> {
+    pub fn resolve_path(path: &str) -> Result<String, IOError> {
         ::sifr_stdlib::fs::resolve_path(path)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
     }
-    pub fn iterdir(path: &String) -> Result<Vec<String>, IOError> {
+    pub fn iterdir(path: &str) -> Result<Vec<String>, IOError> {
         ::sifr_stdlib::fs::iterdir(path)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
     }
-    pub fn glob_pattern(dir: &String, pattern: &String) -> Result<Vec<String>, IOError> {
+    pub fn glob_pattern(dir: &str, pattern: &str) -> Result<Vec<String>, IOError> {
         ::sifr_stdlib::fs::glob_pattern(dir, pattern)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
     }
-    pub fn rglob_pattern(dir: &String, pattern: &String) -> Result<Vec<String>, IOError> {
+    pub fn rglob_pattern(dir: &str, pattern: &str) -> Result<Vec<String>, IOError> {
         ::sifr_stdlib::fs::rglob_pattern(dir, pattern)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
@@ -1530,9 +1524,9 @@ mod __sifr_project_nominals {
         }
     }
     impl __SifrStdlib_sifr_x2ehashlib_x2eHashObject {
-        pub fn update(&mut self, data: &Vec<u8>) {
+        pub fn update(&mut self, data: &[u8]) {
             self._data = {
-                let mut __v = (self._data.clone()).clone();
+                let mut __v = (self._data.clone()).to_vec();
                 __v.extend((data).iter().cloned());
                 __v
             };
@@ -1548,29 +1542,29 @@ mod __sifr_project_nominals {
             _hash_bytes(&self._algorithm, &self._data)
         }
     }
-    pub fn _hash_bytes(algorithm: &String, data: &Vec<u8>) -> Vec<u8> {
-        if (algorithm).as_str() == "md5" {
+    pub fn _hash_bytes(algorithm: &str, data: &[u8]) -> Vec<u8> {
+        if algorithm == "md5" {
             return md5_bytes(data);
         } else {
-            if (algorithm).as_str() == "sha1" {
+            if algorithm == "sha1" {
                 return sha1_bytes(data);
             } else {
-                if (algorithm).as_str() == "sha224" {
+                if algorithm == "sha224" {
                     return sha224_bytes(data);
                 } else {
-                    if (algorithm).as_str() == "sha256" {
+                    if algorithm == "sha256" {
                         return sha256_bytes(data);
                     } else {
-                        if (algorithm).as_str() == "sha384" {
+                        if algorithm == "sha384" {
                             return sha384_bytes(data);
                         } else {
-                            if (algorithm).as_str() == "sha512" {
+                            if algorithm == "sha512" {
                                 return sha512_bytes(data);
                             } else {
-                                if (algorithm).as_str() == "blake2b" {
+                                if algorithm == "blake2b" {
                                     return blake2b_bytes(data);
                                 } else {
-                                    if (algorithm).as_str() == "blake2s" {
+                                    if algorithm == "blake2s" {
                                         return blake2s_bytes(data);
                                     }
                                 }
@@ -1585,7 +1579,7 @@ mod __sifr_project_nominals {
             __sifr_empty_bytes_literal
         }
     }
-    pub fn _hash_hex(algorithm: &String, data: &Vec<u8>) -> String {
+    pub fn _hash_hex(algorithm: &str, data: &[u8]) -> String {
         {
             let __bytes_receiver = &_hash_bytes(algorithm, data);
             let mut __hex = String::with_capacity(
@@ -1737,7 +1731,7 @@ fn datetime_now_struct() -> Vec<SifrInt> {
         .map(|__sifr_bridge_value| __sifr_bridge_value.into_sifr_int())
         .collect()
 }
-fn datetime_format(dt: &String, fmt: &String) -> String {
+fn datetime_format(dt: &str, fmt: &str) -> String {
     ::sifr_stdlib::time::datetime_format(dt, fmt)
 }
 fn datetime_from_timestamp(ts: f64) -> Result<String, ValueError> {
@@ -1750,7 +1744,7 @@ fn datetime_from_timestamp(ts: f64) -> Result<String, ValueError> {
 fn time_now() -> f64 {
     ::sifr_stdlib::time::time_now()
 }
-fn time_format(epoch: f64, fmt: &String) -> String {
+fn time_format(epoch: f64, fmt: &str) -> String {
     ::sifr_stdlib::time::time_format(epoch, fmt)
 }
 fn perf_counter() -> f64 {
@@ -1762,14 +1756,14 @@ fn sleep(seconds: f64) {
 fn monotonic() -> f64 {
     ::sifr_stdlib::time::monotonic()
 }
-fn strptime(s: &String, fmt: &String) -> Result<String, ValueError> {
+fn strptime(s: &str, fmt: &str) -> Result<String, ValueError> {
     ::sifr_stdlib::time::strptime(s, fmt)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| ValueError {
             message: __sifr_bridge_error.to_string(),
         })
 }
-fn _strptime_intrinsic(s: &String, fmt: &String) -> Result<String, ValueError> {
+fn _strptime_intrinsic(s: &str, fmt: &str) -> Result<String, ValueError> {
     ::sifr_stdlib::time::strptime(s, fmt)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| ValueError {
@@ -1788,7 +1782,7 @@ fn localtime(epoch: f64) -> String {
 fn _localtime_intrinsic(epoch: f64) -> String {
     ::sifr_stdlib::time::localtime(epoch)
 }
-fn time_strptime(s: &String, fmt: &String) -> Result<Vec<SifrInt>, ValueError> {
+fn time_strptime(s: &str, fmt: &str) -> Result<Vec<SifrInt>, ValueError> {
     ::sifr_stdlib::time::time_strptime(s, fmt)
         .map(|__sifr_bridge_ok| {
             __sifr_bridge_ok
@@ -1890,7 +1884,7 @@ fn _is_leap_year(year: SifrInt) -> bool {
             == &SifrInt::from_i64(0))))
 }
 fn _days_in_year(year: SifrInt) -> SifrInt {
-    if _is_leap_year((year).clone()) {
+    if _is_leap_year(year.clone()) {
         return SifrInt::from_i64(366);
     }
     SifrInt::from_i64(365)
@@ -1910,7 +1904,7 @@ fn _days_in_month(year: SifrInt, month: SifrInt) -> SifrInt {
             .normalize_index_or_len(__sifr_checked_read_collection.len());
         __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
     };
-    if (&month == &SifrInt::from_i64(2)) && _is_leap_year((year).clone()) {
+    if (&month == &SifrInt::from_i64(2)) && _is_leap_year(year.clone()) {
         return SifrInt::from_i64(29);
     }
     if let Some(d) = d.clone() {
@@ -1918,7 +1912,7 @@ fn _days_in_month(year: SifrInt, month: SifrInt) -> SifrInt {
     }
     SifrInt::from_i64(0)
 }
-fn _substring(value: &String, start: SifrInt, end: SifrInt) -> String {
+fn _substring(value: &str, start: SifrInt, end: SifrInt) -> String {
     let __sifr_chars_value: Vec<char> = value.chars().collect::<Vec<char>>();
     let mut result: String = "".to_string();
     let mut i: SifrInt = start.clone();
@@ -1931,7 +1925,7 @@ fn _substring(value: &String, start: SifrInt, end: SifrInt) -> String {
         })
             .map(|c| c.to_string());
         if let Some(ch) = ch {
-            result.push_str((ch).as_str());
+            result.push_str(ch.as_str());
         }
         i = &i + &SifrInt::from_i64(1);
     }
@@ -1946,7 +1940,7 @@ fn _six_digits(value: SifrInt) -> String {
                 1usize + rendered.len(),
             );
             __sifr_concat.push('0');
-            __sifr_concat.push_str((rendered).as_str());
+            __sifr_concat.push_str(rendered.as_str());
             __sifr_concat
         };
         __sifr_chars_rendered = rendered.chars().collect::<Vec<char>>();
@@ -1954,7 +1948,7 @@ fn _six_digits(value: SifrInt) -> String {
     rendered
 }
 fn _parse_datetime_iso(
-    value: &String,
+    value: &str,
 ) -> Result<(SifrInt, SifrInt, SifrInt, SifrInt, SifrInt, SifrInt), ValueError> {
     let __sifr_chars_value: Vec<char> = value.chars().collect::<Vec<char>>();
     let Some(__sifr_checked_value_2) = ({
@@ -2077,9 +2071,9 @@ fn _parse_datetime_iso(
         }
     }
 }
-fn _timezone_offset_from_text(text: &String) -> Result<SifrInt, ValueError> {
+fn _timezone_offset_from_text(text: &str) -> Result<SifrInt, ValueError> {
     let __sifr_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
-    if (text).as_str() == "UTC" {
+    if text == "UTC" {
         return Ok(SifrInt::from_i64(0));
     }
     if (&SifrInt::from(__sifr_chars_text.len()) != &SifrInt::from_i64(9)) {
@@ -2295,13 +2289,13 @@ fn _from_timestamp_with_tz(
             return Ok(
                 Ok(
                     __SifrStdlib_sifr_x2edatetime_x2edatetime::new(
-                        (year).clone(),
-                        (month).clone(),
-                        (day).clone(),
-                        (hour).clone(),
-                        (minute).clone(),
-                        (second).clone(),
-                        (microsecond).clone(),
+                        year.clone(),
+                        month.clone(),
+                        day.clone(),
+                        hour.clone(),
+                        minute.clone(),
+                        second.clone(),
+                        microsecond.clone(),
                         Some(tz_offset_value),
                     ),
                 ),
@@ -2310,13 +2304,13 @@ fn _from_timestamp_with_tz(
         Ok(
             Ok(
                 __SifrStdlib_sifr_x2edatetime_x2edatetime::new(
-                    (year).clone(),
-                    (month).clone(),
-                    (day).clone(),
-                    (hour).clone(),
-                    (minute).clone(),
-                    (second).clone(),
-                    (microsecond).clone(),
+                    year.clone(),
+                    month.clone(),
+                    day.clone(),
+                    hour.clone(),
+                    minute.clone(),
+                    second.clone(),
+                    microsecond.clone(),
                     None,
                 ),
             ),
@@ -2414,7 +2408,7 @@ fn _from_timestamp_microseconds_with_tz(
                     result.hour.clone(),
                     result.minute.clone(),
                     result.second.clone(),
-                    (microsecond).clone(),
+                    microsecond.clone(),
                     result._tz_offset.clone(),
                 ),
             ),
@@ -2506,7 +2500,7 @@ fn random_module_state_gauss_next() -> Option<f64> {
     ::sifr_stdlib::random::random_module_state_gauss_next()
 }
 fn random_module_set_state(
-    words: &Vec<SifrInt>,
+    words: &[SifrInt],
     index: SifrInt,
     gauss_next: Option<f64>,
 ) -> Result<(), ValueError> {
@@ -2524,20 +2518,20 @@ fn random_module_set_state(
             message: __sifr_bridge_error.to_string(),
         })
 }
-fn base64_encode(s: &String) -> String {
+fn base64_encode(s: &str) -> String {
     ::sifr_stdlib::base64::base64_encode(s)
 }
-fn base64_encode_bytes(data: &Vec<u8>) -> Vec<u8> {
+fn base64_encode_bytes(data: &[u8]) -> Vec<u8> {
     ::sifr_stdlib::base64::base64_encode_bytes(data)
 }
-fn base64_decode(s: &String) -> Result<String, ParseError> {
+fn base64_decode(s: &str) -> Result<String, ParseError> {
     ::sifr_stdlib::base64::base64_decode(s)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| ParseError {
             message: __sifr_bridge_error.to_string(),
         })
 }
-fn base64_decode_bytes(data: &Vec<u8>) -> Result<Vec<u8>, ParseError> {
+fn base64_decode_bytes(data: &[u8]) -> Result<Vec<u8>, ParseError> {
     ::sifr_stdlib::base64::base64_decode_bytes(data)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| ParseError {
@@ -2545,8 +2539,8 @@ fn base64_decode_bytes(data: &Vec<u8>) -> Result<Vec<u8>, ParseError> {
         })
 }
 fn base64_encode_opts(
-    s: &String,
-    altchars: &String,
+    s: &str,
+    altchars: &str,
     wrapcol: SifrInt,
 ) -> Result<String, ParseError> {
     ::sifr_stdlib::base64::base64_encode_opts(
@@ -2560,10 +2554,10 @@ fn base64_encode_opts(
         })
 }
 fn base64_decode_opts(
-    s: &String,
-    altchars: &String,
+    s: &str,
+    altchars: &str,
     validate: bool,
-    ignorechars: &String,
+    ignorechars: &str,
 ) -> Result<String, ParseError> {
     ::sifr_stdlib::base64::base64_decode_opts(s, altchars, validate, ignorechars)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
@@ -2571,122 +2565,122 @@ fn base64_decode_opts(
             message: __sifr_bridge_error.to_string(),
         })
 }
-fn urlsafe_b64encode(s: &String) -> String {
+fn urlsafe_b64encode(s: &str) -> String {
     ::sifr_stdlib::base64::urlsafe_b64encode(s)
 }
-fn urlsafe_b64encode_bytes(data: &Vec<u8>) -> Vec<u8> {
+fn urlsafe_b64encode_bytes(data: &[u8]) -> Vec<u8> {
     ::sifr_stdlib::base64::urlsafe_b64encode_bytes(data)
 }
-fn urlsafe_b64decode(s: &String) -> Result<String, ParseError> {
+fn urlsafe_b64decode(s: &str) -> Result<String, ParseError> {
     ::sifr_stdlib::base64::urlsafe_b64decode(s)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| ParseError {
             message: __sifr_bridge_error.to_string(),
         })
 }
-fn urlsafe_b64decode_bytes(data: &Vec<u8>) -> Result<Vec<u8>, ParseError> {
+fn urlsafe_b64decode_bytes(data: &[u8]) -> Result<Vec<u8>, ParseError> {
     ::sifr_stdlib::base64::urlsafe_b64decode_bytes(data)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| ParseError {
             message: __sifr_bridge_error.to_string(),
         })
 }
-fn b32encode(s: &String) -> String {
+fn b32encode(s: &str) -> String {
     ::sifr_stdlib::base64::b32encode(s)
 }
-fn b32decode(s: &String) -> Result<String, ParseError> {
+fn b32decode(s: &str) -> Result<String, ParseError> {
     ::sifr_stdlib::base64::b32decode(s)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| ParseError {
             message: __sifr_bridge_error.to_string(),
         })
 }
-fn b32hexencode(s: &String) -> String {
+fn b32hexencode(s: &str) -> String {
     ::sifr_stdlib::base64::b32hexencode(s)
 }
-fn b32hexdecode(s: &String) -> Result<String, ParseError> {
+fn b32hexdecode(s: &str) -> Result<String, ParseError> {
     ::sifr_stdlib::base64::b32hexdecode(s)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| ParseError {
             message: __sifr_bridge_error.to_string(),
         })
 }
-fn sha256_bytes(data: &Vec<u8>) -> Vec<u8> {
+fn sha256_bytes(data: &[u8]) -> Vec<u8> {
     ::sifr_stdlib::hash::sha256_bytes(data)
 }
-fn md5_bytes(data: &Vec<u8>) -> Vec<u8> {
+fn md5_bytes(data: &[u8]) -> Vec<u8> {
     ::sifr_stdlib::hash::md5_bytes(data)
 }
-fn sha1_bytes(data: &Vec<u8>) -> Vec<u8> {
+fn sha1_bytes(data: &[u8]) -> Vec<u8> {
     ::sifr_stdlib::hash::sha1_bytes(data)
 }
-fn sha224_bytes(data: &Vec<u8>) -> Vec<u8> {
+fn sha224_bytes(data: &[u8]) -> Vec<u8> {
     ::sifr_stdlib::hash::sha224_bytes(data)
 }
-fn sha384_bytes(data: &Vec<u8>) -> Vec<u8> {
+fn sha384_bytes(data: &[u8]) -> Vec<u8> {
     ::sifr_stdlib::hash::sha384_bytes(data)
 }
-fn sha512_bytes(data: &Vec<u8>) -> Vec<u8> {
+fn sha512_bytes(data: &[u8]) -> Vec<u8> {
     ::sifr_stdlib::hash::sha512_bytes(data)
 }
-fn blake2b_bytes(data: &Vec<u8>) -> Vec<u8> {
+fn blake2b_bytes(data: &[u8]) -> Vec<u8> {
     ::sifr_stdlib::hash::blake2b_bytes(data)
 }
-fn blake2s_bytes(data: &Vec<u8>) -> Vec<u8> {
+fn blake2s_bytes(data: &[u8]) -> Vec<u8> {
     ::sifr_stdlib::hash::blake2s_bytes(data)
 }
-fn read_text(path: &String) -> Result<String, IOError> {
+fn read_text(path: &str) -> Result<String, IOError> {
     ::sifr_stdlib::fs::read_text(path)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn write_text(path: &String, content: &String) -> Result<(), IOError> {
+fn write_text(path: &str, content: &str) -> Result<(), IOError> {
     ::sifr_stdlib::fs::write_text(path, content)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn exists(path: &String) -> bool {
+fn exists(path: &str) -> bool {
     ::sifr_stdlib::fs::exists(path)
 }
-fn read_lines(path: &String) -> Result<Vec<String>, IOError> {
+fn read_lines(path: &str) -> Result<Vec<String>, IOError> {
     ::sifr_stdlib::fs::read_lines(path)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn append_text(path: &String, content: &String) -> Result<(), IOError> {
+fn append_text(path: &str, content: &str) -> Result<(), IOError> {
     ::sifr_stdlib::fs::append_text(path, content)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn _open_file(path: &String, mode: &String) -> Result<String, IOError> {
+fn _open_file(path: &str, mode: &str) -> Result<String, IOError> {
     ::sifr_stdlib::fs::open_file(path, mode)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn _file_read(handle: &String) -> Result<String, IOError> {
+fn _file_read(handle: &str) -> Result<String, IOError> {
     ::sifr_stdlib::fs::file_read(handle)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn _file_write(handle: &String, data: &String) -> Result<(), IOError> {
+fn _file_write(handle: &str, data: &str) -> Result<(), IOError> {
     ::sifr_stdlib::fs::file_write(handle, data)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn _file_readline(handle: &String) -> Result<Option<String>, IOError> {
+fn _file_readline(handle: &str) -> Result<Option<String>, IOError> {
     ::sifr_stdlib::fs::file_readline(handle)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn _file_readlines(handle: &String) -> Result<Vec<String>, IOError> {
+fn _file_readlines(handle: &str) -> Result<Vec<String>, IOError> {
     ::sifr_stdlib::fs::file_readlines(handle)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn _file_close(handle: &String) {
+fn _file_close(handle: &str) {
     ::sifr_stdlib::fs::file_close(handle);
 }
-fn _file_read_bytes(handle: &String, size: Option<SifrInt>) -> Result<Vec<u8>, IOError> {
+fn _file_read_bytes(handle: &str, size: Option<SifrInt>) -> Result<Vec<u8>, IOError> {
     ::sifr_stdlib::fs::file_read_bytes(
             handle,
             size.map(::sifr_runtime::interop::SifrIntBridge::from),
@@ -2694,18 +2688,18 @@ fn _file_read_bytes(handle: &String, size: Option<SifrInt>) -> Result<Vec<u8>, I
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn _file_write_bytes(handle: &String, data: &Vec<u8>) -> Result<(), IOError> {
+fn _file_write_bytes(handle: &str, data: &[u8]) -> Result<(), IOError> {
     ::sifr_stdlib::fs::file_write_bytes(handle, data)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn _file_flush(handle: &String) -> Result<(), IOError> {
+fn _file_flush(handle: &str) -> Result<(), IOError> {
     ::sifr_stdlib::fs::file_flush(handle)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
 fn _file_seek(
-    handle: &String,
+    handle: &str,
     offset: SifrInt,
     whence: SifrInt,
 ) -> Result<SifrInt, IOError> {
@@ -2717,12 +2711,12 @@ fn _file_seek(
         .map(|__sifr_bridge_ok| __sifr_bridge_ok.into_sifr_int())
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn _file_tell(handle: &String) -> Result<SifrInt, IOError> {
+fn _file_tell(handle: &str) -> Result<SifrInt, IOError> {
     ::sifr_stdlib::fs::file_tell(handle)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok.into_sifr_int())
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn open_file(path: &String, mode: &String) -> Result<__SifrIoNativeFileHandle, IOError> {
+fn open_file(path: &str, mode: &str) -> Result<__SifrIoNativeFileHandle, IOError> {
     let __sifr_try_res: Result<Result<__SifrIoNativeFileHandle, IOError>, IOError> = (|| {
         let handle_id: String = _open_file(path, mode)?;
         Ok(Ok(__SifrIoNativeFileHandle::new(handle_id)))
@@ -2740,7 +2734,7 @@ fn open_file(path: &String, mode: &String) -> Result<__SifrIoNativeFileHandle, I
 fn file_read(handle: &__SifrIoNativeFileHandle) -> Result<String, IOError> {
     _file_read(&handle._id.clone())
 }
-fn file_write(handle: &__SifrIoNativeFileHandle, data: &String) -> Result<(), IOError> {
+fn file_write(handle: &__SifrIoNativeFileHandle, data: &str) -> Result<(), IOError> {
     _file_write(&handle._id.clone(), data)
 }
 fn file_readline(handle: &__SifrIoNativeFileHandle) -> Result<Option<String>, IOError> {
@@ -2756,11 +2750,11 @@ fn file_read_bytes(
     handle: &__SifrIoNativeFileHandle,
     size: Option<SifrInt>,
 ) -> Result<Vec<u8>, IOError> {
-    _file_read_bytes(&handle._id.clone(), (size).clone())
+    _file_read_bytes(&handle._id.clone(), size.clone())
 }
 fn file_write_bytes(
     handle: &__SifrIoNativeFileHandle,
-    data: &Vec<u8>,
+    data: &[u8],
 ) -> Result<(), IOError> {
     _file_write_bytes(&handle._id.clone(), data)
 }
@@ -2772,7 +2766,7 @@ fn file_seek(
     offset: SifrInt,
     whence: SifrInt,
 ) -> Result<SifrInt, IOError> {
-    _file_seek(&handle._id.clone(), (offset).clone(), (whence).clone())
+    _file_seek(&handle._id.clone(), offset.clone(), whence.clone())
 }
 fn file_tell(handle: &__SifrIoNativeFileHandle) -> Result<SifrInt, IOError> {
     _file_tell(&handle._id.clone())
@@ -2782,64 +2776,64 @@ fn getcwd() -> Result<String, IOError> {
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn listdir(path: &String) -> Result<Vec<String>, IOError> {
+fn listdir(path: &str) -> Result<Vec<String>, IOError> {
     ::sifr_stdlib::fs::listdir(path)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn mkdir(path: &String) -> Result<(), IOError> {
+fn mkdir(path: &str) -> Result<(), IOError> {
     ::sifr_stdlib::fs::mkdir(path)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn rmdir(path: &String) -> Result<(), IOError> {
+fn rmdir(path: &str) -> Result<(), IOError> {
     ::sifr_stdlib::fs::rmdir(path)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn remove_file(path: &String) -> Result<(), IOError> {
+fn remove_file(path: &str) -> Result<(), IOError> {
     ::sifr_stdlib::fs::remove_file(path)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn rename(src: &String, dst: &String) -> Result<(), IOError> {
+fn rename(src: &str, dst: &str) -> Result<(), IOError> {
     ::sifr_stdlib::fs::rename(src, dst)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn chdir(path: &String) -> Result<(), IOError> {
+fn chdir(path: &str) -> Result<(), IOError> {
     ::sifr_stdlib::fs::chdir(path)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn stat_size(path: &String) -> Result<SifrInt, IOError> {
+fn stat_size(path: &str) -> Result<SifrInt, IOError> {
     ::sifr_stdlib::fs::stat_size(path)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok.into_sifr_int())
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn disk_usage(path: &String) -> Vec<SifrInt> {
+fn disk_usage(path: &str) -> Vec<SifrInt> {
     ::sifr_stdlib::fs::disk_usage(path)
         .into_iter()
         .map(|__sifr_bridge_value| __sifr_bridge_value.into_sifr_int())
         .collect()
 }
-fn is_file(path: &String) -> bool {
+fn is_file(path: &str) -> bool {
     ::sifr_stdlib::fs::is_file(path)
 }
-fn is_dir(path: &String) -> bool {
+fn is_dir(path: &str) -> bool {
     ::sifr_stdlib::fs::is_dir(path)
 }
-fn copy_file(src: &String, dst: &String) -> Result<(), IOError> {
+fn copy_file(src: &str, dst: &str) -> Result<(), IOError> {
     ::sifr_stdlib::fs::copy_file(src, dst)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn walk_dir(path: &String) -> Result<Vec<String>, IOError> {
+fn walk_dir(path: &str) -> Result<Vec<String>, IOError> {
     ::sifr_stdlib::fs::walk_dir(path)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn rmdir_all(path: &String) -> Result<(), IOError> {
+fn rmdir_all(path: &str) -> Result<(), IOError> {
     ::sifr_stdlib::fs::rmdir_all(path)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
@@ -2847,45 +2841,45 @@ fn rmdir_all(path: &String) -> Result<(), IOError> {
 fn gettempdir() -> String {
     ::sifr_stdlib::fs::gettempdir()
 }
-fn makedirs(path: &String) -> Result<(), IOError> {
+fn makedirs(path: &str) -> Result<(), IOError> {
     ::sifr_stdlib::fs::makedirs(path)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn touch(path: &String) -> Result<(), IOError> {
+fn touch(path: &str) -> Result<(), IOError> {
     ::sifr_stdlib::fs::touch(path)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn resolve_path(path: &String) -> Result<String, IOError> {
+fn resolve_path(path: &str) -> Result<String, IOError> {
     ::sifr_stdlib::fs::resolve_path(path)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn iterdir(path: &String) -> Result<Vec<String>, IOError> {
+fn iterdir(path: &str) -> Result<Vec<String>, IOError> {
     ::sifr_stdlib::fs::iterdir(path)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn glob_pattern(dir: &String, pattern: &String) -> Result<Vec<String>, IOError> {
+fn glob_pattern(dir: &str, pattern: &str) -> Result<Vec<String>, IOError> {
     ::sifr_stdlib::fs::glob_pattern(dir, pattern)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
-fn rglob_pattern(dir: &String, pattern: &String) -> Result<Vec<String>, IOError> {
+fn rglob_pattern(dir: &str, pattern: &str) -> Result<Vec<String>, IOError> {
     ::sifr_stdlib::fs::rglob_pattern(dir, pattern)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
 }
 fn _build_hash(
-    algorithm: &String,
-    data: &Vec<u8>,
+    algorithm: &str,
+    data: &[u8],
 ) -> __SifrStdlib_sifr_x2ehashlib_x2eHashObject {
     let alg: String = algorithm.to_lowercase();
     if (alg == "md5") {
         return __SifrStdlib_sifr_x2ehashlib_x2eHashObject::new(
             alg,
-            (data.clone()).clone(),
+            data.to_vec(),
             "md5".to_string(),
             SifrInt::from_i64(16),
             SifrInt::from_i64(64),
@@ -2894,7 +2888,7 @@ fn _build_hash(
         if (alg == "sha1") {
             return __SifrStdlib_sifr_x2ehashlib_x2eHashObject::new(
                 alg,
-                (data.clone()).clone(),
+                data.to_vec(),
                 "sha1".to_string(),
                 SifrInt::from_i64(20),
                 SifrInt::from_i64(64),
@@ -2903,7 +2897,7 @@ fn _build_hash(
             if (alg == "sha224") {
                 return __SifrStdlib_sifr_x2ehashlib_x2eHashObject::new(
                     alg,
-                    (data.clone()).clone(),
+                    data.to_vec(),
                     "sha224".to_string(),
                     SifrInt::from_i64(28),
                     SifrInt::from_i64(64),
@@ -2912,7 +2906,7 @@ fn _build_hash(
                 if (alg == "sha256") {
                     return __SifrStdlib_sifr_x2ehashlib_x2eHashObject::new(
                         alg,
-                        (data.clone()).clone(),
+                        data.to_vec(),
                         "sha256".to_string(),
                         SifrInt::from_i64(32),
                         SifrInt::from_i64(64),
@@ -2921,7 +2915,7 @@ fn _build_hash(
                     if (alg == "sha384") {
                         return __SifrStdlib_sifr_x2ehashlib_x2eHashObject::new(
                             alg,
-                            (data.clone()).clone(),
+                            data.to_vec(),
                             "sha384".to_string(),
                             SifrInt::from_i64(48),
                             SifrInt::from_i64(128),
@@ -2930,7 +2924,7 @@ fn _build_hash(
                         if (alg == "sha512") {
                             return __SifrStdlib_sifr_x2ehashlib_x2eHashObject::new(
                                 alg,
-                                (data.clone()).clone(),
+                                data.to_vec(),
                                 "sha512".to_string(),
                                 SifrInt::from_i64(64),
                                 SifrInt::from_i64(128),
@@ -2939,7 +2933,7 @@ fn _build_hash(
                             if (alg == "blake2b") {
                                 return __SifrStdlib_sifr_x2ehashlib_x2eHashObject::new(
                                     alg,
-                                    (data.clone()).clone(),
+                                    data.to_vec(),
                                     "blake2b".to_string(),
                                     SifrInt::from_i64(64),
                                     SifrInt::from_i64(128),
@@ -2948,7 +2942,7 @@ fn _build_hash(
                                 if (alg == "blake2s") {
                                     return __SifrStdlib_sifr_x2ehashlib_x2eHashObject::new(
                                         alg,
-                                        (data.clone()).clone(),
+                                        data.to_vec(),
                                         "blake2s".to_string(),
                                         SifrInt::from_i64(32),
                                         SifrInt::from_i64(64),
@@ -2963,40 +2957,40 @@ fn _build_hash(
     }
     __SifrStdlib_sifr_x2ehashlib_x2eHashObject::new(
         alg,
-        (data.clone()).clone(),
+        data.to_vec(),
         "unknown".to_string(),
         SifrInt::from_i64(0),
         SifrInt::from_i64(0),
     )
 }
-fn _is_supported_algorithm(name: &String) -> bool {
+fn _is_supported_algorithm(name: &str) -> bool {
     let n: String = name.to_lowercase();
     (((((((n == "md5") || (n == "sha1")) || (n == "sha224")) || (n == "sha256"))
         || (n == "sha384")) || (n == "sha512")) || (n == "blake2b")) || (n == "blake2s")
 }
-fn _hash_bytes(algorithm: &String, data: &Vec<u8>) -> Vec<u8> {
-    if (algorithm).as_str() == "md5" {
+fn _hash_bytes(algorithm: &str, data: &[u8]) -> Vec<u8> {
+    if algorithm == "md5" {
         return md5_bytes(data);
     } else {
-        if (algorithm).as_str() == "sha1" {
+        if algorithm == "sha1" {
             return sha1_bytes(data);
         } else {
-            if (algorithm).as_str() == "sha224" {
+            if algorithm == "sha224" {
                 return sha224_bytes(data);
             } else {
-                if (algorithm).as_str() == "sha256" {
+                if algorithm == "sha256" {
                     return sha256_bytes(data);
                 } else {
-                    if (algorithm).as_str() == "sha384" {
+                    if algorithm == "sha384" {
                         return sha384_bytes(data);
                     } else {
-                        if (algorithm).as_str() == "sha512" {
+                        if algorithm == "sha512" {
                             return sha512_bytes(data);
                         } else {
-                            if (algorithm).as_str() == "blake2b" {
+                            if algorithm == "blake2b" {
                                 return blake2b_bytes(data);
                             } else {
-                                if (algorithm).as_str() == "blake2s" {
+                                if algorithm == "blake2s" {
                                     return blake2s_bytes(data);
                                 }
                             }
@@ -3011,7 +3005,7 @@ fn _hash_bytes(algorithm: &String, data: &Vec<u8>) -> Vec<u8> {
         __sifr_empty_bytes_literal
     }
 }
-fn _hash_hex(algorithm: &String, data: &Vec<u8>) -> String {
+fn _hash_hex(algorithm: &str, data: &[u8]) -> String {
     {
         let __bytes_receiver = &_hash_bytes(algorithm, data);
         let mut __hex = String::with_capacity(
@@ -3024,8 +3018,8 @@ fn _hash_hex(algorithm: &String, data: &Vec<u8>) -> String {
     }
 }
 fn new(
-    name: &String,
-    data: &Vec<u8>,
+    name: &str,
+    data: &[u8],
 ) -> Result<__SifrStdlib_sifr_x2ehashlib_x2eHashObject, ValueError> {
     if !_is_supported_algorithm(name) {
         return Err(
@@ -3034,7 +3028,7 @@ fn new(
                     28usize + name.len(),
                 );
                 __sifr_concat.push_str("unsupported hash algorithm: ");
-                __sifr_concat.push_str((name).as_str());
+                __sifr_concat.push_str(name);
                 __sifr_concat
             }),
         );
@@ -3256,7 +3250,7 @@ fn lcm(a: SifrInt, b: SifrInt) -> SifrInt {
     if &b == &SifrInt::from_i64(0) {
         return SifrInt::from_i64(0);
     }
-    let g: SifrInt = gcd((a).clone(), (b).clone());
+    let g: SifrInt = gcd(a.clone(), b.clone());
     if &g == &SifrInt::from_i64(0) {
         return SifrInt::from_i64(0);
     }
@@ -3356,27 +3350,27 @@ fn isclose(a: f64, b: f64, rel_tol: f64, abs_tol: f64) -> bool {
     }
     diff <= rel_bound
 }
-fn prod(data: &Vec<SifrInt>) -> SifrInt {
+fn prod(data: &[SifrInt]) -> SifrInt {
     let mut result: SifrInt = SifrInt::from_i64(1);
     for val in data.iter().cloned() {
         result = &result * &val;
     }
     result.clone()
 }
-fn _copy_float_list(data: &Vec<f64>) -> Vec<f64> {
+fn _copy_float_list(data: &[f64]) -> Vec<f64> {
     let mut out: Vec<f64> = vec![];
     for value in data.iter().copied() {
         out.push(value);
     }
     out
 }
-fn dist(p: &Vec<f64>, q: &Vec<f64>) -> f64 {
+fn dist(p: &[f64], q: &[f64]) -> f64 {
     dist_impl(_copy_float_list(p), _copy_float_list(q))
 }
-fn fsum(data: &Vec<f64>) -> f64 {
+fn fsum(data: &[f64]) -> f64 {
     fsum_impl(_copy_float_list(data))
 }
-fn sumprod(p: &Vec<f64>, q: &Vec<f64>) -> f64 {
+fn sumprod(p: &[f64], q: &[f64]) -> f64 {
     sumprod_impl(_copy_float_list(p), _copy_float_list(q))
 }
 fn frexp_mantissa(x: f64) -> f64 {
@@ -3442,17 +3436,17 @@ type __SifrStdlib___sifr_x2eregex_x2eCompiledPattern = ::sifr_runtime::interop::
     ::sifr_stdlib::regex::CompiledPattern,
 >;
 trait __SifrOpaque__SifrStdlib___sifr_x2eregex_x2eCompiledPatternMethods {
-    fn search(&self, text: &String) -> Result<Option<String>, RegexError>;
-    fn is_match(&self, text: &String) -> Result<bool, RegexError>;
-    fn sub(&self, replacement: &String, text: &String) -> Result<String, RegexError>;
-    fn findall(&self, text: &String) -> Result<Vec<String>, RegexError>;
-    fn split(&self, text: &String) -> Result<Vec<String>, RegexError>;
+    fn search(&self, text: &str) -> Result<Option<String>, RegexError>;
+    fn is_match(&self, text: &str) -> Result<bool, RegexError>;
+    fn sub(&self, replacement: &str, text: &str) -> Result<String, RegexError>;
+    fn findall(&self, text: &str) -> Result<Vec<String>, RegexError>;
+    fn split(&self, text: &str) -> Result<Vec<String>, RegexError>;
     fn pattern(&self) -> Result<String, RegexError>;
     fn flags(&self) -> Result<SifrInt, RegexError>;
 }
 impl __SifrOpaque__SifrStdlib___sifr_x2eregex_x2eCompiledPatternMethods
 for __SifrStdlib___sifr_x2eregex_x2eCompiledPattern {
-    fn search(&self, text: &String) -> Result<Option<String>, RegexError> {
+    fn search(&self, text: &str) -> Result<Option<String>, RegexError> {
         ::sifr_stdlib::regex::compiled_pattern_search(self, text)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| RegexError {
@@ -3460,7 +3454,7 @@ for __SifrStdlib___sifr_x2eregex_x2eCompiledPattern {
                 detail: __sifr_bridge_error.to_string(),
             })
     }
-    fn is_match(&self, text: &String) -> Result<bool, RegexError> {
+    fn is_match(&self, text: &str) -> Result<bool, RegexError> {
         ::sifr_stdlib::regex::compiled_pattern_is_match(self, text)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| RegexError {
@@ -3468,7 +3462,7 @@ for __SifrStdlib___sifr_x2eregex_x2eCompiledPattern {
                 detail: __sifr_bridge_error.to_string(),
             })
     }
-    fn sub(&self, replacement: &String, text: &String) -> Result<String, RegexError> {
+    fn sub(&self, replacement: &str, text: &str) -> Result<String, RegexError> {
         ::sifr_stdlib::regex::compiled_pattern_replace(self, replacement, text)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| RegexError {
@@ -3476,7 +3470,7 @@ for __SifrStdlib___sifr_x2eregex_x2eCompiledPattern {
                 detail: __sifr_bridge_error.to_string(),
             })
     }
-    fn findall(&self, text: &String) -> Result<Vec<String>, RegexError> {
+    fn findall(&self, text: &str) -> Result<Vec<String>, RegexError> {
         ::sifr_stdlib::regex::compiled_pattern_findall(self, text)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| RegexError {
@@ -3484,7 +3478,7 @@ for __SifrStdlib___sifr_x2eregex_x2eCompiledPattern {
                 detail: __sifr_bridge_error.to_string(),
             })
     }
-    fn split(&self, text: &String) -> Result<Vec<String>, RegexError> {
+    fn split(&self, text: &str) -> Result<Vec<String>, RegexError> {
         ::sifr_stdlib::regex::compiled_pattern_split(self, text)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| RegexError {
@@ -3510,7 +3504,7 @@ for __SifrStdlib___sifr_x2eregex_x2eCompiledPattern {
     }
 }
 fn compile_pattern(
-    pattern: &String,
+    pattern: &str,
 ) -> Result<__SifrStdlib___sifr_x2eregex_x2eCompiledPattern, RegexError> {
     ::sifr_stdlib::regex::compile_pattern(pattern)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
@@ -3520,7 +3514,7 @@ fn compile_pattern(
         })
 }
 fn compile_pattern_flags(
-    pattern: &String,
+    pattern: &str,
     flags: SifrInt,
 ) -> Result<__SifrStdlib___sifr_x2eregex_x2eCompiledPattern, RegexError> {
     ::sifr_stdlib::regex::compile_pattern_flags(
@@ -3533,7 +3527,7 @@ fn compile_pattern_flags(
             detail: __sifr_bridge_error.to_string(),
         })
 }
-fn re_match(pattern: &String, text: &String) -> Result<bool, RegexError> {
+fn re_match(pattern: &str, text: &str) -> Result<bool, RegexError> {
     ::sifr_stdlib::regex::re_match(pattern, text)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| RegexError {
@@ -3541,7 +3535,7 @@ fn re_match(pattern: &String, text: &String) -> Result<bool, RegexError> {
             detail: __sifr_bridge_error.to_string(),
         })
 }
-fn re_find(pattern: &String, text: &String) -> Result<Option<String>, RegexError> {
+fn re_find(pattern: &str, text: &str) -> Result<Option<String>, RegexError> {
     ::sifr_stdlib::regex::re_find(pattern, text)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| RegexError {
@@ -3550,9 +3544,9 @@ fn re_find(pattern: &String, text: &String) -> Result<Option<String>, RegexError
         })
 }
 fn re_replace(
-    pattern: &String,
-    replacement: &String,
-    text: &String,
+    pattern: &str,
+    replacement: &str,
+    text: &str,
 ) -> Result<String, RegexError> {
     ::sifr_stdlib::regex::re_replace(pattern, replacement, text)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
@@ -3561,7 +3555,7 @@ fn re_replace(
             detail: __sifr_bridge_error.to_string(),
         })
 }
-fn re_findall(pattern: &String, text: &String) -> Result<Vec<String>, RegexError> {
+fn re_findall(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
     ::sifr_stdlib::regex::re_findall(pattern, text)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| RegexError {
@@ -3569,7 +3563,7 @@ fn re_findall(pattern: &String, text: &String) -> Result<Vec<String>, RegexError
             detail: __sifr_bridge_error.to_string(),
         })
 }
-fn re_split(pattern: &String, text: &String) -> Result<Vec<String>, RegexError> {
+fn re_split(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
     ::sifr_stdlib::regex::re_split(pattern, text)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| RegexError {
@@ -3577,7 +3571,7 @@ fn re_split(pattern: &String, text: &String) -> Result<Vec<String>, RegexError> 
             detail: __sifr_bridge_error.to_string(),
         })
 }
-fn re_find_start(pattern: &String, text: &String) -> Result<SifrInt, RegexError> {
+fn re_find_start(pattern: &str, text: &str) -> Result<SifrInt, RegexError> {
     ::sifr_stdlib::regex::re_find_start(pattern, text)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok.into_sifr_int())
         .map_err(|__sifr_bridge_error| RegexError {
@@ -3585,7 +3579,7 @@ fn re_find_start(pattern: &String, text: &String) -> Result<SifrInt, RegexError>
             detail: __sifr_bridge_error.to_string(),
         })
 }
-fn re_find_end(pattern: &String, text: &String) -> Result<SifrInt, RegexError> {
+fn re_find_end(pattern: &str, text: &str) -> Result<SifrInt, RegexError> {
     ::sifr_stdlib::regex::re_find_end(pattern, text)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok.into_sifr_int())
         .map_err(|__sifr_bridge_error| RegexError {
@@ -3594,8 +3588,8 @@ fn re_find_end(pattern: &String, text: &String) -> Result<SifrInt, RegexError> {
         })
 }
 fn re_match_flags(
-    pattern: &String,
-    text: &String,
+    pattern: &str,
+    text: &str,
     flags: SifrInt,
 ) -> Result<bool, RegexError> {
     ::sifr_stdlib::regex::re_match_flags(
@@ -3610,8 +3604,8 @@ fn re_match_flags(
         })
 }
 fn re_find_flags(
-    pattern: &String,
-    text: &String,
+    pattern: &str,
+    text: &str,
     flags: SifrInt,
 ) -> Result<Option<String>, RegexError> {
     ::sifr_stdlib::regex::re_find_flags(
@@ -3626,9 +3620,9 @@ fn re_find_flags(
         })
 }
 fn re_replace_flags(
-    pattern: &String,
-    replacement: &String,
-    text: &String,
+    pattern: &str,
+    replacement: &str,
+    text: &str,
     flags: SifrInt,
 ) -> Result<String, RegexError> {
     ::sifr_stdlib::regex::re_replace_flags(
@@ -3644,8 +3638,8 @@ fn re_replace_flags(
         })
 }
 fn re_findall_flags(
-    pattern: &String,
-    text: &String,
+    pattern: &str,
+    text: &str,
     flags: SifrInt,
 ) -> Result<Vec<String>, RegexError> {
     ::sifr_stdlib::regex::re_findall_flags(
@@ -3660,8 +3654,8 @@ fn re_findall_flags(
         })
 }
 fn re_split_flags(
-    pattern: &String,
-    text: &String,
+    pattern: &str,
+    text: &str,
     flags: SifrInt,
 ) -> Result<Vec<String>, RegexError> {
     ::sifr_stdlib::regex::re_split_flags(
@@ -3675,7 +3669,7 @@ fn re_split_flags(
             detail: __sifr_bridge_error.to_string(),
         })
 }
-fn search(pattern: &String, text: &String) -> Result<Option<String>, RegexError> {
+fn search(pattern: &str, text: &str) -> Result<Option<String>, RegexError> {
     re_find(pattern, text)
 }
 #[derive(Clone, PartialEq, Eq, Hash)]
@@ -3699,7 +3693,7 @@ impl ::std::fmt::Display for __SifrStdlib_sifr_x2estatistics_x2eStatisticsError 
     }
 }
 impl ::std::error::Error for __SifrStdlib_sifr_x2estatistics_x2eStatisticsError {}
-fn _sum(data: &Vec<f64>) -> f64 {
+fn _sum(data: &[f64]) -> f64 {
     let mut total: f64 = 0.0_f64;
     for val in data.iter().copied() {
         total += val;
@@ -3773,7 +3767,7 @@ fn _divide_by_int(
         Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError>,
         __SifrStdlib_sifr_x2estatistics_x2eStatisticsError,
     > = (|| {
-        let divisor: f64 = _float_int((denominator).clone())?;
+        let divisor: f64 = _float_int(denominator.clone())?;
         Ok(Ok(numerator / divisor))
     })();
     match __sifr_try_res {
@@ -3791,7 +3785,7 @@ fn _divide_by_int(
     }
 }
 fn mean(
-    data: &Vec<f64>,
+    data: &[f64],
 ) -> Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
     let count: SifrInt = SifrInt::from(data.len());
     if (&count == &SifrInt::from_i64(0)) {
@@ -3802,7 +3796,7 @@ fn mean(
         );
     }
     let total: f64 = _sum(data);
-    _divide_by_int(total, (count).clone())
+    _divide_by_int(total, count.clone())
 }
 fn __io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
     let msg = e.to_string();
@@ -3884,8 +3878,8 @@ fn main() {
     );
     println!(
         "{}", { let mut __sifr_concat : String = String::with_capacity(21usize + 0usize);
-        __sifr_concat.push_str("datetime.isoformat = "); __sifr_concat.push_str((dt
-        .isoformat()).as_str()); __sifr_concat }
+        __sifr_concat.push_str("datetime.isoformat = "); __sifr_concat.push_str(dt
+        .isoformat().as_str()); __sifr_concat }
     );
     let __sifr_try_res: Result<(), ValueError> = (|| {
         let epoch: __SifrStdlib_sifr_x2edatetime_x2edatetime = from_timestamp(
@@ -3895,7 +3889,7 @@ fn main() {
         println!(
             "{}", { let mut __sifr_concat : String = String::with_capacity(29usize +
             0usize); __sifr_concat.push_str("datetime.from_timestamp(0) = ");
-            __sifr_concat.push_str((epoch.isoformat()).as_str()); __sifr_concat }
+            __sifr_concat.push_str(epoch.isoformat().as_str()); __sifr_concat }
         );
         Ok(())
     })();
@@ -3903,8 +3897,8 @@ fn main() {
         let e = __sifr_try_err.clone();
         println!(
             "{}", { let mut __sifr_concat : String = String::with_capacity(16usize +
-            0usize); __sifr_concat.push_str("datetime error: "); __sifr_concat
-            .push_str((e.message.clone()).as_str()); __sifr_concat }
+            0usize); __sifr_concat.push_str("datetime error: "); __sifr_concat.push_str(e
+            .message.clone().as_str()); __sifr_concat }
         );
     }
     let __sifr_try_res: Result<(), RegexError> = (|| {
@@ -3915,8 +3909,8 @@ fn main() {
         println!(
             "{}", { let mut __sifr_concat : String = String::with_capacity(12usize +
             0usize); __sifr_concat.push_str("re.search = "); __sifr_concat
-            .push_str(((found).map_or("None".to_string().to_string(), | __v |
-            format!("{}", __v))).as_str()); __sifr_concat }
+            .push_str((found).map_or("None".to_string().to_string(), | __v |
+            format!("{}", __v)).as_str()); __sifr_concat }
         );
         Ok(())
     })();
@@ -3924,21 +3918,21 @@ fn main() {
         let e = __sifr_try_err.clone();
         println!(
             "{}", { let mut __sifr_concat : String = String::with_capacity(10usize +
-            0usize); __sifr_concat.push_str("re error: "); __sifr_concat.push_str((e
-            .message.clone()).as_str()); __sifr_concat }
+            0usize); __sifr_concat.push_str("re error: "); __sifr_concat.push_str(e
+            .message.clone().as_str()); __sifr_concat }
         );
     }
     println!(
         "{}", { let mut __sifr_concat : String = String::with_capacity(23usize + 0usize);
         __sifr_concat.push_str("sifr.math.comb(8, 3) = "); __sifr_concat
-        .push_str((format!("{}", comb(SifrInt::from_i64(8), SifrInt::from_i64(3))))
+        .push_str(format!("{}", comb(SifrInt::from_i64(8), SifrInt::from_i64(3)))
         .as_str()); __sifr_concat }
     );
     println!(
         "{}", { let mut __sifr_concat : String = String::with_capacity(34usize + 0usize);
         __sifr_concat.push_str("sifr.math.isclose(0.1+0.2, 0.3) = "); __sifr_concat
-        .push_str((format!("{}", isclose(0.30000000000000004_f64, 0.3_f64,
-        0.000000001_f64, 0.0_f64))).as_str()); __sifr_concat }
+        .push_str(format!("{}", isclose(0.30000000000000004_f64, 0.3_f64,
+        0.000000001_f64, 0.0_f64)) .as_str()); __sifr_concat }
     );
     let __sifr_try_res: Result<(), __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> = (||
     {
@@ -3946,7 +3940,7 @@ fn main() {
         println!(
             "{}", { let mut __sifr_concat : String = String::with_capacity(18usize +
             0usize); __sifr_concat.push_str("statistics.mean = "); __sifr_concat
-            .push_str((format!("{}", avg)).as_str()); __sifr_concat }
+            .push_str(format!("{}", avg) .as_str()); __sifr_concat }
         );
         Ok(())
     })();
@@ -3955,7 +3949,7 @@ fn main() {
         println!(
             "{}", { let mut __sifr_concat : String = String::with_capacity(18usize +
             0usize); __sifr_concat.push_str("statistics error: "); __sifr_concat
-            .push_str((e.message.clone()).as_str()); __sifr_concat }
+            .push_str(e.message.clone().as_str()); __sifr_concat }
         );
     }
     let __sifr_try_res: Result<(), ValueError> = (|| {
@@ -3969,7 +3963,7 @@ fn main() {
         println!(
             "{}", { let mut __sifr_concat : String = String::with_capacity(21usize +
             0usize); __sifr_concat.push_str("hashlib.sha256 len = "); __sifr_concat
-            .push_str((format!("{}", SifrInt::from(h.hexdigest().chars().count())))
+            .push_str(format!("{}", SifrInt::from(h.hexdigest().chars().count()))
             .as_str()); __sifr_concat }
         );
         Ok(())
@@ -3978,8 +3972,8 @@ fn main() {
         let e = __sifr_try_err.clone();
         println!(
             "{}", { let mut __sifr_concat : String = String::with_capacity(15usize +
-            0usize); __sifr_concat.push_str("hashlib error: "); __sifr_concat.push_str((e
-            .message.clone()).as_str()); __sifr_concat }
+            0usize); __sifr_concat.push_str("hashlib error: "); __sifr_concat.push_str(e
+            .message.clone().as_str()); __sifr_concat }
         );
     }
 }

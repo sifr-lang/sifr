@@ -14,6 +14,7 @@ fn assert_named_nodes_are_leaf_paths(ty: &RustType) {
             assert!(!name.starts_with("dyn ") && !name.starts_with("impl "));
         }
         RustType::Vec(inner)
+        | RustType::Slice(inner)
         | RustType::HashSet(inner)
         | RustType::VecDeque(inner)
         | RustType::Option(inner)
@@ -61,6 +62,7 @@ fn assert_named_nodes_are_leaf_paths(ty: &RustType) {
         | RustType::F64
         | RustType::Bool
         | RustType::String_
+        | RustType::Str
         | RustType::Unit
         | RustType::Never => {}
     }
@@ -183,6 +185,21 @@ fn callable_fields_use_boxed_trait_objects() {
         sifr_type_to_rust_type(&callable),
         RustType::ImplTrait { .. }
     ));
+}
+
+#[test]
+fn callable_shared_parameters_use_unsized_views() {
+    let callable = Type::Callable(
+        vec![Type::Str, Type::List(Box::new(Type::Int)), Type::Bytes],
+        vec![
+            ParamConvention::borrow(),
+            ParamConvention::borrow(),
+            ParamConvention::borrow(),
+        ],
+        Box::new(Type::None),
+    );
+    let rendered = render_type(&sifr_type_to_rust_type(&callable));
+    assert_eq!(rendered, "impl Fn(&str, &[SifrInt], &[u8])");
 }
 
 #[test]

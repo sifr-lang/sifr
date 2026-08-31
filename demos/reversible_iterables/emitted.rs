@@ -1,7 +1,7 @@
 // src/main.rs
 use ::sifr_runtime::SifrInt;
 
-fn tail_first(values: &Vec<SifrInt>) -> SifrInt {
+fn tail_first(values: &[SifrInt]) -> SifrInt {
     let mut rev: Box<dyn Iterator<Item = SifrInt>> = Box::new((values).iter().cloned().rev());
     let first: Option<SifrInt> = rev.next();
     let Some(first) = first.clone() else {

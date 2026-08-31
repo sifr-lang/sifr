@@ -20,6 +20,7 @@ mod stmt_expr_unit_slice;
 mod stmt_expr_slice;
 #[macro_use]
 mod stmt_expr_wrappers_and_compare;
+mod boolop_operand;
 #[macro_use]
 mod stmt_expr_binop;
 mod stmt_expr_binop_option;

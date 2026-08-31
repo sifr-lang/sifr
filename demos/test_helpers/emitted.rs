@@ -430,7 +430,7 @@ fn lcm(a: SifrInt, b: SifrInt) -> SifrInt {
     if &b == &SifrInt::from_i64(0) {
         return SifrInt::from_i64(0);
     }
-    let g: SifrInt = gcd((a).clone(), (b).clone());
+    let g: SifrInt = gcd(a.clone(), b.clone());
     if &g == &SifrInt::from_i64(0) {
         return SifrInt::from_i64(0);
     }
@@ -530,27 +530,27 @@ fn isclose(a: f64, b: f64, rel_tol: f64, abs_tol: f64) -> bool {
     }
     diff <= rel_bound
 }
-fn prod(data: &Vec<SifrInt>) -> SifrInt {
+fn prod(data: &[SifrInt]) -> SifrInt {
     let mut result: SifrInt = SifrInt::from_i64(1);
     for val in data.iter().cloned() {
         result = &result * &val;
     }
     result.clone()
 }
-fn _copy_float_list(data: &Vec<f64>) -> Vec<f64> {
+fn _copy_float_list(data: &[f64]) -> Vec<f64> {
     let mut out: Vec<f64> = vec![];
     for value in data.iter().copied() {
         out.push(value);
     }
     out
 }
-fn dist(p: &Vec<f64>, q: &Vec<f64>) -> f64 {
+fn dist(p: &[f64], q: &[f64]) -> f64 {
     dist_impl(_copy_float_list(p), _copy_float_list(q))
 }
-fn fsum(data: &Vec<f64>) -> f64 {
+fn fsum(data: &[f64]) -> f64 {
     fsum_impl(_copy_float_list(data))
 }
-fn sumprod(p: &Vec<f64>, q: &Vec<f64>) -> f64 {
+fn sumprod(p: &[f64], q: &[f64]) -> f64 {
     sumprod_impl(_copy_float_list(p), _copy_float_list(q))
 }
 fn frexp_mantissa(x: f64) -> f64 {
@@ -665,7 +665,7 @@ impl ::std::fmt::Display for __SifrStdlib_sifr_x2estatistics_x2eStatisticsError 
     }
 }
 impl ::std::error::Error for __SifrStdlib_sifr_x2estatistics_x2eStatisticsError {}
-fn _sum(data: &Vec<f64>) -> f64 {
+fn _sum(data: &[f64]) -> f64 {
     let mut total: f64 = 0.0_f64;
     for val in data.iter().copied() {
         total += val;
@@ -739,7 +739,7 @@ fn _divide_by_int(
         Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError>,
         __SifrStdlib_sifr_x2estatistics_x2eStatisticsError,
     > = (|| {
-        let divisor: f64 = _float_int((denominator).clone())?;
+        let divisor: f64 = _float_int(denominator.clone())?;
         Ok(Ok(numerator / divisor))
     })();
     match __sifr_try_res {
@@ -757,7 +757,7 @@ fn _divide_by_int(
     }
 }
 fn mean(
-    data: &Vec<f64>,
+    data: &[f64],
 ) -> Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
     let count: SifrInt = SifrInt::from(data.len());
     if (&count == &SifrInt::from_i64(0)) {
@@ -768,10 +768,10 @@ fn mean(
         );
     }
     let total: f64 = _sum(data);
-    _divide_by_int(total, (count).clone())
+    _divide_by_int(total, count.clone())
 }
 fn variance(
-    data: &Vec<f64>,
+    data: &[f64],
 ) -> Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
     let n: SifrInt = SifrInt::from(data.len());
     if (&n < &SifrInt::from_i64(2)) {
@@ -785,7 +785,7 @@ fn variance(
         (f64,),
         __SifrStdlib_sifr_x2estatistics_x2eStatisticsError,
     > = (|| {
-        let avg: f64 = _divide_by_int(_sum(data), (n).clone())?;
+        let avg: f64 = _divide_by_int(_sum(data), n.clone())?;
         Ok((avg,))
     })();
     let (avg,) = match __sifr_try_res {
@@ -807,7 +807,7 @@ fn variance(
     _divide_by_int(total, &n - &SifrInt::from_i64(1))
 }
 fn pvariance(
-    data: &Vec<f64>,
+    data: &[f64],
 ) -> Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
     let n: SifrInt = SifrInt::from(data.len());
     if (&n == &SifrInt::from_i64(0)) {
@@ -821,7 +821,7 @@ fn pvariance(
         (f64,),
         __SifrStdlib_sifr_x2estatistics_x2eStatisticsError,
     > = (|| {
-        let avg: f64 = _divide_by_int(_sum(data), (n).clone())?;
+        let avg: f64 = _divide_by_int(_sum(data), n.clone())?;
         Ok((avg,))
     })();
     let (avg,) = match __sifr_try_res {
@@ -840,10 +840,10 @@ fn pvariance(
         let diff: f64 = val - avg;
         total += diff * diff;
     }
-    _divide_by_int(total, (n).clone())
+    _divide_by_int(total, n.clone())
 }
 fn stdev(
-    data: &Vec<f64>,
+    data: &[f64],
 ) -> Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
     let n: SifrInt = SifrInt::from(data.len());
     if (&n < &SifrInt::from_i64(2)) {
@@ -857,7 +857,7 @@ fn stdev(
         (f64,),
         __SifrStdlib_sifr_x2estatistics_x2eStatisticsError,
     > = (|| {
-        let avg: f64 = _divide_by_int(_sum(data), (n).clone())?;
+        let avg: f64 = _divide_by_int(_sum(data), n.clone())?;
         Ok((avg,))
     })();
     let (avg,) = match __sifr_try_res {
@@ -897,7 +897,7 @@ fn stdev(
     Ok(sqrt(v))
 }
 fn pstdev(
-    data: &Vec<f64>,
+    data: &[f64],
 ) -> Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
     let n: SifrInt = SifrInt::from(data.len());
     if (&n == &SifrInt::from_i64(0)) {
@@ -911,7 +911,7 @@ fn pstdev(
         (f64,),
         __SifrStdlib_sifr_x2estatistics_x2eStatisticsError,
     > = (|| {
-        let avg: f64 = _divide_by_int(_sum(data), (n).clone())?;
+        let avg: f64 = _divide_by_int(_sum(data), n.clone())?;
         Ok((avg,))
     })();
     let (avg,) = match __sifr_try_res {
@@ -934,7 +934,7 @@ fn pstdev(
         (f64,),
         __SifrStdlib_sifr_x2estatistics_x2eStatisticsError,
     > = (|| {
-        let v: f64 = _divide_by_int(total, (n).clone())?;
+        let v: f64 = _divide_by_int(total, n.clone())?;
         Ok((v,))
     })();
     let (v,) = match __sifr_try_res {
@@ -1091,7 +1091,7 @@ fn main() {
         println!(
             "{}", { let mut __sifr_concat : String = String::with_capacity(7usize +
             0usize); __sifr_concat.push_str("mean = "); __sifr_concat
-            .push_str((format!("{}", m)).as_str()); __sifr_concat }
+            .push_str(format!("{}", m) .as_str()); __sifr_concat }
         );
         assert!(
             (format!("{}", format!("{}{}", "mean = ", format!("{}", m))) == "mean = 5")
@@ -1099,7 +1099,7 @@ fn main() {
         println!(
             "{}", { let mut __sifr_concat : String = String::with_capacity(18usize +
             0usize); __sifr_concat.push_str("sample variance = "); __sifr_concat
-            .push_str((format!("{}", sv)).as_str()); __sifr_concat }
+            .push_str(format!("{}", sv) .as_str()); __sifr_concat }
         );
         assert!(
             (format!("{}", format!("{}{}", "sample variance = ", format!("{}", sv))) ==
@@ -1108,7 +1108,7 @@ fn main() {
         println!(
             "{}", { let mut __sifr_concat : String = String::with_capacity(22usize +
             0usize); __sifr_concat.push_str("population variance = "); __sifr_concat
-            .push_str((format!("{}", pv)).as_str()); __sifr_concat }
+            .push_str(format!("{}", pv) .as_str()); __sifr_concat }
         );
         assert!(
             (format!("{}", format!("{}{}", "population variance = ", format!("{}", pv)))
@@ -1117,7 +1117,7 @@ fn main() {
         println!(
             "{}", { let mut __sifr_concat : String = String::with_capacity(15usize +
             0usize); __sifr_concat.push_str("sample stdev = "); __sifr_concat
-            .push_str((format!("{}", sd)).as_str()); __sifr_concat }
+            .push_str(format!("{}", sd) .as_str()); __sifr_concat }
         );
         assert!(
             (format!("{}", format!("{}{}", "sample stdev = ", format!("{}", sd))) ==
@@ -1126,7 +1126,7 @@ fn main() {
         println!(
             "{}", { let mut __sifr_concat : String = String::with_capacity(19usize +
             0usize); __sifr_concat.push_str("population stdev = "); __sifr_concat
-            .push_str((format!("{}", pd)).as_str()); __sifr_concat }
+            .push_str(format!("{}", pd) .as_str()); __sifr_concat }
         );
         assert!(
             (format!("{}", format!("{}{}", "population stdev = ", format!("{}", pd))) ==
@@ -1184,7 +1184,7 @@ fn main() {
         println!(
             "{}", { let mut __sifr_concat : String = String::with_capacity(18usize +
             0usize); __sifr_concat.push_str("statistics error: "); __sifr_concat
-            .push_str((e.message.clone()).as_str()); __sifr_concat }
+            .push_str(e.message.clone().as_str()); __sifr_concat }
         );
         assert!(
             (format!("{}", format!("{}{}", "statistics error: ", e.message.clone())) ==

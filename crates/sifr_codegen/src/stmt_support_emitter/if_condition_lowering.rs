@@ -141,13 +141,7 @@ impl RustEmitter {
                 ) {
                     return None;
                 }
-                Some(crate::RustExpr::MethodCall {
-                    receiver: Box::new(crate::RustExpr::Paren(Box::new(crate::RustExpr::Ident(
-                        name.clone(),
-                    )))),
-                    method: "as_str".to_string(),
-                    args: vec![],
-                })
+                Some(emitter.string_view_expr(operand, crate::RustExpr::Ident(name.clone())))
             };
         match (left.as_ref(), rhs) {
             (name_expr, HirExpr::StringLiteral(literal)) => {

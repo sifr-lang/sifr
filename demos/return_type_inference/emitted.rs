@@ -5,11 +5,11 @@ fn double(x: SifrInt) -> SifrInt {
     &x * &SifrInt::from_i64(2)
 }
 
-fn greet(name: &String) -> String {
+fn greet(name: &str) -> String {
     {
     let mut __sifr_concat: String = String::with_capacity(6usize + name.len());
     __sifr_concat.push_str("hello ");
-    __sifr_concat.push_str((name).as_str());
+    __sifr_concat.push_str(name);
     __sifr_concat
 }
 }

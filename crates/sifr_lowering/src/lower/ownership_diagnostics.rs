@@ -12,6 +12,37 @@ pub(in crate::lower) fn use_after_move(ctx: &mut LowerCtx, name: &str, range: Te
     );
 }
 
+pub(in crate::lower) fn reject_unsupported_index_projection(
+    ctx: &mut LowerCtx,
+    object_ty: &Type,
+    result_ty: &Type,
+    range: TextRange,
+) {
+    if result_ty.contains_affine_resource() {
+        ctx.error_with_code_at(
+            DiagnosticCode::PYZC_INVALID_DECLARATION,
+            "cannot project an affine Python resource through indexing; use a consuming aggregate operation"
+                .to_string(),
+            range,
+        );
+    } else if matches!(object_ty.resolve_alias(), Type::List(_) | Type::Dict(_, _))
+        && matches!(result_ty.resolve_alias(), Type::Class { .. })
+        && !result_ty.is_python_object_contract()
+        && !result_ty.contains_unknown_or_any()
+        && !result_ty.supports_derived_clone()
+    {
+        ctx.error_with_code_at(
+            DiagnosticCode::TYPE_MISMATCH,
+            format!(
+                "cannot project '{}' by value from '{}': the element is not clone-capable; use an owned consuming operation",
+                result_ty.display_name(),
+                object_ty.display_name(),
+            ),
+            range,
+        );
+    }
+}
+
 pub(in crate::lower) fn double_mutable_borrow(
     ctx: &mut LowerCtx,
     name: &str,

@@ -86,8 +86,10 @@ impl Renderer {
             RustType::F64 => "f64".to_string(),
             RustType::Bool => "bool".to_string(),
             RustType::String_ => "String".to_string(),
+            RustType::Str => "str".to_string(),
             RustType::Unit => "()".to_string(),
             RustType::Vec(inner) => format!("Vec<{}>", Self::render_type_string(inner)),
+            RustType::Slice(inner) => format!("[{}]", Self::render_type_string(inner)),
             RustType::HashMap(key, value) => {
                 format!(
                     "HashMap<{}, {}>",

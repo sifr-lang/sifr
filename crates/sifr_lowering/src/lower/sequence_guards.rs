@@ -298,6 +298,29 @@ pub(in crate::lower) fn invalidate_mutable_call_sequence_guards(
     }
 }
 
+pub(in crate::lower) fn invalidate_mutable_receiver_sequence_guards(
+    ctx: &mut LowerCtx,
+    receiver: &HirExpr,
+    convention: Option<sifr_type_system::ReceiverConvention>,
+    method: &str,
+) {
+    if convention != Some(sifr_type_system::ReceiverConvention::MutableBorrow) {
+        return;
+    }
+    let Some(target) = hir_sequence_guard_target_name(receiver) else {
+        return;
+    };
+    ctx.record_flow_effect(sifr_ir::FlowEffect::Mutation {
+        target: target.clone(),
+        operation: format!("method {method}"),
+    });
+    ctx.record_flow_effect(sifr_ir::FlowEffect::ClearNarrowing {
+        binding: target.clone(),
+    });
+    ctx.clear_sequence_guards_for_binding(&target);
+    ctx.clear_sequence_guards_for_target(&target);
+}
+
 pub(in crate::lower) fn key_guard_token(expr: &Expr) -> Option<String> {
     match expr {
         Expr::Name(name) => Some(format!("name:{}", name.id)),

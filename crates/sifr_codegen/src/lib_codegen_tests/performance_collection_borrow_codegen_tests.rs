@@ -14,8 +14,8 @@ def child_at(rows: list[dict[str, int]], row: int, key: str) -> int:
     );
 
     assert!(generated.contains("rows.get(__idx_norm)"), "{generated}");
-    assert!(generated.contains("__bucket.contains_key((key).as_str())"));
-    assert!(generated.contains("__bucket.get((key).as_str())"));
+    assert!(generated.contains("__bucket.contains_key(key)"));
+    assert!(generated.contains("__bucket.get(key)"));
     assert!(generated.contains(")).cloned()"));
     assert!(!generated.contains("__bucket.contains_key(&key)"));
     assert!(!generated.contains("__bucket.get(&key)"));

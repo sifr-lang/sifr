@@ -64,11 +64,12 @@ class Store:
     );
 
     assert!(
-        generated.contains("self.values.get((key).as_str()).cloned().unwrap_or(vec![])"),
+        generated.contains("self.values.get(&key).cloned().unwrap_or(vec![])")
+            || generated.contains("self.values.get(key).cloned().unwrap_or(vec![])"),
         "{generated}"
     );
     assert!(
-        !generated.contains("self.values.get((key).as_str()).map(Vec::as_slice).unwrap_or(&[])"),
+        !generated.contains(".map(Vec::as_slice).unwrap_or(&[])"),
         "{generated}"
     );
 }

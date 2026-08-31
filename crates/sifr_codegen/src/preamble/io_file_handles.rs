@@ -499,7 +499,7 @@ pub(crate) fn file_handle_write_method() -> RustItem {
                 name: "data".to_string(),
                 ty: RustType::Ref {
                     mutable: false,
-                    inner: Box::new(RustType::String_),
+                    inner: Box::new(RustType::Str),
                 },
             },
         ],

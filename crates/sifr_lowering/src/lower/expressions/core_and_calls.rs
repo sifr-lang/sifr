@@ -750,14 +750,12 @@ pub(in crate::lower) fn lower_subscript(
 
     let result_ty = resolve_subscript_result_type(sub, &object_ty, &index, &index_ty, ctx);
 
-    if result_ty.contains_affine_resource() {
-        ctx.error_with_code_at(
-            DiagnosticCode::PYZC_INVALID_DECLARATION,
-            "cannot project an affine Python resource through indexing; use a consuming aggregate operation"
-                .to_string(),
-            sub.range(),
-        );
-    }
+    ownership_diagnostics::reject_unsupported_index_projection(
+        ctx,
+        &object_ty,
+        &result_ty,
+        sub.range(),
+    );
 
     Some(HirExpr::Index {
         object: Box::new(object),

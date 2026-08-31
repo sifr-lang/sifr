@@ -103,11 +103,11 @@ fn borrowed_string_min_max_clone_to_owned_results() {
     let rust = generate_rust(&lowered.module);
 
     assert!(
-        rust.contains("std::cmp::min((*left).clone(), (*right).clone())"),
+        rust.contains("std::cmp::min(left.to_owned(), right.to_owned())"),
         "{rust}"
     );
     assert!(
-        rust.contains("std::cmp::max((*left).clone(), (*right).clone())"),
+        rust.contains("std::cmp::max(left.to_owned(), right.to_owned())"),
         "{rust}"
     );
     syn::parse_file(&rust).expect("generated borrowed string min/max should parse");

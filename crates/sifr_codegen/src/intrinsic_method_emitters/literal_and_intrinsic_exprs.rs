@@ -142,7 +142,7 @@ impl RustEmitter {
                     continue;
                 }
                 if let Some(lowered_arg) = ir_args.get(idx).cloned() {
-                    ir_args[idx] = crate::RustExpr::Clone(Box::new(lowered_arg));
+                    ir_args[idx] = crate::ownership_plan::materialize_owned_value(ty, lowered_arg);
                 }
             }
         }

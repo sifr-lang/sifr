@@ -3,6 +3,9 @@ use crate::hir_analysis::traversal::{self, TraversalConfig, TraversalControl};
 use std::cell::Cell;
 
 pub(crate) fn stmt_needs_performance_lowering(stmt: &HirStmt) -> bool {
+    if root_string_concat_needs_performance_lowering(stmt) {
+        return true;
+    }
     let needs_perf_lowering = Cell::new(false);
     let mut on_stmt = |node: &HirStmt| {
         if stmt_shape_needs_performance_lowering(node) {
@@ -27,6 +30,21 @@ pub(crate) fn stmt_needs_performance_lowering(stmt: &HirStmt) -> bool {
         &mut on_expr,
     );
     needs_perf_lowering.get()
+}
+
+fn root_string_concat_needs_performance_lowering(stmt: &HirStmt) -> bool {
+    let value = match stmt {
+        HirStmt::Return { value: Some(value) }
+        | HirStmt::Let { value, .. }
+        | HirStmt::Assign { value, .. } => value,
+        _ => return false,
+    };
+    matches!(value, HirExpr::BinOp { op, ty, .. }
+    if op == "+"
+        && matches!(
+            crate::resolve_alias_type_for_plain_call(ty),
+            Type::Str | Type::LiteralStr(_)
+        ))
 }
 
 fn stmt_shape_needs_performance_lowering(stmt: &HirStmt) -> bool {

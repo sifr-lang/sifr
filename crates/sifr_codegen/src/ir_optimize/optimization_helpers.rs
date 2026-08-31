@@ -124,6 +124,62 @@ mod tests {
     }
 
     #[test]
+    fn collapses_compounded_clone_forms_to_one_operation() {
+        let nested = RustExpr::Clone(Box::new(RustExpr::Clone(Box::new(RustExpr::Ident(
+            "value".to_string(),
+        )))));
+        let method_nested = RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Clone(Box::new(RustExpr::Ident(
+                "other".to_string(),
+            )))),
+            method: "clone".to_string(),
+            args: Vec::new(),
+        };
+        let mut items = vec![RustItem::Fn {
+            name: "nested".to_string(),
+            visibility: Visibility::Private,
+            type_params: Vec::new(),
+            params: Vec::new(),
+            ret: None,
+            body: vec![RustStmt::Expr(nested), RustStmt::Expr(method_nested)],
+            is_async: false,
+        }];
+
+        assert_eq!(remove_trivial_clones_in_items(&mut items), 2);
+        let RustItem::Fn { body, .. } = &items[0] else {
+            panic!("expected function");
+        };
+        assert!(matches!(&body[0], RustStmt::Expr(RustExpr::Clone(_))));
+        assert!(matches!(&body[1], RustStmt::Expr(RustExpr::Clone(_))));
+    }
+
+    #[test]
+    fn io_carrier_arguments_have_a_single_clone_budget() {
+        let nested_io_arg = |name: &str| RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Clone(Box::new(RustExpr::Ident(name.to_string())))),
+            method: "clone".to_string(),
+            args: Vec::new(),
+        };
+        let mut items = vec![RustItem::Fn {
+            name: "io_carrier".to_string(),
+            visibility: Visibility::Private,
+            type_params: Vec::new(),
+            params: Vec::new(),
+            ret: None,
+            body: vec![RustStmt::Expr(RustExpr::FnCall {
+                func: Box::new(RustExpr::Ident("file_seek".to_string())),
+                args: vec![nested_io_arg("size"), nested_io_arg("offset")],
+            })],
+            is_async: false,
+        }];
+
+        assert_eq!(remove_trivial_clones_in_items(&mut items), 2);
+        let rendered = crate::render_items(&items);
+        assert_eq!(rendered.matches(".clone()").count(), 2, "{rendered}");
+        assert!(!rendered.contains(".clone().clone()"), "{rendered}");
+    }
+
+    #[test]
     fn preserves_mutable_callable_bindings() {
         let mut items = vec![RustItem::Fn {
             name: "demo".to_string(),

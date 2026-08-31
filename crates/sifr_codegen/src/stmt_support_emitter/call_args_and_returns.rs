@@ -69,6 +69,17 @@ impl RustEmitter {
                 if self.borrowed_params.contains(name)
                     || self.mut_borrowed_params.contains(name));
 
+            if let Some(borrowed_view) = self.adapt_recursive_option_borrowed_argument(
+                param_ty,
+                *convention,
+                hir_arg,
+                &effective_arg_ty,
+                lowered_arg.clone(),
+            ) {
+                adapted.push(borrowed_view);
+                continue;
+            }
+
             let unadapted_option_arg = lowered_arg.clone();
             if matches!(hir_arg, HirExpr::NoneLiteral)
                 && matches!(resolved_param, Type::None | Type::TypeVar(_))
@@ -130,7 +141,10 @@ impl RustEmitter {
                     } else if matches!(hir_arg, HirExpr::Name { .. })
                         && !crate::helpers::is_copy_type_for_codegen(&effective_arg_ty)
                     {
-                        crate::RustExpr::Clone(Box::new(lowered_arg))
+                        crate::ownership_plan::materialize_owned_value(
+                            &effective_arg_ty,
+                            lowered_arg,
+                        )
                     } else {
                         Self::clone_non_copy_name_expr_for_ir(hir_arg, lowered_arg)
                     };
@@ -188,11 +202,8 @@ impl RustEmitter {
                         )
                         && Self::rust_expr_is_reusable_place_for_ir(&lowered_arg)))
             {
-                lowered_arg = crate::RustExpr::MethodCall {
-                    receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered_arg))),
-                    method: "clone".to_string(),
-                    args: vec![],
-                };
+                lowered_arg =
+                    crate::ownership_plan::materialize_owned_value(&effective_arg_ty, lowered_arg);
             }
 
             let needs_shared_borrow = convention.is_shared_borrow()
@@ -380,9 +391,10 @@ impl RustEmitter {
         if !(self.borrowed_params.contains(name) || self.mut_borrowed_params.contains(name)) {
             return None;
         }
-        Some(crate::RustExpr::Clone(Box::new(crate::RustExpr::Ident(
-            name.clone(),
-        ))))
+        Some(crate::ownership_plan::materialize_owned_value(
+            value.ty(),
+            crate::RustExpr::Ident(name.clone()),
+        ))
     }
 
     pub(crate) fn lower_non_option_index_expr_for_ir(
@@ -484,6 +496,16 @@ impl RustEmitter {
             return Ok(Some(coerce_return(
                 self,
                 crate::RustExpr::Clone(Box::new(crate::RustExpr::Ident("self".to_string()))),
+            )?));
+        }
+
+        if return_ty.is_some_and(|ty| self.recursive_option_borrowed_type(ty).is_some())
+            && self.expr_is_recursive_option_borrowed_view(value)
+            && let Some(lowered) = self.lower_stmt_expr_for_ir(value)?
+        {
+            return Ok(Some(coerce_return(
+                self,
+                crate::ownership_plan::materialize_borrowed_option_value(lowered),
             )?));
         }
 

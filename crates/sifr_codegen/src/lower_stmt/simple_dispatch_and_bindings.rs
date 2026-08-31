@@ -155,12 +155,25 @@ pub(super) fn try_lower_simple_stmt_with_ctx_and_bindings(
         }
         HirStmt::Return { value: Some(value) } => {
             let mut lowered = try_lower_simple_return_stmt(value, ctx)?;
+            if let HirExpr::ContainsOp { element, .. } = value
+                && matches!(element.as_ref(), HirExpr::Name { name, .. }
+                    if bindings.borrowed_params.contains(name)
+                        || bindings.mut_borrowed_params.contains(name))
+                && let Some(RustStmt::Return(Some(RustExpr::MethodCall { args, .. }))) =
+                    lowered.first_mut()
+                && let [RustExpr::Ref { expr, .. }] = args.as_slice()
+            {
+                *args = vec![*expr.clone()];
+            }
             if matches!(value, HirExpr::Name { name, ty, .. }
                 if bindings.borrowed_params.contains(name)
                     && !crate::helpers::is_copy_type_for_codegen(ty))
             {
                 if let Some(RustStmt::Return(Some(returned))) = lowered.first_mut() {
-                    *returned = RustExpr::Clone(Box::new(returned.clone()));
+                    *returned = crate::ownership_plan::materialize_owned_value(
+                        value.ty(),
+                        returned.clone(),
+                    );
                 }
             }
             Some(lowered)

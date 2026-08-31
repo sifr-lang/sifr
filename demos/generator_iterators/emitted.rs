@@ -102,8 +102,8 @@ fn gen_pairs(limit: SifrInt) -> Box<dyn Iterator<Item = SifrInt>> {
 }))
 }
 
-fn gen_even(xs: &Vec<SifrInt>) -> Box<dyn Iterator<Item = SifrInt>> {
-    let xs = xs.clone();
+fn gen_even(xs: &[SifrInt]) -> Box<dyn Iterator<Item = SifrInt>> {
+    let xs = xs.to_vec();
     Box::new(__SifrGenerator::new(async move |__sifr_yielder: __SifrYielder<SifrInt>| {
     for x in xs.iter().cloned() {
         if (&x.floor_mod_known_nonzero(&SifrInt::from_i64(2)) == &SifrInt::from_i64(0)) {

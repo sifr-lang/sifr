@@ -314,17 +314,9 @@ pub(super) fn try_lower_string_literal_match_guard(pattern: &HirPattern) -> Opti
         HirPattern::Literal {
             value: HirExpr::StringLiteral(expected),
         } => Some(RustExpr::BinOp {
-            left: Box::new(RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Ident("__s".to_string())),
-                method: "as_str".to_string(),
-                args: vec![],
-            }),
+            left: Box::new(RustExpr::Ident("__s".to_string())),
             op: "==".to_string(),
-            right: Box::new(RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Literal(RustLiteral::Str(expected.clone()))),
-                method: "as_str".to_string(),
-                args: vec![],
-            }),
+            right: Box::new(RustExpr::Literal(RustLiteral::StaticStr(expected.clone()))),
         }),
         HirPattern::Or { patterns } => {
             let mut guards = Vec::with_capacity(patterns.len());

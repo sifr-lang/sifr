@@ -115,7 +115,7 @@ fn main() {
     events.push("=== Context Manager: Early Return ===".to_string());
     let result_events: Vec<String> = demo_early_return();
     for item in result_events.iter().cloned() {
-        events.push(item.clone());
+        events.push(item.to_owned());
     }
     events.push("=== Context Manager: Break in Loop ===".to_string());
     let mut i: SifrInt = SifrInt::from_i64(0);

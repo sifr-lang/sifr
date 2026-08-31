@@ -16,6 +16,8 @@ def main():
     n: int = relay_comparable(7)
     s: str = relay_comparable("ok")
     total: int = relay_add(4, 5)
+    joined: str = relay_add("sifr", " rust")
     assert str(n) == '7'
     assert str(s) == 'ok'
     assert total == 9
+    assert joined == "sifr rust"

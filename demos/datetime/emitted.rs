@@ -10,7 +10,7 @@ mod __sifr_project_nominals {
             .map(|__sifr_bridge_value| __sifr_bridge_value.into_sifr_int())
             .collect()
     }
-    pub fn datetime_format(dt: &String, fmt: &String) -> String {
+    pub fn datetime_format(dt: &str, fmt: &str) -> String {
         ::sifr_stdlib::time::datetime_format(dt, fmt)
     }
     pub fn datetime_from_timestamp(ts: f64) -> Result<String, ValueError> {
@@ -23,7 +23,7 @@ mod __sifr_project_nominals {
     pub fn time_now() -> f64 {
         ::sifr_stdlib::time::time_now()
     }
-    pub fn time_format(epoch: f64, fmt: &String) -> String {
+    pub fn time_format(epoch: f64, fmt: &str) -> String {
         ::sifr_stdlib::time::time_format(epoch, fmt)
     }
     pub fn perf_counter() -> f64 {
@@ -35,14 +35,14 @@ mod __sifr_project_nominals {
     pub fn monotonic() -> f64 {
         ::sifr_stdlib::time::monotonic()
     }
-    pub fn strptime(s: &String, fmt: &String) -> Result<String, ValueError> {
+    pub fn strptime(s: &str, fmt: &str) -> Result<String, ValueError> {
         ::sifr_stdlib::time::strptime(s, fmt)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| ValueError {
                 message: __sifr_bridge_error.to_string(),
             })
     }
-    pub fn _strptime_intrinsic(s: &String, fmt: &String) -> Result<String, ValueError> {
+    pub fn _strptime_intrinsic(s: &str, fmt: &str) -> Result<String, ValueError> {
         ::sifr_stdlib::time::strptime(s, fmt)
             .map(|__sifr_bridge_ok| __sifr_bridge_ok)
             .map_err(|__sifr_bridge_error| ValueError {
@@ -61,7 +61,7 @@ mod __sifr_project_nominals {
     pub fn _localtime_intrinsic(epoch: f64) -> String {
         ::sifr_stdlib::time::localtime(epoch)
     }
-    pub fn time_strptime(s: &String, fmt: &String) -> Result<Vec<SifrInt>, ValueError> {
+    pub fn time_strptime(s: &str, fmt: &str) -> Result<Vec<SifrInt>, ValueError> {
         ::sifr_stdlib::time::time_strptime(s, fmt)
             .map(|__sifr_bridge_ok| {
                 __sifr_bridge_ok
@@ -277,11 +277,7 @@ mod __sifr_project_nominals {
                 .floor_mod_known_nonzero(&SifrInt::from_i64(86400000000));
             let s: SifrInt = remaining.floor_div_known_nonzero(&SifrInt::from_i64(1000000));
             let us: SifrInt = remaining.floor_mod_known_nonzero(&SifrInt::from_i64(1000000));
-            __SifrStdlib_sifr_x2edatetime_x2etimedelta::new(
-                (d).clone(),
-                (s).clone(),
-                (us).clone(),
-            )
+            __SifrStdlib_sifr_x2edatetime_x2etimedelta::new(d.clone(), s.clone(), us.clone())
         }
     }
     impl ::std::ops::Sub<&__SifrStdlib_sifr_x2edatetime_x2etimedelta>
@@ -294,11 +290,7 @@ mod __sifr_project_nominals {
                 .floor_mod_known_nonzero(&SifrInt::from_i64(86400000000));
             let s: SifrInt = remaining.floor_div_known_nonzero(&SifrInt::from_i64(1000000));
             let us: SifrInt = remaining.floor_mod_known_nonzero(&SifrInt::from_i64(1000000));
-            __SifrStdlib_sifr_x2edatetime_x2etimedelta::new(
-                (d).clone(),
-                (s).clone(),
-                (us).clone(),
-            )
+            __SifrStdlib_sifr_x2edatetime_x2etimedelta::new(d.clone(), s.clone(), us.clone())
         }
     }
     impl PartialEq for __SifrStdlib_sifr_x2edatetime_x2etimedelta {
@@ -350,7 +342,7 @@ mod __sifr_project_nominals {
                 hs = {
                     let mut __sifr_concat: String = String::with_capacity(1usize + hs.len());
                     __sifr_concat.push('0');
-                    __sifr_concat.push_str((hs).as_str());
+                    __sifr_concat.push_str(hs.as_str());
                     __sifr_concat
                 };
             }
@@ -359,7 +351,7 @@ mod __sifr_project_nominals {
                 ms = {
                     let mut __sifr_concat: String = String::with_capacity(1usize + ms.len());
                     __sifr_concat.push('0');
-                    __sifr_concat.push_str((ms).as_str());
+                    __sifr_concat.push_str(ms.as_str());
                     __sifr_concat
                 };
             }
@@ -367,10 +359,10 @@ mod __sifr_project_nominals {
                 let mut __sifr_concat: String = String::with_capacity(
                     ((sign.len() + hs.len()) + 1usize) + ms.len(),
                 );
-                __sifr_concat.push_str((sign).as_str());
-                __sifr_concat.push_str((hs).as_str());
+                __sifr_concat.push_str(sign.as_str());
+                __sifr_concat.push_str(hs.as_str());
                 __sifr_concat.push(':');
-                __sifr_concat.push_str((ms).as_str());
+                __sifr_concat.push_str(ms.as_str());
                 __sifr_concat
             }
         }
@@ -387,8 +379,8 @@ mod __sifr_project_nominals {
             }
             write!(
                 f, "{}", { let mut __sifr_concat : String = String::with_capacity(3usize +
-                0usize); __sifr_concat.push_str("UTC"); __sifr_concat.push_str((self
-                .iso_suffix()).as_str()); __sifr_concat }
+                0usize); __sifr_concat.push_str("UTC"); __sifr_concat.push_str(self
+                .iso_suffix().as_str()); __sifr_concat }
             )
         }
     }
@@ -442,7 +434,7 @@ mod __sifr_project_nominals {
                 mo = {
                     let mut __sifr_concat: String = String::with_capacity(1usize + mo.len());
                     __sifr_concat.push('0');
-                    __sifr_concat.push_str((mo).as_str());
+                    __sifr_concat.push_str(mo.as_str());
                     __sifr_concat
                 };
             }
@@ -451,7 +443,7 @@ mod __sifr_project_nominals {
                 d = {
                     let mut __sifr_concat: String = String::with_capacity(1usize + d.len());
                     __sifr_concat.push('0');
-                    __sifr_concat.push_str((d).as_str());
+                    __sifr_concat.push_str(d.as_str());
                     __sifr_concat
                 };
             }
@@ -460,7 +452,7 @@ mod __sifr_project_nominals {
                 h = {
                     let mut __sifr_concat: String = String::with_capacity(1usize + h.len());
                     __sifr_concat.push('0');
-                    __sifr_concat.push_str((h).as_str());
+                    __sifr_concat.push_str(h.as_str());
                     __sifr_concat
                 };
             }
@@ -469,7 +461,7 @@ mod __sifr_project_nominals {
                 mi = {
                     let mut __sifr_concat: String = String::with_capacity(1usize + mi.len());
                     __sifr_concat.push('0');
-                    __sifr_concat.push_str((mi).as_str());
+                    __sifr_concat.push_str(mi.as_str());
                     __sifr_concat
                 };
             }
@@ -478,7 +470,7 @@ mod __sifr_project_nominals {
                 s = {
                     let mut __sifr_concat: String = String::with_capacity(1usize + s.len());
                     __sifr_concat.push('0');
-                    __sifr_concat.push_str((s).as_str());
+                    __sifr_concat.push_str(s.as_str());
                     __sifr_concat
                 };
             }
@@ -487,22 +479,22 @@ mod __sifr_project_nominals {
                     (((((((((y.len() + 1usize) + mo.len()) + 1usize) + d.len()) + 1usize)
                         + h.len()) + 1usize) + mi.len()) + 1usize) + s.len(),
                 );
-                __sifr_concat.push_str((y).as_str());
+                __sifr_concat.push_str(y.as_str());
                 __sifr_concat.push('-');
-                __sifr_concat.push_str((mo).as_str());
+                __sifr_concat.push_str(mo.as_str());
                 __sifr_concat.push('-');
-                __sifr_concat.push_str((d).as_str());
+                __sifr_concat.push_str(d.as_str());
                 __sifr_concat.push('T');
-                __sifr_concat.push_str((h).as_str());
+                __sifr_concat.push_str(h.as_str());
                 __sifr_concat.push(':');
-                __sifr_concat.push_str((mi).as_str());
+                __sifr_concat.push_str(mi.as_str());
                 __sifr_concat.push(':');
-                __sifr_concat.push_str((s).as_str());
+                __sifr_concat.push_str(s.as_str());
                 __sifr_concat
             };
             if (&self.microsecond.clone() != &SifrInt::from_i64(0)) {
                 base.push('.');
-                base.push_str((_six_digits(self.microsecond.clone())).as_str());
+                base.push_str(_six_digits(self.microsecond.clone()).as_str());
             }
             let tz_offset_opt: Option<SifrInt> = self._tz_offset.clone();
             if let Some(tz_offset_opt) = tz_offset_opt.clone() {
@@ -525,7 +517,7 @@ mod __sifr_project_nominals {
                             1usize + hs_off.len(),
                         );
                         __sifr_concat.push('0');
-                        __sifr_concat.push_str((hs_off).as_str());
+                        __sifr_concat.push_str(hs_off.as_str());
                         __sifr_concat
                     };
                 }
@@ -536,7 +528,7 @@ mod __sifr_project_nominals {
                             1usize + ms_off.len(),
                         );
                         __sifr_concat.push('0');
-                        __sifr_concat.push_str((ms_off).as_str());
+                        __sifr_concat.push_str(ms_off.as_str());
                         __sifr_concat
                     };
                 }
@@ -544,11 +536,11 @@ mod __sifr_project_nominals {
                     let mut __sifr_concat: String = String::with_capacity(
                         (((base.len() + sign.len()) + hs_off.len()) + 1usize) + ms_off.len(),
                     );
-                    __sifr_concat.push_str((base).as_str());
-                    __sifr_concat.push_str((sign).as_str());
-                    __sifr_concat.push_str((hs_off).as_str());
+                    __sifr_concat.push_str(base.as_str());
+                    __sifr_concat.push_str(sign.as_str());
+                    __sifr_concat.push_str(hs_off.as_str());
                     __sifr_concat.push(':');
-                    __sifr_concat.push_str((ms_off).as_str());
+                    __sifr_concat.push_str(ms_off.as_str());
                     __sifr_concat
                 };
             }
@@ -561,19 +553,19 @@ mod __sifr_project_nominals {
             if (&self.year.clone() >= &SifrInt::from_i64(1970)) {
                 let mut y: SifrInt = SifrInt::from_i64(1970);
                 while (&y < &self.year.clone()) {
-                    days = &days + &_days_in_year((y).clone());
+                    days = &days + &_days_in_year(y.clone());
                     y = &y + &SifrInt::from_i64(1);
                 }
             } else {
                 let mut y: SifrInt = SifrInt::from_i64(1969);
                 while (&y >= &self.year.clone()) {
-                    days = &days - &_days_in_year((y).clone());
+                    days = &days - &_days_in_year(y.clone());
                     y = &y - &SifrInt::from_i64(1);
                 }
             }
             let mut m: SifrInt = SifrInt::from_i64(1);
             while (&m < &self.month.clone()) {
-                days = &days + &_days_in_month(self.year.clone(), (m).clone());
+                days = &days + &_days_in_month(self.year.clone(), m.clone());
                 m = &m + &SifrInt::from_i64(1);
             }
             days = &(&days + &self.day.clone()) - &SifrInt::from_i64(1);
@@ -606,7 +598,7 @@ mod __sifr_project_nominals {
                     let tz_text: String = format!("{}", tz);
                     let target_offset: SifrInt = _timezone_offset_from_text(&tz_text)?;
                     target = __SifrStdlib_sifr_x2edatetime_x2etimezone::new(
-                        (target_offset).clone(),
+                        target_offset.clone(),
                     );
                     Ok(())
                 })();
@@ -617,7 +609,7 @@ mod __sifr_project_nominals {
             }
             _from_timestamp_microseconds_with_tz(
                 self.timestamp_microseconds(),
-                &Some((target).clone()),
+                &Some(target.clone()),
             )
         }
     }
@@ -646,7 +638,7 @@ mod __sifr_project_nominals {
                 == &SifrInt::from_i64(0))))
     }
     pub fn _days_in_year(year: SifrInt) -> SifrInt {
-        if _is_leap_year((year).clone()) {
+        if _is_leap_year(year.clone()) {
             return SifrInt::from_i64(366);
         }
         SifrInt::from_i64(365)
@@ -666,7 +658,7 @@ mod __sifr_project_nominals {
                 .normalize_index_or_len(__sifr_checked_read_collection.len());
             __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
         };
-        if (&month == &SifrInt::from_i64(2)) && _is_leap_year((year).clone()) {
+        if (&month == &SifrInt::from_i64(2)) && _is_leap_year(year.clone()) {
             return SifrInt::from_i64(29);
         }
         if let Some(d) = d.clone() {
@@ -674,7 +666,7 @@ mod __sifr_project_nominals {
         }
         SifrInt::from_i64(0)
     }
-    pub fn _substring(value: &String, start: SifrInt, end: SifrInt) -> String {
+    pub fn _substring(value: &str, start: SifrInt, end: SifrInt) -> String {
         let __sifr_chars_value: Vec<char> = value.chars().collect::<Vec<char>>();
         let mut result: String = "".to_string();
         let mut i: SifrInt = start.clone();
@@ -687,7 +679,7 @@ mod __sifr_project_nominals {
             })
                 .map(|c| c.to_string());
             if let Some(ch) = ch {
-                result.push_str((ch).as_str());
+                result.push_str(ch.as_str());
             }
             i = &i + &SifrInt::from_i64(1);
         }
@@ -702,7 +694,7 @@ mod __sifr_project_nominals {
                     1usize + rendered.len(),
                 );
                 __sifr_concat.push('0');
-                __sifr_concat.push_str((rendered).as_str());
+                __sifr_concat.push_str(rendered.as_str());
                 __sifr_concat
             };
             __sifr_chars_rendered = rendered.chars().collect::<Vec<char>>();
@@ -710,7 +702,7 @@ mod __sifr_project_nominals {
         rendered
     }
     pub fn _parse_datetime_iso(
-        value: &String,
+        value: &str,
     ) -> Result<(SifrInt, SifrInt, SifrInt, SifrInt, SifrInt, SifrInt), ValueError> {
         let __sifr_chars_value: Vec<char> = value.chars().collect::<Vec<char>>();
         let Some(__sifr_checked_value_2) = ({
@@ -833,9 +825,9 @@ mod __sifr_project_nominals {
             }
         }
     }
-    pub fn _timezone_offset_from_text(text: &String) -> Result<SifrInt, ValueError> {
+    pub fn _timezone_offset_from_text(text: &str) -> Result<SifrInt, ValueError> {
         let __sifr_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
-        if (text).as_str() == "UTC" {
+        if text == "UTC" {
             return Ok(SifrInt::from_i64(0));
         }
         if (&SifrInt::from(__sifr_chars_text.len()) != &SifrInt::from_i64(9)) {
@@ -1051,13 +1043,13 @@ mod __sifr_project_nominals {
                 return Ok(
                     Ok(
                         __SifrStdlib_sifr_x2edatetime_x2edatetime::new(
-                            (year).clone(),
-                            (month).clone(),
-                            (day).clone(),
-                            (hour).clone(),
-                            (minute).clone(),
-                            (second).clone(),
-                            (microsecond).clone(),
+                            year.clone(),
+                            month.clone(),
+                            day.clone(),
+                            hour.clone(),
+                            minute.clone(),
+                            second.clone(),
+                            microsecond.clone(),
                             Some(tz_offset_value),
                         ),
                     ),
@@ -1066,13 +1058,13 @@ mod __sifr_project_nominals {
             Ok(
                 Ok(
                     __SifrStdlib_sifr_x2edatetime_x2edatetime::new(
-                        (year).clone(),
-                        (month).clone(),
-                        (day).clone(),
-                        (hour).clone(),
-                        (minute).clone(),
-                        (second).clone(),
-                        (microsecond).clone(),
+                        year.clone(),
+                        month.clone(),
+                        day.clone(),
+                        hour.clone(),
+                        minute.clone(),
+                        second.clone(),
+                        microsecond.clone(),
                         None,
                     ),
                 ),
@@ -1170,7 +1162,7 @@ mod __sifr_project_nominals {
                         result.hour.clone(),
                         result.minute.clone(),
                         result.second.clone(),
-                        (microsecond).clone(),
+                        microsecond.clone(),
                         result._tz_offset.clone(),
                     ),
                 ),
@@ -1282,7 +1274,7 @@ fn datetime_now_struct() -> Vec<SifrInt> {
         .map(|__sifr_bridge_value| __sifr_bridge_value.into_sifr_int())
         .collect()
 }
-fn datetime_format(dt: &String, fmt: &String) -> String {
+fn datetime_format(dt: &str, fmt: &str) -> String {
     ::sifr_stdlib::time::datetime_format(dt, fmt)
 }
 fn datetime_from_timestamp(ts: f64) -> Result<String, ValueError> {
@@ -1295,7 +1287,7 @@ fn datetime_from_timestamp(ts: f64) -> Result<String, ValueError> {
 fn time_now() -> f64 {
     ::sifr_stdlib::time::time_now()
 }
-fn time_format(epoch: f64, fmt: &String) -> String {
+fn time_format(epoch: f64, fmt: &str) -> String {
     ::sifr_stdlib::time::time_format(epoch, fmt)
 }
 fn perf_counter() -> f64 {
@@ -1307,14 +1299,14 @@ fn sleep(seconds: f64) {
 fn monotonic() -> f64 {
     ::sifr_stdlib::time::monotonic()
 }
-fn strptime(s: &String, fmt: &String) -> Result<String, ValueError> {
+fn strptime(s: &str, fmt: &str) -> Result<String, ValueError> {
     ::sifr_stdlib::time::strptime(s, fmt)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| ValueError {
             message: __sifr_bridge_error.to_string(),
         })
 }
-fn _strptime_intrinsic(s: &String, fmt: &String) -> Result<String, ValueError> {
+fn _strptime_intrinsic(s: &str, fmt: &str) -> Result<String, ValueError> {
     ::sifr_stdlib::time::strptime(s, fmt)
         .map(|__sifr_bridge_ok| __sifr_bridge_ok)
         .map_err(|__sifr_bridge_error| ValueError {
@@ -1333,7 +1325,7 @@ fn localtime(epoch: f64) -> String {
 fn _localtime_intrinsic(epoch: f64) -> String {
     ::sifr_stdlib::time::localtime(epoch)
 }
-fn time_strptime(s: &String, fmt: &String) -> Result<Vec<SifrInt>, ValueError> {
+fn time_strptime(s: &str, fmt: &str) -> Result<Vec<SifrInt>, ValueError> {
     ::sifr_stdlib::time::time_strptime(s, fmt)
         .map(|__sifr_bridge_ok| {
             __sifr_bridge_ok
@@ -1435,7 +1427,7 @@ fn _is_leap_year(year: SifrInt) -> bool {
             == &SifrInt::from_i64(0))))
 }
 fn _days_in_year(year: SifrInt) -> SifrInt {
-    if _is_leap_year((year).clone()) {
+    if _is_leap_year(year.clone()) {
         return SifrInt::from_i64(366);
     }
     SifrInt::from_i64(365)
@@ -1455,7 +1447,7 @@ fn _days_in_month(year: SifrInt, month: SifrInt) -> SifrInt {
             .normalize_index_or_len(__sifr_checked_read_collection.len());
         __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
     };
-    if (&month == &SifrInt::from_i64(2)) && _is_leap_year((year).clone()) {
+    if (&month == &SifrInt::from_i64(2)) && _is_leap_year(year.clone()) {
         return SifrInt::from_i64(29);
     }
     if let Some(d) = d.clone() {
@@ -1463,7 +1455,7 @@ fn _days_in_month(year: SifrInt, month: SifrInt) -> SifrInt {
     }
     SifrInt::from_i64(0)
 }
-fn _substring(value: &String, start: SifrInt, end: SifrInt) -> String {
+fn _substring(value: &str, start: SifrInt, end: SifrInt) -> String {
     let __sifr_chars_value: Vec<char> = value.chars().collect::<Vec<char>>();
     let mut result: String = "".to_string();
     let mut i: SifrInt = start.clone();
@@ -1476,7 +1468,7 @@ fn _substring(value: &String, start: SifrInt, end: SifrInt) -> String {
         })
             .map(|c| c.to_string());
         if let Some(ch) = ch {
-            result.push_str((ch).as_str());
+            result.push_str(ch.as_str());
         }
         i = &i + &SifrInt::from_i64(1);
     }
@@ -1491,7 +1483,7 @@ fn _six_digits(value: SifrInt) -> String {
                 1usize + rendered.len(),
             );
             __sifr_concat.push('0');
-            __sifr_concat.push_str((rendered).as_str());
+            __sifr_concat.push_str(rendered.as_str());
             __sifr_concat
         };
         __sifr_chars_rendered = rendered.chars().collect::<Vec<char>>();
@@ -1499,7 +1491,7 @@ fn _six_digits(value: SifrInt) -> String {
     rendered
 }
 fn _parse_datetime_iso(
-    value: &String,
+    value: &str,
 ) -> Result<(SifrInt, SifrInt, SifrInt, SifrInt, SifrInt, SifrInt), ValueError> {
     let __sifr_chars_value: Vec<char> = value.chars().collect::<Vec<char>>();
     let Some(__sifr_checked_value_2) = ({
@@ -1622,9 +1614,9 @@ fn _parse_datetime_iso(
         }
     }
 }
-fn _timezone_offset_from_text(text: &String) -> Result<SifrInt, ValueError> {
+fn _timezone_offset_from_text(text: &str) -> Result<SifrInt, ValueError> {
     let __sifr_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
-    if (text).as_str() == "UTC" {
+    if text == "UTC" {
         return Ok(SifrInt::from_i64(0));
     }
     if (&SifrInt::from(__sifr_chars_text.len()) != &SifrInt::from_i64(9)) {
@@ -1840,13 +1832,13 @@ fn _from_timestamp_with_tz(
             return Ok(
                 Ok(
                     __SifrStdlib_sifr_x2edatetime_x2edatetime::new(
-                        (year).clone(),
-                        (month).clone(),
-                        (day).clone(),
-                        (hour).clone(),
-                        (minute).clone(),
-                        (second).clone(),
-                        (microsecond).clone(),
+                        year.clone(),
+                        month.clone(),
+                        day.clone(),
+                        hour.clone(),
+                        minute.clone(),
+                        second.clone(),
+                        microsecond.clone(),
                         Some(tz_offset_value),
                     ),
                 ),
@@ -1855,13 +1847,13 @@ fn _from_timestamp_with_tz(
         Ok(
             Ok(
                 __SifrStdlib_sifr_x2edatetime_x2edatetime::new(
-                    (year).clone(),
-                    (month).clone(),
-                    (day).clone(),
-                    (hour).clone(),
-                    (minute).clone(),
-                    (second).clone(),
-                    (microsecond).clone(),
+                    year.clone(),
+                    month.clone(),
+                    day.clone(),
+                    hour.clone(),
+                    minute.clone(),
+                    second.clone(),
+                    microsecond.clone(),
                     None,
                 ),
             ),
@@ -1959,7 +1951,7 @@ fn _from_timestamp_microseconds_with_tz(
                     result.hour.clone(),
                     result.minute.clone(),
                     result.second.clone(),
-                    (microsecond).clone(),
+                    microsecond.clone(),
                     result._tz_offset.clone(),
                 ),
             ),
@@ -2057,12 +2049,12 @@ fn now(
                     )?;
                     Ok(
                         __SifrStdlib_sifr_x2edatetime_x2edatetime::new(
-                            (yr).clone(),
-                            (mo).clone(),
-                            (dy).clone(),
-                            (hr).clone(),
-                            (mn).clone(),
-                            (sc).clone(),
+                            yr.clone(),
+                            mo.clone(),
+                            dy.clone(),
+                            hr.clone(),
+                            mn.clone(),
+                            sc.clone(),
                             SifrInt::from_i64(0),
                             Some(parsed_offset),
                         ),
@@ -2075,12 +2067,12 @@ fn now(
                     Err(__sifr_try_err) => {
                         let _e = __sifr_try_err.clone();
                         return __SifrStdlib_sifr_x2edatetime_x2edatetime::new(
-                            (yr).clone(),
-                            (mo).clone(),
-                            (dy).clone(),
-                            (hr).clone(),
-                            (mn).clone(),
-                            (sc).clone(),
+                            yr.clone(),
+                            mo.clone(),
+                            dy.clone(),
+                            hr.clone(),
+                            mn.clone(),
+                            sc.clone(),
                             SifrInt::from_i64(0),
                             None,
                         );
@@ -2088,12 +2080,12 @@ fn now(
                 }
             }
             return __SifrStdlib_sifr_x2edatetime_x2edatetime::new(
-                (yr).clone(),
-                (mo).clone(),
-                (dy).clone(),
-                (hr).clone(),
-                (mn).clone(),
-                (sc).clone(),
+                yr.clone(),
+                mo.clone(),
+                dy.clone(),
+                hr.clone(),
+                mn.clone(),
+                sc.clone(),
                 SifrInt::from_i64(0),
                 None,
             );
@@ -2106,7 +2098,7 @@ fn from_timestamp(
 ) -> Result<__SifrStdlib_sifr_x2edatetime_x2edatetime, ValueError> {
     _from_timestamp_with_tz(ts, tz)
 }
-fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
+fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
     assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
     let mut i: SifrInt = SifrInt::from_i64(0);
     while &i < &SifrInt::from(actual.len()) {
@@ -2135,8 +2127,7 @@ fn collect_positive_actual() -> Vec<bool> {
         SifrInt::from_i64(0),
         None,
     );
-    actual
-        .push((dt.isoformat()).as_str() == ("2024-01-15T10:30:00".to_string()).as_str());
+    actual.push(dt.isoformat().as_str() == "2024-01-15T10:30:00".to_string().as_str());
     let base_td: __SifrStdlib_sifr_x2edatetime_x2etimedelta = __SifrStdlib_sifr_x2edatetime_x2etimedelta::new(
         SifrInt::from_i64(0),
         SifrInt::from_i64(3600),
@@ -2172,11 +2163,11 @@ fn collect_positive_actual() -> Vec<bool> {
     actual.push(epoch_ok);
     actual
         .push(
-            (format!(
+            format!(
                 "{}", __SifrStdlib_sifr_x2edatetime_x2etimezone::new(-&
                 SifrInt::from_i64(19800))
-            ))
-                .as_str() == ("UTC-05:30".to_string()).as_str(),
+            )
+                .as_str() == "UTC-05:30".to_string().as_str(),
         );
     actual
 }
@@ -2199,7 +2190,7 @@ fn collect_negative_actual() -> Vec<bool> {
     actual.push(invalid_rejected);
     actual
 }
-fn append_all(target: &mut Vec<bool>, values: &Vec<bool>) {
+fn append_all(target: &mut Vec<bool>, values: &[bool]) {
     for value in values.iter().copied() {
         target.push(value);
     }

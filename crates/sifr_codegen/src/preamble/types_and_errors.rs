@@ -297,10 +297,7 @@ fn callable_param_types(
                     if convention.is_shared_borrow()
                         && !crate::helpers::is_copy_type_for_codegen(ty) =>
                 {
-                    RustType::Ref {
-                        mutable: false,
-                        inner: Box::new(converted),
-                    }
+                    crate::ownership_plan::shared_borrowed_param_type(ty, converted)
                 }
                 Some(convention)
                     if convention.is_mut_borrow()

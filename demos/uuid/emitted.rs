@@ -4,10 +4,10 @@ mod __sifr_project_nominals {
     pub fn uuid4() -> String {
         ::sifr_stdlib::uuid::uuid4()
     }
-    pub fn uuid3_text(namespace: &String, name: &String) -> String {
+    pub fn uuid3_text(namespace: &str, name: &str) -> String {
         ::sifr_stdlib::uuid::uuid3_text(namespace, name)
     }
-    pub fn uuid5_text(namespace: &String, name: &String) -> String {
+    pub fn uuid5_text(namespace: &str, name: &str) -> String {
         ::sifr_stdlib::uuid::uuid5_text(namespace, name)
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -20,7 +20,7 @@ mod __sifr_project_nominals {
                 let mut __sifr_concat: String = String::with_capacity(
                     hex_str.len() + 0usize,
                 );
-                __sifr_concat.push_str((hex_str).as_str());
+                __sifr_concat.push_str(hex_str.as_str());
                 __sifr_concat.push_str("");
                 __sifr_concat
             };
@@ -42,7 +42,7 @@ mod __sifr_project_nominals {
                     .map(|c| c.to_string());
                 if let Some(ch) = ch {
                     if (ch != "-") {
-                        result.push_str((ch).as_str());
+                        result.push_str(ch.as_str());
                     }
                 }
                 i = &i + &SifrInt::from_i64(1);
@@ -55,7 +55,7 @@ mod __sifr_project_nominals {
             {
                 let mut __sifr_concat: String = String::with_capacity(9usize + 0usize);
                 __sifr_concat.push_str("urn:uuid:");
-                __sifr_concat.push_str((self._hex.clone()).as_str());
+                __sifr_concat.push_str(self._hex.clone().as_str());
                 __sifr_concat
             }
         }
@@ -64,7 +64,7 @@ mod __sifr_project_nominals {
         pub fn to_str(&self) -> String {
             {
                 let mut __sifr_concat: String = String::with_capacity(0usize + 0usize);
-                __sifr_concat.push_str((self._hex.clone()).as_str());
+                __sifr_concat.push_str(self._hex.clone().as_str());
                 __sifr_concat.push_str("");
                 __sifr_concat
             }
@@ -91,53 +91,53 @@ mod __sifr_project_nominals {
             write!(f, "UUID(_hex={})", self._hex)
         }
     }
-    pub fn _hex_digit_value(ch: &String) -> SifrInt {
-        if (ch).as_str() == "0" {
+    pub fn _hex_digit_value(ch: &str) -> SifrInt {
+        if ch == "0" {
             return SifrInt::from_i64(0);
         }
-        if (ch).as_str() == "1" {
+        if ch == "1" {
             return SifrInt::from_i64(1);
         }
-        if (ch).as_str() == "2" {
+        if ch == "2" {
             return SifrInt::from_i64(2);
         }
-        if (ch).as_str() == "3" {
+        if ch == "3" {
             return SifrInt::from_i64(3);
         }
-        if (ch).as_str() == "4" {
+        if ch == "4" {
             return SifrInt::from_i64(4);
         }
-        if (ch).as_str() == "5" {
+        if ch == "5" {
             return SifrInt::from_i64(5);
         }
-        if (ch).as_str() == "6" {
+        if ch == "6" {
             return SifrInt::from_i64(6);
         }
-        if (ch).as_str() == "7" {
+        if ch == "7" {
             return SifrInt::from_i64(7);
         }
-        if (ch).as_str() == "8" {
+        if ch == "8" {
             return SifrInt::from_i64(8);
         }
-        if (ch).as_str() == "9" {
+        if ch == "9" {
             return SifrInt::from_i64(9);
         }
-        if ((ch).as_str() == "a") || ((ch).as_str() == "A") {
+        if (ch == "a") || (ch == "A") {
             return SifrInt::from_i64(10);
         }
-        if ((ch).as_str() == "b") || ((ch).as_str() == "B") {
+        if (ch == "b") || (ch == "B") {
             return SifrInt::from_i64(11);
         }
-        if ((ch).as_str() == "c") || ((ch).as_str() == "C") {
+        if (ch == "c") || (ch == "C") {
             return SifrInt::from_i64(12);
         }
-        if ((ch).as_str() == "d") || ((ch).as_str() == "D") {
+        if (ch == "d") || (ch == "D") {
             return SifrInt::from_i64(13);
         }
-        if ((ch).as_str() == "e") || ((ch).as_str() == "E") {
+        if (ch == "e") || (ch == "E") {
             return SifrInt::from_i64(14);
         }
-        if ((ch).as_str() == "f") || ((ch).as_str() == "F") {
+        if (ch == "f") || (ch == "F") {
             return SifrInt::from_i64(15);
         }
         -&SifrInt::from_i64(1)
@@ -161,7 +161,7 @@ mod __sifr_project_nominals {
 pub use __sifr_project_nominals::ValueError;
 pub use __sifr_project_nominals::__SifrStdlib_sifr_x2euuid_x2eUUID;
 use ::sifr_runtime::SifrInt;
-fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
+fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
     assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
     let mut i: SifrInt = SifrInt::from_i64(0);
     while &i < &SifrInt::from(actual.len()) {
@@ -181,159 +181,159 @@ fn assert_bool_vector_eq(actual: &Vec<bool>, expected: &Vec<bool>) {
 fn uuid4() -> String {
     ::sifr_stdlib::uuid::uuid4()
 }
-fn uuid3_text(namespace: &String, name: &String) -> String {
+fn uuid3_text(namespace: &str, name: &str) -> String {
     ::sifr_stdlib::uuid::uuid3_text(namespace, name)
 }
-fn uuid5_text(namespace: &String, name: &String) -> String {
+fn uuid5_text(namespace: &str, name: &str) -> String {
     ::sifr_stdlib::uuid::uuid5_text(namespace, name)
 }
-fn _to_lower_hex_char(ch: &String) -> String {
-    if (ch).as_str() == "A" {
+fn _to_lower_hex_char(ch: &str) -> String {
+    if ch == "A" {
         return "a".to_string();
     }
-    if (ch).as_str() == "B" {
+    if ch == "B" {
         return "b".to_string();
     }
-    if (ch).as_str() == "C" {
+    if ch == "C" {
         return "c".to_string();
     }
-    if (ch).as_str() == "D" {
+    if ch == "D" {
         return "d".to_string();
     }
-    if (ch).as_str() == "E" {
+    if ch == "E" {
         return "e".to_string();
     }
-    if (ch).as_str() == "F" {
+    if ch == "F" {
         return "f".to_string();
     }
     {
         let mut __sifr_concat: String = String::with_capacity(ch.len() + 0usize);
-        __sifr_concat.push_str((ch).as_str());
+        __sifr_concat.push_str(ch);
         __sifr_concat.push_str("");
         __sifr_concat
     }
 }
-fn _is_hex_char(ch: &String) -> bool {
-    if (ch).as_str() == "0" {
+fn _is_hex_char(ch: &str) -> bool {
+    if ch == "0" {
         return true;
     }
-    if (ch).as_str() == "1" {
+    if ch == "1" {
         return true;
     }
-    if (ch).as_str() == "2" {
+    if ch == "2" {
         return true;
     }
-    if (ch).as_str() == "3" {
+    if ch == "3" {
         return true;
     }
-    if (ch).as_str() == "4" {
+    if ch == "4" {
         return true;
     }
-    if (ch).as_str() == "5" {
+    if ch == "5" {
         return true;
     }
-    if (ch).as_str() == "6" {
+    if ch == "6" {
         return true;
     }
-    if (ch).as_str() == "7" {
+    if ch == "7" {
         return true;
     }
-    if (ch).as_str() == "8" {
+    if ch == "8" {
         return true;
     }
-    if (ch).as_str() == "9" {
+    if ch == "9" {
         return true;
     }
-    if (ch).as_str() == "a" {
+    if ch == "a" {
         return true;
     }
-    if (ch).as_str() == "b" {
+    if ch == "b" {
         return true;
     }
-    if (ch).as_str() == "c" {
+    if ch == "c" {
         return true;
     }
-    if (ch).as_str() == "d" {
+    if ch == "d" {
         return true;
     }
-    if (ch).as_str() == "e" {
+    if ch == "e" {
         return true;
     }
-    if (ch).as_str() == "f" {
+    if ch == "f" {
         return true;
     }
-    if (ch).as_str() == "A" {
+    if ch == "A" {
         return true;
     }
-    if (ch).as_str() == "B" {
+    if ch == "B" {
         return true;
     }
-    if (ch).as_str() == "C" {
+    if ch == "C" {
         return true;
     }
-    if (ch).as_str() == "D" {
+    if ch == "D" {
         return true;
     }
-    if (ch).as_str() == "E" {
+    if ch == "E" {
         return true;
     }
-    if (ch).as_str() == "F" {
+    if ch == "F" {
         return true;
     }
     false
 }
-fn _hex_digit_value(ch: &String) -> SifrInt {
-    if (ch).as_str() == "0" {
+fn _hex_digit_value(ch: &str) -> SifrInt {
+    if ch == "0" {
         return SifrInt::from_i64(0);
     }
-    if (ch).as_str() == "1" {
+    if ch == "1" {
         return SifrInt::from_i64(1);
     }
-    if (ch).as_str() == "2" {
+    if ch == "2" {
         return SifrInt::from_i64(2);
     }
-    if (ch).as_str() == "3" {
+    if ch == "3" {
         return SifrInt::from_i64(3);
     }
-    if (ch).as_str() == "4" {
+    if ch == "4" {
         return SifrInt::from_i64(4);
     }
-    if (ch).as_str() == "5" {
+    if ch == "5" {
         return SifrInt::from_i64(5);
     }
-    if (ch).as_str() == "6" {
+    if ch == "6" {
         return SifrInt::from_i64(6);
     }
-    if (ch).as_str() == "7" {
+    if ch == "7" {
         return SifrInt::from_i64(7);
     }
-    if (ch).as_str() == "8" {
+    if ch == "8" {
         return SifrInt::from_i64(8);
     }
-    if (ch).as_str() == "9" {
+    if ch == "9" {
         return SifrInt::from_i64(9);
     }
-    if ((ch).as_str() == "a") || ((ch).as_str() == "A") {
+    if (ch == "a") || (ch == "A") {
         return SifrInt::from_i64(10);
     }
-    if ((ch).as_str() == "b") || ((ch).as_str() == "B") {
+    if (ch == "b") || (ch == "B") {
         return SifrInt::from_i64(11);
     }
-    if ((ch).as_str() == "c") || ((ch).as_str() == "C") {
+    if (ch == "c") || (ch == "C") {
         return SifrInt::from_i64(12);
     }
-    if ((ch).as_str() == "d") || ((ch).as_str() == "D") {
+    if (ch == "d") || (ch == "D") {
         return SifrInt::from_i64(13);
     }
-    if ((ch).as_str() == "e") || ((ch).as_str() == "E") {
+    if (ch == "e") || (ch == "E") {
         return SifrInt::from_i64(14);
     }
-    if ((ch).as_str() == "f") || ((ch).as_str() == "F") {
+    if (ch == "f") || (ch == "F") {
         return SifrInt::from_i64(15);
     }
     -&SifrInt::from_i64(1)
 }
-fn _substring(value: &String, start: SifrInt, end: SifrInt) -> String {
+fn _substring(value: &str, start: SifrInt, end: SifrInt) -> String {
     let __sifr_chars_value: Vec<char> = value.chars().collect::<Vec<char>>();
     let mut result: String = "".to_string();
     let mut i: SifrInt = start.clone();
@@ -346,13 +346,13 @@ fn _substring(value: &String, start: SifrInt, end: SifrInt) -> String {
         })
             .map(|c| c.to_string());
         if let Some(ch) = ch {
-            result.push_str((ch).as_str());
+            result.push_str(ch.as_str());
         }
         i = &i + &SifrInt::from_i64(1);
     }
     result
 }
-fn _starts_with(value: &String, prefix: &String) -> bool {
+fn _starts_with(value: &str, prefix: &str) -> bool {
     let __sifr_chars_value: Vec<char> = value.chars().collect::<Vec<char>>();
     let __sifr_chars_prefix: Vec<char> = prefix.chars().collect::<Vec<char>>();
     if (&SifrInt::from(__sifr_chars_value.len())
@@ -383,55 +383,60 @@ fn _starts_with(value: &String, prefix: &String) -> bool {
     }
     true
 }
-fn _canonical_uuid_text(input_text: &String) -> Result<String, ValueError> {
+fn _canonical_uuid_text(input_text: &str) -> Result<String, ValueError> {
     let mut normalized_input: String = {
         let mut __sifr_concat: String = String::with_capacity(input_text.len() + 0usize);
-        __sifr_concat.push_str((input_text).as_str());
+        __sifr_concat.push_str(input_text);
         __sifr_concat.push_str("");
         __sifr_concat
     };
+    let mut __sifr_chars_normalized_input: Vec<char> = normalized_input
+        .chars()
+        .collect::<Vec<char>>();
     if _starts_with(&normalized_input, &"urn:uuid:".to_string()) {
         normalized_input = _substring(
             &normalized_input,
             SifrInt::from_i64(9),
             SifrInt::from(normalized_input.chars().count()),
         );
+        __sifr_chars_normalized_input = normalized_input.chars().collect::<Vec<char>>();
     }
-    if (&SifrInt::from(normalized_input.chars().count()) >= &SifrInt::from_i64(2)) {
+    if (&SifrInt::from(__sifr_chars_normalized_input.len()) >= &SifrInt::from_i64(2)) {
         let first: Option<String> = ({
-            let __sifr_string_source = &normalized_input;
             let __sifr_string_index = SifrInt::from_i64(0);
             let __sifr_string_index_normalized = __sifr_string_index
-                .normalize_index_or_len(__sifr_string_source.chars().count());
-            __sifr_string_source.chars().nth(__sifr_string_index_normalized)
+                .normalize_index_or_len(__sifr_chars_normalized_input.len());
+            __sifr_chars_normalized_input.get(__sifr_string_index_normalized)
         })
             .map(|c| c.to_string());
-        let last: Option<String> = {
-            let __sifr_index_str = &normalized_input;
-            let __sifr_index_i = SifrInt::from(normalized_input.chars().count())
+        let last: Option<String> = ({
+            let __sifr_string_index = SifrInt::from(normalized_input.chars().count())
                 - SifrInt::from_i64(1);
-            let __sifr_index_norm = __sifr_index_i
-                .normalize_index_or_len(__sifr_index_str.chars().count());
-            __sifr_index_str.chars().nth(__sifr_index_norm).map(|c| c.to_string())
-        };
+            let __sifr_string_index_normalized = __sifr_string_index
+                .normalize_index_or_len(__sifr_chars_normalized_input.len());
+            __sifr_chars_normalized_input.get(__sifr_string_index_normalized)
+        })
+            .map(|c| c.to_string());
         if (first == Some("{".to_string())) && (last == Some("}".to_string())) {
             normalized_input = _substring(
                 &normalized_input,
                 SifrInt::from_i64(1),
                 SifrInt::from(normalized_input.chars().count()) - SifrInt::from_i64(1),
             );
+            __sifr_chars_normalized_input = normalized_input
+                .chars()
+                .collect::<Vec<char>>();
         }
     }
-    let input_len: SifrInt = SifrInt::from(normalized_input.chars().count());
+    let input_len: SifrInt = SifrInt::from(__sifr_chars_normalized_input.len());
     let mut hex_only: String = "".to_string();
     let mut i: SifrInt = SifrInt::from_i64(0);
     while (&i < &input_len) {
         let ch_opt: Option<String> = ({
-            let __sifr_string_source = &normalized_input;
             let __sifr_string_index = i.clone();
             let __sifr_string_index_normalized = __sifr_string_index
-                .normalize_index_or_len(__sifr_string_source.chars().count());
-            __sifr_string_source.chars().nth(__sifr_string_index_normalized)
+                .normalize_index_or_len(__sifr_chars_normalized_input.len());
+            __sifr_chars_normalized_input.get(__sifr_string_index_normalized)
         })
             .map(|c| c.to_string());
         if let Some(ch_opt) = ch_opt {
@@ -440,7 +445,7 @@ fn _canonical_uuid_text(input_text: &String) -> Result<String, ValueError> {
                 if !_is_hex_char(&ch) {
                     return Err(ValueError::new("invalid UUID hex string".to_string()));
                 }
-                hex_only.push_str((_to_lower_hex_char(&ch)).as_str());
+                hex_only.push_str(_to_lower_hex_char(&ch).as_str());
             }
         }
         i = &i + &SifrInt::from_i64(1);
@@ -452,35 +457,31 @@ fn _canonical_uuid_text(input_text: &String) -> Result<String, ValueError> {
     }
     if (&input_len == &SifrInt::from_i64(36)) {
         let h1: Option<String> = ({
-            let __sifr_string_source = &normalized_input;
             let __sifr_string_index = SifrInt::from_i64(8);
             let __sifr_string_index_normalized = __sifr_string_index
-                .normalize_index_or_len(__sifr_string_source.chars().count());
-            __sifr_string_source.chars().nth(__sifr_string_index_normalized)
+                .normalize_index_or_len(__sifr_chars_normalized_input.len());
+            __sifr_chars_normalized_input.get(__sifr_string_index_normalized)
         })
             .map(|c| c.to_string());
         let h2: Option<String> = ({
-            let __sifr_string_source = &normalized_input;
             let __sifr_string_index = SifrInt::from_i64(13);
             let __sifr_string_index_normalized = __sifr_string_index
-                .normalize_index_or_len(__sifr_string_source.chars().count());
-            __sifr_string_source.chars().nth(__sifr_string_index_normalized)
+                .normalize_index_or_len(__sifr_chars_normalized_input.len());
+            __sifr_chars_normalized_input.get(__sifr_string_index_normalized)
         })
             .map(|c| c.to_string());
         let h3: Option<String> = ({
-            let __sifr_string_source = &normalized_input;
             let __sifr_string_index = SifrInt::from_i64(18);
             let __sifr_string_index_normalized = __sifr_string_index
-                .normalize_index_or_len(__sifr_string_source.chars().count());
-            __sifr_string_source.chars().nth(__sifr_string_index_normalized)
+                .normalize_index_or_len(__sifr_chars_normalized_input.len());
+            __sifr_chars_normalized_input.get(__sifr_string_index_normalized)
         })
             .map(|c| c.to_string());
         let h4: Option<String> = ({
-            let __sifr_string_source = &normalized_input;
             let __sifr_string_index = SifrInt::from_i64(23);
             let __sifr_string_index_normalized = __sifr_string_index
-                .normalize_index_or_len(__sifr_string_source.chars().count());
-            __sifr_string_source.chars().nth(__sifr_string_index_normalized)
+                .normalize_index_or_len(__sifr_chars_normalized_input.len());
+            __sifr_chars_normalized_input.get(__sifr_string_index_normalized)
         })
             .map(|c| c.to_string());
         if (((h1 != Some("-".to_string())) || (h2 != Some("-".to_string())))
@@ -510,7 +511,7 @@ fn _canonical_uuid_text(input_text: &String) -> Result<String, ValueError> {
         })
             .map(|c| c.to_string());
         if let Some(part) = part {
-            canonical.push_str((part).as_str());
+            canonical.push_str(part.as_str());
         }
         j = &j + &SifrInt::from_i64(1);
     }
@@ -520,7 +521,7 @@ fn uuid4_obj() -> __SifrStdlib_sifr_x2euuid_x2eUUID {
     __SifrStdlib_sifr_x2euuid_x2eUUID::new(uuid4())
 }
 fn uuid_from_hex(
-    hex_str: &String,
+    hex_str: &str,
 ) -> Result<__SifrStdlib_sifr_x2euuid_x2eUUID, ValueError> {
     let __sifr_try_res: Result<
         Result<__SifrStdlib_sifr_x2euuid_x2eUUID, ValueError>,
@@ -541,13 +542,13 @@ fn uuid_from_hex(
 }
 fn uuid3(
     namespace: &__SifrStdlib_sifr_x2euuid_x2eUUID,
-    name: &String,
+    name: &str,
 ) -> __SifrStdlib_sifr_x2euuid_x2eUUID {
     __SifrStdlib_sifr_x2euuid_x2eUUID::new(uuid3_text(&namespace.to_str(), name))
 }
 fn uuid5(
     namespace: &__SifrStdlib_sifr_x2euuid_x2eUUID,
-    name: &String,
+    name: &str,
 ) -> __SifrStdlib_sifr_x2euuid_x2eUUID {
     __SifrStdlib_sifr_x2euuid_x2eUUID::new(uuid5_text(&namespace.to_str(), name))
 }
@@ -556,7 +557,7 @@ fn NAMESPACE_DNS() -> __SifrStdlib_sifr_x2euuid_x2eUUID {
         "6ba7b810-9dad-11d1-80b4-00c04fd430c8".to_string(),
     )
 }
-fn is_canonical_shape(value: &String) -> bool {
+fn is_canonical_shape(value: &str) -> bool {
     let __sifr_chars_value: Vec<char> = value.chars().collect::<Vec<char>>();
     if (&SifrInt::from(__sifr_chars_value.len()) != &SifrInt::from_i64(36)) {
         return false;
@@ -667,8 +668,8 @@ fn collect_negative_and_class_actual() -> Vec<bool> {
     );
     actual
         .push(
-            (ctor_passthrough.to_str()).as_str()
-                == ("550e8400-e29b-41d4-a716-44665544000z".to_string()).as_str(),
+            ctor_passthrough.to_str().as_str()
+                == "550e8400-e29b-41d4-a716-44665544000z".to_string().as_str(),
         );
     let mut ctor_curly_ok: bool = false;
     let __sifr_try_res: Result<(), ValueError> = (|| {
@@ -698,7 +699,7 @@ fn collect_negative_and_class_actual() -> Vec<bool> {
         );
     actual
 }
-fn append_all(target: &mut Vec<bool>, values: &Vec<bool>) {
+fn append_all(target: &mut Vec<bool>, values: &[bool]) {
     for value in values.iter().copied() {
         target.push(value);
     }

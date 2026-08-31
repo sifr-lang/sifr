@@ -135,6 +135,6 @@ def main():
     assert value(count) == 1
 "#,
     );
-    assert!(rust.contains("value((count).clone())"), "{rust}");
+    assert!(rust.contains("value(count.clone())"), "{rust}");
     syn::parse_file(&rust).expect("logical-copy record should produce valid Rust syntax");
 }
