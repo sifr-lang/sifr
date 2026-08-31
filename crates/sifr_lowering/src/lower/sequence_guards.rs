@@ -3,6 +3,12 @@ use crate::hir_nodes::HirExpr;
 use sifr_python_ast::{Expr, Number, Operator, UnaryOp};
 use sifr_type_system::ParamConvention;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(in crate::lower) enum SubscriptReferenceStability {
+    StableAcrossGrowth,
+    MayChangeOnGrowth,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(in crate::lower) enum SequenceGuard {
     MinLength {
@@ -28,6 +34,7 @@ pub(in crate::lower) enum SequenceGuard {
     SubscriptPresent {
         sequence: String,
         index_expr_debug: String,
+        reference_stability: SubscriptReferenceStability,
     },
 }
 
@@ -110,6 +117,7 @@ impl LowerCtx {
             SequenceGuard::SubscriptPresent {
                 sequence,
                 index_expr_debug,
+                reference_stability,
             } => {
                 if self.sequence_guards.iter().any(|existing| {
                     matches!(
@@ -117,7 +125,10 @@ impl LowerCtx {
                         SequenceGuard::SubscriptPresent {
                             sequence: existing_sequence,
                             index_expr_debug: existing_index,
-                        } if existing_sequence == &sequence && existing_index == &index_expr_debug
+                            reference_stability: existing_stability,
+                        } if existing_sequence == &sequence
+                            && existing_index == &index_expr_debug
+                            && existing_stability == &reference_stability
                     )
                 }) {
                     return;
@@ -125,6 +136,7 @@ impl LowerCtx {
                 self.sequence_guards.push(SequenceGuard::SubscriptPresent {
                     sequence,
                     index_expr_debug,
+                    reference_stability,
                 });
             }
             SequenceGuard::SubscriptAccessible {
@@ -175,6 +187,22 @@ impl LowerCtx {
                 guard,
                 SequenceGuard::SubscriptPresent { sequence, .. }
                     if path_depends_on_target(sequence, target)
+            )
+        });
+    }
+
+    pub(in crate::lower) fn clear_growth_sensitive_subscript_presence_guards_for_target(
+        &mut self,
+        target: &str,
+    ) {
+        self.sequence_guards.retain(|guard| {
+            !matches!(
+                guard,
+                SequenceGuard::SubscriptPresent {
+                    sequence,
+                    reference_stability: SubscriptReferenceStability::MayChangeOnGrowth,
+                    ..
+                } if path_depends_on_target(sequence, target)
             )
         });
     }
@@ -252,6 +280,7 @@ impl LowerCtx {
                 SequenceGuard::SubscriptPresent {
                     sequence: guard_sequence,
                     index_expr_debug: guard_index,
+                    ..
                 } if guard_sequence == sequence && guard_index == &index_expr_debug
             )
         })
@@ -297,6 +326,7 @@ fn guard_depends_on_binding(guard: &SequenceGuard, binding: &str) -> bool {
         | SequenceGuard::SubscriptPresent {
             sequence,
             index_expr_debug,
+            ..
         } => {
             path_depends_on_binding(sequence, binding)
                 || token_mentions_name(index_expr_debug, binding)

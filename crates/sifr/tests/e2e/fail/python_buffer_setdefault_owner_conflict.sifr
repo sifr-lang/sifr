@@ -1,0 +1,6 @@
+# expect-error: SIFR-PYZC-0001
+def select(
+    mut values: dict[str, python.Buffer[uint8]],
+    own fallback: python.Buffer[uint8],
+) -> python.Buffer[uint8]:
+    return values.setdefault("key", fallback)

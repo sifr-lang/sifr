@@ -27,7 +27,7 @@ fn render_key_arg_expr(arg: &RustExpr) -> RustExpr {
 }
 
 fn materialize_setdefault_storage_arg(ty: &Type, arg: &RustExpr) -> RustExpr {
-    if crate::helpers::is_copy_type_for_codegen(ty) || ty.contains_affine_resource() {
+    if crate::helpers::is_copy_type_for_codegen(ty) {
         return arg.clone();
     }
     let reusable_place = match arg {
@@ -240,6 +240,9 @@ pub(super) fn lower_setdefault(
     value_ty: &Type,
     args: &[RustExpr],
 ) -> Option<RustExpr> {
+    if key_ty.contains_affine_resource() || value_ty.contains_affine_resource() {
+        return None;
+    }
     match args {
         [key, default] => {
             let key = materialize_setdefault_storage_arg(key_ty, key);
@@ -268,15 +271,24 @@ mod tests {
     use super::*;
 
     #[test]
-    fn setdefault_storage_materialization_preserves_copy_and_affine_places() {
+    fn setdefault_storage_materialization_preserves_copy_places() {
         let place = RustExpr::Ident("value".to_string());
         assert_eq!(
             materialize_setdefault_storage_arg(&Type::Bool, &place),
             place
         );
+    }
 
+    #[test]
+    fn setdefault_defensively_rejects_affine_key_and_value_types() {
+        let object = RustExpr::Ident("values".to_string());
+        let key = RustExpr::Ident("key".to_string());
+        let value = RustExpr::Ident("value".to_string());
         let affine =
             Type::PythonBuffer(Box::new(Type::FixedInt(sifr_type_system::FixedIntType::U8)));
-        assert_eq!(materialize_setdefault_storage_arg(&affine, &place), place);
+        assert!(
+            lower_setdefault(&object, &Type::Str, &affine, &[key.clone(), value.clone()]).is_none()
+        );
+        assert!(lower_setdefault(&object, &affine, &Type::Int, &[key, value]).is_none());
     }
 }
