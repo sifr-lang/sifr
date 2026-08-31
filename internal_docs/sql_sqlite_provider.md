@@ -38,7 +38,10 @@ provider uses this exact stable set:
 
 Cargo sets `SYNTAQLITE_SQLITE_VERSION=3053002` for all repository builds. No
 `SYNTAQLITE_CFLAG_*` value is set. Therefore, the parser grammar and the bundled
-runtime use SQLite 3.53.2 with the same default compile-flag set.
+runtime use SQLite 3.53.2 with the same selected compile-flag set. The library
+matrix executes the bundled library, reads `sqlite3_libversion_number()`, and
+records `PRAGMA compile_options`. Compiler-identification strings are observed
+but are not portable qualification inputs.
 
 These crates are private Rust implementation tools. Sifr programs cannot import
 them. Sifr package metadata selects the provider package only.
@@ -157,6 +160,12 @@ Each physical `rusqlite::Connection` lives on one dedicated operating-system
 thread. It never moves to an async task. An async caller sends one command
 through a one-slot channel and waits on a Tokio one-shot response.
 
+Opening a native connection runs through Tokio's blocking pool, so file open,
+PRAGMA setup, feature probes, and attached-file setup do not block an async
+executor thread. Worker destruction interrupts the current statement, requests
+shutdown, and joins the owning thread. A native connection cannot outlive its
+pool resource as a detached thread.
+
 An unverified pool cannot acquire or execute. The pool verifies the expected
 schema dependency slice by introspection, migration head, or a signed manifest.
 Only the resulting `SqlitePool<Verified>` has execution methods. A request must
@@ -221,15 +230,18 @@ sifr sql schema pull --profile <name> [--accept]
 sifr sql schema validate --profile <name> [--live]
 sifr sql schema build --profile <name>
 sifr sql migration plan --profile <name>
+sifr sql migration import --profile <name> --baseline <id>
 sifr sql migration apply --profile <name>
+sifr sql migration rollback --profile <name>
 sifr sql test provision --profile <name>
 sifr sql test cleanup --resource-id <id>
 ```
 
 Live schema commands read `SIFR_SQL_DATABASE_PATH`. The catalog reads
-`PRAGMA database_list`, each `<schema>.sqlite_schema`, `table_xinfo`, and
-`foreign_key_list`. It excludes the temporary schema and internal
-`sqlite_*` objects. It reads objects in stable order.
+`PRAGMA database_list` and each `<schema>.sqlite_schema`. It excludes the
+temporary schema, internal `sqlite_*` objects, and the Sifr migration ledger. It
+reads stored DDL in stable order and sends it through the same exact provider
+parser and `SchemaIR` normalizer as checked-in sources.
 
 Reflection records declared types, affinity, strictness, rowid aliases,
 generated-column storage, defaults, keys, indexes, triggers, views, attached
@@ -243,17 +255,28 @@ shared-memory, or journal sidecars. It cannot remove an arbitrary path.
 
 ## Rebuild migrations
 
-SQLite migration plans have two action types. A statement action runs one owned
-DDL statement. A rebuild action names the old table, a generated temporary
-table, the exact target columns, source expressions, and object definitions to
-recreate.
+SQLite consumes the provider-neutral, compiler-checked `graph.json`. It does not
+have a second runtime plan format. A table rebuild is a checked sequence of DDL
+and data steps that names the old table, a generated temporary table, the exact
+target columns, source expressions, and object definitions to recreate.
 
-The validator rejects `ATTACH`, `DETACH`, `writable_schema`, `VACUUM INTO`, an
-unowned temporary name, duplicate rebuilds, empty expressions, and column-count
-mismatches.
+The migration compiler rejects an unowned temporary name, duplicate rebuilds,
+empty expressions, and column-count mismatches. The SQLite runtime-plan
+validator accepts only one exact statement per DDL step and rejects `ATTACH`,
+`DETACH`, `writable_schema`, and `VACUUM INTO` in syntax tokens. Text inside a
+literal or comment is not treated as migration syntax.
 
-The runtime gets an immediate transaction before it changes data. For a rebuild
-it performs this sequence:
+The tool imports one truthful baseline before it can apply a graph. It stores
+the common JSON ledger in `sifr_migration_ledger`, which catalog reflection
+excludes from application schema identity. Applied migration and step
+checksums, heads, fingerprints, recovery points, and backfill progress use the
+shared migration engine. Changed checksums, head mismatch, or live schema drift
+fail before an unrelated path can run. Rollback exists only when `graph.json`
+contains an explicit compiler-proved reverse path.
+
+The runtime gets a bounded `BEGIN IMMEDIATE` writer lock before it reads the
+ledger or changes data. The lock transaction makes a failed or interrupted
+SQLite run atomic and safe to retry. For a rebuild it performs this sequence:
 
 1. Disable foreign-key enforcement before the transaction.
 2. Create the generated replacement table.
@@ -262,8 +285,9 @@ it performs this sequence:
 5. Rename the replacement table.
 6. Recreate the compiled indexes, triggers, and views.
 7. Run `pragma_foreign_key_check`.
-8. Commit only when the check has no row.
-9. Restore foreign-key enforcement after success or failure.
+8. Verify the live schema fingerprint after every checked step.
+9. Commit the schema and ledger only when the foreign-key check has no row.
+10. Restore foreign-key enforcement after success or failure.
 
 Any failure rolls back the transaction. There is no best-effort continuation.
 The plan carries before and after schema fingerprints. Live drift prevents the
@@ -277,6 +301,7 @@ and required contracts. Mutation mode proves that a changed version, missing
 surface, missing evidence, or missing contract fails.
 
 The bundled matrix covers compiler conformance, runtime execution, cancellation,
-locking, corruption, catalog reflection, rebuilds, provisioning, portable
-requirements, editor behavior, properties, malformed input, and performance.
-It records the exact library number and compile options.
+locking, corruption, catalog parity, common-engine rebuilds, drift, checksums,
+explicit rollback, provisioning, portable requirements, editor behavior,
+properties, malformed input, and a warmed statement-cache performance budget.
+It records the observed library number and runtime compile options.

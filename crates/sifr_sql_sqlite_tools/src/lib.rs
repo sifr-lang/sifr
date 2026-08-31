@@ -13,13 +13,8 @@ pub use catalog::{
 };
 pub use command::{CommandError, CommandOutcome, run_schema_command};
 pub use migration_command::run_migration_command;
-pub use migration_plan::{
-    SqliteMigrationAction, SqliteMigrationPlan, SqliteMigrationPlanError,
-    validate_sqlite_migration_plan,
-};
-pub use migration_runtime::{
-    SqliteMigrationError, SqliteMigrationRuntime, connect_migration_runtime,
-};
+pub use migration_plan::{SqliteMigrationPlanError, validate_sqlite_execution_plan};
+pub use migration_runtime::{SqliteMigrationRuntime, connect_migration_runtime};
 pub use provision::{cleanup_test_database, provision_test_database};
 
 fn lower_hex(bytes: &[u8]) -> String {

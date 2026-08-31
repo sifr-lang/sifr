@@ -24,6 +24,7 @@ pub enum SqliteStatementKind {
     CreateTable(SqliteCreateTable),
     CreateView(SqliteNamedDdl),
     CreateIndex(SqliteNamedDdl),
+    CreateTrigger(SqliteNamedDdl),
     AlterTable(SqliteNamedDdl),
     Drop(SqliteNamedDdl),
 }
@@ -62,7 +63,9 @@ pub enum SqliteExpression {
     Column {
         path: Vec<String>,
     },
-    Parameter,
+    Parameter {
+        marker: String,
+    },
     Literal {
         value: String,
     },
@@ -78,7 +81,7 @@ pub enum SqliteExpression {
     Raw {
         normalized: String,
         columns: Vec<Vec<String>>,
-        parameters: u32,
+        parameters: Vec<String>,
     },
 }
 
@@ -90,6 +93,7 @@ pub struct SqliteWrite {
     pub assignments: Vec<String>,
     pub expressions: Vec<SqliteExpression>,
     pub conflict: SqliteConflictForm,
+    pub returning: Vec<SqliteProjection>,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -126,6 +130,8 @@ pub struct SqliteColumnDefinition {
     pub name: String,
     pub ty: SqliteTypeName,
     pub nullable: bool,
+    pub primary_key: bool,
+    pub primary_key_desc: bool,
     pub auto_increment: bool,
     pub generated: Option<SqliteGeneratedColumn>,
     pub default: Option<String>,

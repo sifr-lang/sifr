@@ -9,6 +9,14 @@ use crate::parser::{
     RawStatement, SqliteParseError, SqliteParser, is_keyword, normalize_tokens, parse_error,
 };
 
+mod token_utils;
+
+use token_utils::{
+    contains_sequence, find_keyword, find_top_level_keyword, identifier_path, key_columns,
+    matching_right, option_value, optional_key_name, single_identifier, split_top_level,
+    token_word, validate_parentheses, value_after,
+};
+
 pub(crate) fn lower_statement(
     raw: &RawStatement,
     parser: &SqliteParser,
@@ -32,7 +40,16 @@ pub(crate) fn lower_statement(
             SqliteStatementKind::AlterTable(lower_named_ddl(&raw.tokens, Keyword::Table, true)?)
         }
         Some(Token::Keyword(Keyword::Drop)) => {
-            SqliteStatementKind::Drop(lower_named_ddl(&raw.tokens, Keyword::Table, false)?)
+            let marker = [
+                Keyword::Table,
+                Keyword::Index,
+                Keyword::View,
+                Keyword::Trigger,
+            ]
+            .into_iter()
+            .find(|marker| find_keyword(&raw.tokens, *marker, 1).is_some())
+            .ok_or_else(|| parse_error(0, "DROP needs an object kind"))?;
+            SqliteStatementKind::Drop(lower_named_ddl(&raw.tokens, marker, false)?)
         }
         _ => {
             return Err(parse_error(
@@ -118,8 +135,8 @@ fn lower_query(tokens: &[Token]) -> Result<SqliteQuery, SqliteParseError> {
         Some(Keyword::By),
         &[Keyword::Limit, Keyword::For, Keyword::Union],
     );
-    let limit = numeric_after(tokens, Keyword::Limit);
-    let offset = numeric_after(tokens, Keyword::Offset);
+    let (limit, comma_offset) = limit_clause(tokens);
+    let offset = numeric_after(tokens, Keyword::Offset).or(comma_offset);
     let common_tables = if select > 0 {
         tokens[1..select]
             .iter()
@@ -192,19 +209,12 @@ fn lower_insert(tokens: &[Token]) -> Result<SqliteWrite, SqliteParseError> {
         .filter(|token| {
             matches!(
                 token,
-                Token::Parameter | Token::String(_) | Token::Number(_)
+                Token::Parameter(_) | Token::String(_) | Token::Number(_)
             )
         })
         .map(|token| lower_expression(std::slice::from_ref(token)))
         .collect();
-    let conflict = if is_keyword(&tokens[0], Keyword::Replace) {
-        SqliteConflictForm::Replace
-    } else if tokens
-        .iter()
-        .any(|token| is_keyword(token, Keyword::Ignore))
-    {
-        SqliteConflictForm::Ignore
-    } else if contains_sequence(tokens, &[Keyword::On, Keyword::Conflict])
+    let conflict = if contains_sequence(tokens, &[Keyword::On, Keyword::Conflict])
         && contains_sequence(tokens, &[Keyword::Do, Keyword::Nothing])
     {
         SqliteConflictForm::UpsertDoNothing
@@ -212,6 +222,18 @@ fn lower_insert(tokens: &[Token]) -> Result<SqliteWrite, SqliteParseError> {
         && contains_sequence(tokens, &[Keyword::Do, Keyword::Update])
     {
         SqliteConflictForm::UpsertDoUpdate
+    } else if is_keyword(&tokens[0], Keyword::Replace)
+        || contains_sequence(tokens, &[Keyword::Or, Keyword::Replace])
+    {
+        SqliteConflictForm::Replace
+    } else if contains_sequence(tokens, &[Keyword::Or, Keyword::Ignore]) {
+        SqliteConflictForm::Ignore
+    } else if contains_sequence(tokens, &[Keyword::Or, Keyword::Rollback]) {
+        SqliteConflictForm::Rollback
+    } else if contains_sequence(tokens, &[Keyword::Or, Keyword::Abort]) {
+        SqliteConflictForm::Abort
+    } else if contains_sequence(tokens, &[Keyword::Or, Keyword::Fail]) {
+        SqliteConflictForm::Fail
     } else {
         SqliteConflictForm::None
     };
@@ -222,20 +244,42 @@ fn lower_insert(tokens: &[Token]) -> Result<SqliteWrite, SqliteParseError> {
         assignments,
         expressions,
         conflict,
+        returning: returning_projections(tokens)?,
     })
 }
 
 fn lower_update(tokens: &[Token]) -> Result<SqliteWrite, SqliteParseError> {
-    let (relation, _) =
-        identifier_path(tokens, 1).ok_or_else(|| parse_error(0, "UPDATE needs a target table"))?;
+    let relation_start = if tokens
+        .get(1)
+        .is_some_and(|token| is_keyword(token, Keyword::Or))
+    {
+        3
+    } else {
+        1
+    };
+    let (relation, _) = identifier_path(tokens, relation_start)
+        .ok_or_else(|| parse_error(0, "UPDATE needs a target table"))?;
     let assignments = assignment_columns(tokens);
-    let expressions = collect_write_expressions(tokens);
+    let expressions = collect_update_expressions(tokens);
     Ok(SqliteWrite {
         relation,
         columns: assignments.clone(),
         assignments,
         expressions,
-        conflict: SqliteConflictForm::None,
+        conflict: if contains_sequence(tokens, &[Keyword::Or, Keyword::Rollback]) {
+            SqliteConflictForm::Rollback
+        } else if contains_sequence(tokens, &[Keyword::Or, Keyword::Abort]) {
+            SqliteConflictForm::Abort
+        } else if contains_sequence(tokens, &[Keyword::Or, Keyword::Fail]) {
+            SqliteConflictForm::Fail
+        } else if contains_sequence(tokens, &[Keyword::Or, Keyword::Ignore]) {
+            SqliteConflictForm::Ignore
+        } else if contains_sequence(tokens, &[Keyword::Or, Keyword::Replace]) {
+            SqliteConflictForm::Replace
+        } else {
+            SqliteConflictForm::None
+        },
+        returning: returning_projections(tokens)?,
     })
 }
 
@@ -250,7 +294,18 @@ fn lower_delete(tokens: &[Token]) -> Result<SqliteWrite, SqliteParseError> {
         assignments: Vec::new(),
         expressions: collect_write_expressions(tokens),
         conflict: SqliteConflictForm::None,
+        returning: returning_projections(tokens)?,
     })
+}
+
+fn returning_projections(tokens: &[Token]) -> Result<Vec<SqliteProjection>, SqliteParseError> {
+    let Some(index) = find_top_level_keyword(tokens, Keyword::Returning, 0) else {
+        return Ok(Vec::new());
+    };
+    split_top_level(&tokens[index + 1..], &Token::Comma)
+        .into_iter()
+        .map(lower_projection)
+        .collect()
 }
 
 fn lower_create(
@@ -266,6 +321,9 @@ fn lower_create(
         }
         Some(Token::Keyword(Keyword::Index | Keyword::Unique)) => {
             lower_named_ddl(tokens, Keyword::Index, true).map(SqliteStatementKind::CreateIndex)
+        }
+        Some(Token::Keyword(Keyword::Trigger)) => {
+            lower_named_ddl(tokens, Keyword::Trigger, true).map(SqliteStatementKind::CreateTrigger)
         }
         _ => Err(parse_error(0, "unsupported SQLite CREATE form")),
     }
@@ -361,13 +419,11 @@ fn lower_table_definition(
         Some(Token::Keyword(Keyword::Check)) => {
             table.checks.push(normalize_tokens(&tokens[cursor + 1..]));
         }
-        Some(Token::Keyword(Keyword::Key | Keyword::Index)) => {
-            table.indexes.push(SqliteKeyDefinition {
-                name: optional_key_name(tokens, cursor + 1),
-                columns: key_columns(tokens, cursor + 1)?,
-            });
-        }
-        Some(Token::Identifier(_) | Token::QuotedIdentifier(_)) => {
+        Some(
+            Token::Identifier(_)
+            | Token::QuotedIdentifier(_)
+            | Token::Keyword(Keyword::Key | Keyword::Index),
+        ) => {
             table.columns.push(lower_column(tokens)?);
         }
         _ => return Err(parse_error(0, "unsupported CREATE TABLE definition")),
@@ -376,10 +432,7 @@ fn lower_table_definition(
 }
 
 fn lower_column(tokens: &[Token]) -> Result<SqliteColumnDefinition, SqliteParseError> {
-    let name = tokens[0]
-        .identifier()
-        .ok_or_else(|| parse_error(0, "column needs a name"))?
-        .to_string();
+    let name = token_word(tokens.first()).ok_or_else(|| parse_error(0, "column needs a name"))?;
     let mut cursor = 1;
     let mut declared_type = Vec::new();
     while let Some(token) = tokens.get(cursor) {
@@ -405,9 +458,6 @@ fn lower_column(tokens: &[Token]) -> Result<SqliteColumnDefinition, SqliteParseE
         };
         declared_type.push(word);
         cursor += 1;
-    }
-    if declared_type.is_empty() {
-        return Err(parse_error(0, "column needs a declared type"));
     }
     let type_name = declared_type.join(" ");
     let mut parameters = Vec::new();
@@ -446,9 +496,12 @@ fn lower_column(tokens: &[Token]) -> Result<SqliteColumnDefinition, SqliteParseE
             parameters,
         },
         nullable: !contains_sequence(tail, &[Keyword::Not, Keyword::Null]),
-        auto_increment: contains_sequence(tail, &[Keyword::Primary, Keyword::Key])
-            && type_name.eq_ignore_ascii_case("integer")
-            && !tail.iter().any(|token| is_keyword(token, Keyword::Desc)),
+        primary_key: contains_sequence(tail, &[Keyword::Primary, Keyword::Key]),
+        primary_key_desc: contains_sequence(tail, &[Keyword::Primary, Keyword::Key])
+            && tail.iter().any(|token| is_keyword(token, Keyword::Desc)),
+        auto_increment: tail
+            .iter()
+            .any(|token| is_keyword(token, Keyword::AutoIncrement)),
         generated,
         default: value_after(tail, Keyword::Default),
         collation: option_value(tail, Keyword::Collate),
@@ -475,6 +528,13 @@ fn lower_named_ddl(
         &[Keyword::If, Keyword::Not, Keyword::Exists],
     ) {
         name_start += 3;
+    } else if contains_sequence(
+        tokens
+            .get(name_start..name_start.saturating_add(2))
+            .unwrap_or_default(),
+        &[Keyword::If, Keyword::Exists],
+    ) {
+        name_start += 2;
     }
     let (name, after_name) = identifier_path(tokens, name_start)
         .ok_or_else(|| parse_error(0, "DDL object needs a name"))?;
@@ -540,17 +600,25 @@ fn lower_expression(tokens: &[Token]) -> SqliteExpression {
     }
     if tokens.len() == 1 {
         return match &tokens[0] {
-            Token::Parameter => SqliteExpression::Parameter,
+            Token::Parameter(marker) => SqliteExpression::Parameter {
+                marker: marker.clone(),
+            },
             Token::String(value) | Token::Number(value) => SqliteExpression::Literal {
                 value: value.clone(),
             },
             Token::Identifier(value) | Token::QuotedIdentifier(value) => SqliteExpression::Column {
                 path: vec![value.clone()],
             },
+            Token::Keyword(Keyword::Key | Keyword::Index) => SqliteExpression::Column {
+                path: vec![tokens[0].normalized().to_ascii_lowercase()],
+            },
             token => SqliteExpression::Raw {
                 normalized: token.normalized(),
                 columns: Vec::new(),
-                parameters: u32::from(matches!(token, Token::Parameter)),
+                parameters: match token {
+                    Token::Parameter(marker) => vec![marker.clone()],
+                    _ => Vec::new(),
+                },
             },
         };
     }
@@ -562,13 +630,13 @@ fn lower_expression(tokens: &[Token]) -> SqliteExpression {
     SqliteExpression::Raw {
         normalized: normalize_tokens(tokens),
         columns: expression_columns(tokens),
-        parameters: u32::try_from(
-            tokens
-                .iter()
-                .filter(|token| matches!(token, Token::Parameter))
-                .count(),
-        )
-        .unwrap_or(u32::MAX),
+        parameters: tokens
+            .iter()
+            .filter_map(|token| match token {
+                Token::Parameter(marker) => Some(marker.clone()),
+                _ => None,
+            })
+            .collect(),
     }
 }
 
@@ -597,6 +665,31 @@ fn collect_write_expressions(tokens: &[Token]) -> Vec<SqliteExpression> {
         .unwrap_or_default()
 }
 
+fn collect_update_expressions(tokens: &[Token]) -> Vec<SqliteExpression> {
+    let mut expressions = Vec::new();
+    if let Some(start) = find_keyword(tokens, Keyword::Set, 0) {
+        let end = [Keyword::Where, Keyword::Returning]
+            .into_iter()
+            .filter_map(|keyword| find_top_level_keyword(tokens, keyword, start + 1))
+            .min()
+            .unwrap_or(tokens.len());
+        for assignment in split_top_level(&tokens[start + 1..end], &Token::Comma) {
+            let value = assignment
+                .iter()
+                .position(|token| *token == Token::Operator("=".to_string()))
+                .map(|index| &assignment[index + 1..])
+                .unwrap_or_default();
+            if !value.is_empty() {
+                expressions.push(lower_expression(value));
+            }
+        }
+    }
+    if let Some(predicate) = clause_expression(tokens, Keyword::Where, &[Keyword::Returning]) {
+        expressions.push(predicate);
+    }
+    expressions
+}
+
 fn assignment_columns(tokens: &[Token]) -> Vec<String> {
     let start = find_keyword(tokens, Keyword::Update, 0)
         .and_then(|_| find_keyword(tokens, Keyword::Set, 0))
@@ -614,7 +707,12 @@ fn assignment_columns(tokens: &[Token]) -> Vec<String> {
             .flatten()
         });
     start.map_or_else(Vec::new, |start| {
-        split_top_level(&tokens[start + 1..], &Token::Comma)
+        let end = [Keyword::Where, Keyword::Returning]
+            .into_iter()
+            .filter_map(|keyword| find_top_level_keyword(tokens, keyword, start + 1))
+            .min()
+            .unwrap_or(tokens.len());
+        split_top_level(&tokens[start + 1..end], &Token::Comma)
             .into_iter()
             .filter_map(|assignment| assignment.first().and_then(Token::identifier))
             .map(str::to_string)
@@ -697,141 +795,6 @@ fn next_clause(tokens: &[Token], start: usize) -> Option<usize> {
     .min()
 }
 
-fn find_keyword(tokens: &[Token], keyword: Keyword, start: usize) -> Option<usize> {
-    tokens
-        .iter()
-        .enumerate()
-        .skip(start)
-        .find_map(|(index, token)| is_keyword(token, keyword).then_some(index))
-}
-
-fn find_top_level_keyword(tokens: &[Token], keyword: Keyword, start: usize) -> Option<usize> {
-    let mut depth = 0_u32;
-    for (index, token) in tokens.iter().enumerate().skip(start) {
-        match token {
-            Token::LeftParen => depth = depth.saturating_add(1),
-            Token::RightParen => depth = depth.saturating_sub(1),
-            _ if depth == 0 && is_keyword(token, keyword) => return Some(index),
-            _ => {}
-        }
-    }
-    None
-}
-
-fn split_top_level<'tokens>(tokens: &'tokens [Token], separator: &Token) -> Vec<&'tokens [Token]> {
-    let mut parts = Vec::new();
-    let mut depth = 0_u32;
-    let mut start = 0;
-    for (index, token) in tokens.iter().enumerate() {
-        match token {
-            Token::LeftParen => depth = depth.saturating_add(1),
-            Token::RightParen => depth = depth.saturating_sub(1),
-            _ if depth == 0 && token == separator => {
-                parts.push(&tokens[start..index]);
-                start = index + 1;
-            }
-            _ => {}
-        }
-    }
-    if start < tokens.len() {
-        parts.push(&tokens[start..]);
-    }
-    parts
-}
-
-fn identifier_path(tokens: &[Token], start: usize) -> Option<(Vec<String>, usize)> {
-    let mut path = vec![tokens.get(start)?.identifier()?.to_string()];
-    let mut cursor = start + 1;
-    while tokens.get(cursor) == Some(&Token::Dot) {
-        path.push(tokens.get(cursor + 1)?.identifier()?.to_string());
-        cursor += 2;
-    }
-    Some((path, cursor))
-}
-
-fn matching_right(tokens: &[Token], open: usize) -> Option<usize> {
-    let mut depth = 0_u32;
-    for (index, token) in tokens.iter().enumerate().skip(open) {
-        match token {
-            Token::LeftParen => depth = depth.saturating_add(1),
-            Token::RightParen => {
-                depth = depth.checked_sub(1)?;
-                if depth == 0 {
-                    return Some(index);
-                }
-            }
-            _ => {}
-        }
-    }
-    None
-}
-
-fn validate_parentheses(tokens: &[Token], offset: usize) -> Result<(), SqliteParseError> {
-    let mut depth = 0_i64;
-    for token in tokens {
-        match token {
-            Token::LeftParen => depth += 1,
-            Token::RightParen => {
-                depth -= 1;
-                if depth < 0 {
-                    return Err(parse_error(offset, "unexpected closing parenthesis"));
-                }
-            }
-            _ => {}
-        }
-    }
-    if depth != 0 {
-        return Err(parse_error(offset, "unclosed parenthesis"));
-    }
-    Ok(())
-}
-
-fn key_columns(tokens: &[Token], start: usize) -> Result<Vec<String>, SqliteParseError> {
-    let open = tokens
-        .iter()
-        .enumerate()
-        .skip(start)
-        .find_map(|(index, token)| (*token == Token::LeftParen).then_some(index))
-        .ok_or_else(|| parse_error(0, "key needs a column list"))?;
-    let close = matching_right(tokens, open)
-        .ok_or_else(|| parse_error(0, "key column list is not closed"))?;
-    split_top_level(&tokens[open + 1..close], &Token::Comma)
-        .into_iter()
-        .map(single_identifier)
-        .collect()
-}
-
-fn single_identifier(tokens: &[Token]) -> Result<String, SqliteParseError> {
-    tokens
-        .first()
-        .and_then(Token::identifier)
-        .map(str::to_string)
-        .ok_or_else(|| parse_error(0, "expected an identifier"))
-}
-
-fn optional_key_name(tokens: &[Token], start: usize) -> Option<String> {
-    tokens
-        .iter()
-        .skip(start)
-        .take_while(|token| **token != Token::LeftParen)
-        .find_map(Token::identifier)
-        .map(str::to_string)
-}
-
-fn option_value(tokens: &[Token], keyword: Keyword) -> Option<String> {
-    let index = find_keyword(tokens, keyword, 0)?;
-    tokens
-        .get(index + 1)
-        .filter(|token| **token != Token::Operator("=".to_string()))
-        .or_else(|| tokens.get(index + 2))
-        .and_then(|token| token_word(Some(token)))
-}
-
-fn value_after(tokens: &[Token], keyword: Keyword) -> Option<String> {
-    let index = find_keyword(tokens, keyword, 0)?;
-    tokens.get(index + 1).map(Token::normalized)
-}
-
 fn numeric_after(tokens: &[Token], keyword: Keyword) -> Option<u64> {
     let index = find_top_level_keyword(tokens, keyword, 0)?;
     match tokens.get(index + 1) {
@@ -840,20 +803,21 @@ fn numeric_after(tokens: &[Token], keyword: Keyword) -> Option<u64> {
     }
 }
 
-fn token_word(token: Option<&Token>) -> Option<String> {
-    match token? {
-        Token::Identifier(value) | Token::QuotedIdentifier(value) => Some(value.clone()),
-        Token::Keyword(keyword) => Some(keyword.text().to_ascii_lowercase()),
-        Token::String(value) | Token::Number(value) => Some(value.clone()),
+fn limit_clause(tokens: &[Token]) -> (Option<u64>, Option<u64>) {
+    let Some(index) = find_keyword(tokens, Keyword::Limit, 0) else {
+        return (None, None);
+    };
+    let first = tokens.get(index + 1).and_then(|token| match token {
+        Token::Number(value) => value.parse().ok(),
         _ => None,
+    });
+    if tokens.get(index + 2) == Some(&Token::Comma) {
+        let count = tokens.get(index + 3).and_then(|token| match token {
+            Token::Number(value) => value.parse().ok(),
+            _ => None,
+        });
+        (count, first)
+    } else {
+        (first, None)
     }
-}
-
-fn contains_sequence(tokens: &[Token], keywords: &[Keyword]) -> bool {
-    tokens.windows(keywords.len()).any(|window| {
-        window
-            .iter()
-            .zip(keywords)
-            .all(|(token, keyword)| is_keyword(token, *keyword))
-    })
 }

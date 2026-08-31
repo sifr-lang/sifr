@@ -44,7 +44,9 @@ pub use editor::{SqliteEditorFacts, SqliteRecoveryDocument, recover_document};
 pub use lexer::{LexError, SpannedToken, Token, tokenize};
 pub use migration::{SqliteDdlExecutionClass, SqliteMigrationDialect, classify_migration_ddl};
 pub use parser::{SqliteParseError, SqliteParser};
-pub use schema::{SqliteSchemaOptions, normalize_sqlite_documents};
+pub use schema::{
+    SqliteSchemaOptions, normalize_sqlite_catalog_documents, normalize_sqlite_documents,
+};
 pub use types::{
     SUPPORTED_SQLITE_SERIES, SqliteAffinity, SqliteServerSeries, SqliteType, affinity,
 };

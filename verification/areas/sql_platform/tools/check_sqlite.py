@@ -45,7 +45,7 @@ def validate(data: dict[str, Any]) -> list[str]:
         ):
             errors.append(f"root Cargo manifest does not lock {crate} {version}")
     cargo_config = (ROOT / ".cargo/config.toml").read_text(encoding="utf-8")
-    if 'SYNTAQLITE_SQLITE_VERSION = "3053002"' not in cargo_config:
+    if 'SYNTAQLITE_SQLITE_VERSION = { value = "3053002", force = true }' not in cargo_config:
         errors.append("Cargo does not pin Syntaqlite to SQLite 3.53.2")
     compiler = (ROOT / "crates/sifr_sql_sqlite/Cargo.toml").read_text(encoding="utf-8")
     runtime = (ROOT / "crates/sifr_sql_sqlite_runtime/Cargo.toml").read_text(encoding="utf-8")
@@ -83,6 +83,19 @@ def validate(data: dict[str, Any]) -> list[str]:
             errors.append("SQLite library evidence must cover every surface")
         elif rows[0].get("version_number") != 3053002 or rows[0].get("status") != "passed":
             errors.append("SQLite 3.53.2 library evidence is not passing")
+        else:
+            options = set(rows[0].get("runtime_compile_options", []))
+            required_options = {
+                "DEFAULT_FOREIGN_KEYS",
+                "DEFAULT_RECURSIVE_TRIGGERS",
+                "ENABLE_FTS5",
+                "ENABLE_RTREE",
+                "ENABLE_UNLOCK_NOTIFY",
+                "MAX_VARIABLE_NUMBER=32766",
+                "THREADSAFE=1",
+            }
+            if not required_options.issubset(options):
+                errors.append("SQLite runtime compile-option evidence is incomplete")
     component_manifest_path = ROOT / str(data.get("component_manifest", ""))
     if not component_manifest_path.is_file():
         errors.append("SQLite component artifact manifest does not exist")

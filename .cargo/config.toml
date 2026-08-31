@@ -3,4 +3,4 @@
 
 [env]
 # Syntaqlite compiles the exact grammar shipped by bundled SQLite 3.53.2.
-SYNTAQLITE_SQLITE_VERSION = "3053002"
+SYNTAQLITE_SQLITE_VERSION = { value = "3053002", force = true }

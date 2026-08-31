@@ -31,6 +31,53 @@ struct SqliteCatalog {
     codecs: CodecRegistry,
 }
 
+#[derive(Default)]
+struct SqliteParameterSlots {
+    maximum: u32,
+    named: BTreeMap<String, u32>,
+    types: BTreeMap<u32, DatabaseType>,
+}
+
+impl SqliteParameterSlots {
+    fn add(&mut self, marker: &str, database_type: DatabaseType) -> Result<(), SqliteDiagnostic> {
+        let index = if marker == "?" {
+            self.maximum.checked_add(1).ok_or_else(parameter_limit)?
+        } else if let Some(number) = marker.strip_prefix('?') {
+            let index = number
+                .parse::<u32>()
+                .ok()
+                .filter(|index| *index > 0)
+                .ok_or_else(|| parameter_error("SQLite explicit parameter slots start at ?1"))?;
+            self.maximum = self.maximum.max(index);
+            index
+        } else if let Some(index) = self.named.get(marker) {
+            *index
+        } else {
+            let index = self.maximum.checked_add(1).ok_or_else(parameter_limit)?;
+            self.named.insert(marker.to_string(), index);
+            index
+        };
+        if index > 32_766 {
+            return Err(parameter_limit());
+        }
+        self.maximum = self.maximum.max(index);
+        self.types.entry(index).or_insert(database_type);
+        Ok(())
+    }
+
+    fn into_types(self) -> Result<Vec<DatabaseType>, SqliteDiagnostic> {
+        (1..=self.maximum)
+            .map(|index| {
+                Ok(self
+                    .types
+                    .get(&index)
+                    .cloned()
+                    .unwrap_or_else(default_parameter_type))
+            })
+            .collect()
+    }
+}
+
 pub struct SqliteAnalyzer<'a> {
     parser: &'a SqliteParser,
     catalog: SqliteCatalog,
@@ -171,7 +218,7 @@ impl<'a> SqliteAnalyzer<'a> {
             .collect::<BTreeSet<_>>();
         let mut accessed_objects = referenced_objects.clone();
         let mut result_fields = Vec::new();
-        let mut parameter_types = Vec::new();
+        let mut parameter_types = SqliteParameterSlots::default();
         for (index, projection) in query.projections.iter().enumerate() {
             self.analyze_projection(
                 projection,
@@ -197,7 +244,7 @@ impl<'a> SqliteAnalyzer<'a> {
             )?;
         }
         let mut required_capabilities = BTreeSet::from(["sql.query.select".to_string()]);
-        if !parameter_types.is_empty() {
+        if parameter_types.maximum != 0 {
             required_capabilities.insert("sql.bind.parameters".to_string());
         }
         if !query.joins.is_empty() {
@@ -223,7 +270,7 @@ impl<'a> SqliteAnalyzer<'a> {
         Ok(ProviderAnalysis {
             server_profile: self.parser.series().profile(),
             normalized_statement: "SELECT".to_string(),
-            parameters: self.parameters(parameter_types)?,
+            parameters: self.parameters(parameter_types.into_types()?)?,
             result_fields,
             cardinality,
             effects: EffectContract::new(QueryEffect::Read, referenced_objects, BTreeSet::new())
@@ -256,7 +303,7 @@ impl<'a> SqliteAnalyzer<'a> {
             })?;
             accessed_objects.insert(column.identity.clone());
         }
-        let mut parameter_types = Vec::new();
+        let mut parameter_types = SqliteParameterSlots::default();
         for expression in &write.expressions {
             Self::account_expression(
                 expression,
@@ -266,18 +313,36 @@ impl<'a> SqliteAnalyzer<'a> {
             )?;
         }
         let mut required_capabilities = BTreeSet::from([capability.to_string()]);
-        if !parameter_types.is_empty() {
+        if parameter_types.maximum != 0 {
             required_capabilities.insert("sql.bind.parameters".to_string());
         }
         if !matches!(write.conflict, crate::ast::SqliteConflictForm::None) {
             required_capabilities.insert("sql.sqlite.write.conflict".to_string());
         }
+        let mut result_fields = Vec::new();
+        for (index, projection) in write.returning.iter().enumerate() {
+            self.analyze_projection(
+                projection,
+                index,
+                &[relation],
+                &mut accessed_objects,
+                &mut parameter_types,
+                &mut result_fields,
+            )?;
+        }
+        if !result_fields.is_empty() {
+            required_capabilities.insert("sql.write.returning".to_string());
+        }
         Ok(ProviderAnalysis {
             server_profile: self.parser.series().profile(),
             normalized_statement: capability.to_string(),
-            parameters: self.parameters(parameter_types)?,
-            result_fields: Vec::new(),
-            cardinality: Cardinality::ZERO,
+            parameters: self.parameters(parameter_types.into_types()?)?,
+            result_fields,
+            cardinality: if write.returning.is_empty() {
+                Cardinality::ZERO
+            } else {
+                Cardinality::MANY
+            },
             effects: EffectContract::new(
                 effect,
                 BTreeSet::from([relation.identity.clone()]),
@@ -298,7 +363,7 @@ impl<'a> SqliteAnalyzer<'a> {
         index: usize,
         scope: &[&SqliteRelation],
         accessed: &mut BTreeSet<ObjectId>,
-        parameters: &mut Vec<DatabaseType>,
+        parameters: &mut SqliteParameterSlots,
         fields: &mut Vec<ProviderResultField>,
     ) -> Result<(), SqliteDiagnostic> {
         match &projection.expression {
@@ -356,13 +421,15 @@ impl<'a> SqliteAnalyzer<'a> {
         expression: &SqliteExpression,
         scope: &[&SqliteRelation],
         accessed: &mut BTreeSet<ObjectId>,
-        parameters: &mut Vec<DatabaseType>,
+        parameters: &mut SqliteParameterSlots,
     ) -> Result<(), SqliteDiagnostic> {
         match expression {
             SqliteExpression::Column { path } => {
                 accessed.insert(Self::resolve_column(scope, path)?.identity.clone());
             }
-            SqliteExpression::Parameter => parameters.push(default_parameter_type()),
+            SqliteExpression::Parameter { marker } => {
+                parameters.add(marker, default_parameter_type())?;
+            }
             SqliteExpression::Function { arguments, .. } => {
                 for argument in arguments {
                     Self::account_expression(argument, scope, accessed, parameters)?;
@@ -374,7 +441,7 @@ impl<'a> SqliteAnalyzer<'a> {
             }
             SqliteExpression::Raw {
                 columns,
-                parameters: count,
+                parameters: markers,
                 ..
             } => {
                 let inferred = columns
@@ -386,7 +453,9 @@ impl<'a> SqliteAnalyzer<'a> {
                 for path in columns {
                     accessed.insert(Self::resolve_column(scope, path)?.identity.clone());
                 }
-                parameters.extend(std::iter::repeat_n(inferred, *count as usize));
+                for marker in markers {
+                    parameters.add(marker, inferred.clone())?;
+                }
             }
             SqliteExpression::Star { .. } | SqliteExpression::Literal { .. } => {}
         }
@@ -529,7 +598,7 @@ fn expression_type(
         SqliteExpression::Column { path } => Ok(SqliteAnalyzer::resolve_column(scope, path)?
             .database_type
             .clone()),
-        SqliteExpression::Parameter
+        SqliteExpression::Parameter { .. }
         | SqliteExpression::Literal { .. }
         | SqliteExpression::Raw { .. } => Ok(default_parameter_type()),
         SqliteExpression::Function { .. } | SqliteExpression::Binary { .. } => {
@@ -561,6 +630,14 @@ fn bool_property(object: &sifr_sql_contract::SchemaObject, name: &str) -> Option
         Some(SemanticValue::Bool(value)) => Some(*value),
         _ => None,
     }
+}
+
+fn parameter_limit() -> SqliteDiagnostic {
+    parameter_error("too many SQLite parameters")
+}
+
+fn parameter_error(message: impl Into<String>) -> SqliteDiagnostic {
+    diagnostic(SqliteDiagnosticCode::TypeMismatch, message)
 }
 
 fn diagnostic(code: SqliteDiagnosticCode, message: impl Into<String>) -> SqliteDiagnostic {

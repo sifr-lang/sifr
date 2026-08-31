@@ -109,6 +109,7 @@ pub use requirement::{
     ProviderSchemaRequirement, SCHEMA_REQUIREMENT_FORMAT_VERSION, SchemaRequirement,
     SchemaRequirementError, SchemaRequirementErrorKind, SchemaRequirementIdentity,
     SchemaRequirementProof, SchemaRequirementRegistry, build_provider_schema_requirement,
+    project_provider_requirement_schema,
 };
 pub use schema::{
     DialectIdentity, ObjectId, ProviderIdentity, SchemaIr, SchemaObject, SchemaObjectKind,

@@ -138,7 +138,9 @@ fn split_statements(source: &str) -> Result<Vec<RawStatement>, SqliteParseError>
         }
         end = token_end;
         if token == Token::Semicolon {
-            if !tokens.is_empty() {
+            if is_incomplete_trigger(&tokens) {
+                tokens.push(Token::Semicolon);
+            } else if !tokens.is_empty() {
                 statements.push(raw_statement(start, std::mem::take(&mut tokens), token_end));
             }
         } else {
@@ -149,6 +151,30 @@ fn split_statements(source: &str) -> Result<Vec<RawStatement>, SqliteParseError>
         statements.push(raw_statement(start, tokens, end));
     }
     Ok(statements)
+}
+
+fn is_incomplete_trigger(tokens: &[Token]) -> bool {
+    if !matches!(tokens.first(), Some(Token::Keyword(Keyword::Create)))
+        || !matches!(tokens.get(1), Some(Token::Keyword(Keyword::Trigger)))
+    {
+        return false;
+    }
+    let mut saw_body = false;
+    let mut depth = 0_u32;
+    for token in tokens.iter().skip(2) {
+        let Some(word) = token.identifier() else {
+            continue;
+        };
+        if word.eq_ignore_ascii_case("begin") {
+            saw_body = true;
+            depth = depth.saturating_add(1);
+        } else if saw_body && word.eq_ignore_ascii_case("case") {
+            depth = depth.saturating_add(1);
+        } else if saw_body && word.eq_ignore_ascii_case("end") {
+            depth = depth.saturating_sub(1);
+        }
+    }
+    !saw_body || depth != 0
 }
 
 fn raw_statement(start: usize, tokens: Vec<Token>, end: usize) -> RawStatement {

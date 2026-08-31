@@ -16,6 +16,7 @@ pub enum Keyword {
     Table,
     View,
     Index,
+    Trigger,
     Unique,
     Primary,
     Key,
@@ -95,6 +96,7 @@ impl Keyword {
             Self::Table => "TABLE",
             Self::View => "VIEW",
             Self::Index => "INDEX",
+            Self::Trigger => "TRIGGER",
             Self::Unique => "UNIQUE",
             Self::Primary => "PRIMARY",
             Self::Key => "KEY",
@@ -122,7 +124,7 @@ impl Keyword {
             Self::Always => "ALWAYS",
             Self::Virtual => "VIRTUAL",
             Self::Stored => "STORED",
-            Self::AutoIncrement => "AUTO_INCREMENT",
+            Self::AutoIncrement => "AUTOINCREMENT",
             Self::Unsigned => "UNSIGNED",
             Self::Zerofill => "ZEROFILL",
             Self::Character => "CHARACTER",
@@ -168,7 +170,7 @@ pub enum Token {
     QuotedIdentifier(String),
     String(String),
     Number(String),
-    Parameter,
+    Parameter(String),
     Comma,
     Dot,
     LeftParen,
@@ -186,7 +188,7 @@ impl Token {
             Self::QuotedIdentifier(value) => format!("`{}`", value.replace('`', "``")),
             Self::String(_) => "?literal".to_string(),
             Self::Number(value) => value.clone(),
-            Self::Parameter => "?".to_string(),
+            Self::Parameter(value) => value.clone(),
             Self::Comma => ",".to_string(),
             Self::Dot => ".".to_string(),
             Self::LeftParen => "(".to_string(),
@@ -349,92 +351,112 @@ impl Iterator for Lexer<'_> {
         }
         let start = self.offset;
         let byte = self.source.as_bytes()[start];
-        let token =
-            match byte {
-                b'`' => self.scan_quoted(b'`', true),
-                b'[' => self.scan_bracket_identifier(),
-                b'\'' => self.scan_quoted(byte, false),
-                b'"' => self.scan_quoted(byte, self.ansi_quotes),
-                b'?' => {
-                    self.offset += 1;
-                    Ok(Token::Parameter)
-                }
-                b':' | b'@'
-                    if self
-                        .source
-                        .as_bytes()
-                        .get(start + 1)
-                        .is_some_and(u8::is_ascii_alphabetic) =>
-                {
-                    self.offset += 2;
-                    while self
-                        .source
-                        .as_bytes()
-                        .get(self.offset)
-                        .is_some_and(|byte| byte.is_ascii_alphanumeric() || *byte == b'_')
-                    {
-                        self.offset += 1;
-                    }
-                    Ok(Token::Parameter)
-                }
-                b',' => {
-                    self.offset += 1;
-                    Ok(Token::Comma)
-                }
-                b'.' => {
-                    self.offset += 1;
-                    Ok(Token::Dot)
-                }
-                b'(' => {
-                    self.offset += 1;
-                    Ok(Token::LeftParen)
-                }
-                b')' => {
-                    self.offset += 1;
-                    Ok(Token::RightParen)
-                }
-                b';' => {
-                    self.offset += 1;
-                    Ok(Token::Semicolon)
-                }
-                byte if byte.is_ascii_digit() => {
-                    self.offset += 1;
-                    while self.source.as_bytes().get(self.offset).is_some_and(|byte| {
-                        byte.is_ascii_digit() || matches!(byte, b'.' | b'e' | b'E' | b'+' | b'-')
-                    }) {
-                        self.offset += 1;
-                    }
-                    Ok(Token::Number(self.source[start..self.offset].to_string()))
-                }
-                byte if byte.is_ascii_alphabetic() || matches!(byte, b'_' | b'$') => {
-                    self.offset += 1;
-                    while self.source.as_bytes().get(self.offset).is_some_and(|byte| {
-                        byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'$')
-                    }) {
-                        self.offset += 1;
-                    }
-                    let value = &self.source[start..self.offset];
-                    Ok(keyword(value)
-                        .map_or_else(|| Token::Identifier(value.to_string()), Token::Keyword))
-                }
-                byte if matches!(
-                    byte,
-                    b'=' | b'<' | b'>' | b'!' | b'+' | b'-' | b'*' | b'/' | b'%'
-                ) =>
+        let token = match byte {
+            b'`' => self.scan_quoted(b'`', true),
+            b'[' => self.scan_bracket_identifier(),
+            b'\'' => self.scan_quoted(byte, false),
+            b'"' => self.scan_quoted(byte, self.ansi_quotes),
+            b'?' => {
+                self.offset += 1;
+                while self
+                    .source
+                    .as_bytes()
+                    .get(self.offset)
+                    .is_some_and(u8::is_ascii_digit)
                 {
                     self.offset += 1;
-                    if self.source.as_bytes().get(self.offset).is_some_and(|next| {
-                        matches!(
-                            (byte, *next),
-                            (b'<' | b'>' | b'!', b'=') | (b'<', b'>' | b'<') | (b'>', b'>')
-                        )
-                    }) {
+                }
+                Ok(Token::Parameter(
+                    self.source[start..self.offset].to_string(),
+                ))
+            }
+            b':' | b'@' | b'$'
+                if self
+                    .source
+                    .as_bytes()
+                    .get(start + 1)
+                    .is_some_and(u8::is_ascii_alphabetic) =>
+            {
+                self.offset += 2;
+                while self
+                    .source
+                    .as_bytes()
+                    .get(self.offset)
+                    .is_some_and(|byte| byte.is_ascii_alphanumeric() || *byte == b'_')
+                {
+                    self.offset += 1;
+                }
+                Ok(Token::Parameter(
+                    self.source[start..self.offset].to_string(),
+                ))
+            }
+            b',' => {
+                self.offset += 1;
+                Ok(Token::Comma)
+            }
+            b'.' => {
+                self.offset += 1;
+                Ok(Token::Dot)
+            }
+            b'(' => {
+                self.offset += 1;
+                Ok(Token::LeftParen)
+            }
+            b')' => {
+                self.offset += 1;
+                Ok(Token::RightParen)
+            }
+            b';' => {
+                self.offset += 1;
+                Ok(Token::Semicolon)
+            }
+            byte if byte.is_ascii_digit() => {
+                self.offset += 1;
+                while self.source.as_bytes().get(self.offset).is_some_and(|byte| {
+                    byte.is_ascii_digit() || matches!(byte, b'.' | b'e' | b'E' | b'+' | b'-')
+                }) {
+                    self.offset += 1;
+                }
+                Ok(Token::Number(self.source[start..self.offset].to_string()))
+            }
+            byte if byte.is_ascii_alphabetic() || matches!(byte, b'_' | b'$') => {
+                self.offset += 1;
+                while self
+                    .source
+                    .as_bytes()
+                    .get(self.offset)
+                    .is_some_and(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'$'))
+                {
+                    self.offset += 1;
+                }
+                let value = &self.source[start..self.offset];
+                Ok(keyword(value)
+                    .map_or_else(|| Token::Identifier(value.to_string()), Token::Keyword))
+            }
+            byte if matches!(
+                byte,
+                b'=' | b'<' | b'>' | b'!' | b'+' | b'-' | b'*' | b'/' | b'%' | b'|' | b'&' | b'~'
+            ) =>
+            {
+                self.offset += 1;
+                if self.source.as_bytes().get(self.offset).is_some_and(|next| {
+                    matches!(
+                        (byte, *next),
+                        (b'<' | b'>' | b'!', b'=')
+                            | (b'<', b'>' | b'<')
+                            | (b'>' | b'-', b'>')
+                            | (b'|', b'|')
+                    )
+                }) {
+                    self.offset += 1;
+                    if byte == b'-' && self.source.as_bytes().get(self.offset) == Some(&b'>') {
                         self.offset += 1;
                     }
-                    Ok(Token::Operator(self.source[start..self.offset].to_string()))
                 }
-                _ => Err(self.error("unsupported SQLite token")),
-            };
+                Ok(Token::Operator(self.source[start..self.offset].to_string()))
+            }
+            _ => Err(self.error("unsupported SQLite token")),
+        };
         match token {
             Ok(token) => Some(Ok((start, token, self.offset))),
             Err(error) => {
@@ -459,6 +481,7 @@ fn keyword(value: &str) -> Option<Keyword> {
         "TABLE" => Keyword::Table,
         "VIEW" => Keyword::View,
         "INDEX" => Keyword::Index,
+        "TRIGGER" => Keyword::Trigger,
         "UNIQUE" => Keyword::Unique,
         "PRIMARY" => Keyword::Primary,
         "KEY" => Keyword::Key,
@@ -486,7 +509,7 @@ fn keyword(value: &str) -> Option<Keyword> {
         "ALWAYS" => Keyword::Always,
         "VIRTUAL" => Keyword::Virtual,
         "STORED" => Keyword::Stored,
-        "AUTO_INCREMENT" => Keyword::AutoIncrement,
+        "AUTOINCREMENT" => Keyword::AutoIncrement,
         "UNSIGNED" => Keyword::Unsigned,
         "ZEROFILL" => Keyword::Zerofill,
         "CHARACTER" => Keyword::Character,

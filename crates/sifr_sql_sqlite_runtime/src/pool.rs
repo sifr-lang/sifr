@@ -90,7 +90,7 @@ impl SqlitePool<Unverified> {
                 let lease = self
                     .shared
                     .coordinator
-                    .acquire(|| async { WorkerHandle::open(&profile) })
+                    .acquire(|| async { WorkerHandle::open(&profile).await })
                     .await?;
                 let observed = lease
                     .resource()?
@@ -136,7 +136,7 @@ impl SqlitePool<Verified> {
         let lease = self
             .shared
             .coordinator
-            .acquire(move || async move { WorkerHandle::open(&open_profile) })
+            .acquire(move || async move { WorkerHandle::open(&open_profile).await })
             .await?;
         let evidence = self
             .evidence
@@ -267,7 +267,10 @@ impl SqliteConnection {
         if request.mode != ExecutionMode::FetchOne {
             return Err(SqlError::new(SqlErrorKind::Cardinality));
         }
-        let mut rows = self.fetch_bounded(request, options, 2).await?.into_iter();
+        let mut rows = self
+            .fetch_bounded(request, options, 2, true)
+            .await?
+            .into_iter();
         let Some(row) = rows.next() else {
             return Err(SqlError::cardinality(
                 CardinalityViolation::ExpectedExactlyOneFoundZero,
@@ -289,7 +292,10 @@ impl SqliteConnection {
         if request.mode != ExecutionMode::FetchOptional {
             return Err(SqlError::new(SqlErrorKind::Cardinality));
         }
-        let mut rows = self.fetch_bounded(request, options, 2).await?.into_iter();
+        let mut rows = self
+            .fetch_bounded(request, options, 2, true)
+            .await?
+            .into_iter();
         let first = rows.next();
         if rows.next().is_some() {
             return Err(SqlError::cardinality(
@@ -307,7 +313,8 @@ impl SqliteConnection {
         let ExecutionMode::FetchAll { maximum_rows } = request.mode else {
             return Err(SqlError::new(SqlErrorKind::Cardinality));
         };
-        self.fetch_bounded(request, options, maximum_rows).await
+        self.fetch_bounded(request, options, maximum_rows, false)
+            .await
     }
 
     async fn fetch_bounded(
@@ -315,6 +322,7 @@ impl SqliteConnection {
         request: ExecutionRequest<SqliteProfile>,
         options: ExecutionOptions,
         maximum_rows: u64,
+        stop_at_limit: bool,
     ) -> Result<Vec<SqliteRow>, SqlError> {
         validate_request(&request, &self.profile, &self.evidence)?;
         let maximum_rows = maximum_rows.min(self.profile.limits().max_collected_rows);
@@ -331,6 +339,7 @@ impl SqliteConnection {
                 request.statement.to_string(),
                 parameters,
                 limits,
+                stop_at_limit,
                 timeout,
                 options.cancellation.as_ref(),
             )

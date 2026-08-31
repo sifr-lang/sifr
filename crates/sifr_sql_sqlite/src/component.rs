@@ -170,7 +170,7 @@ pub fn sqlite_capabilities() -> BTreeSet<String> {
         "sql.query.delete",
         "sql.query.insert",
         "sql.query.join",
-        "sql.query.returning",
+        "sql.write.returning",
         "sql.query.select",
         "sql.query.set-operation",
         "sql.query.subquery",

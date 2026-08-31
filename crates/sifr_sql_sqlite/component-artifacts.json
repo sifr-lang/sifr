@@ -3,8 +3,8 @@
     {
       "path": "components/sqlite-3.53.2.wasm",
       "series": "3.53.2",
-      "sha256": "476159cdcbd435143477b251144946cc443ab9ef3de7f09327d2c48f12b3d2df",
-      "size_bytes": 1823498
+      "sha256": "dc28ac7f1431f507a339d8d84bb7d8dba86f2c6b1b94f39275e98f78ce7c8793",
+      "size_bytes": 1861203
     }
   ],
   "parser": {

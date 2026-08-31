@@ -12,6 +12,13 @@ use std::sync::Arc;
 use std::time::Duration;
 
 fn profile(path: &std::path::Path) -> SqliteProfile {
+    profile_with_attached(path, std::collections::BTreeMap::new())
+}
+
+fn profile_with_attached(
+    path: &std::path::Path,
+    attached_files: std::collections::BTreeMap<String, std::path::PathBuf>,
+) -> SqliteProfile {
     let expected_schema = SchemaDependencySlice::new(
         "b".repeat(64),
         [SchemaProperty::new("main.schema", Some("ready".to_string())).expect("property")],
@@ -26,6 +33,7 @@ fn profile(path: &std::path::Path) -> SqliteProfile {
             probes: vec![VerificationProbe::new("main.schema", "SELECT 'ready'").expect("probe")],
         },
         SchemaStrictness::Exact,
+        attached_files,
         vec!["json".to_string()],
         (3, 53, 2),
         RuntimeLimits {
@@ -41,6 +49,42 @@ fn profile(path: &std::path::Path) -> SqliteProfile {
         250,
     )
     .expect("profile")
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn attached_schema_is_opened_and_queryable_on_every_worker() {
+    let directory = tempfile::tempdir().expect("directory");
+    let attached = directory.path().join("analytics.sqlite3");
+    rusqlite::Connection::open(&attached)
+        .expect("attached database")
+        .execute_batch("CREATE TABLE events(id INTEGER PRIMARY KEY, value TEXT); INSERT INTO events VALUES (1, 'attached')")
+        .expect("attached schema");
+    let selected = profile_with_attached(
+        &directory.path().join("main.sqlite3"),
+        std::collections::BTreeMap::from([("analytics".to_string(), attached)]),
+    );
+    let pool = open_pool(selected)
+        .expect("pool")
+        .verify_schema()
+        .await
+        .expect("verification");
+    let selected = pool.acquire().await.expect("worker").profile();
+    let rows = pool
+        .fetch_all(
+            request(
+                selected,
+                "SELECT value FROM analytics.events WHERE id = 1",
+                vec![],
+                true,
+            ),
+            ExecutionOptions::default(),
+        )
+        .await
+        .expect("attached query");
+    assert_eq!(
+        rows[0].values(),
+        &[OwnedSqlValue::Text("attached".to_string())]
+    );
 }
 
 fn request(
@@ -173,6 +217,107 @@ async fn dedicated_workers_execute_decode_reset_and_reuse() {
     );
     connection.release(None).await.expect("release");
     assert_eq!(pool.statistics().idle, 1);
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn one_row_fetches_report_cardinality_before_collection_limits() {
+    let directory = tempfile::tempdir().expect("directory");
+    let pool = open_pool(profile(&directory.path().join("cardinality.sqlite3")))
+        .expect("pool")
+        .verify_schema()
+        .await
+        .expect("verification");
+    let mut connection = pool.acquire().await.expect("connection");
+    let selected = connection.profile();
+    connection
+        .execute(
+            request(
+                Arc::clone(&selected),
+                "CREATE TABLE items(id INTEGER PRIMARY KEY) STRICT",
+                vec![],
+                false,
+            ),
+            ExecutionOptions::default(),
+        )
+        .await
+        .expect("create");
+    connection
+        .execute(
+            request(
+                Arc::clone(&selected),
+                "INSERT INTO items VALUES (1), (2), (3)",
+                vec![],
+                false,
+            ),
+            ExecutionOptions::default(),
+        )
+        .await
+        .expect("insert");
+    let mut one = request(
+        Arc::clone(&selected),
+        "SELECT id FROM items ORDER BY id",
+        vec![],
+        true,
+    );
+    one.mode = ExecutionMode::FetchOne;
+    let error = connection
+        .fetch_one(one, ExecutionOptions::default())
+        .await
+        .expect_err("three rows violate fetch_one");
+    assert_eq!(error.kind(), sifr_sql_runtime::SqlErrorKind::Cardinality);
+    let mut optional = request(selected, "SELECT id FROM items ORDER BY id", vec![], true);
+    optional.mode = ExecutionMode::FetchOptional;
+    let error = connection
+        .fetch_optional(optional, ExecutionOptions::default())
+        .await
+        .expect_err("three rows violate fetch_optional");
+    assert_eq!(error.kind(), sifr_sql_runtime::SqlErrorKind::Cardinality);
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn warmed_statement_cache_meets_the_local_execution_budget() {
+    let directory = tempfile::tempdir().expect("directory");
+    let pool = open_pool(profile(&directory.path().join("performance.sqlite3")))
+        .expect("pool")
+        .verify_schema()
+        .await
+        .expect("verification");
+    let mut connection = pool.acquire().await.expect("connection");
+    let selected = connection.profile();
+    let sql = "SELECT ? + 1";
+    for _ in 0..20 {
+        connection
+            .fetch_all(
+                request(
+                    Arc::clone(&selected),
+                    sql,
+                    vec![OwnedSqlValue::Signed(1)],
+                    true,
+                ),
+                ExecutionOptions::default(),
+            )
+            .await
+            .expect("warmup");
+    }
+    let started = std::time::Instant::now();
+    for _ in 0..200 {
+        connection
+            .fetch_all(
+                request(
+                    Arc::clone(&selected),
+                    sql,
+                    vec![OwnedSqlValue::Signed(1)],
+                    true,
+                ),
+                ExecutionOptions::default(),
+            )
+            .await
+            .expect("hot execution");
+    }
+    assert!(
+        started.elapsed() < Duration::from_secs(2),
+        "200 warmed executions exceeded the two-second qualification budget"
+    );
 }
 
 #[tokio::test(flavor = "current_thread")]

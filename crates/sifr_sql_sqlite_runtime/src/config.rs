@@ -110,6 +110,7 @@ pub struct SqliteProfile {
     pub(crate) expected_schema: SchemaDependencySlice,
     pub(crate) evidence: SqliteEvidence,
     pub(crate) strictness: SchemaStrictness,
+    attached_files: BTreeMap<String, PathBuf>,
     required_features: Vec<String>,
     minimum_version: (u16, u16, u16),
     limits: RuntimeLimits,
@@ -124,6 +125,7 @@ impl SqliteProfile {
         expected_schema: SchemaDependencySlice,
         evidence: SqliteEvidence,
         strictness: SchemaStrictness,
+        attached_files: BTreeMap<String, PathBuf>,
         required_features: Vec<String>,
         minimum_version: (u16, u16, u16),
         limits: RuntimeLimits,
@@ -138,6 +140,11 @@ impl SqliteProfile {
             || required_features
                 .iter()
                 .any(|feature| !valid_feature(feature))
+            || attached_files.iter().any(|(name, path)| {
+                !valid_schema_name(name)
+                    || matches!(name.as_str(), "main" | "temp")
+                    || path.as_os_str().is_empty()
+            })
         {
             return Err(configuration_error());
         }
@@ -148,6 +155,7 @@ impl SqliteProfile {
             expected_schema,
             evidence,
             strictness,
+            attached_files,
             required_features,
             minimum_version,
             limits: limits.validate()?,
@@ -176,6 +184,11 @@ impl SqliteProfile {
     }
 
     #[must_use]
+    pub fn attached_files(&self) -> &BTreeMap<String, PathBuf> {
+        &self.attached_files
+    }
+
+    #[must_use]
     pub const fn minimum_version(&self) -> (u16, u16, u16) {
         self.minimum_version
     }
@@ -200,6 +213,10 @@ impl fmt::Debug for SqliteProfile {
             .field("schema_fingerprint", &self.expected_schema.fingerprint())
             .field("evidence", &self.evidence)
             .field("strictness", &self.strictness)
+            .field(
+                "attached_schemas",
+                &self.attached_files.keys().collect::<Vec<_>>(),
+            )
             .field("required_features", &self.required_features)
             .field("minimum_version", &self.minimum_version)
             .field("limits", &self.limits)
@@ -259,6 +276,14 @@ fn valid_feature(value: &str) -> bool {
         && value.bytes().all(|byte| {
             byte.is_ascii_lowercase() || byte.is_ascii_digit() || matches!(byte, b'-' | b'_')
         })
+}
+
+fn valid_schema_name(value: &str) -> bool {
+    let mut bytes = value.bytes();
+    bytes
+        .next()
+        .is_some_and(|byte| byte == b'_' || byte.is_ascii_alphabetic())
+        && bytes.all(|byte| byte == b'_' || byte.is_ascii_alphanumeric())
 }
 
 fn configuration_error() -> SqlError {

@@ -68,6 +68,7 @@ enum Command {
         statement: String,
         parameters: Vec<OwnedSqlValue>,
         limits: RuntimeLimits,
+        stop_at_limit: bool,
         response: oneshot::Sender<Result<Vec<SqliteRow>, SqlError>>,
     },
     Control {
@@ -93,19 +94,33 @@ enum Command {
 }
 
 impl WorkerHandle {
-    pub(crate) fn open(profile: &SqliteProfile) -> Result<Self, SqlError> {
+    pub(crate) async fn open(profile: &SqliteProfile) -> Result<Self, SqlError> {
+        let profile = profile.clone();
+        tokio::task::spawn_blocking(move || Self::open_blocking(&profile))
+            .await
+            .map_err(|_| SqlError::new(SqlErrorKind::Connection))?
+    }
+
+    fn open_blocking(profile: &SqliteProfile) -> Result<Self, SqlError> {
         let (sender, receiver) = mpsc::sync_channel(1);
         let (ready_sender, ready_receiver) = mpsc::sync_channel(1);
         let path = profile.path().to_path_buf();
         let limits = profile.limits();
         let busy_timeout = Duration::from_millis(u64::from(profile.busy_timeout_ms()));
         let required_features = profile.required_features().to_vec();
+        let attached_files = profile.attached_files().clone();
         let poisoned = Arc::new(AtomicBool::new(false));
         let worker_poisoned = Arc::clone(&poisoned);
         let join = thread::Builder::new()
             .name("sifr-sqlite-worker".to_string())
             .spawn(move || {
-                let opened = open_connection(&path, limits, busy_timeout, &required_features);
+                let opened = open_connection(
+                    &path,
+                    limits,
+                    busy_timeout,
+                    &required_features,
+                    &attached_files,
+                );
                 let Ok(connection) = opened else {
                     let _ = ready_sender.send(Err(opened.err().unwrap_or_else(provider_error)));
                     return;
@@ -154,6 +169,7 @@ impl WorkerHandle {
         statement: String,
         parameters: Vec<OwnedSqlValue>,
         limits: RuntimeLimits,
+        stop_at_limit: bool,
         timeout: Duration,
         cancellation: Option<&CancellationCarrier>,
     ) -> Result<Vec<SqliteRow>, SqlError> {
@@ -162,6 +178,7 @@ impl WorkerHandle {
             statement,
             parameters,
             limits,
+            stop_at_limit,
             response,
         })?;
         self.wait(receiver, timeout, cancellation).await
@@ -315,9 +332,12 @@ impl WorkerHandle {
 
 impl Drop for WorkerHandle {
     fn drop(&mut self) {
+        self.poisoned.store(true, Ordering::Release);
         self.interrupt.interrupt();
         let _ = self.sender.try_send(Command::Shutdown);
-        self.join.take();
+        if let Some(join) = self.join.take() {
+            let _ = join.join();
+        }
     }
 }
 
@@ -326,6 +346,7 @@ fn open_connection(
     limits: RuntimeLimits,
     busy_timeout: Duration,
     required_features: &[String],
+    attached_files: &std::collections::BTreeMap<String, std::path::PathBuf>,
 ) -> Result<Connection, SqlError> {
     if rusqlite::version_number() != 3_053_002 {
         return Err(SqlError::new(SqlErrorKind::Configuration));
@@ -350,6 +371,14 @@ fn open_connection(
     connection
         .pragma_update(None, "recursive_triggers", true)
         .map_err(map_sqlite_error)?;
+    for (schema, path) in attached_files {
+        connection
+            .execute(
+                &format!("ATTACH DATABASE ?1 AS \"{schema}\""),
+                [path.to_string_lossy().as_ref()],
+            )
+            .map_err(map_sqlite_error)?;
+    }
     verify_features(&connection, required_features)?;
     Ok(connection)
 }
@@ -401,6 +430,7 @@ fn run_worker(
                 statement,
                 parameters,
                 limits,
+                stop_at_limit,
                 response,
             } => {
                 let result = fetch(
@@ -409,6 +439,7 @@ fn run_worker(
                     &statement,
                     parameters,
                     limits,
+                    stop_at_limit,
                 );
                 let _ = response.send(result);
             }
@@ -677,6 +708,7 @@ fn fetch(
     statement: &str,
     parameters: Vec<OwnedSqlValue>,
     limits: RuntimeLimits,
+    stop_at_limit: bool,
 ) -> Result<Vec<SqliteRow>, SqlError> {
     let values = encode_parameters(parameters)?;
     let mut prepared = connection
@@ -702,6 +734,9 @@ fn fetch(
             values,
             decoded_bytes,
         });
+        if stop_at_limit && output.len() as u64 == limits.max_collected_rows {
+            break;
+        }
     }
     Ok(output)
 }

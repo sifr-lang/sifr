@@ -57,6 +57,41 @@ pub fn normalize_sqlite_documents(
     options: &SqliteSchemaOptions,
     documents: Vec<(String, String)>,
 ) -> Result<SchemaNormalizationOutput, SqliteParseError> {
+    let default_schema = options.default_schema.clone();
+    normalize_sqlite_scoped_documents(
+        provider,
+        parser,
+        options,
+        documents
+            .into_iter()
+            .map(|(document, source)| (default_schema.clone(), document, source))
+            .collect(),
+    )
+}
+
+pub fn normalize_sqlite_catalog_documents(
+    provider: ProviderIdentity,
+    parser: &SqliteParser,
+    options: &SqliteSchemaOptions,
+    documents: Vec<(String, String, String)>,
+) -> Result<SchemaNormalizationOutput, SqliteParseError> {
+    if documents.iter().any(|(schema, _, _)| {
+        schema != &options.default_schema && !options.attached_schemas.contains(schema)
+    }) {
+        return Err(SqliteParseError {
+            offset: 0,
+            message: "SQLite catalog document names an undeclared attached schema".to_string(),
+        });
+    }
+    normalize_sqlite_scoped_documents(provider, parser, options, documents)
+}
+
+fn normalize_sqlite_scoped_documents(
+    provider: ProviderIdentity,
+    parser: &SqliteParser,
+    options: &SqliteSchemaOptions,
+    documents: Vec<(String, String, String)>,
+) -> Result<SchemaNormalizationOutput, SqliteParseError> {
     options.validate()?;
     if parser.compile_flags() != &options.compile_flags {
         return Err(SqliteParseError {
@@ -70,10 +105,10 @@ pub fn normalize_sqlite_documents(
             message: "SQLite schema normalization needs at least one document".to_string(),
         });
     }
-    let metadata = metadata_document(options).objects;
-    let mut normalized = Vec::with_capacity(documents.len());
+    let mut normalized = Vec::with_capacity(documents.len().saturating_add(1));
+    normalized.push(metadata_document(options));
     let mut seen = BTreeSet::new();
-    for (document_index, (document, source)) in documents.into_iter().enumerate() {
+    for (schema, document, source) in documents {
         if document.is_empty() || !seen.insert(document.clone()) {
             return Err(SqliteParseError {
                 offset: 0,
@@ -85,18 +120,16 @@ pub fn normalize_sqlite_documents(
         } else {
             parser.parse(&source)?
         };
-        let mut objects = if document_index == 0 {
-            metadata.clone()
-        } else {
-            Vec::new()
-        };
+        let mut objects = Vec::new();
+        let mut document_options = options.clone();
+        document_options.default_schema = schema;
         for statement in statements {
             match statement.kind {
                 SqliteStatementKind::CreateTable(table) => {
-                    objects.extend(table_objects(&document, &table, options)?);
+                    objects.extend(table_objects(&document, &table, &document_options)?);
                 }
                 SqliteStatementKind::CreateView(view) => {
-                    let identity = qualify(&view.name, &options.default_schema);
+                    let identity = qualify(&view.name, &document_options.default_schema);
                     objects.push(SchemaObject {
                         identity: ObjectId::new(&identity),
                         kind: SchemaObjectKind::View,
@@ -117,7 +150,7 @@ pub fn normalize_sqlite_documents(
                         offset: statement.span.start as usize,
                         message: "CREATE INDEX needs an owning table".to_string(),
                     })?;
-                    let table = qualify(&relation, &options.default_schema);
+                    let table = qualify(&relation, &document_options.default_schema);
                     let name = index.name.last().cloned().ok_or_else(|| SqliteParseError {
                         offset: statement.span.start as usize,
                         message: "CREATE INDEX needs a name".to_string(),
@@ -129,6 +162,35 @@ pub fn normalize_sqlite_documents(
                         semantic: BTreeMap::from([(
                             "definition".to_string(),
                             SemanticValue::Text(index.definition),
+                        )]),
+                        dependencies: BTreeSet::from([ObjectId::new(table)]),
+                        source: Some(SchemaSourceLocation {
+                            document: document.clone(),
+                            start: statement.span.start,
+                            end: statement.span.end,
+                        }),
+                    });
+                }
+                SqliteStatementKind::CreateTrigger(trigger) => {
+                    let relation = trigger.relation.ok_or_else(|| SqliteParseError {
+                        offset: statement.span.start as usize,
+                        message: "CREATE TRIGGER needs an owning table".to_string(),
+                    })?;
+                    let table = qualify(&relation, &document_options.default_schema);
+                    let name = trigger
+                        .name
+                        .last()
+                        .cloned()
+                        .ok_or_else(|| SqliteParseError {
+                            offset: statement.span.start as usize,
+                            message: "CREATE TRIGGER needs a name".to_string(),
+                        })?;
+                    objects.push(SchemaObject {
+                        identity: ObjectId::new(format!("{table}.trigger_{name}")),
+                        kind: SchemaObjectKind::Trigger,
+                        semantic: BTreeMap::from([(
+                            "definition".to_string(),
+                            SemanticValue::Text(trigger.definition),
                         )]),
                         dependencies: BTreeSet::from([ObjectId::new(table)]),
                         source: Some(SchemaSourceLocation {
@@ -176,43 +238,46 @@ pub fn normalize_sqlite_documents(
 }
 
 fn metadata_document(options: &SqliteSchemaOptions) -> SchemaDocument {
-    let database = ObjectId::new(&options.default_schema);
+    let mut namespaces = BTreeSet::from([options.default_schema.clone()]);
+    namespaces.extend(options.attached_schemas.iter().cloned());
     let mode_identity = ObjectId::new("sqlite.dialect.settings");
+    let mut objects = namespaces
+        .into_iter()
+        .map(|name| SchemaObject {
+            identity: ObjectId::new(name),
+            kind: SchemaObjectKind::Namespace,
+            semantic: BTreeMap::new(),
+            dependencies: BTreeSet::new(),
+            source: None,
+        })
+        .collect::<Vec<_>>();
+    objects.push(SchemaObject {
+        identity: mode_identity,
+        kind: SchemaObjectKind::DialectMetadata,
+        semantic: BTreeMap::from([
+            (
+                "compile-flags".to_string(),
+                SemanticValue::Set(
+                    options
+                        .compile_flags
+                        .iter()
+                        .cloned()
+                        .map(SemanticValue::Text)
+                        .collect(),
+                ),
+            ),
+            (
+                "minimum-version".to_string(),
+                SemanticValue::Text("3.53.2".to_string()),
+            ),
+        ]),
+        dependencies: BTreeSet::new(),
+        source: None,
+    });
     SchemaDocument {
         kind: SchemaDocumentKind::ProviderMetadata,
         document: "sifr://sqlite/profile-metadata".to_string(),
-        objects: vec![
-            SchemaObject {
-                identity: database,
-                kind: SchemaObjectKind::Namespace,
-                semantic: BTreeMap::new(),
-                dependencies: BTreeSet::new(),
-                source: None,
-            },
-            SchemaObject {
-                identity: mode_identity,
-                kind: SchemaObjectKind::DialectMetadata,
-                semantic: BTreeMap::from([
-                    (
-                        "compile-flags".to_string(),
-                        SemanticValue::Set(
-                            options
-                                .compile_flags
-                                .iter()
-                                .cloned()
-                                .map(SemanticValue::Text)
-                                .collect(),
-                        ),
-                    ),
-                    (
-                        "minimum-version".to_string(),
-                        SemanticValue::Text("3.53.2".to_string()),
-                    ),
-                ]),
-                dependencies: BTreeSet::new(),
-                source: None,
-            },
-        ],
+        objects,
     }
 }
 
@@ -224,6 +289,36 @@ fn table_objects(
     let table_identity = qualify(&table.name, &options.default_schema);
     let mut objects = Vec::new();
     let mut columns = Vec::new();
+    let primary_key = if table.primary_key.is_empty() {
+        table
+            .columns
+            .iter()
+            .filter(|column| column.primary_key)
+            .map(|column| column.name.clone())
+            .collect::<Vec<_>>()
+    } else {
+        table.primary_key.clone()
+    };
+    let rowid_alias = (!table.without_rowid && primary_key.len() == 1)
+        .then(|| {
+            table.columns.iter().find(|column| {
+                column.name == primary_key[0]
+                    && column.ty.name.eq_ignore_ascii_case("integer")
+                    && !column.primary_key_desc
+            })
+        })
+        .flatten()
+        .map(|column| column.name.clone());
+    if table
+        .columns
+        .iter()
+        .any(|column| column.auto_increment && rowid_alias.as_deref() != Some(column.name.as_str()))
+    {
+        return Err(SqliteParseError {
+            offset: 0,
+            message: "SQLite AUTOINCREMENT requires an INTEGER PRIMARY KEY rowid alias".to_string(),
+        });
+    }
     for column in &table.columns {
         let identity = ObjectId::new(format!("{table_identity}.{}", column.name));
         let ty = sqlite_type(&column.ty, &identity, table.strict)
@@ -235,7 +330,7 @@ fn table_objects(
         columns.push(identity.clone());
         objects.push(SchemaObject {
             identity,
-            kind: if column.auto_increment {
+            kind: if rowid_alias.as_deref() == Some(column.name.as_str()) {
                 SchemaObjectKind::IdentityColumn
             } else {
                 SchemaObjectKind::Column
@@ -287,13 +382,13 @@ fn table_objects(
         });
     }
     let mut constraint_ids = Vec::new();
-    if !table.primary_key.is_empty() {
+    if !primary_key.is_empty() {
         let identity = ObjectId::new(format!("{table_identity}.primary_key"));
         constraint_ids.push(identity.clone());
         objects.push(key_object(
             identity,
             SchemaObjectKind::PrimaryKey,
-            &table.primary_key,
+            &primary_key,
             &table_identity,
             document,
         ));
@@ -369,7 +464,7 @@ fn table_objects(
                         .collect(),
                 ),
             ),
-            ("primary-key".to_string(), string_set(&table.primary_key)),
+            ("primary-key".to_string(), string_set(&primary_key)),
             ("unique-sets".to_string(), SemanticValue::List(unique_sets)),
             (
                 "constraints".to_string(),
@@ -387,7 +482,7 @@ fn table_objects(
             ),
             (
                 "rowid-alias".to_string(),
-                SemanticValue::Bool(table.columns.iter().any(|column| column.auto_increment)),
+                SemanticValue::Bool(rowid_alias.is_some()),
             ),
         ]),
         dependencies: BTreeSet::from([ObjectId::new(namespace(&table_identity))]),

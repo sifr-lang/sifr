@@ -59,6 +59,9 @@ pub(crate) fn sqlite_type(
 ) -> Result<SqliteType, String> {
     let declared = name.name.trim().to_ascii_lowercase();
     if declared.is_empty() {
+        if strict {
+            return Err("SQLite STRICT table columns require a declared type".to_string());
+        }
         return Ok(SqliteType {
             database: DatabaseType::Binary { max_bytes: None },
             declared_name: declared,
