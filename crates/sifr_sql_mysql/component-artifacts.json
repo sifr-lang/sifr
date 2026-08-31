@@ -3,20 +3,20 @@
     {
       "path": "components/mysql-8.4.wasm",
       "series": "8.4",
-      "sha256": "1a9cb6d882431d5c7ea170ad6ab5f1e76e3f9f7db3f858500c4302f108ac27d9",
-      "size_bytes": 1383691
+      "sha256": "2047a244dbb13ef79dbf386f6cc5df9451ab2ae06baea4798375a87165c74b53",
+      "size_bytes": 1383726
     },
     {
       "path": "components/mysql-9.7.wasm",
       "series": "9.7",
-      "sha256": "1a9cb6d882431d5c7ea170ad6ab5f1e76e3f9f7db3f858500c4302f108ac27d9",
-      "size_bytes": 1383691
+      "sha256": "2047a244dbb13ef79dbf386f6cc5df9451ab2ae06baea4798375a87165c74b53",
+      "size_bytes": 1383726
     },
     {
       "path": "components/mysql-26.7.wasm",
       "series": "26.7",
-      "sha256": "1a9cb6d882431d5c7ea170ad6ab5f1e76e3f9f7db3f858500c4302f108ac27d9",
-      "size_bytes": 1383691
+      "sha256": "2047a244dbb13ef79dbf386f6cc5df9451ab2ae06baea4798375a87165c74b53",
+      "size_bytes": 1383726
     }
   ],
   "parser_generator": {
