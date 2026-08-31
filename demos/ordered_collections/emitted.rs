@@ -799,7 +799,7 @@ fn bisect_right<T: Clone + 'static + PartialOrd>(
     }
     left.clone()
 }
-fn insort_right<T: Clone + 'static>(
+fn insort_right<T: Clone + 'static + PartialOrd>(
     a: &mut Vec<T>,
     x: &T,
     lo: SifrInt,
@@ -1029,7 +1029,7 @@ fn _sift_up<T: Clone + 'static + PartialOrd>(heap: &mut Vec<T>, mut pos: SifrInt
         }
     }
 }
-fn heapify<T: Clone + 'static>(data: &mut Vec<T>) {
+fn heapify<T: Clone + 'static + PartialOrd>(data: &mut Vec<T>) {
     "Convert list to a min-heap in-place. O(n) time.".to_string();
     let n: SifrInt = SifrInt::from(data.len());
     let mut i: SifrInt = &n.floor_div_known_nonzero(&SifrInt::from_i64(2))
@@ -1039,13 +1039,13 @@ fn heapify<T: Clone + 'static>(data: &mut Vec<T>) {
         i = &i - &SifrInt::from_i64(1);
     }
 }
-fn heappush<T: Clone + 'static>(heap: &mut Vec<T>, item: &T) {
+fn heappush<T: Clone + 'static + PartialOrd>(heap: &mut Vec<T>, item: &T) {
     "Push item onto the heap in-place. O(log n) time.".to_string();
     heap.push(item.clone());
     let pos: SifrInt = &SifrInt::from(heap.len()) - &SifrInt::from_i64(1);
     _sift_up(heap, (pos).clone());
 }
-fn heappop<T: Clone + 'static>(heap: &mut Vec<T>) -> Option<T> {
+fn heappop<T: Clone + 'static + PartialOrd>(heap: &mut Vec<T>) -> Option<T> {
     "Pop and return the smallest item. Heap is modified in-place. O(log n) time.\n    Returns None if the heap is empty."
         .to_string();
     let n: SifrInt = SifrInt::from(heap.len());
@@ -1086,7 +1086,10 @@ fn heappop<T: Clone + 'static>(heap: &mut Vec<T>) -> Option<T> {
     }
     top
 }
-fn heapreplace<T: Clone + 'static>(heap: &mut Vec<T>, item: T) -> Option<T> {
+fn heapreplace<T: Clone + 'static + PartialOrd>(
+    heap: &mut Vec<T>,
+    item: T,
+) -> Option<T> {
     if &SifrInt::from(heap.len()) == &SifrInt::from_i64(0) {
         return None;
     }
@@ -1111,7 +1114,10 @@ fn heapreplace<T: Clone + 'static>(heap: &mut Vec<T>, item: T) -> Option<T> {
     _sift_down(heap, SifrInt::from_i64(0), (heap_len).clone());
     top
 }
-fn heappushpop<T: Clone + 'static>(heap: &mut Vec<T>, item: &T) -> Option<T> {
+fn heappushpop<T: Clone + 'static + PartialOrd>(
+    heap: &mut Vec<T>,
+    item: &T,
+) -> Option<T> {
     heappush(heap, item);
     heappop(heap)
 }

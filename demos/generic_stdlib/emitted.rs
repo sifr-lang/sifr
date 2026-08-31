@@ -911,7 +911,7 @@ fn _sift_down<T: Clone + 'static + PartialOrd>(
         }
     }
 }
-fn heapify<T: Clone + 'static>(data: &mut Vec<T>) {
+fn heapify<T: Clone + 'static + PartialOrd>(data: &mut Vec<T>) {
     "Convert list to a min-heap in-place. O(n) time.".to_string();
     let n: SifrInt = SifrInt::from(data.len());
     let mut i: SifrInt = &n.floor_div_known_nonzero(&SifrInt::from_i64(2))
@@ -921,7 +921,7 @@ fn heapify<T: Clone + 'static>(data: &mut Vec<T>) {
         i = &i - &SifrInt::from_i64(1);
     }
 }
-fn heappop<T: Clone + 'static>(heap: &mut Vec<T>) -> Option<T> {
+fn heappop<T: Clone + 'static + PartialOrd>(heap: &mut Vec<T>) -> Option<T> {
     "Pop and return the smallest item. Heap is modified in-place. O(log n) time.\n    Returns None if the heap is empty."
         .to_string();
     let n: SifrInt = SifrInt::from(heap.len());
@@ -962,7 +962,7 @@ fn heappop<T: Clone + 'static>(heap: &mut Vec<T>) -> Option<T> {
     }
     top
 }
-fn nsmallest<T: Clone + 'static>(n: SifrInt, data: &Vec<T>) -> Vec<T> {
+fn nsmallest<T: Clone + 'static + PartialOrd>(n: SifrInt, data: &Vec<T>) -> Vec<T> {
     let mut heap: Vec<T> = data.clone();
     heapify(&mut heap);
     let mut result: Vec<T> = vec![];
@@ -979,7 +979,7 @@ fn nsmallest<T: Clone + 'static>(n: SifrInt, data: &Vec<T>) -> Vec<T> {
     }
     result
 }
-fn nlargest<T: Clone + 'static>(n: SifrInt, data: &Vec<T>) -> Vec<T> {
+fn nlargest<T: Clone + 'static + PartialOrd>(n: SifrInt, data: &Vec<T>) -> Vec<T> {
     if &n <= &SifrInt::from_i64(0) {
         return vec![];
     }

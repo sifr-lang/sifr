@@ -98,7 +98,7 @@ fn bisect_right<T: Clone + 'static + PartialOrd>(
     }
     left.clone()
 }
-fn insort_left<T: Clone + 'static>(
+fn insort_left<T: Clone + 'static + PartialOrd>(
     a: &mut Vec<T>,
     x: &T,
     lo: SifrInt,
@@ -107,7 +107,7 @@ fn insort_left<T: Clone + 'static>(
     let pos: SifrInt = bisect_left(a, x, (lo).clone(), (hi).clone());
     a.insert(::sifr_runtime::to_usize_proven(&pos), x.clone());
 }
-fn insort_right<T: Clone + 'static>(
+fn insort_right<T: Clone + 'static + PartialOrd>(
     a: &mut Vec<T>,
     x: &T,
     lo: SifrInt,

@@ -125,7 +125,7 @@ fn _sift_down_max<T: Clone + 'static + PartialOrd>(
         }
     }
 }
-fn _heapify_max<T: Clone + 'static>(data: &mut Vec<T>) {
+fn _heapify_max<T: Clone + 'static + PartialOrd>(data: &mut Vec<T>) {
     "Convert list to a max-heap in-place. O(n) time.".to_string();
     let n: SifrInt = SifrInt::from(data.len());
     let mut i: SifrInt = &n.floor_div_known_nonzero(&SifrInt::from_i64(2))
@@ -135,7 +135,7 @@ fn _heapify_max<T: Clone + 'static>(data: &mut Vec<T>) {
         i = &i - &SifrInt::from_i64(1);
     }
 }
-fn _heappop_max<T: Clone + 'static>(heap: &mut Vec<T>) -> Option<T> {
+fn _heappop_max<T: Clone + 'static + PartialOrd>(heap: &mut Vec<T>) -> Option<T> {
     "Pop and return the largest item. Heap is modified in-place. O(log n) time.\n    Returns None if the heap is empty."
         .to_string();
     let n: SifrInt = SifrInt::from(heap.len());
@@ -176,7 +176,10 @@ fn _heappop_max<T: Clone + 'static>(heap: &mut Vec<T>) -> Option<T> {
     }
     top
 }
-fn _heapreplace_max<T: Clone + 'static>(heap: &mut Vec<T>, item: T) -> Option<T> {
+fn _heapreplace_max<T: Clone + 'static + PartialOrd>(
+    heap: &mut Vec<T>,
+    item: T,
+) -> Option<T> {
     "Pop and return the largest item, then push item onto the heap.\n    Returns None if the heap is empty. O(log n) time."
         .to_string();
     if &SifrInt::from(heap.len()) == &SifrInt::from_i64(0) {

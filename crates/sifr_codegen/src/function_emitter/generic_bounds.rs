@@ -85,7 +85,19 @@ impl RustEmitter {
                 } else {
                     base
                 };
-                let extra = Self::extra_bound_items_for_type_param(type_param, &func.body)
+                let mut extra_bounds = Self::extra_bound_items_for_type_param(type_param, &func.body);
+                let mut closed_bounds = self
+                    .function_type_param_bounds
+                    .get(&func.name)
+                    .and_then(|by_param| by_param.get(type_param))
+                    .into_iter()
+                    .flatten()
+                    .filter(|bound| !extra_bounds.contains(bound))
+                    .cloned()
+                    .collect::<Vec<_>>();
+                closed_bounds.sort();
+                extra_bounds.extend(closed_bounds);
+                let extra = extra_bounds
                     .into_iter()
                     .filter(|bound| !base.split(" + ").any(|existing| existing == bound))
                     .fold(String::new(), |mut rendered, bound| {
