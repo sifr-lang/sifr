@@ -19,6 +19,22 @@ CAPABILITIES = AREA_ROOT / "data/capability_matrix.json"
 TOOLS_ROOT = REPO_ROOT / "crates/sifr_sql_postgresql_tools"
 PROVIDER_ROOT = REPO_ROOT / "crates/sifr_sql_postgresql"
 RUNTIME_ROOT = REPO_ROOT / "crates/sifr_sql_runtime"
+REFLECTED_OBJECTS = {
+    "check-constraint", "column", "composite", "domain", "enum", "foreign-key",
+    "function", "index", "materialized-view", "namespace", "primary-key", "range",
+    "sequence", "table", "unique-constraint", "view",
+}
+DECLARED_EFFECT_OBJECTS = {
+    "array", "cast", "collation", "dialect-metadata", "extension", "generated-column",
+    "identity-column", "multirange", "operator", "privilege", "server-capability", "trigger",
+}
+NONTRANSACTIONAL_OPERATIONS = {
+    "alter-subscription", "alter-system", "alter-table-detach-partition-concurrently",
+    "alter-type-add-value", "cluster",
+    "create-database", "create-index-concurrently", "create-subscription", "create-tablespace",
+    "drop-database", "drop-index-concurrently", "drop-subscription", "drop-tablespace",
+    "refresh-materialized-view-concurrently", "reindex-concurrently", "vacuum",
+}
 
 
 class ContractError(ValueError):
@@ -42,8 +58,8 @@ def validate(payload: dict[str, Any]) -> None:
     require(payload.get("supported_server_majors") == list(range(13, 19)), "server matrix drift")
     reflected = set(payload.get("reflected_object_kinds", []))
     declared = set(payload.get("declared_effect_object_kinds", []))
-    require(len(reflected) == 16, "reflected object inventory is incomplete")
-    require(len(declared) == 12, "declared-effect object inventory is incomplete")
+    require(reflected == REFLECTED_OBJECTS, "reflected object inventory is incomplete")
+    require(declared == DECLARED_EFFECT_OBJECTS, "declared-effect object inventory is incomplete")
     require(not reflected.intersection(declared), "object reflection inventories overlap")
     require(
         set(payload.get("fail_closed_mechanisms", []))
@@ -61,8 +77,11 @@ def validate(payload: dict[str, Any]) -> None:
         },
         "operator action inventory is incomplete",
     )
-    require(len(payload.get("nontransactional_operations", [])) == 14, "DDL boundary inventory drift")
-    require(len(payload.get("live_scenarios", [])) == 12, "live scenario inventory drift")
+    require(
+        set(payload.get("nontransactional_operations", [])) == NONTRANSACTIONAL_OPERATIONS,
+        "DDL boundary inventory drift",
+    )
+    require(len(payload.get("live_scenarios", [])) == 13, "live scenario inventory drift")
     validate_matrix(payload)
     validate_sources(payload)
     validate_capability()
@@ -171,7 +190,7 @@ def main() -> int:
     if args.self_test:
         self_test(payload)
     else:
-        print("PostgreSQL migration qualification ok: majors=6 scenarios=12")
+        print("PostgreSQL migration qualification ok: majors=6 scenarios=13")
     return 0
 
 

@@ -85,6 +85,16 @@ impl MigrationEngine {
                 "migration ledger fingerprint differs from the live schema",
             ));
         }
+        if ledger
+            .in_progress
+            .as_ref()
+            .is_some_and(|progress| progress.direction == MigrationDirection::Rollback)
+        {
+            return Err(error(
+                MigrationExecutionErrorKind::AmbiguousRecovery,
+                "pending rollback progress must finish before forward migration",
+            ));
+        }
         loop {
             if ledger.heads.len() == 1 && ledger.heads.contains(&graph.head) {
                 if ledger.schema_fingerprint != graph.target_fingerprint {

@@ -87,15 +87,7 @@ impl<P: PostgresParser> MigrationDialect for PostgresMigrationDialect<P> {
         }
         let mut schema = input.clone();
         for object in document.objects {
-            if schema
-                .objects
-                .insert(object.identity.clone(), object)
-                .is_some()
-            {
-                return Err(reflection_error(
-                    "PostgreSQL DDL replaces an existing schema identity",
-                ));
-            }
+            schema.objects.insert(object.identity.clone(), object);
         }
         let risk = reflected_risk(statement);
         Ok(DdlReflection::Reflected { schema, risk })
@@ -127,10 +119,29 @@ pub fn classify_migration_ddl(statement: &str) -> PostgresDdlExecutionClass {
         "VIEW".to_string(),
         "CONCURRENTLY".to_string(),
     ]);
+    let detach_partition_concurrently = tokens
+        .starts_with(&["ALTER".to_string(), "TABLE".to_string()])
+        && tokens
+            .iter()
+            .position(|token| token == "DETACH")
+            .is_some_and(|index| {
+                tokens
+                    .get(index + 1)
+                    .is_some_and(|token| token == "PARTITION")
+                    && tokens[index + 2..]
+                        .iter()
+                        .any(|token| token == "CONCURRENTLY")
+            });
+    let add_enum_value = tokens.starts_with(&["ALTER".to_string(), "TYPE".to_string()])
+        && tokens
+            .windows(2)
+            .any(|window| window[0] == "ADD" && window[1] == "VALUE");
     if create_or_drop_nontransactional
         || index_concurrently
         || (first == Some("REINDEX") && tokens.iter().any(|token| token == "CONCURRENTLY"))
         || refresh_concurrently
+        || detach_partition_concurrently
+        || add_enum_value
         || tokens.starts_with(&["ALTER".to_string(), "SYSTEM".to_string()])
         || tokens.starts_with(&["ALTER".to_string(), "SUBSCRIPTION".to_string()])
         || matches!(first, Some("VACUUM" | "CLUSTER"))
@@ -148,6 +159,16 @@ fn leading_sql_tokens(statement: &str) -> Vec<String> {
     let mut tokens = Vec::new();
     let mut index = 0;
     while index < bytes.len() && tokens.len() < 12 {
+        if matches!(bytes[index], b'\'' | b'"') {
+            index = skip_quoted(bytes, index, bytes[index]);
+            continue;
+        }
+        if bytes[index] == b'$' {
+            if let Some(after_literal) = skip_dollar_quoted(bytes, index) {
+                index = after_literal;
+                continue;
+            }
+        }
         if bytes[index].is_ascii_whitespace() || bytes[index].is_ascii_punctuation() {
             if bytes[index] == b'-' && bytes.get(index + 1) == Some(&b'-') {
                 index += 2;
@@ -189,6 +210,40 @@ fn leading_sql_tokens(statement: &str) -> Vec<String> {
         index += 1;
     }
     tokens
+}
+
+fn skip_quoted(bytes: &[u8], mut index: usize, quote: u8) -> usize {
+    index += 1;
+    while index < bytes.len() {
+        if bytes[index] == quote {
+            if bytes.get(index + 1) == Some(&quote) {
+                index += 2;
+            } else {
+                return index + 1;
+            }
+        } else {
+            index += 1;
+        }
+    }
+    index
+}
+
+fn skip_dollar_quoted(bytes: &[u8], index: usize) -> Option<usize> {
+    let mut tag_end = index + 1;
+    while bytes
+        .get(tag_end)
+        .is_some_and(|byte| byte.is_ascii_alphanumeric() || *byte == b'_')
+    {
+        tag_end += 1;
+    }
+    if bytes.get(tag_end) != Some(&b'$') {
+        return None;
+    }
+    let delimiter = &bytes[index..=tag_end];
+    bytes[tag_end + 1..]
+        .windows(delimiter.len())
+        .position(|window| window == delimiter)
+        .map(|offset| tag_end + 1 + offset + delimiter.len())
 }
 
 fn reflected_risk(statement: &str) -> DdlRisk {

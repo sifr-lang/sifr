@@ -14,6 +14,8 @@ use sifr_sql_runtime::{
     MigrationTransactionRequirement,
 };
 use std::collections::{BTreeMap, BTreeSet};
+use std::sync::{Arc, Barrier};
+use std::thread;
 use tokio::runtime::Builder;
 use tokio_postgres::NoTls;
 
@@ -42,11 +44,32 @@ fn live_postgresql_migration_contract() {
     );
 
     verify_false_import(&url, major, &plan);
+    verify_concurrent_profile_bootstrap(&url, major, &plan);
     verify_failed_transaction(&url, major, &fingerprints);
     verify_head_mismatch(&url, major, &plan);
     verify_schema_drift(&url, major, &plan);
     verify_lock_and_apply_resume_rollback(&url, major, &plan, &fingerprints);
     verify_checksum_drift(&url, major, &plan);
+}
+
+fn verify_concurrent_profile_bootstrap(url: &str, major: u16, plan: &MigrationExecutionPlan) {
+    let barrier = Arc::new(Barrier::new(2));
+    thread::scope(|scope| {
+        let handles = ["qualification-bootstrap-a", "qualification-bootstrap-b"].map(|identity| {
+            let barrier = Arc::clone(&barrier);
+            scope.spawn(move || {
+                let mut runtime = migration_runtime(url, major, identity);
+                barrier.wait();
+                let lock = MigrationRuntime::acquire_lock(&mut runtime, plan)
+                    .expect("cross-profile bootstrap lock");
+                MigrationRuntime::release_lock(&mut runtime, lock)
+                    .expect("cross-profile bootstrap release");
+            })
+        });
+        for handle in handles {
+            handle.join().expect("bootstrap worker");
+        }
+    });
 }
 
 #[derive(Clone)]

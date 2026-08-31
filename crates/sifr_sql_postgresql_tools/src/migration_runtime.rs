@@ -29,6 +29,7 @@ pub struct PostgresMigrationRuntime {
     identity: MigrationRuntimeIdentity,
     ledger_identity: String,
     lock_key: i64,
+    bootstrap_lock_key: i64,
     transaction_open: bool,
 }
 
@@ -168,6 +169,7 @@ pub fn connect_migration_runtime(
             capabilities,
         },
         lock_key: advisory_key(&format!("{database_oid}:{ledger_identity}")),
+        bootstrap_lock_key: advisory_key(&format!("{database_oid}:ledger-bootstrap")),
         ledger_identity,
         transaction_open: false,
     })
@@ -192,6 +194,24 @@ impl MigrationRuntime for PostgresMigrationRuntime {
         if !acquired {
             return Err("another PostgreSQL migration is running".to_string());
         }
+        let bootstrap = self.runtime.block_on(async {
+            self.client
+                .query_one(
+                    "SELECT pg_advisory_lock($1::bigint)",
+                    &[&self.bootstrap_lock_key],
+                )
+                .await
+                .map(|_| ())
+                .map_err(|_| "cannot acquire PostgreSQL ledger bootstrap lock".to_string())
+        });
+        if let Err(failure) = bootstrap {
+            let _release = self.runtime.block_on(async {
+                self.client
+                    .query_one("SELECT pg_advisory_unlock($1::bigint)", &[&self.lock_key])
+                    .await
+            });
+            return Err(failure);
+        }
         let setup = self.runtime.block_on(async {
             self.client
                 .batch_execute(&format!(
@@ -203,7 +223,23 @@ impl MigrationRuntime for PostgresMigrationRuntime {
                 .await
                 .map_err(|_| "cannot initialize PostgreSQL migration ledger".to_string())
         });
-        if let Err(failure) = setup {
+        let bootstrap_release = self.runtime.block_on(async {
+            self.client
+                .query_one(
+                    "SELECT pg_advisory_unlock($1::bigint)",
+                    &[&self.bootstrap_lock_key],
+                )
+                .await
+                .map_err(|_| "cannot release PostgreSQL ledger bootstrap lock".to_string())?
+                .try_get::<_, bool>(0)
+                .map_err(|_| "PostgreSQL ledger bootstrap unlock result is invalid".to_string())
+                .and_then(|released| {
+                    released
+                        .then_some(())
+                        .ok_or_else(|| "PostgreSQL ledger bootstrap lock was not held".to_string())
+                })
+        });
+        if let Some(failure) = setup.err().or_else(|| bootstrap_release.err()) {
             let _release = self.runtime.block_on(async {
                 self.client
                     .query_one("SELECT pg_advisory_unlock($1::bigint)", &[&self.lock_key])

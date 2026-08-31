@@ -56,7 +56,8 @@ fn migration_artifacts_are_deterministic_complete_and_atomic() {
     let first = build_migration_artifacts(&graph, &target).expect("first build should pass");
     let second = build_migration_artifacts(&graph, &target).expect("second build should pass");
     assert_eq!(first, second);
-    let execution_plan = lower_migration_execution_plan(&graph);
+    let execution_plan =
+        lower_migration_execution_plan(&graph).expect("execution plan should lower");
     let emitted_plan: MigrationExecutionPlan = serde_json::from_slice(
         first
             .files()
@@ -92,6 +93,19 @@ fn migration_artifacts_reject_a_target_authority_mismatch() {
     assert_eq!(
         build_migration_artifacts(&graph, &target)
             .expect_err("target mismatch must fail")
+            .kind,
+        SchemaLifecycleErrorKind::InvalidAuthority
+    );
+}
+
+#[test]
+fn migration_artifacts_reject_an_unknown_compiler_graph_format() {
+    let target = schema();
+    let mut graph = graph(&target);
+    graph.format_version = 2;
+    assert_eq!(
+        lower_migration_execution_plan(&graph)
+            .expect_err("unknown compiler graph format must fail")
             .kind,
         SchemaLifecycleErrorKind::InvalidAuthority
     );

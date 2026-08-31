@@ -3,8 +3,9 @@ use crate::{SchemaArtifactRecord, SchemaLifecycleError, SchemaLifecycleErrorKind
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use sifr_sql_contract::{
-    CompiledMigrationGraph, CompiledMigrationStep, CompiledStepKind, ReplayPolicy, SchemaIr,
-    TransactionBoundary, TransactionRequirement, schema_fingerprint,
+    CompiledMigrationGraph, CompiledMigrationStep, CompiledStepKind,
+    MIGRATION_GRAPH_FORMAT_VERSION, ReplayPolicy, SchemaIr, TransactionBoundary,
+    TransactionRequirement, schema_fingerprint,
 };
 use sifr_sql_runtime::{
     MIGRATION_EXECUTION_PLAN_FORMAT_VERSION, MigrationExecutionNode, MigrationExecutionPath,
@@ -57,9 +58,16 @@ pub fn build_migration_artifacts(
     Ok(first)
 }
 
-#[must_use]
-pub fn lower_migration_execution_plan(graph: &CompiledMigrationGraph) -> MigrationExecutionPlan {
-    MigrationExecutionPlan {
+pub fn lower_migration_execution_plan(
+    graph: &CompiledMigrationGraph,
+) -> Result<MigrationExecutionPlan, SchemaLifecycleError> {
+    if graph.format_version != MIGRATION_GRAPH_FORMAT_VERSION {
+        return Err(error(
+            SchemaLifecycleErrorKind::InvalidAuthority,
+            "compiled migration graph format is not supported",
+        ));
+    }
+    Ok(MigrationExecutionPlan {
         format_version: MIGRATION_EXECUTION_PLAN_FORMAT_VERSION,
         provider_family: graph.provider_family.clone(),
         target_fingerprint: graph.target_fingerprint.clone(),
@@ -121,7 +129,7 @@ pub fn lower_migration_execution_plan(graph: &CompiledMigrationGraph) -> Migrati
                 )
             })
             .collect(),
-    }
+    })
 }
 
 fn build_once(
@@ -140,7 +148,7 @@ fn build_once(
             "compiled migration head does not match the artifact target schema",
         ));
     }
-    let execution_plan = lower_migration_execution_plan(graph);
+    let execution_plan = lower_migration_execution_plan(graph)?;
     let mut files = BTreeMap::from([
         (
             MIGRATION_GRAPH_PATH.to_string(),

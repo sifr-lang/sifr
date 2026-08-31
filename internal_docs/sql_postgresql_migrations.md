@@ -63,8 +63,9 @@ later intermediate states. This rule covers arrays, multiranges, casts,
 operators, collations, extensions, triggers, generated and identity columns,
 privileges, server capabilities, and dialect metadata.
 
-The provider never guesses the effect of unhandled DDL. A reflected statement
-cannot replace an existing object identity. A declared effect cannot be empty.
+The provider never guesses the effect of unhandled DDL. A statement that does
+not add a new reflected object becomes opaque. A declared effect cannot be
+empty.
 
 Reflection also reports schema-lock and data-rewrite risks. The operator plan
 keeps those compile-time reports separate from live execution.
@@ -81,6 +82,9 @@ operation families:
 - `REINDEX ... CONCURRENTLY`;
 - `REFRESH MATERIALIZED VIEW CONCURRENTLY`;
 - `ALTER SYSTEM`;
+- `ALTER TABLE ... DETACH PARTITION ... CONCURRENTLY`;
+- `ALTER TYPE ... ADD VALUE`, because PostgreSQL delays use of the new value
+  until the transaction commits;
 - `VACUUM`; and
 - `CLUSTER`.
 
@@ -126,6 +130,10 @@ step. It does not run another implementation.
 The provider derives one signed 64-bit advisory-lock key from the database OID
 and profile ledger identity. It calls `pg_try_advisory_lock`. A second process
 for the same database and profile fails before it reads or changes the ledger.
+
+A database-scoped bootstrap lock serializes creation of the ledger schema and
+table. Different profiles can start at the same time without racing on the
+shared ledger objects.
 
 The provider stores one JSON ledger row in
 `sifr_internal.migration_ledger`. The row identity is the profile name. The
@@ -202,7 +210,8 @@ For each server, it covers:
 - fresh creation and a multi-step upgrade;
 - two schema-neutral branches and one merge;
 - transactional and concurrent-index DDL;
-- advisory-lock contention and concurrent-start rejection;
+- advisory-lock contention, concurrent-start rejection, and cross-profile
+  ledger bootstrap;
 - bounded backfill interruption and resume;
 - failed transaction rollback;
 - checksum drift, head mismatch, and live schema drift; and

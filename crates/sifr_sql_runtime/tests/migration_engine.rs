@@ -1,13 +1,13 @@
 #![allow(clippy::expect_used)]
 
 use sifr_sql_runtime::{
-    AppliedMigrationRecord, MIGRATION_EXECUTION_PLAN_FORMAT_VERSION, MigrationEngine,
-    MigrationExecutionErrorKind, MigrationExecutionLimits, MigrationExecutionNode,
-    MigrationExecutionPath, MigrationExecutionPlan, MigrationExecutionStatus,
-    MigrationExecutionStep, MigrationExecutionStepKind, MigrationId, MigrationLedgerSnapshot,
-    MigrationLock, MigrationReplayPolicy, MigrationRuntime, MigrationRuntimeConstraint,
-    MigrationRuntimeIdentity, MigrationStateId, MigrationStepRequest, MigrationStepResult,
-    MigrationTransactionBoundary, MigrationTransactionRequirement,
+    AppliedMigrationRecord, InProgressMigrationRecord, MIGRATION_EXECUTION_PLAN_FORMAT_VERSION,
+    MigrationDirection, MigrationEngine, MigrationExecutionErrorKind, MigrationExecutionLimits,
+    MigrationExecutionNode, MigrationExecutionPath, MigrationExecutionPlan,
+    MigrationExecutionStatus, MigrationExecutionStep, MigrationExecutionStepKind, MigrationId,
+    MigrationLedgerSnapshot, MigrationLock, MigrationReplayPolicy, MigrationRuntime,
+    MigrationRuntimeConstraint, MigrationRuntimeIdentity, MigrationStateId, MigrationStepRequest,
+    MigrationStepResult, MigrationTransactionBoundary, MigrationTransactionRequirement,
 };
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
@@ -608,4 +608,34 @@ fn explicit_reverse_plan_rolls_back_to_the_recorded_prior_heads() {
     assert_eq!(report.heads, BTreeSet::from([id("baseline")]));
     assert_eq!(report.schema_fingerprint, before);
     assert!(runtime.ledger.applied.is_empty());
+}
+
+#[test]
+fn forward_execution_refuses_pending_rollback_progress_at_the_target_head() {
+    let graph = graph(false);
+    let after = graph.target_fingerprint.clone();
+    let mut runtime = FakeRuntime::new(
+        &graph,
+        vec![complete(&after), assertion(&after, 1, Some(true))],
+    );
+    let engine = MigrationEngine::new(MigrationExecutionLimits::default());
+    engine
+        .execute(&graph, &mut runtime)
+        .expect("forward migration");
+    runtime.ledger.in_progress = Some(InProgressMigrationRecord {
+        direction: MigrationDirection::Rollback,
+        migration: id("m1"),
+        parent: id("baseline"),
+        migration_checksum: "c".repeat(64),
+        completed_steps: BTreeMap::new(),
+        current_fingerprint: after,
+        recovery_point: None,
+        backfill_progress: None,
+        transaction_open: false,
+        duration_millis: 0,
+    });
+    let error = engine
+        .execute(&graph, &mut runtime)
+        .expect_err("forward execution must not hide rollback progress");
+    assert_eq!(error.kind, MigrationExecutionErrorKind::AmbiguousRecovery);
 }

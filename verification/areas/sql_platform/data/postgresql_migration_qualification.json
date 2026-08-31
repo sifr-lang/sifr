@@ -41,6 +41,8 @@
   "nontransactional_operations": [
     "alter-subscription",
     "alter-system",
+    "alter-table-detach-partition-concurrently",
+    "alter-type-add-value",
     "cluster",
     "create-database",
     "create-index-concurrently",
@@ -77,6 +79,7 @@
   "live_scenarios": [
     "advisory-lock-contention",
     "checksum-drift",
+    "cross-profile-bootstrap",
     "explicit-rollback",
     "failed-transaction",
     "fresh-create",

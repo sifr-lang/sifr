@@ -110,6 +110,18 @@ fn postgresql_nontransactional_ddl_has_a_closed_classification() {
         classify_migration_ddl("CREATE INDEX users_idx ON users(id)"),
         PostgresDdlExecutionClass::Transactional
     );
+    assert_eq!(
+        classify_migration_ddl(
+            "CREATE TABLE notes(value text DEFAULT 'CREATE INDEX CONCURRENTLY')"
+        ),
+        PostgresDdlExecutionClass::Transactional
+    );
+    assert_eq!(
+        classify_migration_ddl(
+            "CREATE TABLE dollar_notes(value text DEFAULT $$CREATE INDEX CONCURRENTLY$$)"
+        ),
+        PostgresDdlExecutionClass::Transactional
+    );
     assert!(matches!(
         classify_migration_ddl("CREATE INDEX CONCURRENTLY users_idx ON users(id)"),
         PostgresDdlExecutionClass::RequiresAutocommit { .. }
@@ -127,16 +139,21 @@ fn postgresql_nontransactional_ddl_has_a_closed_classification() {
         "DROP TABLESPACE qualification",
         "CREATE SUBSCRIPTION qualification CONNECTION 'redacted' PUBLICATION events",
         "ALTER SUBSCRIPTION qualification DISABLE",
+        "ALTER TABLE accounts DETACH PARTITION accounts_2025 CONCURRENTLY",
+        "ALTER TYPE mood ADD VALUE 'excellent'",
         "DROP SUBSCRIPTION qualification",
         "ALTER SYSTEM SET work_mem = '8MB'",
         "REFRESH MATERIALIZED VIEW CONCURRENTLY user_totals",
         "REINDEX (VERBOSE) INDEX CONCURRENTLY users_idx",
         "CLUSTER users USING users_idx",
     ] {
-        assert!(matches!(
-            classify_migration_ddl(statement),
-            PostgresDdlExecutionClass::RequiresAutocommit { .. }
-        ));
+        assert!(
+            matches!(
+                classify_migration_ddl(statement),
+                PostgresDdlExecutionClass::RequiresAutocommit { .. }
+            ),
+            "expected autocommit classification for {statement}"
+        );
     }
 }
 
