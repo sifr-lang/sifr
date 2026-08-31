@@ -52,7 +52,7 @@ pub fn schema_normalization_request(
     compiler_semantic_version: &str,
     profile_identity: &str,
     server_version: &str,
-    sql_modes: &BTreeSet<String>,
+    session: &crate::SessionContract,
     extensions: &BTreeSet<String>,
     sources: &[SchemaSourceInput],
 ) -> Result<EmbeddedAnalysisRequest, SchemaContractError> {
@@ -101,7 +101,23 @@ pub fn schema_normalization_request(
         ("server-version".to_string(), server_version.to_string()),
         (
             "sql-modes".to_string(),
-            serde_json::to_string(sql_modes).map_err(|error| serialization_error(&error))?,
+            serde_json::to_string(&session.sql_modes)
+                .map_err(|error| serialization_error(&error))?,
+        ),
+        (
+            "collation".to_string(),
+            serde_json::to_string(&session.collation)
+                .map_err(|error| serialization_error(&error))?,
+        ),
+        (
+            "character-set".to_string(),
+            serde_json::to_string(&session.character_set)
+                .map_err(|error| serialization_error(&error))?,
+        ),
+        (
+            "search-path".to_string(),
+            serde_json::to_string(&session.search_path)
+                .map_err(|error| serialization_error(&error))?,
         ),
         (
             "extensions".to_string(),

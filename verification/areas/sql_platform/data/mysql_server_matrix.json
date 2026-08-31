@@ -1,0 +1,31 @@
+{
+  "authority": "live-mysql-provider-matrix",
+  "schema_version": 1,
+  "servers": [
+    {
+      "image": "mysql:8.4",
+      "image_digest": "sha256:b3b90af2a6552ae30c266fdb7d5dd55f3afb72404bb78d37fe8a23eb857fd3fb",
+      "series": "8.4",
+      "server_version": "8.4.11",
+      "status": "passed",
+      "surface": "all"
+    },
+    {
+      "image": "mysql:9.7",
+      "image_digest": "sha256:257388edf9c84dbc04c763625446d5f3fa6ed60d1b0873bc552c614ba0a7ab4e",
+      "series": "9.7",
+      "server_version": "9.7.2",
+      "status": "passed",
+      "surface": "all"
+    },
+    {
+      "image": "mysql:26.7",
+      "image_digest": "sha256:66aec17cd21a956029b83f083b813073859e8355dc1a00e55df6ba02f0e32345",
+      "series": "26.7",
+      "server_version": "26.7.0",
+      "status": "passed",
+      "surface": "all"
+    }
+  ],
+  "surface": "all"
+}

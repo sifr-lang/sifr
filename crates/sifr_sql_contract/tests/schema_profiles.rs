@@ -254,7 +254,7 @@ fn schema_component_round_trip_binds_source_bytes_and_source_kinds() {
         "0.0.0",
         "app::main",
         "18",
-        &BTreeSet::new(),
+        &SessionContract::default(),
         &BTreeSet::from(["citext".to_string()]),
         &sources,
     )

@@ -1,0 +1,40 @@
+[package]
+name = "sifr_sql_mysql"
+version = "0.0.0"
+publish = false
+edition = { workspace = true }
+rust-version = { workspace = true }
+license = { workspace = true }
+build = "build.rs"
+
+[lib]
+crate-type = ["rlib", "cdylib"]
+
+[package.metadata.sifr_sql]
+artifact-role = "mysql-compiler-component"
+grammar = "src/mysql.lalrpop"
+artifact-manifest = "component-artifacts.json"
+supported-servers = ["8.4", "9.7", "26.7"]
+
+[dependencies]
+lalrpop-util = { workspace = true, features = ["std", "unicode"] }
+semver = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sha2 = { workspace = true }
+sifr_compiler_component = { workspace = true }
+sifr_sql_contract = { workspace = true }
+
+[target.'cfg(target_family = "wasm")'.dependencies]
+wit-bindgen = { workspace = true }
+
+[build-dependencies]
+lalrpop = { workspace = true, features = ["lexer", "unicode"] }
+
+[dev-dependencies]
+insta = { workspace = true }
+mysql_async = { workspace = true, features = ["aws-lc-rs", "minimal-rust", "rustls-tls", "tls12"] }
+tokio = { workspace = true, features = ["macros", "net", "rt", "time"] }
+
+[lints]
+workspace = true

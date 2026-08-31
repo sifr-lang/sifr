@@ -1,0 +1,30 @@
+[package]
+name = "sifr_sql_mysql_runtime"
+version = "0.0.0"
+publish = false
+edition = { workspace = true }
+rust-version = { workspace = true }
+license = { workspace = true }
+
+[package.metadata.sifr_sql]
+artifact-role = "mysql-runtime"
+raw-driver = "mysql_async::Conn"
+upstream-pool = false
+tracing-feature = false
+cancellation = "bounded-kill-query-then-discard"
+
+[dependencies]
+futures-core = { workspace = true }
+mysql_async = { workspace = true, features = ["aws-lc-rs", "minimal-rust", "rustls-tls", "tls12"] }
+mysql_common = { workspace = true }
+rustls = { workspace = true }
+sifr_runtime = { workspace = true }
+sifr_sql_runtime = { workspace = true }
+tokio = { workspace = true, features = ["macros", "net", "rt", "sync", "time"] }
+
+[dev-dependencies]
+sha2 = { workspace = true }
+static_assertions = { workspace = true }
+
+[lints]
+workspace = true

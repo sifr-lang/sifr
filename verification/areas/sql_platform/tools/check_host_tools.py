@@ -73,8 +73,15 @@ def validate(payload: dict[str, Any]) -> None:
 
 
 def validate_evidence_paths(payload: dict[str, Any]) -> None:
-    evidence = payload.get("behavioral_evidence", [])
-    require(len(evidence) == 4, "host-tool behavioral evidence inventory drift")
+    evidence = set(payload.get("behavioral_evidence", []))
+    require(evidence == {
+        "crates/sifr/tests/host_tool_cli.rs",
+        "crates/sifr_analysis/src/host/tests/sql_editor_tests.rs",
+        "crates/sifr_package/src/host_tools_tests.rs",
+        "crates/sifr_sql_contract/tests/provision_contract.rs",
+        "crates/sifr_sql_mysql_tools/src/command.rs",
+        "crates/sifr_sql_mysql_tools/src/provision.rs",
+    }, "host-tool behavioral evidence inventory drift")
     for relative in evidence:
         path = REPO_ROOT / relative
         require(path.is_file(), f"behavioral evidence file does not exist: {relative}")
@@ -96,6 +103,9 @@ def self_test(payload: dict[str, Any]) -> None:
     mutations.append(candidate)
     candidate = copy.deepcopy(payload)
     candidate["inherited_failure_isolation"]["sql_initialization_is_fatal"] = True
+    mutations.append(candidate)
+    candidate = copy.deepcopy(payload)
+    candidate["behavioral_evidence"].pop()
     mutations.append(candidate)
     accepted = 0
     for candidate in mutations:

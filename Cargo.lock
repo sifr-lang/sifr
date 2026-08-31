@@ -7900,6 +7900,58 @@ dependencies = [
 ]
 
 [[package]]
+name = "sifr_sql_mysql"
+version = "0.0.0"
+dependencies = [
+ "insta",
+ "lalrpop",
+ "lalrpop-util",
+ "mysql_async",
+ "semver",
+ "serde",
+ "serde_json",
+ "sha2 0.11.0",
+ "sifr_compiler_component",
+ "sifr_sql_contract",
+ "tokio",
+ "wit-bindgen 0.61.1",
+]
+
+[[package]]
+name = "sifr_sql_mysql_runtime"
+version = "0.0.0"
+dependencies = [
+ "futures-core",
+ "mysql_async",
+ "mysql_common",
+ "rustls",
+ "sha2 0.11.0",
+ "sifr_runtime",
+ "sifr_sql_runtime",
+ "static_assertions",
+ "tokio",
+]
+
+[[package]]
+name = "sifr_sql_mysql_tools"
+version = "0.0.0"
+dependencies = [
+ "mysql_async",
+ "semver",
+ "serde",
+ "serde_json",
+ "sha2 0.11.0",
+ "sifr_driver",
+ "sifr_sql_contract",
+ "sifr_sql_mysql",
+ "sifr_sql_runtime",
+ "sifr_sql_tool",
+ "tempfile",
+ "tokio",
+ "url",
+]
+
+[[package]]
 name = "sifr_sql_postgresql"
 version = "0.0.0"
 dependencies = [

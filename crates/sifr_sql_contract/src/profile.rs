@@ -43,6 +43,27 @@ pub struct SessionContract {
     pub isolation: Option<String>,
 }
 
+#[must_use]
+pub fn dialect_modes_for_session(session: &SessionContract) -> BTreeSet<String> {
+    session
+        .sql_modes
+        .iter()
+        .cloned()
+        .chain(
+            session
+                .character_set
+                .iter()
+                .map(|value| format!("character-set:{value}")),
+        )
+        .chain(
+            session
+                .collation
+                .iter()
+                .map(|value| format!("collation:{value}")),
+        )
+        .collect()
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct SchemaProfile {

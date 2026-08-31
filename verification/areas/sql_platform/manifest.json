@@ -298,6 +298,50 @@
       ]
     },
     {
+      "name": "mysql-provider",
+      "kind": "adapter",
+      "resource_classes": ["cpu"],
+      "network_mode": "offline",
+      "timeout_seconds": 900,
+      "cases": [
+        {
+          "id": "sql-mysql-qualification",
+          "entry": "verification/areas/sql_platform/data/mysql_qualification.json",
+          "command": "sql-mysql-qualification",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-mysql-compiler-tests",
+          "entry": "crates/sifr_sql_mysql/tests/mysql_compiler.rs",
+          "command": "sql-mysql-compiler-tests",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-mysql-property-tests",
+          "entry": "crates/sifr_sql_mysql/tests/mysql_properties.rs",
+          "command": "sql-mysql-property-tests",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-mysql-runtime-tests",
+          "entry": "crates/sifr_sql_mysql_runtime/tests/runtime_types.rs",
+          "command": "sql-mysql-runtime-tests",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-mysql-migration-tests",
+          "entry": "crates/sifr_sql_mysql_tools/tests/migration_qualification.rs",
+          "command": "sql-mysql-migration-tests",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
       "name": "mutation",
       "kind": "adapter",
       "cases": [
@@ -354,6 +398,13 @@
           "id": "sql-postgresql-runtime-qualification-mutations",
           "entry": "verification/areas/sql_platform/data/postgresql_runtime_qualification.json",
           "command": "sql-postgresql-runtime-qualification-mutations",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-mysql-qualification-mutations",
+          "entry": "verification/areas/sql_platform/tools/check_mysql.py",
+          "command": "sql-mysql-qualification-mutations",
           "expect_exit_code": 0,
           "diagnostic_formats": []
         },
@@ -439,6 +490,22 @@
           "id": "sql-migration-tool-tests",
           "entry": "crates/sifr_sql_tool/tests/migration_artifacts.rs",
           "command": "sql-migration-tool-tests",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "mysql-live",
+      "kind": "adapter",
+      "resource_classes": ["container-runtime", "network", "platform-specific"],
+      "network_mode": "live",
+      "timeout_seconds": 3600,
+      "cases": [
+        {
+          "id": "sql-mysql-live-matrix",
+          "entry": "verification/areas/sql_platform/tools/run_mysql_server_matrix.py",
+          "command": "sql-mysql-live-matrix",
           "expect_exit_code": 0,
           "diagnostic_formats": []
         }

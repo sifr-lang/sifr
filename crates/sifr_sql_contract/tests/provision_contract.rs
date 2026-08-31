@@ -1,3 +1,5 @@
+#![allow(clippy::expect_used)]
+
 use sifr_sql_contract::{
     ProvisionedCleanup, ProvisionedConnection, ProvisionedCredential,
     TEST_CONNECTION_MANIFEST_VERSION, TestConnectionManifest,

@@ -48,7 +48,15 @@ impl ResolvedSqlRequirementProvider {
             || normalized.dialect.family != self.family
             || normalized.dialect.server_version != self.config.server_version
             || normalized.dialect.features != self.config.extensions
-            || normalized.dialect.modes != self.config.sql_modes
+            || normalized.dialect.modes
+                != sifr_sql_contract::dialect_modes_for_session(
+                    &sifr_sql_contract::SessionContract {
+                        sql_modes: self.config.sql_modes.clone(),
+                        collation: self.config.collation.clone(),
+                        character_set: self.config.character_set.clone(),
+                        ..sifr_sql_contract::SessionContract::default()
+                    },
+                )
             || source.kind != SchemaDocumentKind::SqlDdl
             || source.document != normalized_relative_path(&self.config.source)?
         {

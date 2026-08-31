@@ -120,6 +120,8 @@ pub struct SqlEditorDocumentView {
     pub tokens: Vec<SqlEditorToken>,
     pub catalog: SqlEditorCatalog,
     pub profile_name: Option<String>,
+    pub provider_family: Option<String>,
+    pub provider_documentation_base: Option<String>,
     pub fragment_identity: Option<String>,
     pub relation_aliases: BTreeMap<String, String>,
     pub parameter_types: Vec<String>,
@@ -142,6 +144,8 @@ impl SqlEditorDocumentView {
             tokens,
             catalog: SqlEditorCatalog::default(),
             profile_name: None,
+            provider_family: None,
+            provider_documentation_base: None,
             fragment_identity: None,
             relation_aliases,
             parameter_types: Vec::new(),
@@ -208,6 +212,8 @@ impl SqlEditorDocumentView {
         schema: &SchemaIr,
         analysis: &ProviderAnalysis,
     ) -> Self {
+        self.provider_family = Some(schema.dialect.family.clone());
+        self.provider_documentation_base = provider_documentation_base(schema);
         self.catalog = SqlEditorCatalog::from_schema(schema);
         self.apply_relation_scope();
         self.parameter_database_types = analysis
@@ -289,7 +295,10 @@ impl SqlEditorDocumentView {
             .filter(|fix| ranges_overlap(fix.virtual_range, virtual_range))
             .cloned()
             .collect::<Vec<_>>();
-        let synthesized = if upper.ends_with("POSTGRESQL-0004") || upper.contains("ALIAS") {
+        let synthesized = if upper.ends_with("POSTGRESQL-0004")
+            || upper.ends_with("MYSQL-0006")
+            || upper.contains("ALIAS")
+        {
             Some(SqlEditorFix {
                 title: "Add an explicit SQL alias".to_string(),
                 kind: SqlEditorFixKind::Alias,
@@ -297,7 +306,10 @@ impl SqlEditorDocumentView {
                 replacement: Some(format!("{selected} AS value")),
                 detail: None,
             })
-        } else if upper.ends_with("POSTGRESQL-0005") || upper.contains("CAST") {
+        } else if upper.ends_with("POSTGRESQL-0005")
+            || upper.ends_with("MYSQL-0007")
+            || upper.contains("CAST")
+        {
             Some(SqlEditorFix {
                 title: "Add an explicit SQL cast".to_string(),
                 kind: SqlEditorFixKind::Cast,
@@ -305,7 +317,10 @@ impl SqlEditorDocumentView {
                 replacement: Some(format!("CAST({selected} AS text)")),
                 detail: None,
             })
-        } else if upper.ends_with("POSTGRESQL-0003") || upper.contains("COLUMN") {
+        } else if upper.ends_with("POSTGRESQL-0003")
+            || upper.ends_with("MYSQL-0005")
+            || upper.contains("COLUMN")
+        {
             self.catalog
                 .symbols
                 .values()
@@ -545,6 +560,23 @@ impl SqlEditorDocumentView {
     }
 }
 
+fn provider_documentation_base(schema: &SchemaIr) -> Option<String> {
+    match schema.dialect.family.as_str() {
+        "mysql" => Some(format!(
+            "https://dev.mysql.com/doc/refman/{}/en/",
+            schema.dialect.server_version
+        )),
+        "postgresql" => schema
+            .dialect
+            .server_version
+            .split('.')
+            .next()
+            .map(|major| format!("https://www.postgresql.org/docs/{major}/")),
+        "sqlite" => Some("https://sqlite.org/lang.html".to_string()),
+        _ => None,
+    }
+}
+
 #[must_use]
 pub fn sql_editor_documents(module: &HirModule) -> Vec<SqlEditorDocumentView> {
     let mut module = module.clone();
@@ -681,7 +713,9 @@ fn closed_type(ty: &Type) -> Option<ClosedType> {
 mod tests {
     use super::*;
     use crate::{FrontendDiagnosticStyle, FrontendSourceContext, compile_module_hir_with_source};
+    use semver::Version;
     use sifr_lowering::ExternalDefs;
+    use sifr_sql_contract::{DialectIdentity, ProviderIdentity, SCHEMA_IR_FORMAT_VERSION};
 
     #[test]
     fn documents_cover_sql_tokens_holes_semantics_and_fragment_scope() {
@@ -783,5 +817,30 @@ mod tests {
         let fixes = document.fixes_for_diagnostic("SIFR-SQL-POSTGRESQL-0005", name_source);
         assert_eq!(fixes[0].kind, SqlEditorFixKind::Cast);
         assert_eq!(document.source_range_for_fix(&fixes[0]), Some(name_source));
+    }
+
+    #[test]
+    fn mysql_editor_links_follow_the_exact_profile_series() {
+        let schema = SchemaIr {
+            format_version: SCHEMA_IR_FORMAT_VERSION,
+            provider: ProviderIdentity {
+                package_id: "sifr-sql-mysql@0.0.0#editor".to_string(),
+                package_version: Version::new(0, 0, 0),
+                package_source: "workspace".to_string(),
+                package_graph_digest: "a".repeat(64),
+                compiler_components: BTreeMap::from([("mysql".to_string(), "b".repeat(64))]),
+            },
+            dialect: DialectIdentity {
+                family: "mysql".to_string(),
+                server_version: "8.4".to_string(),
+                modes: BTreeSet::new(),
+                features: BTreeSet::new(),
+            },
+            objects: BTreeMap::new(),
+        };
+        assert_eq!(
+            provider_documentation_base(&schema).as_deref(),
+            Some("https://dev.mysql.com/doc/refman/8.4/en/")
+        );
     }
 }
