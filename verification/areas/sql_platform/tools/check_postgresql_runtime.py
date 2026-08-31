@@ -115,7 +115,10 @@ def validate_sources(payload: dict[str, Any]) -> None:
 
     common_manifest = load_toml(COMMON_ROOT / "Cargo.toml")
     common_dependencies = set(common_manifest.get("dependencies", {}))
-    require(common_dependencies == {"sifr_runtime", "tokio"}, "common runtime dependency surface drift")
+    require(
+        common_dependencies == {"semver", "serde", "sifr_runtime", "tokio"},
+        "common runtime dependency surface drift",
+    )
 
 
 def self_test(payload: dict[str, Any]) -> None:

@@ -71,7 +71,7 @@
       "acceptance": "provider-owned MySQL grammar and exact coercion",
       "behaviors": ["Sifr-owned LALRPOP lexer, grammar, AST, and recovery", "supported server-version gates", "queries, writes, CTEs, windows, generated columns, and conflict forms", "SQL modes, collations, unsigned types, and coercions", "server differential authority"],
       "required_evidence": ["fuzz", "integration", "negative", "positive"],
-      "status": "planned"
+      "status": "active"
     },
     {
       "id": "mysql.schema",
@@ -81,7 +81,7 @@
       "acceptance": "exact MySQL catalog and profile normalization",
       "behaviors": ["databases, tables, views, columns, keys, indexes, and constraints", "generated columns, enums, sets, character sets, and collations", "SQL mode and collation fingerprints", "canonical snapshots, dependency slices, and semantic diffs"],
       "required_evidence": ["integration", "negative", "positive", "property"],
-      "status": "planned"
+      "status": "active"
     },
     {
       "id": "mysql.runtime",
@@ -91,7 +91,7 @@
       "acceptance": "verified raw MySQL execution with bounded cancellation",
       "behaviors": ["raw mysql_async connections with Sifr-owned pooling", "Rustls authentication and explicit minimal features", "typed sessions, transactions, streams, statements, codecs, and errors", "KILL QUERY control path with target connection discard", "resource bounds and panic-safe malformed protocol handling"],
       "required_evidence": ["fuzz", "integration", "negative", "performance", "positive"],
-      "status": "planned"
+      "status": "active"
     },
     {
       "id": "mysql.tool",
@@ -101,7 +101,7 @@
       "acceptance": "host-only MySQL schema and test lifecycle commands",
       "behaviors": ["schema pull, validate, and deterministic build", "semantic diffs and affected-query reports", "test provision with common connection manifest", "credential redaction and explicit capabilities"],
       "required_evidence": ["integration", "mutation", "negative", "positive"],
-      "status": "planned"
+      "status": "active"
     },
     {
       "id": "mysql.migration",
@@ -111,7 +111,7 @@
       "acceptance": "truthful MySQL migration graphs and recovery",
       "behaviors": ["provider DDL reflection and intermediate schemas", "implicit-commit boundaries and recovery points", "locking, drift, checksums, import, baseline, and explicit rollback", "fresh, upgrade, merge, interruption, and resume paths"],
       "required_evidence": ["integration", "negative", "positive", "property"],
-      "status": "planned"
+      "status": "active"
     },
     {
       "id": "mysql.editor",
@@ -121,7 +121,7 @@
       "acceptance": "lossless MySQL embedded editing",
       "behaviors": ["versioned virtual SQL documents and source maps", "completion, navigation, rename, parameters, results, nullability, and cardinality", "SQL-mode-aware formatting, fixes, and provider documentation", "cancellation and latency budgets"],
       "required_evidence": ["integration", "performance", "positive", "property"],
-      "status": "planned"
+      "status": "active"
     },
     {
       "id": "sqlite.grammar",

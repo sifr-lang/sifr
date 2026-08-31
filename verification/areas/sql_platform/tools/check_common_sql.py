@@ -126,7 +126,7 @@ def validate_sources() -> None:
     dependencies = set(manifest.get("dependencies", {}))
     require(not dependencies.intersection(FORBIDDEN_DRIVERS), "common runtime links a database driver")
     require(
-        dependencies == {"sifr_runtime", "tokio"},
+        dependencies == {"semver", "serde", "sifr_runtime", "tokio"},
         "common runtime dependency surface is not minimal",
     )
 

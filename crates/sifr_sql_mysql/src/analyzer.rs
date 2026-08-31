@@ -1,0 +1,582 @@
+use crate::ast::{MysqlExpression, MysqlProjection, MysqlQuery, MysqlStatementKind, MysqlWrite};
+use crate::codec::mysql_codec_registry_for_types;
+use crate::diagnostic::{MysqlDiagnostic, MysqlDiagnosticCode};
+use crate::parser::MysqlParser;
+use sifr_sql_contract::{
+    Cardinality, CodecRegistry, DatabaseType, EffectContract, Nullability, ObjectId,
+    ProviderAnalysis, ProviderParameter, ProviderResultField, QueryEffect, SchemaIr,
+    SchemaObjectKind, SemanticValue, canonical_read_type_with_nullability_in,
+};
+use std::collections::{BTreeMap, BTreeSet};
+
+#[derive(Clone, Debug)]
+struct MysqlColumn {
+    name: String,
+    identity: ObjectId,
+    database_type: DatabaseType,
+    nullable: bool,
+}
+
+#[derive(Clone, Debug)]
+struct MysqlRelation {
+    identity: ObjectId,
+    columns: BTreeMap<String, MysqlColumn>,
+}
+
+#[derive(Clone, Debug)]
+struct MysqlCatalog {
+    relations: BTreeMap<ObjectId, MysqlRelation>,
+    codecs: CodecRegistry,
+}
+
+pub struct MysqlAnalyzer<'a> {
+    parser: &'a MysqlParser,
+    catalog: MysqlCatalog,
+}
+
+impl<'a> MysqlAnalyzer<'a> {
+    pub fn new(parser: &'a MysqlParser, schema: &SchemaIr) -> Result<Self, MysqlDiagnostic> {
+        if schema.dialect.family != "mysql"
+            || schema.dialect.server_version != parser.series().version()
+            || schema.dialect.modes
+                != parser
+                    .sql_modes()
+                    .iter()
+                    .cloned()
+                    .chain([
+                        schema
+                            .dialect
+                            .modes
+                            .iter()
+                            .find(|mode| mode.starts_with("character-set:"))
+                            .cloned()
+                            .unwrap_or_default(),
+                        format!("collation:{}", parser.default_collation()),
+                    ])
+                    .collect()
+        {
+            return Err(diagnostic(
+                MysqlDiagnosticCode::UnsupportedMode,
+                "MySQL schema, SQL mode, collation, and parser identity differ",
+            ));
+        }
+        let mut relations = BTreeMap::new();
+        let mut database_types = Vec::new();
+        for (identity, object) in &schema.objects {
+            if object.kind != SchemaObjectKind::Table && object.kind != SchemaObjectKind::View {
+                continue;
+            }
+            let prefix = format!("{}.", identity.as_str());
+            let mut columns = BTreeMap::new();
+            for (column_identity, column) in &schema.objects {
+                if !column_identity.as_str().starts_with(&prefix)
+                    || !matches!(
+                        column.kind,
+                        SchemaObjectKind::Column | SchemaObjectKind::IdentityColumn
+                    )
+                {
+                    continue;
+                }
+                let database_type = text_property(column, "database-type")
+                    .and_then(|value| serde_json::from_str::<DatabaseType>(value).ok())
+                    .ok_or_else(|| {
+                        diagnostic(
+                            MysqlDiagnosticCode::InvalidSchema,
+                            format!("MySQL column '{column_identity}' has no canonical type"),
+                        )
+                    })?;
+                let name = text_property(column, "name")
+                    .map(str::to_string)
+                    .unwrap_or_else(|| {
+                        column_identity
+                            .as_str()
+                            .rsplit('.')
+                            .next()
+                            .unwrap_or("unknown")
+                            .to_string()
+                    });
+                let nullable = bool_property(column, "nullable").unwrap_or(true);
+                database_types.push(database_type.clone());
+                columns.insert(
+                    name.clone(),
+                    MysqlColumn {
+                        name,
+                        identity: column_identity.clone(),
+                        database_type,
+                        nullable,
+                    },
+                );
+            }
+            relations.insert(
+                identity.clone(),
+                MysqlRelation {
+                    identity: identity.clone(),
+                    columns,
+                },
+            );
+        }
+        database_types.push(default_parameter_type());
+        let codecs =
+            mysql_codec_registry_for_types(parser.series(), database_types).map_err(|error| {
+                diagnostic(MysqlDiagnosticCode::ProviderContract, error.to_string())
+            })?;
+        Ok(Self {
+            parser,
+            catalog: MysqlCatalog { relations, codecs },
+        })
+    }
+
+    pub fn analyze_query(&self, source: &str) -> Result<ProviderAnalysis, MysqlDiagnostic> {
+        let statements = self.parser.parse(source).map_err(|error| {
+            MysqlDiagnostic::at_sql(
+                MysqlDiagnosticCode::Syntax,
+                error.message,
+                u32::try_from(error.offset).unwrap_or(u32::MAX),
+                u32::try_from(error.offset.saturating_add(1)).unwrap_or(u32::MAX),
+            )
+        })?;
+        if statements.len() != 1 {
+            return Err(diagnostic(
+                MysqlDiagnosticCode::Syntax,
+                "a Sifr MySQL template must contain exactly one statement",
+            ));
+        }
+        let statement = statements
+            .into_iter()
+            .next()
+            .ok_or_else(|| diagnostic(MysqlDiagnosticCode::Syntax, "MySQL statement is missing"))?;
+        let normalized_statement = self
+            .parser
+            .normalize(source)
+            .map_err(|error| diagnostic(MysqlDiagnosticCode::Syntax, error.message))?;
+        let mut analysis = match statement.kind {
+            MysqlStatementKind::Query(query) => self.analyze_select(&query)?,
+            MysqlStatementKind::Insert(write) => {
+                self.analyze_write(&write, QueryEffect::Write, "sql.query.insert")?
+            }
+            MysqlStatementKind::Update(write) => {
+                self.analyze_write(&write, QueryEffect::Write, "sql.query.update")?
+            }
+            MysqlStatementKind::Delete(write) => {
+                self.analyze_write(&write, QueryEffect::Write, "sql.query.delete")?
+            }
+            _ => {
+                return Err(diagnostic(
+                    MysqlDiagnosticCode::UnsupportedFeature,
+                    "application query templates cannot execute MySQL DDL",
+                ));
+            }
+        };
+        analysis.normalized_statement = normalized_statement;
+        analysis.validate(&self.catalog.codecs).map_err(|error| {
+            diagnostic(MysqlDiagnosticCode::ProviderContract, format!("{error:?}"))
+        })?;
+        Ok(analysis)
+    }
+
+    fn analyze_select(&self, query: &MysqlQuery) -> Result<ProviderAnalysis, MysqlDiagnostic> {
+        let mut scope = Vec::new();
+        for relation in query.relations.iter().chain(&query.joins) {
+            scope.push(self.resolve_relation(relation)?);
+        }
+        let referenced_objects = scope
+            .iter()
+            .map(|relation| relation.identity.clone())
+            .collect::<BTreeSet<_>>();
+        let mut accessed_objects = referenced_objects.clone();
+        let mut result_fields = Vec::new();
+        let mut parameter_types = Vec::new();
+        for (index, projection) in query.projections.iter().enumerate() {
+            self.analyze_projection(
+                projection,
+                index,
+                &scope,
+                &mut accessed_objects,
+                &mut parameter_types,
+                &mut result_fields,
+            )?;
+        }
+        for expression in query
+            .predicate
+            .iter()
+            .chain(&query.group_by)
+            .chain(query.having.iter())
+            .chain(&query.order_by)
+        {
+            Self::account_expression(
+                expression,
+                &scope,
+                &mut accessed_objects,
+                &mut parameter_types,
+            )?;
+        }
+        let mut required_capabilities = BTreeSet::from(["sql.query.select".to_string()]);
+        if !parameter_types.is_empty() {
+            required_capabilities.insert("sql.bind.parameters".to_string());
+        }
+        if !query.joins.is_empty() {
+            required_capabilities.insert("sql.query.join".to_string());
+        }
+        if !query.common_tables.is_empty() {
+            required_capabilities.insert("sql.query.common-table-expression".to_string());
+        }
+        if query.windowed {
+            required_capabilities.insert("sql.query.window".to_string());
+        }
+        if query.for_update {
+            required_capabilities.insert("sql.query.row-locking".to_string());
+        }
+        if !query.group_by.is_empty() || query.having.is_some() {
+            required_capabilities.insert("sql.query.aggregate".to_string());
+        }
+        let cardinality = if query.limit == Some(1) {
+            Cardinality::AT_MOST_ONE
+        } else {
+            Cardinality::MANY
+        };
+        Ok(ProviderAnalysis {
+            server_profile: self.parser.series().profile(),
+            normalized_statement: "SELECT".to_string(),
+            parameters: self.parameters(parameter_types)?,
+            result_fields,
+            cardinality,
+            effects: EffectContract::new(QueryEffect::Read, referenced_objects, BTreeSet::new())
+                .map_err(|error| {
+                    diagnostic(MysqlDiagnosticCode::ProviderContract, error.to_string())
+                })?,
+            accessed_objects,
+            semantic_flags: BTreeSet::from([
+                format!("mysql-collation-{}", self.parser.default_collation()),
+                "provider-owned-object-account".to_string(),
+            ]),
+            required_capabilities,
+        })
+    }
+
+    fn analyze_write(
+        &self,
+        write: &MysqlWrite,
+        effect: QueryEffect,
+        capability: &str,
+    ) -> Result<ProviderAnalysis, MysqlDiagnostic> {
+        let relation = self.resolve_relation(&write.relation)?;
+        let mut accessed_objects = BTreeSet::from([relation.identity.clone()]);
+        for column in write.columns.iter().chain(&write.assignments) {
+            let column = relation.columns.get(column).ok_or_else(|| {
+                diagnostic(
+                    MysqlDiagnosticCode::UnknownColumn,
+                    format!("unknown MySQL write column '{column}'"),
+                )
+            })?;
+            accessed_objects.insert(column.identity.clone());
+        }
+        let mut parameter_types = Vec::new();
+        for expression in &write.expressions {
+            Self::account_expression(
+                expression,
+                &[relation],
+                &mut accessed_objects,
+                &mut parameter_types,
+            )?;
+        }
+        let mut required_capabilities = BTreeSet::from([capability.to_string()]);
+        if !parameter_types.is_empty() {
+            required_capabilities.insert("sql.bind.parameters".to_string());
+        }
+        if !matches!(write.conflict, crate::ast::MysqlConflictForm::None) {
+            required_capabilities.insert("sql.mysql.write.conflict".to_string());
+        }
+        Ok(ProviderAnalysis {
+            server_profile: self.parser.series().profile(),
+            normalized_statement: capability.to_string(),
+            parameters: self.parameters(parameter_types)?,
+            result_fields: Vec::new(),
+            cardinality: Cardinality::ZERO,
+            effects: EffectContract::new(
+                effect,
+                BTreeSet::from([relation.identity.clone()]),
+                BTreeSet::from([relation.identity.clone()]),
+            )
+            .map_err(|error| {
+                diagnostic(MysqlDiagnosticCode::ProviderContract, error.to_string())
+            })?,
+            accessed_objects,
+            semantic_flags: BTreeSet::from(["provider-owned-object-account".to_string()]),
+            required_capabilities,
+        })
+    }
+
+    fn analyze_projection(
+        &self,
+        projection: &MysqlProjection,
+        index: usize,
+        scope: &[&MysqlRelation],
+        accessed: &mut BTreeSet<ObjectId>,
+        parameters: &mut Vec<DatabaseType>,
+        fields: &mut Vec<ProviderResultField>,
+    ) -> Result<(), MysqlDiagnostic> {
+        match &projection.expression {
+            MysqlExpression::Star { .. } => {
+                for relation in scope {
+                    for column in relation.columns.values() {
+                        fields.push(self.result_field(column.name.clone(), column)?);
+                        accessed.insert(column.identity.clone());
+                    }
+                }
+            }
+            MysqlExpression::Column { path } => {
+                let column = Self::resolve_column(scope, path)?;
+                fields.push(
+                    self.result_field(
+                        projection
+                            .alias
+                            .clone()
+                            .unwrap_or_else(|| column.name.clone()),
+                        column,
+                    )?,
+                );
+                accessed.insert(column.identity.clone());
+            }
+            expression => {
+                Self::account_expression(expression, scope, accessed, parameters)?;
+                let database_type = expression_type(expression, scope)?;
+                let nullability = Nullability::Nullable;
+                let codec = self.codec(&database_type)?;
+                let sifr_type = canonical_read_type_with_nullability_in(
+                    &database_type,
+                    nullability,
+                    &self.catalog.codecs,
+                )
+                .map_err(|error| {
+                    diagnostic(MysqlDiagnosticCode::TypeMismatch, error.to_string())
+                })?;
+                fields.push(ProviderResultField {
+                    name: projection
+                        .alias
+                        .clone()
+                        .unwrap_or_else(|| format!("field_{}", index + 1)),
+                    sifr_type,
+                    database_type,
+                    nullability,
+                    codec,
+                    source_object: None,
+                });
+            }
+        }
+        Ok(())
+    }
+
+    fn account_expression(
+        expression: &MysqlExpression,
+        scope: &[&MysqlRelation],
+        accessed: &mut BTreeSet<ObjectId>,
+        parameters: &mut Vec<DatabaseType>,
+    ) -> Result<(), MysqlDiagnostic> {
+        match expression {
+            MysqlExpression::Column { path } => {
+                accessed.insert(Self::resolve_column(scope, path)?.identity.clone());
+            }
+            MysqlExpression::Parameter => parameters.push(default_parameter_type()),
+            MysqlExpression::Function { arguments, .. } => {
+                for argument in arguments {
+                    Self::account_expression(argument, scope, accessed, parameters)?;
+                }
+            }
+            MysqlExpression::Binary { left, right, .. } => {
+                Self::account_expression(left, scope, accessed, parameters)?;
+                Self::account_expression(right, scope, accessed, parameters)?;
+            }
+            MysqlExpression::Raw {
+                columns,
+                parameters: count,
+                ..
+            } => {
+                let inferred = columns
+                    .first()
+                    .and_then(|path| Self::resolve_column(scope, path).ok())
+                    .map_or_else(default_parameter_type, |column| {
+                        column.database_type.clone()
+                    });
+                for path in columns {
+                    accessed.insert(Self::resolve_column(scope, path)?.identity.clone());
+                }
+                parameters.extend(std::iter::repeat_n(inferred, *count as usize));
+            }
+            MysqlExpression::Star { .. } | MysqlExpression::Literal { .. } => {}
+        }
+        Ok(())
+    }
+
+    fn parameters(
+        &self,
+        database_types: Vec<DatabaseType>,
+    ) -> Result<Vec<ProviderParameter>, MysqlDiagnostic> {
+        database_types
+            .into_iter()
+            .enumerate()
+            .map(|(slot, database_type)| {
+                Ok(ProviderParameter {
+                    slot: u32::try_from(slot).map_err(|_| {
+                        diagnostic(
+                            MysqlDiagnosticCode::TypeMismatch,
+                            "too many MySQL parameters",
+                        )
+                    })?,
+                    codec: self.codec(&database_type)?,
+                    database_type,
+                    nullability: Nullability::Nullable,
+                })
+            })
+            .collect()
+    }
+
+    fn result_field(
+        &self,
+        name: String,
+        column: &MysqlColumn,
+    ) -> Result<ProviderResultField, MysqlDiagnostic> {
+        let nullability = if column.nullable {
+            Nullability::Nullable
+        } else {
+            Nullability::NonNull
+        };
+        Ok(ProviderResultField {
+            name,
+            sifr_type: canonical_read_type_with_nullability_in(
+                &column.database_type,
+                nullability,
+                &self.catalog.codecs,
+            )
+            .map_err(|error| diagnostic(MysqlDiagnosticCode::TypeMismatch, error.to_string()))?,
+            database_type: column.database_type.clone(),
+            nullability,
+            codec: self.codec(&column.database_type)?,
+            source_object: Some(column.identity.clone()),
+        })
+    }
+
+    fn codec(
+        &self,
+        database_type: &DatabaseType,
+    ) -> Result<sifr_sql_contract::CodecIdentity, MysqlDiagnostic> {
+        self.catalog
+            .codecs
+            .codec_for_database_type(database_type)
+            .map(|codec| codec.identity.clone())
+            .ok_or_else(|| {
+                diagnostic(
+                    MysqlDiagnosticCode::TypeMismatch,
+                    "MySQL type has no qualified codec",
+                )
+            })
+    }
+
+    fn resolve_relation(&self, path: &[String]) -> Result<&MysqlRelation, MysqlDiagnostic> {
+        let joined = path.join(".");
+        if let Some(relation) = self.catalog.relations.get(&ObjectId::new(&joined)) {
+            return Ok(relation);
+        }
+        let suffix = format!(".{joined}");
+        let matches = self
+            .catalog
+            .relations
+            .iter()
+            .filter(|(identity, _)| identity.as_str().ends_with(&suffix))
+            .map(|(_, relation)| relation)
+            .collect::<Vec<_>>();
+        match matches.as_slice() {
+            [relation] => Ok(*relation),
+            [] => Err(diagnostic(
+                MysqlDiagnosticCode::UnknownObject,
+                format!("unknown MySQL relation '{joined}'"),
+            )),
+            _ => Err(diagnostic(
+                MysqlDiagnosticCode::UnknownObject,
+                format!("ambiguous MySQL relation '{joined}'"),
+            )),
+        }
+    }
+
+    fn resolve_column<'b>(
+        scope: &'b [&MysqlRelation],
+        path: &[String],
+    ) -> Result<&'b MysqlColumn, MysqlDiagnostic> {
+        let Some(name) = path.last() else {
+            return Err(diagnostic(
+                MysqlDiagnosticCode::UnknownColumn,
+                "empty column path",
+            ));
+        };
+        let qualifier = (path.len() > 1).then(|| path[..path.len() - 1].join("."));
+        let matches = scope
+            .iter()
+            .filter(|relation| {
+                qualifier.as_ref().is_none_or(|qualifier| {
+                    relation.identity.as_str() == qualifier
+                        || relation
+                            .identity
+                            .as_str()
+                            .ends_with(&format!(".{qualifier}"))
+                })
+            })
+            .filter_map(|relation| relation.columns.get(name))
+            .collect::<Vec<_>>();
+        match matches.as_slice() {
+            [column] => Ok(*column),
+            [] => Err(diagnostic(
+                MysqlDiagnosticCode::UnknownColumn,
+                format!("unknown MySQL column '{}'", path.join(".")),
+            )),
+            _ => Err(diagnostic(
+                MysqlDiagnosticCode::AmbiguousColumn,
+                format!("ambiguous MySQL column '{name}'"),
+            )),
+        }
+    }
+}
+
+fn expression_type(
+    expression: &MysqlExpression,
+    scope: &[&MysqlRelation],
+) -> Result<DatabaseType, MysqlDiagnostic> {
+    match expression {
+        MysqlExpression::Column { path } => Ok(MysqlAnalyzer::resolve_column(scope, path)?
+            .database_type
+            .clone()),
+        MysqlExpression::Parameter
+        | MysqlExpression::Literal { .. }
+        | MysqlExpression::Raw { .. } => Ok(default_parameter_type()),
+        MysqlExpression::Function { .. } | MysqlExpression::Binary { .. } => {
+            Ok(default_parameter_type())
+        }
+        MysqlExpression::Star { .. } => Err(diagnostic(
+            MysqlDiagnosticCode::TypeMismatch,
+            "star has no scalar MySQL type",
+        )),
+    }
+}
+
+fn default_parameter_type() -> DatabaseType {
+    DatabaseType::Text {
+        fixed: false,
+        max_characters: None,
+    }
+}
+
+fn text_property<'a>(object: &'a sifr_sql_contract::SchemaObject, name: &str) -> Option<&'a str> {
+    match object.semantic.get(name) {
+        Some(SemanticValue::Text(value)) => Some(value),
+        _ => None,
+    }
+}
+
+fn bool_property(object: &sifr_sql_contract::SchemaObject, name: &str) -> Option<bool> {
+    match object.semantic.get(name) {
+        Some(SemanticValue::Bool(value)) => Some(*value),
+        _ => None,
+    }
+}
+
+fn diagnostic(code: MysqlDiagnosticCode, message: impl Into<String>) -> MysqlDiagnostic {
+    MysqlDiagnostic::at_sql(code, message, 0, 1)
+}

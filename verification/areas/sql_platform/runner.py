@@ -135,6 +135,31 @@ COMMANDS = {
         "cargo", "test", "--locked", "-p", "sifr_sql_postgresql_runtime",
         "--lib", "--test", "runtime_types",
     ],
+    "sql-mysql-qualification": [
+        sys.executable,
+        str(AREA_ROOT / "tools" / "check_mysql.py"),
+    ],
+    "sql-mysql-qualification-mutations": [
+        sys.executable,
+        str(AREA_ROOT / "tools" / "check_mysql.py"),
+        "--self-test",
+    ],
+    "sql-mysql-compiler-tests": [
+        "cargo", "test", "--locked", "-p", "sifr_sql_mysql", "--test", "mysql_compiler",
+    ],
+    "sql-mysql-property-tests": [
+        "cargo", "test", "--locked", "-p", "sifr_sql_mysql", "--test", "mysql_properties",
+    ],
+    "sql-mysql-runtime-tests": [
+        "cargo", "test", "--locked", "-p", "sifr_sql_mysql_runtime", "--test", "runtime_types",
+    ],
+    "sql-mysql-migration-tests": [
+        "cargo", "test", "--locked", "-p", "sifr_sql_mysql_tools", "--test", "migration_qualification",
+    ],
+    "sql-mysql-live-matrix": [
+        sys.executable,
+        str(AREA_ROOT / "tools" / "run_mysql_server_matrix.py"),
+    ],
     "sql-incremental-editor-qualification": [
         sys.executable,
         str(AREA_ROOT / "tools" / "check_incremental_editor.py"),
@@ -165,7 +190,7 @@ COMMANDS = {
     ],
     "sql-schema-tool-tests": [
         "cargo", "test", "--locked", "-p", "sifr_sql_tool",
-        "-p", "sifr_sql_postgresql_tools",
+        "-p", "sifr_sql_postgresql_tools", "-p", "sifr_sql_mysql_tools",
     ],
     "sql-migration-engine-qualification": [
         sys.executable,

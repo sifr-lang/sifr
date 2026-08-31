@@ -37,6 +37,10 @@ entrypoint = "sql"
 capabilities = ["network", "credentials", "project-write"]
 ```
 
+The MySQL provider uses `sifr-sql-mysql-tools` with binary
+`sifr-sql-mysql`. A project selects one provider tool package for the `sql`
+namespace. Provider tool packages do not share or chain that namespace.
+
 The package must be one direct, normal dependency of the tools member and an
 exact workspace member. The entry point must be one binary target in that
 package. A transitive, build-only, dev-only, registry-only, or Git-only package

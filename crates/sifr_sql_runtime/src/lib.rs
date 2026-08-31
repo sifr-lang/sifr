@@ -42,7 +42,7 @@ pub use migration::{
 pub use parameter::{
     BoundParameters, OwnedParameter, OwnedSqlValue, ParameterError, RuntimeCodecIdentity,
 };
-pub use pool::{PoolCoordinator, PoolLease, PoolStatistics};
+pub use pool::{PoolCoordinator, PoolDiscardGuard, PoolLease, PoolStatistics};
 pub use provider::{
     CancellationReason, ExecutionMetadata, ExecutionMode, ExecutionRequest, ExecutionResult,
     ProviderRuntime, ResetReason, RuntimeCardinality, RuntimeEffect, RuntimeEffectContract,

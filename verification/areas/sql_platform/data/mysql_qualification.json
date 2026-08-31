@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "milestone": "sql_16_mysql_provider",
+  "provider": "mysql",
+  "supported_series": [
+    {"series": "8.4", "image": "mysql:8.4"},
+    {"series": "9.7", "image": "mysql:9.7"},
+    {"series": "26.7", "image": "mysql:26.7"}
+  ],
+  "toolchain": {
+    "lalrpop": "0.23.1",
+    "lalrpop-util": "0.23.1",
+    "mysql_async": "0.37.0",
+    "mysql_common": "0.37.3",
+    "tokio": "1.53.1",
+    "rustls": "0.23.43"
+  },
+  "runtime_features": ["aws-lc-rs", "minimal-rust", "rustls-tls", "tls12"],
+  "forbidden_runtime_features": ["default", "tracing"],
+  "surfaces": [
+    {"id": "grammar", "owner": "sifr_sql_mysql", "evidence": ["crates/sifr_sql_mysql/src/mysql.lalrpop", "crates/sifr_sql_mysql/tests/mysql_compiler.rs", "crates/sifr_sql_mysql/tests/mysql_properties.rs"]},
+    {"id": "schema", "owner": "sifr_sql_mysql", "evidence": ["crates/sifr_sql_mysql/src/schema.rs", "crates/sifr_sql_mysql_tools/src/catalog.rs"]},
+    {"id": "runtime", "owner": "sifr_sql_mysql_runtime", "evidence": ["crates/sifr_sql_mysql_runtime/src/pool.rs", "crates/sifr_sql_mysql_runtime/src/stream.rs", "crates/sifr_sql_mysql_runtime/src/control.rs"]},
+    {"id": "tools", "owner": "sifr_sql_mysql_tools", "evidence": ["crates/sifr_sql_mysql_tools/src/command.rs", "crates/sifr_sql_mysql_tools/src/provision.rs"]},
+    {"id": "migrations", "owner": "sifr_sql_mysql_tools", "evidence": ["crates/sifr_sql_mysql/src/migration.rs", "crates/sifr_sql_mysql_tools/src/migration_plan.rs", "crates/sifr_sql_mysql_tools/src/migration_runtime.rs", "crates/sifr_sql_mysql_tools/tests/live_migrations.rs"]},
+    {"id": "editor", "owner": "sifr_sql_mysql", "evidence": ["crates/sifr_sql_mysql/src/editor.rs", "crates/sifr_sql_mysql/tests/mysql_compiler.rs", "crates/sifr_frontend/src/sql_editor.rs"]},
+    {"id": "portable-requirements", "owner": "sifr_sql_mysql", "evidence": ["crates/sifr_sql_mysql/tests/mysql_compiler.rs", "crates/sifr_sql_contract/tests/schema_polymorphism.rs"]}
+  ],
+  "required_contracts": [
+    "provider-owned-lexer-grammar-ast-recovery",
+    "server-version-gates",
+    "mode-collation-cache-identity",
+    "exact-unsigned-generated-conflict-semantics",
+    "raw-connections-sifr-owned-pool",
+    "bounded-kill-query-then-discard",
+    "bounded-stream-backpressure",
+    "verified-schema-typestate",
+    "panic-safe-codecs-and-redacted-errors",
+    "schema-pull-validate-build",
+    "common-test-connection-manifest",
+    "implicit-commit-recovery-points",
+    "portable-requirement-specialization",
+    "mysql-editor-documentation"
+  ],
+  "live_matrix": "verification/areas/sql_platform/tools/run_mysql_server_matrix.py",
+  "live_evidence": "verification/areas/sql_platform/data/mysql_server_matrix.json",
+  "documentation": "internal_docs/sql_mysql_provider.md"
+}

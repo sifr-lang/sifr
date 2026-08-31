@@ -1,0 +1,30 @@
+{
+  "artifacts": [
+    {
+      "path": "components/mysql-8.4.wasm",
+      "series": "8.4",
+      "sha256": "efc075a22322fffbb4569d47687fcb004cc18166705a89b273e11bfe27dc1c92",
+      "size_bytes": 1384854
+    },
+    {
+      "path": "components/mysql-9.7.wasm",
+      "series": "9.7",
+      "sha256": "efc075a22322fffbb4569d47687fcb004cc18166705a89b273e11bfe27dc1c92",
+      "size_bytes": 1384854
+    },
+    {
+      "path": "components/mysql-26.7.wasm",
+      "series": "26.7",
+      "sha256": "efc075a22322fffbb4569d47687fcb004cc18166705a89b273e11bfe27dc1c92",
+      "size_bytes": 1384854
+    }
+  ],
+  "parser_generator": {
+    "name": "lalrpop",
+    "version": "0.23.1"
+  },
+  "protocol_major": 1,
+  "schema_version": 1,
+  "target": "wasm32-wasip2",
+  "wit_world": "embedded-language-provider"
+}

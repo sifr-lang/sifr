@@ -144,6 +144,18 @@ pub struct PoolLease<T> {
     not_send_or_sync: PhantomData<Rc<()>>,
 }
 
+/// Pool accounting for a resource that a provider must consume and discard.
+///
+/// This guard lets a provider hand a native connection to an owning driver
+/// stream without making checked-out connections share-safe. The pool slot
+/// remains occupied until the guard is dropped.
+#[doc(hidden)]
+pub struct PoolDiscardGuard<T> {
+    core: Arc<PoolCore<T>>,
+    permit: Option<OwnedSemaphorePermit>,
+    not_send_or_sync: PhantomData<Rc<()>>,
+}
+
 impl<T> PoolLease<T> {
     fn new(core: Arc<PoolCore<T>>, permit: OwnedSemaphorePermit, resource: T) -> Self {
         Self {
@@ -236,6 +248,27 @@ impl<T> PoolLease<T> {
         }
         self.permit.take();
     }
+
+    /// Detach the resource for an operation that cannot return it to the pool.
+    ///
+    /// The returned guard preserves the connection bound until both the
+    /// operation and its native resource have ended.
+    #[doc(hidden)]
+    pub fn detach_for_discard(mut self) -> Result<(T, PoolDiscardGuard<T>), SqlError> {
+        let resource = self
+            .resource
+            .take()
+            .ok_or_else(|| SqlError::new(SqlErrorKind::Connection))?;
+        let permit = self.permit.take();
+        Ok((
+            resource,
+            PoolDiscardGuard {
+                core: Arc::clone(&self.core),
+                permit,
+                not_send_or_sync: PhantomData,
+            },
+        ))
+    }
 }
 
 impl<T> Drop for PoolLease<T> {
@@ -243,6 +276,13 @@ impl<T> Drop for PoolLease<T> {
         if self.resource.take().is_some() {
             decrement_total(&self.core);
         }
+    }
+}
+
+impl<T> Drop for PoolDiscardGuard<T> {
+    fn drop(&mut self) {
+        decrement_total(&self.core);
+        self.permit.take();
     }
 }
 

@@ -1524,6 +1524,9 @@ The Cargo distribution name is `sifr-sql-postgresql`. The Sifr module path is
 `sifr.sql.mysql` owns MySQL grammar, coercions, collations, unsigned numeric types,
 generated columns, conflict behavior, SQL modes, and protocol behavior.
 
+The complete implemented boundary is in
+[`sql_mysql_provider.md`](./sql_mysql_provider.md).
+
 The selected SQL mode is part of the schema and query cache identity.
 
 ### SQLite package

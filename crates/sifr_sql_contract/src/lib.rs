@@ -84,7 +84,7 @@ pub use normalization::{SchemaDocument, SchemaDocumentKind, normalize_schema};
 pub use profile::{
     PoolingMode, ProfileAuthority, ProfileFingerprint, RuntimeSchemaManifest, SchemaEvidence,
     SchemaProfile, SchemaStrictness, SessionContract, build_profile_authority,
-    schema_context_artifact,
+    dialect_modes_for_session, schema_context_artifact,
 };
 pub use profile_registry::{ProfileModuleRegistry, RegisteredProfileModule};
 pub use provider::{

@@ -4,7 +4,10 @@ use crate::graph::scopes::{DirectDependencyScope, ScopedImport, ScopedImportSour
 use crate::{
     ImportRoot, SchemaSourceKind, SifrManifest, resolve_sql_profiles, resolve_sql_requirements,
 };
-use sifr_sql_contract::{DialectIdentity, SCHEMA_IR_FORMAT_VERSION, SchemaIr};
+use sifr_sql_contract::{
+    DialectIdentity, SCHEMA_IR_FORMAT_VERSION, SchemaDocumentKind, SchemaIr, SchemaSourceInput,
+    schema_source_fingerprint,
+};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
@@ -87,7 +90,11 @@ sql-modes = []
 
 #[test]
 fn profile_provider_resolves_to_locked_package_and_component_identity() {
-    let owner = package("app", parse(&app_manifest("postgres")));
+    let owner_manifest = app_manifest("postgres").replace(
+        "time-zone = \"UTC\"",
+        "time-zone = \"UTC\"\ncollation = \"legacy-collation\"\ncharacter-set = \"legacy-character-set\"",
+    );
+    let owner = package("app", parse(&owner_manifest));
     let provider = package("postgres", parse(&provider_manifest()));
     let owner_id = owner.package_id.clone();
     let provider_id = provider.package_id.clone();
@@ -147,6 +154,32 @@ fn profile_provider_resolves_to_locked_package_and_component_identity() {
                 BTreeSet::from(["sql.query.select".to_string()]),
             )
             .is_err()
+    );
+    let source = SchemaSourceInput {
+        document: "db/schema.sql".to_string(),
+        kind: SchemaDocumentKind::SqlDdl,
+        fingerprint: schema_source_fingerprint(b""),
+        contents: Vec::new(),
+    };
+    let compatible_schema = SchemaIr {
+        format_version: SCHEMA_IR_FORMAT_VERSION,
+        provider: profile.provider.clone(),
+        dialect: DialectIdentity {
+            family: "postgresql".to_string(),
+            server_version: "18".to_string(),
+            modes: BTreeSet::from(["standard".to_string()]),
+            features: BTreeSet::from(["citext".to_string()]),
+        },
+        objects: BTreeMap::new(),
+    };
+    assert!(
+        profile
+            .build_authority(
+                compatible_schema,
+                &[source],
+                BTreeSet::from(["sql.query.select".to_string()]),
+            )
+            .is_ok()
     );
     let requirements =
         resolve_sql_requirements(&graph, &owner_id).expect("resolve schema requirements");

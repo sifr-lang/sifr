@@ -33,6 +33,8 @@ pub struct SqlRequirementProviderConfig {
     pub server_version: String,
     pub extensions: BTreeSet<String>,
     pub sql_modes: BTreeSet<String>,
+    pub collation: Option<String>,
+    pub character_set: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -240,6 +242,8 @@ fn parse_requirement_provider(
             "server-version",
             "extensions",
             "sql-modes",
+            "collation",
+            "character-set",
         ],
     )?;
     let provider = required_string(cargo_package_id, manifest_path, table, &prefix, "provider")?;
@@ -283,12 +287,30 @@ fn parse_requirement_provider(
             "expected canonical SQL mode identifiers",
         ));
     }
+    let collation = optional_string(cargo_package_id, manifest_path, table, &prefix, "collation")?;
+    let character_set = optional_string(
+        cargo_package_id,
+        manifest_path,
+        table,
+        &prefix,
+        "character-set",
+    )?;
+    if family == "mysql" && (collation.is_none() || character_set.is_none()) {
+        return Err(invalid(
+            cargo_package_id,
+            manifest_path,
+            prefix.clone(),
+            "MySQL requirement providers need exact collation and character-set settings",
+        ));
+    }
     Ok(SqlRequirementProviderConfig {
         provider,
         source,
         server_version,
         extensions,
         sql_modes,
+        collation,
+        character_set,
     })
 }
 

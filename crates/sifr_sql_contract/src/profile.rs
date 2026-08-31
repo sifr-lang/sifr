@@ -43,6 +43,29 @@ pub struct SessionContract {
     pub isolation: Option<String>,
 }
 
+#[must_use]
+pub fn dialect_modes_for_session(
+    dialect_family: &str,
+    session: &SessionContract,
+) -> BTreeSet<String> {
+    let mut modes = session.sql_modes.clone();
+    if dialect_family == "mysql" {
+        modes.extend(
+            session
+                .character_set
+                .iter()
+                .map(|value| format!("character-set:{value}")),
+        );
+        modes.extend(
+            session
+                .collation
+                .iter()
+                .map(|value| format!("collation:{value}")),
+        );
+    }
+    modes
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct SchemaProfile {

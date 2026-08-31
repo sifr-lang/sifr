@@ -244,7 +244,7 @@ pub fn prepare_sql_profiles(
             env!("CARGO_PKG_VERSION"),
             &format!("{}::{name}", profile.owner_package_id.0),
             &profile.config.server_version,
-            &profile.config.session.sql_modes,
+            &profile.config.session,
             &profile.config.extensions,
             &sources,
         )
@@ -314,7 +314,12 @@ pub fn prepare_sql_profiles(
                     requirement.owner_package_id.0, requirement.name, provider.family
                 ),
                 &provider.config.server_version,
-                &provider.config.sql_modes,
+                &sifr_sql_contract::SessionContract {
+                    sql_modes: provider.config.sql_modes.clone(),
+                    collation: provider.config.collation.clone(),
+                    character_set: provider.config.character_set.clone(),
+                    ..sifr_sql_contract::SessionContract::default()
+                },
                 &provider.config.extensions,
                 std::slice::from_ref(&source),
             )

@@ -68,6 +68,8 @@
     "crates/sifr_package/src/host_tools_tests.rs",
     "crates/sifr/tests/host_tool_cli.rs",
     "crates/sifr_analysis/src/host/tests/sql_editor_tests.rs",
-    "crates/sifr_sql_contract/tests/provision_contract.rs"
+    "crates/sifr_sql_contract/tests/provision_contract.rs",
+    "crates/sifr_sql_mysql_tools/src/command.rs",
+    "crates/sifr_sql_mysql_tools/src/provision.rs"
   ]
 }
