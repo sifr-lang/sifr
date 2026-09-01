@@ -92,4 +92,15 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
         [],
         []
     ),
+    active_entry!(
+        "SIFR-SQL-0009",
+        "SQL",
+        "Configured SQL profile decorator has no schema-profile import.",
+        Severity::Error,
+        "crates/sifr_driver/src/build/sql_profiles_tests.rs",
+        "configured SQL profile decorator has no schema-profile import",
+        "sifr_driver::build::sql_application_queries",
+        [],
+        []
+    ),
 ];

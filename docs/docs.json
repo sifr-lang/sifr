@@ -1,57 +1,56 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "name": "Sifr",
-  "theme": "luma",
-  "seo": {
-    "metatags": {
-      "canonical": "https://docs.sifr.sh"
-    }
-  },
-  "colors": {
-    "primary": "#0EA5E9",
-    "light": "#38BDF8",
-    "dark": "#0284C7"
+  "appearance": {
+    "default": "light"
   },
   "background": {
     "decoration": "gradient"
   },
-  "favicon": "/logo/logo.webp",
-  "icons": {
-    "library": "lucide"
+  "colors": {
+    "dark": "#0284C7",
+    "light": "#38BDF8",
+    "primary": "#0EA5E9"
   },
+  "favicon": "/logo/logo.webp",
   "fonts": {
+    "body": {
+      "family": "Plus Jakarta Sans"
+    },
     "heading": {
       "family": "Space Grotesk",
       "weight": 700
-    },
-    "body": {
-      "family": "Plus Jakarta Sans"
     }
   },
-  "appearance": {
-    "default": "light"
+  "footer": {
+    "socials": {
+      "github": "https://github.com/sifr-lang/sifr"
+    }
+  },
+  "icons": {
+    "library": "lucide"
   },
   "logo": {
-    "light": "/logo/logo.webp",
     "dark": "/logo/logo.webp",
-    "href": "https://sifr.sh"
+    "href": "https://sifr.sh",
+    "light": "/logo/logo.webp"
   },
+  "name": "Sifr",
   "navbar": {
     "links": [
       {
-        "label": "Website",
         "href": "https://sifr.sh",
-        "icon": "globe"
+        "icon": "globe",
+        "label": "Website"
       },
       {
-        "label": "Blog",
         "href": "https://sifr.sh/blog",
-        "icon": "newspaper"
+        "icon": "newspaper",
+        "label": "Blog"
       },
       {
-        "label": "Install Sifr",
         "href": "/installation",
         "icon": "download",
+        "label": "Install Sifr",
         "primary": true
       }
     ]
@@ -59,8 +58,6 @@
   "navigation": {
     "tabs": [
       {
-        "tab": "Documentation",
-        "icon": "book-open",
         "groups": [
           {
             "group": "Get Started",
@@ -151,11 +148,11 @@
               "diagnostics/error-codes"
             ]
           }
-        ]
+        ],
+        "icon": "book-open",
+        "tab": "Documentation"
       },
       {
-        "tab": "Guides",
-        "icon": "map",
         "groups": [
           {
             "group": "Overview",
@@ -192,11 +189,11 @@
               "guides/interop/kafka"
             ]
           }
-        ]
+        ],
+        "icon": "map",
+        "tab": "Guides"
       },
       {
-        "tab": "Reference",
-        "icon": "library",
         "groups": [
           {
             "group": "Error Codes",
@@ -301,7 +298,8 @@
                   "errors/SIFR-SQL-0005",
                   "errors/SIFR-SQL-0006",
                   "errors/SIFR-SQL-0007",
-                  "errors/SIFR-SQL-0008"
+                  "errors/SIFR-SQL-0008",
+                  "errors/SIFR-SQL-0009"
                 ]
               },
               {
@@ -659,19 +657,22 @@
               }
             ]
           }
-        ]
+        ],
+        "icon": "library",
+        "tab": "Reference"
       }
     ]
   },
-  "footer": {
-    "socials": {
-      "github": "https://github.com/sifr-lang/sifr"
-    }
-  },
   "redirects": [
     {
-      "source": "/rust-interop-compatibility",
-      "destination": "/rust-interop"
+      "destination": "/rust-interop",
+      "source": "/rust-interop-compatibility"
     }
-  ]
+  ],
+  "seo": {
+    "metatags": {
+      "canonical": "https://docs.sifr.sh"
+    }
+  },
+  "theme": "luma"
 }

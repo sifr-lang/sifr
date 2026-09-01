@@ -191,6 +191,7 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-SQL-0006`](SIFR-SQL-0006.mdx) | Error | Query effect is not permitted by this SQL API. |
 | [`SIFR-SQL-0007`](SIFR-SQL-0007.mdx) | Error | Provider analysis violates the common SQL contract. |
 | [`SIFR-SQL-0008`](SIFR-SQL-0008.mdx) | Error | SQL handle ownership or lifetime is invalid. |
+| [`SIFR-SQL-0009`](SIFR-SQL-0009.mdx) | Error | Configured SQL profile decorator has no schema-profile import. |
 | [`SIFR-IO-0801`](SIFR-IO-0801.mdx) | Error | Text-mode open requires an explicit encoding. |
 | [`SIFR-IO-0802`](SIFR-IO-0802.mdx) | Error | Open mode must be statically known. |
 | [`SIFR-ENCODING-0803`](SIFR-ENCODING-0803.mdx) | Error | Encoding error handler must be statically known. |

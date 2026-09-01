@@ -57,8 +57,27 @@ def validate_record(record: dict[str, Any]) -> None:
     require(set(record.get("providers", [])) == {"mysql", "postgresql", "sqlite"}, "provider set is incomplete")
     require(
         set(record.get("build_modes", []))
-        == {"clean", "cross-target", "incremental", "locked", "offline", "reproducible"},
+        == {
+            "clean",
+            "cross-target-check",
+            "incremental",
+            "locked",
+            "native-linked-reproducible",
+            "offline",
+            "stable-content-hash",
+        },
         "build-mode qualification is incomplete",
+    )
+    require(
+        record.get("native_linked_artifacts")
+        == ["sifr-sql-mysql", "sifr-sql-postgresql", "sifr-sql-sqlite"],
+        "native linked-artifact set is incomplete",
+    )
+    cross_target_limit = str(record.get("cross_target_limit", ""))
+    require(
+        "Cargo check only" in cross_target_limit
+        and "does not claim linked artifacts or byte reproducibility" in cross_target_limit,
+        "cross-target build limitation is not explicit",
     )
     require(
         set(record.get("security_contracts", []))
@@ -139,12 +158,18 @@ def validate_build_evidence(record: dict[str, Any]) -> None:
     for token in (
         "cargo",
         "check",
+        "build",
         "--locked",
         "--offline",
+        "--release",
         "CARGO_INCREMENTAL",
         "TemporaryDirectory",
-        "incremental_plan != clean_plan",
-        "reproduced_plan != clean_plan",
+        "sha256_file",
+        "validate_linked_hashes",
+        "reset_clean_target",
+        "--remap-path-prefix",
+        "-no_uuid",
+        "byte-reproducible=false",
     ):
         require(token in runner, f"SQL build runner omits executable mechanism: {token}")
     manifest = read_json(REPO_ROOT / "verification/areas/sql_platform/manifest.json")
@@ -152,7 +177,11 @@ def validate_build_evidence(record: dict[str, Any]) -> None:
     suite = suites.get(evidence["suite"])
     require(isinstance(suite, dict), "SQL build qualification suite is absent")
     commands = {str(case.get("command")) for case in suite.get("cases", [])}
-    require(commands == {"sql-build-qualification"}, "SQL build suite command has drifted")
+    require(
+        commands
+        == {"sql-build-qualification", "sql-build-qualification-mutations"},
+        "SQL build suite command has drifted",
+    )
     workflow = (REPO_ROOT / evidence["workflow"]).read_text(encoding="utf-8")
     for target in record["cross_targets"]:
         require(target in workflow, f"cross-target workflow omits {target}")
@@ -284,6 +313,8 @@ def self_test() -> None:
         ("missing-provider", lambda value: value["providers"].pop()),
         ("missing-security", lambda value: value["security_contracts"].pop()),
         ("missing-build-mode", lambda value: value["build_modes"].pop()),
+        ("missing-native-artifact", lambda value: value["native_linked_artifacts"].pop()),
+        ("missing-cross-limit", lambda value: value.pop("cross_target_limit")),
         ("missing-build-evidence", lambda value: value.pop("build_evidence")),
         ("missing-evidence", lambda value: value["allocation_evidence"].clear()),
         ("missing-doc-example", lambda value: value["runnable_documentation_examples"].clear()),

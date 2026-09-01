@@ -143,6 +143,20 @@ Application compilation continues to select the target application package.
 Tool packages do not enter source discovery, HIR, generated Rust, linker input,
 or application artifacts.
 
+## Build qualification
+
+Native qualification builds the three SQL tool binaries with locked, offline
+inputs. It links each binary twice from one cleaned, stable target path. It also
+rebuilds the first candidate to cover incremental reuse. The build remaps source
+and target paths and removes variable native-link identifiers. The qualifier
+compares SHA-256 content hashes for `sifr-sql-mysql`, `sifr-sql-postgresql`, and
+`sifr-sql-sqlite`.
+
+Cross-target qualification uses `cargo check` when the host has no linker for
+the target. This result proves type checking only. It does not claim a linked
+artifact or byte reproducibility. A target receives the native claim only when
+its target triple equals the Rust host triple.
+
 ## Test provisioning
 
 `sifr sql test provision --profile <name>` must return exactly one JSON test

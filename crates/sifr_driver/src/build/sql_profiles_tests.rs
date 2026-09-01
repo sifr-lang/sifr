@@ -1,5 +1,7 @@
 use super::sql_application_queries::compile_application_queries;
 use super::sql_profiles::prepare_sql_profiles;
+#[path = "sql_profiles_test_fixtures.rs"]
+mod sql_profiles_test_fixtures;
 use sha2::{Digest, Sha256};
 use sifr_compiler_component::{
     ClosedType, EmbeddedAnalysisResponse, EmbeddedPlan, PlanKind, RuntimeLowering,
@@ -13,9 +15,9 @@ use sifr_sql_contract::{
     Cardinality, CodecIdentity, DatabaseType, DialectIdentity, EffectContract, IntegerSign,
     IntegerWidth, Nullability, ObjectId, PROVIDER_ANALYSIS_PAYLOAD_TAG, ProviderAnalysis,
     ProviderParameter, ProviderResultField, QueryEffect, SCHEMA_NORMALIZATION_PAYLOAD_TAG,
-    SchemaDocument, SchemaDocumentKind, SchemaNormalizationOutput, SchemaObject, SchemaObjectKind,
-    SchemaSourceLocation, SifrType,
+    SchemaDocument, SchemaDocumentKind, SchemaNormalizationOutput, SchemaObjectKind, SifrType,
 };
+use sql_profiles_test_fixtures::{generated_enum_object, generated_scalar_object, schema_object};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -47,6 +49,44 @@ fn package_compilation_prepares_profiles_offline_and_binds_source_bytes() {
     assert_ne!(first, second);
     assert!(first.contains("sifr.sql.schemas.app"));
     assert_eq!(prepared.requirements().len(), 1);
+    let generated_source = prepared
+        .module("app")
+        .expect("generated app profile")
+        .source
+        .clone();
+    for expected in [
+        "from enum import Enum",
+        "from sifr.datetime import date, datetime, time",
+        "from sifr.json import JsonValue",
+        "from sifr.uuid import UUID",
+        "created_on: date",
+        "local_time: time",
+        "offset_time: OffsetTime",
+        "local_timestamp: datetime",
+        "instant: Instant",
+        "identifier: UUID",
+        "document: JsonValue",
+        "address: IPAddress",
+        "network: IPNetwork",
+        "hardware_address: MacAddress",
+        "class enums__public__mood(Enum):",
+    ] {
+        assert!(generated_source.contains(expected), "{expected}");
+    }
+    let parsed = crate::frontend::parse_source(&generated_source)
+        .expect("generated profile source should parse");
+    crate::project::compile_single_frontend_module_with_source_and_options(
+        "sifr.sql.schemas.app",
+        &parsed,
+        sifr_frontend::FrontendSourceContext {
+            display_path: ".sifr/sql/app/schema.sifr",
+            source: &generated_source,
+        },
+        crate::stdlib::external_defs().expect("stdlib should compile"),
+        sifr_frontend::FrontendDiagnosticStyle::Bare,
+        sifr_lowering::LoweringOptions::default(),
+    )
+    .expect("generated profile annotations must resolve through declared imports");
     let requirement_name = format!("{}::has_users", fixture.owner_id.0);
     let requirement = prepared
         .requirements()
@@ -174,6 +214,52 @@ def main():
             .expect("empty query registry should export")
             .entries
             .is_empty()
+    );
+}
+
+#[test]
+fn configured_profile_query_decorator_requires_its_schema_import() {
+    let fixture = profile_fixture_with_components(
+        fixture_component(&schema_response()),
+        fixture_component(&query_response()),
+    );
+    let prepared = prepare_sql_profiles(&fixture.graph, &fixture.owner_id)
+        .expect("offline schema profile preparation should succeed");
+    let source = r#"
+@cache.query
+def cached() -> int:
+    return 1
+
+@app.query
+def find_user(user_id: int64) -> Template:
+    return t"SELECT {user_id} AS value"
+"#;
+    let parsed = crate::frontend::parse_source(source).expect("query source should parse");
+    let mut external_defs = crate::stdlib::external_defs().expect("stdlib should compile");
+    prepared.install_compiler_externals(&mut external_defs);
+    let mut project = crate::project::compile_single_frontend_module_with_source_and_options(
+        "main",
+        &parsed,
+        sifr_frontend::FrontendSourceContext {
+            display_path: "src/main.sifr",
+            source,
+        },
+        external_defs,
+        sifr_frontend::FrontendDiagnosticStyle::Bare,
+        sifr_lowering::LoweringOptions::default(),
+    )
+    .expect("decorators remain available for SQL discovery");
+    let diagnostics = compile_application_queries(&mut project, &prepared)
+        .expect_err("configured profile decorator must require an import");
+    assert_eq!(diagnostics.len(), 1);
+    assert_eq!(
+        diagnostics[0].code,
+        sifr_diagnostics::DiagnosticCode::SQL_PROFILE_IMPORT.code()
+    );
+    assert!(diagnostics[0].message.contains("@app.query"));
+    assert_eq!(
+        diagnostics[0].help.as_deref(),
+        Some("Add 'from sifr.sql.schemas import app'.")
     );
 }
 
@@ -666,6 +752,8 @@ fn schema_response() -> Vec<u8> {
                     SchemaObjectKind::Column,
                     BTreeSet::from([ObjectId::new("public.users")]),
                 ),
+                generated_scalar_object(),
+                generated_enum_object(),
             ],
         }],
     };
@@ -691,24 +779,6 @@ fn schema_response() -> Vec<u8> {
         plan,
     })
     .expect("schema response")
-}
-
-fn schema_object(
-    identity: &str,
-    kind: SchemaObjectKind,
-    dependencies: BTreeSet<ObjectId>,
-) -> SchemaObject {
-    SchemaObject {
-        identity: ObjectId::new(identity),
-        kind,
-        semantic: BTreeMap::new(),
-        dependencies,
-        source: Some(SchemaSourceLocation {
-            document: "db/schema.sql".to_string(),
-            start: 0,
-            end: 21,
-        }),
-    }
 }
 
 fn fixture_component(output: &[u8]) -> Vec<u8> {

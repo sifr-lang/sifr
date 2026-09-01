@@ -34,6 +34,11 @@ COMMANDS = {
         sys.executable,
         str(AREA_ROOT / "tools" / "run_sql_build_qualification.py"),
     ],
+    "sql-build-qualification-mutations": [
+        sys.executable,
+        str(AREA_ROOT / "tools" / "run_sql_build_qualification.py"),
+        "--self-test",
+    ],
     "sql-component-qualification": [
         sys.executable,
         str(AREA_ROOT / "tools" / "check_component_qualification.py"),

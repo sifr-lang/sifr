@@ -43,6 +43,11 @@ pub(super) fn compile_application_queries(
             return Err(error("compiled module is missing from SQL query discovery"));
         };
         let profile_locals = sifr_frontend::sql_profile_local_names(module, &profile_names);
+        let missing_imports =
+            sifr_frontend::missing_sql_profile_imports(module, &profile_names, &profile_locals);
+        if !missing_imports.is_empty() {
+            return Err(missing_imports.iter().map(profile_import_error).collect());
+        }
         for declaration in
             sifr_frontend::sql_query_declarations(module, &profile_locals).map_err(error)?
         {
@@ -269,6 +274,21 @@ pub(super) fn compile_application_queries(
         sifr_frontend::erase_compiler_sql_surfaces(module, names);
     }
     Ok(signatures)
+}
+
+fn profile_import_error(missing: &sifr_frontend::MissingSqlProfileImport) -> RenderedDiagnostic {
+    let mut diagnostic = diagnostic_with_code(
+        format!(
+            "SQL profile '{}' is configured, but @{}.query on function '{}' has no schema-profile import",
+            missing.profile_name, missing.profile_name, missing.function_name
+        ),
+        DiagnosticCode::SQL_PROFILE_IMPORT,
+    );
+    diagnostic.help = Some(format!(
+        "Add 'from sifr.sql.schemas import {}'.",
+        missing.profile_name
+    ));
+    diagnostic
 }
 
 fn canonical_requirement_name(

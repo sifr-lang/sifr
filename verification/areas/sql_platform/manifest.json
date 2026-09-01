@@ -61,7 +61,7 @@
     {
       "name": "build-qualification",
       "kind": "adapter",
-      "resource_classes": ["cargo-build-exclusive"],
+      "resource_classes": ["default-local", "long-running"],
       "network_mode": "offline",
       "timeout_seconds": 3600,
       "cases": [
@@ -69,6 +69,13 @@
           "id": "sql-build-qualification",
           "entry": "verification/areas/sql_platform/tools/run_sql_build_qualification.py",
           "command": "sql-build-qualification",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-build-qualification-mutations",
+          "entry": "verification/areas/sql_platform/tools/run_sql_build_qualification.py",
+          "command": "sql-build-qualification-mutations",
           "expect_exit_code": 0,
           "diagnostic_formats": []
         }

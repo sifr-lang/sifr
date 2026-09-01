@@ -416,18 +416,10 @@ pub(crate) fn ddl_document(
                 )?;
             }
             StatementKind::CreateSequence(value) => {
-                add_namespace(&document, &value.name, &mut objects);
-                let identity = ObjectId::new(qualified_name(&value.name));
-                objects.insert(
-                    identity.clone(),
-                    SchemaObject {
-                        identity,
-                        kind: SchemaObjectKind::Sequence,
-                        semantic: BTreeMap::new(),
-                        dependencies: namespace_dependency(&value.name),
-                        source: Some(source_location(&document, statement)),
-                    },
-                );
+                crate::catalog_sequences::add_sequence(&document, statement, value, &mut objects)?;
+            }
+            StatementKind::AlterSequence(value) => {
+                crate::catalog_sequences::alter_sequence(value, &mut objects)?;
             }
             StatementKind::CreateIndex(value) => {
                 let relation = ObjectId::new(qualified_name(&value.relation));

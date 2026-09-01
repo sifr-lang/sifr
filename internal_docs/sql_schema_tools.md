@@ -82,6 +82,20 @@ The adapter uses the same structured `DatabaseType` values and property names as
 the declarative DDL normalizer. Generated domain and composite annotations come
 from the provider type registry. An unrepresentable type is an error.
 
+The PostgreSQL adapter keeps explicit sequences, including sequences with an
+`OWNED BY` column dependency. It records that column as the `owned-by` semantic
+field and as a dependency. The adapter excludes only sequences with PostgreSQL
+internal identity ownership (`pg_depend.deptype = 'i'`). It does not exclude
+user sequence ownership (`pg_depend.deptype = 'a'`). The DDL normalizer applies
+the same rule to `CREATE SEQUENCE ... OWNED BY` and `ALTER SEQUENCE ... OWNED
+BY`. It parses the sequence data type, bounds, start, increment, cache, and cycle
+options. Omitted options use PostgreSQL defaults for the data type and increment
+direction. PostgreSQL parser components can omit zero or negative scalar fields
+from JSON. In that case, the adapter reads the integer token at the parser's
+source location. It also accepts the integer and Boolean cycle nodes used by
+PostgreSQL 13 through 18. The parser matrix locks this behavior. Unsupported
+options are errors.
+
 Pull compares the live graph with the checked snapshot. If no snapshot exists,
 it compares with the selected source authority. It prints the semantic diff and
 flushes standard output before any write. A non-empty diff returns status 2.
