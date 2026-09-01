@@ -395,6 +395,7 @@ pub struct ColumnDefinition {
     pub nullable: bool,
     pub has_default: bool,
     pub generated: bool,
+    pub identity_generation: Option<String>,
     pub primary_key: bool,
     pub unique: bool,
     pub references: Option<(Vec<String>, Vec<String>)>,

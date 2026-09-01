@@ -159,6 +159,10 @@ fn leading_sql_tokens(statement: &str) -> Vec<String> {
     let mut tokens = Vec::new();
     let mut index = 0;
     while index < bytes.len() && tokens.len() < 12 {
+        if matches!(bytes[index], b'e' | b'E') && bytes.get(index + 1) == Some(&b'\'') {
+            index = skip_escape_quoted(bytes, index + 1);
+            continue;
+        }
         if matches!(bytes[index], b'\'' | b'"') {
             index = skip_quoted(bytes, index, bytes[index]);
             continue;
@@ -210,6 +214,24 @@ fn leading_sql_tokens(statement: &str) -> Vec<String> {
         index += 1;
     }
     tokens
+}
+
+fn skip_escape_quoted(bytes: &[u8], mut index: usize) -> usize {
+    index += 1;
+    while index < bytes.len() {
+        if bytes[index] == b'\\' {
+            index = (index + 2).min(bytes.len());
+        } else if bytes[index] == b'\'' {
+            if bytes.get(index + 1) == Some(&b'\'') {
+                index += 2;
+            } else {
+                return index + 1;
+            }
+        } else {
+            index += 1;
+        }
+    }
+    index
 }
 
 fn skip_quoted(bytes: &[u8], mut index: usize, quote: u8) -> usize {

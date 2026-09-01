@@ -6,6 +6,7 @@ mod cardinality_analysis;
 mod catalog;
 mod catalog_advanced;
 mod catalog_metadata;
+mod catalog_semantics;
 mod catalog_snapshot;
 mod component;
 mod ddl_constraints;
@@ -26,6 +27,7 @@ mod raw_writes;
 mod result_analysis;
 mod scope;
 mod semantic_helpers;
+mod semantic_json;
 mod source;
 mod types;
 mod window_analysis;
@@ -56,6 +58,7 @@ pub use diagnostic::{
 pub use migration::{PostgresDdlExecutionClass, PostgresMigrationDialect, classify_migration_ddl};
 pub use parameters::{ParameterRewriteError, rewrite_parameter_slots};
 pub use raw_adapter::{LibpgQueryParser, PostgresParseError, PostgresParser};
+pub use semantic_json::canonical_postgres_ast_json;
 pub use source::{
     LibpgQuerySource, SUPPORTED_POSTGRESQL_MAJORS, embedded_source, embedded_sources,
 };

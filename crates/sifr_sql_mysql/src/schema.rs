@@ -58,6 +58,7 @@ pub fn normalize_mysql_documents(
 ) -> Result<SchemaNormalizationOutput, MysqlParseError> {
     options.validate()?;
     if parser.sql_modes() != &options.sql_modes
+        || parser.default_character_set() != options.default_character_set
         || parser.default_collation() != options.default_collation
     {
         return Err(MysqlParseError {
@@ -249,6 +250,7 @@ fn table_objects(
     options: &MysqlSchemaOptions,
 ) -> Result<Vec<SchemaObject>, MysqlParseError> {
     let table_identity = qualify(&table.name, &options.default_database);
+    let table_collation = effective_table_collation(table, options)?;
     let mut objects = Vec::new();
     let mut columns = Vec::new();
     for column in &table.columns {
@@ -301,8 +303,7 @@ fn table_objects(
                         column
                             .collation
                             .clone()
-                            .or_else(|| table.default_collation.clone())
-                            .unwrap_or_else(|| options.default_collation.clone()),
+                            .unwrap_or_else(|| table_collation.clone()),
                     ),
                 ),
             ]),
@@ -422,18 +423,40 @@ fn table_objects(
             ),
             (
                 "collation".to_string(),
-                SemanticValue::Text(
-                    table
-                        .default_collation
-                        .clone()
-                        .unwrap_or_else(|| options.default_collation.clone()),
-                ),
+                SemanticValue::Text(table_collation),
             ),
         ]),
         dependencies: BTreeSet::from([ObjectId::new(namespace(&table_identity))]),
         source: Some(source(document)),
     });
     Ok(objects)
+}
+
+fn effective_table_collation(
+    table: &MysqlCreateTable,
+    options: &MysqlSchemaOptions,
+) -> Result<String, MysqlParseError> {
+    if let Some(collation) = &table.default_collation {
+        return Ok(collation.clone());
+    }
+    let Some(charset) = table.default_character_set.as_deref() else {
+        return Ok(options.default_collation.clone());
+    };
+    let collation = match charset {
+        "utf8mb4" => "utf8mb4_0900_ai_ci",
+        "utf8mb3" | "utf8" => "utf8mb3_general_ci",
+        "latin1" => "latin1_swedish_ci",
+        "ascii" => "ascii_general_ci",
+        "binary" => "binary",
+        value if value == options.default_character_set => options.default_collation.as_str(),
+        _ => {
+            return Err(MysqlParseError {
+                offset: 0,
+                message: format!("MySQL character set '{charset}' has no locked default collation"),
+            });
+        }
+    };
+    Ok(collation.to_string())
 }
 
 fn key_object(

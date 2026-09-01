@@ -1,3 +1,4 @@
+use super::sql_application_queries::compile_application_queries;
 use super::sql_profiles::prepare_sql_profiles;
 use sha2::{Digest, Sha256};
 use sifr_compiler_component::{
@@ -9,9 +10,11 @@ use sifr_package::{
     SifrManifest, SifrPackageGraph, SifrPackageId, SifrPackageMetadata,
 };
 use sifr_sql_contract::{
-    DialectIdentity, ObjectId, SCHEMA_NORMALIZATION_PAYLOAD_TAG, SchemaDocument,
-    SchemaDocumentKind, SchemaNormalizationOutput, SchemaObject, SchemaObjectKind,
-    SchemaSourceLocation,
+    Cardinality, CodecIdentity, DatabaseType, DialectIdentity, EffectContract, IntegerSign,
+    IntegerWidth, Nullability, ObjectId, PROVIDER_ANALYSIS_PAYLOAD_TAG, ProviderAnalysis,
+    ProviderParameter, ProviderResultField, QueryEffect, SCHEMA_NORMALIZATION_PAYLOAD_TAG,
+    SchemaDocument, SchemaDocumentKind, SchemaNormalizationOutput, SchemaObject, SchemaObjectKind,
+    SchemaSourceLocation, SifrType,
 };
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
@@ -29,7 +32,9 @@ fn package_compilation_prepares_profiles_offline_and_binds_source_bytes() {
             .module("app")
             .is_some_and(|module| module.module_path == "sifr.sql.schemas.app")
     );
-    let first = prepared.cache_fragment();
+    let first = prepared
+        .cache_fragment()
+        .expect("prepared profile cache invariant");
     std::fs::write(
         fixture.owner_root.join("db/schema.sql"),
         "create schema public;\n-- semantic source change\n",
@@ -37,7 +42,8 @@ fn package_compilation_prepares_profiles_offline_and_binds_source_bytes() {
     .expect("update checked-in source");
     let second = prepare_sql_profiles(&fixture.graph, &fixture.owner_id)
         .expect("changed checked-in source should still normalize")
-        .cache_fragment();
+        .cache_fragment()
+        .expect("changed profile cache invariant");
     assert_ne!(first, second);
     assert!(first.contains("sifr.sql.schemas.app"));
     assert_eq!(prepared.requirements().len(), 1);
@@ -75,6 +81,206 @@ fn package_compilation_denies_ambient_schema_component_capabilities() {
     );
 }
 
+#[test]
+fn package_query_declarations_emit_non_empty_compatibility_artifact() {
+    let fixture = profile_fixture_with_components(
+        fixture_component(&schema_response()),
+        fixture_component(&query_response()),
+    );
+    let prepared = prepare_sql_profiles(&fixture.graph, &fixture.owner_id)
+        .expect("offline schema profile preparation should succeed");
+    let source = "from sifr.sql.schemas import app\n\n@app.query\ndef find_user(user_id: int64) -> Template:\n    return app.sql(t\"SELECT {user_id} AS value\")\n";
+    let parsed = crate::frontend::parse_source(source).expect("query source should parse");
+    let mut external_defs = crate::stdlib::external_defs().expect("stdlib should compile");
+    prepared.install_compiler_externals(&mut external_defs);
+    let mut project = crate::project::compile_single_frontend_module_with_source_and_options(
+        "main",
+        &parsed,
+        sifr_frontend::FrontendSourceContext {
+            display_path: "src/main.sifr",
+            source,
+        },
+        external_defs,
+        sifr_frontend::FrontendDiagnosticStyle::Bare,
+        sifr_lowering::LoweringOptions::default(),
+    )
+    .expect("profile query source should lower through the normal frontend");
+    let registry = compile_application_queries(&mut project, &prepared)
+        .expect("profile query should compile through the resolved component");
+    let artifact = registry
+        .exported_artifact("fixture-package")
+        .expect("query signatures should export");
+    assert_eq!(artifact.entries.len(), 1);
+    assert_eq!(
+        artifact
+            .entries
+            .values()
+            .next()
+            .map(|entry| entry.symbol.as_str()),
+        Some("find_user")
+    );
+    let module = project
+        .hir_modules
+        .get("main")
+        .expect("lowered main module");
+    assert!(
+        module
+            .imports
+            .iter()
+            .all(|import| import.module != "sifr.sql.schemas")
+    );
+}
+
+#[test]
+fn portable_schema_source_lowers_and_runtime_witness_uses_fail() {
+    let fixture = profile_fixture_with_components(
+        fixture_component(&schema_response()),
+        fixture_component(&portable_query_response()),
+    );
+    let prepared = prepare_sql_profiles(&fixture.graph, &fixture.owner_id)
+        .expect("offline schema profile preparation should succeed");
+    let mut external_defs = crate::stdlib::external_defs().expect("stdlib should compile");
+    prepared.install_compiler_externals(&mut external_defs);
+    let positive = include_str!(
+        "../../../../verification/areas/sql_platform/fixtures/schema_polymorphism/portable_by_email.sifr"
+    );
+    let mut project = lower_sql_fixture(positive, external_defs.clone())
+        .expect("portable SqlSchema source should lower through the normal frontend");
+    let registry = compile_application_queries(&mut project, &prepared)
+        .expect("portable source query must specialize through its concrete profile");
+    let module = project
+        .hir_modules
+        .get("main")
+        .expect("portable main module");
+    assert!(
+        module
+            .functions
+            .iter()
+            .all(|function| function.name != "by_email")
+    );
+    let specialized = module
+        .functions
+        .iter()
+        .find(|function| function.name.starts_with("__sifr_sql_by_email_"))
+        .expect("profile-specialized function");
+    assert_eq!(specialized.params.len(), 1);
+    assert_eq!(specialized.params[0].name, "email");
+    assert!(specialized.type_params.is_empty());
+    registry
+        .row_of("main", &specialized.name, false)
+        .expect("specialized query owns a proof-backed contract");
+    assert!(module.imports.iter().all(|import| {
+        import.module != "sifr.sql"
+            && import.module != "sifr.sql.schemas"
+            && import.module != "sifr.sql.requirements"
+    }));
+
+    for (case, negative, expected_code) in [
+        (
+            "return",
+            include_str!(
+                "../../../../verification/areas/sql_platform/fixtures/schema_polymorphism/negative_return_witness.sifr"
+            ),
+            sifr_diagnostics::DiagnosticCode::SQL_PROVIDER_CONTRACT.code(),
+        ),
+        (
+            "store",
+            include_str!(
+                "../../../../verification/areas/sql_platform/fixtures/schema_polymorphism/negative_store_witness.sifr"
+            ),
+            sifr_diagnostics::DiagnosticCode::SQL_PROVIDER_CONTRACT.code(),
+        ),
+        (
+            "capture",
+            include_str!(
+                "../../../../verification/areas/sql_platform/fixtures/schema_polymorphism/negative_capture_witness.sifr"
+            ),
+            sifr_diagnostics::DiagnosticCode::SQL_PROVIDER_CONTRACT.code(),
+        ),
+        (
+            "unconstrained",
+            include_str!(
+                "../../../../verification/areas/sql_platform/fixtures/schema_polymorphism/negative_unconstrained_witness.sifr"
+            ),
+            sifr_diagnostics::DiagnosticCode::SQL_PROVIDER_CONTRACT.code(),
+        ),
+        (
+            "concrete",
+            include_str!(
+                "../../../../verification/areas/sql_platform/fixtures/schema_polymorphism/negative_concrete_parameter_witness.sifr"
+            ),
+            sifr_diagnostics::DiagnosticCode::SQL_PROVIDER_CONTRACT.code(),
+        ),
+    ] {
+        let diagnostics = match lower_sql_fixture(negative, external_defs.clone()) {
+            Ok(_) => panic!("runtime SqlSchema witness use must fail"),
+            Err(diagnostics) => diagnostics,
+        };
+        assert_eq!(
+            diagnostics[0].code, expected_code,
+            "negative portable witness case: {case}"
+        );
+    }
+
+    let invalid_direct = include_str!(
+        "../../../../verification/areas/sql_platform/fixtures/schema_polymorphism/negative_standalone_profile_witness.sifr"
+    );
+    let mut project = lower_sql_fixture(invalid_direct, external_defs)
+        .expect("direct profile witness misuse reaches application query compilation");
+    let diagnostics = compile_application_queries(&mut project, &prepared)
+        .expect_err("standalone profile witness must not reach runtime HIR");
+    assert_eq!(
+        diagnostics[0].code,
+        sifr_diagnostics::DiagnosticCode::COMPONENT_EXECUTION.code()
+    );
+}
+
+#[test]
+fn migration_sifr_source_discovers_checked_ordered_steps() {
+    let source = include_str!(
+        "../../../../verification/areas/sql_platform/fixtures/migration_source/add_status.sifr"
+    );
+    let external_defs = crate::stdlib::external_defs().expect("stdlib should compile");
+    let project = lower_sql_fixture(source, external_defs)
+        .expect("migration source should lower through the normal frontend");
+    let declarations = sifr_frontend::sql_migration_declarations(
+        project.hir_modules.get("main").expect("migration module"),
+    )
+    .expect("migration source declaration should compile");
+    assert_eq!(declarations.len(), 1);
+    assert_eq!(declarations[0].id.as_str(), "2026_08_add_status");
+    assert_eq!(declarations[0].steps.len(), 4);
+    assert!(
+        declarations[0]
+            .rollback
+            .as_ref()
+            .is_some_and(|steps| steps.len() == 1)
+    );
+    assert!(matches!(
+        &declarations[0].steps[1].kind,
+        sifr_frontend::MigrationSourceStepKind::SqlData { statement }
+            if statement.contains("'pending'")
+    ));
+}
+
+fn lower_sql_fixture(
+    source: &str,
+    external_defs: sifr_lowering::ExternalDefs,
+) -> Result<crate::project::ProjectLowering, Vec<crate::diagnostics::RenderedDiagnostic>> {
+    let parsed = crate::frontend::parse_source(source)?;
+    crate::project::compile_single_frontend_module_with_source_and_options(
+        "main",
+        &parsed,
+        sifr_frontend::FrontendSourceContext {
+            display_path: "fixture.sifr",
+            source,
+        },
+        external_defs,
+        sifr_frontend::FrontendDiagnosticStyle::Bare,
+        sifr_lowering::LoweringOptions::default(),
+    )
+}
+
 struct ProfileFixture {
     graph: SifrPackageGraph,
     owner_id: SifrPackageId,
@@ -82,6 +288,13 @@ struct ProfileFixture {
 }
 
 fn profile_fixture(component_bytes: Vec<u8>) -> ProfileFixture {
+    profile_fixture_with_components(component_bytes.clone(), component_bytes)
+}
+
+fn profile_fixture_with_components(
+    schema_component_bytes: Vec<u8>,
+    query_component_bytes: Vec<u8>,
+) -> ProfileFixture {
     let root = temp_root("sql-profile");
     let owner_root = root.join("app");
     let provider_root = root.join("postgres");
@@ -91,16 +304,25 @@ fn profile_fixture(component_bytes: Vec<u8>) -> ProfileFixture {
     std::fs::write(owner_root.join("db/schema.sql"), "create schema public;\n")
         .expect("schema source");
     std::fs::write(
-        provider_root.join("components/postgresql.wasm"),
-        &component_bytes,
+        provider_root.join("components/postgresql-schema.wasm"),
+        &schema_component_bytes,
     )
     .expect("component artifact");
-    let component_sha = lower_hex(&Sha256::digest(&component_bytes));
+    std::fs::write(
+        provider_root.join("components/postgresql-query.wasm"),
+        &query_component_bytes,
+    )
+    .expect("query component artifact");
+    let schema_component_sha = lower_hex(&Sha256::digest(&schema_component_bytes));
+    let query_component_sha = lower_hex(&Sha256::digest(&query_component_bytes));
     let owner = package("app", &owner_root, parse_manifest(&owner_manifest()));
     let provider = package(
         "postgres",
         &provider_root,
-        parse_manifest(&provider_manifest(&component_sha)),
+        parse_manifest(&provider_manifest(
+            &schema_component_sha,
+            &query_component_sha,
+        )),
     );
     let owner_id = owner.package_id.clone();
     let provider_id = provider.package_id.clone();
@@ -165,6 +387,7 @@ sifr-version = ">=0.3,<0.4"
 
 [sql.profiles.app]
 provider = "postgres"
+family = "postgresql"
 source = "db/schema.sql"
 server-version = "18"
 search-path = ["public"]
@@ -187,25 +410,181 @@ sql-modes = ["standard"]
     .to_string()
 }
 
-fn provider_manifest(sha256: &str) -> String {
+fn provider_manifest(schema_sha256: &str, query_sha256: &str) -> String {
     format!(
         r#"[package]
 name = "sifr_sql_postgresql"
 edition = "2026"
 sifr-version = ">=0.3,<0.4"
 
-[compiler-components.postgresql]
+[compiler-components.postgresql-schema]
 kind = "embedded-language-provider"
-artifact = "components/postgresql.wasm"
+artifact = "components/postgresql-schema.wasm"
 version = "1.0.0"
-sha256 = "{sha256}"
+sha256 = "{schema_sha256}"
 protocol-min = 1
 protocol-max = 1
-processors = ["sifr.sql.postgresql.schema", "sifr.sql.postgresql.sql"]
+processors = ["sifr.sql.postgresql.schema"]
 diagnostic-namespace = "SQL-POSTGRESQL"
 diagnostics = [{{ code = "SIFR-SQL-POSTGRESQL-0001", lifecycle = "active" }}]
+
+[compiler-components.postgresql-query]
+kind = "embedded-language-provider"
+artifact = "components/postgresql-query.wasm"
+version = "1.0.0"
+sha256 = "{query_sha256}"
+protocol-min = 1
+protocol-max = 1
+processors = ["sifr.sql.postgresql.sql"]
+diagnostic-namespace = "SQL-POSTGRESQL-QUERY"
+diagnostics = [{{ code = "SIFR-SQL-POSTGRESQL-QUERY-0001", lifecycle = "active" }}]
 "#
     )
+}
+
+fn query_response() -> Vec<u8> {
+    let codec = CodecIdentity::new("postgresql.int64.binary.v1").expect("codec identity");
+    let database_type = DatabaseType::Integer {
+        sign: IntegerSign::Signed,
+        width: IntegerWidth::Bits64,
+    };
+    let sifr_type = SifrType::FixedInteger {
+        sign: IntegerSign::Signed,
+        width: IntegerWidth::Bits64,
+    };
+    let analysis = ProviderAnalysis {
+        server_profile: "postgresql-18".to_string(),
+        normalized_statement: "SELECT $1::bigint AS value".to_string(),
+        parameters: vec![ProviderParameter {
+            slot: 0,
+            database_type: database_type.clone(),
+            nullability: Nullability::NonNull,
+            codec: codec.clone(),
+        }],
+        result_fields: vec![ProviderResultField {
+            name: "value".to_string(),
+            sifr_type: sifr_type.clone(),
+            database_type,
+            nullability: Nullability::NonNull,
+            codec,
+            source_object: None,
+        }],
+        cardinality: Cardinality::EXACTLY_ONE,
+        effects: EffectContract::new(QueryEffect::Read, BTreeSet::new(), BTreeSet::new())
+            .expect("read effect"),
+        accessed_objects: BTreeSet::new(),
+        semantic_flags: BTreeSet::from(["stable-result-name".to_string()]),
+        required_capabilities: BTreeSet::from([
+            "sql.bind.parameters".to_string(),
+            "sql.query.select".to_string(),
+        ]),
+    };
+    let mut plan = EmbeddedPlan {
+        provider_identity: "sifr.sql.postgresql.sql".to_string(),
+        protocol_major: 1,
+        plan_kind: PlanKind::Expression,
+        schema_identity: None,
+        result_type: ClosedType::None,
+        operations: vec![SemanticOperation::ProviderNode {
+            tag: PROVIDER_ANALYSIS_PAYLOAD_TAG.to_string(),
+            payload: serde_json::to_vec(&analysis).expect("provider analysis"),
+        }],
+        runtime: RuntimeLowering::NoRuntime,
+        dependencies: Vec::new(),
+        diagnostics: Vec::new(),
+        source_map: Vec::new(),
+        stable_fingerprint: String::new(),
+    };
+    plan.stable_fingerprint = compute_plan_fingerprint(&plan).expect("plan fingerprint");
+    serde_json::to_vec(&EmbeddedAnalysisResponse {
+        protocol_major: 1,
+        plan,
+    })
+    .expect("query response")
+}
+
+fn portable_query_response() -> Vec<u8> {
+    let text_codec = CodecIdentity::new("postgresql.text.binary.v1").expect("codec identity");
+    let int_codec = CodecIdentity::new("postgresql.int64.binary.v1").expect("codec identity");
+    let text_type = DatabaseType::Text {
+        fixed: false,
+        max_characters: None,
+    };
+    let int_type = DatabaseType::Integer {
+        sign: IntegerSign::Signed,
+        width: IntegerWidth::Bits64,
+    };
+    let analysis = ProviderAnalysis {
+        server_profile: "postgresql-18".to_string(),
+        normalized_statement: "SELECT id, email FROM public.users WHERE email = $1::text"
+            .to_string(),
+        parameters: vec![ProviderParameter {
+            slot: 0,
+            database_type: text_type.clone(),
+            nullability: Nullability::NonNull,
+            codec: text_codec.clone(),
+        }],
+        result_fields: vec![
+            ProviderResultField {
+                name: "id".to_string(),
+                sifr_type: SifrType::FixedInteger {
+                    sign: IntegerSign::Signed,
+                    width: IntegerWidth::Bits64,
+                },
+                database_type: int_type,
+                nullability: Nullability::NonNull,
+                codec: int_codec,
+                source_object: Some(ObjectId::new("public.users.id")),
+            },
+            ProviderResultField {
+                name: "email".to_string(),
+                sifr_type: SifrType::Str,
+                database_type: text_type,
+                nullability: Nullability::NonNull,
+                codec: text_codec,
+                source_object: Some(ObjectId::new("public.users.email")),
+            },
+        ],
+        cardinality: Cardinality::MANY,
+        effects: EffectContract::new(QueryEffect::Read, BTreeSet::new(), BTreeSet::new())
+            .expect("read effect"),
+        accessed_objects: BTreeSet::from([
+            ObjectId::new("public.users"),
+            ObjectId::new("public.users.id"),
+            ObjectId::new("public.users.email"),
+        ]),
+        semantic_flags: BTreeSet::from([
+            "deterministic-order".to_string(),
+            "stable-result-name".to_string(),
+        ]),
+        required_capabilities: BTreeSet::from([
+            "sql.bind.parameters".to_string(),
+            "sql.expression.equality".to_string(),
+            "sql.query.select".to_string(),
+        ]),
+    };
+    let mut plan = EmbeddedPlan {
+        provider_identity: "sifr.sql.postgresql.sql".to_string(),
+        protocol_major: 1,
+        plan_kind: PlanKind::Expression,
+        schema_identity: None,
+        result_type: ClosedType::None,
+        operations: vec![SemanticOperation::ProviderNode {
+            tag: PROVIDER_ANALYSIS_PAYLOAD_TAG.to_string(),
+            payload: serde_json::to_vec(&analysis).expect("provider analysis"),
+        }],
+        runtime: RuntimeLowering::NoRuntime,
+        dependencies: Vec::new(),
+        diagnostics: Vec::new(),
+        source_map: Vec::new(),
+        stable_fingerprint: String::new(),
+    };
+    plan.stable_fingerprint = compute_plan_fingerprint(&plan).expect("plan fingerprint");
+    serde_json::to_vec(&EmbeddedAnalysisResponse {
+        protocol_major: 1,
+        plan,
+    })
+    .expect("query response")
 }
 
 fn schema_response() -> Vec<u8> {
@@ -224,17 +603,24 @@ fn schema_response() -> Vec<u8> {
         documents: vec![SchemaDocument {
             kind: SchemaDocumentKind::SqlDdl,
             document: "db/schema.sql".to_string(),
-            objects: vec![SchemaObject {
-                identity: ObjectId::new("public"),
-                kind: SchemaObjectKind::Namespace,
-                semantic: BTreeMap::new(),
-                dependencies: BTreeSet::new(),
-                source: Some(SchemaSourceLocation {
-                    document: "db/schema.sql".to_string(),
-                    start: 0,
-                    end: 21,
-                }),
-            }],
+            objects: vec![
+                schema_object("public", SchemaObjectKind::Namespace, BTreeSet::new()),
+                schema_object(
+                    "public.users",
+                    SchemaObjectKind::Table,
+                    BTreeSet::from([ObjectId::new("public")]),
+                ),
+                schema_object(
+                    "public.users.id",
+                    SchemaObjectKind::Column,
+                    BTreeSet::from([ObjectId::new("public.users")]),
+                ),
+                schema_object(
+                    "public.users.email",
+                    SchemaObjectKind::Column,
+                    BTreeSet::from([ObjectId::new("public.users")]),
+                ),
+            ],
         }],
     };
     let mut plan = EmbeddedPlan {
@@ -259,6 +645,24 @@ fn schema_response() -> Vec<u8> {
         plan,
     })
     .expect("schema response")
+}
+
+fn schema_object(
+    identity: &str,
+    kind: SchemaObjectKind,
+    dependencies: BTreeSet<ObjectId>,
+) -> SchemaObject {
+    SchemaObject {
+        identity: ObjectId::new(identity),
+        kind,
+        semantic: BTreeMap::new(),
+        dependencies,
+        source: Some(SchemaSourceLocation {
+            document: "db/schema.sql".to_string(),
+            start: 0,
+            end: 21,
+        }),
+    }
 }
 
 fn fixture_component(output: &[u8]) -> Vec<u8> {

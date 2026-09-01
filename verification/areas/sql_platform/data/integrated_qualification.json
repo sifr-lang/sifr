@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "providers": ["mysql", "postgresql", "sqlite"],
+  "component_protocol_participants": [
+    "sifr_compiler_component",
+    "sifr_sql_mysql",
+    "sifr_sql_postgresql",
+    "sifr_sql_sqlite"
+  ],
+  "component_protocol_evidence": {
+    "sifr_compiler_component": "crates/sifr_compiler_component/src/tests.rs::non_sql_component_parses_typed_requests_and_is_cacheless_deterministic",
+    "sifr_sql_mysql": "crates/sifr_sql_mysql/tests/mysql_compiler.rs::every_checked_in_mysql_component_executes_in_the_capability_free_host",
+    "sifr_sql_postgresql": "crates/sifr_sql_postgresql/tests/postgresql_components.rs::every_checked_in_component_executes_in_the_capability_free_host",
+    "sifr_sql_sqlite": "crates/sifr_sql_sqlite/tests/sqlite_compiler.rs::checked_in_sqlite_component_executes_in_the_capability_free_host"
+  },
+  "portable_provider_evidence": {
+    "mysql": "crates/sifr_sql_mysql/tests/mysql_compiler.rs::mysql_independently_normalizes_portable_requirement_sources",
+    "postgresql": "crates/sifr_sql_postgresql/tests/postgresql_compiler.rs::postgresql_normalizes_portable_requirement_ddl_with_explicit_capabilities",
+    "source-program": "crates/sifr_driver/src/build/sql_profiles_tests.rs::portable_schema_source_lowers_and_runtime_witness_uses_fail",
+    "sqlite": "crates/sifr_sql_sqlite/tests/sqlite_compiler.rs::sqlite_independently_normalizes_proves_and_specializes_portable_requirements"
+  },
+  "build_modes": [
+    "clean",
+    "cross-target",
+    "incremental",
+    "locked",
+    "offline",
+    "reproducible"
+  ],
+  "cross_targets": [
+    "aarch64-apple-darwin",
+    "aarch64-unknown-linux-gnu",
+    "wasm32-wasip2",
+    "x86_64-pc-windows-msvc",
+    "x86_64-unknown-linux-gnu"
+  ],
+  "banned_provider_dependencies": [
+    "bb8",
+    "deadpool",
+    "diesel",
+    "r2d2",
+    "sea-orm",
+    "sea-orm-migration",
+    "sqlparser",
+    "sqlx"
+  ],
+  "security_contracts": [
+    "injection",
+    "malformed-protocol",
+    "malicious-metadata",
+    "resource-exhaustion",
+    "sandbox-escape",
+    "secret-redaction",
+    "unsafe-capability"
+  ],
+  "runtime_audits": [
+    "bounded-allocation",
+    "bounded-collections",
+    "data-dependent-panic",
+    "malformed-external-input",
+    "provider-panic-containment"
+  ],
+  "runtime_audit_evidence": {
+    "bounded-allocation": "crates/sifr_sql_runtime/tests/runtime_contracts.rs::resource_accounting_fails_before_a_bound_is_exceeded",
+    "bounded-collections": "crates/sifr_sql_runtime/tests/runtime_policies.rs::statement_cache_is_bounded_lru_with_complete_identity",
+    "data-dependent-panic": "crates/sifr_sql_runtime/tests/runtime_contracts.rs::asynchronous_provider_panics_are_caught_at_poll_time",
+    "malformed-external-input": "crates/sifr_sql_runtime/tests/runtime_contracts.rs::codec_panics_are_redacted_and_malformed_values_remain_typed_errors",
+    "provider-panic-containment": "crates/sifr_sql_runtime/tests/runtime_contracts.rs::synchronous_provider_panics_are_caught_before_future_creation"
+  },
+  "allocation_evidence": [
+    "crates/sifr_sql_runtime/tests/runtime_contracts.rs::resource_accounting_fails_before_a_bound_is_exceeded",
+    "crates/sifr_sql_runtime/tests/runtime_policies.rs::statement_cache_is_bounded_lru_with_complete_identity",
+    "crates/sifr_sql_postgresql_runtime/tests/live_runtime.rs::live_postgresql_runtime_contract",
+    "crates/sifr_sql_sqlite_runtime/tests/runtime_types.rs::interrupt_cancellation_retires_the_worker_with_a_bound"
+  ],
+  "security_evidence": {
+    "injection": "crates/sifr_sql_runtime/tests/runtime_contracts.rs::bound_parameters_are_owned_ordered_and_duplicate_free",
+    "malformed-protocol": "crates/sifr_compiler_component/src/tests.rs::malformed_output_and_missing_wit_export_are_structured_errors",
+    "malicious-metadata": "crates/sifr_compiler_component/src/tests.rs::closed_envelopes_reject_unknown_fields_and_noncanonical_records",
+    "resource-exhaustion": "crates/sifr_compiler_component/src/tests.rs::fuel_and_output_bounds_fail_without_panics",
+    "sandbox-escape": "crates/sifr/tests/host_tool_cli.rs::direct_sql_namespace_runs_locked_host_tool_and_validates_manifest",
+    "secret-redaction": "crates/sifr_sql_runtime/tests/runtime_contracts.rs::error_display_is_stable_and_never_renders_provider_metadata",
+    "unsafe-capability": "crates/sifr_sql_contract/tests/query_fragments.rs::ordinary_runtime_text_has_no_fragment_path_and_unsafe_syntax_is_audited"
+  },
+  "documentation": [
+    "internal_docs/sql_architecture.md",
+    "internal_docs/sql_host_tools.md",
+    "internal_docs/sql_migrations.md",
+    "internal_docs/sql_schema_polymorphism.md",
+    "internal_docs/sql_schema_tools.md"
+  ],
+  "runnable_documentation_examples": [
+    "verification/areas/sql_platform/fixtures/migration_source/add_status.sifr",
+    "verification/areas/sql_platform/fixtures/schema_polymorphism/portable_by_email.sifr"
+  ]
+}

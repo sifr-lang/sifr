@@ -172,14 +172,23 @@ fingerprint mismatch.
 The PostgreSQL host tool has this closed command surface:
 
 ```text
+sifr sql migration build --profile <name>
 sifr sql migration plan --profile <name>
 sifr sql migration import --profile <name> --baseline <id>
 sifr sql migration apply --profile <name>
 sifr sql migration rollback --profile <name>
 ```
 
-The commands read `.sifr/sql-migrations/<profile>/graph.json`. Live commands
+`build` reads `migrations/<profile>/*.sifr` and
+`migrations/<profile>/baselines/*.json`, then atomically publishes the closed
+artifacts. The other commands read
+`.sifr/sql-migrations/<profile>/graph.json`. Live commands
 also read the profile authority and `SIFR_SQL_DATABASE_URL`.
+
+Execution-plan format 3 stores the exact executable source separately from its
+canonical semantic normalization for every SQL data, assertion, and backfill
+step. Runtime execution uses only the exact source. Fingerprints and
+compatibility analysis use only the canonical normalization.
 
 `plan` is offline. It reports every forward and reverse action. Each action has
 the migration, selected parent, direction, step identity, step checksum, action

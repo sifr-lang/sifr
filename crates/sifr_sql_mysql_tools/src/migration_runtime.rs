@@ -275,21 +275,17 @@ impl MigrationRuntime for MysqlMigrationRuntime {
                 self.run_drop(statement, "MySQL migration DDL failed")?;
                 StepOutcome::Completed
             }
-            MigrationExecutionStepKind::SqlData {
-                normalized_statement,
-            } => {
-                self.run_drop(normalized_statement, "MySQL migration data step failed")?;
+            MigrationExecutionStepKind::SqlData { statement, .. } => {
+                self.run_drop(statement, "MySQL migration data step failed")?;
                 StepOutcome::Completed
             }
             MigrationExecutionStepKind::SifrData { .. } => {
                 return Err("MySQL migration callback executor is unavailable".to_string());
             }
-            MigrationExecutionStepKind::Assertion {
-                normalized_statement,
-            } => {
+            MigrationExecutionStepKind::Assertion { statement, .. } => {
                 let rows: Vec<(Option<bool>,)> = self
                     .runtime
-                    .block_on(async { self.connection.query(normalized_statement).await })
+                    .block_on(async { self.connection.query(statement).await })
                     .map_err(|_| "MySQL migration assertion failed".to_string())?;
                 StepOutcome::Assertion {
                     rows: rows.len() as u64,
@@ -297,11 +293,11 @@ impl MigrationRuntime for MysqlMigrationRuntime {
                 }
             }
             MigrationExecutionStepKind::Backfill {
-                normalized_statement,
+                statement,
                 maximum_batch_rows,
                 ..
             } => {
-                self.run_drop(normalized_statement, "MySQL migration backfill failed")?;
+                self.run_drop(statement, "MySQL migration backfill failed")?;
                 let processed_rows = self.connection.affected_rows();
                 let prior = request
                     .backfill_progress

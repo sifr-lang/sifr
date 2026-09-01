@@ -1,0 +1,25 @@
+# sifr.sql — compiler-owned SQL surface types
+
+class SqlSchema[P]:
+    def sql(self, own template: Template) -> Template:
+        return template
+
+
+class SqlError(Error):
+    pass
+
+
+class EncodeError(SqlError):
+    pass
+
+
+class DecodeError(SqlError):
+    pass
+
+
+class QueryTemplate[P]:
+    pass
+
+
+class BoundQuery[P]:
+    pass

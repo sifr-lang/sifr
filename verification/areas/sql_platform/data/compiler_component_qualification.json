@@ -47,6 +47,39 @@
     "tables",
     "type-depth"
   ],
+  "sql_participants": [
+    {
+      "crate": "sifr_sql_mysql",
+      "artifacts": [
+        "crates/sifr_sql_mysql/components/mysql-8.4.wasm",
+        "crates/sifr_sql_mysql/components/mysql-9.7.wasm",
+        "crates/sifr_sql_mysql/components/mysql-26.7.wasm"
+      ],
+      "manifest": "crates/sifr_sql_mysql/component-artifacts.json",
+      "evidence": "crates/sifr_sql_mysql/tests/mysql_compiler.rs::every_checked_in_mysql_component_executes_in_the_capability_free_host"
+    },
+    {
+      "crate": "sifr_sql_postgresql",
+      "artifacts": [
+        "crates/sifr_sql_postgresql/components/postgresql-13.wasm",
+        "crates/sifr_sql_postgresql/components/postgresql-14.wasm",
+        "crates/sifr_sql_postgresql/components/postgresql-15.wasm",
+        "crates/sifr_sql_postgresql/components/postgresql-16.wasm",
+        "crates/sifr_sql_postgresql/components/postgresql-17.wasm",
+        "crates/sifr_sql_postgresql/components/postgresql-18.wasm"
+      ],
+      "manifest": "crates/sifr_sql_postgresql/component-artifacts.json",
+      "evidence": "crates/sifr_sql_postgresql/tests/postgresql_components.rs::every_checked_in_component_executes_in_the_capability_free_host"
+    },
+    {
+      "crate": "sifr_sql_sqlite",
+      "artifacts": [
+        "crates/sifr_sql_sqlite/components/sqlite-3.53.2.wasm"
+      ],
+      "manifest": "crates/sifr_sql_sqlite/component-artifacts.json",
+      "evidence": "crates/sifr_sql_sqlite/tests/sqlite_compiler.rs::checked_in_sqlite_component_executes_in_the_capability_free_host"
+    }
+  ],
   "fixture": {
     "name": "words",
     "sql": false,

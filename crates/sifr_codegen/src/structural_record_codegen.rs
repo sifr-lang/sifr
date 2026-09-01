@@ -12,7 +12,7 @@ pub(crate) fn structural_record_rust_type(record: &StructuralRecordType) -> Rust
     let arguments = record
         .fields()
         .iter()
-        .map(|field| crate::sifr_type_to_rust_type(field.ty()))
+        .map(|field| structural_record_field_rust_type(field.ty()))
         .collect::<Vec<_>>();
     if arguments.is_empty() {
         RustType::Named(base)
@@ -21,6 +21,34 @@ pub(crate) fn structural_record_rust_type(record: &StructuralRecordType) -> Rust
             base,
             params: arguments,
         }
+    }
+}
+
+fn structural_record_field_rust_type(ty: &sifr_type_system::Type) -> RustType {
+    match ty.resolve_alias() {
+        // A structural record is an ordinary stored value. Callable parameters use
+        // `impl Fn` at call boundaries, but `impl Trait` is not a legal stored field
+        // representation. Shared ownership also preserves Sifr's logical-copy
+        // semantics for callable values.
+        sifr_type_system::Type::Callable(params, conventions, ret) => RustType::Generic {
+            base: "std::sync::Arc".to_string(),
+            params: vec![crate::preamble::callable_dyn_rust_type(
+                params,
+                conventions,
+                ret,
+                false,
+            )],
+        },
+        sifr_type_system::Type::AsyncCallable(params, conventions, ret) => RustType::Generic {
+            base: "std::sync::Arc".to_string(),
+            params: vec![crate::preamble::callable_dyn_rust_type(
+                params,
+                conventions,
+                ret,
+                true,
+            )],
+        },
+        _ => crate::sifr_type_to_rust_type(ty),
     }
 }
 

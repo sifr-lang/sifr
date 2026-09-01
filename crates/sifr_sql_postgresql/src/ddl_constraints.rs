@@ -1,5 +1,6 @@
 use crate::ast::{CreateTableStatement, PostgresStatement, TableConstraint};
 use crate::diagnostic::{PostgresDiagnostic, PostgresDiagnosticCode};
+use sha2::{Digest, Sha256};
 use sifr_sql_contract::{
     ObjectId, SchemaObject, SchemaObjectKind, SchemaSourceLocation, SemanticValue,
 };
@@ -36,9 +37,9 @@ pub(crate) fn add_table_constraints(
             column_dependencies(input.table_identity, input.column_ids, &columns),
         ));
     }
-    for (index, columns) in input.unique_sets.iter().enumerate() {
+    for columns in input.unique_sets {
         identities.push(writer.add_constraint(
-            constraint_name(input.table_identity, &format!("unique_{}", index + 1)),
+            stable_constraint_name(input.table_identity, "unique", columns),
             SchemaObjectKind::UniqueConstraint,
             columns_semantic(columns),
             column_dependencies(input.table_identity, input.column_ids, columns),
@@ -50,7 +51,6 @@ pub(crate) fn add_table_constraints(
                 std::slice::from_ref(&column.name),
                 relation,
                 referenced,
-                identities.len(),
             ));
         }
     }
@@ -60,14 +60,9 @@ pub(crate) fn add_table_constraints(
                 columns,
                 relation,
                 referenced,
-            } => identities.push(writer.add_foreign_key(
-                columns,
-                relation,
-                referenced,
-                identities.len(),
-            )),
+            } => identities.push(writer.add_foreign_key(columns, relation, referenced)),
             TableConstraint::Check { expression } => {
-                let serialized = serde_json::to_string(expression).map_err(|_| {
+                let serialized = crate::canonical_postgres_ast_json(expression).map_err(|_| {
                     PostgresDiagnostic::at_sql(
                         PostgresDiagnosticCode::TypeMismatch,
                         "cannot serialize PostgreSQL CHECK expression",
@@ -76,9 +71,10 @@ pub(crate) fn add_table_constraints(
                     )
                 })?;
                 identities.push(writer.add_constraint(
-                    constraint_name(
+                    stable_constraint_name(
                         input.table_identity,
-                        &format!("check_{}", identities.len() + 1),
+                        "check",
+                        std::slice::from_ref(&serialized),
                     ),
                     SchemaObjectKind::CheckConstraint,
                     BTreeMap::from([(
@@ -108,13 +104,21 @@ impl ConstraintWriter<'_> {
         columns: &[String],
         relation: &[String],
         referenced: &[String],
-        index: usize,
     ) -> ObjectId {
         let referenced_relation = ObjectId::new(qualified_name(relation));
         let mut dependencies = column_dependencies(self.table_identity, self.column_ids, columns);
         dependencies.insert(referenced_relation.clone());
         self.add_constraint(
-            constraint_name(self.table_identity, &format!("fkey_{}", index + 1)),
+            stable_constraint_name(
+                self.table_identity,
+                "fkey",
+                &columns
+                    .iter()
+                    .chain(relation)
+                    .chain(referenced)
+                    .cloned()
+                    .collect::<Vec<_>>(),
+            ),
             SchemaObjectKind::ForeignKey,
             BTreeMap::from([
                 ("columns".to_string(), string_list(columns)),
@@ -182,6 +186,17 @@ fn constraint_name(table: &ObjectId, suffix: &str) -> ObjectId {
     let relation = segments.next().unwrap_or("relation");
     let namespace = segments.next().unwrap_or("public");
     ObjectId::new(format!("{namespace}.{relation}_{suffix}"))
+}
+
+fn stable_constraint_name(table: &ObjectId, kind: &str, signature: &[String]) -> ObjectId {
+    let mut digest = Sha256::new();
+    digest.update(kind.as_bytes());
+    for value in signature {
+        digest.update([0]);
+        digest.update(value.as_bytes());
+    }
+    let encoded = crate::component::lower_hex(&digest.finalize());
+    constraint_name(table, &format!("{kind}_{}", &encoded[..16]))
 }
 
 fn qualified_name(name: &[String]) -> String {

@@ -39,7 +39,8 @@ pub use diagnostics::{
     diagnostic_label_for_code, render_package_diagnostic,
 };
 pub use frontend::{
-    check, compile, compile_with_metadata, lower_source, parse_source, type_check_source,
+    check, compile, compile_sql_migration_source, compile_with_metadata, lower_source,
+    parse_source, type_check_source,
 };
 pub use python_binding::{
     PythonBindingDeclaration, PythonBindingDeclarationKind, PythonBindingParameter,

@@ -1,0 +1,6 @@
+from sifr.sql import SqlSchema
+from sifr.sql.schemas import app
+
+
+def runtime_parameter(own schema: SqlSchema[app.Schema], email: str):
+    return schema.sql(t"SELECT id FROM public.users WHERE email = {email}")

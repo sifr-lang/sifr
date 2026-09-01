@@ -19,7 +19,7 @@ expression: views
                 {},
             ),
             "provider-query": Text(
-                "{\"common_tables\":[],\"recursive\":false,\"targets\":[{\"expression\":{\"kind\":{\"kind\":\"column\",\"path\":[\"a\"]},\"span\":{\"start\":110,\"end\":111}},\"alias\":null,\"span\":{\"start\":110,\"end\":111}}],\"from\":[{\"kind\":\"relation\",\"name\":[\"ordered\"],\"alias\":null,\"span\":{\"start\":117,\"end\":124}}],\"predicate\":null,\"group_by\":[],\"having\":null,\"order_by\":[],\"windows\":[],\"limit\":null,\"offset\":null,\"locking\":[],\"values\":[],\"set_operation\":null}",
+                "{\"common_tables\":[],\"from\":[{\"alias\":null,\"kind\":\"relation\",\"name\":[\"ordered\"]}],\"group_by\":[],\"having\":null,\"limit\":null,\"locking\":[],\"offset\":null,\"order_by\":[],\"predicate\":null,\"recursive\":false,\"set_operation\":null,\"targets\":[{\"alias\":null,\"expression\":{\"kind\":{\"kind\":\"column\",\"path\":[\"a\"]}}}],\"values\":[],\"windows\":[]}",
             ),
             "unique-sets": List(
                 [],
@@ -53,7 +53,7 @@ expression: views
                 {},
             ),
             "provider-query": Text(
-                "{\"common_tables\":[],\"recursive\":false,\"targets\":[{\"expression\":{\"kind\":{\"kind\":\"column\",\"path\":[\"z\"]},\"span\":{\"start\":35,\"end\":36}},\"alias\":null,\"span\":{\"start\":35,\"end\":36}},{\"expression\":{\"kind\":{\"kind\":\"column\",\"path\":[\"a\"]},\"span\":{\"start\":38,\"end\":39}},\"alias\":null,\"span\":{\"start\":38,\"end\":39}}],\"from\":[{\"kind\":\"relation\",\"name\":[\"ordered\"],\"alias\":null,\"span\":{\"start\":45,\"end\":52}}],\"predicate\":null,\"group_by\":[],\"having\":null,\"order_by\":[],\"windows\":[],\"limit\":null,\"offset\":null,\"locking\":[],\"values\":[],\"set_operation\":null}",
+                "{\"common_tables\":[],\"from\":[{\"alias\":null,\"kind\":\"relation\",\"name\":[\"ordered\"]}],\"group_by\":[],\"having\":null,\"limit\":null,\"locking\":[],\"offset\":null,\"order_by\":[],\"predicate\":null,\"recursive\":false,\"set_operation\":null,\"targets\":[{\"alias\":null,\"expression\":{\"kind\":{\"kind\":\"column\",\"path\":[\"z\"]}}},{\"alias\":null,\"expression\":{\"kind\":{\"kind\":\"column\",\"path\":[\"a\"]}}}],\"values\":[],\"windows\":[]}",
             ),
             "unique-sets": List(
                 [],

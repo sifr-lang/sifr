@@ -325,7 +325,11 @@ impl SqliteConnection {
         stop_at_limit: bool,
     ) -> Result<Vec<SqliteRow>, SqlError> {
         validate_request(&request, &self.profile, &self.evidence)?;
-        let maximum_rows = maximum_rows.min(self.profile.limits().max_collected_rows);
+        let maximum_rows = if stop_at_limit {
+            maximum_rows
+        } else {
+            maximum_rows.min(self.profile.limits().max_collected_rows)
+        };
         if maximum_rows == 0 {
             return Err(SqlError::resource_limit(ResourceLimitKind::CollectedRows));
         }

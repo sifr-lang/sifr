@@ -19,6 +19,7 @@ use tokio_postgres_rustls::MakeRustlsConnect;
 
 const LEDGER_SCHEMA: &str = "sifr_internal";
 const LEDGER_TABLE: &str = "migration_ledger";
+const LEDGER_OWNER: &str = "sifr:sql-migration-ledger:v1";
 
 pub struct PostgresMigrationRuntime {
     runtime: Runtime,
@@ -213,9 +214,26 @@ impl MigrationRuntime for PostgresMigrationRuntime {
             return Err(failure);
         }
         let setup = self.runtime.block_on(async {
+            let existing = self
+                .client
+                .query_opt(
+                    "SELECT obj_description(oid, 'pg_namespace') FROM pg_namespace WHERE nspname = 'sifr_internal'",
+                    &[],
+                )
+                .await
+                .map_err(|_| "cannot inspect PostgreSQL migration ledger namespace".to_string())?;
+            if let Some(row) = existing {
+                let owner = row
+                    .try_get::<_, Option<String>>(0)
+                    .map_err(|_| "PostgreSQL migration ledger namespace owner is invalid".to_string())?;
+                if owner.as_deref() != Some(LEDGER_OWNER) {
+                    return Err("PostgreSQL namespace 'sifr_internal' is reserved and is not owned by Sifr".to_string());
+                }
+            }
             self.client
                 .batch_execute(&format!(
                     "CREATE SCHEMA IF NOT EXISTS {LEDGER_SCHEMA};\
+                     COMMENT ON SCHEMA {LEDGER_SCHEMA} IS '{LEDGER_OWNER}';\
                      CREATE TABLE IF NOT EXISTS {LEDGER_SCHEMA}.{LEDGER_TABLE} (\
                        identity text PRIMARY KEY, payload jsonb NOT NULL\
                      );"
@@ -384,12 +402,10 @@ impl MigrationRuntime for PostgresMigrationRuntime {
                 })?;
                 StepOutcome::Completed
             }
-            MigrationExecutionStepKind::SqlData {
-                normalized_statement,
-            } => {
+            MigrationExecutionStepKind::SqlData { statement, .. } => {
                 self.runtime.block_on(async {
                     self.client
-                        .batch_execute(normalized_statement)
+                        .batch_execute(statement)
                         .await
                         .map_err(|_| "PostgreSQL migration data step failed".to_string())
                 })?;
@@ -398,12 +414,10 @@ impl MigrationRuntime for PostgresMigrationRuntime {
             MigrationExecutionStepKind::SifrData { .. } => {
                 return Err("PostgreSQL migration callback executor is unavailable".to_string());
             }
-            MigrationExecutionStepKind::Assertion {
-                normalized_statement,
-            } => {
+            MigrationExecutionStepKind::Assertion { statement, .. } => {
                 let rows = self.runtime.block_on(async {
                     self.client
-                        .query(normalized_statement, &[])
+                        .query(statement, &[])
                         .await
                         .map_err(|_| "PostgreSQL migration assertion failed".to_string())
                 })?;
@@ -420,13 +434,13 @@ impl MigrationRuntime for PostgresMigrationRuntime {
                 }
             }
             MigrationExecutionStepKind::Backfill {
-                normalized_statement,
+                statement,
                 maximum_batch_rows,
                 ..
             } => {
                 let processed_rows = self.runtime.block_on(async {
                     self.client
-                        .execute(normalized_statement, &[])
+                        .execute(statement, &[])
                         .await
                         .map_err(|_| "PostgreSQL migration backfill failed".to_string())
                 })?;

@@ -1,4 +1,6 @@
+from sifr.sql import SqlSchema
 from sifr.sql.requirements import has_users
+from sifr.sql.schemas import app
 
 
 def by_email[S: has_users.Schema](schema: SqlSchema[S], email: str):
@@ -9,4 +11,5 @@ def by_email[S: has_users.Schema](schema: SqlSchema[S], email: str):
     """)
 
 
-query = by_email(app.schema, "dev@example.com")
+def main():
+    query = by_email(app.schema, "dev@example.com")

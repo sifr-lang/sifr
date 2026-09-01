@@ -28,6 +28,7 @@ pub(super) struct SandboxedToolOutput {
     pub(super) stdout: Vec<u8>,
     pub(super) stderr: Vec<u8>,
     pub(super) output_exceeded_limit: bool,
+    pub(super) streamed: bool,
 }
 
 pub(super) struct SandboxedToolRequest<'a> {
@@ -39,6 +40,7 @@ pub(super) struct SandboxedToolRequest<'a> {
     pub(super) package_checksum: &'a str,
     pub(super) lockfile_fingerprint: &'a str,
     pub(super) executable_hash: &'a str,
+    pub(super) stream_output: bool,
 }
 
 pub(super) fn run_sandboxed_tool(
@@ -65,10 +67,19 @@ pub(super) fn run_sandboxed_tool(
     let stderr_limit = Arc::clone(&remaining);
     let stdout_exceeded = Arc::clone(&exceeded);
     let stderr_exceeded = Arc::clone(&exceeded);
-    let stdout_reader =
-        std::thread::spawn(move || read_bounded(stdout, &stdout_limit, &stdout_exceeded));
-    let stderr_reader =
-        std::thread::spawn(move || read_bounded(stderr, &stderr_limit, &stderr_exceeded));
+    let stream_output = request.stream_output;
+    let stdout_reader = std::thread::spawn(move || {
+        read_bounded(stdout, &stdout_limit, &stdout_exceeded, stream_output, true)
+    });
+    let stderr_reader = std::thread::spawn(move || {
+        read_bounded(
+            stderr,
+            &stderr_limit,
+            &stderr_exceeded,
+            stream_output,
+            false,
+        )
+    });
     let status = loop {
         if exceeded.load(Ordering::Acquire) {
             if let Some(status) = child
@@ -103,6 +114,7 @@ pub(super) fn run_sandboxed_tool(
         stdout,
         stderr,
         output_exceeded_limit: exceeded.load(Ordering::Acquire),
+        streamed: request.stream_output,
     })
 }
 
@@ -110,6 +122,8 @@ fn read_bounded(
     mut reader: impl Read,
     remaining: &Mutex<usize>,
     exceeded: &AtomicBool,
+    stream: bool,
+    stdout: bool,
 ) -> Result<Vec<u8>, String> {
     let mut output = Vec::new();
     let mut buffer = [0u8; 8192];
@@ -126,6 +140,14 @@ fn read_bounded(
         let retained = (*available).min(read);
         *available -= retained;
         output.extend_from_slice(&buffer[..retained]);
+        if stream && retained != 0 {
+            let result = if stdout {
+                std::io::Write::write_all(&mut std::io::stdout(), &buffer[..retained])
+            } else {
+                std::io::Write::write_all(&mut std::io::stderr(), &buffer[..retained])
+            };
+            result.map_err(|error| format!("cannot stream host-tool output: {error}"))?;
+        }
         if retained < read {
             exceeded.store(true, Ordering::Release);
         }
@@ -254,12 +276,13 @@ fn macos_profile(request: &SandboxedToolRequest<'_>, temp: &Path) -> Result<Stri
         "(deny default)".to_string(),
         "(allow process-info*)".to_string(),
         "(allow sysctl-read)".to_string(),
-        "(allow mach-lookup)".to_string(),
+        "(allow mach-lookup (global-name \"com.apple.system.opendirectoryd.libinfo\") (global-name \"com.apple.system.logger\"))".to_string(),
         format!("(allow process-exec (literal {executable}))"),
         format!("(allow file-read-data (literal {executable}))"),
         "(allow file-read-data (literal \"/\"))".to_string(),
         format!("(allow file-read-metadata (subpath {executable_parent}))"),
-        "(allow file-read* (subpath \"/System\") (subpath \"/usr/lib\") (subpath \"/private/etc\"))".to_string(),
+        "(allow file-read* (subpath \"/System\") (subpath \"/usr/lib\"))".to_string(),
+        "(allow file-read* (literal \"/private/etc/hosts\") (literal \"/private/etc/protocols\") (literal \"/private/etc/services\") (literal \"/private/etc/resolv.conf\"))".to_string(),
         format!("(allow file-read* file-write* (subpath {temp}))"),
         "(allow file-read* file-write* (literal \"/dev/null\"))".to_string(),
     ];

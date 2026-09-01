@@ -663,6 +663,7 @@ impl<'a> RawAdapter<'a> {
         let mut nullable = true;
         let mut has_default = false;
         let mut generated = false;
+        let mut identity_generation = None;
         let mut primary_key = false;
         let mut unique = false;
         let mut references = None;
@@ -671,7 +672,23 @@ impl<'a> RawAdapter<'a> {
             match string_field(constraint, "contype").unwrap_or("") {
                 "CONSTR_NOTNULL" => nullable = false,
                 "CONSTR_DEFAULT" => has_default = true,
-                "CONSTR_GENERATED" | "CONSTR_IDENTITY" => generated = true,
+                "CONSTR_GENERATED" => generated = true,
+                "CONSTR_IDENTITY" => {
+                    generated = true;
+                    identity_generation = Some(
+                        match string_field(constraint, "generated_when").unwrap_or("") {
+                            "a" => "always",
+                            "d" => "by-default",
+                            _ => {
+                                return Err(self.invalid(
+                                    "identity column has an invalid generation mode",
+                                    constraint,
+                                ));
+                            }
+                        }
+                        .to_string(),
+                    );
+                }
                 "CONSTR_PRIMARY" => {
                     primary_key = true;
                     nullable = false;
@@ -694,6 +711,7 @@ impl<'a> RawAdapter<'a> {
             nullable,
             has_default,
             generated,
+            identity_generation,
             primary_key,
             unique,
             references,

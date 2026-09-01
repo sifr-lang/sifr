@@ -80,6 +80,7 @@ The CLI accepts a package namespace directly:
 
 ```text
 sifr sql schema build --profile app
+sifr sql migration build --profile app
 sifr sql test provision --profile app
 ```
 
@@ -119,7 +120,17 @@ The closed capability vocabulary is:
 - `subprocess`
 
 An unknown capability is an error. Package review remains the trust boundary
-for native host code, in the same way as a trusted Rust backend package.
+for native host code, in the same way as a trusted Rust backend package. Cargo
+build scripts and procedural macros execute while that reviewed package is
+built, before runtime confinement begins. Package and lock review are therefore
+also the explicit build-time trust boundary. The native sandbox confines only
+the built tool process.
+
+Ordinary tools stream retained stdout and stderr while they run. Sifr shares one
+10 MiB counter across both streams, retains and emits at most that prefix, then
+terminates the process and reports the bound. Commands whose stdout is a
+machine-validated protocol document, such as test provisioning, remain buffered
+until validation succeeds.
 
 ## Application isolation
 
@@ -156,6 +167,9 @@ Tool resolution fails closed for an unknown namespace, reserved namespace,
 missing direct package, missing binary, unknown capability, lock drift, or
 application-graph contamination.
 
-SQL editor initialization has a different failure boundary. A missing lockfile,
-invalid schema, or provider initialization error disables SQL enrichment and
-adds an explicit diagnostic. It does not disable ordinary Sifr analysis.
+SQL editor initialization has a different failure boundary. A missing lockfile
+silently defers resolved SQL enrichment and does not create dependency state.
+Lexical SQL features and ordinary Sifr analysis remain available. After a
+lockfile exists, an invalid schema or provider initialization error disables
+resolved SQL enrichment and adds an explicit diagnostic. It does not disable
+ordinary Sifr analysis.

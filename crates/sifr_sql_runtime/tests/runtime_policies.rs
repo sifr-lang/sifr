@@ -13,16 +13,12 @@ fn fingerprint(byte: char) -> String {
 }
 
 fn cache_key(byte: char) -> StatementCacheKey {
-    cache_key_with_schema(byte, 'c')
-}
-
-fn cache_key_with_schema(byte: char, schema_byte: char) -> StatementCacheKey {
     StatementCacheKey {
         normalized_statement_fingerprint: fingerprint(byte),
         parameter_type_fingerprint: fingerprint('a'),
         result_type_fingerprint: fingerprint('b'),
         provider_version: "13".to_string(),
-        schema_fingerprint: fingerprint(schema_byte),
+        schema_fingerprint: fingerprint('c'),
     }
     .validate()
     .expect("test key is valid")
@@ -89,21 +85,6 @@ fn statement_cache_is_bounded_lru_with_complete_identity() {
     assert_eq!(cache.get(&first), Some(&1));
     assert_eq!(cache.get(&third), Some(&3));
     assert_eq!(cache.len(), 2);
-}
-
-#[test]
-fn statement_cache_invalidates_only_the_named_schema() {
-    let mut cache = StatementCache::new(3).expect("positive capacity");
-    let invalidated = cache_key_with_schema('d', 'c');
-    let retained = cache_key_with_schema('e', 'd');
-    cache.insert(&invalidated, 1);
-    cache.insert(&retained, 2);
-
-    cache.invalidate_schema(&fingerprint('c'));
-
-    assert!(cache.get(&invalidated).is_none());
-    assert_eq!(cache.get(&retained), Some(&2));
-    assert_eq!(cache.len(), 1);
 }
 
 #[test]

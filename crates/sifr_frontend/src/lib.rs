@@ -71,14 +71,21 @@ mod source_provider;
 mod sql_editor;
 mod sql_migrations;
 mod sql_queries;
+mod sql_query_source;
 mod sql_schema_polymorphism;
+mod sql_schema_source;
 #[cfg(test)]
 mod structural_shape_import_tests;
+pub use sifr_sql_contract::{
+    MigrationSourceDeclaration, MigrationSourceStep, MigrationSourceStepKind,
+};
 pub use source_provider::*;
 pub use sql_editor::*;
 pub use sql_migrations::*;
 pub use sql_queries::*;
+pub use sql_query_source::*;
 pub use sql_schema_polymorphism::*;
+pub use sql_schema_source::*;
 mod source_maps;
 pub use source_maps::*;
 mod workspace_session;

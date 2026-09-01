@@ -34,6 +34,7 @@ provider uses this exact stable set:
 | Bundled SQLite | SQLite amalgamation | 3.53.2 | default bundled compile flags |
 | Component C toolchain | WASI SDK | 33 | WASI Preview 2 target |
 | Component ABI generator | `wit-bindgen` | 0.61.1 | macros, reallocation, and standard support |
+| Component capability virtualizer | WASI-Virt | 0.2.0 at `448f6df8f688cee5d6995e96b1ffc31f9bf00742` | deny-by-default WASI composition |
 | Async coordination | Tokio | 1.53.1 | macros, runtime, synchronization, and time |
 
 Cargo sets `SYNTAQLITE_SQLITE_VERSION=3053002` for all repository builds. No
@@ -46,6 +47,12 @@ but are not portable qualification inputs.
 These crates are private Rust implementation tools. Sifr programs cannot import
 them. Sifr package metadata selects the provider package only.
 
+The component builder verifies the exact WASI-Virt commit and tracked-source
+digest before use. The artifact manifest records both values, the artifact
+digest, and its size. The guest uses sorted JSON maps and does not request
+ambient randomness. WASI-Virt resolves every remaining WASI interface inside
+the artifact, so the host grants no WASI capability.
+
 ## Supported library
 
 The provider supports bundled SQLite 3.53.2. A profile must select this exact
@@ -55,6 +62,7 @@ error.
 ```toml
 [sql.profiles.app]
 provider = "sifr_sql_sqlite"
+family = "sqlite"
 source = "db/schema.sql"
 server-version = "3.53.2"
 search-path = ["main"]
@@ -229,6 +237,7 @@ The host tool exposes this surface:
 sifr sql schema pull --profile <name> [--accept]
 sifr sql schema validate --profile <name> [--live]
 sifr sql schema build --profile <name>
+sifr sql migration build --profile <name>
 sifr sql migration plan --profile <name>
 sifr sql migration import --profile <name> --baseline <id>
 sifr sql migration apply --profile <name>

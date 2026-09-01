@@ -1,0 +1,5 @@
+from sifr.sql import SqlSchema
+
+
+def unconstrained_query[S](own schema: SqlSchema[S], email: str):
+    return schema.sql(t"SELECT id FROM public.users WHERE email = {email}")

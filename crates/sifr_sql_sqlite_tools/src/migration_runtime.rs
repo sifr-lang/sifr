@@ -287,24 +287,20 @@ impl MigrationRuntime for SqliteMigrationRuntime {
                     self.execute_sql(statement, "SQLite migration DDL failed")?;
                     StepOutcome::Completed
                 }
-                MigrationExecutionStepKind::SqlData {
-                    normalized_statement,
-                } => {
-                    self.execute_sql(normalized_statement, "SQLite migration data step failed")?;
+                MigrationExecutionStepKind::SqlData { statement, .. } => {
+                    self.execute_sql(statement, "SQLite migration data step failed")?;
                     StepOutcome::Completed
                 }
                 MigrationExecutionStepKind::SifrData { .. } => {
                     self.failed = true;
                     return Err("SQLite migration callback executor is unavailable".to_string());
                 }
-                MigrationExecutionStepKind::Assertion {
-                    normalized_statement,
-                } => {
-                    let mut statement = self
+                MigrationExecutionStepKind::Assertion { statement, .. } => {
+                    let mut prepared = self
                         .connection
-                        .prepare(normalized_statement)
+                        .prepare(statement)
                         .map_err(|_| "SQLite migration assertion failed".to_string())?;
-                    let values = statement
+                    let values = prepared
                         .query_map([], |row| row.get::<_, Option<bool>>(0))
                         .and_then(Iterator::collect::<Result<Vec<_>, _>>)
                         .map_err(|_| "SQLite migration assertion failed".to_string())?;
@@ -317,13 +313,13 @@ impl MigrationRuntime for SqliteMigrationRuntime {
                     }
                 }
                 MigrationExecutionStepKind::Backfill {
-                    normalized_statement,
+                    statement,
                     maximum_batch_rows,
                     ..
                 } => {
                     let changed = self
                         .connection
-                        .execute(normalized_statement, [])
+                        .execute(statement, [])
                         .map_err(|_| "SQLite migration backfill failed".to_string())?
                         as u64;
                     if changed > *maximum_batch_rows {

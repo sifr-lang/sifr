@@ -11,8 +11,9 @@ pub use types::{
     CompiledMigrationStep, CompiledStepKind, DataCallbackContract, DdlReflection, DdlRisk,
     MigrationBaseline, MigrationCompileError, MigrationCompileErrorKind, MigrationDefinition,
     MigrationGraphDefinition, MigrationImpact, MigrationNodeId, MigrationProviderConstraint,
+    MigrationSourceDeclaration, MigrationSourceStep, MigrationSourceStepKind,
     MigrationStateIdentity, MigrationStepDefinition, MigrationStepKind, ReplayPolicy,
     TransactionBoundary, TransactionRequirement,
 };
 
-pub const MIGRATION_GRAPH_FORMAT_VERSION: u32 = 1;
+pub const MIGRATION_GRAPH_FORMAT_VERSION: u32 = 2;

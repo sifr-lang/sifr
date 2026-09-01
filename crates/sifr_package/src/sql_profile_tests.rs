@@ -252,6 +252,7 @@ sifr-version = ">=0.3,<0.4"
 
 [sql.profiles.app]
 provider = "{provider}"
+family = "postgresql"
 source = "db/schema.sql"
 server-version = "18"
 search-path = ["app", "public"]

@@ -36,13 +36,6 @@ pub(super) fn cmd_host_tool(words: &[String], format: DiagnosticFormat) -> i32 {
         render_tool_error("missing tool namespace", format);
         return EXIT_USAGE_OR_CONFIG;
     };
-    if let Some(suggestion) = builtin_typo_suggestion(namespace) {
-        render_tool_error(
-            &format!("unknown command '{namespace}'; did you mean '{suggestion}'?"),
-            format,
-        );
-        return EXIT_USAGE_OR_CONFIG;
-    }
     let (graph, mut provider) = match load_graph(format) {
         Ok(value) => value,
         Err(code) => return code,
@@ -56,6 +49,13 @@ pub(super) fn cmd_host_tool(words: &[String], format: DiagnosticFormat) -> i32 {
     let plan = match graph.build_plan(namespace, env!("SIFR_BUILD_TARGET")) {
         Ok(plan) => plan,
         Err(error) => {
+            if let Some(suggestion) = builtin_typo_suggestion(namespace) {
+                render_tool_error(
+                    &format!("unknown command '{namespace}'; did you mean '{suggestion}'?"),
+                    format,
+                );
+                return EXIT_USAGE_OR_CONFIG;
+            }
             render_diagnostics(&[package_diagnostic(error)], format);
             return EXIT_USAGE_OR_CONFIG;
         }
@@ -118,6 +118,7 @@ pub(super) fn cmd_host_tool(words: &[String], format: DiagnosticFormat) -> i32 {
         package_checksum: &plan.package_checksum,
         lockfile_fingerprint: &graph.lockfile_fingerprint,
         executable_hash: &executable_hash,
+        stream_output: provision_profile.is_none(),
     }) {
         Ok(output) => output,
         Err(message) => {
@@ -129,11 +130,11 @@ pub(super) fn cmd_host_tool(words: &[String], format: DiagnosticFormat) -> i32 {
         render_tool_error("host-tool output exceeded the 10 MiB limit", format);
         return EXIT_USER_DIAGNOSTIC;
     }
-    if !output.stderr.is_empty() {
+    if !output.streamed && !output.stderr.is_empty() {
         let _ = std::io::stderr().write_all(&output.stderr);
     }
     if !output.status.success() {
-        if !output.stdout.is_empty() {
+        if !output.streamed && !output.stdout.is_empty() {
             let _ = std::io::stdout().write_all(&output.stdout);
         }
         return output.status.code().unwrap_or(EXIT_USER_DIAGNOSTIC);
@@ -141,7 +142,7 @@ pub(super) fn cmd_host_tool(words: &[String], format: DiagnosticFormat) -> i32 {
     if let Some(profile) = provision_profile {
         return render_connection_manifest(&output.stdout, &profile, namespace, format);
     }
-    if std::io::stdout().write_all(&output.stdout).is_err() {
+    if !output.streamed && std::io::stdout().write_all(&output.stdout).is_err() {
         return EXIT_INTERNAL_COMPILER_FAILURE;
     }
     EXIT_SUCCESS
@@ -286,6 +287,9 @@ fn provision_profile(namespace: &str, forwarded: &[String]) -> Result<Option<Str
     let mut profiles = Vec::new();
     let mut index = 2;
     while index < forwarded.len() {
+        if forwarded[index] == "--" {
+            break;
+        }
         if forwarded[index] == "--profile" {
             profiles.push(forwarded.get(index + 1).cloned().unwrap_or_default());
             index += 2;
@@ -429,6 +433,23 @@ mod tests {
                 .iter()
                 .map(|name| (*name).to_string())
                 .collect()
+        );
+    }
+
+    #[test]
+    fn provision_profile_does_not_scan_operands_after_separator() {
+        let arguments = [
+            "test".to_string(),
+            "provision".to_string(),
+            "--profile".to_string(),
+            "app".to_string(),
+            "--".to_string(),
+            "--profile".to_string(),
+            "operand".to_string(),
+        ];
+        assert_eq!(
+            super::provision_profile("sql", &arguments),
+            Ok(Some("app".to_string()))
         );
     }
 }

@@ -7,10 +7,15 @@ import hashlib
 import json
 import os
 import subprocess
-import tomllib
 from pathlib import Path
 
 from postgresql_component_inputs import guest_source_sha256
+from wasi_virt_inputs import (
+    WASI_VIRT_COMMIT,
+    WASI_VIRT_SOURCE_SHA256,
+    WASI_VIRT_VERSION,
+    validate_wasi_virt,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 CRATE = REPO_ROOT / "crates/sifr_sql_postgresql"
@@ -18,22 +23,7 @@ OUTPUT = CRATE / "components"
 MAJORS = range(13, 19)
 ARTIFACT_MANIFEST = CRATE / "component-artifacts.json"
 WASI_VIRT = REPO_ROOT / "third_party/wasi-virt"
-WASI_VIRT_COMMIT = "448f6df8f688cee5d6995e96b1ffc31f9bf00742"
-WASI_VIRT_SOURCE_SHA256 = "47c1ca1cc80df330c93c4797f6748d5330c2804001bdcff0342c4001920d1d2e"
 WASI_SDK_ASSET_SHA256 = "85c997a2665ead91673b5bb88b7d0df3fc8900df3bfa244f720d478187bbdc78"
-
-
-def tracked_content_sha256(repository: Path) -> str:
-    digest = hashlib.sha256()
-    paths = subprocess.check_output(
-        ["git", "-C", str(repository), "ls-files", "-z"]
-    ).split(b"\0")
-    for raw_path in paths:
-        if raw_path:
-            digest.update(raw_path)
-            digest.update(b"\0")
-            digest.update(hashlib.sha256((repository / raw_path.decode()).read_bytes()).digest())
-    return digest.hexdigest()
 
 
 def main() -> int:
@@ -47,19 +37,8 @@ def main() -> int:
     version_file = Path(sdk) / "VERSION"
     if not version_file.is_file() or not version_file.read_text(encoding="utf-8").startswith("33.0"):
         raise SystemExit("PostgreSQL components require the pinned wasi-sdk 33.0 release")
+    validate_wasi_virt(WASI_VIRT)
     virt_manifest = WASI_VIRT / "Cargo.toml"
-    if not virt_manifest.is_file():
-        raise SystemExit("initialize the pinned third_party/wasi-virt submodule")
-    virt_package = tomllib.loads(virt_manifest.read_text(encoding="utf-8"))["package"]
-    if virt_package.get("version") != "0.2.0":
-        raise SystemExit("PostgreSQL components require WASI-Virt 0.2.0")
-    virt_commit = subprocess.check_output(
-        ["git", "-C", str(WASI_VIRT), "rev-parse", "HEAD"], text=True
-    ).strip()
-    if virt_commit != WASI_VIRT_COMMIT:
-        raise SystemExit("third_party/wasi-virt commit has drifted")
-    if tracked_content_sha256(WASI_VIRT) != WASI_VIRT_SOURCE_SHA256:
-        raise SystemExit("third_party/wasi-virt content has drifted")
     subprocess.run(
         [
             "cargo",
@@ -126,7 +105,7 @@ def main() -> int:
         "toolchain": {
             "wasi_sdk": "33.0",
             "wasi_sdk_asset_sha256": WASI_SDK_ASSET_SHA256,
-            "wasi_virt": "0.2.0",
+            "wasi_virt": WASI_VIRT_VERSION,
             "wasi_virt_commit": WASI_VIRT_COMMIT,
             "wasi_virt_source_sha256": WASI_VIRT_SOURCE_SHA256,
             "wit_bindgen": "0.61.1",

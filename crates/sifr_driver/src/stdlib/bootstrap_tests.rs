@@ -1,6 +1,8 @@
 use super::*;
 use sifr_lowering::CompilerIntrinsicId;
-use std::path::PathBuf;
+
+#[path = "bootstrap_fixture_tests.rs"]
+mod fixture_tests;
 
 fn sample_param(name: &str, ty: Type, convention: ParamConvention) -> HirParam {
     HirParam {
@@ -90,6 +92,57 @@ fn public_constant_integer_value_exports_filter_to_public_recorded_values() {
 #[test]
 fn stdlib_class_exports_preserve_parent_markers_and_generic_templates() {
     let compiled = compile_stdlib_uncached().expect("stdlib should compile");
+    let migration_plan = compiled
+        .defs
+        .classes
+        .get("sifr.sql.migration")
+        .and_then(|classes| classes.get("MigrationPlan"))
+        .expect("sifr.sql.migration.MigrationPlan should be exported");
+    let Type::Class {
+        methods: migration_methods,
+        ..
+    } = migration_plan
+    else {
+        panic!("MigrationPlan should be a class");
+    };
+    assert_eq!(
+        migration_methods
+            .iter()
+            .map(|(name, _)| name.as_str())
+            .collect::<Vec<_>>(),
+        [
+            "ddl",
+            "sql_step",
+            "assert_sql",
+            "recovery_point",
+            "begin",
+            "commit"
+        ]
+    );
+    for (name, method) in migration_methods {
+        let Type::Class {
+            methods: returned_methods,
+            ..
+        } = method.return_type.resolve_alias()
+        else {
+            panic!("MigrationPlan.{name} should return MigrationPlan");
+        };
+        assert_eq!(
+            returned_methods
+                .iter()
+                .map(|(name, _)| name.as_str())
+                .collect::<Vec<_>>(),
+            [
+                "ddl",
+                "sql_step",
+                "assert_sql",
+                "recovery_point",
+                "begin",
+                "commit"
+            ],
+            "MigrationPlan.{name} return type must preserve the complete fluent API"
+        );
+    }
     let channel_sender = compiled
         .defs
         .classes
@@ -567,32 +620,6 @@ fn text_and_data_modules_export_only_canonical_operation_names() {
     assert!(!regex_classes.contains_key("CompiledPattern"));
 }
 
-fn fixture_source(module: &str, source: &str, kind: LoadedStdlibSourceKind) -> LoadedStdlibSource {
-    let stdlib_root =
-        std::fs::canonicalize(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../stdlib"))
-            .expect("development stdlib root should resolve");
-    LoadedStdlibSource {
-        module: module.to_string(),
-        source: source.to_string(),
-        path: stdlib_root.join(format!("{}.sifr", module.replace('.', "/"))),
-        kind,
-    }
-}
-
-fn compile_fixture_sources(
-    sources: &[LoadedStdlibSource],
-) -> Result<StdlibCompiled, Vec<RenderedDiagnostic>> {
-    let sysroot = sifr_sysroot::resolve_sysroot(None).expect("development sysroot should resolve");
-    compile_stdlib_sources_with_sysroot(sources, sysroot)
-}
-
-fn fixture_diagnostics(sources: &[LoadedStdlibSource]) -> Vec<RenderedDiagnostic> {
-    match compile_fixture_sources(sources) {
-        Ok(_) => panic!("fixture should fail stdlib bootstrap"),
-        Err(diagnostics) => diagnostics,
-    }
-}
-
 #[test]
 fn binary_and_hashing_exports_use_only_first_class_bytes_contracts() {
     let compiled = compile_stdlib_uncached().expect("stdlib should compile");
@@ -788,85 +815,4 @@ fn collections_and_sorted_insert_modules_export_only_canonical_operations() {
         .expect("sifr.statistics functions should be exported");
     assert!(statistics.contains_key("mean"));
     assert!(!statistics.contains_key("fmean"));
-}
-
-#[test]
-fn private_stdlib_imports_resolve_only_from_compiled_source_exports() {
-    let sources = [
-        fixture_source(
-            "_sifr.fixture",
-            "def existing(value: int) -> int:\n    return value\n",
-            LoadedStdlibSourceKind::PrivateDeclaration,
-        ),
-        fixture_source(
-            "sifr.fixture",
-            "from _sifr.fixture import existing\n\ndef forwarded(value: int) -> int:\n    return existing(value)\n",
-            LoadedStdlibSourceKind::Public,
-        ),
-    ];
-
-    let compiled = compile_fixture_sources(&sources).expect("source-backed import should compile");
-    assert!(
-        compiled
-            .defs
-            .functions
-            .get("sifr.fixture")
-            .is_some_and(|functions| functions.contains_key("forwarded"))
-    );
-    assert!(
-        compiled
-            .code
-            .transitive_deps
-            .get("sifr.fixture")
-            .is_some_and(|deps| deps.contains("_sifr.fixture"))
-    );
-}
-
-#[test]
-fn missing_private_stdlib_member_is_a_structured_bootstrap_failure() {
-    let sources = [
-        fixture_source(
-            "_sifr.fixture",
-            "def existing(value: int) -> int:\n    return value\n",
-            LoadedStdlibSourceKind::PrivateDeclaration,
-        ),
-        fixture_source(
-            "sifr.fixture",
-            "from _sifr.fixture import absent\n",
-            LoadedStdlibSourceKind::Public,
-        ),
-    ];
-
-    let diagnostics = fixture_diagnostics(&sources);
-    assert!(!diagnostics.is_empty());
-    assert!(
-        diagnostics
-            .iter()
-            .all(|diagnostic| diagnostic.code == DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE.code())
-    );
-    assert!(diagnostics.iter().any(|diagnostic| {
-        diagnostic.message.contains("_sifr.fixture") && diagnostic.message.contains("absent")
-    }));
-}
-
-#[test]
-fn missing_private_stdlib_module_is_a_structured_bootstrap_failure() {
-    let sources = [fixture_source(
-        "sifr.fixture",
-        "from _sifr.missing import absent\n",
-        LoadedStdlibSourceKind::Public,
-    )];
-
-    let diagnostics = fixture_diagnostics(&sources);
-    assert!(!diagnostics.is_empty());
-    assert!(
-        diagnostics
-            .iter()
-            .all(|diagnostic| diagnostic.code == DiagnosticCode::STDLIB_BOOTSTRAP_FAILURE.code())
-    );
-    assert!(
-        diagnostics
-            .iter()
-            .any(|diagnostic| diagnostic.message.contains("_sifr.missing"))
-    );
 }

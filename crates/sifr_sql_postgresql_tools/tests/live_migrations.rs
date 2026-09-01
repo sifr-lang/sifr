@@ -177,6 +177,7 @@ fn qualification_plan(fingerprints: &Fingerprints) -> MigrationExecutionPlan {
                 &fingerprints.table,
                 &fingerprints.table,
                 MigrationExecutionStepKind::SqlData {
+                    statement: format!("INSERT INTO {TABLE}(id) VALUES (1), (2), (3)"),
                     normalized_statement: format!("INSERT INTO {TABLE}(id) VALUES (1), (2), (3)"),
                 },
             ),
@@ -246,6 +247,9 @@ fn qualification_plan(fingerprints: &Fingerprints) -> MigrationExecutionPlan {
                 &fingerprints.index,
                 &fingerprints.index,
                 MigrationExecutionStepKind::Backfill {
+                    statement: format!(
+                        "UPDATE {TABLE} SET processed = true WHERE id IN (SELECT id FROM {TABLE} WHERE NOT processed ORDER BY id LIMIT 2)"
+                    ),
                     normalized_statement: format!(
                         "UPDATE {TABLE} SET processed = true WHERE id IN (SELECT id FROM {TABLE} WHERE NOT processed ORDER BY id LIMIT 2)"
                     ),
@@ -260,6 +264,7 @@ fn qualification_plan(fingerprints: &Fingerprints) -> MigrationExecutionPlan {
                 &fingerprints.index,
                 &fingerprints.index,
                 MigrationExecutionStepKind::Assertion {
+                    statement: format!("SELECT count(*) = 3 FROM {TABLE} WHERE processed"),
                     normalized_statement: format!(
                         "SELECT count(*) = 3 FROM {TABLE} WHERE processed"
                     ),
@@ -412,6 +417,7 @@ fn verify_failed_transaction(url: &str, major: u16, fingerprints: &Fingerprints)
                 &fingerprints.table,
                 &fingerprints.table,
                 MigrationExecutionStepKind::Assertion {
+                    statement: "SELECT false".to_string(),
                     normalized_statement: "SELECT false".to_string(),
                 },
             ),

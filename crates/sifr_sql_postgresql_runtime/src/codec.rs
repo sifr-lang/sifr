@@ -218,6 +218,7 @@ pub(crate) fn decode_value(
     };
     match *ty {
         Type::BOOL if bytes.len() == 1 => Ok(OwnedSqlValue::Bool(bytes[0] != 0)),
+        Type::BOOL => Err(SqlError::new(SqlErrorKind::Decode)),
         Type::INT2 => read_i16(&bytes).map(|value| OwnedSqlValue::Signed(i64::from(value))),
         Type::INT4 => read_i32(&bytes).map(|value| OwnedSqlValue::Signed(i64::from(value))),
         Type::INT8 => read_i64(&bytes).map(OwnedSqlValue::Signed),
@@ -302,6 +303,12 @@ mod tests {
             decoded.expect_err("invalid UTF-8 must fail").kind(),
             SqlErrorKind::Decode
         );
+
+        for bytes in [Vec::new(), vec![0, 1]] {
+            let error = decode_value(&Type::BOOL, Some(RawPostgresValue(bytes)))
+                .expect_err("invalid BOOL width must fail");
+            assert_eq!(error.kind(), SqlErrorKind::Decode);
+        }
     }
 
     #[test]

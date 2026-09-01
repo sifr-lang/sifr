@@ -1,9 +1,15 @@
 use crate::{CompiledSqlQuery, QueryCompilationInput, SqlQueryCompiler};
+use sifr_ir::{
+    HirExpr, HirFunction, HirModule, HirStmt, visit_hir_function_exprs_mut,
+    visit_hir_stmts_exprs_mut,
+};
 use sifr_sql_contract::{
     ProfileModuleRegistry, ProviderAnalysis, QueryContractError, SchemaRequirementError,
     SchemaRequirementErrorKind, SchemaRequirementIdentity, SchemaRequirementProof,
     SchemaRequirementRegistry,
 };
+use sifr_type_system::Type;
+use std::collections::{HashMap, HashSet};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SqlSchemaWitness {
@@ -69,6 +75,284 @@ pub fn validate_sql_schema_witness_use(
             "SqlSchema witnesses are compile-time-only namespace exports or constrained generic parameters",
         )),
     }
+}
+
+/// Validate the source-level witness surface after ordinary type lowering.
+/// The caller supplies the function generic bounds recorded by the lowering
+/// environment so an unconstrained `SqlSchema[T]` cannot masquerade as a
+/// portable requirement.
+pub fn validate_sql_schema_witness_module(
+    module: &HirModule,
+    bounds: Option<&HashMap<String, HashMap<String, Vec<String>>>>,
+) -> Result<(), SchemaRequirementError> {
+    for class in &module.classes {
+        if class.fields.iter().any(|(_, ty)| contains_witness(ty)) {
+            return Err(invalid_witness(
+                "SqlSchema witnesses cannot be stored in class fields",
+            ));
+        }
+    }
+    if module
+        .constants
+        .iter()
+        .any(|(_, ty, _)| contains_witness(ty))
+    {
+        return Err(invalid_witness(
+            "SqlSchema witnesses cannot be stored in module constants",
+        ));
+    }
+    for function in &module.functions {
+        validate_witness_function(function, bounds.and_then(|items| items.get(&function.name)))?;
+    }
+    Ok(())
+}
+
+fn validate_witness_function(
+    function: &HirFunction,
+    bounds: Option<&HashMap<String, Vec<String>>>,
+) -> Result<(), SchemaRequirementError> {
+    if contains_witness(&function.return_type) {
+        return Err(invalid_witness(
+            "SqlSchema witnesses cannot be returned as runtime data",
+        ));
+    }
+    let mut witness_params = HashSet::new();
+    for parameter in &function.params {
+        let Some(type_parameter) = witness_type_parameter(&parameter.ty) else {
+            if contains_witness(&parameter.ty) {
+                return Err(invalid_witness(
+                    "SqlSchema function parameters must use one constrained generic type parameter",
+                ));
+            }
+            continue;
+        };
+        let constrained = function
+            .type_params
+            .iter()
+            .any(|name| name == type_parameter)
+            && bounds
+                .and_then(|items| items.get(type_parameter))
+                .is_some_and(|items| {
+                    items
+                        .iter()
+                        .any(|item| item == "Schema" || item.ends_with(".Schema"))
+                });
+        if !constrained {
+            return Err(invalid_witness(
+                "SqlSchema generic parameters require a declared schema requirement bound",
+            ));
+        }
+        witness_params.insert(parameter.name.clone());
+    }
+    for statement in &function.body {
+        match statement {
+            HirStmt::Let { ty, .. } if contains_witness(ty) => {
+                return Err(invalid_witness(
+                    "SqlSchema witnesses cannot be stored in runtime locals",
+                ));
+            }
+            HirStmt::Assign { value, .. } if contains_witness(value.ty()) => {
+                return Err(invalid_witness(
+                    "SqlSchema witnesses cannot be assigned as runtime values",
+                ));
+            }
+            HirStmt::Return { value: Some(value) } if contains_witness(value.ty()) => {
+                return Err(invalid_witness(
+                    "SqlSchema witnesses cannot be returned as runtime data",
+                ));
+            }
+            _ => {}
+        }
+    }
+    let mut cloned = function.clone();
+    let mut invalid_selection = false;
+    let mut lambda_capture = false;
+    visit_hir_function_exprs_mut(&mut cloned, &mut |expression| {
+        if matches!(expression, HirExpr::IfExpr { ty, .. } if contains_witness(ty)) {
+            invalid_selection = true;
+        }
+        if let HirExpr::Lambda { body, .. } = expression {
+            let mut body = HirStmt::Expr {
+                expr: body.as_ref().clone(),
+            };
+            visit_hir_stmts_exprs_mut(std::slice::from_mut(&mut body), &mut |nested| {
+                if matches!(nested, HirExpr::Name { name, .. } if witness_params.contains(name.as_str()))
+                {
+                    lambda_capture = true;
+                }
+            });
+        }
+    });
+    if invalid_selection {
+        return Err(invalid_witness(
+            "SqlSchema witnesses cannot be selected through runtime control flow",
+        ));
+    }
+    if lambda_capture || nested_function_captures(&function.body, &witness_params) {
+        return Err(invalid_witness(
+            "SqlSchema witnesses cannot be captured by closures",
+        ));
+    }
+    Ok(())
+}
+
+fn nested_function_captures(statements: &[HirStmt], witnesses: &HashSet<String>) -> bool {
+    for statement in statements {
+        match statement {
+            HirStmt::NestedFunction { func, .. } => {
+                let mut func = func.clone();
+                let mut captured = false;
+                visit_hir_function_exprs_mut(&mut func, &mut |expression| {
+                    if matches!(expression, HirExpr::Name { name, .. } if witnesses.contains(name.as_str()))
+                    {
+                        captured = true;
+                    }
+                });
+                if captured {
+                    return true;
+                }
+            }
+            HirStmt::If {
+                then_body,
+                elif_clauses,
+                else_body,
+                ..
+            } => {
+                if nested_function_captures(then_body, witnesses)
+                    || elif_clauses
+                        .iter()
+                        .any(|(_, body)| nested_function_captures(body, witnesses))
+                    || else_body
+                        .as_deref()
+                        .is_some_and(|body| nested_function_captures(body, witnesses))
+                {
+                    return true;
+                }
+            }
+            HirStmt::While {
+                body, else_body, ..
+            }
+            | HirStmt::For {
+                body, else_body, ..
+            }
+            | HirStmt::AsyncFor {
+                body, else_body, ..
+            } => {
+                if nested_function_captures(body, witnesses)
+                    || else_body
+                        .as_deref()
+                        .is_some_and(|body| nested_function_captures(body, witnesses))
+                {
+                    return true;
+                }
+            }
+            HirStmt::TryExcept { body, handlers, .. } => {
+                if nested_function_captures(body, witnesses)
+                    || handlers
+                        .iter()
+                        .any(|handler| nested_function_captures(&handler.body, witnesses))
+                {
+                    return true;
+                }
+            }
+            HirStmt::TryFinally { body, finalbody } => {
+                if nested_function_captures(body, witnesses)
+                    || nested_function_captures(finalbody, witnesses)
+                {
+                    return true;
+                }
+            }
+            HirStmt::With { body, .. } | HirStmt::AsyncWith { body, .. } => {
+                if nested_function_captures(body, witnesses) {
+                    return true;
+                }
+            }
+            HirStmt::Match { arms, .. } => {
+                if arms
+                    .iter()
+                    .any(|arm| nested_function_captures(&arm.body, witnesses))
+                {
+                    return true;
+                }
+            }
+            HirStmt::Let { .. }
+            | HirStmt::Assign { .. }
+            | HirStmt::AugAssign { .. }
+            | HirStmt::Return { .. }
+            | HirStmt::Expr { .. }
+            | HirStmt::Break
+            | HirStmt::Continue
+            | HirStmt::TupleUnpack { .. }
+            | HirStmt::StarUnpack { .. }
+            | HirStmt::Pass
+            | HirStmt::Assert { .. }
+            | HirStmt::Raise { .. }
+            | HirStmt::FieldAssign { .. }
+            | HirStmt::NestedFieldAssign { .. }
+            | HirStmt::SubscriptAssign { .. }
+            | HirStmt::NestedSubscriptAssign { .. }
+            | HirStmt::AttributeNestedSubscriptAssign { .. }
+            | HirStmt::SubscriptAugAssign { .. }
+            | HirStmt::AttributeAugAssign { .. }
+            | HirStmt::AttributeSubscriptAssign { .. }
+            | HirStmt::Delete { .. }
+            | HirStmt::Yield { .. } => {}
+        }
+    }
+    false
+}
+
+pub(crate) fn witness_type_parameter(ty: &Type) -> Option<&str> {
+    let Type::Class {
+        identity: Some(identity),
+        type_args,
+        ..
+    } = ty.resolve_alias()
+    else {
+        return None;
+    };
+    if identity != "sifr.sql.SqlSchema" {
+        return None;
+    }
+    match type_args.as_slice() {
+        [Type::TypeVar(name)] => Some(name),
+        _ => None,
+    }
+}
+
+fn contains_witness(ty: &Type) -> bool {
+    match ty.resolve_alias() {
+        Type::Class {
+            identity: Some(identity),
+            ..
+        } if identity == "sifr.sql.SqlSchema" => true,
+        Type::List(inner)
+        | Type::Set(inner)
+        | Type::Iterable(inner)
+        | Type::Iterator(inner)
+        | Type::Awaitable(inner)
+        | Type::Failure(inner)
+        | Type::TimeoutResult(inner)
+        | Type::Newtype { inner, .. } => contains_witness(inner),
+        Type::Dict(left, right)
+        | Type::Result(left, right)
+        | Type::Task(left, right)
+        | Type::TaskResult(left, right)
+        | Type::Coroutine(left, right)
+        | Type::Select2(left, right)
+        | Type::BlockingTask(left, right)
+        | Type::JoinSet(left, right)
+        | Type::AsyncIterator(left, right)
+        | Type::AsyncGenerator(left, right) => contains_witness(left) || contains_witness(right),
+        Type::Tuple(items) | Type::Union(items) | Type::Intersection(items) => {
+            items.iter().any(contains_witness)
+        }
+        _ => false,
+    }
+}
+
+fn invalid_witness(message: impl Into<String>) -> SchemaRequirementError {
+    SchemaRequirementError::new(SchemaRequirementErrorKind::InvalidWitnessUse, message)
 }
 
 pub struct SchemaSpecializationInput<'a> {

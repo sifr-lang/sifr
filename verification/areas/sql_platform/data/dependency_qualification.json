@@ -22,8 +22,8 @@
       "rules": [
         "The host enables the WebAssembly Component Model without WASI.",
         "The host links no ambient file, network, clock, random, environment, process, thread, or native-library interface.",
-        "WASI-Virt composes deny-by-default implementations into PostgreSQL components before registration.",
-        "Every registered PostgreSQL component has no host imports and executes in the capability-free host.",
+        "WASI-Virt composes deny-by-default implementations into every SQL provider component before registration.",
+        "Every registered SQL provider component has no host imports and executes in the capability-free host.",
         "Fuel, memory, stack, input, output, and protocol limits fail with SIFR-COMPONENT diagnostics."
       ]
     },
@@ -65,10 +65,10 @@
       "commit": "448f6df8f688cee5d6995e96b1ffc31f9bf00742",
       "source_content_sha256": "47c1ca1cc80df330c93c4797f6748d5330c2804001bdcff0342c4001920d1d2e",
       "license": "Apache-2.0 WITH LLVM-exception",
-      "artifacts": ["postgresql-component"],
+      "artifacts": ["mysql-component", "postgresql-component", "sqlite-component"],
       "targets": ["wasm32-wasip2"],
-      "platform_part": "postgresql_compiler",
-      "audit_owner": "sifr-sql-postgresql/component-encapsulation"
+      "platform_part": "compiler_components",
+      "audit_owner": "compiler/sql-platform/component-encapsulation"
     }
   ],
   "dependencies": [

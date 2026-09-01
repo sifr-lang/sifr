@@ -283,6 +283,26 @@ fn callable_trait_type(
     }
 }
 
+pub(crate) fn callable_dyn_rust_type(
+    params: &[Type],
+    conventions: &[sifr_type_system::ParamConvention],
+    ret: &Type,
+    is_async: bool,
+) -> RustType {
+    if is_async {
+        RustType::DynTrait {
+            trait_: RustTrait::Callable {
+                name: "Fn".to_string(),
+                params: callable_param_types(params, conventions),
+                ret: Some(Box::new(future_type(sifr_type_to_rust_type(ret)))),
+            },
+            auto_traits: vec!["Send".to_string(), "Sync".to_string()],
+        }
+    } else {
+        callable_trait_type(params, conventions, ret, false)
+    }
+}
+
 fn callable_param_types(
     params: &[Type],
     conventions: &[sifr_type_system::ParamConvention],

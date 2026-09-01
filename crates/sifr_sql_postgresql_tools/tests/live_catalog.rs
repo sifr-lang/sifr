@@ -7,8 +7,8 @@ use sifr_sql_contract::{
     semantic_diff,
 };
 use sifr_sql_postgresql::{
-    LibpgQueryParser, PostgresCatalog, PostgresCompilerComponent, PostgresComponentRequest,
-    PostgresComponentResponse, PostgresTypeRegistry,
+    LibpgQueryParser, PostgresAnalyzer, PostgresCatalog, PostgresCompilerComponent,
+    PostgresComponentRequest, PostgresComponentResponse, PostgresTypeRegistry,
 };
 use sifr_sql_postgresql_tools::pull_live_catalog;
 use sifr_sql_tool::{GENERATED_MODULE_PATH, build_schema_artifacts};
@@ -63,8 +63,17 @@ async fn live_catalog_preserves_postgresql_semantic_objects() {
     ]);
     assert_eq!(kinds.intersection(&expected).count(), expected.len());
     assert_eq!(schema.dialect.server_version, major.to_string());
-    PostgresCatalog::from_schema(&schema, PostgresTypeRegistry::new(major))
+    let catalog = PostgresCatalog::from_schema(&schema, PostgresTypeRegistry::new(major))
         .expect("pulled schema must load in the compiler catalog");
+    let analyzer = PostgresAnalyzer::new(LibpgQueryParser, catalog);
+    analyzer
+        .analyze_query(
+            "SELECT add_one(1::integer) AS narrow, add_one(1::bigint) AS wide, 1 === 1 AS equal",
+        )
+        .expect("overloaded functions and operator must resolve from canonical identities");
+    analyzer
+        .analyze_query("SELECT ROW('street', 'city', 1, 2)::postal_address::text AS rendered")
+        .expect("user-defined cast must resolve from the canonical cast account");
     let artifacts = build_schema_artifacts(&authority(schema.clone())).expect("schema artifacts");
     let generated = String::from_utf8(artifacts.files()[GENERATED_MODULE_PATH].clone())
         .expect("generated source");
@@ -72,6 +81,9 @@ async fn live_catalog_preserves_postgresql_semantic_objects() {
     assert!(generated.contains("value: i32"));
     assert!(generated.contains("unit_count: i32"));
     assert!(generated.contains("latitude: sifr.sql.Numeric"));
+    assert!(generated.contains("domain_values: list[domains__public__positive_id]"));
+    assert!(generated.contains("composite_values: list[composites__public__postal_address]"));
+    assert!(generated.contains("window: domains__public__price_window"));
     if major == 18 {
         let live = parity_schema(schema);
         let ddl = ddl_parity_schema(provider());
@@ -85,7 +97,8 @@ fn parity_schema(mut schema: sifr_sql_contract::SchemaIr) -> sifr_sql_contract::
         identity.as_str() == "public"
             || identity.as_str() == "public.parity_users"
             || identity.as_str().starts_with("public.parity_users.")
-            || identity.as_str() == "public.parity_users_pkey"
+            || identity.as_str().starts_with("public.parity_users_")
+            || identity.as_str() == "public.parity_user_view"
     });
     schema
 }
@@ -97,7 +110,13 @@ fn ddl_parity_schema(provider: ProviderIdentity) -> sifr_sql_contract::SchemaIr 
             server_major: 18,
             documents: vec![(
                 "parity.sql".to_string(),
-                "CREATE TABLE parity_users (id bigint PRIMARY KEY, name text NOT NULL);"
+                "CREATE TABLE parity_users (\
+                    id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY, \
+                    name text NOT NULL, \
+                    score integer CHECK (score >= 0)\
+                 ); \
+                 CREATE VIEW parity_user_view AS \
+                    SELECT id, name, score FROM parity_users;"
                     .to_string(),
             )],
         },

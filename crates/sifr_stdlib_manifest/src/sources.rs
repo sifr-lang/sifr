@@ -88,6 +88,14 @@ pub const PRIVATE_STDLIB_MODULES: &[&str] = &[
 
 pub const STDLIB_SOURCES: &[StdlibSource] = &[
     StdlibSource {
+        module: "sifr.sql",
+        source: include_str!("../../../stdlib/sifr/sql.sifr"),
+    },
+    StdlibSource {
+        module: "sifr.sql.migration",
+        source: include_str!("../../../stdlib/sifr/sql.migration.sifr"),
+    },
+    StdlibSource {
         module: "sifr.meta",
         source: include_str!("../../../stdlib/sifr/meta.sifr"),
     },

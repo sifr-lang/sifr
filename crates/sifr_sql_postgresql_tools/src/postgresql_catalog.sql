@@ -55,6 +55,7 @@ catalog_objects AS (
            CASE con.contype WHEN 'p' THEN 'primary-key' WHEN 'u' THEN 'unique-constraint'
                 WHEN 'f' THEN 'foreign-key' ELSE 'check-constraint' END,
            jsonb_build_object('name', con.conname, 'definition', pg_catalog.pg_get_constraintdef(con.oid, true),
+                              'expression', CASE WHEN con.contype = 'c' THEN pg_catalog.pg_get_expr(con.conbin, con.conrelid, true) ELSE '' END,
                               'columns', COALESCE((
                                   SELECT jsonb_agg(a.attname ORDER BY key.ordinality)
                                   FROM unnest(con.conkey) WITH ORDINALITY AS key(attnum, ordinality)
@@ -126,8 +127,8 @@ catalog_objects AS (
     UNION ALL
     SELECT n.nspname || '.' || t.typname, 'domain',
            jsonb_build_object('name', t.typname, 'base-database-type-name', pg_catalog.format_type(t.typbasetype, t.typtypmod),
-                              'nullable', NOT t.typnotnull, 'default-expression', COALESCE(t.typdefault, ''),
-                              'sifr_type', 'str'), jsonb_build_array(n.nspname)
+                              'nullable', NOT t.typnotnull, 'default-expression', COALESCE(t.typdefault, '')),
+           jsonb_build_array(n.nspname)
     FROM pg_catalog.pg_type t JOIN user_namespaces n ON n.oid = t.typnamespace
     WHERE t.typtype = 'd'
 
@@ -138,10 +139,7 @@ catalog_objects AS (
                                                    'database-type-name', pg_catalog.format_type(a.atttypid, a.atttypmod),
                                                    'nullable', NOT a.attnotnull) ORDER BY a.attnum)
                FROM pg_catalog.pg_attribute a WHERE a.attrelid = t.typrelid AND a.attnum > 0 AND NOT a.attisdropped
-           ), '[]'::jsonb), 'fields', COALESCE((
-               SELECT jsonb_object_agg(a.attname, 'str')
-               FROM pg_catalog.pg_attribute a WHERE a.attrelid = t.typrelid AND a.attnum > 0 AND NOT a.attisdropped
-           ), '{}'::jsonb)), jsonb_build_array(n.nspname)
+           ), '[]'::jsonb)), jsonb_build_array(n.nspname)
     FROM pg_catalog.pg_type t
     JOIN user_namespaces n ON n.oid = t.typnamespace
     JOIN pg_catalog.pg_class c ON c.oid = t.typrelid AND c.relkind = 'c'

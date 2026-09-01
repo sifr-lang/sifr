@@ -10,6 +10,10 @@ schema-first SQL. The normative SQL design remains in
 loads the resolved SQL profiles from the frozen package graph. It resolves one
 schema processor and one query processor from the selected provider package.
 The editor uses the same profile authority and provider component as the build.
+It opens the package graph in frozen mode only when `Cargo.lock` exists. If the
+lockfile is absent, it defers resolved profile loading without writing a file or
+reporting a package failure. Lexical SQL features and ordinary Sifr analysis
+remain available. A normal package command must create the lockfile.
 
 An embedded SQL key contains the query component request and the normal frontend
 context. The request includes these inputs:

@@ -145,18 +145,23 @@ pub fn postgresql_capabilities() -> BTreeSet<String> {
     [
         "sql.bind.parameters",
         "sql.expression.case",
+        "sql.expression.function",
         "sql.expression.equality",
         "sql.query.aggregate",
         "sql.query.common-table-expression",
         "sql.query.delete",
         "sql.query.insert",
         "sql.query.join",
+        "sql.query.lateral",
+        "sql.query.aggregate-filter",
         "sql.query.row-locking",
         "sql.query.select",
         "sql.query.set-operation",
         "sql.query.subquery",
         "sql.query.update",
         "sql.query.window",
+        "sql.type.array",
+        "sql.type.cast",
         "sql.write.conflict",
         "sql.write.returning",
     ]
@@ -572,7 +577,7 @@ fn component_diagnostic(message: impl Into<String>) -> PostgresDiagnostic {
     PostgresDiagnostic::at_sql(PostgresDiagnosticCode::UnsupportedCoreSyntax, message, 0, 1)
 }
 
-fn lower_hex(bytes: &[u8]) -> String {
+pub(crate) fn lower_hex(bytes: &[u8]) -> String {
     const HEX: &[u8; 16] = b"0123456789abcdef";
     let mut output = String::with_capacity(bytes.len() * 2);
     for byte in bytes {

@@ -1,8 +1,6 @@
 use crate::ast::{CreateCompositeStatement, CreateRangeStatement, PostgresStatement};
-use crate::catalog::{
-    add_namespace, database_value, namespace_dependency, qualified_name, schema_error_message,
-    source_location,
-};
+use crate::catalog::{add_namespace, namespace_dependency, qualified_name, source_location};
+use crate::catalog_semantics::{database_value, schema_error_message};
 use crate::diagnostic::PostgresDiagnostic;
 use crate::types::PostgresTypeRegistry;
 use sifr_sql_contract::{DatabaseType, ObjectId, SchemaObject, SchemaObjectKind, SemanticValue};

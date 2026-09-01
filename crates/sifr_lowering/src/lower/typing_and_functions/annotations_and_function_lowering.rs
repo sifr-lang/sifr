@@ -382,7 +382,7 @@ pub(in crate::lower) fn lower_function(
             } else if super::super::attached_api_declarations::is_attached_api_decorator(d) {
                 Some("attached_api".to_string())
             } else {
-                None
+                migration_decorator(&d.expression).or_else(|| rollback_decorator(&d.expression))
             }
         })
         .collect();
@@ -423,6 +423,93 @@ pub(in crate::lower) fn lower_function(
         compiler_intrinsic,
         type_params,
     })
+}
+
+fn rollback_decorator(expression: &Expr) -> Option<String> {
+    let Expr::Call(call) = expression else {
+        return None;
+    };
+    if !matches!(call.func.as_ref(), Expr::Name(name) if name.id.as_str() == "rollback")
+        || !call.arguments.args.is_empty()
+        || call.arguments.keywords.len() != 1
+    {
+        return None;
+    }
+    let keyword = &call.arguments.keywords[0];
+    if keyword.arg.as_ref()?.as_str() != "of" {
+        return None;
+    }
+    let Expr::StringLiteral(value) = &keyword.value else {
+        return None;
+    };
+    serde_json::to_string(&serde_json::json!({ "of": value.value.to_str() }))
+        .ok()
+        .map(|payload| format!("sifr.sql.rollback:{payload}"))
+}
+
+fn migration_decorator(expression: &Expr) -> Option<String> {
+    let Expr::Call(call) = expression else {
+        return None;
+    };
+    if !matches!(call.func.as_ref(), Expr::Name(name) if name.id.as_str() == "migration")
+        || !call.arguments.args.is_empty()
+    {
+        return None;
+    }
+    let mut id = None;
+    let mut parents = None;
+    let mut author = None;
+    let mut created_at = None;
+    for keyword in &call.arguments.keywords {
+        let name = keyword.arg.as_ref()?.as_str();
+        match name {
+            "id" if id.is_none() => {
+                let Expr::StringLiteral(value) = &keyword.value else {
+                    return None;
+                };
+                id = Some(value.value.to_str().to_string());
+            }
+            "parents" if parents.is_none() => {
+                let Expr::List(values) = &keyword.value else {
+                    return None;
+                };
+                let values = values
+                    .elts
+                    .iter()
+                    .map(|value| match value {
+                        Expr::StringLiteral(value) => Some(value.value.to_str().to_string()),
+                        _ => None,
+                    })
+                    .collect::<Option<Vec<_>>>()?;
+                parents = Some(values);
+            }
+            "author" if author.is_none() => {
+                let Expr::StringLiteral(value) = &keyword.value else {
+                    return None;
+                };
+                author = Some(value.value.to_str().to_string());
+            }
+            "created_at" if created_at.is_none() => {
+                let Expr::StringLiteral(value) = &keyword.value else {
+                    return None;
+                };
+                created_at = Some(value.value.to_str().to_string());
+            }
+            _ => return None,
+        }
+    }
+    let id = id?;
+    let parents = parents?;
+    let author = author?;
+    let created_at = created_at?;
+    serde_json::to_string(&serde_json::json!({
+        "id": id,
+        "parents": parents,
+        "author": author,
+        "created_at": created_at,
+    }))
+    .ok()
+    .map(|payload| format!("sifr.sql.migration:{payload}"))
 }
 
 pub(super) fn requires_exhaustive_return_annotation(

@@ -75,6 +75,41 @@ pub(in crate::lower) fn resolve_annotation_expr(expr: &Expr, ctx: &mut LowerCtx)
                 ctx,
             )
         }
+        Expr::Attribute(attribute) => {
+            let Expr::Name(root) = attribute.value.as_ref() else {
+                invalid_type_annotation(
+                    ctx,
+                    "qualified type names must have one imported namespace",
+                    attribute.range(),
+                );
+                return Type::Any;
+            };
+            let owner = ctx
+                .scope
+                .lookup(root.id.as_str())
+                .map(|binding| binding.effective_type().clone())
+                .or_else(|| ctx.class_types.get(root.id.as_str()).cloned());
+            let Some(Type::Class { fields, .. }) = owner.map(|ty| ty.resolve_alias().clone())
+            else {
+                unknown_type(
+                    ctx,
+                    &format!("{}.{}", root.id, attribute.attr),
+                    attribute.range(),
+                );
+                return Type::Any;
+            };
+            fields
+                .into_iter()
+                .find_map(|(name, ty)| (name == attribute.attr.as_str()).then_some(ty))
+                .unwrap_or_else(|| {
+                    unknown_type(
+                        ctx,
+                        &format!("{}.{}", root.id, attribute.attr),
+                        attribute.range(),
+                    );
+                    Type::Any
+                })
+        }
         // Union type syntax: int | str (parsed as BinOp with BitOr)
         Expr::BinOp(binop) if matches!(binop.op, Operator::BitOr) => {
             let left = resolve_annotation_expr(&binop.left, ctx);

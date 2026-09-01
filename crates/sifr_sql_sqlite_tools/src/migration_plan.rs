@@ -139,18 +139,22 @@ fn validate_step_sequence(
                 validate_owned_statement(statement)?;
             }
             MigrationExecutionStepKind::SqlData {
+                statement,
                 normalized_statement,
             }
             | MigrationExecutionStepKind::Assertion {
+                statement,
                 normalized_statement,
             }
             | MigrationExecutionStepKind::Backfill {
+                statement,
                 normalized_statement,
                 ..
             } => {
-                if normalized_statement.trim().is_empty() {
+                if statement.trim().is_empty() || normalized_statement.trim().is_empty() {
                     return Err(error("SQLite migration SQL step is empty"));
                 }
+                validate_owned_statement(statement)?;
             }
             MigrationExecutionStepKind::SifrData { callback } => {
                 if callback.trim().is_empty() {

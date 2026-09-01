@@ -205,6 +205,7 @@ fn failed_atomic_run_restores_the_ledger_baseline_and_can_retry() {
         output_fingerprint: target.clone(),
         checksum: "e".repeat(64),
         kind: MigrationExecutionStepKind::SqlData {
+            statement: "INSERT INTO retry_keys VALUES (1)".to_string(),
             normalized_statement: "INSERT INTO retry_keys VALUES (1)".to_string(),
         },
     });
@@ -330,6 +331,7 @@ fn steps(
                 checksum: format!("{:064x}", index + 1),
                 kind: if statement.starts_with("INSERT") {
                     MigrationExecutionStepKind::SqlData {
+                        statement: (*statement).to_string(),
                         normalized_statement: (*statement).to_string(),
                     }
                 } else {

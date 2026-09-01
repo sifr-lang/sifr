@@ -445,11 +445,16 @@ impl<'a, D: MigrationDialect> MigrationCompiler<'a, D> {
                     }
                 }
             }
-            MigrationStepKind::SqlData { analysis } => {
+            MigrationStepKind::SqlData {
+                statement,
+                analysis,
+            } => {
                 validate_data_analysis(analysis, schema)?;
+                validate_executable_statement(statement, analysis)?;
                 Ok((
                     schema.clone(),
                     CompiledStepKind::SqlData {
+                        statement: statement.clone(),
                         normalized_statement: analysis.normalized_statement.clone(),
                     },
                     analysis.effects.referenced_objects.clone(),
@@ -469,11 +474,16 @@ impl<'a, D: MigrationDialect> MigrationCompiler<'a, D> {
                     data_rewrite_risk(callback.affected_objects.iter()),
                 ))
             }
-            MigrationStepKind::Assertion { analysis } => {
+            MigrationStepKind::Assertion {
+                statement,
+                analysis,
+            } => {
                 validate_assertion(analysis, schema)?;
+                validate_executable_statement(statement, analysis)?;
                 Ok((
                     schema.clone(),
                     CompiledStepKind::Assertion {
+                        statement: statement.clone(),
                         normalized_statement: analysis.normalized_statement.clone(),
                     },
                     analysis.effects.referenced_objects.clone(),
@@ -483,9 +493,11 @@ impl<'a, D: MigrationDialect> MigrationCompiler<'a, D> {
             }
             MigrationStepKind::Backfill { contract } => {
                 validate_backfill(contract, schema)?;
+                validate_executable_statement(&contract.statement, &contract.analysis)?;
                 Ok((
                     schema.clone(),
                     CompiledStepKind::Backfill {
+                        statement: contract.statement.clone(),
                         normalized_statement: contract.analysis.normalized_statement.clone(),
                         maximum_batch_rows: contract.maximum_batch_rows,
                         replay: contract.replay.clone(),
@@ -591,13 +603,13 @@ impl<'a, D: MigrationDialect> MigrationCompiler<'a, D> {
             ));
         }
         if let Some(minimum) = &constraint.minimum_server_version {
-            let required = Version::parse(minimum).map_err(|_| {
+            let required = parse_database_version(minimum).map_err(|_| {
                 error(
                     MigrationCompileErrorKind::ProviderMismatch,
                     "migration minimum server version is invalid",
                 )
             })?;
-            let actual = Version::parse(self.dialect.server_version()).map_err(|_| {
+            let actual = parse_database_version(self.dialect.server_version()).map_err(|_| {
                 error(
                     MigrationCompileErrorKind::ProviderMismatch,
                     "provider server version is invalid",
@@ -648,6 +660,29 @@ impl<'a, D: MigrationDialect> MigrationCompiler<'a, D> {
         }
         Ok(())
     }
+}
+
+fn parse_database_version(value: &str) -> Result<Version, semver::Error> {
+    let separator_count = value.bytes().filter(|byte| *byte == b'.').count();
+    let normalized = match separator_count {
+        0 => format!("{value}.0.0"),
+        1 => format!("{value}.0"),
+        _ => value.to_string(),
+    };
+    Version::parse(&normalized)
+}
+
+fn validate_executable_statement(
+    statement: &str,
+    analysis: &ProviderAnalysis,
+) -> Result<(), MigrationCompileError> {
+    if statement.trim().is_empty() || analysis.normalized_statement.trim().is_empty() {
+        return Err(error(
+            MigrationCompileErrorKind::InvalidStep,
+            "migration SQL needs both executable source and canonical semantic normalization",
+        ));
+    }
+    Ok(())
 }
 
 fn validate_data_analysis(

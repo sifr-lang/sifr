@@ -174,6 +174,10 @@ impl PostgresTypeRegistry {
 
 pub fn generated_sifr_type(database_type: &DatabaseType) -> Result<String, SchemaContractError> {
     let ty = canonical_read_type(database_type)?;
+    generated_sifr_type_from_read_type(&ty)
+}
+
+fn generated_sifr_type_from_read_type(ty: &SifrType) -> Result<String, SchemaContractError> {
     match ty {
         SifrType::Bool => Ok("bool".to_string()),
         SifrType::FixedInteger { sign, width } => Ok(match (sign, width) {
@@ -207,14 +211,28 @@ pub fn generated_sifr_type(database_type: &DatabaseType) -> Result<String, Schem
         SifrType::IpNetwork => Ok("sifr.ipaddress.IPNetwork".to_string()),
         SifrType::MacAddress => Ok("sifr.ipaddress.MacAddress".to_string()),
         SifrType::Nominal { identity } => Ok(identity.as_str().to_string()),
-        SifrType::Custom { identity } => Ok(identity),
-        SifrType::List { .. }
-        | SifrType::SqlArray { .. }
-        | SifrType::Range { .. }
-        | SifrType::Union { .. } => Err(SchemaContractError::new(
-            sifr_sql_contract::SchemaContractErrorKind::InvalidProvider,
-            "PostgreSQL generated schema type cannot be represented by one static Sifr type path",
+        SifrType::Custom { identity } => Ok(identity.clone()),
+        SifrType::List { element } => Ok(format!(
+            "list[{}]",
+            generated_sifr_type_from_read_type(element)?
         )),
+        SifrType::SqlArray { element } => Ok(format!(
+            "sifr.sql.SqlArray[{}]",
+            generated_sifr_type_from_read_type(element)?
+        )),
+        SifrType::Range {
+            element,
+            multirange,
+        } => Ok(format!(
+            "sifr.sql.{}[{}]",
+            if *multirange { "MultiRange" } else { "Range" },
+            generated_sifr_type_from_read_type(element)?
+        )),
+        SifrType::Union { members } => members
+            .iter()
+            .map(generated_sifr_type_from_read_type)
+            .collect::<Result<Vec<_>, _>>()
+            .map(|members| members.join(" | ")),
     }
 }
 

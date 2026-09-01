@@ -7,6 +7,7 @@ use sifr_sql_runtime::{
 };
 use std::future::Future;
 use std::pin::Pin;
+use std::sync::atomic::Ordering;
 use std::time::Duration;
 
 pub struct MysqlTransaction {
@@ -158,6 +159,17 @@ impl MysqlSavepoint<'_> {
             .ok_or_else(provider_error)?
             .native_mut()?
             .conn)
+    }
+}
+
+impl Drop for MysqlSavepoint<'_> {
+    fn drop(&mut self) {
+        if !self.finished
+            && let Ok(connection) = self.transaction.connection_mut()
+            && let Ok(native) = connection.native_mut()
+        {
+            native.poisoned.store(true, Ordering::Release);
+        }
     }
 }
 

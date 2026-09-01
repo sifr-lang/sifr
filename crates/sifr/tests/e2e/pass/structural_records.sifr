@@ -6,6 +6,10 @@ type Boxed[T] = {value: T}
 type ReorderedUser = {id: int, email: str, active: bool}
 type Flags = {active: bool, admin: bool}
 type Count = {value: int}
+type WideCount = {left: int, middle: int, right: int}
+type NarrowCount = {left: int, right: int}
+type Transform = {apply: Callable[[int], int]}
+type TaggedNumber = {value: int | bool}
 
 
 def read_id(user: UserSummary) -> int:
@@ -26,6 +30,10 @@ def is_active(flags: Flags) -> bool:
 
 def count_value(count: Count) -> int:
     return count.value
+
+
+def increment(value: int) -> int:
+    return value + 1
 
 
 def main():
@@ -57,3 +65,16 @@ def main():
     match projected:
         case {"id": projected_id}:
             assert projected_id == 7
+
+    wide_count: WideCount = WideCount(left=11, middle=12, right=13)
+    narrow_count: NarrowCount = wide_count.project[NarrowCount]()
+    assert narrow_count.left == 11
+    assert narrow_count.right == 13
+    # Exact integers have Sifr copy semantics but use a non-Copy Rust carrier.
+    assert wide_count.middle == 12
+
+    transform: Transform = Transform(apply=increment)
+    assert transform.apply(4) == 5
+
+    tagged: TaggedNumber = TaggedNumber(value=17)
+    assert tagged.value == 17

@@ -50,12 +50,20 @@ PROFILE_SUITES = {
     "compiler-components",
     "contracts",
     "dependency-baseline",
+    "host-tools",
+    "integrated-qualification",
     "incremental-editor",
+    "migration-engine",
+    "mysql-provider",
     "mutation",
     "postgresql-compiler",
+    "postgresql-migrations",
     "postgresql-runtime",
     "query-fragments",
+    "schema-polymorphism",
     "schema-profiles",
+    "schema-tools",
+    "sqlite-provider",
 }
 REQUIRED_AUDITS = {"advisory", "license", "panic", "secret-redaction", "unsafe-code"}
 
@@ -269,7 +277,7 @@ def validate_qualification(payload: dict[str, Any], baseline: dict[str, Any], ar
         require(tool.get(field) == baseline_tool.get(field), f"WASI-Virt qualification has baseline {field} drift")
     require(set(tool.get("artifacts", [])).issubset(artifacts), "WASI-Virt names an unknown artifact")
     require(tool.get("targets") == ["wasm32-wasip2"], "WASI-Virt target has drifted")
-    require(tool.get("platform_part") == "postgresql_compiler", "WASI-Virt owner has drifted")
+    require(tool.get("platform_part") == "compiler_components", "WASI-Virt owner has drifted")
     require(nonempty(tool.get("audit_owner")), "WASI-Virt has no audit owner")
     rows = unique_rows(payload.get("dependencies"), "crate", "dependency qualification")
     baseline_rows = unique_rows(baseline.get("crate"), "name", "dependency baseline crates")
@@ -346,8 +354,9 @@ def validate_architecture_baseline(baseline: dict[str, Any]) -> None:
     require(str(baseline.get("verified_at")) in text, "SQL architecture does not contain the baseline verification date")
     require(str(baseline.get("sqlite_amalgamation")) in text, "SQL architecture has SQLite amalgamation drift")
     for row in baseline.get("crate", []):
+        expected_prefix = f"| {row['display_name']} |"
         matching_row = any(
-            str(row["display_name"]).lower() in line.lower() and f"`{row['version']}`" in line
+            line.startswith(expected_prefix) and f"`{row['version']}`" in line
             for line in text.splitlines()
         )
         require(matching_row, f"SQL architecture has baseline row drift for {row['name']} {row['version']}")

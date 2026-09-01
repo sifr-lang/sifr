@@ -6,16 +6,26 @@ from __future__ import annotations
 import hashlib
 import json
 import os
-import shutil
 import subprocess
 from pathlib import Path
+
+from wasi_virt_inputs import (
+    WASI_VIRT_COMMIT,
+    WASI_VIRT_SOURCE_SHA256,
+    WASI_VIRT_VERSION,
+    validate_wasi_virt,
+)
 
 ROOT = Path(__file__).resolve().parents[4]
 CRATE = ROOT / "crates/sifr_sql_sqlite"
 OUTPUT = ROOT / "target/wasm32-wasip2/release/sifr_sql_sqlite.wasm"
+WASI_VIRT = ROOT / "third_party/wasi-virt/target/release/wasi-virt"
 
 
 def main() -> int:
+    validate_wasi_virt(ROOT / "third_party/wasi-virt")
+    if not WASI_VIRT.is_file():
+        raise SystemExit("build the pinned third_party/wasi-virt tool before SQLite components")
     environment = os.environ.copy()
     sdk = environment.get("WASI_SDK_PATH")
     sdk_candidates = [
@@ -71,13 +81,23 @@ def main() -> int:
     )
     destination = CRATE / "components/sqlite-3.53.2.wasm"
     destination.parent.mkdir(exist_ok=True)
-    shutil.copyfile(OUTPUT, destination)
+    subprocess.run(
+        [str(WASI_VIRT), str(OUTPUT), "-o", str(destination)],
+        cwd=ROOT,
+        check=True,
+    )
     payload = destination.read_bytes()
     manifest = {
         "schema_version": 1,
         "target": "wasm32-wasip2",
         "wit_world": "embedded-language-provider",
         "protocol_major": 1,
+        "wasi_virtualization": {
+            "name": "wasi-virt",
+            "version": WASI_VIRT_VERSION,
+            "commit": WASI_VIRT_COMMIT,
+            "source_content_sha256": WASI_VIRT_SOURCE_SHA256,
+        },
         "parser": {
             "name": "syntaqlite",
             "version": "0.9.0",

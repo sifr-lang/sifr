@@ -142,14 +142,6 @@ pub fn schema_normalization_request(
     })
 }
 
-pub fn normalized_schema_from_response(
-    provider: ProviderIdentity,
-    sources: &[SchemaSourceInput],
-    response: &EmbeddedAnalysisResponse,
-) -> Result<SchemaIr, SchemaContractError> {
-    Ok(schema_normalization_from_response(provider, sources, response)?.schema)
-}
-
 pub fn schema_normalization_from_response(
     provider: ProviderIdentity,
     sources: &[SchemaSourceInput],

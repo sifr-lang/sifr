@@ -30,6 +30,8 @@ provider uses this exact stable compatible set, verified on 2026-08-30:
 | --- | --- | ---: | --- |
 | Parser generator | `lalrpop` | 0.23.1 | lexer and Unicode build support |
 | Parser runtime | `lalrpop-util` | 0.23.1 | standard library and Unicode |
+| Component ABI generator | `wit-bindgen` | 0.61.1 | macros, reallocation, and standard support |
+| Component capability virtualizer | WASI-Virt | 0.2.0 at `448f6df8f688cee5d6995e96b1ffc31f9bf00742` | deny-by-default WASI composition |
 | Async MySQL client | `mysql_async` | 0.37.0 | `aws-lc-rs`, `minimal-rust`, `rustls-tls`, and `tls12` |
 | Protocol values | `mysql_common` | 0.37.3 | no default features |
 | Async runtime | Tokio | 1.53.1 | macros, network, runtime, synchronization, and time |
@@ -45,6 +47,13 @@ Sifr owns redacted operational metadata.
 
 LALRPOP, the driver, Tokio, and Rustls are private Rust implementation tools.
 They are not Sifr modules. Applications do not import them.
+
+The component builder verifies the exact WASI-Virt commit and tracked-source
+digest before use. The artifact manifest records both values, each artifact
+digest, and each artifact size. The guest uses sorted JSON maps. It does not
+enable insertion-order maps that can request ambient randomness. WASI-Virt
+then resolves every remaining WASI interface inside the artifact, so the host
+grants no WASI capability.
 
 ## Supported servers
 
@@ -224,6 +233,11 @@ The host tool exposes this closed surface:
 sifr sql schema pull --profile <name> [--accept]
 sifr sql schema validate --profile <name> [--live]
 sifr sql schema build --profile <name>
+sifr sql migration build --profile <name>
+sifr sql migration plan --profile <name>
+sifr sql migration import --profile <name> --baseline <id>
+sifr sql migration apply --profile <name>
+sifr sql migration rollback --profile <name>
 sifr sql test provision --profile <name>
 sifr sql test cleanup --resource-id <id>
 ```

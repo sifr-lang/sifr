@@ -256,7 +256,7 @@ pub(super) fn resolve_class_method_on_type(
     else {
         return None;
     };
-    resolve_class_method_type(
+    let return_type = resolve_class_method_type(
         ClassMethodSurface {
             identity: identity.as_ref(),
             type_args,
@@ -269,7 +269,12 @@ pub(super) fn resolve_class_method_on_type(
         arg_ranges,
         method_range,
         ctx,
-    )
+    )?;
+    if return_type.is_same_class_specialization(class) {
+        Some(class.clone())
+    } else {
+        Some(return_type)
+    }
 }
 
 fn type_contains_exact(container: &Type, candidate: &Type) -> bool {

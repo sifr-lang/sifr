@@ -3,20 +3,20 @@
     {
       "path": "components/mysql-8.4.wasm",
       "series": "8.4",
-      "sha256": "efc075a22322fffbb4569d47687fcb004cc18166705a89b273e11bfe27dc1c92",
-      "size_bytes": 1384854
+      "sha256": "02d631dcc4a03af2d44f05f06fe9989df8efd88c16805b60c913ab7d78112517",
+      "size_bytes": 1518871
     },
     {
       "path": "components/mysql-9.7.wasm",
       "series": "9.7",
-      "sha256": "efc075a22322fffbb4569d47687fcb004cc18166705a89b273e11bfe27dc1c92",
-      "size_bytes": 1384854
+      "sha256": "02d631dcc4a03af2d44f05f06fe9989df8efd88c16805b60c913ab7d78112517",
+      "size_bytes": 1518871
     },
     {
       "path": "components/mysql-26.7.wasm",
       "series": "26.7",
-      "sha256": "efc075a22322fffbb4569d47687fcb004cc18166705a89b273e11bfe27dc1c92",
-      "size_bytes": 1384854
+      "sha256": "02d631dcc4a03af2d44f05f06fe9989df8efd88c16805b60c913ab7d78112517",
+      "size_bytes": 1518871
     }
   ],
   "parser_generator": {
@@ -26,5 +26,11 @@
   "protocol_major": 1,
   "schema_version": 1,
   "target": "wasm32-wasip2",
+  "wasi_virtualization": {
+    "commit": "448f6df8f688cee5d6995e96b1ffc31f9bf00742",
+    "name": "wasi-virt",
+    "source_content_sha256": "47c1ca1cc80df330c93c4797f6748d5330c2804001bdcff0342c4001920d1d2e",
+    "version": "0.2.0"
+  },
   "wit_world": "embedded-language-provider"
 }

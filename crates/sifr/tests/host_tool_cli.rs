@@ -82,6 +82,17 @@ fn direct_sql_namespace_runs_locked_host_tool_and_validates_manifest() {
     );
     assert_eq!(String::from_utf8_lossy(&probe.stdout).trim(), "confined");
 
+    let legal_near_name = Command::new(env!("CARGO_BIN_EXE_sifr"))
+        .arg("biuld")
+        .current_dir(workspace.path())
+        .output()
+        .expect("run declared namespace near built-in spelling");
+    assert!(legal_near_name.status.success());
+    assert_eq!(
+        String::from_utf8_lossy(&legal_near_name.stdout).trim(),
+        "confined"
+    );
+
     let bounded = Command::new(env!("CARGO_BIN_EXE_sifr"))
         .args(["probe", "flood"])
         .current_dir(workspace.path())
@@ -99,12 +110,12 @@ fn direct_sql_namespace_runs_locked_host_tool_and_validates_manifest() {
     assert!(String::from_utf8_lossy(&unknown.stderr).contains("unknown tool namespace"));
 
     let typo = Command::new(env!("CARGO_BIN_EXE_sifr"))
-        .arg("biuld")
+        .arg("chekc")
         .current_dir(workspace.path().join("provider"))
         .output()
         .expect("diagnose built-in typo");
     assert_eq!(typo.status.code(), Some(2));
-    assert!(String::from_utf8_lossy(&typo.stderr).contains("did you mean 'build'"));
+    assert!(String::from_utf8_lossy(&typo.stderr).contains("did you mean 'check'"));
 
     std::fs::write(
         workspace.path().join("provider/src/drift.rs"),
@@ -136,7 +147,7 @@ fn write_fixture(root: &std::path::Path) {
     std::fs::write(root.join("tools/src/lib.rs"), "pub fn marker() {}\n").expect("tools marker");
     std::fs::write(
         root.join("tools/sifr.toml"),
-        "[tools.sql]\npackage = \"provider-tools\"\nentrypoint = \"sql-tool\"\ncapabilities = [\"credentials\", \"network\", \"project-write\"]\n\n[tools.probe]\npackage = \"provider-tools\"\nentrypoint = \"probe-tool\"\ncapabilities = []\n",
+        "[tools.sql]\npackage = \"provider-tools\"\nentrypoint = \"sql-tool\"\ncapabilities = [\"credentials\", \"network\", \"project-write\"]\n\n[tools.probe]\npackage = \"provider-tools\"\nentrypoint = \"probe-tool\"\ncapabilities = []\n\n[tools.biuld]\npackage = \"provider-tools\"\nentrypoint = \"probe-tool\"\ncapabilities = []\n",
     )
     .expect("tools Sifr manifest");
     std::fs::write(

@@ -13,7 +13,7 @@ use sifr_sql_contract::{
     SchemaObjectKind, SchemaProfile, SchemaSlice, SchemaSourceInput, SchemaSourceLocation,
     SchemaStrictness, SemanticValue, SessionContract, build_profile_authority,
     dialect_modes_for_session, generate_profile_module, minimum_schema_slice, normalize_schema,
-    normalized_schema_from_response, schema_context_artifact, schema_fingerprint,
+    schema_context_artifact, schema_fingerprint, schema_normalization_from_response,
     schema_normalization_request, schema_source_fingerprint, semantic_diff,
     verify_compatible_slice,
 };
@@ -315,9 +315,14 @@ fn schema_component_round_trip_binds_source_bytes_and_source_kinds() {
         protocol_major: 1,
         plan,
     };
-    let normalized = normalized_schema_from_response(provider(), &sources, &response)
+    let normalized = schema_normalization_from_response(provider(), &sources, &response)
         .expect("normalized response");
-    assert!(normalized.objects.contains_key(&ObjectId::new("public")));
+    assert!(
+        normalized
+            .schema
+            .objects
+            .contains_key(&ObjectId::new("public"))
+    );
 
     let mut wrong_kind = response;
     let SemanticOperation::ProviderNode { payload, .. } = &mut wrong_kind.plan.operations[0] else {
@@ -327,7 +332,7 @@ fn schema_component_round_trip_binds_source_bytes_and_source_kinds() {
         serde_json::from_slice(payload).expect("decode output");
     output.documents[0].kind = SchemaDocumentKind::ProviderMetadata;
     *payload = serde_json::to_vec(&output).expect("encode output");
-    assert!(normalized_schema_from_response(provider(), &sources, &wrong_kind).is_err());
+    assert!(schema_normalization_from_response(provider(), &sources, &wrong_kind).is_err());
 }
 
 #[test]

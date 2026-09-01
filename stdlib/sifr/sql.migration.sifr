@@ -1,0 +1,32 @@
+# sifr.sql.migration — compiler-owned migration declaration surface
+
+class MigrationState:
+    pass
+
+
+class MigrationPlan[S]:
+    def ddl(own self, own statement: Template) -> MigrationPlan[S]:
+        return self
+
+    def sql_step(own self, own statement: Template) -> MigrationPlan[S]:
+        return self
+
+    def assert_sql(own self, own statement: Template) -> MigrationPlan[S]:
+        return self
+
+    def recovery_point(own self, name: str) -> MigrationPlan[S]:
+        return self
+
+    def begin(own self) -> MigrationPlan[S]:
+        return self
+
+    def commit(own self) -> MigrationPlan[S]:
+        return self
+
+
+def migration(id: str, parents: list[str], author: str, created_at: str) -> None:
+    return None
+
+
+def rollback(of: str) -> None:
+    return None

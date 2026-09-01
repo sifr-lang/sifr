@@ -47,7 +47,10 @@ impl AnalysisContext<'_> {
         if let Some(set) = &select.set_operation {
             self.required_capabilities
                 .insert("sql.query.set-operation".to_string());
-            if !select.locking.is_empty() {
+            if !select.locking.is_empty()
+                || set_operand_has_locking(&set.left)
+                || set_operand_has_locking(&set.right)
+            {
                 return Err(PostgresAnalysisError::at_start(
                     PostgresDiagnosticCode::InvalidResult,
                     "PostgreSQL row locking cannot apply to a set operation",
@@ -89,7 +92,13 @@ impl AnalysisContext<'_> {
                 self.infer(offset, &[], Some(&integer64_type()))?;
             }
             let mut flags = left.flags;
-            flags.extend(right.flags);
+            flags.remove("deterministic-order");
+            flags.extend(
+                right
+                    .flags
+                    .into_iter()
+                    .filter(|flag| flag != "deterministic-order"),
+            );
             flags.insert(
                 match set.operator {
                     SetOperator::Union => "set-union",
@@ -365,6 +374,8 @@ impl AnalysisContext<'_> {
                 expression: inner,
                 ty,
             } => {
+                self.required_capabilities
+                    .insert("sql.type.cast".to_string());
                 let target = self.catalog.types.resolve(ty).ok_or_else(|| {
                     PostgresAnalysisError::new(
                         PostgresDiagnosticCode::TypeMismatch,
@@ -492,6 +503,8 @@ impl AnalysisContext<'_> {
                 filter,
                 window,
             } => {
+                self.required_capabilities
+                    .insert("sql.expression.function".to_string());
                 let short = name.last().map(String::as_str).unwrap_or_default();
                 let window_only = matches!(
                     short,
@@ -539,6 +552,8 @@ impl AnalysisContext<'_> {
                     ));
                 }
                 if let Some(filter) = filter {
+                    self.required_capabilities
+                        .insert("sql.query.aggregate-filter".to_string());
                     self.require_boolean(filter, frames)?;
                 }
                 if let Some(window) = window {
@@ -558,6 +573,8 @@ impl AnalysisContext<'_> {
                 self.infer_function(name, arguments, *aggregate_star, frames, expression)
             }
             ExpressionKind::Array { elements } => {
+                self.required_capabilities
+                    .insert("sql.type.array".to_string());
                 let Some(first) = elements.first() else {
                     return Err(PostgresAnalysisError::new(
                         PostgresDiagnosticCode::TypeMismatch,
@@ -763,6 +780,13 @@ impl AnalysisContext<'_> {
             }
         }
     }
+}
+
+fn set_operand_has_locking(select: &SelectStatement) -> bool {
+    !select.locking.is_empty()
+        || select.set_operation.as_ref().is_some_and(|set| {
+            set_operand_has_locking(&set.left) || set_operand_has_locking(&set.right)
+        })
 }
 
 pub(crate) fn write_error(message: impl Into<String>) -> PostgresAnalysisError {

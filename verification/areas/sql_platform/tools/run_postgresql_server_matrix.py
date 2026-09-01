@@ -41,7 +41,13 @@ def main() -> int:
         EVIDENCE.write_text(rendered, encoding="utf-8")
         print(f"wrote {EVIDENCE.relative_to(REPO_ROOT)}")
     else:
-        print(rendered, end="")
+        expected = EVIDENCE.read_text(encoding="utf-8")
+        if rendered != expected:
+            raise RuntimeError(
+                "live PostgreSQL facts differ from checked evidence; "
+                "review the drift and use --write to accept it"
+            )
+        print("live PostgreSQL facts match checked evidence")
     return 0
 
 

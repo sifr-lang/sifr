@@ -199,7 +199,11 @@ pub(crate) fn normalize_tokens(tokens: &[Token]) -> String {
         if !output.is_empty() && !no_space_before && !no_space_after_previous {
             output.push(' ');
         }
-        output.push_str(&token.normalized());
+        if matches!(token, Token::Operator(operator) if operator == "==") {
+            output.push('=');
+        } else {
+            output.push_str(&token.normalized());
+        }
         previous = Some(token);
     }
     output

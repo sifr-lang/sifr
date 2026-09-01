@@ -29,6 +29,7 @@ Each profile must declare these fields:
 ```toml
 [sql.profiles.app]
 provider = "sifr-sql-postgresql"
+family = "postgresql"
 source = "db/schema.postgresql.sql"
 source-kind = "sql-ddl"
 server-version = "18"
@@ -59,6 +60,11 @@ password, credential environment variable, or live-introspection option cannot
 enter normal compilation. Schema lifecycle tools can use credentials in their
 separate host-only execution path. They write checked-in schema artifacts for
 later compilation.
+
+`family` is required. It is the expected provider dialect, such as
+`postgresql`, `mysql`, or `sqlite`. The compiler compares this value with the
+resolved provider before it accepts schema output. Provider output cannot
+select or change the expected family.
 
 `schema-evidence` is `introspection`, `migration-head`, or `signed-manifest`.
 `schema-strictness` is `exact` or `compatible`. Signed manifests require at

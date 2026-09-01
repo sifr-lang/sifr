@@ -55,6 +55,12 @@ impl ResolvedSqlProfile {
                 "normalized schema provider does not match the package-resolved profile provider",
             ));
         }
+        if schema.dialect.family != self.config.family {
+            return Err(SchemaContractError::new(
+                SchemaContractErrorKind::InvalidProfile,
+                "normalized schema dialect family does not match the package profile configuration",
+            ));
+        }
         if schema.dialect.server_version != self.config.server_version
             || schema.dialect.features != self.config.extensions
             || schema.dialect.modes

@@ -3,8 +3,8 @@
     {
       "path": "components/sqlite-3.53.2.wasm",
       "series": "3.53.2",
-      "sha256": "dc28ac7f1431f507a339d8d84bb7d8dba86f2c6b1b94f39275e98f78ce7c8793",
-      "size_bytes": 1861203
+      "sha256": "19a19b961f47bcff8342673c38d810507cddc89d2d5379a61ce21e9dff1a9467",
+      "size_bytes": 1985939
     }
   ],
   "parser": {
@@ -17,5 +17,11 @@
   "protocol_major": 1,
   "schema_version": 1,
   "target": "wasm32-wasip2",
+  "wasi_virtualization": {
+    "commit": "448f6df8f688cee5d6995e96b1ffc31f9bf00742",
+    "name": "wasi-virt",
+    "source_content_sha256": "47c1ca1cc80df330c93c4797f6748d5330c2804001bdcff0342c4001920d1d2e",
+    "version": "0.2.0"
+  },
   "wit_world": "embedded-language-provider"
 }

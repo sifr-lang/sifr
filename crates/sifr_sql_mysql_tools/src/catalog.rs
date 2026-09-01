@@ -93,12 +93,12 @@ pub async fn pull_live_catalog_from_connection(
     }
     let options = MysqlSchemaOptions {
         default_database: database,
-        default_character_set: character_set,
+        default_character_set: character_set.clone(),
         default_collation: collation.clone(),
         sql_modes: sql_modes.clone(),
         extensions: dialect.features.clone(),
     };
-    let parser = MysqlParser::new(series, sql_modes, collation)
+    let parser = MysqlParser::new(series, sql_modes, character_set, collation)
         .map_err(|error| catalog_error(error.to_string()))?;
     let output = normalize_mysql_documents(provider.clone(), &parser, &options, documents)
         .map_err(|error| catalog_error(error.to_string()))?;

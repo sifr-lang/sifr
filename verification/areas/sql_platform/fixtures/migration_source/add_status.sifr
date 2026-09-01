@@ -1,0 +1,14 @@
+from sifr.sql.migration import MigrationPlan, MigrationState, migration, rollback
+
+
+@migration(id="2026_08_add_status", parents=["2026_07_previous"], author="Sifr SQL; team=qualification", created_at="2026-08-31T00:00:00Z")
+def add_status[S: MigrationState](own plan: MigrationPlan[S]) -> MigrationPlan[S]:
+    after_add = plan.ddl(t"ALTER TABLE orders ADD COLUMN status TEXT NULL")
+    after_data = after_add.sql_step(t"UPDATE orders SET status = 'pending' WHERE status IS NULL")
+    after_assert = after_data.assert_sql(t"SELECT status IS NOT NULL AS valid FROM orders")
+    return after_assert.ddl(t"ALTER TABLE orders ALTER COLUMN status SET NOT NULL")
+
+
+@rollback(of="2026_08_add_status")
+def remove_status[S: MigrationState](own plan: MigrationPlan[S]) -> MigrationPlan[S]:
+    return plan.ddl(t"ALTER TABLE orders DROP COLUMN status")
