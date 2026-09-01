@@ -8,7 +8,13 @@ pub(super) fn method_function_type(ty: &Type, method_name: &str) -> Option<Funct
         Type::Class { methods, .. } | Type::Protocol { methods, .. } => methods
             .iter()
             .find(|(candidate, _)| candidate == method_name)
-            .map(|(_, function_type)| function_type.clone()),
+            .map(|(_, function_type)| function_type.clone())
+            .or_else(|| {
+                super::super::callable_fields::callable_field_function_type(ty, method_name)
+            }),
+        Type::StructuralRecord(_) => {
+            super::super::callable_fields::callable_field_function_type(ty, method_name)
+        }
         _ => None,
     }
 }

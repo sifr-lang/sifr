@@ -1,4 +1,5 @@
 use super::{HirExpr, HirStmt, Type, lower_source};
+use sifr_type_system::ReceiverConvention;
 
 #[test]
 fn record_constructor_and_field_access_lower_with_exact_types() {
@@ -232,4 +233,141 @@ def main():
             .message
             .contains("branches cannot infer 'value' as a union")
     }));
+}
+
+#[test]
+fn callable_record_field_lowers_as_a_shared_receiver_call() {
+    let module = lower_source(
+        r#"
+type Transform = {apply: Callable[[int], int]}
+
+def apply(transform: Transform, value: int) -> int:
+    return transform.apply(value)
+"#,
+    )
+    .expect("callable structural-record fields should lower");
+    let HirStmt::Return {
+        value:
+            Some(HirExpr::MethodCall {
+                method,
+                receiver_convention,
+                ty,
+                ..
+            }),
+    } = &module.functions[0].body[0]
+    else {
+        panic!("expected callable field method call");
+    };
+    assert_eq!(method, "apply");
+    assert_eq!(*receiver_convention, Some(ReceiverConvention::SharedBorrow));
+    assert_eq!(ty, &Type::Int);
+}
+
+#[test]
+fn async_callable_record_field_lowers_to_a_coroutine() {
+    let module = lower_source(
+        r#"
+type Runner = {apply: AsyncCallable[[str], str]}
+
+async def apply(runner: Runner, own value: str) -> str:
+    return await runner.apply(value)
+"#,
+    )
+    .expect("async callable structural-record fields should lower");
+    let HirStmt::Return {
+        value: Some(HirExpr::Await { value, .. }),
+    } = &module.functions[0].body[0]
+    else {
+        panic!("expected awaited callable field");
+    };
+    assert!(matches!(
+        value.as_ref(),
+        HirExpr::MethodCall {
+            method,
+            ty: Type::Coroutine(ok, _),
+            ..
+        } if method == "apply" && ok.as_ref() == &Type::Str
+    ));
+}
+
+#[test]
+fn callable_record_field_validates_arity_and_argument_types() {
+    let arity_errors = lower_source(
+        r#"
+type Transform = {apply: Callable[[int], int]}
+
+def apply(transform: Transform) -> int:
+    return transform.apply()
+"#,
+    )
+    .expect_err("callable record-field arity must be checked");
+    assert!(arity_errors.iter().any(|error| {
+        error
+            .message
+            .contains("(callable field) takes 1 argument(s), got 0")
+    }));
+
+    let type_errors = lower_source(
+        r#"
+type Transform = {apply: Callable[[int], int]}
+
+def apply(transform: Transform) -> int:
+    return transform.apply("wrong")
+"#,
+    )
+    .expect_err("callable record-field argument types must be checked");
+    assert!(type_errors.iter().any(|error| {
+        error.message.contains("argument 1 of")
+            && error
+                .message
+                .contains(".apply(): expected 'int', got 'str'")
+    }));
+}
+
+#[test]
+fn record_field_call_distinguishes_missing_and_non_callable_fields() {
+    let missing = lower_source(
+        r#"
+type Transform = {apply: Callable[[int], int]}
+
+def apply(transform: Transform) -> int:
+    return transform.missing(1)
+"#,
+    )
+    .expect_err("missing record fields must be diagnosed");
+    assert!(
+        missing
+            .iter()
+            .any(|error| error.message.contains("has no field 'missing'"))
+    );
+
+    let non_callable = lower_source(
+        r#"
+type Value = {number: int}
+
+def read(value: Value) -> int:
+    return value.number()
+"#,
+    )
+    .expect_err("non-callable record fields must be diagnosed");
+    assert!(non_callable.iter().any(|error| {
+        error.message.contains("field 'number' of record type")
+            && error.message.contains("is not callable (type: 'int')")
+    }));
+}
+
+#[test]
+fn async_callable_record_field_consumes_owned_arguments() {
+    let errors = lower_source(
+        r#"
+type Runner = {apply: AsyncCallable[[str], str]}
+
+async def apply(runner: Runner, own value: str) -> str:
+    result: str = await runner.apply(value)
+    print(value)
+    return result
+"#,
+    )
+    .expect_err("async callable record fields must consume owned arguments");
+    assert!(errors.iter().any(|error| error.message.contains("moved")));
 }

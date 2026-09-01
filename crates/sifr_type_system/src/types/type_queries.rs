@@ -6,6 +6,33 @@ pub(super) fn parent_chain_contains(parent_class: Option<&str>, ancestor: &str) 
 }
 
 impl Type {
+    /// Return a callable field exposed through method-call syntax.
+    ///
+    /// Declared class methods shadow same-named fields. Structural records have
+    /// no methods, so their field namespace is unambiguous.
+    #[must_use]
+    pub fn callable_field_type(&self, field_name: &str) -> Option<&Self> {
+        let field_ty = match self.resolve_alias() {
+            Self::Class {
+                fields, methods, ..
+            } => {
+                if methods.iter().any(|(name, _)| name == field_name) {
+                    return None;
+                }
+                fields
+                    .iter()
+                    .find_map(|(name, ty)| (name == field_name).then_some(ty))?
+            }
+            Self::StructuralRecord(record) => record.field(field_name)?.ty(),
+            _ => return None,
+        };
+        matches!(
+            field_ty.resolve_alias(),
+            Self::Callable(..) | Self::AsyncCallable(..)
+        )
+        .then_some(field_ty)
+    }
+
     /// Stable recursion key for a nominal class representation. The declaring
     /// identity distinguishes same-named imports, while concrete arguments
     /// distinguish specializations whose emitted trait capabilities can differ.

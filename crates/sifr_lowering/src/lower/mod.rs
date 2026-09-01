@@ -24,6 +24,7 @@ mod builtin_calls;
 mod bytes_methods;
 mod call_argument_ranges;
 mod call_iterable_validation;
+mod callable_fields;
 mod class_field_inference;
 #[cfg(test)]
 mod class_inheritance_defaults_tests;

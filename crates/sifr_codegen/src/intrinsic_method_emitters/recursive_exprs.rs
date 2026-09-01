@@ -195,25 +195,21 @@ impl RustEmitter {
                         arg_exprs[0] = Self::clone_owned_append_arg_expr_for_ir(&args[0], adjusted);
                     }
                 }
-                if let Type::Class {
-                    fields, methods, ..
-                } = crate::resolve_alias_type_for_plain_call(&effective_object_ty)
-                {
-                    let is_callable_field = !methods.iter().any(|(name, _)| name == method)
-                        && fields
-                            .iter()
-                            .any(|(name, ty)| name == method && matches!(ty, Type::Callable(..)));
-                    if is_callable_field {
-                        return Some(crate::RustExpr::FnCall {
-                            func: Box::new(crate::RustExpr::Paren(Box::new(
-                                crate::RustExpr::Field {
-                                    expr: Box::new(object_expr),
-                                    field: method.clone(),
-                                },
-                            ))),
-                            args: arg_exprs,
-                        });
+                if effective_object_ty.callable_field_type(method).is_some() {
+                    if let Some(method_params) = method_params.as_deref() {
+                        self.apply_registry_method_arg_conventions(
+                            args,
+                            method_params,
+                            &mut arg_exprs,
+                        );
                     }
+                    return Some(crate::RustExpr::FnCall {
+                        func: Box::new(crate::RustExpr::Paren(Box::new(crate::RustExpr::Field {
+                            expr: Box::new(object_expr),
+                            field: method.clone(),
+                        }))),
+                        args: arg_exprs,
+                    });
                 }
                 if let Some(lowered) = methods::lower_method_with_context(
                     &effective_object_ty,

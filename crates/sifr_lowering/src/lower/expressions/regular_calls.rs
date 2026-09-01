@@ -188,7 +188,11 @@ pub(super) fn lower_regular_call(
                 .get(i)
                 .copied()
                 .unwrap_or(ParamConvention::borrow());
-            if !argument_is_assignable(arg.ty(), param_ty, convention) {
+            if !super::super::callable_fields::callable_argument_is_assignable(
+                arg.ty(),
+                param_ty,
+                convention,
+            ) {
                 expression_diagnostics::type_mismatch(
                     ctx,
                     format!(
@@ -521,7 +525,11 @@ pub(super) fn lower_regular_call(
                 .copied()
                 .flatten()
                 .unwrap_or_else(|| call.range());
-            if argument_is_assignable(arg.ty(), param_ty, *convention) {
+            if super::super::callable_fields::callable_argument_is_assignable(
+                arg.ty(),
+                param_ty,
+                *convention,
+            ) {
                 validate_borrowed_structural_coercion(
                     arg.ty(),
                     param_ty,
@@ -641,7 +649,11 @@ pub(super) fn lower_regular_call(
                     }
                     continue;
                 }
-                if argument_is_assignable(arg.ty(), &concrete_param_ty, *convention) {
+                if super::super::callable_fields::callable_argument_is_assignable(
+                    arg.ty(),
+                    &concrete_param_ty,
+                    *convention,
+                ) {
                     let primary_range = arg_ranges
                         .get(i)
                         .copied()
@@ -790,14 +802,6 @@ pub(super) fn lower_regular_call(
             args,
             ty: call_type,
         })
-    }
-}
-
-fn argument_is_assignable(source: &Type, target: &Type, convention: ParamConvention) -> bool {
-    if convention.is_shared_borrow() {
-        source.is_shared_borrow_assignable_to(target)
-    } else {
-        source.is_assignable_to(target)
     }
 }
 

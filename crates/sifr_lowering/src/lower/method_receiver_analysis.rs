@@ -454,7 +454,8 @@ pub(super) fn method_signature(
             methods,
             method,
             class_types,
-        ),
+        )
+        .or_else(|| super::callable_fields::callable_field_function_type(ty, method)),
         Type::Protocol {
             identity,
             name,
@@ -467,6 +468,9 @@ pub(super) fn method_signature(
             class_types,
         ),
         Type::Enum { name, .. } => functions.get(&format!("{name}.{method}")).cloned(),
+        Type::StructuralRecord(_) => {
+            super::callable_fields::callable_field_function_type(ty, method)
+        }
         Type::Alias { body, .. } => method_signature(body, method, class_types, functions),
         Type::TypeVar(name) => class_types
             .get(name)
