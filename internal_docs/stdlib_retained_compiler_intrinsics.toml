@@ -110,18 +110,33 @@ exact_intrinsics = [
 ]
 
 [[surface]]
+id = "first-class-string::checked-padding"
+state = "retained-by-design"
+owner = "first-class-string-language-semantics"
+issue = "3648"
+evidence_links = ["internal_docs/architecture.md"]
+reason = "First-class string padding methods lower through allocation-checked runtime primitives so arbitrary-precision widths produce typed overflow failures and generated code cannot panic while reserving output storage."
+direct_runtime_roots = [
+  "sifr_runtime::checked_center",
+  "sifr_runtime::checked_ljust",
+  "sifr_runtime::checked_rjust",
+  "sifr_runtime::checked_zfill",
+]
+
+[[surface]]
 id = "_sifr.task::language_runtime_glue"
 state = "retained-by-design"
 owner = "stdlib-native-boundary-completion"
 issue = "stdlib-native-boundary-completion"
 evidence_links = ["stdlib-native-boundary-completion"]
 declaration_files = ["stdlib/sifr/task.sifr"]
-reason = "The public current_context declaration carries explicit typed compiler identity; task, cancellation, offload, join-set, and context propagation remain language/runtime glue."
+reason = "The public current_context declaration carries explicit typed compiler identity; task cancellation evidence, bounded asynchronous cleanup, offload, join-set, and context propagation remain language/runtime glue."
 registry_files = ["task.rs"]
 preamble_files = [
   "cpu_offload_runtime.rs",
   "join_set_runtime.rs",
   "parallel_runtime.rs",
+  "secondary_error.rs",
   "task_cancellation_runtime.rs",
   "task_context_runtime.rs",
   "task_runtime.rs",
@@ -130,7 +145,22 @@ preamble_files = [
 ]
 exact_intrinsics = ["task_current_context"]
 source_declared_intrinsics = ["task_current_context"]
-direct_runtime_roots = ["sifr_runtime::cancellation"]
+direct_runtime_roots = [
+  "sifr_runtime::async_cleanup",
+  "sifr_runtime::cancellation",
+]
+
+[[surface]]
+id = "generator-language-runtime"
+state = "retained-by-design"
+owner = "lazy-resumable-generators"
+issue = "permanent-language-contract"
+evidence_links = [
+  "internal_docs/architecture.md",
+  "internal_docs/async_concurrency_model.md",
+]
+reason = "Sifr generator suspension and resumption are compiler-owned language semantics. The demand-driven generated state machines provide sync and async generator protocol glue without implementing a standard-library API."
+preamble_files = ["generator_runtime.rs"]
 
 [[surface]]
 id = "typed-intrinsic-dispatch-core"
@@ -183,8 +213,12 @@ state = "retained-by-design"
 owner = "stdlib-native-boundary-completion"
 issue = "stdlib-native-boundary-completion"
 evidence_links = ["stdlib-native-boundary-completion"]
-reason = "Generated Rust type conversion and error wrapper helpers are shared language/runtime glue."
-preamble_files = ["type_validation.rs", "types_and_errors.rs"]
+reason = "Generated Rust type conversion, error hierarchy conversion, and error wrapper helpers are shared language/runtime glue."
+preamble_files = [
+  "error_conversion.rs",
+  "type_validation.rs",
+  "types_and_errors.rs",
+]
 direct_runtime_roots = [
   "sifr_runtime::IntegerArithmeticError",
   "sifr_runtime::IntegerDivisionError",
