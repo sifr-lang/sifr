@@ -137,7 +137,7 @@ impl<'a> RawAdapter<'a> {
                         StatementKind::CreateView(self.create_materialized_view(body)?)
                     }
                     "IndexStmt" => StatementKind::CreateIndex(Self::create_index(body)?),
-                    "CreateSeqStmt" => StatementKind::CreateSequence(Self::create_sequence(body)?),
+                    "CreateSeqStmt" => StatementKind::CreateSequence(self.create_sequence(body)?),
                     "AlterSeqStmt" => StatementKind::AlterSequence(Self::alter_sequence(body)?),
                     "CreateFunctionStmt" => {
                         StatementKind::CreateFunction(Self::create_function(body)?)

@@ -90,7 +90,11 @@ user sequence ownership (`pg_depend.deptype = 'a'`). The DDL normalizer applies
 the same rule to `CREATE SEQUENCE ... OWNED BY` and `ALTER SEQUENCE ... OWNED
 BY`. It parses the sequence data type, bounds, start, increment, cache, and cycle
 options. Omitted options use PostgreSQL defaults for the data type and increment
-direction. Unsupported options are errors.
+direction. PostgreSQL parser components can omit zero or negative scalar fields
+from JSON. In that case, the adapter reads the integer token at the parser's
+source location. It also accepts the integer and Boolean cycle nodes used by
+PostgreSQL 13 through 18. The parser matrix locks this behavior. Unsupported
+options are errors.
 
 Pull compares the live graph with the checked snapshot. If no snapshot exists,
 it compares with the selected source authority. It prints the semantic diff and

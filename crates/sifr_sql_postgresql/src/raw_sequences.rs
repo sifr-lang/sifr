@@ -2,13 +2,14 @@ use crate::ast::{AlterSequenceStatement, CreateSequenceStatement, SequenceDataTy
 use crate::raw_adapter::{PostgresParseError, RawAdapter};
 use crate::raw_helpers::{
     bool_field, name_list, object, object_field, optional_array, optional_object_field,
-    relation_name, string_field, tagged, type_name,
+    relation_name, string_field, tagged, type_name, u32_field,
 };
 use serde_json::{Map, Value};
 use std::collections::BTreeSet;
 
 impl RawAdapter<'_> {
     pub(crate) fn create_sequence(
+        &self,
         body: &Map<String, Value>,
     ) -> Result<CreateSequenceStatement, PostgresParseError> {
         let mut statement = CreateSequenceStatement {
@@ -34,12 +35,16 @@ impl RawAdapter<'_> {
             }
             match name {
                 "as" => statement.data_type = sequence_data_type(option)?,
-                "increment" => statement.increment = sequence_integer(option, name)?,
-                "minvalue" => statement.minimum = optional_sequence_integer(option, name)?,
-                "maxvalue" => statement.maximum = optional_sequence_integer(option, name)?,
-                "start" => statement.start = Some(sequence_integer(option, name)?),
-                "cache" => statement.cache = sequence_integer(option, name)?,
-                "cycle" => statement.cycle = sequence_boolean(option, name)?,
+                "increment" => statement.increment = sequence_integer(self.source, option, name)?,
+                "minvalue" => {
+                    statement.minimum = optional_sequence_integer(self.source, option, name)?;
+                }
+                "maxvalue" => {
+                    statement.maximum = optional_sequence_integer(self.source, option, name)?;
+                }
+                "start" => statement.start = Some(sequence_integer(self.source, option, name)?),
+                "cache" => statement.cache = sequence_integer(self.source, option, name)?,
+                "cycle" => statement.cycle = sequence_boolean(self.source, option, name)?,
                 "owned_by" => statement.owned_by = sequence_owner(option)?,
                 other => {
                     return Err(sequence_error(format!(
@@ -112,19 +117,26 @@ fn sequence_data_type(option: &Map<String, Value>) -> Result<SequenceDataType, P
 }
 
 fn optional_sequence_integer(
+    source: &str,
     option: &Map<String, Value>,
     name: &str,
 ) -> Result<Option<i64>, PostgresParseError> {
     optional_object_field(option, "arg")
-        .map(|argument| sequence_integer_argument(argument, name))
+        .map(|argument| sequence_integer_argument(source, option, argument, name))
         .transpose()
 }
 
-fn sequence_integer(option: &Map<String, Value>, name: &str) -> Result<i64, PostgresParseError> {
-    sequence_integer_argument(object_field(option, "arg")?, name)
+fn sequence_integer(
+    source: &str,
+    option: &Map<String, Value>,
+    name: &str,
+) -> Result<i64, PostgresParseError> {
+    sequence_integer_argument(source, option, object_field(option, "arg")?, name)
 }
 
 fn sequence_integer_argument(
+    source: &str,
+    option: &Map<String, Value>,
     argument: &Map<String, Value>,
     name: &str,
 ) -> Result<i64, PostgresParseError> {
@@ -134,17 +146,120 @@ fn sequence_integer_argument(
         "Float" => string_field(body, "fval").and_then(|value| value.parse().ok()),
         _ => None,
     };
-    value.ok_or_else(|| sequence_error(format!("sequence {name} is not an i64 integer")))
+    value
+        .or_else(|| sequence_integer_from_source(source, option))
+        .ok_or_else(|| sequence_error(format!("sequence {name} is not an i64 integer")))
 }
 
-fn sequence_boolean(option: &Map<String, Value>, name: &str) -> Result<bool, PostgresParseError> {
+fn sequence_boolean(
+    source: &str,
+    option: &Map<String, Value>,
+    name: &str,
+) -> Result<bool, PostgresParseError> {
     let argument = object_field(option, "arg")?;
     let (tag, body) = tagged(argument, "sequence boolean")?;
-    if tag != "Boolean" {
-        return Err(sequence_error(format!("sequence {name} is not a boolean")));
-    }
-    bool_field(body, "boolval")
+    let value = match tag {
+        "Boolean" => bool_field(body, "boolval"),
+        "Integer" => body
+            .get("ival")
+            .and_then(Value::as_i64)
+            .and_then(|value| match value {
+                0 => Some(false),
+                1 => Some(true),
+                _ => None,
+            }),
+        _ => None,
+    };
+    value
+        .or_else(|| sequence_boolean_from_source(source, option))
         .ok_or_else(|| sequence_error(format!("sequence {name} has no boolean value")))
+}
+
+fn sequence_integer_from_source(source: &str, option: &Map<String, Value>) -> Option<i64> {
+    let start = usize::try_from(u32_field(option, "location")?).ok()?;
+    let bytes = source.as_bytes();
+    let mut index = start;
+    while index < bytes.len() {
+        index = skip_sql_spacing(bytes, index)?;
+        if index >= bytes.len() || bytes[index] == b';' {
+            return None;
+        }
+        if bytes[index].is_ascii_alphabetic() || bytes[index] == b'_' {
+            index += 1;
+            while index < bytes.len()
+                && (bytes[index].is_ascii_alphanumeric() || bytes[index] == b'_')
+            {
+                index += 1;
+            }
+            continue;
+        }
+        let number_start = index;
+        if matches!(bytes[index], b'+' | b'-') {
+            index += 1;
+        }
+        let digit_start = index;
+        while index < bytes.len() && bytes[index].is_ascii_digit() {
+            index += 1;
+        }
+        if index > digit_start {
+            return source.get(number_start..index)?.parse().ok();
+        }
+        index += 1;
+    }
+    None
+}
+
+fn sequence_boolean_from_source(source: &str, option: &Map<String, Value>) -> Option<bool> {
+    let start = usize::try_from(u32_field(option, "location")?).ok()?;
+    let bytes = source.as_bytes();
+    let index = skip_sql_spacing(bytes, start)?;
+    let end = bytes[index..]
+        .iter()
+        .position(|byte| !byte.is_ascii_alphabetic())
+        .map_or(bytes.len(), |offset| index + offset);
+    let keyword = source.get(index..end)?;
+    if keyword.eq_ignore_ascii_case("NO") {
+        Some(false)
+    } else if keyword.eq_ignore_ascii_case("CYCLE") {
+        Some(true)
+    } else {
+        None
+    }
+}
+
+fn skip_sql_spacing(bytes: &[u8], mut index: usize) -> Option<usize> {
+    loop {
+        while index < bytes.len() && bytes[index].is_ascii_whitespace() {
+            index += 1;
+        }
+        if bytes.get(index..index + 2) == Some(b"--") {
+            index += 2;
+            while index < bytes.len() && bytes[index] != b'\n' {
+                index += 1;
+            }
+            continue;
+        }
+        if bytes.get(index..index + 2) == Some(b"/*") {
+            index += 2;
+            let mut depth = 1_u32;
+            while index < bytes.len() && depth > 0 {
+                if bytes.get(index..index + 2) == Some(b"/*") {
+                    depth = depth.checked_add(1)?;
+                    index += 2;
+                } else if bytes.get(index..index + 2) == Some(b"*/") {
+                    depth -= 1;
+                    index += 2;
+                } else {
+                    index += 1;
+                }
+            }
+            if depth > 0 {
+                return None;
+            }
+            continue;
+        }
+        return Some(index);
+    }
 }
 
 fn sequence_owner(option: &Map<String, Value>) -> Result<Option<Vec<String>>, PostgresParseError> {

@@ -84,8 +84,10 @@ fn ddl_normalization_and_query_analysis_share_one_schema_authority() {
              CREATE MATERIALIZED VIEW public.team_names AS SELECT id, name FROM public.teams;\
              CREATE SEQUENCE public.audit_sequence;\
              CREATE SEQUENCE public.owned_users_sequence AS integer INCREMENT 5 \
-               MINVALUE 10 MAXVALUE 1000 START 20 CACHE 3 CYCLE;\
+               MINVALUE 0 MAXVALUE 1000 START 0 CACHE 3 CYCLE;\
              ALTER SEQUENCE public.owned_users_sequence OWNED BY public.users.id;\
+             CREATE SEQUENCE public.descending_sequence AS integer INCREMENT -2 \
+               MINVALUE -1000 MAXVALUE -1 START -1 NO CYCLE;\
              CREATE TYPE public.mood AS ENUM ('ok', 'sad');\
              CREATE DOMAIN public.label AS text NOT NULL;"
                 .to_string(),
@@ -136,9 +138,9 @@ fn ddl_normalization_and_query_analysis_share_one_schema_authority() {
     );
     for (key, expected) in [
         ("data-type", SemanticValue::Text("integer".to_string())),
-        ("start", SemanticValue::Signed(20)),
+        ("start", SemanticValue::Signed(0)),
         ("increment", SemanticValue::Signed(5)),
-        ("minimum", SemanticValue::Signed(10)),
+        ("minimum", SemanticValue::Signed(0)),
         ("maximum", SemanticValue::Signed(1000)),
         ("cache", SemanticValue::Signed(3)),
         ("cycle", SemanticValue::Bool(true)),
@@ -150,6 +152,23 @@ fn ddl_normalization_and_query_analysis_share_one_schema_authority() {
             .dependencies
             .contains(&ObjectId::new("public.users.id"))
     );
+    let descending_sequence = schema
+        .objects
+        .get(&ObjectId::new("public.descending_sequence"))
+        .expect("descending sequence");
+    for (key, expected) in [
+        ("start", SemanticValue::Signed(-1)),
+        ("increment", SemanticValue::Signed(-2)),
+        ("minimum", SemanticValue::Signed(-1000)),
+        ("maximum", SemanticValue::Signed(-1)),
+        ("cycle", SemanticValue::Bool(false)),
+    ] {
+        assert_eq!(
+            descending_sequence.semantic.get(key),
+            Some(&expected),
+            "{key}"
+        );
+    }
     let check = schema
         .objects
         .values()
