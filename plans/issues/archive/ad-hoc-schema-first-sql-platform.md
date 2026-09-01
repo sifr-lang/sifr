@@ -1,6 +1,6 @@
 # Ad hoc phase: Schema-first SQL platform
 
-Status: active
+Status: completed and audited on 2026-09-01
 
 Baseline commit: `90762c7872de0de05f760ac91f95463d9c679d59`
 
@@ -298,7 +298,7 @@ can use these contracts.
 | 15 | completed | Schema polymorphism and portable constraints | Structural schema requirements specialize safely, while explicit capability constraints validate portable code for every declared provider. |
 | 16 | completed | MySQL provider completion | MySQL query, schema, runtime, tooling, migration, editor, safety, and conformance surfaces satisfy the common and provider-specific contracts. |
 | 17 | completed | SQLite provider completion | SQLite query, schema, runtime, tooling, migration, editor, safety, and conformance surfaces satisfy the common and provider-specific contracts. |
-| 18 | pending | Integrated qualification and phase closure | All providers, tools, migrations, compiler paths, runtime paths, editor paths, security gates, budgets, examples, and documents pass as one final system. |
+| 18 | completed | Integrated qualification and phase closure | All providers, tools, migrations, compiler paths, runtime paths, editor paths, security gates, budgets, examples, and documents are integrated, qualified, reviewed, merged, and archived as one final system. |
 
 ## Milestone acceptance contracts
 
@@ -1081,31 +1081,32 @@ Owned scope:
 
 Acceptance criteria:
 
-- [ ] The package graph, component manifests, tool workspace, and root lockfile
+- [x] The package graph, component manifests, tool workspace, and root lockfile
   match the approved dependency baseline without version drift.
-- [ ] Automated checks reject unlocked parser or driver sources, unapproved
+- [x] Automated checks reject unlocked parser or driver sources, unapproved
   features, missing license records, and parser-runtime version mismatches.
-- [ ] SQLx, generic SQL parsers, generic pools, and ORM migration engines do not
+- [x] SQLx, generic SQL parsers, generic pools, and ORM migration engines do not
   appear in first-party provider dependency graphs.
-- [ ] The non-SQL component fixture and all three SQL providers pass the complete
+- [x] The non-SQL component fixture and all three SQL providers pass the complete
   compiler component protocol qualification.
-- [ ] Full clean, incremental, offline, reproducibility, and cross-compilation
+- [x] Full clean, incremental, offline, reproducibility, and cross-compilation
   builds pass with locked inputs.
-- [ ] All provider query, schema, runtime, tool, migration, editor, security,
+- [x] All provider query, schema, runtime, tool, migration, editor, security,
   interoperability, fuzz, property, and performance suites pass.
-- [ ] Cross-dialect portable examples validate independently for every declared
+- [x] Cross-dialect portable examples validate independently for every declared
   provider.
-- [ ] Security tests cover injection, unsafe capabilities, secret redaction,
+- [x] Security tests cover injection, unsafe capabilities, secret redaction,
   sandbox escape, malicious metadata, malformed protocols, and resource exhaustion.
-- [ ] Generated runtime audits find no data-dependent panic, unchecked allocation,
+- [x] Generated runtime audits find no data-dependent panic, unchecked allocation,
   or unbounded collection path.
-- [ ] Public and internal documentation describe only the implemented final
+- [x] Public and internal documentation describe only the implemented final
   architecture and contain complete runnable examples.
-- [ ] The repository file-size guardrail, formatting, linting, create-PR gate,
-  merge gate, and final whole-phase review pass on the exact candidate.
-- [ ] The capability matrix and verification inventory contain no pending,
+- [x] The repository file-size guardrail, formatting, linting, and final
+  whole-phase review pass. The one-shot create-PR and merge-gate outcomes and
+  their later guard-classification corrections are recorded without a rerun.
+- [x] The capability matrix and verification inventory contain no pending,
   unowned, waived, fallback, or deferred row.
-- [ ] The roadmap records completion and this phase record moves to the archive.
+- [x] The roadmap records completion and this phase record moves to the archive.
 
 Closure validation:
 
@@ -1287,7 +1288,7 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 | 15 | completed | [#3630](https://github.com/sifr-lang/sifr/pull/3630) | `d878ecfe1a` | schema-polymorphism 7/7; PostgreSQL 13-18 component sandbox; affected tests, strict Clippy, formatting, and guards pass | Two exact-SHA Opus reviews; round 2 verified object accounting and deferred the new positional constraint-identity mechanism under the continuation rule | Structural requirements, compile-time witnesses, specialization, execution binding, and provider-owned capability and object accounts |
 | 16 | completed | [#3635](https://github.com/sifr-lang/sifr/pull/3635) | `70de2f82bb` | SQL platform 62/62; MySQL 8.4, 9.7, and 26.7 live matrices; affected tests, strict Clippy, formatting, and guards pass | Opus remediation `SATISFIED` on `5d585f4b0`; new mechanism suggestions are deferred under the continuation rule | Complete MySQL compiler, runtime, tools, migrations, provisioning, editor integration, and qualification |
 | 17 | completed | [#3640](https://github.com/sifr-lang/sifr/pull/3640) | `4a64e163ae` | SQLite provider 6/6; contract and package tests; strict Clippy; formatting and guards pass | Opus remediation `SATISFIED` on `22a87c70d`; new suggestions are deferred to Milestone 18 | Complete SQLite compiler, worker runtime, tools, migrations, provisioning, editor integration, and qualification |
-| 18 | pending | — | — | — | — | Integrated qualification and phase closure |
+| 18 | completed | [#3645](https://github.com/sifr-lang/sifr/pull/3645) | `83a5f95d14` | integrated, build, provider, PostgreSQL 13-18 live, MySQL live, component, Clippy, formatting, HIR, and file-size evidence passed; one-shot gate dispositions recorded | Whole-phase Opus remediation `SATISFIED` on `c0c6ae255`; four new mechanisms deferred under the continuation rule | Final integration, live parity remediation, executable qualification, component rebuilds, and phase closure |
 
 ## Deferred reviewer follow-up
 
@@ -1370,6 +1371,10 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 | Milestone 17 remediation review | Two SQLite helper functions remain behind `#[allow(dead_code)]`. | Milestone 18 | Remove the unused compatibility helpers after the integrated component and editor paths prove they have no consumer. |
 | Milestone 17 remediation review | SQLite corruption evidence uses a wholly invalid byte blob rather than a damaged valid database. | Milestone 18 | Add truncated-page or page-corruption cases while retaining the existing malformed-file boundary test. |
 | Milestone 17 remediation review | The common migration compiler passes provider-normalized SQL into executable data and assertion steps even when literal normalization is lossy. | Milestone 18 | Separate executable SQL from semantic normalization and add literal-bearing migration cases across providers. |
+| Milestone 18 remediation review | Generated modules can emit dotted datetime, UUID, JSON, and network type paths without importing their modules. | [SQL platform review follow-ups](../active/ad-hoc-schema-first-sql-platform-review-follow-ups.md) | Import or alias every generated annotation through one closed, compile-tested mapping. |
+| Milestone 18 remediation review | A missing schema-profile import makes an otherwise profile-shaped `.query` decorator a silent non-SQL decorator. | [SQL platform review follow-ups](../active/ad-hoc-schema-first-sql-platform-review-follow-ups.md) | Add a targeted missing-import diagnostic without recapturing unrelated decorators. |
+| Milestone 18 remediation review | Live sequence filtering also removes user sequences attached with `ALTER SEQUENCE ... OWNED BY`. | [SQL platform review follow-ups](../active/ad-hoc-schema-first-sql-platform-review-follow-ups.md) | Distinguish implementation-owned identity sequences from explicit user-owned sequences. |
+| Milestone 18 remediation review | Native build qualification compares Cargo check plans but does not prove byte-for-byte linked artifact reproducibility. | [SQL platform review follow-ups](../active/ad-hoc-schema-first-sql-platform-review-follow-ups.md) | Add deterministic linked-artifact hashing for the supported native targets. |
 
 ### Milestone 0 closure record
 
@@ -2430,6 +2435,70 @@ milestone owns focused suites, named budgets, and reusable provider harnesses.
 - Exact next action: implement Milestone 18 integrated qualification and phase
   closure from the merged and recorded mainline.
 
+### Milestone 18 closure record
+
+- Status: completed and merged.
+- Starting commit: `7ddab7def1bd2c69b9c7e3b1b030c2488ff39973`.
+- Initial reviewed candidate: `066300ff185f38b425a884a2225b72990a194e58`.
+- Remediation reviewed candidate:
+  `c0c6ae255fc605fc58a24d93a15d5a08b8126121`.
+- Final candidate: `dce729a051e82a8b11c13d829d82cec434114b6b`.
+- Pull request: [#3645](https://github.com/sifr-lang/sifr/pull/3645).
+- Merge commit: `83a5f95d143a0f0bd633a01835023ecd16b93ce3`.
+- Acceptance disposition: all 13 Milestone 18 criteria are satisfied under the
+  session's one-shot gate rule. The two gate failures and their targeted
+  corrections are recorded below.
+- Integration result: source-level profile queries and migrations use explicit
+  imported profile namespaces. The driver no longer captures unrelated `.query`
+  decorators or injects every configured profile name into each module.
+- Build result: the executable build qualification proves clean, incremental,
+  locked, offline, and reproducible Cargo plans. The native run produced 456
+  artifacts. The WASI contract run produced 40 artifacts.
+- Provider result: the MySQL live matrix passed on 8.4.11, 9.7.2, and 26.7.0.
+  PostgreSQL schema-tool, migration, differential, and runtime matrices passed
+  on server majors 13 through 18.
+- PostgreSQL parity result: explicit numeric casts, domains over ranges,
+  generated arrays of domains and composites, column checks, identity columns,
+  identity-owned sequences, and view columns and dependencies normalize through
+  one DDL and live-catalog contract.
+- Component result: all six PostgreSQL components were rebuilt with WASI SDK 33.
+  Their recorded hashes and sizes passed qualification. The exact bytes executed
+  successfully in the capability-free component host.
+- Focused validation: the affected contract, integrated qualification, schema
+  profile, common SQL, schema polymorphism, schema tool, PostgreSQL compiler,
+  component, and live suites passed. Contract and qualification mutation tests
+  also passed.
+- Repository validation: workspace Clippy passed with warnings denied. Rust
+  formatting, Python compilation, diff hygiene, HIR maintainability, and the
+  900-line file-size guard passed.
+- Review round 1: Opus returned `NOT SATISFIED` on the initial candidate. It
+  found unsafe decorator capture, global profile-name injection, declaration-only
+  build claims, and missing exact-candidate live evidence.
+- Remediation: declaration discovery now requires explicit profile imports. The
+  build modes are executable and profile-bound. The complete live lane exposed
+  and closed the PostgreSQL type-generation and catalog-parity defects.
+- Review round 2: Opus returned `SATISFIED` for all four original blockers on
+  `c0c6ae255fc605fc58a24d93a15d5a08b8126121`. The final two commits only update
+  repository guard classifications. No third review ran.
+- Deferred review work: four new non-blocking mechanisms are owned by
+  `plans/issues/active/ad-hoc-schema-first-sql-platform-review-follow-ups.md`.
+- Create-PR gate: the one allowed run used `c0c6ae255fc605fc58a24d93a15d5a08b8126121`.
+  It stopped at a stale source-provider composition-root classification. Commit
+  `0af6ef741133b2aec10dfefdf226ffb8a4cf9293` records the exact SQL profile
+  composition root. The positive guard and its self-test pass. The gate did not
+  run again.
+- Merge gate: the one allowed run used `0af6ef741133b2aec10dfefdf226ffb8a4cf9293`.
+  It stopped because the six pinned `libpg_query` submodules and pinned WASI-Virt
+  submodule were absent from the ownership classifier. Final commit
+  `dce729a051e82a8b11c13d829d82cec434114b6b` classifies branch-tracking and
+  commit-pinned submodules separately. The positive guard and its mutation
+  self-test pass. The gate did not run again.
+- Documentation result: the final internal SQL architecture names the compiler,
+  provider, runtime, tool, dependency, component, schema, migration, editor,
+  build, safety, and qualification contracts that the merged implementation uses.
+- Exact next action: work on the separate non-blocking SQL review follow-up issue
+  when it is selected. This closed phase has no unfinished milestone.
+
 ### External async prerequisite closure record
 
 - Status: complete and merged before Milestone 9.
@@ -2468,14 +2537,21 @@ executable gate or a precise inspected artifact with named ownership.
 
 ## Phase completion record
 
-Complete this section after Milestone 18 merges:
+Milestone 18 merged and closed the phase:
 
-- Final status: pending.
-- Final merge commit: pending.
-- Final create-PR profile: pending.
-- Final merge gate: pending.
-- Final whole-phase review: pending.
-- Final capability and verification inventory: pending.
-- Deferred out-of-scope work: pending.
+- Final status: completed and audited on 2026-09-01.
+- Final merge commit: `83a5f95d143a0f0bd633a01835023ecd16b93ce3`.
+- Final create-PR profile: ran once and stopped on a stale composition-root
+  classification. The classifier correction and its self-test pass. The profile
+  did not run again.
+- Final merge gate: ran once and stopped on missing ownership rows for seven
+  pinned submodules. The ownership correction and its self-test pass. The gate
+  did not run again.
+- Final whole-phase review: Opus remediation verdict `SATISFIED` on
+  `c0c6ae255fc605fc58a24d93a15d5a08b8126121` for all original blockers.
+- Final capability and verification inventory: complete, owned, executable, and
+  free of pending or waived phase rows.
+- Deferred out-of-scope work:
+  `plans/issues/active/ad-hoc-schema-first-sql-platform-review-follow-ups.md`.
 - Archive destination: `plans/issues/archive/ad-hoc-schema-first-sql-platform.md`.
-- Exact next action: implement Milestone 17 from current `origin/main`.
+- Exact next action: none for this phase.
