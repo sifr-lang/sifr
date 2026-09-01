@@ -667,6 +667,7 @@ impl<'a> RawAdapter<'a> {
         let mut primary_key = false;
         let mut unique = false;
         let mut references = None;
+        let mut checks = Vec::new();
         for constraint in optional_array(body, "constraints") {
             let (_, constraint) = tagged(object(constraint, "column constraint")?, "constraint")?;
             match string_field(constraint, "contype").unwrap_or("") {
@@ -700,6 +701,9 @@ impl<'a> RawAdapter<'a> {
                         name_list(constraint, "pk_attrs"),
                     ));
                 }
+                "CONSTR_CHECK" => {
+                    checks.push(self.expression_object(object_field(constraint, "raw_expr")?)?);
+                }
                 _ => {}
             }
         }
@@ -715,6 +719,7 @@ impl<'a> RawAdapter<'a> {
             primary_key,
             unique,
             references,
+            checks,
             span: self.span(body),
         })
     }

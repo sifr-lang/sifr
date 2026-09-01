@@ -72,23 +72,38 @@ async fn live_catalog_preserves_postgresql_semantic_objects() {
         )
         .expect("overloaded functions and operator must resolve from canonical identities");
     analyzer
-        .analyze_query("SELECT ROW('street', 'city', 1, 2)::postal_address::text AS rendered")
+        .analyze_query("SELECT address::text AS rendered FROM type_samples")
         .expect("user-defined cast must resolve from the canonical cast account");
+    let price_window = schema
+        .objects
+        .get(&sifr_sql_contract::ObjectId::new("public.price_window"))
+        .expect("domain over range");
+    assert!(
+        price_window.semantic.contains_key("sifr_type"),
+        "domain over range semantics: {:?}",
+        price_window.semantic
+    );
     let artifacts = build_schema_artifacts(&authority(schema.clone())).expect("schema artifacts");
     let generated = String::from_utf8(artifacts.files()[GENERATED_MODULE_PATH].clone())
         .expect("generated source");
     assert!(generated.contains("class domains__public__positive_id:"));
     assert!(generated.contains("value: i32"));
     assert!(generated.contains("unit_count: i32"));
-    assert!(generated.contains("latitude: sifr.sql.Numeric"));
-    assert!(generated.contains("domain_values: list[domains__public__positive_id]"));
-    assert!(generated.contains("composite_values: list[composites__public__postal_address]"));
-    assert!(generated.contains("window: domains__public__price_window"));
+    assert!(generated.contains("latitude: Numeric"));
+    assert!(
+        generated.contains("domain_values: SqlArray[domains__public__positive_id | None]"),
+        "{generated}"
+    );
+    assert!(
+        generated.contains("composite_values: SqlArray[composites__public__postal_address | None]")
+    );
+    assert!(generated.contains("value: Range[Numeric]"));
     if major == 18 {
         let live = parity_schema(schema);
         let ddl = ddl_parity_schema(provider());
         build_schema_artifacts(&authority(ddl.clone())).expect("DDL schema artifacts");
-        assert!(semantic_diff(&ddl, &live).is_empty());
+        let differences = semantic_diff(&ddl, &live);
+        assert!(differences.is_empty(), "{differences:#?}");
     }
 }
 
@@ -99,6 +114,7 @@ fn parity_schema(mut schema: sifr_sql_contract::SchemaIr) -> sifr_sql_contract::
             || identity.as_str().starts_with("public.parity_users.")
             || identity.as_str().starts_with("public.parity_users_")
             || identity.as_str() == "public.parity_user_view"
+            || identity.as_str().starts_with("public.parity_user_view.")
     });
     schema
 }

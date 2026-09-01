@@ -30,7 +30,22 @@ catalog_objects AS (
                    FROM pg_catalog.pg_attribute a
                    WHERE a.attrelid = r.oid AND a.attnum > 0 AND NOT a.attisdropped
                ), '[]'::jsonb)
-           )), jsonb_build_array(r.nspname)
+           )), CASE WHEN r.relkind IN ('v', 'm') THEN
+                   jsonb_build_array(r.nspname) || COALESCE((
+                       SELECT jsonb_agg(dependency.identity ORDER BY dependency.identity)
+                       FROM (
+                           SELECT DISTINCT dependency_n.nspname || '.' || dependency.relname AS identity
+                           FROM pg_catalog.pg_rewrite rewrite
+                           JOIN pg_catalog.pg_depend depend
+                             ON depend.classid = 'pg_catalog.pg_rewrite'::regclass
+                            AND depend.objid = rewrite.oid
+                            AND depend.refclassid = 'pg_catalog.pg_class'::regclass
+                           JOIN pg_catalog.pg_class dependency ON dependency.oid = depend.refobjid
+                           JOIN user_namespaces dependency_n ON dependency_n.oid = dependency.relnamespace
+                           WHERE rewrite.ev_class = r.oid AND dependency.oid <> r.oid
+                       ) dependency
+                   ), '[]'::jsonb)
+               ELSE jsonb_build_array(r.nspname) END
     FROM relations r
 
     UNION ALL
@@ -40,7 +55,7 @@ catalog_objects AS (
                'database-type-name', pg_catalog.format_type(a.atttypid, a.atttypmod),
                'nullable', NOT a.attnotnull,
                'has-default', a.atthasdef,
-               'generated', a.attgenerated <> '',
+               'generated', a.attgenerated <> '' OR a.attidentity <> '',
                'identity', a.attidentity,
                'position', a.attnum,
                'default-expression', COALESCE(pg_catalog.pg_get_expr(d.adbin, d.adrelid, true), '')
@@ -104,6 +119,13 @@ catalog_objects AS (
     FROM pg_catalog.pg_sequence s
     JOIN pg_catalog.pg_class c ON c.oid = s.seqrelid
     JOIN user_namespaces n ON n.oid = c.relnamespace
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM pg_catalog.pg_depend dependency
+        WHERE dependency.classid = 'pg_catalog.pg_class'::regclass
+          AND dependency.objid = c.oid
+          AND dependency.deptype IN ('a', 'i')
+    )
 
     UNION ALL
     SELECT r.identity || '._identity_' || a.attname, 'identity-column',

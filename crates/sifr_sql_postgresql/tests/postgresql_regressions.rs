@@ -214,6 +214,7 @@ fn core_operators_aggregates_and_dialect_diagnostics_are_preserved() {
     for source in [
         "SELECT sum(id) AS total, avg(id) AS average FROM users",
         "SELECT id % 2 AS remainder FROM users",
+        "SELECT 1::bigint AS widened",
         "SELECT name LIKE $1 AS matches FROM users",
         "SELECT id FROM users WHERE $1 IN (SELECT id FROM users)",
         "INSERT INTO users(id, name) VALUES ($1, $2) ON CONFLICT(id) WHERE id > $3 DO UPDATE SET name = excluded.name WHERE users.id = $1 RETURNING id",

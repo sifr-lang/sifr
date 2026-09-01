@@ -563,7 +563,10 @@ fn add_view(
                         "database-type".to_string(),
                         database_value(&field.database_type)?,
                     ),
-                    ("nullable".to_string(), SemanticValue::Bool(field.nullable)),
+                    // PostgreSQL does not retain source nullability proofs on view
+                    // attributes. Keep the canonical schema conservative so DDL
+                    // and live catalog evidence have the same meaning.
+                    ("nullable".to_string(), SemanticValue::Bool(true)),
                     ("has-default".to_string(), SemanticValue::Bool(false)),
                     ("generated".to_string(), SemanticValue::Bool(false)),
                 ]),

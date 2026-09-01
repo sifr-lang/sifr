@@ -17,6 +17,26 @@ class DecodeError(SqlError):
     pass
 
 
+class Numeric:
+    pass
+
+
+class CalendarInterval:
+    pass
+
+
+class SqlArray[T]:
+    pass
+
+
+class Range[T]:
+    pass
+
+
+class MultiRange[T]:
+    pass
+
+
 class QueryTemplate[P]:
     pass
 

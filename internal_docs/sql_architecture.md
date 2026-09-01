@@ -624,7 +624,7 @@ Each provider maps its database types to these canonical Sifr types:
 | calendar interval | `sifr.datetime.CalendarInterval` | Preserves months, days, and sub-day units. |
 | UUID | `sifr.uuid.UUID` | Exact 128-bit identity. |
 | JSON or JSONB | `sifr.json.JsonValue` | The plan retains the database type identity. |
-| SQL array | `sifr.sql.Array[T]` | Preserves dimensions and lower bounds. |
+| SQL array | `sifr.sql.SqlArray[T]` | Preserves dimensions and lower bounds. |
 | enum | `app.enums.<Name>` | Generated nominal enum. |
 | domain | `app.domains.<Name>` | Generated nominal constrained type. |
 | composite | `app.composites.<Name>` | Generated nominal immutable record. |
@@ -702,7 +702,7 @@ All providers use this input relation:
 | `float` | 32-bit float | accepted with a fallible range encoder |
 | `str` | fixed-length text | accepted with a fallible length encoder |
 | `list[T]` | one-dimensional SQL array | accepted with lower bound one |
-| `sifr.sql.Array[T]` | SQL array | accepted with dimensions and lower bounds preserved |
+| `sifr.sql.SqlArray[T]` | SQL array | accepted with dimensions and lower bounds preserved |
 | generated enum, domain, or composite | its exact database identity | accepted |
 | a custom codec type | its registered database identity | accepted |
 

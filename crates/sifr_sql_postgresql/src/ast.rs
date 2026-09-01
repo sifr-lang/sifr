@@ -399,6 +399,7 @@ pub struct ColumnDefinition {
     pub primary_key: bool,
     pub unique: bool,
     pub references: Option<(Vec<String>, Vec<String>)>,
+    pub checks: Vec<Expression>,
     pub span: SqlSpan,
 }
 

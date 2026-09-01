@@ -18,7 +18,14 @@ SETUP_SQL = r"""
 CREATE TYPE mood AS ENUM ('sad', 'ok', 'happy');
 CREATE DOMAIN email_address AS text CHECK (VALUE LIKE '%@%');
 CREATE DOMAIN positive_id AS integer CHECK (VALUE > 0);
-CREATE TYPE postal_address AS (street text, city text, unit_count integer, latitude numeric);
+CREATE TYPE postal_address AS (
+  street text,
+  city text,
+  unit_count integer,
+  latitude numeric,
+  domain_values positive_id[]
+);
+CREATE TYPE address_book AS (composite_values postal_address[]);
 CREATE TYPE price_range AS RANGE (subtype = numeric);
 CREATE DOMAIN price_window AS price_range;
 CREATE COLLATION sifr_c (provider = libc, locale = 'C');
@@ -42,7 +49,8 @@ CREATE TABLE type_samples (
   id bigint PRIMARY KEY,
   domain_values positive_id[],
   composite_values postal_address[],
-  window price_window
+  address postal_address,
+  "window" price_window
 );
 CREATE INDEX orders_account_idx ON orders(account_id);
 CREATE VIEW account_view AS SELECT id, email FROM accounts;

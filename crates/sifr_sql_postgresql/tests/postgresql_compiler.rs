@@ -74,11 +74,10 @@ fn ddl_normalization_and_query_analysis_share_one_schema_authority() {
             "CREATE TABLE public.teams (id integer PRIMARY KEY, name text NOT NULL);\
              CREATE TABLE public.users (\
                id bigint PRIMARY KEY,\
-               name text NOT NULL UNIQUE,\
+               name text NOT NULL UNIQUE CHECK (name <> ''),\
                team_id integer REFERENCES public.teams(id),\
                nickname text,\
-               generated text GENERATED ALWAYS AS (name || id::text) STORED,\
-               CHECK (name <> '')\
+               generated text GENERATED ALWAYS AS (name || id::text) STORED\
              );\
              CREATE UNIQUE INDEX users_name_idx ON public.users(name);\
              CREATE VIEW public.user_names AS SELECT id, name FROM public.users;\
@@ -124,6 +123,16 @@ fn ddl_normalization_and_query_analysis_share_one_schema_authority() {
     ] {
         assert!(kinds.contains(&kind), "missing normalized object {kind:?}");
     }
+    let check = schema
+        .objects
+        .values()
+        .find(|object| object.kind == SchemaObjectKind::CheckConstraint)
+        .expect("column CHECK constraint");
+    assert!(
+        check
+            .dependencies
+            .contains(&sifr_sql_contract::ObjectId::new("public.users.name"))
+    );
 
     let query = component.execute(PostgresComponentRequest::AnalyzeQuery {
         schema: schema.clone(),

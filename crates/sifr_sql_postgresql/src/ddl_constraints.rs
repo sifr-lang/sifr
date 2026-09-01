@@ -1,4 +1,6 @@
-use crate::ast::{CreateTableStatement, PostgresStatement, TableConstraint};
+use crate::ast::{
+    CreateTableStatement, Expression, ExpressionKind, PostgresStatement, TableConstraint,
+};
 use crate::diagnostic::{PostgresDiagnostic, PostgresDiagnosticCode};
 use sha2::{Digest, Sha256};
 use sifr_sql_contract::{
@@ -53,6 +55,9 @@ pub(crate) fn add_table_constraints(
                 referenced,
             ));
         }
+        for expression in &column.checks {
+            identities.push(writer.add_check(expression)?);
+        }
     }
     for constraint in &input.table.constraints {
         match constraint {
@@ -61,29 +66,7 @@ pub(crate) fn add_table_constraints(
                 relation,
                 referenced,
             } => identities.push(writer.add_foreign_key(columns, relation, referenced)),
-            TableConstraint::Check { expression } => {
-                let serialized = crate::canonical_postgres_ast_json(expression).map_err(|_| {
-                    PostgresDiagnostic::at_sql(
-                        PostgresDiagnosticCode::TypeMismatch,
-                        "cannot serialize PostgreSQL CHECK expression",
-                        expression.span.start,
-                        expression.span.end,
-                    )
-                })?;
-                identities.push(writer.add_constraint(
-                    stable_constraint_name(
-                        input.table_identity,
-                        "check",
-                        std::slice::from_ref(&serialized),
-                    ),
-                    SchemaObjectKind::CheckConstraint,
-                    BTreeMap::from([(
-                        "provider-expression".to_string(),
-                        SemanticValue::Text(serialized),
-                    )]),
-                    BTreeSet::from([input.table_identity.clone()]),
-                ));
-            }
+            TableConstraint::Check { expression } => identities.push(writer.add_check(expression)?),
             TableConstraint::PrimaryKey { .. } | TableConstraint::Unique { .. } => {}
         }
     }
@@ -99,6 +82,31 @@ struct ConstraintWriter<'a> {
 }
 
 impl ConstraintWriter<'_> {
+    fn add_check(&mut self, expression: &Expression) -> Result<ObjectId, PostgresDiagnostic> {
+        let serialized = crate::canonical_postgres_ast_json(expression).map_err(|_| {
+            PostgresDiagnostic::at_sql(
+                PostgresDiagnosticCode::TypeMismatch,
+                "cannot serialize PostgreSQL CHECK expression",
+                expression.span.start,
+                expression.span.end,
+            )
+        })?;
+        let columns = check_columns(expression).into_iter().collect::<Vec<_>>();
+        Ok(self.add_constraint(
+            stable_constraint_name(
+                self.table_identity,
+                "check",
+                std::slice::from_ref(&serialized),
+            ),
+            SchemaObjectKind::CheckConstraint,
+            BTreeMap::from([(
+                "provider-expression".to_string(),
+                SemanticValue::Text(serialized),
+            )]),
+            column_dependencies(self.table_identity, self.column_ids, &columns),
+        ))
+    }
+
     fn add_foreign_key(
         &mut self,
         columns: &[String],
@@ -155,6 +163,106 @@ impl ConstraintWriter<'_> {
             },
         );
         identity
+    }
+}
+
+fn check_columns(expression: &Expression) -> BTreeSet<String> {
+    let mut columns = BTreeSet::new();
+    collect_check_columns(expression, &mut columns);
+    columns
+}
+
+fn collect_check_columns(expression: &Expression, columns: &mut BTreeSet<String>) {
+    match &expression.kind {
+        ExpressionKind::Column { path } => {
+            if let Some(name) = path.last() {
+                columns.insert(name.clone());
+            }
+        }
+        ExpressionKind::Cast { expression, .. }
+        | ExpressionKind::Unary { expression, .. }
+        | ExpressionKind::NullTest { expression, .. } => {
+            collect_check_columns(expression, columns);
+        }
+        ExpressionKind::Binary { left, right, .. } => {
+            collect_check_columns(left, columns);
+            collect_check_columns(right, columns);
+        }
+        ExpressionKind::InList {
+            expression, values, ..
+        } => {
+            collect_check_columns(expression, columns);
+            for value in values {
+                collect_check_columns(value, columns);
+            }
+        }
+        ExpressionKind::BooleanList { expressions, .. }
+        | ExpressionKind::Array {
+            elements: expressions,
+        }
+        | ExpressionKind::Coalesce {
+            arguments: expressions,
+        } => {
+            for expression in expressions {
+                collect_check_columns(expression, columns);
+            }
+        }
+        ExpressionKind::Function {
+            arguments,
+            filter,
+            window,
+            ..
+        } => {
+            for argument in arguments {
+                collect_check_columns(argument, columns);
+            }
+            if let Some(filter) = filter {
+                collect_check_columns(filter, columns);
+            }
+            if let Some(window) = window {
+                for expression in &window.partition_by {
+                    collect_check_columns(expression, columns);
+                }
+                for order in &window.order_by {
+                    collect_check_columns(&order.expression, columns);
+                }
+                if let Some(offset) = &window.start_offset {
+                    collect_check_columns(offset, columns);
+                }
+                if let Some(offset) = &window.end_offset {
+                    collect_check_columns(offset, columns);
+                }
+            }
+        }
+        ExpressionKind::Case {
+            operand,
+            branches,
+            fallback,
+        } => {
+            if let Some(operand) = operand {
+                collect_check_columns(operand, columns);
+            }
+            for branch in branches {
+                collect_check_columns(&branch.condition, columns);
+                collect_check_columns(&branch.result, columns);
+            }
+            if let Some(fallback) = fallback {
+                collect_check_columns(fallback, columns);
+            }
+        }
+        ExpressionKind::SubqueryComparison { left, .. } => {
+            collect_check_columns(left, columns);
+        }
+        ExpressionKind::Star { .. }
+        | ExpressionKind::Parameter { .. }
+        | ExpressionKind::Integer { .. }
+        | ExpressionKind::Float { .. }
+        | ExpressionKind::String { .. }
+        | ExpressionKind::Boolean { .. }
+        | ExpressionKind::Null
+        | ExpressionKind::Subquery { .. }
+        | ExpressionKind::Exists { .. }
+        | ExpressionKind::Default => {}
     }
 }
 

@@ -46,6 +46,7 @@ DOMAINS = {"grammar", "schema", "runtime", "tool", "migration", "editor"}
 EVIDENCE_TYPES = {"positive", "negative", "mutation", "integration", "fuzz", "property", "performance"}
 PROFILE_NAMES = {"create-pr", "merge", "nightly", "release"}
 PROFILE_SUITES = {
+    "build-qualification",
     "common-sql",
     "compiler-components",
     "contracts",
