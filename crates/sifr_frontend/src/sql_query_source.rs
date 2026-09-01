@@ -4,18 +4,29 @@ use sifr_ir::{
 };
 use sifr_sql_contract::{IntegerSign, IntegerWidth, SifrType};
 use sifr_type_system::{FixedIntType, Type};
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
-pub fn sql_query_declarations(module: &HirModule) -> Result<Vec<SqlQueryDeclaration>, String> {
+pub fn sql_query_declarations(
+    module: &HirModule,
+    profile_locals: &BTreeMap<String, String>,
+) -> Result<Vec<SqlQueryDeclaration>, String> {
     let mut declarations = Vec::new();
     for function in &module.functions {
-        let Some(profile_name) = function
+        let mut sql_decorators = function
             .decorators
             .iter()
-            .find_map(|decorator| decorator.strip_suffix(".query"))
-        else {
+            .filter_map(|decorator| decorator.strip_suffix(".query"))
+            .filter(|name| profile_locals.contains_key(*name));
+        let Some(local_profile_name) = sql_decorators.next() else {
             continue;
         };
+        if sql_decorators.next().is_some() {
+            return Err(format!(
+                "SQL query function '{}' must use exactly one imported profile query decorator",
+                function.name
+            ));
+        }
+        let profile_name = &profile_locals[local_profile_name];
         let mut function = function.clone();
         let mut templates = Vec::new();
         visit_hir_function_exprs_mut(&mut function, &mut |expression| {
@@ -25,7 +36,7 @@ pub fn sql_query_declarations(module: &HirModule) -> Result<Vec<SqlQueryDeclarat
         });
         if templates.len() != 1 {
             return Err(format!(
-                "@{profile_name}.query function '{}' must contain exactly one typed template",
+                "@{local_profile_name}.query function '{}' must contain exactly one typed template",
                 function.name
             ));
         }
@@ -37,10 +48,9 @@ pub fn sql_query_declarations(module: &HirModule) -> Result<Vec<SqlQueryDeclarat
             .collect::<Result<Vec<_>, _>>()?;
         declarations.push(SqlQueryDeclaration {
             symbol: function.name.clone(),
-            profile_name: profile_name.to_string(),
+            profile_name: profile_name.clone(),
             exported: !function.name.starts_with('_'),
-            document: SqlEditorDocumentView::from_hir(&template)
-                .with_profile(profile_name.to_string()),
+            document: SqlEditorDocumentView::from_hir(&template).with_profile(profile_name.clone()),
             parameter_types,
         });
     }

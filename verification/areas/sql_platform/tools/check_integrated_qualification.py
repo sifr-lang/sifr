@@ -74,6 +74,7 @@ def validate_record(record: dict[str, Any]) -> None:
         "security qualification is incomplete",
     )
     require(len(record.get("cross_targets", [])) == 5, "cross-target matrix is incomplete")
+    validate_build_evidence(record)
     require(len(record.get("runtime_audits", [])) == 5, "runtime audit inventory is incomplete")
     runtime_evidence = record.get("runtime_audit_evidence")
     require(
@@ -120,6 +121,57 @@ def validate_record(record: dict[str, Any]) -> None:
             else:
                 path = str(value)
                 require((REPO_ROOT / path).is_file(), f"{field} path does not exist: {path}")
+
+
+def validate_build_evidence(record: dict[str, Any]) -> None:
+    evidence = record.get("build_evidence")
+    require(isinstance(evidence, dict), "build evidence is absent")
+    require(
+        evidence
+        == {
+            "runner": "verification/areas/sql_platform/tools/run_sql_build_qualification.py",
+            "suite": "build-qualification",
+            "workflow": ".github/workflows/local-first-validation.yml",
+        },
+        "build evidence identity has drifted",
+    )
+    runner = (REPO_ROOT / evidence["runner"]).read_text(encoding="utf-8")
+    for token in (
+        "cargo",
+        "check",
+        "--locked",
+        "--offline",
+        "CARGO_INCREMENTAL",
+        "TemporaryDirectory",
+        "incremental_plan != clean_plan",
+        "reproduced_plan != clean_plan",
+    ):
+        require(token in runner, f"SQL build runner omits executable mechanism: {token}")
+    manifest = read_json(REPO_ROOT / "verification/areas/sql_platform/manifest.json")
+    suites = {str(suite.get("name")): suite for suite in manifest.get("suites", [])}
+    suite = suites.get(evidence["suite"])
+    require(isinstance(suite, dict), "SQL build qualification suite is absent")
+    commands = {str(case.get("command")) for case in suite.get("cases", [])}
+    require(commands == {"sql-build-qualification"}, "SQL build suite command has drifted")
+    workflow = (REPO_ROOT / evidence["workflow"]).read_text(encoding="utf-8")
+    for target in record["cross_targets"]:
+        require(target in workflow, f"cross-target workflow omits {target}")
+    require(
+        "run_sql_build_qualification.py --target" in workflow,
+        "cross-target workflow does not execute the SQL build runner",
+    )
+    for profile in ("create-pr", "merge", "nightly", "release"):
+        profile_record = read_json(REPO_ROOT / "verification" / "profiles" / f"{profile}.json")
+        sql_rows = [
+            row
+            for row in profile_record.get("selected_areas", [])
+            if row.get("area") == "sql_platform"
+        ]
+        require(len(sql_rows) == 1, f"{profile} SQL profile entry is not unique")
+        require(
+            evidence["suite"] in sql_rows[0].get("suites", []),
+            f"{profile} omits executable SQL build qualification",
+        )
 
 
 def validate_named_test(evidence: str) -> None:
@@ -232,6 +284,7 @@ def self_test() -> None:
         ("missing-provider", lambda value: value["providers"].pop()),
         ("missing-security", lambda value: value["security_contracts"].pop()),
         ("missing-build-mode", lambda value: value["build_modes"].pop()),
+        ("missing-build-evidence", lambda value: value.pop("build_evidence")),
         ("missing-evidence", lambda value: value["allocation_evidence"].clear()),
         ("missing-doc-example", lambda value: value["runnable_documentation_examples"].clear()),
         ("missing-component-evidence", lambda value: value["component_protocol_evidence"].pop("sifr_sql_mysql")),

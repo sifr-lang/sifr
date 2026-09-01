@@ -2336,6 +2336,20 @@ Each dialect has:
 Provider claims are explicit. Unsupported server versions fail during schema build
 or pool validation.
 
+### Build qualification
+
+The SQL verification area performs a clean locked and offline Cargo check in a
+new target directory. It repeats the check in the same directory to prove the
+incremental path. It then repeats the clean check in a second directory and
+compares the semantic artifact plan. This comparison detects dependency,
+feature, target, or crate-output drift.
+
+The required repository profiles run this build qualification on their native
+target. The local-first workflow also runs it on every supported native target
+and on `wasm32-wasip2`. Provider component qualification separately executes
+every checked-in WebAssembly guest in the capability-free host and verifies its
+source, toolchain, size, and digest records.
+
 ### Safety testing
 
 Fuzzing covers SQL parsing, schema ingestion, component protocol decoding, runtime

@@ -759,6 +759,7 @@
     {
       "area": "sql_platform",
       "suites": [
+        "build-qualification",
         "compiler-components",
         "common-sql",
         "contracts",

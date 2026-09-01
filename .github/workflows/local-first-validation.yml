@@ -96,6 +96,22 @@ jobs:
           targets: ${{ matrix.target }}
       - name: Run native compiler component qualification
         run: cargo test --locked -p sifr_compiler_component --target "${{ matrix.target }}"
+      - name: Run native SQL build qualification
+        run: python verification/areas/sql_platform/tools/run_sql_build_qualification.py --target "${{ matrix.target }}"
+
+  sql-wasi-build:
+    name: sql-build-wasm32-wasip2
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          submodules: recursive
+      - uses: dtolnay/rust-toolchain@f8be11a05b1d4f3fcebe6410cc16743212b999b0 # Rust 1.98.0
+        with:
+          targets: wasm32-wasip2
+      - name: Run WASI SQL build qualification
+        run: python verification/areas/sql_platform/tools/run_sql_build_qualification.py --target wasm32-wasip2
 
   deterministic-report-signature:
     name: deterministic-report-signature

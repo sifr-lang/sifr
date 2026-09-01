@@ -550,9 +550,6 @@ fn imported_namespace_names(
             }
         }
     }
-    for name in known {
-        names.entry(name.clone()).or_insert_with(|| name.clone());
-    }
     names
 }
 

@@ -43,16 +43,9 @@ pub(super) fn compile_application_queries(
             return Err(error("compiled module is missing from SQL query discovery"));
         };
         let profile_locals = sifr_frontend::sql_profile_local_names(module, &profile_names);
-        for mut declaration in sifr_frontend::sql_query_declarations(module).map_err(error)? {
-            declaration.profile_name = profile_locals
-                .get(&declaration.profile_name)
-                .cloned()
-                .ok_or_else(|| {
-                    error(format!(
-                        "SQL query '{}' names unknown profile namespace '{}'",
-                        declaration.symbol, declaration.profile_name
-                    ))
-                })?;
+        for declaration in
+            sifr_frontend::sql_query_declarations(module, &profile_locals).map_err(error)?
+        {
             declarations.push(PlannedQuery {
                 module_name: module_name.clone(),
                 declaration,

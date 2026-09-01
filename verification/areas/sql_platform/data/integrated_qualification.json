@@ -34,6 +34,11 @@
     "x86_64-pc-windows-msvc",
     "x86_64-unknown-linux-gnu"
   ],
+  "build_evidence": {
+    "runner": "verification/areas/sql_platform/tools/run_sql_build_qualification.py",
+    "suite": "build-qualification",
+    "workflow": ".github/workflows/local-first-validation.yml"
+  },
   "banned_provider_dependencies": [
     "bb8",
     "deadpool",

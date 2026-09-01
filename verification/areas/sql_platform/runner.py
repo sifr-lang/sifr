@@ -30,6 +30,10 @@ COMMANDS = {
         str(AREA_ROOT / "tools" / "check_integrated_qualification.py"),
         "--self-test",
     ],
+    "sql-build-qualification": [
+        sys.executable,
+        str(AREA_ROOT / "tools" / "run_sql_build_qualification.py"),
+    ],
     "sql-component-qualification": [
         sys.executable,
         str(AREA_ROOT / "tools" / "check_component_qualification.py"),

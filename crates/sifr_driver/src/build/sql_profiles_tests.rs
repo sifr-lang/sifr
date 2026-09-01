@@ -132,6 +132,52 @@ fn package_query_declarations_emit_non_empty_compatibility_artifact() {
 }
 
 #[test]
+fn sql_discovery_requires_imported_profile_namespaces() {
+    let fixture = profile_fixture_with_components(
+        fixture_component(&schema_response()),
+        fixture_component(&query_response()),
+    );
+    let prepared = prepare_sql_profiles(&fixture.graph, &fixture.owner_id)
+        .expect("offline schema profile preparation should succeed");
+    let source = r#"
+class Config:
+    schema: str
+
+@cache.query
+def load() -> int:
+    return 1
+
+def main():
+    app: Config = Config("local")
+    print(app.schema)
+"#;
+    let parsed = crate::frontend::parse_source(source).expect("ordinary source should parse");
+    let mut external_defs = crate::stdlib::external_defs().expect("stdlib should compile");
+    prepared.install_compiler_externals(&mut external_defs);
+    let mut project = crate::project::compile_single_frontend_module_with_source_and_options(
+        "main",
+        &parsed,
+        sifr_frontend::FrontendSourceContext {
+            display_path: "src/main.sifr",
+            source,
+        },
+        external_defs,
+        sifr_frontend::FrontendDiagnosticStyle::Bare,
+        sifr_lowering::LoweringOptions::default(),
+    )
+    .expect("ordinary names must not be claimed by SQL discovery");
+    let registry = compile_application_queries(&mut project, &prepared)
+        .expect("unimported names and non-SQL decorators must remain ordinary source");
+    assert!(
+        registry
+            .exported_artifact("fixture-package")
+            .expect("empty query registry should export")
+            .entries
+            .is_empty()
+    );
+}
+
+#[test]
 fn portable_schema_source_lowers_and_runtime_witness_uses_fail() {
     let fixture = profile_fixture_with_components(
         fixture_component(&schema_response()),
