@@ -1,9 +1,7 @@
 // src/main.rs
-mod helper;
-mod shared;
-
+pub mod helper;
+pub mod shared;
 use crate::helper::value;
-
 fn main() {
     println!("project_test_discovery project/test discovery parity behavior demo:");
     println!("{}", value());
@@ -11,12 +9,14 @@ fn main() {
 
 // src/helper.rs
 pub use ::sifr_runtime::SifrInt;
+#[must_use]
 pub fn value() -> SifrInt {
-    crate::shared::__const_BASE()
+    crate::shared::sifr_generated_const_42415345()
 }
 
 // src/shared.rs
 pub use ::sifr_runtime::SifrInt;
-pub fn __const_BASE() -> SifrInt {
+#[must_use]
+pub const fn sifr_generated_const_42415345() -> SifrInt {
     SifrInt::from_i64(42)
 }

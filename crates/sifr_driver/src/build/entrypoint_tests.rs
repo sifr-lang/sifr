@@ -69,7 +69,7 @@ fn test_project_entrypoint_plan_generates_support_modules() {
             .collect::<Vec<_>>(),
         vec!["helper".to_string()]
     );
-    assert!(generated_project.main_rs.starts_with("mod helper;"));
+    assert!(generated_project.main_rs.starts_with("pub mod helper;"));
     assert!(generated_project.main_rs.contains("fn main"));
 
     let _ = std::fs::remove_dir_all(dir);

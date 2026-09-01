@@ -91,8 +91,9 @@ fn async_callable_class_field_uses_a_boxed_future_adapter() {
     );
 
     assert!(rust_code.contains("Box<dyn Fn(SifrInt) -> ::std::pin::Pin<Box<dyn ::std::future::Future<Output = SifrInt> + Send>> + Send + Sync>"));
+    assert!(rust_code.contains("let __sifr_field_value_"));
     assert!(rust_code.contains(
-        "let __sifr_field_init_0: Box<dyn Fn(SifrInt) -> ::std::pin::Pin<Box<dyn ::std::future::Future<Output = SifrInt> + Send>> + Send + Sync>"
+        ": Box<dyn Fn(SifrInt) -> ::std::pin::Pin<Box<dyn ::std::future::Future<Output = SifrInt> + Send>> + Send + Sync>"
     ));
     assert!(rust_code.contains("move |__sifr_async_arg_0|"));
     assert!(rust_code.contains("::std::sync::Arc::clone(&__sifr_async_callable)"));
@@ -170,10 +171,8 @@ fn test_generate_rust_preserves_loop_else_recursion_and_try_except_returns() {
         return 99
 "#,
     );
-    assert!(
-        try_except_return.contains("return Err(ValueError::new(\"non-positive\".to_string()));")
-    );
-    assert!(try_except_return.contains("return SifrInt::from_i64(99);"));
+    assert!(try_except_return.contains("Err(ValueError::new(\"non-positive\".to_string()))"));
+    assert!(try_except_return.contains("SifrInt::from_i64(99)"));
 
     let loop_guard_narrowing = generate_rust_from_source(
         r#"def summarize(values: list[int]) -> int:
@@ -207,7 +206,7 @@ fn test_generate_rust_elides_unreachable_returns_after_always_exit_paths() {
         always_exit_try.contains("Err(ValueError::new(\"bad value\".to_string()))"),
         "{always_exit_try}"
     );
-    assert!(always_exit_try.contains("return SifrInt::from_i64(77);"));
+    assert!(always_exit_try.contains("SifrInt::from_i64(77)"));
     assert!(!always_exit_try.contains("SifrInt::from_i64(11)"));
 
     let unreachable_tail = generate_rust_from_source(
@@ -257,10 +256,7 @@ fn test_generate_rust_guarded_list_pop_unwraps_compiler_verified_nonempty() {
         "def main():\n    values: list[int] = [1, 2]\n    while values:\n        _: int = values.pop()\n",
     );
 
-    assert!(
-        rust_code.contains("if let Some(_) = values.pop()"),
-        "{rust_code}"
-    );
+    assert!(rust_code.contains("let _ = values.pop();"), "{rust_code}");
     assert!(!rust_code.contains("values.remove(values.len()"));
     assert!(!rust_code.contains("unreachable!"));
 }
@@ -513,7 +509,7 @@ fn test_generate_rust_recursive_generic_node_preserves_instantiated_type_argumen
 #[test]
 fn test_generate_rust_own_mut_param_emits_mut_binding_without_shadow() {
     let rust_code = generate_rust_from_source(
-        "def replace_elements(own mut arr: list[int]) -> list[int]:\n    try:\n        arr[0] = 8\n    except IndexError:\n        pass\n    return arr\n\ndef touch(mut arr: list[int]) -> int:\n    try:\n        arr[0] = 7\n    except IndexError:\n        pass\n    return len(arr)\n",
+        "def replace_elements(own mut arr: list[int]) -> list[int]:\n    try:\n        arr[0] = 8\n    except IndexError:\n        pass\n    return arr\n\ndef untouched(own mut arr: list[int]) -> list[int]:\n    return arr\n\ndef touch(mut arr: list[int]) -> int:\n    try:\n        arr[0] = 7\n    except IndexError:\n        pass\n    return len(arr)\n",
     );
 
     assert!(rust_code.contains("fn replace_elements(mut arr: Vec<SifrInt>) -> Vec<SifrInt>"));
@@ -522,6 +518,10 @@ fn test_generate_rust_own_mut_param_emits_mut_binding_without_shadow() {
         "owned mutable params should lower directly to mutable Rust params"
     );
     assert!(rust_code.contains("fn touch(arr: &mut Vec<SifrInt>) -> SifrInt"));
+    assert!(
+        rust_code.contains("fn untouched(arr: Vec<SifrInt>) -> Vec<SifrInt>"),
+        "owned mutable parameters should only carry Rust `mut` when the body mutates them"
+    );
 }
 
 #[test]
@@ -706,9 +706,9 @@ fn test_structured_codegen_lowers_comprehension_local_initializers() {
 
     let rust_code = generate_rust(&module);
 
-    assert!(rust_code.contains("let values: Vec<SifrInt> = {"));
-    assert!(rust_code.contains("let lookup: HashMap<SifrInt, SifrInt> = {"));
-    assert!(rust_code.contains("let unique: HashSet<SifrInt> = {"));
+    assert!(rust_code.contains("let _values: Vec<SifrInt> = {"));
+    assert!(rust_code.contains("let _lookup: HashMap<SifrInt, SifrInt> = {"));
+    assert!(rust_code.contains("let _unique: HashSet<SifrInt> = {"));
     assert!(rust_code.contains("__sifr_list_comp"));
     assert!(rust_code.contains("__sifr_dict_comp"));
     assert!(rust_code.contains("__sifr_set_comp"));

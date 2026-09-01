@@ -19,11 +19,15 @@ use super::{
 use crate::StdlibCode;
 use crate::error_refs::collect_complete_referenced_builtin_error_classes;
 use crate::ir_imports::{collect_import_needs_from_items, collect_import_needs_from_source};
-use crate::ir_optimize::{remove_trivial_clones_in_items, remove_unneeded_mutability_in_items};
+use crate::ir_optimize::{
+    remove_trivial_clones_in_items, remove_unneeded_mutability_in_items,
+    remove_unread_pure_bindings_in_items, simplify_control_flow_in_items,
+};
 use crate::ir_validate::validate_items;
+use crate::stdlib_demand_plan::plan_demanded_stdlib_sources;
 use crate::stdlib_filter::{
     absolutize_external_crate_paths, collect_and_strip_shared_prelude, dedup_rust_items,
-    filter_canonical_stdlib_ir_to_needed, seal_canonical_stdlib_names,
+    seal_canonical_stdlib_names,
 };
 use crate::stdlib_import_signatures::register_imported_stdlib_signature;
 use sifr_ir::HirModule;
@@ -33,6 +37,9 @@ use std::collections::{BTreeSet, HashMap, HashSet};
 use std::fmt::Write as _;
 
 mod project_imports;
+#[path = "lib_modules_structural_policy.rs"]
+mod structural_policy;
+pub(crate) use structural_policy::generate_rust_with_stdlib_for_module_with_structural_policy;
 
 pub(crate) type FuncSignature = (Vec<(Type, ParamConvention)>, Type);
 pub(crate) type ModuleFuncSignatures = HashMap<String, FuncSignature>;
@@ -180,26 +187,6 @@ pub fn generate_rust_with_stdlib_for_module(
         stdlib_code,
         module_name,
         crate::rust_interop_plan::module_uses_structural_interop(module),
-    )
-}
-
-pub(crate) fn generate_rust_with_stdlib_for_module_with_structural_policy(
-    module: &HirModule,
-    stdlib_code: &StdlibCode,
-    module_name: Option<&str>,
-    structural_interop_enabled: bool,
-) -> CodegenResult {
-    generate_rust_with_stdlib_for_module_with_project_policy(
-        module,
-        stdlib_code,
-        module_name,
-        None,
-        structural_interop_enabled,
-        None,
-        None,
-        None,
-        None,
-        None,
     )
 }
 
@@ -359,7 +346,6 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
     // Never retain a second definition copied from filtered stdlib source.
     infra_skip_types.extend(emitter.union_enums.keys().cloned());
     let mut all_needed: Vec<String> = Vec::new();
-    let mut transitive_dependency_modules: HashSet<String> = HashSet::new();
     let mut stdlib_needs_file_handles = false;
     let mut stdlib_provides_file_handle_struct = false;
     for module_name in emitter.used_stdlib_modules.iter().collect::<BTreeSet<_>>() {
@@ -370,59 +356,29 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
                 {
                     all_needed.push(dep.clone());
                 }
-                if dep.starts_with("sifr.") || dep.starts_with("_sifr.") {
-                    transitive_dependency_modules.insert(dep.clone());
-                }
             }
         }
         if !all_needed.contains(module_name) {
             all_needed.push(module_name.clone());
         }
     }
+    let planned_stdlib_sources = plan_demanded_stdlib_sources(
+        stdlib_code,
+        &all_needed,
+        &emitter.used_stdlib_modules,
+        &emitter.imported_stdlib_names,
+        &emitter.suppressed_union_enum_definitions,
+    );
     for module_name in &all_needed {
         if emitted_modules.contains(module_name) {
             continue;
         }
         if let Some(rust_source) = stdlib_code.module_rust_code.get(module_name) {
             if !rust_source.rust.is_empty() {
-                let mut filtered =
-                    if let Some(imported_names) = emitter.imported_stdlib_names.get(module_name) {
-                        let pure_sifr_imports = imported_names.clone();
-                        let mut expanded_imports = pure_sifr_imports.clone();
-                        expanded_imports.extend(
-                            emitter
-                                .suppressed_union_enum_definitions
-                                .iter()
-                                .filter(|name| {
-                                    crate::stdlib_filter::rust_source_defines_item_name(
-                                        &rust_source.rust,
-                                        name,
-                                    )
-                                })
-                                .cloned(),
-                        );
-                        if transitive_dependency_modules.contains(module_name) {
-                            rust_source.rust.clone()
-                        } else if expanded_imports.is_empty() {
-                            String::new()
-                        } else {
-                            if let Some(const_map) = stdlib_code.module_constants.get(module_name) {
-                                for name in &pure_sifr_imports {
-                                    if const_map.contains_key(name) {
-                                        expanded_imports.insert(format!("__const_{name}"));
-                                    }
-                                }
-                            }
-                            filter_canonical_stdlib_ir_to_needed(
-                                &rust_source.rust,
-                                &expanded_imports,
-                                &rust_source.module,
-                                &rust_source.nominal_types,
-                            )
-                        }
-                    } else {
-                        rust_source.rust.clone()
-                    };
+                let mut filtered = planned_stdlib_sources
+                    .get(module_name)
+                    .cloned()
+                    .unwrap_or_default();
                 if module_name == "sifr.sync" && sync_channel_runtime_needed(&filtered) {
                     filtered = replace_sync_channel_runtime_items(&filtered);
                 }
@@ -688,6 +644,8 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
         scope_async_main_cancellation(&mut assembled_body_items);
     }
     remove_trivial_clones_in_items(&mut assembled_body_items);
+    simplify_control_flow_in_items(&mut assembled_body_items);
+    remove_unread_pure_bindings_in_items(&mut assembled_body_items);
     remove_unneeded_mutability_in_items(
         &mut assembled_body_items,
         &emitter.protected_mutable_place_roots,
@@ -828,7 +786,6 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
         source.push('\n');
         source
     };
-
     let needs_python_runtime =
         crate::python_interop_common::rust_source_uses_python_runtime(&rust_source);
     let needs_sifr_stdlib_fs = rust_source.contains("::sifr_stdlib::fs::");

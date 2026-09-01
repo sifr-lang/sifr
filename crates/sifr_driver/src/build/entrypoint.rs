@@ -179,9 +179,14 @@ pub(crate) fn emit_project_entrypoint(
         false,
         DirectProbePolicy::DeferTrustedSysroot,
     ) {
-        Ok(generated_project) => CompileResult::Success {
-            rust_source: generated_project.emit_source_listing(),
-        },
+        Ok(generated_project) => {
+            match super::project_codegen::format_generated_binary_project(generated_project) {
+                Ok(generated_project) => CompileResult::Success {
+                    rust_source: generated_project.emit_source_listing(),
+                },
+                Err(errors) => CompileResult::Errors { errors },
+            }
+        }
         Err(errors) => CompileResult::Errors { errors },
     }
 }
@@ -668,24 +673,23 @@ impl RootedEntrypointPlan {
             direct_probe_policy,
         )?;
         let generated = apply_package_python_bridge_metadata(generated, python_bridges.as_ref());
-        if allow_deferred_python_probes {
+        let generated = if allow_deferred_python_probes {
             let generated = super::python_interop::apply_python_interop_metadata_for_check(
                 generated,
                 python_runtime.as_ref(),
             )?;
-            Ok(
-                super::project_codegen::attach_package_runtime_metadata_for_check(
-                    generated,
-                    python_runtime,
-                ),
+            super::project_codegen::attach_package_runtime_metadata_for_check(
+                generated,
+                python_runtime,
             )
         } else {
             let generated = super::python_interop::apply_python_interop_metadata(
                 generated,
                 python_runtime.as_ref(),
             )?;
-            apply_package_runtime_metadata(generated, python_runtime)
-        }
+            apply_package_runtime_metadata(generated, python_runtime)?
+        };
+        Ok(generated)
     }
 }
 

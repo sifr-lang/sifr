@@ -375,6 +375,10 @@ macro_rules! stmt_expr_method_call {
                 crate::resolve_alias_type_for_plain_call($expr.ty()),
                 Type::Int
             ) && matches!(method.as_str(), "len" | "count")
+                && !matches!(
+                    crate::resolve_alias_type_for_plain_call(&effective_object_ty),
+                    Type::Class { .. }
+                )
             {
                 return Ok(Some(crate::RustExpr::FnCall {
                     func: Box::new(crate::RustExpr::Path(vec![

@@ -318,8 +318,8 @@ def validate_clippy_lint_owners(
 
 def load_debt(path: Path) -> dict[str, Any]:
     payload = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(payload, dict) or payload.get("schema_version") != 1:
-        raise ValueError("generated quality debt must use schema_version 1")
+    if not isinstance(payload, dict) or payload.get("schema_version") != 2:
+        raise ValueError("generated quality debt must use schema_version 2")
     if payload.get("closure_item") != 12:
         raise ValueError("generated quality debt must expire at Item 12")
     validate_debt_owners(payload)
@@ -429,19 +429,14 @@ def validate_debt_entry(
             validate_signature_summary(summary, f"{label} policy {policy_id}")
         return
     if category == "clippy":
-        if (
-            not isinstance(entry, dict)
-            or set(entry) != {"count", "lint_count", "signature_sha256"}
-            or not isinstance(entry.get("count"), int)
-            or isinstance(entry.get("count"), bool)
-            or entry["count"] < 1
-            or not isinstance(entry.get("lint_count"), int)
-            or isinstance(entry.get("lint_count"), bool)
-            or entry["lint_count"] < 1
-            or not isinstance(entry.get("signature_sha256"), str)
-            or re.fullmatch(r"[0-9a-f]{64}", entry["signature_sha256"]) is None
-        ):
-            raise ValueError(f"{label} must contain positive count, lint_count, and SHA-256")
+        if not isinstance(entry, dict) or not entry:
+            raise ValueError(f"{label} must contain per-lint signatures")
+        if not isinstance(lint_owners, dict):
+            raise ValueError(f"{label} requires lint owners")
+        for lint, summary in entry.items():
+            if lint not in lint_owners:
+                raise ValueError(f"{label} names lint without an exact owner: {lint}")
+            validate_signature_summary(summary, f"{label} lint {lint}")
         return
     if category == "rustfmt":
         validate_signature_summary(entry, label)
@@ -532,6 +527,24 @@ def run_debt_self_test(debt: dict[str, Any]) -> None:
     malformed_entry = copy.deepcopy(debt)
     malformed_entry["rustfmt"]["entries"]["self-test"] = {"count": 1, "signature_sha256": "bad"}
     _expect_invalid(malformed_entry, "signature_sha256 must be a lowercase SHA-256")
+
+    malformed_clippy = copy.deepcopy(debt)
+    malformed_clippy["clippy"]["entries"]["self-test"] = {
+        "clippy::arithmetic_side_effects": {
+            "count": 1,
+            "signature_sha256": "bad",
+        }
+    }
+    _expect_invalid(malformed_clippy, "signature_sha256 must be a lowercase SHA-256")
+
+    ownerless_clippy = copy.deepcopy(debt)
+    ownerless_clippy["clippy"]["entries"]["self-test"] = {
+        "clippy::self_test_ownerless": {
+            "count": 1,
+            "signature_sha256": "0" * 64,
+        }
+    }
+    _expect_invalid(ownerless_clippy, "lint without an exact owner")
 
     stale_selection = copy.deepcopy(debt)
     stale_selection["rustfmt"]["entries"]["stale-selection"] = {

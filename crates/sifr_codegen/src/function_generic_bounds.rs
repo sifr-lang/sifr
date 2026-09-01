@@ -29,6 +29,11 @@ pub(crate) fn module_requires_addable_support(
     module: &HirModule,
     function_bounds: &FunctionTypeParamBounds,
 ) -> bool {
+    let module_function_names = module
+        .functions
+        .iter()
+        .map(|function| function.name.as_str())
+        .collect::<HashSet<_>>();
     function_bounds
         .values()
         .flat_map(HashMap::values)
@@ -45,9 +50,13 @@ pub(crate) fn module_requires_addable_support(
                         .iter()
                         .chain(&method.type_params)
                         .any(|type_param| {
-                            direct_type_param_bounds(type_param, &method.body)
+                            collect_lexical_generic_effects(method, &module_function_names)
+                                .reachable_functions
                                 .iter()
-                                .any(FunctionTypeParamBound::requires_addable_support)
+                                .flat_map(|reachable| {
+                                    direct_type_param_bounds(type_param, &reachable.body)
+                                })
+                                .any(|bound| bound.requires_addable_support())
                         })
                 })
         })
@@ -93,11 +102,21 @@ pub(crate) fn direct_type_param_bounds(
 }
 
 #[derive(Debug, Clone)]
-struct GenericCallSite {
-    function: String,
+pub(crate) struct GenericCallSite {
+    pub(crate) function: String,
     explicit_type_args: Vec<Type>,
     argument_types: Vec<Type>,
     result_type: Type,
+}
+
+struct LexicalScope {
+    nested_functions: HashMap<String, (String, HirFunction)>,
+    shadowed_names: HashSet<String>,
+}
+
+struct LexicalGenericEffects {
+    reachable_functions: Vec<HirFunction>,
+    module_calls: Vec<GenericCallSite>,
 }
 
 impl RustEmitter {
@@ -114,6 +133,7 @@ impl RustEmitter {
             .iter()
             .map(|function| (function.name.as_str(), function))
             .collect::<HashMap<_, _>>();
+        let module_function_names = functions.keys().copied().collect::<HashSet<_>>();
         let mut requirements = module
             .functions
             .iter()
@@ -123,8 +143,14 @@ impl RustEmitter {
                     .type_params
                     .iter()
                     .map(|type_param| {
-                        let mut bounds = direct_type_param_bounds(type_param, &function.body)
-                            .into_iter()
+                        let effects =
+                            collect_lexical_generic_effects(function, &module_function_names);
+                        let mut bounds = effects
+                            .reachable_functions
+                            .iter()
+                            .flat_map(|reachable| {
+                                direct_type_param_bounds(type_param, &reachable.body)
+                            })
                             .collect::<HashSet<_>>();
                         if function_type_param_needs_hash_eq(function, type_param) {
                             bounds.insert(FunctionTypeParamBound::Trait(
@@ -155,7 +181,9 @@ impl RustEmitter {
                 .iter()
                 .filter(|function| !function.type_params.is_empty())
             {
-                for call in collect_generic_call_sites(&caller.body) {
+                for call in
+                    collect_reachable_module_generic_call_sites(caller, &module_function_names)
+                {
                     let Some(callee) = functions.get(call.function.as_str()) else {
                         continue;
                     };
@@ -163,8 +191,12 @@ impl RustEmitter {
                         continue;
                     };
                     for (callee_type_param, bounds) in callee_requirements {
-                        let forwarded =
-                            forwarded_caller_type_params(caller, callee, &call, &callee_type_param);
+                        let forwarded = forwarded_type_params(
+                            &caller.type_params,
+                            callee,
+                            &call,
+                            &callee_type_param,
+                        );
                         for caller_type_param in forwarded {
                             let target = requirements
                                 .entry(caller.name.clone())
@@ -225,12 +257,89 @@ fn type_contains_hash_key_param(ty: &Type, type_param: &str) -> bool {
     }
 }
 
-fn collect_generic_call_sites(body: &[HirStmt]) -> Vec<GenericCallSite> {
-    let mut calls = Vec::new();
+pub(crate) fn collect_reachable_module_generic_call_sites(
+    function: &HirFunction,
+    module_function_names: &HashSet<&str>,
+) -> Vec<GenericCallSite> {
+    collect_lexical_generic_effects(function, module_function_names).module_calls
+}
+
+pub(crate) fn reachable_direct_type_param_bounds(
+    function: &HirFunction,
+    type_param: &str,
+    module_function_names: &HashSet<&str>,
+) -> HashSet<FunctionTypeParamBound> {
+    collect_lexical_generic_effects(function, module_function_names)
+        .reachable_functions
+        .iter()
+        .flat_map(|reachable| direct_type_param_bounds(type_param, &reachable.body))
+        .collect()
+}
+
+fn collect_lexical_generic_effects(
+    function: &HirFunction,
+    module_function_names: &HashSet<&str>,
+) -> LexicalGenericEffects {
+    let mut effects = LexicalGenericEffects {
+        reachable_functions: Vec::new(),
+        module_calls: Vec::new(),
+    };
+    let mut scopes = Vec::new();
+    let mut visited = HashSet::new();
+    collect_lexical_scope_effects(
+        function,
+        "root",
+        module_function_names,
+        &mut scopes,
+        &mut visited,
+        &mut effects,
+    );
+    effects
+}
+
+fn collect_lexical_scope_effects(
+    function: &HirFunction,
+    lexical_identity: &str,
+    module_function_names: &HashSet<&str>,
+    scopes: &mut Vec<LexicalScope>,
+    visited: &mut HashSet<String>,
+    effects: &mut LexicalGenericEffects,
+) {
+    if !visited.insert(lexical_identity.to_string()) {
+        return;
+    }
+    effects.reachable_functions.push(function.clone());
+
+    let mut nested_functions = HashMap::new();
+    let mut on_stmt = |stmt: &HirStmt| {
+        if let HirStmt::NestedFunction { func, .. } = stmt {
+            nested_functions.insert(
+                func.name.clone(),
+                (format!("{lexical_identity}/{}", func.name), func.clone()),
+            );
+        }
+    };
+    let mut on_expr = |_expr: &HirExpr| {};
+    crate::hir_analysis::traversal::walk_stmts(
+        &function.body,
+        crate::hir_analysis::traversal::TraversalConfig::LOCAL_SCOPE_ONLY,
+        &mut on_stmt,
+        &mut on_expr,
+    );
+    let mut shadowed_names =
+        crate::hir_analysis::queries::collect_locally_defined_vars(&function.body);
+    shadowed_names.extend(function.params.iter().map(|param| param.name.clone()));
+    scopes.push(LexicalScope {
+        nested_functions,
+        shadowed_names,
+    });
+
+    let mut direct_calls = Vec::new();
     let mut on_stmt = |_stmt: &HirStmt| {};
     let mut on_expr = |expr: &HirExpr| match expr {
-        HirExpr::Call { func, args, ty, .. } => calls.push(GenericCallSite {
-            function: func.clone(),
+        HirExpr::Call { func, args, ty, .. } => direct_calls.push(GenericCallSite {
+            function: crate::stmt_support_emitter::canonical_plain_call_name_for_ir(func)
+                .to_string(),
             explicit_type_args: Vec::new(),
             argument_types: args.iter().map(|argument| argument.ty().clone()).collect(),
             result_type: ty.clone(),
@@ -241,8 +350,9 @@ fn collect_generic_call_sites(body: &[HirStmt]) -> Vec<GenericCallSite> {
             args,
             ty,
             ..
-        } => calls.push(GenericCallSite {
-            function: func.clone(),
+        } => direct_calls.push(GenericCallSite {
+            function: crate::stmt_support_emitter::canonical_plain_call_name_for_ir(func)
+                .to_string(),
             explicit_type_args: type_args.clone(),
             argument_types: args.iter().map(|argument| argument.ty().clone()).collect(),
             result_type: ty.clone(),
@@ -250,16 +360,56 @@ fn collect_generic_call_sites(body: &[HirStmt]) -> Vec<GenericCallSite> {
         _ => {}
     };
     crate::hir_analysis::traversal::walk_stmts(
-        body,
+        &function.body,
         crate::hir_analysis::traversal::TraversalConfig::LOCAL_SCOPE_ONLY,
         &mut on_stmt,
         &mut on_expr,
     );
-    calls
+
+    let mut nested_targets = Vec::new();
+    for call in direct_calls {
+        match resolve_lexical_call(&call.function, scopes) {
+            LexicalCall::Nested(identity, target) => nested_targets.push((identity, target)),
+            LexicalCall::Shadowed => {}
+            LexicalCall::Module if module_function_names.contains(call.function.as_str()) => {
+                effects.module_calls.push(call);
+            }
+            LexicalCall::Module => {}
+        }
+    }
+    for (identity, target) in nested_targets {
+        collect_lexical_scope_effects(
+            &target,
+            &identity,
+            module_function_names,
+            scopes,
+            visited,
+            effects,
+        );
+    }
+    scopes.pop();
 }
 
-fn forwarded_caller_type_params(
-    caller: &HirFunction,
+enum LexicalCall {
+    Nested(String, HirFunction),
+    Shadowed,
+    Module,
+}
+
+fn resolve_lexical_call(name: &str, scopes: &[LexicalScope]) -> LexicalCall {
+    for scope in scopes.iter().rev() {
+        if let Some(function) = scope.nested_functions.get(name) {
+            return LexicalCall::Nested(function.0.clone(), function.1.clone());
+        }
+        if scope.shadowed_names.contains(name) {
+            return LexicalCall::Shadowed;
+        }
+    }
+    LexicalCall::Module
+}
+
+pub(crate) fn forwarded_type_params(
+    caller_type_params: &[String],
     callee: &HirFunction,
     call: &GenericCallSite,
     callee_type_param: &str,
@@ -271,14 +421,14 @@ fn forwarded_caller_type_params(
         .position(|candidate| candidate == callee_type_param)
         && let Some(actual) = call.explicit_type_args.get(index)
     {
-        collect_actual_caller_params(actual, &caller.type_params, &mut forwarded);
+        collect_actual_caller_params(actual, caller_type_params, &mut forwarded);
     }
     for (formal, actual) in callee.params.iter().zip(&call.argument_types) {
         collect_corresponding_type_params(
             &formal.ty,
             actual,
             callee_type_param,
-            &caller.type_params,
+            caller_type_params,
             &mut forwarded,
         );
     }
@@ -286,7 +436,7 @@ fn forwarded_caller_type_params(
         &callee.return_type,
         &call.result_type,
         callee_type_param,
-        &caller.type_params,
+        caller_type_params,
         &mut forwarded,
     );
     forwarded
@@ -392,9 +542,6 @@ fn collect_corresponding_type_params(
                 );
             }
         }
-        _ if RustEmitter::type_mentions_type_param(formal, callee_type_param) => {
-            collect_actual_caller_params(actual, caller_type_params, forwarded);
-        }
         _ => {}
     }
 }
@@ -413,259 +560,5 @@ fn collect_actual_caller_params(
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use sifr_ir::{HirParam, MethodKind};
-    use sifr_type_system::ParamConvention;
-
-    fn parameter(name: &str, ty: Type) -> HirParam {
-        HirParam {
-            name: name.to_string(),
-            ty,
-            default: None,
-            keyword_only: false,
-            convention: ParamConvention::own(),
-        }
-    }
-
-    fn function(
-        name: &str,
-        type_param: &str,
-        params: Vec<HirParam>,
-        return_type: Type,
-        body: Vec<HirStmt>,
-    ) -> HirFunction {
-        HirFunction {
-            name: name.to_string(),
-            params,
-            return_type,
-            body,
-            is_async: false,
-            method_kind: MethodKind::Regular,
-            receiver: None,
-            decorators: Vec::new(),
-            rust_interop: Vec::new(),
-            python_interop: Vec::new(),
-            compiler_intrinsic: None,
-            type_params: vec![type_param.to_string()],
-        }
-    }
-
-    fn name(name: &str, ty: Type) -> HirExpr {
-        HirExpr::Name {
-            name: name.to_string(),
-            binding_id: None,
-            ty,
-        }
-    }
-
-    fn call(function: &str, args: Vec<HirExpr>, ty: Type) -> HirStmt {
-        HirStmt::Expr {
-            expr: HirExpr::Call {
-                func: function.to_string(),
-                args,
-                mutable_arg_places: Vec::new(),
-                ty,
-            },
-        }
-    }
-
-    fn module(
-        functions: Vec<HirFunction>,
-        type_param_bounds: HashMap<String, HashMap<String, Vec<String>>>,
-    ) -> HirModule {
-        HirModule {
-            functions,
-            classes: Vec::new(),
-            imports: Vec::new(),
-            constants: Vec::new(),
-            generic_functions: HashMap::new(),
-            type_param_bounds,
-        }
-    }
-
-    #[test]
-    fn source_protocol_bounds_survive_without_local_operator_use() {
-        let passthrough = function(
-            "passthrough",
-            "T",
-            vec![parameter("value", Type::TypeVar("T".to_string()))],
-            Type::TypeVar("T".to_string()),
-            vec![HirStmt::Return {
-                value: Some(name("value", Type::TypeVar("T".to_string()))),
-            }],
-        );
-        let bounds = HashMap::from([(
-            "passthrough".to_string(),
-            HashMap::from([("T".to_string(), vec!["Comparable".to_string()])]),
-        )]);
-
-        let closed =
-            RustEmitter::closed_function_type_param_bounds(&module(vec![passthrough], bounds));
-
-        assert!(
-            closed["passthrough"]["T"]
-                .contains(&FunctionTypeParamBound::Trait("PartialOrd".to_string()))
-        );
-    }
-
-    #[test]
-    fn generic_call_graph_closes_operator_display_and_hash_requirements() {
-        let compared = Type::TypeVar("Compared".to_string());
-        let compare = function(
-            "compare",
-            "Compared",
-            vec![
-                parameter("left", compared.clone()),
-                parameter("right", compared.clone()),
-            ],
-            Type::Bool,
-            vec![HirStmt::Return {
-                value: Some(HirExpr::Compare {
-                    left: Box::new(name("left", compared.clone())),
-                    ops: vec!["<".to_string()],
-                    comparators: vec![name("right", compared.clone())],
-                    ty: Type::Bool,
-                }),
-            }],
-        );
-        let displayed = Type::TypeVar("Displayed".to_string());
-        let display = function(
-            "display",
-            "Displayed",
-            vec![parameter("value", displayed.clone())],
-            Type::None,
-            vec![call("print", vec![name("value", displayed)], Type::None)],
-        );
-        let keyed = Type::TypeVar("Key".to_string());
-        let key_map = Type::Dict(Box::new(keyed), Box::new(Type::Int));
-        let hash = function(
-            "hash",
-            "Key",
-            vec![parameter("values", key_map)],
-            Type::None,
-            vec![HirStmt::Pass],
-        );
-        let forwarded = Type::TypeVar("Forwarded".to_string());
-        let forwarded_map = Type::Dict(Box::new(forwarded.clone()), Box::new(Type::Int));
-        let forward = function(
-            "forward",
-            "Forwarded",
-            vec![
-                parameter("value", forwarded.clone()),
-                parameter("values", forwarded_map.clone()),
-            ],
-            Type::None,
-            vec![
-                call(
-                    "compare",
-                    vec![
-                        name("value", forwarded.clone()),
-                        name("value", forwarded.clone()),
-                    ],
-                    Type::Bool,
-                ),
-                call(
-                    "display",
-                    vec![name("value", forwarded.clone())],
-                    Type::None,
-                ),
-                call("hash", vec![name("values", forwarded_map)], Type::None),
-            ],
-        );
-        let outer = Type::TypeVar("Outer".to_string());
-        let outer_map = Type::Dict(Box::new(outer.clone()), Box::new(Type::Int));
-        let outer_forward = function(
-            "outer_forward",
-            "Outer",
-            vec![
-                parameter("value", outer.clone()),
-                parameter("values", outer_map.clone()),
-            ],
-            Type::None,
-            vec![call(
-                "forward",
-                vec![name("value", outer), name("values", outer_map)],
-                Type::None,
-            )],
-        );
-
-        let closed = RustEmitter::closed_function_type_param_bounds(&module(
-            vec![compare, display, hash, forward, outer_forward],
-            HashMap::new(),
-        ));
-        let outer_bounds = closed["outer_forward"]["Outer"]
-            .iter()
-            .map(|bound| bound.render_for("Outer"))
-            .collect::<HashSet<_>>();
-
-        for expected in ["PartialOrd", "std::fmt::Display", "std::hash::Hash", "Eq"] {
-            assert!(outer_bounds.contains(expected), "missing {expected}");
-        }
-    }
-
-    #[test]
-    fn generic_call_graph_renders_output_traits_for_the_receiving_parameter() {
-        let callee_type = Type::TypeVar("T".to_string());
-        let add_same = function(
-            "add_same",
-            "T",
-            vec![
-                parameter("left", callee_type.clone()),
-                parameter("right", callee_type.clone()),
-            ],
-            callee_type.clone(),
-            vec![HirStmt::Return {
-                value: Some(HirExpr::BinOp {
-                    left: Box::new(name("left", callee_type.clone())),
-                    op: "+".to_string(),
-                    right: Box::new(name("right", callee_type.clone())),
-                    ty: callee_type,
-                }),
-            }],
-        );
-        let caller_type = Type::TypeVar("U".to_string());
-        let relay_add = function(
-            "relay_add",
-            "U",
-            vec![
-                parameter("left", caller_type.clone()),
-                parameter("right", caller_type.clone()),
-            ],
-            caller_type.clone(),
-            vec![HirStmt::Return {
-                value: Some(HirExpr::Call {
-                    func: "add_same".to_string(),
-                    args: vec![
-                        name("left", caller_type.clone()),
-                        name("right", caller_type.clone()),
-                    ],
-                    mutable_arg_places: Vec::new(),
-                    ty: caller_type,
-                }),
-            }],
-        );
-        let bounds = HashMap::from([
-            (
-                "add_same".to_string(),
-                HashMap::from([("T".to_string(), vec!["Addable".to_string()])]),
-            ),
-            (
-                "relay_add".to_string(),
-                HashMap::from([("U".to_string(), vec!["Addable".to_string()])]),
-            ),
-        ]);
-
-        let closed = RustEmitter::closed_function_type_param_bounds(&module(
-            vec![add_same, relay_add],
-            bounds,
-        ));
-        let rendered = closed["relay_add"]["U"]
-            .iter()
-            .map(|bound| bound.render_for("U"))
-            .collect::<HashSet<_>>();
-
-        assert!(rendered.contains("__SifrAdd"));
-        assert!(rendered.iter().all(|bound| !bound.contains("Output = T")));
-    }
-}
+#[path = "function_generic_bounds_tests.rs"]
+mod tests;

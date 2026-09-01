@@ -28,6 +28,34 @@ pub(in crate::lower) struct LocalFunctionMetadata {
     pub(in crate::lower) workload: Option<WorkloadKind>,
 }
 
+/// Exact integer facts for immutable module/import bindings. Proof lookup is
+/// keyed by stable binding identity; names are retained only for module export.
+#[derive(Default)]
+pub(in crate::lower) struct ModuleConstIntegerFacts {
+    by_binding: HashMap<BindingId, num_bigint::BigInt>,
+    by_exported_name: HashMap<String, num_bigint::BigInt>,
+}
+
+impl ModuleConstIntegerFacts {
+    pub(in crate::lower) fn record(
+        &mut self,
+        name: String,
+        binding_id: BindingId,
+        value: num_bigint::BigInt,
+    ) {
+        self.by_binding.insert(binding_id, value.clone());
+        self.by_exported_name.insert(name, value);
+    }
+
+    pub(in crate::lower) fn get(&self, binding_id: BindingId) -> Option<&num_bigint::BigInt> {
+        self.by_binding.get(&binding_id)
+    }
+
+    pub(in crate::lower) fn exported(&self) -> HashMap<String, num_bigint::BigInt> {
+        self.by_exported_name.clone()
+    }
+}
+
 /// The lowering context that tracks state during AST->HIR conversion.
 pub(in crate::lower) struct LowerCtx {
     /// Function signatures (name -> type)
@@ -43,6 +71,10 @@ pub(in crate::lower) struct LowerCtx {
     pub(in crate::lower) function_workload_annotations: HashMap<String, WorkloadKind>,
     /// Default parameter values for functions (name -> vec of (`param_index`, `default_expr`))
     pub(in crate::lower) function_defaults: HashMap<String, Vec<(usize, HirExpr)>>,
+    /// Defaults synthesized by compiler intrinsics, keyed by canonical nominal
+    /// identity plus method name. This namespace is deliberately disjoint from
+    /// source/user defaults, which are keyed by lexical declaration names.
+    pub(in crate::lower) compiler_method_defaults: HashMap<String, Vec<(usize, HirExpr)>>,
     /// Class declaration defaults, independent of constructor signatures.
     pub(in crate::lower) class_field_defaults: HashMap<String, Vec<(usize, HirExpr)>>,
     pub(in crate::lower) declaration_metadata: Vec<sifr_ir::TypedDeclarationMetadata>,
@@ -159,6 +191,9 @@ pub(in crate::lower) struct LowerCtx {
     pub(in crate::lower) in_try_block: bool,
     /// Whether the currently lowered function body is async.
     pub(in crate::lower) current_function_is_async: bool,
+    /// Whether the current body is consumed by the bounded compile-time
+    /// evaluator instead of emitted as a runtime Rust function.
+    pub(in crate::lower) current_function_uses_compile_time_evaluator: bool,
     /// Whether the currently lowered function body contains `yield`.
     pub(in crate::lower) current_function_is_generator: bool,
     /// Whether the currently lowered function body is an `async def` containing `yield`.
@@ -246,7 +281,7 @@ pub(in crate::lower) struct LowerCtx {
     /// Expected type for a specific expression range while lowering a typed initializer.
     pub(in crate::lower) contextual_expr_types: Vec<(TextRange, Type)>,
     pub(in crate::lower) empty_dict_specializations: HashMap<String, Type>,
-    pub(in crate::lower) const_integer_values: HashMap<String, num_bigint::BigInt>,
+    pub(in crate::lower) const_integer_values: ModuleConstIntegerFacts,
     pub(in crate::lower) flow_effects: Vec<FlowEffect>,
 }
 
@@ -261,6 +296,7 @@ impl LowerCtx {
             async_suspension_summaries: HashMap::new(),
             function_workload_annotations: HashMap::new(),
             function_defaults: HashMap::new(),
+            compiler_method_defaults: HashMap::new(),
             class_field_defaults: HashMap::new(),
             declaration_metadata: Vec::new(),
             class_adapter_providers: Vec::new(),
@@ -329,6 +365,7 @@ impl LowerCtx {
             current_parent_type: None,
             in_try_block: false,
             current_function_is_async: false,
+            current_function_uses_compile_time_evaluator: false,
             current_function_is_generator: false,
             current_function_is_async_generator: false,
             current_function_return_type: None,
@@ -378,7 +415,7 @@ impl LowerCtx {
             defaultdict_hint_adoption: Vec::new(),
             contextual_expr_types: Vec::new(),
             empty_dict_specializations: HashMap::new(),
-            const_integer_values: HashMap::new(),
+            const_integer_values: ModuleConstIntegerFacts::default(),
             flow_effects: Vec::new(),
         }
     }

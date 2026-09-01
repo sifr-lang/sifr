@@ -27,6 +27,7 @@ mod stmt_expr_binop_option;
 mod stmt_expr_method_and_question_mark;
 
 mod assert_and_augassign;
+mod assignment_validation;
 mod async_cleanup;
 mod async_with_and_for;
 mod await_and_async_comprehension;

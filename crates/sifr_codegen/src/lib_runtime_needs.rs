@@ -80,7 +80,7 @@ impl<T: Clone> Channel<T> {
         };
     }
 
-    fn with_state<R>(&self, f: impl FnOnce(&mut __SifrChannelState<T>) -> R) -> R {
+    fn __sifr_with_state<R>(&self, f: impl FnOnce(&mut __SifrChannelState<T>) -> R) -> R {
         match self._state.lock() {
             Ok(mut state) => f(&mut state),
             Err(poisoned) => {
@@ -91,11 +91,11 @@ impl<T: Clone> Channel<T> {
     }
 
     fn is_closed(&self) -> bool {
-        return self.with_state(|state| state.closed || !state.receiver_alive);
+        return self.__sifr_with_state(|state| state.closed || !state.receiver_alive);
     }
 
     fn close(&mut self) {
-        self.with_state(|state| {
+        self.__sifr_with_state(|state| {
             state.closed = true;
         });
         self._send_notify.notify_waiters();
@@ -103,13 +103,13 @@ impl<T: Clone> Channel<T> {
     }
 
     fn register_sender(&self) {
-        self.with_state(|state| {
+        self.__sifr_with_state(|state| {
             state.sender_count += 1;
         });
     }
 
     fn release_sender(&self) {
-        self.with_state(|state| {
+        self.__sifr_with_state(|state| {
             if state.sender_count > 0 {
                 state.sender_count -= 1;
             }
@@ -121,7 +121,7 @@ impl<T: Clone> Channel<T> {
     }
 
     fn release_receiver(&self) {
-        self.with_state(|state| {
+        self.__sifr_with_state(|state| {
             state.receiver_alive = false;
             state.closed = true;
         });
@@ -130,7 +130,7 @@ impl<T: Clone> Channel<T> {
     }
 
     fn try_push(&self, value: T) -> __SifrChannelPushState<T> {
-        self.with_state(|state| {
+        self.__sifr_with_state(|state| {
             if state.closed || !state.receiver_alive {
                 return __SifrChannelPushState::Closed(value);
             }
@@ -146,7 +146,7 @@ impl<T: Clone> Channel<T> {
     }
 
     fn push(&mut self, value: T) -> Result<(), ClosedError> {
-        self.with_state(|state| {
+        self.__sifr_with_state(|state| {
             if state.closed || !state.receiver_alive {
                 return Err(ClosedError::new());
             }
@@ -157,7 +157,7 @@ impl<T: Clone> Channel<T> {
     }
 
     fn try_pop(&self) -> __SifrChannelPopState<T> {
-        self.with_state(|state| {
+        self.__sifr_with_state(|state| {
             if let Some(value) = state.buffer.pop_front() {
                 self._send_notify.notify_one();
                 return __SifrChannelPopState::Item(value);
@@ -839,7 +839,9 @@ pub(crate) fn public_visibility() -> syn::Visibility {
 
 pub(crate) fn publicize_impl_items(items: &mut [syn::ImplItem]) {
     for item in items {
-        if let syn::ImplItem::Fn(function) = item {
+        if let syn::ImplItem::Fn(function) = item
+            && function.sig.ident != "__sifr_with_state"
+        {
             function.vis = public_visibility();
         }
     }

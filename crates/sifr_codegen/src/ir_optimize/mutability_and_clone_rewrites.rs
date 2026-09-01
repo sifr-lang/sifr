@@ -606,7 +606,11 @@ pub(super) fn optimize_stmt(stmt: &mut RustStmt) -> usize {
             if let Some(else_body) = else_body {
                 removed += optimize_block(else_body);
             }
-            if else_body.as_ref().is_some_and(Vec::is_empty) {
+            if else_body.as_ref().is_some_and(Vec::is_empty)
+                && !then_body
+                    .last()
+                    .is_some_and(|stmt| matches!(stmt, RustStmt::TailExpr(_)))
+            {
                 *else_body = None;
                 removed += 1;
             }
@@ -623,7 +627,11 @@ pub(super) fn optimize_stmt(stmt: &mut RustStmt) -> usize {
             if let Some(else_body) = else_body {
                 removed += optimize_block(else_body);
             }
-            if else_body.as_ref().is_some_and(Vec::is_empty) {
+            if else_body.as_ref().is_some_and(Vec::is_empty)
+                && !then_body
+                    .last()
+                    .is_some_and(|stmt| matches!(stmt, RustStmt::TailExpr(_)))
+            {
                 *else_body = None;
                 removed += 1;
             }

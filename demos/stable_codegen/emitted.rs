@@ -1,6 +1,5 @@
 // src/main.rs
 use ::sifr_runtime::SifrInt;
-
 fn summarize(values: &[SifrInt]) -> SifrInt {
     let mut total: SifrInt = SifrInt::from_i64(0);
     for value in values.iter().cloned() {
@@ -12,8 +11,14 @@ fn summarize(values: &[SifrInt]) -> SifrInt {
     }
     total.clone()
 }
-
 fn main() {
     println!("stable_codegen analysis/emission boundary hardening demo:");
-    println!("{}", summarize(&vec![SifrInt::from_i64(3), SifrInt::from_i64(12), SifrInt::from_i64(20)]));
+    println!(
+        "{}",
+        summarize(&vec![
+            SifrInt::from_i64(3),
+            SifrInt::from_i64(12),
+            SifrInt::from_i64(20)
+        ])
+    );
 }

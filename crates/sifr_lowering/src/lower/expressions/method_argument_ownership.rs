@@ -19,6 +19,24 @@ pub(super) fn method_function_type(ty: &Type, method_name: &str) -> Option<Funct
     }
 }
 
+pub(super) fn method_param_defaults(
+    ctx: &LowerCtx,
+    owner_type: &Type,
+    method_name: &str,
+    source_key: &str,
+) -> Option<Vec<(usize, HirExpr)>> {
+    let compiler_key = match owner_type.resolve_alias() {
+        Type::Class {
+            identity: Some(identity),
+            ..
+        } => Some(format!("{identity}.{method_name}")),
+        _ => None,
+    };
+    compiler_key
+        .and_then(|key| ctx.compiler_method_defaults.get(&key).cloned())
+        .or_else(|| ctx.function_defaults.get(source_key).cloned())
+}
+
 pub(super) fn consume_owned_method_arguments(
     args: &[HirExpr],
     call: &ExprCall,
@@ -101,7 +119,7 @@ pub(super) fn try_lower_super_method_call(
         );
         return Some(None);
     };
-    let method_defaults = ctx.function_defaults.get(&defaults_key).cloned();
+    let method_defaults = method_param_defaults(ctx, &defining_type, &method_name, &defaults_key);
     let Some(args) = lower_signature_call_args(
         call,
         &defaults_key,
@@ -168,7 +186,7 @@ pub(super) fn try_lower_class_method_call(
         return Some(None);
     };
     let defaults_key = qualified_method;
-    let method_defaults = ctx.function_defaults.get(&defaults_key).cloned();
+    let method_defaults = method_param_defaults(ctx, &class_type, &method_name, &defaults_key);
     let Some(args) = lower_signature_call_args(
         call,
         &defaults_key,

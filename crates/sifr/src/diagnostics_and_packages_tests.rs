@@ -522,14 +522,14 @@ pub(super) fn test_diagnostic_exit_code_rules_user_vs_internal() {
     );
     assert_eq!(diagnostic_exit_code(&[reveal_note]), EXIT_SUCCESS);
 
-    let overflow_warning = test_diagnostic(
-        "SIFR-TYPE-0901",
+    let unreachable_warning = test_diagnostic(
+        "SIFR-FLOW-0901",
         Severity::Warning,
-        "integer addition may overflow at runtime",
+        "unreachable statement ignored",
         None,
         None,
     );
-    assert_eq!(diagnostic_exit_code(&[overflow_warning]), EXIT_SUCCESS);
+    assert_eq!(diagnostic_exit_code(&[unreachable_warning]), EXIT_SUCCESS);
 
     let internal_error = diagnostic_with_code(
         "internal compiler panic during single-file code generation: boom",

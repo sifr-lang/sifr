@@ -524,5 +524,5 @@ fn test_compose_test_runner_lib_uses_safe_path_for_support_main() {
     let support_modules = vec!["main".to_string()];
     let lib_source = compose_test_runner_lib(&support_modules, "");
 
-    assert!(lib_source.contains("#[path = \"__sifr_support_main.rs\"]\nmod main;"));
+    assert!(lib_source.contains("#[path = \"__sifr_support_main.rs\"]\npub mod main;"));
 }

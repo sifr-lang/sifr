@@ -1,55 +1,55 @@
 // src/main.rs
 use ::sifr_runtime::SifrInt;
-
+#[expect(
+    clippy::approx_constant,
+    reason = "generated Rust preserves this exact typed Sifr source contract"
+)]
 const PI: f64 = 3.14159_f64;
-
-fn __const_MAX_RETRIES() -> SifrInt {
+const fn sifr_generated_const_4d41585f52455452494553() -> SifrInt {
     SifrInt::from_i64(3)
 }
-
-fn __const_APP_NAME() -> String {
-    "sifr".to_string().to_string()
+fn sifr_generated_const_4150505f4e414d45() -> String {
+    "sifr".to_string()
 }
-
 const DEBUG: bool = true;
-
 #[derive(Debug, Clone, PartialEq)]
 struct Temperature {
     celsius: f64,
 }
-
 impl Temperature {
-    fn new(celsius: f64) -> Self {
-        let __sifr_field_init_0: f64 = celsius;
-        Self { celsius: __sifr_field_init_0 }
+    const fn new(celsius: f64) -> Self {
+        let sifr_generated_field_value_69a867ea0a4ed8a3_63656c73697573: f64 = celsius;
+        Self {
+            celsius: sifr_generated_field_value_69a867ea0a4ed8a3_63656c73697573,
+        }
     }
 }
-
 impl Temperature {
     fn from_fahrenheit(f: f64) -> Temperature {
-        Temperature::new(((f - (32.0_f64)) * (5.0_f64)) / (9.0_f64))
+        Temperature::new((f - 32.0_f64) * 5.0_f64 / 9.0_f64)
     }
 }
-
 impl ::std::fmt::Display for Temperature {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         write!(f, "Temperature(celsius={})", self.celsius)
     }
 }
-
 fn circle_area(r: f64) -> f64 {
-    (PI * r) * r
+    PI * r * r
 }
-
 fn get_config() -> String {
-    format!("{} (debug={}, retries={})", __const_APP_NAME(), DEBUG, __const_MAX_RETRIES())
+    format!(
+        "{} (debug={}, retries={})",
+        sifr_generated_const_4150505f4e414d45(),
+        DEBUG,
+        sifr_generated_const_4d41585f52455452494553()
+    )
 }
-
 fn main() {
     println!("{}", circle_area(5.0_f64));
     println!("{}", get_config());
-    println!("{}", PI);
-    println!("{}", __const_MAX_RETRIES());
+    println!("{PI}");
+    println!("{}", sifr_generated_const_4d41585f52455452494553());
     let t: Temperature = Temperature::new(100.0_f64);
     println!("{}", t.celsius);
     let t2: Temperature = Temperature::from_fahrenheit(212.0_f64);

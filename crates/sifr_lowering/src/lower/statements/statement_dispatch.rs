@@ -24,7 +24,7 @@ use super::return_lowering::lower_return;
 use super::statement_diagnostics;
 use super::typing_and_functions::{
     ast_convention_to_param, register_local_function_signature, register_local_function_symbol,
-    reject_unsupported_nested_async_generator,
+    reject_unsupported_nested_generator,
 };
 use super::{
     lower_ann_assign, lower_assign, lower_aug_assign, lower_chained_assign, lower_for, lower_if,
@@ -264,6 +264,21 @@ pub(in crate::lower) fn lower_stmt(
                         exc.range(),
                     );
                     return None;
+                }
+                if !ctx.in_try_block && !ctx.current_function_uses_compile_time_evaluator {
+                    let compatible_error_channel = match func_type.return_type.resolve_alias() {
+                        Type::Result(_, error_ty) => raised_ty.is_assignable_to(error_ty),
+                        _ => false,
+                    };
+                    if !compatible_error_channel {
+                        super::result_diagnostics::invalid_raise_for_return_type(
+                            ctx,
+                            &raised_ty.display_name(),
+                            &func_type.return_type.display_name(),
+                            exc.range(),
+                        );
+                        return None;
+                    }
                 }
                 Some(HirStmt::Raise { value })
             } else {
@@ -626,6 +641,18 @@ pub(in crate::lower) fn lower_stmt(
         }
         Stmt::FunctionDef(func) => {
             // Nested function definition (def inside def)
+            if func
+                .type_params
+                .as_ref()
+                .is_some_and(|params| !params.is_empty())
+            {
+                statement_diagnostics::unsupported_form(
+                    ctx,
+                    "nested generic function declarations",
+                    func.name.range(),
+                );
+                return None;
+            }
             if let Some(decorator) = func.decorator_list.iter().find(|decorator| {
                 python_interop::has_python_interop_decorator_syntax(std::slice::from_ref(decorator))
             }) {
@@ -643,7 +670,7 @@ pub(in crate::lower) fn lower_stmt(
                 .map(|metadata| metadata.signature.clone())
                 .unwrap_or_else(|| register_local_function_symbol(func, ctx));
 
-            reject_unsupported_nested_async_generator(func, ft.return_type.as_ref(), ctx);
+            reject_unsupported_nested_generator(func, ft.return_type.as_ref(), ctx);
             super::ownership_diagnostics::reject_affine_nested_function_capture(
                 ctx,
                 func.name.as_str(),
@@ -755,14 +782,17 @@ pub(in crate::lower) fn lower_stmt(
             );
 
             let previous_dynamic_python = ctx.current_function_trusts_dynamic_python;
+            let previous_compile_time_evaluator = ctx.current_function_uses_compile_time_evaluator;
             ctx.current_function_trusts_dynamic_python =
                 has_decorator(func, "trust_python_dynamic");
+            ctx.current_function_uses_compile_time_evaluator = false;
             let body = if stub_body.skips_normal_body_lowering() {
                 Vec::new()
             } else {
                 super::function_body::lower_function_stmts(&func.body, &ft, ctx)
             };
             ctx.current_function_trusts_dynamic_python = previous_dynamic_python;
+            ctx.current_function_uses_compile_time_evaluator = previous_compile_time_evaluator;
             ctx.exit_function_scope();
             restore_container_specialization_patches(
                 enclosing_container_patches,

@@ -1,7 +1,8 @@
 use super::{
     RustExpr, RustItem, RustParam, RustStmt, RustType, Visibility, task_context_label_capture_stmt,
-    task_context_label_field,
+    task_context_label_field, task_result_debug::build_task_result_debug_impl,
 };
+
 pub fn build_task_scope_items() -> Vec<RustItem> {
     vec![
         RustItem::Struct {
@@ -79,7 +80,7 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
         RustItem::Enum {
             name: "__SifrTaskResult<T, E>".to_string(),
             visibility: Visibility::Private,
-            derives: vec!["Debug".to_string()],
+            derives: vec![],
             repr: None,
             variants: vec![
                 crate::RustEnumVariant {
@@ -104,6 +105,7 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
                 },
             ],
         },
+        build_task_result_debug_impl(),
         RustItem::Impl {
             target: "__SifrTaskResult<T, E>".to_string(),
             type_params: vec![
@@ -701,14 +703,13 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
                     is_async: false,
                 },
                 RustItem::Fn {
-                    name: "__sifr_join_all".to_string(),
+                    name: "__sifr_join_all_fail_fast".to_string(),
                     visibility: Visibility::Private,
                     type_params: vec![],
                     params: vec![RustParam::SelfParam { mutable: true }],
                     ret: Some(RustType::Named("Result<(), ScopeFailure>".to_string())),
                     body: vec![RustStmt::Verbatim(
-                        r#"if self.fail_fast {
-            let mut failure: Option<ScopeFailure> = None;
+                        r#"let mut failure: Option<ScopeFailure> = None;
             let mut policy_cancelling = false;
             let mut cancellations = Vec::with_capacity(self.children.len());
             let mut fallback_abort_handles = Vec::new();
@@ -773,12 +774,18 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
                     }
                 }
             }
-            if let Some(failure) = failure {
-                return Err(failure);
-            }
-            return Ok(());
-        }
-        let mut failure: Option<ScopeFailure> = None;
+            return failure.map_or(Ok(()), Err)"#.to_string(),
+                    )],
+                    is_async: true,
+                },
+                RustItem::Fn {
+                    name: "__sifr_join_all_ordered".to_string(),
+                    visibility: Visibility::Private,
+                    type_params: vec![],
+                    params: vec![RustParam::SelfParam { mutable: true }],
+                    ret: Some(RustType::Named("Result<(), ScopeFailure>".to_string())),
+                    body: vec![RustStmt::Verbatim(
+                        r#"let mut failure: Option<ScopeFailure> = None;
         while let Some(mut child) = self.children.pop() {
             if let Some(start) = child.start_on_join.take() {
                 let _ = start.send(());
@@ -804,10 +811,22 @@ pub fn build_task_scope_items() -> Vec<RustItem> {
                 }
             }
         }
-        if let Some(failure) = failure {
-            return Err(failure);
+        return failure.map_or(Ok(()), Err)"#.to_string(),
+                    )],
+                    is_async: true,
+                },
+                RustItem::Fn {
+                    name: "__sifr_join_all".to_string(),
+                    visibility: Visibility::Private,
+                    type_params: vec![],
+                    params: vec![RustParam::SelfParam { mutable: true }],
+                    ret: Some(RustType::Named("Result<(), ScopeFailure>".to_string())),
+                    body: vec![RustStmt::Verbatim(
+                        r#"if self.fail_fast {
+            return self.__sifr_join_all_fail_fast().await;
         }
-        return Ok(())"#.to_string(),
+        self.__sifr_join_all_ordered().await"#
+                            .to_string(),
                     )],
                     is_async: true,
                 },

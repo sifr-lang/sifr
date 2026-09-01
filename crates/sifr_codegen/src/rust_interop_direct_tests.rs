@@ -428,11 +428,10 @@ class Resource:
         "{generated}"
     );
     assert!(
-        generated.contains(
-            "bridge::resources::aclose(self).await.map(|__sifr_bridge_ok| __sifr_bridge_ok)"
-        ),
+        generated.contains("bridge::resources::aclose(self).await.map_err("),
         "{generated}"
     );
+    assert!(!generated.contains("map(|__sifr_bridge_ok| __sifr_bridge_ok)"));
 }
 
 #[test]

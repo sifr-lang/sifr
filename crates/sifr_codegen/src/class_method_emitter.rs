@@ -1,3 +1,5 @@
+mod recursive_fields;
+
 use crate::{
     RustEmitter, RustExpr, RustItem, RustLiteral, RustParam, RustStmt, RustType, RustTypeParam,
     Visibility,
@@ -20,102 +22,6 @@ impl RustEmitter {
             ReceiverConvention::Owned => RustParam::SelfValue,
             ReceiverConvention::OwnedMutable => RustParam::MutableSelfValue,
         }
-    }
-
-    pub(crate) fn is_some_call_expr(expr: &RustExpr) -> bool {
-        matches!(
-            expr,
-            RustExpr::FnCall { func, .. }
-                if matches!(func.as_ref(), RustExpr::Path(path) if path.len() == 1 && path[0] == "Some")
-                    || matches!(func.as_ref(), RustExpr::Ident(name) if name == "Some")
-        )
-    }
-
-    pub(crate) fn is_box_new_call_expr(expr: &RustExpr) -> bool {
-        matches!(
-            expr,
-            RustExpr::FnCall { func, .. }
-                if matches!(func.as_ref(), RustExpr::Path(path) if path.len() == 2 && path[0] == "Box" && path[1] == "new")
-                    || matches!(func.as_ref(), RustExpr::Ident(name) if name == "Box::new")
-        )
-    }
-
-    pub(crate) fn ensure_some_box_inner(expr: RustExpr) -> RustExpr {
-        match expr {
-            RustExpr::FnCall { func, args }
-                if matches!(func.as_ref(), RustExpr::Path(path) if path.len() == 1 && path[0] == "Some")
-                    && args.len() == 1 =>
-            {
-                let mut args_iter = args.into_iter();
-                let Some(inner) = args_iter.next() else {
-                    unreachable!("Some(_) call must have exactly one argument");
-                };
-                if Self::is_box_new_call_expr(&inner) {
-                    RustExpr::FnCall {
-                        func,
-                        args: vec![inner],
-                    }
-                } else {
-                    RustExpr::FnCall {
-                        func,
-                        args: vec![RustExpr::FnCall {
-                            func: Box::new(RustExpr::Path(vec![
-                                "Box".to_string(),
-                                "new".to_string(),
-                            ])),
-                            args: vec![inner],
-                        }],
-                    }
-                }
-            }
-            other => RustExpr::FnCall {
-                func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
-                args: vec![RustExpr::FnCall {
-                    func: Box::new(RustExpr::Path(vec!["Box".to_string(), "new".to_string()])),
-                    args: vec![other],
-                }],
-            },
-        }
-    }
-
-    pub(crate) fn wrap_recursive_constructor_field_value(
-        &self,
-        class: &HirClass,
-        method: &HirFunction,
-        field_name: &str,
-        field_ty: &Type,
-        value_expr: &HirExpr,
-        lowered_value: RustExpr,
-    ) -> RustExpr {
-        let is_recursive = self
-            .recursive_fields
-            .contains(&(class.name.clone(), field_name.to_string()));
-        if !is_recursive {
-            return lowered_value;
-        }
-
-        let is_boxed_constructor_param = matches!(
-            value_expr,
-            HirExpr::Name { name, .. }
-                if method.name == "new"
-                    && name == field_name
-                    && method.params.iter().any(|param| param.name == *name)
-        );
-        if is_boxed_constructor_param {
-            return lowered_value;
-        }
-
-        if crate::helpers::is_option_type(field_ty) {
-            if matches!(value_expr, HirExpr::NoneLiteral) {
-                return lowered_value;
-            }
-            if Self::is_some_call_expr(&lowered_value) {
-                return Self::ensure_some_box_inner(lowered_value);
-            }
-            return Self::ensure_some_box_inner(lowered_value);
-        }
-
-        Self::box_recursive_value_for_ir(lowered_value)
     }
 
     pub(crate) fn lower_class_stmt_strict(
@@ -386,7 +292,8 @@ impl RustEmitter {
                     let final_value = field_ty.map_or(lowered_value.clone(), |ty| {
                         Self::box_constructor_callable_value(ty, lowered_value)
                     });
-                    let temp_name = format!("__sifr_field_init_{}", field_inits.len());
+                    let encoded_field = encode_field_name(field);
+                    let temp_name = format!("__sifr_field_value_{encoded_field}");
                     body.push(RustStmt::Let {
                         mutable: false,
                         name: temp_name.clone(),
@@ -788,7 +695,10 @@ impl RustEmitter {
                 param.convention,
             );
             params.push(
-                if param.convention.is_owned() && param.convention.is_mutable() {
+                if param.convention.is_owned()
+                    && param.convention.is_mutable()
+                    && self.mutated_vars.contains(&param.name)
+                {
                     RustParam::NamedMut {
                         name: param.name.clone(),
                         ty: rust_ty,
@@ -880,4 +790,19 @@ impl RustEmitter {
             is_async: method.is_async,
         }
     }
+}
+
+fn encode_field_name(field: &str) -> String {
+    const HEX: &[u8; 16] = b"0123456789abcdef";
+    const FNV_OFFSET_BASIS: u64 = 0xcbf2_9ce4_8422_2325;
+    const FNV_PRIME: u64 = 0x0000_0100_0000_01b3;
+    let mut encoded = String::with_capacity(field.len() * 2);
+    let mut fingerprint = FNV_OFFSET_BASIS;
+    for byte in field.bytes() {
+        fingerprint ^= u64::from(byte);
+        fingerprint = fingerprint.wrapping_mul(FNV_PRIME);
+        encoded.push(char::from(HEX[usize::from(byte >> 4)]));
+        encoded.push(char::from(HEX[usize::from(byte & 0x0f)]));
+    }
+    format!("{fingerprint:016x}_{encoded}")
 }

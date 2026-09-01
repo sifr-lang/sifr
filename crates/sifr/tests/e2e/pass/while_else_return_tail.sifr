@@ -1,0 +1,17 @@
+def classify(values: list[int], target: int) -> int:
+    index: int = 0
+    while index < len(values):
+        if values[index] == target:
+            break
+        index += 1
+    else:
+        return -1
+    return index
+
+
+def main() -> None:
+    assert classify([4, 5, 6], 5) == 1
+    assert classify([4, 5, 6], 9) == -1
+
+
+main()

@@ -1,5 +1,6 @@
 //! Signature-aware argument lowering for method calls.
 
+use super::method_argument_ownership::method_param_defaults;
 use super::{
     ExprCall, FunctionType, HirExpr, LowerCtx, Type, lower_method_call_args,
     lower_signature_call_args,
@@ -28,7 +29,8 @@ pub(super) fn lower(
                 methods.iter().find(|(candidate, _)| candidate == method)
             {
                 let defaults_key = format!("{name}.{method}");
-                let method_defaults = ctx.function_defaults.get(&defaults_key).cloned();
+                let method_defaults =
+                    method_param_defaults(ctx, canonical_type, method, &defaults_key);
                 lower_signature_call_args(
                     call,
                     &defaults_key,

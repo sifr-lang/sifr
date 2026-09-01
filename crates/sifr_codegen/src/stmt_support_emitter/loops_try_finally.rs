@@ -7,6 +7,33 @@ use super::{
 mod try_except;
 
 impl RustEmitter {
+    pub(crate) fn loop_else_scaffold_for_ir(
+        lowered_loop: RustStmt,
+        lowered_else_body: Vec<RustStmt>,
+    ) -> RustStmt {
+        RustStmt::Block(vec![
+            RustStmt::Let {
+                mutable: true,
+                name: "_broke".to_string(),
+                ty: Some(crate::RustType::Bool),
+                value: RustExpr::Literal(crate::RustLiteral::Bool(false)),
+            },
+            lowered_loop,
+            RustStmt::If {
+                cond: RustExpr::UnaryOp {
+                    op: "!".to_string(),
+                    operand: Box::new(RustExpr::Paren(Box::new(RustExpr::Ident(
+                        "_broke".to_string(),
+                    )))),
+                },
+                then_body: lowered_else_body,
+                // Preserve statement-valued normalization when the else body
+                // ends in a return-like expression.
+                else_body: Some(Vec::new()),
+            },
+        ])
+    }
+
     pub(crate) fn lower_loop_break_for_ir(&self) -> RustStmt {
         let in_loop_with_else = self.loop_else_stack.last().copied().unwrap_or(false);
         crate::lower_loop_break_stmt(in_loop_with_else)
@@ -62,25 +89,10 @@ impl RustEmitter {
             else {
                 return Ok(false);
             };
-            self.push_captured_stmt(&RustStmt::Block(vec![
-                RustStmt::Let {
-                    mutable: true,
-                    name: "_broke".to_string(),
-                    ty: Some(crate::RustType::Bool),
-                    value: crate::RustExpr::Literal(crate::RustLiteral::Bool(false)),
-                },
+            self.push_captured_stmt(&Self::loop_else_scaffold_for_ir(
                 lowered_loop,
-                RustStmt::If {
-                    cond: crate::RustExpr::UnaryOp {
-                        op: "!".to_string(),
-                        operand: Box::new(crate::RustExpr::Paren(Box::new(
-                            crate::RustExpr::Ident("_broke".to_string()),
-                        ))),
-                    },
-                    then_body: lowered_else_body,
-                    else_body: None,
-                },
-            ]));
+                lowered_else_body,
+            ));
             return Ok(true);
         }
 
@@ -150,29 +162,14 @@ impl RustEmitter {
             else {
                 return Ok(false);
             };
-            self.push_captured_stmt(&RustStmt::Block(vec![
-                RustStmt::Let {
-                    mutable: true,
-                    name: "_broke".to_string(),
-                    ty: Some(crate::RustType::Bool),
-                    value: crate::RustExpr::Literal(crate::RustLiteral::Bool(false)),
-                },
+            self.push_captured_stmt(&Self::loop_else_scaffold_for_ir(
                 RustStmt::For {
                     var,
                     iter: lowered_iter,
                     body: lowered_body,
                 },
-                RustStmt::If {
-                    cond: crate::RustExpr::UnaryOp {
-                        op: "!".to_string(),
-                        operand: Box::new(crate::RustExpr::Paren(Box::new(
-                            crate::RustExpr::Ident("_broke".to_string()),
-                        ))),
-                    },
-                    then_body: lowered_else_body,
-                    else_body: None,
-                },
-            ]));
+                lowered_else_body,
+            ));
             return Ok(true);
         }
 
@@ -292,32 +289,26 @@ impl RustEmitter {
             });
         let capture_returns =
             queries::body_contains_return(body) && self.current_return_type.is_some();
-        let direct_return_capture =
-            capture_returns && queries::block_control_flow_effect(body).always_exits();
-        let return_wrap = if direct_return_capture {
-            crate::TryClosureReturnWrap::Direct
-        } else {
-            crate::TryClosureReturnWrap::Optional
-        };
+        let capture_loop_control = !self.loop_else_stack.is_empty();
         if !can_return_error {
             err_ty = "std::convert::Infallible".to_string();
         }
-        let ok_ty = if capture_returns {
-            if let Some(return_ty) = self.current_return_type.as_ref() {
-                if direct_return_capture {
-                    crate::render_type(&crate::sifr_type_to_rust_type(return_ty))
-                } else {
-                    format!(
-                        "Option<{}>",
-                        crate::render_type(&crate::sifr_type_to_rust_type(return_ty))
-                    )
-                }
-            } else {
-                "()".to_string()
-            }
+        let normal_ty = if let Some(return_ty) = self.current_return_type.as_ref()
+            && capture_returns
+        {
+            format!(
+                "Option<{}>",
+                crate::render_type(&crate::sifr_type_to_rust_type(return_ty))
+            )
         } else {
             "()".to_string()
         };
+        let loop_control_ty = if capture_loop_control {
+            "bool"
+        } else {
+            "std::convert::Infallible"
+        };
+        let ok_ty = format!("Result<{normal_ty}, {loop_control_ty}>");
 
         let active_error_type = self
             .try_closure_error_type_info
@@ -333,34 +324,39 @@ impl RustEmitter {
                 Some(error_type.as_ref().clone())
             });
         let mut closure_body = {
-            if capture_returns {
-                self.try_closure_depth += 1;
-                self.try_closure_return_wrap.push(return_wrap.clone());
-            }
             self.try_closure_error_type.push(err_ty.clone());
             self.try_closure_error_type_info.push(active_error_type);
-            let lowered = self.try_lower_scoped_stmt_block_for_ir(body)?;
-            if capture_returns {
-                self.try_closure_depth -= 1;
-                self.try_closure_return_wrap.pop();
+            if capture_loop_control {
+                // The outcome dispatcher, not the closure body, owns the
+                // enclosing loop-else marker update.
+                self.loop_else_stack.push(false);
+            }
+            let lowered_result = self.try_lower_scoped_stmt_block_for_ir(body);
+            if capture_loop_control {
+                let popped = self.loop_else_stack.pop();
+                debug_assert!(popped.is_some(), "loop_else_stack should not underflow");
             }
             self.try_closure_error_type.pop();
             self.try_closure_error_type_info.pop();
+            let lowered = lowered_result?;
             let Some(lowered) = lowered else {
                 return Ok(None);
             };
             lowered
         };
 
-        if !capture_returns {
+        closure_body = super::python_context::rewrite_context_control_flow(closure_body, 0);
+        if !super::python_context::rust_stmts_always_exit(&closure_body) {
             closure_body.push(RustStmt::Return(Some(RustExpr::FnCall {
                 func: Box::new(RustExpr::Ident("Ok".to_string())),
-                args: vec![RustExpr::Literal(crate::RustLiteral::Unit)],
-            })));
-        } else if !direct_return_capture {
-            closure_body.push(RustStmt::Return(Some(RustExpr::FnCall {
-                func: Box::new(RustExpr::Ident("Ok".to_string())),
-                args: vec![RustExpr::Literal(crate::RustLiteral::None)],
+                args: vec![RustExpr::FnCall {
+                    func: Box::new(RustExpr::Ident("Ok".to_string())),
+                    args: vec![if capture_returns {
+                        RustExpr::Literal(crate::RustLiteral::None)
+                    } else {
+                        RustExpr::Literal(crate::RustLiteral::Unit)
+                    }],
+                }],
             })));
         }
 
@@ -397,74 +393,80 @@ impl RustEmitter {
             return Ok(None);
         };
         lowered.extend(finalbody_lowered);
+        if queries::block_control_flow_effect(finalbody).always_exits() {
+            return Ok(Some(lowered));
+        }
 
+        let mut arms = vec![crate::RustMatchArm {
+            pattern: if capture_returns {
+                "Ok(Ok(None))".to_string()
+            } else {
+                "Ok(Ok(()))".to_string()
+            },
+            bindings: vec![],
+            guard: None,
+            body: vec![],
+        }];
         if capture_returns {
-            let mut arms = vec![crate::RustMatchArm {
-                pattern: if direct_return_capture {
-                    "Ok(__sifr_ret_val)".to_string()
-                } else {
-                    "Ok(Some(__sifr_ret_val))".to_string()
-                },
+            arms.push(crate::RustMatchArm {
+                pattern: "Ok(Ok(Some(__sifr_ret_val)))".to_string(),
                 bindings: vec!["__sifr_ret_val".to_string()],
                 guard: None,
                 body: vec![RustStmt::Return(Some(RustExpr::Ident(
                     "__sifr_ret_val".to_string(),
                 )))],
-            }];
-            if !direct_return_capture {
-                arms.push(crate::RustMatchArm {
-                    pattern: "Ok(None)".to_string(),
-                    bindings: vec![],
-                    guard: None,
-                    body: vec![],
-                });
-            }
-            arms.push(crate::RustMatchArm {
-                pattern: "Err(__sifr_finally_err)".to_string(),
-                bindings: vec!["__sifr_finally_err".to_string()],
-                guard: None,
-                body: if can_return_error {
-                    vec![RustStmt::Return(Some(RustExpr::FnCall {
-                        func: Box::new(RustExpr::Ident("Err".to_string())),
-                        args: vec![RustExpr::MethodCall {
-                            receiver: Box::new(RustExpr::Ident("__sifr_finally_err".to_string())),
-                            method: "into".to_string(),
-                            args: vec![],
-                        }],
-                    }))]
-                } else {
-                    vec![RustStmt::TailExpr(RustExpr::Match {
-                        expr: Box::new(RustExpr::Ident("__sifr_finally_err".to_string())),
-                        arms: vec![],
-                    })]
-                },
-            });
-            lowered.push(RustStmt::Match {
-                expr: RustExpr::Ident("__sifr_try_finally_res".to_string()),
-                arms,
-            });
-        } else {
-            lowered.push(RustStmt::IfLet {
-                pattern: "Err(__sifr_finally_err)".to_string(),
-                expr: RustExpr::Ident("__sifr_try_finally_res".to_string()),
-                then_body: if can_return_error {
-                    vec![RustStmt::Return(Some(RustExpr::FnCall {
-                        func: Box::new(RustExpr::Ident("Err".to_string())),
-                        args: vec![RustExpr::MethodCall {
-                            receiver: Box::new(RustExpr::Ident("__sifr_finally_err".to_string())),
-                            method: "into".to_string(),
-                            args: vec![],
-                        }],
-                    }))]
-                } else {
-                    vec![RustStmt::Expr(RustExpr::Match {
-                        expr: Box::new(RustExpr::Ident("__sifr_finally_err".to_string())),
-                        arms: vec![],
-                    })]
-                },
-                else_body: None,
             });
         }
+        if capture_loop_control {
+            arms.extend([
+                crate::RustMatchArm {
+                    pattern: "Ok(Err(false))".to_string(),
+                    bindings: vec![],
+                    guard: None,
+                    body: vec![self.lower_loop_break_for_ir()],
+                },
+                crate::RustMatchArm {
+                    pattern: "Ok(Err(true))".to_string(),
+                    bindings: vec![],
+                    guard: None,
+                    body: vec![RustStmt::Continue],
+                },
+            ]);
+        } else {
+            arms.push(crate::RustMatchArm {
+                pattern: "Ok(Err(__sifr_finally_control))".to_string(),
+                bindings: vec!["__sifr_finally_control".to_string()],
+                guard: None,
+                body: vec![RustStmt::TailExpr(RustExpr::Match {
+                    expr: Box::new(RustExpr::Ident("__sifr_finally_control".to_string())),
+                    arms: vec![],
+                })],
+            });
+        }
+        arms.push(crate::RustMatchArm {
+            pattern: "Err(__sifr_finally_err)".to_string(),
+            bindings: vec!["__sifr_finally_err".to_string()],
+            guard: None,
+            body: if can_return_error {
+                vec![RustStmt::Return(Some(RustExpr::FnCall {
+                    func: Box::new(RustExpr::Ident("Err".to_string())),
+                    args: vec![RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident("__sifr_finally_err".to_string())),
+                        method: "into".to_string(),
+                        args: vec![],
+                    }],
+                }))]
+            } else {
+                vec![RustStmt::TailExpr(RustExpr::Match {
+                    expr: Box::new(RustExpr::Ident("__sifr_finally_err".to_string())),
+                    arms: vec![],
+                })]
+            },
+        });
+        lowered.push(RustStmt::Match {
+            expr: RustExpr::Ident("__sifr_try_finally_res".to_string()),
+            arms,
+        });
         Ok(Some(lowered))
     }
 }

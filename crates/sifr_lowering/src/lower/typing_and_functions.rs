@@ -26,7 +26,7 @@ use python_arrow_annotations::resolve_python_arrow_annotation;
 mod async_generator_validation;
 mod python_dlpack_annotations;
 pub(in crate::lower) use async_generator_validation::{
-    reject_declared_async_generator_boundary, reject_unsupported_nested_async_generator,
+    reject_declared_async_generator_boundary, reject_unsupported_nested_generator,
 };
 use python_dlpack_annotations::{
     resolve_python_dlpack_tensor_annotation, resolve_python_resource_attribute_annotation,

@@ -41,10 +41,6 @@ impl ArrowResource {
         self.metadata.producer_type.clone()
     }
 
-    fn handle(&self) -> Result<python::ArrowHandle, PythonError> {
-        resource_value(&self.identity)?.arrow_key()
-    }
-
     fn prepare_argument(self) -> Result<PythonArrowArgument, PythonError> {
         let identity = take_resource(self.identity)?;
         python::prepare_arrow_argument(identity.into_arrow_key()?).map(PythonArrowArgument)

@@ -16,6 +16,9 @@ fn is_already_borrowed_rendered_expr(arg: &RustExpr) -> bool {
 
 fn render_borrowed_arg_expr(arg: &RustExpr) -> RustExpr {
     match arg {
+        RustExpr::Ref { expr, .. } if is_already_borrowed_rendered_expr(expr) => {
+            expr.as_ref().clone()
+        }
         RustExpr::Ref { .. } => arg.clone(),
         _ if is_already_borrowed_rendered_expr(arg) => arg.clone(),
         _ => RustExpr::Ref {

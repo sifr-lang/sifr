@@ -177,7 +177,8 @@ fn test_empty_recursive_container_field_uses_box_default() {
     );
 
     assert!(
-        rust_code.contains("let __sifr_field_init_0: Box<Vec<Tree>> = Box::default();"),
+        rust_code.contains("let __sifr_field_value_")
+            && rust_code.contains(": Box<Vec<Tree>> = Box::default();"),
         "empty recursive container fields should use the lint-clean default constructor:\n{rust_code}"
     );
     assert!(
@@ -265,31 +266,25 @@ def wrapKeyword(node: TreeNode | None) -> TreeNode:
     );
 
     assert!(
-        rust_code.contains(
-            "nodes.push(TreeNode::new(node.value.clone(), left_copy.map(|__sifr_option_value| Box::new(__sifr_option_value))));"
-        ),
+        rust_code
+            .contains("nodes.push(TreeNode::new(node.value.clone(), left_copy.map(Box::new)));"),
         "named optional recursive values must be mapped to Option<Box<_>> inside nested constructor calls:\n{rust_code}"
     );
     assert!(
-        rust_code.contains(
-            "Some(TreeNode::new(node.value.clone(), left_copy.map(|__sifr_option_value| Box::new(__sifr_option_value))))"
-        ),
+        rust_code.contains("Some(TreeNode::new(node.value.clone(), left_copy.map(Box::new)))"),
         "direct constructor calls should retain exactly one recursive option box layer:\n{rust_code}"
     );
     assert!(
-        !rust_code
-            .contains("left_copy.map(|__sifr_option_value| Box::new(__sifr_option_value)).map("),
+        !rust_code.contains("left_copy.map(Box::new).map("),
         "repeated constructor adaptation must not double-box named optional values:\n{rust_code}"
     );
     assert!(
-        rust_code.contains(
-            "TreeNode::new(SifrInt::from_i64(5), node.cloned().map(|__sifr_option_value| Box::new(__sifr_option_value)))"
-        ),
+        rust_code.contains("TreeNode::new(SifrInt::from_i64(5), node.cloned().map(Box::new))"),
         "borrowed optional parameters must materialize their values before recursive constructor boxing:\n{rust_code}"
     );
     assert!(
         rust_code.contains(
-            "nodes.push(TreeNode::new(SifrInt::from_i64(6), node.cloned().map(|__sifr_option_value| Box::new(__sifr_option_value))))"
+            "nodes.push(TreeNode::new(SifrInt::from_i64(6), node.cloned().map(Box::new)))"
         ),
         "nested constructors must use the same borrowed-option materialization:\n{rust_code}"
     );
@@ -299,14 +294,12 @@ def wrapKeyword(node: TreeNode | None) -> TreeNode:
         "borrowed optional parameters must never be moved by mapping before they are cloned:\n{rust_code}"
     );
     assert!(
-        rust_code.contains(
-            "nodes.push(TreeNode::new(SifrInt::from_i64(7), node.map(|__sifr_option_value| Box::new(__sifr_option_value))))"
-        ),
+        rust_code.contains("nodes.push(TreeNode::new(SifrInt::from_i64(7), node.map(Box::new)))"),
         "owned optional parameters must map directly inside nested recursive constructors:\n{rust_code}"
     );
     assert!(
         rust_code.contains(
-            "nodes.push(TreeNode::new(SifrInt::from_i64(8), (node.left).as_deref().cloned().map(|__sifr_option_value| Box::new(__sifr_option_value))))"
+            "nodes.push(TreeNode::new(SifrInt::from_i64(8), (node.left).as_deref().cloned().map(Box::new)))"
         ),
         "recursive optional field projections must map to boxed storage inside nested constructors:\n{rust_code}"
     );
@@ -319,9 +312,7 @@ def wrapKeyword(node: TreeNode | None) -> TreeNode:
         "non-option recursive values must never be double boxed:\n{rust_code}"
     );
     assert!(
-        rust_code.contains(
-            "TreeNode::new(SifrInt::from_i64(10), node.cloned().map(|__sifr_option_value| Box::new(__sifr_option_value)))"
-        ),
+        rust_code.contains("TreeNode::new(SifrInt::from_i64(10), node.cloned().map(Box::new))"),
         "keyword recursive option arguments must use the same borrowed-option materialization:\n{rust_code}"
     );
 }

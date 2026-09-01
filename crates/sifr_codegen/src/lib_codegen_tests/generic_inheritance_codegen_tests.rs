@@ -16,7 +16,7 @@ def main():
 
     assert!(rust_code.contains("struct Marker<T>"));
     assert!(rust_code.contains("__sifr_type_marker: ::std::marker::PhantomData<fn() -> (T,)>"));
-    assert!(rust_code.contains("let marker: Marker<SifrInt> = make();"));
+    assert!(rust_code.contains("let _marker: Marker<SifrInt> = make();"));
 }
 
 #[test]
@@ -203,7 +203,7 @@ def main():
         "{rust_code}"
     );
     assert!(
-        rust_code.contains("(make_result()).map(|__sifr_ok_value| ::std::convert::Into::<Root>::into(__sifr_ok_value))"),
+        rust_code.contains("(make_result()).map(::std::convert::Into::<Root>::into)"),
         "{rust_code}"
     );
     assert!(

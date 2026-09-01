@@ -63,6 +63,11 @@ pub(crate) fn lower_method_with_context(
         (Type::Tuple(elems), "index") => common::lower_tuple_index(elems.len(), object, args),
         (Type::Str, "len") => common::lower_string_char_len(object, args),
         (ty, "len") if is_option_type(ty) => common::lower_option_len(object, args),
+        (Type::Class { .. }, "len") if args.is_empty() => Some(RustExpr::MethodCall {
+            receiver: Box::new(object.clone()),
+            method: "len".to_string(),
+            args: Vec::new(),
+        }),
         (_, "len") => common::lower_len(object, args),
         (Type::Str, "upper") => string::lower_upper(object, args),
         (Type::Str, "lower") => string::lower_lower(object, args),
@@ -301,7 +306,7 @@ mod tests {
             lower_method(&Type::Str, "split", "s", &["sep".to_string()]).expect("split sep");
         assert_eq!(
             render_expr(&split_sep.expr),
-            "s.split(&sep).map(|s| s.to_string()).collect::<Vec<String>>()"
+            "s.split(&sep).map(::std::string::ToString::to_string).collect::<Vec<String>>()"
         );
 
         let replace = lower_method(

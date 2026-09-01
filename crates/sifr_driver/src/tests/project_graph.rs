@@ -424,7 +424,10 @@ fn test_assemble_project_main_rs_is_deterministic_against_hashmap_order() {
     let main_a = assemble_project_main_rs(&compile_order, &rust_files_a);
     let main_b = assemble_project_main_rs(&compile_order, &rust_files_b);
     assert_eq!(main_a, main_b);
-    assert_eq!(main_a, "mod consumer;\nmod provider;\n\nfn main() {}\n");
+    assert_eq!(
+        main_a,
+        "pub mod consumer;\npub mod provider;\n\nfn main() {}\n"
+    );
 }
 
 #[test]
@@ -440,7 +443,7 @@ fn test_assemble_project_main_rs_declares_dotted_modules_by_top_level_namespace(
 
     let main_rs = assemble_project_main_rs(&compile_order, &rust_files);
 
-    assert_eq!(main_rs, "mod helpers;\n\nfn main() {}\n");
+    assert_eq!(main_rs, "pub mod helpers;\n\nfn main() {}\n");
 }
 
 #[test]

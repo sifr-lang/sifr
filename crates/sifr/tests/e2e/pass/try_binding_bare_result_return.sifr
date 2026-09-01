@@ -1,0 +1,27 @@
+class LoadError(Error):
+    message: str
+
+
+def load() -> Result[int, LoadError]:
+    return 7
+
+
+def maybe_stop(stop: bool) -> Result[None, LoadError]:
+    try:
+        value: int = load()
+        if stop:
+            return
+    except LoadError as error:
+        raise error
+    assert value == 7
+    return None
+
+
+def main() -> None:
+    first = maybe_stop(True)
+    second = maybe_stop(False)
+    assert str(first) == "Ok(())"
+    assert str(second) == "Ok(())"
+
+
+main()

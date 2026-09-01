@@ -383,11 +383,11 @@ fn test_structured_stmt_path_handles_copy_typed_let_expr() {
     };
 
     let generated = generate_rust_with_metadata(&module);
-    assert!(generated.rust_source.contains("let x: SifrInt ="));
+    assert!(generated.rust_source.contains("let _x: SifrInt ="));
     assert!(
         generated
             .rust_source
-            .contains("let x: SifrInt = SifrInt::from_i64(7)")
+            .contains("let _x: SifrInt = SifrInt::from_i64(7)")
     );
     assert!(
         generated.lowering_stats.stmt_structured >= 1,
@@ -456,7 +456,10 @@ fn test_structured_stmt_path_lowers_non_optional_string_index_for_optional_targe
     assert_eq!(captured.len(), 1, "{captured:#?}");
     let rendered = crate::render_stmts(&captured);
     assert!(rendered.contains(".chars().nth("), "{rendered}");
-    assert!(rendered.contains(".map(|c| c.to_string())"), "{rendered}");
+    assert!(
+        rendered.contains(".map(|character| character.to_string())"),
+        "{rendered}"
+    );
     assert!(!rendered.contains("compile_error!"), "{rendered}");
     assert!(!rendered.contains("[j]"), "{rendered}");
 }
@@ -697,12 +700,15 @@ fn test_lib_decomposition_guards_keep_stmt_expr_logic_out_of_lib_rs() {
 #[test]
 fn test_production_lowering_rules_uses_result_helpers_only() {
     let lib_src = include_str!("../lib.rs");
-    let emitter_state_src = include_str!("../lib_emitter_state.rs");
+    let emitter_structured_stmt_src = include_str!("../lib_emitter_structured_stmt.rs");
     let lower_expr_src = include_str!("../lower_expr/leaves_and_plain_calls.rs");
     let module_constants_src = include_str!("../module_constants.rs");
     let field_rewrites_src = include_str!("../expr_render_helpers/field_and_stdlib_rewrites.rs");
 
-    assert!(emitter_state_src.contains("try_lower_simple_stmt_with_scope_result_and_bindings("));
+    assert!(
+        emitter_structured_stmt_src
+            .contains("try_lower_simple_stmt_with_scope_result_and_bindings(")
+    );
     assert!(lower_expr_src.contains("pub fn try_lower_leaf_expr_result("));
     assert!(module_constants_src.contains("try_lower_simple_module_constant_item_result("));
     assert!(field_rewrites_src.contains("try_lower_registry_expr_result("));

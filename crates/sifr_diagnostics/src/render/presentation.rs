@@ -419,11 +419,11 @@ mod tests {
         let _ = sink.emit_error(internal);
 
         let warning = DiagnosticBuilder::source(
-            DiagnosticCode::TYPE_ARITHMETIC_OVERFLOW_RISK,
+            DiagnosticCode::FLOW_UNREACHABLE_STATEMENT,
             Severity::Warning,
             primary.clone(),
         )
-        .message_template("int multiplication may overflow")
+        .message_template("unreachable statement ignored")
         .build();
         sink.emit(warning);
 
@@ -447,7 +447,7 @@ mod tests {
             compact
                 .contains("E SIFR-INTERNAL-0001 <unknown> internal compiler panic during codegen")
         );
-        assert!(compact.contains("W SIFR-TYPE-0901 main.sifr:1:1 int multiplication may overflow"));
+        assert!(compact.contains("W SIFR-FLOW-0901 main.sifr:1:1 unreachable statement ignored"));
         assert!(compact.contains("N SIFR-TYPE-0902 main.sifr:1:1 revealed type is `int`"));
     }
 

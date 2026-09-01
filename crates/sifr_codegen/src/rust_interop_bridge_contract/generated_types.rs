@@ -54,6 +54,9 @@ impl GeneratedTypeCollector {
                 } else {
                     RustGeneratedBridgeTypeKind::Record
                 },
+                supports_eq: fields
+                    .iter()
+                    .all(|(_, field_ty)| field_ty.supports_derived_eq()),
                 fields: bridge_fields,
                 variants: Vec::new(),
             },
@@ -94,6 +97,7 @@ impl GeneratedTypeCollector {
                 name: format!("{name}Bridge"),
                 rust_type_path: generated_bridge_type_path(module_name, name),
                 kind: RustGeneratedBridgeTypeKind::ClosedEnum,
+                supports_eq: true,
                 fields: Vec::new(),
                 variants: bridge_variants,
             },

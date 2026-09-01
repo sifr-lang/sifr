@@ -1,13 +1,8 @@
 // src/main.rs
-mod __sifr_project_nominals {
+mod sifr_generated_project_nominals {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ValueError {
         pub message: String,
-    }
-    impl ValueError {
-        pub fn new(message: String) -> Self {
-            Self { message }
-        }
     }
     impl ::std::fmt::Display for ValueError {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
@@ -16,33 +11,41 @@ mod __sifr_project_nominals {
     }
     impl ::std::error::Error for ValueError {}
 }
-pub use __sifr_project_nominals::ValueError;
-use ::std::collections::HashMap;
 use ::sifr_runtime::SifrInt;
 use ::sifr_runtime::SifrRange;
+use ::std::collections::HashMap;
+pub use sifr_generated_project_nominals::ValueError;
+#[expect(
+    clippy::assertions_on_constants,
+    reason = "generated Rust preserves this exact typed Sifr source contract"
+)]
 fn assert_ok<T: Clone + 'static>(value: Result<T, Error>) {
-    let __sifr_try_res: Result<(), Error> = (|| {
-        let out: T = value?;
+    let sifr_generated_try_res: Result<(), Error> = (|| {
+        let _ = value?;
         Ok(())
     })();
-    if let Err(e) = __sifr_try_res {
+    if sifr_generated_try_res.is_err() {
         assert!(false);
     }
 }
+#[expect(
+    clippy::assertions_on_constants,
+    reason = "generated Rust preserves this exact typed Sifr source contract"
+)]
 fn assert_err<T: Clone + 'static>(value: Result<T, Error>) {
-    let __sifr_try_res: Result<(), Error> = (|| {
-        let out: T = value?;
+    let sifr_generated_try_res: Result<(), Error> = (|| {
+        let _ = value?;
         assert!(false);
         Ok(())
     })();
-    if let Err(e) = __sifr_try_res {}
+    let _ = sifr_generated_try_res.is_err();
 }
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Error {
     message: String,
 }
 impl Error {
-    fn new(message: String) -> Self {
+    const fn new(message: String) -> Self {
         Self { message }
     }
 }
@@ -63,64 +66,151 @@ fn negate(x: SifrInt) -> SifrInt {
 fn add(x: SifrInt, y: SifrInt) -> SifrInt {
     &x + &y
 }
+#[expect(
+    clippy::too_many_lines,
+    reason = "one generated Rust function preserves one typed Sifr function"
+)]
 fn main() {
     println!("=== constructors ===");
     println!(
-        "{:?}", ("sifr".to_string()).chars().map(| __sifr_char | __sifr_char.to_string())
-        .collect::< Vec < _ >> ()
+        "{:?}",
+        "sifr"
+            .to_string()
+            .chars()
+            .map(|sifr_generated_char| sifr_generated_char.to_string())
+            .collect::<Vec<_>>()
     );
-    println!("{:?}", (SifrInt::from_i64(1), SifrInt::from_i64(2), SifrInt::from_i64(3)));
     println!(
-        "{:?}", { let mut __sifr_dict_ctor = (vec![("compiler".to_string(),
-        SifrInt::from_i64(1))]).clone().into_iter().collect::< HashMap < _, _ >> ();
-        __sifr_dict_ctor.extend((HashMap::from([("demo".to_string(),
-        SifrInt::from_i64(2))])).clone()); __sifr_dict_ctor }
+        "{:?}",
+        (
+            SifrInt::from_i64(1),
+            SifrInt::from_i64(2),
+            SifrInt::from_i64(3)
+        )
     );
+    println!("{:?}", {
+        let mut sifr_generated_dict_ctor = vec![("compiler".to_string(), SifrInt::from_i64(1))]
+            .clone()
+            .into_iter()
+            .collect::<HashMap<_, _>>();
+        sifr_generated_dict_ctor
+            .extend(HashMap::from([("demo".to_string(), SifrInt::from_i64(2))]).clone());
+        sifr_generated_dict_ctor
+    });
     println!("=== helpers ===");
+    println!("{:?}", {
+        let mut sifr_generated_sorted_v = vec![
+            SifrInt::from_i64(3),
+            SifrInt::from_i64(1),
+            SifrInt::from_i64(2),
+        ]
+        .into_iter()
+        .collect::<Vec<_>>();
+        sifr_generated_sorted_v.sort();
+        ();
+        sifr_generated_sorted_v
+    });
+    println!("{:?}", {
+        let mut sifr_generated_sorted_v = vec![
+            SifrInt::from_i64(3),
+            SifrInt::from_i64(1),
+            SifrInt::from_i64(2),
+        ]
+        .into_iter()
+        .collect::<Vec<_>>();
+        sifr_generated_sorted_v.sort_by(|sifr_generated_left, sifr_generated_right| {
+            negate(sifr_generated_left.clone()).cmp(&negate(sifr_generated_right.clone()))
+        });
+        ();
+        sifr_generated_sorted_v
+    });
+    println!("{:?}", {
+        let mut sifr_generated_sorted_v = vec![
+            SifrInt::from_i64(3),
+            SifrInt::from_i64(1),
+            SifrInt::from_i64(2),
+        ]
+        .into_iter()
+        .collect::<Vec<_>>();
+        sifr_generated_sorted_v.sort();
+        {
+            sifr_generated_sorted_v.reverse();
+        };
+        sifr_generated_sorted_v
+    });
     println!(
-        "{:?}", { let mut __sifr_sorted_v = (vec![SifrInt::from_i64(3),
-        SifrInt::from_i64(1), SifrInt::from_i64(2)]).into_iter().collect::< Vec < _ >>
-        (); __sifr_sorted_v.sort(); if false { { __sifr_sorted_v.reverse(); } };
-        __sifr_sorted_v }
+        "{:?}",
+        Box::new(
+            "sifr"
+                .to_string()
+                .chars()
+                .map(|sifr_generated_char| sifr_generated_char.to_string())
+                .rev()
+        )
+        .collect::<Vec<_>>()
     );
     println!(
-        "{:?}", { let mut __sifr_sorted_v = (vec![SifrInt::from_i64(3),
-        SifrInt::from_i64(1), SifrInt::from_i64(2)]).into_iter().collect::< Vec < _ >>
-        (); __sifr_sorted_v.sort_by(| __left, __right | { negate(__left.clone()).cmp(&
-        negate(__right.clone())) }); if false { { __sifr_sorted_v.reverse(); } };
-        __sifr_sorted_v }
+        "{:?}",
+        Box::new(
+            vec!["a".to_string(), "b".to_string()]
+                .into_iter()
+                .enumerate()
+                .map(|sifr_generated_pair| (
+                    SifrInt::from(sifr_generated_pair.0) + SifrInt::from_i64(10),
+                    sifr_generated_pair.1
+                ))
+        )
+        .collect::<Vec<_>>()
     );
     println!(
-        "{:?}", { let mut __sifr_sorted_v = (vec![SifrInt::from_i64(3),
-        SifrInt::from_i64(1), SifrInt::from_i64(2)]).into_iter().collect::< Vec < _ >>
-        (); __sifr_sorted_v.sort(); if true { { __sifr_sorted_v.reverse(); } };
-        __sifr_sorted_v }
+        "{:?}",
+        Box::new(
+            vec![SifrInt::from_i64(1), SifrInt::from_i64(2)]
+                .into_iter()
+                .zip(vec!["a".to_string(), "b".to_string()].into_iter())
+                .zip(vec![true, false].into_iter())
+                .map(|sifr_generated_zip_item| (
+                    sifr_generated_zip_item.0.0,
+                    sifr_generated_zip_item.0.1,
+                    sifr_generated_zip_item.1
+                ))
+        )
+        .collect::<Vec<_>>()
     );
     println!(
-        "{:?}", Box::new(("sifr".to_string()).chars().map(| __sifr_char | __sifr_char
-        .to_string()).rev()).collect::< Vec < _ >> ()
+        "{:?}",
+        Box::new(
+            vec![
+                SifrInt::from_i64(1),
+                SifrInt::from_i64(2),
+                SifrInt::from_i64(3)
+            ]
+            .into_iter()
+            .zip(
+                vec![
+                    SifrInt::from_i64(4),
+                    SifrInt::from_i64(5),
+                    SifrInt::from_i64(6)
+                ]
+                .into_iter()
+            )
+            .map(|sifr_generated_map_item| {
+                let sifr_generated_map_arg_0 = sifr_generated_map_item.0;
+                let sifr_generated_map_arg_1 = sifr_generated_map_item.1;
+                add(sifr_generated_map_arg_0, sifr_generated_map_arg_1)
+            })
+            .into_iter()
+        )
+        .collect::<Vec<_>>()
     );
     println!(
-        "{:?}", Box::new((vec!["a".to_string(), "b".to_string()]).into_iter().enumerate()
-        .map(| __pair | (SifrInt::from(__pair.0) + SifrInt::from_i64(10), __pair.1)))
-        .collect::< Vec < _ >> ()
-    );
-    println!(
-        "{:?}", Box::new((vec![SifrInt::from_i64(1), SifrInt::from_i64(2)]).into_iter()
-        .zip((vec!["a".to_string(), "b".to_string()]).into_iter()).zip((vec![true,
-        false]).into_iter()).map(| __zip_item | (__zip_item.0.0, __zip_item.0.1,
-        __zip_item.1))).collect::< Vec < _ >> ()
-    );
-    println!(
-        "{:?}", Box::new((vec![SifrInt::from_i64(1), SifrInt::from_i64(2),
-        SifrInt::from_i64(3)]).into_iter().zip((vec![SifrInt::from_i64(4),
-        SifrInt::from_i64(5), SifrInt::from_i64(6)]).into_iter()).map(| __map_item | {
-        let __map_arg_0 = __map_item.0; let __map_arg_1 = __map_item.1; add(__map_arg_0,
-        __map_arg_1) }).into_iter()).collect::< Vec < _ >> ()
-    );
-    println!(
-        "{:?}", SifrRange::new_known_nonzero(SifrInt::from_i64(2), SifrInt::from_i64(9),
-        SifrInt::from_i64(3)).collect::< Vec < _ >> ()
+        "{:?}",
+        SifrRange::new_known_nonzero(
+            SifrInt::from_i64(2),
+            SifrInt::from_i64(9),
+            SifrInt::from_i64(3)
+        )
+        .collect::<Vec<_>>()
     );
     println!("=== ord/chr ===");
     println!("{}", SifrInt::from_i64(65));
@@ -128,63 +218,52 @@ fn main() {
     let ok_text: String = "Z".to_string();
     let bad_text: String = "ZZ".to_string();
     let ok_codepoint: SifrInt = SifrInt::from_i64(67);
-    let huge: SifrInt = SifrInt::from_i64(1114112);
+    let huge: SifrInt = SifrInt::from_i64(1_114_112);
     assert_ok(
-        ({
-            let __sifr_ord_chars = (ok_text).chars().collect::<Vec<char>>();
-            match __sifr_ord_chars.as_slice() {
-                [__sifr_ord_char] => Ok(SifrInt::from(*__sifr_ord_char as u32)),
-                _ => {
-                    Err(ValueError {
-                        message: "ord() expected a string of length 1".to_string(),
-                    })
-                }
+        {
+            let sifr_generated_ord_chars = ok_text.chars().collect::<Vec<char>>();
+            if let [sifr_generated_ord_char] = sifr_generated_ord_chars.as_slice() {
+                Ok(SifrInt::from(*sifr_generated_ord_char as u32))
+            } else {
+                Err(ValueError {
+                    message: "ord() expected a string of length 1".to_string(),
+                })
             }
-        })
-            .map_err(|__sifr_error_value| ::std::convert::Into::<
-                Error,
-            >::into(__sifr_error_value)),
+        }
+        .map_err(::std::convert::Into::<Error>::into),
     );
     assert_err(
-        ({
-            let __sifr_ord_chars = (bad_text).chars().collect::<Vec<char>>();
-            match __sifr_ord_chars.as_slice() {
-                [__sifr_ord_char] => Ok(SifrInt::from(*__sifr_ord_char as u32)),
-                _ => {
-                    Err(ValueError {
-                        message: "ord() expected a string of length 1".to_string(),
-                    })
-                }
+        {
+            let sifr_generated_ord_chars = bad_text.chars().collect::<Vec<char>>();
+            if let [sifr_generated_ord_char] = sifr_generated_ord_chars.as_slice() {
+                Ok(SifrInt::from(*sifr_generated_ord_char as u32))
+            } else {
+                Err(ValueError {
+                    message: "ord() expected a string of length 1".to_string(),
+                })
             }
-        })
-            .map_err(|__sifr_error_value| ::std::convert::Into::<
-                Error,
-            >::into(__sifr_error_value)),
+        }
+        .map_err(::std::convert::Into::<Error>::into),
     );
     assert_ok(
-        ((ok_codepoint)
+        ok_codepoint
             .try_to_u32()
             .ok()
             .and_then(::std::char::from_u32)
-            .map(|__sifr_chr| __sifr_chr.to_string())
+            .map(|sifr_generated_chr| sifr_generated_chr.to_string())
             .ok_or_else(|| ValueError {
                 message: "chr() arg not in range(0x110000)".to_string(),
-            }))
-            .map_err(|__sifr_error_value| ::std::convert::Into::<
-                Error,
-            >::into(__sifr_error_value)),
+            })
+            .map_err(::std::convert::Into::<Error>::into),
     );
     assert_err(
-        ((huge)
-            .try_to_u32()
+        huge.try_to_u32()
             .ok()
             .and_then(::std::char::from_u32)
-            .map(|__sifr_chr| __sifr_chr.to_string())
+            .map(|sifr_generated_chr| sifr_generated_chr.to_string())
             .ok_or_else(|| ValueError {
                 message: "chr() arg not in range(0x110000)".to_string(),
-            }))
-            .map_err(|__sifr_error_value| ::std::convert::Into::<
-                Error,
-            >::into(__sifr_error_value)),
+            })
+            .map_err(::std::convert::Into::<Error>::into),
     );
 }

@@ -1,128 +1,275 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "baseline_commit": "d7a08f12a2ba638b98542c7745913f7e83be5ab9",
   "closure_item": 12,
-  "policy": "Exact signatures may only stay equal or be removed. Unknown or changed debt fails. The file must be empty at Item 12.",
+  "policy": "Each Clippy lint has an exact owner and per-selection count/signature. Exact signatures may only stay equal or be removed. Unknown or changed debt fails. The file must be empty at Item 12.",
   "safety": {
-    "owner_items": [3, 4, 11],
+    "owner_items": [
+      3,
+      4,
+      11
+    ],
     "entries": {}
   },
   "rustfmt": {
-    "owner_items": [8],
-    "entries": {
-      "selection-8e91c9f5f5bb2334": {"count": 2, "signature_sha256": "4861e5d2f111f4f9ea5c7cf2d97e443f17eb32c759c206b6ecfb5bbcf92596ec"},
-      "selection-7cddd09acf851f35": {"count": 12, "signature_sha256": "41373209accf9f3dbc3b7e159837ada836a804cf86de62ff728c22ea4e54af51"},
-      "selection-0902166e369de295": {"count": 91, "signature_sha256": "af0b33524b196181a038b8595c25eb43d17542640efdad45505c21dbc2548ac4"}
-    }
+    "owner_items": [
+      8
+    ],
+    "entries": {}
   },
   "clippy": {
-    "owner_items": [2, 4, 5, 7, 8, 9, 11],
+    "owner_items": [
+      2,
+      5,
+      7,
+      9,
+      11
+    ],
     "lint_owners": {
-      "clippy::approx_constant": 8,
       "clippy::arithmetic_side_effects": 2,
-      "clippy::assertions_on_constants": 8,
       "clippy::assigning_clones": 7,
       "clippy::box_collection": 7,
-      "clippy::branches_sharing_code": 8,
       "clippy::cast_lossless": 11,
       "clippy::clone_on_copy": 7,
       "clippy::cloned_instead_of_copied": 7,
-      "clippy::collapsible_else_if": 8,
-      "clippy::collapsible_if": 8,
-      "clippy::collapsible_str_replace": 9,
-      "clippy::comparison_to_empty": 8,
       "clippy::cmp_owned": 7,
-      "clippy::derive_partial_eq_without_eq": 8,
-      "clippy::double_parens": 8,
+      "clippy::collapsible_str_replace": 9,
       "clippy::explicit_into_iter_loop": 7,
       "clippy::float_cmp": 2,
-      "clippy::fn_params_excessive_bools": 8,
-      "clippy::format_in_format_args": 8,
-      "clippy::identity_op": 8,
-      "clippy::ignored_unit_patterns": 8,
       "clippy::implicit_clone": 7,
-      "clippy::inherent_to_string_shadow_display": 8,
-      "clippy::indexing_slicing": 4,
-      "clippy::items_after_statements": 8,
       "clippy::iter_cloned_collect": 7,
       "clippy::iter_overeager_cloned": 7,
-      "clippy::let_unit_value": 8,
-      "clippy::manual_assert_eq": 8,
       "clippy::manual_is_multiple_of": 2,
-      "clippy::manual_let_else": 8,
-      "clippy::manual_ok_err": 8,
-      "clippy::manual_string_new": 8,
-      "clippy::map_identity": 8,
-      "clippy::many_single_char_names": 8,
-      "clippy::missing_const_for_fn": 8,
-      "clippy::missing_errors_doc": 8,
-      "clippy::missing_fields_in_debug": 8,
-      "clippy::must_use_candidate": 8,
       "clippy::needless_borrow": 7,
       "clippy::needless_collect": 9,
       "clippy::needless_pass_by_value": 7,
-      "clippy::needless_return": 8,
-      "clippy::no_effect_underscore_binding": 8,
-      "clippy::option_if_let_else": 8,
       "clippy::op_ref": 7,
-      "clippy::or_fun_call": 8,
-      "clippy::partialeq_to_none": 8,
       "clippy::ptr_arg": 7,
-      "clippy::pub_underscore_fields": 8,
-      "clippy::question_mark": 8,
-      "clippy::range_plus_one": 8,
       "clippy::redundant_clone": 7,
-      "clippy::redundant_closure": 8,
-      "clippy::redundant_closure_call": 8,
-      "clippy::redundant_closure_for_method_calls": 8,
-      "clippy::redundant_else": 8,
       "clippy::redundant_iter_cloned": 7,
       "clippy::ref_option": 7,
-      "clippy::return_self_not_must_use": 8,
-      "clippy::semicolon_if_nothing_returned": 8,
-      "clippy::similar_names": 8,
       "clippy::single_char_pattern": 9,
-      "clippy::single_match_else": 8,
-      "clippy::struct_excessive_bools": 8,
-      "clippy::to_string_in_format_args": 8,
-      "clippy::too_many_arguments": 8,
-      "clippy::too_many_lines": 8,
       "clippy::type_complexity": 7,
-      "clippy::uninlined_format_args": 8,
       "clippy::unnecessary_cast": 11,
-      "clippy::unnecessary_operation": 8,
-      "clippy::unnecessary_semicolon": 8,
+      "clippy::unnecessary_owned_empty_strings": 9,
       "clippy::unnecessary_to_owned": 7,
-      "clippy::unnecessary_wraps": 8,
-      "clippy::unnested_or_patterns": 8,
-      "clippy::unreadable_literal": 8,
       "clippy::unused_async": 5,
       "clippy::unused_async_trait_impl": 5,
       "clippy::unused_self": 7,
-      "clippy::unused_unit": 8,
       "clippy::use_self": 7,
-      "clippy::used_underscore_binding": 8,
-      "clippy::used_underscore_items": 8,
-      "clippy::useless_vec": 7,
-      "clippy::useless_conversion": 8,
-      "clippy::useless_format": 8,
-      "clippy::useless_let_if_seq": 8,
-      "clippy::vec_init_then_push": 8,
-      "dead_code": 8,
-      "non_camel_case_types": 8,
-      "non_snake_case": 8,
-      "unreachable_code": 8,
-      "unused_assignments": 8,
-      "unused_imports": 8,
-      "unused_mut": 8,
-      "unused_parens": 8,
-      "unused_variables": 8
+      "clippy::useless_vec": 7
     },
     "entries": {
-      "selection-8e91c9f5f5bb2334": {"count": 679, "lint_count": 40, "signature_sha256": "7bab7e5d7aad0f2eb033b37a187cbced46bc18017e9c820102d9462b3e6861f5"},
-      "selection-7cddd09acf851f35": {"count": 7205, "lint_count": 73, "signature_sha256": "ec5dbe847d1ff95e51d217b37469f88de52d16a542b5093107c8c83bcc9fc0b9"},
-      "selection-0902166e369de295": {"count": 35982, "lint_count": 99, "signature_sha256": "9bcb53cd081c44b33167709332ec723a04b4b6615ac4f8bf2566da5becb21f14"}
+      "selection-7cddd09acf851f35": {
+        "clippy::arithmetic_side_effects": {
+          "count": 69,
+          "signature_sha256": "e1bcb7eab47e67cd730ca61132705260adc62ff9076452cb2b08ab293b30b992"
+        },
+        "clippy::assigning_clones": {
+          "count": 2,
+          "signature_sha256": "4cb9ca1195e4635fc26ea5cd005e29cc7cd63fa6fe2cdd446313a8dd68fabb25"
+        },
+        "clippy::implicit_clone": {
+          "count": 22,
+          "signature_sha256": "2b2e7b609efa8a074f3548b6f5b0beb7e8cd5f4b6f9a0c87de770dc5514809a0"
+        },
+        "clippy::iter_overeager_cloned": {
+          "count": 1,
+          "signature_sha256": "300eaeb5a8f3f9827f83a9aa0ad951a50b73873b916c6294c4cccda1c03def9b"
+        },
+        "clippy::needless_collect": {
+          "count": 7,
+          "signature_sha256": "7146dd6879cf5d22e4f5986b11bfe0c11b81f2a4ebe2cc6d5c2745ba5f0f27bc"
+        },
+        "clippy::needless_pass_by_value": {
+          "count": 67,
+          "signature_sha256": "8b159735a31fb3a4808bdc7aeb4fe1d300c1850e5ad753d552c199e410c273ac"
+        },
+        "clippy::op_ref": {
+          "count": 60,
+          "signature_sha256": "7f328b2e06dd684995b99bcf9f3a85a79caacb065d97e09385959b1c2f500d69"
+        },
+        "clippy::redundant_clone": {
+          "count": 207,
+          "signature_sha256": "6eb064e3cf2774ca4cbbe8d37fb64404feac1c3416ca60476bd7b8130f5cc904"
+        },
+        "clippy::ref_option": {
+          "count": 4,
+          "signature_sha256": "67d39544d7a6a872c1d7fae016ec0ab9fe46158a2ce4cc91ca087b611dac53aa"
+        },
+        "clippy::single_char_pattern": {
+          "count": 4,
+          "signature_sha256": "cbbda90888e97793f55ef3b2d2865ba31ce122d09870fc6c564596a8a8dccb06"
+        },
+        "clippy::type_complexity": {
+          "count": 1,
+          "signature_sha256": "715521d18510da97dc450c45dfdc6863bcdad654fa97b0d600aec0f67cbcc4e1"
+        },
+        "clippy::unnecessary_cast": {
+          "count": 9,
+          "signature_sha256": "099881dc052ab44fd1e4b19973a7edd0bf76495af2f755cd2ae3d30abfd03688"
+        },
+        "clippy::unnecessary_to_owned": {
+          "count": 29,
+          "signature_sha256": "ee9b2027485d72384a61b878b5ecc3ea70c2152a30889447056e89adfbc85be5"
+        },
+        "clippy::unused_async": {
+          "count": 2,
+          "signature_sha256": "c32dd5009596d441eb07228ecf90b9e29405dd3dd882918646ecfd4bb8a0d070"
+        },
+        "clippy::unused_async_trait_impl": {
+          "count": 1,
+          "signature_sha256": "bcf916ee09bf78e24c79b1804e5ffd12ceaa6aa494e70542e57063f81d1a6193"
+        },
+        "clippy::unused_self": {
+          "count": 1,
+          "signature_sha256": "c684a74cf162de3fb551a142b122c2960d79784c93b1c4e475fdc862973488b0"
+        },
+        "clippy::use_self": {
+          "count": 34,
+          "signature_sha256": "6c200b9e5c854eb0a2a8919ad570c8820c6797a0260cef6511874bd1f189c8c6"
+        },
+        "clippy::useless_vec": {
+          "count": 3,
+          "signature_sha256": "84d550efe9fb91315605562affe93e7d7c79d63814e5016133c08037b616118e"
+        }
+      },
+      "selection-0902166e369de295": {
+        "clippy::arithmetic_side_effects": {
+          "count": 510,
+          "signature_sha256": "2921d1a30903ce6ffcd35bf8af702942e614ef7fe53326188af93ec0be772cb4"
+        },
+        "clippy::assigning_clones": {
+          "count": 2,
+          "signature_sha256": "4cb9ca1195e4635fc26ea5cd005e29cc7cd63fa6fe2cdd446313a8dd68fabb25"
+        },
+        "clippy::box_collection": {
+          "count": 2,
+          "signature_sha256": "94bd79ef7a3432bc1d08fb52c0c08725eb8ad812e7ad087349760caedcd9173f"
+        },
+        "clippy::cast_lossless": {
+          "count": 1,
+          "signature_sha256": "295e18c3814e03d0e70ae4cccced4e7fba7dcbd2d7beecfd5b4f58a47d13797b"
+        },
+        "clippy::clone_on_copy": {
+          "count": 1,
+          "signature_sha256": "6f3854f4d4a598055acd11af84484b839ba66057591dcb54d40f0112da156eb1"
+        },
+        "clippy::cloned_instead_of_copied": {
+          "count": 6,
+          "signature_sha256": "6c08c0726ad4a21448cf58017a48a62e129921803e9520c7053d33859a2afa8a"
+        },
+        "clippy::cmp_owned": {
+          "count": 20,
+          "signature_sha256": "acb66f502f94ca78b2ee96a354482bdfdabacab7f1d2910047d7b96526f6f61e"
+        },
+        "clippy::collapsible_str_replace": {
+          "count": 1,
+          "signature_sha256": "81c9091d7782ca20fdaaada4219b203a0a91af965b94e6a1c5b0a739e2d75b59"
+        },
+        "clippy::explicit_into_iter_loop": {
+          "count": 2,
+          "signature_sha256": "4d775074f1e76fe4b1ca47a64c808c8c009b772a9f96ccf2d0639aabc18e5da9"
+        },
+        "clippy::float_cmp": {
+          "count": 6,
+          "signature_sha256": "e7fffc6c98611df7f05f60535e40aaf9b91ee51c435e92248ac662dbf2e051d8"
+        },
+        "clippy::implicit_clone": {
+          "count": 298,
+          "signature_sha256": "4425ed39f3a18e6d78a9defb9059f406de2b308b90f47c984822219b10f19691"
+        },
+        "clippy::iter_cloned_collect": {
+          "count": 2,
+          "signature_sha256": "27d99cb9629d09490769d1fe692142bddf06cab869acb72fec0bef06df3ced4c"
+        },
+        "clippy::iter_overeager_cloned": {
+          "count": 1,
+          "signature_sha256": "300eaeb5a8f3f9827f83a9aa0ad951a50b73873b916c6294c4cccda1c03def9b"
+        },
+        "clippy::manual_is_multiple_of": {
+          "count": 1,
+          "signature_sha256": "09c6a11acf408813cb9dc85d3e5b7ba6c076dd1ec850d59226768455655182a2"
+        },
+        "clippy::needless_borrow": {
+          "count": 9,
+          "signature_sha256": "6609d276c44f93e5ec620984a9aa7182654c4e65d2939e04f0315249debf291a"
+        },
+        "clippy::needless_collect": {
+          "count": 26,
+          "signature_sha256": "11e37c5687864d3ef50b0602726b28161e8417f1f0050697ee7f778a4b68bd04"
+        },
+        "clippy::needless_pass_by_value": {
+          "count": 326,
+          "signature_sha256": "71f6e578b4b688ac4abd42ca20ddc90f8f74ceda1c761952525fcc717d01c4e7"
+        },
+        "clippy::op_ref": {
+          "count": 668,
+          "signature_sha256": "f8bde9975c867a9845dcf0beabf708c35d2d58e5aa3a85851e2398bfe4656d61"
+        },
+        "clippy::ptr_arg": {
+          "count": 1,
+          "signature_sha256": "dc601fd4e7e14d42aca3cdaf00ecc0a3960e429d81f6f253db20129148234808"
+        },
+        "clippy::redundant_clone": {
+          "count": 1462,
+          "signature_sha256": "f280f80f72c61e73764f6fc6ddb87fdde68430ff89ccda53dc62950d989071dc"
+        },
+        "clippy::redundant_iter_cloned": {
+          "count": 1,
+          "signature_sha256": "d2fe75e0b8cd1cb308d924f22b60c77f3a5f665d22f47767f35b720404a86d85"
+        },
+        "clippy::ref_option": {
+          "count": 55,
+          "signature_sha256": "7b5c57bc1151b980f8f5ab402f0ccfd29e0ca1a3572779f448bf41ef527c4c60"
+        },
+        "clippy::single_char_pattern": {
+          "count": 8,
+          "signature_sha256": "a310a4795fee1bab6dbbb352e979a4d92cff578dd6f0b7f74cba5093307bab39"
+        },
+        "clippy::type_complexity": {
+          "count": 3,
+          "signature_sha256": "26211a6564afe29c798a081b9bce31e95b34dac6a08e9f74bc5327e4d2035e5e"
+        },
+        "clippy::unnecessary_cast": {
+          "count": 21,
+          "signature_sha256": "64aec7242f4bd0d5b5ea8c5d38975a9c980debf02b67dc685eadd55591d283af"
+        },
+        "clippy::unnecessary_owned_empty_strings": {
+          "count": 18,
+          "signature_sha256": "f1ad1b9b53c17e49a91ff11cbcb87c38b31816491fa00f2b60007df215008398"
+        },
+        "clippy::unnecessary_to_owned": {
+          "count": 476,
+          "signature_sha256": "413091c2b48f754d539fcbab554c2d71d5dee517e93c54ac633d3dac7c78da91"
+        },
+        "clippy::unused_async": {
+          "count": 4,
+          "signature_sha256": "09fbdd5ef61f268996640da06f2b8ae4e06d38d871831efa839c73a6f4a8f194"
+        },
+        "clippy::unused_async_trait_impl": {
+          "count": 3,
+          "signature_sha256": "8924a7a2af72a70825eb47e5acb2901600150bd586e86380c9a7e5aae6ae48d1"
+        },
+        "clippy::unused_self": {
+          "count": 1,
+          "signature_sha256": "c684a74cf162de3fb551a142b122c2960d79784c93b1c4e475fdc862973488b0"
+        },
+        "clippy::use_self": {
+          "count": 211,
+          "signature_sha256": "b7934158d77bf586b97b171c412c3a2539fa78b9e2a49b7765abf9afdcebefa5"
+        },
+        "clippy::useless_vec": {
+          "count": 74,
+          "signature_sha256": "1834eb2973a8d1f81b66f617a57c41f02d25dbfa5502327acd55a06c1d5a9687"
+        }
+      }
     }
   },
-  "freshness": {"owner_items": [8], "entries": {}}
+  "freshness": {
+    "owner_items": [
+      8
+    ],
+    "entries": {}
+  }
 }

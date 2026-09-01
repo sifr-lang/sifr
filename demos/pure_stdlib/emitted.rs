@@ -1,12 +1,13 @@
 // src/main.rs
-mod __sifr_project_nominals {
-    pub use ::std::collections::HashMap;
+mod sifr_generated_project_nominals {
     pub use ::sifr_runtime::SifrInt;
-    #[derive(Debug, Clone, PartialEq)]
-    pub struct __SifrStdlib_sifr_x2ecollections_x2eCounter<T: std::hash::Hash + Eq> {
+    pub use ::std::collections::HashMap;
+    #[derive(Debug, Clone, PartialEq, Eq)]
+    pub struct SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T: std::hash::Hash + Eq> {
         pub counts: HashMap<T, SifrInt>,
     }
-    impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
+    impl<T: ::std::hash::Hash + Eq + Clone> SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T> {
+        #[must_use]
         pub fn new(source: Option<HashMap<T, SifrInt>>, iterable: Option<Vec<T>>) -> Self {
             let mut counts: HashMap<T, SifrInt> = HashMap::from([]);
             if let Some(source) = source {
@@ -14,10 +15,11 @@ mod __sifr_project_nominals {
                     let value: Option<SifrInt> = source.get(&key).cloned();
                     if let Some(value) = value.clone() {
                         {
-                            let __assign_value = value.clone();
+                            let sifr_generated_assign_value = value.clone();
                             {
-                                let __assign_key = key.clone();
-                                counts.insert(__assign_key, __assign_value);
+                                let sifr_generated_assign_key = key.clone();
+                                counts
+                                    .insert(sifr_generated_assign_key, sifr_generated_assign_value);
                             }
                         }
                     }
@@ -25,231 +27,101 @@ mod __sifr_project_nominals {
             }
             if let Some(iterable) = iterable {
                 for item in iterable.iter().cloned() {
-                    let value2: Option<SifrInt> = counts.get(&item).cloned();
-                    if let Some(value2) = value2.clone() {
+                    let value2_value_2127bacf1a4dd308: Option<SifrInt> = counts.get(&item).cloned();
+                    if let Some(value2) = value2_value_2127bacf1a4dd308.clone() {
                         {
-                            let __assign_value = &value2 + &SifrInt::from_i64(1);
+                            let sifr_generated_assign_value = &value2 + &SifrInt::from_i64(1);
                             {
-                                let __assign_key = item.clone();
-                                counts.insert(__assign_key, __assign_value);
+                                let sifr_generated_assign_key = item.clone();
+                                counts
+                                    .insert(sifr_generated_assign_key, sifr_generated_assign_value);
                             }
                         }
                     } else {
+                        let sifr_generated_assign_value = SifrInt::from_i64(1);
                         {
-                            let __assign_value = SifrInt::from_i64(1);
-                            {
-                                let __assign_key = item.clone();
-                                counts.insert(__assign_key, __assign_value);
-                            }
+                            let sifr_generated_assign_key = item.clone();
+                            counts.insert(sifr_generated_assign_key, sifr_generated_assign_value);
                         }
                     }
                 }
             }
-            let __sifr_field_init_0: HashMap<T, SifrInt> = counts;
+            let sifr_generated_field_value_c341febe5aae51e5_636f756e7473: HashMap<T, SifrInt> =
+                counts;
             Self {
-                counts: __sifr_field_init_0,
+                counts: sifr_generated_field_value_c341febe5aae51e5_636f756e7473,
             }
         }
     }
-    impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
-        pub fn __iter__(&self) -> Vec<T> {
-            Box::new((self.counts.keys().cloned().collect::<Vec<_>>()).into_iter())
-                .collect::<Vec<_>>()
-        }
-    }
-    impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
-        pub fn __getitem__(&self, key: &T) -> SifrInt {
-            let val: Option<SifrInt> = self.counts.get(key).cloned();
-            if let Some(val) = val.clone() {
-                return val;
-            }
-            SifrInt::from_i64(0)
-        }
-    }
-    impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
+    impl<T: ::std::hash::Hash + Eq + Clone> SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T> {
+        #[must_use]
         pub fn get(&self, key: &T, default: &SifrInt) -> SifrInt {
             let val: Option<SifrInt> = self.counts.get(key).cloned();
-            if let Some(val) = val.clone() {
-                return val;
-            }
-            default.clone()
-        }
-    }
-    impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
-        pub fn increment(&mut self, key: &T) {
-            let val: Option<SifrInt> = self.counts.get(key).cloned();
-            if let Some(val) = val.clone() {
-                {
-                    let __assign_value = &val + &SifrInt::from_i64(1);
-                    {
-                        let __assign_key = key.clone();
-                        self.counts.insert(__assign_key, __assign_value);
-                    }
-                }
-            } else {
-                {
-                    let __assign_value = SifrInt::from_i64(1);
-                    {
-                        let __assign_key = key.clone();
-                        self.counts.insert(__assign_key, __assign_value);
-                    }
-                }
-            }
-        }
-    }
-    impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
-        pub fn total(&self) -> SifrInt {
-            let mut total: SifrInt = SifrInt::from_i64(0);
-            for count in self.counts.values().cloned().collect::<Vec<_>>() {
-                total = &total + &count;
-            }
-            total
-        }
-    }
-    impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
-        pub fn most_common(&self, n: &Option<SifrInt>) -> Vec<(T, SifrInt)> {
-            let mut result: Vec<(T, SifrInt)> = vec![];
-            for key in self.counts.keys().cloned().collect::<Vec<_>>() {
-                let count: Option<SifrInt> = self.counts.get(&key).cloned();
-                if let Some(count) = count.clone() {
-                    let entry: (T, SifrInt) = (key, count.clone());
-                    result.push(entry.clone());
-                }
-            }
-            let mut i: SifrInt = SifrInt::from_i64(0);
-            while (&SifrInt::from_i64(0) <= &i) && (&i < &SifrInt::from(result.len())) {
-                let mut j: SifrInt = &i + &SifrInt::from_i64(1);
-                while (&SifrInt::from_i64(0) <= &j) && (&j < &SifrInt::from(result.len())) {
-                    let left: Option<(T, SifrInt)> = {
-                        let __sifr_checked_read_collection = &result;
-                        let __sifr_checked_read_index = i.clone();
-                        let __sifr_checked_read_normalized = __sifr_checked_read_index
-                            .normalize_index_or_len(__sifr_checked_read_collection.len());
-                        __sifr_checked_read_collection
-                            .get(__sifr_checked_read_normalized)
-                            .cloned()
-                    };
-                    let right: Option<(T, SifrInt)> = {
-                        let __sifr_checked_read_collection = &result;
-                        let __sifr_checked_read_index = j.clone();
-                        let __sifr_checked_read_normalized = __sifr_checked_read_index
-                            .normalize_index_or_len(__sifr_checked_read_collection.len());
-                        __sifr_checked_read_collection
-                            .get(__sifr_checked_read_normalized)
-                            .cloned()
-                    };
-                    if let Some(left) = left {
-                        if let Some(right) = right {
-                            if ((right).1.clone() > (left).1.clone()) {
-                                {
-                                    let __assign_value = right.clone();
-                                    {
-                                        let __index_raw = i.clone();
-                                        let __index_normalized = __index_raw
-                                            .normalize_index_or_len(result.len());
-                                        if let Some(__elem) = result.get_mut(__index_normalized) {
-                                            *__elem = __assign_value;
-                                        }
-                                    }
-                                }
-                                {
-                                    let __assign_value = left.clone();
-                                    {
-                                        let __index_raw = j.clone();
-                                        let __index_normalized = __index_raw
-                                            .normalize_index_or_len(result.len());
-                                        if let Some(__elem) = result.get_mut(__index_normalized) {
-                                            *__elem = __assign_value;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    j = &j + &SifrInt::from_i64(1);
-                }
-                i = &i + &SifrInt::from_i64(1);
-            }
-            let Some(n) = n.as_ref() else {
-                return result;
+            let Some(val) = val.clone() else {
+                return default.clone();
             };
-            if (n <= &SifrInt::from_i64(0)) {
-                return vec![];
-            }
-            let mut top: Vec<(T, SifrInt)> = vec![];
-            let mut index: SifrInt = SifrInt::from_i64(0);
-            while index < *n {
-                if (&index >= &SifrInt::from(result.len())) {
-                    return top;
-                }
-                let value: Option<(T, SifrInt)> = {
-                    let __sifr_checked_read_collection = &result;
-                    let __sifr_checked_read_index = index.clone();
-                    let __sifr_checked_read_normalized = __sifr_checked_read_index
-                        .normalize_index_or_len(__sifr_checked_read_collection.len());
-                    __sifr_checked_read_collection
-                        .get(__sifr_checked_read_normalized)
-                        .cloned()
-                };
-                if let Some(value) = value {
-                    top.push(value.clone());
-                }
-                index = &index + &SifrInt::from_i64(1);
-            }
-            top
+            val
         }
     }
-    impl<
-        T: ::std::hash::Hash + Eq + Clone + PartialOrd,
-    > __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
+    impl<T: ::std::hash::Hash + Eq + Clone + PartialOrd>
+        SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T>
+    {
+        #[must_use]
         pub fn keys(&self) -> Vec<T> {
             let mut result: Vec<T> = self.counts.keys().cloned().collect::<Vec<_>>();
             let mut i: SifrInt = SifrInt::from_i64(0);
-            while (&SifrInt::from_i64(0) <= &i) && (&i < &SifrInt::from(result.len())) {
+            while &SifrInt::from_i64(0) <= &i && &i < &SifrInt::from(result.len()) {
                 let mut j: SifrInt = &i + &SifrInt::from_i64(1);
-                while (&SifrInt::from_i64(0) <= &j) && (&j < &SifrInt::from(result.len())) {
+                while &SifrInt::from_i64(0) <= &j && &j < &SifrInt::from(result.len()) {
                     let left: Option<T> = {
-                        let __sifr_checked_read_collection = &result;
-                        let __sifr_checked_read_index = i.clone();
-                        let __sifr_checked_read_normalized = __sifr_checked_read_index
-                            .normalize_index_or_len(__sifr_checked_read_collection.len());
-                        __sifr_checked_read_collection
-                            .get(__sifr_checked_read_normalized)
+                        let sifr_generated_checked_read_collection = &result;
+                        let sifr_generated_checked_read_index = i.clone();
+                        let sifr_generated_checked_read_normalized =
+                            sifr_generated_checked_read_index.normalize_index_or_len(
+                                sifr_generated_checked_read_collection.len(),
+                            );
+                        sifr_generated_checked_read_collection
+                            .get(sifr_generated_checked_read_normalized)
                             .cloned()
                     };
                     let right: Option<T> = {
-                        let __sifr_checked_read_collection = &result;
-                        let __sifr_checked_read_index = j.clone();
-                        let __sifr_checked_read_normalized = __sifr_checked_read_index
-                            .normalize_index_or_len(__sifr_checked_read_collection.len());
-                        __sifr_checked_read_collection
-                            .get(__sifr_checked_read_normalized)
+                        let sifr_generated_checked_read_collection = &result;
+                        let sifr_generated_checked_read_index = j.clone();
+                        let sifr_generated_checked_read_normalized =
+                            sifr_generated_checked_read_index.normalize_index_or_len(
+                                sifr_generated_checked_read_collection.len(),
+                            );
+                        sifr_generated_checked_read_collection
+                            .get(sifr_generated_checked_read_normalized)
                             .cloned()
                     };
-                    if let Some(left) = left {
-                        if let Some(right) = right {
-                            if (right < left) {
+                    if let Some(left) = left
+                        && let Some(right) = right
+                        && right < left
+                    {
+                        {
+                            let sifr_generated_assign_value = right.clone();
+                            {
+                                let sifr_generated_index_raw = i.clone();
+                                let sifr_generated_index_normalized =
+                                    sifr_generated_index_raw.normalize_index_or_len(result.len());
+                                if let Some(sifr_generated_elem) =
+                                    result.get_mut(sifr_generated_index_normalized)
                                 {
-                                    let __assign_value = right.clone();
-                                    {
-                                        let __index_raw = i.clone();
-                                        let __index_normalized = __index_raw
-                                            .normalize_index_or_len(result.len());
-                                        if let Some(__elem) = result.get_mut(__index_normalized) {
-                                            *__elem = __assign_value;
-                                        }
-                                    }
+                                    *sifr_generated_elem = sifr_generated_assign_value;
                                 }
+                            }
+                        }
+                        {
+                            let sifr_generated_assign_value = left.clone();
+                            {
+                                let sifr_generated_index_raw = j.clone();
+                                let sifr_generated_index_normalized =
+                                    sifr_generated_index_raw.normalize_index_or_len(result.len());
+                                if let Some(sifr_generated_elem) =
+                                    result.get_mut(sifr_generated_index_normalized)
                                 {
-                                    let __assign_value = left.clone();
-                                    {
-                                        let __index_raw = j.clone();
-                                        let __index_normalized = __index_raw
-                                            .normalize_index_or_len(result.len());
-                                        if let Some(__elem) = result.get_mut(__index_normalized) {
-                                            *__elem = __assign_value;
-                                        }
-                                    }
+                                    *sifr_generated_elem = sifr_generated_assign_value;
                                 }
                             }
                         }
@@ -261,117 +133,90 @@ mod __sifr_project_nominals {
             result
         }
     }
-    impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
-        pub fn items(&self) -> Vec<(T, SifrInt)> {
-            let mut result: Vec<(T, SifrInt)> = vec![];
-            for key in self.counts.keys().cloned().collect::<Vec<_>>() {
-                let value: Option<SifrInt> = self.counts.get(&key).cloned();
-                if let Some(value) = value.clone() {
-                    let entry: (T, SifrInt) = (key, value.clone());
-                    result.push(entry.clone());
-                }
-            }
-            result
-        }
-    }
-    impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
-        pub fn values(&self) -> Vec<SifrInt> {
-            self.counts.values().cloned().collect::<Vec<_>>()
-        }
-    }
-    impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
-        pub fn copy(&self) -> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
-            __SifrStdlib_sifr_x2ecollections_x2eCounter::new(Some(self.counts.clone()), None)
-        }
-    }
-    impl<T: ::std::hash::Hash + Eq> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
-        pub fn clear(&mut self) {
-            self.counts = HashMap::from([]);
-        }
-    }
-    impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
-        pub fn update(&mut self, other: &__SifrStdlib_sifr_x2ecollections_x2eCounter<T>) {
+    impl<T: ::std::hash::Hash + Eq + Clone> SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T> {
+        pub fn update(&mut self, other: &SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T>) {
             for key in other.counts.keys().cloned().collect::<Vec<_>>() {
                 let other_val: Option<SifrInt> = other.counts.get(&key).cloned();
                 if let Some(other_val) = other_val.clone() {
                     let existing: Option<SifrInt> = self.counts.get(&key).cloned();
                     if let Some(existing) = existing.clone() {
                         {
-                            let __assign_value = &existing + &other_val;
+                            let sifr_generated_assign_value = &existing + &other_val;
                             {
-                                let __assign_key = key.clone();
-                                self.counts.insert(__assign_key, __assign_value);
+                                let sifr_generated_assign_key = key.clone();
+                                self.counts
+                                    .insert(sifr_generated_assign_key, sifr_generated_assign_value);
                             }
                         }
                     } else {
+                        let sifr_generated_assign_value = other_val.clone();
                         {
-                            let __assign_value = other_val.clone();
-                            {
-                                let __assign_key = key.clone();
-                                self.counts.insert(__assign_key, __assign_value);
-                            }
+                            let sifr_generated_assign_key = key.clone();
+                            self.counts
+                                .insert(sifr_generated_assign_key, sifr_generated_assign_value);
                         }
                     }
                 }
             }
         }
     }
-    impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
-        pub fn subtract(&mut self, other: &__SifrStdlib_sifr_x2ecollections_x2eCounter<T>) {
+    impl<T: ::std::hash::Hash + Eq + Clone> SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T> {
+        pub fn subtract(&mut self, other: &SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T>) {
             for key in other.counts.keys().cloned().collect::<Vec<_>>() {
                 let other_val: Option<SifrInt> = other.counts.get(&key).cloned();
                 if let Some(other_val) = other_val.clone() {
                     let existing: Option<SifrInt> = self.counts.get(&key).cloned();
                     if let Some(existing) = existing.clone() {
                         {
-                            let __assign_value = &existing - &other_val;
+                            let sifr_generated_assign_value = &existing - &other_val;
                             {
-                                let __assign_key = key.clone();
-                                self.counts.insert(__assign_key, __assign_value);
+                                let sifr_generated_assign_key = key.clone();
+                                self.counts
+                                    .insert(sifr_generated_assign_key, sifr_generated_assign_value);
                             }
                         }
                     } else {
+                        let sifr_generated_assign_value = &SifrInt::from_i64(0) - &other_val;
                         {
-                            let __assign_value = &SifrInt::from_i64(0) - &other_val;
-                            {
-                                let __assign_key = key.clone();
-                                self.counts.insert(__assign_key, __assign_value);
-                            }
+                            let sifr_generated_assign_key = key.clone();
+                            self.counts
+                                .insert(sifr_generated_assign_key, sifr_generated_assign_value);
                         }
                     }
                 }
             }
         }
     }
-    impl<T: ::std::hash::Hash + Eq + Clone> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
+    impl<T: ::std::hash::Hash + Eq + Clone> SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T> {
+        #[must_use]
         pub fn elements(&self) -> Vec<T> {
-            let mut result: Vec<T> = vec![];
+            let mut result: Vec<T> = Vec::new();
             let all_keys: Vec<T> = self.counts.keys().cloned().collect::<Vec<_>>();
             let mut ki: SifrInt = SifrInt::from_i64(0);
-            while (&ki < &SifrInt::from(all_keys.len())) {
+            while &ki < &SifrInt::from(all_keys.len()) {
                 let key_opt: Option<T> = {
-                    let __sifr_checked_read_collection = &all_keys;
-                    let __sifr_checked_read_index = ki.clone();
-                    let __sifr_checked_read_normalized = __sifr_checked_read_index
-                        .normalize_index_or_len(__sifr_checked_read_collection.len());
-                    __sifr_checked_read_collection
-                        .get(__sifr_checked_read_normalized)
+                    let sifr_generated_checked_read_collection = &all_keys;
+                    let sifr_generated_checked_read_index = ki.clone();
+                    let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
+                        .normalize_index_or_len(sifr_generated_checked_read_collection.len());
+                    sifr_generated_checked_read_collection
+                        .get(sifr_generated_checked_read_normalized)
                         .cloned()
                 };
                 if let Some(key_opt) = key_opt {
                     let cnt: Option<SifrInt> = self.counts.get(&key_opt).cloned();
                     if let Some(cnt) = cnt.clone() {
                         let mut i: SifrInt = SifrInt::from_i64(0);
-                        while (&i < &cnt) {
+                        while &i < &cnt {
                             let key_copy: Option<T> = {
-                                let __sifr_checked_read_collection = &all_keys;
-                                let __sifr_checked_read_index = ki.clone();
-                                let __sifr_checked_read_normalized = __sifr_checked_read_index
-                                    .normalize_index_or_len(
-                                        __sifr_checked_read_collection.len(),
+                                let sifr_generated_checked_read_collection = &all_keys;
+                                let sifr_generated_checked_read_index = ki.clone();
+                                let sifr_generated_checked_read_normalized =
+                                    sifr_generated_checked_read_index.normalize_index_or_len(
+                                        sifr_generated_checked_read_collection.len(),
                                     );
-                                __sifr_checked_read_collection
-                                    .get(__sifr_checked_read_normalized)
+                                sifr_generated_checked_read_collection
+                                    .get(sifr_generated_checked_read_normalized)
                                     .cloned()
                             };
                             if let Some(key_copy) = key_copy {
@@ -386,93 +231,84 @@ mod __sifr_project_nominals {
             result
         }
     }
-    impl<
-        T: ::std::hash::Hash + Eq + Clone,
-    > ::std::ops::Add<&__SifrStdlib_sifr_x2ecollections_x2eCounter<T>>
-    for &__SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
-        type Output = __SifrStdlib_sifr_x2ecollections_x2eCounter<T>;
-        fn add(
-            self,
-            other: &__SifrStdlib_sifr_x2ecollections_x2eCounter<T>,
-        ) -> Self::Output {
+    impl<T: ::std::hash::Hash + Eq + Clone>
+        ::std::ops::Add<&SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T>>
+        for &SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T>
+    {
+        type Output = SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T>;
+        fn add(self, other: &SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T>) -> Self::Output {
             let mut new_counts: HashMap<T, SifrInt> = HashMap::from([]);
-            for key in Box::new(
-                (self.counts.keys().cloned().collect::<Vec<_>>()).into_iter(),
-            ) {
+            for key in Box::new(self.counts.keys().cloned().collect::<Vec<_>>().into_iter()) {
                 let a_val: Option<SifrInt> = self.counts.get(&key).cloned();
                 if let Some(a_val) = a_val {
-                    let b_val: Option<SifrInt> = other.counts.get(&key).cloned();
-                    let mut b_count: SifrInt = SifrInt::from_i64(0);
-                    if let Some(b_val) = b_val.clone() {
-                        b_count = b_val;
-                    }
+                    let b_val_value_f4118a41fdffa885: Option<SifrInt> =
+                        other.counts.get(&key).cloned();
+                    let b_count: SifrInt = b_val_value_f4118a41fdffa885
+                        .clone()
+                        .unwrap_or_else(|| SifrInt::from_i64(0));
                     let total: SifrInt = &a_val + &b_count;
                     if &total > &SifrInt::from_i64(0) {
                         {
-                            let __assign_value = total.clone();
+                            let sifr_generated_assign_value = total.clone();
                             {
-                                let __assign_key = key.clone();
-                                new_counts.insert(__assign_key, __assign_value);
+                                let sifr_generated_assign_key = key.clone();
+                                new_counts
+                                    .insert(sifr_generated_assign_key, sifr_generated_assign_value);
                             }
                         }
                     }
                 }
             }
-            for key2 in Box::new(
-                (other.counts.keys().cloned().collect::<Vec<_>>()).into_iter(),
-            ) {
+            for key2 in Box::new(other.counts.keys().cloned().collect::<Vec<_>>().into_iter()) {
                 let already: Option<SifrInt> = new_counts.get(&key2).cloned();
                 if already.is_none() {
                     let b_val2: Option<SifrInt> = other.counts.get(&key2).cloned();
-                    if let Some(b_val2) = b_val2 {
-                        if &b_val2 > &SifrInt::from_i64(0) {
+                    if let Some(b_val2) = b_val2
+                        && &b_val2 > &SifrInt::from_i64(0)
+                    {
+                        {
+                            let sifr_generated_assign_value = b_val2.clone();
                             {
-                                let __assign_value = b_val2.clone();
-                                {
-                                    let __assign_key = key2.clone();
-                                    new_counts.insert(__assign_key, __assign_value);
-                                }
+                                let sifr_generated_assign_key = key2.clone();
+                                new_counts
+                                    .insert(sifr_generated_assign_key, sifr_generated_assign_value);
                             }
                         }
                     }
                 }
             }
-            __SifrStdlib_sifr_x2ecollections_x2eCounter::new(Some(new_counts), None)
+            SifrGeneratedStdlibSifrX2ecollectionsX2eCounter::new(Some(new_counts), None)
         }
     }
-    impl<
-        T: ::std::hash::Hash + Eq + Clone,
-    > ::std::ops::Sub<&__SifrStdlib_sifr_x2ecollections_x2eCounter<T>>
-    for &__SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
-        type Output = __SifrStdlib_sifr_x2ecollections_x2eCounter<T>;
-        fn sub(
-            self,
-            other: &__SifrStdlib_sifr_x2ecollections_x2eCounter<T>,
-        ) -> Self::Output {
+    impl<T: ::std::hash::Hash + Eq + Clone>
+        ::std::ops::Sub<&SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T>>
+        for &SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T>
+    {
+        type Output = SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T>;
+        fn sub(self, other: &SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T>) -> Self::Output {
             let mut new_counts: HashMap<T, SifrInt> = HashMap::from([]);
-            for key in Box::new(
-                (self.counts.keys().cloned().collect::<Vec<_>>()).into_iter(),
-            ) {
+            for key in Box::new(self.counts.keys().cloned().collect::<Vec<_>>().into_iter()) {
                 let a_val: Option<SifrInt> = self.counts.get(&key).cloned();
                 if let Some(a_val) = a_val {
-                    let b_val: Option<SifrInt> = other.counts.get(&key).cloned();
-                    let mut b_count: SifrInt = SifrInt::from_i64(0);
-                    if let Some(b_val) = b_val.clone() {
-                        b_count = b_val;
-                    }
+                    let b_val_value_f4118a41fdffa885: Option<SifrInt> =
+                        other.counts.get(&key).cloned();
+                    let b_count: SifrInt = b_val_value_f4118a41fdffa885
+                        .clone()
+                        .unwrap_or_else(|| SifrInt::from_i64(0));
                     let diff: SifrInt = &a_val - &b_count;
                     if &diff > &SifrInt::from_i64(0) {
                         {
-                            let __assign_value = diff.clone();
+                            let sifr_generated_assign_value = diff.clone();
                             {
-                                let __assign_key = key.clone();
-                                new_counts.insert(__assign_key, __assign_value);
+                                let sifr_generated_assign_key = key.clone();
+                                new_counts
+                                    .insert(sifr_generated_assign_key, sifr_generated_assign_value);
                             }
                         }
                     }
                 }
             }
-            __SifrStdlib_sifr_x2ecollections_x2eCounter::new(Some(new_counts), None)
+            SifrGeneratedStdlibSifrX2ecollectionsX2eCounter::new(Some(new_counts), None)
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -480,7 +316,8 @@ mod __sifr_project_nominals {
         pub message: String,
     }
     impl ValueError {
-        pub fn new(message: String) -> Self {
+        #[must_use]
+        pub const fn new(message: String) -> Self {
             Self { message }
         }
     }
@@ -491,35 +328,33 @@ mod __sifr_project_nominals {
     }
     impl ::std::error::Error for ValueError {}
 }
-pub use __sifr_project_nominals::ValueError;
-pub use __sifr_project_nominals::__SifrStdlib_sifr_x2ecollections_x2eCounter;
-use ::std::collections::HashMap;
 use ::sifr_runtime::SifrInt;
+use ::std::collections::HashMap;
+pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2ecollectionsX2eCounter;
+pub use sifr_generated_project_nominals::ValueError;
 fn from_list<T: Clone + ::std::hash::Hash + Eq + 'static>(
     items: &[T],
-) -> __SifrStdlib_sifr_x2ecollections_x2eCounter<T> {
+) -> SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T> {
     let mut counts: HashMap<T, SifrInt> = HashMap::from([]);
     for item in items.iter().cloned() {
         let val: Option<SifrInt> = counts.get(&item).cloned();
         if let Some(val) = val.clone() {
             {
-                let __assign_value = &val + &SifrInt::from_i64(1);
+                let sifr_generated_assign_value = &val + &SifrInt::from_i64(1);
                 {
-                    let __assign_key = item.clone();
-                    counts.insert(__assign_key, __assign_value);
+                    let sifr_generated_assign_key = item.clone();
+                    counts.insert(sifr_generated_assign_key, sifr_generated_assign_value);
                 }
             }
         } else {
+            let sifr_generated_assign_value = SifrInt::from_i64(1);
             {
-                let __assign_value = SifrInt::from_i64(1);
-                {
-                    let __assign_key = item.clone();
-                    counts.insert(__assign_key, __assign_value);
-                }
+                let sifr_generated_assign_key = item.clone();
+                counts.insert(sifr_generated_assign_key, sifr_generated_assign_value);
             }
         }
     }
-    __SifrStdlib_sifr_x2ecollections_x2eCounter::new(Some(counts), None)
+    SifrGeneratedStdlibSifrX2ecollectionsX2eCounter::new(Some(counts), None)
 }
 fn reduce<T: Clone + 'static, U: Clone + 'static>(
     func: impl Fn(&U, &T) -> U,
@@ -532,37 +367,37 @@ fn reduce<T: Clone + 'static, U: Clone + 'static>(
     }
     result
 }
-struct __SifrYielder<T> {
+struct SifrGeneratedYielder<T> {
     slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
 }
-struct __SifrYieldFuture<T> {
+struct SifrGeneratedYieldFuture<T> {
     slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
     value: Option<T>,
 }
-impl<T> Unpin for __SifrYieldFuture<T> {}
-impl<T> ::std::future::Future for __SifrYieldFuture<T> {
+impl<T> Unpin for SifrGeneratedYieldFuture<T> {}
+impl<T> ::std::future::Future for SifrGeneratedYieldFuture<T> {
     type Output = ();
     fn poll(
         self: ::std::pin::Pin<&mut Self>,
-        _cx: &mut ::std::task::Context<'_>,
+        _: &mut ::std::task::Context<'_>,
     ) -> ::std::task::Poll<()> {
         let state = self.get_mut();
         let Some(value) = state.value.take() else {
             return ::std::task::Poll::Ready(());
         };
-        __sifr_store_suspended(&state.slot, value);
+        sifr_generated_store_suspended(&state.slot, value);
         ::std::task::Poll::Pending
     }
 }
-impl<T> __SifrYielder<T> {
-    fn suspend(&self, value: T) -> __SifrYieldFuture<T> {
-        __SifrYieldFuture {
+impl<T> SifrGeneratedYielder<T> {
+    fn suspend(&self, value: T) -> SifrGeneratedYieldFuture<T> {
+        SifrGeneratedYieldFuture {
             slot: ::std::sync::Arc::clone(&self.slot),
             value: Some(value),
         }
     }
 }
-fn __sifr_store_suspended<T>(
+fn sifr_generated_store_suspended<T>(
     slot: &::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
     value: T,
 ) {
@@ -571,7 +406,7 @@ fn __sifr_store_suspended<T>(
         Err(poisoned) => *poisoned.into_inner() = Some(value),
     }
 }
-fn __sifr_take_suspended<T>(
+fn sifr_generated_take_suspended<T>(
     slot: &::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
 ) -> Option<T> {
     match slot.lock() {
@@ -579,20 +414,20 @@ fn __sifr_take_suspended<T>(
         Err(poisoned) => poisoned.into_inner().take(),
     }
 }
-struct __SifrGenerator<T> {
-    producer: Option<
-        ::std::pin::Pin<Box<dyn ::std::future::Future<Output = ()> + 'static>>,
-    >,
+struct SifrGeneratedGenerator<T> {
+    producer: Option<::std::pin::Pin<Box<dyn ::std::future::Future<Output = ()> + 'static>>>,
     yielded: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
     complete: bool,
 }
-impl<T> __SifrGenerator<T> {
+impl<T> SifrGeneratedGenerator<T> {
     fn new<
-        F: FnOnce(__SifrYielder<T>) -> Fut + 'static,
+        F: FnOnce(SifrGeneratedYielder<T>) -> Fut + 'static,
         Fut: ::std::future::Future<Output = ()> + 'static,
-    >(factory: F) -> Self {
+    >(
+        factory: F,
+    ) -> Self {
         let yielded = ::std::sync::Arc::new(::std::sync::Mutex::new(None));
-        let producer = factory(__SifrYielder {
+        let producer = factory(SifrGeneratedYielder {
             slot: ::std::sync::Arc::clone(&yielded),
         });
         Self {
@@ -602,7 +437,7 @@ impl<T> __SifrGenerator<T> {
         }
     }
 }
-impl<T> Iterator for __SifrGenerator<T> {
+impl<T> Iterator for SifrGeneratedGenerator<T> {
     type Item = T;
     fn next(&mut self) -> Option<T> {
         if self.complete {
@@ -613,12 +448,10 @@ impl<T> Iterator for __SifrGenerator<T> {
                 self.complete = true;
                 return None;
             };
-            let mut context = ::std::task::Context::from_waker(
-                ::std::task::Waker::noop(),
-            );
+            let mut context = ::std::task::Context::from_waker(::std::task::Waker::noop());
             ::std::future::Future::poll(producer.as_mut(), &mut context).is_ready()
         };
-        let yielded = __sifr_take_suspended(&self.yielded);
+        let yielded = sifr_generated_take_suspended(&self.yielded);
         if completed {
             self.complete = true;
             self.producer = None;
@@ -626,179 +459,182 @@ impl<T> Iterator for __SifrGenerator<T> {
         yielded
     }
 }
-pub trait __SifrAdd: Sized {
-    fn __sifr_add(self, rhs: Self) -> Self;
+pub trait SifrGeneratedAdd: Sized {
+    #[must_use]
+    fn sifr_generated_add(self, rhs: Self) -> Self;
 }
-impl __SifrAdd for ::sifr_runtime::SifrInt {
-    fn __sifr_add(self, rhs: Self) -> Self {
+impl SifrGeneratedAdd for ::sifr_runtime::SifrInt {
+    fn sifr_generated_add(self, rhs: Self) -> Self {
         self + rhs
     }
 }
-impl __SifrAdd for f64 {
-    fn __sifr_add(self, rhs: Self) -> Self {
+impl SifrGeneratedAdd for f64 {
+    fn sifr_generated_add(self, rhs: Self) -> Self {
         self + rhs
     }
 }
-impl __SifrAdd for String {
-    fn __sifr_add(mut self, rhs: Self) -> Self {
+impl SifrGeneratedAdd for String {
+    fn sifr_generated_add(mut self, rhs: Self) -> Self {
         self.push_str(&rhs);
         self
     }
 }
 fn count(start: SifrInt, step: SifrInt) -> Box<dyn Iterator<Item = SifrInt>> {
-    Box::new(
-        __SifrGenerator::new(async move |__sifr_yielder: __SifrYielder<SifrInt>| {
+    Box::new(SifrGeneratedGenerator::new(
+        async move |sifr_generated_yielder: SifrGeneratedYielder<SifrInt>| {
             let mut current: SifrInt = start.clone();
             loop {
-                __sifr_yielder.suspend(current.clone()).await;
+                sifr_generated_yielder.suspend(current.clone()).await;
                 current = &current + &step;
             }
-        }),
-    )
+        },
+    ))
 }
-fn accumulate<T: Clone + 'static + __SifrAdd>(
+fn accumulate<T: Clone + 'static + SifrGeneratedAdd>(
     data: Box<dyn Iterator<Item = T>>,
     initial: Option<T>,
 ) -> Box<dyn Iterator<Item = T>> {
-    Box::new(
-        __SifrGenerator::new(async move |__sifr_yielder: __SifrYielder<T>| {
-            let mut state: Vec<T> = vec![];
+    Box::new(SifrGeneratedGenerator::new(
+        async move |sifr_generated_yielder: SifrGeneratedYielder<T>| {
+            let mut state: Vec<T> = Vec::new();
             if let Some(initial) = initial {
                 state.push(initial.clone());
                 let initial_value: Option<T> = {
-                    let __sifr_checked_read_collection = &state;
-                    let __sifr_checked_read_index = SifrInt::from_i64(0);
-                    let __sifr_checked_read_normalized = __sifr_checked_read_index
-                        .normalize_index_or_len(__sifr_checked_read_collection.len());
-                    __sifr_checked_read_collection
-                        .get(__sifr_checked_read_normalized)
+                    let sifr_generated_checked_read_collection = &state;
+                    let sifr_generated_checked_read_index = SifrInt::from_i64(0);
+                    let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
+                        .normalize_index_or_len(sifr_generated_checked_read_collection.len());
+                    sifr_generated_checked_read_collection
+                        .get(sifr_generated_checked_read_normalized)
                         .cloned()
                 };
                 if let Some(initial_value) = initial_value {
-                    __sifr_yielder.suspend(initial_value.clone()).await;
+                    sifr_generated_yielder.suspend(initial_value.clone()).await;
                 }
             }
             for item in data {
-                if (&SifrInt::from(state.len()) == &SifrInt::from_i64(0)) {
+                if &SifrInt::from(state.len()) == &SifrInt::from_i64(0) {
                     state.push(item.clone());
                 } else {
                     let prev: Option<T> = {
-                        let __sifr_checked_read_collection = &state;
-                        let __sifr_checked_read_index = SifrInt::from_i64(0);
-                        let __sifr_checked_read_normalized = __sifr_checked_read_index
-                            .normalize_index_or_len(
-                                __sifr_checked_read_collection.len(),
+                        let sifr_generated_checked_read_collection = &state;
+                        let sifr_generated_checked_read_index = SifrInt::from_i64(0);
+                        let sifr_generated_checked_read_normalized =
+                            sifr_generated_checked_read_index.normalize_index_or_len(
+                                sifr_generated_checked_read_collection.len(),
                             );
-                        __sifr_checked_read_collection
-                            .get(__sifr_checked_read_normalized)
+                        sifr_generated_checked_read_collection
+                            .get(sifr_generated_checked_read_normalized)
                             .cloned()
                     };
                     if let Some(prev) = prev {
-                        let next_val: T = __SifrAdd::__sifr_add(prev, item);
-                        let __sifr_try_res: Result<(), IndexError> = (|| {
+                        let next_val: T = SifrGeneratedAdd::sifr_generated_add(prev, item);
+                        let sifr_generated_try_res: Result<(), IndexError> = (|| {
                             {
-                                let __assign_value = next_val.clone();
+                                let sifr_generated_assign_value = next_val.clone();
                                 {
-                                    let __index_raw = SifrInt::from_i64(0);
-                                    let __index_normalized = __index_raw
+                                    let sifr_generated_index_raw = SifrInt::from_i64(0);
+                                    let sifr_generated_index_normalized = sifr_generated_index_raw
                                         .normalize_index_or_len(state.len());
-                                    if let Some(__elem) = state.get_mut(__index_normalized) {
-                                        *__elem = __assign_value;
+                                    if let Some(sifr_generated_elem) =
+                                        state.get_mut(sifr_generated_index_normalized)
+                                    {
+                                        *sifr_generated_elem = sifr_generated_assign_value;
                                     } else {
-                                        return Err(
-                                            IndexError::new("collection index out of range".to_string()),
-                                        );
+                                        return Err(IndexError::new(
+                                            "collection index out of range".to_string(),
+                                        ));
                                     }
                                 }
                             }
                             Ok(())
-                        })();
-                        if let Err(__sifr_try_err) = __sifr_try_res {
-                            let _e = __sifr_try_err.clone();
+                        })(
+                        );
+                        if sifr_generated_try_res.is_err() {
                             return;
                         }
                     }
                 }
                 let current: Option<T> = {
-                    let __sifr_checked_read_collection = &state;
-                    let __sifr_checked_read_index = SifrInt::from_i64(0);
-                    let __sifr_checked_read_normalized = __sifr_checked_read_index
-                        .normalize_index_or_len(__sifr_checked_read_collection.len());
-                    __sifr_checked_read_collection
-                        .get(__sifr_checked_read_normalized)
+                    let sifr_generated_checked_read_collection = &state;
+                    let sifr_generated_checked_read_index = SifrInt::from_i64(0);
+                    let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
+                        .normalize_index_or_len(sifr_generated_checked_read_collection.len());
+                    sifr_generated_checked_read_collection
+                        .get(sifr_generated_checked_read_normalized)
                         .cloned()
                 };
                 if let Some(current) = current {
-                    __sifr_yielder.suspend(current.clone()).await;
+                    sifr_generated_yielder.suspend(current.clone()).await;
                 }
             }
-        }),
-    )
+        },
+    ))
 }
 fn compress<T: Clone + 'static>(
     data: Box<dyn Iterator<Item = T>>,
     selectors: Box<dyn Iterator<Item = bool>>,
 ) -> Box<dyn Iterator<Item = T>> {
-    Box::new(
-        __SifrGenerator::new(async move |__sifr_yielder: __SifrYielder<T>| {
-            for (value, selector) in Box::new(
-                data.zip(selectors).map(|__zip_item| (__zip_item.0, __zip_item.1)),
-            ) {
+    Box::new(SifrGeneratedGenerator::new(
+        async move |sifr_generated_yielder: SifrGeneratedYielder<T>| {
+            for (value, selector) in Box::new(data.zip(selectors).map(|sifr_generated_zip_item| {
+                (sifr_generated_zip_item.0, sifr_generated_zip_item.1)
+            })) {
                 if selector {
-                    __sifr_yielder.suspend(value.clone()).await;
+                    sifr_generated_yielder.suspend(value.clone()).await;
                 }
             }
-        }),
-    )
+        },
+    ))
 }
 fn dropwhile<T: Clone + 'static>(
     pred: impl Fn(&T) -> bool + Send + Sync + 'static,
     data: Box<dyn Iterator<Item = T>>,
 ) -> Box<dyn Iterator<Item = T>> {
-    Box::new(
-        __SifrGenerator::new(async move |__sifr_yielder: __SifrYielder<T>| {
+    Box::new(SifrGeneratedGenerator::new(
+        async move |sifr_generated_yielder: SifrGeneratedYielder<T>| {
             let mut dropping: bool = true;
             for val in data {
                 if dropping {
                     if !pred(&val) {
                         dropping = false;
-                        __sifr_yielder.suspend(val.clone()).await;
+                        sifr_generated_yielder.suspend(val.clone()).await;
                     }
                 } else {
-                    __sifr_yielder.suspend(val.clone()).await;
+                    sifr_generated_yielder.suspend(val.clone()).await;
                 }
             }
-        }),
-    )
+        },
+    ))
 }
 fn takewhile<T: Clone + 'static>(
     pred: impl Fn(&T) -> bool + Send + Sync + 'static,
     data: Box<dyn Iterator<Item = T>>,
 ) -> Box<dyn Iterator<Item = T>> {
-    Box::new(
-        __SifrGenerator::new(async move |__sifr_yielder: __SifrYielder<T>| {
+    Box::new(SifrGeneratedGenerator::new(
+        async move |sifr_generated_yielder: SifrGeneratedYielder<T>| {
             for val in data {
                 if !pred(&val) {
                     return;
                 }
-                __sifr_yielder.suspend(val.clone()).await;
+                sifr_generated_yielder.suspend(val.clone()).await;
             }
-        }),
-    )
+        },
+    ))
 }
 fn filterfalse<T: Clone + 'static>(
     pred: impl Fn(&T) -> bool + Send + Sync + 'static,
     data: Box<dyn Iterator<Item = T>>,
 ) -> Box<dyn Iterator<Item = T>> {
-    Box::new(
-        __SifrGenerator::new(async move |__sifr_yielder: __SifrYielder<T>| {
+    Box::new(SifrGeneratedGenerator::new(
+        async move |sifr_generated_yielder: SifrGeneratedYielder<T>| {
             for val in data {
                 if !pred(&val) {
-                    __sifr_yielder.suspend(val.clone()).await;
+                    sifr_generated_yielder.suspend(val.clone()).await;
                 }
             }
-        }),
-    )
+        },
+    ))
 }
 fn zip_longest<T: Clone + 'static>(
     a: Box<dyn Iterator<Item = T>>,
@@ -806,17 +642,17 @@ fn zip_longest<T: Clone + 'static>(
     fill: &T,
 ) -> Box<dyn Iterator<Item = Vec<T>>> {
     let fill = fill.clone();
-    Box::new(
-        __SifrGenerator::new(async move |__sifr_yielder: __SifrYielder<Vec<T>>| {
+    Box::new(SifrGeneratedGenerator::new(
+        async move |sifr_generated_yielder: SifrGeneratedYielder<Vec<T>>| {
             let mut left: Box<dyn Iterator<Item = T>> = a;
             let mut right: Box<dyn Iterator<Item = T>> = b;
             loop {
                 let left_value: Option<T> = left.next();
                 let right_value: Option<T> = right.next();
-                if (left_value.is_none()) && (right_value.is_none()) {
+                if left_value.is_none() && right_value.is_none() {
                     return;
                 }
-                let mut pair: Vec<T> = vec![];
+                let mut pair: Vec<T> = Vec::new();
                 if let Some(left_value) = left_value {
                     pair.push(left_value.clone());
                 } else {
@@ -827,191 +663,71 @@ fn zip_longest<T: Clone + 'static>(
                 } else {
                     pair.push(fill.clone());
                 }
-                __sifr_yielder.suspend(pair.to_vec()).await;
+                sifr_generated_yielder.suspend(pair.to_vec()).await;
             }
-        }),
-    )
+        },
+    ))
 }
-fn count_from(
-    start: SifrInt,
-    step: SifrInt,
-    n: SifrInt,
-) -> Box<dyn Iterator<Item = SifrInt>> {
-    Box::new(
-        __SifrGenerator::new(async move |__sifr_yielder: __SifrYielder<SifrInt>| {
+fn count_from(start: SifrInt, step: SifrInt, n: SifrInt) -> Box<dyn Iterator<Item = SifrInt>> {
+    Box::new(SifrGeneratedGenerator::new(
+        async move |sifr_generated_yielder: SifrGeneratedYielder<SifrInt>| {
             let mut i: SifrInt = SifrInt::from_i64(0);
             let mut current: SifrInt = start.clone();
             while &i < &n {
-                __sifr_yielder.suspend(current.clone()).await;
+                sifr_generated_yielder.suspend(current.clone()).await;
                 current = &current + &step;
                 i = &i + &SifrInt::from_i64(1);
             }
-        }),
-    )
+        },
+    ))
 }
 fn cycle<T: Clone + 'static>(
     data: Box<dyn Iterator<Item = T>>,
     n: SifrInt,
 ) -> Box<dyn Iterator<Item = T>> {
-    Box::new(
-        __SifrGenerator::new(async move |__sifr_yielder: __SifrYielder<T>| {
-            let mut saved: Vec<T> = vec![];
+    Box::new(SifrGeneratedGenerator::new(
+        async move |sifr_generated_yielder: SifrGeneratedYielder<T>| {
+            let mut saved: Vec<T> = Vec::new();
             let mut emitted: SifrInt = SifrInt::from_i64(0);
             if &n <= &SifrInt::from_i64(0) {
                 return;
             }
             for value in data {
                 saved.push(value.clone());
-                __sifr_yielder.suspend(value.clone()).await;
+                sifr_generated_yielder.suspend(value.clone()).await;
                 emitted = &emitted + &SifrInt::from_i64(1);
-                if (&emitted >= &n) {
+                if &emitted >= &n {
                     return;
                 }
             }
-            while (&emitted < &n)
-                && (&SifrInt::from(saved.len()) > &SifrInt::from_i64(0))
-            {
+            while &emitted < &n && &SifrInt::from(saved.len()) > &SifrInt::from_i64(0) {
                 for repeated in saved.iter().cloned() {
-                    __sifr_yielder.suspend(repeated.clone()).await;
+                    sifr_generated_yielder.suspend(repeated.clone()).await;
                     emitted = &emitted + &SifrInt::from_i64(1);
-                    if (&emitted >= &n) {
+                    if &emitted >= &n {
                         return;
                     }
                 }
             }
-        }),
-    )
+        },
+    ))
 }
-const PI: f64 = 3.141592653589793_f64;
-const E: f64 = 2.718281828459045_f64;
-const TAU: f64 = 6.283185307179586_f64;
-const INF: f64 = f64::INFINITY;
-const NAN: f64 = f64::NAN;
+#[expect(
+    clippy::approx_constant,
+    reason = "generated Rust preserves this exact typed Sifr source contract"
+)]
+const PI: f64 = 3.141_592_653_589_793_f64;
 fn sqrt(x: f64) -> f64 {
     ::sifr_stdlib::math::sqrt(x)
 }
-fn floor(x: f64) -> SifrInt {
-    ::sifr_stdlib::math::floor(x).into_sifr_int()
-}
-fn ceil(x: f64) -> SifrInt {
-    ::sifr_stdlib::math::ceil(x).into_sifr_int()
-}
 fn log(x: f64) -> f64 {
     ::sifr_stdlib::math::log(x)
-}
-fn cbrt(x: f64) -> f64 {
-    ::sifr_stdlib::math::cbrt(x)
 }
 fn sin(x: f64) -> f64 {
     ::sifr_stdlib::math::sin(x)
 }
 fn cos(x: f64) -> f64 {
     ::sifr_stdlib::math::cos(x)
-}
-fn tan(x: f64) -> f64 {
-    ::sifr_stdlib::math::tan(x)
-}
-fn pow_val(x: f64, y: f64) -> f64 {
-    ::sifr_stdlib::math::pow_val(x, y)
-}
-fn min_val(a: f64, b: f64) -> f64 {
-    ::sifr_stdlib::math::min_val(a, b)
-}
-fn max_val(a: f64, b: f64) -> f64 {
-    ::sifr_stdlib::math::max_val(a, b)
-}
-fn round_val(x: f64) -> SifrInt {
-    ::sifr_stdlib::math::round_val(x).into_sifr_int()
-}
-fn asin(x: f64) -> f64 {
-    ::sifr_stdlib::math::asin(x)
-}
-fn acos(x: f64) -> f64 {
-    ::sifr_stdlib::math::acos(x)
-}
-fn atan(x: f64) -> f64 {
-    ::sifr_stdlib::math::atan(x)
-}
-fn atan2(y: f64, x: f64) -> f64 {
-    ::sifr_stdlib::math::atan2(y, x)
-}
-fn sinh(x: f64) -> f64 {
-    ::sifr_stdlib::math::sinh(x)
-}
-fn cosh(x: f64) -> f64 {
-    ::sifr_stdlib::math::cosh(x)
-}
-fn tanh(x: f64) -> f64 {
-    ::sifr_stdlib::math::tanh(x)
-}
-fn log10(x: f64) -> f64 {
-    ::sifr_stdlib::math::log10(x)
-}
-fn log2(x: f64) -> f64 {
-    ::sifr_stdlib::math::log2(x)
-}
-fn exp2(x: f64) -> f64 {
-    ::sifr_stdlib::math::exp2(x)
-}
-fn degrees(x: f64) -> f64 {
-    ::sifr_stdlib::math::degrees(x)
-}
-fn radians(x: f64) -> f64 {
-    ::sifr_stdlib::math::radians(x)
-}
-fn isnan(x: f64) -> bool {
-    ::sifr_stdlib::math::isnan(x)
-}
-fn isinf(x: f64) -> bool {
-    ::sifr_stdlib::math::isinf(x)
-}
-fn trunc(x: f64) -> SifrInt {
-    ::sifr_stdlib::math::trunc(x).into_sifr_int()
-}
-fn copysign(x: f64, y: f64) -> f64 {
-    ::sifr_stdlib::math::copysign(x, y)
-}
-fn signbit(x: f64) -> bool {
-    ::sifr_stdlib::math::signbit(x)
-}
-fn fmod(x: f64, y: f64) -> f64 {
-    ::sifr_stdlib::math::fmod(x, y)
-}
-fn remainder(x: f64, y: f64) -> f64 {
-    ::sifr_stdlib::math::remainder(x, y)
-}
-fn hypot(x: f64, y: f64) -> f64 {
-    ::sifr_stdlib::math::hypot(x, y)
-}
-fn fma(x: f64, y: f64, z: f64) -> f64 {
-    ::sifr_stdlib::math::fma(x, y, z)
-}
-fn fmax(x: f64, y: f64) -> f64 {
-    ::sifr_stdlib::math::fmax(x, y)
-}
-fn fmin(x: f64, y: f64) -> f64 {
-    ::sifr_stdlib::math::fmin(x, y)
-}
-fn exp(x: f64) -> f64 {
-    ::sifr_stdlib::math::exp(x)
-}
-fn expm1(x: f64) -> f64 {
-    ::sifr_stdlib::math::expm1(x)
-}
-fn log1p(x: f64) -> f64 {
-    ::sifr_stdlib::math::log1p(x)
-}
-fn fabs(x: f64) -> f64 {
-    ::sifr_stdlib::math::fabs(x)
-}
-fn isfinite(x: f64) -> bool {
-    ::sifr_stdlib::math::isfinite(x)
-}
-fn isnormal(x: f64) -> bool {
-    ::sifr_stdlib::math::isnormal(x)
-}
-fn issubnormal(x: f64) -> bool {
-    ::sifr_stdlib::math::issubnormal(x)
 }
 fn acosh(x: f64) -> f64 {
     ::sifr_stdlib::math::acosh(x)
@@ -1023,8 +739,7 @@ fn atanh(x: f64) -> f64 {
     ::sifr_stdlib::math::atanh(x)
 }
 fn isqrt(n: SifrInt) -> SifrInt {
-    ::sifr_stdlib::math::isqrt(::sifr_runtime::interop::SifrIntBridge::from(n))
-        .into_sifr_int()
+    ::sifr_stdlib::math::isqrt(::sifr_runtime::interop::SifrIntBridge::from(n)).into_sifr_int()
 }
 fn dist_impl(p: Vec<f64>, q: Vec<f64>) -> f64 {
     ::sifr_stdlib::math::dist(p, q)
@@ -1032,296 +747,34 @@ fn dist_impl(p: Vec<f64>, q: Vec<f64>) -> f64 {
 fn fsum_impl(data: Vec<f64>) -> f64 {
     ::sifr_stdlib::math::fsum(data)
 }
-fn sumprod_impl(p: Vec<f64>, q: Vec<f64>) -> f64 {
-    ::sifr_stdlib::math::sumprod(p, q)
-}
-fn erf(x: f64) -> f64 {
-    ::sifr_stdlib::math::erf(x)
-}
-fn erfc(x: f64) -> f64 {
-    ::sifr_stdlib::math::erfc(x)
-}
-fn gamma(x: f64) -> f64 {
-    ::sifr_stdlib::math::gamma(x)
-}
-fn lgamma(x: f64) -> f64 {
-    ::sifr_stdlib::math::lgamma(x)
-}
-fn frexp(x: f64) -> Vec<f64> {
-    ::sifr_stdlib::math::frexp(x)
-}
-fn ldexp(m: f64, e: SifrInt) -> f64 {
-    ::sifr_stdlib::math::ldexp(m, ::sifr_runtime::interop::SifrIntBridge::from(e))
-}
-fn modf(x: f64) -> Vec<f64> {
-    ::sifr_stdlib::math::modf(x)
-}
-fn nextafter(x: f64, y: f64) -> f64 {
-    ::sifr_stdlib::math::nextafter(x, y)
-}
-fn ulp(x: f64) -> f64 {
-    ::sifr_stdlib::math::ulp(x)
-}
-fn factorial(n: SifrInt) -> SifrInt {
-    if &n < &SifrInt::from_i64(0) {
-        return SifrInt::from_i64(0);
-    }
-    let mut result: SifrInt = SifrInt::from_i64(1);
-    let mut i: SifrInt = SifrInt::from_i64(2);
-    while &i <= &n {
-        result = &result * &i;
-        i = &i + &SifrInt::from_i64(1);
-    }
-    result.clone()
-}
-fn gcd(a: SifrInt, b: SifrInt) -> SifrInt {
-    let mut x: SifrInt = a.clone();
-    let mut y: SifrInt = b.clone();
-    if &x < &SifrInt::from_i64(0) {
-        x = &SifrInt::from_i64(0) - &x;
-    }
-    if &y < &SifrInt::from_i64(0) {
-        y = &SifrInt::from_i64(0) - &y;
-    }
-    while (&y != &SifrInt::from_i64(0)) {
-        let temp: SifrInt = y.clone();
-        y = x.floor_mod_known_nonzero(&y);
-        x = temp;
-    }
-    x.clone()
-}
-fn lcm(a: SifrInt, b: SifrInt) -> SifrInt {
-    if &a == &SifrInt::from_i64(0) {
-        return SifrInt::from_i64(0);
-    }
-    if &b == &SifrInt::from_i64(0) {
-        return SifrInt::from_i64(0);
-    }
-    let g: SifrInt = gcd(a.clone(), b.clone());
-    if &g == &SifrInt::from_i64(0) {
-        return SifrInt::from_i64(0);
-    }
-    let mut x: SifrInt = a.clone();
-    if &x < &SifrInt::from_i64(0) {
-        x = &SifrInt::from_i64(0) - &x;
-    }
-    let mut y: SifrInt = b.clone();
-    if &y < &SifrInt::from_i64(0) {
-        y = &SifrInt::from_i64(0) - &y;
-    }
-    &x.floor_div_known_nonzero(&g) * &y
-}
-fn comb(n: SifrInt, k: SifrInt) -> SifrInt {
-    if &k < &SifrInt::from_i64(0) {
-        return SifrInt::from_i64(0);
-    }
-    if &k > &n {
-        return SifrInt::from_i64(0);
-    }
-    if &k == &SifrInt::from_i64(0) {
-        return SifrInt::from_i64(1);
-    }
-    if &k == &n {
-        return SifrInt::from_i64(1);
-    }
-    let mut r: SifrInt = k.clone();
-    if &r > &(&n - &k) {
-        r = &n - &k;
-    }
-    let mut result: SifrInt = SifrInt::from_i64(1);
-    let mut i: SifrInt = SifrInt::from_i64(0);
-    while (&i < &r) {
-        result = &result * &(&n - &i);
-        let divisor: SifrInt = &i + &SifrInt::from_i64(1);
-        if (&divisor == &SifrInt::from_i64(0)) {
-            return SifrInt::from_i64(0);
-        }
-        result = result.floor_div_known_nonzero(&divisor);
-        i = &i + &SifrInt::from_i64(1);
-    }
-    result.clone()
-}
-fn perm(n: SifrInt, k: SifrInt) -> SifrInt {
-    if &k < &SifrInt::from_i64(0) {
-        return SifrInt::from_i64(0);
-    }
-    if &k > &n {
-        return SifrInt::from_i64(0);
-    }
-    let mut result: SifrInt = SifrInt::from_i64(1);
-    let mut i: SifrInt = SifrInt::from_i64(0);
-    while &i < &k {
-        result = &result * &(&n - &i);
-        i = &i + &SifrInt::from_i64(1);
-    }
-    result.clone()
-}
-fn log_base(x: f64, base: f64) -> f64 {
-    log(x) / log(base)
-}
-fn isclose(a: f64, b: f64, rel_tol: f64, abs_tol: f64) -> bool {
-    if rel_tol < (0.0_f64) {
-        return false;
-    }
-    if abs_tol < (0.0_f64) {
-        return false;
-    }
-    if a == b {
-        return true;
-    }
-    if isnan(a) || isnan(b) {
-        return false;
-    }
-    if isinf(a) || isinf(b) {
-        return false;
-    }
-    let mut diff: f64 = a - b;
-    if diff < (0.0_f64) {
-        diff = (0.0_f64) - diff;
-    }
-    let mut a_abs: f64 = a;
-    if a_abs < (0.0_f64) {
-        a_abs = (0.0_f64) - a_abs;
-    }
-    let mut b_abs: f64 = b;
-    if b_abs < (0.0_f64) {
-        b_abs = (0.0_f64) - b_abs;
-    }
-    let mut larger_abs: f64 = a_abs;
-    if b_abs > larger_abs {
-        larger_abs = b_abs;
-    }
-    let mut rel_bound: f64 = rel_tol * larger_abs;
-    if abs_tol > rel_bound {
-        rel_bound = abs_tol;
-    }
-    diff <= rel_bound
-}
-fn prod(data: &[SifrInt]) -> SifrInt {
-    let mut result: SifrInt = SifrInt::from_i64(1);
-    for val in data.iter().cloned() {
-        result = &result * &val;
-    }
-    result.clone()
-}
-fn _copy_float_list(data: &[f64]) -> Vec<f64> {
-    let mut out: Vec<f64> = vec![];
+fn sifr_generated_copy_float_list(data: &[f64]) -> Vec<f64> {
+    let mut out: Vec<f64> = Vec::new();
     for value in data.iter().copied() {
         out.push(value);
     }
     out
 }
 fn dist(p: &[f64], q: &[f64]) -> f64 {
-    dist_impl(_copy_float_list(p), _copy_float_list(q))
+    dist_impl(
+        sifr_generated_copy_float_list(p),
+        sifr_generated_copy_float_list(q),
+    )
 }
 fn fsum(data: &[f64]) -> f64 {
-    fsum_impl(_copy_float_list(data))
-}
-fn sumprod(p: &[f64], q: &[f64]) -> f64 {
-    sumprod_impl(_copy_float_list(p), _copy_float_list(q))
-}
-fn frexp_mantissa(x: f64) -> f64 {
-    let parts: Vec<f64> = frexp(x);
-    let m: Option<f64> = {
-        let __sifr_checked_read_collection = &parts;
-        let __sifr_checked_read_index = SifrInt::from_i64(0);
-        let __sifr_checked_read_normalized = __sifr_checked_read_index
-            .normalize_index_or_len(__sifr_checked_read_collection.len());
-        __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
-    };
-    let Some(m) = m else {
-        return NAN;
-    };
-    m
-}
-fn frexp_exponent(x: f64) -> SifrInt {
-    let parts: Vec<f64> = frexp(x);
-    let exp_val: Option<f64> = {
-        let __sifr_checked_read_collection = &parts;
-        let __sifr_checked_read_index = SifrInt::from_i64(1);
-        let __sifr_checked_read_normalized = __sifr_checked_read_index
-            .normalize_index_or_len(__sifr_checked_read_collection.len());
-        __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
-    };
-    let Some(exp_val) = exp_val else {
-        return SifrInt::from_i64(0);
-    };
-    trunc(exp_val)
-}
-fn modf_fractional(x: f64) -> f64 {
-    let parts: Vec<f64> = modf(x);
-    let f: Option<f64> = {
-        let __sifr_checked_read_collection = &parts;
-        let __sifr_checked_read_index = SifrInt::from_i64(0);
-        let __sifr_checked_read_normalized = __sifr_checked_read_index
-            .normalize_index_or_len(__sifr_checked_read_collection.len());
-        __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
-    };
-    let Some(f) = f else {
-        return NAN;
-    };
-    f
-}
-fn modf_integral(x: f64) -> f64 {
-    let parts: Vec<f64> = modf(x);
-    let i: Option<f64> = {
-        let __sifr_checked_read_collection = &parts;
-        let __sifr_checked_read_index = SifrInt::from_i64(1);
-        let __sifr_checked_read_normalized = __sifr_checked_read_index
-            .normalize_index_or_len(__sifr_checked_read_collection.len());
-        __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
-    };
-    let Some(i) = i else {
-        return NAN;
-    };
-    i
-}
-fn pow(x: f64, y: f64) -> f64 {
-    pow_val(x, y)
-}
-fn random_int(min: SifrInt, max: SifrInt) -> SifrInt {
-    ::sifr_stdlib::random::random_int(
-            ::sifr_runtime::interop::SifrIntBridge::from(min),
-            ::sifr_runtime::interop::SifrIntBridge::from(max),
-        )
-        .into_sifr_int()
-}
-fn random_float() -> f64 {
-    ::sifr_stdlib::random::random_float()
+    fsum_impl(sifr_generated_copy_float_list(data))
 }
 fn random_word_to_unit_float(value: SifrInt) -> f64 {
-    ::sifr_stdlib::random::random_word_to_unit_float(
-        ::sifr_runtime::interop::SifrIntBridge::from(value),
-    )
+    ::sifr_stdlib::random::random_word_to_unit_float(::sifr_runtime::interop::SifrIntBridge::from(
+        value,
+    ))
 }
 fn random_seed() -> SifrInt {
     ::sifr_stdlib::random::random_seed().into_sifr_int()
 }
-fn random_uniform(min: f64, max: f64) -> f64 {
-    ::sifr_stdlib::random::random_uniform(min, max)
-}
-fn random_randrange(
-    start: SifrInt,
-    stop: SifrInt,
-    step: SifrInt,
-) -> Result<SifrInt, ValueError> {
-    ::sifr_stdlib::random::random_randrange(
-            ::sifr_runtime::interop::SifrIntBridge::from(start),
-            ::sifr_runtime::interop::SifrIntBridge::from(stop),
-            ::sifr_runtime::interop::SifrIntBridge::from(step),
-        )
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok.into_sifr_int())
-        .map_err(|__sifr_bridge_error| ValueError {
-            message: __sifr_bridge_error.to_string(),
-        })
-}
-fn random_gauss(mu: f64, sigma: f64) -> f64 {
-    ::sifr_stdlib::random::random_gauss(mu, sigma)
-}
 fn random_module_state_words() -> Vec<SifrInt> {
     ::sifr_stdlib::random::random_module_state_words()
         .into_iter()
-        .map(|__sifr_bridge_value| __sifr_bridge_value.into_sifr_int())
+        .map(::sifr_runtime::interop::SifrIntBridge::into_sifr_int)
         .collect()
 }
 fn random_module_state_index() -> SifrInt {
@@ -1336,617 +789,424 @@ fn random_module_set_state(
     gauss_next: Option<f64>,
 ) -> Result<(), ValueError> {
     ::sifr_stdlib::random::random_module_set_state(
-            &words
-                .iter()
-                .cloned()
-                .map(::sifr_runtime::interop::SifrIntBridge::from)
-                .collect::<Vec<_>>(),
-            ::sifr_runtime::interop::SifrIntBridge::from(index),
-            gauss_next.map(|__sifr_bridge_item_0| __sifr_bridge_item_0),
-        )
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| ValueError {
-            message: __sifr_bridge_error.to_string(),
-        })
+        &words
+            .iter()
+            .cloned()
+            .map(::sifr_runtime::interop::SifrIntBridge::from)
+            .collect::<Vec<_>>(),
+        ::sifr_runtime::interop::SifrIntBridge::from(index),
+        gauss_next.map(|sifr_generated_bridge_item_0| sifr_generated_bridge_item_0),
+    )
+    .map_err(|sifr_generated_bridge_error| ValueError {
+        message: sifr_generated_bridge_error.to_string(),
+    })
 }
-fn base64_encode(s: &str) -> String {
-    ::sifr_stdlib::base64::base64_encode(s)
-}
-fn base64_encode_bytes(data: &[u8]) -> Vec<u8> {
-    ::sifr_stdlib::base64::base64_encode_bytes(data)
-}
-fn base64_decode(s: &str) -> Result<String, ParseError> {
-    ::sifr_stdlib::base64::base64_decode(s)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| ParseError {
-            message: __sifr_bridge_error.to_string(),
-        })
-}
-fn base64_decode_bytes(data: &[u8]) -> Result<Vec<u8>, ParseError> {
-    ::sifr_stdlib::base64::base64_decode_bytes(data)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| ParseError {
-            message: __sifr_bridge_error.to_string(),
-        })
-}
-fn base64_encode_opts(
-    s: &str,
-    altchars: &str,
-    wrapcol: SifrInt,
-) -> Result<String, ParseError> {
-    ::sifr_stdlib::base64::base64_encode_opts(
-            s,
-            altchars,
-            ::sifr_runtime::interop::SifrIntBridge::from(wrapcol),
-        )
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| ParseError {
-            message: __sifr_bridge_error.to_string(),
-        })
-}
-fn base64_decode_opts(
-    s: &str,
-    altchars: &str,
-    validate: bool,
-    ignorechars: &str,
-) -> Result<String, ParseError> {
-    ::sifr_stdlib::base64::base64_decode_opts(s, altchars, validate, ignorechars)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| ParseError {
-            message: __sifr_bridge_error.to_string(),
-        })
-}
-fn urlsafe_b64encode(s: &str) -> String {
-    ::sifr_stdlib::base64::urlsafe_b64encode(s)
-}
-fn urlsafe_b64encode_bytes(data: &[u8]) -> Vec<u8> {
-    ::sifr_stdlib::base64::urlsafe_b64encode_bytes(data)
-}
-fn urlsafe_b64decode(s: &str) -> Result<String, ParseError> {
-    ::sifr_stdlib::base64::urlsafe_b64decode(s)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| ParseError {
-            message: __sifr_bridge_error.to_string(),
-        })
-}
-fn urlsafe_b64decode_bytes(data: &[u8]) -> Result<Vec<u8>, ParseError> {
-    ::sifr_stdlib::base64::urlsafe_b64decode_bytes(data)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| ParseError {
-            message: __sifr_bridge_error.to_string(),
-        })
-}
-fn b32encode(s: &str) -> String {
-    ::sifr_stdlib::base64::b32encode(s)
-}
-fn b32decode(s: &str) -> Result<String, ParseError> {
-    ::sifr_stdlib::base64::b32decode(s)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| ParseError {
-            message: __sifr_bridge_error.to_string(),
-        })
-}
-fn b32hexencode(s: &str) -> String {
-    ::sifr_stdlib::base64::b32hexencode(s)
-}
-fn b32hexdecode(s: &str) -> Result<String, ParseError> {
-    ::sifr_stdlib::base64::b32hexdecode(s)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| ParseError {
-            message: __sifr_bridge_error.to_string(),
-        })
-}
-fn sha256_bytes(data: &[u8]) -> Vec<u8> {
-    ::sifr_stdlib::hash::sha256_bytes(data)
-}
-fn md5_bytes(data: &[u8]) -> Vec<u8> {
-    ::sifr_stdlib::hash::md5_bytes(data)
-}
-fn sha1_bytes(data: &[u8]) -> Vec<u8> {
-    ::sifr_stdlib::hash::sha1_bytes(data)
-}
-fn sha224_bytes(data: &[u8]) -> Vec<u8> {
-    ::sifr_stdlib::hash::sha224_bytes(data)
-}
-fn sha384_bytes(data: &[u8]) -> Vec<u8> {
-    ::sifr_stdlib::hash::sha384_bytes(data)
-}
-fn sha512_bytes(data: &[u8]) -> Vec<u8> {
-    ::sifr_stdlib::hash::sha512_bytes(data)
-}
-fn blake2b_bytes(data: &[u8]) -> Vec<u8> {
-    ::sifr_stdlib::hash::blake2b_bytes(data)
-}
-fn blake2s_bytes(data: &[u8]) -> Vec<u8> {
-    ::sifr_stdlib::hash::blake2s_bytes(data)
-}
-fn __const__MT_N() -> SifrInt {
+const fn sifr_generated_const_5f4d545f4e() -> SifrInt {
     SifrInt::from_i64(624)
 }
-fn __const__MT_M() -> SifrInt {
+const fn sifr_generated_const_5f4d545f4d() -> SifrInt {
     SifrInt::from_i64(397)
 }
-fn __const__MT_MATRIX_A() -> SifrInt {
-    SifrInt::from_i64(2567483615)
+const fn sifr_generated_const_5f4d545f4d41545249585f41() -> SifrInt {
+    SifrInt::from_i64(2_567_483_615)
 }
-fn __const__MT_UPPER_MASK() -> SifrInt {
-    SifrInt::from_i64(2147483648)
+const fn sifr_generated_const_5f4d545f55505045525f4d41534b() -> SifrInt {
+    SifrInt::from_i64(2_147_483_648)
 }
-fn __const__MT_LOWER_MASK() -> SifrInt {
-    SifrInt::from_i64(2147483647)
+const fn sifr_generated_const_5f4d545f4c4f5745525f4d41534b() -> SifrInt {
+    SifrInt::from_i64(2_147_483_647)
 }
-fn __const__MT_F() -> SifrInt {
-    SifrInt::from_i64(1812433253)
+const fn sifr_generated_const_5f4d545f46() -> SifrInt {
+    SifrInt::from_i64(1_812_433_253)
 }
-fn __const__MT_WORD_MASK() -> SifrInt {
-    SifrInt::from_i64(4294967295)
+const fn sifr_generated_const_5f4d545f574f52445f4d41534b() -> SifrInt {
+    SifrInt::from_i64(4_294_967_295)
 }
 #[derive(Debug, Clone, PartialEq)]
-struct __SifrStdlib_sifr_x2erandom_x2eRandomState {
+struct SifrGeneratedStdlibSifrX2erandomX2eRandomState {
     version: SifrInt,
     state_words: Vec<SifrInt>,
     index: SifrInt,
     gauss_next: Option<f64>,
 }
-impl __SifrStdlib_sifr_x2erandom_x2eRandomState {
+impl SifrGeneratedStdlibSifrX2erandomX2eRandomState {
     fn new(
         version: SifrInt,
         state_words: Vec<SifrInt>,
         index: SifrInt,
         gauss_next: Option<f64>,
     ) -> Self {
-        let __sifr_field_init_0: SifrInt = version.clone();
-        let __sifr_field_init_1: Vec<SifrInt> = state_words;
-        let __sifr_field_init_2: SifrInt = index.clone();
-        let __sifr_field_init_3: Option<f64> = gauss_next;
+        let sifr_generated_field_value_bb62c62c9808ea37_76657273696f6e: SifrInt = version.clone();
+        let sifr_generated_field_value_8e62ac2dd7162e8c_73746174655f776f726473: Vec<SifrInt> =
+            state_words;
+        let sifr_generated_field_value_83cf8e8f9081468b_696e646578: SifrInt = index.clone();
+        let sifr_generated_field_value_edec7000e7b3eeaa_67617573735f6e657874: Option<f64> =
+            gauss_next;
         Self {
-            version: __sifr_field_init_0,
-            state_words: __sifr_field_init_1,
-            index: __sifr_field_init_2,
-            gauss_next: __sifr_field_init_3,
+            version: sifr_generated_field_value_bb62c62c9808ea37_76657273696f6e,
+            state_words: sifr_generated_field_value_8e62ac2dd7162e8c_73746174655f776f726473,
+            index: sifr_generated_field_value_83cf8e8f9081468b_696e646578,
+            gauss_next: sifr_generated_field_value_edec7000e7b3eeaa_67617573735f6e657874,
         }
     }
 }
-impl __SifrStdlib_sifr_x2erandom_x2eRandomState {}
 #[derive(Debug, Clone, PartialEq)]
-struct __SifrStdlib_sifr_x2erandom_x2eRandom {
-    _state_words: Vec<SifrInt>,
-    _index: SifrInt,
-    _gauss_next: Option<f64>,
+struct SifrGeneratedStdlibSifrX2erandomX2eRandom {
+    state_words_field: Vec<SifrInt>,
+    index_field: SifrInt,
+    gauss_next_field: Option<f64>,
 }
-impl __SifrStdlib_sifr_x2erandom_x2eRandom {
+impl SifrGeneratedStdlibSifrX2erandomX2eRandom {
     fn new(seed_value: Option<SifrInt>) -> Self {
-        let normalized_seed: SifrInt = _normalize_seed_input(seed_value.clone());
-        let __sifr_field_init_0: Vec<SifrInt> = _seed_words_from_seed(
-            normalized_seed.clone(),
-        );
-        let __sifr_field_init_1: SifrInt = __const__MT_N().clone();
-        let __sifr_field_init_2: Option<f64> = None;
+        let normalized_seed: SifrInt = sifr_generated_normalize_seed_input(seed_value.clone());
+        let sifr_generated_field_value_7e372b502c45daad_5f73746174655f776f726473: Vec<SifrInt> =
+            sifr_generated_seed_words_from_seed(normalized_seed.clone());
+        let sifr_generated_field_value_497043933c8a2d12_5f696e646578: SifrInt =
+            sifr_generated_const_5f4d545f4e().clone();
+        let sifr_generated_field_value_88c1b3a412b57c41_5f67617573735f6e657874: Option<f64> = None;
         Self {
-            _state_words: __sifr_field_init_0,
-            _index: __sifr_field_init_1,
-            _gauss_next: __sifr_field_init_2,
+            state_words_field: sifr_generated_field_value_7e372b502c45daad_5f73746174655f776f726473,
+            index_field: sifr_generated_field_value_497043933c8a2d12_5f696e646578,
+            gauss_next_field: sifr_generated_field_value_88c1b3a412b57c41_5f67617573735f6e657874,
         }
     }
 }
-impl __SifrStdlib_sifr_x2erandom_x2eRandom {
-    fn seed(&mut self, seed_value: &Option<SifrInt>) {
-        let normalized_seed: SifrInt = _normalize_seed_input(seed_value.clone());
-        self._state_words = _seed_words_from_seed(normalized_seed.clone());
-        self._index = __const__MT_N().clone();
-        self._gauss_next = None;
-    }
-}
-impl __SifrStdlib_sifr_x2erandom_x2eRandom {
-    fn _twist(&mut self) {
+impl SifrGeneratedStdlibSifrX2erandomX2eRandom {
+    fn sifr_generated_twist(&mut self) {
         let mut i: SifrInt = SifrInt::from_i64(0);
-        while (&SifrInt::from_i64(0) <= &i)
-            && (&i < &SifrInt::from(self._state_words.len()))
-        {
-            let y: SifrInt = &(&_state_word_at(&self._state_words, i.clone())
-                & &__const__MT_UPPER_MASK())
-                + &(&_state_word_at(
-                    &self._state_words,
+        while &SifrInt::from_i64(0) <= &i && &i < &SifrInt::from(self.state_words_field.len()) {
+            let y: SifrInt = &(&sifr_generated_state_word_at(&self.state_words_field, i.clone())
+                & &sifr_generated_const_5f4d545f55505045525f4d41534b())
+                + &(&sifr_generated_state_word_at(
+                    &self.state_words_field,
                     (&i + &SifrInt::from_i64(1))
-                        .floor_mod_known_nonzero(&__const__MT_N()),
-                ) & &__const__MT_LOWER_MASK());
+                        .floor_mod_known_nonzero(&sifr_generated_const_5f4d545f4e()),
+                ) & &sifr_generated_const_5f4d545f4c4f5745525f4d41534b());
             let mut x_a: SifrInt = y.floor_div_known_nonzero(&SifrInt::from_i64(2));
-            if (&y.floor_mod_known_nonzero(&SifrInt::from_i64(2))
-                != &SifrInt::from_i64(0))
-            {
-                x_a = &x_a ^ &__const__MT_MATRIX_A();
+            if &y.floor_mod_known_nonzero(&SifrInt::from_i64(2)) != &SifrInt::from_i64(0) {
+                x_a = &x_a ^ &sifr_generated_const_5f4d545f4d41545249585f41();
             }
-            let new_word: SifrInt = &_state_word_at(
-                &self._state_words,
-                (&i + &__const__MT_M()).floor_mod_known_nonzero(&__const__MT_N()),
+            let new_word: SifrInt = &sifr_generated_state_word_at(
+                &self.state_words_field,
+                (&i + &sifr_generated_const_5f4d545f4d())
+                    .floor_mod_known_nonzero(&sifr_generated_const_5f4d545f4e()),
             ) ^ &x_a;
             {
-                let __assign_value = &new_word & &__const__MT_WORD_MASK();
+                let sifr_generated_assign_value =
+                    &new_word & &sifr_generated_const_5f4d545f574f52445f4d41534b();
                 {
-                    let __index_raw = i.clone();
-                    let __index_normalized = __index_raw
-                        .normalize_index_or_len(self._state_words.len());
-                    if let Some(__elem) = self._state_words.get_mut(__index_normalized) {
-                        *__elem = __assign_value;
+                    let sifr_generated_index_raw = i.clone();
+                    let sifr_generated_index_normalized = sifr_generated_index_raw
+                        .normalize_index_or_len(self.state_words_field.len());
+                    if let Some(sifr_generated_elem) = self
+                        .state_words_field
+                        .get_mut(sifr_generated_index_normalized)
+                    {
+                        *sifr_generated_elem = sifr_generated_assign_value;
                     }
                 }
             }
             i = &i + &SifrInt::from_i64(1);
         }
-        self._index = SifrInt::from_i64(0);
+        self.index_field = SifrInt::from_i64(0);
     }
 }
-impl __SifrStdlib_sifr_x2erandom_x2eRandom {
-    fn _next_u32(&mut self) -> SifrInt {
-        if (&self._index.clone() >= &__const__MT_N()) {
-            self._twist();
+impl SifrGeneratedStdlibSifrX2erandomX2eRandom {
+    fn sifr_generated_next_u32(&mut self) -> SifrInt {
+        if &self.index_field.clone() >= &sifr_generated_const_5f4d545f4e() {
+            self.sifr_generated_twist();
         }
-        let mut y: SifrInt = _state_word_at(&self._state_words, self._index.clone());
-        self._index = &self._index.clone() + &SifrInt::from_i64(1);
+        let mut y: SifrInt =
+            sifr_generated_state_word_at(&self.state_words_field, self.index_field.clone());
+        self.index_field = &self.index_field.clone() + &SifrInt::from_i64(1);
         y = &y ^ &y.floor_div_known_nonzero(&SifrInt::from_i64(2048));
-        y = &y ^ &(&(&y * &SifrInt::from_i64(128)) & &SifrInt::from_i64(2636928640));
-        y = &y ^ &(&(&y * &SifrInt::from_i64(32768)) & &SifrInt::from_i64(4022730752));
-        y = &y ^ &y.floor_div_known_nonzero(&SifrInt::from_i64(262144));
-        &y & &__const__MT_WORD_MASK()
+        y = &y ^ &(&(&y * &SifrInt::from_i64(128)) & &SifrInt::from_i64(2_636_928_640));
+        y = &y ^ &(&(&y * &SifrInt::from_i64(32768)) & &SifrInt::from_i64(4_022_730_752));
+        y = &y ^ &y.floor_div_known_nonzero(&SifrInt::from_i64(262_144));
+        &y & &sifr_generated_const_5f4d545f574f52445f4d41534b()
     }
 }
-impl __SifrStdlib_sifr_x2erandom_x2eRandom {
+impl SifrGeneratedStdlibSifrX2erandomX2eRandom {
     fn random(&mut self) -> f64 {
-        random_word_to_unit_float(self._next_u32())
+        random_word_to_unit_float(self.sifr_generated_next_u32())
     }
 }
-impl __SifrStdlib_sifr_x2erandom_x2eRandom {
-    fn uniform(&mut self, minimum: f64, maximum: f64) -> f64 {
-        minimum + ((maximum - minimum) * self.random())
-    }
-}
-impl __SifrStdlib_sifr_x2erandom_x2eRandom {
+impl SifrGeneratedStdlibSifrX2erandomX2eRandom {
     fn randrange(
         &mut self,
         start: &SifrInt,
         stop: &Option<SifrInt>,
-        step: &SifrInt,
+        step_argument_af0b4e191da20cef: &SifrInt,
     ) -> Result<SifrInt, ValueError> {
-        if (step == &SifrInt::from_i64(0)) {
-            return Err(ValueError::new("randrange: step must not be zero".to_string()));
+        if step_argument_af0b4e191da20cef == &SifrInt::from_i64(0) {
+            return Err(ValueError::new(
+                "randrange: step must not be zero".to_string(),
+            ));
         }
         let mut actual_start: SifrInt = start.clone();
-        let mut actual_stop: SifrInt = start.clone();
-        if (stop.is_none()) {
+        let mut actual_stop_value_351bdef5a4961be0: SifrInt = start.clone();
+        if stop.is_none() {
             actual_start = SifrInt::from_i64(0);
-        } else {
-            if let Some(stop) = stop.as_ref() {
-                actual_stop = stop.clone();
-            }
+        } else if let Some(stop) = stop.as_ref() {
+            actual_stop_value_351bdef5a4961be0 = stop.clone();
         }
-        let width: SifrInt = &actual_stop - &actual_start;
-        if (step > &SifrInt::from_i64(0)) {
-            if (&width <= &SifrInt::from_i64(0)) {
+        let width: SifrInt = &actual_stop_value_351bdef5a4961be0 - &actual_start;
+        if step_argument_af0b4e191da20cef > &SifrInt::from_i64(0) {
+            if &width <= &SifrInt::from_i64(0) {
                 return Err(ValueError::new("randrange: empty range".to_string()));
             }
-        } else {
-            if (&width >= &SifrInt::from_i64(0)) {
-                return Err(ValueError::new("randrange: empty range".to_string()));
-            }
+        } else if &width >= &SifrInt::from_i64(0) {
+            return Err(ValueError::new("randrange: empty range".to_string()));
         }
         let mut abs_width: SifrInt = width.clone();
         if &abs_width < &SifrInt::from_i64(0) {
             abs_width = &SifrInt::from_i64(0) - &abs_width;
         }
-        let mut abs_step: SifrInt = step.clone();
+        let mut abs_step: SifrInt = step_argument_af0b4e191da20cef.clone();
         if &abs_step < &SifrInt::from_i64(0) {
             abs_step = &SifrInt::from_i64(0) - &abs_step;
         }
-        if (&abs_step == &SifrInt::from_i64(0)) {
-            return Err(ValueError::new("randrange: step must not be zero".to_string()));
+        if &abs_step == &SifrInt::from_i64(0) {
+            return Err(ValueError::new(
+                "randrange: step must not be zero".to_string(),
+            ));
         }
-        let count: SifrInt = (&(&abs_width + &abs_step) - &SifrInt::from_i64(1))
-            .floor_div_known_nonzero(&abs_step);
-        if (&count <= &SifrInt::from_i64(0)) {
+        let count: SifrInt =
+            (&(&abs_width + &abs_step) - &SifrInt::from_i64(1)).floor_div_known_nonzero(&abs_step);
+        if &count <= &SifrInt::from_i64(0) {
             return Err(ValueError::new("randrange: empty range".to_string()));
         }
-        if (&count == &SifrInt::from_i64(0)) {
+        if &count == &SifrInt::from_i64(0) {
             return Err(ValueError::new("randrange: empty range".to_string()));
         }
-        let pick: SifrInt = self._next_u32().floor_mod_known_nonzero(&count);
-        Ok(&actual_start + &(&pick * step))
+        let pick: SifrInt = self
+            .sifr_generated_next_u32()
+            .floor_mod_known_nonzero(&count);
+        Ok(&actual_start + &(&pick * step_argument_af0b4e191da20cef))
     }
 }
-impl __SifrStdlib_sifr_x2erandom_x2eRandom {
-    fn randint(
-        &mut self,
-        minimum: &SifrInt,
-        maximum: &SifrInt,
-    ) -> Result<SifrInt, ValueError> {
-        if *minimum > *maximum {
-            return Err(ValueError::new("randint: min must be <= max".to_string()));
-        }
-        self.randrange(
-            minimum,
-            &Some((maximum + &SifrInt::from_i64(1)).clone()),
-            &SifrInt::from_i64(1),
-        )
-    }
-}
-impl __SifrStdlib_sifr_x2erandom_x2eRandom {
-    fn getrandbits(&mut self, k: &SifrInt) -> Result<SifrInt, ValueError> {
-        if (k < &SifrInt::from_i64(0)) {
-            return Err(
-                ValueError::new("getrandbits: number of bits must be >= 0".to_string()),
-            );
-        }
-        let mut result: SifrInt = SifrInt::from_i64(0);
-        let mut bits_left: SifrInt = k.clone();
-        while (&bits_left > &SifrInt::from_i64(0)) {
-            let word: SifrInt = self._next_u32();
-            let mut take: SifrInt = SifrInt::from_i64(32);
-            if (&bits_left < &SifrInt::from_i64(32)) {
-                take = bits_left.clone();
-            }
-            let mut mask: SifrInt = SifrInt::from_i64(0);
-            let mut shifted_result: SifrInt = result;
-            let mut shift_index: SifrInt = SifrInt::from_i64(0);
-            while (&shift_index < &take) {
-                mask = &(&mask * &SifrInt::from_i64(2)) + &SifrInt::from_i64(1);
-                shifted_result = &shifted_result * &SifrInt::from_i64(2);
-                shift_index = &shift_index + &SifrInt::from_i64(1);
-            }
-            result = &shifted_result | &(&word & &mask);
-            bits_left = &bits_left - &take;
-        }
-        Ok(result.clone())
-    }
-}
-impl __SifrStdlib_sifr_x2erandom_x2eRandom {
-    fn randbytes(&mut self, n: &SifrInt) -> Result<Vec<u8>, ValueError> {
-        if (n < &SifrInt::from_i64(0)) {
-            return Err(ValueError::new("randbytes: n must be >= 0".to_string()));
-        }
-        let mut values: Vec<SifrInt> = vec![];
-        let mut i: SifrInt = SifrInt::from_i64(0);
-        while i < *n {
-            let byte_value: SifrInt = &self._next_u32() & &SifrInt::from_i64(255);
-            values.push(byte_value.clone());
-            i = &i + &SifrInt::from_i64(1);
-        }
-        {
-            let __vals = values;
-            let mut __out = Vec::new();
-            for __pair in __vals.iter().enumerate() {
-                __out
-                    .push(
-                        __pair
-                            .1
-                            .try_to_u8()
-                            .map_err(|_error| ValueError {
-                                message: format!(
-                                    "byte out of range at index {}: {}", __pair.0, * __pair.1
-                                ),
-                            })?,
-                    );
-            }
-            Ok::<Vec<u8>, ValueError>(__out)
-        }
-    }
-}
-impl __SifrStdlib_sifr_x2erandom_x2eRandom {
+impl SifrGeneratedStdlibSifrX2erandomX2eRandom {
     fn gauss(&mut self, mu: f64, sigma: f64) -> f64 {
-        let cached: Option<f64> = self._gauss_next;
+        let cached: Option<f64> = self.gauss_next_field;
         if let Some(cached) = cached {
-            self._gauss_next = None;
-            return mu + (sigma * cached);
+            self.gauss_next_field = None;
+            return mu + sigma * cached;
         }
         let mut u1: f64 = self.random();
-        if u1 <= (0.0_f64) {
-            u1 = 0.000000000001_f64;
+        if u1 <= 0.0_f64 {
+            u1 = 0.000_000_000_001_f64;
         }
         let u2: f64 = self.random();
-        let radius: f64 = sqrt(-(2.0_f64) * log(u1));
-        let theta: f64 = ((2.0_f64) * PI) * u2;
+        let radius: f64 = sqrt(-2.0_f64 * log(u1));
+        let theta: f64 = 2.0_f64 * PI * u2;
         let z0: f64 = radius * cos(theta);
         let z1: f64 = radius * sin(theta);
         let next_cached: Option<f64> = Some(z1);
-        self._gauss_next = next_cached;
-        mu + (sigma * z0)
+        self.gauss_next_field = next_cached;
+        mu + sigma * z0
     }
 }
-impl __SifrStdlib_sifr_x2erandom_x2eRandom {
-    fn getstate(&self) -> __SifrStdlib_sifr_x2erandom_x2eRandomState {
-        __SifrStdlib_sifr_x2erandom_x2eRandomState::new(
+impl SifrGeneratedStdlibSifrX2erandomX2eRandom {
+    fn getstate(&self) -> SifrGeneratedStdlibSifrX2erandomX2eRandomState {
+        SifrGeneratedStdlibSifrX2erandomX2eRandomState::new(
             SifrInt::from_i64(3),
-            _clone_words(&self._state_words),
-            self._index.clone(),
-            self._gauss_next,
+            sifr_generated_clone_words(&self.state_words_field),
+            self.index_field.clone(),
+            self.gauss_next_field,
         )
     }
 }
-impl __SifrStdlib_sifr_x2erandom_x2eRandom {
+impl SifrGeneratedStdlibSifrX2erandomX2eRandom {
     fn setstate(
         &mut self,
-        state: &__SifrStdlib_sifr_x2erandom_x2eRandomState,
+        state: &SifrGeneratedStdlibSifrX2erandomX2eRandomState,
     ) -> Result<(), ValueError> {
-        if (&state.version.clone() != &SifrInt::from_i64(3)) {
+        if &state.version.clone() != &SifrInt::from_i64(3) {
             return Err(ValueError::new("setstate: unsupported version".to_string()));
         }
-        if (&SifrInt::from(state.state_words.len()) != &__const__MT_N()) {
-            return Err(
-                ValueError::new("setstate: state_words must have length 624".to_string()),
-            );
+        if &SifrInt::from(state.state_words.len()) != &sifr_generated_const_5f4d545f4e() {
+            return Err(ValueError::new(
+                "setstate: state_words must have length 624".to_string(),
+            ));
         }
-        if (&state.index.clone() < &SifrInt::from_i64(0))
-            || (&state.index.clone() > &__const__MT_N())
+        if &state.index.clone() < &SifrInt::from_i64(0)
+            || &state.index.clone() > &sifr_generated_const_5f4d545f4e()
         {
-            return Err(
-                ValueError::new("setstate: index must be in range [0, 624]".to_string()),
-            );
+            return Err(ValueError::new(
+                "setstate: index must be in range [0, 624]".to_string(),
+            ));
         }
-        let mut normalized: Vec<SifrInt> = vec![];
+        let mut normalized: Vec<SifrInt> = Vec::new();
         for word in state.state_words.clone().iter().cloned() {
-            if (&word < &SifrInt::from_i64(0)) || (&word > &__const__MT_WORD_MASK()) {
+            if &word < &SifrInt::from_i64(0)
+                || &word > &sifr_generated_const_5f4d545f574f52445f4d41534b()
+            {
                 return Err(ValueError::new("setstate: word out of range".to_string()));
             }
-            normalized.push(&word & &__const__MT_WORD_MASK());
+            normalized.push(&word & &sifr_generated_const_5f4d545f574f52445f4d41534b());
         }
-        self._state_words = normalized;
-        self._index = state.index.clone();
-        self._gauss_next = state.gauss_next;
+        self.state_words_field = normalized;
+        self.index_field = state.index.clone();
+        self.gauss_next_field = state.gauss_next;
         Ok(())
     }
 }
-fn _state_word_at(words: &[SifrInt], index: SifrInt) -> SifrInt {
+fn sifr_generated_state_word_at(words: &[SifrInt], index: SifrInt) -> SifrInt {
     let value: Option<SifrInt> = {
-        let __sifr_checked_read_collection = &words;
-        let __sifr_checked_read_index = index.clone();
-        let __sifr_checked_read_normalized = __sifr_checked_read_index
-            .normalize_index_or_len(__sifr_checked_read_collection.len());
-        __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+        let sifr_generated_checked_read_collection = &words;
+        let sifr_generated_checked_read_index = index.clone();
+        let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
+            .normalize_index_or_len(sifr_generated_checked_read_collection.len());
+        sifr_generated_checked_read_collection
+            .get(sifr_generated_checked_read_normalized)
+            .cloned()
     };
-    if let Some(value) = value.clone() {
-        return value;
-    }
-    SifrInt::from_i64(0)
+    let Some(value_value_7ce4fd9430e80cea) = value.clone() else {
+        return SifrInt::from_i64(0);
+    };
+    value_value_7ce4fd9430e80cea
 }
-fn _clone_words(words: &[SifrInt]) -> Vec<SifrInt> {
-    let mut copied: Vec<SifrInt> = vec![];
+fn sifr_generated_clone_words(words: &[SifrInt]) -> Vec<SifrInt> {
+    let mut copied: Vec<SifrInt> = Vec::new();
     for word in words.iter().cloned() {
         copied.push(word.clone());
     }
     copied
 }
-fn _normalize_seed_input(seed_value: Option<SifrInt>) -> SifrInt {
-    if let Some(seed_value) = seed_value.clone() {
-        return seed_value.clone();
-    }
-    random_seed()
+fn sifr_generated_normalize_seed_input(seed_value: Option<SifrInt>) -> SifrInt {
+    let Some(seed_value) = seed_value.clone() else {
+        return random_seed();
+    };
+    seed_value.clone()
 }
-fn _seed_words_from_seed(seed_value: SifrInt) -> Vec<SifrInt> {
-    let mut words: Vec<SifrInt> = vec![];
-    words.push(&seed_value & &__const__MT_WORD_MASK());
+fn sifr_generated_seed_words_from_seed(seed_value: SifrInt) -> Vec<SifrInt> {
+    let mut words: Vec<SifrInt> =
+        vec![&seed_value & &sifr_generated_const_5f4d545f574f52445f4d41534b()];
     let mut i: SifrInt = SifrInt::from_i64(1);
-    while (&i < &__const__MT_N()) {
-        let prev: SifrInt = _state_word_at(&words, &i - &SifrInt::from_i64(1));
-        let next_word: SifrInt = &(&(&__const__MT_F()
-            * &(&prev ^ &prev.floor_div_known_nonzero(&SifrInt::from_i64(1073741824))))
-            + &i) & &__const__MT_WORD_MASK();
+    while &i < &sifr_generated_const_5f4d545f4e() {
+        let prev: SifrInt = sifr_generated_state_word_at(&words, &i - &SifrInt::from_i64(1));
+        let next_word: SifrInt = &(&(&sifr_generated_const_5f4d545f46()
+            * &(&prev ^ &prev.floor_div_known_nonzero(&SifrInt::from_i64(1_073_741_824))))
+            + &i)
+            & &sifr_generated_const_5f4d545f574f52445f4d41534b();
         words.push(next_word.clone());
         i = &i + &SifrInt::from_i64(1);
     }
     words
 }
-fn _build_state_from_module_storage() -> __SifrStdlib_sifr_x2erandom_x2eRandomState {
-    __SifrStdlib_sifr_x2erandom_x2eRandomState::new(
+fn sifr_generated_build_state_from_module_storage() -> SifrGeneratedStdlibSifrX2erandomX2eRandomState
+{
+    SifrGeneratedStdlibSifrX2erandomX2eRandomState::new(
         SifrInt::from_i64(3),
         random_module_state_words(),
         random_module_state_index(),
         random_module_state_gauss_next(),
     )
 }
-fn _store_state_into_module_storage(state: &__SifrStdlib_sifr_x2erandom_x2eRandomState) {
-    let _set_result: Result<(), ValueError> = random_module_set_state(
-        &_clone_words(&state.state_words.clone()),
+fn sifr_generated_store_state_into_module_storage(
+    state: &SifrGeneratedStdlibSifrX2erandomX2eRandomState,
+) {
+    let sifr_generated_set_result: Result<(), ValueError> = random_module_set_state(
+        &sifr_generated_clone_words(&state.state_words.clone()),
         state.index.clone(),
         state.gauss_next,
     );
-    let _ = _set_result;
+    let _ = sifr_generated_set_result;
 }
-fn _ensure_module_state_initialized() {
+fn sifr_generated_ensure_module_state_initialized() {
     let words: Vec<SifrInt> = random_module_state_words();
-    if &SifrInt::from(words.len()) == &__const__MT_N() {
+    if &SifrInt::from(words.len()) == &sifr_generated_const_5f4d545f4e() {
         return;
     }
-    let bootstrap: __SifrStdlib_sifr_x2erandom_x2eRandom = __SifrStdlib_sifr_x2erandom_x2eRandom::new(
-        Some(SifrInt::from_i64(5489)),
-    );
-    _store_state_into_module_storage(&bootstrap.getstate());
+    let bootstrap: SifrGeneratedStdlibSifrX2erandomX2eRandom =
+        SifrGeneratedStdlibSifrX2erandomX2eRandom::new(Some(SifrInt::from_i64(5489)));
+    sifr_generated_store_state_into_module_storage(&bootstrap.getstate());
 }
-fn _module_random() -> __SifrStdlib_sifr_x2erandom_x2eRandom {
-    _ensure_module_state_initialized();
-    let mut r: __SifrStdlib_sifr_x2erandom_x2eRandom = __SifrStdlib_sifr_x2erandom_x2eRandom::new(
-        Some(SifrInt::from_i64(0)),
-    );
-    let __sifr_try_res: Result<(), ValueError> = (|| {
-        let _set_result: Result<(), ValueError> = r
-            .setstate(&_build_state_from_module_storage());
-        let _ = _set_result;
-        Ok(())
-    })();
-    if let Err(__sifr_try_err) = __sifr_try_res {
-        let e = __sifr_try_err.clone();
-        let _ = e.message.clone();
-    }
+fn sifr_generated_module_random() -> SifrGeneratedStdlibSifrX2erandomX2eRandom {
+    sifr_generated_ensure_module_state_initialized();
+    let mut r: SifrGeneratedStdlibSifrX2erandomX2eRandom =
+        SifrGeneratedStdlibSifrX2erandomX2eRandom::new(Some(SifrInt::from_i64(0)));
+    let sifr_generated_set_result: Result<(), ValueError> =
+        r.setstate(&sifr_generated_build_state_from_module_storage());
+    let _ = sifr_generated_set_result;
     r
 }
-fn _sync_module_random(generator: &mut __SifrStdlib_sifr_x2erandom_x2eRandom) {
-    _store_state_into_module_storage(&generator.getstate());
+fn sifr_generated_sync_module_random(generator: &mut SifrGeneratedStdlibSifrX2erandomX2eRandom) {
+    sifr_generated_store_state_into_module_storage(&generator.getstate());
 }
 fn randrange(
     start: SifrInt,
     stop: Option<SifrInt>,
-    step: SifrInt,
+    step_argument_af0b4e191da20cef: SifrInt,
 ) -> Result<SifrInt, ValueError> {
-    let mut generator: __SifrStdlib_sifr_x2erandom_x2eRandom = _module_random();
-    let value: Result<SifrInt, ValueError> = generator.randrange(&start, &stop, &step);
-    _sync_module_random(&mut generator);
+    let mut generator: SifrGeneratedStdlibSifrX2erandomX2eRandom = sifr_generated_module_random();
+    let value: Result<SifrInt, ValueError> =
+        generator.randrange(&start, &stop, &step_argument_af0b4e191da20cef);
+    sifr_generated_sync_module_random(&mut generator);
     value
 }
 fn gauss(mu: f64, sigma: f64) -> f64 {
-    let mut generator: __SifrStdlib_sifr_x2erandom_x2eRandom = _module_random();
+    let mut generator: SifrGeneratedStdlibSifrX2erandomX2eRandom = sifr_generated_module_random();
     let value: f64 = generator.gauss(mu, sigma);
-    _sync_module_random(&mut generator);
+    sifr_generated_sync_module_random(&mut generator);
     value
 }
 fn sample<T: Clone + 'static>(items: &[T], k: SifrInt) -> Result<Vec<T>, ValueError> {
-    if (&k < &SifrInt::from_i64(0)) {
+    if &k < &SifrInt::from_i64(0) {
         return Err(ValueError::new("sample: k must be >= 0".to_string()));
     }
-    if (&k > &SifrInt::from(items.len())) {
+    if &k > &SifrInt::from(items.len()) {
         return Err(ValueError::new("sample larger than population".to_string()));
     }
-    let mut pool: Vec<T> = vec![];
+    let mut pool: Vec<T> = Vec::new();
     for item in items.iter().cloned() {
         pool.push(item.clone());
     }
-    let mut generator: __SifrStdlib_sifr_x2erandom_x2eRandom = _module_random();
-    let mut result: Vec<T> = vec![];
+    let mut generator: SifrGeneratedStdlibSifrX2erandomX2eRandom = sifr_generated_module_random();
+    let mut result: Vec<T> = Vec::new();
     let mut remaining: SifrInt = SifrInt::from(pool.len());
     let mut i: SifrInt = SifrInt::from_i64(0);
-    while (&i < &k) {
-        if (&remaining == &SifrInt::from_i64(0)) {
+    while &i < &k {
+        if &remaining == &SifrInt::from_i64(0) {
             return Err(ValueError::new("sample larger than population".to_string()));
         }
         let pick_index: SifrInt = generator
-            ._next_u32()
+            .sifr_generated_next_u32()
             .floor_mod_known_nonzero(&remaining);
         let picked: Option<T> = {
-            let __sifr_checked_read_collection = &pool;
-            let __sifr_checked_read_index = pick_index.clone();
-            let __sifr_checked_read_normalized = __sifr_checked_read_index
-                .normalize_index_or_len(__sifr_checked_read_collection.len());
-            __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+            let sifr_generated_checked_read_collection = &pool;
+            let sifr_generated_checked_read_index = pick_index.clone();
+            let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
+                .normalize_index_or_len(sifr_generated_checked_read_collection.len());
+            sifr_generated_checked_read_collection
+                .get(sifr_generated_checked_read_normalized)
+                .cloned()
         };
         if let Some(picked) = picked {
             result.push(picked.clone());
         }
         let last: Option<T> = {
-            let __sifr_checked_read_collection = &pool;
-            let __sifr_checked_read_index = &remaining - &SifrInt::from_i64(1);
-            let __sifr_checked_read_normalized = __sifr_checked_read_index
-                .normalize_index_or_len(__sifr_checked_read_collection.len());
-            __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+            let sifr_generated_checked_read_collection = &pool;
+            let sifr_generated_checked_read_index = &remaining - &SifrInt::from_i64(1);
+            let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
+                .normalize_index_or_len(sifr_generated_checked_read_collection.len());
+            sifr_generated_checked_read_collection
+                .get(sifr_generated_checked_read_normalized)
+                .cloned()
         };
-        if let Some(last) = last {
-            if (&SifrInt::from_i64(0) <= &pick_index)
-                && (&pick_index < &SifrInt::from(pool.len()))
+        if let Some(last) = last
+            && &SifrInt::from_i64(0) <= &pick_index
+            && &pick_index < &SifrInt::from(pool.len())
+        {
             {
+                let sifr_generated_assign_value = last.clone();
                 {
-                    let __assign_value = last.clone();
+                    let sifr_generated_index_raw = pick_index.clone();
+                    let sifr_generated_index_normalized =
+                        sifr_generated_index_raw.normalize_index_or_len(pool.len());
+                    if let Some(sifr_generated_elem) = pool.get_mut(sifr_generated_index_normalized)
                     {
-                        let __index_raw = pick_index.clone();
-                        let __index_normalized = __index_raw
-                            .normalize_index_or_len(pool.len());
-                        if let Some(__elem) = pool.get_mut(__index_normalized) {
-                            *__elem = __assign_value;
-                        }
+                        *sifr_generated_elem = sifr_generated_assign_value;
                     }
                 }
             }
@@ -1954,67 +1214,69 @@ fn sample<T: Clone + 'static>(items: &[T], k: SifrInt) -> Result<Vec<T>, ValueEr
         remaining = &remaining - &SifrInt::from_i64(1);
         i = &i + &SifrInt::from_i64(1);
     }
-    _sync_module_random(&mut generator);
+    sifr_generated_sync_module_random(&mut generator);
     Ok(result)
 }
 fn shuffle<T: Clone + 'static>(items: &mut Vec<T>) {
-    let mut generator: __SifrStdlib_sifr_x2erandom_x2eRandom = _module_random();
+    let mut generator: SifrGeneratedStdlibSifrX2erandomX2eRandom = sifr_generated_module_random();
     let n: SifrInt = SifrInt::from(items.len());
-    if (&n > &SifrInt::from_i64(1)) {
+    if &n > &SifrInt::from_i64(1) {
         let mut i: SifrInt = &n - &SifrInt::from_i64(1);
-        while (&i > &SifrInt::from_i64(0)) {
+        while &i > &SifrInt::from_i64(0) {
             let divisor: SifrInt = &i + &SifrInt::from_i64(1);
-            if (&divisor == &SifrInt::from_i64(0)) {
+            if &divisor == &SifrInt::from_i64(0) {
                 return;
             }
-            let j: SifrInt = generator._next_u32().floor_mod_known_nonzero(&divisor);
+            let j: SifrInt = generator
+                .sifr_generated_next_u32()
+                .floor_mod_known_nonzero(&divisor);
             let left: Option<T> = {
-                let __sifr_checked_read_collection = &items;
-                let __sifr_checked_read_index = i.clone();
-                let __sifr_checked_read_normalized = __sifr_checked_read_index
-                    .normalize_index_or_len(__sifr_checked_read_collection.len());
-                __sifr_checked_read_collection
-                    .get(__sifr_checked_read_normalized)
+                let sifr_generated_checked_read_collection = &items;
+                let sifr_generated_checked_read_index = i.clone();
+                let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
+                    .normalize_index_or_len(sifr_generated_checked_read_collection.len());
+                sifr_generated_checked_read_collection
+                    .get(sifr_generated_checked_read_normalized)
                     .cloned()
             };
             let right: Option<T> = {
-                let __sifr_checked_read_collection = &items;
-                let __sifr_checked_read_index = j.clone();
-                let __sifr_checked_read_normalized = __sifr_checked_read_index
-                    .normalize_index_or_len(__sifr_checked_read_collection.len());
-                __sifr_checked_read_collection
-                    .get(__sifr_checked_read_normalized)
+                let sifr_generated_checked_read_collection = &items;
+                let sifr_generated_checked_read_index = j.clone();
+                let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
+                    .normalize_index_or_len(sifr_generated_checked_read_collection.len());
+                sifr_generated_checked_read_collection
+                    .get(sifr_generated_checked_read_normalized)
                     .cloned()
             };
-            if let Some(left) = left {
-                if let Some(right) = right {
-                    if (&SifrInt::from_i64(0) <= &i)
-                        && (&i < &SifrInt::from(items.len()))
+            if let Some(left) = left
+                && let Some(right) = right
+            {
+                if &SifrInt::from_i64(0) <= &i && &i < &SifrInt::from(items.len()) {
                     {
+                        let sifr_generated_assign_value = right.clone();
                         {
-                            let __assign_value = right.clone();
+                            let sifr_generated_index_raw = i.clone();
+                            let sifr_generated_index_normalized =
+                                sifr_generated_index_raw.normalize_index_or_len(items.len());
+                            if let Some(sifr_generated_elem) =
+                                items.get_mut(sifr_generated_index_normalized)
                             {
-                                let __index_raw = i.clone();
-                                let __index_normalized = __index_raw
-                                    .normalize_index_or_len(items.len());
-                                if let Some(__elem) = items.get_mut(__index_normalized) {
-                                    *__elem = __assign_value;
-                                }
+                                *sifr_generated_elem = sifr_generated_assign_value;
                             }
                         }
                     }
-                    if (&SifrInt::from_i64(0) <= &j)
-                        && (&j < &SifrInt::from(items.len()))
+                }
+                if &SifrInt::from_i64(0) <= &j && &j < &SifrInt::from(items.len()) {
                     {
+                        let sifr_generated_assign_value = left.clone();
                         {
-                            let __assign_value = left.clone();
+                            let sifr_generated_index_raw = j.clone();
+                            let sifr_generated_index_normalized =
+                                sifr_generated_index_raw.normalize_index_or_len(items.len());
+                            if let Some(sifr_generated_elem) =
+                                items.get_mut(sifr_generated_index_normalized)
                             {
-                                let __index_raw = j.clone();
-                                let __index_normalized = __index_raw
-                                    .normalize_index_or_len(items.len());
-                                if let Some(__elem) = items.get_mut(__index_normalized) {
-                                    *__elem = __assign_value;
-                                }
+                                *sifr_generated_elem = sifr_generated_assign_value;
                             }
                         }
                     }
@@ -2023,88 +1285,84 @@ fn shuffle<T: Clone + 'static>(items: &mut Vec<T>) {
             i = &i - &SifrInt::from_i64(1);
         }
     }
-    _sync_module_random(&mut generator);
+    sifr_generated_sync_module_random(&mut generator);
 }
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-enum __SifrUnion_8_x3asequence5_x3aunion1_x3a231_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a0 {
-    __SifrUnionVariant_5_x3aclass18_x3aFloatOverflowError1_x3a0(FloatOverflowError),
-    __SifrUnionVariant_5_x3aclass23_x3aFloatPrecisionLossError1_x3a0(
-        FloatPrecisionLossError,
-    ),
+enum SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0
+{
+    SifrGeneratedUnionVariant5X3aclass18X3aFloatOverflowError1X3a0(FloatOverflowError),
+    SifrGeneratedUnionVariant5X3aclass23X3aFloatPrecisionLossError1X3a0(FloatPrecisionLossError),
 }
 impl From<FloatOverflowError>
-for __SifrUnion_8_x3asequence5_x3aunion1_x3a231_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a0 {
+for SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0 {
     fn from(value: FloatOverflowError) -> Self {
-        __SifrUnion_8_x3asequence5_x3aunion1_x3a231_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a0::__SifrUnionVariant_5_x3aclass18_x3aFloatOverflowError1_x3a0(
+        SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass18X3aFloatOverflowError1X3a0(
             value,
         )
     }
 }
 impl ::std::fmt::Display
-for __SifrUnion_8_x3asequence5_x3aunion1_x3a231_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a0 {
+for SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0 {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         match self {
-            __SifrUnion_8_x3asequence5_x3aunion1_x3a231_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a0::__SifrUnionVariant_5_x3aclass18_x3aFloatOverflowError1_x3a0(
+            SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass18X3aFloatOverflowError1X3a0(
                 v,
-            ) => {
-                return write!(f, "{}", v);
-            }
-            __SifrUnion_8_x3asequence5_x3aunion1_x3a231_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a0::__SifrUnionVariant_5_x3aclass23_x3aFloatPrecisionLossError1_x3a0(
+            ) => write!(f, "{v}"),
+            SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3aFloatPrecisionLossError1X3a0(
                 v,
-            ) => {
-                return write!(f, "{}", v);
-            }
+            ) => write!(f, "{v}"),
         }
     }
 }
 #[derive(Clone, PartialEq, Eq, Hash)]
-struct __SifrStdlib_sifr_x2estatistics_x2eStatisticsError {
+struct SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError {
     message: String,
 }
-impl __SifrStdlib_sifr_x2estatistics_x2eStatisticsError {
-    fn new(message: String) -> Self {
+impl SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError {
+    const fn new(message: String) -> Self {
         Self { message }
     }
 }
-impl __SifrStdlib_sifr_x2estatistics_x2eStatisticsError {}
-impl ::std::fmt::Debug for __SifrStdlib_sifr_x2estatistics_x2eStatisticsError {
+impl ::std::fmt::Debug for SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        f.debug_struct("StatisticsError").field("message", &self.message).finish()
+        f.debug_struct("StatisticsError")
+            .field("message", &self.message)
+            .finish()
     }
 }
-impl ::std::fmt::Display for __SifrStdlib_sifr_x2estatistics_x2eStatisticsError {
+impl ::std::fmt::Display for SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         write!(f, "{}", self.message)
     }
 }
-impl ::std::error::Error for __SifrStdlib_sifr_x2estatistics_x2eStatisticsError {}
-fn _sum(data: &[f64]) -> f64 {
+impl ::std::error::Error for SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError {}
+fn sifr_generated_sum(data: &[f64]) -> f64 {
     let mut total: f64 = 0.0_f64;
     for val in data.iter().copied() {
         total += val;
     }
     total
 }
-fn _float_int(
+fn sifr_generated_float_int(
     value: SifrInt,
-) -> Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
-    let __sifr_try_res: Result<
-        Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError>,
-        __SifrUnion_8_x3asequence5_x3aunion1_x3a231_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a0,
+) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
+    let sifr_generated_try_res: Result<
+        Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError>,
+        SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0,
     > = (|| {
         let converted: f64 = value
             .clone()
             .checked_to_f64()
-            .map_err(|__sifr_float_error| match __sifr_float_error {
+            .map_err(|sifr_generated_float_error| match sifr_generated_float_error {
                 ::sifr_runtime::IntegerFloatConversionError::Overflow => {
-                    __SifrUnion_8_x3asequence5_x3aunion1_x3a231_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a0::__SifrUnionVariant_5_x3aclass18_x3aFloatOverflowError1_x3a0(
+                    SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass18X3aFloatOverflowError1X3a0(
                         FloatOverflowError::new(
                             "exact integer is outside the finite float range".to_string(),
                         ),
                     )
                 }
                 ::sifr_runtime::IntegerFloatConversionError::PrecisionLoss => {
-                    __SifrUnion_8_x3asequence5_x3aunion1_x3a231_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a0::__SifrUnionVariant_5_x3aclass23_x3aFloatPrecisionLossError1_x3a0(
+                    SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3aFloatPrecisionLossError1X3a0(
                         FloatPrecisionLossError::new(
                             "exact integer cannot be represented without float precision loss"
                                 .to_string(),
@@ -2114,162 +1372,141 @@ fn _float_int(
             })?;
         Ok(Ok(converted))
     })();
-    match __sifr_try_res {
-        Ok(__sifr_ret_val) => {
-            return __sifr_ret_val;
-        }
-        Err(__sifr_try_err) => {
-            match __sifr_try_err {
-                __SifrUnion_8_x3asequence5_x3aunion1_x3a231_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a0::__SifrUnionVariant_5_x3aclass18_x3aFloatOverflowError1_x3a0(
-                    __sifr_try_variant_error,
-                ) => {
-                    let error = __sifr_try_variant_error.clone();
-                    return Err(
-                        __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
-                            error.message.clone(),
-                        ),
-                    );
-                }
-                __SifrUnion_8_x3asequence5_x3aunion1_x3a231_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a0::__SifrUnionVariant_5_x3aclass23_x3aFloatPrecisionLossError1_x3a0(
-                    __sifr_try_variant_error,
-                ) => {
-                    let error = __sifr_try_variant_error.clone();
-                    return Err(
-                        __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
-                            error.message.clone(),
-                        ),
-                    );
-                }
+    sifr_generated_try_res
+        .unwrap_or_else(|sifr_generated_try_err| match sifr_generated_try_err {
+            SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass18X3aFloatOverflowError1X3a0(
+                sifr_generated_try_variant_error,
+            ) => {
+                let error = sifr_generated_try_variant_error.clone();
+                Err(
+                    SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
+                        error.message.clone(),
+                    ),
+                )
             }
-        }
-    }
+            SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3aFloatPrecisionLossError1X3a0(
+                sifr_generated_try_variant_error,
+            ) => {
+                let error = sifr_generated_try_variant_error.clone();
+                Err(
+                    SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
+                        error.message.clone(),
+                    ),
+                )
+            }
+        })
 }
-fn _divide_by_int(
+fn sifr_generated_divide_by_int(
     numerator: f64,
     denominator: SifrInt,
-) -> Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
-    let __sifr_try_res: Result<
-        Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError>,
-        __SifrStdlib_sifr_x2estatistics_x2eStatisticsError,
+) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
+    let sifr_generated_try_res: Result<
+        Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError>,
+        SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError,
     > = (|| {
-        let divisor: f64 = _float_int(denominator.clone())?;
+        let divisor: f64 = sifr_generated_float_int(denominator.clone())?;
         Ok(Ok(numerator / divisor))
     })();
-    match __sifr_try_res {
-        Ok(__sifr_ret_val) => {
-            return __sifr_ret_val;
-        }
-        Err(__sifr_try_err) => {
-            let error = __sifr_try_err.clone();
-            return Err(
-                __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
-                    error.message.clone(),
-                ),
-            );
-        }
-    }
+    sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
+        let error = sifr_generated_try_err.clone();
+        Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
+            error.message.clone(),
+        ))
+    })
 }
-fn mean(
-    data: &[f64],
-) -> Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
+fn mean(data: &[f64]) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
     let count: SifrInt = SifrInt::from(data.len());
-    if (&count == &SifrInt::from_i64(0)) {
-        return Err(
-            __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
-                "mean requires at least one data point".to_string(),
-            ),
-        );
+    if &count == &SifrInt::from_i64(0) {
+        return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
+            "mean requires at least one data point".to_string(),
+        ));
     }
-    let total: f64 = _sum(data);
-    _divide_by_int(total, count.clone())
+    let total: f64 = sifr_generated_sum(data);
+    sifr_generated_divide_by_int(total, count.clone())
 }
-fn median(
-    data: &[f64],
-) -> Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
+fn median(data: &[f64]) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
     let n: SifrInt = SifrInt::from(data.len());
-    if (&n == &SifrInt::from_i64(0)) {
-        return Err(
-            __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
-                "median requires at least one data point".to_string(),
-            ),
-        );
+    if &n == &SifrInt::from_i64(0) {
+        return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
+            "median requires at least one data point".to_string(),
+        ));
     }
     let sorted_data: Vec<f64> = {
-        let mut __sifr_sorted_v = (data).iter().copied().collect::<Vec<_>>();
-        __sifr_sorted_v.sort_by(f64::total_cmp);
-        __sifr_sorted_v
+        let mut sifr_generated_sorted_v = data.iter().copied().collect::<Vec<_>>();
+        sifr_generated_sorted_v.sort_by(f64::total_cmp);
+        sifr_generated_sorted_v
     };
     let mid: SifrInt = n.floor_div_known_nonzero(&SifrInt::from_i64(2));
-    if (&n.floor_mod_known_nonzero(&SifrInt::from_i64(2)) == &SifrInt::from_i64(0)) {
+    if &n.floor_mod_known_nonzero(&SifrInt::from_i64(2)) == &SifrInt::from_i64(0) {
         let a: Option<f64> = {
-            let __sifr_checked_read_collection = &sorted_data;
-            let __sifr_checked_read_index = &mid - &SifrInt::from_i64(1);
-            let __sifr_checked_read_normalized = __sifr_checked_read_index
-                .normalize_index_or_len(__sifr_checked_read_collection.len());
-            __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+            let sifr_generated_checked_read_collection = &sorted_data;
+            let sifr_generated_checked_read_index = &mid - &SifrInt::from_i64(1);
+            let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
+                .normalize_index_or_len(sifr_generated_checked_read_collection.len());
+            sifr_generated_checked_read_collection
+                .get(sifr_generated_checked_read_normalized)
+                .cloned()
         };
         let b: Option<f64> = {
-            let __sifr_checked_read_collection = &sorted_data;
-            let __sifr_checked_read_index = mid.clone();
-            let __sifr_checked_read_normalized = __sifr_checked_read_index
-                .normalize_index_or_len(__sifr_checked_read_collection.len());
-            __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+            let sifr_generated_checked_read_collection = &sorted_data;
+            let sifr_generated_checked_read_index = mid.clone();
+            let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
+                .normalize_index_or_len(sifr_generated_checked_read_collection.len());
+            sifr_generated_checked_read_collection
+                .get(sifr_generated_checked_read_normalized)
+                .cloned()
         };
-        if let Some(a) = a {
-            if let Some(b) = b {
-                return Ok((a + b) / (2.0_f64));
-            }
+        if let Some(a) = a
+            && let Some(b) = b
+        {
+            return Ok((a + b) / 2.0_f64);
         }
-        return Err(
-            __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
-                "median: index error".to_string(),
-            ),
-        );
+        Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
+            "median: index error".to_string(),
+        ))
     } else {
         let val: Option<f64> = {
-            let __sifr_checked_read_collection = &sorted_data;
-            let __sifr_checked_read_index = mid.clone();
-            let __sifr_checked_read_normalized = __sifr_checked_read_index
-                .normalize_index_or_len(__sifr_checked_read_collection.len());
-            __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+            let sifr_generated_checked_read_collection = &sorted_data;
+            let sifr_generated_checked_read_index = mid.clone();
+            let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
+                .normalize_index_or_len(sifr_generated_checked_read_collection.len());
+            sifr_generated_checked_read_collection
+                .get(sifr_generated_checked_read_normalized)
+                .cloned()
         };
-        if let Some(val) = val {
-            return Ok(val);
-        }
-        return Err(
-            __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
+        let Some(val) = val else {
+            return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
                 "median: index error".to_string(),
-            ),
-        );
+            ));
+        };
+        Ok(val)
     }
 }
-fn variance(
-    data: &[f64],
-) -> Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
+fn variance(data: &[f64]) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
     let n: SifrInt = SifrInt::from(data.len());
-    if (&n < &SifrInt::from_i64(2)) {
-        return Err(
-            __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
-                "variance requires at least two data points".to_string(),
-            ),
-        );
+    if &n < &SifrInt::from_i64(2) {
+        return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
+            "variance requires at least two data points".to_string(),
+        ));
     }
-    let __sifr_try_res: Result<
+    let sifr_generated_try_res: Result<
         (f64,),
-        __SifrStdlib_sifr_x2estatistics_x2eStatisticsError,
+        SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError,
     > = (|| {
-        let avg: f64 = _divide_by_int(_sum(data), n.clone())?;
+        let avg: f64 = sifr_generated_divide_by_int(sifr_generated_sum(data), n.clone())?;
         Ok((avg,))
     })();
-    let (avg,) = match __sifr_try_res {
-        Ok(__sifr_try_bindings) => __sifr_try_bindings,
-        Err(__sifr_try_err) => {
-            let error = __sifr_try_err.clone();
-            return Err(
-                __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
-                    error.message.clone(),
-                ),
-            );
+    let (avg,) = #[expect(
+        clippy::single_match_else,
+        reason = "the fallback returns through the enclosing Sifr control-flow carrier"
+    )]
+    match sifr_generated_try_res {
+        Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
+        Err(sifr_generated_try_err) => {
+            let error = sifr_generated_try_err.clone();
+            return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
+                error.message.clone(),
+            ));
         }
     };
     let mut total: f64 = 0.0_f64;
@@ -2277,35 +1514,33 @@ fn variance(
         let diff: f64 = val - avg;
         total += diff * diff;
     }
-    _divide_by_int(total, &n - &SifrInt::from_i64(1))
+    sifr_generated_divide_by_int(total, &n - &SifrInt::from_i64(1))
 }
-fn stdev(
-    data: &[f64],
-) -> Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
+fn stdev(data: &[f64]) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
     let n: SifrInt = SifrInt::from(data.len());
-    if (&n < &SifrInt::from_i64(2)) {
-        return Err(
-            __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
-                "stdev requires at least two data points".to_string(),
-            ),
-        );
+    if &n < &SifrInt::from_i64(2) {
+        return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
+            "stdev requires at least two data points".to_string(),
+        ));
     }
-    let __sifr_try_res: Result<
+    let sifr_generated_try_res: Result<
         (f64,),
-        __SifrStdlib_sifr_x2estatistics_x2eStatisticsError,
+        SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError,
     > = (|| {
-        let avg: f64 = _divide_by_int(_sum(data), n.clone())?;
+        let avg: f64 = sifr_generated_divide_by_int(sifr_generated_sum(data), n.clone())?;
         Ok((avg,))
     })();
-    let (avg,) = match __sifr_try_res {
-        Ok(__sifr_try_bindings) => __sifr_try_bindings,
-        Err(__sifr_try_err) => {
-            let error = __sifr_try_err.clone();
-            return Err(
-                __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
-                    error.message.clone(),
-                ),
-            );
+    let (avg,) = #[expect(
+        clippy::single_match_else,
+        reason = "the fallback returns through the enclosing Sifr control-flow carrier"
+    )]
+    match sifr_generated_try_res {
+        Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
+        Err(sifr_generated_try_err) => {
+            let error = sifr_generated_try_err.clone();
+            return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
+                error.message.clone(),
+            ));
         }
     };
     let mut total: f64 = 0.0_f64;
@@ -2313,54 +1548,52 @@ fn stdev(
         let diff: f64 = val - avg;
         total += diff * diff;
     }
-    let __sifr_try_res: Result<
+    let sifr_generated_try_res: Result<
         (f64,),
-        __SifrStdlib_sifr_x2estatistics_x2eStatisticsError,
+        SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError,
     > = (|| {
-        let v: f64 = _divide_by_int(total, &n - &SifrInt::from_i64(1))?;
+        let v: f64 = sifr_generated_divide_by_int(total, &n - &SifrInt::from_i64(1))?;
         Ok((v,))
     })();
-    let (v,) = match __sifr_try_res {
-        Ok(__sifr_try_bindings) => __sifr_try_bindings,
-        Err(__sifr_try_err) => {
-            let error = __sifr_try_err.clone();
-            return Err(
-                __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
-                    error.message.clone(),
-                ),
-            );
+    let (v,) = #[expect(
+        clippy::single_match_else,
+        reason = "the fallback returns through the enclosing Sifr control-flow carrier"
+    )]
+    match sifr_generated_try_res {
+        Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
+        Err(sifr_generated_try_err) => {
+            let error = sifr_generated_try_err.clone();
+            return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
+                error.message.clone(),
+            ));
         }
     };
     Ok(sqrt(v))
 }
 fn mode(
     data: &[SifrInt],
-) -> Result<SifrInt, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
-    if (&SifrInt::from(data.len()) == &SifrInt::from_i64(0)) {
-        return Err(
-            __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
-                "mode requires at least one data point".to_string(),
-            ),
-        );
+) -> Result<SifrInt, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
+    if &SifrInt::from(data.len()) == &SifrInt::from_i64(0) {
+        return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
+            "mode requires at least one data point".to_string(),
+        ));
     }
     let mut counts: HashMap<SifrInt, SifrInt> = HashMap::from([]);
     for val in data.iter().cloned() {
         let existing: Option<SifrInt> = counts.get(&val).cloned();
         if let Some(existing) = existing.clone() {
             {
-                let __assign_value = &existing + &SifrInt::from_i64(1);
+                let sifr_generated_assign_value = &existing + &SifrInt::from_i64(1);
                 {
-                    let __assign_key = val.clone();
-                    counts.insert(__assign_key, __assign_value);
+                    let sifr_generated_assign_key = val.clone();
+                    counts.insert(sifr_generated_assign_key, sifr_generated_assign_value);
                 }
             }
         } else {
+            let sifr_generated_assign_value = SifrInt::from_i64(1);
             {
-                let __assign_value = SifrInt::from_i64(1);
-                {
-                    let __assign_key = val.clone();
-                    counts.insert(__assign_key, __assign_value);
-                }
+                let sifr_generated_assign_key = val.clone();
+                counts.insert(sifr_generated_assign_key, sifr_generated_assign_value);
             }
         }
     }
@@ -2368,12 +1601,11 @@ fn mode(
     let mut best_set: bool = false;
     let mut best_count: SifrInt = SifrInt::from_i64(0);
     for val2 in data.iter().cloned() {
-        let count2: Option<SifrInt> = counts.get(&val2).cloned();
-        let mut count2_val: SifrInt = SifrInt::from_i64(0);
-        if let Some(count2) = count2.clone() {
-            count2_val = count2;
-        }
-        if (&count2_val > &best_count) {
+        let count2_value_c3423dbe5aaebcf2: Option<SifrInt> = counts.get(&val2).cloned();
+        let count2_val: SifrInt = count2_value_c3423dbe5aaebcf2
+            .clone()
+            .unwrap_or_else(|| SifrInt::from_i64(0));
+        if &count2_val > &best_count {
             best_count = count2_val;
             best = val2;
             best_set = true;
@@ -2382,193 +1614,188 @@ fn mode(
     if best_set {
         return Ok(best.clone());
     }
-    Err(
-        __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
-            "mode: no mode found".to_string(),
-        ),
-    )
+    Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
+        "mode: no mode found".to_string(),
+    ))
 }
 fn multimode(
     data: &[SifrInt],
-) -> Result<Vec<SifrInt>, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
-    if (&SifrInt::from(data.len()) == &SifrInt::from_i64(0)) {
-        return Err(
-            __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
-                "multimode requires at least one data point".to_string(),
-            ),
-        );
+) -> Result<Vec<SifrInt>, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
+    if &SifrInt::from(data.len()) == &SifrInt::from_i64(0) {
+        return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
+            "multimode requires at least one data point".to_string(),
+        ));
     }
     let mut counts: HashMap<SifrInt, SifrInt> = HashMap::from([]);
     for val in data.iter().cloned() {
         let existing: Option<SifrInt> = counts.get(&val).cloned();
         if let Some(existing) = existing.clone() {
             {
-                let __assign_value = &existing + &SifrInt::from_i64(1);
+                let sifr_generated_assign_value = &existing + &SifrInt::from_i64(1);
                 {
-                    let __assign_key = val.clone();
-                    counts.insert(__assign_key, __assign_value);
+                    let sifr_generated_assign_key = val.clone();
+                    counts.insert(sifr_generated_assign_key, sifr_generated_assign_value);
                 }
             }
         } else {
+            let sifr_generated_assign_value = SifrInt::from_i64(1);
             {
-                let __assign_value = SifrInt::from_i64(1);
-                {
-                    let __assign_key = val.clone();
-                    counts.insert(__assign_key, __assign_value);
-                }
+                let sifr_generated_assign_key = val.clone();
+                counts.insert(sifr_generated_assign_key, sifr_generated_assign_value);
             }
         }
     }
     let mut max_count: SifrInt = SifrInt::from_i64(0);
     for val2 in data.iter().cloned() {
-        let count2: Option<SifrInt> = counts.get(&val2).cloned();
-        let mut count2_val: SifrInt = SifrInt::from_i64(0);
-        if let Some(count2) = count2.clone() {
-            count2_val = count2;
-        }
-        if (&count2_val > &max_count) {
+        let count2_value_c3423dbe5aaebcf2: Option<SifrInt> = counts.get(&val2).cloned();
+        let count2_val: SifrInt = count2_value_c3423dbe5aaebcf2
+            .clone()
+            .unwrap_or_else(|| SifrInt::from_i64(0));
+        if &count2_val > &max_count {
             max_count = count2_val;
         }
     }
-    let mut result: Vec<SifrInt> = vec![];
+    let mut result: Vec<SifrInt> = Vec::new();
     let mut seen: HashMap<SifrInt, bool> = HashMap::from([]);
     for val3 in data.iter().cloned() {
         let already_opt: Option<bool> = seen.get(&val3).cloned();
-        let mut already: bool = false;
-        if let Some(already_opt) = already_opt {
-            already = already_opt;
-        }
+        let already: bool = already_opt.is_some_and(|already_opt| already_opt);
         if !already {
-            let count3: Option<SifrInt> = counts.get(&val3).cloned();
-            let mut count3_val: SifrInt = SifrInt::from_i64(0);
-            if let Some(count3) = count3.clone() {
-                count3_val = count3;
-            }
-            if (&count3_val == &max_count) {
+            let count3_value_c3423ebe5aaebea5: Option<SifrInt> = counts.get(&val3).cloned();
+            let count3_val_value_7442ae8ecb6bc585: SifrInt = count3_value_c3423ebe5aaebea5
+                .clone()
+                .unwrap_or_else(|| SifrInt::from_i64(0));
+            if &count3_val_value_7442ae8ecb6bc585 == &max_count {
                 result.push(val3.clone());
             }
             {
-                let __assign_value = true;
+                let sifr_generated_assign_value = true;
                 {
-                    let __assign_key = val3.clone();
-                    seen.insert(__assign_key, __assign_value);
+                    let sifr_generated_assign_key = val3.clone();
+                    seen.insert(sifr_generated_assign_key, sifr_generated_assign_value);
                 }
             }
         }
     }
     Ok(result)
 }
+#[expect(
+    clippy::too_many_lines,
+    reason = "one generated Rust function preserves one typed Sifr function"
+)]
 fn quantiles(
     data: &[f64],
     n: SifrInt,
-) -> Result<Vec<f64>, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
-    if (&SifrInt::from(data.len()) < &SifrInt::from_i64(2)) {
-        return Err(
-            __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
-                "quantiles requires at least two data points".to_string(),
-            ),
-        );
+) -> Result<Vec<f64>, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
+    if &SifrInt::from(data.len()) < &SifrInt::from_i64(2) {
+        return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
+            "quantiles requires at least two data points".to_string(),
+        ));
     }
-    if (&n < &SifrInt::from_i64(1)) {
-        return Err(
-            __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
-                "quantiles: n must be at least 1".to_string(),
-            ),
-        );
+    if &n < &SifrInt::from_i64(1) {
+        return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
+            "quantiles: n must be at least 1".to_string(),
+        ));
     }
     let sorted_data: Vec<f64> = {
-        let mut __sifr_sorted_v = (data).iter().copied().collect::<Vec<_>>();
-        __sifr_sorted_v.sort_by(f64::total_cmp);
-        __sifr_sorted_v
+        let mut sifr_generated_sorted_v = data.iter().copied().collect::<Vec<_>>();
+        sifr_generated_sorted_v.sort_by(f64::total_cmp);
+        sifr_generated_sorted_v
     };
     let m: SifrInt = SifrInt::from(sorted_data.len());
-    let mut result: Vec<f64> = vec![];
+    let mut result: Vec<f64> = Vec::new();
     let mut i: SifrInt = SifrInt::from_i64(1);
-    while (&i < &n) {
-        let __sifr_try_res: Result<
+    while &i < &n {
+        let sifr_generated_try_res: Result<
             (f64, f64, f64),
-            __SifrStdlib_sifr_x2estatistics_x2eStatisticsError,
+            SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError,
         > = (|| {
-            let i_float: f64 = _float_int(i.clone())?;
-            let m_float: f64 = _float_int(m.clone())?;
-            let n_float: f64 = _float_int(n.clone())?;
-            Ok((i_float, m_float, n_float))
+            let i_float: f64 = sifr_generated_float_int(i.clone())?;
+            let m_float_value_b0fecb9ab83ca525: f64 = sifr_generated_float_int(m.clone())?;
+            let n_float_value_15c49f18b6cbd018: f64 = sifr_generated_float_int(n.clone())?;
+            Ok((
+                i_float,
+                m_float_value_b0fecb9ab83ca525,
+                n_float_value_15c49f18b6cbd018,
+            ))
         })();
-        let (i_float, m_float, n_float) = match __sifr_try_res {
-            Ok(__sifr_try_bindings) => __sifr_try_bindings,
-            Err(__sifr_try_err) => {
-                let error = __sifr_try_err.clone();
-                return Err(
-                    __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
+        let (i_float, m_float_value_b0fecb9ab83ca525, n_float_value_15c49f18b6cbd018) =
+            #[expect(
+                clippy::single_match_else,
+                reason = "the fallback returns through the enclosing Sifr control-flow carrier"
+            )]
+            match sifr_generated_try_res {
+                Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
+                Err(sifr_generated_try_err) => {
+                    let error = sifr_generated_try_err.clone();
+                    return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
                         error.message.clone(),
-                    ),
-                );
-            }
-        };
-        let idx_f: f64 = (i_float * m_float) / n_float;
+                    ));
+                }
+            };
+        let idx_f: f64 = i_float * m_float_value_b0fecb9ab83ca525 / n_float_value_15c49f18b6cbd018;
         let mut idx: SifrInt = SifrInt::from_i64(0);
-        let __sifr_try_res: Result<(), ValueError> = (|| {
-            let converted_idx: SifrInt = SifrInt::from_f64_trunc(idx_f)
-                .ok_or_else(|| ValueError {
+        let sifr_generated_try_res: Result<(), ValueError> = (|| {
+            let converted_idx: SifrInt =
+                SifrInt::from_f64_trunc(idx_f).ok_or_else(|| ValueError {
                     message: "cannot convert non-finite float to int".to_string(),
                 })?;
             idx = converted_idx;
             Ok(())
         })();
-        if let Err(__sifr_try_err) = __sifr_try_res {
-            let error = __sifr_try_err.clone();
-            return Err(
-                __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
-                    error.message.clone(),
-                ),
-            );
+        if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+            let error = sifr_generated_try_err.clone();
+            return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
+                error.message.clone(),
+            ));
         }
-        let __sifr_try_res: Result<
+        let sifr_generated_try_res: Result<
             (f64,),
-            __SifrStdlib_sifr_x2estatistics_x2eStatisticsError,
+            SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError,
         > = (|| {
-            let idx_float: f64 = _float_int(idx.clone())?;
+            let idx_float: f64 = sifr_generated_float_int(idx.clone())?;
             Ok((idx_float,))
         })();
-        let (idx_float,) = match __sifr_try_res {
-            Ok(__sifr_try_bindings) => __sifr_try_bindings,
-            Err(__sifr_try_err) => {
-                let error = __sifr_try_err.clone();
-                return Err(
-                    __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
-                        error.message.clone(),
-                    ),
-                );
+        let (idx_float,) = #[expect(
+            clippy::single_match_else,
+            reason = "the fallback returns through the enclosing Sifr control-flow carrier"
+        )]
+        match sifr_generated_try_res {
+            Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
+            Err(sifr_generated_try_err) => {
+                let error = sifr_generated_try_err.clone();
+                return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
+                    error.message.clone(),
+                ));
             }
         };
         let frac: f64 = idx_f - idx_float;
-        if (&idx >= &m) {
+        if &idx >= &m {
             idx = &m - &SifrInt::from_i64(1);
         }
-        if (&idx < &SifrInt::from_i64(0)) {
+        if &idx < &SifrInt::from_i64(0) {
             idx = SifrInt::from_i64(0);
         }
         let lo: Option<f64> = {
-            let __sifr_checked_read_collection = &sorted_data;
-            let __sifr_checked_read_index = idx.clone();
-            let __sifr_checked_read_normalized = __sifr_checked_read_index
-                .normalize_index_or_len(__sifr_checked_read_collection.len());
-            __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+            let sifr_generated_checked_read_collection = &sorted_data;
+            let sifr_generated_checked_read_index = idx.clone();
+            let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
+                .normalize_index_or_len(sifr_generated_checked_read_collection.len());
+            sifr_generated_checked_read_collection
+                .get(sifr_generated_checked_read_normalized)
+                .cloned()
         };
-        let mut lo_val: f64 = 0.0_f64;
-        if let Some(lo) = lo {
-            lo_val = lo;
-        }
-        if (frac > (0.0_f64)) {
+        let lo_val: f64 = lo.map_or(0.0_f64, |lo| lo);
+        if frac > 0.0_f64 {
             let hi_idx: SifrInt = &idx + &SifrInt::from_i64(1);
-            if (&hi_idx < &m) {
+            if &hi_idx < &m {
                 let hi: Option<f64> = {
-                    let __sifr_checked_read_collection = &sorted_data;
-                    let __sifr_checked_read_index = hi_idx.clone();
-                    let __sifr_checked_read_normalized = __sifr_checked_read_index
-                        .normalize_index_or_len(__sifr_checked_read_collection.len());
-                    __sifr_checked_read_collection
-                        .get(__sifr_checked_read_normalized)
+                    let sifr_generated_checked_read_collection = &sorted_data;
+                    let sifr_generated_checked_read_index = hi_idx.clone();
+                    let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
+                        .normalize_index_or_len(sifr_generated_checked_read_collection.len());
+                    sifr_generated_checked_read_collection
+                        .get(sifr_generated_checked_read_normalized)
                         .cloned()
                 };
                 if let Some(hi) = hi {
@@ -2584,303 +1811,274 @@ fn quantiles(
 fn covariance(
     x: &[f64],
     y: &[f64],
-) -> Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
+) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
     let n: SifrInt = SifrInt::from(x.len());
-    if (&n < &SifrInt::from_i64(2)) {
-        return Err(
-            __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
-                "covariance requires at least two data points".to_string(),
-            ),
-        );
+    if &n < &SifrInt::from_i64(2) {
+        return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
+            "covariance requires at least two data points".to_string(),
+        ));
     }
-    if (&SifrInt::from(y.len()) != &n) {
-        return Err(
-            __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
-                "covariance: x and y must have the same length".to_string(),
-            ),
-        );
+    if &SifrInt::from(y.len()) != &n {
+        return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
+            "covariance: x and y must have the same length".to_string(),
+        ));
     }
-    let __sifr_try_res: Result<
+    let sifr_generated_try_res: Result<
         (f64, f64),
-        __SifrStdlib_sifr_x2estatistics_x2eStatisticsError,
+        SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError,
     > = (|| {
-        let mx: f64 = _divide_by_int(_sum(x), n.clone())?;
-        let my: f64 = _divide_by_int(_sum(y), n.clone())?;
+        let mx: f64 = sifr_generated_divide_by_int(sifr_generated_sum(x), n.clone())?;
+        let my: f64 = sifr_generated_divide_by_int(sifr_generated_sum(y), n.clone())?;
         Ok((mx, my))
     })();
-    let (mx, my) = match __sifr_try_res {
-        Ok(__sifr_try_bindings) => __sifr_try_bindings,
-        Err(__sifr_try_err) => {
-            let error = __sifr_try_err.clone();
-            return Err(
-                __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
-                    error.message.clone(),
-                ),
-            );
+    let (mx, my) = #[expect(
+        clippy::single_match_else,
+        reason = "the fallback returns through the enclosing Sifr control-flow carrier"
+    )]
+    match sifr_generated_try_res {
+        Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
+        Err(sifr_generated_try_err) => {
+            let error = sifr_generated_try_err.clone();
+            return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
+                error.message.clone(),
+            ));
         }
     };
     let mut total: f64 = 0.0_f64;
     let mut i: SifrInt = SifrInt::from_i64(0);
-    while (&i < &n) {
+    while &i < &n {
         let xi: Option<f64> = {
-            let __sifr_checked_read_collection = &x;
-            let __sifr_checked_read_index = i.clone();
-            let __sifr_checked_read_normalized = __sifr_checked_read_index
-                .normalize_index_or_len(__sifr_checked_read_collection.len());
-            __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+            let sifr_generated_checked_read_collection = &x;
+            let sifr_generated_checked_read_index = i.clone();
+            let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
+                .normalize_index_or_len(sifr_generated_checked_read_collection.len());
+            sifr_generated_checked_read_collection
+                .get(sifr_generated_checked_read_normalized)
+                .cloned()
         };
         let yi: Option<f64> = {
-            let __sifr_checked_read_collection = &y;
-            let __sifr_checked_read_index = i.clone();
-            let __sifr_checked_read_normalized = __sifr_checked_read_index
-                .normalize_index_or_len(__sifr_checked_read_collection.len());
-            __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+            let sifr_generated_checked_read_collection = &y;
+            let sifr_generated_checked_read_index = i.clone();
+            let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
+                .normalize_index_or_len(sifr_generated_checked_read_collection.len());
+            sifr_generated_checked_read_collection
+                .get(sifr_generated_checked_read_normalized)
+                .cloned()
         };
-        if let Some(xi) = xi {
-            if let Some(yi) = yi {
-                total += (xi - mx) * (yi - my);
-            }
+        if let Some(xi) = xi
+            && let Some(yi) = yi
+        {
+            total += (xi - mx) * (yi - my);
         }
         i = &i + &SifrInt::from_i64(1);
     }
-    _divide_by_int(total, &n - &SifrInt::from_i64(1))
+    sifr_generated_divide_by_int(total, &n - &SifrInt::from_i64(1))
 }
+#[expect(
+    clippy::too_many_lines,
+    reason = "one generated Rust function preserves one typed Sifr function"
+)]
 fn correlation(
     x: &[f64],
     y: &[f64],
-) -> Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
+) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
     let n: SifrInt = SifrInt::from(x.len());
-    if (&n < &SifrInt::from_i64(2)) {
-        return Err(
-            __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
-                "correlation requires at least two data points".to_string(),
-            ),
-        );
+    if &n < &SifrInt::from_i64(2) {
+        return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
+            "correlation requires at least two data points".to_string(),
+        ));
     }
-    if (&SifrInt::from(y.len()) != &n) {
-        return Err(
-            __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
-                "correlation: x and y must have the same length".to_string(),
-            ),
-        );
+    if &SifrInt::from(y.len()) != &n {
+        return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
+            "correlation: x and y must have the same length".to_string(),
+        ));
     }
-    let __sifr_try_res: Result<
+    let sifr_generated_try_res: Result<
         (f64, f64),
-        __SifrStdlib_sifr_x2estatistics_x2eStatisticsError,
+        SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError,
     > = (|| {
-        let mx: f64 = _divide_by_int(_sum(x), n.clone())?;
-        let my: f64 = _divide_by_int(_sum(y), n.clone())?;
+        let mx: f64 = sifr_generated_divide_by_int(sifr_generated_sum(x), n.clone())?;
+        let my: f64 = sifr_generated_divide_by_int(sifr_generated_sum(y), n.clone())?;
         Ok((mx, my))
     })();
-    let (mx, my) = match __sifr_try_res {
-        Ok(__sifr_try_bindings) => __sifr_try_bindings,
-        Err(__sifr_try_err) => {
-            let error = __sifr_try_err.clone();
-            return Err(
-                __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
-                    error.message.clone(),
-                ),
-            );
+    let (mx, my) = #[expect(
+        clippy::single_match_else,
+        reason = "the fallback returns through the enclosing Sifr control-flow carrier"
+    )]
+    match sifr_generated_try_res {
+        Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
+        Err(sifr_generated_try_err) => {
+            let error = sifr_generated_try_err.clone();
+            return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
+                error.message.clone(),
+            ));
         }
     };
     let mut cov_num: f64 = 0.0_f64;
     let mut sx_num: f64 = 0.0_f64;
-    let mut sy_num: f64 = 0.0_f64;
+    let mut sy_num_value_0e49c538a785c2b2: f64 = 0.0_f64;
     let mut i: SifrInt = SifrInt::from_i64(0);
-    while (&i < &n) {
+    while &i < &n {
         let xi: Option<f64> = {
-            let __sifr_checked_read_collection = &x;
-            let __sifr_checked_read_index = i.clone();
-            let __sifr_checked_read_normalized = __sifr_checked_read_index
-                .normalize_index_or_len(__sifr_checked_read_collection.len());
-            __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+            let sifr_generated_checked_read_collection = &x;
+            let sifr_generated_checked_read_index = i.clone();
+            let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
+                .normalize_index_or_len(sifr_generated_checked_read_collection.len());
+            sifr_generated_checked_read_collection
+                .get(sifr_generated_checked_read_normalized)
+                .cloned()
         };
         let yi: Option<f64> = {
-            let __sifr_checked_read_collection = &y;
-            let __sifr_checked_read_index = i.clone();
-            let __sifr_checked_read_normalized = __sifr_checked_read_index
-                .normalize_index_or_len(__sifr_checked_read_collection.len());
-            __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+            let sifr_generated_checked_read_collection = &y;
+            let sifr_generated_checked_read_index = i.clone();
+            let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
+                .normalize_index_or_len(sifr_generated_checked_read_collection.len());
+            sifr_generated_checked_read_collection
+                .get(sifr_generated_checked_read_normalized)
+                .cloned()
         };
-        if let Some(xi) = xi {
-            if let Some(yi) = yi {
-                cov_num += (xi - mx) * (yi - my);
-                sx_num += (xi - mx) * (xi - mx);
-                sy_num += (yi - my) * (yi - my);
-            }
+        if let Some(xi) = xi
+            && let Some(yi) = yi
+        {
+            cov_num += (xi - mx) * (yi - my);
+            sx_num += (xi - mx) * (xi - mx);
+            sy_num_value_0e49c538a785c2b2 += (yi - my) * (yi - my);
         }
         i = &i + &SifrInt::from_i64(1);
     }
-    let __sifr_try_res: Result<
+    let sifr_generated_try_res: Result<
         (f64, f64),
-        __SifrStdlib_sifr_x2estatistics_x2eStatisticsError,
+        SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError,
     > = (|| {
-        let sx_variance: f64 = _divide_by_int(sx_num, &n - &SifrInt::from_i64(1))?;
-        let sy_variance: f64 = _divide_by_int(sy_num, &n - &SifrInt::from_i64(1))?;
+        let sx_variance: f64 = sifr_generated_divide_by_int(sx_num, &n - &SifrInt::from_i64(1))?;
+        let sy_variance_value_29a72f81ad7b8e6d: f64 = sifr_generated_divide_by_int(
+            sy_num_value_0e49c538a785c2b2,
+            &n - &SifrInt::from_i64(1),
+        )?;
         let sx: f64 = sqrt(sx_variance);
-        let sy: f64 = sqrt(sy_variance);
+        let sy: f64 = sqrt(sy_variance_value_29a72f81ad7b8e6d);
         Ok((sx, sy))
     })();
-    let (sx, sy) = match __sifr_try_res {
-        Ok(__sifr_try_bindings) => __sifr_try_bindings,
-        Err(__sifr_try_err) => {
-            let error = __sifr_try_err.clone();
-            return Err(
-                __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
-                    error.message.clone(),
-                ),
-            );
+    let (sx, sy) = #[expect(
+        clippy::single_match_else,
+        reason = "the fallback returns through the enclosing Sifr control-flow carrier"
+    )]
+    match sifr_generated_try_res {
+        Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
+        Err(sifr_generated_try_err) => {
+            let error = sifr_generated_try_err.clone();
+            return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
+                error.message.clone(),
+            ));
         }
     };
-    if (sx == (0.0_f64)) {
-        return Err(
-            __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
-                "correlation: x has zero variance".to_string(),
-            ),
-        );
+    if sx == 0.0_f64 {
+        return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
+            "correlation: x has zero variance".to_string(),
+        ));
     }
-    if (sy == (0.0_f64)) {
-        return Err(
-            __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
-                "correlation: y has zero variance".to_string(),
-            ),
-        );
+    if sy == 0.0_f64 {
+        return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
+            "correlation: y has zero variance".to_string(),
+        ));
     }
-    let __sifr_try_res: Result<
-        Result<f64, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError>,
-        __SifrStdlib_sifr_x2estatistics_x2eStatisticsError,
+    let sifr_generated_try_res: Result<
+        Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError>,
+        SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError,
     > = (|| {
-        let covariance_value: f64 = _divide_by_int(cov_num, &n - &SifrInt::from_i64(1))?;
+        let covariance_value: f64 =
+            sifr_generated_divide_by_int(cov_num, &n - &SifrInt::from_i64(1))?;
         Ok(Ok(covariance_value / (sx * sy)))
     })();
-    match __sifr_try_res {
-        Ok(__sifr_ret_val) => {
-            return __sifr_ret_val;
-        }
-        Err(__sifr_try_err) => {
-            let error = __sifr_try_err.clone();
-            return Err(
-                __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
-                    error.message.clone(),
-                ),
-            );
-        }
-    }
+    sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
+        let error = sifr_generated_try_err.clone();
+        Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
+            error.message.clone(),
+        ))
+    })
 }
 fn linear_regression(
     x: &[f64],
     y: &[f64],
-) -> Result<Vec<f64>, __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> {
+) -> Result<Vec<f64>, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
     let n: SifrInt = SifrInt::from(x.len());
-    if (&n < &SifrInt::from_i64(2)) {
-        return Err(
-            __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
-                "linear_regression requires at least two data points".to_string(),
-            ),
-        );
+    if &n < &SifrInt::from_i64(2) {
+        return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
+            "linear_regression requires at least two data points".to_string(),
+        ));
     }
-    if (&SifrInt::from(y.len()) != &n) {
-        return Err(
-            __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
-                "linear_regression: x and y must have the same length".to_string(),
-            ),
-        );
+    if &SifrInt::from(y.len()) != &n {
+        return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
+            "linear_regression: x and y must have the same length".to_string(),
+        ));
     }
-    let __sifr_try_res: Result<
+    let sifr_generated_try_res: Result<
         (f64, f64),
-        __SifrStdlib_sifr_x2estatistics_x2eStatisticsError,
+        SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError,
     > = (|| {
-        let mx: f64 = _divide_by_int(_sum(x), n.clone())?;
-        let my: f64 = _divide_by_int(_sum(y), n.clone())?;
+        let mx: f64 = sifr_generated_divide_by_int(sifr_generated_sum(x), n.clone())?;
+        let my: f64 = sifr_generated_divide_by_int(sifr_generated_sum(y), n.clone())?;
         Ok((mx, my))
     })();
-    let (mx, my) = match __sifr_try_res {
-        Ok(__sifr_try_bindings) => __sifr_try_bindings,
-        Err(__sifr_try_err) => {
-            let error = __sifr_try_err.clone();
-            return Err(
-                __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
-                    error.message.clone(),
-                ),
-            );
+    let (mx, my) = #[expect(
+        clippy::single_match_else,
+        reason = "the fallback returns through the enclosing Sifr control-flow carrier"
+    )]
+    match sifr_generated_try_res {
+        Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
+        Err(sifr_generated_try_err) => {
+            let error = sifr_generated_try_err.clone();
+            return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
+                error.message.clone(),
+            ));
         }
     };
     let mut num: f64 = 0.0_f64;
     let mut den: f64 = 0.0_f64;
     let mut i: SifrInt = SifrInt::from_i64(0);
-    while (&i < &n) {
+    while &i < &n {
         let xi: Option<f64> = {
-            let __sifr_checked_read_collection = &x;
-            let __sifr_checked_read_index = i.clone();
-            let __sifr_checked_read_normalized = __sifr_checked_read_index
-                .normalize_index_or_len(__sifr_checked_read_collection.len());
-            __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+            let sifr_generated_checked_read_collection = &x;
+            let sifr_generated_checked_read_index = i.clone();
+            let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
+                .normalize_index_or_len(sifr_generated_checked_read_collection.len());
+            sifr_generated_checked_read_collection
+                .get(sifr_generated_checked_read_normalized)
+                .cloned()
         };
         let yi: Option<f64> = {
-            let __sifr_checked_read_collection = &y;
-            let __sifr_checked_read_index = i.clone();
-            let __sifr_checked_read_normalized = __sifr_checked_read_index
-                .normalize_index_or_len(__sifr_checked_read_collection.len());
-            __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+            let sifr_generated_checked_read_collection = &y;
+            let sifr_generated_checked_read_index = i.clone();
+            let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
+                .normalize_index_or_len(sifr_generated_checked_read_collection.len());
+            sifr_generated_checked_read_collection
+                .get(sifr_generated_checked_read_normalized)
+                .cloned()
         };
-        if let Some(xi) = xi {
-            if let Some(yi) = yi {
-                num += (xi - mx) * (yi - my);
-                den += (xi - mx) * (xi - mx);
-            }
+        if let Some(xi) = xi
+            && let Some(yi) = yi
+        {
+            num += (xi - mx) * (yi - my);
+            den += (xi - mx) * (xi - mx);
         }
         i = &i + &SifrInt::from_i64(1);
     }
-    if (den == (0.0_f64)) {
-        return Err(
-            __SifrStdlib_sifr_x2estatistics_x2eStatisticsError::new(
-                "linear_regression: x has zero variance".to_string(),
-            ),
-        );
+    if den == 0.0_f64 {
+        return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
+            "linear_regression: x has zero variance".to_string(),
+        ));
     }
     let slope: f64 = num / den;
-    let intercept: f64 = my - (slope * mx);
-    let mut result: Vec<f64> = vec![];
-    result.push(slope);
-    result.push(intercept);
+    let intercept: f64 = my - slope * mx;
+    let result: Vec<f64> = vec![slope, intercept];
     Ok(result)
 }
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct Error {
-    message: String,
-}
-impl Error {
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-impl ::std::fmt::Display for Error {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-impl ::std::error::Error for Error {}
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct ParseError {
-    message: String,
-}
-impl ParseError {
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-impl ::std::fmt::Display for ParseError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-impl ::std::error::Error for ParseError {}
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct FloatOverflowError {
     message: String,
 }
 impl FloatOverflowError {
-    fn new(message: String) -> Self {
+    const fn new(message: String) -> Self {
         Self { message }
     }
 }
@@ -2895,7 +2093,7 @@ struct FloatPrecisionLossError {
     message: String,
 }
 impl FloatPrecisionLossError {
-    fn new(message: String) -> Self {
+    const fn new(message: String) -> Self {
         Self { message }
     }
 }
@@ -2910,7 +2108,7 @@ struct IndexError {
     message: String,
 }
 impl IndexError {
-    fn new(message: String) -> Self {
+    const fn new(message: String) -> Self {
         Self { message }
     }
 }
@@ -2920,31 +2118,6 @@ impl ::std::fmt::Display for IndexError {
     }
 }
 impl ::std::error::Error for IndexError {}
-impl From<ParseError> for Error {
-    fn from(err: ParseError) -> Self {
-        Self::new(err.message)
-    }
-}
-impl From<ValueError> for Error {
-    fn from(err: ValueError) -> Self {
-        Self::new(err.message)
-    }
-}
-impl From<FloatOverflowError> for Error {
-    fn from(err: FloatOverflowError) -> Self {
-        Self::new(err.message)
-    }
-}
-impl From<FloatPrecisionLossError> for Error {
-    fn from(err: FloatPrecisionLossError) -> Self {
-        Self::new(err.message)
-    }
-}
-impl From<IndexError> for Error {
-    fn from(err: IndexError) -> Self {
-        Self::new(err.message)
-    }
-}
 fn add(a: SifrInt, b: SifrInt) -> SifrInt {
     &a + &b
 }
@@ -2954,405 +2127,499 @@ fn mul(a: SifrInt, b: SifrInt) -> SifrInt {
 fn less_than_three(x: SifrInt) -> bool {
     &x < &SifrInt::from_i64(3)
 }
+#[expect(
+    clippy::too_many_lines,
+    reason = "one generated Rust function preserves one typed Sifr function"
+)]
 fn main() {
     println!("=== math additions ===");
-    println!(
-        "{}", { let mut __sifr_concat : String = String::with_capacity(13usize + 0usize);
-        __sifr_concat.push_str("acosh(1.0) = "); __sifr_concat.push_str(format!("{}",
-        acosh(1.0_f64)) .as_str()); __sifr_concat }
-    );
-    println!(
-        "{}", { let mut __sifr_concat : String = String::with_capacity(13usize + 0usize);
-        __sifr_concat.push_str("asinh(0.0) = "); __sifr_concat.push_str(format!("{}",
-        asinh(0.0_f64)) .as_str()); __sifr_concat }
-    );
-    println!(
-        "{}", { let mut __sifr_concat : String = String::with_capacity(13usize + 0usize);
-        __sifr_concat.push_str("atanh(0.0) = "); __sifr_concat.push_str(format!("{}",
-        atanh(0.0_f64)) .as_str()); __sifr_concat }
-    );
-    println!(
-        "{}", { let mut __sifr_concat : String = String::with_capacity(12usize + 0usize);
-        __sifr_concat.push_str("isqrt(17) = "); __sifr_concat.push_str(format!("{}",
-        isqrt(SifrInt::from_i64(17))) .as_str()); __sifr_concat }
-    );
+    println!("{}", {
+        let mut sifr_generated_concat: String = String::with_capacity(13usize);
+        sifr_generated_concat.push_str("acosh(1.0) = ");
+        sifr_generated_concat.push_str(acosh(1.0_f64).to_string().as_str());
+        sifr_generated_concat
+    });
+    println!("{}", {
+        let mut sifr_generated_concat: String = String::with_capacity(13usize);
+        sifr_generated_concat.push_str("asinh(0.0) = ");
+        sifr_generated_concat.push_str(asinh(0.0_f64).to_string().as_str());
+        sifr_generated_concat
+    });
+    println!("{}", {
+        let mut sifr_generated_concat: String = String::with_capacity(13usize);
+        sifr_generated_concat.push_str("atanh(0.0) = ");
+        sifr_generated_concat.push_str(atanh(0.0_f64).to_string().as_str());
+        sifr_generated_concat
+    });
+    println!("{}", {
+        let mut sifr_generated_concat: String = String::with_capacity(12usize);
+        sifr_generated_concat.push_str("isqrt(17) = ");
+        sifr_generated_concat.push_str(isqrt(SifrInt::from_i64(17)).to_string().as_str());
+        sifr_generated_concat
+    });
     let p: Vec<f64> = vec![0.0_f64, 0.0_f64];
     let q: Vec<f64> = vec![3.0_f64, 4.0_f64];
-    println!(
-        "{}", { let mut __sifr_concat : String = String::with_capacity(20usize + 0usize);
-        __sifr_concat.push_str("dist([0,0],[3,4]) = "); __sifr_concat
-        .push_str(format!("{}", dist(& p, & q)) .as_str()); __sifr_concat }
-    );
+    println!("{}", {
+        let mut sifr_generated_concat: String = String::with_capacity(20usize);
+        sifr_generated_concat.push_str("dist([0,0],[3,4]) = ");
+        sifr_generated_concat.push_str(dist(&p, &q).to_string().as_str());
+        sifr_generated_concat
+    });
     let data_fsum: Vec<f64> = vec![
-        0.1_f64, 0.1_f64, 0.1_f64, 0.1_f64, 0.1_f64, 0.1_f64, 0.1_f64, 0.1_f64, 0.1_f64,
-        0.1_f64
+        0.1_f64, 0.1_f64, 0.1_f64, 0.1_f64, 0.1_f64, 0.1_f64, 0.1_f64, 0.1_f64, 0.1_f64, 0.1_f64,
     ];
-    println!(
-        "{}", { let mut __sifr_concat : String = String::with_capacity(15usize + 0usize);
-        __sifr_concat.push_str("fsum(10x0.1) = "); __sifr_concat.push_str(format!("{}",
-        fsum(& data_fsum)) .as_str()); __sifr_concat }
-    );
+    println!("{}", {
+        let mut sifr_generated_concat: String = String::with_capacity(15usize);
+        sifr_generated_concat.push_str("fsum(10x0.1) = ");
+        sifr_generated_concat.push_str(fsum(&data_fsum).to_string().as_str());
+        sifr_generated_concat
+    });
     println!("=== statistics (Result[float, StatisticsError]) ===");
     let data: Vec<f64> = vec![1.0_f64, 2.0_f64, 3.0_f64, 4.0_f64, 5.0_f64];
-    let __sifr_try_res: Result<(), __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> = (||
-    {
-        let m: f64 = mean(&data)?;
-        println!(
-            "{}", { let mut __sifr_concat : String = String::with_capacity(7usize +
-            0usize); __sifr_concat.push_str("mean = "); __sifr_concat
-            .push_str(format!("{}", m) .as_str()); __sifr_concat }
-        );
-        let med: f64 = median(&data)?;
-        println!(
-            "{}", { let mut __sifr_concat : String = String::with_capacity(9usize +
-            0usize); __sifr_concat.push_str("median = "); __sifr_concat
-            .push_str(format!("{}", med) .as_str()); __sifr_concat }
-        );
-        let v: f64 = variance(&data)?;
-        println!(
-            "{}", { let mut __sifr_concat : String = String::with_capacity(11usize +
-            0usize); __sifr_concat.push_str("variance = "); __sifr_concat
-            .push_str(format!("{}", v) .as_str()); __sifr_concat }
-        );
-        let s: f64 = stdev(&data)?;
-        println!(
-            "{}", { let mut __sifr_concat : String = String::with_capacity(8usize +
-            0usize); __sifr_concat.push_str("stdev = "); __sifr_concat
-            .push_str(format!("{}", s) .as_str()); __sifr_concat }
-        );
-        let idata: Vec<SifrInt> = vec![
-            SifrInt::from_i64(1), SifrInt::from_i64(2), SifrInt::from_i64(2),
-            SifrInt::from_i64(3), SifrInt::from_i64(3), SifrInt::from_i64(3)
-        ];
-        let mo: SifrInt = mode(&idata)?;
-        println!(
-            "{}", { let mut __sifr_concat : String = String::with_capacity(7usize +
-            0usize); __sifr_concat.push_str("mode = "); __sifr_concat
-            .push_str(format!("{}", mo) .as_str()); __sifr_concat }
-        );
-        let mm: Vec<SifrInt> = multimode(
-            &vec![
-                SifrInt::from_i64(1), SifrInt::from_i64(2), SifrInt::from_i64(2),
-                SifrInt::from_i64(3), SifrInt::from_i64(3)
-            ],
-        )?;
-        println!(
-            "{}", { let mut __sifr_concat : String = String::with_capacity(16usize +
-            0usize); __sifr_concat.push_str("multimode len = "); __sifr_concat
-            .push_str(format!("{}", SifrInt::from(mm.len())) .as_str()); __sifr_concat }
-        );
-        let qs: Vec<f64> = quantiles(&data, SifrInt::from_i64(4))?;
-        println!(
-            "{}", { let mut __sifr_concat : String = String::with_capacity(18usize +
-            0usize); __sifr_concat.push_str("quartiles count = "); __sifr_concat
-            .push_str(format!("{}", SifrInt::from(qs.len())) .as_str()); __sifr_concat }
-        );
-        let x: Vec<f64> = vec![1.0_f64, 2.0_f64, 3.0_f64, 4.0_f64, 5.0_f64];
-        let y: Vec<f64> = vec![2.0_f64, 4.0_f64, 6.0_f64, 8.0_f64, 10.0_f64];
-        let cov: f64 = covariance(&x, &y)?;
-        println!(
-            "{}", { let mut __sifr_concat : String = String::with_capacity(13usize +
-            0usize); __sifr_concat.push_str("covariance = "); __sifr_concat
-            .push_str(format!("{}", cov) .as_str()); __sifr_concat }
-        );
-        let r: f64 = correlation(&x, &y)?;
-        println!(
-            "{}", { let mut __sifr_concat : String = String::with_capacity(14usize +
-            0usize); __sifr_concat.push_str("correlation = "); __sifr_concat
-            .push_str(format!("{}", r) .as_str()); __sifr_concat }
-        );
-        let lr: Vec<f64> = linear_regression(&x, &y)?;
-        let slope: Option<f64> = {
-            let __sifr_checked_read_collection = &lr;
-            let __sifr_checked_read_index = SifrInt::from_i64(0);
-            let __sifr_checked_read_normalized = __sifr_checked_read_index
-                .normalize_index_or_len(__sifr_checked_read_collection.len());
-            __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
-        };
-        let intercept: Option<f64> = {
-            let __sifr_checked_read_collection = &lr;
-            let __sifr_checked_read_index = SifrInt::from_i64(1);
-            let __sifr_checked_read_normalized = __sifr_checked_read_index
-                .normalize_index_or_len(__sifr_checked_read_collection.len());
-            __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
-        };
-        if let Some(slope) = slope {
-            println!(
-                "{}", { let mut __sifr_concat : String = String::with_capacity(8usize +
-                0usize); __sifr_concat.push_str("slope = "); __sifr_concat
-                .push_str(format!("{}", slope) .as_str()); __sifr_concat }
-            );
-        }
-        if let Some(intercept) = intercept {
-            println!(
-                "{}", { let mut __sifr_concat : String = String::with_capacity(12usize +
-                0usize); __sifr_concat.push_str("intercept = "); __sifr_concat
-                .push_str(format!("{}", intercept) .as_str()); __sifr_concat }
-            );
-        }
-        Ok(())
-    })();
-    if let Err(__sifr_try_err) = __sifr_try_res {
-        let e = __sifr_try_err.clone();
-        println!(
-            "{}", { let mut __sifr_concat : String = String::with_capacity(7usize +
-            0usize); __sifr_concat.push_str("error: "); __sifr_concat.push_str(e.message
-            .clone().as_str()); __sifr_concat }
-        );
+    let sifr_generated_try_res: Result<(), SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> =
+        (|| {
+            let m: f64 = mean(&data)?;
+            println!("{}", {
+                let mut sifr_generated_concat: String = String::with_capacity(7usize);
+                sifr_generated_concat.push_str("mean = ");
+                sifr_generated_concat.push_str(m.to_string().as_str());
+                sifr_generated_concat
+            });
+            let med: f64 = median(&data)?;
+            println!("{}", {
+                let mut sifr_generated_concat: String = String::with_capacity(9usize);
+                sifr_generated_concat.push_str("median = ");
+                sifr_generated_concat.push_str(med.to_string().as_str());
+                sifr_generated_concat
+            });
+            let v: f64 = variance(&data)?;
+            println!("{}", {
+                let mut sifr_generated_concat: String = String::with_capacity(11usize);
+                sifr_generated_concat.push_str("variance = ");
+                sifr_generated_concat.push_str(v.to_string().as_str());
+                sifr_generated_concat
+            });
+            let s: f64 = stdev(&data)?;
+            println!("{}", {
+                let mut sifr_generated_concat: String = String::with_capacity(8usize);
+                sifr_generated_concat.push_str("stdev = ");
+                sifr_generated_concat.push_str(s.to_string().as_str());
+                sifr_generated_concat
+            });
+            let idata_value_4763ae3b1301126c: Vec<SifrInt> = vec![
+                SifrInt::from_i64(1),
+                SifrInt::from_i64(2),
+                SifrInt::from_i64(2),
+                SifrInt::from_i64(3),
+                SifrInt::from_i64(3),
+                SifrInt::from_i64(3),
+            ];
+            let mo: SifrInt = mode(&idata_value_4763ae3b1301126c)?;
+            println!("{}", {
+                let mut sifr_generated_concat: String = String::with_capacity(7usize);
+                sifr_generated_concat.push_str("mode = ");
+                sifr_generated_concat.push_str(mo.to_string().as_str());
+                sifr_generated_concat
+            });
+            let mm: Vec<SifrInt> = multimode(&vec![
+                SifrInt::from_i64(1),
+                SifrInt::from_i64(2),
+                SifrInt::from_i64(2),
+                SifrInt::from_i64(3),
+                SifrInt::from_i64(3),
+            ])?;
+            println!("{}", {
+                let mut sifr_generated_concat: String = String::with_capacity(16usize);
+                sifr_generated_concat.push_str("multimode len = ");
+                sifr_generated_concat.push_str(SifrInt::from(mm.len()).to_string().as_str());
+                sifr_generated_concat
+            });
+            let qs: Vec<f64> = quantiles(&data, SifrInt::from_i64(4))?;
+            println!("{}", {
+                let mut sifr_generated_concat: String = String::with_capacity(18usize);
+                sifr_generated_concat.push_str("quartiles count = ");
+                sifr_generated_concat.push_str(SifrInt::from(qs.len()).to_string().as_str());
+                sifr_generated_concat
+            });
+            let x: Vec<f64> = vec![1.0_f64, 2.0_f64, 3.0_f64, 4.0_f64, 5.0_f64];
+            let y: Vec<f64> = vec![2.0_f64, 4.0_f64, 6.0_f64, 8.0_f64, 10.0_f64];
+            let cov: f64 = covariance(&x, &y)?;
+            println!("{}", {
+                let mut sifr_generated_concat: String = String::with_capacity(13usize);
+                sifr_generated_concat.push_str("covariance = ");
+                sifr_generated_concat.push_str(cov.to_string().as_str());
+                sifr_generated_concat
+            });
+            let r: f64 = correlation(&x, &y)?;
+            println!("{}", {
+                let mut sifr_generated_concat: String = String::with_capacity(14usize);
+                sifr_generated_concat.push_str("correlation = ");
+                sifr_generated_concat.push_str(r.to_string().as_str());
+                sifr_generated_concat
+            });
+            let lr: Vec<f64> = linear_regression(&x, &y)?;
+            let slope: Option<f64> = {
+                let sifr_generated_checked_read_collection = &lr;
+                let sifr_generated_checked_read_index = SifrInt::from_i64(0);
+                let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
+                    .normalize_index_or_len(sifr_generated_checked_read_collection.len());
+                sifr_generated_checked_read_collection
+                    .get(sifr_generated_checked_read_normalized)
+                    .cloned()
+            };
+            let intercept: Option<f64> = {
+                let sifr_generated_checked_read_collection = &lr;
+                let sifr_generated_checked_read_index = SifrInt::from_i64(1);
+                let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
+                    .normalize_index_or_len(sifr_generated_checked_read_collection.len());
+                sifr_generated_checked_read_collection
+                    .get(sifr_generated_checked_read_normalized)
+                    .cloned()
+            };
+            if let Some(slope) = slope {
+                println!("{}", {
+                    let mut sifr_generated_concat: String = String::with_capacity(8usize);
+                    sifr_generated_concat.push_str("slope = ");
+                    sifr_generated_concat.push_str(slope.to_string().as_str());
+                    sifr_generated_concat
+                });
+            }
+            if let Some(intercept) = intercept {
+                println!("{}", {
+                    let mut sifr_generated_concat: String = String::with_capacity(12usize);
+                    sifr_generated_concat.push_str("intercept = ");
+                    sifr_generated_concat.push_str(intercept.to_string().as_str());
+                    sifr_generated_concat
+                });
+            }
+            Ok(())
+        })();
+    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+        let e = sifr_generated_try_err.clone();
+        println!("{}", {
+            let mut sifr_generated_concat: String = String::with_capacity(7usize);
+            sifr_generated_concat.push_str("error: ");
+            sifr_generated_concat.push_str(e.message.clone().as_str());
+            sifr_generated_concat
+        });
     }
-    let __sifr_try_res: Result<(), __SifrStdlib_sifr_x2estatistics_x2eStatisticsError> = (||
-    {
-        let empty: Vec<f64> = vec![];
-        let bad: f64 = mean(&empty)?;
-        Ok(())
-    })();
-    if let Err(__sifr_try_err) = __sifr_try_res {
-        let e = __sifr_try_err.clone();
-        println!(
-            "{}", { let mut __sifr_concat : String = String::with_capacity(18usize +
-            0usize); __sifr_concat.push_str("empty mean error: "); __sifr_concat
-            .push_str(e.message.clone().as_str()); __sifr_concat }
-        );
+    let sifr_generated_try_res: Result<(), SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> =
+        (|| {
+            let empty: Vec<f64> = Vec::new();
+            let _ = mean(&empty)?;
+            Ok(())
+        })();
+    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+        let e = sifr_generated_try_err.clone();
+        println!("{}", {
+            let mut sifr_generated_concat: String = String::with_capacity(18usize);
+            sifr_generated_concat.push_str("empty mean error: ");
+            sifr_generated_concat.push_str(e.message.clone().as_str());
+            sifr_generated_concat
+        });
     }
     println!("=== random additions ===");
     let mut items: Vec<SifrInt> = vec![
-        SifrInt::from_i64(1), SifrInt::from_i64(2), SifrInt::from_i64(3),
-        SifrInt::from_i64(4), SifrInt::from_i64(5)
+        SifrInt::from_i64(1),
+        SifrInt::from_i64(2),
+        SifrInt::from_i64(3),
+        SifrInt::from_i64(4),
+        SifrInt::from_i64(5),
     ];
     shuffle(&mut items);
-    println!(
-        "{}", { let mut __sifr_concat : String = String::with_capacity(14usize + 0usize);
-        __sifr_concat.push_str("shuffle len = "); __sifr_concat.push_str(format!("{}",
-        SifrInt::from(items.len())) .as_str()); __sifr_concat }
-    );
-    let __sifr_try_res: Result<(), ValueError> = (|| {
+    println!("{}", {
+        let mut sifr_generated_concat: String = String::with_capacity(14usize);
+        sifr_generated_concat.push_str("shuffle len = ");
+        sifr_generated_concat.push_str(SifrInt::from(items.len()).to_string().as_str());
+        sifr_generated_concat
+    });
+    let sifr_generated_try_res: Result<(), ValueError> = (|| {
         let s3: Vec<SifrInt> = sample(&items, SifrInt::from_i64(3))?;
-        println!(
-            "{}", { let mut __sifr_concat : String = String::with_capacity(16usize +
-            0usize); __sifr_concat.push_str("sample(3) len = "); __sifr_concat
-            .push_str(format!("{}", SifrInt::from(s3.len())) .as_str()); __sifr_concat }
-        );
+        println!("{}", {
+            let mut sifr_generated_concat: String = String::with_capacity(16usize);
+            sifr_generated_concat.push_str("sample(3) len = ");
+            sifr_generated_concat.push_str(SifrInt::from(s3.len()).to_string().as_str());
+            sifr_generated_concat
+        });
         Ok(())
     })();
-    if let Err(__sifr_try_err) = __sifr_try_res {
-        let e = __sifr_try_err.clone();
-        println!(
-            "{}", { let mut __sifr_concat : String = String::with_capacity(14usize +
-            0usize); __sifr_concat.push_str("sample error: "); __sifr_concat.push_str(e
-            .message.clone().as_str()); __sifr_concat }
-        );
+    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+        let e = sifr_generated_try_err.clone();
+        println!("{}", {
+            let mut sifr_generated_concat: String = String::with_capacity(14usize);
+            sifr_generated_concat.push_str("sample error: ");
+            sifr_generated_concat.push_str(e.message.clone().as_str());
+            sifr_generated_concat
+        });
     }
-    let __sifr_try_res: Result<(), ValueError> = (|| {
+    let sifr_generated_try_res: Result<(), ValueError> = (|| {
         let rr: SifrInt = randrange(
             SifrInt::from_i64(0),
             Some(SifrInt::from_i64(100)),
             SifrInt::from_i64(5),
         )?;
-        println!(
-            "{}", { let mut __sifr_concat : String = String::with_capacity(21usize +
-            0usize); __sifr_concat.push_str("randrange in range = "); __sifr_concat
-            .push_str(format!("{}", & rr >= & SifrInt::from_i64(0)) .as_str());
-            __sifr_concat }
-        );
+        println!("{}", {
+            let mut sifr_generated_concat: String = String::with_capacity(21usize);
+            sifr_generated_concat.push_str("randrange in range = ");
+            sifr_generated_concat.push_str((&rr >= &SifrInt::from_i64(0)).to_string().as_str());
+            sifr_generated_concat
+        });
         Ok(())
     })();
-    if let Err(__sifr_try_err) = __sifr_try_res {
-        let e = __sifr_try_err.clone();
-        println!(
-            "{}", { let mut __sifr_concat : String = String::with_capacity(17usize +
-            0usize); __sifr_concat.push_str("randrange error: "); __sifr_concat
-            .push_str(e.message.clone().as_str()); __sifr_concat }
-        );
+    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+        let e = sifr_generated_try_err.clone();
+        println!("{}", {
+            let mut sifr_generated_concat: String = String::with_capacity(17usize);
+            sifr_generated_concat.push_str("randrange error: ");
+            sifr_generated_concat.push_str(e.message.clone().as_str());
+            sifr_generated_concat
+        });
     }
-    let g: f64 = gauss(0.0_f64, 1.0_f64);
+    let _ = gauss(0.0_f64, 1.0_f64);
     println!("gauss sample is float = True");
     println!("=== functools.reduce ===");
     let nums: Vec<SifrInt> = vec![
-        SifrInt::from_i64(1), SifrInt::from_i64(2), SifrInt::from_i64(3),
-        SifrInt::from_i64(4), SifrInt::from_i64(5)
+        SifrInt::from_i64(1),
+        SifrInt::from_i64(2),
+        SifrInt::from_i64(3),
+        SifrInt::from_i64(4),
+        SifrInt::from_i64(5),
     ];
     let total: SifrInt = reduce(
-        |__arg0, __arg1| add((__arg0).clone(), (__arg1).clone()),
+        |sifr_generated_arg0, sifr_generated_arg1| {
+            add(sifr_generated_arg0.clone(), sifr_generated_arg1.clone())
+        },
         &nums,
         &SifrInt::from_i64(0),
     );
-    println!(
-        "{}", { let mut __sifr_concat : String = String::with_capacity(14usize + 0usize);
-        __sifr_concat.push_str("reduce(add) = "); __sifr_concat.push_str(format!("{}",
-        total) .as_str()); __sifr_concat }
-    );
+    println!("{}", {
+        let mut sifr_generated_concat: String = String::with_capacity(14usize);
+        sifr_generated_concat.push_str("reduce(add) = ");
+        sifr_generated_concat.push_str(total.to_string().as_str());
+        sifr_generated_concat
+    });
     let product: SifrInt = reduce(
-        |__arg0, __arg1| mul((__arg0).clone(), (__arg1).clone()),
+        |sifr_generated_arg0, sifr_generated_arg1| {
+            mul(sifr_generated_arg0.clone(), sifr_generated_arg1.clone())
+        },
         &nums,
         &SifrInt::from_i64(1),
     );
-    println!(
-        "{}", { let mut __sifr_concat : String = String::with_capacity(14usize + 0usize);
-        __sifr_concat.push_str("reduce(mul) = "); __sifr_concat.push_str(format!("{}",
-        product) .as_str()); __sifr_concat }
-    );
+    println!("{}", {
+        let mut sifr_generated_concat: String = String::with_capacity(14usize);
+        sifr_generated_concat.push_str("reduce(mul) = ");
+        sifr_generated_concat.push_str(product.to_string().as_str());
+        sifr_generated_concat
+    });
     println!("=== itertools additions ===");
     let idata2: Vec<SifrInt> = vec![
-        SifrInt::from_i64(1), SifrInt::from_i64(2), SifrInt::from_i64(3),
-        SifrInt::from_i64(4), SifrInt::from_i64(5)
+        SifrInt::from_i64(1),
+        SifrInt::from_i64(2),
+        SifrInt::from_i64(3),
+        SifrInt::from_i64(4),
+        SifrInt::from_i64(5),
     ];
-    let acc: Vec<SifrInt> = accumulate(Box::new(idata2.clone().into_iter()), None)
-        .collect::<Vec<_>>();
-    println!(
-        "{}", { let mut __sifr_concat : String = String::with_capacity(13usize + 0usize);
-        __sifr_concat.push_str("accumulate = "); __sifr_concat.push_str(format!("{:?}",
-        acc) .as_str()); __sifr_concat }
-    );
+    let acc: Vec<SifrInt> =
+        accumulate(Box::new(idata2.clone().into_iter()), None).collect::<Vec<_>>();
+    println!("{}", {
+        let mut sifr_generated_concat: String = String::with_capacity(13usize);
+        sifr_generated_concat.push_str("accumulate = ");
+        sifr_generated_concat.push_str(format!("{acc:?}").as_str());
+        sifr_generated_concat
+    });
     let sel: Vec<bool> = vec![true, false, true, false, true];
     let comp: Vec<SifrInt> = compress(
-            Box::new(idata2.clone().into_iter()),
-            Box::new(sel.clone().into_iter()),
-        )
-        .collect::<Vec<_>>();
-    println!(
-        "{}", { let mut __sifr_concat : String = String::with_capacity(11usize + 0usize);
-        __sifr_concat.push_str("compress = "); __sifr_concat.push_str(format!("{:?}",
-        comp) .as_str()); __sifr_concat }
-    );
+        Box::new(idata2.clone().into_iter()),
+        Box::new(sel.clone().into_iter()),
+    )
+    .collect::<Vec<_>>();
+    println!("{}", {
+        let mut sifr_generated_concat: String = String::with_capacity(11usize);
+        sifr_generated_concat.push_str("compress = ");
+        sifr_generated_concat.push_str(format!("{comp:?}").as_str());
+        sifr_generated_concat
+    });
     let dw: Vec<SifrInt> = dropwhile(
-            |__arg0| less_than_three((__arg0).clone()),
-            Box::new(idata2.clone().into_iter()),
-        )
-        .collect::<Vec<_>>();
-    println!(
-        "{}", { let mut __sifr_concat : String = String::with_capacity(16usize + 0usize);
-        __sifr_concat.push_str("dropwhile(<3) = "); __sifr_concat
-        .push_str(format!("{:?}", dw) .as_str()); __sifr_concat }
-    );
+        |sifr_generated_arg0| less_than_three(sifr_generated_arg0.clone()),
+        Box::new(idata2.clone().into_iter()),
+    )
+    .collect::<Vec<_>>();
+    println!("{}", {
+        let mut sifr_generated_concat: String = String::with_capacity(16usize);
+        sifr_generated_concat.push_str("dropwhile(<3) = ");
+        sifr_generated_concat.push_str(format!("{dw:?}").as_str());
+        sifr_generated_concat
+    });
     let tw: Vec<SifrInt> = takewhile(
-            |__arg0| less_than_three((__arg0).clone()),
-            Box::new(idata2.clone().into_iter()),
-        )
-        .collect::<Vec<_>>();
-    println!(
-        "{}", { let mut __sifr_concat : String = String::with_capacity(16usize + 0usize);
-        __sifr_concat.push_str("takewhile(<3) = "); __sifr_concat
-        .push_str(format!("{:?}", tw) .as_str()); __sifr_concat }
-    );
+        |sifr_generated_arg0| less_than_three(sifr_generated_arg0.clone()),
+        Box::new(idata2.clone().into_iter()),
+    )
+    .collect::<Vec<_>>();
+    println!("{}", {
+        let mut sifr_generated_concat: String = String::with_capacity(16usize);
+        sifr_generated_concat.push_str("takewhile(<3) = ");
+        sifr_generated_concat.push_str(format!("{tw:?}").as_str());
+        sifr_generated_concat
+    });
     let ff: Vec<SifrInt> = filterfalse(
-            |__arg0| less_than_three((__arg0).clone()),
-            Box::new(idata2.clone().into_iter()),
-        )
-        .collect::<Vec<_>>();
-    println!(
-        "{}", { let mut __sifr_concat : String = String::with_capacity(18usize + 0usize);
-        __sifr_concat.push_str("filterfalse(<3) = "); __sifr_concat
-        .push_str(format!("{:?}", ff) .as_str()); __sifr_concat }
-    );
+        |sifr_generated_arg0| less_than_three(sifr_generated_arg0.clone()),
+        Box::new(idata2.clone().into_iter()),
+    )
+    .collect::<Vec<_>>();
+    println!("{}", {
+        let mut sifr_generated_concat: String = String::with_capacity(18usize);
+        sifr_generated_concat.push_str("filterfalse(<3) = ");
+        sifr_generated_concat.push_str(format!("{ff:?}").as_str());
+        sifr_generated_concat
+    });
     let a: Vec<SifrInt> = vec![
-        SifrInt::from_i64(1), SifrInt::from_i64(2), SifrInt::from_i64(3)
+        SifrInt::from_i64(1),
+        SifrInt::from_i64(2),
+        SifrInt::from_i64(3),
     ];
     let b: Vec<SifrInt> = vec![SifrInt::from_i64(4), SifrInt::from_i64(5)];
     let zl: Vec<Vec<SifrInt>> = zip_longest(
-            Box::new(a.clone().into_iter()),
-            Box::new(b.clone().into_iter()),
-            &SifrInt::from_i64(0),
-        )
-        .collect::<Vec<_>>();
-    println!(
-        "{}", { let mut __sifr_concat : String = String::with_capacity(18usize + 0usize);
-        __sifr_concat.push_str("zip_longest len = "); __sifr_concat
-        .push_str(format!("{}", SifrInt::from(zl.len())) .as_str()); __sifr_concat }
-    );
+        Box::new(a.clone().into_iter()),
+        Box::new(b.clone().into_iter()),
+        &SifrInt::from_i64(0),
+    )
+    .collect::<Vec<_>>();
+    println!("{}", {
+        let mut sifr_generated_concat: String = String::with_capacity(18usize);
+        sifr_generated_concat.push_str("zip_longest len = ");
+        sifr_generated_concat.push_str(SifrInt::from(zl.len()).to_string().as_str());
+        sifr_generated_concat
+    });
     let cf: Vec<SifrInt> = count_from(
-            SifrInt::from_i64(0),
-            SifrInt::from_i64(2),
-            SifrInt::from_i64(5),
-        )
-        .collect::<Vec<_>>();
-    println!(
-        "{}", { let mut __sifr_concat : String = String::with_capacity(20usize + 0usize);
-        __sifr_concat.push_str("count_from(0,2,5) = "); __sifr_concat
-        .push_str(format!("{:?}", cf) .as_str()); __sifr_concat }
-    );
-    let mut ctr: Box<dyn Iterator<Item = SifrInt>> = count(
         SifrInt::from_i64(0),
         SifrInt::from_i64(2),
-    );
+        SifrInt::from_i64(5),
+    )
+    .collect::<Vec<_>>();
+    println!("{}", {
+        let mut sifr_generated_concat: String = String::with_capacity(20usize);
+        sifr_generated_concat.push_str("count_from(0,2,5) = ");
+        sifr_generated_concat.push_str(format!("{cf:?}").as_str());
+        sifr_generated_concat
+    });
+    let mut ctr: Box<dyn Iterator<Item = SifrInt>> =
+        count(SifrInt::from_i64(0), SifrInt::from_i64(2));
     let count0: Option<SifrInt> = ctr.next();
-    let count1: Option<SifrInt> = ctr.next();
-    let count2: Option<SifrInt> = ctr.next();
-    let count3: Option<SifrInt> = ctr.next();
-    let count4: Option<SifrInt> = ctr.next();
-    println!(
-        "{}", { let mut __sifr_concat : String = String::with_capacity(21usize + 0usize);
-        __sifr_concat.push_str("count(0,2) first 5 = "); __sifr_concat
-        .push_str(format!("{:?}", vec![count0, count1, count2, count3, count4])
-        .as_str()); __sifr_concat }
-    );
+    let count1_value_c3423cbe5aaebb3f: Option<SifrInt> = ctr.next();
+    let count2_value_c3423dbe5aaebcf2: Option<SifrInt> = ctr.next();
+    let count3_value_c3423ebe5aaebea5: Option<SifrInt> = ctr.next();
+    let count4_value_c34237be5aaeb2c0: Option<SifrInt> = ctr.next();
+    println!("{}", {
+        let mut sifr_generated_concat: String = String::with_capacity(21usize);
+        sifr_generated_concat.push_str("count(0,2) first 5 = ");
+        sifr_generated_concat.push_str(
+            format!(
+                "{:?}",
+                vec![
+                    count0,
+                    count1_value_c3423cbe5aaebb3f,
+                    count2_value_c3423dbe5aaebcf2,
+                    count3_value_c3423ebe5aaebea5,
+                    count4_value_c34237be5aaeb2c0
+                ]
+            )
+            .as_str(),
+        );
+        sifr_generated_concat
+    });
     let cyc: Vec<SifrInt> = cycle(
-            Box::new(
-                vec![SifrInt::from_i64(1), SifrInt::from_i64(2), SifrInt::from_i64(3)]
-                    .into_iter(),
-            ),
-            SifrInt::from_i64(7),
-        )
-        .collect::<Vec<_>>();
-    println!(
-        "{}", { let mut __sifr_concat : String = String::with_capacity(20usize + 0usize);
-        __sifr_concat.push_str("cycle([1,2,3], 7) = "); __sifr_concat
-        .push_str(format!("{:?}", cyc) .as_str()); __sifr_concat }
-    );
+        Box::new(
+            vec![
+                SifrInt::from_i64(1),
+                SifrInt::from_i64(2),
+                SifrInt::from_i64(3),
+            ]
+            .into_iter(),
+        ),
+        SifrInt::from_i64(7),
+    )
+    .collect::<Vec<_>>();
+    println!("{}", {
+        let mut sifr_generated_concat: String = String::with_capacity(20usize);
+        sifr_generated_concat.push_str("cycle([1,2,3], 7) = ");
+        sifr_generated_concat.push_str(format!("{cyc:?}").as_str());
+        sifr_generated_concat
+    });
     println!("=== Counter enhancements ===");
-    let mut c1: __SifrStdlib_sifr_x2ecollections_x2eCounter<String> = from_list(
-        &vec!["a".to_string(), "b".to_string(), "a".to_string(), "c".to_string()],
-    );
-    let c2: __SifrStdlib_sifr_x2ecollections_x2eCounter<String> = from_list(
-        &vec!["b".to_string(), "c".to_string(), "d".to_string()],
-    );
+    let mut c1: SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<String> = from_list(&vec![
+        "a".to_string(),
+        "b".to_string(),
+        "a".to_string(),
+        "c".to_string(),
+    ]);
+    let c2: SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<String> =
+        from_list(&vec!["b".to_string(), "c".to_string(), "d".to_string()]);
     c1.update(&c2);
-    println!(
-        "{}", { let mut __sifr_concat : String = String::with_capacity(((16usize +
-        0usize) + 3usize) + 0usize); __sifr_concat.push_str("after update: a=");
-        __sifr_concat.push_str(format!("{}", c1.get(& "a".to_string(), &
-        SifrInt::from_i64(0))) .as_str()); __sifr_concat.push_str(" b="); __sifr_concat
-        .push_str(format!("{}", c1.get(& "b".to_string(), & SifrInt::from_i64(0)))
-        .as_str()); __sifr_concat }
-    );
-    let mut c3: __SifrStdlib_sifr_x2ecollections_x2eCounter<String> = from_list(
-        &vec!["x".to_string(), "x".to_string(), "y".to_string()],
-    );
-    let c4: __SifrStdlib_sifr_x2ecollections_x2eCounter<String> = from_list(
-        &vec!["x".to_string()],
-    );
+    println!("{}", {
+        let mut sifr_generated_concat: String = String::with_capacity(16usize + 3usize);
+        sifr_generated_concat.push_str("after update: a=");
+        sifr_generated_concat.push_str(
+            c1.get(&"a".to_string(), &SifrInt::from_i64(0))
+                .to_string()
+                .as_str(),
+        );
+        sifr_generated_concat.push_str(" b=");
+        sifr_generated_concat.push_str(
+            c1.get(&"b".to_string(), &SifrInt::from_i64(0))
+                .to_string()
+                .as_str(),
+        );
+        sifr_generated_concat
+    });
+    let mut c3: SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<String> =
+        from_list(&vec!["x".to_string(), "x".to_string(), "y".to_string()]);
+    let c4: SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<String> =
+        from_list(&vec!["x".to_string()]);
     c3.subtract(&c4);
-    println!(
-        "{}", { let mut __sifr_concat : String = String::with_capacity(18usize + 0usize);
-        __sifr_concat.push_str("after subtract: x="); __sifr_concat
-        .push_str(format!("{}", c3.get(& "x".to_string(), & SifrInt::from_i64(0)))
-        .as_str()); __sifr_concat }
-    );
-    let c5: __SifrStdlib_sifr_x2ecollections_x2eCounter<String> = from_list(
-        &vec!["a".to_string(), "a".to_string(), "b".to_string()],
-    );
+    println!("{}", {
+        let mut sifr_generated_concat: String = String::with_capacity(18usize);
+        sifr_generated_concat.push_str("after subtract: x=");
+        sifr_generated_concat.push_str(
+            c3.get(&"x".to_string(), &SifrInt::from_i64(0))
+                .to_string()
+                .as_str(),
+        );
+        sifr_generated_concat
+    });
+    let c5: SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<String> =
+        from_list(&vec!["a".to_string(), "a".to_string(), "b".to_string()]);
     let elems: Vec<String> = c5.elements();
-    println!(
-        "{}", { let mut __sifr_concat : String = String::with_capacity(15usize + 0usize);
-        __sifr_concat.push_str("elements len = "); __sifr_concat.push_str(format!("{}",
-        SifrInt::from(elems.len())) .as_str()); __sifr_concat }
-    );
-    let mut cc: __SifrStdlib_sifr_x2ecollections_x2eCounter<String> = from_list(
-        &vec!["a".to_string(), "b".to_string()],
-    );
+    println!("{}", {
+        let mut sifr_generated_concat: String = String::with_capacity(15usize);
+        sifr_generated_concat.push_str("elements len = ");
+        sifr_generated_concat.push_str(SifrInt::from(elems.len()).to_string().as_str());
+        sifr_generated_concat
+    });
+    let mut cc: SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<String> =
+        from_list(&vec!["a".to_string(), "b".to_string()]);
     cc.update(&from_list(&vec!["b".to_string(), "c".to_string()]));
-    println!(
-        "{}", { let mut __sifr_concat : String = String::with_capacity(16usize + 0usize);
-        __sifr_concat.push_str("counter_add b = "); __sifr_concat.push_str(format!("{}",
-        cc.get(& "b".to_string(), & SifrInt::from_i64(0))) .as_str()); __sifr_concat }
-    );
-    let mut cd: __SifrStdlib_sifr_x2ecollections_x2eCounter<String> = from_list(
-        &vec!["a".to_string(), "a".to_string(), "b".to_string()],
-    );
+    println!("{}", {
+        let mut sifr_generated_concat: String = String::with_capacity(16usize);
+        sifr_generated_concat.push_str("counter_add b = ");
+        sifr_generated_concat.push_str(
+            cc.get(&"b".to_string(), &SifrInt::from_i64(0))
+                .to_string()
+                .as_str(),
+        );
+        sifr_generated_concat
+    });
+    let mut cd: SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<String> =
+        from_list(&vec!["a".to_string(), "a".to_string(), "b".to_string()]);
     cd.subtract(&from_list(&vec!["a".to_string()]));
-    println!(
-        "{}", { let mut __sifr_concat : String = String::with_capacity(16usize + 0usize);
-        __sifr_concat.push_str("counter_sub a = "); __sifr_concat.push_str(format!("{}",
-        cd.get(& "a".to_string(), & SifrInt::from_i64(0))) .as_str()); __sifr_concat }
-    );
+    println!("{}", {
+        let mut sifr_generated_concat: String = String::with_capacity(16usize);
+        sifr_generated_concat.push_str("counter_sub a = ");
+        sifr_generated_concat.push_str(
+            cd.get(&"a".to_string(), &SifrInt::from_i64(0))
+                .to_string()
+                .as_str(),
+        );
+        sifr_generated_concat
+    });
     println!("=== stdlib_pure_expansion: all features demonstrated ===");
 }

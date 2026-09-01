@@ -16,6 +16,26 @@ sys.path.insert(0, str(REPO_ROOT / "verification" / "areas" / "common"))
 from sifr_binary import resolve_sifr_binary  # noqa: E402
 
 
+NON_AUTHORITATIVE_TEST_PROJECT_REFERENCES = {
+    Path("demos/test_imports_and_constants/idiomatic.rs"),
+    Path("demos/test_runner/idiomatic.rs"),
+    Path("demos/test_runner_imports/idiomatic.rs"),
+}
+
+
+def validate_non_authoritative_references() -> None:
+    for relative in sorted(NON_AUTHORITATIVE_TEST_PROJECT_REFERENCES):
+        reference = REPO_ROOT / relative
+        if not reference.is_file():
+            raise RuntimeError(f"missing non-authoritative Rust reference: {relative}")
+        emitted = reference.with_name("emitted.rs")
+        if emitted.exists():
+            raise RuntimeError(
+                "test-project Rust references must not acquire an authoritative "
+                f"single-file companion: {emitted.relative_to(REPO_ROOT)}"
+            )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--sifr", type=Path)
@@ -36,6 +56,12 @@ def main() -> int:
 
     if args.jobs < 1:
         parser.error("--jobs must be positive")
+
+    try:
+        validate_non_authoritative_references()
+    except RuntimeError as error:
+        print(error, file=sys.stderr)
+        return 1
 
     pairs: list[tuple[Path, Path]] = []
     for emitted in sorted((REPO_ROOT / "demos").glob("**/emitted.rs")):

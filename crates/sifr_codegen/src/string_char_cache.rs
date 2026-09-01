@@ -711,13 +711,13 @@ fn char_option_to_string(option_expr: RustExpr) -> RustExpr {
         method: "map".to_string(),
         args: vec![RustExpr::Closure {
             params: vec![crate::RustParam::Named {
-                name: "c".to_string(),
+                name: "character".to_string(),
                 ty: RustType::Named("_".to_string()),
             }],
             body: Box::new(RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Ident("c".to_string())),
+                receiver: Box::new(RustExpr::Ident("character".to_string())),
                 method: "to_string".to_string(),
-                args: vec![],
+                args: Vec::new(),
             }),
             is_move: false,
         }],

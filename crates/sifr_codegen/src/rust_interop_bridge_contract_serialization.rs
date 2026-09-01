@@ -127,6 +127,12 @@ fn push_generated_type(out: &mut String, bridge_type: &RustGeneratedBridgeType) 
         RustGeneratedBridgeTypeKind::ClosedEnum => "enum",
         RustGeneratedBridgeTypeKind::Error => "error",
     });
+    out.push_str("|eq=");
+    out.push_str(if bridge_type.supports_eq {
+        "true"
+    } else {
+        "false"
+    });
     for field in &bridge_type.fields {
         out.push_str("|field=");
         out.push_str(&field.name);

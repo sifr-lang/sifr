@@ -165,15 +165,6 @@ pub(in crate::lower) fn lower_async_for(
         );
         return None;
     }
-    if !for_stmt.orelse.is_empty() {
-        statement_diagnostics::unsupported_form(
-            ctx,
-            "async for else clauses are not supported in v1",
-            for_stmt.range(),
-        );
-        return None;
-    }
-
     let iter = lower_python_context_owned_expr(&for_stmt.iter, ctx)?;
     let iter_ty = iter.ty().clone();
     let Some((target_ty, iter_error_ty)) = async_iterator_parts(&iter_ty) else {
@@ -249,6 +240,15 @@ pub(in crate::lower) fn lower_async_for(
         }
     }
 
+    let else_body = if for_stmt.orelse.is_empty() {
+        None
+    } else {
+        ctx.scope.push();
+        let else_stmts = crate::lower::statements::lower_stmts(&for_stmt.orelse, func_type, ctx);
+        ctx.scope.pop();
+        Some(else_stmts)
+    };
+
     let active_error_ty = match func_type.return_type.resolve_alias() {
         Type::Result(_, error) => error.as_ref().clone(),
         _ => Type::Never,
@@ -262,6 +262,6 @@ pub(in crate::lower) fn lower_async_for(
         active_error_ty,
         body_may_raise,
         body,
-        else_body: None,
+        else_body,
     })
 }

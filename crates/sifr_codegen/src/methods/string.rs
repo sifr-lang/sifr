@@ -218,18 +218,7 @@ pub(super) fn lower_split(object: &RustExpr, args: &[RustExpr]) -> Option<RustEx
                     args: vec![],
                 }),
                 method: "map".to_string(),
-                args: vec![RustExpr::Closure {
-                    params: vec![RustParam::Named {
-                        name: "s".to_string(),
-                        ty: RustType::Named("_".to_string()),
-                    }],
-                    body: Box::new(RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::Ident("s".to_string())),
-                        method: "to_string".to_string(),
-                        args: vec![],
-                    }),
-                    is_move: false,
-                }],
+                args: vec![to_string_method_path()],
             }),
             method: "collect::<Vec<String>>".to_string(),
             args: vec![],
@@ -243,18 +232,7 @@ pub(super) fn lower_split(object: &RustExpr, args: &[RustExpr]) -> Option<RustEx
                         args: vec![],
                     }),
                     method: "map".to_string(),
-                    args: vec![RustExpr::Closure {
-                        params: vec![RustParam::Named {
-                            name: "s".to_string(),
-                            ty: RustType::Named("_".to_string()),
-                        }],
-                        body: Box::new(RustExpr::MethodCall {
-                            receiver: Box::new(RustExpr::Ident("s".to_string())),
-                            method: "to_string".to_string(),
-                            args: vec![],
-                        }),
-                        is_move: false,
-                    }],
+                    args: vec![to_string_method_path()],
                 }),
                 method: "collect::<Vec<String>>".to_string(),
                 args: vec![],
@@ -268,18 +246,7 @@ pub(super) fn lower_split(object: &RustExpr, args: &[RustExpr]) -> Option<RustEx
                         args: vec![string_pattern_arg(&args[0])],
                     }),
                     method: "map".to_string(),
-                    args: vec![RustExpr::Closure {
-                        params: vec![RustParam::Named {
-                            name: "s".to_string(),
-                            ty: RustType::Named("_".to_string()),
-                        }],
-                        body: Box::new(RustExpr::MethodCall {
-                            receiver: Box::new(RustExpr::Ident("s".to_string())),
-                            method: "to_string".to_string(),
-                            args: vec![],
-                        }),
-                        is_move: false,
-                    }],
+                    args: vec![to_string_method_path()],
                 }),
                 method: "collect::<Vec<String>>".to_string(),
                 args: vec![],
@@ -345,18 +312,7 @@ pub(super) fn lower_split(object: &RustExpr, args: &[RustExpr]) -> Option<RustEx
                                 }],
                             }),
                             method: "map".to_string(),
-                            args: vec![RustExpr::Closure {
-                                params: vec![RustParam::Named {
-                                    name: "s".to_string(),
-                                    ty: RustType::Named("_".to_string()),
-                                }],
-                                body: Box::new(RustExpr::MethodCall {
-                                    receiver: Box::new(RustExpr::Ident("s".to_string())),
-                                    method: "to_string".to_string(),
-                                    args: vec![],
-                                }),
-                                is_move: false,
-                            }],
+                            args: vec![to_string_method_path()],
                         }),
                         method: "collect::<Vec<String>>".to_string(),
                         args: vec![],
@@ -379,18 +335,7 @@ pub(super) fn lower_split(object: &RustExpr, args: &[RustExpr]) -> Option<RustEx
                                 ],
                             }),
                             method: "map".to_string(),
-                            args: vec![RustExpr::Closure {
-                                params: vec![RustParam::Named {
-                                    name: "s".to_string(),
-                                    ty: RustType::Named("_".to_string()),
-                                }],
-                                body: Box::new(RustExpr::MethodCall {
-                                    receiver: Box::new(RustExpr::Ident("s".to_string())),
-                                    method: "to_string".to_string(),
-                                    args: vec![],
-                                }),
-                                is_move: false,
-                            }],
+                            args: vec![to_string_method_path()],
                         }),
                         method: "collect::<Vec<String>>".to_string(),
                         args: vec![],
@@ -400,6 +345,15 @@ pub(super) fn lower_split(object: &RustExpr, args: &[RustExpr]) -> Option<RustEx
         }
         _ => None,
     }
+}
+
+fn to_string_method_path() -> RustExpr {
+    RustExpr::Path(
+        ["std", "string", "ToString", "to_string"]
+            .into_iter()
+            .map(str::to_string)
+            .collect(),
+    )
 }
 
 pub(super) fn lower_replace(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {

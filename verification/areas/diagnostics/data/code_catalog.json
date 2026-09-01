@@ -3255,22 +3255,6 @@
       "suggestion_applicability": "none"
     },
     {
-      "code": "SIFR-TYPE-0901",
-      "constant": "TYPE_ARITHMETIC_OVERFLOW_RISK",
-      "docs_link": "docs/errors/SIFR-TYPE-0901.mdx",
-      "machine_applicable": false,
-      "owner": "compiler/core-language",
-      "renderer_support": [
-        "human",
-        "json",
-        "compact"
-      ],
-      "representative_fixture": "crates/sifr_driver/src/tests/single_file_frontend.rs::test_type_check_source_surfaces_arithmetic_overflow_as_structured_warning",
-      "severity": "Warning",
-      "stability": "stable",
-      "suggestion_applicability": "none"
-    },
-    {
       "code": "SIFR-TYPE-0902",
       "constant": "TYPE_REVEAL_TYPE",
       "docs_link": "docs/errors/SIFR-TYPE-0902.mdx",

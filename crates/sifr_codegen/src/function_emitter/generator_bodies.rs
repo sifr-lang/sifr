@@ -144,7 +144,10 @@ impl RustEmitter {
                 } else {
                     rust_ty
                 };
-                if param.convention.is_owned() && param.convention.is_mutable() {
+                if param.convention.is_owned()
+                    && param.convention.is_mutable()
+                    && self.mutated_vars.contains(&param.name)
+                {
                     RustParam::NamedMut {
                         name: param.name.clone(),
                         ty: rust_ty,

@@ -130,11 +130,17 @@ pub(super) fn try_lower_simple_async_with_stmt(
         let propagates_scope_failure = ctx.return_type.is_some_and(|ty| {
             matches!(ty.resolve_alias(), Type::Result(_, err) if matches!(err.resolve_alias(), Type::Class { name, .. } if name == "ScopeFailure" || name == "Error"))
         });
+        let returns_scope_failure = ctx.return_type.is_some_and(|ty| {
+            matches!(ty.resolve_alias(), Type::Result(_, err) if matches!(err.resolve_alias(), Type::Class { name, .. } if name == "ScopeFailure"))
+        });
         let join_expr = format!("{target}.__sifr_join_all().await");
         let stmt = if propagates_scope_failure {
-            format!(
-                "if let Err(__sifr_scope_failure) = {join_expr} {{ return Err(__sifr_scope_failure.into()); }}"
-            )
+            let failure = if returns_scope_failure {
+                "__sifr_scope_failure"
+            } else {
+                "__sifr_scope_failure.into()"
+            };
+            format!("if let Err(__sifr_scope_failure) = {join_expr} {{ return Err({failure}); }}")
         } else {
             format!("let _ = {join_expr};")
         };
@@ -336,7 +342,10 @@ pub(super) fn try_lower_string_literal_match_guard(pattern: &HirPattern) -> Opti
 pub(super) fn try_lower_match_pattern(pattern: &HirPattern) -> Option<(String, Vec<String>)> {
     match pattern {
         HirPattern::Wildcard => Some(("_".to_string(), vec![])),
-        HirPattern::Capture { name, .. } => Some((name.clone(), vec![name.clone()])),
+        HirPattern::Capture { name, .. } => {
+            let pattern_name = crate::Renderer::render_identifier(name);
+            Some((pattern_name, vec![name.clone()]))
+        }
         HirPattern::Literal { value } => Some((try_lower_match_literal_pattern(value)?, vec![])),
         HirPattern::None => Some(("None".to_string(), vec![])),
         HirPattern::Value { path } => Some((path.join("::"), vec![])),
@@ -380,6 +389,28 @@ pub(super) fn try_lower_match_pattern(pattern: &HirPattern) -> Option<(String, V
                     bindings,
                 ))
             }
+        }
+    }
+}
+
+#[cfg(test)]
+mod reserved_literal_identifier_tests {
+    use super::*;
+
+    #[test]
+    fn capture_names_cannot_be_reinterpreted_as_boolean_literals() {
+        for (name, expected) in [
+            ("true", "sifr_source_74727565"),
+            ("false", "sifr_source_66616c7365"),
+        ] {
+            let pattern = HirPattern::Capture {
+                name: name.to_string(),
+                ty: Type::Bool,
+            };
+            let (rendered, bindings) =
+                try_lower_match_pattern(&pattern).expect("capture pattern should lower");
+            assert_eq!(rendered, expected);
+            assert_eq!(bindings, [name]);
         }
     }
 }

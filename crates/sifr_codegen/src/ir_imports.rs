@@ -1,10 +1,11 @@
 use crate::{RustExpr, RustItem, RustParam, RustStmt, RustType};
 use syn::visit::{self, Visit};
 
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(crate) struct IrImportNeeds {
     pub(crate) collections: IrCollectionImportNeeds,
     pub(crate) runtime: IrRuntimeImportNeeds,
+    pub(crate) referenced_symbols: std::collections::HashSet<String>,
 }
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
@@ -503,6 +504,7 @@ fn scan_named_text(text: &str, needs: &mut IrImportNeeds) {
 }
 
 fn mark_symbol(symbol: &str, needs: &mut IrImportNeeds) {
+    needs.referenced_symbols.insert(symbol.to_string());
     match symbol {
         "HashMap" => needs.collections.needs_hashmap = true,
         "HashSet" => needs.collections.needs_hashset = true,

@@ -226,9 +226,10 @@ fn resolve_constant(
         .constant_integer_values
         .get(module_name)
         .and_then(|module_values| module_values.get(name))
+        && let Some(binding_id) = ctx.scope.lookup(local).map(|binding| binding.binding_id)
     {
         ctx.const_integer_values
-            .insert(local.to_string(), value.clone());
+            .record(local.to_string(), binding_id, value.clone());
     }
     true
 }

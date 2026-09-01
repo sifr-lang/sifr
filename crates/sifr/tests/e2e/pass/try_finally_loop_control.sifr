@@ -1,0 +1,21 @@
+def main() -> None:
+    visited: list[int] = []
+    finalized: list[int] = []
+
+    for value in range(5):
+        try:
+            if value == 1:
+                continue
+            if value == 3:
+                break
+            visited.append(value)
+        finally:
+            finalized.append(value)
+    else:
+        assert False
+
+    assert visited == [0, 2]
+    assert finalized == [0, 1, 2, 3]
+
+
+main()

@@ -64,6 +64,9 @@ pub(super) fn try_lower_simple_stmt_with_ctx_and_bindings(
                 return None;
             }
             let lowered_value = try_lower_simple_let_value(effective_ty, value)?;
+            if name == "_" && matches!(resolve_alias_type(effective_ty), Type::None) {
+                return Some(vec![RustStmt::Expr(lowered_value)]);
+            }
             Some(vec![RustStmt::Let {
                 mutable: bindings.mutated_vars.contains(name)
                     || crate::stmt_support_emitter::should_force_mutable_binding(

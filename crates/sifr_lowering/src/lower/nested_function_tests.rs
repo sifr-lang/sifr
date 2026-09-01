@@ -66,6 +66,40 @@ fn test_forward_direct_call_to_nested_function_type_checks() {
 }
 
 #[test]
+fn nested_generic_function_declaration_is_rejected_explicitly() {
+    let source = "def outer() -> None:\n    def identity[T](value: T) -> T:\n        return value\n    identity(1)\n";
+    let errors =
+        lower_source(source).expect_err("nested generics are not a supported lowering form");
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::FLOW_UNSUPPORTED_STATEMENT_FORM)
+            && error
+                .message
+                .contains("nested generic function declarations")
+            && error.primary_range == Some(range_for_after(source, "def outer", "identity"))
+    }));
+}
+
+#[test]
+fn nested_sync_generator_is_rejected_before_codegen() {
+    let source =
+        "def outer() -> None:\n    def values() -> Iterator[int]:\n        yield 1\n    values()\n";
+    let errors =
+        lower_source(source).expect_err("nested sync generators require unsupported lazy lowering");
+
+    assert!(
+        errors.iter().any(|error| {
+            error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+                && error
+                    .message
+                    .contains("nested generators require dedicated lazy materialization")
+                && error.primary_range == Some(range_for_after(source, "def values", "yield 1"))
+        }),
+        "expected the nested-generator diagnostic at the first yield, got {errors:?}"
+    );
+}
+
+#[test]
 fn test_missing_forward_local_helper_still_errors_explicitly() {
     let result = lower_source(
         "def apply(f: Callable[[int], int], value: int) -> int:\n    return f(value)\n\ndef outer(x: int) -> int:\n    return apply(missing, x)\n",

@@ -69,6 +69,102 @@ impl RustEmitter {
         invalidated
     }
 
+    fn checked_place_refresh_precondition_holds(
+        key: &str,
+        witness: &super::CheckedPlaceReadWitness,
+        stmt: &crate::HirStmt,
+    ) -> bool {
+        let mut statements_preserve_presence = true;
+        let mut expressions_preserve_presence = true;
+        crate::hir_analysis::traversal::walk_stmts(
+            std::slice::from_ref(stmt),
+            crate::hir_analysis::traversal::TraversalConfig::LOCAL_SCOPE_ONLY,
+            &mut |stmt| match stmt {
+                crate::HirStmt::Assign { name, .. } | crate::HirStmt::AugAssign { name, .. }
+                    if witness.dependencies.contains(name) =>
+                {
+                    statements_preserve_presence = false;
+                }
+                crate::HirStmt::FieldAssign { object, .. }
+                | crate::HirStmt::NestedFieldAssign { object, .. }
+                | crate::HirStmt::AttributeAugAssign { object, .. }
+                    if witness.dependencies.contains(object) =>
+                {
+                    statements_preserve_presence = false;
+                }
+                crate::HirStmt::Delete { object, .. }
+                    if witness
+                        .dependencies
+                        .iter()
+                        .any(|name| expr_mentions_name(object, name)) =>
+                {
+                    statements_preserve_presence = false;
+                }
+                _ => {}
+            },
+            &mut |expr| {
+                let (args, mutable_arg_places) = match expr {
+                    crate::HirExpr::Call {
+                        args,
+                        mutable_arg_places,
+                        ..
+                    }
+                    | crate::HirExpr::GenericCall {
+                        args,
+                        mutable_arg_places,
+                        ..
+                    } => (args, mutable_arg_places),
+                    crate::HirExpr::MethodCall {
+                        object,
+                        method,
+                        args,
+                        receiver_convention,
+                        mutable_arg_places,
+                        ..
+                    } => {
+                        let mutates_dependency = matches!(
+                            receiver_convention,
+                            Some(sifr_type_system::ReceiverConvention::MutableBorrow)
+                        ) && witness
+                            .dependencies
+                            .iter()
+                            .any(|name| expr_mentions_name(object, name));
+                        let mutates_value_inside_proven_place = checked_place_expr_token(object)
+                            .is_some_and(|token| token.strip_prefix("index:") == Some(key));
+                        let preserves_proven_place = mutates_value_inside_proven_place
+                            || !matches!(
+                                sifr_type_system::receiver_mutation_summary(
+                                    object.ty(),
+                                    method,
+                                    receiver_convention.unwrap_or(
+                                        sifr_type_system::ReceiverConvention::SharedBorrow,
+                                    ),
+                                )
+                                .effect,
+                                sifr_type_system::ReceiverMutationEffect::Removal
+                            );
+                        if mutates_dependency && !preserves_proven_place {
+                            expressions_preserve_presence = false;
+                        }
+                        (args, mutable_arg_places)
+                    }
+                    _ => return,
+                };
+                for (argument, target) in args.iter().zip(mutable_arg_places) {
+                    if target.is_some()
+                        && witness
+                            .dependencies
+                            .iter()
+                            .any(|name| expr_mentions_name(argument, name))
+                    {
+                        expressions_preserve_presence = false;
+                    }
+                }
+            },
+        );
+        statements_preserve_presence && expressions_preserve_presence
+    }
+
     fn checked_place_witnesses_affected_by_stmts(
         &self,
         stmts: &[crate::HirStmt],
@@ -198,7 +294,7 @@ impl RustEmitter {
         &mut self,
         stmt: &crate::HirStmt,
         following: Option<&[crate::HirStmt]>,
-    ) -> Vec<RustStmt> {
+    ) -> Result<Vec<RustStmt>, crate::CodegenError> {
         let affected = self.checked_place_witnesses_affected_by_stmt(stmt);
         let mut refreshes = Vec::new();
         for (key, witness) in affected {
@@ -207,6 +303,11 @@ impl RustEmitter {
                 || !following.is_some_and(|tail| Self::checked_place_read_is_used(&key, tail))
             {
                 continue;
+            }
+            if !Self::checked_place_refresh_precondition_holds(&key, &witness, stmt) {
+                return Err(crate::CodegenError::new(
+                    "codegen invariant violated: checked-place refresh fallback reached a mutation that may remove the proven place",
+                ));
             }
             self.checked_place_read_witnesses
                 .insert(key, witness.clone());
@@ -221,7 +322,7 @@ impl RustEmitter {
                 },
             });
         }
-        refreshes
+        Ok(refreshes)
     }
 
     pub(crate) fn try_lower_checked_place_mutation_tail_for_ir(
@@ -257,13 +358,20 @@ impl RustEmitter {
         for (key, _) in &affected {
             self.checked_place_read_witnesses.remove(key);
         }
-        let refreshed = affected
-            .into_iter()
-            .filter(|(key, witness)| {
-                !Self::checked_place_witness_is_invalidated_by_stmt(witness, stmt)
-                    && Self::checked_place_read_is_used(key, following)
-            })
-            .collect::<Vec<_>>();
+        let mut refreshed = Vec::new();
+        for (key, witness) in affected {
+            if Self::checked_place_witness_is_invalidated_by_stmt(&witness, stmt)
+                || !Self::checked_place_read_is_used(&key, following)
+            {
+                continue;
+            }
+            if !Self::checked_place_refresh_precondition_holds(&key, &witness, stmt) {
+                return Err(crate::CodegenError::new(
+                    "codegen invariant violated: checked-place refresh fallback reached a mutation that may remove the proven place",
+                ));
+            }
+            refreshed.push((key, witness));
+        }
         for (key, witness) in &refreshed {
             self.checked_place_read_witnesses
                 .insert(key.clone(), witness.clone());
@@ -751,3 +859,7 @@ impl RustEmitter {
         Ok(Some(lowered))
     }
 }
+
+#[cfg(test)]
+#[path = "control_flow_tests.rs"]
+mod tests;

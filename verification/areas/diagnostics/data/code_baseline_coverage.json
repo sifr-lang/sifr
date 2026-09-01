@@ -2194,19 +2194,6 @@
       "suggestion_rendering_fixture": null
     },
     {
-      "baseline_fixture_id": null,
-      "code": "SIFR-TYPE-0901",
-      "deferral": {
-        "issue": "emitted-rust-excellence-item-8-retire-type0901",
-        "owner": "compiler/core-language",
-        "reason": "the exact-integer architecture removed the final arithmetic-overflow warning producer; only the dead warning IR and rendering path remain",
-        "removal_target": "Item 8 must remove the dead warning IR variant, registry entry, renderer, generated catalog and documentation"
-      },
-      "multi_error_recovery_fixture": null,
-      "renderer_formats": [],
-      "suggestion_rendering_fixture": null
-    },
-    {
       "baseline_fixture_id": "semantic_reveal_type_note",
       "code": "SIFR-TYPE-0902",
       "deferral": null,

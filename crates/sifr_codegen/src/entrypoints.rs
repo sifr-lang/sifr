@@ -2,7 +2,10 @@ use super::{
     CodegenResult, HashSet, HirModule, Renderer, RustEmitter, RustFile, RustItem, StdlibCode,
 };
 use crate::ir_imports::collect_import_needs_from_items;
-use crate::ir_optimize::{remove_trivial_clones_in_items, remove_unneeded_mutability_in_items};
+use crate::ir_optimize::{
+    remove_trivial_clones_in_items, remove_unneeded_mutability_in_items,
+    remove_unread_pure_bindings_in_items, simplify_control_flow_in_items,
+};
 use crate::ir_validate::validate_items;
 
 /// Generate Rust source code from a HIR module.
@@ -128,7 +131,6 @@ pub(crate) fn generate_rust_test_with_project_policy(
     }
 
     let mut emitted_items: Vec<RustItem> = Vec::new();
-    emitted_items.extend(module_import_items);
     if !emitter.enum_items.is_empty() {
         emitted_items.extend(emitter.enum_items.clone());
     }
@@ -186,6 +188,15 @@ pub(crate) fn generate_rust_test_with_project_policy(
         emitted_items.extend(emitter.body_items.clone());
     }
     let import_needs = collect_import_needs_from_items(&emitted_items);
+    module_import_items.retain(|item| match item {
+        RustItem::Use(path) => path
+            .last()
+            .is_some_and(|name| import_needs.referenced_symbols.contains(name)),
+        RustItem::UseAlias { alias, .. } => {
+            alias == "_" || import_needs.referenced_symbols.contains(alias)
+        }
+        _ => true,
+    });
 
     let mut import_items = Vec::new();
     if import_needs.collections.needs_hashmap {
@@ -244,8 +255,11 @@ pub(crate) fn generate_rust_test_with_project_policy(
 
     let mut file_items: Vec<RustItem> = Vec::new();
     file_items.extend(import_items);
+    file_items.extend(module_import_items);
     file_items.extend(emitted_items);
     remove_trivial_clones_in_items(&mut file_items);
+    simplify_control_flow_in_items(&mut file_items);
+    remove_unread_pure_bindings_in_items(&mut file_items);
     remove_unneeded_mutability_in_items(&mut file_items, &emitter.protected_mutable_place_roots);
     let file_issues = validate_items(&file_items);
     assert!(

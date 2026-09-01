@@ -74,15 +74,12 @@ pub(in crate::lower) fn validate_annotated_constant_initializer(
     None
 }
 
-pub(in crate::lower) fn remember_module_const_integer(
+pub(in crate::lower) fn evaluate_module_const_integer(
     ctx: &mut LowerCtx,
-    name: &str,
     value: &HirExpr,
     range: TextRange,
 ) -> Option<BigInt> {
     if let ConstIntegerValue::Value(value) = const_integer_value(ctx, value, range) {
-        ctx.const_integer_values
-            .insert(name.to_string(), value.clone());
         return Some(value);
     }
     None
@@ -108,13 +105,13 @@ fn const_integer_value(ctx: &mut LowerCtx, value: &HirExpr, range: TextRange) ->
                 Err(_) => return ConstIntegerValue::Unsupported,
             }
         }
-        HirExpr::Name { name, .. } => {
-            if is_shadowed_by_inner_scope(ctx, name) {
-                return ConstIntegerValue::Unsupported;
-            }
+        HirExpr::Name {
+            binding_id: Some(binding_id),
+            ..
+        } => {
             return ctx
                 .const_integer_values
-                .get(name)
+                .get(*binding_id)
                 .cloned()
                 .map_or(ConstIntegerValue::Unsupported, ConstIntegerValue::Value);
         }
@@ -236,15 +233,6 @@ fn evaluate_pow(
         return ConstIntegerValue::Rejected;
     }
     ConstIntegerValue::Value(left.pow(exponent))
-}
-
-fn is_shadowed_by_inner_scope(ctx: &LowerCtx, name: &str) -> bool {
-    let frame_count = ctx.scope.frame_count();
-    frame_count > 1
-        && ctx
-            .scope
-            .lookup_in_frame_range(name, 1, frame_count - 1)
-            .is_some()
 }
 
 fn non_negative_u32(value: &BigInt) -> Option<u32> {

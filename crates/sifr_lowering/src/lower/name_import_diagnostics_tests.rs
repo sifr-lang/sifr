@@ -380,6 +380,36 @@ fn builtin_open_never_reuses_a_local_same_basename_handle() {
 }
 
 #[test]
+fn compiler_open_defaults_do_not_attach_to_local_same_basename_methods() {
+    let source = r#"class FileHandle:
+    def seek(self, offset: int, whence: int) -> int:
+        return offset
+
+def main() -> None:
+    try:
+        system_handle = open("input.bin", "rb")
+        system_handle.close()
+    except IOError:
+        pass
+    handle = FileHandle()
+    handle.seek(0)
+"#;
+    let parsed = parse_module(source).expect("parse failed");
+    let errors = match lower_module(parsed.suite()) {
+        Ok(_) => panic!("a local same-basename method must retain its required argument"),
+        Err(errors) => errors,
+    };
+
+    assert!(
+        errors.iter().any(|error| {
+            error.code == Some(DiagnosticCode::CALL_MISSING_REQUIRED_ARGUMENT)
+                && error.message.contains("missing required argument")
+        }),
+        "expected the local method to retain its required whence argument, got {errors:?}"
+    );
+}
+
+#[test]
 fn builtin_open_inferred_bindings_keep_canonical_handle_identities() {
     let source = r#"class FileHandle:
     value: int

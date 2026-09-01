@@ -1,13 +1,11 @@
 // src/main.rs
 use ::sifr_runtime::SifrInt;
-
 fn factorial(n: SifrInt) -> SifrInt {
     if &n <= &SifrInt::from_i64(1) {
         return SifrInt::from_i64(1);
     }
     &n * &factorial(&n - &SifrInt::from_i64(1))
 }
-
 fn fibonacci(n: SifrInt) -> SifrInt {
     if &n <= &SifrInt::from_i64(0) {
         return SifrInt::from_i64(0);
@@ -17,17 +15,15 @@ fn fibonacci(n: SifrInt) -> SifrInt {
     }
     &fibonacci(&n - &SifrInt::from_i64(1)) + &fibonacci(&n - &SifrInt::from_i64(2))
 }
-
 fn greet(name: &str) -> String {
     {
-    let mut __sifr_concat: String = String::with_capacity((7usize + name.len()) + 1usize);
-    __sifr_concat.push_str("Hello, ");
-    __sifr_concat.push_str(name);
-    __sifr_concat.push('!');
-    __sifr_concat
+        let mut sifr_generated_concat: String = String::with_capacity(7usize + name.len() + 1usize);
+        sifr_generated_concat.push_str("Hello, ");
+        sifr_generated_concat.push_str(name);
+        sifr_generated_concat.push('!');
+        sifr_generated_concat
+    }
 }
-}
-
 fn classify(x: SifrInt) -> String {
     if &x > &SifrInt::from_i64(0) {
         return "positive".to_string();
@@ -37,11 +33,9 @@ fn classify(x: SifrInt) -> String {
     }
     "zero".to_string()
 }
-
 fn double(n: SifrInt) -> SifrInt {
     &n * &SifrInt::from_i64(2)
 }
-
 fn is_even(n: SifrInt) -> bool {
     if &n == &SifrInt::from_i64(0) {
         return true;
@@ -51,29 +45,26 @@ fn is_even(n: SifrInt) -> bool {
     }
     is_even(&n - &SifrInt::from_i64(2))
 }
-
 fn main() {
     let x: SifrInt = SifrInt::from_i64(42);
-    let pi: f64 = 3.14_f64;
-    let flag: bool = true;
     let name: String = "Sifr".to_string();
     let sum: SifrInt = &x + &SifrInt::from_i64(8);
     let product: SifrInt = double(sum.clone());
-    println!("{}", product);
+    println!("{product}");
     let fact: SifrInt = factorial(SifrInt::from_i64(5));
-    println!("{}", fact);
+    println!("{fact}");
     let fib: SifrInt = fibonacci(SifrInt::from_i64(10));
-    println!("{}", fib);
+    println!("{fib}");
     let msg: String = greet(&name);
-    println!("{}", msg);
+    println!("{msg}");
     let label: String = classify(x.clone());
-    println!("{}", label);
+    println!("{label}");
     let neg_label: String = classify(-&SifrInt::from_i64(7));
-    println!("{}", neg_label);
+    println!("{neg_label}");
     let zero_label: String = classify(SifrInt::from_i64(0));
-    println!("{}", zero_label);
+    println!("{zero_label}");
     let even: bool = is_even(SifrInt::from_i64(4));
-    println!("{}", even);
+    println!("{even}");
     let odd: bool = is_even(SifrInt::from_i64(7));
-    println!("{}", odd);
+    println!("{odd}");
 }

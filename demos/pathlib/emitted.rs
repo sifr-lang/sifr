@@ -1,304 +1,76 @@
 // src/main.rs
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct __SifrIoNativeFileHandle {
-    pub _id: String,
-}
-impl __SifrIoNativeFileHandle {
-    pub fn new(id: String) -> Self {
-        let __sifr_field_init_0: String = id;
-        Self { _id: __sifr_field_init_0 }
-    }
-}
-impl __SifrIoNativeFileHandle {}
-impl ::std::fmt::Display for __SifrIoNativeFileHandle {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        write!(f, "NativeFileHandle(_id={})", self._id)
-    }
-}
-
-mod __sifr_project_nominals {
-    use crate::__SifrIoNativeFileHandle;
+mod sifr_generated_project_nominals {
     pub use ::sifr_runtime::SifrInt;
+    ///# Errors
+    ///Returns the typed error produced by this operation.
     pub fn read_text(path: &str) -> Result<String, IOError> {
-        ::sifr_stdlib::fs::read_text(path)
-            .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-            .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
+        ::sifr_stdlib::fs::read_text(path).map_err(sifr_generated_io_err)
     }
+    ///# Errors
+    ///Returns the typed error produced by this operation.
     pub fn write_text(path: &str, content: &str) -> Result<(), IOError> {
-        ::sifr_stdlib::fs::write_text(path, content)
-            .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-            .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
+        ::sifr_stdlib::fs::write_text(path, content).map_err(sifr_generated_io_err)
     }
+    #[must_use]
     pub fn exists(path: &str) -> bool {
         ::sifr_stdlib::fs::exists(path)
     }
-    pub fn read_lines(path: &str) -> Result<Vec<String>, IOError> {
-        ::sifr_stdlib::fs::read_lines(path)
-            .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-            .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-    }
-    pub fn append_text(path: &str, content: &str) -> Result<(), IOError> {
-        ::sifr_stdlib::fs::append_text(path, content)
-            .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-            .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-    }
-    pub fn _open_file(path: &str, mode: &str) -> Result<String, IOError> {
-        ::sifr_stdlib::fs::open_file(path, mode)
-            .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-            .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-    }
-    pub fn _file_read(handle: &str) -> Result<String, IOError> {
-        ::sifr_stdlib::fs::file_read(handle)
-            .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-            .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-    }
-    pub fn _file_write(handle: &str, data: &str) -> Result<(), IOError> {
-        ::sifr_stdlib::fs::file_write(handle, data)
-            .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-            .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-    }
-    pub fn _file_readline(handle: &str) -> Result<Option<String>, IOError> {
-        ::sifr_stdlib::fs::file_readline(handle)
-            .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-            .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-    }
-    pub fn _file_readlines(handle: &str) -> Result<Vec<String>, IOError> {
-        ::sifr_stdlib::fs::file_readlines(handle)
-            .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-            .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-    }
-    pub fn _file_close(handle: &str) {
-        ::sifr_stdlib::fs::file_close(handle);
-    }
-    pub fn _file_read_bytes(
-        handle: &str,
-        size: Option<SifrInt>,
-    ) -> Result<Vec<u8>, IOError> {
-        ::sifr_stdlib::fs::file_read_bytes(
-                handle,
-                size.map(::sifr_runtime::interop::SifrIntBridge::from),
-            )
-            .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-            .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-    }
-    pub fn _file_write_bytes(handle: &str, data: &[u8]) -> Result<(), IOError> {
-        ::sifr_stdlib::fs::file_write_bytes(handle, data)
-            .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-            .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-    }
-    pub fn _file_flush(handle: &str) -> Result<(), IOError> {
-        ::sifr_stdlib::fs::file_flush(handle)
-            .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-            .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-    }
-    pub fn _file_seek(
-        handle: &str,
-        offset: SifrInt,
-        whence: SifrInt,
-    ) -> Result<SifrInt, IOError> {
-        ::sifr_stdlib::fs::file_seek(
-                handle,
-                ::sifr_runtime::interop::SifrIntBridge::from(offset),
-                ::sifr_runtime::interop::SifrIntBridge::from(whence),
-            )
-            .map(|__sifr_bridge_ok| __sifr_bridge_ok.into_sifr_int())
-            .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-    }
-    pub fn _file_tell(handle: &str) -> Result<SifrInt, IOError> {
-        ::sifr_stdlib::fs::file_tell(handle)
-            .map(|__sifr_bridge_ok| __sifr_bridge_ok.into_sifr_int())
-            .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-    }
-    pub fn open_file(path: &str, mode: &str) -> Result<__SifrIoNativeFileHandle, IOError> {
-        let __sifr_try_res: Result<Result<__SifrIoNativeFileHandle, IOError>, IOError> = (|| {
-            let handle_id: String = _open_file(path, mode)?;
-            Ok(Ok(__SifrIoNativeFileHandle::new(handle_id)))
-        })();
-        match __sifr_try_res {
-            Ok(__sifr_ret_val) => {
-                return __sifr_ret_val;
-            }
-            Err(__sifr_try_err) => {
-                let e = __sifr_try_err.clone();
-                return Err(e);
-            }
-        }
-    }
-    pub fn file_read(handle: &__SifrIoNativeFileHandle) -> Result<String, IOError> {
-        _file_read(&handle._id.clone())
-    }
-    pub fn file_write(handle: &__SifrIoNativeFileHandle, data: &str) -> Result<(), IOError> {
-        _file_write(&handle._id.clone(), data)
-    }
-    pub fn file_readline(
-        handle: &__SifrIoNativeFileHandle,
-    ) -> Result<Option<String>, IOError> {
-        _file_readline(&handle._id.clone())
-    }
-    pub fn file_readlines(
-        handle: &__SifrIoNativeFileHandle,
-    ) -> Result<Vec<String>, IOError> {
-        _file_readlines(&handle._id.clone())
-    }
-    pub fn file_close(handle: &__SifrIoNativeFileHandle) {
-        _file_close(&handle._id.clone());
-    }
-    pub fn file_read_bytes(
-        handle: &__SifrIoNativeFileHandle,
-        size: Option<SifrInt>,
-    ) -> Result<Vec<u8>, IOError> {
-        _file_read_bytes(&handle._id.clone(), size.clone())
-    }
-    pub fn file_write_bytes(
-        handle: &__SifrIoNativeFileHandle,
-        data: &[u8],
-    ) -> Result<(), IOError> {
-        _file_write_bytes(&handle._id.clone(), data)
-    }
-    pub fn file_flush(handle: &__SifrIoNativeFileHandle) -> Result<(), IOError> {
-        _file_flush(&handle._id.clone())
-    }
-    pub fn file_seek(
-        handle: &__SifrIoNativeFileHandle,
-        offset: SifrInt,
-        whence: SifrInt,
-    ) -> Result<SifrInt, IOError> {
-        _file_seek(&handle._id.clone(), offset.clone(), whence.clone())
-    }
-    pub fn file_tell(handle: &__SifrIoNativeFileHandle) -> Result<SifrInt, IOError> {
-        _file_tell(&handle._id.clone())
-    }
-    pub fn getcwd() -> Result<String, IOError> {
-        ::sifr_stdlib::fs::getcwd()
-            .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-            .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-    }
-    pub fn listdir(path: &str) -> Result<Vec<String>, IOError> {
-        ::sifr_stdlib::fs::listdir(path)
-            .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-            .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-    }
+    ///# Errors
+    ///Returns the typed error produced by this operation.
     pub fn mkdir(path: &str) -> Result<(), IOError> {
-        ::sifr_stdlib::fs::mkdir(path)
-            .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-            .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
+        ::sifr_stdlib::fs::mkdir(path).map_err(sifr_generated_io_err)
     }
+    ///# Errors
+    ///Returns the typed error produced by this operation.
     pub fn rmdir(path: &str) -> Result<(), IOError> {
-        ::sifr_stdlib::fs::rmdir(path)
-            .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-            .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
+        ::sifr_stdlib::fs::rmdir(path).map_err(sifr_generated_io_err)
     }
+    ///# Errors
+    ///Returns the typed error produced by this operation.
     pub fn remove_file(path: &str) -> Result<(), IOError> {
-        ::sifr_stdlib::fs::remove_file(path)
-            .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-            .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
+        ::sifr_stdlib::fs::remove_file(path).map_err(sifr_generated_io_err)
     }
-    pub fn rename(src: &str, dst: &str) -> Result<(), IOError> {
-        ::sifr_stdlib::fs::rename(src, dst)
-            .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-            .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-    }
-    pub fn chdir(path: &str) -> Result<(), IOError> {
-        ::sifr_stdlib::fs::chdir(path)
-            .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-            .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-    }
-    pub fn stat_size(path: &str) -> Result<SifrInt, IOError> {
-        ::sifr_stdlib::fs::stat_size(path)
-            .map(|__sifr_bridge_ok| __sifr_bridge_ok.into_sifr_int())
-            .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-    }
-    pub fn disk_usage(path: &str) -> Vec<SifrInt> {
-        ::sifr_stdlib::fs::disk_usage(path)
-            .into_iter()
-            .map(|__sifr_bridge_value| __sifr_bridge_value.into_sifr_int())
-            .collect()
-    }
+    #[must_use]
     pub fn is_file(path: &str) -> bool {
         ::sifr_stdlib::fs::is_file(path)
     }
-    pub fn is_dir(path: &str) -> bool {
-        ::sifr_stdlib::fs::is_dir(path)
-    }
-    pub fn copy_file(src: &str, dst: &str) -> Result<(), IOError> {
-        ::sifr_stdlib::fs::copy_file(src, dst)
-            .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-            .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-    }
-    pub fn walk_dir(path: &str) -> Result<Vec<String>, IOError> {
-        ::sifr_stdlib::fs::walk_dir(path)
-            .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-            .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-    }
-    pub fn rmdir_all(path: &str) -> Result<(), IOError> {
-        ::sifr_stdlib::fs::rmdir_all(path)
-            .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-            .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-    }
-    pub fn gettempdir() -> String {
-        ::sifr_stdlib::fs::gettempdir()
-    }
-    pub fn makedirs(path: &str) -> Result<(), IOError> {
-        ::sifr_stdlib::fs::makedirs(path)
-            .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-            .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-    }
-    pub fn touch(path: &str) -> Result<(), IOError> {
-        ::sifr_stdlib::fs::touch(path)
-            .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-            .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-    }
-    pub fn resolve_path(path: &str) -> Result<String, IOError> {
-        ::sifr_stdlib::fs::resolve_path(path)
-            .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-            .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-    }
-    pub fn iterdir(path: &str) -> Result<Vec<String>, IOError> {
-        ::sifr_stdlib::fs::iterdir(path)
-            .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-            .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-    }
+    ///# Errors
+    ///Returns the typed error produced by this operation.
     pub fn glob_pattern(dir: &str, pattern: &str) -> Result<Vec<String>, IOError> {
-        ::sifr_stdlib::fs::glob_pattern(dir, pattern)
-            .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-            .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
+        ::sifr_stdlib::fs::glob_pattern(dir, pattern).map_err(sifr_generated_io_err)
     }
-    pub fn rglob_pattern(dir: &str, pattern: &str) -> Result<Vec<String>, IOError> {
-        ::sifr_stdlib::fs::rglob_pattern(dir, pattern)
-            .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-            .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-    }
-    pub struct __SifrYielder<T> {
+    pub struct SifrGeneratedYielder<T> {
         pub slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
     }
-    pub struct __SifrYieldFuture<T> {
+    pub struct SifrGeneratedYieldFuture<T> {
         pub slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
         pub value: Option<T>,
     }
-    impl<T> Unpin for __SifrYieldFuture<T> {}
-    impl<T> ::std::future::Future for __SifrYieldFuture<T> {
+    impl<T> Unpin for SifrGeneratedYieldFuture<T> {}
+    impl<T> ::std::future::Future for SifrGeneratedYieldFuture<T> {
         type Output = ();
         fn poll(
             self: ::std::pin::Pin<&mut Self>,
-            _cx: &mut ::std::task::Context<'_>,
+            _: &mut ::std::task::Context<'_>,
         ) -> ::std::task::Poll<()> {
             let state = self.get_mut();
             let Some(value) = state.value.take() else {
                 return ::std::task::Poll::Ready(());
             };
-            __sifr_store_suspended(&state.slot, value);
+            sifr_generated_store_suspended(&state.slot, value);
             ::std::task::Poll::Pending
         }
     }
-    impl<T> __SifrYielder<T> {
-        pub fn suspend(&self, value: T) -> __SifrYieldFuture<T> {
-            __SifrYieldFuture {
+    impl<T> SifrGeneratedYielder<T> {
+        #[must_use]
+        pub fn suspend(&self, value: T) -> SifrGeneratedYieldFuture<T> {
+            SifrGeneratedYieldFuture {
                 slot: ::std::sync::Arc::clone(&self.slot),
                 value: Some(value),
             }
         }
     }
-    pub fn __sifr_store_suspended<T>(
+    pub fn sifr_generated_store_suspended<T>(
         slot: &::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
         value: T,
     ) {
@@ -307,7 +79,8 @@ mod __sifr_project_nominals {
             Err(poisoned) => *poisoned.into_inner() = Some(value),
         }
     }
-    pub fn __sifr_take_suspended<T>(
+    #[must_use]
+    pub fn sifr_generated_take_suspended<T>(
         slot: &::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
     ) -> Option<T> {
         match slot.lock() {
@@ -315,20 +88,22 @@ mod __sifr_project_nominals {
             Err(poisoned) => poisoned.into_inner().take(),
         }
     }
-    pub struct __SifrGenerator<T> {
-        pub producer: Option<
-            ::std::pin::Pin<Box<dyn ::std::future::Future<Output = ()> + 'static>>,
-        >,
+    pub struct SifrGeneratedGenerator<T> {
+        pub producer:
+            Option<::std::pin::Pin<Box<dyn ::std::future::Future<Output = ()> + 'static>>>,
         pub yielded: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
         pub complete: bool,
     }
-    impl<T> __SifrGenerator<T> {
+    impl<T> SifrGeneratedGenerator<T> {
+        #[must_use]
         pub fn new<
-            F: FnOnce(__SifrYielder<T>) -> Fut + 'static,
+            F: FnOnce(SifrGeneratedYielder<T>) -> Fut + 'static,
             Fut: ::std::future::Future<Output = ()> + 'static,
-        >(factory: F) -> Self {
+        >(
+            factory: F,
+        ) -> Self {
             let yielded = ::std::sync::Arc::new(::std::sync::Mutex::new(None));
-            let producer = factory(__SifrYielder {
+            let producer = factory(SifrGeneratedYielder {
                 slot: ::std::sync::Arc::clone(&yielded),
             });
             Self {
@@ -338,7 +113,7 @@ mod __sifr_project_nominals {
             }
         }
     }
-    impl<T> Iterator for __SifrGenerator<T> {
+    impl<T> Iterator for SifrGeneratedGenerator<T> {
         type Item = T;
         fn next(&mut self) -> Option<T> {
             if self.complete {
@@ -349,12 +124,10 @@ mod __sifr_project_nominals {
                     self.complete = true;
                     return None;
                 };
-                let mut context = ::std::task::Context::from_waker(
-                    ::std::task::Waker::noop(),
-                );
+                let mut context = ::std::task::Context::from_waker(::std::task::Waker::noop());
                 ::std::future::Future::poll(producer.as_mut(), &mut context).is_ready()
             };
-            let yielded = __sifr_take_suspended(&self.yielded);
+            let yielded = sifr_generated_take_suspended(&self.yielded);
             if completed {
                 self.complete = true;
                 self.producer = None;
@@ -363,484 +136,131 @@ mod __sifr_project_nominals {
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct __SifrStdlib_sifr_x2epathlib_x2ePath {
-        pub _path: String,
+    pub struct SifrGeneratedStdlibSifrX2epathlibX2ePath {
+        pub path: String,
     }
-    impl __SifrStdlib_sifr_x2epathlib_x2ePath {
-        pub fn new(path: String) -> Self {
-            let __sifr_field_init_0: String = path;
-            Self { _path: __sifr_field_init_0 }
+    impl SifrGeneratedStdlibSifrX2epathlibX2ePath {
+        #[must_use]
+        pub const fn new(path: String) -> Self {
+            let sifr_generated_field_value_0e74a76ec4f48c05_5f70617468: String = path;
+            Self {
+                path: sifr_generated_field_value_0e74a76ec4f48c05_5f70617468,
+            }
         }
     }
-    impl __SifrStdlib_sifr_x2epathlib_x2ePath {
-        pub fn name(&self) -> String {
-            basename(&self._path)
-        }
-    }
-    impl __SifrStdlib_sifr_x2epathlib_x2ePath {
-        pub fn parent(&self) -> __SifrStdlib_sifr_x2epathlib_x2ePath {
-            __SifrStdlib_sifr_x2epathlib_x2ePath::new(dirname(&self._path))
-        }
-    }
-    impl __SifrStdlib_sifr_x2epathlib_x2ePath {
-        pub fn suffix(&self) -> String {
-            extension(&self._path)
-        }
-    }
-    impl __SifrStdlib_sifr_x2epathlib_x2ePath {
-        pub fn stem(&self) -> String {
-            stem(&self._path)
-        }
-    }
-    impl __SifrStdlib_sifr_x2epathlib_x2ePath {
+    impl SifrGeneratedStdlibSifrX2epathlibX2ePath {
+        #[must_use]
         pub fn exists(&self) -> bool {
-            exists(&self._path)
+            exists(&self.path)
         }
     }
-    impl __SifrStdlib_sifr_x2epathlib_x2ePath {
+    impl SifrGeneratedStdlibSifrX2epathlibX2ePath {
+        #[must_use]
         pub fn is_file(&self) -> bool {
-            is_file(&self._path)
+            is_file(&self.path)
         }
     }
-    impl __SifrStdlib_sifr_x2epathlib_x2ePath {
-        pub fn is_dir(&self) -> bool {
-            is_dir(&self._path)
-        }
-    }
-    impl __SifrStdlib_sifr_x2epathlib_x2ePath {
-        pub fn is_absolute(&self) -> bool {
-            is_absolute(&self._path)
-        }
-    }
-    impl __SifrStdlib_sifr_x2epathlib_x2ePath {
+    impl SifrGeneratedStdlibSifrX2epathlibX2ePath {
+        ///# Errors
+        ///Returns the typed error produced by this operation.
         pub fn read_text(&self) -> Result<String, IOError> {
-            read_text(&self._path)
+            read_text(&self.path)
         }
     }
-    impl __SifrStdlib_sifr_x2epathlib_x2ePath {
+    impl SifrGeneratedStdlibSifrX2epathlibX2ePath {
+        ///# Errors
+        ///Returns the typed error produced by this operation.
         pub fn write_text(&self, content: &str) -> Result<(), IOError> {
-            write_text(&self._path, content)
+            write_text(&self.path, content)
         }
     }
-    impl __SifrStdlib_sifr_x2epathlib_x2ePath {
+    impl SifrGeneratedStdlibSifrX2epathlibX2ePath {
+        ///# Errors
+        ///Returns the typed error produced by this operation.
         pub fn mkdir(&self) -> Result<(), IOError> {
-            mkdir(&self._path)
+            mkdir(&self.path)
         }
     }
-    impl __SifrStdlib_sifr_x2epathlib_x2ePath {
-        pub fn joinpath(&self, child: &str) -> __SifrStdlib_sifr_x2epathlib_x2ePath {
-            __SifrStdlib_sifr_x2epathlib_x2ePath::new(join_path(&self._path, child))
-        }
-    }
-    impl __SifrStdlib_sifr_x2epathlib_x2ePath {
-        pub fn to_str(&self) -> String {
-            {
-                let mut __sifr_concat: String = String::with_capacity(0usize + 0usize);
-                __sifr_concat.push_str(self._path.clone().as_str());
-                __sifr_concat.push_str("");
-                __sifr_concat
-            }
-        }
-    }
-    impl __SifrStdlib_sifr_x2epathlib_x2ePath {
-        pub fn touch(&self) -> Result<(), IOError> {
-            touch(&self._path)
-        }
-    }
-    impl __SifrStdlib_sifr_x2epathlib_x2ePath {
+    impl SifrGeneratedStdlibSifrX2epathlibX2ePath {
+        ///# Errors
+        ///Returns the typed error produced by this operation.
         pub fn unlink(&self) -> Result<(), IOError> {
-            remove_file(&self._path)
+            remove_file(&self.path)
         }
     }
-    impl __SifrStdlib_sifr_x2epathlib_x2ePath {
+    impl SifrGeneratedStdlibSifrX2epathlibX2ePath {
+        ///# Errors
+        ///Returns the typed error produced by this operation.
         pub fn rmdir(&self) -> Result<(), IOError> {
-            rmdir(&self._path)
+            rmdir(&self.path)
         }
     }
-    impl __SifrStdlib_sifr_x2epathlib_x2ePath {
-        pub fn resolve(&self) -> Result<String, IOError> {
-            resolve_path(&self._path)
+    impl SifrGeneratedStdlibSifrX2epathlibX2ePath {
+        ///# Errors
+        ///Returns the typed error produced by this operation.
+        pub fn glob(&self, pattern: &str) -> Result<Box<dyn Iterator<Item = String>>, IOError> {
+            sifr_generated_glob_to_iter(&self.path, pattern)
         }
     }
-    impl __SifrStdlib_sifr_x2epathlib_x2ePath {
-        pub fn iterdir(&self) -> Result<Box<dyn Iterator<Item = String>>, IOError> {
-            _iterdir_to_iter(&self._path)
-        }
-    }
-    impl __SifrStdlib_sifr_x2epathlib_x2ePath {
-        pub fn with_name(&self, name: &str) -> __SifrStdlib_sifr_x2epathlib_x2ePath {
-            let parent: String = dirname(&self._path);
-            if (parent == "") {
-                return __SifrStdlib_sifr_x2epathlib_x2ePath::new(format!("{}{}", name, ""));
-            }
-            __SifrStdlib_sifr_x2epathlib_x2ePath::new(
-                format!("{}{}", format!("{}{}", parent, "/"), name),
-            )
-        }
-    }
-    impl __SifrStdlib_sifr_x2epathlib_x2ePath {
-        pub fn with_suffix(&self, suffix: &str) -> __SifrStdlib_sifr_x2epathlib_x2ePath {
-            let s: String = stem(&self._path);
-            let parent: String = dirname(&self._path);
-            if (parent == "") {
-                return __SifrStdlib_sifr_x2epathlib_x2ePath::new(format!("{}{}", s, suffix));
-            }
-            __SifrStdlib_sifr_x2epathlib_x2ePath::new(
-                format!("{}{}", format!("{}{}", format!("{}{}", parent, "/"), s), suffix),
-            )
-        }
-    }
-    impl __SifrStdlib_sifr_x2epathlib_x2ePath {
-        pub fn glob(
-            &self,
-            pattern: &str,
-        ) -> Result<Box<dyn Iterator<Item = String>>, IOError> {
-            _glob_to_iter(&self._path, pattern)
-        }
-    }
-    impl __SifrStdlib_sifr_x2epathlib_x2ePath {
-        pub fn rglob(
-            &self,
-            pattern: &str,
-        ) -> Result<Box<dyn Iterator<Item = String>>, IOError> {
-            _rglob_to_iter(&self._path, pattern)
-        }
-    }
-    impl ::std::fmt::Display for __SifrStdlib_sifr_x2epathlib_x2ePath {
+    impl ::std::fmt::Display for SifrGeneratedStdlibSifrX2epathlibX2ePath {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-            write!(f, "Path(_path={})", self._path)
+            write!(f, "Path(_path={})", self.path)
         }
     }
-    pub fn join_path(base: &str, child: &str) -> String {
-        let __sifr_chars_base: Vec<char> = base.chars().collect::<Vec<char>>();
-        if (&SifrInt::from(__sifr_chars_base.len()) == &SifrInt::from_i64(0)) {
-            return {
-                let mut __sifr_concat: String = String::with_capacity(child.len() + 0usize);
-                __sifr_concat.push_str(child);
-                __sifr_concat.push_str("");
-                __sifr_concat
-            };
-        }
-        let last: Option<String> = ({
-            let __sifr_string_index = SifrInt::from(base.chars().count())
-                - SifrInt::from_i64(1);
-            let __sifr_string_index_normalized = __sifr_string_index
-                .normalize_index_or_len(__sifr_chars_base.len());
-            __sifr_chars_base.get(__sifr_string_index_normalized)
-        })
-            .map(|c| c.to_string());
-        if let Some(last) = last {
-            if (last).as_str() == ("/".to_string()).as_str() {
-                return {
-                    let mut __sifr_concat: String = String::with_capacity(
-                        base.len() + child.len(),
-                    );
-                    __sifr_concat.push_str((base).as_ref());
-                    __sifr_concat.push_str((child).as_ref());
-                    __sifr_concat
-                };
-            }
-        }
-        {
-            let mut __sifr_concat: String = String::with_capacity(
-                (base.len() + 1usize) + child.len(),
-            );
-            __sifr_concat.push_str(base);
-            __sifr_concat.push('/');
-            __sifr_concat.push_str(child);
-            __sifr_concat
-        }
-    }
-    pub fn basename(path: &str) -> String {
-        let __sifr_chars_path: Vec<char> = path.chars().collect::<Vec<char>>();
-        let mut i: SifrInt = &SifrInt::from(__sifr_chars_path.len()) - &SifrInt::from_i64(1);
-        while (&i >= &SifrInt::from_i64(0)) {
-            let ch: Option<String> = ({
-                let __sifr_string_index = i.clone();
-                let __sifr_string_index_normalized = __sifr_string_index
-                    .normalize_index_or_len(__sifr_chars_path.len());
-                __sifr_chars_path.get(__sifr_string_index_normalized)
-            })
-                .map(|c| c.to_string());
-            if let Some(ch) = ch {
-                if (ch == "/") {
-                    return {
-                        let _slice_src = &__sifr_chars_path;
-                        let _slice_len = _slice_src.len();
-                        let _slice_start = (&i + &SifrInt::from_i64(1))
-                            .clamp_slice_bound(_slice_len);
-                        let _slice_stop = _slice_len;
-                        String::from_iter(
-                            _slice_src
-                                .iter()
-                                .skip(_slice_start)
-                                .take(_slice_stop.saturating_sub(_slice_start))
-                                .copied(),
-                        )
-                    };
-                }
-            }
-            i = &i - &SifrInt::from_i64(1);
-        }
-        {
-            let mut __sifr_concat: String = String::with_capacity(path.len() + 0usize);
-            __sifr_concat.push_str(path);
-            __sifr_concat.push_str("");
-            __sifr_concat
-        }
-    }
-    pub fn dirname(path: &str) -> String {
-        let __sifr_chars_path: Vec<char> = path.chars().collect::<Vec<char>>();
-        let mut i: SifrInt = &SifrInt::from(__sifr_chars_path.len()) - &SifrInt::from_i64(1);
-        while (&i >= &SifrInt::from_i64(0)) {
-            let ch: Option<String> = ({
-                let __sifr_string_index = i.clone();
-                let __sifr_string_index_normalized = __sifr_string_index
-                    .normalize_index_or_len(__sifr_chars_path.len());
-                __sifr_chars_path.get(__sifr_string_index_normalized)
-            })
-                .map(|c| c.to_string());
-            if let Some(ch) = ch {
-                if (ch == "/") {
-                    return {
-                        let _slice_src = &__sifr_chars_path;
-                        let _slice_len = _slice_src.len();
-                        let _slice_start = 0;
-                        let _slice_stop = i.clamp_slice_bound(_slice_len);
-                        String::from_iter(
-                            _slice_src
-                                .iter()
-                                .skip(_slice_start)
-                                .take(_slice_stop.saturating_sub(_slice_start))
-                                .copied(),
-                        )
-                    };
-                }
-            }
-            i = &i - &SifrInt::from_i64(1);
-        }
-        "".to_string()
-    }
-    pub fn extension(path: &str) -> String {
-        let __sifr_chars_path: Vec<char> = path.chars().collect::<Vec<char>>();
-        let mut i: SifrInt = &SifrInt::from(__sifr_chars_path.len()) - &SifrInt::from_i64(1);
-        while (&i >= &SifrInt::from_i64(0)) {
-            let ch: Option<String> = ({
-                let __sifr_string_index = i.clone();
-                let __sifr_string_index_normalized = __sifr_string_index
-                    .normalize_index_or_len(__sifr_chars_path.len());
-                __sifr_chars_path.get(__sifr_string_index_normalized)
-            })
-                .map(|c| c.to_string());
-            if let Some(ch) = ch {
-                if (ch == ".") {
-                    return {
-                        let _slice_src = &__sifr_chars_path;
-                        let _slice_len = _slice_src.len();
-                        let _slice_start = i.clamp_slice_bound(_slice_len);
-                        let _slice_stop = _slice_len;
-                        String::from_iter(
-                            _slice_src
-                                .iter()
-                                .skip(_slice_start)
-                                .take(_slice_stop.saturating_sub(_slice_start))
-                                .copied(),
-                        )
-                    };
-                }
-                if (ch == "/") {
-                    return "".to_string();
-                }
-            }
-            i = &i - &SifrInt::from_i64(1);
-        }
-        "".to_string()
-    }
-    pub fn stem(path: &str) -> String {
-        let base: String = basename(path);
-        let __sifr_chars_base: Vec<char> = base.chars().collect::<Vec<char>>();
-        let mut i: SifrInt = &SifrInt::from(__sifr_chars_base.len()) - &SifrInt::from_i64(1);
-        while (&i > &SifrInt::from_i64(0)) {
-            let ch: Option<String> = ({
-                let __sifr_string_index = i.clone();
-                let __sifr_string_index_normalized = __sifr_string_index
-                    .normalize_index_or_len(__sifr_chars_base.len());
-                __sifr_chars_base.get(__sifr_string_index_normalized)
-            })
-                .map(|c| c.to_string());
-            if let Some(ch) = ch {
-                if (ch == ".") {
-                    return {
-                        let _slice_src = &__sifr_chars_base;
-                        let _slice_len = _slice_src.len();
-                        let _slice_start = 0;
-                        let _slice_stop = i.clamp_slice_bound(_slice_len);
-                        String::from_iter(
-                            _slice_src
-                                .iter()
-                                .skip(_slice_start)
-                                .take(_slice_stop.saturating_sub(_slice_start))
-                                .copied(),
-                        )
-                    };
-                }
-            }
-            i = &i - &SifrInt::from_i64(1);
-        }
-        {
-            let mut __sifr_concat: String = String::with_capacity(base.len() + 0usize);
-            __sifr_concat.push_str(base.as_str());
-            __sifr_concat.push_str("");
-            __sifr_concat
-        }
-    }
-    pub fn is_absolute(path: &str) -> bool {
-        let __sifr_chars_path: Vec<char> = path.chars().collect::<Vec<char>>();
-        if (&SifrInt::from(__sifr_chars_path.len()) == &SifrInt::from_i64(0)) {
-            return false;
-        }
-        if (&SifrInt::from(__sifr_chars_path.len()) >= &SifrInt::from_i64(3)) {
-            let colon: Option<String> = ({
-                let __sifr_string_index = SifrInt::from_i64(1);
-                let __sifr_string_index_normalized = __sifr_string_index
-                    .normalize_index_or_len(__sifr_chars_path.len());
-                __sifr_chars_path.get(__sifr_string_index_normalized)
-            })
-                .map(|c| c.to_string());
-            let sep: Option<String> = ({
-                let __sifr_string_index = SifrInt::from_i64(2);
-                let __sifr_string_index_normalized = __sifr_string_index
-                    .normalize_index_or_len(__sifr_chars_path.len());
-                __sifr_chars_path.get(__sifr_string_index_normalized)
-            })
-                .map(|c| c.to_string());
-            if let Some(colon) = colon {
-                if let Some(sep) = sep {
-                    if (colon == ":") && ((sep == "/") || (sep == "\\")) {
-                        return true;
-                    }
-                }
-            }
-        }
-        let first: Option<String> = ({
-            let __sifr_string_index = SifrInt::from_i64(0);
-            let __sifr_string_index_normalized = __sifr_string_index
-                .normalize_index_or_len(__sifr_chars_path.len());
-            __sifr_chars_path.get(__sifr_string_index_normalized)
-        })
-            .map(|c| c.to_string());
-        if let Some(first) = first {
-            if (first == "/") || (first == "\\") {
-                return true;
-            }
-        }
-        false
-    }
-    pub fn _iter_list_str(entries: Vec<String>) -> Box<dyn Iterator<Item = String>> {
-        Box::new(
-            __SifrGenerator::new(async move |__sifr_yielder: __SifrYielder<String>| {
+    #[must_use]
+    pub fn sifr_generated_iter_list_str(entries: Vec<String>) -> Box<dyn Iterator<Item = String>> {
+        Box::new(SifrGeneratedGenerator::new(
+            async move |sifr_generated_yielder: SifrGeneratedYielder<String>| {
                 let mut i: SifrInt = SifrInt::from_i64(0);
-                while (&i < &SifrInt::from(entries.len())) {
-                    let Some(__sifr_checked_value_7) = ({
-                        let __sifr_checked_read_collection = &entries;
-                        let __sifr_checked_read_index = i.clone();
-                        let __sifr_checked_read_normalized = __sifr_checked_read_index
-                            .normalize_index_or_len(__sifr_checked_read_collection.len());
-                        __sifr_checked_read_collection
-                            .get(__sifr_checked_read_normalized)
+                while &i < &SifrInt::from(entries.len()) {
+                    let Some(sifr_generated_checked_value_7) = ({
+                        let sifr_generated_checked_read_collection = &entries;
+                        let sifr_generated_checked_read_index = i.clone();
+                        let sifr_generated_checked_read_normalized =
+                            sifr_generated_checked_read_index.normalize_index_or_len(
+                                sifr_generated_checked_read_collection.len(),
+                            );
+                        sifr_generated_checked_read_collection
+                            .get(sifr_generated_checked_read_normalized)
                             .cloned()
                     }) else {
                         break;
                     };
-                    __sifr_yielder.suspend(__sifr_checked_value_7.clone()).await;
+                    sifr_generated_yielder
+                        .suspend(sifr_generated_checked_value_7.clone())
+                        .await;
                     i = &i + &SifrInt::from_i64(1);
                 }
-            }),
-        )
+            },
+        ))
     }
-    pub fn _iterdir_list(path: &str) -> Result<Vec<String>, IOError> {
-        iterdir(path)
-    }
-    pub fn _glob_list(path: &str, pattern: &str) -> Result<Vec<String>, IOError> {
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn sifr_generated_glob_list(path: &str, pattern: &str) -> Result<Vec<String>, IOError> {
         glob_pattern(path, pattern)
     }
-    pub fn _rglob_list(path: &str, pattern: &str) -> Result<Vec<String>, IOError> {
-        rglob_pattern(path, pattern)
-    }
-    pub fn _iterdir_to_iter(
-        path: &str,
-    ) -> Result<Box<dyn Iterator<Item = String>>, IOError> {
-        let __sifr_try_res: Result<
-            Result<Box<dyn Iterator<Item = String>>, IOError>,
-            IOError,
-        > = (|| {
-            let entries: Vec<String> = _iterdir_list(path)?;
-            Ok(Ok(_iter_list_str(entries)))
-        })();
-        match __sifr_try_res {
-            Ok(__sifr_ret_val) => {
-                return __sifr_ret_val;
-            }
-            Err(__sifr_try_err) => {
-                let e = __sifr_try_err.clone();
-                return Err(e);
-            }
-        }
-    }
-    pub fn _glob_to_iter(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    pub fn sifr_generated_glob_to_iter(
         path: &str,
         pattern: &str,
     ) -> Result<Box<dyn Iterator<Item = String>>, IOError> {
-        let __sifr_try_res: Result<
+        let sifr_generated_try_res: Result<
             Result<Box<dyn Iterator<Item = String>>, IOError>,
             IOError,
         > = (|| {
-            let entries: Vec<String> = _glob_list(path, pattern)?;
-            Ok(Ok(_iter_list_str(entries)))
+            let entries: Vec<String> = sifr_generated_glob_list(path, pattern)?;
+            Ok(Ok(sifr_generated_iter_list_str(entries)))
         })();
-        match __sifr_try_res {
-            Ok(__sifr_ret_val) => {
-                return __sifr_ret_val;
-            }
-            Err(__sifr_try_err) => {
-                let e = __sifr_try_err.clone();
-                return Err(e);
-            }
-        }
-    }
-    pub fn _rglob_to_iter(
-        path: &str,
-        pattern: &str,
-    ) -> Result<Box<dyn Iterator<Item = String>>, IOError> {
-        let __sifr_try_res: Result<
-            Result<Box<dyn Iterator<Item = String>>, IOError>,
-            IOError,
-        > = (|| {
-            let entries: Vec<String> = _rglob_list(path, pattern)?;
-            Ok(Ok(_iter_list_str(entries)))
-        })();
-        match __sifr_try_res {
-            Ok(__sifr_ret_val) => {
-                return __sifr_ret_val;
-            }
-            Err(__sifr_try_err) => {
-                let e = __sifr_try_err.clone();
-                return Err(e);
-            }
-        }
+        sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
+            let e = sifr_generated_try_err.clone();
+            Err(e)
+        })
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct IOError {
         pub message: String,
         pub kind: String,
-    }
-    impl IOError {
-        pub fn new(message: String) -> Self {
-            Self {
-                message,
-                kind: "Other".to_string(),
-            }
-        }
     }
     impl ::std::fmt::Display for IOError {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
@@ -848,822 +268,173 @@ mod __sifr_project_nominals {
         }
     }
     impl ::std::error::Error for IOError {}
-    pub fn __io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
+    #[must_use]
+    pub fn sifr_generated_io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
         let msg = e.to_string();
         let kind = {
-            let __sifr_io_kind = (&e as &dyn ::std::any::Any)
+            let sifr_generated_io_kind = (&e as &dyn ::std::any::Any)
                 .downcast_ref::<std::io::Error>()
                 .map(::std::io::Error::kind);
-            match __sifr_io_kind {
+            match sifr_generated_io_kind {
                 Some(::std::io::ErrorKind::NotFound) => "FileNotFound".to_string(),
-                Some(::std::io::ErrorKind::PermissionDenied) => {
-                    "PermissionDenied".to_string()
-                }
+                Some(::std::io::ErrorKind::PermissionDenied) => "PermissionDenied".to_string(),
                 Some(::std::io::ErrorKind::AlreadyExists) => "FileExists".to_string(),
                 Some(::std::io::ErrorKind::IsADirectory) => "IsADirectory".to_string(),
                 Some(::std::io::ErrorKind::NotADirectory) => "NotADirectory".to_string(),
-                Some(::std::io::ErrorKind::DirectoryNotEmpty) => {
-                    "DirectoryNotEmpty".to_string()
-                }
+                Some(::std::io::ErrorKind::DirectoryNotEmpty) => "DirectoryNotEmpty".to_string(),
                 _ => "Other".to_string(),
             }
         };
         IOError { message: msg, kind }
     }
 }
-pub use __sifr_project_nominals::IOError;
-pub use __sifr_project_nominals::__SifrStdlib_sifr_x2epathlib_x2ePath;
 use ::sifr_runtime::SifrInt;
-fn read_text(path: &str) -> Result<String, IOError> {
-    ::sifr_stdlib::fs::read_text(path)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-}
-fn write_text(path: &str, content: &str) -> Result<(), IOError> {
-    ::sifr_stdlib::fs::write_text(path, content)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-}
-fn exists(path: &str) -> bool {
-    ::sifr_stdlib::fs::exists(path)
-}
-fn read_lines(path: &str) -> Result<Vec<String>, IOError> {
-    ::sifr_stdlib::fs::read_lines(path)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-}
-fn append_text(path: &str, content: &str) -> Result<(), IOError> {
-    ::sifr_stdlib::fs::append_text(path, content)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-}
-fn _open_file(path: &str, mode: &str) -> Result<String, IOError> {
-    ::sifr_stdlib::fs::open_file(path, mode)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-}
-fn _file_read(handle: &str) -> Result<String, IOError> {
-    ::sifr_stdlib::fs::file_read(handle)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-}
-fn _file_write(handle: &str, data: &str) -> Result<(), IOError> {
-    ::sifr_stdlib::fs::file_write(handle, data)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-}
-fn _file_readline(handle: &str) -> Result<Option<String>, IOError> {
-    ::sifr_stdlib::fs::file_readline(handle)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-}
-fn _file_readlines(handle: &str) -> Result<Vec<String>, IOError> {
-    ::sifr_stdlib::fs::file_readlines(handle)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-}
-fn _file_close(handle: &str) {
-    ::sifr_stdlib::fs::file_close(handle);
-}
-fn _file_read_bytes(handle: &str, size: Option<SifrInt>) -> Result<Vec<u8>, IOError> {
-    ::sifr_stdlib::fs::file_read_bytes(
-            handle,
-            size.map(::sifr_runtime::interop::SifrIntBridge::from),
-        )
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-}
-fn _file_write_bytes(handle: &str, data: &[u8]) -> Result<(), IOError> {
-    ::sifr_stdlib::fs::file_write_bytes(handle, data)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-}
-fn _file_flush(handle: &str) -> Result<(), IOError> {
-    ::sifr_stdlib::fs::file_flush(handle)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-}
-fn _file_seek(
-    handle: &str,
-    offset: SifrInt,
-    whence: SifrInt,
-) -> Result<SifrInt, IOError> {
-    ::sifr_stdlib::fs::file_seek(
-            handle,
-            ::sifr_runtime::interop::SifrIntBridge::from(offset),
-            ::sifr_runtime::interop::SifrIntBridge::from(whence),
-        )
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok.into_sifr_int())
-        .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-}
-fn _file_tell(handle: &str) -> Result<SifrInt, IOError> {
-    ::sifr_stdlib::fs::file_tell(handle)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok.into_sifr_int())
-        .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-}
-fn open_file(path: &str, mode: &str) -> Result<__SifrIoNativeFileHandle, IOError> {
-    let __sifr_try_res: Result<Result<__SifrIoNativeFileHandle, IOError>, IOError> = (|| {
-        let handle_id: String = _open_file(path, mode)?;
-        Ok(Ok(__SifrIoNativeFileHandle::new(handle_id)))
-    })();
-    match __sifr_try_res {
-        Ok(__sifr_ret_val) => {
-            return __sifr_ret_val;
-        }
-        Err(__sifr_try_err) => {
-            let e = __sifr_try_err.clone();
-            return Err(e);
-        }
-    }
-}
-fn file_read(handle: &__SifrIoNativeFileHandle) -> Result<String, IOError> {
-    _file_read(&handle._id.clone())
-}
-fn file_write(handle: &__SifrIoNativeFileHandle, data: &str) -> Result<(), IOError> {
-    _file_write(&handle._id.clone(), data)
-}
-fn file_readline(handle: &__SifrIoNativeFileHandle) -> Result<Option<String>, IOError> {
-    _file_readline(&handle._id.clone())
-}
-fn file_readlines(handle: &__SifrIoNativeFileHandle) -> Result<Vec<String>, IOError> {
-    _file_readlines(&handle._id.clone())
-}
-fn file_close(handle: &__SifrIoNativeFileHandle) {
-    _file_close(&handle._id.clone());
-}
-fn file_read_bytes(
-    handle: &__SifrIoNativeFileHandle,
-    size: Option<SifrInt>,
-) -> Result<Vec<u8>, IOError> {
-    _file_read_bytes(&handle._id.clone(), size.clone())
-}
-fn file_write_bytes(
-    handle: &__SifrIoNativeFileHandle,
-    data: &[u8],
-) -> Result<(), IOError> {
-    _file_write_bytes(&handle._id.clone(), data)
-}
-fn file_flush(handle: &__SifrIoNativeFileHandle) -> Result<(), IOError> {
-    _file_flush(&handle._id.clone())
-}
-fn file_seek(
-    handle: &__SifrIoNativeFileHandle,
-    offset: SifrInt,
-    whence: SifrInt,
-) -> Result<SifrInt, IOError> {
-    _file_seek(&handle._id.clone(), offset.clone(), whence.clone())
-}
-fn file_tell(handle: &__SifrIoNativeFileHandle) -> Result<SifrInt, IOError> {
-    _file_tell(&handle._id.clone())
-}
-fn getcwd() -> Result<String, IOError> {
-    ::sifr_stdlib::fs::getcwd()
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-}
-fn listdir(path: &str) -> Result<Vec<String>, IOError> {
-    ::sifr_stdlib::fs::listdir(path)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-}
-fn mkdir(path: &str) -> Result<(), IOError> {
-    ::sifr_stdlib::fs::mkdir(path)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-}
-fn rmdir(path: &str) -> Result<(), IOError> {
-    ::sifr_stdlib::fs::rmdir(path)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-}
-fn remove_file(path: &str) -> Result<(), IOError> {
-    ::sifr_stdlib::fs::remove_file(path)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-}
-fn rename(src: &str, dst: &str) -> Result<(), IOError> {
-    ::sifr_stdlib::fs::rename(src, dst)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-}
-fn chdir(path: &str) -> Result<(), IOError> {
-    ::sifr_stdlib::fs::chdir(path)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-}
-fn stat_size(path: &str) -> Result<SifrInt, IOError> {
-    ::sifr_stdlib::fs::stat_size(path)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok.into_sifr_int())
-        .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-}
-fn disk_usage(path: &str) -> Vec<SifrInt> {
-    ::sifr_stdlib::fs::disk_usage(path)
-        .into_iter()
-        .map(|__sifr_bridge_value| __sifr_bridge_value.into_sifr_int())
-        .collect()
-}
-fn is_file(path: &str) -> bool {
-    ::sifr_stdlib::fs::is_file(path)
-}
-fn is_dir(path: &str) -> bool {
-    ::sifr_stdlib::fs::is_dir(path)
-}
-fn copy_file(src: &str, dst: &str) -> Result<(), IOError> {
-    ::sifr_stdlib::fs::copy_file(src, dst)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-}
-fn walk_dir(path: &str) -> Result<Vec<String>, IOError> {
-    ::sifr_stdlib::fs::walk_dir(path)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-}
-fn rmdir_all(path: &str) -> Result<(), IOError> {
-    ::sifr_stdlib::fs::rmdir_all(path)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-}
-fn gettempdir() -> String {
-    ::sifr_stdlib::fs::gettempdir()
-}
-fn makedirs(path: &str) -> Result<(), IOError> {
-    ::sifr_stdlib::fs::makedirs(path)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-}
-fn touch(path: &str) -> Result<(), IOError> {
-    ::sifr_stdlib::fs::touch(path)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-}
-fn resolve_path(path: &str) -> Result<String, IOError> {
-    ::sifr_stdlib::fs::resolve_path(path)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-}
-fn iterdir(path: &str) -> Result<Vec<String>, IOError> {
-    ::sifr_stdlib::fs::iterdir(path)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-}
-fn glob_pattern(dir: &str, pattern: &str) -> Result<Vec<String>, IOError> {
-    ::sifr_stdlib::fs::glob_pattern(dir, pattern)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-}
-fn rglob_pattern(dir: &str, pattern: &str) -> Result<Vec<String>, IOError> {
-    ::sifr_stdlib::fs::rglob_pattern(dir, pattern)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-}
-fn run_command(cmd: &str) -> Result<String, IOError> {
-    ::sifr_stdlib::sys::run_command(cmd)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))
-}
-fn env_get(key: &str) -> Option<String> {
-    ::sifr_stdlib::sys::env_get(key)
-}
-fn env_keys() -> Vec<String> {
-    ::sifr_stdlib::sys::env_keys()
-}
-fn env_values() -> Vec<String> {
-    ::sifr_stdlib::sys::env_values()
-}
-fn env_items() -> Vec<String> {
-    ::sifr_stdlib::sys::env_items()
-}
-fn get_args() -> Vec<String> {
-    ::sifr_stdlib::sys::get_args()
-}
-fn sys_exit(code: SifrInt) {
-    ::sifr_stdlib::sys::sys_exit(::sifr_runtime::interop::SifrIntBridge::from(code));
-}
-fn sys_version() -> String {
-    ::sifr_stdlib::sys::sys_version()
-}
-fn sys_platform() -> String {
-    ::sifr_stdlib::sys::sys_platform()
-}
-fn sys_maxsize() -> SifrInt {
-    ::sifr_stdlib::sys::sys_maxsize().into_sifr_int()
-}
+pub use sifr_generated_project_nominals::IOError;
+pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2epathlibX2ePath;
 fn getpid() -> SifrInt {
     ::sifr_stdlib::sys::getpid().into_sifr_int()
 }
-fn cpu_count() -> SifrInt {
-    ::sifr_stdlib::sys::cpu_count().into_sifr_int()
-}
-fn which(name: &str) -> Option<String> {
-    ::sifr_stdlib::sys::which(name)
-}
-fn os_sep() -> String {
-    ::sifr_stdlib::sys::os_sep()
-}
-fn os_linesep() -> String {
-    ::sifr_stdlib::sys::os_linesep()
-}
-fn os_name() -> String {
-    ::sifr_stdlib::sys::os_name()
-}
-struct __SifrYielder<T> {
-    slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
-}
-struct __SifrYieldFuture<T> {
-    slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
-    value: Option<T>,
-}
-impl<T> Unpin for __SifrYieldFuture<T> {}
-impl<T> ::std::future::Future for __SifrYieldFuture<T> {
-    type Output = ();
-    fn poll(
-        self: ::std::pin::Pin<&mut Self>,
-        _cx: &mut ::std::task::Context<'_>,
-    ) -> ::std::task::Poll<()> {
-        let state = self.get_mut();
-        let Some(value) = state.value.take() else {
-            return ::std::task::Poll::Ready(());
-        };
-        __sifr_store_suspended(&state.slot, value);
-        ::std::task::Poll::Pending
-    }
-}
-impl<T> __SifrYielder<T> {
-    fn suspend(&self, value: T) -> __SifrYieldFuture<T> {
-        __SifrYieldFuture {
-            slot: ::std::sync::Arc::clone(&self.slot),
-            value: Some(value),
-        }
-    }
-}
-fn __sifr_store_suspended<T>(
-    slot: &::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
-    value: T,
-) {
-    match slot.lock() {
-        Ok(mut state) => *state = Some(value),
-        Err(poisoned) => *poisoned.into_inner() = Some(value),
-    }
-}
-fn __sifr_take_suspended<T>(
-    slot: &::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
-) -> Option<T> {
-    match slot.lock() {
-        Ok(mut state) => state.take(),
-        Err(poisoned) => poisoned.into_inner().take(),
-    }
-}
-struct __SifrGenerator<T> {
-    producer: Option<
-        ::std::pin::Pin<Box<dyn ::std::future::Future<Output = ()> + 'static>>,
-    >,
-    yielded: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
-    complete: bool,
-}
-impl<T> __SifrGenerator<T> {
-    fn new<
-        F: FnOnce(__SifrYielder<T>) -> Fut + 'static,
-        Fut: ::std::future::Future<Output = ()> + 'static,
-    >(factory: F) -> Self {
-        let yielded = ::std::sync::Arc::new(::std::sync::Mutex::new(None));
-        let producer = factory(__SifrYielder {
-            slot: ::std::sync::Arc::clone(&yielded),
-        });
-        Self {
-            producer: Some(Box::pin(producer)),
-            yielded,
-            complete: false,
-        }
-    }
-}
-impl<T> Iterator for __SifrGenerator<T> {
-    type Item = T;
-    fn next(&mut self) -> Option<T> {
-        if self.complete {
-            return None;
-        }
-        let completed = {
-            let Some(producer) = self.producer.as_mut() else {
-                self.complete = true;
-                return None;
-            };
-            let mut context = ::std::task::Context::from_waker(
-                ::std::task::Waker::noop(),
-            );
-            ::std::future::Future::poll(producer.as_mut(), &mut context).is_ready()
-        };
-        let yielded = __sifr_take_suspended(&self.yielded);
-        if completed {
-            self.complete = true;
-            self.producer = None;
-        }
-        yielded
-    }
-}
 fn join_path(base: &str, child: &str) -> String {
-    let __sifr_chars_base: Vec<char> = base.chars().collect::<Vec<char>>();
-    if (&SifrInt::from(__sifr_chars_base.len()) == &SifrInt::from_i64(0)) {
+    let sifr_generated_chars_base: Vec<char> = base.chars().collect::<Vec<char>>();
+    if &SifrInt::from(sifr_generated_chars_base.len()) == &SifrInt::from_i64(0) {
         return {
-            let mut __sifr_concat: String = String::with_capacity(child.len() + 0usize);
-            __sifr_concat.push_str(child);
-            __sifr_concat.push_str("");
-            __sifr_concat
+            let mut sifr_generated_concat: String = String::with_capacity(child.len());
+            sifr_generated_concat.push_str(child);
+            sifr_generated_concat.push_str("");
+            sifr_generated_concat
         };
     }
-    let last: Option<String> = ({
-        let __sifr_string_index = SifrInt::from(base.chars().count())
-            - SifrInt::from_i64(1);
-        let __sifr_string_index_normalized = __sifr_string_index
-            .normalize_index_or_len(__sifr_chars_base.len());
-        __sifr_chars_base.get(__sifr_string_index_normalized)
-    })
-        .map(|c| c.to_string());
-    if let Some(last) = last {
-        if (last).as_str() == ("/".to_string()).as_str() {
-            return {
-                let mut __sifr_concat: String = String::with_capacity(
-                    base.len() + child.len(),
-                );
-                __sifr_concat.push_str((base).as_ref());
-                __sifr_concat.push_str((child).as_ref());
-                __sifr_concat
-            };
-        }
+    let last: Option<String> = {
+        let sifr_generated_string_index =
+            SifrInt::from(base.chars().count()) - SifrInt::from_i64(1);
+        let sifr_generated_string_index_normalized =
+            sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_base.len());
+        sifr_generated_chars_base.get(sifr_generated_string_index_normalized)
+    }
+    .map(::std::string::ToString::to_string);
+    if let Some(last) = last
+        && last.as_str() == "/".to_string().as_str()
+    {
+        return {
+            let mut sifr_generated_concat: String = String::with_capacity(base.len() + child.len());
+            sifr_generated_concat.push_str(base.as_ref());
+            sifr_generated_concat.push_str(child.as_ref());
+            sifr_generated_concat
+        };
     }
     {
-        let mut __sifr_concat: String = String::with_capacity(
-            (base.len() + 1usize) + child.len(),
-        );
-        __sifr_concat.push_str(base);
-        __sifr_concat.push('/');
-        __sifr_concat.push_str(child);
-        __sifr_concat
+        let mut sifr_generated_concat: String =
+            String::with_capacity(base.len() + 1usize + child.len());
+        sifr_generated_concat.push_str(base);
+        sifr_generated_concat.push('/');
+        sifr_generated_concat.push_str(child);
+        sifr_generated_concat
     }
 }
 fn basename(path: &str) -> String {
-    let __sifr_chars_path: Vec<char> = path.chars().collect::<Vec<char>>();
-    let mut i: SifrInt = &SifrInt::from(__sifr_chars_path.len()) - &SifrInt::from_i64(1);
-    while (&i >= &SifrInt::from_i64(0)) {
-        let ch: Option<String> = ({
-            let __sifr_string_index = i.clone();
-            let __sifr_string_index_normalized = __sifr_string_index
-                .normalize_index_or_len(__sifr_chars_path.len());
-            __sifr_chars_path.get(__sifr_string_index_normalized)
-        })
-            .map(|c| c.to_string());
-        if let Some(ch) = ch {
-            if (ch == "/") {
-                return {
-                    let _slice_src = &__sifr_chars_path;
-                    let _slice_len = _slice_src.len();
-                    let _slice_start = (&i + &SifrInt::from_i64(1))
-                        .clamp_slice_bound(_slice_len);
-                    let _slice_stop = _slice_len;
-                    String::from_iter(
-                        _slice_src
-                            .iter()
-                            .skip(_slice_start)
-                            .take(_slice_stop.saturating_sub(_slice_start))
-                            .copied(),
-                    )
-                };
-            }
+    let sifr_generated_chars_path: Vec<char> = path.chars().collect::<Vec<char>>();
+    let mut i: SifrInt = &SifrInt::from(sifr_generated_chars_path.len()) - &SifrInt::from_i64(1);
+    while &i >= &SifrInt::from_i64(0) {
+        let ch: Option<String> = {
+            let sifr_generated_string_index = i.clone();
+            let sifr_generated_string_index_normalized =
+                sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_path.len());
+            sifr_generated_chars_path.get(sifr_generated_string_index_normalized)
+        }
+        .map(::std::string::ToString::to_string);
+        if let Some(ch) = ch
+            && ch == "/"
+        {
+            return {
+                let sifr_generated_slice_src = &sifr_generated_chars_path;
+                let sifr_generated_slice_len = sifr_generated_slice_src.len();
+                let sifr_generated_slice_start =
+                    (&i + &SifrInt::from_i64(1)).clamp_slice_bound(sifr_generated_slice_len);
+                let sifr_generated_slice_stop = sifr_generated_slice_len;
+                String::from_iter(
+                    sifr_generated_slice_src
+                        .iter()
+                        .skip(sifr_generated_slice_start)
+                        .take(sifr_generated_slice_stop.saturating_sub(sifr_generated_slice_start))
+                        .copied(),
+                )
+            };
         }
         i = &i - &SifrInt::from_i64(1);
     }
     {
-        let mut __sifr_concat: String = String::with_capacity(path.len() + 0usize);
-        __sifr_concat.push_str(path);
-        __sifr_concat.push_str("");
-        __sifr_concat
-    }
-}
-fn dirname(path: &str) -> String {
-    let __sifr_chars_path: Vec<char> = path.chars().collect::<Vec<char>>();
-    let mut i: SifrInt = &SifrInt::from(__sifr_chars_path.len()) - &SifrInt::from_i64(1);
-    while (&i >= &SifrInt::from_i64(0)) {
-        let ch: Option<String> = ({
-            let __sifr_string_index = i.clone();
-            let __sifr_string_index_normalized = __sifr_string_index
-                .normalize_index_or_len(__sifr_chars_path.len());
-            __sifr_chars_path.get(__sifr_string_index_normalized)
-        })
-            .map(|c| c.to_string());
-        if let Some(ch) = ch {
-            if (ch == "/") {
-                return {
-                    let _slice_src = &__sifr_chars_path;
-                    let _slice_len = _slice_src.len();
-                    let _slice_start = 0;
-                    let _slice_stop = i.clamp_slice_bound(_slice_len);
-                    String::from_iter(
-                        _slice_src
-                            .iter()
-                            .skip(_slice_start)
-                            .take(_slice_stop.saturating_sub(_slice_start))
-                            .copied(),
-                    )
-                };
-            }
-        }
-        i = &i - &SifrInt::from_i64(1);
-    }
-    "".to_string()
-}
-fn extension(path: &str) -> String {
-    let __sifr_chars_path: Vec<char> = path.chars().collect::<Vec<char>>();
-    let mut i: SifrInt = &SifrInt::from(__sifr_chars_path.len()) - &SifrInt::from_i64(1);
-    while (&i >= &SifrInt::from_i64(0)) {
-        let ch: Option<String> = ({
-            let __sifr_string_index = i.clone();
-            let __sifr_string_index_normalized = __sifr_string_index
-                .normalize_index_or_len(__sifr_chars_path.len());
-            __sifr_chars_path.get(__sifr_string_index_normalized)
-        })
-            .map(|c| c.to_string());
-        if let Some(ch) = ch {
-            if (ch == ".") {
-                return {
-                    let _slice_src = &__sifr_chars_path;
-                    let _slice_len = _slice_src.len();
-                    let _slice_start = i.clamp_slice_bound(_slice_len);
-                    let _slice_stop = _slice_len;
-                    String::from_iter(
-                        _slice_src
-                            .iter()
-                            .skip(_slice_start)
-                            .take(_slice_stop.saturating_sub(_slice_start))
-                            .copied(),
-                    )
-                };
-            }
-            if (ch == "/") {
-                return "".to_string();
-            }
-        }
-        i = &i - &SifrInt::from_i64(1);
-    }
-    "".to_string()
-}
-fn stem(path: &str) -> String {
-    let base: String = basename(path);
-    let __sifr_chars_base: Vec<char> = base.chars().collect::<Vec<char>>();
-    let mut i: SifrInt = &SifrInt::from(__sifr_chars_base.len()) - &SifrInt::from_i64(1);
-    while (&i > &SifrInt::from_i64(0)) {
-        let ch: Option<String> = ({
-            let __sifr_string_index = i.clone();
-            let __sifr_string_index_normalized = __sifr_string_index
-                .normalize_index_or_len(__sifr_chars_base.len());
-            __sifr_chars_base.get(__sifr_string_index_normalized)
-        })
-            .map(|c| c.to_string());
-        if let Some(ch) = ch {
-            if (ch == ".") {
-                return {
-                    let _slice_src = &__sifr_chars_base;
-                    let _slice_len = _slice_src.len();
-                    let _slice_start = 0;
-                    let _slice_stop = i.clamp_slice_bound(_slice_len);
-                    String::from_iter(
-                        _slice_src
-                            .iter()
-                            .skip(_slice_start)
-                            .take(_slice_stop.saturating_sub(_slice_start))
-                            .copied(),
-                    )
-                };
-            }
-        }
-        i = &i - &SifrInt::from_i64(1);
-    }
-    {
-        let mut __sifr_concat: String = String::with_capacity(base.len() + 0usize);
-        __sifr_concat.push_str(base.as_str());
-        __sifr_concat.push_str("");
-        __sifr_concat
-    }
-}
-fn is_absolute(path: &str) -> bool {
-    let __sifr_chars_path: Vec<char> = path.chars().collect::<Vec<char>>();
-    if (&SifrInt::from(__sifr_chars_path.len()) == &SifrInt::from_i64(0)) {
-        return false;
-    }
-    if (&SifrInt::from(__sifr_chars_path.len()) >= &SifrInt::from_i64(3)) {
-        let colon: Option<String> = ({
-            let __sifr_string_index = SifrInt::from_i64(1);
-            let __sifr_string_index_normalized = __sifr_string_index
-                .normalize_index_or_len(__sifr_chars_path.len());
-            __sifr_chars_path.get(__sifr_string_index_normalized)
-        })
-            .map(|c| c.to_string());
-        let sep: Option<String> = ({
-            let __sifr_string_index = SifrInt::from_i64(2);
-            let __sifr_string_index_normalized = __sifr_string_index
-                .normalize_index_or_len(__sifr_chars_path.len());
-            __sifr_chars_path.get(__sifr_string_index_normalized)
-        })
-            .map(|c| c.to_string());
-        if let Some(colon) = colon {
-            if let Some(sep) = sep {
-                if (colon == ":") && ((sep == "/") || (sep == "\\")) {
-                    return true;
-                }
-            }
-        }
-    }
-    let first: Option<String> = ({
-        let __sifr_string_index = SifrInt::from_i64(0);
-        let __sifr_string_index_normalized = __sifr_string_index
-            .normalize_index_or_len(__sifr_chars_path.len());
-        __sifr_chars_path.get(__sifr_string_index_normalized)
-    })
-        .map(|c| c.to_string());
-    if let Some(first) = first {
-        if (first == "/") || (first == "\\") {
-            return true;
-        }
-    }
-    false
-}
-fn _iter_list_str(entries: Vec<String>) -> Box<dyn Iterator<Item = String>> {
-    Box::new(
-        __SifrGenerator::new(async move |__sifr_yielder: __SifrYielder<String>| {
-            let mut i: SifrInt = SifrInt::from_i64(0);
-            while (&i < &SifrInt::from(entries.len())) {
-                let Some(__sifr_checked_value_7) = ({
-                    let __sifr_checked_read_collection = &entries;
-                    let __sifr_checked_read_index = i.clone();
-                    let __sifr_checked_read_normalized = __sifr_checked_read_index
-                        .normalize_index_or_len(__sifr_checked_read_collection.len());
-                    __sifr_checked_read_collection
-                        .get(__sifr_checked_read_normalized)
-                        .cloned()
-                }) else {
-                    break;
-                };
-                __sifr_yielder.suspend(__sifr_checked_value_7.clone()).await;
-                i = &i + &SifrInt::from_i64(1);
-            }
-        }),
-    )
-}
-fn _iterdir_list(path: &str) -> Result<Vec<String>, IOError> {
-    iterdir(path)
-}
-fn _glob_list(path: &str, pattern: &str) -> Result<Vec<String>, IOError> {
-    glob_pattern(path, pattern)
-}
-fn _rglob_list(path: &str, pattern: &str) -> Result<Vec<String>, IOError> {
-    rglob_pattern(path, pattern)
-}
-fn _iterdir_to_iter(path: &str) -> Result<Box<dyn Iterator<Item = String>>, IOError> {
-    let __sifr_try_res: Result<
-        Result<Box<dyn Iterator<Item = String>>, IOError>,
-        IOError,
-    > = (|| {
-        let entries: Vec<String> = _iterdir_list(path)?;
-        Ok(Ok(_iter_list_str(entries)))
-    })();
-    match __sifr_try_res {
-        Ok(__sifr_ret_val) => {
-            return __sifr_ret_val;
-        }
-        Err(__sifr_try_err) => {
-            let e = __sifr_try_err.clone();
-            return Err(e);
-        }
-    }
-}
-fn _glob_to_iter(
-    path: &str,
-    pattern: &str,
-) -> Result<Box<dyn Iterator<Item = String>>, IOError> {
-    let __sifr_try_res: Result<
-        Result<Box<dyn Iterator<Item = String>>, IOError>,
-        IOError,
-    > = (|| {
-        let entries: Vec<String> = _glob_list(path, pattern)?;
-        Ok(Ok(_iter_list_str(entries)))
-    })();
-    match __sifr_try_res {
-        Ok(__sifr_ret_val) => {
-            return __sifr_ret_val;
-        }
-        Err(__sifr_try_err) => {
-            let e = __sifr_try_err.clone();
-            return Err(e);
-        }
-    }
-}
-fn _rglob_to_iter(
-    path: &str,
-    pattern: &str,
-) -> Result<Box<dyn Iterator<Item = String>>, IOError> {
-    let __sifr_try_res: Result<
-        Result<Box<dyn Iterator<Item = String>>, IOError>,
-        IOError,
-    > = (|| {
-        let entries: Vec<String> = _rglob_list(path, pattern)?;
-        Ok(Ok(_iter_list_str(entries)))
-    })();
-    match __sifr_try_res {
-        Ok(__sifr_ret_val) => {
-            return __sifr_ret_val;
-        }
-        Err(__sifr_try_err) => {
-            let e = __sifr_try_err.clone();
-            return Err(e);
-        }
+        let mut sifr_generated_concat: String = String::with_capacity(path.len());
+        sifr_generated_concat.push_str(path);
+        sifr_generated_concat.push_str("");
+        sifr_generated_concat
     }
 }
 fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
     assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
     let mut i: SifrInt = SifrInt::from_i64(0);
     while &i < &SifrInt::from(actual.len()) {
-        assert!(
-            ({ let __sifr_condition_list = & actual; let __sifr_condition_index = i
-            .clone(); let __sifr_condition_normalized = __sifr_condition_index
-            .normalize_index_or_len(__sifr_condition_list.len()); __sifr_condition_list
-            .get(__sifr_condition_normalized).copied() }) == ({ let __sifr_condition_list
-            = & expected; let __sifr_condition_index = i.clone(); let
-            __sifr_condition_normalized = __sifr_condition_index
-            .normalize_index_or_len(__sifr_condition_list.len()); __sifr_condition_list
-            .get(__sifr_condition_normalized).copied() })
+        assert_eq!(
+            {
+                let sifr_generated_condition_list = &actual;
+                let sifr_generated_condition_index = i.clone();
+                let sifr_generated_condition_normalized = sifr_generated_condition_index
+                    .normalize_index_or_len(sifr_generated_condition_list.len());
+                sifr_generated_condition_list
+                    .get(sifr_generated_condition_normalized)
+                    .copied()
+            },
+            {
+                let sifr_generated_condition_list = &expected;
+                let sifr_generated_condition_index = i.clone();
+                let sifr_generated_condition_normalized = sifr_generated_condition_index
+                    .normalize_index_or_len(sifr_generated_condition_list.len());
+                sifr_generated_condition_list
+                    .get(sifr_generated_condition_normalized)
+                    .copied()
+            }
         );
         i = &i + &SifrInt::from_i64(1);
     }
 }
-fn __io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
-    let msg = e.to_string();
-    let kind = {
-        let __sifr_io_kind = (&e as &dyn ::std::any::Any)
-            .downcast_ref::<std::io::Error>()
-            .map(::std::io::Error::kind);
-        match __sifr_io_kind {
-            Some(::std::io::ErrorKind::NotFound) => "FileNotFound".to_string(),
-            Some(::std::io::ErrorKind::PermissionDenied) => {
-                "PermissionDenied".to_string()
-            }
-            Some(::std::io::ErrorKind::AlreadyExists) => "FileExists".to_string(),
-            Some(::std::io::ErrorKind::IsADirectory) => "IsADirectory".to_string(),
-            Some(::std::io::ErrorKind::NotADirectory) => "NotADirectory".to_string(),
-            Some(::std::io::ErrorKind::DirectoryNotEmpty) => {
-                "DirectoryNotEmpty".to_string()
-            }
-            _ => "Other".to_string(),
-        }
-    };
-    IOError { message: msg, kind }
-}
 fn collect_path_helpers_actual() -> Vec<bool> {
-    let mut actual: Vec<bool> = vec![];
-    actual
-        .push(
-            basename(&"/tmp/demo.txt".to_string()).as_str()
-                == "demo.txt".to_string().as_str(),
-        );
-    actual
-        .push(
-            join_path(&"/tmp".to_string(), &"demo.txt".to_string()).as_str()
-                == "/tmp/demo.txt".to_string().as_str(),
-        );
+    let actual: Vec<bool> = vec![
+        basename(&"/tmp/demo.txt".to_string()).as_str() == "demo.txt".to_string().as_str(),
+        join_path(&"/tmp".to_string(), &"demo.txt".to_string()).as_str()
+            == "/tmp/demo.txt".to_string().as_str(),
+    ];
     actual
 }
 fn collect_path_class_actual() -> Vec<bool> {
-    let mut actual: Vec<bool> = vec![];
+    let mut actual: Vec<bool> = Vec::new();
     let base: String = {
-        let mut __sifr_concat: String = String::with_capacity(31usize + 0usize);
-        __sifr_concat.push_str("/tmp/sifr_pathlib_pathlib_demo_");
-        __sifr_concat.push_str(format!("{}", getpid()).as_str());
-        __sifr_concat
+        let mut sifr_generated_concat: String = String::with_capacity(31usize);
+        sifr_generated_concat.push_str("/tmp/sifr_pathlib_pathlib_demo_");
+        sifr_generated_concat.push_str(getpid().to_string().as_str());
+        sifr_generated_concat
     };
-    let filep: __SifrStdlib_sifr_x2epathlib_x2ePath = __SifrStdlib_sifr_x2epathlib_x2ePath::new(
-        format!("{}{}", base, "/demo.txt"),
-    );
-    let dirp: __SifrStdlib_sifr_x2epathlib_x2ePath = __SifrStdlib_sifr_x2epathlib_x2ePath::new(
-        format!("{}{}", base, ""),
-    );
+    let filep: SifrGeneratedStdlibSifrX2epathlibX2ePath =
+        SifrGeneratedStdlibSifrX2epathlibX2ePath::new(format!("{base}/demo.txt"));
+    let dirp: SifrGeneratedStdlibSifrX2epathlibX2ePath =
+        SifrGeneratedStdlibSifrX2epathlibX2ePath::new(base.to_string());
     let mut path_flow_ok: bool = false;
     let mut glob_ok: bool = false;
     let mut cleanup_ok: bool = false;
-    let __sifr_try_res: Result<(), IOError> = (|| {
-        let _m: () = dirp.mkdir()?;
-        let _w: () = filep.write_text(&"hello".to_string())?;
+    let sifr_generated_try_res: Result<(), IOError> = (|| {
+        dirp.mkdir()?;
+        filep.write_text(&"hello".to_string())?;
         let content: String = filep.read_text()?;
-        path_flow_ok = (((filep.exists()) && (filep.is_file()))
-            && ((content == "hello")));
-        let matches_it: Box<dyn Iterator<Item = String>> = dirp
-            .glob(&"*.txt".to_string())?;
+        path_flow_ok = filep.exists() && filep.is_file() && content == "hello";
+        let matches_it: Box<dyn Iterator<Item = String>> = dirp.glob(&"*.txt".to_string())?;
         let matches: Vec<String> = matches_it.collect::<Vec<_>>();
-        glob_ok = (&SifrInt::from(matches.len()) >= &SifrInt::from_i64(1));
-        let _u: () = filep.unlink()?;
-        let _r: () = dirp.rmdir()?;
-        cleanup_ok = !(dirp.exists());
+        glob_ok = &SifrInt::from(matches.len()) >= &SifrInt::from_i64(1);
+        filep.unlink()?;
+        dirp.rmdir()?;
+        cleanup_ok = !dirp.exists();
         Ok(())
     })();
-    if let Err(__sifr_try_err) = __sifr_try_res {
-        let e = __sifr_try_err.clone();
-        let _ = format!("{}", e.message.clone());
+    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+        let e = sifr_generated_try_err.clone();
+        let _ = e.message.clone().to_string();
     }
     actual.push(path_flow_ok);
     actual.push(glob_ok);
@@ -1671,18 +442,18 @@ fn collect_path_class_actual() -> Vec<bool> {
     actual
 }
 fn collect_missing_path_actual() -> Vec<bool> {
-    let mut actual: Vec<bool> = vec![];
+    let mut actual: Vec<bool> = Vec::new();
     let mut missing_rejected: bool = false;
-    let __sifr_try_res: Result<(), IOError> = (|| {
-        let _bad: String = __SifrStdlib_sifr_x2epathlib_x2ePath::new(
-                "/tmp/sifr_pathlib_pathlib_demo_missing.txt".to_string(),
-            )
-            .read_text()?;
+    let sifr_generated_try_res: Result<(), IOError> = (|| {
+        let _ = SifrGeneratedStdlibSifrX2epathlibX2ePath::new(
+            "/tmp/sifr_pathlib_pathlib_demo_missing.txt".to_string(),
+        )
+        .read_text()?;
         Ok(())
     })();
-    if let Err(__sifr_try_err) = __sifr_try_res {
-        let e = __sifr_try_err.clone();
-        let _ = format!("{}", e.message.clone());
+    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+        let e = sifr_generated_try_err.clone();
+        let _ = e.message.clone().to_string();
         missing_rejected = true;
     }
     actual.push(missing_rejected);
@@ -1695,7 +466,7 @@ fn append_all(target: &mut Vec<bool>, values: &[bool]) {
 }
 fn main() {
     let expected: Vec<bool> = vec![true, true, true, true, true, true];
-    let mut actual: Vec<bool> = vec![];
+    let mut actual: Vec<bool> = Vec::new();
     append_all(&mut actual, &collect_path_helpers_actual());
     append_all(&mut actual, &collect_path_class_actual());
     append_all(&mut actual, &collect_missing_path_actual());

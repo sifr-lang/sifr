@@ -17,6 +17,7 @@ mod python_interop;
 mod python_interop_shared_target_tests;
 mod python_runtime;
 mod report;
+mod rust_formatter;
 mod rust_interop;
 #[cfg(test)]
 mod rust_interop_advanced_data_contract_tests;
@@ -97,6 +98,7 @@ pub use report::{
     PythonDeclarationCheck, PythonEnvironmentCheck, PythonInteropCheckReport, PythonTargetCheck,
     PythonTargetCheckStatus,
 };
+pub(crate) use rust_formatter::format_generated_rust;
 pub use sql_profiles::{PreparedSqlProfiles, load_sql_editor_profiles, prepare_sql_profiles};
 pub use sql_query_signatures::{QUERY_SIGNATURE_ARTIFACT_NAME, emit_query_signature_artifact};
 

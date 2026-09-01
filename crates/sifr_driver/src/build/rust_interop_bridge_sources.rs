@@ -26,8 +26,10 @@ pub(super) fn generated_bridge_sources(
         root.push_str(";\n");
         let mut module_source = String::new();
         for bridge_type in bridge_types {
+            if !module_source.is_empty() {
+                module_source.push('\n');
+            }
             module_source.push_str(&render_bridge_type(bridge_type));
-            module_source.push('\n');
         }
         sources.insert(
             PathBuf::from("__sifr_bridge").join(format!("{module_name}.rs")),
@@ -63,7 +65,11 @@ fn render_bridge_type(bridge_type: &RustGeneratedBridgeType) -> String {
 
 fn render_record_bridge_type(bridge_type: &RustGeneratedBridgeType) -> String {
     let mut out = String::new();
-    out.push_str("#[derive(Clone, Debug, PartialEq)]\n");
+    if bridge_type.supports_eq {
+        out.push_str("#[derive(Clone, Debug, PartialEq, Eq)]\n");
+    } else {
+        out.push_str("#[derive(Clone, Debug, PartialEq)]\n");
+    }
     out.push_str("pub struct ");
     out.push_str(&bridge_type.name);
     out.push_str(" {\n");
@@ -116,6 +122,7 @@ mod tests {
                 name: "TokenBridge".to_string(),
                 rust_type_path: "crate::__sifr_bridge::app::TokenBridge".to_string(),
                 kind: RustGeneratedBridgeTypeKind::Record,
+                supports_eq: true,
                 fields: vec![RustGeneratedBridgeField {
                     name: "text".to_string(),
                     sifr_type: "str".to_string(),
@@ -128,6 +135,7 @@ mod tests {
                 name: "KindBridge".to_string(),
                 rust_type_path: "crate::__sifr_bridge::app::KindBridge".to_string(),
                 kind: RustGeneratedBridgeTypeKind::ClosedEnum,
+                supports_eq: true,
                 fields: Vec::new(),
                 variants: vec![RustGeneratedBridgeVariant {
                     name: "Word".to_string(),
@@ -149,5 +157,8 @@ mod tests {
         assert!(app_source.contains("pub text: String"));
         assert!(app_source.contains("#[repr(u32)]"));
         assert!(app_source.contains("Word = 1"));
+        assert!(app_source.contains("}\n\n#[repr(u32)]"));
+        assert!(app_source.ends_with("}\n"));
+        assert!(!app_source.ends_with("}\n\n"));
     }
 }

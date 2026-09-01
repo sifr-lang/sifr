@@ -71,6 +71,18 @@ pub(super) fn codegen_single_file_frontend(
     Ok(generated)
 }
 
+pub(super) fn format_generated_binary_project(
+    mut generated: GeneratedBinaryProject,
+) -> Result<GeneratedBinaryProject, Vec<RenderedDiagnostic>> {
+    generated.main_rs =
+        super::rust_formatter::format_generated_rust(&generated.main_rs, "project main.rs")?;
+    for (module_name, source) in &mut generated.support_modules {
+        let label = format!("project module {module_name}");
+        *source = super::rust_formatter::format_generated_rust(source, &label)?;
+    }
+    Ok(generated)
+}
+
 pub(super) fn generated_single_file_binary_project(
     mut codegen_result: sifr_codegen::CodegenResult,
 ) -> GeneratedBinaryProject {

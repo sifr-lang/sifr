@@ -1,4 +1,4 @@
-# expect-error: SIFR-TYPE-0002
+# expect-error[col=15]: SIFR-RESULT-0003
 
 async def worker() -> int:
     return 1

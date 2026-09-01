@@ -69,7 +69,7 @@ impl std::fmt::Debug for Pool {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Pool")
             .field("workers", &self._workers)
-            .finish()
+            .finish_non_exhaustive()
     }
 }
 

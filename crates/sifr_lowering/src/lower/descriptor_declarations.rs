@@ -24,6 +24,20 @@ pub(in crate::lower) fn prepare(stmts: &[Stmt], ctx: &mut LowerCtx) {
     collect_class_bases(stmts, ctx);
 }
 
+pub(in crate::lower) fn function_uses_compile_time_evaluator(function: &StmtFunctionDef) -> bool {
+    has_bare_decorator(function, "const_eval")
+        || function.decorator_list.iter().any(|decorator| {
+            let Expr::Call(call) = &decorator.expression else {
+                return false;
+            };
+            let Expr::Name(name) = call.func.as_ref() else {
+                return false;
+            };
+            name.id.as_str() == "class_adapter_provider"
+                || descriptor_kind(name.id.as_str()).is_some()
+        })
+}
+
 pub(in crate::lower) fn data_parent_name(class_name: &str, ctx: &LowerCtx) -> Option<String> {
     ctx.class_data_parents.get(class_name).cloned().flatten()
 }

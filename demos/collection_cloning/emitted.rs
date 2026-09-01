@@ -1,11 +1,12 @@
 // src/main.rs
-mod __sifr_project_nominals {
+mod sifr_generated_project_nominals {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ValueError {
         pub message: String,
     }
     impl ValueError {
-        pub fn new(message: String) -> Self {
+        #[must_use]
+        pub const fn new(message: String) -> Self {
             Self { message }
         }
     }
@@ -16,51 +17,51 @@ mod __sifr_project_nominals {
     }
     impl ::std::error::Error for ValueError {}
 }
-pub use __sifr_project_nominals::ValueError;
 use ::sifr_runtime::SifrInt;
+pub use sifr_generated_project_nominals::ValueError;
 fn double(n: SifrInt) -> SifrInt {
     &n * &SifrInt::from_i64(2)
 }
 fn is_even(n: SifrInt) -> bool {
-    (&n.floor_mod_known_nonzero(&SifrInt::from_i64(2)) == &SifrInt::from_i64(0))
+    &n.floor_mod_known_nonzero(&SifrInt::from_i64(2)) == &SifrInt::from_i64(0)
 }
+#[expect(
+    clippy::assertions_on_constants,
+    reason = "generated Rust preserves this exact typed Sifr source contract"
+)]
 fn main() {
     let nums: Vec<SifrInt> = vec![
-        SifrInt::from_i64(1), SifrInt::from_i64(2), SifrInt::from_i64(3),
-        SifrInt::from_i64(4)
+        SifrInt::from_i64(1),
+        SifrInt::from_i64(2),
+        SifrInt::from_i64(3),
+        SifrInt::from_i64(4),
     ];
-    let mapped: Vec<SifrInt> = Box::new(
-            nums.iter().cloned().map(|__sifr_map_item| double(__sifr_map_item)),
-        )
-        .collect::<Vec<_>>();
-    let filtered: Vec<SifrInt> = Box::new(
-            nums
-                .iter()
-                .cloned()
-                .filter(|__filter_item| {
-                    let __filter_value = __filter_item.clone();
-                    is_even(__filter_value)
-                }),
-        )
+    let mapped: Vec<SifrInt> = Box::new(nums.iter().cloned().map(double)).collect::<Vec<_>>();
+    let filtered: Vec<SifrInt> =
+        Box::new(nums.iter().cloned().filter(|sifr_generated_filter_item| {
+            let sifr_generated_filter_value = sifr_generated_filter_item.clone();
+            is_even(sifr_generated_filter_value)
+        }))
         .collect::<Vec<_>>();
     let mut first: SifrInt = SifrInt::from_i64(0);
-    let mut rest: Vec<SifrInt> = vec![];
-    let __sifr_try_res: Result<(), ValueError> = (|| {
-        let __sifr_unpack_source = &nums;
-        let [__sifr_before_0, __sifr_star @ ..] = __sifr_unpack_source.as_slice() else {
+    let mut rest: Vec<SifrInt> = Vec::new();
+    let sifr_generated_try_res: Result<(), ValueError> = (|| {
+        let sifr_generated_unpack_source = &nums;
+        let [sifr_generated_before_0, sifr_generated_star @ ..] =
+            sifr_generated_unpack_source.as_slice()
+        else {
             return Err(ValueError::new("not enough values to unpack".to_string()));
         };
-        first = __sifr_before_0.clone();
-        rest = __sifr_star.to_vec();
+        first = sifr_generated_before_0.clone();
+        rest = sifr_generated_star.to_vec();
         Ok(())
     })();
-    if let Err(__sifr_try_err) = __sifr_try_res {
-        let _e = __sifr_try_err.clone();
+    if sifr_generated_try_res.is_err() {
         assert!(false);
     }
-    println!("{}", format!("{:?}", mapped));
-    println!("{}", format!("{:?}", filtered));
-    println!("{}", format!("{}", first));
-    println!("{}", format!("{:?}", rest));
+    println!("{}", format!("{mapped:?}"));
+    println!("{}", format!("{filtered:?}"));
+    println!("{first}");
+    println!("{}", format!("{rest:?}"));
     println!("clone_collection_cloning_lock_demo: pass");
 }

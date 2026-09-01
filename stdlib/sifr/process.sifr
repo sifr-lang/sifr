@@ -410,15 +410,19 @@ def _status_from_exit(exit_status: tuple[int, int | None]) -> Status:
     return _status_from_fields(exit_status[0], exit_status[1], False)
 
 
+def _signal_from_parts(parts: list[int]) -> int | None:
+    if parts[2] == 0:
+        return None
+    return parts[1]
+
+
 def _status_from_parts(parts: list[int], timed_out: bool = False) -> Status:
     observed_timed_out: bool = timed_out
     if len(parts) > 3 and parts[3] != 0:
         observed_timed_out = True
     if len(parts) < 3:
         return _status_from_fields(-1, None, observed_timed_out)
-    signal: int | None = None
-    if parts[2] != 0:
-        signal = parts[1]
+    signal: int | None = _signal_from_parts(parts)
     return _status_from_fields(parts[0], signal, observed_timed_out)
 
 

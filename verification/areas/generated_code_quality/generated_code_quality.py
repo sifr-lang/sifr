@@ -9,7 +9,6 @@ import functools
 import hashlib
 import json
 import os
-import re
 import shutil
 import subprocess
 import sys
@@ -31,7 +30,6 @@ from inventory_gates import (  # noqa: E402
     gate_inventory as run_inventory_gate,
 )
 from quality_policy import (  # noqa: E402
-    PATTERN_POLICIES,
     STRICT_CLIPPY_ARGS,
     assert_negative_pattern,
     compare_exact_debt,
@@ -46,6 +44,13 @@ from quality_policy import (  # noqa: E402
     validate_debt_owners,
     validate_clippy_lint_owners,
     violation_summary,
+)
+from source_quality_checks import (
+    assert_negative_clippy,
+    assert_negative_determinism,
+    assert_negative_rustfmt,
+    compare_bytes,
+    scan_codegen_source_emissions,
 )
 
 # Inputs that change generated Rust or its compile environment. Manifest metadata
@@ -103,20 +108,6 @@ CONCURRENCY_READINESS_DEMOS = {
     "demos/structured_shutdown_demo/main.sifr",
     "demos/sync_channel_demo/main.sifr",
 }
-RUST_RAW_STRING_RE = re.compile(r"r(?P<hashes>#*)\"(?P<body>.*?)\"(?P=hashes)")
-RUST_NORMAL_STRING_RE = re.compile(r'"(?P<body>(?:\\.|[^"\\])*)"')
-GENERATED_SOURCE_CONTEXT_RE = re.compile(
-    r"\b(format!|emit_line|RustExpr::Ident|RustType::Named|RustLiteral::Str|push_str)\b"
-)
-SOURCE_FORBIDDEN_POLICY_IDS = {
-    "allow-attribute",
-    "expect",
-    "panic",
-    "todo",
-    "unimplemented",
-    "unsafe",
-    "unwrap",
-}
 @dataclasses.dataclass(frozen=True)
 class Entry:
     id: str
@@ -135,6 +126,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "mode",
         choices=(
+            "companions",
             "corpus",
             "inventory",
             "panic-scan",
@@ -404,101 +396,6 @@ def rust_files(crate_root: Path) -> list[Path]:
     return sorted((crate_root / "src").rglob("*.rs"))
 
 
-def codegen_source_files() -> list[Path]:
-    src_root = REPO_ROOT / "crates" / "sifr_codegen" / "src"
-    return sorted(
-        path
-        for path in src_root.rglob("*.rs")
-        if path.name not in {"tests.rs"}
-        and not path.name.endswith("_tests.rs")
-        and "tests" not in path.relative_to(src_root).parts
-    )
-
-
-def rust_string_literals(line: str) -> list[str]:
-    literals: list[str] = []
-    raw_ranges: list[tuple[int, int]] = []
-    for match in RUST_RAW_STRING_RE.finditer(line):
-        literals.append(match.group("body"))
-        raw_ranges.append(match.span())
-    for match in RUST_NORMAL_STRING_RE.finditer(line):
-        if any(start <= match.start() < end for start, end in raw_ranges):
-            continue
-        literals.append(match.group("body"))
-    return literals
-
-
-def scan_codegen_source_emissions() -> list[str]:
-    violations: list[str] = []
-    for path in codegen_source_files():
-        for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
-            if not GENERATED_SOURCE_CONTEXT_RE.search(line):
-                continue
-            for literal in rust_string_literals(line):
-                for policy in PATTERN_POLICIES:
-                    if policy.id not in SOURCE_FORBIDDEN_POLICY_IDS:
-                        continue
-                    if policy.pattern.search(literal):
-                        violations.append(
-                            f"{path}:{line_number}: emitted source contains {policy.id}"
-                        )
-    return violations
-
-
-def assert_negative_rustfmt(seed: Path, run_root: Path) -> None:
-    run_root.mkdir(parents=True, exist_ok=True)
-    target = run_root / "negative-format.rs"
-    shutil.copyfile(seed, target)
-    result = run_command(["rustfmt", "--check", str(target)], check=False)
-    if result.returncode == 0:
-        raise RuntimeError("negative rustfmt seed unexpectedly passed")
-
-
-def write_negative_clippy_crate(seed: Path, run_root: Path) -> Path:
-    crate_root = run_root / "negative-clippy"
-    src = crate_root / "src"
-    src.mkdir(parents=True, exist_ok=True)
-    (crate_root / "Cargo.toml").write_text(
-        "[package]\nname = \"negative_clippy\"\nversion = \"0.1.0\"\nedition = \"2024\"\n\n[workspace]\n",
-        encoding="utf-8",
-    )
-    shutil.copyfile(seed, src / "main.rs")
-    return crate_root
-
-
-def assert_negative_clippy(seed: Path, run_root: Path, expected_lint: str) -> None:
-    crate_root = write_negative_clippy_crate(seed, run_root)
-    result = run_command(
-        [
-            "cargo",
-            "clippy",
-            "--message-format=json",
-            "--manifest-path",
-            str(crate_root / "Cargo.toml"),
-            "--",
-            *STRICT_CLIPPY_ARGS,
-        ],
-        check=False,
-    )
-    if result.returncode == 0:
-        raise RuntimeError("negative clippy seed unexpectedly passed")
-    diagnostics = parse_clippy_diagnostics(result.stdout, crate_root)
-    if expected_lint not in diagnostics:
-        raise RuntimeError(
-            f"negative Clippy seed {seed.name} did not trigger {expected_lint}; "
-            f"got {diagnostics}"
-        )
-
-
-def assert_negative_determinism(a: Path, b: Path) -> None:
-    if compare_bytes(a.read_bytes(), b.read_bytes()):
-        raise RuntimeError("negative determinism seed unexpectedly matched")
-
-
-def compare_bytes(left: bytes, right: bytes) -> bool:
-    return left == right
-
-
 def emit_source(entry: Entry) -> bytes:
     result = run_command(
         [sifr_binary(), "emit", entry.source_path],
@@ -654,7 +551,11 @@ def gate_rustfmt(entries: list[Entry], args: argparse.Namespace) -> None:
         timed_case(
             "generated_code_quality",
             "rustfmt/negative-format-violation",
-            lambda: assert_negative_rustfmt(GCQ_ROOT / "negative_seeds" / "format_violation.rs", run_root),
+            lambda: assert_negative_rustfmt(
+                GCQ_ROOT / "negative_seeds" / "format_violation.rs",
+                run_root,
+                run_command,
+            ),
         )
         debt = load_debt(QUALITY_DEBT)
         validate_debt_owners(debt)
@@ -719,6 +620,9 @@ def gate_clippy(entries: list[Entry], args: argparse.Namespace) -> None:
                     GCQ_ROOT / "negative_seeds" / filename,
                     run_root,
                     lint,
+                    run_command,
+                    STRICT_CLIPPY_ARGS,
+                    parse_clippy_diagnostics,
                 ),
             )
         debt = load_debt(QUALITY_DEBT)
@@ -752,6 +656,20 @@ def gate_clippy(entries: list[Entry], args: argparse.Namespace) -> None:
             crate_root = timed_case("generated_code_quality", f"clippy/{entry.id}", clippy_entry)
             records.append(record_for_entry(entry, crate_root, "passed"))
         merged = merge_signature_summaries(summaries)
+        lint_counts = ", ".join(
+            f"{lint}={signature['count']}" for lint, signature in merged.items()
+        )
+        print(f"generated-code clippy diagnostics: {lint_counts or 'none'}")
+        summary_path = run_root / "clippy-summary.json"
+        summary_path.write_text(
+            json.dumps(
+                {"selection_id": selection_id(selected), "summary": merged},
+                indent=2,
+                sort_keys=True,
+            ),
+            encoding="utf-8",
+        )
+        print(f"generated-code clippy summary={summary_path.relative_to(REPO_ROOT)}")
         full_selection = not args.group and not explicit_entry_ids() and not os.environ.get(
             "SIFR_GCQ_MAX_ENTRIES"
         )
@@ -759,7 +677,7 @@ def gate_clippy(entries: list[Entry], args: argparse.Namespace) -> None:
         compare_exact_debt(
             category="clippy",
             entry_id=selection_id(selected),
-            actual=compact_clippy_summary(merged),
+            actual=merged,
             debt=debt,
         )
         evidence = record_evidence("clippy", run, records)
@@ -825,6 +743,90 @@ def gate_demos(entries: list[Entry], args: argparse.Namespace) -> None:
     gate_corpus(entries, args)
 
 
+def authoritative_companion_entries() -> list[tuple[Path, Entry]]:
+    entries = []
+    for emitted in sorted((REPO_ROOT / "demos").glob("**/emitted.rs")):
+        source = emitted.with_name("main.sifr")
+        if not source.is_file():
+            raise RuntimeError(
+                f"authoritative companion has no source: {emitted.relative_to(REPO_ROOT)}"
+            )
+        relative_source = source.relative_to(REPO_ROOT).as_posix()
+        digest = hashlib.sha256(relative_source.encode("utf-8")).hexdigest()[:12]
+        entries.append(
+            (
+                emitted,
+                Entry(
+                    id=f"companion-{digest}",
+                    group="authoritative-demo-companions",
+                    source_path=relative_source,
+                    expected_command="build",
+                    evidence_category="authoritative-companion-quality",
+                ),
+            )
+        )
+    return entries
+
+
+def gate_companions(_entries: list[Entry], args: argparse.Namespace) -> None:
+    run = run_id("companions")
+    run_root = TARGET_ROOT / run
+    records = []
+    try:
+        for emitted, entry in authoritative_companion_entries():
+            def check_companion() -> Path:
+                run_command(
+                    ["rustfmt", "--edition", "2024", "--check", str(emitted)]
+                )
+                crate_root_inner = materialize_entry(entry, run_root)
+                result = run_command(
+                    [
+                        "cargo",
+                        "clippy",
+                        "--message-format=json",
+                        "--manifest-path",
+                        str(crate_root_inner / "Cargo.toml"),
+                        "--",
+                        *STRICT_CLIPPY_ARGS,
+                    ],
+                    check=False,
+                )
+                diagnostics = parse_clippy_diagnostics(result.stdout, crate_root_inner)
+                if result.returncode != 0:
+                    summary = compact_clippy_summary(diagnostics)
+                    raise RuntimeError(
+                        f"{entry.source_path}: strict companion Clippy failed: {summary}\n"
+                        f"{result.stderr}"
+                    )
+                if diagnostics:
+                    raise RuntimeError(
+                        f"{entry.source_path}: successful Clippy emitted diagnostics: "
+                        f"{compact_clippy_summary(diagnostics)}"
+                    )
+                return crate_root_inner
+
+            crate_root = timed_case(
+                "generated_code_quality",
+                f"companions/{entry.id}",
+                check_companion,
+            )
+            records.append(record_for_entry(entry, crate_root, "passed"))
+        evidence = record_evidence("companions", run, records)
+        print(
+            "authoritative demo companion quality passed; "
+            f"evidence={evidence.relative_to(REPO_ROOT)}"
+        )
+    except Exception:
+        print(
+            f"authoritative demo companion quality failed; preserved={run_root}",
+            file=sys.stderr,
+        )
+        raise
+    else:
+        if not args.keep_success:
+            shutil.rmtree(run_root, ignore_errors=True)
+
+
 def gate_intrinsic_panic_lint(_entries: list[Entry], _args: argparse.Namespace) -> None:
     def check_intrinsic_layout() -> None:
         codegen_lib = REPO_ROOT / "crates" / "sifr_codegen" / "src" / "lib.rs"
@@ -833,7 +835,7 @@ def gate_intrinsic_panic_lint(_entries: list[Entry], _args: argparse.Namespace) 
         for marker in forbidden:
             if marker in source:
                 raise RuntimeError(f"retired intrinsic emitter monolith returned: {marker}")
-        source_violations = scan_codegen_source_emissions()
+        source_violations = scan_codegen_source_emissions(REPO_ROOT)
         if source_violations:
             raise RuntimeError("\n".join(["forbidden emitted constructs in codegen source", *source_violations]))
 
@@ -849,7 +851,9 @@ def main() -> None:
     args = parse_args()
     entries = load_manifest(Path(args.manifest))
     try:
-        if args.mode == "corpus":
+        if args.mode == "companions":
+            gate_companions(entries, args)
+        elif args.mode == "corpus":
             gate_corpus(entries, args)
         elif args.mode == "inventory":
             gate_inventory(entries, args)

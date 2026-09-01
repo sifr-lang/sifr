@@ -1,38 +1,36 @@
 // src/main.rs
 use ::sifr_runtime::SifrInt;
-
-// --- stdlib: sifr.itertools ---
-struct __SifrYielder<T> {
+struct SifrGeneratedYielder<T> {
     slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
 }
-struct __SifrYieldFuture<T> {
+struct SifrGeneratedYieldFuture<T> {
     slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
     value: Option<T>,
 }
-impl<T> Unpin for __SifrYieldFuture<T> {}
-impl<T> ::std::future::Future for __SifrYieldFuture<T> {
+impl<T> Unpin for SifrGeneratedYieldFuture<T> {}
+impl<T> ::std::future::Future for SifrGeneratedYieldFuture<T> {
     type Output = ();
     fn poll(
         self: ::std::pin::Pin<&mut Self>,
-        _cx: &mut ::std::task::Context<'_>,
+        _: &mut ::std::task::Context<'_>,
     ) -> ::std::task::Poll<()> {
         let state = self.get_mut();
         let Some(value) = state.value.take() else {
             return ::std::task::Poll::Ready(());
         };
-        __sifr_store_suspended(&state.slot, value);
+        sifr_generated_store_suspended(&state.slot, value);
         ::std::task::Poll::Pending
     }
 }
-impl<T> __SifrYielder<T> {
-    fn suspend(&self, value: T) -> __SifrYieldFuture<T> {
-        __SifrYieldFuture {
+impl<T> SifrGeneratedYielder<T> {
+    fn suspend(&self, value: T) -> SifrGeneratedYieldFuture<T> {
+        SifrGeneratedYieldFuture {
             slot: ::std::sync::Arc::clone(&self.slot),
             value: Some(value),
         }
     }
 }
-fn __sifr_store_suspended<T>(
+fn sifr_generated_store_suspended<T>(
     slot: &::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
     value: T,
 ) {
@@ -41,7 +39,7 @@ fn __sifr_store_suspended<T>(
         Err(poisoned) => *poisoned.into_inner() = Some(value),
     }
 }
-fn __sifr_take_suspended<T>(
+fn sifr_generated_take_suspended<T>(
     slot: &::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
 ) -> Option<T> {
     match slot.lock() {
@@ -49,20 +47,20 @@ fn __sifr_take_suspended<T>(
         Err(poisoned) => poisoned.into_inner().take(),
     }
 }
-struct __SifrGenerator<T> {
-    producer: Option<
-        ::std::pin::Pin<Box<dyn ::std::future::Future<Output = ()> + 'static>>,
-    >,
+struct SifrGeneratedGenerator<T> {
+    producer: Option<::std::pin::Pin<Box<dyn ::std::future::Future<Output = ()> + 'static>>>,
     yielded: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
     complete: bool,
 }
-impl<T> __SifrGenerator<T> {
+impl<T> SifrGeneratedGenerator<T> {
     fn new<
-        F: FnOnce(__SifrYielder<T>) -> Fut + 'static,
+        F: FnOnce(SifrGeneratedYielder<T>) -> Fut + 'static,
         Fut: ::std::future::Future<Output = ()> + 'static,
-    >(factory: F) -> Self {
+    >(
+        factory: F,
+    ) -> Self {
         let yielded = ::std::sync::Arc::new(::std::sync::Mutex::new(None));
-        let producer = factory(__SifrYielder {
+        let producer = factory(SifrGeneratedYielder {
             slot: ::std::sync::Arc::clone(&yielded),
         });
         Self {
@@ -72,7 +70,7 @@ impl<T> __SifrGenerator<T> {
         }
     }
 }
-impl<T> Iterator for __SifrGenerator<T> {
+impl<T> Iterator for SifrGeneratedGenerator<T> {
     type Item = T;
     fn next(&mut self) -> Option<T> {
         if self.complete {
@@ -83,12 +81,10 @@ impl<T> Iterator for __SifrGenerator<T> {
                 self.complete = true;
                 return None;
             };
-            let mut context = ::std::task::Context::from_waker(
-                ::std::task::Waker::noop(),
-            );
+            let mut context = ::std::task::Context::from_waker(::std::task::Waker::noop());
             ::std::future::Future::poll(producer.as_mut(), &mut context).is_ready()
         };
-        let yielded = __sifr_take_suspended(&self.yielded);
+        let yielded = sifr_generated_take_suspended(&self.yielded);
         if completed {
             self.complete = true;
             self.producer = None;
@@ -96,71 +92,128 @@ impl<T> Iterator for __SifrGenerator<T> {
         yielded
     }
 }
-pub trait __SifrAdd: Sized {
-    fn __sifr_add(self, rhs: Self) -> Self;
-}
-impl __SifrAdd for ::sifr_runtime::SifrInt {
-    fn __sifr_add(self, rhs: Self) -> Self {
-        self + rhs
-    }
-}
-impl __SifrAdd for f64 {
-    fn __sifr_add(self, rhs: Self) -> Self {
-        self + rhs
-    }
-}
-impl __SifrAdd for String {
-    fn __sifr_add(mut self, rhs: Self) -> Self {
-        self.push_str(&rhs);
-        self
-    }
-}
+pub trait SifrGeneratedAdd: Sized {}
+impl SifrGeneratedAdd for ::sifr_runtime::SifrInt {}
 fn chain<T: Clone + 'static>(iterables: &[Vec<T>]) -> Box<dyn Iterator<Item = T>> {
     let iterables = iterables.to_vec();
-    Box::new(
-        __SifrGenerator::new(async move |__sifr_yielder: __SifrYielder<T>| {
+    Box::new(SifrGeneratedGenerator::new(
+        async move |sifr_generated_yielder: SifrGeneratedYielder<T>| {
             for iterable in iterables.iter().cloned() {
                 for item in iterable.iter().cloned() {
-                    __sifr_yielder.suspend(item.clone()).await;
+                    sifr_generated_yielder.suspend(item.clone()).await;
                 }
             }
-        }),
-    )
+        },
+    ))
 }
 fn count(start: SifrInt, step: SifrInt) -> Box<dyn Iterator<Item = SifrInt>> {
-    Box::new(
-        __SifrGenerator::new(async move |__sifr_yielder: __SifrYielder<SifrInt>| {
+    Box::new(SifrGeneratedGenerator::new(
+        async move |sifr_generated_yielder: SifrGeneratedYielder<SifrInt>| {
             let mut current: SifrInt = start.clone();
             loop {
-                __sifr_yielder.suspend(current.clone()).await;
+                sifr_generated_yielder.suspend(current.clone()).await;
                 current = &current + &step;
             }
-        }),
-    )
+        },
+    ))
 }
-// --- end stdlib ---
-
 fn square(n: SifrInt) -> SifrInt {
     &n * &n
 }
-
 fn main() {
-    let nums: Vec<SifrInt> = vec![SifrInt::from_i64(1), SifrInt::from_i64(2), SifrInt::from_i64(3), SifrInt::from_i64(4)];
-    let mut it: Box<dyn Iterator<Item = SifrInt>> = Box::new((nums).iter().cloned());
-    assert!((it.next() == Some(SifrInt::from_i64(1))));
-    assert!((it.next() == Some(SifrInt::from_i64(2))));
-    assert!((format!("{:?}", Box::new(nums.iter().cloned().map(|__sifr_map_item| square(__sifr_map_item))).collect::<Vec<_>>()) == "[1, 4, 9, 16]"));
-    assert!((format!("{:?}", Box::new((nums).iter().cloned().filter(move |__filter_item| {
-    let x = __filter_item.clone();
-    (&x.floor_mod_known_nonzero(&SifrInt::from_i64(2)) == &SifrInt::from_i64(0))
-})).collect::<Vec<_>>()) == "[2, 4]"));
-    assert!((format!("{:?}", Box::new((nums).iter().cloned().zip((vec!["a".to_string(), "b".to_string(), "c".to_string(), "d".to_string()]).into_iter()).map(|__zip_item| (__zip_item.0, __zip_item.1))).collect::<Vec<_>>()) == "[(1, \"a\"), (2, \"b\"), (3, \"c\"), (4, \"d\")]"));
-    assert!((format!("{:?}", Box::new((vec!["x".to_string(), "y".to_string()]).into_iter().enumerate().map(|__pair| (SifrInt::from(__pair.0) + SifrInt::from_i64(10), __pair.1))).collect::<Vec<_>>()) == "[(10, \"x\"), (11, \"y\")]"));
-    assert!((format!("{:?}", Box::new((nums).iter().cloned().rev()).collect::<Vec<_>>()) == "[4, 3, 2, 1]"));
-    assert!((format!("{:?}", chain(&vec![vec![SifrInt::from_i64(1), SifrInt::from_i64(2)], vec![SifrInt::from_i64(3)]]).collect::<Vec<_>>()) == "[1, 2, 3]"));
-    let mut ticker: Box<dyn Iterator<Item = SifrInt>> = count(SifrInt::from_i64(3), SifrInt::from_i64(2));
-    assert!((ticker.next() == Some(SifrInt::from_i64(3))));
-    assert!((ticker.next() == Some(SifrInt::from_i64(5))));
-    assert!((ticker.next() == Some(SifrInt::from_i64(7))));
+    let nums: Vec<SifrInt> = vec![
+        SifrInt::from_i64(1),
+        SifrInt::from_i64(2),
+        SifrInt::from_i64(3),
+        SifrInt::from_i64(4),
+    ];
+    let mut it: Box<dyn Iterator<Item = SifrInt>> = Box::new(nums.iter().cloned());
+    assert_eq!(it.next(), Some(SifrInt::from_i64(1)));
+    assert_eq!(it.next(), Some(SifrInt::from_i64(2)));
+    assert_eq!(
+        format!(
+            "{:?}",
+            Box::new(nums.iter().cloned().map(square)).collect::<Vec<_>>()
+        ),
+        "[1, 4, 9, 16]"
+    );
+    assert_eq!(
+        format!(
+            "{:?}",
+            Box::new(
+                nums.iter()
+                    .cloned()
+                    .filter(move |sifr_generated_filter_item| {
+                        let x = sifr_generated_filter_item.clone();
+                        &x.floor_mod_known_nonzero(&SifrInt::from_i64(2)) == &SifrInt::from_i64(0)
+                    })
+            )
+            .collect::<Vec<_>>()
+        ),
+        "[2, 4]"
+    );
+    assert_eq!(
+        format!(
+            "{:?}",
+            Box::new(
+                nums.iter()
+                    .cloned()
+                    .zip(
+                        vec![
+                            "a".to_string(),
+                            "b".to_string(),
+                            "c".to_string(),
+                            "d".to_string()
+                        ]
+                        .into_iter()
+                    )
+                    .map(|sifr_generated_zip_item| (
+                        sifr_generated_zip_item.0,
+                        sifr_generated_zip_item.1
+                    ))
+            )
+            .collect::<Vec<_>>()
+        ),
+        "[(1, \"a\"), (2, \"b\"), (3, \"c\"), (4, \"d\")]"
+    );
+    assert_eq!(
+        format!(
+            "{:?}",
+            Box::new(
+                vec!["x".to_string(), "y".to_string()]
+                    .into_iter()
+                    .enumerate()
+                    .map(|sifr_generated_pair| (
+                        SifrInt::from(sifr_generated_pair.0) + SifrInt::from_i64(10),
+                        sifr_generated_pair.1
+                    ))
+            )
+            .collect::<Vec<_>>()
+        ),
+        "[(10, \"x\"), (11, \"y\")]"
+    );
+    assert_eq!(
+        format!(
+            "{:?}",
+            Box::new(nums.iter().cloned().rev()).collect::<Vec<_>>()
+        ),
+        "[4, 3, 2, 1]"
+    );
+    assert_eq!(
+        format!(
+            "{:?}",
+            chain(&vec![
+                vec![SifrInt::from_i64(1), SifrInt::from_i64(2)],
+                vec![SifrInt::from_i64(3)]
+            ])
+            .collect::<Vec<_>>()
+        ),
+        "[1, 2, 3]"
+    );
+    let mut ticker: Box<dyn Iterator<Item = SifrInt>> =
+        count(SifrInt::from_i64(3), SifrInt::from_i64(2));
+    assert_eq!(ticker.next(), Some(SifrInt::from_i64(3)));
+    assert_eq!(ticker.next(), Some(SifrInt::from_i64(5)));
+    assert_eq!(ticker.next(), Some(SifrInt::from_i64(7)));
     println!("iter_fix_lazy_iterators_basics_lock_demo: ok");
 }

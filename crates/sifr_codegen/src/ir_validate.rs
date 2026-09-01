@@ -316,7 +316,7 @@ fn validate_expr(expr: &RustExpr, issues: &mut Vec<IrValidationIssue>, in_functi
                 validate_expr(arg, issues, in_function);
             }
         }
-        RustExpr::MacroCall { name, args } => {
+        RustExpr::MacroCall { name, args } | RustExpr::FormatMacro { name, args, .. } => {
             if matches!(name.as_str(), "panic" | "unreachable") {
                 issues.push(IrValidationIssue {
                     kind: IrValidationKind::ForbiddenFailureDischarge,
@@ -340,11 +340,6 @@ fn validate_expr(expr: &RustExpr, issues: &mut Vec<IrValidationIssue>, in_functi
             validate_expr(duration, issues, in_function);
             validate_expr(future, issues, in_function);
             validate_expr(error, issues, in_function);
-        }
-        RustExpr::FormatMacro { args, .. } => {
-            for arg in args {
-                validate_expr(arg, issues, in_function);
-            }
         }
         RustExpr::BinOp { left, right, .. } => {
             validate_expr(left, issues, in_function);
@@ -664,6 +659,26 @@ mod tests {
         assert!(issues.iter().any(|issue| {
             issue.kind == IrValidationKind::ForbiddenFailureDischarge
                 && issue.message.contains("unreachable!")
+        }));
+    }
+
+    #[test]
+    fn rejects_failure_discharge_in_every_structured_macro_variant() {
+        let items = vec![RustItem::Const {
+            name: "BROKEN".to_string(),
+            visibility: Visibility::Private,
+            ty: RustType::String_,
+            value: RustExpr::FormatMacro {
+                name: "panic".to_string(),
+                format_str: "{}".to_string(),
+                args: vec![RustExpr::Literal(RustLiteral::Str("boom".to_string()))],
+            },
+        }];
+
+        let issues = validate_items(&items);
+        assert!(issues.iter().any(|issue| {
+            issue.kind == IrValidationKind::ForbiddenFailureDischarge
+                && issue.message.contains("panic!")
         }));
     }
 

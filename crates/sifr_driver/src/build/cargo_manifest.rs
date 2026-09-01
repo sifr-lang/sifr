@@ -401,6 +401,7 @@ mod tests {
                 rust_type_path: "crate::__sifr_bridge::_sifr_json::JSONDecodeErrorBridge"
                     .to_string(),
                 kind: RustGeneratedBridgeTypeKind::Error,
+                supports_eq: true,
                 fields: vec![RustGeneratedBridgeField {
                     name: "line".to_string(),
                     sifr_type: "int".to_string(),

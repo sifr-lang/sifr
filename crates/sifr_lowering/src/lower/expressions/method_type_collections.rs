@@ -314,10 +314,9 @@ pub(super) fn resolve_dict_method_type(
     {
         return None;
     }
-    let requires_reusable_values = matches!(
-        method,
-        "values" | "items" | "update" | "copy" | "get" | "setdefault"
-    );
+    // `setdefault` has a dedicated ownership contract immediately below. Do
+    // not duplicate it in the generic reusable-value path.
+    let requires_reusable_values = matches!(method, "values" | "items" | "update" | "copy" | "get");
     if method == "setdefault" && val_ty.contains_affine_resource() {
         ctx.error_with_code_at(
             DiagnosticCode::PYZC_INVALID_DECLARATION,

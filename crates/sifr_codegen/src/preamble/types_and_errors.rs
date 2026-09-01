@@ -460,7 +460,7 @@ pub fn build_failure_type_items() -> Vec<RustItem> {
         RustItem::Struct {
             name: "__SifrFailure<E>".to_string(),
             visibility: Visibility::Private,
-            derives: vec!["Debug".to_string()],
+            derives: vec![],
             fields: vec![
                 ("primary".to_string(), RustType::Named("E".to_string())),
                 (
@@ -469,6 +469,7 @@ pub fn build_failure_type_items() -> Vec<RustItem> {
                 ),
             ],
         },
+        build_failure_debug_impl(),
         RustItem::Impl {
             target: "__SifrFailure<E>".to_string(),
             type_params: vec![crate::RustTypeParam {
@@ -587,6 +588,72 @@ pub fn build_failure_type_items() -> Vec<RustItem> {
             ],
         },
     ]
+}
+
+fn build_failure_debug_impl() -> RustItem {
+    let debug = RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::Ident("f".to_string())),
+                    method: "debug_struct".to_string(),
+                    args: vec![RustExpr::Literal(crate::RustLiteral::StaticStr(
+                        "SifrGeneratedFailure".to_string(),
+                    ))],
+                }),
+                method: "field".to_string(),
+                args: vec![
+                    RustExpr::Literal(crate::RustLiteral::StaticStr("primary".to_string())),
+                    RustExpr::Ref {
+                        mutable: false,
+                        expr: Box::new(RustExpr::Field {
+                            expr: Box::new(RustExpr::Ident("self".to_string())),
+                            field: "primary".to_string(),
+                        }),
+                    },
+                ],
+            }),
+            method: "field".to_string(),
+            args: vec![
+                RustExpr::Literal(crate::RustLiteral::StaticStr("secondary".to_string())),
+                RustExpr::Ref {
+                    mutable: false,
+                    expr: Box::new(RustExpr::Field {
+                        expr: Box::new(RustExpr::Ident("self".to_string())),
+                        field: "secondary".to_string(),
+                    }),
+                },
+            ],
+        }),
+        method: "finish".to_string(),
+        args: vec![],
+    };
+    RustItem::Impl {
+        target: "__SifrFailure<E>".to_string(),
+        type_params: vec![crate::RustTypeParam {
+            name: "E".to_string(),
+            bounds: vec!["std::fmt::Debug".to_string()],
+        }],
+        trait_: Some("std::fmt::Debug".to_string()),
+        items: vec![RustItem::Fn {
+            name: "fmt".to_string(),
+            visibility: Visibility::Private,
+            type_params: vec![],
+            params: vec![
+                RustParam::SelfParam { mutable: false },
+                RustParam::Named {
+                    name: "f".to_string(),
+                    ty: RustType::Ref {
+                        mutable: true,
+                        inner: Box::new(RustType::Named("std::fmt::Formatter<'_>".to_string())),
+                    },
+                },
+            ],
+            ret: Some(RustType::Named("std::fmt::Result".to_string())),
+            body: vec![RustStmt::Return(Some(debug))],
+            is_async: false,
+        }],
+    }
 }
 
 pub fn build_timeout_result_type_items() -> Vec<RustItem> {
