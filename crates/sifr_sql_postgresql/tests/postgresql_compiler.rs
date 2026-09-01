@@ -86,8 +86,10 @@ fn ddl_normalization_and_query_analysis_share_one_schema_authority() {
              CREATE SEQUENCE public.owned_users_sequence AS integer INCREMENT 5 \
                MINVALUE 0 MAXVALUE 1000 START 0 CACHE 3 CYCLE;\
              ALTER SEQUENCE public.owned_users_sequence OWNED BY public.users.id;\
-             CREATE SEQUENCE public.descending_sequence AS integer INCREMENT -2 \
-               MINVALUE -1000 MAXVALUE -1 START -1 NO CYCLE;\
+             CREATE SEQUENCE public.descending_sequence AS integer \
+               INCREMENT - /* signed step */ 2 \
+               MINVALUE -- signed lower bound\n\
+                 -1000 MAXVALUE - 1 START -/* signed start */1 NO CYCLE;\
              CREATE TYPE public.mood AS ENUM ('ok', 'sad');\
              CREATE DOMAIN public.label AS text NOT NULL;"
                 .to_string(),

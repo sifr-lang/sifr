@@ -141,14 +141,19 @@ fn sequence_integer_argument(
     name: &str,
 ) -> Result<i64, PostgresParseError> {
     let (tag, body) = tagged(argument, "sequence integer")?;
-    let value = match tag {
-        "Integer" => body.get("ival").and_then(Value::as_i64),
-        "Float" => string_field(body, "fval").and_then(|value| value.parse().ok()),
-        _ => None,
-    };
-    value
-        .or_else(|| sequence_integer_from_source(source, option))
-        .ok_or_else(|| sequence_error(format!("sequence {name} is not an i64 integer")))
+    match tag {
+        "Integer" => body
+            .get("ival")
+            .and_then(Value::as_i64)
+            .or_else(|| sequence_integer_from_source(source, option))
+            .ok_or_else(|| sequence_error(format!("sequence {name} is not an i64 integer"))),
+        "Float" => string_field(body, "fval")
+            .and_then(|value| value.parse().ok())
+            .ok_or_else(|| sequence_error(format!("sequence {name} is not an i64 integer"))),
+        _ => Err(sequence_error(format!(
+            "sequence {name} is not an i64 integer"
+        ))),
+    }
 }
 
 fn sequence_boolean(
@@ -193,16 +198,28 @@ fn sequence_integer_from_source(source: &str, option: &Map<String, Value>) -> Op
             }
             continue;
         }
-        let number_start = index;
-        if matches!(bytes[index], b'+' | b'-') {
+        let sign = if matches!(bytes[index], b'+' | b'-') {
+            let sign = bytes[index];
             index += 1;
-        }
+            index = skip_sql_spacing(bytes, index)?;
+            Some(sign)
+        } else {
+            None
+        };
         let digit_start = index;
         while index < bytes.len() && bytes[index].is_ascii_digit() {
             index += 1;
         }
         if index > digit_start {
-            return source.get(number_start..index)?.parse().ok();
+            let digits = source.get(digit_start..index)?;
+            return match sign {
+                Some(b'-') => format!("-{digits}").parse().ok(),
+                Some(b'+') | None => digits.parse().ok(),
+                _ => None,
+            };
+        }
+        if sign.is_some() {
+            return None;
         }
         index += 1;
     }
@@ -213,7 +230,8 @@ fn sequence_boolean_from_source(source: &str, option: &Map<String, Value>) -> Op
     let start = usize::try_from(u32_field(option, "location")?).ok()?;
     let bytes = source.as_bytes();
     let index = skip_sql_spacing(bytes, start)?;
-    let end = bytes[index..]
+    let tail = bytes.get(index..)?;
+    let end = tail
         .iter()
         .position(|byte| !byte.is_ascii_alphabetic())
         .map_or(bytes.len(), |offset| index + offset);
