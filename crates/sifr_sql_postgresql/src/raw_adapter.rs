@@ -1,10 +1,9 @@
 use crate::ast::{
     ColumnDefinition, ConflictAction, ConflictClause, CreateDomainStatement, CreateEnumStatement,
-    CreateFunctionStatement, CreateIndexStatement, CreateSequenceStatement, CreateTableStatement,
-    CreateViewStatement, DeleteStatement, Expression, ExpressionKind, FromItem, InsertStatement,
-    JoinKind, OrderDirection, OrderItem, PostgresStatement, PostgresTypeName, SelectItem,
-    SelectStatement, SetOperation, SetOperator, SqlSpan, StatementKind, TableConstraint,
-    UpdateStatement,
+    CreateFunctionStatement, CreateIndexStatement, CreateTableStatement, CreateViewStatement,
+    DeleteStatement, Expression, ExpressionKind, FromItem, InsertStatement, JoinKind,
+    OrderDirection, OrderItem, PostgresStatement, PostgresTypeName, SelectItem, SelectStatement,
+    SetOperation, SetOperator, SqlSpan, StatementKind, TableConstraint, UpdateStatement,
 };
 use crate::diagnostic::{PostgresDiagnostic, PostgresDiagnosticCode};
 use crate::ffi;
@@ -139,6 +138,7 @@ impl<'a> RawAdapter<'a> {
                     }
                     "IndexStmt" => StatementKind::CreateIndex(Self::create_index(body)?),
                     "CreateSeqStmt" => StatementKind::CreateSequence(Self::create_sequence(body)?),
+                    "AlterSeqStmt" => StatementKind::AlterSequence(Self::alter_sequence(body)?),
                     "CreateFunctionStmt" => {
                         StatementKind::CreateFunction(Self::create_function(body)?)
                     }
@@ -815,14 +815,6 @@ impl<'a> RawAdapter<'a> {
                 })
                 .collect(),
             unique: bool_field(body, "unique").unwrap_or(false),
-        })
-    }
-
-    fn create_sequence(
-        body: &Map<String, Value>,
-    ) -> Result<CreateSequenceStatement, PostgresParseError> {
-        Ok(CreateSequenceStatement {
-            name: relation_name(object_field(body, "sequence")?),
         })
     }
 

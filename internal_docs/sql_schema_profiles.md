@@ -164,6 +164,18 @@ original qualified database identity. Generated source uses a collision-free
 internal class name such as `enums__public__status`; the compiler-known metadata
 exposes that type as `enums.public.status`.
 
+One contract-owned table defines all external annotation names and imports.
+Providers return names from this table. The generator rejects each annotation
+name that is not a builtin, an imported name, or a generated local type.
+Generated enums extend `sifr.sql.SqlEnum`. They do not import Python `enum`.
+Date, time, UUID, JSON, network, range, and SQL wrapper names use explicit
+imports in every generated module.
+
+Query discovery uses the imported profile namespaces. If `app` is configured,
+`@app.query` requires `from sifr.sql.schemas import app`. The compiler reports
+one profile-import diagnostic with this correction. A decorator such as
+`@cache.query` does not match a configured profile and remains ordinary source.
+
 A sidecar `ProfileModuleMetadata` contains the nominal identity, profile and
 schema fingerprints, compiler-known exports, generated types, and complete
 schema-symbol index.

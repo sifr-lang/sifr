@@ -23,6 +23,7 @@ mod parameters;
 mod raw_adapter;
 mod raw_advanced;
 mod raw_helpers;
+mod raw_sequences;
 mod raw_writes;
 mod result_analysis;
 mod scope;
@@ -36,11 +37,11 @@ mod writes;
 pub use analysis::PostgresAnalysisError;
 pub use analyzer::PostgresAnalyzer;
 pub use ast::{
-    Assignment, CaseBranch, CommonTableExpression, ConflictAction, ConflictClause,
-    CreateCompositeStatement, CreateRangeStatement, CteMaterialization, Expression, ExpressionKind,
-    FromItem, JoinKind, LockStrength, LockWait, LockingClause, OrderDirection, PostgresStatement,
-    PostgresTypeName, SelectItem, SetOperator, StatementKind, SubqueryQuantifier,
-    WindowSpecification,
+    AlterSequenceStatement, Assignment, CaseBranch, CommonTableExpression, ConflictAction,
+    ConflictClause, CreateCompositeStatement, CreateRangeStatement, CteMaterialization, Expression,
+    ExpressionKind, FromItem, JoinKind, LockStrength, LockWait, LockingClause, OrderDirection,
+    PostgresStatement, PostgresTypeName, SelectItem, SetOperator, StatementKind,
+    SubqueryQuantifier, WindowSpecification,
 };
 pub use catalog::{
     CatalogCast, CatalogColumn, CatalogFunction, CatalogOperator, CatalogRelation, PostgresCatalog,

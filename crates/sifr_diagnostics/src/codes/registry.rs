@@ -722,6 +722,7 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::SQL_EFFECT,
     DiagnosticCode::SQL_PROVIDER_CONTRACT,
     DiagnosticCode::SQL_OWNERSHIP,
+    DiagnosticCode::SQL_PROFILE_IMPORT,
     DiagnosticCode::PYENV_INVALID_CONFIG,
     DiagnosticCode::PYENV_MULTIPLE_SELECTIONS,
     DiagnosticCode::PYENV_MISSING_SELECTION,

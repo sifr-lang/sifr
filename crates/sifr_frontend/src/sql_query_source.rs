@@ -6,6 +6,35 @@ use sifr_sql_contract::{IntegerSign, IntegerWidth, SifrType};
 use sifr_type_system::{FixedIntType, Type};
 use std::collections::{BTreeMap, BTreeSet};
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MissingSqlProfileImport {
+    pub profile_name: String,
+    pub function_name: String,
+}
+
+#[must_use]
+pub fn missing_sql_profile_imports(
+    module: &HirModule,
+    configured_profiles: &BTreeSet<String>,
+    imported_profiles: &BTreeMap<String, String>,
+) -> Vec<MissingSqlProfileImport> {
+    module
+        .functions
+        .iter()
+        .flat_map(|function| {
+            function.decorators.iter().filter_map(|decorator| {
+                let profile_name = decorator.strip_suffix(".query")?;
+                (configured_profiles.contains(profile_name)
+                    && !imported_profiles.contains_key(profile_name))
+                .then(|| MissingSqlProfileImport {
+                    profile_name: profile_name.to_string(),
+                    function_name: function.name.clone(),
+                })
+            })
+        })
+        .collect()
+}
+
 pub fn sql_query_declarations(
     module: &HirModule,
     profile_locals: &BTreeMap<String, String>,

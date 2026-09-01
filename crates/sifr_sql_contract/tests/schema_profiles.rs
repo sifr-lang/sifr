@@ -245,12 +245,12 @@ fn nominal_profiles_and_generated_namespaces_do_not_collapse_equal_schemas() {
 
     let module = generate_profile_module(&first).expect("generated module");
     assert!(module.source.contains("class Schema:"));
-    assert!(module.source.contains("class enums__public__sql(Enum):"));
-    assert!(module.source.contains("class enums__app__sql(Enum):"));
+    assert!(module.source.contains("class enums__public__sql(SqlEnum):"));
+    assert!(module.source.contains("class enums__app__sql(SqlEnum):"));
     assert!(
         module
             .source
-            .contains("class enums__app___sifr_sql_636c617373(Enum):")
+            .contains("class enums__app___sifr_sql_636c617373(SqlEnum):")
     );
     assert!(module.metadata.compiler_known_exports.contains("sql"));
     assert_eq!(

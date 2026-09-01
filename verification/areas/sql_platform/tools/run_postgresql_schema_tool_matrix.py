@@ -36,6 +36,8 @@ CREATE TABLE accounts (
   state mood NOT NULL,
   balance numeric CHECK (balance >= 0)
 );
+CREATE SEQUENCE owned_accounts_sequence;
+ALTER SEQUENCE owned_accounts_sequence OWNED BY accounts.id;
 CREATE TABLE orders (
   id bigint PRIMARY KEY,
   account_id bigint REFERENCES accounts(id)
@@ -45,6 +47,8 @@ CREATE TABLE parity_users (
   name text NOT NULL,
   score integer CHECK (score >= 0)
 );
+CREATE SEQUENCE parity_owned_sequence;
+ALTER SEQUENCE parity_owned_sequence OWNED BY parity_users.id;
 CREATE TABLE type_samples (
   id bigint PRIMARY KEY,
   domain_values positive_id[],

@@ -11,4 +11,5 @@ impl DiagnosticCode {
     pub const SQL_EFFECT: Self = Self::new("SIFR-SQL-0006", Severity::Error);
     pub const SQL_PROVIDER_CONTRACT: Self = Self::new("SIFR-SQL-0007", Severity::Error);
     pub const SQL_OWNERSHIP: Self = Self::new("SIFR-SQL-0008", Severity::Error);
+    pub const SQL_PROFILE_IMPORT: Self = Self::new("SIFR-SQL-0009", Severity::Error);
 }

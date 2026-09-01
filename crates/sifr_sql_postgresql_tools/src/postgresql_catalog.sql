@@ -112,19 +112,37 @@ catalog_objects AS (
 
     UNION ALL
     SELECT n.nspname || '.' || c.relname, 'sequence',
-           jsonb_build_object('name', c.relname, 'data-type', pg_catalog.format_type(s.seqtypid, NULL),
-                              'start', s.seqstart, 'increment', s.seqincrement, 'minimum', s.seqmin,
-                              'maximum', s.seqmax, 'cache', s.seqcache, 'cycle', s.seqcycle),
-           jsonb_build_array(n.nspname)
+           jsonb_strip_nulls(jsonb_build_object(
+               'name', c.relname, 'data-type', pg_catalog.format_type(s.seqtypid, NULL),
+               'start', s.seqstart, 'increment', s.seqincrement, 'minimum', s.seqmin,
+               'maximum', s.seqmax, 'cache', s.seqcache, 'cycle', s.seqcycle,
+               'owned-by', owner.identity
+           )),
+           jsonb_build_array(n.nspname) ||
+               CASE WHEN owner.identity IS NULL THEN '[]'::jsonb
+                    ELSE jsonb_build_array(owner.identity) END
     FROM pg_catalog.pg_sequence s
     JOIN pg_catalog.pg_class c ON c.oid = s.seqrelid
     JOIN user_namespaces n ON n.oid = c.relnamespace
+    LEFT JOIN LATERAL (
+        SELECT owner_n.nspname || '.' || owner_c.relname || '.' || owner_a.attname AS identity
+        FROM pg_catalog.pg_depend dependency
+        JOIN pg_catalog.pg_class owner_c ON owner_c.oid = dependency.refobjid
+        JOIN pg_catalog.pg_namespace owner_n ON owner_n.oid = owner_c.relnamespace
+        JOIN pg_catalog.pg_attribute owner_a
+          ON owner_a.attrelid = owner_c.oid AND owner_a.attnum = dependency.refobjsubid
+        WHERE dependency.classid = 'pg_catalog.pg_class'::regclass
+          AND dependency.objid = c.oid
+          AND dependency.refclassid = 'pg_catalog.pg_class'::regclass
+          AND dependency.deptype = 'a'
+        LIMIT 1
+    ) owner ON true
     WHERE NOT EXISTS (
         SELECT 1
         FROM pg_catalog.pg_depend dependency
         WHERE dependency.classid = 'pg_catalog.pg_class'::regclass
           AND dependency.objid = c.oid
-          AND dependency.deptype IN ('a', 'i')
+          AND dependency.deptype = 'i'
     )
 
     UNION ALL

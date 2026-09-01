@@ -63,6 +63,33 @@ async fn live_catalog_preserves_postgresql_semantic_objects() {
     ]);
     assert_eq!(kinds.intersection(&expected).count(), expected.len());
     assert_eq!(schema.dialect.server_version, major.to_string());
+    assert!(
+        schema
+            .objects
+            .contains_key(&sifr_sql_contract::ObjectId::new("public.audit_sequence"))
+    );
+    let owned_sequence = schema
+        .objects
+        .get(&sifr_sql_contract::ObjectId::new(
+            "public.owned_accounts_sequence",
+        ))
+        .expect("explicit owned sequence");
+    assert_eq!(
+        owned_sequence.semantic.get("owned-by"),
+        Some(&sifr_sql_contract::SemanticValue::Text(
+            "public.accounts.id".to_string()
+        ))
+    );
+    assert!(
+        owned_sequence
+            .dependencies
+            .contains(&sifr_sql_contract::ObjectId::new("public.accounts.id"))
+    );
+    assert!(
+        !schema
+            .objects
+            .contains_key(&sifr_sql_contract::ObjectId::new("public.accounts_id_seq"))
+    );
     let catalog = PostgresCatalog::from_schema(&schema, PostgresTypeRegistry::new(major))
         .expect("pulled schema must load in the compiler catalog");
     let analyzer = PostgresAnalyzer::new(LibpgQueryParser, catalog);
@@ -87,8 +114,8 @@ async fn live_catalog_preserves_postgresql_semantic_objects() {
     let generated = String::from_utf8(artifacts.files()[GENERATED_MODULE_PATH].clone())
         .expect("generated source");
     assert!(generated.contains("class domains__public__positive_id:"));
-    assert!(generated.contains("value: i32"));
-    assert!(generated.contains("unit_count: i32"));
+    assert!(generated.contains("value: int32"));
+    assert!(generated.contains("unit_count: int32"));
     assert!(generated.contains("latitude: Numeric"));
     assert!(
         generated.contains("domain_values: SqlArray[domains__public__positive_id | None]"),
@@ -113,6 +140,7 @@ fn parity_schema(mut schema: sifr_sql_contract::SchemaIr) -> sifr_sql_contract::
             || identity.as_str() == "public.parity_users"
             || identity.as_str().starts_with("public.parity_users.")
             || identity.as_str().starts_with("public.parity_users_")
+            || identity.as_str() == "public.parity_owned_sequence"
             || identity.as_str() == "public.parity_user_view"
             || identity.as_str().starts_with("public.parity_user_view.")
     });
@@ -132,7 +160,9 @@ fn ddl_parity_schema(provider: ProviderIdentity) -> sifr_sql_contract::SchemaIr 
                     score integer CHECK (score >= 0)\
                  ); \
                  CREATE VIEW parity_user_view AS \
-                    SELECT id, name, score FROM parity_users;"
+                    SELECT id, name, score FROM parity_users; \
+                 CREATE SEQUENCE parity_owned_sequence; \
+                 ALTER SEQUENCE parity_owned_sequence OWNED BY parity_users.id;"
                     .to_string(),
             )],
         },

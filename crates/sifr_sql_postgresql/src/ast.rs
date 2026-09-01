@@ -29,6 +29,7 @@ pub enum StatementKind {
     CreateView(CreateViewStatement),
     CreateIndex(CreateIndexStatement),
     CreateSequence(CreateSequenceStatement),
+    AlterSequence(AlterSequenceStatement),
     CreateFunction(CreateFunctionStatement),
 }
 
@@ -473,6 +474,13 @@ pub struct CreateIndexStatement {
 #[serde(deny_unknown_fields)]
 pub struct CreateSequenceStatement {
     pub name: Vec<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct AlterSequenceStatement {
+    pub name: Vec<String>,
+    pub owned_by: Vec<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

@@ -82,6 +82,13 @@ The adapter uses the same structured `DatabaseType` values and property names as
 the declarative DDL normalizer. Generated domain and composite annotations come
 from the provider type registry. An unrepresentable type is an error.
 
+The PostgreSQL adapter keeps explicit sequences, including sequences with an
+`OWNED BY` column dependency. It records that column as the `owned-by` semantic
+field and as a dependency. The adapter excludes only sequences with PostgreSQL
+internal identity ownership (`pg_depend.deptype = 'i'`). It does not exclude
+user sequence ownership (`pg_depend.deptype = 'a'`). The DDL normalizer applies
+the same rule to `ALTER SEQUENCE ... OWNED BY`.
+
 Pull compares the live graph with the checked snapshot. If no snapshot exists,
 it compares with the selected source authority. It prints the semantic diff and
 flushes standard output before any write. A non-empty diff returns status 2.

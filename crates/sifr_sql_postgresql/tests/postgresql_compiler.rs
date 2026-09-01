@@ -83,6 +83,8 @@ fn ddl_normalization_and_query_analysis_share_one_schema_authority() {
              CREATE VIEW public.user_names AS SELECT id, name FROM public.users;\
              CREATE MATERIALIZED VIEW public.team_names AS SELECT id, name FROM public.teams;\
              CREATE SEQUENCE public.audit_sequence;\
+             CREATE SEQUENCE public.owned_users_sequence;\
+             ALTER SEQUENCE public.owned_users_sequence OWNED BY public.users.id;\
              CREATE TYPE public.mood AS ENUM ('ok', 'sad');\
              CREATE DOMAIN public.label AS text NOT NULL;"
                 .to_string(),
@@ -123,6 +125,19 @@ fn ddl_normalization_and_query_analysis_share_one_schema_authority() {
     ] {
         assert!(kinds.contains(&kind), "missing normalized object {kind:?}");
     }
+    let owned_sequence = schema
+        .objects
+        .get(&ObjectId::new("public.owned_users_sequence"))
+        .expect("owned sequence");
+    assert_eq!(
+        owned_sequence.semantic.get("owned-by"),
+        Some(&SemanticValue::Text("public.users.id".to_string()))
+    );
+    assert!(
+        owned_sequence
+            .dependencies
+            .contains(&ObjectId::new("public.users.id"))
+    );
     let check = schema
         .objects
         .values()

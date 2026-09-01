@@ -17,11 +17,35 @@ class DecodeError(SqlError):
     pass
 
 
+class SqlEnum:
+    pass
+
+
 class Numeric:
     pass
 
 
 class CalendarInterval:
+    pass
+
+
+class OffsetTime:
+    pass
+
+
+class Instant:
+    pass
+
+
+class IPAddress:
+    pass
+
+
+class IPNetwork:
+    pass
+
+
+class MacAddress:
     pass
 
 

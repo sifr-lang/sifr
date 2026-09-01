@@ -64,6 +64,7 @@ pub use fragment_batches::{
 pub use generated::{
     COMPILER_KNOWN_PROFILE_EXPORTS, GeneratedProfileModule, GeneratedSchemaType,
     ProfileModuleMetadata, SchemaWitnessMetadata, generate_profile_module,
+    generated_sifr_type_name,
 };
 pub use identifier::{
     decode_generated_identifier, decode_generated_path, encode_generated_identifier,
