@@ -87,7 +87,10 @@ The PostgreSQL adapter keeps explicit sequences, including sequences with an
 field and as a dependency. The adapter excludes only sequences with PostgreSQL
 internal identity ownership (`pg_depend.deptype = 'i'`). It does not exclude
 user sequence ownership (`pg_depend.deptype = 'a'`). The DDL normalizer applies
-the same rule to `ALTER SEQUENCE ... OWNED BY`.
+the same rule to `CREATE SEQUENCE ... OWNED BY` and `ALTER SEQUENCE ... OWNED
+BY`. It parses the sequence data type, bounds, start, increment, cache, and cycle
+options. Omitted options use PostgreSQL defaults for the data type and increment
+direction. Unsupported options are errors.
 
 Pull compares the live graph with the checked snapshot. If no snapshot exists,
 it compares with the selected source authority. It prints the semantic diff and

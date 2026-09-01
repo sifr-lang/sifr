@@ -47,7 +47,8 @@ CREATE TABLE parity_users (
   name text NOT NULL,
   score integer CHECK (score >= 0)
 );
-CREATE SEQUENCE parity_owned_sequence;
+CREATE SEQUENCE parity_owned_sequence AS integer INCREMENT 5
+  MINVALUE 10 MAXVALUE 1000 START 20 CACHE 3 CYCLE;
 ALTER SEQUENCE parity_owned_sequence OWNED BY parity_users.id;
 CREATE TABLE type_samples (
   id bigint PRIMARY KEY,

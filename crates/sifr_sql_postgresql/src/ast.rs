@@ -474,6 +474,22 @@ pub struct CreateIndexStatement {
 #[serde(deny_unknown_fields)]
 pub struct CreateSequenceStatement {
     pub name: Vec<String>,
+    pub data_type: SequenceDataType,
+    pub increment: i64,
+    pub minimum: Option<i64>,
+    pub maximum: Option<i64>,
+    pub start: Option<i64>,
+    pub cache: i64,
+    pub cycle: bool,
+    pub owned_by: Option<Vec<String>>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum SequenceDataType {
+    SmallInt,
+    Integer,
+    BigInt,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

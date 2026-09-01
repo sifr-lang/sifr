@@ -1,5 +1,7 @@
 use super::sql_application_queries::compile_application_queries;
 use super::sql_profiles::prepare_sql_profiles;
+#[path = "sql_profiles_test_fixtures.rs"]
+mod sql_profiles_test_fixtures;
 use sha2::{Digest, Sha256};
 use sifr_compiler_component::{
     ClosedType, EmbeddedAnalysisResponse, EmbeddedPlan, PlanKind, RuntimeLowering,
@@ -13,9 +15,9 @@ use sifr_sql_contract::{
     Cardinality, CodecIdentity, DatabaseType, DialectIdentity, EffectContract, IntegerSign,
     IntegerWidth, Nullability, ObjectId, PROVIDER_ANALYSIS_PAYLOAD_TAG, ProviderAnalysis,
     ProviderParameter, ProviderResultField, QueryEffect, SCHEMA_NORMALIZATION_PAYLOAD_TAG,
-    SchemaDocument, SchemaDocumentKind, SchemaNormalizationOutput, SchemaObject, SchemaObjectKind,
-    SchemaSourceLocation, SifrType,
+    SchemaDocument, SchemaDocumentKind, SchemaNormalizationOutput, SchemaObjectKind, SifrType,
 };
+use sql_profiles_test_fixtures::{generated_enum_object, generated_scalar_object, schema_object};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -53,6 +55,7 @@ fn package_compilation_prepares_profiles_offline_and_binds_source_bytes() {
         .source
         .clone();
     for expected in [
+        "from enum import Enum",
         "from sifr.datetime import date, datetime, time",
         "from sifr.json import JsonValue",
         "from sifr.uuid import UUID",
@@ -66,6 +69,7 @@ fn package_compilation_prepares_profiles_offline_and_binds_source_bytes() {
         "address: IPAddress",
         "network: IPNetwork",
         "hardware_address: MacAddress",
+        "class enums__public__mood(Enum):",
     ] {
         assert!(generated_source.contains(expected), "{expected}");
     }
@@ -749,6 +753,7 @@ fn schema_response() -> Vec<u8> {
                     BTreeSet::from([ObjectId::new("public.users")]),
                 ),
                 generated_scalar_object(),
+                generated_enum_object(),
             ],
         }],
     };
@@ -774,53 +779,6 @@ fn schema_response() -> Vec<u8> {
         plan,
     })
     .expect("schema response")
-}
-
-fn schema_object(
-    identity: &str,
-    kind: SchemaObjectKind,
-    dependencies: BTreeSet<ObjectId>,
-) -> SchemaObject {
-    SchemaObject {
-        identity: ObjectId::new(identity),
-        kind,
-        semantic: BTreeMap::new(),
-        dependencies,
-        source: Some(SchemaSourceLocation {
-            document: "db/schema.sql".to_string(),
-            start: 0,
-            end: 21,
-        }),
-    }
-}
-
-fn generated_scalar_object() -> SchemaObject {
-    let mut object = schema_object(
-        "public.scalar_samples",
-        SchemaObjectKind::Composite,
-        BTreeSet::from([ObjectId::new("public")]),
-    );
-    object.semantic.insert(
-        "fields".to_string(),
-        sifr_sql_contract::SemanticValue::Map(
-            BTreeMap::from([
-                ("created_on".to_string(), "date".to_string()),
-                ("local_time".to_string(), "time".to_string()),
-                ("offset_time".to_string(), "OffsetTime".to_string()),
-                ("local_timestamp".to_string(), "datetime".to_string()),
-                ("instant".to_string(), "Instant".to_string()),
-                ("identifier".to_string(), "UUID".to_string()),
-                ("document".to_string(), "JsonValue".to_string()),
-                ("address".to_string(), "IPAddress".to_string()),
-                ("network".to_string(), "IPNetwork".to_string()),
-                ("hardware_address".to_string(), "MacAddress".to_string()),
-            ])
-            .into_iter()
-            .map(|(name, ty)| (name, sifr_sql_contract::SemanticValue::Text(ty)))
-            .collect(),
-        ),
-    );
-    object
 }
 
 fn fixture_component(output: &[u8]) -> Vec<u8> {

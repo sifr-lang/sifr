@@ -7,6 +7,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write as _;
 
 const GENERATED_PROFILE_IMPORTS: &[(&str, &[&str])] = &[
+    ("enum", &["Enum"]),
     ("sifr.datetime", &["date", "datetime", "time"]),
     ("sifr.json", &["JsonValue"]),
     (
@@ -22,7 +23,6 @@ const GENERATED_PROFILE_IMPORTS: &[(&str, &[&str])] = &[
             "OffsetTime",
             "Range",
             "SqlArray",
-            "SqlEnum",
             "SqlSchema",
         ],
     ),
@@ -192,7 +192,7 @@ fn render_generated_type(
     match generated {
         GeneratedSchemaType::Enum { path, variants, .. } => {
             let name = encode_generated_path(path)?;
-            writeln!(source, "\nclass {name}(SqlEnum):").map_err(format_error)?;
+            writeln!(source, "\nclass {name}(Enum):").map_err(format_error)?;
             for (index, variant) in variants.iter().enumerate() {
                 writeln!(
                     source,

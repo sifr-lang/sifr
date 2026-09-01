@@ -83,7 +83,8 @@ fn ddl_normalization_and_query_analysis_share_one_schema_authority() {
              CREATE VIEW public.user_names AS SELECT id, name FROM public.users;\
              CREATE MATERIALIZED VIEW public.team_names AS SELECT id, name FROM public.teams;\
              CREATE SEQUENCE public.audit_sequence;\
-             CREATE SEQUENCE public.owned_users_sequence;\
+             CREATE SEQUENCE public.owned_users_sequence AS integer INCREMENT 5 \
+               MINVALUE 10 MAXVALUE 1000 START 20 CACHE 3 CYCLE;\
              ALTER SEQUENCE public.owned_users_sequence OWNED BY public.users.id;\
              CREATE TYPE public.mood AS ENUM ('ok', 'sad');\
              CREATE DOMAIN public.label AS text NOT NULL;"
@@ -133,6 +134,17 @@ fn ddl_normalization_and_query_analysis_share_one_schema_authority() {
         owned_sequence.semantic.get("owned-by"),
         Some(&SemanticValue::Text("public.users.id".to_string()))
     );
+    for (key, expected) in [
+        ("data-type", SemanticValue::Text("integer".to_string())),
+        ("start", SemanticValue::Signed(20)),
+        ("increment", SemanticValue::Signed(5)),
+        ("minimum", SemanticValue::Signed(10)),
+        ("maximum", SemanticValue::Signed(1000)),
+        ("cache", SemanticValue::Signed(3)),
+        ("cycle", SemanticValue::Bool(true)),
+    ] {
+        assert_eq!(owned_sequence.semantic.get(key), Some(&expected), "{key}");
+    }
     assert!(
         owned_sequence
             .dependencies

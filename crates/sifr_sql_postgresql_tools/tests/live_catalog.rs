@@ -161,7 +161,8 @@ fn ddl_parity_schema(provider: ProviderIdentity) -> sifr_sql_contract::SchemaIr 
                  ); \
                  CREATE VIEW parity_user_view AS \
                     SELECT id, name, score FROM parity_users; \
-                 CREATE SEQUENCE parity_owned_sequence; \
+                 CREATE SEQUENCE parity_owned_sequence AS integer INCREMENT 5 \
+                    MINVALUE 10 MAXVALUE 1000 START 20 CACHE 3 CYCLE; \
                  ALTER SEQUENCE parity_owned_sequence OWNED BY parity_users.id;"
                     .to_string(),
             )],

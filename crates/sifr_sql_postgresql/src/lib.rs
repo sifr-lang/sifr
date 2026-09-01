@@ -7,6 +7,7 @@ mod catalog;
 mod catalog_advanced;
 mod catalog_metadata;
 mod catalog_semantics;
+mod catalog_sequences;
 mod catalog_snapshot;
 mod component;
 mod ddl_constraints;

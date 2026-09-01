@@ -416,32 +416,10 @@ pub(crate) fn ddl_document(
                 )?;
             }
             StatementKind::CreateSequence(value) => {
-                add_namespace(&document, &value.name, &mut objects);
-                let identity = ObjectId::new(qualified_name(&value.name));
-                objects.insert(
-                    identity.clone(),
-                    SchemaObject {
-                        identity,
-                        kind: SchemaObjectKind::Sequence,
-                        semantic: default_sequence_semantics(&value.name),
-                        dependencies: namespace_dependency(&value.name),
-                        source: Some(source_location(&document, statement)),
-                    },
-                );
+                crate::catalog_sequences::add_sequence(&document, statement, value, &mut objects)?;
             }
             StatementKind::AlterSequence(value) => {
-                let identity = ObjectId::new(qualified_name(&value.name));
-                let owned_by = owned_sequence_column_identity(&value.owned_by);
-                let sequence = objects.get_mut(&identity).ok_or_else(|| {
-                    schema_error_message(format!(
-                        "ALTER SEQUENCE names unknown sequence '{identity}'"
-                    ))
-                })?;
-                sequence.semantic.insert(
-                    "owned-by".to_string(),
-                    SemanticValue::Text(owned_by.clone()),
-                );
-                sequence.dependencies.insert(ObjectId::new(owned_by));
+                crate::catalog_sequences::alter_sequence(value, &mut objects)?;
             }
             StatementKind::CreateIndex(value) => {
                 let relation = ObjectId::new(qualified_name(&value.relation));
@@ -525,33 +503,6 @@ pub(crate) fn ddl_document(
             })
             .collect(),
     })
-}
-
-fn default_sequence_semantics(name: &[String]) -> BTreeMap<String, SemanticValue> {
-    BTreeMap::from([
-        (
-            "name".to_string(),
-            SemanticValue::Text(name.last().cloned().unwrap_or_default()),
-        ),
-        (
-            "data-type".to_string(),
-            SemanticValue::Text("bigint".to_string()),
-        ),
-        ("start".to_string(), SemanticValue::Signed(1)),
-        ("increment".to_string(), SemanticValue::Signed(1)),
-        ("minimum".to_string(), SemanticValue::Signed(1)),
-        ("maximum".to_string(), SemanticValue::Signed(i64::MAX)),
-        ("cache".to_string(), SemanticValue::Signed(1)),
-        ("cycle".to_string(), SemanticValue::Bool(false)),
-    ])
-}
-
-fn owned_sequence_column_identity(name: &[String]) -> String {
-    if name.len() == 2 {
-        format!("public.{}", name.join("."))
-    } else {
-        name.join(".")
-    }
 }
 
 fn add_view(

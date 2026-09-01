@@ -17,10 +17,6 @@ class DecodeError(SqlError):
     pass
 
 
-class SqlEnum:
-    pass
-
-
 class Numeric:
     pass
 
