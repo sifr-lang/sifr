@@ -61,7 +61,7 @@
     {
       "name": "build-qualification",
       "kind": "adapter",
-      "resource_classes": ["cargo-build-exclusive"],
+      "resource_classes": ["default-local", "long-running"],
       "network_mode": "offline",
       "timeout_seconds": 3600,
       "cases": [
