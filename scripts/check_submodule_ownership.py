@@ -17,7 +17,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 class ExpectedSubmodule:
     path: str
     url: str
-    branch: str
+    branch: str | None
 
 
 EXPECTED_SUBMODULES = [
@@ -65,6 +65,19 @@ EXPECTED_SUBMODULES = [
         "verification/areas/developer_tooling/corpora/sifr-large-lsp-verification",
         "https://github.com/sifr-lang/sifr-large-lsp-verification.git",
         "main",
+    ),
+    *[
+        ExpectedSubmodule(
+            f"third_party/libpg_query/{major}",
+            "https://github.com/pganalyze/libpg_query.git",
+            None,
+        )
+        for major in range(13, 19)
+    ],
+    ExpectedSubmodule(
+        "third_party/wasi-virt",
+        "https://github.com/bytecodealliance/WASI-Virt.git",
+        None,
     ),
 ]
 
@@ -120,7 +133,12 @@ def validate_gitmodules(text: str) -> list[str]:
             failures.append(
                 f"submodule {expected.path} has unexpected url: {actual['url']}"
             )
-        if actual["branch"] != expected.branch:
+        if expected.branch is None:
+            if actual["branch"]:
+                failures.append(
+                    f"submodule {expected.path} must remain commit-pinned without branch tracking"
+                )
+        elif actual["branch"] != expected.branch:
             failures.append(f"submodule {expected.path} must track {expected.branch}")
 
     for path in sorted(entries):
@@ -188,7 +206,7 @@ def run_self_test() -> None:
         f'[submodule "{entry.path}"]\n'
         f"\tpath = {entry.path}\n"
         f"\turl = {entry.url}\n"
-        f"\tbranch = {entry.branch}\n"
+        + (f"\tbranch = {entry.branch}\n" if entry.branch is not None else "")
         for entry in EXPECTED_SUBMODULES
     )
     if validate_gitmodules(valid_gitmodules):
@@ -221,6 +239,17 @@ def run_self_test() -> None:
         raise SystemExit(
             "submodule ownership self-test failed: missing branch accepted"
         )
+    pinned = next(entry for entry in EXPECTED_SUBMODULES if entry.branch is None)
+    tracked_pin = valid_gitmodules.replace(
+        f"\turl = {pinned.url}\n",
+        f"\turl = {pinned.url}\n\tbranch = main\n",
+        1,
+    )
+    if not any(
+        "must remain commit-pinned" in failure
+        for failure in validate_gitmodules(tracked_pin)
+    ):
+        raise SystemExit("submodule ownership self-test failed: tracked pin accepted")
     stale_path = valid_gitmodules + (
         '[submodule "audits/leetcode"]\n'
         "\tpath = audits/leetcode\n"
