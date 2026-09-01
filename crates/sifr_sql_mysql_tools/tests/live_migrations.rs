@@ -111,6 +111,7 @@ fn qualification_plan(
             table_fingerprint,
             table_fingerprint,
             MigrationExecutionStepKind::SqlData {
+                statement: format!("INSERT INTO `{TABLE}` VALUES (1)"),
                 normalized_statement: format!("INSERT INTO `{TABLE}` VALUES (1)"),
             },
             'c',
@@ -120,6 +121,7 @@ fn qualification_plan(
             table_fingerprint,
             table_fingerprint,
             MigrationExecutionStepKind::SqlData {
+                statement: format!("INSERT INTO `{TABLE}` VALUES (1)"),
                 normalized_statement: format!("INSERT INTO `{TABLE}` VALUES (1)"),
             },
             'd',

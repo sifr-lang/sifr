@@ -190,6 +190,15 @@ pub fn validate_response(
         .iter()
         .map(|hole| hole.index)
         .collect::<BTreeSet<_>>();
+    let request_documents = request
+        .parts
+        .iter()
+        .map(|part| match part {
+            TemplatePart::Static { span, .. } | TemplatePart::Hole { span, .. } => {
+                span.document.as_str()
+            }
+        })
+        .collect::<BTreeSet<_>>();
     let mut operation_count = 0;
     for operation in &response.plan.operations {
         validate_operation(operation, 0, &mut operation_count, &known_holes, limits)?;
@@ -199,8 +208,10 @@ pub fn validate_response(
             return Err(limit_error("diagnostic message is too large"));
         }
         validate_span(&diagnostic.primary)?;
+        validate_response_document(&diagnostic.primary, &request_documents)?;
         for span in &diagnostic.related {
             validate_span(span)?;
+            validate_response_document(span, &request_documents)?;
         }
         if provider_diagnostics.lifecycle_for(&diagnostic.code) != Some(diagnostic.lifecycle) {
             return Err(ComponentError::new(
@@ -224,6 +235,7 @@ pub fn validate_response(
         }
         previous_provider_end = Some(mapping.provider_end);
         validate_span(&mapping.source)?;
+        validate_response_document(&mapping.source, &request_documents)?;
     }
     validate_dependencies(response)?;
     validate_runtime(&response.plan.runtime, &known_holes)?;
@@ -235,6 +247,18 @@ pub fn validate_response(
     if compute_plan_fingerprint(&response.plan)? != response.plan.stable_fingerprint {
         return Err(envelope_error(
             "plan fingerprint does not match the canonical plan contents",
+        ));
+    }
+    Ok(())
+}
+
+fn validate_response_document(
+    span: &SourceSpan,
+    request_documents: &BTreeSet<&str>,
+) -> Result<(), ComponentError> {
+    if !request_documents.contains(span.document.as_str()) {
+        return Err(envelope_error(
+            "component response span names a document outside the request",
         ));
     }
     Ok(())

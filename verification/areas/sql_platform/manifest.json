@@ -36,6 +36,45 @@
       ]
     },
     {
+      "name": "integrated-qualification",
+      "kind": "adapter",
+      "resource_classes": ["default-local"],
+      "network_mode": "offline",
+      "timeout_seconds": 900,
+      "cases": [
+        {
+          "id": "sql-integrated-qualification",
+          "entry": "verification/areas/sql_platform/data/integrated_qualification.json",
+          "command": "sql-integrated-qualification",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        },
+        {
+          "id": "sql-integrated-qualification-mutations",
+          "entry": "verification/areas/sql_platform/tools/check_integrated_qualification.py",
+          "command": "sql-integrated-qualification-mutations",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
+      "name": "build-qualification",
+      "kind": "adapter",
+      "resource_classes": ["cargo-build-exclusive"],
+      "network_mode": "offline",
+      "timeout_seconds": 3600,
+      "cases": [
+        {
+          "id": "sql-build-qualification",
+          "entry": "verification/areas/sql_platform/tools/run_sql_build_qualification.py",
+          "command": "sql-build-qualification",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
+        }
+      ]
+    },
+    {
       "name": "compiler-components",
       "kind": "adapter",
       "cases": [
@@ -174,7 +213,7 @@
       "name": "schema-polymorphism",
       "kind": "adapter",
       "resource_classes": [
-        "cpu"
+        "default-local"
       ],
       "network_mode": "offline",
       "timeout_seconds": 900,
@@ -300,7 +339,7 @@
     {
       "name": "mysql-provider",
       "kind": "adapter",
-      "resource_classes": ["cpu"],
+      "resource_classes": ["default-local"],
       "network_mode": "offline",
       "timeout_seconds": 900,
       "cases": [
@@ -426,9 +465,9 @@
     },
     {
       "name": "schema-tools",
-      "kind": "cargo",
+      "kind": "adapter",
       "resource_classes": [
-        "cpu"
+        "default-local"
       ],
       "network_mode": "offline",
       "timeout_seconds": 600,
@@ -446,7 +485,7 @@
       "name": "migration-engine",
       "kind": "adapter",
       "resource_classes": [
-        "cpu"
+        "default-local"
       ],
       "network_mode": "offline",
       "timeout_seconds": 900,
@@ -535,7 +574,7 @@
       "name": "postgresql-migrations",
       "kind": "adapter",
       "resource_classes": [
-        "cpu"
+        "default-local"
       ],
       "network_mode": "offline",
       "timeout_seconds": 900,
@@ -606,7 +645,7 @@
     {
       "name": "sqlite-provider",
       "kind": "adapter",
-      "resource_classes": ["cpu"],
+      "resource_classes": ["default-local"],
       "network_mode": "offline",
       "timeout_seconds": 1800,
       "cases": [

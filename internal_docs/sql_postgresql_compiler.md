@@ -227,6 +227,10 @@ plans carry those objects as schema-fingerprinted dependencies.
 `INSERT` checks required columns, row widths, assignment casts, generated
 columns, explicit `DEFAULT` values, and `INSERT SELECT` widths.
 
+An `INSERT` without a column list accounts for every concrete target column.
+Portable code uses an explicit column list when its structural requirement
+declares only part of an application table.
+
 `ON CONFLICT` targets must match a primary or unique key. Conflict-target and
 update predicates remain distinct. The `excluded` pseudo-relation uses the
 target table column types. SQL `NULL` cannot be assigned to a non-nullable

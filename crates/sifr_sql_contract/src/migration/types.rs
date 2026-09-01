@@ -51,6 +51,33 @@ pub struct MigrationBaseline {
     pub schema: SchemaIr,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum MigrationSourceStepKind {
+    Ddl { statement: String },
+    SqlData { statement: String },
+    Assertion { statement: String },
+    RecoveryPoint { name: String },
+    Begin,
+    Commit,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MigrationSourceStep {
+    pub id: MigrationNodeId,
+    pub kind: MigrationSourceStepKind,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MigrationSourceDeclaration {
+    pub id: MigrationNodeId,
+    pub parents: Vec<MigrationNodeId>,
+    pub function: String,
+    pub author: String,
+    pub created_at: String,
+    pub steps: Vec<MigrationSourceStep>,
+    pub rollback: Option<Vec<MigrationSourceStep>>,
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum TransactionRequirement {
@@ -87,6 +114,7 @@ pub struct DataCallbackContract {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct BackfillContract {
+    pub statement: String,
     pub analysis: ProviderAnalysis,
     pub maximum_batch_rows: u64,
     pub replay: ReplayPolicy,
@@ -100,12 +128,14 @@ pub enum MigrationStepKind {
         declared_effect: Option<Box<SchemaIr>>,
     },
     SqlData {
+        statement: String,
         analysis: ProviderAnalysis,
     },
     SifrData {
         callback: DataCallbackContract,
     },
     Assertion {
+        statement: String,
         analysis: ProviderAnalysis,
     },
     Backfill {
@@ -189,15 +219,18 @@ pub enum CompiledStepKind {
         statement: String,
     },
     SqlData {
+        statement: String,
         normalized_statement: String,
     },
     SifrData {
         callback: String,
     },
     Assertion {
+        statement: String,
         normalized_statement: String,
     },
     Backfill {
+        statement: String,
         normalized_statement: String,
         maximum_batch_rows: u64,
         replay: ReplayPolicy,

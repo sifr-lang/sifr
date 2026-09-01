@@ -313,8 +313,7 @@ fn lower_create_table(
     let options = &tokens[close + 1..];
     table.default_character_set = option_value(options, Keyword::Charset)
         .or_else(|| option_value_after_sequence(options, Keyword::Character, Keyword::Set));
-    table.default_collation = option_value(options, Keyword::Collate)
-        .or_else(|| Some(parser.default_collation().to_string()));
+    table.default_collation = option_value(options, Keyword::Collate);
     Ok(table)
 }
 

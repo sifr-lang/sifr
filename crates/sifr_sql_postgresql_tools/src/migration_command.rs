@@ -2,14 +2,23 @@ use crate::command::{
     CommandError, CommandOutcome, command_error, json_line, load_authority, required_connection,
 };
 use crate::{connect_migration_runtime, validate_postgres_migration_plan};
+use sifr_sql_postgresql::{
+    LibpgQueryParser, PostgresAnalyzer, PostgresCatalog, PostgresMigrationDialect, PostgresParser,
+    PostgresTypeRegistry, postgresql_capabilities,
+};
 use sifr_sql_runtime::{
     MigrationEngine, MigrationExecutionLimits, MigrationExecutionPlan, MigrationId,
+};
+use sifr_sql_tool::{
+    build_migration_artifacts, compile_migration_sources, load_migration_source_inputs,
+    write_migration_artifacts_atomically,
 };
 use std::fs;
 use std::path::Path;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 enum MigrationCommand {
+    Build { profile: String },
     Plan { profile: String },
     Import { profile: String, baseline: String },
     Apply { profile: String },
@@ -23,11 +32,15 @@ pub async fn run_migration_command(
 ) -> Result<CommandOutcome, CommandError> {
     let command = parse_command(arguments)?;
     let profile = match &command {
-        MigrationCommand::Plan { profile }
+        MigrationCommand::Build { profile }
+        | MigrationCommand::Plan { profile }
         | MigrationCommand::Import { profile, .. }
         | MigrationCommand::Apply { profile }
         | MigrationCommand::Rollback { profile } => profile,
     };
+    if matches!(command, MigrationCommand::Build { .. }) {
+        return build(workspace_root, profile);
+    }
     let plan = read_plan(workspace_root, profile)?;
     let operator_plan = validate_postgres_migration_plan(&plan)
         .map_err(|failure| command_error(failure.message))?;
@@ -81,6 +94,9 @@ pub async fn run_migration_command(
             MigrationCommand::Plan { .. } => {
                 Err("migration plan command entered live execution".to_string())
             }
+            MigrationCommand::Build { .. } => {
+                Err("migration build command entered live execution".to_string())
+            }
         }
     })
     .await
@@ -90,6 +106,64 @@ pub async fn run_migration_command(
         exit_code: 0,
         stdout: result,
     })
+}
+
+fn build(workspace_root: &Path, profile: &str) -> Result<CommandOutcome, CommandError> {
+    let authority = load_authority(workspace_root, profile)?;
+    let target = authority.profile.schema;
+    let parser = LibpgQueryParser;
+    let dialect = PostgresMigrationDialect::new(
+        parser,
+        target.dialect.server_version.clone(),
+        postgresql_capabilities(),
+    );
+    let inputs = load_migration_source_inputs(workspace_root, profile, compile_migration_source)
+        .map_err(|failure| command_error(failure.message))?;
+    let graph = compile_migration_sources(
+        &dialect,
+        target.clone(),
+        inputs.baselines,
+        inputs.declarations,
+        |schema, statement| {
+            let catalog = PostgresCatalog::from_schema(
+                schema,
+                PostgresTypeRegistry::new(parser.server_major()),
+            )
+            .map_err(|failure| failure.message)?;
+            PostgresAnalyzer::new(parser, catalog)
+                .analyze_query(statement)
+                .map_err(|failure| failure.to_string())
+        },
+    )
+    .map_err(|failure| command_error(failure.message))?;
+    let artifacts = build_migration_artifacts(&graph, &target)
+        .map_err(|failure| command_error(failure.message))?;
+    let output = migration_directory(workspace_root, profile);
+    write_migration_artifacts_atomically(&output, &artifacts)
+        .map_err(|failure| command_error(failure.message))?;
+    Ok(CommandOutcome {
+        exit_code: 0,
+        stdout: json_line(&artifacts.manifest)?,
+    })
+}
+
+fn compile_migration_source(
+    source: &str,
+) -> Result<Vec<sifr_sql_contract::MigrationSourceDeclaration>, String> {
+    sifr_driver::compile_sql_migration_source(source).map_err(|failures| {
+        failures
+            .into_iter()
+            .map(|failure| failure.message)
+            .collect::<Vec<_>>()
+            .join("\n")
+    })
+}
+
+fn migration_directory(workspace_root: &Path, profile: &str) -> std::path::PathBuf {
+    workspace_root
+        .join(".sifr")
+        .join("sql-migrations")
+        .join(profile)
 }
 
 fn read_plan(workspace_root: &Path, profile: &str) -> Result<MigrationExecutionPlan, CommandError> {
@@ -137,6 +211,7 @@ fn parse_command(arguments: &[String]) -> Result<MigrationCommand, CommandError>
         .filter(|value| !value.is_empty() && !value.starts_with("--"))
         .ok_or_else(usage)?;
     match command {
+        "build" if baseline.is_none() => Ok(MigrationCommand::Build { profile }),
         "plan" if baseline.is_none() => Ok(MigrationCommand::Plan { profile }),
         "import" => Ok(MigrationCommand::Import {
             profile,
@@ -163,7 +238,7 @@ fn checked_id(value: &str) -> Result<MigrationId, String> {
 
 fn usage() -> CommandError {
     command_error(
-        "usage: migration plan --profile <name> | migration import --profile <name> --baseline <id> | migration apply --profile <name> | migration rollback --profile <name>",
+        "usage: migration build --profile <name> | migration plan --profile <name> | migration import --profile <name> --baseline <id> | migration apply --profile <name> | migration rollback --profile <name>",
     )
 }
 
@@ -185,6 +260,7 @@ mod tests {
         assert!(parse_command(&words("apply --profile app")).is_ok());
         assert!(parse_command(&words("rollback --profile app")).is_ok());
         assert!(parse_command(&words("plan --profile app")).is_ok());
+        assert!(parse_command(&words("build --profile app")).is_ok());
         assert!(parse_command(&words("apply --profile app --baseline old")).is_err());
     }
 

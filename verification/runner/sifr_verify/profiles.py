@@ -193,9 +193,16 @@ def required_sql_platform_suites() -> set[str]:
     names = {
         str(suite["name"])
         for suite in suites
+        if isinstance(suite, dict)
+        and isinstance(suite.get("name"), str)
+        and suite.get("network_mode", manifest.get("network_mode")) == "offline"
+    }
+    declared_names = {
+        str(suite["name"])
+        for suite in suites
         if isinstance(suite, dict) and isinstance(suite.get("name"), str)
     }
-    if len(names) != len(suites):
+    if len(declared_names) != len(suites):
         raise ProfileError("SQL platform area manifest has invalid or duplicate suites")
     return names
 

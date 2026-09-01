@@ -17,9 +17,86 @@ callback receives `MigrationDb[S]` for the exact input state.
 progress, assertion outcomes, bounded backfill progress, and recovery errors.
 Provider tools implement the runtime interface.
 
-`sifr_sql_tool` converts the checked compiler graph to a closed execution plan.
-The `MigrationExecutionPlan` contains only runtime-owned types. The
-application runtime does not link `sifr_sql_contract` or compiler components.
+`sifr_sql_tool` loads source files and converts the checked compiler graph to a
+closed execution plan. It receives checked declarations through a callback.
+Thus, this crate does not depend on `sifr_driver` in production.
+
+Each provider tool invokes `sifr_driver` for source checking. The provider tool
+then passes the checked declarations to `sifr_sql_tool`.
+
+The `MigrationExecutionPlan` contains only runtime-owned types. The application
+runtime does not link `sifr_sql_contract` or compiler components.
+
+## Source layout and build command
+
+Migration declarations are ordinary checked Sifr source files. A profile uses
+this project layout:
+
+```text
+migrations/
+  app/
+    2026_08_add_status.sifr
+    baselines/
+      2026_07_previous.json
+.sifr/
+  sql-migrations/
+    app/                         # generated; never an authoring location
+```
+
+Each source filename must equal its migration `id`. Each baseline filename must
+equal its baseline `id`. Each source file declares exactly one migration.
+
+The profile name is one normalized path segment. Source files, baseline files,
+and their directories must be real files or directories. Symlinks fail before
+artifact publication.
+
+Duplicate identities, unknown parents, cycles, and disconnected graphs also
+fail before artifact publication.
+
+All providers expose the same offline command:
+
+```text
+sifr sql migration build --profile app
+```
+
+The command loads the selected profile authority, type-checks every `.sifr`
+source, uses that provider's exact parser and analyzer for SQL steps, reflects
+DDL through the provider migration dialect, compiles the complete graph, and
+atomically writes `graph.json`, `schema.json`, `impact.json`, and
+`artifact-manifest.json` under `.sifr/sql-migrations/app/`.
+
+The source declaration surface is concise and deterministic:
+
+```sifr
+from sifr.sql.migration import MigrationPlan, MigrationState, migration, rollback
+
+@migration(
+    id="2026_08_add_status",
+    parents=["2026_07_previous"],
+    author="Application team",
+    created_at="2026-08-31T00:00:00Z",
+)
+def add_status[S: MigrationState](own plan: MigrationPlan[S]) -> MigrationPlan[S]:
+    changed = plan.ddl(t"ALTER TABLE orders ADD COLUMN status TEXT")
+    filled = changed.sql_step(
+        t"UPDATE orders SET status = 'pending' WHERE status IS NULL"
+    )
+    checked = filled.assert_sql(
+        t"SELECT bool_and(status IS NOT NULL) AS valid FROM orders"
+    )
+    return checked.ddl(t"ALTER TABLE orders ALTER COLUMN status SET NOT NULL")
+
+@rollback(of="2026_08_add_status")
+def remove_status[S: MigrationState](own plan: MigrationPlan[S]) -> MigrationPlan[S]:
+    return plan.ddl(t"ALTER TABLE orders DROP COLUMN status")
+```
+
+Migration SQL is static at graph-build time. Exact source text is retained for
+execution; provider normalization is retained separately for semantics and
+fingerprints. Dynamic interpolation is rejected.
+`@rollback` is optional. When present, it names exactly one migration and the
+compiler proves that its explicit reverse steps reproduce every parent schema.
+No reverse SQL is synthesized.
 
 ## Graph contract
 
@@ -34,6 +111,10 @@ migration declares these values:
 - ordered steps and a transaction requirement.
 - optional explicit reverse steps.
 - author and creation metadata.
+
+Version comparison uses semantic versions. User-facing database versions can
+omit trailing zero fields: `18` becomes `18.0.0`, and `8.4` becomes `8.4.0`.
+Other malformed versions fail before migration compilation.
 
 The compiler uses a deterministic topological order. It rejects unknown parents,
 cycles, disconnected baselines, duplicate identities, and multiple terminal
@@ -51,9 +132,12 @@ The provider reflects each DDL statement against its input `SchemaIR`. The
 compiler creates a nominal state identity from the migration, parent, direction,
 step position, and resulting fingerprint.
 
-If a provider cannot reflect a raw DDL statement, the step must declare an
-explicit schema effect. An empty effect is an error. If reflection succeeds, a
-declared effect must equal the reflected schema.
+The source-level `plan.ddl` operation accepts only DDL that the selected
+provider can reflect. The compiler rejects opaque DDL. It does not accept an
+unchecked schema-effect fallback.
+
+The low-level graph contract can carry a provider-owned declared effect. If
+reflection also succeeds, that effect must equal the reflected schema.
 
 Each step records its input state, output state, input fingerprint, output
 fingerprint, checksum, referenced objects, and affected objects. Data steps do
@@ -149,5 +233,6 @@ The permanent `migration-engine` SQL suite contains these checks:
 
 [`sql_postgresql_migrations.md`](./sql_postgresql_migrations.md) defines the
 PostgreSQL DDL, advisory lock, ledger, import, command, recovery, rollback, and
-PostgreSQL 13 through 18 qualification contracts. Integrated source-to-tool
-callback binding remains part of final platform integration.
+PostgreSQL 13 through 18 qualification contracts. MySQL and SQLite use the same
+source loader, graph compiler, artifact transaction, and command surface with
+their own exact parser, analyzer, reflection, and runtime implementations.

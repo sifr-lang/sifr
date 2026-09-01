@@ -18,8 +18,16 @@ SETUP_SQL = r"""
 CREATE TYPE mood AS ENUM ('sad', 'ok', 'happy');
 CREATE DOMAIN email_address AS text CHECK (VALUE LIKE '%@%');
 CREATE DOMAIN positive_id AS integer CHECK (VALUE > 0);
-CREATE TYPE postal_address AS (street text, city text, unit_count integer, latitude numeric);
+CREATE TYPE postal_address AS (
+  street text,
+  city text,
+  unit_count integer,
+  latitude numeric,
+  domain_values positive_id[]
+);
+CREATE TYPE address_book AS (composite_values postal_address[]);
 CREATE TYPE price_range AS RANGE (subtype = numeric);
+CREATE DOMAIN price_window AS price_range;
 CREATE COLLATION sifr_c (provider = libc, locale = 'C');
 CREATE SEQUENCE audit_sequence;
 CREATE TABLE accounts (
@@ -32,13 +40,28 @@ CREATE TABLE orders (
   id bigint PRIMARY KEY,
   account_id bigint REFERENCES accounts(id)
 );
-CREATE TABLE parity_users (id bigint PRIMARY KEY, name text NOT NULL);
+CREATE TABLE parity_users (
+  id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  name text NOT NULL,
+  score integer CHECK (score >= 0)
+);
+CREATE TABLE type_samples (
+  id bigint PRIMARY KEY,
+  domain_values positive_id[],
+  composite_values postal_address[],
+  address postal_address,
+  "window" price_window
+);
 CREATE INDEX orders_account_idx ON orders(account_id);
 CREATE VIEW account_view AS SELECT id, email FROM accounts;
+CREATE VIEW parity_user_view AS SELECT id, name, score FROM parity_users;
 CREATE MATERIALIZED VIEW account_count AS SELECT count(*) AS count FROM accounts;
 CREATE FUNCTION add_one(integer) RETURNS integer LANGUAGE SQL IMMUTABLE STRICT AS 'SELECT $1 + 1';
+CREATE FUNCTION add_one(bigint) RETURNS bigint LANGUAGE SQL IMMUTABLE STRICT AS 'SELECT $1 + 1';
 CREATE FUNCTION integer_same(integer, integer) RETURNS boolean LANGUAGE SQL IMMUTABLE STRICT AS 'SELECT $1 = $2';
 CREATE OPERATOR === (LEFTARG = integer, RIGHTARG = integer, FUNCTION = integer_same);
+CREATE FUNCTION postal_address_text(postal_address) RETURNS text LANGUAGE SQL IMMUTABLE STRICT AS 'SELECT ($1).street || '', '' || ($1).city';
+CREATE CAST (postal_address AS text) WITH FUNCTION postal_address_text(postal_address) AS ASSIGNMENT;
 CREATE FUNCTION audit_accounts() RETURNS trigger LANGUAGE plpgsql AS 'BEGIN RETURN NEW; END';
 CREATE TRIGGER accounts_audit BEFORE INSERT ON accounts FOR EACH ROW EXECUTE FUNCTION audit_accounts();
 """

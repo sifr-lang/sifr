@@ -521,9 +521,11 @@ impl RootedEntrypointPlan {
                             &package_project.module_packages,
                             &python_bridges,
                         );
+                        let mut external_defs = stdlib.defs.clone();
+                        sql_profiles.install_compiler_externals(&mut external_defs);
                         collect_project_hir_source_modules_with_options(
                             &package_project.parsed_modules,
-                            stdlib.defs.clone(),
+                            external_defs,
                             &lowering_options,
                         )
                     })?;
@@ -539,12 +541,18 @@ impl RootedEntrypointPlan {
         };
         let (
             shape,
-            project_lowering,
+            mut project_lowering,
             python_runtime,
             python_bridges,
             rust_interop_context,
             sql_profiles,
         ) = resolved;
+        let query_signatures = measure_stage(stages, "Compiling SQL query declarations", || {
+            super::sql_application_queries::compile_application_queries(
+                &mut project_lowering,
+                &sql_profiles,
+            )
+        })?;
 
         Ok((
             Self {
@@ -555,7 +563,7 @@ impl RootedEntrypointPlan {
                 python_bridges,
                 rust_interop_context,
                 sql_profiles,
-                query_signatures: sifr_sql_contract::QuerySignatureRegistry::default(),
+                query_signatures,
                 package_identity,
                 cargo_resolution,
             },
@@ -633,7 +641,7 @@ impl RootedEntrypointPlan {
         let python_bridges = self.python_bridges.clone();
         let rust_interop_context = self.rust_interop_context.clone();
         let cargo_resolution = self.cargo_resolution.clone();
-        let sql_profile_cache_fragment = self.sql_profiles.cache_fragment();
+        let sql_profile_cache_fragment = self.sql_profiles.cache_fragment()?;
         let stdlib_interop = self.stdlib.interop.clone();
         let mut generated = match self.shape {
             RootedEntrypointShape::SingleFile => {

@@ -73,5 +73,14 @@
     "crates/sifr_sql_mysql_tools/src/provision.rs",
     "crates/sifr_sql_sqlite_tools/src/command.rs",
     "crates/sifr_sql_sqlite_tools/src/provision.rs"
+  ],
+  "executable_tests": [
+    {"path": "crates/sifr/tests/host_tool_cli.rs", "name": "direct_sql_namespace_runs_locked_host_tool_and_validates_manifest"},
+    {"path": "crates/sifr_analysis/src/host/tests/sql_editor_tests.rs", "name": "lockfile_less_project_defers_sql_profiles_and_preserves_overlay_analysis"},
+    {"path": "crates/sifr_package/src/host_tools_tests.rs", "name": "host_tool_graph_resolves_locked_host_entrypoint"},
+    {"path": "crates/sifr_package/src/host_tools_tests.rs", "name": "host_tool_graph_rejects_reserved_namespaces_and_unknown_capabilities"},
+    {"path": "crates/sifr_package/src/host_tools_tests.rs", "name": "host_tool_graph_rejects_application_contamination"},
+    {"path": "crates/sifr_package/src/host_tools_tests.rs", "name": "host_tool_graph_detects_lockfile_hash_drift"},
+    {"path": "crates/sifr_sql_contract/tests/provision_contract.rs", "name": "connection_manifest_is_structured_and_never_contains_inline_credentials"}
   ]
 }

@@ -15,7 +15,16 @@ fn lookup_named_type(name: &str, ctx: &LowerCtx) -> Option<Type> {
             .scope
             .lookup_type_alias(name)
             .cloned()
-            .or_else(|| ctx.class_types.get(name).cloned()),
+            .or_else(|| ctx.class_types.get(name).cloned())
+            .or_else(|| {
+                let (root, member) = name.split_once('.')?;
+                let Type::Class { fields, .. } = ctx.class_types.get(root)?.resolve_alias() else {
+                    return None;
+                };
+                fields
+                    .iter()
+                    .find_map(|(field, ty)| (field == member).then(|| ty.clone()))
+            }),
     }
 }
 

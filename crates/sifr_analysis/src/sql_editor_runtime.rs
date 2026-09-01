@@ -68,6 +68,11 @@ impl SqlEditorRuntime {
         self.cancellation = cancellation;
     }
 
+    pub(super) fn replace_profiles(&mut self, profiles: PreparedSqlProfiles) {
+        self.initialization_diagnostics = profiles.initialization_diagnostics().to_vec();
+        self.profiles = profiles;
+    }
+
     pub(super) fn diagnostics_for_source(&self, source: &str) -> Vec<RenderedDiagnostic> {
         self.initialization_diagnostics
             .iter()
@@ -176,7 +181,7 @@ impl SqlEditorRuntime {
             }
             let analysis = provider_analysis_from_response(&run.response)
                 .map_err(|error| SqlEditorRuntimeError::Contract(error.to_string()))?;
-            let dependencies = run
+            let mut dependencies = run
                 .response
                 .plan
                 .dependencies
@@ -188,6 +193,24 @@ impl SqlEditorRuntime {
                     )
                 })
                 .collect::<Vec<_>>();
+            if analysis.semantic_flags.contains("expanded-select-star") {
+                let schema = &self
+                    .profiles
+                    .registry()
+                    .profile(&profile_name)
+                    .map_err(|error| SqlEditorRuntimeError::Contract(error.to_string()))?
+                    .authority()
+                    .profile
+                    .schema;
+                for relation in &analysis.effects.referenced_objects {
+                    if let Some(fingerprint) = relation_membership_fingerprint(schema, relation)? {
+                        dependencies.push(SqlAnalysisDependency::new(
+                            relation_membership_identity(&profile_name, relation.as_str()),
+                            fingerprint,
+                        ));
+                    }
+                }
+            }
             let slice_request =
                 dependency_scoped_cache_request(&request, Some(&run.response.plan.dependencies))?;
             let slice_key = EmbeddedAnalysisKey::new(&slice_request, (*cache_context).clone())
@@ -213,16 +236,69 @@ impl SqlEditorRuntime {
     fn observed_dependencies(&self) -> Result<BTreeMap<String, String>, SqlEditorRuntimeError> {
         let mut observed = BTreeMap::new();
         for (profile_name, registered) in self.profiles.registry().entries() {
-            for object in registered.authority().profile.schema.objects.values() {
+            let schema = &registered.authority().profile.schema;
+            for object in schema.objects.values() {
                 observed.insert(
                     dependency_identity(profile_name, object.identity.as_str()),
                     schema_object_fingerprint(object)
                         .map_err(|error| SqlEditorRuntimeError::Contract(error.to_string()))?,
                 );
+                if matches!(
+                    object.kind,
+                    sifr_sql_contract::SchemaObjectKind::Table
+                        | sifr_sql_contract::SchemaObjectKind::View
+                        | sifr_sql_contract::SchemaObjectKind::MaterializedView
+                ) && let Some(fingerprint) =
+                    relation_membership_fingerprint(schema, &object.identity)?
+                {
+                    observed.insert(
+                        relation_membership_identity(profile_name, object.identity.as_str()),
+                        fingerprint,
+                    );
+                }
             }
         }
         Ok(observed)
     }
+}
+
+fn relation_membership_identity(profile: &str, relation: &str) -> String {
+    format!("{profile}::__relation-membership__::{relation}")
+}
+
+fn relation_membership_fingerprint(
+    schema: &sifr_sql_contract::SchemaIr,
+    relation: &sifr_sql_contract::ObjectId,
+) -> Result<Option<String>, SqlEditorRuntimeError> {
+    let Some(object) = schema.objects.get(relation) else {
+        return Ok(None);
+    };
+    if !matches!(
+        object.kind,
+        sifr_sql_contract::SchemaObjectKind::Table
+            | sifr_sql_contract::SchemaObjectKind::View
+            | sifr_sql_contract::SchemaObjectKind::MaterializedView
+    ) {
+        return Ok(None);
+    }
+    let mut identity = String::new();
+    for child in schema.objects.values().filter(|child| {
+        child.kind == sifr_sql_contract::SchemaObjectKind::Column
+            && child.dependencies.contains(relation)
+    }) {
+        identity.push_str(child.identity.as_str());
+        identity.push('\0');
+        identity.push_str(
+            &schema_object_fingerprint(child)
+                .map_err(|error| SqlEditorRuntimeError::Contract(error.to_string()))?,
+        );
+        identity.push('\n');
+    }
+    Ok(Some(
+        sifr_frontend::SourceHash::from_source_text(&identity)
+            .as_str()
+            .to_string(),
+    ))
 }
 
 fn render_provider_diagnostic(

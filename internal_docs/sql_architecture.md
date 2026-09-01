@@ -58,6 +58,7 @@ The project declares each schema profile in `sifr.toml`:
 ```toml
 [sql.profiles.app]
 provider = "sifr-sql-postgresql"
+family = "postgresql"
 source = "db/schema.postgresql.sql"
 server-version = "18"
 search-path = ["app", "public"]
@@ -68,6 +69,7 @@ schema-strictness = "compatible"
 
 [sql.profiles.analytics]
 provider = "sifr-sql-postgresql"
+family = "postgresql"
 source = "db/analytics.postgresql.sql"
 server-version = "18"
 search-path = ["analytics", "public"]
@@ -622,7 +624,7 @@ Each provider maps its database types to these canonical Sifr types:
 | calendar interval | `sifr.datetime.CalendarInterval` | Preserves months, days, and sub-day units. |
 | UUID | `sifr.uuid.UUID` | Exact 128-bit identity. |
 | JSON or JSONB | `sifr.json.JsonValue` | The plan retains the database type identity. |
-| SQL array | `sifr.sql.Array[T]` | Preserves dimensions and lower bounds. |
+| SQL array | `sifr.sql.SqlArray[T]` | Preserves dimensions and lower bounds. |
 | enum | `app.enums.<Name>` | Generated nominal enum. |
 | domain | `app.domains.<Name>` | Generated nominal constrained type. |
 | composite | `app.composites.<Name>` | Generated nominal immutable record. |
@@ -700,7 +702,7 @@ All providers use this input relation:
 | `float` | 32-bit float | accepted with a fallible range encoder |
 | `str` | fixed-length text | accepted with a fallible length encoder |
 | `list[T]` | one-dimensional SQL array | accepted with lower bound one |
-| `sifr.sql.Array[T]` | SQL array | accepted with dimensions and lower bounds preserved |
+| `sifr.sql.SqlArray[T]` | SQL array | accepted with dimensions and lower bounds preserved |
 | generated enum, domain, or composite | its exact database identity | accepted |
 | a custom codec type | its registered database identity | accepted |
 
@@ -1290,7 +1292,9 @@ There is no public `PreparedQuery` type. Each connection maintains a bounded
 prepared-statement cache. Cache identity includes the normalized SQL, parameter
 database types, result database types, provider version, and schema fingerprint.
 
-Schema contract failure invalidates affected entries before execution.
+A physical connection is verified against one schema fingerprint. A schema
+contract failure discards that connection and its complete cache before
+execution. Partial cross-schema invalidation is not a runtime state.
 
 `connection.warm(template)` prepares one template on a held connection. The
 template still binds through its normal callable API.
@@ -1465,6 +1469,13 @@ The compiler proves that `app.Schema` satisfies `has_users.Schema`. It then sets
 `S` to `app.Schema` and analyzes the SQL against the `app` profile. The result
 has profile parameter `app.Schema` and has no runtime witness argument.
 
+The argument must be the direct `app.schema` export. The compiler rejects a
+stored witness, an indirect argument, or a branch that selects a witness.
+
+Each function and profile pair gets one stable HIR specialization. Imported
+portable functions use the specialization from their defining module. The
+compiler removes the generic definition and all witness values before codegen.
+
 Only `Pool[app.Schema, Verified]`, or a verified connection or transaction with
 that profile, can execute the specialized query. A different profile is a
 compile-time type error, even when its schema also satisfies the requirement.
@@ -1490,7 +1501,8 @@ object that the structural requirement does not declare.
 `SqlSchema` witnesses are compile-time-only. They can occur only as the direct
 `schema` export of a profile namespace or as a constrained generic parameter.
 The compiler rejects storage, return, capture, selection, and unconstrained uses.
-Specialization erases the witness and retains the concrete profile on the query.
+Specialization erases the parameter and argument. The query retains the
+concrete profile identity and all proof fingerprints.
 
 The full manifest, proof, witness, execution, and diagnostic contract is in
 [`sql_schema_polymorphism.md`](sql_schema_polymorphism.md).
@@ -1549,12 +1561,18 @@ application.
 
 ### Placement rule
 
-SQL is a first-party package family, not part of the core standard library.
-The standard library supplies only package-neutral values, async tasks, time,
-networking, files, `Result`, and `Option`.
+SQL behavior is a first-party package family, not a core standard-library
+implementation. The compiler sysroot contains small `sifr.sql` declaration
+files for shared source-language types such as `SqlSchema`, `QueryTemplate`,
+and `MigrationPlan`. These declarations have no parser, driver, pool,
+migration-engine, or host-tool behavior. They add no Cargo dependency to an
+application by themselves.
 
-Installing `sifr-sql-postgresql`, `sifr-sql-mysql`, or `sifr-sql-sqlite` adds
-the public Sifr modules and the required Cargo-backed implementation crates.
+Installing `sifr-sql-postgresql`, `sifr-sql-mysql`, or `sifr-sql-sqlite`
+selects the provider API and the required Cargo-backed implementation crates.
+The selected package supplies all behavior behind the compiler-owned common
+declarations. The standard library otherwise supplies only package-neutral
+values, async tasks, time, networking, files, `Result`, and `Option`.
 Each provider depends on the common `sifr-sql-core` package. An application
 does not select Rust driver crates or parser crates directly.
 
@@ -1644,7 +1662,8 @@ The following versions are the latest stable compatible set verified on
 | PostgreSQL types | `0.2.14` | [`postgres-types` releases](https://crates.io/crates/postgres-types/0.2.14) |
 | CC build adapter | `1.4.4` | [`cc` releases](https://crates.io/crates/cc/1.4.4) |
 | Tokio PostgreSQL Rustls | `0.14.0` | [`tokio-postgres-rustls` releases](https://crates.io/crates/tokio-postgres-rustls/0.14.0) |
-| LALRPOP and LALRPOP utility | `0.23.1` | [`lalrpop` releases](https://crates.io/crates/lalrpop/0.23.1) |
+| LALRPOP | `0.23.1` | [`lalrpop` releases](https://crates.io/crates/lalrpop/0.23.1) |
+| LALRPOP utility | `0.23.1` | [`lalrpop-util` releases](https://crates.io/crates/lalrpop-util/0.23.1) |
 | MySQL async client | `0.37.0` | [`mysql_async` releases](https://crates.io/crates/mysql_async/0.37.0) |
 | MySQL protocol primitives | `0.37.3` | [`mysql_common` releases](https://crates.io/crates/mysql_common/0.37.3) |
 | Syntaqlite | `0.9.0` | [`syntaqlite` releases](https://crates.io/crates/syntaqlite/0.9.0) |
@@ -2262,7 +2281,10 @@ migrations for changes that occurred before import.
 [`sql_migrations.md`](./sql_migrations.md) records the implemented
 provider-neutral graph compiler, nominal intermediate states, affine plan and
 callback types, impact reports, execution ledger, bounded backfills, and
-recovery rules. [`sql_postgresql_migrations.md`](./sql_postgresql_migrations.md)
+recovery rules. Checked sources live in `migrations/<profile>/`; the shared
+`sifr sql migration build --profile <name>` command writes only generated
+artifacts under `.sifr/sql-migrations/<profile>/`.
+[`sql_postgresql_migrations.md`](./sql_postgresql_migrations.md)
 records PostgreSQL reflection, transaction classes, live execution, and the
 PostgreSQL 13 through 18 migration matrix. Other provider tools own their
 qualification.
@@ -2314,6 +2336,20 @@ Each dialect has:
 Provider claims are explicit. Unsupported server versions fail during schema build
 or pool validation.
 
+### Build qualification
+
+The SQL verification area performs a clean locked and offline Cargo check in a
+new target directory. It repeats the check in the same directory to prove the
+incremental path. It then repeats the clean check in a second directory and
+compares the semantic artifact plan. This comparison detects dependency,
+feature, target, or crate-output drift.
+
+The required repository profiles run this build qualification on their native
+target. The local-first workflow also runs it on every supported native target
+and on `wasm32-wasip2`. Provider component qualification separately executes
+every checked-in WebAssembly guest in the capability-free host and verifies its
+source, toolchain, size, and digest records.
+
 ### Safety testing
 
 Fuzzing covers SQL parsing, schema ingestion, component protocol decoding, runtime
@@ -2346,6 +2382,7 @@ provider release when it exceeds the recorded budget.
 ```toml
 [sql.profiles.app]
 provider = "sifr-sql-postgresql"
+family = "postgresql"
 source = "db/schema.postgresql.sql"
 server-version = "18"
 search-path = ["app", "public"]

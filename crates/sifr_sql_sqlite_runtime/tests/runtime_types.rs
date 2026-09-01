@@ -367,6 +367,51 @@ async fn malformed_database_bytes_are_structured_errors_not_panics() {
 }
 
 #[tokio::test(flavor = "current_thread")]
+async fn damaged_page_in_a_valid_database_is_a_structured_error_not_a_panic() {
+    use std::io::{Seek as _, SeekFrom, Write as _};
+
+    let directory = tempfile::tempdir().expect("directory");
+    let path = directory.path().join("page-corrupt.sqlite3");
+    {
+        let connection = rusqlite::Connection::open(&path).expect("valid database");
+        connection
+            .execute_batch(
+                "PRAGMA page_size=4096; CREATE TABLE damage(value TEXT NOT NULL); \
+                 WITH RECURSIVE n(x) AS (VALUES(1) UNION ALL SELECT x+1 FROM n WHERE x < 2000) \
+                 INSERT INTO damage SELECT printf('%01000d', x) FROM n;",
+            )
+            .expect("populate multiple pages");
+    }
+    let mut file = std::fs::OpenOptions::new()
+        .write(true)
+        .open(&path)
+        .expect("open valid database for page damage");
+    file.seek(SeekFrom::Start(4096 + 128)).expect("seek page");
+    file.write_all(&[0xff; 512]).expect("damage one page");
+    drop(file);
+
+    let pool = open_pool(profile(&path))
+        .expect("pool")
+        .verify_schema()
+        .await
+        .expect("header and profile verification");
+    let mut connection = pool.acquire().await.expect("connection");
+    let selected_profile = connection.profile();
+    let result = connection
+        .fetch_all(
+            request(
+                selected_profile,
+                "SELECT sum(length(value)) FROM damage",
+                vec![],
+                true,
+            ),
+            ExecutionOptions::default(),
+        )
+        .await;
+    assert!(result.is_err());
+}
+
+#[tokio::test(flavor = "current_thread")]
 async fn verified_pool_streams_with_one_row_backpressure_and_releases_on_exhaustion() {
     let directory = tempfile::tempdir().expect("directory");
     let pool = open_pool(profile(&directory.path().join("stream.sqlite3")))

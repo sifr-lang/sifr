@@ -19,6 +19,8 @@ from typing import Any
 REPO_ROOT = Path(__file__).resolve().parents[4]
 BASELINE_PATH = REPO_ROOT / "verification/areas/sql_platform/dependency_baseline.toml"
 USER_AGENT = "sifr-sql-baseline-resolver/1.0"
+MAX_GITHUB_RELEASE_PAGES = 10
+MAX_GITHUB_TAG_INDIRECTIONS = 8
 HEX64 = re.compile(r"[0-9a-f]{64}")
 HEX40 = re.compile(r"[0-9a-f]{40}")
 NAME = re.compile(r"[a-z][a-z0-9_-]*")
@@ -290,7 +292,7 @@ def refresh(payload: dict[str, Any]) -> dict[str, Any]:
         ]
         if not candidates:
             raise BaselineError(f"release authority has no libpg_query tag for PostgreSQL {major}")
-        release = max(candidates, key=lambda item: release_tag_key(str(item["tag_name"]), major) or ())
+        release = max(candidates, key=lambda item: stable_release_key(item, major))
         tag = str(release["tag_name"])
         row["tag"] = tag
         row["commit"] = resolve_github_tag(tag)
@@ -301,8 +303,7 @@ def refresh(payload: dict[str, Any]) -> dict[str, Any]:
 
 def fetch_github_releases() -> list[dict[str, Any]]:
     releases: list[dict[str, Any]] = []
-    page = 1
-    while True:
+    for page in range(1, MAX_GITHUB_RELEASE_PAGES + 1):
         batch = fetch_json(
             "https://api.github.com/repos/pganalyze/libpg_query/releases"
             f"?per_page=100&page={page}"
@@ -312,7 +313,7 @@ def fetch_github_releases() -> list[dict[str, Any]]:
         releases.extend(item for item in batch if isinstance(item, dict))
         if len(batch) < 100:
             return releases
-        page += 1
+    raise BaselineError("libpg_query release pagination exceeded the bounded page limit")
 
 
 def release_tag_key(tag: str, major: int) -> tuple[int, ...] | None:
@@ -324,12 +325,23 @@ def release_tag_key(tag: str, major: int) -> tuple[int, ...] | None:
     return numbers[1:]
 
 
+def stable_release_key(item: dict[str, Any], major: int) -> tuple[int, ...]:
+    key = release_tag_key(str(item.get("tag_name", "")), major)
+    if key is None:
+        raise BaselineError("unstable libpg_query release reached stable selection")
+    return key
+
+
 def resolve_github_tag(tag: str) -> str:
     encoded = urllib.parse.quote(tag, safe="")
     payload = fetch_json(f"https://api.github.com/repos/pganalyze/libpg_query/git/ref/tags/{encoded}")
     current = payload["object"]
-    while current["type"] == "tag":
+    for _ in range(MAX_GITHUB_TAG_INDIRECTIONS):
+        if current["type"] != "tag":
+            break
         current = fetch_json(current["url"])["object"]
+    else:
+        raise BaselineError(f"tag {tag} exceeded the bounded indirection limit")
     if current["type"] != "commit" or HEX40.fullmatch(current["sha"]) is None:
         raise BaselineError(f"tag {tag} does not resolve to a commit")
     return str(current["sha"])
@@ -364,7 +376,10 @@ def self_test() -> None:
     payload = load_baseline()
     validate_baseline(payload)
     release_tags = ["17-6.1.9", "17-6.2.2", "17-5.9.9"]
-    latest_tag = max(release_tags, key=lambda tag: release_tag_key(tag, 17) or ())
+    latest_tag = max(
+        release_tags,
+        key=lambda tag: stable_release_key({"tag_name": tag}, 17),
+    )
     if latest_tag != "17-6.2.2" or release_tag_key("17-6.3.0-rc1", 17) is not None:
         raise AssertionError("libpg_query stable release ordering is invalid")
     mutations = [

@@ -261,6 +261,9 @@ pub(crate) fn can_builtin_cast(
     if source == target {
         return true;
     }
+    if !implicit && is_numeric(source) && is_numeric(target) {
+        return true;
+    }
     if implicit && integer_widens(source, target) {
         return true;
     }

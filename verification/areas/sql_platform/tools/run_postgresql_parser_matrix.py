@@ -36,7 +36,7 @@ def main() -> int:
         "-p",
         "sifr_sql_postgresql",
         "--test",
-        "postgresql_compiler",
+        "postgresql_components",
         "every_checked_in_component_executes_in_the_capability_free_host",
         "--",
         "--exact",

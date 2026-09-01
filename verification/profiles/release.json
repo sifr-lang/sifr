@@ -755,15 +755,24 @@
     {
       "area": "sql_platform",
       "suites": [
+        "build-qualification",
         "compiler-components",
         "common-sql",
         "contracts",
         "dependency-baseline",
+        "host-tools",
+        "integrated-qualification",
+        "migration-engine",
+        "mysql-provider",
         "postgresql-compiler",
+        "postgresql-migrations",
         "postgresql-runtime",
         "incremental-editor",
         "query-fragments",
+        "schema-polymorphism",
         "schema-profiles",
+        "schema-tools",
+        "sqlite-provider",
         "mutation"
       ],
       "resource_classes": [

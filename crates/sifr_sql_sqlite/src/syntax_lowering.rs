@@ -222,17 +222,16 @@ fn lower_insert(tokens: &[Token]) -> Result<SqliteWrite, SqliteParseError> {
         && contains_sequence(tokens, &[Keyword::Do, Keyword::Update])
     {
         SqliteConflictForm::UpsertDoUpdate
-    } else if is_keyword(&tokens[0], Keyword::Replace)
-        || contains_sequence(tokens, &[Keyword::Or, Keyword::Replace])
+    } else if is_keyword(&tokens[0], Keyword::Replace) || insert_prefix_is(tokens, Keyword::Replace)
     {
         SqliteConflictForm::Replace
-    } else if contains_sequence(tokens, &[Keyword::Or, Keyword::Ignore]) {
+    } else if insert_prefix_is(tokens, Keyword::Ignore) {
         SqliteConflictForm::Ignore
-    } else if contains_sequence(tokens, &[Keyword::Or, Keyword::Rollback]) {
+    } else if insert_prefix_is(tokens, Keyword::Rollback) {
         SqliteConflictForm::Rollback
-    } else if contains_sequence(tokens, &[Keyword::Or, Keyword::Abort]) {
+    } else if insert_prefix_is(tokens, Keyword::Abort) {
         SqliteConflictForm::Abort
-    } else if contains_sequence(tokens, &[Keyword::Or, Keyword::Fail]) {
+    } else if insert_prefix_is(tokens, Keyword::Fail) {
         SqliteConflictForm::Fail
     } else {
         SqliteConflictForm::None
@@ -246,6 +245,16 @@ fn lower_insert(tokens: &[Token]) -> Result<SqliteWrite, SqliteParseError> {
         conflict,
         returning: returning_projections(tokens)?,
     })
+}
+
+fn insert_prefix_is(tokens: &[Token], action: Keyword) -> bool {
+    tokens
+        .first()
+        .is_some_and(|token| is_keyword(token, Keyword::Insert))
+        && tokens
+            .get(1)
+            .is_some_and(|token| is_keyword(token, Keyword::Or))
+        && tokens.get(2).is_some_and(|token| is_keyword(token, action))
 }
 
 fn lower_update(tokens: &[Token]) -> Result<SqliteWrite, SqliteParseError> {

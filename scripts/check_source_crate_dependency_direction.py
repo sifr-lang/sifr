@@ -121,6 +121,7 @@ INLINE_TEST_MODULE_PATTERN = re.compile(
     r"(?m)^#\[cfg\(test\)\]\s*(?:#\[path\s*=\s*\"[^\"]+\"\]\s*)?mod\s+\w+\s*\{"
 )
 PROVIDER_COMPOSITION_ROOTS = {
+    Path("crates/sifr_driver/src/build/sql_profiles.rs"),
     Path("crates/sifr_frontend/src/workspace_session.rs"),
 }
 

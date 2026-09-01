@@ -45,6 +45,7 @@ pub(crate) fn compile_frontend_modules(
             )]);
         };
         let result = compile_module_hir(module_name, stmts, &external_defs, diagnostic_style)?;
+        validate_sql_witnesses(&result.module)?;
         let LoweringResult {
             mut module,
             flow_graph,
@@ -137,6 +138,7 @@ pub(crate) fn compile_single_frontend_module_with_source_and_options(
         Some(source_context),
         lowering_options,
     )?;
+    validate_sql_witnesses(&result.module)?;
     let LoweringResult {
         mut module,
         flow_graph,
@@ -273,6 +275,7 @@ pub(crate) fn collect_project_hir_source_modules_with_options(
             }),
             lowering_options.clone(),
         )?;
+        validate_sql_witnesses(&result.module)?;
         let source_context = FrontendSourceContext {
             display_path: &parsed_module.display_path,
             source: &parsed_module.source,
@@ -351,6 +354,16 @@ pub(crate) fn collect_project_hir_source_modules_with_options(
         compile_order,
         module_diagnostics,
     })
+}
+
+fn validate_sql_witnesses(module: &HirModule) -> Result<(), Vec<RenderedDiagnostic>> {
+    sifr_frontend::validate_sql_schema_witness_module(module, Some(&module.type_param_bounds))
+        .map_err(|error| {
+            vec![crate::diagnostics::diagnostic_with_code(
+                error.message,
+                DiagnosticCode::SQL_PROVIDER_CONTRACT,
+            )]
+        })
 }
 
 pub(crate) fn emit_project_frontend_diagnostics(project_lowering: &ProjectLowering) {

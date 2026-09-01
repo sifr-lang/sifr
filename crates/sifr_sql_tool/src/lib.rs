@@ -3,6 +3,7 @@
 mod artifacts;
 mod lifecycle;
 mod migration_artifacts;
+mod migration_source;
 mod transaction;
 
 pub use artifacts::{
@@ -20,5 +21,8 @@ pub use migration_artifacts::{
     MIGRATION_ARTIFACT_MANIFEST_PATH, MIGRATION_GRAPH_PATH, MIGRATION_IMPACT_PATH,
     MIGRATION_SCHEMA_PATH, MigrationArtifactManifest, MigrationBuildArtifacts,
     build_migration_artifacts, lower_migration_execution_plan,
+};
+pub use migration_source::{
+    MigrationSourceInputs, compile_migration_sources, load_migration_source_inputs,
 };
 pub use transaction::{write_artifacts_atomically, write_migration_artifacts_atomically};

@@ -8,6 +8,7 @@ fn parser_and_recovery_do_not_panic_on_protocol_corpus() {
     let parser = MysqlParser::new(
         MysqlServerSeries::new(26, 7),
         ["ANSI_QUOTES"],
+        "utf8mb4",
         "utf8mb4_0900_ai_ci",
     )
     .expect("parser");
@@ -38,6 +39,7 @@ fn normalization_is_stable_for_whitespace_and_comments() {
     let parser = MysqlParser::new(
         MysqlServerSeries::new(8, 4),
         std::iter::empty::<String>(),
+        "utf8mb4",
         "utf8mb4_0900_ai_ci",
     )
     .expect("parser");
@@ -57,6 +59,7 @@ fn warm_parser_batch_stays_within_the_named_editor_budget() {
     let parser = MysqlParser::new(
         MysqlServerSeries::new(8, 4),
         ["STRICT_TRANS_TABLES"],
+        "utf8mb4",
         "utf8mb4_0900_ai_ci",
     )
     .expect("parser");

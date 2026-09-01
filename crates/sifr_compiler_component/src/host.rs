@@ -136,6 +136,13 @@ impl ComponentHost {
         }
         verify_component_hash(&registration.identity.sha256, component_bytes)?;
         validate_request(request, &self.limits)?;
+        let input = serde_json::to_vec(request).map_err(protocol_serialization_error)?;
+        if input.len() > self.limits.max_input_bytes {
+            return Err(ComponentError::new(
+                ComponentErrorKind::ResourceLimit,
+                "component request exceeds the input byte limit",
+            ));
+        }
         let key = CacheKey::for_request(request)?;
         if let Some(cache) = &mut self.cache {
             let max_cache_bytes = u64::try_from(self.limits.max_output_bytes)
@@ -158,7 +165,7 @@ impl ComponentHost {
                 });
             }
         }
-        let response = self.execute(component_bytes, request, &registration.diagnostics)?;
+        let response = self.execute(component_bytes, request, input, &registration.diagnostics)?;
         if let Some(cache) = &mut self.cache {
             cache.put(&key, &response)?;
         }
@@ -185,15 +192,9 @@ impl ComponentHost {
         &self,
         component_bytes: &[u8],
         request: &EmbeddedAnalysisRequest,
+        input: Vec<u8>,
         diagnostics: &DiagnosticRegistry,
     ) -> Result<EmbeddedAnalysisResponse, ComponentError> {
-        let input = serde_json::to_vec(request).map_err(protocol_serialization_error)?;
-        if input.len() > self.limits.max_input_bytes {
-            return Err(ComponentError::new(
-                ComponentErrorKind::ResourceLimit,
-                "component request exceeds the input byte limit",
-            ));
-        }
         let component = Component::new(&self.engine, component_bytes).map_err(component_error)?;
         let imports = component
             .component_type()

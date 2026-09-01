@@ -3,13 +3,14 @@
 use semver::Version;
 use sifr_sql_contract::{
     BackfillContract, Cardinality, CodecIdentity, CompiledStepKind, DataCallbackContract,
-    DatabaseType, DdlReflection, DdlRisk, DialectIdentity, EffectContract, MigrationBaseline,
-    MigrationCompileError, MigrationCompileErrorKind, MigrationCompiler, MigrationDb,
-    MigrationDefinition, MigrationDialect, MigrationGraphDefinition, MigrationNodeId,
-    MigrationPlan, MigrationProviderConstraint, MigrationState, MigrationStepDefinition,
-    MigrationStepKind, Nullability, ObjectId, ProviderAnalysis, ProviderIdentity,
-    ProviderResultField, QueryEffect, ReplayPolicy, SchemaIr, SchemaObject, SchemaObjectKind,
-    SifrType, TransactionBoundary, TransactionRequirement, schema_fingerprint, topological_order,
+    DatabaseType, DdlReflection, DdlRisk, DialectIdentity, EffectContract,
+    MIGRATION_GRAPH_FORMAT_VERSION, MigrationBaseline, MigrationCompileError,
+    MigrationCompileErrorKind, MigrationCompiler, MigrationDb, MigrationDefinition,
+    MigrationDialect, MigrationGraphDefinition, MigrationNodeId, MigrationPlan,
+    MigrationProviderConstraint, MigrationState, MigrationStepDefinition, MigrationStepKind,
+    Nullability, ObjectId, ProviderAnalysis, ProviderIdentity, ProviderResultField, QueryEffect,
+    ReplayPolicy, SchemaIr, SchemaObject, SchemaObjectKind, SifrType, TransactionBoundary,
+    TransactionRequirement, schema_fingerprint, topological_order,
 };
 use static_assertions::assert_not_impl_any;
 use std::collections::{BTreeMap, BTreeSet};
@@ -199,12 +200,14 @@ fn definition() -> (TestDialect, MigrationGraphDefinition) {
         step(
             "fill-status",
             MigrationStepKind::SqlData {
+                statement: "UPDATE public.orders SET status = 'pending'".to_string(),
                 analysis: data_analysis(),
             },
         ),
         step(
             "assert-status",
             MigrationStepKind::Assertion {
+                statement: "SELECT true AS valid".to_string(),
                 analysis: assertion_analysis(),
             },
         ),
@@ -212,6 +215,7 @@ fn definition() -> (TestDialect, MigrationGraphDefinition) {
             "backfill-status",
             MigrationStepKind::Backfill {
                 contract: BackfillContract {
+                    statement: "UPDATE public.orders SET status = 'pending'".to_string(),
                     analysis: data_analysis(),
                     maximum_batch_rows: 500,
                     replay: ReplayPolicy::Idempotent {
@@ -255,7 +259,7 @@ fn definition() -> (TestDialect, MigrationGraphDefinition) {
         ),
     ];
     let graph = MigrationGraphDefinition {
-        format_version: 1,
+        format_version: MIGRATION_GRAPH_FORMAT_VERSION,
         baselines: BTreeMap::from([(
             baseline.clone(),
             MigrationBaseline {
@@ -348,7 +352,7 @@ fn compiler_rejects_opaque_ddl_without_effect_and_invalid_intermediate_reference
         .migrations
         .get_mut(&id("2026_08_add_status"))
         .expect("test migration should exist");
-    let MigrationStepKind::SqlData { analysis } = &mut migration.steps[2].kind else {
+    let MigrationStepKind::SqlData { analysis, .. } = &mut migration.steps[2].kind else {
         panic!("expected SQL data step");
     };
     analysis
@@ -368,7 +372,7 @@ fn compiler_rejects_invalid_assertions_callbacks_backfills_and_transactions() {
         .migrations
         .get_mut(&id("2026_08_add_status"))
         .expect("test migration should exist");
-    let MigrationStepKind::Assertion { analysis } = &mut migration.steps[3].kind else {
+    let MigrationStepKind::Assertion { analysis, .. } = &mut migration.steps[3].kind else {
         panic!("expected assertion step");
     };
     analysis.result_fields[0].nullability = Nullability::Nullable;
@@ -525,7 +529,7 @@ fn topological_order_property_is_stable_for_linear_graphs() {
             parent = migration_id;
         }
         let graph = MigrationGraphDefinition {
-            format_version: 1,
+            format_version: MIGRATION_GRAPH_FORMAT_VERSION,
             baselines: BTreeMap::from([(
                 baseline.clone(),
                 MigrationBaseline {
@@ -577,7 +581,7 @@ fn compiler_rejects_schema_changing_sibling_branches_that_cannot_be_sequenced() 
         created_at: "2026-08-31".to_string(),
     };
     let graph = MigrationGraphDefinition {
-        format_version: 1,
+        format_version: MIGRATION_GRAPH_FORMAT_VERSION,
         baselines: BTreeMap::from([(
             baseline.clone(),
             MigrationBaseline {

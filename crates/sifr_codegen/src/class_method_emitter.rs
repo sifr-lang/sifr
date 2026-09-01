@@ -662,6 +662,23 @@ impl RustEmitter {
         }
     }
 
+    pub(crate) fn arc_constructor_callable_value(field_ty: &Type, value: RustExpr) -> RustExpr {
+        let boxed = Self::box_constructor_callable_value(field_ty, value);
+        let value = match boxed {
+            RustExpr::FnCall { mut args, .. } if !args.is_empty() => args.remove(0),
+            other => return other,
+        };
+        RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec![
+                "std".to_string(),
+                "sync".to_string(),
+                "Arc".to_string(),
+                "new".to_string(),
+            ])),
+            args: vec![value],
+        }
+    }
+
     pub(crate) fn lower_class_method_item(
         &mut self,
         method: &HirFunction,

@@ -1,9 +1,11 @@
 use crate::{
-    Cardinality, CodecIdentity, CodecRegistry, DatabaseType, EffectContract, NullCodecBehavior,
-    Nullability, ObjectId, SifrType, canonical_read_type_with_nullability_in,
+    Cardinality, CodecContract, CodecIdentity, CodecRegistry, DatabaseType, EffectContract,
+    NullCodecBehavior, Nullability, ObjectId, PanicContainment, SifrType, WireFormatIdentity,
+    canonical_read_type_with_nullability_in,
 };
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeSet;
+use sha2::{Digest, Sha256};
+use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -163,6 +165,81 @@ impl ProviderAnalysis {
         }
         Ok(())
     }
+}
+
+/// Build the closed codec view needed to validate a component response. The
+/// provider chooses codec identities and database types; the typed source owns
+/// parameter Sifr types. Duplicate codec identities must describe one exact
+/// contract.
+pub fn component_codec_registry(
+    analysis: &ProviderAnalysis,
+    parameter_types: &[SifrType],
+) -> Result<CodecRegistry, ProviderAnalysisError> {
+    if parameter_types.len() != analysis.parameters.len() {
+        return Err(ProviderAnalysisError::InvalidDialectSemantics);
+    }
+    let mut contracts = BTreeMap::new();
+    for (parameter, sifr_type) in analysis.parameters.iter().zip(parameter_types) {
+        insert_component_codec(
+            &mut contracts,
+            component_codec_contract(
+                analysis,
+                &parameter.codec,
+                &parameter.database_type,
+                sifr_type,
+            )?,
+        )?;
+    }
+    for field in &analysis.result_fields {
+        insert_component_codec(
+            &mut contracts,
+            component_codec_contract(
+                analysis,
+                &field.codec,
+                &field.database_type,
+                &field.sifr_type,
+            )?,
+        )?;
+    }
+    CodecRegistry::for_profile(analysis.server_profile.clone(), contracts.into_values())
+        .map_err(|_| ProviderAnalysisError::InvalidDialectSemantics)
+}
+
+fn insert_component_codec(
+    contracts: &mut BTreeMap<CodecIdentity, CodecContract>,
+    contract: CodecContract,
+) -> Result<(), ProviderAnalysisError> {
+    if let Some(existing) = contracts.get(&contract.identity)
+        && existing != &contract
+    {
+        return Err(ProviderAnalysisError::InvalidDialectSemantics);
+    }
+    contracts.insert(contract.identity.clone(), contract);
+    Ok(())
+}
+
+fn component_codec_contract(
+    analysis: &ProviderAnalysis,
+    identity: &CodecIdentity,
+    database_type: &DatabaseType,
+    sifr_type: &SifrType,
+) -> Result<CodecContract, ProviderAnalysisError> {
+    let encoded = serde_json::to_vec(&(identity, database_type, sifr_type))
+        .map_err(|_| ProviderAnalysisError::InvalidDialectSemantics)?;
+    let digest = Sha256::digest(encoded);
+    let suffix = crate::fingerprint::lower_hex(&digest[..12]);
+    Ok(CodecContract {
+        sifr_type: sifr_type.clone(),
+        database_type: database_type.clone(),
+        identity: identity.clone(),
+        server_profiles: BTreeSet::from([analysis.server_profile.clone()]),
+        encode_error: "sifr.sql.EncodeError".to_string(),
+        decode_error: "sifr.sql.DecodeError".to_string(),
+        null_behavior: NullCodecBehavior::PassThrough,
+        wire_format: WireFormatIdentity::new(format!("sql.component.{suffix}.v1"))
+            .map_err(|_| ProviderAnalysisError::InvalidDialectSemantics)?,
+        panic_containment: PanicContainment::CatchAndRedact,
+    })
 }
 
 fn codec_matches(

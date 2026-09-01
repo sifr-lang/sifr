@@ -1,10 +1,11 @@
 use crate::catalog::PostgresCatalogError;
+use sha2::{Digest, Sha256};
 use sifr_sql_contract::{DatabaseType, ObjectId, SchemaObject, SchemaObjectKind, SemanticValue};
 use sifr_sql_postgresql::{
     LibpgQueryParser, PostgresParser, PostgresStatement, PostgresTypeName, PostgresTypeRegistry,
-    StatementKind, generated_sifr_type,
+    StatementKind, canonical_postgres_ast_json, generated_sifr_type,
 };
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 pub(crate) fn normalize_catalog_objects(
     server_major: u16,
@@ -12,12 +13,12 @@ pub(crate) fn normalize_catalog_objects(
 ) -> Result<(), PostgresCatalogError> {
     let mut registry = PostgresTypeRegistry::new(server_major);
     register_simple_nominals(&mut registry, objects);
-    register_domains(&mut registry, objects)?;
-    register_ranges(&mut registry, objects)?;
+    register_dependent_nominals(&mut registry, objects)?;
     normalize_constraint_dependencies(objects)?;
     for object in objects.iter_mut() {
         normalize_object(&registry, object)?;
     }
+    canonicalize_constraint_identities(objects)?;
     normalize_relations(objects)?;
     Ok(())
 }
@@ -40,63 +41,52 @@ fn register_simple_nominals(registry: &mut PostgresTypeRegistry, objects: &[Sche
     }
 }
 
-fn register_domains(
+fn register_dependent_nominals(
     registry: &mut PostgresTypeRegistry,
     objects: &[SchemaObject],
 ) -> Result<(), PostgresCatalogError> {
     let mut remaining = objects
         .iter()
-        .filter(|object| object.kind == SchemaObjectKind::Domain)
+        .filter(|object| {
+            matches!(
+                object.kind,
+                SchemaObjectKind::Domain | SchemaObjectKind::Range
+            )
+        })
         .collect::<Vec<_>>();
     while !remaining.is_empty() {
         let before = remaining.len();
         remaining.retain(|object| {
-            let Some(name) = optional_text(object, "base-database-type-name") else {
-                return true;
+            let name = match object.kind {
+                SchemaObjectKind::Domain => optional_text(object, "base-database-type-name"),
+                SchemaObjectKind::Range => optional_text(object, "subtype-database-type-name"),
+                _ => None,
             };
+            let Some(name) = name else { return true };
             let Ok(base) = resolve_type(registry, name) else {
                 return true;
             };
-            registry.add_nominal(
-                &identity_path(&object.identity),
-                DatabaseType::Domain {
+            let ty = match object.kind {
+                SchemaObjectKind::Domain => DatabaseType::Domain {
                     identity: object.identity.clone(),
                     base: Box::new(base),
                 },
-            );
+                SchemaObjectKind::Range => DatabaseType::Named {
+                    identity: object.identity.clone(),
+                    parameters: Vec::new(),
+                    canonical: Box::new(DatabaseType::Range {
+                        element: Box::new(base),
+                        multirange: optional_bool(object, "multirange").unwrap_or(false),
+                    }),
+                },
+                _ => return true,
+            };
+            registry.add_nominal(&identity_path(&object.identity), ty);
             false
         });
         if remaining.len() == before {
-            return Err(incomplete("domain base type"));
+            return Err(incomplete("domain or range base type"));
         }
-    }
-    Ok(())
-}
-
-fn register_ranges(
-    registry: &mut PostgresTypeRegistry,
-    objects: &[SchemaObject],
-) -> Result<(), PostgresCatalogError> {
-    for object in objects
-        .iter()
-        .filter(|object| object.kind == SchemaObjectKind::Range)
-    {
-        let subtype = resolve_type(
-            registry,
-            required_text(object, "subtype-database-type-name")?,
-        )?;
-        let multirange = required_bool(object, "multirange")?;
-        registry.add_nominal(
-            &identity_path(&object.identity),
-            DatabaseType::Named {
-                identity: object.identity.clone(),
-                parameters: Vec::new(),
-                canonical: Box::new(DatabaseType::Range {
-                    element: Box::new(subtype),
-                    multirange,
-                }),
-            },
-        );
     }
     Ok(())
 }
@@ -115,6 +105,23 @@ fn normalize_object(
         SchemaObjectKind::Function => function_semantics(registry, object)?,
         SchemaObjectKind::Operator => operator_semantics(registry, object)?,
         SchemaObjectKind::Cast => cast_semantics(registry, object)?,
+        SchemaObjectKind::IdentityColumn => BTreeMap::from([
+            (
+                "column".to_string(),
+                SemanticValue::Text(required_text(object, "column")?.to_string()),
+            ),
+            (
+                "generation".to_string(),
+                SemanticValue::Text(
+                    match required_text(object, "generation")? {
+                        "a" | "always" => "always",
+                        "d" | "by-default" => "by-default",
+                        _ => return Err(incomplete("identity generation mode")),
+                    }
+                    .to_string(),
+                ),
+            ),
+        ]),
         SchemaObjectKind::PrimaryKey | SchemaObjectKind::UniqueConstraint => {
             BTreeMap::from([("columns".to_string(), required_list(object, "columns")?)])
         }
@@ -131,7 +138,7 @@ fn normalize_object(
         ]),
         SchemaObjectKind::CheckConstraint => BTreeMap::from([(
             "provider-expression".to_string(),
-            SemanticValue::Text(required_text(object, "definition")?.to_string()),
+            SemanticValue::Text(canonical_expression(required_text(object, "expression")?)?),
         )]),
         SchemaObjectKind::Index => BTreeMap::from([
             ("columns".to_string(), required_list(object, "columns")?),
@@ -272,7 +279,7 @@ fn function_semantics(
         })
         .collect::<Result<Vec<_>, _>>()?;
     let result = resolve_type(registry, required_text(object, "result-type-name")?)?;
-    Ok(BTreeMap::from([
+    let mut semantic = BTreeMap::from([
         ("arguments".to_string(), SemanticValue::List(arguments)),
         ("result".to_string(), database_value(&result)?),
         (
@@ -283,11 +290,14 @@ fn function_semantics(
             "aggregate".to_string(),
             SemanticValue::Bool(required_text(object, "kind")? == "a"),
         ),
-        (
-            "result-nullable".to_string(),
-            SemanticValue::Bool(!required_bool(object, "strict")?),
-        ),
-    ]))
+        ("result-nullable".to_string(), SemanticValue::Bool(true)),
+    ]);
+    for key in ["overload_namespace", "overload_name"] {
+        if let Some(value) = optional_text(object, key) {
+            semantic.insert(key.to_string(), SemanticValue::Text(value.to_string()));
+        }
+    }
+    Ok(semantic)
 }
 
 fn operator_semantics(
@@ -393,12 +403,143 @@ fn normalize_relations(objects: &mut [SchemaObject]) -> Result<(), PostgresCatal
         } else {
             semantic.insert(
                 "provider-query".to_string(),
-                SemanticValue::Text(required_text(relation, "definition")?.to_string()),
+                SemanticValue::Text(canonical_select(required_text(relation, "definition")?)?),
             );
         }
         relation.semantic = semantic;
     }
     Ok(())
+}
+
+fn canonical_select(source: &str) -> Result<String, PostgresCatalogError> {
+    let statements = LibpgQueryParser
+        .parse(source)
+        .map_err(|_| incomplete("parseable view definition"))?;
+    let [
+        PostgresStatement {
+            kind: StatementKind::Select(query),
+            ..
+        },
+    ] = statements.as_slice()
+    else {
+        return Err(incomplete("single SELECT view definition"));
+    };
+    canonical_postgres_ast_json(query).map_err(|_| incomplete("canonical view definition"))
+}
+
+fn canonical_expression(source: &str) -> Result<String, PostgresCatalogError> {
+    let statements = LibpgQueryParser
+        .parse(&format!("SELECT {source}"))
+        .map_err(|_| incomplete("parseable check expression"))?;
+    let [
+        PostgresStatement {
+            kind: StatementKind::Select(query),
+            ..
+        },
+    ] = statements.as_slice()
+    else {
+        return Err(incomplete("single check expression"));
+    };
+    let [target] = query.targets.as_slice() else {
+        return Err(incomplete("single check expression target"));
+    };
+    canonical_postgres_ast_json(&target.expression)
+        .map_err(|_| incomplete("canonical check expression"))
+}
+
+fn canonicalize_constraint_identities(
+    objects: &mut [SchemaObject],
+) -> Result<(), PostgresCatalogError> {
+    let relation_ids = objects
+        .iter()
+        .filter(|object| object.kind == SchemaObjectKind::Table)
+        .map(|object| object.identity.clone())
+        .collect::<BTreeSet<_>>();
+    let mut replacements = BTreeMap::new();
+    for object in objects.iter().filter(|object| is_constraint(object.kind)) {
+        let relation = object
+            .dependencies
+            .iter()
+            .find(|identity| relation_ids.contains(*identity))
+            .ok_or_else(|| incomplete("constraint relation dependency"))?;
+        let identity = match object.kind {
+            SchemaObjectKind::PrimaryKey => constraint_identity(relation, "pkey", &[]),
+            SchemaObjectKind::UniqueConstraint => constraint_identity(
+                relation,
+                "unique",
+                &text_list(&object.semantic, "columns")
+                    .ok_or_else(|| incomplete("constraint columns"))?,
+            ),
+            SchemaObjectKind::ForeignKey => {
+                let mut signature = text_list(&object.semantic, "columns")
+                    .ok_or_else(|| incomplete("foreign-key columns"))?;
+                signature.extend(
+                    required_text(object, "referenced-relation")?
+                        .split('.')
+                        .map(str::to_string),
+                );
+                signature.extend(
+                    text_list(&object.semantic, "referenced-columns")
+                        .ok_or_else(|| incomplete("foreign-key referenced columns"))?,
+                );
+                constraint_identity(relation, "fkey", &signature)
+            }
+            SchemaObjectKind::CheckConstraint => constraint_identity(
+                relation,
+                "check",
+                &[required_text(object, "provider-expression")?.to_string()],
+            ),
+            _ => continue,
+        };
+        replacements.insert(object.identity.clone(), identity);
+    }
+    let mut seen = BTreeSet::new();
+    for object in objects.iter_mut() {
+        if let Some(identity) = replacements.get(&object.identity) {
+            object.identity = identity.clone();
+        }
+        object.dependencies = object
+            .dependencies
+            .iter()
+            .map(|identity| replacements.get(identity).unwrap_or(identity).clone())
+            .collect();
+        if !seen.insert(object.identity.clone()) {
+            return Err(PostgresCatalogError {
+                message: format!(
+                    "PostgreSQL catalog normalizes more than one object to '{}'",
+                    object.identity
+                ),
+            });
+        }
+    }
+    Ok(())
+}
+
+fn constraint_identity(relation: &ObjectId, kind: &str, signature: &[String]) -> ObjectId {
+    let mut segments = relation.as_str().rsplitn(2, '.');
+    let table = segments.next().unwrap_or("relation");
+    let namespace = segments.next().unwrap_or("public");
+    if kind == "pkey" {
+        return ObjectId::new(format!("{namespace}.{table}_pkey"));
+    }
+    let mut digest = Sha256::new();
+    digest.update(kind.as_bytes());
+    for value in signature {
+        digest.update([0]);
+        digest.update(value.as_bytes());
+    }
+    let digest = lower_hex(&digest.finalize());
+    ObjectId::new(format!("{namespace}.{table}_{kind}_{}", &digest[..16]))
+}
+
+fn lower_hex(bytes: &[u8]) -> String {
+    const HEX: &[u8; 16] = b"0123456789abcdef";
+    let mut output = String::with_capacity(bytes.len() * 2);
+    for byte in bytes {
+        output.push(char::from(HEX[usize::from(byte >> 4)]));
+        output.push(char::from(HEX[usize::from(byte & 0x0f)]));
+    }
+    output
 }
 
 fn normalize_constraint_dependencies(
@@ -506,6 +647,13 @@ fn required_bool(object: &SchemaObject, key: &str) -> Result<bool, PostgresCatal
     match object.semantic.get(key) {
         Some(SemanticValue::Bool(value)) => Ok(*value),
         _ => Err(incomplete(key)),
+    }
+}
+
+fn optional_bool(object: &SchemaObject, key: &str) -> Option<bool> {
+    match object.semantic.get(key) {
+        Some(SemanticValue::Bool(value)) => Some(*value),
+        _ => None,
     }
 }
 

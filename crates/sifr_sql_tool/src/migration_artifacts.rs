@@ -211,23 +211,29 @@ fn lower_step_kind(kind: &CompiledStepKind) -> MigrationExecutionStepKind {
             statement: statement.clone(),
         },
         CompiledStepKind::SqlData {
+            statement,
             normalized_statement,
         } => MigrationExecutionStepKind::SqlData {
+            statement: statement.clone(),
             normalized_statement: normalized_statement.clone(),
         },
         CompiledStepKind::SifrData { callback } => MigrationExecutionStepKind::SifrData {
             callback: callback.clone(),
         },
         CompiledStepKind::Assertion {
+            statement,
             normalized_statement,
         } => MigrationExecutionStepKind::Assertion {
+            statement: statement.clone(),
             normalized_statement: normalized_statement.clone(),
         },
         CompiledStepKind::Backfill {
+            statement,
             normalized_statement,
             maximum_batch_rows,
             replay,
         } => MigrationExecutionStepKind::Backfill {
+            statement: statement.clone(),
             normalized_statement: normalized_statement.clone(),
             maximum_batch_rows: *maximum_batch_rows,
             replay: match replay {

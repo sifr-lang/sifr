@@ -1,4 +1,4 @@
-use crate::lexer::{SpannedToken, Token, tokenize};
+use crate::lexer::{Token, tokenize};
 use crate::lower_hex;
 use crate::parser::SqliteParser;
 use serde::{Deserialize, Serialize};
@@ -104,13 +104,4 @@ fn recovery_token(start: usize, token: &Token, end: usize) -> RecoveryToken {
         end: u32::try_from(end).unwrap_or(u32::MAX),
         normalized: token.normalized(),
     }
-}
-
-#[allow(dead_code)]
-fn collect_tokens(tokens: Vec<SpannedToken>) -> Vec<RecoveryToken> {
-    tokens
-        .into_iter()
-        .filter_map(Result::ok)
-        .map(|(start, token, end)| recovery_token(start, &token, end))
-        .collect()
 }

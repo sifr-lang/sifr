@@ -656,13 +656,27 @@ pub fn try_lower_leaf_expr(expr: &HirExpr) -> Option<RustExpr> {
         HirExpr::StructuralRecordProject { source, fields, ty } => {
             let lowered_source = try_lower_leaf_or_name_expr(source)?;
             let constructor = crate::stmt_support_emitter::canonical_constructor_class_name("", ty);
+            let source_record = match source.ty().resolve_alias() {
+                Type::StructuralRecord(record) => Some(record),
+                _ => None,
+            };
             Some(RustExpr::FnCall {
                 func: Box::new(RustExpr::Path(vec![constructor, "new".to_string()])),
                 args: fields
                     .iter()
-                    .map(|field| RustExpr::Field {
-                        expr: Box::new(lowered_source.clone()),
-                        field: field.clone(),
+                    .map(|field| {
+                        let access = RustExpr::Field {
+                            expr: Box::new(lowered_source.clone()),
+                            field: field.clone(),
+                        };
+                        source_record
+                            .and_then(|record| record.field(field))
+                            .filter(|field| {
+                                crate::helpers::is_logically_copy_rust_move_type(field.ty())
+                            })
+                            .map_or(access.clone(), |field| {
+                                crate::ownership_plan::materialize_owned_value(field.ty(), access)
+                            })
                     })
                     .collect(),
             })

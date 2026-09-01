@@ -56,6 +56,7 @@ impl std::error::Error for MysqlParseError {}
 pub struct MysqlParser {
     series: MysqlServerSeries,
     sql_modes: BTreeSet<String>,
+    default_character_set: String,
     default_collation: String,
 }
 
@@ -63,6 +64,7 @@ impl MysqlParser {
     pub fn new(
         series: MysqlServerSeries,
         sql_modes: impl IntoIterator<Item = impl Into<String>>,
+        default_character_set: impl Into<String>,
         default_collation: impl Into<String>,
     ) -> Result<Self, MysqlParseError> {
         if !SUPPORTED_MYSQL_SERIES.contains(&series) {
@@ -81,6 +83,10 @@ impl MysqlParser {
         }) {
             return Err(parse_error(0, "invalid MySQL SQL mode"));
         }
+        let default_character_set = default_character_set.into().to_ascii_lowercase();
+        if !valid_character_set(&default_character_set) {
+            return Err(parse_error(0, "invalid MySQL default character set"));
+        }
         let default_collation = default_collation.into().to_ascii_lowercase();
         if !valid_collation(&default_collation) {
             return Err(parse_error(0, "invalid MySQL default collation"));
@@ -88,6 +94,7 @@ impl MysqlParser {
         Ok(Self {
             series,
             sql_modes,
+            default_character_set,
             default_collation,
         })
     }
@@ -105,6 +112,11 @@ impl MysqlParser {
     #[must_use]
     pub fn default_collation(&self) -> &str {
         &self.default_collation
+    }
+
+    #[must_use]
+    pub fn default_character_set(&self) -> &str {
+        &self.default_character_set
     }
 
     pub fn parse(&self, source: &str) -> Result<Vec<MysqlStatement>, MysqlParseError> {
@@ -195,6 +207,13 @@ pub(crate) fn is_keyword(token: &Token, keyword: Keyword) -> bool {
 fn valid_collation(value: &str) -> bool {
     !value.is_empty()
         && value.len() <= 96
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'_')
+}
+
+fn valid_character_set(value: &str) -> bool {
+    !value.is_empty()
         && value
             .bytes()
             .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'_')

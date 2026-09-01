@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 
-pub const MIGRATION_EXECUTION_PLAN_FORMAT_VERSION: u32 = 2;
+pub const MIGRATION_EXECUTION_PLAN_FORMAT_VERSION: u32 = 3;
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
@@ -79,15 +79,18 @@ pub enum MigrationExecutionStepKind {
         statement: String,
     },
     SqlData {
+        statement: String,
         normalized_statement: String,
     },
     SifrData {
         callback: String,
     },
     Assertion {
+        statement: String,
         normalized_statement: String,
     },
     Backfill {
+        statement: String,
         normalized_statement: String,
         maximum_batch_rows: u64,
         replay: MigrationReplayPolicy,

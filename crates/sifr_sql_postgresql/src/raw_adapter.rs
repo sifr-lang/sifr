@@ -663,15 +663,33 @@ impl<'a> RawAdapter<'a> {
         let mut nullable = true;
         let mut has_default = false;
         let mut generated = false;
+        let mut identity_generation = None;
         let mut primary_key = false;
         let mut unique = false;
         let mut references = None;
+        let mut checks = Vec::new();
         for constraint in optional_array(body, "constraints") {
             let (_, constraint) = tagged(object(constraint, "column constraint")?, "constraint")?;
             match string_field(constraint, "contype").unwrap_or("") {
                 "CONSTR_NOTNULL" => nullable = false,
                 "CONSTR_DEFAULT" => has_default = true,
-                "CONSTR_GENERATED" | "CONSTR_IDENTITY" => generated = true,
+                "CONSTR_GENERATED" => generated = true,
+                "CONSTR_IDENTITY" => {
+                    generated = true;
+                    identity_generation = Some(
+                        match string_field(constraint, "generated_when").unwrap_or("") {
+                            "a" => "always",
+                            "d" => "by-default",
+                            _ => {
+                                return Err(self.invalid(
+                                    "identity column has an invalid generation mode",
+                                    constraint,
+                                ));
+                            }
+                        }
+                        .to_string(),
+                    );
+                }
                 "CONSTR_PRIMARY" => {
                     primary_key = true;
                     nullable = false;
@@ -682,6 +700,9 @@ impl<'a> RawAdapter<'a> {
                         relation_name(object_field(constraint, "pktable")?),
                         name_list(constraint, "pk_attrs"),
                     ));
+                }
+                "CONSTR_CHECK" => {
+                    checks.push(self.expression_object(object_field(constraint, "raw_expr")?)?);
                 }
                 _ => {}
             }
@@ -694,9 +715,11 @@ impl<'a> RawAdapter<'a> {
             nullable,
             has_default,
             generated,
+            identity_generation,
             primary_key,
             unique,
             references,
+            checks,
             span: self.span(body),
         })
     }

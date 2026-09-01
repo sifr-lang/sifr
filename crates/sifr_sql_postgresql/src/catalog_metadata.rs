@@ -1,6 +1,6 @@
-use crate::catalog::{
-    CatalogFunction, CatalogOperator, database_type_property, optional_bool_property, schema_error,
-    text_property,
+use crate::catalog::{CatalogFunction, CatalogOperator};
+use crate::catalog_semantics::{
+    database_type_property, optional_bool_property, schema_error, text_property,
 };
 use crate::diagnostic::PostgresDiagnostic;
 use sifr_sql_contract::{SchemaObject, SemanticValue};

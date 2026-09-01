@@ -22,9 +22,15 @@ async fn parser_acceptance_matches_supported_mysql_server() {
         .await
         .expect("collation")
         .expect("collation row");
+    let character_set: String = connection
+        .query_first("SELECT @@character_set_connection")
+        .await
+        .expect("character set")
+        .expect("character-set row");
     let parser = MysqlParser::new(
         MysqlServerSeries::new(major.parse().expect("major"), minor.parse().expect("minor")),
         modes.split(',').filter(|mode| !mode.is_empty()),
+        character_set,
         collation,
     )
     .expect("parser");

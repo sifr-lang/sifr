@@ -10,6 +10,11 @@ import json
 import tomllib
 from pathlib import Path
 
+from wasi_virt_inputs import (
+    WASI_VIRT_COMMIT,
+    WASI_VIRT_SOURCE_SHA256,
+    WASI_VIRT_VERSION,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 RECORD_PATH = REPO_ROOT / "verification/areas/sql_platform/data/compiler_component_qualification.json"
@@ -128,6 +133,69 @@ def validate(payload: object, *, host_source_override: str | None = None) -> Non
     limits = payload.get("limits")
     if not isinstance(limits, list) or len(limits) != len(set(limits)) or len(limits) < 8:
         raise QualificationError("component resource-limit list is incomplete")
+    participants = payload.get("sql_participants")
+    if not isinstance(participants, list) or {
+        row.get("crate") for row in participants if isinstance(row, dict)
+    } != {"sifr_sql_mysql", "sifr_sql_postgresql", "sifr_sql_sqlite"}:
+        raise QualificationError("SQL component participant set is incomplete")
+    for participant in participants:
+        artifacts = participant.get("artifacts")
+        if not isinstance(artifacts, list) or not artifacts:
+            raise QualificationError("SQL component artifact set is empty")
+        if any(not (REPO_ROOT / str(path)).is_file() for path in artifacts):
+            raise QualificationError("SQL component artifact is absent")
+        manifest_path = REPO_ROOT / str(participant.get("manifest", ""))
+        if not manifest_path.is_file():
+            raise QualificationError("SQL component artifact manifest is absent")
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        if (
+            manifest.get("target") != "wasm32-wasip2"
+            or manifest.get("wit_world") != "embedded-language-provider"
+            or manifest.get("protocol_major") != 1
+        ):
+            raise QualificationError("SQL component artifact manifest boundary has drifted")
+        virtualization = manifest.get("wasi_virtualization")
+        if virtualization is None:
+            toolchain = manifest.get("toolchain", {})
+            virtualization = {
+                "name": "wasi-virt",
+                "version": toolchain.get("wasi_virt"),
+                "commit": toolchain.get("wasi_virt_commit"),
+                "source_content_sha256": toolchain.get("wasi_virt_source_sha256"),
+            }
+        if virtualization != {
+            "name": "wasi-virt",
+            "version": WASI_VIRT_VERSION,
+            "commit": WASI_VIRT_COMMIT,
+            "source_content_sha256": WASI_VIRT_SOURCE_SHA256,
+        }:
+            raise QualificationError("SQL component WASI-Virt identity has drifted")
+        manifest_artifacts = manifest.get("artifacts")
+        if not isinstance(manifest_artifacts, list) or not manifest_artifacts:
+            raise QualificationError("SQL component artifact manifest has no artifacts")
+        recorded_paths = set()
+        for row in manifest_artifacts:
+            if not isinstance(row, dict):
+                raise QualificationError("SQL component artifact record is invalid")
+            artifact_path = manifest_path.parent / str(row.get("path", ""))
+            if not artifact_path.is_file():
+                raise QualificationError("recorded SQL component artifact is absent")
+            payload_bytes = artifact_path.read_bytes()
+            if row.get("sha256") != hashlib.sha256(payload_bytes).hexdigest() or row.get(
+                "size_bytes"
+            ) != len(payload_bytes):
+                raise QualificationError("SQL component artifact digest or size has drifted")
+            recorded_paths.add(artifact_path.resolve())
+        qualified_paths = {(REPO_ROOT / str(path)).resolve() for path in artifacts}
+        if recorded_paths != qualified_paths:
+            raise QualificationError("SQL component artifact manifest coverage has drifted")
+        evidence = str(participant.get("evidence", ""))
+        parts = evidence.split("::", maxsplit=1)
+        if len(parts) != 2 or not (REPO_ROOT / parts[0]).is_file():
+            raise QualificationError("SQL component evidence is invalid")
+        source = (REPO_ROOT / parts[0]).read_text(encoding="utf-8")
+        if f"fn {parts[1]}()" not in source:
+            raise QualificationError("SQL component evidence does not resolve")
     fixture = payload.get("fixture")
     if not isinstance(fixture, dict) or fixture.get("sql") is not False:
         raise QualificationError("qualification requires a non-SQL fixture")
@@ -206,6 +274,14 @@ def run_self_test(payload: dict[str, object]) -> None:
     sql_fixture = copy.deepcopy(payload)
     sql_fixture["fixture"]["sql"] = True  # type: ignore[index]
     mutations.append(("fixture", sql_fixture))
+    missing_sql_participant = copy.deepcopy(payload)
+    missing_sql_participant["sql_participants"] = missing_sql_participant[
+        "sql_participants"
+    ][:-1]
+    mutations.append(("sql-participant", missing_sql_participant))
+    missing_manifest = copy.deepcopy(payload)
+    del missing_manifest["sql_participants"][0]["manifest"]  # type: ignore[index]
+    mutations.append(("component-manifest", missing_manifest))
     for name, mutation in mutations:
         try:
             validate(mutation)

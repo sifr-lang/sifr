@@ -1,0 +1,6 @@
+from sifr.sql import SqlSchema
+from sifr.sql.requirements import has_users
+
+
+def leak[S: has_users.Schema](own schema: SqlSchema[S]) -> SqlSchema[S]:
+    return schema

@@ -4,6 +4,7 @@ use sifr_sql_contract::{
     CheckedCodecBinding, CodecContract, CodecIdentity, CodecRegistry, DatabaseType,
     DecimalRepresentation, IntegerSign, IntegerWidth, NullCodecBehavior, Nullability,
     PanicContainment, SchemaContractError, SifrType, WireFormatIdentity, canonical_read_type,
+    encode_generated_path,
 };
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -173,7 +174,40 @@ impl PostgresTypeRegistry {
 }
 
 pub fn generated_sifr_type(database_type: &DatabaseType) -> Result<String, SchemaContractError> {
-    let ty = canonical_read_type(database_type)?;
+    match database_type {
+        DatabaseType::Array {
+            element,
+            element_nullability,
+            ..
+        } => {
+            let mut element = generated_sifr_type(element)?;
+            if *element_nullability == Nullability::Nullable {
+                element.push_str(" | None");
+            }
+            Ok(format!("SqlArray[{element}]"))
+        }
+        DatabaseType::Enum { identity } => generated_nominal_type("enums", identity),
+        DatabaseType::Domain { identity, .. } => generated_nominal_type("domains", identity),
+        DatabaseType::Composite { identity } => generated_nominal_type("composites", identity),
+        DatabaseType::Named { canonical, .. } => generated_sifr_type(canonical),
+        _ => {
+            let ty = canonical_read_type(database_type)?;
+            generated_sifr_type_from_read_type(&ty)
+        }
+    }
+}
+
+fn generated_nominal_type(
+    category: &str,
+    identity: &sifr_sql_contract::ObjectId,
+) -> Result<String, SchemaContractError> {
+    let path = std::iter::once(category.to_string())
+        .chain(identity.as_str().split('.').map(str::to_string))
+        .collect::<Vec<_>>();
+    encode_generated_path(&path)
+}
+
+fn generated_sifr_type_from_read_type(ty: &SifrType) -> Result<String, SchemaContractError> {
     match ty {
         SifrType::Bool => Ok("bool".to_string()),
         SifrType::FixedInteger { sign, width } => Ok(match (sign, width) {
@@ -190,7 +224,7 @@ pub fn generated_sifr_type(database_type: &DatabaseType) -> Result<String, Schem
         SifrType::ExactInteger => Ok("int".to_string()),
         SifrType::Decimal => Ok("Decimal".to_string()),
         SifrType::BigDecimal => Ok("BigDecimal".to_string()),
-        SifrType::Numeric => Ok("sifr.sql.Numeric".to_string()),
+        SifrType::Numeric => Ok("Numeric".to_string()),
         SifrType::Float => Ok("float".to_string()),
         SifrType::Str => Ok("str".to_string()),
         SifrType::Bytes => Ok("bytes".to_string()),
@@ -199,7 +233,7 @@ pub fn generated_sifr_type(database_type: &DatabaseType) -> Result<String, Schem
         SifrType::OffsetTime => Ok("sifr.datetime.offset_time".to_string()),
         SifrType::LocalDateTime => Ok("sifr.datetime.datetime".to_string()),
         SifrType::Instant => Ok("sifr.datetime.instant".to_string()),
-        SifrType::CalendarInterval => Ok("sifr.sql.CalendarInterval".to_string()),
+        SifrType::CalendarInterval => Ok("CalendarInterval".to_string()),
         SifrType::Uuid => Ok("sifr.uuid.UUID".to_string()),
         SifrType::JsonValue => Ok("sifr.json.JsonValue".to_string()),
         SifrType::None => Ok("None".to_string()),
@@ -207,14 +241,28 @@ pub fn generated_sifr_type(database_type: &DatabaseType) -> Result<String, Schem
         SifrType::IpNetwork => Ok("sifr.ipaddress.IPNetwork".to_string()),
         SifrType::MacAddress => Ok("sifr.ipaddress.MacAddress".to_string()),
         SifrType::Nominal { identity } => Ok(identity.as_str().to_string()),
-        SifrType::Custom { identity } => Ok(identity),
-        SifrType::List { .. }
-        | SifrType::SqlArray { .. }
-        | SifrType::Range { .. }
-        | SifrType::Union { .. } => Err(SchemaContractError::new(
-            sifr_sql_contract::SchemaContractErrorKind::InvalidProvider,
-            "PostgreSQL generated schema type cannot be represented by one static Sifr type path",
+        SifrType::Custom { identity } => Ok(identity.clone()),
+        SifrType::List { element } => Ok(format!(
+            "list[{}]",
+            generated_sifr_type_from_read_type(element)?
         )),
+        SifrType::SqlArray { element } => Ok(format!(
+            "SqlArray[{}]",
+            generated_sifr_type_from_read_type(element)?
+        )),
+        SifrType::Range {
+            element,
+            multirange,
+        } => Ok(format!(
+            "{}[{}]",
+            if *multirange { "MultiRange" } else { "Range" },
+            generated_sifr_type_from_read_type(element)?
+        )),
+        SifrType::Union { members } => members
+            .iter()
+            .map(generated_sifr_type_from_read_type)
+            .collect::<Result<Vec<_>, _>>()
+            .map(|members| members.join(" | ")),
     }
 }
 

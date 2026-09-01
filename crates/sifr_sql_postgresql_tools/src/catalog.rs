@@ -102,6 +102,7 @@ async fn pull_catalog_snapshot(
     expected_dialect: DialectIdentity,
     expected_server_major: u16,
 ) -> Result<SchemaIr, PostgresCatalogError> {
+    reject_reserved_namespace_collision(client).await?;
     let version = client
         .query_one("SHOW server_version_num", &[])
         .await
@@ -129,6 +130,30 @@ async fn pull_catalog_snapshot(
         );
     }
     schema_from_rows(provider, expected_dialect, rows)
+}
+
+async fn reject_reserved_namespace_collision(client: &Client) -> Result<(), PostgresCatalogError> {
+    let owner = client
+        .query_opt(
+            "SELECT obj_description(oid, 'pg_namespace') FROM pg_namespace WHERE nspname = 'sifr_internal'",
+            &[],
+        )
+        .await;
+    match owner {
+        Ok(Some(row)) => {
+            let marker = row.try_get::<_, Option<String>>(0).map_err(|_| {
+                catalog_error("cannot validate the reserved PostgreSQL namespace owner")
+            })?;
+            if marker.as_deref() != Some("sifr:sql-migration-ledger:v1") {
+                return Err(catalog_error(
+                    "PostgreSQL namespace 'sifr_internal' is reserved and is not owned by Sifr",
+                ));
+            }
+        }
+        Ok(None) => {}
+        Err(_) => return Err(catalog_error("cannot inspect PostgreSQL namespaces")),
+    }
+    Ok(())
 }
 
 fn schema_from_rows(

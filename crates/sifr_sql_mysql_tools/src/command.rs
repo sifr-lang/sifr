@@ -3,6 +3,7 @@ use serde::Serialize;
 use sifr_driver::{QUERY_SIGNATURE_ARTIFACT_NAME, load_sql_editor_profiles};
 use sifr_sql_contract::{
     ProfileAuthority, QuerySignatureArtifact, SchemaEvidence, SchemaIr, build_profile_authority,
+    schema_source_fingerprint,
 };
 use sifr_sql_tool::{
     AuthorityMergeRule, NamedProfileAuthority, NamedSchema, SNAPSHOT_PATH, SchemaLifecycleError,
@@ -198,6 +199,14 @@ fn authority_with_schema(
     schema: SchemaIr,
 ) -> Result<ProfileAuthority, CommandError> {
     let mut profile = authority.profile.clone();
+    let source = format!(".sifr/live-schema/{}.json", profile.name);
+    let bytes = serde_json::to_vec(&schema)
+        .map_err(|_| command_error("cannot fingerprint accepted live schema"))?;
+    profile.source_files = [source.clone()].into_iter().collect();
+    profile.source_fingerprints = [(source, schema_source_fingerprint(&bytes))]
+        .into_iter()
+        .collect();
+    profile.evidence = SchemaEvidence::Introspection;
     profile.schema = schema;
     build_profile_authority(profile).map_err(|error| command_error(error.to_string()))
 }

@@ -58,6 +58,10 @@ impl AnalysisContext<'_> {
             } => {
                 self.required_capabilities
                     .insert("sql.query.subquery".to_string());
+                if *lateral {
+                    self.required_capabilities
+                        .insert("sql.query.lateral".to_string());
+                }
                 let mut scopes = outer.to_vec();
                 if *lateral {
                     scopes.push(frame.clone());

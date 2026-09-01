@@ -275,6 +275,7 @@ pub fn execute_embedded_request(
             sifr_end: end,
         });
     into_embedded_response(
+        request.component.processor,
         request.plan_kind,
         artifact.identity.clone(),
         &schema,
@@ -335,8 +336,13 @@ fn execute_schema_normalization(
             request.component.sha256.clone(),
         )]),
     };
-    let parser = MysqlParser::new(series, sql_modes.clone(), default_collation.clone())
-        .map_err(|error| component_diagnostic(error.message))?;
+    let parser = MysqlParser::new(
+        series,
+        sql_modes.clone(),
+        default_character_set.clone(),
+        default_collation.clone(),
+    )
+    .map_err(|error| component_diagnostic(error.message))?;
     let output = normalize_mysql_documents(
         provider,
         &parser,
@@ -352,10 +358,7 @@ fn execute_schema_normalization(
     .map_err(|error| component_diagnostic(error.message))?;
     let payload = serde_json::to_vec(&output)
         .map_err(|_| component_diagnostic("cannot serialize MySQL normalized schema"))?;
-    let provider_identity = format!(
-        "{}@{}#{}",
-        request.component.package, request.component.version, request.component.sha256
-    );
+    let provider_identity = request.component.processor;
     let mut response = EmbeddedAnalysisResponse {
         protocol_major: COMPONENT_PROTOCOL_MAJOR,
         plan: EmbeddedPlan {
@@ -395,6 +398,7 @@ fn semantic_json<T: serde::de::DeserializeOwned>(
 }
 
 fn into_embedded_response(
+    provider_identity: String,
     plan_kind: PlanKind,
     schema_identity: String,
     schema: &SchemaIr,
@@ -442,12 +446,6 @@ fn into_embedded_response(
         .iter()
         .map(|parameter| parameter.slot)
         .collect();
-    let provider_identity = format!(
-        "{}@{}#{}",
-        schema.provider.package_id,
-        schema.provider.package_version,
-        schema.provider.package_graph_digest
-    );
     let operations = vec![SemanticOperation::ProviderNode {
         tag: PROVIDER_ANALYSIS_PAYLOAD_TAG.to_string(),
         payload: payload.clone(),
@@ -457,9 +455,7 @@ fn into_embedded_response(
         payload,
         parameter_order,
     };
-    let stable_fingerprint =
-        stable_plan_fingerprint(&provider_identity, &schema_identity, &analysis, plan_kind)?;
-    Ok(EmbeddedAnalysisResponse {
+    let mut embedded = EmbeddedAnalysisResponse {
         protocol_major: COMPONENT_PROTOCOL_MAJOR,
         plan: EmbeddedPlan {
             provider_identity,
@@ -472,9 +468,13 @@ fn into_embedded_response(
             dependencies,
             diagnostics: Vec::new(),
             source_map: Vec::new(),
-            stable_fingerprint,
+            stable_fingerprint: String::new(),
         },
-    })
+    };
+    embedded.plan.stable_fingerprint =
+        sifr_compiler_component::compute_plan_fingerprint(&embedded.plan)
+            .map_err(|error| component_diagnostic(error.to_string()))?;
+    Ok(embedded)
 }
 
 fn template_source(parts: &[TemplatePart]) -> Result<(String, String, u32, u32), MysqlDiagnostic> {
@@ -532,7 +532,13 @@ fn parser_from_schema(
         .iter()
         .find_map(|mode| mode.strip_prefix("collation:"))
         .ok_or_else(|| component_diagnostic("MySQL SchemaIR has no default collation"))?;
-    MysqlParser::new(series, sql_modes, collation)
+    let character_set = schema
+        .dialect
+        .modes
+        .iter()
+        .find_map(|mode| mode.strip_prefix("character-set:"))
+        .ok_or_else(|| component_diagnostic("MySQL SchemaIR has no default character set"))?;
+    MysqlParser::new(series, sql_modes, character_set, collation)
         .map_err(|error| component_diagnostic(error.message))
 }
 
@@ -548,17 +554,6 @@ fn parse_series(version: &str) -> Result<MysqlServerSeries, MysqlDiagnostic> {
 
 fn processor(series: MysqlServerSeries) -> String {
     format!("{MYSQL_QUERY_OPERATION}.v{}-{}", series.major, series.minor)
-}
-
-fn stable_plan_fingerprint(
-    provider_identity: &str,
-    schema_identity: &str,
-    analysis: &ProviderAnalysis,
-    plan_kind: PlanKind,
-) -> Result<String, MysqlDiagnostic> {
-    let bytes = serde_json::to_vec(&(provider_identity, schema_identity, analysis, plan_kind))
-        .map_err(|_| component_diagnostic("cannot fingerprint MySQL plan"))?;
-    Ok(lower_hex(&Sha256::digest(bytes)))
 }
 
 fn closed_type(ty: &SifrType) -> ClosedType {

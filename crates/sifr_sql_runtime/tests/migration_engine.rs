@@ -81,6 +81,7 @@ fn graph(with_backfill: bool) -> MigrationExecutionPlan {
             &after,
             &after,
             MigrationExecutionStepKind::Backfill {
+                statement: "UPDATE".to_string(),
                 normalized_statement: "UPDATE".to_string(),
                 maximum_batch_rows: 10,
                 replay: MigrationReplayPolicy::Idempotent {
@@ -94,6 +95,7 @@ fn graph(with_backfill: bool) -> MigrationExecutionPlan {
         &after,
         &after,
         MigrationExecutionStepKind::Assertion {
+            statement: "SELECT true AS valid".to_string(),
             normalized_statement: "SELECT true AS valid".to_string(),
         },
     ));

@@ -54,7 +54,7 @@ fn sql_templates_route_through_virtual_document_editor_queries() {
 }
 
 #[test]
-fn sql_profile_load_failure_preserves_non_sql_package_analysis() {
+fn lockfile_less_project_defers_sql_profiles_and_preserves_overlay_analysis() {
     let dir = temp_project_dir("sql_profile_failure_isolation");
     std::fs::create_dir_all(dir.join("src")).expect("source directory");
     std::fs::write(
@@ -90,22 +90,13 @@ fn sql_profile_load_failure_preserves_non_sql_package_analysis() {
         .diagnostics(file)
         .expect("diagnostics should query")
         .into_value();
-    assert!(
-        diagnostics.iter().any(|diagnostic| {
-            diagnostic.message.contains("cargo metadata")
-                || diagnostic.message.contains("SQL editor package graph")
-        }),
-        "diagnostics={:?}",
-        diagnostics
-            .iter()
-            .map(|diagnostic| diagnostic.message.as_str())
-            .collect::<Vec<_>>()
-    );
+    assert!(diagnostics.is_empty(), "diagnostics={diagnostics:?}");
+    assert!(!dir.join("Cargo.lock").exists());
     let _ = std::fs::remove_dir_all(dir);
 }
 
 #[test]
-fn sql_profile_load_failure_preserves_direct_open_project_analysis() {
+fn lockfile_less_project_defers_sql_profiles_and_preserves_disk_analysis() {
     let dir = temp_project_dir("sql_profile_failure_direct_open");
     std::fs::create_dir_all(dir.join("src")).expect("source directory");
     std::fs::write(
@@ -134,9 +125,8 @@ fn sql_profile_load_failure_preserves_direct_open_project_analysis() {
         host.diagnostics(file)
             .expect("initialization diagnostics")
             .into_value()
-            .iter()
-            .any(|diagnostic| diagnostic.message.contains("cargo metadata")
-                || diagnostic.message.contains("SQL editor package graph"))
+            .is_empty()
     );
+    assert!(!dir.join("Cargo.lock").exists());
     let _ = std::fs::remove_dir_all(dir);
 }

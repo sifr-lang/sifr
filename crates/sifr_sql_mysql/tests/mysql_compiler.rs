@@ -2,7 +2,9 @@
 
 use semver::Version;
 use sifr_compiler_component::{
-    COMPONENT_PROTOCOL_MAJOR, ComponentIdentity, ComponentRegistration, ProtocolRange,
+    AnalysisContext, COMPONENT_PROTOCOL_MAJOR, ComponentHost, ComponentHostLimits,
+    ComponentIdentity, ComponentRegistration, ContextArtifact, EmbeddedAnalysisRequest, PlanKind,
+    ProtocolRange, SourceSpan, TemplatePart,
 };
 use sifr_sql_contract::{
     ProviderIdentity, SchemaDocumentKind, SchemaObjectKind, SchemaSourceInput, SessionContract,
@@ -10,13 +12,20 @@ use sifr_sql_contract::{
     schema_normalization_request, schema_source_fingerprint,
 };
 use sifr_sql_mysql::{
-    MysqlAnalyzer, MysqlEditorFacts, MysqlParser, MysqlSchemaOptions, MysqlServerSeries,
+    MYSQL_SCHEMA_ARTIFACT_KIND, MysqlAnalyzer, MysqlEditorFacts, MysqlParser, MysqlSchemaOptions,
+    MysqlServerSeries, SUPPORTED_MYSQL_SERIES, component_artifact_path, component_registration,
     execute_embedded_request, normalize_mysql_documents, provider_diagnostics,
 };
 use std::collections::{BTreeMap, BTreeSet};
 
 fn parser(series: MysqlServerSeries) -> MysqlParser {
-    MysqlParser::new(series, ["STRICT_TRANS_TABLES"], "utf8mb4_0900_ai_ci").expect("valid parser")
+    MysqlParser::new(
+        series,
+        ["STRICT_TRANS_TABLES"],
+        "utf8mb4",
+        "utf8mb4_0900_ai_ci",
+    )
+    .expect("valid parser")
 }
 
 fn options() -> MysqlSchemaOptions {
@@ -40,7 +49,11 @@ fn provider() -> ProviderIdentity {
 }
 
 fn schema(ddl: &str) -> sifr_sql_contract::SchemaIr {
-    let parser = parser(MysqlServerSeries::new(8, 4));
+    schema_for_series(MysqlServerSeries::new(8, 4), ddl)
+}
+
+fn schema_for_series(series: MysqlServerSeries, ddl: &str) -> sifr_sql_contract::SchemaIr {
+    let parser = parser(series);
     let output = normalize_mysql_documents(
         provider(),
         &parser,
@@ -76,11 +89,74 @@ fn supported_series_own_query_and_ddl_parsing() {
 }
 
 #[test]
+fn every_checked_in_mysql_component_executes_in_the_capability_free_host() {
+    for series in SUPPORTED_MYSQL_SERIES {
+        let schema = schema_for_series(
+            series,
+            "CREATE TABLE users(id BIGINT PRIMARY KEY, email VARCHAR(255) NOT NULL UNIQUE)",
+        );
+        let fingerprint = schema_fingerprint(&schema)
+            .expect("schema fingerprint")
+            .as_str()
+            .to_string();
+        let registration = component_registration(series).expect("component registration");
+        let bytes = std::fs::read(component_artifact_path(series)).expect("component artifact");
+        let request = EmbeddedAnalysisRequest {
+            protocol_major: COMPONENT_PROTOCOL_MAJOR,
+            component: registration.identity.clone(),
+            provider_diagnostics: registration.diagnostics.clone(),
+            compiler_semantic_version: "0.0.0".to_string(),
+            parts: vec![TemplatePart::Static {
+                text: "SELECT id FROM users ORDER BY id LIMIT 1".to_string(),
+                span: SourceSpan {
+                    document: "src/component.sifr".to_string(),
+                    start: 0,
+                    end: 41,
+                },
+            }],
+            holes: Vec::new(),
+            context: AnalysisContext {
+                schema_profile: Some("app.Schema".to_string()),
+                schema_fingerprint: Some(fingerprint.clone()),
+                semantic_profile: BTreeMap::new(),
+                imported_signatures: Vec::new(),
+                artifacts: vec![ContextArtifact {
+                    kind: MYSQL_SCHEMA_ARTIFACT_KIND.to_string(),
+                    identity: "app.Schema".to_string(),
+                    format_version: 1,
+                    fingerprint,
+                    payload: serde_json::to_vec(&schema).expect("schema payload"),
+                }],
+            },
+            plan_kind: PlanKind::Expression,
+        };
+        let mut host = ComponentHost::new(
+            ComponentHostLimits {
+                fuel: 100_000_000,
+                ..ComponentHostLimits::default()
+            },
+            None,
+        )
+        .expect("component host");
+        let run = host
+            .analyze(&registration, &bytes, &request)
+            .unwrap_or_else(|failure| panic!("MySQL {series:?} component failed: {failure}"));
+        assert_eq!(
+            run.response.plan.provider_identity,
+            registration.identity.processor
+        );
+        assert!(run.response.plan.diagnostics.is_empty());
+        assert!(!run.response.plan.operations.is_empty());
+    }
+}
+
+#[test]
 fn ansi_quotes_changes_the_lexical_contract() {
     let ordinary = parser(MysqlServerSeries::new(8, 4));
     let ansi = MysqlParser::new(
         MysqlServerSeries::new(8, 4),
         ["ANSI_QUOTES", "STRICT_TRANS_TABLES"],
+        "utf8mb4",
         "utf8mb4_0900_ai_ci",
     )
     .expect("ANSI parser");
@@ -121,6 +197,37 @@ fn schema_models_unsigned_generated_collation_and_content_constraint_ids() {
 }
 
 #[test]
+fn schema_rejects_character_set_drift_and_uses_the_server_charset_default() {
+    let parser = parser(MysqlServerSeries::new(8, 4));
+    let mut mismatched = options();
+    mismatched.default_character_set = "latin1".to_string();
+    assert!(
+        normalize_mysql_documents(
+            provider(),
+            &parser,
+            &mismatched,
+            vec![(
+                "db/mismatch.sql".to_string(),
+                "CREATE TABLE users (id BIGINT)".to_string()
+            )],
+        )
+        .is_err()
+    );
+
+    let schema = schema("CREATE TABLE latin_users (name VARCHAR(32)) CHARACTER SET latin1");
+    for identity in ["app.latin_users", "app.latin_users.name"] {
+        assert_eq!(
+            schema.objects[&sifr_sql_contract::ObjectId::new(identity)]
+                .semantic
+                .get("collation"),
+            Some(&sifr_sql_contract::SemanticValue::Text(
+                "latin1_swedish_ci".to_string()
+            ))
+        );
+    }
+}
+
+#[test]
 fn analyzer_accounts_for_relations_columns_parameters_and_conflict_capability() {
     let schema = schema(
         "CREATE TABLE users (id BIGINT UNSIGNED PRIMARY KEY, email VARCHAR(255) NOT NULL UNIQUE)",
@@ -132,7 +239,14 @@ fn analyzer_accounts_for_relations_columns_parameters_and_conflict_capability() 
         .expect("read analysis");
     assert_eq!(read.parameters.len(), 1);
     assert_eq!(read.result_fields.len(), 2);
-    assert!(read.accessed_objects.len() >= 3);
+    assert_eq!(
+        read.accessed_objects,
+        BTreeSet::from([
+            sifr_sql_contract::ObjectId::new("app.users"),
+            sifr_sql_contract::ObjectId::new("app.users.id"),
+            sifr_sql_contract::ObjectId::new("app.users.email"),
+        ])
+    );
     let write = analyzer
         .analyze_query(
             "INSERT INTO users(id, email) VALUES (?, ?) ON DUPLICATE KEY UPDATE email = ?",
@@ -154,6 +268,7 @@ fn editor_recovery_is_non_authoritative_and_settings_sensitive() {
     let changed = MysqlParser::new(
         MysqlServerSeries::new(8, 4),
         ["ANSI_QUOTES", "STRICT_TRANS_TABLES"],
+        "utf8mb4",
         "utf8mb4_0900_ai_ci",
     )
     .expect("changed parser");

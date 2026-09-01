@@ -24,6 +24,7 @@ struct LspDocumentAnalysis {
 
 struct LspProjectAnalysis {
     host: Option<AnalysisHost>,
+    project_root: Option<ProjectRoot>,
     files_by_uri: BTreeMap<String, FileId>,
     load_diagnostics: BTreeMap<String, Vec<RenderedDiagnostic>>,
     open_uris: BTreeSet<String>,
@@ -107,11 +108,13 @@ impl LspAnalysisWorkspace {
         self.projects.retain(|root, _| grouped.contains_key(root));
         for (root, documents) in grouped {
             let open_uris = open_uris(&documents);
-            if self
-                .projects
-                .get(&root)
-                .is_some_and(|project| project.open_uris == open_uris)
-            {
+            if let Some(project) = self.projects.get_mut(&root) {
+                if project.open_uris != open_uris {
+                    let _synchronized = project.synchronize_documents(&documents);
+                }
+                for document in &documents {
+                    self.documents.remove(document.uri());
+                }
                 continue;
             }
             let analysis = LspProjectAnalysis::open(root.clone(), &documents);
@@ -126,6 +129,9 @@ impl LspAnalysisWorkspace {
         for analysis in self.projects.values_mut() {
             if let Some(host) = analysis.host.as_mut() {
                 host.record_watcher_events(event_count, Self::WATCHER_STORM_THRESHOLD);
+            }
+            if event_count > 0 {
+                analysis.refresh_external_state();
             }
         }
         for analysis in self.documents.values_mut() {
@@ -269,6 +275,7 @@ impl LspProjectAnalysis {
         let Some(entrypoint) = project_entrypoint(&root, documents) else {
             return Self {
                 host: None,
+                project_root: None,
                 files_by_uri: BTreeMap::new(),
                 load_diagnostics: BTreeMap::new(),
                 open_uris: open_uris(documents),
@@ -292,6 +299,7 @@ impl LspProjectAnalysis {
                     .collect();
                 Self {
                     host: Some(host),
+                    project_root: Some(project_root),
                     files_by_uri,
                     load_diagnostics: BTreeMap::new(),
                     open_uris: open_uris(documents),
@@ -299,6 +307,7 @@ impl LspProjectAnalysis {
             }
             Err(diagnostics) => Self {
                 host: None,
+                project_root: Some(project_root),
                 files_by_uri: BTreeMap::new(),
                 load_diagnostics: documents
                     .iter()
@@ -306,6 +315,65 @@ impl LspProjectAnalysis {
                     .collect(),
                 open_uris: open_uris(documents),
             },
+        }
+    }
+
+    fn synchronize_documents(
+        &mut self,
+        documents: &[&DocumentState],
+    ) -> Result<(), ProjectDocumentFailure> {
+        let Some(host) = self.host.as_mut() else {
+            return Err(ProjectDocumentFailure::HostUnavailable);
+        };
+        let next_uris = open_uris(documents);
+        let removed = self
+            .open_uris
+            .difference(&next_uris)
+            .filter_map(|uri| self.files_by_uri.get(uri))
+            .filter_map(|file| host.path_for_file(*file).ok())
+            .map(Path::to_path_buf)
+            .collect::<Vec<_>>();
+        let overlays = documents
+            .iter()
+            .map(|document| {
+                (
+                    SourcePath::new(document.path().to_path_buf()),
+                    Some(document.uri().to_string()),
+                    document_version(document),
+                    SourceText::new(document.text().to_string()),
+                )
+            })
+            .collect();
+        if let Err(diagnostics) = host.synchronize_project_overlays(&removed, overlays) {
+            self.load_diagnostics = documents
+                .iter()
+                .map(|document| (document.uri().to_string(), diagnostics.clone()))
+                .collect();
+            return Err(ProjectDocumentFailure::DocumentUnavailable);
+        }
+        self.files_by_uri = documents
+            .iter()
+            .filter_map(|document| {
+                host.document_file_for_path(document.path())
+                    .ok()
+                    .map(|file| (document.uri().to_string(), file))
+            })
+            .collect();
+        self.load_diagnostics.clear();
+        self.open_uris = next_uris;
+        Ok(())
+    }
+
+    fn refresh_external_state(&mut self) {
+        let (Some(host), Some(root)) = (self.host.as_mut(), self.project_root.as_ref()) else {
+            return;
+        };
+        if let Err(diagnostics) = host.refresh_project_sources_and_sql(root) {
+            self.load_diagnostics = self
+                .open_uris
+                .iter()
+                .map(|uri| (uri.clone(), diagnostics.clone()))
+                .collect();
         }
     }
 

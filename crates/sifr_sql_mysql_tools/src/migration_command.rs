@@ -2,13 +2,22 @@ use crate::command::{
     CommandError, CommandOutcome, command_error, json_line, load_authority, required_connection,
 };
 use crate::{connect_migration_runtime, validate_mysql_migration_plan};
+use sifr_sql_contract::{SchemaIr, SchemaObjectKind};
+use sifr_sql_mysql::{
+    MysqlAnalyzer, MysqlMigrationDialect, MysqlParser, MysqlSchemaOptions, SUPPORTED_MYSQL_SERIES,
+};
 use sifr_sql_runtime::{
     MigrationEngine, MigrationExecutionLimits, MigrationExecutionPlan, MigrationId,
+};
+use sifr_sql_tool::{
+    build_migration_artifacts, compile_migration_sources, load_migration_source_inputs,
+    write_migration_artifacts_atomically,
 };
 use std::fs;
 use std::path::Path;
 
 enum MigrationCommand {
+    Build { profile: String },
     Plan { profile: String },
     Import { profile: String, baseline: String },
     Apply { profile: String },
@@ -22,11 +31,15 @@ pub async fn run_migration_command(
 ) -> Result<CommandOutcome, CommandError> {
     let command = parse_command(arguments)?;
     let profile = match &command {
-        MigrationCommand::Plan { profile }
+        MigrationCommand::Build { profile }
+        | MigrationCommand::Plan { profile }
         | MigrationCommand::Import { profile, .. }
         | MigrationCommand::Apply { profile }
         | MigrationCommand::Rollback { profile } => profile,
     };
+    if matches!(command, MigrationCommand::Build { .. }) {
+        return build(workspace_root, profile);
+    }
     let plan = read_plan(workspace_root, profile)?;
     let operator =
         validate_mysql_migration_plan(&plan).map_err(|error| command_error(error.message))?;
@@ -65,6 +78,9 @@ pub async fn run_migration_command(
             MigrationCommand::Plan { .. } => {
                 Err("migration plan entered live execution".to_string())
             }
+            MigrationCommand::Build { .. } => {
+                Err("migration build entered live execution".to_string())
+            }
         }
     })
     .await
@@ -74,6 +90,111 @@ pub async fn run_migration_command(
         exit_code: 0,
         stdout: result,
     })
+}
+
+fn build(workspace_root: &Path, profile: &str) -> Result<CommandOutcome, CommandError> {
+    let authority = load_authority(workspace_root, profile)?;
+    let target = authority.profile.schema;
+    let (parser, options) = mysql_build_context(&target)?;
+    let dialect = MysqlMigrationDialect::new(parser.clone(), options);
+    let inputs = load_migration_source_inputs(workspace_root, profile, compile_migration_source)
+        .map_err(|failure| command_error(failure.message))?;
+    let graph = compile_migration_sources(
+        &dialect,
+        target.clone(),
+        inputs.baselines,
+        inputs.declarations,
+        |schema, statement| {
+            MysqlAnalyzer::new(&parser, schema)
+                .and_then(|analyzer| analyzer.analyze_query(statement))
+                .map_err(|failure| failure.message)
+        },
+    )
+    .map_err(|failure| command_error(failure.message))?;
+    let artifacts = build_migration_artifacts(&graph, &target)
+        .map_err(|failure| command_error(failure.message))?;
+    let output = workspace_root
+        .join(".sifr")
+        .join("sql-migrations")
+        .join(profile);
+    write_migration_artifacts_atomically(&output, &artifacts)
+        .map_err(|failure| command_error(failure.message))?;
+    Ok(CommandOutcome {
+        exit_code: 0,
+        stdout: json_line(&artifacts.manifest)?,
+    })
+}
+
+fn compile_migration_source(
+    source: &str,
+) -> Result<Vec<sifr_sql_contract::MigrationSourceDeclaration>, String> {
+    sifr_driver::compile_sql_migration_source(source).map_err(|failures| {
+        failures
+            .into_iter()
+            .map(|failure| failure.message)
+            .collect::<Vec<_>>()
+            .join("\n")
+    })
+}
+
+fn mysql_build_context(
+    schema: &SchemaIr,
+) -> Result<(MysqlParser, MysqlSchemaOptions), CommandError> {
+    let series = SUPPORTED_MYSQL_SERIES
+        .into_iter()
+        .find(|series| series.version() == schema.dialect.server_version)
+        .ok_or_else(|| command_error("migration profile selects an unsupported MySQL series"))?;
+    let character_set = prefixed_mode(&schema.dialect.modes, "character-set:")?;
+    let collation = prefixed_mode(&schema.dialect.modes, "collation:")?;
+    let sql_modes = schema
+        .dialect
+        .modes
+        .iter()
+        .filter(|mode| !mode.starts_with("character-set:") && !mode.starts_with("collation:"))
+        .cloned()
+        .collect::<std::collections::BTreeSet<_>>();
+    let database = schema
+        .objects
+        .values()
+        .find(|object| {
+            object.kind == SchemaObjectKind::Namespace
+                && !object.identity.as_str().starts_with("mysql.")
+        })
+        .map(|object| object.identity.to_string())
+        .ok_or_else(|| command_error("MySQL migration profile has no default database object"))?;
+    let parser = MysqlParser::new(
+        series,
+        sql_modes.clone(),
+        character_set.clone(),
+        collation.clone(),
+    )
+    .map_err(|failure| command_error(failure.to_string()))?;
+    Ok((
+        parser,
+        MysqlSchemaOptions {
+            default_database: database,
+            default_character_set: character_set,
+            default_collation: collation,
+            sql_modes,
+            extensions: schema.dialect.features.clone(),
+        },
+    ))
+}
+
+fn prefixed_mode(
+    modes: &std::collections::BTreeSet<String>,
+    prefix: &str,
+) -> Result<String, CommandError> {
+    let values = modes
+        .iter()
+        .filter_map(|mode| mode.strip_prefix(prefix))
+        .collect::<Vec<_>>();
+    let [value] = values.as_slice() else {
+        return Err(command_error(format!(
+            "MySQL migration profile needs exactly one {prefix} mode"
+        )));
+    };
+    Ok((*value).to_string())
 }
 
 fn read_plan(root: &Path, profile: &str) -> Result<MigrationExecutionPlan, CommandError> {
@@ -113,6 +234,7 @@ fn parse_command(arguments: &[String]) -> Result<MigrationCommand, CommandError>
         .filter(|value| !value.is_empty())
         .ok_or_else(usage)?;
     match command {
+        "build" if baseline.is_none() => Ok(MigrationCommand::Build { profile }),
         "plan" if baseline.is_none() => Ok(MigrationCommand::Plan { profile }),
         "import" => Ok(MigrationCommand::Import {
             profile,
@@ -146,6 +268,6 @@ fn serialize(value: &impl serde::Serialize) -> Result<String, String> {
 
 fn usage() -> CommandError {
     command_error(
-        "usage: migration plan --profile <name> | migration import --profile <name> --baseline <id> | migration apply --profile <name> | migration rollback --profile <name>",
+        "usage: migration build --profile <name> | migration plan --profile <name> | migration import --profile <name> --baseline <id> | migration apply --profile <name> | migration rollback --profile <name>",
     )
 }

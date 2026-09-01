@@ -1,6 +1,10 @@
 #![allow(clippy::expect_used, clippy::unwrap_used)]
 
 use semver::Version;
+use sifr_compiler_component::{
+    AnalysisContext, COMPONENT_PROTOCOL_MAJOR, ComponentHost, ComponentHostLimits, ContextArtifact,
+    EmbeddedAnalysisRequest, PlanKind, SourceSpan, TemplatePart,
+};
 use sifr_sql_contract::{
     Cardinality, PoolingMode, ProviderIdentity, SchemaDocumentKind, SchemaEvidence,
     SchemaObjectKind, SchemaProfile, SchemaRequirement, SchemaRequirementIdentity,
@@ -9,9 +13,10 @@ use sifr_sql_contract::{
     schema_normalization_from_response, schema_normalization_request, schema_source_fingerprint,
 };
 use sifr_sql_sqlite::{
-    SUPPORTED_SQLITE_SERIES, SqliteAffinity, SqliteAnalyzer, SqliteConflictForm, SqliteEditorFacts,
-    SqliteParser, SqliteSchemaOptions, SqliteStatementKind, affinity, component_registration,
-    execute_embedded_request, normalize_sqlite_documents, sqlite_capabilities,
+    SQLITE_SCHEMA_ARTIFACT_KIND, SUPPORTED_SQLITE_SERIES, SqliteAffinity, SqliteAnalyzer,
+    SqliteConflictForm, SqliteEditorFacts, SqliteParser, SqliteSchemaOptions, SqliteStatementKind,
+    affinity, component_artifact_path, component_registration, execute_embedded_request,
+    normalize_sqlite_documents, sqlite_capabilities,
 };
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -48,6 +53,66 @@ fn syntaqlite_grammar_affinity_strict_rowid_and_generated_columns_are_owned() {
 }
 
 #[test]
+fn checked_in_sqlite_component_executes_in_the_capability_free_host() {
+    let schema =
+        normalized_schema("CREATE TABLE users(id INTEGER PRIMARY KEY, email TEXT NOT NULL) STRICT");
+    let fingerprint = sifr_sql_contract::schema_fingerprint(&schema)
+        .expect("schema fingerprint")
+        .as_str()
+        .to_string();
+    let registration =
+        component_registration(SUPPORTED_SQLITE_SERIES[0]).expect("component registration");
+    let bytes = std::fs::read(component_artifact_path(SUPPORTED_SQLITE_SERIES[0]))
+        .expect("component artifact");
+    let request = EmbeddedAnalysisRequest {
+        protocol_major: COMPONENT_PROTOCOL_MAJOR,
+        component: registration.identity.clone(),
+        provider_diagnostics: registration.diagnostics.clone(),
+        compiler_semantic_version: "0.0.0".to_string(),
+        parts: vec![TemplatePart::Static {
+            text: "SELECT id FROM users ORDER BY id LIMIT 1".to_string(),
+            span: SourceSpan {
+                document: "src/component.sifr".to_string(),
+                start: 0,
+                end: 41,
+            },
+        }],
+        holes: Vec::new(),
+        context: AnalysisContext {
+            schema_profile: Some("app.Schema".to_string()),
+            schema_fingerprint: Some(fingerprint.clone()),
+            semantic_profile: BTreeMap::new(),
+            imported_signatures: Vec::new(),
+            artifacts: vec![ContextArtifact {
+                kind: SQLITE_SCHEMA_ARTIFACT_KIND.to_string(),
+                identity: "app.Schema".to_string(),
+                format_version: 1,
+                fingerprint,
+                payload: serde_json::to_vec(&schema).expect("schema payload"),
+            }],
+        },
+        plan_kind: PlanKind::Expression,
+    };
+    let mut host = ComponentHost::new(
+        ComponentHostLimits {
+            fuel: 100_000_000,
+            ..ComponentHostLimits::default()
+        },
+        None,
+    )
+    .expect("component host");
+    let run = host
+        .analyze(&registration, &bytes, &request)
+        .expect("SQLite component execution");
+    assert_eq!(
+        run.response.plan.provider_identity,
+        registration.identity.processor
+    );
+    assert!(run.response.plan.diagnostics.is_empty());
+    assert!(!run.response.plan.operations.is_empty());
+}
+
+#[test]
 fn sqlite_conflict_forms_and_returning_follow_the_pinned_grammar() {
     let statements = parser()
         .parse(
@@ -78,6 +143,14 @@ fn sqlite_parameter_slots_limits_returning_conflicts_and_operators_are_exact() {
     assert_eq!(analysis.cardinality, Cardinality::MANY);
     assert!(analysis.normalized_statement.contains("?1"));
     assert!(analysis.normalized_statement.contains(":email"));
+    assert_eq!(
+        analysis.accessed_objects,
+        BTreeSet::from([
+            sifr_sql_contract::ObjectId::new("main.users"),
+            sifr_sql_contract::ObjectId::new("main.users.id"),
+            sifr_sql_contract::ObjectId::new("main.users.email"),
+        ])
+    );
 
     let one = analyzer
         .analyze_query("SELECT id FROM users LIMIT 5, 1")

@@ -6,6 +6,7 @@ use sifr_runtime::cancellation::{CancellationClaimError, CancellationClaimLease}
 use sifr_sql_runtime::{AsyncCleanupEvidence, SqlError, SqlErrorKind};
 use std::future::Future;
 use std::sync::Arc;
+use std::sync::Mutex;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
@@ -31,10 +32,15 @@ impl ControlHandle {
     }
 }
 
-pub(crate) fn arm_cancellation(
+struct CancellationArm {
+    _claim: CancellationClaimLease,
+    completed: tokio::sync::oneshot::Receiver<Option<AsyncCleanupEvidence>>,
+}
+
+fn arm_cancellation(
     control: &ControlHandle,
     options: &ExecutionOptions,
-) -> Result<Option<CancellationClaimLease>, SqlError> {
+) -> Result<Option<CancellationArm>, SqlError> {
     let Some(carrier) = &options.cancellation else {
         return Ok(None);
     };
@@ -43,26 +49,38 @@ pub(crate) fn arm_cancellation(
     let opts = control.control_opts.clone();
     let budget = control.cleanup_timeout;
     let evidence_carrier = carrier.clone();
+    let (completed, completion) = tokio::sync::oneshot::channel();
+    let completed = Arc::new(Mutex::new(Some(completed)));
     let runtime =
         tokio::runtime::Handle::try_current().map_err(|_| SqlError::new(SqlErrorKind::Provider))?;
-    carrier
+    let claim = carrier
         .claim(Arc::new(move || {
             poison.store(true, Ordering::Release);
             let spawned_opts = opts.clone();
             let spawned_carrier = evidence_carrier.clone();
+            let completed = Arc::clone(&completed);
             runtime.spawn(async move {
-                if let Some(evidence) = bounded_kill_query(spawned_opts, target, budget).await {
-                    spawned_carrier.record_async_cleanup_evidence(evidence);
+                let evidence = bounded_kill_query(spawned_opts, target, budget).await;
+                if let Some(evidence) = &evidence {
+                    spawned_carrier.record_async_cleanup_evidence(evidence.clone());
+                }
+                if let Ok(mut sender) = completed.lock()
+                    && let Some(sender) = sender.take()
+                {
+                    let _sent = sender.send(evidence);
                 }
             });
         }))
-        .map(Some)
         .map_err(|error| match error {
             CancellationClaimError::CancelledBeforeClaim => SqlError::new(SqlErrorKind::Cancelled),
             CancellationClaimError::AlreadyClaimed | CancellationClaimError::StateUnavailable => {
                 SqlError::new(SqlErrorKind::Provider)
             }
-        })
+        })?;
+    Ok(Some(CancellationArm {
+        _claim: claim,
+        completed: completion,
+    }))
 }
 
 pub(crate) async fn run_controlled<T>(
@@ -71,9 +89,25 @@ pub(crate) async fn run_controlled<T>(
     options: &ExecutionOptions,
     operation: impl Future<Output = Result<T, SqlError>>,
 ) -> Result<T, SqlError> {
-    let _claim = arm_cancellation(control, options)?;
+    let arm = arm_cancellation(control, options)?;
     let deadline = options.deadline(profile)?;
-    match tokio::time::timeout(deadline, operation).await {
+    let timed = tokio::time::timeout(deadline, operation);
+    tokio::pin!(timed);
+    let outcome = if let Some(arm) = arm {
+        tokio::select! {
+            result = &mut timed => result,
+            cleanup = arm.completed => {
+                let mut error = SqlError::new(SqlErrorKind::Cancelled);
+                if let Ok(Some(evidence)) = cleanup {
+                    error.extend_secondary([evidence]);
+                }
+                return Err(error);
+            }
+        }
+    } else {
+        timed.await
+    };
+    match outcome {
         Ok(result) if !control.poison.load(Ordering::Acquire) => result,
         Ok(_) => Err(SqlError::new(SqlErrorKind::Cancelled)),
         Err(_) => Err(cancel_after_timeout(control, options).await),

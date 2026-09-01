@@ -86,13 +86,132 @@ impl PreparedSqlProfiles {
             .flatten()
     }
 
-    #[must_use]
-    pub(super) fn cache_fragment(&self) -> String {
+    /// Install the compiler-owned profile and requirement namespaces into the
+    /// normal import/type environment. These exports are compile-time values;
+    /// they are erased before Rust generation.
+    pub fn install_compiler_externals(&self, defs: &mut sifr_lowering::ExternalDefs) {
+        use sifr_type_system::{FunctionType, ParamConvention, Type};
+
+        let template_method = |name: &str| {
+            (
+                name.to_string(),
+                FunctionType {
+                    receiver: None,
+                    params: vec![(
+                        "template".to_string(),
+                        Type::Template(Vec::new()),
+                        ParamConvention::own(),
+                    )],
+                    return_type: Box::new(Type::Template(Vec::new())),
+                },
+            )
+        };
+        let schema_witness = |identity: &str| Type::Class {
+            identity: Some("sifr.sql.SqlSchema".to_string()),
+            type_args: vec![Type::Class {
+                identity: Some(identity.to_string()),
+                type_args: Vec::new(),
+                name: "Schema".to_string(),
+                fields: Vec::new(),
+                methods: Vec::new(),
+                parent_class: None,
+            }],
+            name: "SqlSchema".to_string(),
+            fields: Vec::new(),
+            methods: vec![template_method("sql")],
+            parent_class: None,
+        };
+        let mut profiles = std::collections::HashMap::new();
+        for (name, registered) in self.registry.entries() {
+            let identity = &registered.authority().nominal_identity;
+            let marker = Type::Class {
+                identity: Some(identity.clone()),
+                type_args: Vec::new(),
+                name: "Schema".to_string(),
+                fields: Vec::new(),
+                methods: Vec::new(),
+                parent_class: None,
+            };
+            profiles.insert(
+                name.to_string(),
+                Type::Class {
+                    identity: Some(format!("sifr.sql.schemas.{name}")),
+                    type_args: Vec::new(),
+                    name: name.to_string(),
+                    fields: vec![
+                        ("Schema".to_string(), marker),
+                        ("schema".to_string(), schema_witness(identity)),
+                    ],
+                    methods: vec![
+                        template_method("sql"),
+                        template_method("all"),
+                        template_method("any"),
+                        template_method("not_"),
+                        (
+                            "symbol".to_string(),
+                            FunctionType {
+                                receiver: None,
+                                params: vec![(
+                                    "name".to_string(),
+                                    Type::Str,
+                                    ParamConvention::borrow(),
+                                )],
+                                return_type: Box::new(Type::Str),
+                            },
+                        ),
+                    ],
+                    parent_class: None,
+                },
+            );
+        }
+        if !profiles.is_empty() {
+            defs.constants
+                .entry("sifr.sql.schemas".to_string())
+                .or_default()
+                .extend(profiles);
+        }
+
+        let mut requirements = std::collections::HashMap::new();
+        for (name, requirement) in self.requirements.entries() {
+            let short_name = name.rsplit("::").next().unwrap_or(name);
+            let identity = requirement.identity.canonical_name();
+            requirements.insert(
+                short_name.to_string(),
+                Type::Class {
+                    identity: Some(format!("sifr.sql.requirements.{short_name}")),
+                    type_args: Vec::new(),
+                    name: short_name.to_string(),
+                    fields: vec![(
+                        "Schema".to_string(),
+                        Type::Protocol {
+                            identity: Some(identity),
+                            name: "Schema".to_string(),
+                            methods: Vec::new(),
+                        },
+                    )],
+                    methods: Vec::new(),
+                    parent_class: None,
+                },
+            );
+        }
+        if !requirements.is_empty() {
+            defs.classes
+                .entry("sifr.sql.requirements".to_string())
+                .or_default()
+                .extend(requirements);
+        }
+    }
+
+    pub(super) fn cache_fragment(&self) -> Result<String, Vec<RenderedDiagnostic>> {
+        if self.registry.len() != self.profiles.len() {
+            return Err(profile_registry_invariant_diagnostics());
+        }
         let mut fragment = String::new();
         for (name, registered) in self.registry.entries() {
-            let Some(prepared) = self.profiles.get(name) else {
-                continue;
-            };
+            let prepared = self
+                .profiles
+                .get(name)
+                .ok_or_else(profile_registry_invariant_diagnostics)?;
             let _ = writeln!(
                 fragment,
                 "{name}\t{}\t{}\t{}\t{}",
@@ -111,8 +230,15 @@ impl PreparedSqlProfiles {
                 );
             }
         }
-        fragment
+        Ok(fragment)
     }
+}
+
+fn profile_registry_invariant_diagnostics() -> Vec<RenderedDiagnostic> {
+    vec![diagnostic_with_code(
+        "prepared SQL profiles and generated profile registry are inconsistent",
+        sifr_diagnostics::DiagnosticCode::COMPONENT_PROTOCOL_ENVELOPE,
+    )]
 }
 
 pub fn load_sql_editor_profiles(
@@ -120,6 +246,11 @@ pub fn load_sql_editor_profiles(
     entrypoint: &Path,
 ) -> Result<PreparedSqlProfiles, Vec<RenderedDiagnostic>> {
     if !workspace_root.join("sifr.toml").is_file() || !workspace_root.join("Cargo.toml").is_file() {
+        return Ok(PreparedSqlProfiles::default());
+    }
+    // Editor analysis must not create or update dependency state. Defer SQL
+    // profile loading until the normal package workflow has produced a lockfile.
+    if !workspace_root.join("Cargo.lock").is_file() {
         return Ok(PreparedSqlProfiles::default());
     }
     let mut provider = sifr_frontend::DiskSourceProvider::new();

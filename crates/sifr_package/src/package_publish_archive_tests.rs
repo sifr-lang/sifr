@@ -59,6 +59,7 @@ edition = "2026"
 sifr-version = ">=0.3,<0.4"
 
 [sql.profiles.app]
+family = "postgresql"
 provider = "postgres"
 source = ["db/schema.sql", "db/types.sql"]
 server-version = "18"

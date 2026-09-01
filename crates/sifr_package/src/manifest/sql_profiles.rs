@@ -15,6 +15,7 @@ pub enum SchemaSourceKind {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SqlProfileConfig {
     pub provider: String,
+    pub family: String,
     pub sources: Vec<PathBuf>,
     pub source_kind: SchemaSourceKind,
     pub server_version: String,
@@ -366,6 +367,7 @@ fn parse_profile(
         table,
         &[
             "provider",
+            "family",
             "source",
             "source-kind",
             "server-version",
@@ -382,6 +384,8 @@ fn parse_profile(
         ],
     )?;
     let provider = required_string(cargo_package_id, manifest_path, table, &prefix, "provider")?;
+    let family = required_string(cargo_package_id, manifest_path, table, &prefix, "family")?;
+    validate_provider_family(cargo_package_id, manifest_path, &prefix, &family)?;
     let sources = parse_sources(cargo_package_id, manifest_path, table, &prefix)?;
     let source_kind_value = optional_string(
         cargo_package_id,
@@ -542,6 +546,7 @@ fn parse_profile(
     }
     Ok(SqlProfileConfig {
         provider,
+        family,
         sources,
         source_kind,
         server_version,

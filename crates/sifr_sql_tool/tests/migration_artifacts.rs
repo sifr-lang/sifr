@@ -2,8 +2,8 @@
 
 use semver::Version;
 use sifr_sql_contract::{
-    CompiledMigrationGraph, DialectIdentity, MigrationNodeId, ProviderIdentity, SchemaIr,
-    schema_fingerprint,
+    CompiledMigrationGraph, DialectIdentity, MIGRATION_GRAPH_FORMAT_VERSION, MigrationNodeId,
+    ProviderIdentity, SchemaIr, schema_fingerprint,
 };
 use sifr_sql_runtime::MigrationExecutionPlan;
 use sifr_sql_tool::{
@@ -35,7 +35,7 @@ fn schema() -> SchemaIr {
 
 fn graph(target: &SchemaIr) -> CompiledMigrationGraph {
     CompiledMigrationGraph {
-        format_version: 1,
+        format_version: MIGRATION_GRAPH_FORMAT_VERSION,
         provider_family: "postgresql".to_string(),
         target_fingerprint: schema_fingerprint(target)
             .expect("test schema should fingerprint")
@@ -102,7 +102,7 @@ fn migration_artifacts_reject_a_target_authority_mismatch() {
 fn migration_artifacts_reject_an_unknown_compiler_graph_format() {
     let target = schema();
     let mut graph = graph(&target);
-    graph.format_version = 2;
+    graph.format_version = MIGRATION_GRAPH_FORMAT_VERSION + 1;
     assert_eq!(
         lower_migration_execution_plan(&graph)
             .expect_err("unknown compiler graph format must fail")

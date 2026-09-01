@@ -44,9 +44,8 @@ pub use diagnostic::CommonSqlDiagnostic;
 pub use component::{
     PROVIDER_ANALYSIS_PAYLOAD_TAG, SCHEMA_NORMALIZATION_OPERATION,
     SCHEMA_NORMALIZATION_PAYLOAD_TAG, SchemaNormalizationOutput, SchemaNormalizationResult,
-    SchemaSourceArtifact, SchemaSourceInput, normalized_schema_from_response,
-    provider_analysis_from_response, schema_normalization_from_response,
-    schema_normalization_request, schema_source_fingerprint,
+    SchemaSourceArtifact, SchemaSourceInput, provider_analysis_from_response,
+    schema_normalization_from_response, schema_normalization_request, schema_source_fingerprint,
 };
 pub use diff::{ObjectChange, ObjectChangeKind, SchemaDiff, semantic_diff};
 pub use effect::{EffectContract, QueryEffect};
@@ -76,7 +75,8 @@ pub use migration::{
     MIGRATION_GRAPH_FORMAT_VERSION, MigrationBaseline, MigrationCompileError,
     MigrationCompileErrorKind, MigrationCompiler, MigrationDb, MigrationDefinition,
     MigrationDialect, MigrationGraphDefinition, MigrationImpact, MigrationNodeId, MigrationPlan,
-    MigrationProviderConstraint, MigrationState, MigrationStateIdentity, MigrationStepDefinition,
+    MigrationProviderConstraint, MigrationSourceDeclaration, MigrationSourceStep,
+    MigrationSourceStepKind, MigrationState, MigrationStateIdentity, MigrationStepDefinition,
     MigrationStepKind, ReplayPolicy, TransactionBoundary, TransactionRequirement,
     topological_order,
 };
@@ -89,7 +89,7 @@ pub use profile::{
 pub use profile_registry::{ProfileModuleRegistry, RegisteredProfileModule};
 pub use provider::{
     DialectSemantics, ProviderAnalysis, ProviderAnalysisError, ProviderDiagnosticSpan,
-    ProviderParameter, ProviderResultField, ProviderSemanticDiagnostic,
+    ProviderParameter, ProviderResultField, ProviderSemanticDiagnostic, component_codec_registry,
 };
 pub use provision::{
     ProvisionedCleanup, ProvisionedConnection, ProvisionedCredential,

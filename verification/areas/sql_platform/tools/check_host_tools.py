@@ -87,6 +87,20 @@ def validate_evidence_paths(payload: dict[str, Any]) -> None:
     for relative in evidence:
         path = REPO_ROOT / relative
         require(path.is_file(), f"behavioral evidence file does not exist: {relative}")
+    executable = payload.get("executable_tests", [])
+    require(len(executable) == 7, "host-tool executable test inventory drift")
+    identities: set[tuple[str, str]] = set()
+    for entry in executable:
+        require(set(entry) == {"path", "name"}, "invalid executable test record")
+        relative = entry["path"]
+        name = entry["name"]
+        identity = (relative, name)
+        require(identity not in identities, f"duplicate executable test: {relative}::{name}")
+        identities.add(identity)
+        path = REPO_ROOT / relative
+        require(path.is_file(), f"executable test file does not exist: {relative}")
+        source = path.read_text(encoding="utf-8")
+        require(f"fn {name}(" in source, f"named executable test is absent: {relative}::{name}")
 
 
 def self_test(payload: dict[str, Any]) -> None:
@@ -109,6 +123,9 @@ def self_test(payload: dict[str, Any]) -> None:
     candidate = copy.deepcopy(payload)
     candidate["behavioral_evidence"].pop()
     mutations.append(candidate)
+    candidate = copy.deepcopy(payload)
+    candidate["executable_tests"][0]["name"] = "replacement_without_a_test"
+    mutations.append(candidate)
     accepted = 0
     for candidate in mutations:
         try:
@@ -129,7 +146,7 @@ def main() -> int:
     if args.self_test:
         self_test(payload)
     else:
-        print("SQL host-tool qualification ok: identities=11 negatives=12 capabilities=6")
+        print("SQL host-tool qualification ok: identities=11 negatives=12 capabilities=6 tests=7")
     return 0
 
 

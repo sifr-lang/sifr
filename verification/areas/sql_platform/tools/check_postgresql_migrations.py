@@ -54,7 +54,7 @@ def load_toml(path: Path) -> dict[str, Any]:
 def validate(payload: dict[str, Any]) -> None:
     require(payload.get("schema_version") == 1, "schema_version must be 1")
     require(payload.get("provider_family") == "postgresql", "provider family drift")
-    require(payload.get("execution_plan_format") == 2, "execution plan format drift")
+    require(payload.get("execution_plan_format") == 3, "execution plan format drift")
     require(payload.get("supported_server_majors") == list(range(13, 19)), "server matrix drift")
     reflected = set(payload.get("reflected_object_kinds", []))
     declared = set(payload.get("declared_effect_object_kinds", []))
@@ -153,7 +153,10 @@ def validate_capability() -> None:
     capabilities = json.loads(CAPABILITIES.read_text(encoding="utf-8"))["capabilities"]
     row = next((item for item in capabilities if item.get("id") == "postgresql.migration"), None)
     require(row is not None, "PostgreSQL migration capability is absent")
-    require(row.get("status") == "active", "PostgreSQL migration capability is not active")
+    require(
+        row.get("status") in {"active", "complete"},
+        "PostgreSQL migration capability is neither active nor complete",
+    )
 
 
 def self_test(payload: dict[str, Any]) -> None:

@@ -1,6 +1,6 @@
 # SQL schema polymorphism
 
-Status: Milestone 15 contract.
+Status: Implemented architecture.
 
 This document defines reusable SQL queries that work with structural schema
 requirements. It also defines portable provider constraints.
@@ -39,6 +39,12 @@ Provider query analysis also returns every schema object that the SQL reaches.
 This set includes columns used only in predicates, joins, groups, and writes.
 The frontend rejects each object that is absent from the requirement.
 
+For `INSERT` without an explicit column list, the statement reaches every
+concrete target column in declaration order. This is intentionally strict. A
+portable requirement with a narrower table must use an explicit column list.
+The compiler does not hide application-only target columns to make the write
+appear portable.
+
 The compiler does not remove syntax or change behavior to satisfy another
 provider. There is no silent lowest-common-denominator rewrite.
 
@@ -52,6 +58,17 @@ The compiler proves the requirement against the selected profile.
 
 The compiler then analyzes the SQL with that concrete profile. The result keeps
 the concrete profile identity, fingerprint, and schema fingerprint.
+
+The witness argument must be a direct `profile.schema` expression. The compiler
+rejects variables, branches, containers, returned witnesses, and runtime
+parameters. Thus, a call cannot select a profile at runtime.
+
+The compiler creates one stable HIR specialization for each function and
+profile pair. Calls from the defining module and imported calls use the same
+specialization. Two profiles create two independent proofs and query contracts.
+
+The compiler removes an unused portable definition from runtime HIR. A portable
+definition has no runtime form until a concrete call selects a profile.
 
 ### Witness erasure
 
@@ -144,8 +161,9 @@ the requirement manifest.
    and the schema subset.
 7. The provider analyzes the query and reports its exact capability use.
 8. The frontend rejects undeclared objects and provider behavior.
-9. The frontend emits a concrete query and removes the witness.
-10. Execution accepts only a matching verified handle.
+9. The frontend creates one profile-specific function and query contract.
+10. The frontend removes the witness parameter and each witness argument.
+11. Execution accepts only a matching verified handle.
 
 The compiler performs no live database access in this pipeline.
 

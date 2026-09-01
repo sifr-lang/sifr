@@ -11,7 +11,7 @@
       "acceptance": "strict versioned parsing and exact PostgreSQL semantics",
       "behaviors": ["PostgreSQL 13 through 18 parser sources", "queries and writes", "CTEs, subqueries, set operations, windows, aggregates, and locking", "provider-owned AST conversion", "lossless recovery tokens without compile authority"],
       "required_evidence": ["fuzz", "integration", "negative", "positive"],
-      "status": "planned"
+      "status": "complete"
     },
     {
       "id": "postgresql.schema",
@@ -21,7 +21,7 @@
       "acceptance": "exact catalog normalization and offline resolution",
       "behaviors": ["catalogs, schemas, search path, tables, views, and materialized views", "enums, domains, composites, arrays, ranges, and multiranges", "constraints, indexes, generated columns, functions, operators, extensions, collations, and privileges", "canonical fingerprints, dependency slices, and absence facts"],
       "required_evidence": ["integration", "negative", "positive", "property"],
-      "status": "planned"
+      "status": "complete"
     },
     {
       "id": "postgresql.runtime",
@@ -31,7 +31,7 @@
       "acceptance": "verified panic-safe raw protocol execution",
       "behaviors": ["Rustls authentication and raw tokio-postgres clients", "verified pooling and typed session reset", "explicit execution, cardinality, transactions, savepoints, and streams", "bounded cache, cancellation, cleanup, row bytes, row count, and connections", "structured protocol and codec errors without user-triggered panic"],
       "required_evidence": ["fuzz", "integration", "negative", "performance", "positive"],
-      "status": "planned"
+      "status": "complete"
     },
     {
       "id": "postgresql.tool",
@@ -41,7 +41,7 @@
       "acceptance": "host-only schema and test lifecycle commands",
       "behaviors": ["schema pull with semantic diff", "schema validate without silent mutation", "deterministic schema build", "test provision with structured connection manifest", "credential redaction and explicit capabilities"],
       "required_evidence": ["integration", "mutation", "negative", "positive"],
-      "status": "planned"
+      "status": "complete"
     },
     {
       "id": "postgresql.migration",
@@ -51,7 +51,7 @@
       "acceptance": "qualified PostgreSQL migration graphs and recovery",
       "behaviors": ["fresh, upgrade, merge, and resume paths", "transactional and non-transactional DDL", "advisory locks and concurrent-start exclusion", "imports, baselines, checksums, drift, recovery, and explicit rollback", "every supported PostgreSQL major"],
       "required_evidence": ["integration", "negative", "positive", "property"],
-      "status": "active"
+      "status": "complete"
     },
     {
       "id": "postgresql.editor",
@@ -61,7 +61,7 @@
       "acceptance": "lossless PostgreSQL embedded editing",
       "behaviors": ["virtual documents and bidirectional source maps", "highlight, completion, hover, definition, references, rename, and parameters", "nullability, cardinality, result, and provider documentation", "hole-preserving formatting and machine fixes", "cancellation and latency budgets"],
       "required_evidence": ["integration", "performance", "positive", "property"],
-      "status": "planned"
+      "status": "complete"
     },
     {
       "id": "mysql.grammar",
@@ -71,7 +71,7 @@
       "acceptance": "provider-owned MySQL grammar and exact coercion",
       "behaviors": ["Sifr-owned LALRPOP lexer, grammar, AST, and recovery", "supported server-version gates", "queries, writes, CTEs, windows, generated columns, and conflict forms", "SQL modes, collations, unsigned types, and coercions", "server differential authority"],
       "required_evidence": ["fuzz", "integration", "negative", "positive"],
-      "status": "active"
+      "status": "complete"
     },
     {
       "id": "mysql.schema",
@@ -81,7 +81,7 @@
       "acceptance": "exact MySQL catalog and profile normalization",
       "behaviors": ["databases, tables, views, columns, keys, indexes, and constraints", "generated columns, enums, sets, character sets, and collations", "SQL mode and collation fingerprints", "canonical snapshots, dependency slices, and semantic diffs"],
       "required_evidence": ["integration", "negative", "positive", "property"],
-      "status": "active"
+      "status": "complete"
     },
     {
       "id": "mysql.runtime",
@@ -91,7 +91,7 @@
       "acceptance": "verified raw MySQL execution with bounded cancellation",
       "behaviors": ["raw mysql_async connections with Sifr-owned pooling", "Rustls authentication and explicit minimal features", "typed sessions, transactions, streams, statements, codecs, and errors", "KILL QUERY control path with target connection discard", "resource bounds and panic-safe malformed protocol handling"],
       "required_evidence": ["fuzz", "integration", "negative", "performance", "positive"],
-      "status": "active"
+      "status": "complete"
     },
     {
       "id": "mysql.tool",
@@ -101,7 +101,7 @@
       "acceptance": "host-only MySQL schema and test lifecycle commands",
       "behaviors": ["schema pull, validate, and deterministic build", "semantic diffs and affected-query reports", "test provision with common connection manifest", "credential redaction and explicit capabilities"],
       "required_evidence": ["integration", "mutation", "negative", "positive"],
-      "status": "active"
+      "status": "complete"
     },
     {
       "id": "mysql.migration",
@@ -111,7 +111,7 @@
       "acceptance": "truthful MySQL migration graphs and recovery",
       "behaviors": ["provider DDL reflection and intermediate schemas", "implicit-commit boundaries and recovery points", "locking, drift, checksums, import, baseline, and explicit rollback", "fresh, upgrade, merge, interruption, and resume paths"],
       "required_evidence": ["integration", "negative", "positive", "property"],
-      "status": "active"
+      "status": "complete"
     },
     {
       "id": "mysql.editor",
@@ -121,7 +121,7 @@
       "acceptance": "lossless MySQL embedded editing",
       "behaviors": ["versioned virtual SQL documents and source maps", "completion, navigation, rename, parameters, results, nullability, and cardinality", "SQL-mode-aware formatting, fixes, and provider documentation", "cancellation and latency budgets"],
       "required_evidence": ["integration", "performance", "positive", "property"],
-      "status": "active"
+      "status": "complete"
     },
     {
       "id": "sqlite.grammar",
@@ -131,7 +131,7 @@
       "acceptance": "versioned SQLite grammar and exact affinity semantics",
       "behaviors": ["syntaqlite parser pinned to SQLite version and flags", "queries, writes, CTEs, windows, generated columns, and conflict forms", "affinity, strict tables, rowid, attached scope, and version gates", "provider-owned semantic nodes and recovery tokens"],
       "required_evidence": ["fuzz", "integration", "negative", "positive"],
-      "status": "active"
+      "status": "complete"
     },
     {
       "id": "sqlite.schema",
@@ -141,7 +141,7 @@
       "acceptance": "exact SQLite schema and file profile normalization",
       "behaviors": ["tables, views, indexes, triggers, generated columns, keys, and constraints", "strictness, affinity, rowid, attached database, version, and compile flags", "canonical snapshots, dependency slices, semantic diffs, and required features"],
       "required_evidence": ["integration", "negative", "positive", "property"],
-      "status": "active"
+      "status": "complete"
     },
     {
       "id": "sqlite.runtime",
@@ -151,7 +151,7 @@
       "acceptance": "verified bundled SQLite execution on dedicated workers",
       "behaviors": ["bundled rusqlite and pinned SQLite amalgamation", "one dedicated blocking worker per connection", "Sifr-owned pooling, statements, transactions, streams, codecs, and errors", "InterruptHandle cancellation with worker disposal", "bounds, corruption handling, locking, and panic safety"],
       "required_evidence": ["fuzz", "integration", "negative", "performance", "positive"],
-      "status": "active"
+      "status": "complete"
     },
     {
       "id": "sqlite.tool",
@@ -161,7 +161,7 @@
       "acceptance": "host-only SQLite schema and test lifecycle commands",
       "behaviors": ["schema pull, validate, and deterministic build", "file authority and compile-flag validation", "semantic diffs and affected-query reports", "test provision with common connection manifest", "credential and path redaction with explicit capabilities"],
       "required_evidence": ["integration", "mutation", "negative", "positive"],
-      "status": "active"
+      "status": "complete"
     },
     {
       "id": "sqlite.migration",
@@ -171,7 +171,7 @@
       "acceptance": "truthful SQLite migration graphs and table rebuilds",
       "behaviors": ["provider DDL reflection and intermediate schemas", "table-rebuild plans with data and constraint preservation", "transactions, locks, corruption, interruption, recovery, and resume", "drift, checksums, import, baseline, and explicit rollback"],
       "required_evidence": ["integration", "negative", "positive", "property"],
-      "status": "active"
+      "status": "complete"
     },
     {
       "id": "sqlite.editor",
@@ -181,7 +181,7 @@
       "acceptance": "lossless SQLite embedded editing",
       "behaviors": ["versioned virtual SQL documents and source maps", "completion, navigation, rename, parameters, results, affinity, nullability, and cardinality", "flag-aware formatting, fixes, and provider documentation", "cancellation and latency budgets"],
       "required_evidence": ["integration", "performance", "positive", "property"],
-      "status": "active"
+      "status": "complete"
     }
   ]
 }

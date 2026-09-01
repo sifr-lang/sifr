@@ -6,6 +6,7 @@ use sifr_sql_postgresql::{
 };
 use std::collections::BTreeMap;
 
+#[allow(dead_code)]
 pub(crate) fn schema_for_writes(
     component: &PostgresCompilerComponent<LibpgQueryParser>,
     server_major: u16,

@@ -76,7 +76,7 @@ def validate(payload: Any) -> None:
         "package": ["parse_sql_config", "connection URLs, credentials", "signed-manifest"],
         "component": ["pub struct ContextArtifact", "pub artifacts: Vec<ContextArtifact>"],
         "dispatch": ["prepare_sql_profiles", "ComponentHost", "load_schema_sources"],
-        "schema_component": ["schema_normalization_request", "normalized_schema_from_response", "SchemaSourceInput"],
+        "schema_component": ["schema_normalization_request", "schema_normalization_from_response", "SchemaSourceInput"],
     }
     for owner, tokens in required_tokens.items():
         if any(token not in sources[owner] for token in tokens):

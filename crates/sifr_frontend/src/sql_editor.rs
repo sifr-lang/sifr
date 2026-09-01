@@ -6,7 +6,7 @@ use sifr_ir::{
     visit_hir_stmts_exprs_mut,
 };
 use sifr_sql_contract::{
-    Nullability, ProviderAnalysis, SchemaIr, decode_generated_path, encode_generated_path,
+    Nullability, ProviderAnalysis, SchemaIr, SifrType, decode_generated_path, encode_generated_path,
 };
 use sifr_type_system::Type;
 use std::collections::{BTreeMap, BTreeSet};
@@ -131,6 +131,15 @@ pub struct SqlEditorDocumentView {
     pub result_fields: Vec<SqlEditorSymbol>,
     pub cardinality: String,
     pub fixes: Vec<SqlEditorFix>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SqlQueryDeclaration {
+    pub symbol: String,
+    pub profile_name: String,
+    pub exported: bool,
+    pub document: SqlEditorDocumentView,
+    pub parameter_types: Vec<SifrType>,
 }
 
 impl SqlEditorDocumentView {

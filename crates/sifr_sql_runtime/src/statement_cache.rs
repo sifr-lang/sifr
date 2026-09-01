@@ -78,13 +78,6 @@ impl<V> StatementCache<V> {
         previous
     }
 
-    pub fn invalidate_schema(&mut self, schema_fingerprint: &str) {
-        self.entries
-            .retain(|key, _| key.schema_fingerprint != schema_fingerprint);
-        self.recency
-            .retain(|key| key.schema_fingerprint != schema_fingerprint);
-    }
-
     pub fn clear(&mut self) {
         self.entries.clear();
         self.recency.clear();

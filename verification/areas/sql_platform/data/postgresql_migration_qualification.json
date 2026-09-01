@@ -4,7 +4,7 @@
   "compiler_crate": "sifr_sql_postgresql",
   "tool_crate": "sifr_sql_postgresql_tools",
   "runtime_crate": "sifr_sql_runtime",
-  "execution_plan_format": 2,
+  "execution_plan_format": 3,
   "supported_server_majors": [13, 14, 15, 16, 17, 18],
   "reflected_object_kinds": [
     "check-constraint",

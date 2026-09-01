@@ -1,0 +1,5 @@
+from sifr.sql.schemas import app
+
+
+def misuse_profile_witness():
+    app.schema

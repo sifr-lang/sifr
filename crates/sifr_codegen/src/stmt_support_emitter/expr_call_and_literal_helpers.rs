@@ -301,6 +301,18 @@ macro_rules! stmt_expr_constructor {
                 lowered_args.push(adapted_arg);
             }
             for (idx, lowered_arg) in lowered_args.iter_mut().enumerate() {
+                if let Type::StructuralRecord(record) = ty.resolve_alias()
+                    && let Some(field) = record.source_fields().get(idx)
+                    && matches!(
+                        field.ty().resolve_alias(),
+                        Type::Callable(..) | Type::AsyncCallable(..)
+                    )
+                {
+                    *lowered_arg = Self::arc_constructor_callable_value(
+                        field.ty(),
+                        lowered_arg.clone(),
+                    );
+                }
                 let Some((param_ty, convention)) =
                     ctor_params.as_ref().and_then(|params| params.get(idx))
                 else {

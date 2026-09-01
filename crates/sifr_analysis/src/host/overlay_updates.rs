@@ -61,6 +61,42 @@ impl AnalysisHost {
         Ok(())
     }
 
+    pub fn synchronize_project_overlays(
+        &mut self,
+        removed: &[std::path::PathBuf],
+        overlays: Vec<(SourcePath, Option<String>, DocumentVersion, SourceText)>,
+    ) -> Result<(), Vec<RenderedDiagnostic>> {
+        for path in removed {
+            self.session.remove_overlay(path);
+        }
+        for (path, uri, version, source) in overlays {
+            self.session
+                .upsert_overlay(path, uri, version, source, None);
+        }
+        self.session.reload()?;
+        self.refresh_file_map();
+        self.refresh_current_revision();
+        self.symbol_index = None;
+        self.last_invalidation = None;
+        Ok(())
+    }
+
+    pub fn refresh_project_sources_and_sql(
+        &mut self,
+        root: &ProjectRoot,
+    ) -> Result<(), Vec<RenderedDiagnostic>> {
+        self.session.reload()?;
+        self.refresh_file_map();
+        self.refresh_current_revision();
+        self.symbol_index = None;
+        self.last_invalidation = None;
+        let profiles =
+            sifr_driver::load_sql_editor_profiles(root.root.as_path(), root.entrypoint.as_path())
+                .unwrap_or_else(sifr_driver::PreparedSqlProfiles::from_initialization_failure);
+        self.sql_editor_runtime.replace_profiles(profiles);
+        Ok(())
+    }
+
     pub fn record_watcher_events(&mut self, event_count: usize, storm_threshold: usize) {
         self.session
             .record_watcher_events(event_count, storm_threshold);

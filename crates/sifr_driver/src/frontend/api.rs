@@ -26,6 +26,18 @@ pub fn lower_source(source: &str) -> Result<LoweringResult, Vec<RenderedDiagnost
     compile_frontend(source).map(|frontend| frontend.lowering_result)
 }
 
+pub fn compile_sql_migration_source(
+    source: &str,
+) -> Result<Vec<sifr_frontend::MigrationSourceDeclaration>, Vec<RenderedDiagnostic>> {
+    let lowered = lower_source(source)?;
+    sifr_frontend::sql_migration_declarations(&lowered.module).map_err(|error| {
+        vec![crate::diagnostics::diagnostic_with_code(
+            error.message,
+            sifr_diagnostics::DiagnosticCode::SQL_PROVIDER_CONTRACT,
+        )]
+    })
+}
+
 pub fn type_check_source(source: &str) -> Vec<RenderedDiagnostic> {
     match lower_source(source) {
         Ok(lowering_result) => {

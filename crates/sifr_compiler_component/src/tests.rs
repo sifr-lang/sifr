@@ -421,6 +421,67 @@ fn cached_responses_obey_the_current_host_output_limit() {
 }
 
 #[test]
+fn cached_responses_obey_the_current_host_input_limit() {
+    let response_bytes = serde_json::to_vec(&response()).expect("response should serialize");
+    let bytes = fixture_component(&response_bytes, false);
+    let identity = identity(&bytes);
+    let registration = registration(identity.clone());
+    let mut request = request();
+    request.component = identity;
+    let root = temp_root("cache_input_limit");
+
+    let cache = AnalysisCache::open(&root, 8 * 1024 * 1024).expect("cache should open");
+    let mut host = ComponentHost::new(ComponentHostLimits::default(), Some(cache))
+        .expect("component host should initialize");
+    host.analyze(&registration, &bytes, &request)
+        .expect("fixture response should populate the cache");
+    drop(host);
+
+    let cache = AnalysisCache::open(&root, 8 * 1024 * 1024).expect("cache should reopen");
+    let mut limits = ComponentHostLimits::default();
+    limits.max_input_bytes = 1;
+    let mut host = ComponentHost::new(limits, Some(cache)).expect("host should initialize");
+    let error = host
+        .analyze(&registration, &bytes, &request)
+        .expect_err("cache hits must enforce the current input limit");
+    assert_eq!(error.kind, ComponentErrorKind::ResourceLimit);
+    std::fs::remove_dir_all(root).expect("fixture cache should be removable");
+}
+
+#[test]
+fn component_response_spans_must_name_request_documents() {
+    let request = request();
+    let registry = provider_registry();
+    let mutations: [fn(&mut EmbeddedAnalysisResponse); 3] = [
+        |response: &mut EmbeddedAnalysisResponse| {
+            response.plan.diagnostics[0].primary.document = "forged.sifr".to_string();
+        },
+        |response: &mut EmbeddedAnalysisResponse| {
+            response.plan.diagnostics[0].related.push(SourceSpan {
+                document: "forged.sifr".to_string(),
+                start: 0,
+                end: 0,
+            });
+        },
+        |response: &mut EmbeddedAnalysisResponse| {
+            response.plan.source_map[0].source.document = "forged.sifr".to_string();
+        },
+    ];
+    for mutate in mutations {
+        let mut response = response();
+        mutate(&mut response);
+        let error = validate_response(
+            &request,
+            &response,
+            &ComponentHostLimits::default(),
+            &registry,
+        )
+        .expect_err("response spans outside the request must fail closed");
+        assert_eq!(error.kind, ComponentErrorKind::ProtocolEnvelope);
+    }
+}
+
+#[test]
 fn cache_identity_changes_for_every_semantic_input_family() {
     let base = request();
     let base_key = CacheKey::for_request(&base).expect("key should derive");
