@@ -45,8 +45,7 @@ pub(crate) fn lower_intrinsic(name: &str, rendered_args: &[String]) -> Option<Lo
     };
     let args = rendered_args
         .iter()
-        .cloned()
-        .map(|arg| parse_test_arg(&arg))
+        .map(|arg| parse_test_arg(arg))
         .collect::<Vec<_>>();
     super::lower_intrinsic(intrinsic, &args)
 }

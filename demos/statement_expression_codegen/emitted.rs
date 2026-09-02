@@ -20,7 +20,7 @@ fn main() {
         "low".to_string()
     };
     println!("total = {total}");
-    assert_eq!(format!("total = {total}").to_string(), "total = 24");
+    assert_eq!(format!("total = {total}"), "total = 24");
     println!("verdict = {verdict}");
-    assert_eq!(format!("verdict = {verdict}").to_string(), "verdict = high");
+    assert_eq!(format!("verdict = {verdict}"), "verdict = high");
 }

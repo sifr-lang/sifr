@@ -2054,11 +2054,7 @@ fn stdev(data: &[f64]) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eSta
         let avg: f64 = sifr_generated_divide_by_int(sifr_generated_sum(data), n.clone())?;
         Ok((avg,))
     })();
-    let (avg,) = #[expect(
-        clippy::single_match_else,
-        reason = "the fallback returns through the enclosing Sifr control-flow carrier"
-    )]
-    match sifr_generated_try_res {
+    let (avg,) = match sifr_generated_try_res {
         Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
         Err(sifr_generated_try_err) => {
             let error = sifr_generated_try_err.clone();
@@ -2079,11 +2075,7 @@ fn stdev(data: &[f64]) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eSta
         let v: f64 = sifr_generated_divide_by_int(total, &n - &SifrInt::from_i64(1))?;
         Ok((v,))
     })();
-    let (v,) = #[expect(
-        clippy::single_match_else,
-        reason = "the fallback returns through the enclosing Sifr control-flow carrier"
-    )]
-    match sifr_generated_try_res {
+    let (v,) = match sifr_generated_try_res {
         Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
         Err(sifr_generated_try_err) => {
             let error = sifr_generated_try_err.clone();

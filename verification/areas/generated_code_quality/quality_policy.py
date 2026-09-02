@@ -311,7 +311,12 @@ def validate_clippy_lint_owners(
     if unknown:
         raise RuntimeError(f"Clippy debt contains lints without exact owners: {unknown}")
     if require_exact:
-        stale = sorted(set(lint_owners).difference(summary))
+        governed_lints = {
+            lint
+            for entry in debt["clippy"]["entries"].values()
+            for lint in entry
+        }
+        stale = sorted(set(lint_owners).difference(governed_lints))
         if stale:
             raise RuntimeError(f"Clippy debt contains stale lint owners: {stale}")
 
@@ -489,6 +494,17 @@ def _expect_invalid(debt: dict[str, Any], expected: str) -> None:
 def run_debt_self_test(debt: dict[str, Any]) -> None:
     validate_debt_owners(debt)
 
+    one_lint = {
+        "clippy::self_test": {
+            "count": 1,
+            "signature_sha256": "0" * 64,
+        }
+    }
+    first_companion = merge_signature_summaries([("companion-a", one_lint)])
+    moved_companion = merge_signature_summaries([("companion-b", one_lint)])
+    if first_companion == moved_companion:
+        raise AssertionError("merged lint signatures ignored companion identity")
+
     lexical_fixture = "// panic!()\nlet text = \"values[0] as usize\";\n/* unsafe {} */\n"
     if any(
         pattern_matches(policy, line)
@@ -568,6 +584,16 @@ def run_debt_self_test(debt: dict[str, Any]) -> None:
             raise
     else:
         raise AssertionError("stale Clippy lint owner was accepted")
+
+    cross_selection_owner = copy.deepcopy(debt)
+    cross_selection_owner["clippy"]["lint_owners"]["clippy::self_test_other_selection"] = 10
+    cross_selection_owner["clippy"]["entries"]["self-test-other-selection"] = {
+        "clippy::self_test_other_selection": {
+            "count": 1,
+            "signature_sha256": "0" * 64,
+        }
+    }
+    validate_clippy_lint_owners({}, cross_selection_owner, require_exact=True)
 
     for category in sorted(DEBT_CATEGORIES):
         try:

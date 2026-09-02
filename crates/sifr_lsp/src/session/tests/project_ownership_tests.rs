@@ -115,13 +115,8 @@ fn unmapped_project_file_does_not_create_standalone_project_fallback() {
         error.message().contains("analysis is unavailable"),
         "unexpected error: {error:?}"
     );
-    assert!(
-        session.close_document(
-            &url::Url::from_file_path(&main_path)
-                .expect("main file uri")
-                .to_string()
-        )
-    );
+    let main_uri = url::Url::from_file_path(&main_path).expect("main file uri");
+    assert!(session.close_document(main_uri.as_str()));
     session
         .open_document(
             url::Url::from_file_path(&main_path)

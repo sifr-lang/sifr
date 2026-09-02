@@ -133,6 +133,9 @@ pub use crate::sql_requirements::{
 };
 
 #[cfg(test)]
+mod test_support;
+
+#[cfg(test)]
 mod cargo_backend_integration_tests;
 #[cfg(test)]
 mod host_tools_tests;
@@ -166,6 +169,7 @@ mod tests {
     use crate::cargo::metadata::parse_metadata_json;
     use crate::graph::derive::{PackageClassification, derive_package_graph};
     use crate::graph::digest::digest_graph_inputs;
+    use crate::test_support::{TestExpectErr as _, TestUnwrap as _};
     use sifr_diagnostics::DiagnosticCode;
     use sifr_frontend::DiskSourceProvider;
     use std::fs;
@@ -179,12 +183,12 @@ mod tests {
         write_pure_package(&package_root, "sifr-demo-json", "demo_json");
 
         let metadata = parse_metadata_json(&metadata_json(&temp.root, &[&package_root]))
-            .expect("metadata should parse");
+            .test_unwrap("metadata should parse");
         let graph = derive_package_graph(metadata, &mut DiskSourceProvider::new())
-            .expect("graph should derive");
+            .test_unwrap("graph should derive");
 
         assert_eq!(graph.packages.len(), 1);
-        let package = graph.packages.values().next().expect("package exists");
+        let package = graph.packages.values().next().test_unwrap("package exists");
         assert_eq!(package.sifr_name.0, "demo_json");
         assert_eq!(
             graph.classifications.get(&package.cargo_package_id),
@@ -199,12 +203,13 @@ mod tests {
         let temp = TestWorkspace::new("bad_marker");
         let package_root = temp.package("sifr-demo-json");
         write_pure_package(&package_root, "sifr-demo-json", "demo_json");
-        fs::write(package_root.join("src/lib.rs"), "pub fn hidden() {}\n").expect("write marker");
+        fs::write(package_root.join("src/lib.rs"), "pub fn hidden() {}\n")
+            .test_unwrap("write marker");
 
         let metadata = parse_metadata_json(&metadata_json(&temp.root, &[&package_root]))
-            .expect("metadata should parse");
+            .test_unwrap("metadata should parse");
         let diagnostics = derive_package_graph(metadata, &mut DiskSourceProvider::new())
-            .expect_err("marker must fail");
+            .test_expect_err("marker must fail");
 
         assert_eq!(diagnostics.len(), 1);
         assert_eq!(
@@ -218,12 +223,12 @@ mod tests {
         let temp = TestWorkspace::new("missing_manifest");
         let package_root = temp.package("sifr-demo-json");
         write_pure_package(&package_root, "sifr-demo-json", "demo_json");
-        fs::remove_file(package_root.join("sifr.toml")).expect("remove manifest");
+        fs::remove_file(package_root.join("sifr.toml")).test_unwrap("remove manifest");
 
         let metadata = parse_metadata_json(&metadata_json(&temp.root, &[&package_root]))
-            .expect("metadata should parse");
+            .test_unwrap("metadata should parse");
         let diagnostics = derive_package_graph(metadata, &mut DiskSourceProvider::new())
-            .expect_err("manifest must fail");
+            .test_expect_err("manifest must fail");
 
         assert_eq!(
             diagnostics[0].code,
@@ -242,7 +247,7 @@ mod tests {
             &package_root,
             r#"{"sifr":{"manifest":"sifr.toml","package":{"name":"demo_json"}}}"#,
         );
-        let diagnostic = parse_metadata_json(&json).expect_err("misplaced metadata must fail");
+        let diagnostic = parse_metadata_json(&json).test_expect_err("misplaced metadata must fail");
 
         assert_eq!(
             diagnostic.code,
@@ -259,37 +264,37 @@ mod tests {
         write_pure_package(&second, "sifr-demo-http", "demo_http");
 
         let normal = parse_metadata_json(&metadata_json(&temp.root, &[&first, &second]))
-            .expect("normal metadata parses")
+            .test_unwrap("normal metadata parses")
             .normalize();
         let shuffled = parse_metadata_json(&metadata_json(&temp.root, &[&second, &first]))
-            .expect("shuffled metadata parses")
+            .test_unwrap("shuffled metadata parses")
             .normalize();
 
         assert_eq!(digest_graph_inputs(&normal), digest_graph_inputs(&shuffled));
     }
 
     fn write_pure_package(package_root: &Path, cargo_name: &str, sifr_name: &str) {
-        fs::create_dir_all(package_root.join("src")).expect("create src");
+        fs::create_dir_all(package_root.join("src")).test_unwrap("create src");
         fs::write(
             package_root.join("src/lib.rs"),
             "// Pure Sifr package marker. Sifr source lives in the sifr.toml source root.\n",
         )
-        .expect("write marker");
+        .test_unwrap("write marker");
         fs::write(
             package_root.join("Cargo.toml"),
             format!(
                 "[package]\nname = \"{cargo_name}\"\nversion = \"0.1.0\"\nedition = \"2024\"\n\n[package.metadata.sifr]\nmanifest = \"sifr.toml\"\n"
             ),
         )
-        .expect("write Cargo.toml");
+        .test_unwrap("write Cargo.toml");
         fs::write(
             package_root.join("sifr.toml"),
             format!(
                 "[package]\nname = \"{sifr_name}\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n\n[source]\nroot = \"src\"\n"
             ),
         )
-        .expect("write sifr.toml");
-        fs::write(package_root.join("src/__init__.sifr"), "").expect("write init");
+        .test_unwrap("write sifr.toml");
+        fs::write(package_root.join("src/__init__.sifr"), "").test_unwrap("write init");
     }
 
     fn metadata_json(workspace_root: &Path, package_roots: &[&PathBuf]) -> String {
@@ -305,7 +310,7 @@ mod tests {
             .map(|package_root| {
                 let name = package_root
                     .file_name()
-                    .expect("package name")
+                    .test_unwrap("package name")
                     .to_string_lossy();
                 format!(r#""path+file://{}#{}@0.1.0""#, package_root.display(), name)
             })
@@ -345,7 +350,7 @@ mod tests {
     fn metadata_package_json(package_root: &Path, metadata: &str, dependencies: &str) -> String {
         let name = package_root
             .file_name()
-            .expect("package name")
+            .test_unwrap("package name")
             .to_string_lossy();
         format!(
             r#"{{
@@ -381,16 +386,16 @@ mod tests {
         fn new(name: &str) -> Self {
             let nonce = SystemTime::now()
                 .duration_since(UNIX_EPOCH)
-                .expect("clock should be after epoch")
+                .test_unwrap("clock should be after epoch")
                 .as_nanos();
             let root = std::env::temp_dir().join(format!("sifr_package_{name}_{nonce}"));
-            fs::create_dir_all(&root).expect("create temp workspace");
+            fs::create_dir_all(&root).test_unwrap("create temp workspace");
             Self { root }
         }
 
         fn package(&self, name: &str) -> PathBuf {
             let path = self.root.join(name);
-            fs::create_dir_all(&path).expect("create package");
+            fs::create_dir_all(&path).test_unwrap("create package");
             path
         }
     }

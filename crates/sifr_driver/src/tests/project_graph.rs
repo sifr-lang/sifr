@@ -28,14 +28,14 @@ def main():
         FrontendDiagnosticStyle::Bare,
     )
     .err()
-    .expect("bare diagnostic style should still report type errors");
+    .unwrap_or_else(|| panic!("bare diagnostic style should still report type errors"));
     let prefixed_errors = compile_frontend_modules(
         &parsed_modules,
         stdlib_defs,
         FrontendDiagnosticStyle::ModulePrefixed,
     )
     .err()
-    .expect("module-prefixed diagnostic style should report type errors");
+    .unwrap_or_else(|| panic!("module-prefixed diagnostic style should report type errors"));
 
     assert!(
         bare_errors
@@ -63,7 +63,7 @@ def main():
     let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
     let project_errors = collect_project_hir_modules(&parsed_modules, stdlib_defs)
         .err()
-        .expect("project lowering should report same frontend type errors");
+        .unwrap_or_else(|| panic!("project lowering should report same frontend type errors"));
 
     let check_messages: Vec<String> = check_errors.into_iter().map(|e| e.message).collect();
     let normalized_project_messages: Vec<String> = project_errors
@@ -473,9 +473,9 @@ def get() -> int:
     );
 
     let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
-    let errors = collect_project_hir_modules(&parsed_modules, stdlib_defs)
-        .err()
-        .expect("project lowering should fail when non-main imports missing module");
+    let Err(errors) = collect_project_hir_modules(&parsed_modules, stdlib_defs) else {
+        panic!("project lowering should fail when non-main imports missing module");
+    };
     assert!(errors.iter().any(|e| {
         e.message.contains("unknown import target: 'missing_mod'")
             && e.code == DiagnosticCode::IMPORT_UNKNOWN_SOURCE_MODULE.code()
@@ -531,9 +531,9 @@ def attach(state: LocalState):
     );
 
     let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
-    let errors = collect_project_hir_modules(&parsed_modules, stdlib_defs)
-        .err()
-        .expect("retained callback capture should be rejected across module reexports");
+    let Err(errors) = collect_project_hir_modules(&parsed_modules, stdlib_defs) else {
+        panic!("retained callback capture should be rejected across module reexports");
+    };
 
     assert!(errors.iter().any(|error| {
         error.code == DiagnosticCode::RUST_CALLBACK_CONTRACT.code()
@@ -584,7 +584,7 @@ def attach(registrar: Registrar, state: LocalState):
     let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
     let errors = collect_project_hir_modules(&parsed_modules, stdlib_defs)
         .err()
-        .expect("imported method callback capture should be rejected");
+        .unwrap_or_else(|| panic!("imported method callback capture should be rejected"));
 
     assert!(errors.iter().any(|error| {
         error.code == DiagnosticCode::RUST_CALLBACK_CONTRACT.code()
@@ -633,7 +633,7 @@ def value_b() -> int:
     let stdlib_defs = compile_stdlib().expect("stdlib should compile").defs;
     let errors = collect_project_hir_modules(&parsed_modules, stdlib_defs)
         .err()
-        .expect("project lowering should fail when there is a dependency cycle");
+        .unwrap_or_else(|| panic!("project lowering should fail when there is a dependency cycle"));
     assert!(errors.iter().any(|error| {
         error.code == DiagnosticCode::IMPORT_CYCLE.code()
             && error.message == "circular import detected: a -> b -> a"
@@ -737,10 +737,10 @@ def value_a() -> int:
 
     let error_a = compute_module_compile_order(&parsed_modules_a)
         .err()
-        .expect("cycle graph should fail compile ordering");
+        .unwrap_or_else(|| panic!("cycle graph should fail compile ordering"));
     let error_b = compute_module_compile_order(&parsed_modules_b)
         .err()
-        .expect("cycle graph should fail compile ordering");
+        .unwrap_or_else(|| panic!("cycle graph should fail compile ordering"));
 
     let message_a = &error_a[0].message;
     let message_b = &error_b[0].message;

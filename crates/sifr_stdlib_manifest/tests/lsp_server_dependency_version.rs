@@ -1,4 +1,6 @@
-#![allow(clippy::expect_used)]
+mod support;
+
+use support::TestUnwrap as _;
 
 const WORKSPACE_MANIFEST: &str = include_str!("../../../Cargo.toml");
 const LSP_MANIFEST: &str = include_str!("../../sifr_lsp/Cargo.toml");
@@ -13,18 +15,18 @@ const LSP_SERVER_PACKAGE_HASH: &str =
 #[test]
 fn direct_lsp_server_dependency_uses_the_latest_stable_release() {
     let workspace: toml::Value =
-        toml::from_str(WORKSPACE_MANIFEST).expect("workspace manifest must parse");
+        toml::from_str(WORKSPACE_MANIFEST).test_unwrap("workspace manifest must parse");
     let dependency = workspace
         .get("workspace")
         .and_then(|workspace| workspace.get("dependencies"))
         .and_then(|dependencies| dependencies.get("lsp-server"))
-        .expect("workspace must declare LSP Server");
+        .test_unwrap("workspace must declare LSP Server");
     assert_eq!(
         dependency.get("version").and_then(toml::Value::as_str),
         Some(LSP_SERVER_VERSION)
     );
 
-    let lsp: toml::Value = toml::from_str(LSP_MANIFEST).expect("LSP manifest must parse");
+    let lsp: toml::Value = toml::from_str(LSP_MANIFEST).test_unwrap("LSP manifest must parse");
     assert_eq!(
         lsp.get("dependencies")
             .and_then(|dependencies| dependencies.get("lsp-server"))
@@ -36,11 +38,11 @@ fn direct_lsp_server_dependency_uses_the_latest_stable_release() {
 
 #[test]
 fn first_party_lock_edge_uses_only_lsp_server_0_10_0() {
-    let lock: toml::Value = toml::from_str(WORKSPACE_LOCK).expect("Cargo.lock must parse");
+    let lock: toml::Value = toml::from_str(WORKSPACE_LOCK).test_unwrap("Cargo.lock must parse");
     let packages = lock
         .get("package")
         .and_then(toml::Value::as_array)
-        .expect("Cargo.lock packages must be an array");
+        .test_unwrap("Cargo.lock packages must be an array");
     let lsp_server = packages
         .iter()
         .filter(|package| package_name(package) == Some("lsp-server"))
@@ -55,7 +57,7 @@ fn first_party_lock_edge_uses_only_lsp_server_0_10_0() {
     let sifr_lsp = packages
         .iter()
         .find(|package| package_name(package) == Some("sifr_lsp"))
-        .expect("sifr_lsp must exist in Cargo.lock");
+        .test_unwrap("sifr_lsp must exist in Cargo.lock");
     let edges = sifr_lsp
         .get("dependencies")
         .and_then(toml::Value::as_array)
@@ -70,7 +72,7 @@ fn first_party_lock_edge_uses_only_lsp_server_0_10_0() {
 #[test]
 fn vendor_contains_the_official_lsp_server_release() {
     let manifest: toml::Value =
-        toml::from_str(VENDOR_MANIFEST).expect("vendor manifest must parse");
+        toml::from_str(VENDOR_MANIFEST).test_unwrap("vendor manifest must parse");
     assert_eq!(
         manifest
             .get("package")
@@ -87,7 +89,7 @@ fn vendor_contains_the_official_lsp_server_release() {
     );
 
     let checksum: serde_json::Value =
-        serde_json::from_str(VENDOR_CHECKSUM).expect("vendor checksum must parse");
+        serde_json::from_str(VENDOR_CHECKSUM).test_unwrap("vendor checksum must parse");
     assert_eq!(
         checksum.get("package").and_then(serde_json::Value::as_str),
         Some(LSP_SERVER_PACKAGE_HASH)

@@ -9,7 +9,7 @@ fn preview_metadata_with_stable_record() -> ChannelMetadata {
     let mut payload = metadata_payload();
     payload["releases"]["0.1.0"] = release(
         "stable",
-        json!({
+        &json!({
             "aarch64-apple-darwin": digest_evidence(),
             "x86_64-apple-darwin": digest_evidence(),
             "aarch64-unknown-linux-gnu": digest_evidence(),

@@ -53,26 +53,23 @@ fn main() {
     let angle: f64 = atan2(1.0_f64, 1.0_f64);
     let finite: bool = isfinite(powered);
     println!("root = {root}");
-    assert_eq!(format!("root = {root}").to_string(), "root = 3");
+    assert_eq!(format!("root = {root}"), "root = 3");
     println!("rounded_down = {rounded_down}");
-    assert_eq!(
-        format!("rounded_down = {rounded_down}").to_string(),
-        "rounded_down = 3"
-    );
+    assert_eq!(format!("rounded_down = {rounded_down}"), "rounded_down = 3");
     println!("rounded_up = {rounded_up_value_c84a77e463db860a}");
     assert_eq!(
-        format!("rounded_up = {rounded_up_value_c84a77e463db860a}").to_string(),
+        format!("rounded_up = {rounded_up_value_c84a77e463db860a}"),
         "rounded_up = 4"
     );
     println!("powered = {powered}");
-    assert_eq!(format!("powered = {powered}").to_string(), "powered = 8");
+    assert_eq!(format!("powered = {powered}"), "powered = 8");
     println!("rounded = {rounded}");
-    assert_eq!(format!("rounded = {rounded}").to_string(), "rounded = 4");
+    assert_eq!(format!("rounded = {rounded}"), "rounded = 4");
     println!("angle_positive = {}", angle > 0.0_f64);
     assert_eq!(
-        format!("angle_positive = {}", angle > 0.0_f64).to_string(),
+        format!("angle_positive = {}", angle > 0.0_f64),
         "angle_positive = true"
     );
     println!("finite = {finite}");
-    assert_eq!(format!("finite = {finite}").to_string(), "finite = true");
+    assert_eq!(format!("finite = {finite}"), "finite = true");
 }

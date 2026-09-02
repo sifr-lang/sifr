@@ -115,11 +115,14 @@ mod sifr_generated_project_nominals {
     #[must_use]
     pub fn sifr_generated_hash_hex(algorithm: &str, data: &[u8]) -> String {
         {
-            let sifr_generated_bytes_receiver = &sifr_generated_hash_bytes(algorithm, data);
+            let sifr_generated_bytes_receiver: &[u8] = &sifr_generated_hash_bytes(algorithm, data);
             let mut sifr_generated_hex =
                 String::with_capacity(sifr_generated_bytes_receiver.len().saturating_mul(2_usize));
-            for sifr_generated_byte in sifr_generated_bytes_receiver.iter() {
-                sifr_generated_hex.push_str(&format!("{:02x}", *sifr_generated_byte));
+            for sifr_generated_byte in sifr_generated_bytes_receiver {
+                let _ = ::std::fmt::Write::write_fmt(
+                    &mut sifr_generated_hex,
+                    format_args!("{:02x}", *sifr_generated_byte),
+                );
             }
             sifr_generated_hex
         }
@@ -359,11 +362,7 @@ fn file_digest(
         let handle: SifrGeneratedIoNativeFileHandle = open_file(path, &"rb".to_string())?;
         Ok((handle,))
     })();
-    let (handle,) = #[expect(
-        clippy::single_match_else,
-        reason = "the fallback returns through the enclosing Sifr control-flow carrier"
-    )]
-    match sifr_generated_try_res {
+    let (handle,) = match sifr_generated_try_res {
         Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
         Err(sifr_generated_try_err) => {
             let e = sifr_generated_try_err.clone();
@@ -376,11 +375,7 @@ fn file_digest(
         let data: Vec<u8> = file_read_bytes(&handle, None)?;
         Ok((data,))
     })();
-    let (data,) = #[expect(
-        clippy::single_match_else,
-        reason = "the fallback returns through the enclosing Sifr control-flow carrier"
-    )]
-    match sifr_generated_try_res {
+    let (data,) = match sifr_generated_try_res {
         Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
         Err(sifr_generated_try_err) => {
             let e = sifr_generated_try_err.clone();

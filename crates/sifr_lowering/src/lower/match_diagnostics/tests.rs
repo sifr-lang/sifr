@@ -17,10 +17,10 @@ pub(super) fn range_for_after(source: &str, after: &str, needle: &str) -> TextRa
     let relative_start = source[search_start..]
         .find(needle)
         .expect("needle should exist after anchor");
-    let start = (search_start + relative_start) as u32;
+    let start = search_start + relative_start;
     TextRange::new(
-        TextSize::new(start),
-        TextSize::new(start + needle.len() as u32),
+        TextSize::try_from(start).expect("test source offset fits in TextSize"),
+        TextSize::try_from(start + needle.len()).expect("test source offset fits in TextSize"),
     )
 }
 

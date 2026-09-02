@@ -669,16 +669,30 @@ impl RustEmitter {
         else {
             return Ok(None);
         };
-        let Type::Dict(_, _) = collection.ty().resolve_alias() else {
+        let dictionary = match collection.as_ref() {
+            crate::HirExpr::MethodCall {
+                object,
+                method,
+                args,
+                ..
+            } if method == "keys"
+                && args.is_empty()
+                && matches!(object.ty().resolve_alias(), Type::Dict(_, _)) =>
+            {
+                object.as_ref()
+            }
+            collection => collection,
+        };
+        let Type::Dict(_, _) = dictionary.ty().resolve_alias() else {
             return Ok(None);
         };
-        let Some(key) = checked_place_read_key(collection, element) else {
+        let Some(key) = checked_place_read_key(dictionary, element) else {
             return Ok(None);
         };
-        let dependencies = checked_place_dependencies(collection, element);
-        let lowered_collection = if let Some(path) = self.emit_shared_receiver_path(collection) {
+        let dependencies = checked_place_dependencies(dictionary, element);
+        let lowered_collection = if let Some(path) = self.emit_shared_receiver_path(dictionary) {
             path
-        } else if let Some(lowered) = self.lower_stmt_expr_for_ir(collection)? {
+        } else if let Some(lowered) = self.lower_stmt_expr_for_ir(dictionary)? {
             lowered
         } else {
             return Ok(None);

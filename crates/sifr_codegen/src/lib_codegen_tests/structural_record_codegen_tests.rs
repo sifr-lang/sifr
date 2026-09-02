@@ -180,6 +180,25 @@ def main():
 }
 
 #[test]
+fn union_record_field_constructor_uses_the_canonical_target_coercion() {
+    let rust = generate_rust_from_source(
+        r#"
+type TaggedNumber = {value: int | bool}
+
+def main():
+    tagged: TaggedNumber = TaggedNumber(value=17)
+    assert tagged.value == 17
+"#,
+    );
+    assert!(
+        rust.contains("__SifrUnionVariant_4_x3aatom3_x3aint(SifrInt::from_i64(17))"),
+        "{rust}"
+    );
+    assert!(!rust.contains("::new(SifrInt::from_i64(17))"), "{rust}");
+    syn::parse_file(&rust).expect("union record-field codegen should produce valid Rust syntax");
+}
+
+#[test]
 fn async_callable_record_field_emits_an_awaited_field_call() {
     let rust = generate_rust_from_source(
         r#"

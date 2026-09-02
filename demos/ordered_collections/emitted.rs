@@ -235,6 +235,11 @@ mod sifr_generated_project_nominals {
             result
         }
     }
+    impl<T: ::std::hash::Hash + Eq> SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T> {
+        pub fn clear(&mut self) {
+            self.counts = HashMap::from([]);
+        }
+    }
     impl<T: ::std::hash::Hash + Eq + Clone>
         ::std::ops::Add<&SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T>>
         for &SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T>
@@ -389,6 +394,11 @@ mod sifr_generated_project_nominals {
             result
         }
     }
+    impl<T> SifrGeneratedStdlibSifrX2ecollectionsX2edeque<T> {
+        pub fn clear(&mut self) {
+            self.data.clear();
+        }
+    }
     impl<T: Clone> SifrGeneratedStdlibSifrX2ecollectionsX2edeque<T> {
         pub fn rotate(&mut self, n: &SifrInt) {
             let length: SifrInt = SifrInt::from(self.data.len());
@@ -406,6 +416,83 @@ mod sifr_generated_project_nominals {
                     self.data.push_front(value.clone());
                 }
                 count = &count + &SifrInt::from_i64(1);
+            }
+        }
+    }
+    impl<T: Clone + PartialEq> SifrGeneratedStdlibSifrX2ecollectionsX2edeque<T> {
+        #[must_use]
+        pub fn index(&self, value: &T, start: &SifrInt, stop: &Option<SifrInt>) -> Option<SifrInt> {
+            let size: SifrInt = SifrInt::from(self.data.len());
+            let mut begin: SifrInt = start.clone();
+            if &begin < &SifrInt::from_i64(0) {
+                begin = &size + &begin;
+                if &begin < &SifrInt::from_i64(0) {
+                    begin = SifrInt::from_i64(0);
+                }
+            }
+            let mut end: SifrInt = size.clone();
+            if let Some(stop) = stop.as_ref() {
+                end = stop.clone();
+                if &end < &SifrInt::from_i64(0) {
+                    end = &size + &end;
+                }
+                if &end < &SifrInt::from_i64(0) {
+                    end = SifrInt::from_i64(0);
+                }
+                if &end > &size {
+                    end = size;
+                }
+            }
+            let mut i: SifrInt = begin.clone();
+            while &i < &end {
+                let current: Option<T> = {
+                    let sifr_generated_checked_read_collection = &self.data;
+                    let sifr_generated_checked_read_index = i.clone();
+                    let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
+                        .normalize_index_or_len(sifr_generated_checked_read_collection.len());
+                    sifr_generated_checked_read_collection
+                        .get(sifr_generated_checked_read_normalized)
+                        .cloned()
+                };
+                if let Some(current) = current
+                    && current == *value
+                {
+                    return Some(i);
+                }
+                i = &i + &SifrInt::from_i64(1);
+            }
+            None
+        }
+    }
+    impl<T: Clone + PartialEq> SifrGeneratedStdlibSifrX2ecollectionsX2edeque<T> {
+        pub fn remove(&mut self, value: &T) {
+            let idx: Option<SifrInt> = self.index(value, &SifrInt::from_i64(0), &None);
+            if let Some(idx) = idx.clone() {
+                let mut rebuilt: Vec<T> = Vec::new();
+                let mut i: SifrInt = SifrInt::from_i64(0);
+                while &i < &SifrInt::from(self.data.len()) {
+                    let current: Option<T> = {
+                        let sifr_generated_checked_read_collection = &self.data;
+                        let sifr_generated_checked_read_index = i.clone();
+                        let sifr_generated_checked_read_normalized =
+                            sifr_generated_checked_read_index.normalize_index_or_len(
+                                sifr_generated_checked_read_collection.len(),
+                            );
+                        sifr_generated_checked_read_collection
+                            .get(sifr_generated_checked_read_normalized)
+                            .cloned()
+                    };
+                    if let Some(current) = current
+                        && &i != &idx
+                    {
+                        rebuilt.push(current.clone());
+                    }
+                    i = &i + &SifrInt::from_i64(1);
+                }
+                self.data.clear();
+                for item in rebuilt.iter().cloned() {
+                    self.data.push_back(item.clone());
+                }
             }
         }
     }

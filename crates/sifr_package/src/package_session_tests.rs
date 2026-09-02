@@ -1,3 +1,5 @@
+use crate::test_support::{TestExpectErr as _, TestUnwrap as _};
+
 use crate::SifrManifest;
 use crate::cargo::commands::{CargoFeatureSelection, CargoPackageSelection};
 use crate::cargo::errors::{CargoAction, map_cargo_failure, redact_cargo_stderr};
@@ -25,11 +27,14 @@ fn package_session_plans_fetch_tree_and_package_check() {
 
     let fetch = session.plan_fetch();
     assert_eq!(fetch.operation.operation, PackageOperation::Fetch);
-    assert_eq!(fetch.cargo.expect("fetch plan").args, ["fetch", "--locked"]);
+    assert_eq!(
+        fetch.cargo.test_unwrap("fetch plan").args,
+        ["fetch", "--locked"]
+    );
 
     let tree = session.plan_tree(&["--depth".to_string(), "1".to_string()]);
     assert_eq!(
-        tree.cargo.expect("tree plan").args,
+        tree.cargo.test_unwrap("tree plan").args,
         ["tree", "--locked", "--depth", "1"]
     );
 
@@ -39,9 +44,12 @@ fn package_session_plans_fetch_tree_and_package_check() {
             &CargoFeatureSelection::default(),
             &CargoPackageSelection::default(),
         )
-        .expect("check plan");
+        .test_unwrap("check plan");
     assert_eq!(check.operation.operation, PackageOperation::Check);
-    assert_eq!(check.cargo.expect("check plan").args, ["check", "--locked"]);
+    assert_eq!(
+        check.cargo.test_unwrap("check plan").args,
+        ["check", "--locked"]
+    );
 }
 
 #[test]
@@ -63,10 +71,10 @@ fn package_session_plans_check_workspace_package_selection() {
 
     let check = session
         .plan_check(None, &CargoFeatureSelection::default(), &selection)
-        .expect("check plan");
+        .test_unwrap("check plan");
 
     assert_eq!(
-        check.cargo.expect("check plan").args,
+        check.cargo.test_unwrap("check plan").args,
         [
             "check",
             "--locked",
@@ -114,8 +122,8 @@ fn package_session_stops_at_nested_cargo_workspace_without_root_sifr_manifest() 
     };
     let check = session
         .plan_check(None, &CargoFeatureSelection::default(), &selection)
-        .expect("workspace check plan");
-    let cargo = check.cargo.expect("cargo plan");
+        .test_unwrap("workspace check plan");
+    let cargo = check.cargo.test_unwrap("cargo plan");
     assert_eq!(cargo.current_dir, temp.path().join("nested"));
     assert_eq!(
         cargo.args,
@@ -145,9 +153,9 @@ fn package_session_resolves_default_script_and_explicit_bin() {
 
     let default_run = session
         .plan_run(&PackageRunRequest::default())
-        .expect("default run target");
+        .test_unwrap("default run target");
     assert_eq!(
-        default_run.cargo.expect("run plan").args,
+        default_run.cargo.test_unwrap("run plan").args,
         ["run", "--bin", "admin"]
     );
 
@@ -156,8 +164,8 @@ fn package_session_resolves_default_script_and_explicit_bin() {
             target_or_path: Some("dev".to_string()),
             ..PackageRunRequest::default()
         })
-        .expect("script plan");
-    let origin = script.script_origin.expect("script origin");
+        .test_unwrap("script plan");
+    let origin = script.script_origin.test_unwrap("script origin");
     assert_eq!(origin.name, "dev");
     assert_eq!(origin.command, "run");
 }
@@ -180,7 +188,7 @@ fn package_session_reports_script_target_ambiguity() {
             target_or_path: Some("admin".to_string()),
             ..PackageRunRequest::default()
         })
-        .expect_err("ambiguous target should fail");
+        .test_expect_err("ambiguous target should fail");
 
     assert_eq!(
         diagnostic.code,
@@ -206,7 +214,7 @@ fn package_session_rejects_invalid_nested_target_name() {
             bin: Some("bad!name".to_string()),
             ..PackageRunRequest::default()
         })
-        .expect_err("invalid target should fail");
+        .test_expect_err("invalid target should fail");
 
     assert_eq!(
         diagnostic.code,
@@ -233,7 +241,7 @@ fn package_session_rejects_explicit_file_outside_source_root() {
             &CargoFeatureSelection::default(),
             &CargoPackageSelection::default(),
         )
-        .expect_err("outside source root should fail");
+        .test_expect_err("outside source root should fail");
 
     assert_eq!(
         diagnostic.code,
@@ -260,7 +268,7 @@ fn package_session_accepts_explicit_file_under_source_root() {
             &CargoFeatureSelection::default(),
             &CargoPackageSelection::default(),
         )
-        .expect("file under source root should be accepted");
+        .test_unwrap("file under source root should be accepted");
 
     assert_eq!(plan.operation.operation, PackageOperation::Check);
 }
@@ -282,7 +290,7 @@ fn package_session_rejects_nested_script_expansion() {
             script: Some("dev".to_string()),
             ..PackageRunRequest::default()
         })
-        .expect_err("nested scripts should fail");
+        .test_expect_err("nested scripts should fail");
 
     assert_eq!(diagnostic.code, DiagnosticCode::PACKAGE_SCRIPT_RECURSION);
 }
@@ -299,7 +307,7 @@ fn manifest_parses_scripts_and_cargo_compatible_dependency_sections() {
         &temp.path().join("sifr.toml"),
         &mut DiskSourceProvider::new(),
     )
-    .expect("manifest parses");
+    .test_unwrap("manifest parses");
 
     assert_eq!(manifest.scripts["check-all"].command, "check");
     assert!(manifest.dependencies.contains_key("demo_json"));
@@ -340,7 +348,7 @@ fn session(
         },
         provider,
     )
-    .expect("session discovers")
+    .test_unwrap("session discovers")
 }
 
 struct TestPackage {
@@ -354,11 +362,11 @@ impl TestPackage {
             std::process::id(),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
-                .expect("time")
+                .test_unwrap("time")
                 .as_nanos()
         );
         let path = std::env::temp_dir().join(unique);
-        fs::create_dir_all(&path).expect("create temp package");
+        fs::create_dir_all(&path).test_unwrap("create temp package");
         Self { path }
     }
 
@@ -373,9 +381,9 @@ impl TestPackage {
     fn write(&self, relative: &str, contents: &str) {
         let path = self.path.join(relative);
         if let Some(parent) = path.parent() {
-            fs::create_dir_all(parent).expect("create parent");
+            fs::create_dir_all(parent).test_unwrap("create parent");
         }
-        fs::write(path, contents).expect("write file");
+        fs::write(path, contents).test_unwrap("write file");
     }
 }
 

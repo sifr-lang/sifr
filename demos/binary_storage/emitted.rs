@@ -261,68 +261,69 @@ fn main() {
     });
     let iter_ok: bool = &sum_bytes(&payload) == &SifrInt::from_i64(1497);
     let contains_ok: bool = {
-        let sifr_generated_bytes_receiver = &payload;
+        let sifr_generated_bytes_receiver: &[u8] = &payload;
         {
             let sifr_generated_needle = SifrInt::from_i64(98);
-            match sifr_generated_needle.try_to_u8() {
-                Ok(sifr_generated_needle_u8) => {
+            sifr_generated_needle.try_to_u8().map_or_else(
+                |_| false,
+                |sifr_generated_needle_u8| {
                     sifr_generated_bytes_receiver.contains(&sifr_generated_needle_u8)
-                }
-                Err(_) => false,
-            }
+                },
+            )
         }
     } && !{
-        let sifr_generated_bytes_receiver = &payload;
+        let sifr_generated_bytes_receiver: &[u8] = &payload;
         {
             let sifr_generated_needle = SifrInt::from_i64(512);
-            match sifr_generated_needle.try_to_u8() {
-                Ok(sifr_generated_needle_u8) => {
+            sifr_generated_needle.try_to_u8().map_or_else(
+                |_| false,
+                |sifr_generated_needle_u8| {
                     sifr_generated_bytes_receiver.contains(&sifr_generated_needle_u8)
-                }
-                Err(_) => false,
-            }
+                },
+            )
         }
     };
     let count_ok: bool = &{
-        let sifr_generated_bytes_receiver = &payload;
+        let sifr_generated_bytes_receiver: &[u8] = &payload;
         {
             let sifr_generated_needle = SifrInt::from_i64(98);
-            match sifr_generated_needle.try_to_u8() {
-                Ok(sifr_generated_needle_u8) => SifrInt::from(
-                    sifr_generated_bytes_receiver
-                        .iter()
-                        .filter(|sifr_generated_x| **sifr_generated_x == sifr_generated_needle_u8)
-                        .count(),
-                ),
-                Err(_) => SifrInt::from_i64(0),
-            }
+            sifr_generated_needle.try_to_u8().map_or_else(
+                |_| SifrInt::from_i64(0),
+                |sifr_generated_needle_u8| {
+                    SifrInt::from(::sifr_runtime::count_byte(
+                        sifr_generated_bytes_receiver,
+                        sifr_generated_needle_u8,
+                    ))
+                },
+            )
         }
     } == &SifrInt::from_i64(1)
         && &{
-            let sifr_generated_bytes_receiver = &payload;
+            let sifr_generated_bytes_receiver: &[u8] = &payload;
             {
                 let sifr_generated_needle = SifrInt::from_i64(512);
-                match sifr_generated_needle.try_to_u8() {
-                    Ok(sifr_generated_needle_u8) => SifrInt::from(
-                        sifr_generated_bytes_receiver
-                            .iter()
-                            .filter(|sifr_generated_x| {
-                                **sifr_generated_x == sifr_generated_needle_u8
-                            })
-                            .count(),
-                    ),
-                    Err(_) => SifrInt::from_i64(0),
-                }
+                sifr_generated_needle.try_to_u8().map_or_else(
+                    |_| SifrInt::from_i64(0),
+                    |sifr_generated_needle_u8| {
+                        SifrInt::from(::sifr_runtime::count_byte(
+                            sifr_generated_bytes_receiver,
+                            sifr_generated_needle_u8,
+                        ))
+                    },
+                )
             }
         } == &SifrInt::from_i64(0);
     let mut hex_ok: bool = false;
     let sifr_generated_try_res: Result<(), ParseError> = (|| {
         let hexed: String = {
-            let sifr_generated_bytes_receiver = &payload;
+            let sifr_generated_bytes_receiver: &[u8] = &payload;
             let mut sifr_generated_hex =
                 String::with_capacity(sifr_generated_bytes_receiver.len().saturating_mul(2_usize));
-            for sifr_generated_byte in sifr_generated_bytes_receiver.iter() {
-                sifr_generated_hex.push_str(&format!("{:02x}", *sifr_generated_byte));
+            for sifr_generated_byte in sifr_generated_bytes_receiver {
+                let _ = ::std::fmt::Write::write_fmt(
+                    &mut sifr_generated_hex,
+                    format_args!("{:02x}", *sifr_generated_byte),
+                );
             }
             sifr_generated_hex
         };

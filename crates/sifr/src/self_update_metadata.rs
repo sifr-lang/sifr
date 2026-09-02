@@ -592,9 +592,9 @@ mod tests {
                 "beta": "0.1.0-beta.2"
             },
             "releases": {
-                "0.1.0-alpha.2": release("alpha", targets.clone()),
-                "0.1.0-beta.1": release("beta", targets.clone()),
-                "0.1.0-beta.2": release("beta", targets)
+                "0.1.0-alpha.2": release("alpha", &targets),
+                "0.1.0-beta.1": release("beta", &targets),
+                "0.1.0-beta.2": release("beta", &targets)
             }
         })
     }
@@ -603,15 +603,13 @@ mod tests {
         let mut payload = metadata_payload();
         payload["ga_status"] = json!("active");
         payload["channels"]["stable"] = json!("0.1.0");
-        payload["releases"]["0.1.0"] = release(
-            "stable",
-            json!({
-                "aarch64-apple-darwin": digest_evidence(),
-                "x86_64-apple-darwin": digest_evidence(),
-                "aarch64-unknown-linux-gnu": digest_evidence(),
-                "x86_64-unknown-linux-gnu": digest_evidence()
-            }),
-        );
+        let targets = json!({
+            "aarch64-apple-darwin": digest_evidence(),
+            "x86_64-apple-darwin": digest_evidence(),
+            "aarch64-unknown-linux-gnu": digest_evidence(),
+            "x86_64-unknown-linux-gnu": digest_evidence()
+        });
+        payload["releases"]["0.1.0"] = release("stable", &targets);
         ChannelMetadata::parse(&serde_json::to_string(&payload).expect("serialize metadata"))
             .expect("active metadata parses")
     }
@@ -626,8 +624,8 @@ mod tests {
         });
         payload["ga_status"] = json!("active");
         payload["channels"]["stable"] = json!("0.1.1");
-        payload["releases"]["0.1.0"] = release("stable", targets.clone());
-        payload["releases"]["0.1.1"] = release("stable", targets);
+        payload["releases"]["0.1.0"] = release("stable", &targets);
+        payload["releases"]["0.1.1"] = release("stable", &targets);
         ChannelMetadata::parse(&serde_json::to_string(&payload).expect("serialize metadata"))
             .expect("active successor metadata parses")
     }
@@ -645,7 +643,7 @@ mod tests {
         })
     }
 
-    pub(super) fn release(channel: &str, targets: Value) -> Value {
+    pub(super) fn release(channel: &str, targets: &Value) -> Value {
         json!({
             "channel": channel,
             "status": "active",

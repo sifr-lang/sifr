@@ -61,26 +61,21 @@ pub(super) fn rewrite_result_identity_match(expression: &mut syn::Expr) {
     {
         return;
     }
-    if crosses_closure_control_flow_boundary(&failure.body) {
-        if matches!(match_.expr.as_ref(), syn::Expr::Path(_))
-            && !match_.attrs.iter().any(|attribute| {
-                attribute.path().is_ident("expect")
-                    && quote::ToTokens::to_token_stream(&attribute.meta)
-                        .to_string()
-                        .contains("single_match_else")
-            })
-        {
-            match_.attrs.push(syn::parse_quote!(
-                #[expect(
-                    clippy::single_match_else,
-                    reason = "the fallback returns through the enclosing Sifr control-flow carrier"
-                )]
-            ));
-        }
-        return;
-    }
     let matched = match_.expr.clone();
     let fallback = failure.body.clone();
+    if crosses_closure_control_flow_boundary(&fallback) {
+        if !matches!(failure_pattern, syn::Pat::Wild(_)) {
+            return;
+        }
+        *expression = syn::parse_quote! {
+            if let Ok(#binding) = #matched {
+                #binding
+            } else {
+                #fallback
+            }
+        };
+        return;
+    }
     *expression = syn::parse_quote! {
         (#matched).unwrap_or_else(|#failure_pattern| #fallback)
     };

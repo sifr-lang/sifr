@@ -1,5 +1,6 @@
 use super::{
-    CodegenResult, HirModule, StdlibCode, generate_rust_with_stdlib_for_module_with_project_policy,
+    CodegenResult, HirModule, ProjectStructuralLayoutLocation, StdlibCode,
+    generate_rust_with_stdlib_for_module_with_project_policy,
 };
 
 pub(crate) fn generate_rust_with_stdlib_for_module_with_structural_policy(
@@ -18,6 +19,7 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_structural_policy(
         None,
         None,
         None,
+        ProjectStructuralLayoutLocation::Local,
         None,
     )
 }

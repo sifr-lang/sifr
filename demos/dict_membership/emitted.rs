@@ -8,17 +8,18 @@ fn guarded_lookup(table: &HashMap<SifrInt, SifrInt>, key: SifrInt) -> SifrInt {
     let value: SifrInt = (*sifr_generated_checked_value_0).clone();
     value.clone()
 }
-fn expression_lookup(_: &HashMap<SifrInt, SifrInt>, _: SifrInt) -> SifrInt {
-    compile_error!(
-        "structured statement emission missing for production path: If { condition: ContainsOp { element: BinOp { left: Name { name: \"base\", binding_id: Some(BindingId(4)), ty: Int }, op: \"+\", right: IntLiteral(1), ty: Int }, collection: MethodCall { object: Name { name: \"table\", binding_id: Some(BindingId(3)), ty: Dict(Int, Int) }, method: \"keys\", args: [], receiver_convention: Some(SharedBorrow), receiver_target: None, mutable_arg_places: [], source: Some(MethodCallSource { call_range: 378..390, receiver_range: 378..383, arg_ranges: [] }), ty: List(Int) }, ty: Bool }, then_body: [Let { name: \"value\", ty: Int, value: Index { object: Name { name: \"table\", binding_id: Some(BindingId(3)), ty: Dict(Int, Int) }, index: BinOp { left: Name { name: \"base\", binding_id: Some(BindingId(4)), ty: Int }, op: \"+\", right: IntLiteral(1), ty: Int }, ty: Int }, is_mutable: true }, Return { value: Some(Name { name: \"value\", binding_id: Some(BindingId(5)), ty: Int }) }], elif_clauses: [], else_body: None }"
-    );
-    -&SifrInt::from_i64(1)
+fn expression_lookup(table: &HashMap<SifrInt, SifrInt>, base: SifrInt) -> SifrInt {
+    let Some(sifr_generated_checked_value_2) = table.get(&(&base + &SifrInt::from_i64(1))) else {
+        return -&SifrInt::from_i64(1);
+    };
+    let value: SifrInt = (*sifr_generated_checked_value_2).clone();
+    value.clone()
 }
 fn sum_known_keys(table: &HashMap<SifrInt, SifrInt>, keys: &[SifrInt]) -> SifrInt {
     let mut total: SifrInt = SifrInt::from_i64(0);
     for key in keys.iter().cloned() {
-        if let Some(sifr_generated_checked_value_1) = table.get(&key) {
-            total = &total + &(*sifr_generated_checked_value_1).clone();
+        if let Some(sifr_generated_checked_value_3) = table.get(&key) {
+            total = &total + &(*sifr_generated_checked_value_3).clone();
         }
     }
     total.clone()

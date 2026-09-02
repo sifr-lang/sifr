@@ -1,6 +1,10 @@
+mod support;
+
 use std::collections::BTreeSet;
 use std::fs;
 use std::path::Path;
+
+use support::TestUnwrap as _;
 
 const WORKSPACE_MANIFEST: &str = include_str!("../../../Cargo.toml");
 const WORKSPACE_LOCK: &str = include_str!("../../../Cargo.lock");
@@ -14,12 +18,12 @@ const VENDORED_0_5_CHECKSUM: &str = include_str!("../../../vendor/num-bigint/.ca
 #[test]
 fn num_bigint_direct_dependencies_use_the_latest_stable_release() {
     let workspace: toml::Value =
-        toml::from_str(WORKSPACE_MANIFEST).expect("workspace manifest must parse");
+        toml::from_str(WORKSPACE_MANIFEST).test_unwrap("workspace manifest must parse");
     let dependency = workspace
         .get("workspace")
         .and_then(|workspace| workspace.get("dependencies"))
         .and_then(|dependencies| dependencies.get("num-bigint"))
-        .expect("workspace must declare num-bigint");
+        .test_unwrap("workspace must declare num-bigint");
 
     assert_eq!(
         dependency.get("version").and_then(toml::Value::as_str),
@@ -50,13 +54,13 @@ fn maintained_first_party_lock_edges_use_num_bigint_0_5_1() {
     let mut checked_edges = 0;
     for lock_path in lock_paths {
         let lock_source =
-            fs::read_to_string(&lock_path).expect("maintained Cargo.lock must be readable");
+            fs::read_to_string(&lock_path).test_unwrap("maintained Cargo.lock must be readable");
         let lock: toml::Value =
-            toml::from_str(&lock_source).expect("maintained Cargo.lock must parse");
+            toml::from_str(&lock_source).test_unwrap("maintained Cargo.lock must parse");
         let packages = lock
             .get("package")
             .and_then(toml::Value::as_array)
-            .expect("maintained Cargo.lock packages must be an array");
+            .test_unwrap("maintained Cargo.lock packages must be an array");
         let first_party_edges = packages
             .iter()
             .filter(|package| is_first_party(package))
@@ -99,15 +103,15 @@ fn maintained_first_party_lock_edges_use_num_bigint_0_5_1() {
 
 #[test]
 fn bigdecimal_and_vendor_sources_keep_their_owned_num_bigint_lines() {
-    let lock: toml::Value = toml::from_str(WORKSPACE_LOCK).expect("workspace lock must parse");
+    let lock: toml::Value = toml::from_str(WORKSPACE_LOCK).test_unwrap("workspace lock must parse");
     let packages = lock
         .get("package")
         .and_then(toml::Value::as_array)
-        .expect("workspace lock packages must be an array");
+        .test_unwrap("workspace lock packages must be an array");
     let bigdecimal = packages
         .iter()
         .find(|package| package.get("name").and_then(toml::Value::as_str) == Some("bigdecimal"))
-        .expect("workspace lock must contain BigDecimal");
+        .test_unwrap("workspace lock must contain BigDecimal");
     assert!(
         dependencies(bigdecimal).any(|dependency| dependency == "num-bigint 0.4.8"),
         "BigDecimal must retain its latest compatible 0.4 release"
@@ -128,8 +132,8 @@ fn bigdecimal_and_vendor_sources_keep_their_owned_num_bigint_lines() {
 }
 
 fn collect_lock_paths(directory: &Path, lock_paths: &mut Vec<std::path::PathBuf>) {
-    for entry in fs::read_dir(directory).expect("workspace directory must be readable") {
-        let entry = entry.expect("workspace entry must be readable");
+    for entry in fs::read_dir(directory).test_unwrap("workspace directory must be readable") {
+        let entry = entry.test_unwrap("workspace entry must be readable");
         let path = entry.path();
         let name = entry.file_name();
         if path.is_dir() {
@@ -173,7 +177,7 @@ fn assert_vendored_release(
     expected_version: &str,
 ) {
     let manifest: toml::Value =
-        toml::from_str(manifest_source).expect("vendored num-bigint manifest must parse");
+        toml::from_str(manifest_source).test_unwrap("vendored num-bigint manifest must parse");
     assert_eq!(
         manifest
             .get("package")
@@ -190,9 +194,9 @@ fn assert_vendored_release(
         })
         .and_then(|package| package.get("checksum"))
         .and_then(toml::Value::as_str)
-        .expect("workspace lock must contain the certified num-bigint release");
+        .test_unwrap("workspace lock must contain the certified num-bigint release");
     let checksum: serde_json::Value =
-        serde_json::from_str(checksum_source).expect("vendored checksum must parse");
+        serde_json::from_str(checksum_source).test_unwrap("vendored checksum must parse");
     assert_eq!(
         checksum.get("package").and_then(serde_json::Value::as_str),
         Some(lock_checksum)

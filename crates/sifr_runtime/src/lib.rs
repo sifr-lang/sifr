@@ -2,6 +2,7 @@
 #![cfg_attr(test, allow(clippy::expect_used))]
 
 pub mod async_cleanup;
+mod byte_ops;
 pub mod cancellation;
 mod conversion;
 pub mod encoding;
@@ -30,6 +31,7 @@ pub mod unicode;
 #[cfg(feature = "unicode")]
 mod unicode_data;
 
+pub use byte_ops::count_byte;
 pub use conversion::{ProvenUsize, to_usize_proven};
 pub use int::{
     DEFAULT_MAX_INTEGER_DIGITS, DEFAULT_MAX_INTEGER_OUTPUT_BITS, IntegerArithmeticError,

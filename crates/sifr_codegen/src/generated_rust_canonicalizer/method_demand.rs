@@ -114,12 +114,26 @@ fn resolve_method_references(
     references: &MethodReferences,
     methods: &BTreeSet<MethodKey>,
 ) -> BTreeSet<MethodKey> {
+    let local_owners = methods
+        .iter()
+        .map(|key| key.owner.as_str())
+        .collect::<BTreeSet<_>>();
+    let conservatively_demanded_names = references
+        .inferred_associated
+        .iter()
+        .filter(|(owner, _)| !local_owners.contains(owner.as_str()))
+        .map(|(_, name)| name.as_str())
+        .collect::<BTreeSet<_>>();
     methods
         .iter()
         .filter(|key| {
             references.method_names.contains(&key.name)
+                || conservatively_demanded_names.contains(key.name.as_str())
                 || references
                     .associated
+                    .contains(&(key.owner.clone(), key.name.clone()))
+                || references
+                    .inferred_associated
                     .contains(&(key.owner.clone(), key.name.clone()))
         })
         .cloned()
@@ -130,12 +144,14 @@ fn resolve_method_references(
 struct MethodReferences {
     method_names: BTreeSet<String>,
     associated: BTreeSet<(String, String)>,
+    inferred_associated: BTreeSet<(String, String)>,
 }
 
 impl MethodReferences {
     fn extend(&mut self, other: Self) {
         self.method_names.extend(other.method_names);
         self.associated.extend(other.associated);
+        self.inferred_associated.extend(other.inferred_associated);
     }
 }
 
@@ -346,7 +362,7 @@ impl<'ast> Visit<'ast> for CalledMethodCollector<'_> {
     fn visit_expr_method_call(&mut self, call: &'ast syn::ExprMethodCall) {
         if let Some(owner) = self.receiver_owner(&call.receiver) {
             self.references
-                .associated
+                .inferred_associated
                 .insert((owner, call.method.to_string()));
         } else {
             self.references.method_names.insert(call.method.to_string());

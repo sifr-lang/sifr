@@ -69,6 +69,12 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2ejsonX2eJsonValue {
         #[must_use]
+        pub fn is_array(&self) -> bool {
+            self.kind.clone() == "array"
+        }
+    }
+    impl SifrGeneratedStdlibSifrX2ejsonX2eJsonValue {
+        #[must_use]
         pub fn is_object(&self) -> bool {
             self.kind.clone() == "object"
         }
@@ -83,6 +89,27 @@ mod sifr_generated_project_nominals {
         #[must_use]
         pub fn as_str(&self) -> Option<String> {
             self.str_value.clone()
+        }
+    }
+    impl SifrGeneratedStdlibSifrX2ejsonX2eJsonValue {
+        #[must_use]
+        pub fn at(&self, index: &SifrInt) -> Option<SifrGeneratedStdlibSifrX2ejsonX2eJsonValue> {
+            if !self.is_array() {
+                return None;
+            }
+            if index < &SifrInt::from_i64(0) || index >= &SifrInt::from(self.array_items.len()) {
+                return None;
+            }
+            let value: Option<SifrGeneratedStdlibSifrX2ejsonX2eJsonValue> = {
+                let sifr_generated_checked_read_collection = &self.array_items;
+                let sifr_generated_checked_read_index = index.clone();
+                let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
+                    .normalize_index_or_len(sifr_generated_checked_read_collection.len());
+                sifr_generated_checked_read_collection
+                    .get(sifr_generated_checked_read_normalized)
+                    .cloned()
+            };
+            value
         }
     }
     impl SifrGeneratedStdlibSifrX2ejsonX2eJsonValue {

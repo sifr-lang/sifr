@@ -12,10 +12,10 @@ fn lower_errors(source: &str) -> Vec<HirDiagnostic> {
 }
 
 fn range_for(source: &str, needle: &str) -> TextRange {
-    let start = source.find(needle).expect("needle should exist") as u32;
+    let start = source.find(needle).expect("needle should exist");
     TextRange::new(
-        TextSize::new(start),
-        TextSize::new(start + needle.len() as u32),
+        TextSize::try_from(start).expect("test source offset fits in TextSize"),
+        TextSize::try_from(start + needle.len()).expect("test source offset fits in TextSize"),
     )
 }
 
@@ -24,10 +24,10 @@ fn range_for_after(source: &str, after: &str, needle: &str) -> TextRange {
     let relative_start = source[after_start..]
         .find(needle)
         .expect("needle should exist after anchor");
-    let start = (after_start + relative_start) as u32;
+    let start = after_start + relative_start;
     TextRange::new(
-        TextSize::new(start),
-        TextSize::new(start + needle.len() as u32),
+        TextSize::try_from(start).expect("test source offset fits in TextSize"),
+        TextSize::try_from(start + needle.len()).expect("test source offset fits in TextSize"),
     )
 }
 
@@ -151,8 +151,7 @@ def main():
     assert!(errors.iter().any(|error| {
         error.code == Some(DiagnosticCode::RESULT_UNCOVERED_TRY_ERRORS)
             && error.message == "except arms do not cover all error types from try body: ValueError"
-            && error.primary_range.map(|range| range.start())
-                == Some(range_for(source, "try:").start())
+            && error.primary_range.map(TextRange::start) == Some(range_for(source, "try:").start())
     }));
 }
 
@@ -183,8 +182,7 @@ def main():
     assert!(errors.iter().any(|error| {
         error.code == Some(DiagnosticCode::RESULT_UNCOVERED_TRY_ERRORS)
             && error.message == "except arms do not cover all error types from try body: IOError"
-            && error.primary_range.map(|range| range.start())
-                == Some(range_for(source, "try:").start())
+            && error.primary_range.map(TextRange::start) == Some(range_for(source, "try:").start())
     }));
 }
 

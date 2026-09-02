@@ -9,6 +9,7 @@ mod api_cleanup;
 mod field_name_cleanup;
 mod identifier_canonicalizer;
 mod identifier_policy;
+mod item_demand;
 mod local_name_cleanup;
 mod member_demand;
 mod method_demand;
@@ -74,11 +75,11 @@ fn prune_closed_generated_binary(source: &str) -> Result<Option<String>, String>
     }
 
     simplify_infallible_main(&mut file.items);
-    prune_item_scope(&mut file.items, &HashSet::from(["main".to_string()]));
+    prune_item_scope(&mut file.items, &HashSet::from(["main".to_string()]), true);
     let demanded_methods = demanded_inherent_method_names(&file);
     prune_inherent_methods(&mut file.items, &demanded_methods);
     prune_unused_members(&mut file);
-    prune_item_scope(&mut file.items, &HashSet::from(["main".to_string()]));
+    prune_item_scope(&mut file.items, &HashSet::from(["main".to_string()]), true);
     if file.to_token_stream().to_string() == before {
         Ok(None)
     } else {
@@ -340,12 +341,22 @@ fn sequential_format_placeholders(format: &str) -> Vec<(usize, usize, String)> {
     placeholders
 }
 
-fn prune_item_scope(items: &mut Vec<syn::Item>, external_roots: &HashSet<String>) {
+fn prune_item_scope(
+    items: &mut Vec<syn::Item>,
+    external_roots: &HashSet<String>,
+    is_crate_root: bool,
+) {
     let definitions = items
         .iter()
         .filter_map(item_definition_name)
         .collect::<HashSet<_>>();
     let mut roots = external_roots.clone();
+    roots.extend(item_demand::concrete_trait_impl_roots(items));
+    roots.extend(parent_items_demanded_by_modules(
+        items,
+        &definitions,
+        is_crate_root,
+    ));
     for item in items.iter() {
         let local_impl_owner = match item {
             syn::Item::Impl(item_impl) => impl_self_type_name(item_impl.self_ty.as_ref())
@@ -436,7 +447,7 @@ fn prune_item_scope(items: &mut Vec<syn::Item>, external_roots: &HashSet<String>
         if let (Some(nested_roots), syn::Item::Mod(module)) = (nested_roots, &mut items[index])
             && let Some((_, nested)) = &mut module.content
         {
-            prune_item_scope(nested, &nested_roots);
+            prune_item_scope(nested, &nested_roots, false);
         }
     }
 
@@ -448,6 +459,114 @@ fn prune_item_scope(items: &mut Vec<syn::Item>, external_roots: &HashSet<String>
         collect_use_bindings(&item_use.tree, &mut bindings)
             || bindings.iter().any(|binding| used_names.contains(binding))
     });
+}
+
+fn parent_items_demanded_by_modules(
+    items: &[syn::Item],
+    definitions: &HashSet<String>,
+    is_crate_root: bool,
+) -> HashSet<String> {
+    let mut roots = HashSet::new();
+    for item in items {
+        let syn::Item::Mod(module) = item else {
+            continue;
+        };
+        let Some((_, nested)) = &module.content else {
+            continue;
+        };
+        let mut collector = ParentScopeReferenceCollector {
+            definitions,
+            roots: &mut roots,
+            is_crate_root,
+            nested_module_depth: 0,
+        };
+        for nested_item in nested {
+            collector.visit_item(nested_item);
+        }
+    }
+    roots
+}
+
+struct ParentScopeReferenceCollector<'scope> {
+    definitions: &'scope HashSet<String>,
+    roots: &'scope mut HashSet<String>,
+    is_crate_root: bool,
+    nested_module_depth: usize,
+}
+
+impl ParentScopeReferenceCollector<'_> {
+    fn collect_segments(&mut self, segments: &[String]) {
+        let candidate = match segments {
+            [qualifier, candidate, ..] if qualifier == "crate" && self.is_crate_root => {
+                Some(candidate)
+            }
+            [qualifier, candidate, ..] if qualifier == "super" && self.nested_module_depth == 0 => {
+                Some(candidate)
+            }
+            _ => None,
+        };
+        if let Some(candidate) = candidate
+            && self.definitions.contains(candidate)
+        {
+            self.roots.insert(candidate.clone());
+        }
+    }
+
+    fn collect_use_tree(&mut self, tree: &syn::UseTree, prefix: &mut Vec<String>) {
+        match tree {
+            syn::UseTree::Path(path) => {
+                prefix.push(path.ident.to_string());
+                self.collect_use_tree(&path.tree, prefix);
+                prefix.pop();
+            }
+            syn::UseTree::Name(name) => {
+                prefix.push(name.ident.to_string());
+                self.collect_segments(prefix);
+                prefix.pop();
+            }
+            syn::UseTree::Rename(rename) => {
+                prefix.push(rename.ident.to_string());
+                self.collect_segments(prefix);
+                prefix.pop();
+            }
+            syn::UseTree::Group(group) => {
+                for tree in &group.items {
+                    self.collect_use_tree(tree, prefix);
+                }
+            }
+            syn::UseTree::Glob(_) => {
+                let imports_parent = matches!(prefix.as_slice(), [qualifier]
+                    if qualifier == "super" && self.nested_module_depth == 0)
+                    || matches!(prefix.as_slice(), [qualifier]
+                        if qualifier == "crate" && self.is_crate_root);
+                if imports_parent {
+                    self.roots.extend(self.definitions.iter().cloned());
+                }
+            }
+        }
+    }
+}
+
+impl<'ast> Visit<'ast> for ParentScopeReferenceCollector<'_> {
+    fn visit_path(&mut self, path: &'ast syn::Path) {
+        let segments = path
+            .segments
+            .iter()
+            .map(|segment| segment.ident.to_string())
+            .collect::<Vec<_>>();
+        self.collect_segments(&segments);
+        visit::visit_path(self, path);
+    }
+
+    fn visit_item_use(&mut self, item: &'ast syn::ItemUse) {
+        self.collect_use_tree(&item.tree, &mut Vec::new());
+    }
+
+    fn visit_item_mod(&mut self, module: &'ast syn::ItemMod) {
+        self.nested_module_depth += 1;
+        visit::visit_item_mod(self, module);
+        self.nested_module_depth -= 1;
+    }
 }
 
 fn module_roots_from_parent_scope(

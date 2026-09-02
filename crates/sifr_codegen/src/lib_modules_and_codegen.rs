@@ -46,6 +46,12 @@ pub(crate) type ModuleFuncSignatures = HashMap<String, FuncSignature>;
 pub(crate) type UnionVariantTypes = Vec<(String, Type)>;
 pub(crate) type IsinstanceUnionMatch = (String, String, String, UnionVariantTypes);
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) enum ProjectStructuralLayoutLocation {
+    Local,
+    CrateRoot,
+}
+
 pub use crate::entrypoints::{generate_rust, generate_rust_test, generate_rust_with_metadata};
 
 #[derive(Clone)]
@@ -201,6 +207,7 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
     project_ordinary_union_enums: Option<&HashSet<String>>,
     project_try_error_carrier_enums: Option<&HashSet<String>>,
     project_structural_record_identities: Option<&HashSet<String>>,
+    project_structural_layout_location: ProjectStructuralLayoutLocation,
     project_structural_identity_expressions: Option<&HashMap<String, String>>,
 ) -> CodegenResult {
     let mut emitter = RustEmitter::new();
@@ -677,7 +684,9 @@ pub(crate) fn generate_rust_with_stdlib_for_module_with_project_policy(
         || stdlib_import_needs.runtime.needs_mutex;
 
     let mut import_items: Vec<RustItem> = Vec::new();
-    if project_structural_record_identities.is_some() {
+    if project_structural_record_identities.is_some()
+        && project_structural_layout_location == ProjectStructuralLayoutLocation::CrateRoot
+    {
         import_items.extend(project_imports::structural_layout_import_items(
             &emitter.structural_record_types,
         ));

@@ -147,6 +147,7 @@ fn default_interpreter(venv_root: &Path) -> PathBuf {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::test_support::TestUnwrap as _;
     use std::fs;
     use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -154,18 +155,18 @@ mod tests {
     fn uv_defaults_discover_workspace_project_from_nested_package() {
         let root = temp_root("workspace-discovery");
         let package = root.join("packages/app");
-        fs::create_dir_all(&package).expect("create nested package");
-        fs::write(root.join("pyproject.toml"), "[project]\n").expect("write pyproject");
-        fs::write(root.join("uv.lock"), "version = 1\n").expect("write lock marker");
+        fs::create_dir_all(&package).test_unwrap("create nested package");
+        fs::write(root.join("pyproject.toml"), "[project]\n").test_unwrap("write pyproject");
+        fs::write(root.join("uv.lock"), "version = 1\n").test_unwrap("write lock marker");
 
         assert_eq!(discover_project_root(&package), Some(root.clone()));
-        fs::remove_dir_all(&root).expect("remove workspace fixture");
+        fs::remove_dir_all(&root).test_unwrap("remove workspace fixture");
     }
 
     fn temp_root(label: &str) -> PathBuf {
         let nonce = SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .expect("clock after epoch")
+            .test_unwrap("clock after epoch")
             .as_nanos();
         std::env::temp_dir().join(format!(
             "sifr-python-{label}-{}-{nonce}",

@@ -21,11 +21,14 @@ fn main() {
     let mut conversion_ok: bool = false;
     let sifr_generated_try_res: Result<(), ParseError> = (|| {
         let as_hex: String = {
-            let sifr_generated_bytes_receiver = &payload;
+            let sifr_generated_bytes_receiver: &[u8] = &payload;
             let mut sifr_generated_hex =
                 String::with_capacity(sifr_generated_bytes_receiver.len().saturating_mul(2_usize));
-            for sifr_generated_byte in sifr_generated_bytes_receiver.iter() {
-                sifr_generated_hex.push_str(&format!("{:02x}", *sifr_generated_byte));
+            for sifr_generated_byte in sifr_generated_bytes_receiver {
+                let _ = ::std::fmt::Write::write_fmt(
+                    &mut sifr_generated_hex,
+                    format_args!("{:02x}", *sifr_generated_byte),
+                );
             }
             sifr_generated_hex
         };

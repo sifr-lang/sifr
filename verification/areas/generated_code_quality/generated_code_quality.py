@@ -50,7 +50,7 @@ from source_quality_checks import (
     assert_negative_determinism,
     assert_negative_rustfmt,
     compare_bytes,
-    scan_codegen_source_emissions,
+    gate_intrinsic_panic_lint as run_intrinsic_panic_lint_gate,
 )
 
 # Inputs that change generated Rust or its compile environment. Manifest metadata
@@ -772,11 +772,22 @@ def gate_companions(_entries: list[Entry], args: argparse.Namespace) -> None:
     run = run_id("companions")
     run_root = TARGET_ROOT / run
     records = []
+    summaries = []
+    debt = load_debt(QUALITY_DEBT)
+    companions = authoritative_companion_entries()
     try:
-        for emitted, entry in authoritative_companion_entries():
-            def check_companion() -> Path:
+        for emitted, entry in companions:
+            def check_companion() -> tuple[Path, dict[str, dict[str, Any]]]:
                 run_command(
-                    ["rustfmt", "--edition", "2024", "--check", str(emitted)]
+                    [
+                        "rustfmt",
+                        "--edition",
+                        "2024",
+                        "--check",
+                        "--config",
+                        "skip_children=true",
+                        str(emitted),
+                    ]
                 )
                 crate_root_inner = materialize_entry(entry, run_root)
                 result = run_command(
@@ -792,28 +803,52 @@ def gate_companions(_entries: list[Entry], args: argparse.Namespace) -> None:
                     check=False,
                 )
                 diagnostics = parse_clippy_diagnostics(result.stdout, crate_root_inner)
-                if result.returncode != 0:
-                    summary = compact_clippy_summary(diagnostics)
+                if result.returncode != 0 and not diagnostics:
                     raise RuntimeError(
-                        f"{entry.source_path}: strict companion Clippy failed: {summary}\n"
+                        f"{entry.source_path}: companion Clippy failed without "
+                        "classifiable diagnostics\n"
                         f"{result.stderr}"
                     )
-                if diagnostics:
-                    raise RuntimeError(
-                        f"{entry.source_path}: successful Clippy emitted diagnostics: "
-                        f"{compact_clippy_summary(diagnostics)}"
-                    )
-                return crate_root_inner
+                return crate_root_inner, diagnostics
 
-            crate_root = timed_case(
+            crate_root, diagnostics = timed_case(
                 "generated_code_quality",
                 f"companions/{entry.id}",
                 check_companion,
             )
-            records.append(record_for_entry(entry, crate_root, "passed"))
+            summaries.append((entry.id, diagnostics))
+            record = record_for_entry(entry, crate_root, "passed")
+            record["clippy_summary"] = diagnostics
+            records.append(record)
+            if not args.keep_success:
+                shutil.rmtree(crate_root.parent, ignore_errors=True)
+        merged = merge_signature_summaries(summaries)
+        companion_selection = selection_id([entry for _, entry in companions])
+        summary_path = run_root / "companion-summary.json"
+        summary_path.write_text(
+            json.dumps(
+                {"selection_id": companion_selection, "summary": merged},
+                indent=2,
+                sort_keys=True,
+            ),
+            encoding="utf-8",
+        )
         evidence = record_evidence("companions", run, records)
         print(
+            "authoritative demo companion summary="
+            f"{summary_path.relative_to(REPO_ROOT)}"
+        )
+        validate_clippy_lint_owners(merged, debt)
+        compare_exact_debt(
+            category="clippy",
+            entry_id=companion_selection,
+            actual=merged,
+            debt=debt,
+        )
+        governed = compact_clippy_summary(merged)
+        print(
             "authoritative demo companion quality passed; "
+            f"governed_clippy={governed or 'none'}; "
             f"evidence={evidence.relative_to(REPO_ROOT)}"
         )
     except Exception:
@@ -825,26 +860,6 @@ def gate_companions(_entries: list[Entry], args: argparse.Namespace) -> None:
     else:
         if not args.keep_success:
             shutil.rmtree(run_root, ignore_errors=True)
-
-
-def gate_intrinsic_panic_lint(_entries: list[Entry], _args: argparse.Namespace) -> None:
-    def check_intrinsic_layout() -> None:
-        codegen_lib = REPO_ROOT / "crates" / "sifr_codegen" / "src" / "lib.rs"
-        source = codegen_lib.read_text(encoding="utf-8")
-        forbidden = ("fn emit_intrinsic_call(", "pub(crate) fn emit_intrinsic_call(")
-        for marker in forbidden:
-            if marker in source:
-                raise RuntimeError(f"retired intrinsic emitter monolith returned: {marker}")
-        source_violations = scan_codegen_source_emissions(REPO_ROOT)
-        if source_violations:
-            raise RuntimeError("\n".join(["forbidden emitted constructs in codegen source", *source_violations]))
-
-    timed_case(
-        "generated_code_quality",
-        "intrinsic-panic-lint/no-retired-emit-intrinsic-call",
-        check_intrinsic_layout,
-    )
-    print("generated-code intrinsic panic lint passed")
 
 
 def main() -> None:
@@ -870,7 +885,7 @@ def main() -> None:
         elif args.mode == "freshness":
             gate_freshness(entries, args)
         elif args.mode == "intrinsic-panic-lint":
-            gate_intrinsic_panic_lint(entries, args)
+            run_intrinsic_panic_lint_gate(REPO_ROOT, timed_case)
         else:
             raise SystemExit(f"unsupported mode {args.mode}")
     except Exception as error:

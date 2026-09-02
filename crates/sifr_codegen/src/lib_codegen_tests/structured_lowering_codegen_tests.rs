@@ -423,7 +423,7 @@ fn test_structured_stmt_path_handles_copy_typed_return_expr() {
 
     let generated = generate_rust_with_metadata(&module);
     assert!(generated.rust_source.contains("fn value() -> SifrInt"));
-    assert!(generated.rust_source.contains("7"));
+    assert!(generated.rust_source.contains('7'));
     assert!(
         generated.lowering_stats.stmt_structured >= 1,
         "copy-typed return should be emitted through structured stmt path"

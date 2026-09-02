@@ -253,6 +253,13 @@ fn simplify_expr(expr: &mut RustExpr) -> usize {
         changed += 1;
     }
     if let RustExpr::FormatMacro {
+        format_str, args, ..
+    } = expr
+        && flatten_nested_format_arguments(format_str, args)
+    {
+        changed += 1;
+    }
+    if let RustExpr::FormatMacro {
         name,
         format_str,
         args,
@@ -336,6 +343,82 @@ fn simplify_expr(expr: &mut RustExpr) -> usize {
         }
     }
     changed
+}
+
+fn flatten_nested_format_arguments(format_str: &mut String, args: &mut Vec<RustExpr>) -> bool {
+    let Some(fields) = sequential_format_fields(format_str) else {
+        return false;
+    };
+    if fields.len() != args.len() {
+        return false;
+    }
+
+    let mut flattened_format = String::with_capacity(format_str.len());
+    let mut flattened_args = Vec::with_capacity(args.len());
+    let mut cursor = 0;
+    let mut changed = false;
+    for ((start, end), argument) in fields.into_iter().zip(std::mem::take(args)) {
+        flattened_format.push_str(&format_str[cursor..start]);
+        let field = &format_str[start..end];
+        if field == "{}" {
+            match argument {
+                RustExpr::FormatMacro {
+                    name,
+                    format_str: inner_format,
+                    args: inner_args,
+                } if name == "format"
+                    && sequential_format_fields(&inner_format)
+                        .is_some_and(|inner_fields| inner_fields.len() == inner_args.len()) =>
+                {
+                    flattened_format.push_str(&inner_format);
+                    flattened_args.extend(inner_args);
+                    changed = true;
+                }
+                argument => {
+                    flattened_format.push_str(field);
+                    flattened_args.push(argument);
+                }
+            }
+        } else {
+            flattened_format.push_str(field);
+            flattened_args.push(argument);
+        }
+        cursor = end;
+    }
+    flattened_format.push_str(&format_str[cursor..]);
+
+    if changed {
+        *format_str = flattened_format;
+    }
+    *args = flattened_args;
+    changed
+}
+
+fn sequential_format_fields(format_str: &str) -> Option<Vec<(usize, usize)>> {
+    let bytes = format_str.as_bytes();
+    let mut fields = Vec::new();
+    let mut index = 0;
+    while index < bytes.len() {
+        match bytes[index] {
+            b'{' if bytes.get(index + 1) == Some(&b'{') => index += 2,
+            b'}' if bytes.get(index + 1) == Some(&b'}') => index += 2,
+            b'{' => {
+                let close_offset = bytes[index + 1..].iter().position(|byte| *byte == b'}')?;
+                let end = index + close_offset + 2;
+                let field_body = &format_str[index + 1..end - 1];
+                if field_body.contains(['{', '}'])
+                    || (!field_body.is_empty() && !field_body.starts_with(':'))
+                {
+                    return None;
+                }
+                fields.push((index, end));
+                index = end;
+            }
+            b'}' => return None,
+            _ => index += 1,
+        }
+    }
+    Some(fields)
 }
 
 fn is_zero_literal(expr: &RustExpr) -> bool {
@@ -683,6 +766,45 @@ mod tests {
             Some(RustStmt::Expr(RustExpr::FnCall { func, args }))
                 if args.is_empty()
                     && matches!(func.as_ref(), RustExpr::Path(path) if path == &["String", "new"])
+        ));
+    }
+
+    #[test]
+    fn flattens_nested_format_macros_into_outer_format_arguments() {
+        let mut items = vec![RustItem::Fn {
+            name: "demo".to_string(),
+            visibility: Visibility::Private,
+            type_params: Vec::new(),
+            params: Vec::new(),
+            ret: None,
+            body: vec![RustStmt::Expr(RustExpr::FormatMacro {
+                name: "println".to_string(),
+                format_str: "repr = {}, exact = {:?}".to_string(),
+                args: vec![
+                    RustExpr::FormatMacro {
+                        name: "format".to_string(),
+                        format_str: "{:?}".to_string(),
+                        args: vec![RustExpr::Ident("value".to_string())],
+                    },
+                    RustExpr::Ident("exact".to_string()),
+                ],
+            })],
+            is_async: false,
+        }];
+
+        assert_eq!(simplify_control_flow_in_items(&mut items), 1);
+        let RustItem::Fn { body, .. } = &items[0] else {
+            unreachable!();
+        };
+        assert!(matches!(
+            body.as_slice(),
+            [RustStmt::Expr(RustExpr::FormatMacro {
+                format_str,
+                args,
+                ..
+            })] if format_str == "repr = {:?}, exact = {:?}"
+                && matches!(args.as_slice(), [RustExpr::Ident(value), RustExpr::Ident(exact)]
+                    if value == "value" && exact == "exact")
         ));
     }
 

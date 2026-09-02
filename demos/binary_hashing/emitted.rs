@@ -106,11 +106,14 @@ mod sifr_generated_project_nominals {
     #[must_use]
     pub fn sifr_generated_hash_hex(algorithm: &str, data: &[u8]) -> String {
         {
-            let sifr_generated_bytes_receiver = &sifr_generated_hash_bytes(algorithm, data);
+            let sifr_generated_bytes_receiver: &[u8] = &sifr_generated_hash_bytes(algorithm, data);
             let mut sifr_generated_hex =
                 String::with_capacity(sifr_generated_bytes_receiver.len().saturating_mul(2_usize));
-            for sifr_generated_byte in sifr_generated_bytes_receiver.iter() {
-                sifr_generated_hex.push_str(&format!("{:02x}", *sifr_generated_byte));
+            for sifr_generated_byte in sifr_generated_bytes_receiver {
+                let _ = ::std::fmt::Write::write_fmt(
+                    &mut sifr_generated_hex,
+                    format_args!("{:02x}", *sifr_generated_byte),
+                );
             }
             sifr_generated_hex
         }
@@ -343,8 +346,8 @@ fn main() {
             ) => {
                 let e = sifr_generated_try_variant_error.clone();
                 assert_eq!(
-                    format!("unexpected parse error: {}", e.message.clone())
-                    .to_string(), "rng_binary_hashing_base64_bytes_demo: pass"
+                    format!("unexpected parse error: {}", e.message.clone()),
+                    "rng_binary_hashing_base64_bytes_demo: pass"
                 );
             }
             SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a023X3a5X3aclass10X3aValueError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aValueError1X3a0(
@@ -352,8 +355,8 @@ fn main() {
             ) => {
                 let e = sifr_generated_try_variant_error.clone();
                 assert_eq!(
-                    format!("unexpected value error: {}", e.message.clone())
-                    .to_string(), "rng_binary_hashing_base64_bytes_demo: pass"
+                    format!("unexpected value error: {}", e.message.clone()),
+                    "rng_binary_hashing_base64_bytes_demo: pass"
                 );
             }
         }

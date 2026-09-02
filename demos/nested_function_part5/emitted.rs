@@ -12,7 +12,7 @@ fn score(base: SifrInt) -> SifrInt {
 }
 fn accumulate(values: &[SifrInt]) -> SifrInt {
     let mut total: SifrInt = SifrInt::from_i64(0);
-    let apply = || {
+    let mut apply = || {
         for value in values.iter().cloned() {
             total += value;
         }

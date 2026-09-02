@@ -367,18 +367,19 @@ fn json_array(
 #[cfg(test)]
 mod environment_tests {
     use super::*;
+    use crate::test_support::{TestExpectErr as _, TestUnwrap as _};
     use std::fs;
     use std::time::{SystemTime, UNIX_EPOCH};
 
     #[test]
     fn uv_lock_check_accepts_current_lock_and_rejects_stale_project() {
         let root = temp_root("uv-lock-check");
-        fs::create_dir_all(&root).expect("create project");
+        fs::create_dir_all(&root).test_unwrap("create project");
         let pyproject = root.join("pyproject.toml");
         let lock = root.join("uv.lock");
-        fs::write(&pyproject, minimal_pyproject("==3.14.7")).expect("write pyproject");
+        fs::write(&pyproject, minimal_pyproject("==3.14.7")).test_unwrap("write pyproject");
         let Some(lock_status) = crate::cargo::python_probe::generate_uv_lock_for_test(&root) else {
-            fs::remove_dir_all(&root).expect("remove skipped uv fixture");
+            fs::remove_dir_all(&root).test_unwrap("remove skipped uv fixture");
             return;
         };
         assert!(lock_status.success(), "fixture lock should generate");
@@ -391,12 +392,12 @@ mod environment_tests {
             declared_imports: Vec::new(),
             native_imports: Vec::new(),
         };
-        validate_uv_lock_consistency(&request).expect("current uv lock should pass");
+        validate_uv_lock_consistency(&request).test_unwrap("current uv lock should pass");
 
-        fs::write(&pyproject, minimal_pyproject("==3.14.6")).expect("mutate pyproject");
-        let error = validate_uv_lock_consistency(&request).expect_err("stale lock must fail");
+        fs::write(&pyproject, minimal_pyproject("==3.14.6")).test_unwrap("mutate pyproject");
+        let error = validate_uv_lock_consistency(&request).test_expect_err("stale lock must fail");
         assert_eq!(error.code, DiagnosticCode::PYENV_LOCK_OR_PROJECT_STALE);
-        fs::remove_dir_all(&root).expect("remove uv fixture");
+        fs::remove_dir_all(&root).test_unwrap("remove uv fixture");
     }
 
     fn minimal_pyproject(requires_python: &str) -> String {
@@ -408,7 +409,7 @@ mod environment_tests {
     fn temp_root(label: &str) -> PathBuf {
         let nonce = SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .expect("clock after epoch")
+            .test_unwrap("clock after epoch")
             .as_nanos();
         std::env::temp_dir().join(format!(
             "sifr-python-{label}-{}-{nonce}",

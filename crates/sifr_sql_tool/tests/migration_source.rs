@@ -17,11 +17,11 @@ struct SourceDialect {
 }
 
 impl MigrationDialect for SourceDialect {
-    fn family(&self) -> &str {
+    fn family(&self) -> &'static str {
         "postgresql"
     }
 
-    fn server_version(&self) -> &str {
+    fn server_version(&self) -> &'static str {
         "18"
     }
 

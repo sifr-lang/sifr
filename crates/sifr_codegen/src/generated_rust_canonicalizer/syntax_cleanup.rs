@@ -16,7 +16,7 @@ mod liveness;
 mod mutability_cleanup;
 mod typed_fallback_cleanup;
 
-use dead_assignment_cleanup::remove_dead_generated_cache_assignments;
+use dead_assignment_cleanup::remove_dead_generated_assignments;
 use liveness::update_references_crossing_statement;
 use mutability_cleanup::{collect_mutating_method_names, remove_unneeded_parameter_mutability};
 use mutability_cleanup::{collect_token_identifiers, remove_unneeded_mutability};
@@ -28,7 +28,7 @@ pub(super) fn canonicalize_syntax(file: &mut syn::File) {
         mutating_methods: &mutating_methods,
     }
     .visit_file_mut(file);
-    idiom_cleanup::canonicalize_idioms(file);
+    idiom_cleanup::canonicalize_idioms(file, &mutating_methods);
     typed_fallback_cleanup::canonicalize_typed_fallbacks(file);
 }
 
@@ -47,7 +47,7 @@ impl VisitMut for CanonicalSyntaxRewriter<'_> {
         );
         visit_mut::visit_item_fn_mut(self, function);
         disambiguate_similar_names_across_nested_scopes(&function.sig, &mut function.block);
-        remove_dead_generated_cache_assignments(&mut function.block);
+        remove_dead_generated_assignments(&mut function.block);
         normalize_tail_position(&mut function.block.stmts);
         terminate_unit_tail(&function.sig, &mut function.block.stmts);
     }
@@ -58,7 +58,7 @@ impl VisitMut for CanonicalSyntaxRewriter<'_> {
         remove_unneeded_parameter_mutability(&mut method.sig, &method.block, self.mutating_methods);
         visit_mut::visit_impl_item_fn_mut(self, method);
         disambiguate_similar_names_across_nested_scopes(&method.sig, &mut method.block);
-        remove_dead_generated_cache_assignments(&mut method.block);
+        remove_dead_generated_assignments(&mut method.block);
         normalize_tail_position(&mut method.block.stmts);
         terminate_unit_tail(&method.sig, &mut method.block.stmts);
     }

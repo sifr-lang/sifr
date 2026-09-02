@@ -621,7 +621,7 @@ mod tests {
     #[test]
     fn call_scoped_callback_constructor_propagates_argument_types_to_the_closure() {
         fn accept_callback(
-            callback: super::CallScopedCallbackBridge<
+            callback: &super::CallScopedCallbackBridge<
                 '_,
                 (super::SifrIntBridge, Vec<super::SifrIntBridge>),
                 i64,
@@ -633,7 +633,7 @@ mod tests {
             ))
         }
 
-        let total = accept_callback(super::CallScopedCallbackBridge::new(&|(value, items)| {
+        let total = accept_callback(&super::CallScopedCallbackBridge::new(&|(value, items)| {
             value.to_i64_saturating() + items[0].to_i64_saturating()
         }));
 

@@ -1,35 +1,6 @@
 // src/main.rs
 mod sifr_generated_project_nominals {
     pub use ::sifr_runtime::SifrInt;
-    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub enum SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0
-    {
-        SifrGeneratedUnionVariant5X3aclass18X3aFloatOverflowError1X3a0(FloatOverflowError),
-        SifrGeneratedUnionVariant5X3aclass23X3aFloatPrecisionLossError1X3a0(
-            FloatPrecisionLossError,
-        ),
-    }
-    impl From<FloatOverflowError>
-    for SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0 {
-        fn from(value: FloatOverflowError) -> Self {
-            SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass18X3aFloatOverflowError1X3a0(
-                value,
-            )
-        }
-    }
-    impl ::std::fmt::Display
-    for SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0 {
-        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-            match self {
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass18X3aFloatOverflowError1X3a0(
-                    v,
-                ) => write!(f, "{v}"),
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3aFloatPrecisionLossError1X3a0(
-                    v,
-                ) => write!(f, "{v}"),
-            }
-        }
-    }
     #[derive(Debug, Clone)]
     pub struct SifrGeneratedStdlibSifrX2edatetimeX2etimezone {
         pub offset: SifrInt,
@@ -657,7 +628,6 @@ pub use sifr_generated_project_nominals::RegexError;
 pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2edatetimeX2edatetime;
 pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2edatetimeX2etimezone;
 pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2etomllibX2eTomlValue;
-pub use sifr_generated_project_nominals::SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0;
 pub use sifr_generated_project_nominals::TOMLDecodeError;
 pub use sifr_generated_project_nominals::ValueError;
 mod sifr_generated_project_unions {
@@ -1210,59 +1180,71 @@ fn now(
                 sifr_generated_from_timestamp_with_tz(current_epoch, tz)?;
             Ok(current)
         })();
-    #[expect(
-        clippy::single_match_else,
-        reason = "the fallback returns through the enclosing Sifr control-flow carrier"
-    )]
-    match sifr_generated_try_res {
-        Ok(sifr_generated_ret_val) => sifr_generated_ret_val,
-        Err(_) => {
-            let parts: Vec<SifrInt> = datetime_now_struct();
-            let mut yr: SifrInt = SifrInt::from_i64(0);
-            let mut mo: SifrInt = SifrInt::from_i64(1);
-            let mut dy: SifrInt = SifrInt::from_i64(1);
-            let mut hr: SifrInt = SifrInt::from_i64(0);
-            let mut mn: SifrInt = SifrInt::from_i64(0);
-            let mut sc: SifrInt = SifrInt::from_i64(0);
-            for (i, v) in Box::new(
-                parts
-                    .iter()
-                    .cloned()
-                    .enumerate()
-                    .map(|sifr_generated_pair| {
-                        (
-                            SifrInt::from(sifr_generated_pair.0) + SifrInt::from_i64(0),
-                            sifr_generated_pair.1,
-                        )
-                    }),
-            ) {
-                if &i == &SifrInt::from_i64(0) {
-                    yr = v.clone();
-                }
-                if &i == &SifrInt::from_i64(1) {
-                    mo = v.clone();
-                }
-                if &i == &SifrInt::from_i64(2) {
-                    dy = v.clone();
-                }
-                if &i == &SifrInt::from_i64(3) {
-                    hr = v.clone();
-                }
-                if &i == &SifrInt::from_i64(4) {
-                    mn = v.clone();
-                }
-                if &i == &SifrInt::from_i64(5) {
-                    sc = v.clone();
-                }
+    if let Ok(sifr_generated_ret_val) = sifr_generated_try_res {
+        sifr_generated_ret_val
+    } else {
+        let parts: Vec<SifrInt> = datetime_now_struct();
+        let mut yr: SifrInt = SifrInt::from_i64(0);
+        let mut mo: SifrInt = SifrInt::from_i64(1);
+        let mut dy: SifrInt = SifrInt::from_i64(1);
+        let mut hr: SifrInt = SifrInt::from_i64(0);
+        let mut mn: SifrInt = SifrInt::from_i64(0);
+        let mut sc: SifrInt = SifrInt::from_i64(0);
+        for (i, v) in Box::new(
+            parts
+                .iter()
+                .cloned()
+                .enumerate()
+                .map(|sifr_generated_pair| {
+                    (
+                        SifrInt::from(sifr_generated_pair.0) + SifrInt::from_i64(0),
+                        sifr_generated_pair.1,
+                    )
+                }),
+        ) {
+            if &i == &SifrInt::from_i64(0) {
+                yr = v.clone();
             }
-            if let Some(tz) = tz.as_ref() {
-                let sifr_generated_try_res: Result<
-                    SifrGeneratedStdlibSifrX2edatetimeX2edatetime,
-                    ValueError,
-                > = (|| {
-                    let parsed_offset: SifrInt =
-                        sifr_generated_timezone_offset_from_text(&tz.to_string())?;
-                    Ok(SifrGeneratedStdlibSifrX2edatetimeX2edatetime::new(
+            if &i == &SifrInt::from_i64(1) {
+                mo = v.clone();
+            }
+            if &i == &SifrInt::from_i64(2) {
+                dy = v.clone();
+            }
+            if &i == &SifrInt::from_i64(3) {
+                hr = v.clone();
+            }
+            if &i == &SifrInt::from_i64(4) {
+                mn = v.clone();
+            }
+            if &i == &SifrInt::from_i64(5) {
+                sc = v.clone();
+            }
+        }
+        if let Some(tz) = tz.as_ref() {
+            let sifr_generated_try_res: Result<
+                SifrGeneratedStdlibSifrX2edatetimeX2edatetime,
+                ValueError,
+            > = (|| {
+                let parsed_offset: SifrInt =
+                    sifr_generated_timezone_offset_from_text(&tz.to_string())?;
+                Ok(SifrGeneratedStdlibSifrX2edatetimeX2edatetime::new(
+                    yr.clone(),
+                    mo.clone(),
+                    dy.clone(),
+                    hr.clone(),
+                    mn.clone(),
+                    sc.clone(),
+                    SifrInt::from_i64(0),
+                    Some(parsed_offset),
+                ))
+            })();
+            match sifr_generated_try_res {
+                Ok(sifr_generated_ret_val) => {
+                    return sifr_generated_ret_val;
+                }
+                Err(_) => {
+                    return SifrGeneratedStdlibSifrX2edatetimeX2edatetime::new(
                         yr.clone(),
                         mo.clone(),
                         dy.clone(),
@@ -1270,38 +1252,21 @@ fn now(
                         mn.clone(),
                         sc.clone(),
                         SifrInt::from_i64(0),
-                        Some(parsed_offset),
-                    ))
-                })();
-                match sifr_generated_try_res {
-                    Ok(sifr_generated_ret_val) => {
-                        return sifr_generated_ret_val;
-                    }
-                    Err(_) => {
-                        return SifrGeneratedStdlibSifrX2edatetimeX2edatetime::new(
-                            yr.clone(),
-                            mo.clone(),
-                            dy.clone(),
-                            hr.clone(),
-                            mn.clone(),
-                            sc.clone(),
-                            SifrInt::from_i64(0),
-                            None,
-                        );
-                    }
+                        None,
+                    );
                 }
             }
-            SifrGeneratedStdlibSifrX2edatetimeX2edatetime::new(
-                yr.clone(),
-                mo.clone(),
-                dy.clone(),
-                hr.clone(),
-                mn.clone(),
-                sc.clone(),
-                SifrInt::from_i64(0),
-                None,
-            )
         }
+        SifrGeneratedStdlibSifrX2edatetimeX2edatetime::new(
+            yr.clone(),
+            mo.clone(),
+            dy.clone(),
+            hr.clone(),
+            mn.clone(),
+            sc.clone(),
+            SifrInt::from_i64(0),
+            None,
+        )
     }
 }
 fn from_timestamp(
@@ -1310,10 +1275,6 @@ fn from_timestamp(
 ) -> Result<SifrGeneratedStdlibSifrX2edatetimeX2edatetime, ValueError> {
     sifr_generated_from_timestamp_with_tz(ts, tz)
 }
-#[expect(
-    clippy::too_many_lines,
-    reason = "one generated Rust function preserves one typed Sifr function"
-)]
 fn get_close_matches(
     word: &str,
     possibilities: &[String],
@@ -1336,11 +1297,7 @@ fn get_close_matches(
             )?;
             Ok((score_value_c10e63fbe7f624f5,))
         })();
-        let (score_value_c10e63fbe7f624f5_binding,) = #[expect(
-            clippy::single_match_else,
-            reason = "the fallback returns through the enclosing Sifr control-flow carrier"
-        )]
-        match sifr_generated_try_res {
+        let (score_value_c10e63fbe7f624f5_binding,) = match sifr_generated_try_res {
             Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
             Err(sifr_generated_try_err) => {
                 match sifr_generated_try_err {
@@ -1588,14 +1545,13 @@ fn sifr_generated_sort_blocks(
         for existing in sorted_blocks.iter().cloned() {
             if !found_insert_at {
                 let (ex_a, ex_b_value_e8565f608f1d5555, _) = existing;
-                let mut comes_before: bool = false;
-                if &bl_a < &ex_a {
-                    comes_before = true;
-                } else if &bl_a == &ex_a
-                    && &bl_b_value_c53dd39bc263efba < &ex_b_value_e8565f608f1d5555
+                let comes_before: bool = if &bl_a < &ex_a
+                    || &bl_a == &ex_a && &bl_b_value_c53dd39bc263efba < &ex_b_value_e8565f608f1d5555
                 {
-                    comes_before = true;
-                }
+                    true
+                } else {
+                    false
+                };
                 if comes_before {
                     insert_at = i.clone();
                     found_insert_at = true;
@@ -1946,88 +1902,66 @@ fn sifr_generated_in_ipv4_range(value: SifrInt, start: SifrInt, end: SifrInt) ->
     true
 }
 fn sifr_generated_is_private_ipv4_value(value: SifrInt) -> bool {
-    let mut private_hit: bool = false;
-    if sifr_generated_in_ipv4_range(
+    let private_hit: bool = if sifr_generated_in_ipv4_range(
         value.clone(),
         SifrInt::from_i64(0),
         SifrInt::from_i64(16_777_215),
-    ) {
-        private_hit = true;
-    } else if sifr_generated_in_ipv4_range(
+    ) || (sifr_generated_in_ipv4_range(
         value.clone(),
         SifrInt::from_i64(167_772_160),
         SifrInt::from_i64(184_549_375),
-    ) {
-        private_hit = true;
-    } else if sifr_generated_in_ipv4_range(
+    ) || (sifr_generated_in_ipv4_range(
         value.clone(),
         SifrInt::from_i64(2_130_706_432),
         SifrInt::from_i64(2_147_483_647),
-    ) {
-        private_hit = true;
-    } else if sifr_generated_in_ipv4_range(
+    ) || (sifr_generated_in_ipv4_range(
         value.clone(),
         SifrInt::from_i64(2_851_995_648),
         SifrInt::from_i64(2_852_061_183),
-    ) {
-        private_hit = true;
-    } else if sifr_generated_in_ipv4_range(
+    ) || (sifr_generated_in_ipv4_range(
         value.clone(),
         SifrInt::from_i64(2_886_729_728),
         SifrInt::from_i64(2_887_778_303),
-    ) {
-        private_hit = true;
-    } else if sifr_generated_in_ipv4_range(
+    ) || (sifr_generated_in_ipv4_range(
         value.clone(),
         SifrInt::from_i64(3_221_225_472),
         SifrInt::from_i64(3_221_225_727),
-    ) {
-        private_hit = true;
-    } else if sifr_generated_in_ipv4_range(
+    ) || (sifr_generated_in_ipv4_range(
         value.clone(),
         SifrInt::from_i64(3_221_225_642),
         SifrInt::from_i64(3_221_225_643),
-    ) {
-        private_hit = true;
-    } else if sifr_generated_in_ipv4_range(
-        value.clone(),
-        SifrInt::from_i64(3_221_225_984),
-        SifrInt::from_i64(3_221_226_239),
-    ) {
-        private_hit = true;
-    } else if sifr_generated_in_ipv4_range(
-        value.clone(),
-        SifrInt::from_i64(3_232_235_520),
-        SifrInt::from_i64(3_232_301_055),
-    ) {
-        private_hit = true;
-    } else if sifr_generated_in_ipv4_range(
-        value.clone(),
-        SifrInt::from_i64(3_323_068_416),
-        SifrInt::from_i64(3_323_199_487),
-    ) {
-        private_hit = true;
-    } else if sifr_generated_in_ipv4_range(
-        value.clone(),
-        SifrInt::from_i64(3_325_256_704),
-        SifrInt::from_i64(3_325_256_959),
-    ) {
-        private_hit = true;
-    } else if sifr_generated_in_ipv4_range(
-        value.clone(),
-        SifrInt::from_i64(3_405_803_776),
-        SifrInt::from_i64(3_405_804_031),
-    ) {
-        private_hit = true;
-    } else if sifr_generated_in_ipv4_range(
-        value.clone(),
-        SifrInt::from_i64(4_026_531_840),
-        SifrInt::from_i64(4_294_967_295),
-    ) {
-        private_hit = true;
-    } else if &value == &SifrInt::from_i64(4_294_967_295) {
-        private_hit = true;
-    }
+    )
+        || (sifr_generated_in_ipv4_range(
+            value.clone(),
+            SifrInt::from_i64(3_221_225_984),
+            SifrInt::from_i64(3_221_226_239),
+        ) || (sifr_generated_in_ipv4_range(
+            value.clone(),
+            SifrInt::from_i64(3_232_235_520),
+            SifrInt::from_i64(3_232_301_055),
+        ) || (sifr_generated_in_ipv4_range(
+            value.clone(),
+            SifrInt::from_i64(3_323_068_416),
+            SifrInt::from_i64(3_323_199_487),
+        ) || (sifr_generated_in_ipv4_range(
+            value.clone(),
+            SifrInt::from_i64(3_325_256_704),
+            SifrInt::from_i64(3_325_256_959),
+        ) || (sifr_generated_in_ipv4_range(
+            value.clone(),
+            SifrInt::from_i64(3_405_803_776),
+            SifrInt::from_i64(3_405_804_031),
+        ) || (sifr_generated_in_ipv4_range(
+            value.clone(),
+            SifrInt::from_i64(4_026_531_840),
+            SifrInt::from_i64(4_294_967_295),
+        ) || &value
+            == &SifrInt::from_i64(4_294_967_295)))))))))))))
+    {
+        true
+    } else {
+        false
+    };
     if private_hit {
         if &value == &SifrInt::from_i64(3_221_225_481) {
             return false;
@@ -2605,7 +2539,7 @@ fn main() {
         let err = sifr_generated_try_err.clone();
         println!("getcwd error: {}", err.message.clone());
         assert_eq!(
-            format!("getcwd error: {}", err.message.clone()).to_string(),
+            format!("getcwd error: {}", err.message.clone()),
             "stdlib_parity demo: all checks passed!"
         );
     }
@@ -2618,7 +2552,7 @@ fn main() {
         let err = sifr_generated_try_err.clone();
         println!("regex error: {}", err.message.clone());
         assert_eq!(
-            format!("regex error: {}", err.message.clone()).to_string(),
+            format!("regex error: {}", err.message.clone()),
             "Total stdlib modules: 37"
         );
     }

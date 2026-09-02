@@ -380,11 +380,14 @@ fn sifr_generated_hash_bytes(algorithm: &str, data: &[u8]) -> Vec<u8> {
 }
 fn sifr_generated_hash_hex(algorithm: &str, data: &[u8]) -> String {
     {
-        let sifr_generated_bytes_receiver = &sifr_generated_hash_bytes(algorithm, data);
+        let sifr_generated_bytes_receiver: &[u8] = &sifr_generated_hash_bytes(algorithm, data);
         let mut sifr_generated_hex =
             String::with_capacity(sifr_generated_bytes_receiver.len().saturating_mul(2_usize));
-        for sifr_generated_byte in sifr_generated_bytes_receiver.iter() {
-            sifr_generated_hex.push_str(&format!("{:02x}", *sifr_generated_byte));
+        for sifr_generated_byte in sifr_generated_bytes_receiver {
+            let _ = ::std::fmt::Write::write_fmt(
+                &mut sifr_generated_hex,
+                format_args!("{:02x}", *sifr_generated_byte),
+            );
         }
         sifr_generated_hex
     }

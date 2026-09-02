@@ -795,7 +795,7 @@ fn random_module_set_state(
             .map(::sifr_runtime::interop::SifrIntBridge::from)
             .collect::<Vec<_>>(),
         ::sifr_runtime::interop::SifrIntBridge::from(index),
-        gauss_next.map(|sifr_generated_bridge_item_0| sifr_generated_bridge_item_0),
+        gauss_next,
     )
     .map_err(|sifr_generated_bridge_error| ValueError {
         message: sifr_generated_bridge_error.to_string(),
@@ -1496,11 +1496,7 @@ fn variance(data: &[f64]) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2e
         let avg: f64 = sifr_generated_divide_by_int(sifr_generated_sum(data), n.clone())?;
         Ok((avg,))
     })();
-    let (avg,) = #[expect(
-        clippy::single_match_else,
-        reason = "the fallback returns through the enclosing Sifr control-flow carrier"
-    )]
-    match sifr_generated_try_res {
+    let (avg,) = match sifr_generated_try_res {
         Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
         Err(sifr_generated_try_err) => {
             let error = sifr_generated_try_err.clone();
@@ -1530,11 +1526,7 @@ fn stdev(data: &[f64]) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eSta
         let avg: f64 = sifr_generated_divide_by_int(sifr_generated_sum(data), n.clone())?;
         Ok((avg,))
     })();
-    let (avg,) = #[expect(
-        clippy::single_match_else,
-        reason = "the fallback returns through the enclosing Sifr control-flow carrier"
-    )]
-    match sifr_generated_try_res {
+    let (avg,) = match sifr_generated_try_res {
         Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
         Err(sifr_generated_try_err) => {
             let error = sifr_generated_try_err.clone();
@@ -1555,11 +1547,7 @@ fn stdev(data: &[f64]) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eSta
         let v: f64 = sifr_generated_divide_by_int(total, &n - &SifrInt::from_i64(1))?;
         Ok((v,))
     })();
-    let (v,) = #[expect(
-        clippy::single_match_else,
-        reason = "the fallback returns through the enclosing Sifr control-flow carrier"
-    )]
-    match sifr_generated_try_res {
+    let (v,) = match sifr_generated_try_res {
         Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
         Err(sifr_generated_try_err) => {
             let error = sifr_generated_try_err.clone();
@@ -1720,10 +1708,6 @@ fn quantiles(
             ))
         })();
         let (i_float, m_float_value_b0fecb9ab83ca525, n_float_value_15c49f18b6cbd018) =
-            #[expect(
-                clippy::single_match_else,
-                reason = "the fallback returns through the enclosing Sifr control-flow carrier"
-            )]
             match sifr_generated_try_res {
                 Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
                 Err(sifr_generated_try_err) => {
@@ -1756,11 +1740,7 @@ fn quantiles(
             let idx_float: f64 = sifr_generated_float_int(idx.clone())?;
             Ok((idx_float,))
         })();
-        let (idx_float,) = #[expect(
-            clippy::single_match_else,
-            reason = "the fallback returns through the enclosing Sifr control-flow carrier"
-        )]
-        match sifr_generated_try_res {
+        let (idx_float,) = match sifr_generated_try_res {
             Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
             Err(sifr_generated_try_err) => {
                 let error = sifr_generated_try_err.clone();
@@ -1785,7 +1765,7 @@ fn quantiles(
                 .get(sifr_generated_checked_read_normalized)
                 .cloned()
         };
-        let lo_val: f64 = lo.map_or(0.0_f64, |lo| lo);
+        let mut lo_val: f64 = lo.unwrap_or(0.0_f64);
         if frac > 0.0_f64 {
             let hi_idx: SifrInt = &idx + &SifrInt::from_i64(1);
             if &hi_idx < &m {
@@ -1831,11 +1811,7 @@ fn covariance(
         let my: f64 = sifr_generated_divide_by_int(sifr_generated_sum(y), n.clone())?;
         Ok((mx, my))
     })();
-    let (mx, my) = #[expect(
-        clippy::single_match_else,
-        reason = "the fallback returns through the enclosing Sifr control-flow carrier"
-    )]
-    match sifr_generated_try_res {
+    let (mx, my) = match sifr_generated_try_res {
         Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
         Err(sifr_generated_try_err) => {
             let error = sifr_generated_try_err.clone();
@@ -1901,11 +1877,7 @@ fn correlation(
         let my: f64 = sifr_generated_divide_by_int(sifr_generated_sum(y), n.clone())?;
         Ok((mx, my))
     })();
-    let (mx, my) = #[expect(
-        clippy::single_match_else,
-        reason = "the fallback returns through the enclosing Sifr control-flow carrier"
-    )]
-    match sifr_generated_try_res {
+    let (mx, my) = match sifr_generated_try_res {
         Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
         Err(sifr_generated_try_err) => {
             let error = sifr_generated_try_err.clone();
@@ -1959,11 +1931,7 @@ fn correlation(
         let sy: f64 = sqrt(sy_variance_value_29a72f81ad7b8e6d);
         Ok((sx, sy))
     })();
-    let (sx, sy) = #[expect(
-        clippy::single_match_else,
-        reason = "the fallback returns through the enclosing Sifr control-flow carrier"
-    )]
-    match sifr_generated_try_res {
+    let (sx, sy) = match sifr_generated_try_res {
         Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
         Err(sifr_generated_try_err) => {
             let error = sifr_generated_try_err.clone();
@@ -2020,11 +1988,7 @@ fn linear_regression(
         let my: f64 = sifr_generated_divide_by_int(sifr_generated_sum(y), n.clone())?;
         Ok((mx, my))
     })();
-    let (mx, my) = #[expect(
-        clippy::single_match_else,
-        reason = "the fallback returns through the enclosing Sifr control-flow carrier"
-    )]
-    match sifr_generated_try_res {
+    let (mx, my) = match sifr_generated_try_res {
         Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
         Err(sifr_generated_try_err) => {
             let error = sifr_generated_try_err.clone();

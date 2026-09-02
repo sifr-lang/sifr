@@ -371,7 +371,7 @@ fn random_module_set_state(
             .map(::sifr_runtime::interop::SifrIntBridge::from)
             .collect::<Vec<_>>(),
         ::sifr_runtime::interop::SifrIntBridge::from(index),
-        gauss_next.map(|sifr_generated_bridge_item_0| sifr_generated_bridge_item_0),
+        gauss_next,
     )
     .map_err(|sifr_generated_bridge_error| ValueError {
         message: sifr_generated_bridge_error.to_string(),
@@ -486,7 +486,7 @@ fn main() {
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
         let e = sifr_generated_try_err.clone();
         assert_eq!(
-            format!("unexpected random error: {}", e.message.clone()).to_string(),
+            format!("unexpected random error: {}", e.message.clone()),
             "rng_random_state_object_model_demo: pass"
         );
     }

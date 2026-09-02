@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use quote::quote;
 use syn::punctuated::Punctuated;
 use syn::visit::{self, Visit};
@@ -7,6 +9,7 @@ mod lint_cleanup;
 mod result_control_cleanup;
 mod structured_control_cleanup;
 
+use super::mutability_cleanup::statements_mutate_name;
 use lint_cleanup::{
     flatten_infallible_result_scaffolding, fold_delayed_initializations, fold_initial_assignments,
     fold_literal_result_bindings, fold_vec_push_sequences, group_long_float_literal,
@@ -16,17 +19,20 @@ use lint_cleanup::{
 };
 use result_control_cleanup::{rewrite_discarded_result_matches, rewrite_result_identity_match};
 use structured_control_cleanup::{
-    collapse_else_if, collapse_nested_if, factor_tuple_struct_or_pattern, flatten_or_pattern,
-    invert_negative_condition_with_else, remove_single_expression_block,
+    collapse_else_if, collapse_identical_if_else_branches, collapse_nested_if,
+    factor_tuple_struct_or_pattern, flatten_or_pattern, invert_negative_condition_with_else,
+    remove_single_expression_block,
 };
 
-pub(super) fn canonicalize_idioms(file: &mut syn::File) {
-    IdiomCleanup.visit_file_mut(file);
+pub(super) fn canonicalize_idioms(file: &mut syn::File, mutating_methods: &HashSet<String>) {
+    IdiomCleanup { mutating_methods }.visit_file_mut(file);
 }
 
-struct IdiomCleanup;
+struct IdiomCleanup<'methods> {
+    mutating_methods: &'methods HashSet<String>,
+}
 
-impl VisitMut for IdiomCleanup {
+impl VisitMut for IdiomCleanup<'_> {
     fn visit_macro_mut(&mut self, rust_macro: &mut syn::Macro) {
         let Some(name) = rust_macro
             .path
@@ -66,13 +72,14 @@ impl VisitMut for IdiomCleanup {
     }
 
     fn visit_block_mut(&mut self, block: &mut syn::Block) {
+        rewrite_discarded_result_matches(&mut block.stmts);
         visit_mut::visit_block_mut(self, block);
         move_scoped_items_before_statements(&mut block.stmts);
         flatten_infallible_result_scaffolding(&mut block.stmts);
-        fold_delayed_initializations(&mut block.stmts);
+        fold_delayed_initializations(&mut block.stmts, self.mutating_methods);
         fold_initial_assignments(&mut block.stmts);
         fold_literal_result_bindings(&mut block.stmts);
-        fold_assignment_conditionals(&mut block.stmts);
+        fold_assignment_conditionals(&mut block.stmts, self.mutating_methods);
         fold_vec_push_sequences(&mut block.stmts);
         remove_redundant_else_blocks(&mut block.stmts);
         rewrite_discarded_result_matches(&mut block.stmts);
@@ -81,6 +88,7 @@ impl VisitMut for IdiomCleanup {
     }
 
     fn visit_local_mut(&mut self, local: &mut syn::Local) {
+        rewrite_result_match_with_let_else(local);
         visit_mut::visit_local_mut(self, local);
         rewrite_option_let_else_with_question_mark(local);
         rewrite_result_match_with_let_else(local);
@@ -115,7 +123,7 @@ impl VisitMut for IdiomCleanup {
         rewrite_result_identity_match(expression);
         rewrite_literal_result_fallback(expression);
         make_map_or_default_lazy(expression);
-        rewrite_identity_map_or_else(expression);
+        rewrite_identity_map_or(expression);
         make_constant_unwrap_default_eager(expression);
         rewrite_unwrap_or_default(expression);
         remove_known_identity_conversion(expression);
@@ -125,6 +133,7 @@ impl VisitMut for IdiomCleanup {
         rewrite_option_expression(expression);
         collapse_nested_if(expression);
         collapse_else_if(expression);
+        collapse_identical_if_else_branches(expression);
         invert_negative_condition_with_else(expression);
         remove_single_expression_block(expression);
     }
@@ -195,7 +204,10 @@ fn rewrite_identity_error_propagation(statements: &mut [syn::Stmt]) {
     }
 }
 
-fn fold_assignment_conditionals(statements: &mut Vec<syn::Stmt>) {
+fn fold_assignment_conditionals(
+    statements: &mut Vec<syn::Stmt>,
+    mutating_methods: &HashSet<String>,
+) {
     let mut index = 0;
     while index + 1 < statements.len() {
         let Some(name) = mutable_local_name(&statements[index]) else {
@@ -228,11 +240,15 @@ fn fold_assignment_conditionals(statements: &mut Vec<syn::Stmt>) {
             index += 1;
             continue;
         }
+        let mutated_later =
+            statements_mutate_name(&statements[index + 2..], &name, mutating_methods);
         let syn::Stmt::Local(local) = &mut statements[index] else {
             index += 1;
             continue;
         };
-        remove_simple_pattern_mutability(&mut local.pat);
+        if !mutated_later {
+            remove_simple_pattern_mutability(&mut local.pat);
+        }
         if let Some(init) = &mut local.init {
             *init.expr = syn::parse_quote! {
                 if #condition { #then_value } else { #else_value }
@@ -655,11 +671,12 @@ fn make_map_or_default_lazy(expression: &mut syn::Expr) {
     call.args.push(mapper);
 }
 
-fn rewrite_identity_map_or_else(expression: &mut syn::Expr) {
+fn rewrite_identity_map_or(expression: &mut syn::Expr) {
     let syn::Expr::MethodCall(call) = expression else {
         return;
     };
-    if call.method != "map_or_else" || call.args.len() != 2 {
+    if !matches!(call.method.to_string().as_str(), "map_or" | "map_or_else") || call.args.len() != 2
+    {
         return;
     }
     let Some(mapper) = call.args.last() else {
@@ -678,7 +695,12 @@ fn rewrite_identity_map_or_else(expression: &mut syn::Expr) {
     {
         return;
     }
-    call.method = syn::Ident::new("unwrap_or_else", call.method.span());
+    let replacement = if call.method == "map_or" {
+        "unwrap_or"
+    } else {
+        "unwrap_or_else"
+    };
+    call.method = syn::Ident::new(replacement, call.method.span());
     call.args.pop();
 }
 

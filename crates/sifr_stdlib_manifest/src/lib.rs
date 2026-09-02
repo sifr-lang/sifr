@@ -7,6 +7,8 @@ mod features;
 #[cfg(test)]
 mod features_tests;
 mod sources;
+#[cfg(test)]
+mod test_support;
 
 pub use features::{
     CargoVendorMode, StdlibFeature, SysrootCrate, SysrootCrateDependency, SysrootDependencyPlan,
@@ -23,13 +25,14 @@ pub use sources::{
 #[cfg(test)]
 mod tests {
     use super::STDLIB_SOURCES;
+    use crate::test_support::TestUnwrap as _;
 
     #[test]
     fn stdlib_source_inventory_contains_user_modules() {
         let json = STDLIB_SOURCES
             .iter()
             .find(|source| source.module == "sifr.json")
-            .expect("sifr.json should be in the stdlib inventory");
+            .test_unwrap("sifr.json should be in the stdlib inventory");
 
         assert!(json.source.contains("from _sifr.json import"));
     }

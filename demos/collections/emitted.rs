@@ -235,6 +235,11 @@ mod sifr_generated_project_nominals {
             result
         }
     }
+    impl<T: ::std::hash::Hash + Eq> SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T> {
+        pub fn clear(&mut self) {
+            self.counts = HashMap::from([]);
+        }
+    }
     impl<T: ::std::hash::Hash + Eq + Clone>
         ::std::ops::Add<&SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T>>
         for &SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T>
@@ -409,6 +414,11 @@ mod sifr_generated_project_nominals {
         #[must_use]
         pub fn len(&self) -> SifrInt {
             SifrInt::from(self.data.len())
+        }
+    }
+    impl<T> SifrGeneratedStdlibSifrX2ecollectionsX2edeque<T> {
+        pub fn clear(&mut self) {
+            self.data.clear();
         }
     }
     impl<T: Clone + PartialEq> SifrGeneratedStdlibSifrX2ecollectionsX2edeque<T> {

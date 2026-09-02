@@ -1,8 +1,28 @@
+#![expect(
+    clippy::print_stderr,
+    reason = "the E2E harness reports compilation progress and failures"
+)]
+
 use super::*;
 
 fn compile_source_for_e2e(source: &str) -> sifr_driver::CompileResultFull {
     sifr_driver::compile_with_metadata(source)
 }
+
+type CompiledMetadata = (
+    String,
+    HashSet<String>,
+    HashSet<StdlibFeature>,
+    sifr_driver::InteropBuildPlan,
+);
+
+type CompiledMetadataWithStats = (
+    String,
+    HashSet<String>,
+    HashSet<StdlibFeature>,
+    sifr_driver::InteropBuildPlan,
+    sifr_driver::LoweringStats,
+);
 
 pub(crate) fn failure_matches_expectation(
     failure: &CompiledFailure,
@@ -31,17 +51,7 @@ pub(crate) fn match_compile_failure_expectations(
     Ok(())
 }
 
-pub(crate) fn compile_source_with_metadata(
-    source: &str,
-) -> Result<
-    (
-        String,
-        HashSet<String>,
-        HashSet<StdlibFeature>,
-        sifr_driver::InteropBuildPlan,
-    ),
-    Vec<String>,
-> {
+pub(crate) fn compile_source_with_metadata(source: &str) -> Result<CompiledMetadata, Vec<String>> {
     match compile_source_for_e2e(source) {
         sifr_driver::CompileResultFull::Success {
             rust_source,
@@ -58,16 +68,7 @@ pub(crate) fn compile_source_with_metadata(
 
 pub(crate) fn compile_source_with_metadata_and_stats(
     source: &str,
-) -> Result<
-    (
-        String,
-        HashSet<String>,
-        HashSet<StdlibFeature>,
-        sifr_driver::InteropBuildPlan,
-        sifr_driver::LoweringStats,
-    ),
-    Vec<String>,
-> {
+) -> Result<CompiledMetadataWithStats, Vec<String>> {
     match compile_source_for_e2e(source) {
         sifr_driver::CompileResultFull::Success {
             rust_source,
@@ -179,7 +180,7 @@ pub(crate) fn discover_fixtures(base_dir: &Path) -> Vec<FixtureCase> {
                     });
                 }
                 Err(err) => {
-                    eprintln!("[sifr-e2e] skipping fixture read error: {}", err);
+                    eprintln!("[sifr-e2e] skipping fixture read error: {err}");
                 }
             }
         }
@@ -346,7 +347,7 @@ pub(crate) fn build_group_sources(group_cases: Vec<CompiledCase>) -> Result<Batc
     generated_main.push_str("    }\n");
     generated_main.push_str("}\n");
 
-    let generated_rust = format!("{}{}", generated_modules, generated_main);
+    let generated_rust = format!("{generated_modules}{generated_main}");
     let generated_rust_hash = deterministic_hash(&generated_rust);
     let raw_group_signature = format!(
         "{}|{}|{}",
@@ -400,8 +401,7 @@ pub(crate) fn plan_batches(
                         planning_failures.push(FixtureExecution {
                             name: fixture_name.clone(),
                             status: Err(format!(
-                                "FAIL [{}]: failed to generate grouped crate source: {}",
-                                fixture_name, err
+                                "FAIL [{fixture_name}]: failed to generate grouped crate source: {err}"
                             )),
                         });
                     }

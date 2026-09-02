@@ -10,8 +10,7 @@ fn main() {
         format!(
             "max(3, 7) = {}",
             ::std::cmp::max(SifrInt::from_i64(3), SifrInt::from_i64(7))
-        )
-        .to_string(),
+        ),
         "max(3, 7) = 7"
     );
     println!(
@@ -22,8 +21,7 @@ fn main() {
         format!(
             "min(3, 7) = {}",
             ::std::cmp::min(SifrInt::from_i64(3), SifrInt::from_i64(7))
-        )
-        .to_string(),
+        ),
         "min(3, 7) = 3"
     );
     println!(
@@ -34,8 +32,7 @@ fn main() {
         format!(
             "pow(2, 10) = {}",
             SifrInt::from_i64(2).pow_known_valid(10_u32)
-        )
-        .to_string(),
+        ),
         "pow(2, 10) = 1024"
     );
     let mut result: String = String::new();

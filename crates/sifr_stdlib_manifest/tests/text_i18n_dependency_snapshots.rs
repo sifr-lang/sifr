@@ -1,3 +1,7 @@
+mod support;
+
+use support::TestUnwrap as _;
+
 use sifr_stdlib_manifest::{StdlibFeature, try_generated_cargo_dependencies};
 use std::collections::HashSet;
 
@@ -38,7 +42,7 @@ fn generated_cargo_dependencies(
     required_features: &HashSet<StdlibFeature>,
 ) -> Vec<String> {
     try_generated_cargo_dependencies(stdlib_modules, required_features)
-        .expect("source-tree sysroot dependencies should resolve")
+        .test_unwrap("source-tree sysroot dependencies should resolve")
 }
 
 #[test]

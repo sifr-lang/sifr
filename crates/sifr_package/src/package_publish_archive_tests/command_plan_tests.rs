@@ -1,3 +1,5 @@
+use crate::test_support::TestUnwrap as _;
+
 use crate::cargo::commands::{
     CargoCommandPlan, CargoFeatureSelection, CargoPackageArchiveOptions, CargoPackageSelection,
     CargoPublishOptions, CargoVendorOptions,
@@ -149,7 +151,7 @@ fn package_publish_vendor_session_plans_route_through_package_session() {
     );
     assert_eq!(package.operation.operation, PackageOperation::Package);
     assert_eq!(
-        package.cargo.expect("package cargo plan").args,
+        package.cargo.test_unwrap("package cargo plan").args,
         ["package", "--locked", "-p", "sifr-app"]
     );
 
@@ -163,7 +165,7 @@ fn package_publish_vendor_session_plans_route_through_package_session() {
     );
     assert_eq!(publish.operation.operation, PackageOperation::Publish);
     assert_eq!(
-        publish.cargo.expect("publish cargo plan").args,
+        publish.cargo.test_unwrap("publish cargo plan").args,
         ["publish", "--locked", "-p", "sifr-app", "--dry-run"]
     );
 
@@ -176,7 +178,7 @@ fn package_publish_vendor_session_plans_route_through_package_session() {
     );
     assert_eq!(vendor.operation.operation, PackageOperation::Vendor);
     assert_eq!(
-        vendor.cargo.expect("vendor cargo plan").args,
+        vendor.cargo.test_unwrap("vendor cargo plan").args,
         ["vendor", "--locked", "--versioned-dirs", "vendor"]
     );
 }

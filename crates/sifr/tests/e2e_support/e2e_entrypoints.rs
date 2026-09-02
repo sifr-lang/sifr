@@ -1,7 +1,12 @@
+#![expect(
+    clippy::print_stderr,
+    reason = "the E2E harness reports qualification progress and failures"
+)]
+
 use super::*;
 #[test]
 pub(crate) fn test_e2e_pass() {
-    let config = runner_config().expect("runner config");
+    let config = runner_config();
     let report = run_pass_suite(&config);
     assert_report("pass", &report);
     eprintln!(
@@ -62,8 +67,7 @@ pub(crate) fn test_codegen_corpus_subset_parity() {
 
         if !rust_source.contains("fn main(") {
             failures.push(format!(
-                "FAIL [{}]: generated Rust has no main function",
-                case
+                "FAIL [{case}]: generated Rust has no main function"
             ));
             continue;
         }
@@ -75,29 +79,28 @@ pub(crate) fn test_codegen_corpus_subset_parity() {
             &required_features,
             &interop,
         ) {
-            failures.push(format!("FAIL [{}]: {}", case, err));
+            failures.push(format!("FAIL [{case}]: {err}"));
             continue;
         }
 
         test_count += 1;
     }
 
-    if !failures.is_empty() {
-        panic!(
-            "{} corpus parity test(s) failed:\n\n{}\n\n({} passed, {} failed)",
-            failures.len(),
-            failures.join("\n\n"),
-            test_count,
-            failures.len()
-        );
-    }
+    assert!(
+        failures.is_empty(),
+        "{} corpus parity test(s) failed:\n\n{}\n\n({} passed, {} failed)",
+        failures.len(),
+        failures.join("\n\n"),
+        test_count,
+        failures.len()
+    );
 
     assert_eq!(
         test_count,
         corpus.len(),
         "Not all corpus subset cases executed successfully"
     );
-    eprintln!("  {} corpus subset parity tests completed", test_count);
+    eprintln!("  {test_count} corpus subset parity tests completed");
 }
 
 #[test]
@@ -157,17 +160,19 @@ pub(crate) fn test_emit_pass_fixtures_do_not_include_unwrap_or_expect() {
     }
 
     assert!(total > 0, "no pass fixtures were checked");
-    if !failures.is_empty() {
-        panic!(
-            "{} emitted-code safety failure(s):\n\n{}",
-            failures.len(),
-            failures.join("\n\n")
-        );
-    }
+    assert!(
+        failures.is_empty(),
+        "{} emitted-code safety failure(s):\n\n{}",
+        failures.len(),
+        failures.join("\n\n")
+    );
 }
 
 #[test]
 pub(crate) fn test_codegen_structured_lowering_ratio_gate_stmt_expr_corpus() {
+    const BASIS_POINTS: u64 = 10_000;
+    const MINIMUM_BASIS_POINTS: u64 = 8_000;
+
     let pass_dir = Path::new("tests/e2e/pass");
     let corpus = ["statement_expression_lowering"];
 
@@ -206,8 +211,7 @@ pub(crate) fn test_codegen_structured_lowering_ratio_gate_stmt_expr_corpus() {
 
         if !rust_source.contains("fn main(") {
             failures.push(format!(
-                "FAIL [{}]: generated Rust has no main function",
-                case
+                "FAIL [{case}]: generated Rust has no main function"
             ));
             continue;
         }
@@ -227,13 +231,12 @@ pub(crate) fn test_codegen_structured_lowering_ratio_gate_stmt_expr_corpus() {
         total_expr_candidate_structured += stats.expr_candidate_structured;
     }
 
-    if !failures.is_empty() {
-        panic!(
-            "{} structured-ratio corpus setup failure(s):\n\n{}",
-            failures.len(),
-            failures.join("\n\n")
-        );
-    }
+    assert!(
+        failures.is_empty(),
+        "{} structured-ratio corpus setup failure(s):\n\n{}",
+        failures.len(),
+        failures.join("\n\n")
+    );
 
     assert!(
         total_stmt_candidate > 0,
@@ -244,24 +247,28 @@ pub(crate) fn test_codegen_structured_lowering_ratio_gate_stmt_expr_corpus() {
         "structured ratio gate: expr_candidate_total must be > 0"
     );
 
-    let stmt_ratio = total_stmt_candidate_structured as f64 / total_stmt_candidate as f64;
-    let expr_ratio = total_expr_candidate_structured as f64 / total_expr_candidate as f64;
+    let stmt_basis_points =
+        total_stmt_candidate_structured.saturating_mul(BASIS_POINTS) / total_stmt_candidate;
+    let expr_basis_points =
+        total_expr_candidate_structured.saturating_mul(BASIS_POINTS) / total_expr_candidate;
 
     assert!(
-        stmt_ratio >= 0.80,
+        stmt_basis_points >= MINIMUM_BASIS_POINTS,
         "structured ratio gate failed for statements"
     );
     assert!(
-        expr_ratio >= 0.80,
+        expr_basis_points >= MINIMUM_BASIS_POINTS,
         "structured ratio gate failed for expressions"
     );
 
     eprintln!(
-        "  structured ratio gate passed: stmt={:.3} ({}/{}), expr={:.3} ({}/{})",
-        stmt_ratio,
+        "  structured ratio gate passed: stmt={}.{:02}% ({}/{}), expr={}.{:02}% ({}/{})",
+        stmt_basis_points / 100,
+        stmt_basis_points % 100,
         total_stmt_candidate_structured,
         total_stmt_candidate,
-        expr_ratio,
+        expr_basis_points / 100,
+        expr_basis_points % 100,
         total_expr_candidate_structured,
         total_expr_candidate
     );
@@ -283,12 +290,11 @@ pub(crate) fn test_e2e_fail() {
             Err(mut errors) => rules_errors.append(&mut errors),
         }
     }
-    if !rules_errors.is_empty() {
-        panic!(
-            "fail fixture expectation rules violations:\n{}",
-            format_expectation_rules_errors(&rules_errors)
-        );
-    }
+    assert!(
+        rules_errors.is_empty(),
+        "fail fixture expectation rules violations:\n{}",
+        format_expectation_rules_errors(&rules_errors)
+    );
 
     let mut failures = 0usize;
     for (path, source, expected) in fail_cases {
@@ -318,7 +324,7 @@ pub(crate) fn test_e2e_fail() {
     }
 
     assert!(failures > 0, "No fail tests found");
-    eprintln!("  {} fail tests completed", failures);
+    eprintln!("  {failures} fail tests completed");
 }
 
 #[test]
@@ -517,8 +523,7 @@ pub(crate) fn test_e2e_runtime_fail() {
             Ok((_stdout, stderr, success)) => {
                 if success {
                     failures.push(format!(
-                        "FAIL [{}]: expected runtime failure but binary exited successfully",
-                        test_name
+                        "FAIL [{test_name}]: expected runtime failure but binary exited successfully"
                     ));
                     continue;
                 }
@@ -526,14 +531,13 @@ pub(crate) fn test_e2e_runtime_fail() {
                 for expected in &expected_stderr {
                     if !stderr.contains(expected) {
                         failures.push(format!(
-                            "FAIL [{}]: expected stderr containing {:?} but got:\n{}",
-                            test_name, expected, stderr
+                            "FAIL [{test_name}]: expected stderr containing {expected:?} but got:\n{stderr}"
                         ));
                     }
                 }
             }
             Err(err) => {
-                failures.push(format!("FAIL [{}]: {}", test_name, err));
+                failures.push(format!("FAIL [{test_name}]: {err}"));
                 continue;
             }
         }
@@ -541,18 +545,17 @@ pub(crate) fn test_e2e_runtime_fail() {
         total += 1;
     }
 
-    if !failures.is_empty() {
-        panic!(
-            "{} E2E runtime-fail test(s) failed:\n\n{}\n\n({} passed, {} failed)",
-            failures.len(),
-            failures.join("\n\n"),
-            total,
-            failures.len()
-        );
-    }
+    assert!(
+        failures.is_empty(),
+        "{} E2E runtime-fail test(s) failed:\n\n{}\n\n({} passed, {} failed)",
+        failures.len(),
+        failures.join("\n\n"),
+        total,
+        failures.len()
+    );
 
     assert!(total > 0, "No runtime_fail tests found");
-    eprintln!("  {} runtime_fail tests completed", total);
+    eprintln!("  {total} runtime_fail tests completed");
 }
 
 pub(crate) fn read_dir_file_paths_sorted(directory: &Path) -> Vec<PathBuf> {

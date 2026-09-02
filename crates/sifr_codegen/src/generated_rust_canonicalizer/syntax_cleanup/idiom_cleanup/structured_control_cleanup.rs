@@ -107,6 +107,29 @@ pub(super) fn collapse_else_if(expression: &mut syn::Expr) {
     **else_expression = syn::Expr::If(nested.clone());
 }
 
+pub(super) fn collapse_identical_if_else_branches(expression: &mut syn::Expr) {
+    let syn::Expr::If(branch) = expression else {
+        return;
+    };
+    let Some((_, else_expression)) = &branch.else_branch else {
+        return;
+    };
+    let syn::Expr::If(nested) = else_expression.as_ref() else {
+        return;
+    };
+    if branch.then_branch.to_token_stream().to_string()
+        != nested.then_branch.to_token_stream().to_string()
+    {
+        return;
+    }
+
+    let first = branch.cond.as_ref();
+    let second = nested.cond.as_ref();
+    let combined: syn::Expr = syn::parse_quote!((#first) || (#second));
+    *branch.cond = combined;
+    branch.else_branch = nested.else_branch.clone();
+}
+
 pub(super) fn invert_negative_condition_with_else(expression: &mut syn::Expr) {
     let syn::Expr::If(branch) = expression else {
         return;
@@ -114,15 +137,26 @@ pub(super) fn invert_negative_condition_with_else(expression: &mut syn::Expr) {
     let Some((else_token, else_expression)) = branch.else_branch.take() else {
         return;
     };
-    let syn::Expr::Binary(condition) = branch.cond.as_mut() else {
-        branch.else_branch = Some((else_token, else_expression));
-        return;
+    let positive_condition = match branch.cond.as_mut() {
+        syn::Expr::Binary(condition) => {
+            let syn::BinOp::Ne(not_equal) = condition.op else {
+                branch.else_branch = Some((else_token, else_expression));
+                return;
+            };
+            condition.op = syn::BinOp::Eq(syn::token::EqEq(not_equal.spans));
+            None
+        }
+        syn::Expr::Unary(condition) if matches!(condition.op, syn::UnOp::Not(_)) => {
+            Some(condition.expr.as_ref().clone())
+        }
+        _ => {
+            branch.else_branch = Some((else_token, else_expression));
+            return;
+        }
     };
-    let syn::BinOp::Ne(not_equal) = condition.op else {
-        branch.else_branch = Some((else_token, else_expression));
-        return;
-    };
-    condition.op = syn::BinOp::Eq(syn::token::EqEq(not_equal.spans));
+    if let Some(positive_condition) = positive_condition {
+        *branch.cond = positive_condition;
+    }
     let previous_then = std::mem::replace(
         &mut branch.then_branch,
         super::super::expression_into_block(else_expression),

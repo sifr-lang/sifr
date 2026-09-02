@@ -349,18 +349,18 @@ fn profile_fixture_with_components(
         .expect("provider component directory");
     std::fs::write(owner_root.join("db/schema.sql"), "create schema public;\n")
         .expect("schema source");
+    let schema_component_sha = lower_hex(&Sha256::digest(&schema_component_bytes));
+    let query_component_sha = lower_hex(&Sha256::digest(&query_component_bytes));
     std::fs::write(
         provider_root.join("components/postgresql-schema.wasm"),
-        &schema_component_bytes,
+        schema_component_bytes,
     )
     .expect("component artifact");
     std::fs::write(
         provider_root.join("components/postgresql-query.wasm"),
-        &query_component_bytes,
+        query_component_bytes,
     )
     .expect("query component artifact");
-    let schema_component_sha = lower_hex(&Sha256::digest(&schema_component_bytes));
-    let query_component_sha = lower_hex(&Sha256::digest(&query_component_bytes));
     let owner = package("app", &owner_root, parse_manifest(&owner_manifest()));
     let provider = package(
         "postgres",
@@ -712,10 +712,13 @@ fn schema_object(
 }
 
 fn fixture_component(output: &[u8]) -> Vec<u8> {
-    let escaped = output
-        .iter()
-        .map(|byte| format!("\\{:02x}", byte))
-        .collect::<String>();
+    const DIGITS: &[u8; 16] = b"0123456789abcdef";
+    let mut escaped = String::with_capacity(output.len() * 3);
+    for byte in output {
+        escaped.push('\\');
+        escaped.push(char::from(DIGITS[usize::from(byte >> 4)]));
+        escaped.push(char::from(DIGITS[usize::from(byte & 0x0f)]));
+    }
     let source = format!(
         r#"(component
             (type $analyze-type (func (param "request" (list u8)) (result (list u8))))

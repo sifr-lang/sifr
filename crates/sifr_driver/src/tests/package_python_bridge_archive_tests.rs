@@ -172,7 +172,7 @@ fn append_python_trust(package: &TestPackage, roots: &[&str]) {
         .map(|root| format!("\"{root}\""))
         .collect::<Vec<_>>()
         .join(", ");
-    source.push_str(&format!("\n[trust]\npython = [{roots}]\n"));
+    writeln!(source, "\n[trust]\npython = [{roots}]").expect("writing to a String should succeed");
     std::fs::write(manifest, source).expect("manifest trust should be updated");
 }
 

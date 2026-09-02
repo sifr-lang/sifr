@@ -59,9 +59,9 @@ fn main() {
     if sifr_generated_try_res.is_err() {
         assert!(false);
     }
-    println!("{}", format!("{mapped:?}"));
-    println!("{}", format!("{filtered:?}"));
+    println!("{mapped:?}");
+    println!("{filtered:?}");
     println!("{first}");
-    println!("{}", format!("{rest:?}"));
+    println!("{rest:?}");
     println!("clone_collection_cloning_lock_demo: pass");
 }

@@ -85,21 +85,6 @@ pub(crate) fn generate_rust_test_with_project_policy(
     emitter.generate_enum_definitions();
 
     let mut module_import_items: Vec<RustItem> = Vec::new();
-    if project_structural_record_identities.is_some() {
-        let mut layout_names = emitter
-            .structural_record_types
-            .values()
-            .map(crate::structural_identity_codegen::structural_record_layout_rust_name)
-            .collect::<HashSet<_>>()
-            .into_iter()
-            .collect::<Vec<_>>();
-        layout_names.sort();
-        module_import_items.extend(
-            layout_names
-                .into_iter()
-                .map(|layout_name| RustItem::Use(vec!["crate".to_string(), layout_name])),
-        );
-    }
     for import in &module.imports {
         // Stdlib/intrinsic imports are lowered through registry/preamble paths.
         if import.module.starts_with("sifr.") || import.module.starts_with("_sifr.") {

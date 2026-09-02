@@ -465,9 +465,7 @@ mod sifr_generated_project_nominals {
             field_started = true;
             i = &i + &SifrInt::from_i64(1);
         }
-        if in_quotes {
-            in_quotes = false;
-        }
+        let _ = in_quotes;
         if &SifrInt::from(row.len()) > &SifrInt::from_i64(0) || !field.is_empty() {
             sifr_generated_append_field(&mut row, field);
             sifr_generated_append_row(&mut rows, row);
@@ -532,9 +530,9 @@ mod sifr_generated_project_nominals {
             sifr_generated_concat
         };
         if escaped.contains(&quotechar) {
-            if dialect.doublequote {
+            if dialect.doublequote || dialect.escapechar.clone().is_empty() {
                 escaped = escaped.replace(&quotechar, &format!("{quotechar}{quotechar}"));
-            } else if !dialect.escapechar.clone().is_empty() {
+            } else {
                 let escapechar_value: String = {
                     let mut sifr_generated_concat: String = String::new();
                     sifr_generated_concat.push_str(dialect.escapechar.clone().as_str());
@@ -542,8 +540,6 @@ mod sifr_generated_project_nominals {
                     sifr_generated_concat
                 };
                 escaped = escaped.replace(&quotechar, &format!("{escapechar_value}{quotechar}"));
-            } else {
-                escaped = escaped.replace(&quotechar, &format!("{quotechar}{quotechar}"));
             }
         }
         {
@@ -587,13 +583,13 @@ mod sifr_generated_project_nominals {
         if !dialect.quotechar.clone().is_empty() {
             let quotechar2: String = sifr_generated_quotechar_value(dialect);
             if result.contains(&quotechar2) {
-                if !dialect.escapechar.clone().is_empty() {
+                if dialect.escapechar.clone().is_empty() {
+                    result = result.replace(&quotechar2, &format!("{quotechar2}{quotechar2}"));
+                } else {
                     result = result.replace(
                         &quotechar2,
                         &format!("{}{}", dialect.escapechar.clone(), quotechar2),
                     );
-                } else {
-                    result = result.replace(&quotechar2, &format!("{quotechar2}{quotechar2}"));
                 }
             }
         }
@@ -995,9 +991,7 @@ fn parse_csv(
         field_started = true;
         i = &i + &SifrInt::from_i64(1);
     }
-    if in_quotes {
-        in_quotes = false;
-    }
+    let _ = in_quotes;
     if &SifrInt::from(row.len()) > &SifrInt::from_i64(0) || !field.is_empty() {
         sifr_generated_append_field(&mut row, field);
         sifr_generated_append_row(&mut rows, row);
@@ -1060,9 +1054,9 @@ fn sifr_generated_quote_field(
         sifr_generated_concat
     };
     if escaped.contains(&quotechar) {
-        if dialect.doublequote {
+        if dialect.doublequote || dialect.escapechar.clone().is_empty() {
             escaped = escaped.replace(&quotechar, &format!("{quotechar}{quotechar}"));
-        } else if !dialect.escapechar.clone().is_empty() {
+        } else {
             let escapechar_value: String = {
                 let mut sifr_generated_concat: String = String::new();
                 sifr_generated_concat.push_str(dialect.escapechar.clone().as_str());
@@ -1070,8 +1064,6 @@ fn sifr_generated_quote_field(
                 sifr_generated_concat
             };
             escaped = escaped.replace(&quotechar, &format!("{escapechar_value}{quotechar}"));
-        } else {
-            escaped = escaped.replace(&quotechar, &format!("{quotechar}{quotechar}"));
         }
     }
     {
@@ -1113,13 +1105,13 @@ fn sifr_generated_escape_unquoted_field(
     if !dialect.quotechar.clone().is_empty() {
         let quotechar2: String = sifr_generated_quotechar_value(dialect);
         if result.contains(&quotechar2) {
-            if !dialect.escapechar.clone().is_empty() {
+            if dialect.escapechar.clone().is_empty() {
+                result = result.replace(&quotechar2, &format!("{quotechar2}{quotechar2}"));
+            } else {
                 result = result.replace(
                     &quotechar2,
                     &format!("{}{}", dialect.escapechar.clone(), quotechar2),
                 );
-            } else {
-                result = result.replace(&quotechar2, &format!("{quotechar2}{quotechar2}"));
             }
         }
     }

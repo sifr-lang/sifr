@@ -89,7 +89,7 @@ fn sql_virtual_document_features_share_the_analysis_snapshot() {
         "semantic_token_data": semantic.pointer("/data").and_then(Value::as_array).map_or(0, Vec::len),
         "inlay_hint_count": inlay.as_array().map_or(0, Vec::len),
         "rename_edits_present": rename.pointer("/changes").is_some(),
-        "format_preserves_hole": formatting.as_array().is_some_and(|edits| edits.is_empty())
+        "format_preserves_hole": formatting.as_array().is_some_and(Vec::is_empty)
             || formatting.to_string().contains("{user_id}"),
         "structured_cast_fix": code_actions.to_string().contains("quickfix.sifr.sql.cast"),
         "hole_completion_is_sifr": !hole_completion.to_string().contains("\"SELECT\""),

@@ -1,4 +1,22 @@
 // src/main.rs
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct SifrGeneratedIoNativeFileHandle {
+    pub id: String,
+}
+impl SifrGeneratedIoNativeFileHandle {
+    #[must_use]
+    pub const fn new(id: String) -> Self {
+        let sifr_generated_field_value_b90e3b1a0ca5e613_5f6964: String = id;
+        Self {
+            id: sifr_generated_field_value_b90e3b1a0ca5e613_5f6964,
+        }
+    }
+}
+impl ::std::fmt::Display for SifrGeneratedIoNativeFileHandle {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        write!(f, "NativeFileHandle(_id={})", self.id)
+    }
+}
 mod sifr_generated_project_nominals {
     use crate::SifrGeneratedIoNativeFileHandle;
     pub use ::sifr_runtime::SifrInt;
@@ -383,7 +401,7 @@ mod sifr_generated_project_nominals {
         })
     }
     pub fn file_close(handle: &SifrGeneratedIoNativeFileHandle) {
-        sifr_generated_file_close(&handle.sifr_generated_id.clone());
+        sifr_generated_file_close(&handle.id.clone());
     }
     ///# Errors
     ///Returns the typed error produced by this operation.
@@ -391,7 +409,7 @@ mod sifr_generated_project_nominals {
         handle: &SifrGeneratedIoNativeFileHandle,
         data: &[u8],
     ) -> Result<(), IOError> {
-        sifr_generated_file_write_bytes(&handle.sifr_generated_id.clone(), data)
+        sifr_generated_file_write_bytes(&handle.id.clone(), data)
     }
     #[must_use]
     pub fn sifr_generated_const_454e434f44494e475f55544638() -> String {

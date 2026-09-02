@@ -1587,88 +1587,66 @@ mod sifr_generated_project_nominals {
     }
     #[must_use]
     pub fn sifr_generated_is_private_ipv4_value(value: SifrInt) -> bool {
-        let mut private_hit: bool = false;
-        if sifr_generated_in_ipv4_range(
+        let private_hit: bool = if sifr_generated_in_ipv4_range(
             value.clone(),
             SifrInt::from_i64(0),
             SifrInt::from_i64(16_777_215),
-        ) {
-            private_hit = true;
-        } else if sifr_generated_in_ipv4_range(
+        ) || (sifr_generated_in_ipv4_range(
             value.clone(),
             SifrInt::from_i64(167_772_160),
             SifrInt::from_i64(184_549_375),
-        ) {
-            private_hit = true;
-        } else if sifr_generated_in_ipv4_range(
+        ) || (sifr_generated_in_ipv4_range(
             value.clone(),
             SifrInt::from_i64(2_130_706_432),
             SifrInt::from_i64(2_147_483_647),
-        ) {
-            private_hit = true;
-        } else if sifr_generated_in_ipv4_range(
+        ) || (sifr_generated_in_ipv4_range(
             value.clone(),
             SifrInt::from_i64(2_851_995_648),
             SifrInt::from_i64(2_852_061_183),
-        ) {
-            private_hit = true;
-        } else if sifr_generated_in_ipv4_range(
+        ) || (sifr_generated_in_ipv4_range(
             value.clone(),
             SifrInt::from_i64(2_886_729_728),
             SifrInt::from_i64(2_887_778_303),
-        ) {
-            private_hit = true;
-        } else if sifr_generated_in_ipv4_range(
+        ) || (sifr_generated_in_ipv4_range(
             value.clone(),
             SifrInt::from_i64(3_221_225_472),
             SifrInt::from_i64(3_221_225_727),
-        ) {
-            private_hit = true;
-        } else if sifr_generated_in_ipv4_range(
+        ) || (sifr_generated_in_ipv4_range(
             value.clone(),
             SifrInt::from_i64(3_221_225_642),
             SifrInt::from_i64(3_221_225_643),
-        ) {
-            private_hit = true;
-        } else if sifr_generated_in_ipv4_range(
-            value.clone(),
-            SifrInt::from_i64(3_221_225_984),
-            SifrInt::from_i64(3_221_226_239),
-        ) {
-            private_hit = true;
-        } else if sifr_generated_in_ipv4_range(
-            value.clone(),
-            SifrInt::from_i64(3_232_235_520),
-            SifrInt::from_i64(3_232_301_055),
-        ) {
-            private_hit = true;
-        } else if sifr_generated_in_ipv4_range(
-            value.clone(),
-            SifrInt::from_i64(3_323_068_416),
-            SifrInt::from_i64(3_323_199_487),
-        ) {
-            private_hit = true;
-        } else if sifr_generated_in_ipv4_range(
-            value.clone(),
-            SifrInt::from_i64(3_325_256_704),
-            SifrInt::from_i64(3_325_256_959),
-        ) {
-            private_hit = true;
-        } else if sifr_generated_in_ipv4_range(
-            value.clone(),
-            SifrInt::from_i64(3_405_803_776),
-            SifrInt::from_i64(3_405_804_031),
-        ) {
-            private_hit = true;
-        } else if sifr_generated_in_ipv4_range(
-            value.clone(),
-            SifrInt::from_i64(4_026_531_840),
-            SifrInt::from_i64(4_294_967_295),
-        ) {
-            private_hit = true;
-        } else if &value == &SifrInt::from_i64(4_294_967_295) {
-            private_hit = true;
-        }
+        )
+            || (sifr_generated_in_ipv4_range(
+                value.clone(),
+                SifrInt::from_i64(3_221_225_984),
+                SifrInt::from_i64(3_221_226_239),
+            ) || (sifr_generated_in_ipv4_range(
+                value.clone(),
+                SifrInt::from_i64(3_232_235_520),
+                SifrInt::from_i64(3_232_301_055),
+            ) || (sifr_generated_in_ipv4_range(
+                value.clone(),
+                SifrInt::from_i64(3_323_068_416),
+                SifrInt::from_i64(3_323_199_487),
+            ) || (sifr_generated_in_ipv4_range(
+                value.clone(),
+                SifrInt::from_i64(3_325_256_704),
+                SifrInt::from_i64(3_325_256_959),
+            ) || (sifr_generated_in_ipv4_range(
+                value.clone(),
+                SifrInt::from_i64(3_405_803_776),
+                SifrInt::from_i64(3_405_804_031),
+            ) || (sifr_generated_in_ipv4_range(
+                value.clone(),
+                SifrInt::from_i64(4_026_531_840),
+                SifrInt::from_i64(4_294_967_295),
+            ) || &value
+                == &SifrInt::from_i64(4_294_967_295)))))))))))))
+        {
+            true
+        } else {
+            false
+        };
         if private_hit {
             if &value == &SifrInt::from_i64(3_221_225_481) {
                 return false;

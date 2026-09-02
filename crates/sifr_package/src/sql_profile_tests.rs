@@ -1,3 +1,5 @@
+use crate::test_support::{TestExpectErr as _, TestUnwrap as _};
+
 use crate::cargo::metadata::CargoPackageId;
 use crate::graph::derive::{SifrPackageGraph, SifrPackageId, SifrPackageMetadata};
 use crate::graph::scopes::{DirectDependencyScope, ScopedImport, ScopedImportSource};
@@ -80,7 +82,7 @@ fn manifest_rejects_credentials_and_live_connection_inputs() {
             &format!("server-version = \"18\"\n{forbidden}"),
         );
         let error = SifrManifest::parse(&cargo_id("app"), Path::new("/ws/app/sifr.toml"), &source)
-            .expect_err("credential-bearing profile input must fail");
+            .test_expect_err("credential-bearing profile input must fail");
         assert!(error.message.contains("unsupported field"));
         assert!(!error.message.contains("secret"));
     }
@@ -89,7 +91,7 @@ fn manifest_rejects_credentials_and_live_connection_inputs() {
         "sql-modes = [\"postgresql://user:secret@host/db\"]",
     );
     let error = SifrManifest::parse(&cargo_id("app"), Path::new("/ws/app/sifr.toml"), &source)
-        .expect_err("SQL modes must not carry arbitrary credential strings");
+        .test_expect_err("SQL modes must not carry arbitrary credential strings");
     assert!(error.message.contains("SQL mode identifiers"));
     assert!(!error.message.contains("secret"));
 }
@@ -149,7 +151,7 @@ fn profile_provider_resolves_to_locked_package_and_component_identity() {
         backend_crates: BTreeMap::new(),
         classifications: BTreeMap::new(),
     };
-    let resolved = resolve_sql_profiles(&graph, &owner_id).expect("resolve profiles");
+    let resolved = resolve_sql_profiles(&graph, &owner_id).test_unwrap("resolve profiles");
     let profile = &resolved["app"];
     assert_eq!(profile.provider.package_version.to_string(), "1.0.0");
     assert_eq!(
@@ -211,7 +213,7 @@ fn profile_provider_resolves_to_locked_package_and_component_identity() {
             .is_ok()
     );
     let requirements =
-        resolve_sql_requirements(&graph, &owner_id).expect("resolve schema requirements");
+        resolve_sql_requirements(&graph, &owner_id).test_unwrap("resolve schema requirements");
     let requirement = &requirements[&format!("{}::has_users", owner_id.0)];
     assert_eq!(
         requirement.providers["postgresql"].provider,
@@ -236,7 +238,8 @@ fn package(name: &str, manifest: SifrManifest) -> SifrPackageMetadata {
 }
 
 fn parse(source: &str) -> SifrManifest {
-    SifrManifest::parse(&cargo_id("app"), Path::new("/ws/app/sifr.toml"), source).expect("manifest")
+    SifrManifest::parse(&cargo_id("app"), Path::new("/ws/app/sifr.toml"), source)
+        .test_unwrap("manifest")
 }
 
 fn cargo_id(name: &str) -> CargoPackageId {

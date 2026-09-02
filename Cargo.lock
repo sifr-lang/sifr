@@ -7790,6 +7790,7 @@ dependencies = [
  "icu_plurals",
  "indexmap",
  "libc",
+ "memchr",
  "num-bigint 0.5.1",
  "num-traits",
  "pyo3",

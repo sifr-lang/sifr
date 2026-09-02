@@ -1,20 +1,24 @@
+mod support;
+
+use support::TestUnwrap as _;
+
 const WORKSPACE_MANIFEST: &str = include_str!("../../../Cargo.toml");
 const WORKSPACE_LOCK: &str = include_str!("../../../Cargo.lock");
 
 #[test]
 fn icu_direct_dependencies_match_latest_stable_versions() {
     let manifest: toml::Value =
-        toml::from_str(WORKSPACE_MANIFEST).expect("workspace manifest must parse");
+        toml::from_str(WORKSPACE_MANIFEST).test_unwrap("workspace manifest must parse");
     let dependencies = manifest
         .get("workspace")
         .and_then(|workspace| workspace.get("dependencies"))
         .and_then(toml::Value::as_table)
-        .expect("workspace dependencies must be a table");
-    let lock: toml::Value = toml::from_str(WORKSPACE_LOCK).expect("workspace lock must parse");
+        .test_unwrap("workspace dependencies must be a table");
+    let lock: toml::Value = toml::from_str(WORKSPACE_LOCK).test_unwrap("workspace lock must parse");
     let locked_packages = lock
         .get("package")
         .and_then(toml::Value::as_array)
-        .expect("workspace lock packages must be an array");
+        .test_unwrap("workspace lock packages must be an array");
 
     for (package, expected_version) in [
         ("icu_collator", "2.3.1"),
@@ -41,11 +45,11 @@ fn icu_direct_dependencies_match_latest_stable_versions() {
 
 #[test]
 fn icu_shared_graph_uses_locale_fallback_split() {
-    let lock: toml::Value = toml::from_str(WORKSPACE_LOCK).expect("workspace lock must parse");
+    let lock: toml::Value = toml::from_str(WORKSPACE_LOCK).test_unwrap("workspace lock must parse");
     let locked_packages = lock
         .get("package")
         .and_then(toml::Value::as_array)
-        .expect("workspace lock packages must be an array");
+        .test_unwrap("workspace lock packages must be an array");
 
     for (package, expected_version) in [("icu_locale_fallback", "2.3.0"), ("icu_provider", "2.3.1")]
     {

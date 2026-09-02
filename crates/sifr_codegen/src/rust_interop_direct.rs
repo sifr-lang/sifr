@@ -472,7 +472,7 @@ mod tests {
         };
 
         assert_eq!(
-            render_expr(&expr),
+            render_expr(expr),
             "fixture_bridge::roundtrip_ints(items.into_iter().map(::sifr_runtime::interop::SifrIntBridge::from).collect::<Vec<_>>()).into_iter().map(|__sifr_bridge_value| __sifr_bridge_value.into_sifr_int()).collect()"
         );
     }
@@ -510,7 +510,7 @@ mod tests {
         };
 
         assert_eq!(
-            render_expr(&expr),
+            render_expr(expr),
             "fixture_bridge::count_ints(&items.iter().cloned().map(::sifr_runtime::interop::SifrIntBridge::from).collect::<Vec<_>>()).into_sifr_int()"
         );
     }
@@ -548,7 +548,7 @@ mod tests {
         };
 
         assert_eq!(
-            render_expr(&expr),
+            render_expr(expr),
             "::sifr_stdlib::calendar::calendar_weekday(::sifr_runtime::interop::SifrIntBridge::from(year)).into_sifr_int()"
         );
     }
@@ -595,7 +595,7 @@ mod tests {
         };
 
         assert_eq!(
-            render_expr(&expr),
+            render_expr(expr),
             "::sifr_stdlib::url::url_build_parts(query.clone(), port.as_ref().map(::sifr_runtime::interop::SifrIntBridge::from))"
         );
     }
@@ -633,7 +633,7 @@ mod tests {
         };
 
         assert_eq!(
-            render_expr(&expr),
+            render_expr(expr),
             "::sifr_stdlib::calendar::calendar_monthrange(::sifr_runtime::interop::SifrIntBridge::from(month)).into_iter().map(|__sifr_bridge_value| __sifr_bridge_value.into_sifr_int()).collect()"
         );
     }
@@ -672,7 +672,7 @@ mod tests {
         };
 
         assert_eq!(
-            render_expr(&expr),
+            render_expr(expr),
             "::sifr_stdlib::base64::base64_decode(s).map(|__sifr_bridge_ok| __sifr_bridge_ok).map_err(|__sifr_bridge_error| ParseError { message: __sifr_bridge_error.to_string() })"
         );
     }
@@ -711,7 +711,7 @@ mod tests {
         };
 
         assert_eq!(
-            render_expr(&expr),
+            render_expr(expr),
             "::sifr_stdlib::fs::read_text(path).map(|__sifr_bridge_ok| __sifr_bridge_ok).map_err(|__sifr_bridge_error| __io_err(__sifr_bridge_error))"
         );
     }
@@ -753,7 +753,7 @@ mod tests {
         };
 
         assert_eq!(
-            render_expr(&expr),
+            render_expr(expr),
             "::sifr_stdlib::regex::re_match(pattern).map(|__sifr_bridge_ok| __sifr_bridge_ok).map_err(|__sifr_bridge_error| RegexError { message: __sifr_bridge_error.to_string(), detail: __sifr_bridge_error.to_string() })"
         );
     }
@@ -802,7 +802,7 @@ mod tests {
         };
 
         assert_eq!(
-            render_expr(&expr),
+            render_expr(expr),
             "::sifr_stdlib::json::json_load_tokens(text).map(|__sifr_bridge_ok| __sifr_bridge_ok).map_err(|__sifr_bridge_error| JSONDecodeError { message: __sifr_bridge_error.message().to_string(), line: SifrInt::from(__sifr_bridge_error.line()), column: SifrInt::from(__sifr_bridge_error.column()) })"
         );
     }

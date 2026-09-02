@@ -20,10 +20,10 @@ fn lower_errors(source: &str) -> Vec<HirDiagnostic> {
 }
 
 fn range_for(source: &str, needle: &str) -> TextRange {
-    let start = source.find(needle).expect("needle should exist") as u32;
+    let start = source.find(needle).expect("needle should exist");
     TextRange::new(
-        TextSize::new(start),
-        TextSize::new(start + needle.len() as u32),
+        TextSize::try_from(start).expect("test source offset fits in TextSize"),
+        TextSize::try_from(start + needle.len()).expect("test source offset fits in TextSize"),
     )
 }
 

@@ -284,8 +284,9 @@
       "severity": "blocking",
       "owner_item": 8,
       "mechanism": "Generated output includes unreachable statements after terminators, needless returns, identity maps, redundant closures, constant branches, and repeated formatting scaffolds.",
-      "evidence": ["demos/**/emitted.rs", "crates/sifr_codegen/src/ir_optimize", "crates/sifr_codegen/src/render"],
-      "semantic_anchor": {"kind": "text", "revision": "current", "path": "crates/sifr_codegen/src/render/render_helpers.rs", "contains": "RustLiteral::Bool(false)"},
+      "resolution": "Item 8 routes typed Rust IR through canonical control-flow and dead-binding passes, then parses the fully assembled file as a syn syntax tree for fixed-point demand, syntax, identifier, and API cleanup before final rendering. Focused structural and generated-shape regressions cover dead tails, identity transforms, constant branches, formatting scaffolds, and liveness-sensitive preservation.",
+      "evidence": ["crates/sifr_codegen/src/ir_optimize/canonical_control_flow.rs", "crates/sifr_codegen/src/ir_optimize/dead_bindings.rs", "crates/sifr_codegen/src/generated_rust_canonicalizer.rs", "crates/sifr_codegen/src/generated_rust_canonicalizer_tests.rs", "crates/sifr_codegen/src/generated_rust_canonicalizer_item8_tests.rs"],
+      "semantic_anchor": {"kind": "text", "revision": "current", "path": "crates/sifr_codegen/src/generated_rust_canonicalizer.rs", "contains": "canonicalize_syntax_to_fixed_point"},
       "sources": ["internal", "external"]
     },
     {

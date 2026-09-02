@@ -1,4 +1,6 @@
-#![allow(clippy::expect_used)]
+mod support;
+
+use support::TestUnwrap as _;
 
 const CATALOG_MANIFEST: &str = include_str!("../../sifr_rust_interop_catalog/Cargo.toml");
 const ASYNC_MANIFEST: &str = include_str!(
@@ -63,7 +65,7 @@ fn maintained_reqwest_dependencies_use_the_latest_stable_policy() {
         let mut features = dependency
             .get("features")
             .and_then(toml::Value::as_array)
-            .expect("reqwest features must be an array")
+            .test_unwrap("reqwest features must be an array")
             .iter()
             .filter_map(toml::Value::as_str)
             .collect::<Vec<_>>();
@@ -72,7 +74,7 @@ fn maintained_reqwest_dependencies_use_the_latest_stable_policy() {
     }
 
     let catalog: toml::Value =
-        toml::from_str(CATALOG_MANIFEST).expect("catalog manifest must parse");
+        toml::from_str(CATALOG_MANIFEST).test_unwrap("catalog manifest must parse");
     assert_eq!(
         catalog
             .get("dependencies")
@@ -85,7 +87,8 @@ fn maintained_reqwest_dependencies_use_the_latest_stable_policy() {
 
 #[test]
 fn maintained_lock_edges_select_reqwest_0_13_4() {
-    let workspace: toml::Value = toml::from_str(WORKSPACE_LOCK).expect("workspace lock must parse");
+    let workspace: toml::Value =
+        toml::from_str(WORKSPACE_LOCK).test_unwrap("workspace lock must parse");
     let packages = lock_packages(&workspace);
     let reqwest = package(packages, "reqwest", REQWEST_VERSION);
     assert_eq!(
@@ -102,7 +105,7 @@ fn maintained_lock_edges_select_reqwest_0_13_4() {
                 edge,
                 "reqwest 0.13.4",
                 "{} must use the maintained reqwest line",
-                package_name(first_party).expect("first-party package name")
+                package_name(first_party).test_unwrap("first-party package name")
             );
         }
     }
@@ -142,7 +145,7 @@ fn maintained_lock_edges_select_reqwest_0_13_4() {
 #[test]
 fn vendor_contains_the_official_reqwest_release_and_provider_policy() {
     let manifest: toml::Value =
-        toml::from_str(VENDOR_MANIFEST).expect("vendor manifest must parse");
+        toml::from_str(VENDOR_MANIFEST).test_unwrap("vendor manifest must parse");
     assert_eq!(
         manifest
             .get("package")
@@ -161,7 +164,7 @@ fn vendor_contains_the_official_reqwest_release_and_provider_policy() {
         .get("features")
         .and_then(|features| features.get("rustls"))
         .and_then(toml::Value::as_array)
-        .expect("vendor rustls feature must be an array")
+        .test_unwrap("vendor rustls feature must be an array")
         .iter()
         .filter_map(toml::Value::as_str)
         .collect::<Vec<_>>();
@@ -175,14 +178,14 @@ fn vendor_contains_the_official_reqwest_release_and_provider_policy() {
     );
 
     let checksum: serde_json::Value =
-        serde_json::from_str(VENDOR_CHECKSUM).expect("vendor checksum must parse");
+        serde_json::from_str(VENDOR_CHECKSUM).test_unwrap("vendor checksum must parse");
     assert_eq!(
         checksum.get("package").and_then(serde_json::Value::as_str),
         Some(REQWEST_PACKAGE_HASH)
     );
 
     let vcs: serde_json::Value =
-        serde_json::from_str(VENDOR_VCS_INFO).expect("vendor VCS metadata must parse");
+        serde_json::from_str(VENDOR_VCS_INFO).test_unwrap("vendor VCS metadata must parse");
     assert_eq!(
         vcs.get("git")
             .and_then(|git| git.get("sha1"))
@@ -194,7 +197,7 @@ fn vendor_contains_the_official_reqwest_release_and_provider_policy() {
 fn lock_packages(lock: &toml::Value) -> &[toml::Value] {
     lock.get("package")
         .and_then(toml::Value::as_array)
-        .expect("lock packages must be an array")
+        .test_unwrap("lock packages must be an array")
 }
 
 fn package<'a>(packages: &'a [toml::Value], name: &str, version: &str) -> &'a toml::Value {

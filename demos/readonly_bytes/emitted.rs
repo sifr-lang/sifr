@@ -247,26 +247,26 @@ fn main() {
     });
     let iter_ok: bool = &sum_bytes(&payload) > &SifrInt::from_i64(0);
     let contains_ok: bool = {
-        let sifr_generated_bytes_receiver = &payload;
+        let sifr_generated_bytes_receiver: &[u8] = &payload;
         {
             let sifr_generated_needle = SifrInt::from_i64(102);
-            match sifr_generated_needle.try_to_u8() {
-                Ok(sifr_generated_needle_u8) => {
+            sifr_generated_needle.try_to_u8().map_or_else(
+                |_| false,
+                |sifr_generated_needle_u8| {
                     sifr_generated_bytes_receiver.contains(&sifr_generated_needle_u8)
-                }
-                Err(_) => false,
-            }
+                },
+            )
         }
     } && !{
-        let sifr_generated_bytes_receiver = &payload;
+        let sifr_generated_bytes_receiver: &[u8] = &payload;
         {
             let sifr_generated_needle = SifrInt::from_i64(512);
-            match sifr_generated_needle.try_to_u8() {
-                Ok(sifr_generated_needle_u8) => {
+            sifr_generated_needle.try_to_u8().map_or_else(
+                |_| false,
+                |sifr_generated_needle_u8| {
                     sifr_generated_bytes_receiver.contains(&sifr_generated_needle_u8)
-                }
-                Err(_) => false,
-            }
+                },
+            )
         }
     };
     let to_ints_ok: bool = format!(

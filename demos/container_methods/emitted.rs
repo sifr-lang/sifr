@@ -14,7 +14,7 @@ fn main() {
             .chars()
             .map(|sifr_generated_char| sifr_generated_char.to_string()),
     );
-    println!("{}", format!("{words:?}"));
+    println!("{words:?}");
     let mut mapping: HashMap<String, SifrInt> =
         HashMap::from([("base".to_string(), SifrInt::from_i64(1))]);
     mapping.extend(HashMap::from([("extra".to_string(), SifrInt::from_i64(2))]));
@@ -95,26 +95,23 @@ fn main() {
         )
     );
     println!(
-        "{}",
-        format!(
-            "{:?}",
-            if &SifrInt::from_i64(1) < &0 {
-                "alpha,beta,gamma"
-                    .to_string()
-                    .split(',')
-                    .map(::std::string::ToString::to_string)
-                    .collect::<Vec<String>>()
-            } else {
-                "alpha,beta,gamma"
-                    .to_string()
-                    .splitn(
-                        ::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(1) + 1)),
-                        ',',
-                    )
-                    .map(::std::string::ToString::to_string)
-                    .collect::<Vec<String>>()
-            }
-        )
+        "{:?}",
+        if &SifrInt::from_i64(1) < &0 {
+            "alpha,beta,gamma"
+                .to_string()
+                .split(',')
+                .map(::std::string::ToString::to_string)
+                .collect::<Vec<String>>()
+        } else {
+            "alpha,beta,gamma"
+                .to_string()
+                .splitn(
+                    ::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(1) + 1)),
+                    ',',
+                )
+                .map(::std::string::ToString::to_string)
+                .collect::<Vec<String>>()
+        }
     );
     println!(
         "{}",

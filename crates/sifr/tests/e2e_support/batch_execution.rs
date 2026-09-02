@@ -1,3 +1,8 @@
+#![expect(
+    clippy::print_stderr,
+    reason = "the E2E harness reports cache and batch execution status"
+)]
+
 use super::*;
 pub(crate) fn build_group_binary_path(group_root: &Path, package_name: &str) -> PathBuf {
     let debug_dir = group_root.join("target").join("debug");
@@ -77,30 +82,7 @@ pub(crate) fn build_batch_group(
             // recorded cache location and makes the run phase miss them.
             build_command.env_remove("CARGO_TARGET_DIR");
             let build_capture = run_capture(build_command);
-            if !build_capture.status_ok {
-                let log_path = group_root.join("build.log");
-                let mut diagnostic = String::new();
-                let _ = std::fmt::Write::write_str(
-                    &mut diagnostic,
-                    &format!(
-                        "Rust build failed for {} ({})\n\nSTDOUT:\n{}\n\nSTDERR:\n{}\n",
-                        group.id,
-                        group.fingerprint.hash(),
-                        build_capture.stdout,
-                        build_capture.stderr
-                    ),
-                );
-                let _ = std::fmt::Write::write_str(&mut diagnostic, "Generated Rust:\n");
-                let _ = std::fmt::Write::write_str(&mut diagnostic, &group.generated_main);
-                if let Err(err) = std::fs::write(&log_path, diagnostic) {
-                    eprintln!("[sifr-e2e-cache] failed to write build log: {err}");
-                }
-                build_error = Some(format!(
-                    "Rust compilation failed. Check build log: {}",
-                    log_path.display()
-                ));
-                build_log = Some(log_path);
-            } else {
+            if build_capture.status_ok {
                 artifact = Some(build_group_binary_path(&group_root, &group.package_name));
                 if let Some(path) = &artifact {
                     if config.cache.enabled {
@@ -141,6 +123,29 @@ pub(crate) fn build_batch_group(
                         }
                     }
                 }
+            } else {
+                let log_path = group_root.join("build.log");
+                let mut diagnostic = String::new();
+                let _ = std::fmt::Write::write_str(
+                    &mut diagnostic,
+                    &format!(
+                        "Rust build failed for {} ({})\n\nSTDOUT:\n{}\n\nSTDERR:\n{}\n",
+                        group.id,
+                        group.fingerprint.hash(),
+                        build_capture.stdout,
+                        build_capture.stderr
+                    ),
+                );
+                let _ = std::fmt::Write::write_str(&mut diagnostic, "Generated Rust:\n");
+                let _ = std::fmt::Write::write_str(&mut diagnostic, &group.generated_main);
+                if let Err(err) = std::fs::write(&log_path, diagnostic) {
+                    eprintln!("[sifr-e2e-cache] failed to write build log: {err}");
+                }
+                build_error = Some(format!(
+                    "Rust compilation failed. Check build log: {}",
+                    log_path.display()
+                ));
+                build_log = Some(log_path);
             }
         }
     }
@@ -156,7 +161,7 @@ pub(crate) fn build_batch_group(
 }
 
 pub(crate) fn build_batch_suite(
-    groups: Vec<BatchGroup>,
+    groups: &[BatchGroup],
     config: &RunnerConfig,
     toolchain: &ToolchainInfo,
     env_signature: &str,
@@ -165,7 +170,7 @@ pub(crate) fn build_batch_suite(
     let cache_root = manifest.entries.len();
     let _ = cache_root;
     let shared_manifest = Arc::new(Mutex::new(manifest.clone()));
-    let outcomes = run_in_parallel(&groups, config.rust_jobs, |group| {
+    let outcomes = run_in_parallel(groups, config.rust_jobs, |group| {
         build_batch_group(
             group.clone(),
             config,
@@ -188,9 +193,7 @@ pub(crate) fn build_batch_suite(
 pub(crate) fn run_single_case(artifact_path: &Path, fixture_name: &str) -> Result<(), String> {
     let args = ["--case", fixture_name];
     let run_capture = command_with_capture(
-        artifact_path
-            .to_str()
-            .unwrap_or_else(|| "sifr_batch_binary"),
+        artifact_path.to_str().unwrap_or("sifr_batch_binary"),
         &args,
         None,
     );
@@ -234,29 +237,26 @@ pub(crate) fn run_batch_outcomes(group_outcome: &GroupBuildOutcome) -> Vec<Fixtu
             .collect();
     }
 
-    let artifact = match &group_outcome.artifact_path {
-        Some(artifact) => artifact.clone(),
-        None => {
-            let message = group_outcome
-                .build_error
-                .as_deref()
-                .unwrap_or("missing batch artifact");
-            return group
-                .cases
-                .iter()
-                .map(|case| FixtureExecution {
-                    name: case.fixture.name.clone(),
-                    status: Err(format!(
-                        "FAIL [{}]: {}\n  group: {}\n  group fingerprint: {}\n  crate: {}",
-                        case.fixture.name,
-                        message,
-                        group.id,
-                        group.fingerprint.hash(),
-                        config_cache_root().join("groups").join(&group.id).display(),
-                    )),
-                })
-                .collect();
-        }
+    let Some(artifact) = &group_outcome.artifact_path else {
+        let message = group_outcome
+            .build_error
+            .as_deref()
+            .unwrap_or("missing batch artifact");
+        return group
+            .cases
+            .iter()
+            .map(|case| FixtureExecution {
+                name: case.fixture.name.clone(),
+                status: Err(format!(
+                    "FAIL [{}]: {}\n  group: {}\n  group fingerprint: {}\n  crate: {}",
+                    case.fixture.name,
+                    message,
+                    group.id,
+                    group.fingerprint.hash(),
+                    config_cache_root().join("groups").join(&group.id).display(),
+                )),
+            })
+            .collect();
     };
 
     group
@@ -264,8 +264,8 @@ pub(crate) fn run_batch_outcomes(group_outcome: &GroupBuildOutcome) -> Vec<Fixtu
         .iter()
         .map(|case| {
             let status =
-                match run_single_case(&artifact, &case.fixture.name) {
-                    Ok(_) => Ok(()),
+                match run_single_case(artifact, &case.fixture.name) {
+                    Ok(()) => Ok(()),
                     Err(err) => Err(format!(
                         "FAIL [{}]: {}\n  group: {}\n  group fingerprint: {}\n  crate: {}\n  artifact: {}",
                         case.fixture.name,
@@ -278,7 +278,7 @@ pub(crate) fn run_batch_outcomes(group_outcome: &GroupBuildOutcome) -> Vec<Fixtu
                 };
             FixtureExecution {
                 name: case.fixture.name.clone(),
-                status: status,
+                status,
             }
         })
         .collect()
@@ -433,7 +433,9 @@ where
             let handle = scope.spawn(move || {
                 loop {
                     let item_index = {
-                        let mut cursor = index.lock().unwrap_or_else(|err| err.into_inner());
+                        let mut cursor = index
+                            .lock()
+                            .unwrap_or_else(std::sync::PoisonError::into_inner);
                         let next = *cursor;
                         *cursor += 1;
                         next
@@ -459,7 +461,9 @@ where
     });
 
     let mut ordered = Vec::with_capacity(items.len());
-    let mut output = results.lock().unwrap_or_else(|err| err.into_inner());
+    let mut output = results
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
     for slot in output.iter_mut() {
         if let Some(value) = slot.take() {
             ordered.push(value);
@@ -518,7 +522,7 @@ pub(crate) fn run_pass_suite(config: &RunnerConfig) -> PassReport {
 
     let build_started = Instant::now();
     let (build_outcomes, _updated_manifest) = build_batch_suite(
-        groups,
+        &groups,
         config,
         &toolchain,
         &env_signature,
@@ -585,24 +589,19 @@ pub(crate) fn run_pass_suite(config: &RunnerConfig) -> PassReport {
         }
 
         groups
-            .into_iter()
+            .iter()
             .map(|(id, ms, count, cache_hit)| {
-                format!(
-                    "  - {} ({} fixtures, {}ms, cache_hit={})",
-                    id, count, ms, cache_hit
-                )
+                format!("  - {id} ({count} fixtures, {ms}ms, cache_hit={cache_hit})")
             })
             .collect::<Vec<_>>()
             .join("\n")
     };
 
     eprintln!(
-        "[sifr-e2e] timing: compile={}ms plan={}ms build={}ms build-sum={}ms run={}ms cache_hits={}/{}",
-        compile_ms, plan_ms, build_ms, observed_build_ms, run_ms, cache_hits, group_count
+        "[sifr-e2e] timing: compile={compile_ms}ms plan={plan_ms}ms build={build_ms}ms build-sum={observed_build_ms}ms run={run_ms}ms cache_hits={cache_hits}/{group_count}"
     );
     eprintln!(
-        "[sifr-e2e] group_stats: groups={} largest_group_fixtures={} median_group_fixtures={}",
-        group_count, largest_group_fixtures, median_group_fixtures
+        "[sifr-e2e] group_stats: groups={group_count} largest_group_fixtures={largest_group_fixtures} median_group_fixtures={median_group_fixtures}"
     );
     eprintln!(
         "[sifr-e2e] slowest build groups:\n{}",

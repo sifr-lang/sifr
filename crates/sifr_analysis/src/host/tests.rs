@@ -537,7 +537,7 @@ fn all_editor_query_methods_expose_current_revision_metadata() {
         AnalysisQueryKind::FoldingRanges
     );
     assert_eq!(
-        host.selection_ranges(file, &[position.clone()])
+        host.selection_ranges(file, std::slice::from_ref(&position))
             .expect("query should run")
             .metadata()
             .query,
@@ -705,7 +705,7 @@ def main():
     );
     assert!(
         !host
-            .selection_ranges(file, &[value_position.clone()])
+            .selection_ranges(file, std::slice::from_ref(&value_position))
             .expect("selection ranges should query")
             .into_value()
             .is_empty(),

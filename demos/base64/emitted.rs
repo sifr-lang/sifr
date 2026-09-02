@@ -43,11 +43,14 @@ fn b16encode(s: &str) -> Result<String, ParseError> {
                     message: sifr_generated_message,
                 })?;
         Ok(Ok({
-            let sifr_generated_bytes_receiver = &data;
+            let sifr_generated_bytes_receiver: &[u8] = &data;
             let mut sifr_generated_hex =
                 String::with_capacity(sifr_generated_bytes_receiver.len().saturating_mul(2_usize));
-            for sifr_generated_byte in sifr_generated_bytes_receiver.iter() {
-                sifr_generated_hex.push_str(&format!("{:02x}", *sifr_generated_byte));
+            for sifr_generated_byte in sifr_generated_bytes_receiver {
+                let _ = ::std::fmt::Write::write_fmt(
+                    &mut sifr_generated_hex,
+                    format_args!("{:02x}", *sifr_generated_byte),
+                );
             }
             sifr_generated_hex
         }
@@ -172,7 +175,7 @@ fn decode_b64_or_empty(payload: &str) -> String {
     })();
     sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
         let e = sifr_generated_try_err.clone();
-        let _ = format!("unexpected: {}", e.message.clone()).to_string();
+        let _ = format!("unexpected: {}", e.message.clone());
         String::new()
     })
 }
@@ -183,7 +186,7 @@ fn decode_urlsafe_b64_or_empty(payload: &str) -> String {
     })();
     sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
         let e = sifr_generated_try_err.clone();
-        let _ = format!("unexpected: {}", e.message.clone()).to_string();
+        let _ = format!("unexpected: {}", e.message.clone());
         String::new()
     })
 }
@@ -196,7 +199,7 @@ fn b16_encode_or_empty(payload: &str) -> String {
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
         let e = sifr_generated_try_err.clone();
-        let _ = format!("unexpected: {}", e.message.clone()).to_string();
+        let _ = format!("unexpected: {}", e.message.clone());
     }
     encoded
 }
@@ -209,7 +212,7 @@ fn b16_decode_or_empty(payload: &str) -> String {
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
         let e = sifr_generated_try_err.clone();
-        let _ = format!("unexpected: {}", e.message.clone()).to_string();
+        let _ = format!("unexpected: {}", e.message.clone());
     }
     decoded
 }

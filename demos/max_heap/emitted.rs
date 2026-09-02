@@ -233,7 +233,7 @@ fn main() {
         SifrInt::from_i64(1),
     ];
     sifr_generated_heapify_max(&mut stones);
-    println!("{}", format!("{:?}", drain(&mut stones)));
+    println!("{:?}", drain(&mut stones));
     let mut probe: Vec<SifrInt> = vec![
         SifrInt::from_i64(4),
         SifrInt::from_i64(10),
@@ -241,5 +241,5 @@ fn main() {
     ];
     sifr_generated_heapify_max(&mut probe);
     sifr_generated_heapreplace_max(&mut probe, SifrInt::from_i64(6));
-    println!("{}", format!("{:?}", drain(&mut probe)));
+    println!("{:?}", drain(&mut probe));
 }

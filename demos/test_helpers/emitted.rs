@@ -155,11 +155,7 @@ fn variance(data: &[f64]) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2e
         let avg: f64 = sifr_generated_divide_by_int(sifr_generated_sum(data), n.clone())?;
         Ok((avg,))
     })();
-    let (avg,) = #[expect(
-        clippy::single_match_else,
-        reason = "the fallback returns through the enclosing Sifr control-flow carrier"
-    )]
-    match sifr_generated_try_res {
+    let (avg,) = match sifr_generated_try_res {
         Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
         Err(sifr_generated_try_err) => {
             let error = sifr_generated_try_err.clone();
@@ -189,11 +185,7 @@ fn pvariance(data: &[f64]) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2
         let avg: f64 = sifr_generated_divide_by_int(sifr_generated_sum(data), n.clone())?;
         Ok((avg,))
     })();
-    let (avg,) = #[expect(
-        clippy::single_match_else,
-        reason = "the fallback returns through the enclosing Sifr control-flow carrier"
-    )]
-    match sifr_generated_try_res {
+    let (avg,) = match sifr_generated_try_res {
         Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
         Err(sifr_generated_try_err) => {
             let error = sifr_generated_try_err.clone();
@@ -223,11 +215,7 @@ fn stdev(data: &[f64]) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eSta
         let avg: f64 = sifr_generated_divide_by_int(sifr_generated_sum(data), n.clone())?;
         Ok((avg,))
     })();
-    let (avg,) = #[expect(
-        clippy::single_match_else,
-        reason = "the fallback returns through the enclosing Sifr control-flow carrier"
-    )]
-    match sifr_generated_try_res {
+    let (avg,) = match sifr_generated_try_res {
         Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
         Err(sifr_generated_try_err) => {
             let error = sifr_generated_try_err.clone();
@@ -248,11 +236,7 @@ fn stdev(data: &[f64]) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eSta
         let v: f64 = sifr_generated_divide_by_int(total, &n - &SifrInt::from_i64(1))?;
         Ok((v,))
     })();
-    let (v,) = #[expect(
-        clippy::single_match_else,
-        reason = "the fallback returns through the enclosing Sifr control-flow carrier"
-    )]
-    match sifr_generated_try_res {
+    let (v,) = match sifr_generated_try_res {
         Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
         Err(sifr_generated_try_err) => {
             let error = sifr_generated_try_err.clone();
@@ -277,11 +261,7 @@ fn pstdev(data: &[f64]) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eSt
         let avg: f64 = sifr_generated_divide_by_int(sifr_generated_sum(data), n.clone())?;
         Ok((avg,))
     })();
-    let (avg,) = #[expect(
-        clippy::single_match_else,
-        reason = "the fallback returns through the enclosing Sifr control-flow carrier"
-    )]
-    match sifr_generated_try_res {
+    let (avg,) = match sifr_generated_try_res {
         Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
         Err(sifr_generated_try_err) => {
             let error = sifr_generated_try_err.clone();
@@ -302,11 +282,7 @@ fn pstdev(data: &[f64]) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eSt
         let v: f64 = sifr_generated_divide_by_int(total, n.clone())?;
         Ok((v,))
     })();
-    let (v,) = #[expect(
-        clippy::single_match_else,
-        reason = "the fallback returns through the enclosing Sifr control-flow carrier"
-    )]
-    match sifr_generated_try_res {
+    let (v,) = match sifr_generated_try_res {
         Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
         Err(sifr_generated_try_err) => {
             let error = sifr_generated_try_err.clone();
@@ -368,7 +344,7 @@ fn main() {
                 sifr_generated_concat.push_str(m.to_string().as_str());
                 sifr_generated_concat
             });
-            assert_eq!(format!("mean = {m}").to_string(), "mean = 5");
+            assert_eq!(format!("mean = {m}"), "mean = 5");
             println!("{}", {
                 let mut sifr_generated_concat: String = String::with_capacity(18usize);
                 sifr_generated_concat.push_str("sample variance = ");
@@ -376,7 +352,7 @@ fn main() {
                 sifr_generated_concat
             });
             assert_eq!(
-                format!("sample variance = {sv}").to_string(),
+                format!("sample variance = {sv}"),
                 "sample variance = 4.571428571428571"
             );
             println!("{}", {
@@ -386,7 +362,7 @@ fn main() {
                 sifr_generated_concat
             });
             assert_eq!(
-                format!("population variance = {pv}").to_string(),
+                format!("population variance = {pv}"),
                 "population variance = 4"
             );
             println!("{}", {
@@ -396,7 +372,7 @@ fn main() {
                 sifr_generated_concat
             });
             assert_eq!(
-                format!("sample stdev = {sd}").to_string(),
+                format!("sample stdev = {sd}"),
                 "sample stdev = 2.138089935299395"
             );
             println!("{}", {
@@ -405,10 +381,7 @@ fn main() {
                 sifr_generated_concat.push_str(pd.to_string().as_str());
                 sifr_generated_concat
             });
-            assert_eq!(
-                format!("population stdev = {pd}").to_string(),
-                "population stdev = 2"
-            );
+            assert_eq!(format!("population stdev = {pd}"), "population stdev = 2");
             {
                 let sifr_generated_lhs = m;
                 let sifr_generated_rhs = 5.0_f64;
@@ -485,7 +458,7 @@ fn main() {
             sifr_generated_concat
         });
         assert_eq!(
-            format!("statistics error: {}", e.message.clone()).to_string(),
+            format!("statistics error: {}", e.message.clone()),
             "All assertions passed!"
         );
     }

@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use quote::{ToTokens, quote};
 use syn::punctuated::Punctuated;
 use syn::visit::{self, Visit};
@@ -221,7 +223,10 @@ pub(super) fn fold_initial_assignments(statements: &mut Vec<syn::Stmt>) {
     }
 }
 
-pub(super) fn fold_delayed_initializations(statements: &mut Vec<syn::Stmt>) {
+pub(super) fn fold_delayed_initializations(
+    statements: &mut Vec<syn::Stmt>,
+    mutating_methods: &HashSet<String>,
+) {
     let mut declaration_index = 0;
     while declaration_index < statements.len() {
         let Some((name, mut pattern, attrs)) =
@@ -244,7 +249,13 @@ pub(super) fn fold_delayed_initializations(statements: &mut Vec<syn::Stmt>) {
             declaration_index += 1;
             continue;
         };
-        remove_pattern_mutability(&mut pattern);
+        if !super::super::mutability_cleanup::statements_mutate_name(
+            &statements[assignment_index + 1..],
+            &name,
+            mutating_methods,
+        ) {
+            remove_pattern_mutability(&mut pattern);
+        }
         statements[assignment_index] = syn::parse_quote!(#(#attrs)* let #pattern = #value;);
         statements.remove(declaration_index);
     }

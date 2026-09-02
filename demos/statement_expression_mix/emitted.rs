@@ -35,5 +35,5 @@ fn main() {
     }
     assert!(&acc > &SifrInt::from_i64(0));
     println!("acc = {acc}");
-    assert_eq!(format!("acc = {acc}").to_string(), "acc = 22");
+    assert_eq!(format!("acc = {acc}"), "acc = 22");
 }

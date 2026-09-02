@@ -1086,9 +1086,7 @@ mod sifr_generated_project_nominals {
             field_started = true;
             i = &i + &SifrInt::from_i64(1);
         }
-        if in_quotes {
-            in_quotes = false;
-        }
+        let _ = in_quotes;
         if &SifrInt::from(row.len()) > &SifrInt::from_i64(0) || !field.is_empty() {
             sifr_generated_append_field(&mut row, field);
             sifr_generated_append_row(&mut rows, row);
@@ -1223,6 +1221,19 @@ mod sifr_generated_project_nominals {
                 }
             }
             None
+        }
+    }
+    impl SifrGeneratedStdlibSifrX2ejsonX2eJsonValue {
+        #[must_use]
+        pub fn keys(&self) -> Vec<String> {
+            let mut result: Vec<String> = Vec::new();
+            if !self.is_object() {
+                return result;
+            }
+            for (item_key, _) in self.object_items.as_ref().clone().iter().cloned() {
+                result.push(item_key.to_owned());
+            }
+            result
         }
     }
     impl ::std::fmt::Display for SifrGeneratedStdlibSifrX2ejsonX2eJsonValue {

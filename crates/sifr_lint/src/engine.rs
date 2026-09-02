@@ -336,7 +336,7 @@ mod tests {
         fs::create_dir_all(&root).unwrap();
         fs::write(root.join("main.sifr"), "def main():  \n").unwrap();
         let run = LintRunner::new(&LintOptions::default())
-            .run_paths(&[root.clone()], &mut DiskSourceProvider::new())
+            .run_paths(std::slice::from_ref(&root), &mut DiskSourceProvider::new())
             .unwrap();
         assert!(
             run.phases

@@ -1,3 +1,5 @@
+use crate::test_support::TestUnwrap as _;
+
 use crate::{
     CargoPackageId, ResolvedPackageCapabilities, SifrManifest, SifrPackageGraph, SifrPackageId,
     SifrPackageMetadata,
@@ -18,8 +20,8 @@ fn root_manifest_is_the_only_unsafe_sql_authority() {
         ),
     );
 
-    let denied =
-        ResolvedPackageCapabilities::from_root_package(&dependency_grant_graph, &app).unwrap();
+    let denied = ResolvedPackageCapabilities::from_root_package(&dependency_grant_graph, &app)
+        .test_unwrap("test precondition should hold");
     assert!(!denied.allows(&app.0, "sql.unsafe-syntax"));
     assert!(
         denied
@@ -38,7 +40,8 @@ fn root_manifest_is_the_only_unsafe_sql_authority() {
         ),
         (&dependency, manifest("")),
     );
-    let allowed = ResolvedPackageCapabilities::from_root_package(&root_grant_graph, &app).unwrap();
+    let allowed = ResolvedPackageCapabilities::from_root_package(&root_grant_graph, &app)
+        .test_unwrap("test precondition should hold");
     assert!(allowed.allows(&app.0, "sql.unsafe-syntax"));
     assert!(
         allowed
@@ -101,5 +104,5 @@ fn manifest(extra: &str) -> SifrManifest {
         Path::new("/app/sifr.toml"),
         &source,
     )
-    .expect("test manifest")
+    .test_unwrap("test manifest")
 }

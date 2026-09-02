@@ -245,9 +245,9 @@ pub(crate) fn cache_root_from_env(raw: Option<&str>) -> PathBuf {
     }
 }
 
-pub(crate) fn runner_config() -> Result<RunnerConfig, String> {
+pub(crate) fn runner_config() -> RunnerConfig {
     let available_workers = std::thread::available_parallelism()
-        .map(|v| v.get())
+        .map(std::num::NonZero::get)
         .unwrap_or(1);
 
     let sifr_jobs = parse_positive_usize(
@@ -274,7 +274,7 @@ pub(crate) fn runner_config() -> Result<RunnerConfig, String> {
     );
     let cache_root = cache_root_from_env(env::var("SIFR_E2E_CACHE_DIR").ok().as_deref());
 
-    Ok(RunnerConfig {
+    RunnerConfig {
         sifr_jobs,
         rust_jobs,
         run_jobs,
@@ -283,7 +283,7 @@ pub(crate) fn runner_config() -> Result<RunnerConfig, String> {
             enabled: cache_enabled,
             root: cache_root,
         },
-    })
+    }
 }
 
 pub(crate) fn cache_dir(root: &Path) -> PathBuf {
@@ -303,10 +303,10 @@ pub(crate) fn cache_group_path(root: &Path, group_id: &str) -> PathBuf {
 }
 
 pub(crate) fn deterministic_hash(value: &str) -> String {
-    let mut hash: u64 = 0xcbf29ce484222325;
+    let mut hash: u64 = 0xcbf2_9ce4_8422_2325;
     for byte in value.as_bytes() {
         hash ^= u64::from(*byte);
-        hash = hash.wrapping_mul(0x100000001b3);
+        hash = hash.wrapping_mul(0x0100_0000_01b3);
     }
     format!("{hash:016x}")
 }

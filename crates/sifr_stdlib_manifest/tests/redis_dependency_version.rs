@@ -1,4 +1,6 @@
-#![allow(clippy::expect_used)]
+mod support;
+
+use support::TestUnwrap as _;
 
 const REDIS_VERSION: &str = "1.6.0";
 const REDIS_PACKAGE_HASH: &str = "e37a4ca5c6ca42aa3e6df2fd32b987a65d32a4c2159a6f3fe0fd1df306a2658f";
@@ -39,7 +41,7 @@ fn maintained_locks_use_current_redis_with_registry_checksum() {
             toml::from_str(source).unwrap_or_else(|error| panic!("{label} lock: {error}"));
         let packages = lock["package"]
             .as_array()
-            .expect("lock packages must be an array");
+            .test_unwrap("lock packages must be an array");
         let matching = packages
             .iter()
             .filter(|package| package["name"].as_str() == Some("redis"))
@@ -71,17 +73,17 @@ fn resource_bridge_uses_redis_1_6_bounded_reconnect_attempts() {
 }
 
 fn assert_dependency(source: &str, expected_features: &[&str]) {
-    let manifest: toml::Value = toml::from_str(source).expect("manifest must parse");
+    let manifest: toml::Value = toml::from_str(source).test_unwrap("manifest must parse");
     let dependency = manifest["dependencies"]
         .get("redis")
-        .expect("manifest must declare Redis");
+        .test_unwrap("manifest must declare Redis");
     assert_eq!(dependency["version"].as_str(), Some("=1.6.0"));
     assert_eq!(dependency["default-features"].as_bool(), Some(false));
     let features = dependency["features"]
         .as_array()
-        .expect("Redis features must be an array")
+        .test_unwrap("Redis features must be an array")
         .iter()
-        .map(|feature| feature.as_str().expect("feature must be a string"))
+        .map(|feature| feature.as_str().test_unwrap("feature must be a string"))
         .collect::<Vec<_>>();
     assert_eq!(features, expected_features);
 }

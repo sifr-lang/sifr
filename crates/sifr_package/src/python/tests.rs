@@ -1,3 +1,5 @@
+use crate::test_support::{TestExpectErr as _, TestUnwrap as _};
+
 use super::test_support::{cargo_id, graph, package, package_id};
 use super::{
     PythonEnvironmentResolution, resolve_python_environment, resolve_python_environment_for_check,
@@ -20,7 +22,7 @@ sifr-version = ">=0.3,<0.4"
 venv = "/absolute/.venv"
 "#;
     let diagnostic = SifrManifest::parse(&cargo_id("app"), &PathBuf::from("sifr.toml"), source)
-        .expect_err("absolute venv path must fail");
+        .test_expect_err("absolute venv path must fail");
 
     assert_eq!(diagnostic.code, DiagnosticCode::PYENV_INVALID_CONFIG);
 }
@@ -36,7 +38,7 @@ edition = "2026"
 sifr-version = ">=0.3,<0.4"
 "#;
     let diagnostic = SifrManifest::parse(&cargo_id("app"), &PathBuf::from("sifr.toml"), source)
-        .expect_err("mistyped python table must fail");
+        .test_expect_err("mistyped python table must fail");
 
     assert_eq!(diagnostic.code, DiagnosticCode::PYENV_INVALID_CONFIG);
 }
@@ -53,7 +55,7 @@ sifr-version = ">=0.3,<0.4"
 allow-imports = ["numpy"]
 "#;
     let diagnostic = SifrManifest::parse(&cargo_id("app"), &PathBuf::from("sifr.toml"), source)
-        .expect_err("removed authority must not be ignored");
+        .test_expect_err("removed authority must not be ignored");
 
     assert_eq!(diagnostic.code, DiagnosticCode::PYENV_INVALID_CONFIG);
     assert!(diagnostic.message.contains("allow-imports"));
@@ -62,9 +64,10 @@ allow-imports = ["numpy"]
 #[test]
 fn python_environment_uses_uv_project_defaults_without_repeated_paths() {
     let project_root = temp_root("default-discovery");
-    fs::create_dir_all(&project_root).expect("create uv project");
-    fs::write(project_root.join("pyproject.toml"), "[project]\n").expect("write project marker");
-    fs::write(project_root.join("uv.lock"), "version = 1\n").expect("write lock marker");
+    fs::create_dir_all(&project_root).test_unwrap("create uv project");
+    fs::write(project_root.join("pyproject.toml"), "[project]\n")
+        .test_unwrap("write project marker");
+    fs::write(project_root.join("uv.lock"), "version = 1\n").test_unwrap("write lock marker");
     let mut app = package(
         "app",
         PythonConfig {
@@ -81,8 +84,8 @@ fn python_environment_uses_uv_project_defaults_without_repeated_paths() {
 
     let root = package_id("app");
     let resolved = resolve_python_environment(&graph, &root)
-        .expect("default discovery should resolve")
-        .expect("Python is required");
+        .test_unwrap("default discovery should resolve")
+        .test_unwrap("Python is required");
 
     assert_eq!(resolved.venv_root, project_root.join(".venv"));
     assert_eq!(
@@ -91,7 +94,7 @@ fn python_environment_uses_uv_project_defaults_without_repeated_paths() {
     );
     assert_eq!(resolved.lock, Some(project_root.join("uv.lock")));
     assert_eq!(resolved.interpreter, project_root.join(".venv/bin/python"));
-    fs::remove_dir_all(project_root).expect("remove uv project");
+    fs::remove_dir_all(project_root).test_unwrap("remove uv project");
 }
 
 #[test]
@@ -111,7 +114,7 @@ fn missing_uv_environment_selection_reports_pyenv_0003() {
     let graph = graph(vec![app]);
 
     let diagnostics = resolve_python_environment(&graph, &package_id("app"))
-        .expect_err("missing uv project must fail");
+        .test_expect_err("missing uv project must fail");
 
     assert_eq!(diagnostics.len(), 1);
     assert_eq!(diagnostics[0].code, DiagnosticCode::PYENV_MISSING_SELECTION);
@@ -131,7 +134,7 @@ fn read_only_library_resolution_defers_only_missing_final_application_authority(
     let graph = graph(vec![library]);
 
     let resolution = resolve_python_environment_for_check(&graph, &package_id("lib"), &[], true)
-        .expect("missing final-application authority should defer");
+        .test_unwrap("missing final-application authority should defer");
     let PythonEnvironmentResolution::DeferredToFinalApplication(deferred) = resolution else {
         panic!("library resolution should be deferred");
     };
@@ -140,7 +143,7 @@ fn read_only_library_resolution_defers_only_missing_final_application_authority(
     assert!(deferred.environment_selection_missing);
 
     let diagnostics = resolve_python_environment_for_check(&graph, &package_id("lib"), &[], false)
-        .expect_err("strict resolution must preserve trust failure");
+        .test_expect_err("strict resolution must preserve trust failure");
     assert_eq!(
         diagnostics[0].code,
         DiagnosticCode::PYTRUST_REQUIRED_IMPORT_UNAUTHORIZED
@@ -150,9 +153,10 @@ fn read_only_library_resolution_defers_only_missing_final_application_authority(
 #[test]
 fn read_only_library_resolution_uses_discovered_environment_authority() {
     let project_root = temp_root("check-default-discovery");
-    fs::create_dir_all(&project_root).expect("create uv project");
-    fs::write(project_root.join("pyproject.toml"), "[project]\n").expect("write project marker");
-    fs::write(project_root.join("uv.lock"), "version = 1\n").expect("write lock marker");
+    fs::create_dir_all(&project_root).test_unwrap("create uv project");
+    fs::write(project_root.join("pyproject.toml"), "[project]\n")
+        .test_unwrap("write project marker");
+    fs::write(project_root.join("uv.lock"), "version = 1\n").test_unwrap("write lock marker");
     let mut library = package(
         "lib",
         PythonConfig {
@@ -168,13 +172,13 @@ fn read_only_library_resolution_uses_discovered_environment_authority() {
     let graph = graph(vec![library]);
 
     let resolution = resolve_python_environment_for_check(&graph, &package_id("lib"), &[], true)
-        .expect("discovered environment should resolve");
+        .test_unwrap("discovered environment should resolve");
     let PythonEnvironmentResolution::Resolved(resolved) = resolution else {
         panic!("discovered library environment should not defer");
     };
     assert_eq!(resolved.venv_root, project_root.join(".venv"));
     assert_eq!(resolved.trusted_imports, ["numpy"]);
-    fs::remove_dir_all(project_root).expect("remove uv project");
+    fs::remove_dir_all(project_root).test_unwrap("remove uv project");
 }
 
 #[test]
@@ -199,7 +203,8 @@ fn multiple_python_environment_selections_report_pyenv_0002() {
     ]);
 
     let root = package_id("app");
-    let diagnostics = resolve_python_environment(&graph, &root).expect_err("two venvs must fail");
+    let diagnostics =
+        resolve_python_environment(&graph, &root).test_expect_err("two venvs must fail");
 
     assert_eq!(diagnostics.len(), 1);
     assert_eq!(
@@ -240,8 +245,8 @@ fn python_environment_resolution_deduplicates_declared_roots() {
 
     let root = package_id("app");
     let resolved = resolve_python_environment(&graph, &root)
-        .expect("resolution should pass")
-        .expect("environment should be selected");
+        .test_unwrap("resolution should pass")
+        .test_unwrap("environment should be selected");
 
     assert_eq!(
         resolved.declared_imports,
@@ -275,8 +280,8 @@ fn same_root_python_environment_selection_resolves_once() {
     let root = package_id("app");
 
     let resolved = resolve_python_environment(&graph, &root)
-        .expect("same root environment should pass")
-        .expect("environment should be selected");
+        .test_unwrap("same root environment should pass")
+        .test_unwrap("environment should be selected");
 
     assert_eq!(resolved.selected_by, root);
     assert_eq!(resolved.venv_root, PathBuf::from("/ws/app/.python-env"));
@@ -307,7 +312,7 @@ fn dependency_python_environment_selection_reports_pyenv_0001() {
     let root = package_id("app");
 
     let diagnostics =
-        resolve_python_environment(&graph, &root).expect_err("dependency venv must fail");
+        resolve_python_environment(&graph, &root).test_expect_err("dependency venv must fail");
 
     assert_eq!(diagnostics.len(), 1);
     assert_eq!(diagnostics[0].code, DiagnosticCode::PYENV_INVALID_CONFIG);
@@ -316,7 +321,7 @@ fn dependency_python_environment_selection_reports_pyenv_0001() {
 fn temp_root(label: &str) -> PathBuf {
     let nonce = SystemTime::now()
         .duration_since(UNIX_EPOCH)
-        .expect("clock after epoch")
+        .test_unwrap("clock after epoch")
         .as_nanos();
     std::env::temp_dir().join(format!(
         "sifr-python-{label}-{}-{nonce}",

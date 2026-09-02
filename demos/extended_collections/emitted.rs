@@ -352,11 +352,14 @@ fn main() {
         println!("decode error: {}", err.message.clone());
     }
     let hex_hello: String = {
-        let sifr_generated_bytes_receiver = &vec![104u8, 101u8, 108u8, 108u8, 111u8];
+        let sifr_generated_bytes_receiver: &[u8] = &vec![104u8, 101u8, 108u8, 108u8, 111u8];
         let mut sifr_generated_hex =
             String::with_capacity(sifr_generated_bytes_receiver.len().saturating_mul(2_usize));
-        for sifr_generated_byte in sifr_generated_bytes_receiver.iter() {
-            sifr_generated_hex.push_str(&format!("{:02x}", *sifr_generated_byte));
+        for sifr_generated_byte in sifr_generated_bytes_receiver {
+            let _ = ::std::fmt::Write::write_fmt(
+                &mut sifr_generated_hex,
+                format_args!("{:02x}", *sifr_generated_byte),
+            );
         }
         sifr_generated_hex
     };

@@ -58,12 +58,12 @@ mod sifr_generated_project_nominals {
     }
     #[must_use]
     pub fn sifr_generated_is_identifier_start(ch: &str) -> bool {
-        ch == "_" || !ch.is_empty() && ch.chars().all(|c| c.is_alphabetic())
+        ch == "_" || !ch.is_empty() && ch.chars().all(char::is_alphabetic)
     }
     #[must_use]
     pub fn sifr_generated_is_identifier_continue(ch: &str) -> bool {
         ch == "_"
-            || !ch.is_empty() && ch.chars().all(|c| c.is_alphabetic())
+            || !ch.is_empty() && ch.chars().all(char::is_alphabetic)
             || !ch.is_empty() && ch.chars().all(|c| c.is_ascii_digit())
     }
     #[must_use]
@@ -1636,14 +1636,13 @@ fn sifr_generated_sort_blocks(
         for existing in sorted_blocks.iter().cloned() {
             if !found_insert_at {
                 let (ex_a, ex_b_value_e8565f608f1d5555, _) = existing;
-                let mut comes_before: bool = false;
-                if &bl_a < &ex_a {
-                    comes_before = true;
-                } else if &bl_a == &ex_a
-                    && &bl_b_value_c53dd39bc263efba < &ex_b_value_e8565f608f1d5555
+                let comes_before: bool = if &bl_a < &ex_a
+                    || &bl_a == &ex_a && &bl_b_value_c53dd39bc263efba < &ex_b_value_e8565f608f1d5555
                 {
-                    comes_before = true;
-                }
+                    true
+                } else {
+                    false
+                };
                 if comes_before {
                     insert_at = i.clone();
                     found_insert_at = true;

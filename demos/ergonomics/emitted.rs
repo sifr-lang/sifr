@@ -201,7 +201,7 @@ fn demo_string_methods() {
     );
     println!(
         "Is alpha: {}",
-        !"abc".to_string().is_empty() && "abc".to_string().chars().all(|c| c.is_alphabetic())
+        !"abc".to_string().is_empty() && "abc".to_string().chars().all(char::is_alphabetic)
     );
     println!(
         "Is digit: {}",
@@ -372,12 +372,12 @@ const fn placeholder() {}
 fn demo_builtins() {
     println!("abs(-42) = {}", (-&SifrInt::from_i64(42)).abs());
     println!(
-        "round(3.7) = {}",
+        "round(3.7) = {:?}",
         SifrInt::from_f64_trunc(3.7_f64.round_ties_even()).ok_or_else(|| ValueError {
             message: "cannot round non-finite float to int".to_string()
         })
     );
-    println!("repr(42) = {}", format!("{:?}", SifrInt::from_i64(42)));
+    println!("repr(42) = {:?}", SifrInt::from_i64(42));
 }
 fn main() {
     demo_augmented_assign();

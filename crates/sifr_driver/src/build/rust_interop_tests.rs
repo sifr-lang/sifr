@@ -683,14 +683,15 @@ fn package_context_with_root(
 ) -> PackageRustInteropContext {
     let package_id = SifrPackageId("sifr-app@0.1.0#path".to_string());
     let cargo_package_id = CargoPackageId("path+file:///ws/app#sifr-app@0.1.0".to_string());
+    let sifr_manifest = package_root.join("sifr.toml");
     let package = SifrPackageMetadata {
         package_id: package_id.clone(),
         cargo_package_id: cargo_package_id.clone(),
         cargo_package_name: "sifr-app".to_string(),
         cargo_version: "0.1.0".to_string(),
         cargo_source: None,
-        package_root: package_root.clone(),
-        sifr_manifest: package_root.join("sifr.toml"),
+        package_root,
+        sifr_manifest,
         sifr_name: SifrPackageName("app".to_string()),
         manifest: SifrManifest {
             package_name: SifrPackageName("app".to_string()),

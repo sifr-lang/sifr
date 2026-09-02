@@ -60,7 +60,9 @@ where
         }
         let pairs = description
             .edges()
-            .chunks_exact(2)
+            .as_chunks::<2>()
+            .0
+            .iter()
             .enumerate()
             .map(|(index, pair)| {
                 if pair[0].kind() != StructuralEdgeKind::MappingKey(index)
@@ -132,7 +134,9 @@ where
         }
         let pairs = description
             .edges()
-            .chunks_exact(2)
+            .as_chunks::<2>()
+            .0
+            .iter()
             .enumerate()
             .map(|(index, pair)| {
                 if pair[0].kind() != StructuralEdgeKind::MappingKey(index)

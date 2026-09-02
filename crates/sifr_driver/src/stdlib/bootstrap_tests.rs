@@ -734,12 +734,10 @@ fn collections_and_sorted_insert_modules_export_only_canonical_operations() {
         .functions
         .get("sifr.collections")
         .expect("sifr.collections functions should be exported");
-    for name in ["from_list"] {
-        assert!(
-            collections.contains_key(name),
-            "sifr.collections.{name} should exist"
-        );
-    }
+    assert!(
+        collections.contains_key("from_list"),
+        "sifr.collections.from_list should exist"
+    );
     let collection_classes = compiled
         .defs
         .classes

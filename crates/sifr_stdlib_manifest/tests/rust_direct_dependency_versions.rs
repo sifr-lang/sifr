@@ -1,4 +1,6 @@
-#![allow(clippy::expect_used)]
+mod support;
+
+use support::TestUnwrap as _;
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
@@ -27,7 +29,7 @@ struct RegistryRelease {
 
 #[test]
 fn every_maintained_rust_direct_declaration_matches_the_registry_audit() {
-    let audit: serde_json::Value = serde_json::from_str(AUDIT).expect("audit JSON must parse");
+    let audit: serde_json::Value = serde_json::from_str(AUDIT).test_unwrap("audit JSON must parse");
     assert_eq!(audit["schema_version"].as_u64(), Some(1));
     assert_eq!(audit["audited_at"].as_str(), Some("2026-08-26"));
     assert_eq!(
@@ -41,7 +43,7 @@ fn every_maintained_rust_direct_declaration_matches_the_registry_audit() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../..")
         .canonicalize()
-        .expect("workspace root must resolve");
+        .test_unwrap("workspace root must resolve");
     let mut manifests = Vec::new();
     collect_manifests(&root, &root, &mut manifests);
     manifests.sort();
@@ -50,9 +52,9 @@ fn every_maintained_rust_direct_declaration_matches_the_registry_audit() {
         usize::try_from(
             audit["maintained_manifests"]
                 .as_u64()
-                .expect("manifest count must be an integer"),
+                .test_unwrap("manifest count must be an integer"),
         )
-        .expect("manifest count must fit usize"),
+        .test_unwrap("manifest count must fit usize"),
         "maintained Cargo.toml inventory drifted; refresh the official registry audit"
     );
 
@@ -77,9 +79,9 @@ fn every_maintained_rust_direct_declaration_matches_the_registry_audit() {
         usize::try_from(
             audit["direct_declarations"]
                 .as_u64()
-                .expect("declaration count must be an integer"),
+                .test_unwrap("declaration count must be an integer"),
         )
-        .expect("declaration count must fit usize"),
+        .test_unwrap("declaration count must fit usize"),
         "direct declaration inventory drifted; refresh the official registry audit"
     );
     assert_eq!(
@@ -91,12 +93,12 @@ fn every_maintained_rust_direct_declaration_matches_the_registry_audit() {
 
 #[test]
 fn audited_checksums_match_the_workspace_lock_when_present() {
-    let audit: serde_json::Value = serde_json::from_str(AUDIT).expect("audit JSON must parse");
+    let audit: serde_json::Value = serde_json::from_str(AUDIT).test_unwrap("audit JSON must parse");
     let releases = registry_releases(&audit);
-    let lock: toml::Value = toml::from_str(WORKSPACE_LOCK).expect("workspace lock must parse");
+    let lock: toml::Value = toml::from_str(WORKSPACE_LOCK).test_unwrap("workspace lock must parse");
     let packages = lock["package"]
         .as_array()
-        .expect("workspace lock packages must be an array");
+        .test_unwrap("workspace lock packages must be an array");
 
     for (name, release) in releases {
         let matching = packages.iter().find(|package| {
@@ -118,20 +120,20 @@ fn audited_checksums_match_the_workspace_lock_when_present() {
 fn registry_releases(audit: &serde_json::Value) -> BTreeMap<String, RegistryRelease> {
     audit["packages"]
         .as_array()
-        .expect("audit packages must be an array")
+        .test_unwrap("audit packages must be an array")
         .iter()
         .map(|package| {
             let name = package["name"]
                 .as_str()
-                .expect("audit package name")
+                .test_unwrap("audit package name")
                 .to_string();
             let latest_stable = package["latest_stable"]
                 .as_str()
-                .expect("audit stable version")
+                .test_unwrap("audit stable version")
                 .to_string();
             let checksum = package["checksum"]
                 .as_str()
-                .expect("audit checksum")
+                .test_unwrap("audit checksum")
                 .to_string();
             assert_eq!(checksum.len(), 64, "{name} checksum length");
             assert!(
@@ -156,9 +158,9 @@ fn collect_manifests(root: &Path, directory: &Path, manifests: &mut Vec<PathBuf>
     let entries =
         fs::read_dir(directory).unwrap_or_else(|error| panic!("{}: {error}", directory.display()));
     for entry in entries {
-        let entry = entry.expect("directory entry must be readable");
+        let entry = entry.test_unwrap("directory entry must be readable");
         let path = entry.path();
-        let file_type = entry.file_type().expect("entry type must be readable");
+        let file_type = entry.file_type().test_unwrap("entry type must be readable");
         if file_type.is_symlink() {
             continue;
         }

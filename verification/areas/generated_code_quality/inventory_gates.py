@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -94,10 +95,22 @@ def allowed_debt_selections() -> set[str]:
         for entry in payload["entries"]
         if entry.get("group") in positive_groups
     ]
+    companion_ids = []
+    for emitted in sorted((REPO_ROOT / "demos").glob("**/emitted.rs")):
+        source = emitted.with_name("main.sifr")
+        if not source.is_file():
+            raise ValueError(
+                "authoritative companion has no source: "
+                f"{emitted.relative_to(REPO_ROOT)}"
+            )
+        relative_source = source.relative_to(REPO_ROOT).as_posix()
+        digest = hashlib.sha256(relative_source.encode("utf-8")).hexdigest()[:12]
+        companion_ids.append(f"companion-{digest}")
     return {
         debt_selection_id(SMOKE_ENTRY_IDS),
         debt_selection_id(ids[:12]),
         debt_selection_id(ids),
+        debt_selection_id(companion_ids),
     }
 
 

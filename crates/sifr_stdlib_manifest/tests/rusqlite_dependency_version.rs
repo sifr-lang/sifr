@@ -1,4 +1,6 @@
-#![allow(clippy::expect_used)]
+mod support;
+
+use support::TestUnwrap as _;
 
 const CATALOG_MANIFEST: &str = include_str!("../../sifr_rust_interop_catalog/Cargo.toml");
 const FIXTURE_MANIFEST: &str = include_str!(
@@ -56,7 +58,7 @@ fn maintained_rusqlite_dependencies_use_the_latest_stable_policy() {
             dependency
                 .get("features")
                 .and_then(toml::Value::as_array)
-                .expect("rusqlite features must be an array")
+                .test_unwrap("rusqlite features must be an array")
                 .iter()
                 .filter_map(toml::Value::as_str)
                 .collect::<Vec<_>>(),
@@ -66,7 +68,7 @@ fn maintained_rusqlite_dependencies_use_the_latest_stable_policy() {
     }
 
     let catalog: toml::Value =
-        toml::from_str(CATALOG_MANIFEST).expect("catalog manifest must parse");
+        toml::from_str(CATALOG_MANIFEST).test_unwrap("catalog manifest must parse");
     assert_eq!(
         catalog
             .get("dependencies")
@@ -77,15 +79,15 @@ fn maintained_rusqlite_dependencies_use_the_latest_stable_policy() {
     );
 
     let fixture: serde_json::Value =
-        serde_json::from_str(FIXTURE_POLICY).expect("fixture policy must parse");
+        serde_json::from_str(FIXTURE_POLICY).test_unwrap("fixture policy must parse");
     let fixture_policy = fixture
         .get("features")
         .and_then(|features| features.get("rusqlite"))
-        .expect("fixture must declare a rusqlite policy");
+        .test_unwrap("fixture must declare a rusqlite policy");
     assert_policy("fixture", fixture_policy);
 
     let matrix: serde_json::Value =
-        serde_json::from_str(MATRIX_POLICY).expect("matrix policy must parse");
+        serde_json::from_str(MATRIX_POLICY).test_unwrap("matrix policy must parse");
     let matrix_policy = matrix
         .get("fixtures")
         .and_then(serde_json::Value::as_array)
@@ -96,7 +98,7 @@ fn maintained_rusqlite_dependencies_use_the_latest_stable_policy() {
         })
         .and_then(|fixture| fixture.get("features"))
         .and_then(|features| features.get("rusqlite"))
-        .expect("matrix must declare the opaque resource rusqlite policy");
+        .test_unwrap("matrix must declare the opaque resource rusqlite policy");
     assert_policy("matrix", matrix_policy);
 }
 
@@ -146,12 +148,12 @@ fn runtime_certifies_safe_savepoint_names_and_exact_native_trust() {
         "runtime must prove that the table survives the tainted identifier"
     );
 
-    let trust: toml::Value = toml::from_str(FIXTURE_TRUST).expect("fixture trust must parse");
+    let trust: toml::Value = toml::from_str(FIXTURE_TRUST).test_unwrap("fixture trust must parse");
     let build_scripts = trust
         .get("trust")
         .and_then(|trust| trust.get("rust-build-scripts"))
         .and_then(toml::Value::as_array)
-        .expect("build-script trust must be an array")
+        .test_unwrap("build-script trust must be an array")
         .iter()
         .filter_map(toml::Value::as_str)
         .collect::<Vec<_>>();
@@ -161,7 +163,7 @@ fn runtime_certifies_safe_savepoint_names_and_exact_native_trust() {
         .get("trust")
         .and_then(|trust| trust.get("native-links"))
         .and_then(toml::Value::as_array)
-        .expect("native-link trust must be an array")
+        .test_unwrap("native-link trust must be an array")
         .iter()
         .filter_map(toml::Value::as_str)
         .collect::<Vec<_>>();
@@ -179,7 +181,7 @@ fn assert_policy(label: &str, policy: &serde_json::Value) {
     let features = policy
         .get("features")
         .and_then(serde_json::Value::as_array)
-        .expect("rusqlite policy features must be an array")
+        .test_unwrap("rusqlite policy features must be an array")
         .iter()
         .filter_map(serde_json::Value::as_str)
         .collect::<Vec<_>>();
@@ -189,7 +191,7 @@ fn assert_policy(label: &str, policy: &serde_json::Value) {
 fn lock_packages(lock: &toml::Value) -> &[toml::Value] {
     lock.get("package")
         .and_then(toml::Value::as_array)
-        .expect("lock packages must be an array")
+        .test_unwrap("lock packages must be an array")
 }
 
 fn package<'a>(packages: &'a [toml::Value], name: &str, version: &str) -> &'a toml::Value {

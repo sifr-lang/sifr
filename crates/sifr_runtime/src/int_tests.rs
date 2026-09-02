@@ -215,7 +215,7 @@ fn exact_zero_divided_by_negative_integer_preserves_negative_zero() {
         .checked_true_div(&SifrInt::from_i64(-2))
         .expect("nonzero exact divisor should succeed");
 
-    assert_eq!(quotient, 0.0);
+    assert_eq!(quotient.to_bits(), (-0.0_f64).to_bits());
     assert!(quotient.is_sign_negative());
 }
 

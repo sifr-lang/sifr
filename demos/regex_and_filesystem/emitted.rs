@@ -327,6 +327,13 @@ mod sifr_generated_project_nominals {
     impl SifrGeneratedStdlibSifrX2ereX2ePattern {
         ///# Errors
         ///Returns the typed error produced by this operation.
+        pub fn findall(&self, text: &str) -> Result<Vec<String>, RegexError> {
+            self.compiled.findall(text)
+        }
+    }
+    impl SifrGeneratedStdlibSifrX2ereX2ePattern {
+        ///# Errors
+        ///Returns the typed error produced by this operation.
         pub fn finditer(
             &self,
             text: &str,

@@ -634,6 +634,12 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2etomllibX2eTomlValue {
         #[must_use]
+        pub fn as_str(&self) -> Option<String> {
+            self.str_value.clone()
+        }
+    }
+    impl SifrGeneratedStdlibSifrX2etomllibX2eTomlValue {
+        #[must_use]
         pub fn get(&self, key: &str) -> Option<SifrGeneratedStdlibSifrX2etomllibX2eTomlValue> {
             if !self.is_table() {
                 return None;

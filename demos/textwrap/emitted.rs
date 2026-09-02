@@ -419,11 +419,13 @@ fn dedent(text: &str) -> String {
                 }
                 j = &j + &SifrInt::from_i64(1);
             }
-            if !have_indent {
+            if have_indent {
+                if &spaces < &min_indent {
+                    min_indent = spaces;
+                }
+            } else {
                 min_indent = spaces;
                 have_indent = true;
-            } else if &spaces < &min_indent {
-                min_indent = spaces;
             }
         }
     }

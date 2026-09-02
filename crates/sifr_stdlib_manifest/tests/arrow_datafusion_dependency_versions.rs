@@ -1,4 +1,6 @@
-#![allow(clippy::expect_used)]
+mod support;
+
+use support::TestUnwrap as _;
 
 use std::collections::BTreeSet;
 
@@ -74,10 +76,10 @@ const DATAFUSION_PACKAGES: &[&str] = &[
 #[test]
 fn maintained_manifests_select_the_latest_stable_analytical_stack() {
     let catalog: toml::Value =
-        toml::from_str(CATALOG_MANIFEST).expect("catalog manifest must parse");
+        toml::from_str(CATALOG_MANIFEST).test_unwrap("catalog manifest must parse");
     let catalog_dependencies = catalog
         .get("dependencies")
-        .expect("catalog must declare dependencies");
+        .test_unwrap("catalog must declare dependencies");
     assert_dependency(catalog_dependencies, "arrow", ARROW_VERSION, Some(true));
     assert_dependency(
         catalog_dependencies,
@@ -87,11 +89,11 @@ fn maintained_manifests_select_the_latest_stable_analytical_stack() {
     );
 
     let fixture: toml::Value =
-        toml::from_str(FIXTURE_MANIFEST).expect("fixture manifest must parse");
+        toml::from_str(FIXTURE_MANIFEST).test_unwrap("fixture manifest must parse");
     let fixture_dependencies = fixture
         .get("workspace")
         .and_then(|workspace| workspace.get("dependencies"))
-        .expect("fixture must declare workspace dependencies");
+        .test_unwrap("fixture must declare workspace dependencies");
     assert_dependency(fixture_dependencies, "arrow", ARROW_VERSION, None);
     assert_dependency(fixture_dependencies, "datafusion", DATAFUSION_VERSION, None);
 }
@@ -224,7 +226,7 @@ fn assert_package_hash(
 fn lock_packages(lock: &toml::Value) -> &[toml::Value] {
     lock.get("package")
         .and_then(toml::Value::as_array)
-        .expect("lock packages must be an array")
+        .test_unwrap("lock packages must be an array")
 }
 
 fn package<'a>(packages: &'a [toml::Value], name: &str) -> &'a toml::Value {

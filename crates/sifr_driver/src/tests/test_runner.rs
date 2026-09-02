@@ -337,8 +337,7 @@ fn test_run_tests_reports_deterministic_parse_error_order() {
 
     let first_diagnostics: Vec<(String, Vec<String>)> =
         run_tests(&test_dir, &mut DiskSourceProvider::new())
-            .err()
-            .expect("parse errors should be reported")
+            .expect_err("parse errors should be reported")
             .into_iter()
             .map(|error| {
                 (
@@ -353,8 +352,7 @@ fn test_run_tests_reports_deterministic_parse_error_order() {
             .collect();
     let second_diagnostics: Vec<(String, Vec<String>)> =
         run_tests(&test_dir, &mut DiskSourceProvider::new())
-            .err()
-            .expect("parse errors should be deterministic")
+            .expect_err("parse errors should be deterministic")
             .into_iter()
             .map(|error| {
                 (

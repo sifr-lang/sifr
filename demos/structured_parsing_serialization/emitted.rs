@@ -1308,9 +1308,7 @@ mod sifr_generated_project_nominals {
             field_started = true;
             i = &i + &SifrInt::from_i64(1);
         }
-        if in_quotes {
-            in_quotes = false;
-        }
+        let _ = in_quotes;
         if &SifrInt::from(row.len()) > &SifrInt::from_i64(0) || !field.is_empty() {
             sifr_generated_append_field(&mut row, field);
             sifr_generated_append_row(&mut rows, row);
@@ -1375,9 +1373,9 @@ mod sifr_generated_project_nominals {
             sifr_generated_concat
         };
         if escaped.contains(&quotechar) {
-            if dialect.doublequote {
+            if dialect.doublequote || dialect.escapechar.clone().is_empty() {
                 escaped = escaped.replace(&quotechar, &format!("{quotechar}{quotechar}"));
-            } else if !dialect.escapechar.clone().is_empty() {
+            } else {
                 let escapechar_value: String = {
                     let mut sifr_generated_concat: String = String::new();
                     sifr_generated_concat.push_str(dialect.escapechar.clone().as_str());
@@ -1385,8 +1383,6 @@ mod sifr_generated_project_nominals {
                     sifr_generated_concat
                 };
                 escaped = escaped.replace(&quotechar, &format!("{escapechar_value}{quotechar}"));
-            } else {
-                escaped = escaped.replace(&quotechar, &format!("{quotechar}{quotechar}"));
             }
         }
         {
@@ -1430,13 +1426,13 @@ mod sifr_generated_project_nominals {
         if !dialect.quotechar.clone().is_empty() {
             let quotechar2: String = sifr_generated_quotechar_value(dialect);
             if result.contains(&quotechar2) {
-                if !dialect.escapechar.clone().is_empty() {
+                if dialect.escapechar.clone().is_empty() {
+                    result = result.replace(&quotechar2, &format!("{quotechar2}{quotechar2}"));
+                } else {
                     result = result.replace(
                         &quotechar2,
                         &format!("{}{}", dialect.escapechar.clone(), quotechar2),
                     );
-                } else {
-                    result = result.replace(&quotechar2, &format!("{quotechar2}{quotechar2}"));
                 }
             }
         }
@@ -1664,6 +1660,12 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2ejsonX2eJsonValue {
         #[must_use]
+        pub fn is_array(&self) -> bool {
+            self.kind.clone() == "array"
+        }
+    }
+    impl SifrGeneratedStdlibSifrX2ejsonX2eJsonValue {
+        #[must_use]
         pub fn is_object(&self) -> bool {
             self.kind.clone() == "object"
         }
@@ -1682,6 +1684,27 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2ejsonX2eJsonValue {
         #[must_use]
+        pub fn at(&self, index: &SifrInt) -> Option<SifrGeneratedStdlibSifrX2ejsonX2eJsonValue> {
+            if !self.is_array() {
+                return None;
+            }
+            if index < &SifrInt::from_i64(0) || index >= &SifrInt::from(self.array_items.len()) {
+                return None;
+            }
+            let value: Option<SifrGeneratedStdlibSifrX2ejsonX2eJsonValue> = {
+                let sifr_generated_checked_read_collection = &self.array_items;
+                let sifr_generated_checked_read_index = index.clone();
+                let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
+                    .normalize_index_or_len(sifr_generated_checked_read_collection.len());
+                sifr_generated_checked_read_collection
+                    .get(sifr_generated_checked_read_normalized)
+                    .cloned()
+            };
+            value
+        }
+    }
+    impl SifrGeneratedStdlibSifrX2ejsonX2eJsonValue {
+        #[must_use]
         pub fn get(&self, key: &str) -> Option<SifrGeneratedStdlibSifrX2ejsonX2eJsonValue> {
             if !self.is_object() {
                 return None;
@@ -1692,6 +1715,19 @@ mod sifr_generated_project_nominals {
                 }
             }
             None
+        }
+    }
+    impl SifrGeneratedStdlibSifrX2ejsonX2eJsonValue {
+        #[must_use]
+        pub fn keys(&self) -> Vec<String> {
+            let mut result: Vec<String> = Vec::new();
+            if !self.is_object() {
+                return result;
+            }
+            for (item_key, _) in self.object_items.as_ref().clone().iter().cloned() {
+                result.push(item_key.to_owned());
+            }
+            result
         }
     }
     impl ::std::fmt::Display for SifrGeneratedStdlibSifrX2ejsonX2eJsonValue {
@@ -1822,6 +1858,12 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2etomllibX2eTomlValue {
         #[must_use]
+        pub fn is_array(&self) -> bool {
+            self.kind.clone() == "array"
+        }
+    }
+    impl SifrGeneratedStdlibSifrX2etomllibX2eTomlValue {
+        #[must_use]
         pub fn is_table(&self) -> bool {
             self.kind.clone() == "table"
         }
@@ -1840,6 +1882,27 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2etomllibX2eTomlValue {
         #[must_use]
+        pub fn at(&self, index: &SifrInt) -> Option<SifrGeneratedStdlibSifrX2etomllibX2eTomlValue> {
+            if !self.is_array() {
+                return None;
+            }
+            if index < &SifrInt::from_i64(0) || index >= &SifrInt::from(self.array_items.len()) {
+                return None;
+            }
+            let value: Option<SifrGeneratedStdlibSifrX2etomllibX2eTomlValue> = {
+                let sifr_generated_checked_read_collection = &self.array_items;
+                let sifr_generated_checked_read_index = index.clone();
+                let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
+                    .normalize_index_or_len(sifr_generated_checked_read_collection.len());
+                sifr_generated_checked_read_collection
+                    .get(sifr_generated_checked_read_normalized)
+                    .cloned()
+            };
+            value
+        }
+    }
+    impl SifrGeneratedStdlibSifrX2etomllibX2eTomlValue {
+        #[must_use]
         pub fn get(&self, key: &str) -> Option<SifrGeneratedStdlibSifrX2etomllibX2eTomlValue> {
             if !self.is_table() {
                 return None;
@@ -1850,6 +1913,19 @@ mod sifr_generated_project_nominals {
                 }
             }
             None
+        }
+    }
+    impl SifrGeneratedStdlibSifrX2etomllibX2eTomlValue {
+        #[must_use]
+        pub fn keys(&self) -> Vec<String> {
+            let mut result: Vec<String> = Vec::new();
+            if !self.is_table() {
+                return result;
+            }
+            for (item_key, _) in self.table_items.as_ref().clone().iter().cloned() {
+                result.push(item_key.to_owned());
+            }
+            result
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -2178,9 +2254,9 @@ fn sifr_generated_quote_field(
         sifr_generated_concat
     };
     if escaped.contains(&quotechar) {
-        if dialect.doublequote {
+        if dialect.doublequote || dialect.escapechar.clone().is_empty() {
             escaped = escaped.replace(&quotechar, &format!("{quotechar}{quotechar}"));
-        } else if !dialect.escapechar.clone().is_empty() {
+        } else {
             let escapechar_value: String = {
                 let mut sifr_generated_concat: String = String::new();
                 sifr_generated_concat.push_str(dialect.escapechar.clone().as_str());
@@ -2188,8 +2264,6 @@ fn sifr_generated_quote_field(
                 sifr_generated_concat
             };
             escaped = escaped.replace(&quotechar, &format!("{escapechar_value}{quotechar}"));
-        } else {
-            escaped = escaped.replace(&quotechar, &format!("{quotechar}{quotechar}"));
         }
     }
     {
@@ -2231,13 +2305,13 @@ fn sifr_generated_escape_unquoted_field(
     if !dialect.quotechar.clone().is_empty() {
         let quotechar2: String = sifr_generated_quotechar_value(dialect);
         if result.contains(&quotechar2) {
-            if !dialect.escapechar.clone().is_empty() {
+            if dialect.escapechar.clone().is_empty() {
+                result = result.replace(&quotechar2, &format!("{quotechar2}{quotechar2}"));
+            } else {
                 result = result.replace(
                     &quotechar2,
                     &format!("{}{}", dialect.escapechar.clone(), quotechar2),
                 );
-            } else {
-                result = result.replace(&quotechar2, &format!("{quotechar2}{quotechar2}"));
             }
         }
     }
@@ -3343,7 +3417,7 @@ fn main() {
             false,
             SifrInt::from_i64(0),
         );
-    println!("{}", format!("{:?}", dict_reader.rows()));
+    println!("{:?}", dict_reader.rows());
     let mut dict_writer: SifrGeneratedStdlibSifrX2ecsvX2eDictWriter =
         SifrGeneratedStdlibSifrX2ecsvX2eDictWriter::new(
             vec!["name".to_string(), "age".to_string()],

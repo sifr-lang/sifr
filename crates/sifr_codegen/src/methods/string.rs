@@ -108,20 +108,16 @@ fn lower_non_empty_char_all(
                 args: vec![],
             }),
             method: "all".to_string(),
-            args: vec![RustExpr::Closure {
-                params: vec![RustParam::Named {
-                    name: "c".to_string(),
-                    ty: RustType::Named("_".to_string()),
-                }],
-                body: Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::Ident("c".to_string())),
-                    method: char_predicate_method.to_string(),
-                    args: vec![],
-                }),
-                is_move: false,
-            }],
+            args: vec![char_predicate(char_predicate_method)],
         }),
     })
+}
+
+fn char_predicate(method: &str) -> RustExpr {
+    if method == "is_ascii_digit" {
+        return char_predicate_closure(method);
+    }
+    RustExpr::Path(vec!["char".to_string(), method.to_string()])
 }
 
 fn char_predicate_closure(method: &str) -> RustExpr {
@@ -155,7 +151,7 @@ fn lower_has_alpha_and_filtered_all(
                 args: vec![],
             }),
             method: "any".to_string(),
-            args: vec![char_predicate_closure("is_alphabetic")],
+            args: vec![char_predicate("is_alphabetic")],
         }),
         op: "&&".to_string(),
         right: Box::new(RustExpr::MethodCall {
@@ -169,7 +165,7 @@ fn lower_has_alpha_and_filtered_all(
                 args: vec![char_predicate_closure("is_alphabetic")],
             }),
             method: "all".to_string(),
-            args: vec![char_predicate_closure(alpha_case_method)],
+            args: vec![char_predicate(alpha_case_method)],
         }),
     })
 }

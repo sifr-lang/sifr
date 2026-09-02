@@ -34,7 +34,7 @@ impl WorkerProcess {
     fn spawn() -> Self {
         let startup_lock = WORKER_STARTUP_LOCK
             .lock()
-            .unwrap_or_else(|poisoned| poisoned.into_inner());
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
         let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
         let repo_root = manifest_dir
             .parent()

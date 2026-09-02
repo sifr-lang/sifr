@@ -454,21 +454,21 @@ mod tests {
 
     fn configured_state() -> IpcConnectionState {
         IpcConnectionState::new(IpcConnectionConfig::new(sample_schema()))
-            .expect("sample config is valid")
+            .unwrap_or_else(|error| panic!("sample config should be valid: {error:?}"))
     }
 
     fn ready_state() -> IpcConnectionState {
         let mut state = configured_state();
         state
             .begin_parent_handshake()
-            .expect("initialized state can emit hello");
+            .unwrap_or_else(|error| panic!("initialized state should emit hello: {error:?}"));
         state
             .accept_worker_bootstrap(&IpcEnvelope::Ready {
                 protocol_version: 1,
                 schema: sample_schema(),
                 max_frame_bytes: 2048,
             })
-            .expect("sample ready frame is compatible");
+            .unwrap_or_else(|error| panic!("sample ready frame should be compatible: {error:?}"));
         state
     }
 

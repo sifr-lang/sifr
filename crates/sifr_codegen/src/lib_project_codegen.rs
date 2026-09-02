@@ -390,6 +390,11 @@ pub fn generate_rust_multi_with_metadata(
             .unwrap_or_default();
         let owned_unions = HashSet::new();
         let structural_identity_module_name = Some(*module_name);
+        let structural_layout_location = if crate_root_modules.contains(module_name) {
+            super::ProjectStructuralLayoutLocation::Local
+        } else {
+            super::ProjectStructuralLayoutLocation::CrateRoot
+        };
         let codegen_result = generate_rust_with_stdlib_for_module_with_project_policy(
             module,
             &module_codegen_code,
@@ -400,6 +405,7 @@ pub fn generate_rust_multi_with_metadata(
             Some(&union_usage.ordinary_unions),
             Some(&union_usage.try_error_unions),
             Some(&structural_record_identities),
+            structural_layout_location,
             Some(&structural_identity_expressions),
         );
         let local_imports =
@@ -509,14 +515,13 @@ edition = "2024"
 }
 
 #[cfg(test)]
+#[path = "lib_project_codegen_opaque_import_tests.rs"]
+mod opaque_import_tests;
+
+#[cfg(test)]
 mod tests {
     use super::*;
-    use ruff_text_size::TextRange;
-    use sifr_ir::{
-        HirClass, HirClassKind, HirExceptHandler, HirFunction, HirImport, MethodKind,
-        RustInteropAbiRequirements, RustInteropDeclaration, RustInteropDecoratorKind,
-        RustInteropEffect,
-    };
+    use sifr_ir::{HirClass, HirClassKind, HirExceptHandler, HirFunction, HirImport, MethodKind};
 
     fn empty_function(name: &str, return_type: sifr_type_system::Type) -> HirFunction {
         HirFunction {
@@ -817,82 +822,5 @@ mod tests {
 
             assert_eq!(usage.unions.len(), 2, "{:?}", usage.unions);
         }
-    }
-
-    #[test]
-    fn local_imports_bring_opaque_extension_traits_into_scope() {
-        let declaration = |kind| RustInteropDeclaration {
-            kind,
-            target: None,
-            arguments: Vec::new(),
-            span: TextRange::default(),
-            effect: RustInteropEffect::Sync,
-            abi_requirements: RustInteropAbiRequirements::default(),
-            consumes_receiver: false,
-        };
-        let provider = HirModule {
-            functions: Vec::new(),
-            classes: vec![HirClass {
-                name: "Resource".to_string(),
-                identity: None,
-                fields: Vec::new(),
-                field_defaults: Vec::new(),
-                field_default_identities: Vec::new(),
-                declaration_metadata: Vec::new(),
-                methods: vec![HirFunction {
-                    name: "close".to_string(),
-                    params: Vec::new(),
-                    return_type: sifr_type_system::Type::None,
-                    body: Vec::new(),
-                    is_async: false,
-                    method_kind: MethodKind::Regular,
-                    receiver: None,
-                    decorators: Vec::new(),
-                    rust_interop: vec![declaration(RustInteropDecoratorKind::Function)],
-                    python_interop: Vec::new(),
-                    compiler_intrinsic: None,
-                    type_params: Vec::new(),
-                }],
-                is_hashable: false,
-                is_error_type: false,
-                kind: HirClassKind::Regular,
-                operator_impls: Vec::new(),
-                newtype_inner: None,
-                implements_protocols: Vec::new(),
-                parent_class: None,
-                parent_type: None,
-                type_params: Vec::new(),
-                enum_variants: Vec::new(),
-                rust_interop: vec![declaration(RustInteropDecoratorKind::Opaque)],
-            }],
-            imports: Vec::new(),
-            constants: Vec::new(),
-            generic_functions: HashMap::new(),
-            type_param_bounds: HashMap::new(),
-        };
-        let consumer = HirModule {
-            functions: Vec::new(),
-            classes: Vec::new(),
-            imports: vec![HirImport {
-                module: "resources".to_string(),
-                names: vec!["Resource".to_string()],
-                aliases: Vec::new(),
-            }],
-            constants: Vec::new(),
-            generic_functions: HashMap::new(),
-            type_param_bounds: HashMap::new(),
-        };
-        let modules = HashMap::from([("resources", &provider), ("main", &consumer)]);
-
-        let imports = render_local_module_imports(&consumer, &modules, &StdlibCode::default());
-
-        assert!(
-            imports.contains("use crate::resources::Resource;"),
-            "{imports}"
-        );
-        assert!(
-            imports.contains("use crate::resources::__SifrOpaqueResourceMethods as _;"),
-            "{imports}"
-        );
     }
 }

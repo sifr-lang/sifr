@@ -15,12 +15,12 @@ fn main() {
     ];
     println!("length: {}", SifrInt::from(nums.len()));
     assert_eq!(
-        format!("length: {}", SifrInt::from(nums.len())).to_string(),
+        format!("length: {}", SifrInt::from(nums.len())),
         "length: 5"
     );
     println!("sum: {}", nums.iter().cloned().sum::<SifrInt>());
     assert_eq!(
-        format!("sum: {}", nums.iter().cloned().sum::<SifrInt>()).to_string(),
+        format!("sum: {}", nums.iter().cloned().sum::<SifrInt>()),
         "sum: 15"
     );
 }

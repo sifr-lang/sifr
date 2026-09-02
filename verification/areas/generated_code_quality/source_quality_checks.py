@@ -66,6 +66,33 @@ def scan_codegen_source_emissions(repo_root: Path) -> list[str]:
     return violations
 
 
+def gate_intrinsic_panic_lint(
+    repo_root: Path,
+    timed_case: Callable[..., Any],
+) -> None:
+    def check_intrinsic_layout() -> None:
+        codegen_lib = repo_root / "crates" / "sifr_codegen" / "src" / "lib.rs"
+        source = codegen_lib.read_text(encoding="utf-8")
+        forbidden = ("fn emit_intrinsic_call(", "pub(crate) fn emit_intrinsic_call(")
+        for marker in forbidden:
+            if marker in source:
+                raise RuntimeError(f"retired intrinsic emitter monolith returned: {marker}")
+        source_violations = scan_codegen_source_emissions(repo_root)
+        if source_violations:
+            raise RuntimeError(
+                "\n".join(
+                    ["forbidden emitted constructs in codegen source", *source_violations]
+                )
+            )
+
+    timed_case(
+        "generated_code_quality",
+        "intrinsic-panic-lint/no-retired-emit-intrinsic-call",
+        check_intrinsic_layout,
+    )
+    print("generated-code intrinsic panic lint passed")
+
+
 def assert_negative_rustfmt(
     seed: Path,
     run_root: Path,

@@ -1,3 +1,8 @@
+#![expect(
+    clippy::print_stdout,
+    reason = "the validation-suite runner reports progress and its final summary"
+)]
+
 use crate::validation_suite_support::manifest::{self, Assertion, CommandSpec, Stream, Suite};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -123,7 +128,7 @@ fn run_row_commands(
                         let result = run_command(&repo_root, &tmp_dir, &command);
                         output
                             .lock()
-                            .unwrap_or_else(|err| err.into_inner())
+                            .unwrap_or_else(std::sync::PoisonError::into_inner)
                             .push((command.id.clone(), result));
                     }));
                 }
@@ -132,7 +137,10 @@ fn run_row_commands(
                         .join()
                         .map_err(|_| "parallel validation command panicked".to_string())?;
                 }
-                let grouped = output.lock().unwrap_or_else(|err| err.into_inner()).clone();
+                let grouped = output
+                    .lock()
+                    .unwrap_or_else(std::sync::PoisonError::into_inner)
+                    .clone();
                 for (command_id, result) in grouped {
                     results.insert(command_id, result?);
                 }
@@ -264,10 +272,7 @@ fn command_result<'a>(
     command_id: &str,
 ) -> Result<&'a CommandResult, String> {
     results.get(command_id).ok_or_else(|| {
-        format!(
-            "validation suite assertion referenced unknown command '{}'",
-            command_id
-        )
+        format!("validation suite assertion referenced unknown command '{command_id}'")
     })
 }
 

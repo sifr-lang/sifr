@@ -1,3 +1,5 @@
+use crate::test_support::TestUnwrap as _;
+
 use crate::cargo::metadata::parse_metadata_json;
 use crate::graph::derive::{SifrPackageId, derive_package_graph};
 use crate::imports::source_map::{
@@ -17,7 +19,7 @@ fn import_resolution_result_preserves_ambiguous_candidates() {
 
     let graph = graph(&temp, &[&app, &math], &[edge(&app, "math", &math)]);
     let source_map = PackageSourceMap::build(&graph, &mut DiskSourceProvider::new())
-        .expect("ambiguous map is queryable");
+        .test_unwrap("ambiguous map is queryable");
 
     let PackageImportResolutionResult::Ambiguous(ambiguity) = source_map.resolve_import_result(
         &graph,
@@ -40,8 +42,8 @@ fn import_resolution_result_distinguishes_unresolved_private_and_fatal_states() 
     let app = package(&temp, "app", "sifr-app", "0.1.0", "app", &["main"]);
     let math = package(&temp, "math", "sifr-math", "1.0.0", "math", &["_internal"]);
     let graph = graph(&temp, &[&app, &math], &[edge(&app, "math", &math)]);
-    let source_map =
-        PackageSourceMap::build(&graph, &mut DiskSourceProvider::new()).expect("source map builds");
+    let source_map = PackageSourceMap::build(&graph, &mut DiskSourceProvider::new())
+        .test_unwrap("source map builds");
 
     assert!(matches!(
         source_map.resolve_import_result(
@@ -78,9 +80,9 @@ fn graph(
     packages: &[&TestPackage],
     edges: &[ResolveEdge],
 ) -> crate::SifrPackageGraph {
-    let metadata =
-        parse_metadata_json(&metadata_json(&temp.root, packages, edges)).expect("metadata parses");
-    derive_package_graph(metadata, &mut DiskSourceProvider::new()).expect("graph derives")
+    let metadata = parse_metadata_json(&metadata_json(&temp.root, packages, edges))
+        .test_unwrap("metadata parses");
+    derive_package_graph(metadata, &mut DiskSourceProvider::new()).test_unwrap("graph derives")
 }
 
 fn package(
@@ -92,26 +94,26 @@ fn package(
     modules: &[&str],
 ) -> TestPackage {
     let root = temp.package(dir);
-    fs::create_dir_all(root.join("src")).expect("create src");
+    fs::create_dir_all(root.join("src")).test_unwrap("create src");
     fs::write(
         root.join("src/lib.rs"),
         "// Pure Sifr package marker. Sifr source lives in the sifr.toml source root.\n",
     )
-    .expect("write marker");
+    .test_unwrap("write marker");
     fs::write(
         root.join("Cargo.toml"),
         format!(
             "[package]\nname = \"{cargo_name}\"\nversion = \"{version}\"\nedition = \"2024\"\n\n[package.metadata.sifr]\nmanifest = \"sifr.toml\"\n"
         ),
     )
-    .expect("write Cargo.toml");
+    .test_unwrap("write Cargo.toml");
     fs::write(
         root.join("sifr.toml"),
         format!(
             "[package]\nname = \"{export}\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n\n[source]\nroot = \"src\"\n"
         ),
     )
-    .expect("write sifr.toml");
+    .test_unwrap("write sifr.toml");
     write_module_under(&root, "src", "__init__");
     for module in modules {
         write_module_under(&root, "src", module);
@@ -128,8 +130,9 @@ fn write_module_under(package_root: &Path, source_root: &str, module: &str) {
     for part in module.split('.') {
         path.push(part);
     }
-    fs::create_dir_all(path.parent().expect("module has parent")).expect("create module parent");
-    fs::write(path.with_extension("sifr"), "").expect("write module");
+    fs::create_dir_all(path.parent().test_unwrap("module has parent"))
+        .test_unwrap("create module parent");
+    fs::write(path.with_extension("sifr"), "").test_unwrap("write module");
 }
 
 fn metadata_json(
@@ -238,16 +241,16 @@ impl TestWorkspace {
     fn new(name: &str) -> Self {
         let stamp = SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .expect("time should move forward")
+            .test_unwrap("time should move forward")
             .as_nanos();
         let root = std::env::temp_dir().join(format!("sifr_pkg_import_resolution_{name}_{stamp}"));
-        fs::create_dir_all(&root).expect("create temp workspace");
+        fs::create_dir_all(&root).test_unwrap("create temp workspace");
         Self { root }
     }
 
     fn package(&self, name: &str) -> PathBuf {
         let path = self.root.join(name);
-        fs::create_dir_all(&path).expect("create temp package");
+        fs::create_dir_all(&path).test_unwrap("create temp package");
         path
     }
 }

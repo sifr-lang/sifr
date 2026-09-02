@@ -33,7 +33,35 @@ pub(super) fn remove_unneeded_mutability(
         let syn::Stmt::Local(local) = statement else {
             continue;
         };
+        if local
+            .init
+            .as_ref()
+            .is_some_and(|initializer| expression_is_closure(&initializer.expr))
+        {
+            continue;
+        }
         remove_unneeded_pattern_mutability(&mut local.pat, &collector.names);
+    }
+}
+
+pub(super) fn statements_mutate_name(
+    statements: &[syn::Stmt],
+    name: &str,
+    mutating_methods: &HashSet<String>,
+) -> bool {
+    let mut collector = MutatingUseCollector::new(mutating_methods);
+    for statement in statements {
+        collector.visit_stmt(statement);
+    }
+    collector.names.contains(name)
+}
+
+fn expression_is_closure(expression: &syn::Expr) -> bool {
+    match expression {
+        syn::Expr::Closure(_) => true,
+        syn::Expr::Group(group) => expression_is_closure(&group.expr),
+        syn::Expr::Paren(paren) => expression_is_closure(&paren.expr),
+        _ => false,
     }
 }
 

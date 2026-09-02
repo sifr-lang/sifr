@@ -384,8 +384,7 @@ pub(super) fn test_check_entrypoint_project_mode_error_parity_with_compile_entry
     let check_errors = check_entrypoint(&main, &mut DiskSourceProvider::new());
     let build_out = mktemp_dir("check_entrypoint_build_out");
     let build_errors = compile_entrypoint(&main, &build_out, &mut DiskSourceProvider::new())
-        .err()
-        .expect("build path should fail for helper type mismatch");
+        .expect_err("build path should fail for helper type mismatch");
 
     let check_messages = render_compact_diagnostics(&check_errors);
     let build_messages = render_compact_diagnostics(&build_errors);
@@ -491,11 +490,9 @@ pub(super) fn test_frontend_error_messages_match_across_check_build_and_run_path
     let run_out = mktemp_dir("frontend_parity_run_out");
     let build_out = mktemp_dir("frontend_parity_build_out");
     let run_errors = compile_entrypoint(&main, &run_out, &mut DiskSourceProvider::new())
-        .err()
-        .expect("run path should fail on helper type error");
+        .expect_err("run path should fail on helper type error");
     let build_errors = compile_entrypoint(&main, &build_out, &mut DiskSourceProvider::new())
-        .err()
-        .expect("build path should fail on helper type error");
+        .expect_err("build path should fail on helper type error");
 
     let check_messages = render_compact_diagnostics(&check_errors);
     let run_messages = render_compact_diagnostics(&run_errors);

@@ -1,3 +1,5 @@
+use crate::test_support::{TestExpectErr as _, TestUnwrap as _};
+
 use super::bridge_resolution::{
     ResolvedPythonBridgeImport, resolve_python_bridge_graph, resolved_python_bridge_package_key,
     resolved_python_bridge_runtime_package,
@@ -38,7 +40,7 @@ fn resolved_package_key_is_stable_distinct_and_a_valid_identifier_segment() {
 #[test]
 fn missing_root_package_is_a_structured_graph_error() {
     let diagnostics = resolve_python_bridge_graph(&graph(Vec::new()), &package_id("missing"))
-        .expect_err("missing bridge root package must fail");
+        .test_expect_err("missing bridge root package must fail");
 
     assert_eq!(diagnostics[0].code, DiagnosticCode::PACKAGE_METADATA_PARSE);
     assert!(
@@ -75,7 +77,7 @@ fn selected_bridge_graph_rewrites_package_edges_and_derives_external_requirement
         },
     );
 
-    let resolved = resolve_python_bridge_graph(&graph, &app_id).expect("resolve bridge graph");
+    let resolved = resolve_python_bridge_graph(&graph, &app_id).test_unwrap("resolve bridge graph");
 
     assert_eq!(resolved.packages.len(), 2);
     assert_eq!(
@@ -96,19 +98,19 @@ fn selected_bridge_graph_rewrites_package_edges_and_derives_external_requirement
         .packages
         .iter()
         .find(|package| package.package_id == app_id)
-        .expect("app bridge package");
+        .test_unwrap("app bridge package");
     let dependency = resolved
         .packages
         .iter()
         .find(|package| package.package_id == dependency_id)
-        .expect("dependency bridge package");
+        .test_unwrap("dependency bridge package");
     assert_ne!(app.runtime_package, dependency.runtime_package);
     for package in [app, dependency] {
         let adapter = package
             .modules
             .iter()
             .find(|module| module.module == "adapter")
-            .expect("adapter module");
+            .test_unwrap("adapter module");
         assert!(adapter.imports.iter().any(|import| matches!(
             import,
             ResolvedPythonBridgeImport::SamePackage { module, runtime_module }
@@ -122,12 +124,12 @@ fn selected_bridge_graph_rewrites_package_edges_and_derives_external_requirement
 fn unresolved_same_package_bridge_import_is_rejected() {
     let fixture = ResolutionFixture::new("missing");
     let mut app = fixture.package("app");
-    fixture.write(&app, "adapter.py", "import bridge.missing\n");
+    ResolutionFixture::write(&app, "adapter.py", "import bridge.missing\n");
     let app_id = app.package_id.clone();
     app.manifest.trust.python = vec!["requests".to_string()];
 
     let diagnostics = resolve_python_bridge_graph(&graph(vec![app]), &app_id)
-        .expect_err("missing same-package module must fail");
+        .test_expect_err("missing same-package module must fail");
 
     assert_eq!(
         diagnostics[0].code,
@@ -142,7 +144,7 @@ fn dependency_bridge_requirements_remain_root_authorized() {
     let mut app = fixture.package("app");
     app.manifest.trust.python = vec!["requests".to_string()];
     let dependency = fixture.package("dependency");
-    fixture.write(&dependency, "adapter.py", "import numpy.linalg\n");
+    ResolutionFixture::write(&dependency, "adapter.py", "import numpy.linalg\n");
     let app_id = app.package_id.clone();
     let dependency_id = dependency.package_id.clone();
     let dependency_cargo_id = dependency.cargo_package_id.clone();
@@ -163,7 +165,7 @@ fn dependency_bridge_requirements_remain_root_authorized() {
             )]),
         },
     );
-    let resolved = resolve_python_bridge_graph(&graph, &app_id).expect("resolve requirements");
+    let resolved = resolve_python_bridge_graph(&graph, &app_id).test_unwrap("resolve requirements");
     let requirements = canonical_python_requirements(&graph, &resolved.requirements);
 
     let diagnostics = validate_python_trust_policy(
@@ -173,7 +175,7 @@ fn dependency_bridge_requirements_remain_root_authorized() {
         &["requests".to_string()],
         &[],
     )
-    .expect_err("untrusted bridge import must fail");
+    .test_expect_err("untrusted bridge import must fail");
 
     assert!(diagnostics.iter().any(|diagnostic| {
         diagnostic.code == DiagnosticCode::PYTRUST_REQUIRED_IMPORT_UNAUTHORIZED
@@ -194,7 +196,7 @@ impl ResolutionFixture {
             sequence,
             label
         ));
-        fs::create_dir_all(&root).expect("create resolution fixture");
+        fs::create_dir_all(&root).test_unwrap("create resolution fixture");
         Self { root }
     }
 
@@ -203,7 +205,7 @@ impl ResolutionFixture {
         package.package_root = self.root.join(name);
         package.sifr_manifest = package.package_root.join("sifr.toml");
         fs::create_dir_all(package.package_root.join("src/python_bridges"))
-            .expect("create bridge root");
+            .test_unwrap("create bridge root");
         package
     }
 
@@ -213,8 +215,8 @@ impl ResolutionFixture {
         external_import: &str,
     ) -> crate::graph::derive::SifrPackageMetadata {
         let package = self.package(name);
-        self.write(&package, "shared.py", "VALUE = 1\n");
-        self.write(
+        Self::write(&package, "shared.py", "VALUE = 1\n");
+        Self::write(
             &package,
             "adapter.py",
             &format!("import bridge.shared\nimport {external_import}\n"),
@@ -222,17 +224,12 @@ impl ResolutionFixture {
         package
     }
 
-    fn write(
-        &self,
-        package: &crate::graph::derive::SifrPackageMetadata,
-        relative: &str,
-        source: &str,
-    ) {
+    fn write(package: &crate::graph::derive::SifrPackageMetadata, relative: &str, source: &str) {
         let path = package
             .package_root
             .join(Path::new("src/python_bridges"))
             .join(relative);
-        fs::write(path, source).expect("write bridge source");
+        fs::write(path, source).test_unwrap("write bridge source");
     }
 }
 

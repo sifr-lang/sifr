@@ -1,6 +1,105 @@
 use super::canonicalize_generated_rust_source;
 
 #[test]
+fn preserves_result_matches_that_return_from_the_enclosing_function() {
+    let source = r#"
+        pub fn propagate(result: Result<i64, String>) -> Result<i64, String> {
+            let value = match result {
+                Ok(value) => value,
+                Err(error) => return Err(error),
+            };
+            Ok(value)
+        }
+    "#;
+
+    let canonical = canonicalize_generated_rust_source(source)
+        .expect("enclosing control flow must not move into a closure");
+
+    assert!(canonical.contains("match result"), "{canonical}");
+    assert!(canonical.contains("return Err(error)"), "{canonical}");
+    assert!(!canonical.contains("map_or_else"), "{canonical}");
+    assert!(
+        !canonical.contains("clippy::single_match_else"),
+        "{canonical}"
+    );
+}
+
+#[test]
+fn canonicalizes_wildcard_result_fallbacks_without_capturing_enclosing_returns() {
+    let source = r#"
+        pub fn recover(result: Result<i64, String>, early: bool) -> i64 {
+            match result {
+                Ok(value) => value,
+                Err(_) => {
+                    if early {
+                        return 1;
+                    }
+                    2
+                }
+            }
+        }
+    "#;
+
+    let canonical = canonicalize_generated_rust_source(source)
+        .expect("wildcard fallback control flow should remain in the enclosing function");
+
+    assert!(
+        canonical.contains("if let Ok(value) = result"),
+        "{canonical}"
+    );
+    assert!(canonical.contains("return 1"), "{canonical}");
+    assert!(!canonical.contains("match result"), "{canonical}");
+    assert!(!canonical.contains("unwrap_or_else"), "{canonical}");
+}
+
+#[test]
+fn canonicalizes_discarded_result_match_without_capturing_enclosing_return() {
+    let source = r#"
+        pub async fn wait(result: Result<(), String>) -> Result<(), String> {
+            match async { result }.await {
+                Ok(value) => value,
+                Err(error) => { return Err(error); }
+            };
+            Ok(())
+        }
+    "#;
+
+    let canonical = canonicalize_generated_rust_source(source)
+        .expect("discarded result matches should preserve enclosing control flow");
+
+    assert!(
+        canonical.contains("async { result }.await?;"),
+        "{canonical}"
+    );
+    assert!(!canonical.contains("return Err(error)"), "{canonical}");
+    assert!(!canonical.contains("unwrap_or_else"), "{canonical}");
+    assert!(
+        !canonical.contains("clippy::single_match_else"),
+        "{canonical}"
+    );
+}
+
+#[test]
+fn canonicalizes_discarded_wildcard_result_match_as_an_error_test() {
+    let source = r#"
+        pub async fn wait(result: Result<(), String>) -> Result<(), String> {
+            match async { result }.await {
+                Ok(value) => value,
+                Err(_) => { return Err("failed".to_string()); }
+            };
+            Ok(())
+        }
+    "#;
+
+    let canonical = canonicalize_generated_rust_source(source)
+        .expect("wildcard result matches should become direct error tests");
+
+    assert!(canonical.contains(".await.is_err()"), "{canonical}");
+    assert!(!canonical.contains("if let Err(_)"), "{canonical}");
+    assert!(canonical.contains("return Err"), "{canonical}");
+}
+
+#[test]
 fn prunes_undemanded_generated_trait_methods_and_enum_variants() {
     let source = r#"
         trait GeneratedActions {
@@ -40,6 +139,139 @@ fn prunes_undemanded_generated_trait_methods_and_enum_variants() {
     assert!(canonical.contains("Ready(i64)"), "{canonical}");
     assert!(!canonical.contains("Dead(String)"), "{canonical}");
     assert!(canonical.contains("Printed"), "{canonical}");
+}
+
+#[test]
+fn preserves_method_demand_when_pattern_refinement_hides_the_receiver_owner() {
+    let source = r#"
+        struct GeneratedValue;
+        impl GeneratedValue {
+            fn live(&self) -> i64 { 1 }
+            fn dead(&self) -> i64 { 2 }
+        }
+        fn make_value() -> Option<GeneratedValue> { Some(GeneratedValue) }
+        fn main() {
+            let mut value: Option<GeneratedValue> = None;
+            value = make_value();
+            if let Some(value) = value {
+                println!("{}", value.live());
+            }
+        }
+    "#;
+
+    let canonical = canonicalize_generated_rust_source(source)
+        .expect("unresolved refined receivers must conservatively retain live methods");
+
+    assert!(canonical.contains("fn live"), "{canonical}");
+    assert!(!canonical.contains("fn dead"), "{canonical}");
+    syn::parse_file(&canonical).expect("method-demand pruning must preserve valid Rust syntax");
+}
+
+#[test]
+fn external_associated_constructors_do_not_retain_same_named_local_methods() {
+    let source = r#"
+        struct GeneratedFailure;
+        impl GeneratedFailure {
+            fn new() -> Self { Self }
+            fn with_secondary() -> Self { Self }
+        }
+        fn main() {
+            let _external = String::new();
+            let _failure = GeneratedFailure::with_secondary();
+        }
+    "#;
+
+    let canonical = canonicalize_generated_rust_source(source)
+        .expect("exact external constructors must not retain unrelated local methods");
+
+    assert!(!canonical.contains("fn new"), "{canonical}");
+    assert!(canonical.contains("fn with_secondary"), "{canonical}");
+}
+
+#[test]
+fn preserves_crate_root_items_imported_by_inline_support_modules() {
+    let source = r#"
+        struct GeneratedHandle(i64);
+        impl GeneratedHandle {
+            fn new(value: i64) -> Self { Self(value) }
+        }
+        struct DeadRootItem;
+        mod support {
+            use crate::GeneratedHandle;
+            pub fn make_handle() -> GeneratedHandle { GeneratedHandle::new(1) }
+        }
+        fn main() {
+            let handle = support::make_handle();
+            println!("{}", handle.0);
+        }
+    "#;
+
+    let canonical = canonicalize_generated_rust_source(source)
+        .expect("inline module imports must demand their crate-root definitions");
+
+    assert!(canonical.contains("struct GeneratedHandle"), "{canonical}");
+    assert!(canonical.contains("fn new"), "{canonical}");
+    assert!(!canonical.contains("DeadRootItem"), "{canonical}");
+    syn::parse_file(&canonical).expect("cross-scope demand must preserve valid Rust syntax");
+}
+
+#[test]
+fn removes_unobserved_literal_resets_of_boolean_locals() {
+    let source = r#"
+        fn parse(input: bool) {
+            let mut in_quotes: bool = input;
+            if in_quotes {
+                println!("quoted");
+            }
+            if in_quotes {
+                in_quotes = false;
+            }
+            println!("done");
+        }
+        fn main() { parse(true); }
+    "#;
+
+    let canonical = canonicalize_generated_rust_source(source)
+        .expect("unobserved boolean resets should be removed structurally");
+
+    assert!(!canonical.contains("in_quotes = false"), "{canonical}");
+    assert!(!canonical.contains("if in_quotes {}"), "{canonical}");
+    syn::parse_file(&canonical).expect("dead boolean cleanup must preserve valid Rust syntax");
+}
+
+#[test]
+fn inverts_negated_if_else_conditions() {
+    let source = r#"
+        fn select(empty: bool) -> i64 {
+            if !empty { 1 } else { 2 }
+        }
+        fn main() { println!("{}", select(false)); }
+    "#;
+
+    let canonical = canonicalize_generated_rust_source(source)
+        .expect("negated if-else conditions should be expressed positively");
+
+    assert!(
+        canonical.contains("if empty { 2 } else { 1 }"),
+        "{canonical}"
+    );
+    assert!(!canonical.contains("if !empty"), "{canonical}");
+}
+
+#[test]
+fn combines_adjacent_if_branches_with_identical_bodies() {
+    let source = r#"
+        fn select(first: bool, second: bool) -> i64 {
+            if first { 1 } else if second { 1 } else { 2 }
+        }
+        fn main() { println!("{}", select(false, true)); }
+    "#;
+
+    let canonical = canonicalize_generated_rust_source(source)
+        .expect("adjacent identical branches should share one condition");
+
+    assert!(canonical.contains("first || second"), "{canonical}");
+    assert_eq!(canonical.matches("{ 1 }").count(), 1, "{canonical}");
 }
 
 #[test]
@@ -494,6 +726,109 @@ fn adds_eq_only_when_every_retained_field_type_is_proven_eq() {
     );
     assert!(
         canonical.contains("#[derive(PartialEq)]\nenum Values"),
+        "{canonical}"
+    );
+}
+
+#[test]
+fn preserves_mutability_of_fn_mut_closure_bindings() {
+    let source = r#"
+        fn main() {
+            let mut total = 0;
+            let mut apply = || {
+                total += 1;
+            };
+            apply();
+            println!("{total}");
+        }
+    "#;
+
+    let canonical = canonicalize_generated_rust_source(source)
+        .expect("FnMut closure bindings must retain callable mutability");
+
+    assert!(canonical.contains("let mut apply = ||"), "{canonical}");
+}
+
+#[test]
+fn preserves_mutability_after_folding_an_assignment_conditional() {
+    let source = r#"
+        fn main() {
+            let value = Some(1.0_f64);
+            let mut selected: f64 = 0.0_f64;
+            if let Some(value) = value {
+                selected = value;
+            }
+            if true {
+                if let Some(increment) = Some(2.0_f64) {
+                    selected += increment;
+                }
+            }
+            println!("{selected}");
+        }
+    "#;
+
+    let canonical = canonicalize_generated_rust_source(source)
+        .expect("folded assignment conditionals must preserve later mutability");
+
+    assert!(canonical.contains("let mut selected"), "{canonical}");
+    assert!(
+        canonical.contains("value.unwrap_or(0.0_f64)"),
+        "{canonical}"
+    );
+}
+
+#[test]
+fn preserves_mutability_after_folding_a_delayed_initialization() {
+    let source = r#"
+        fn main() {
+            let mut selected: f64 = 0.0_f64;
+            println!("initializing");
+            selected = 1.0_f64;
+            if true {
+                selected += 2.0_f64;
+            }
+            println!("{selected}");
+        }
+    "#;
+
+    let canonical = canonicalize_generated_rust_source(source)
+        .expect("folded delayed initializations must preserve later mutability");
+
+    assert!(canonical.contains("let mut selected"), "{canonical}");
+}
+
+#[test]
+fn retains_only_concretely_instantiated_generated_trait_impls() {
+    let source = r#"
+        trait GeneratedAdd: Sized {
+            fn add(self, rhs: Self) -> Self;
+        }
+        impl GeneratedAdd for String {
+            fn add(mut self, rhs: Self) -> Self { self.push_str(&rhs); self }
+        }
+        impl GeneratedAdd for f64 {
+            fn add(self, rhs: Self) -> Self { self + rhs }
+        }
+        fn add_same<T: GeneratedAdd>(left: T, right: T) -> T {
+            GeneratedAdd::add(left, right)
+        }
+        fn relay<U: GeneratedAdd>(left: U, right: U) -> U {
+            add_same(left, right)
+        }
+        fn main() {
+            println!("{}", relay("sifr".to_string(), " rust".to_string()));
+        }
+    "#;
+
+    let canonical = canonicalize_generated_rust_source(source)
+        .expect("concrete generic calls must demand their generated trait implementation");
+
+    assert!(
+        canonical.contains("impl GeneratedAdd for String"),
+        "{canonical}"
+    );
+    assert!(
+        !canonical.contains("impl GeneratedAdd for f64"),
         "{canonical}"
     );
 }

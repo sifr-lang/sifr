@@ -1382,10 +1382,7 @@ fn main() {
             sifr_generated_concat.push_str(text.as_str());
             sifr_generated_concat
         });
-        assert_eq!(
-            format!("file = {text}").to_string(),
-            "file = codegen preamble"
-        );
+        assert_eq!(format!("file = {text}"), "file = codegen preamble");
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
@@ -1397,7 +1394,7 @@ fn main() {
             sifr_generated_concat
         });
         assert_eq!(
-            format!("ioerror = {}", e.message.clone()).to_string(),
+            format!("ioerror = {}", e.message.clone()),
             "preamble demo complete"
         );
     }

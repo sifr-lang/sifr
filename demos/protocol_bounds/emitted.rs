@@ -9,6 +9,12 @@ impl SifrGeneratedAdd for ::sifr_runtime::SifrInt {
         self + rhs
     }
 }
+impl SifrGeneratedAdd for String {
+    fn sifr_generated_add(mut self, rhs: Self) -> Self {
+        self.push_str(&rhs);
+        self
+    }
+}
 fn keep_comparable<T: Clone + 'static + PartialOrd>(x: &T) -> T {
     x.clone()
 }

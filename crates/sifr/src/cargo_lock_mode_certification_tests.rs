@@ -394,7 +394,7 @@ fn assert_drift_rejected(case: DriftCase) {
             std::fs::remove_file(&lock_path).expect("negative case should remove copied lock");
         }
         DriftCase::StaleVersion => {
-            replace_file(&lock_path, "version = \"2.14.0\"", "version = \"2.99.0\"")
+            replace_file(&lock_path, "version = \"2.14.0\"", "version = \"2.99.0\"");
         }
         DriftCase::Checksum => replace_file(
             &lock_path,
