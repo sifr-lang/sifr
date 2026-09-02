@@ -151,6 +151,10 @@ def validate_build_evidence(record: dict[str, Any]) -> None:
     suites = {str(suite.get("name")): suite for suite in manifest.get("suites", [])}
     suite = suites.get(evidence["suite"])
     require(isinstance(suite, dict), "SQL build qualification suite is absent")
+    require(
+        suite.get("resource_classes") == ["default-local"],
+        "SQL build qualification must use the schema-supported default-local resource class",
+    )
     commands = {str(case.get("command")) for case in suite.get("cases", [])}
     require(commands == {"sql-build-qualification"}, "SQL build suite command has drifted")
     workflow = (REPO_ROOT / evidence["workflow"]).read_text(encoding="utf-8")
