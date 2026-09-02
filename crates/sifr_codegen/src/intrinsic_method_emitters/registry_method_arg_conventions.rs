@@ -1,6 +1,25 @@
 use super::{HirExpr, ParamConvention, RustEmitter, Type};
 
 impl RustEmitter {
+    pub(crate) fn apply_registry_method_arg_conventions(
+        &self,
+        args: &[HirExpr],
+        params: &[(Type, ParamConvention)],
+        lowered_args: &mut [crate::RustExpr],
+    ) {
+        for (index, lowered_arg) in lowered_args.iter_mut().enumerate() {
+            if let (Some(arg), Some((param_ty, convention))) = (args.get(index), params.get(index))
+            {
+                *lowered_arg = self.apply_registry_method_arg_convention(
+                    arg,
+                    param_ty,
+                    *convention,
+                    lowered_arg.clone(),
+                );
+            }
+        }
+    }
+
     pub(crate) fn apply_registry_method_arg_convention(
         &self,
         arg: &HirExpr,

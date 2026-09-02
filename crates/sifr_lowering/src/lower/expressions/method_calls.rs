@@ -11,8 +11,8 @@ use super::{
     resolve_enum_method_type, resolve_fixed_width_method_type, resolve_list_method_type,
     resolve_newtype_method_type, resolve_protocol_method_type, resolve_python_arrow_method_type,
     resolve_python_buffer_method_type, resolve_python_dlpack_method_type, resolve_set_method_type,
-    resolve_str_method_type, resolve_tuple_method_type, str, try_lower_class_method_call,
-    try_lower_super_method_call, tsc,
+    resolve_str_method_type, resolve_structural_record_method_type, resolve_tuple_method_type, str,
+    try_lower_class_method_call, try_lower_super_method_call, tsc,
 };
 use super::{method_call_arguments, python_raw_object_methods};
 use crate::lower::python_interop::callback_method_arg_ranges;
@@ -439,6 +439,16 @@ pub(in crate::lower) fn resolve_method_type(
     }
     if matches!(object_ty, Type::AsyncGenerator(_, _)) {
         return super::async_generator_methods::resolve_async_generator_method_type(
+            object_ty,
+            method,
+            args,
+            arg_ranges,
+            method_range,
+            ctx,
+        );
+    }
+    if matches!(object_ty.resolve_alias(), Type::StructuralRecord(_)) {
+        return resolve_structural_record_method_type(
             object_ty,
             method,
             args,

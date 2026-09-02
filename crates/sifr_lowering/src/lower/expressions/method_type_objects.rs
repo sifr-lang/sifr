@@ -3,7 +3,7 @@ use super::{
     canonicalize_class_surface_type, coroutine_result_type, expression_diagnostics,
     expression_operators, method_count_range, reject_exact_method_arg_count,
     reject_method_arg_count, reject_no_method_args, resolve_method_type,
-    resolve_str_encode_method_type, str,
+    resolve_str_encode_method_type, str, validate_borrowed_structural_coercion,
 };
 pub(super) fn resolve_str_method_type(
     method: &str,
@@ -400,46 +400,19 @@ pub(super) fn resolve_class_method_type(
         }
         Some(canonicalize_class_surface_type(&ft.return_type))
     } else if let Some((_, field_ty)) = class.fields.iter().find(|(n, _)| n == method) {
-        // Callable fields use method-call syntax; async callable fields produce a coroutine.
-        if let Type::Callable(param_types, _, ret_type)
-        | Type::AsyncCallable(param_types, _, ret_type) = field_ty
-        {
-            if args.len() != param_types.len() {
-                expression_diagnostics::call_not_callable_or_arity(
-                    ctx,
-                    format!(
-                        "{}.{}() (callable field) takes {} argument(s), got {}",
-                        class.name,
-                        method,
-                        param_types.len(),
-                        args.len()
-                    ),
-                    method_count_range(args.len(), param_types.len(), arg_ranges, method_range),
-                );
-                return None;
-            }
-            for (i, (arg, param_ty)) in args.iter().zip(param_types.iter()).enumerate() {
-                if !arg.ty().is_assignable_to(param_ty) {
-                    expression_diagnostics::type_mismatch(
-                        ctx,
-                        format!(
-                            "argument {} of {}.{}(): expected '{}', got '{}'",
-                            i + 1,
-                            class.name,
-                            method,
-                            param_ty.display_name(),
-                            arg.ty().display_name()
-                        ),
-                        arg_ranges.get(i).copied().unwrap_or(method_range),
-                    );
-                }
-            }
-            let return_type = canonicalize_class_surface_type(ret_type);
-            if matches!(field_ty, Type::AsyncCallable(..)) {
-                Some(coroutine_result_type(&return_type))
-            } else {
-                Some(return_type)
-            }
+        if matches!(
+            field_ty.resolve_alias(),
+            Type::Callable(..) | Type::AsyncCallable(..)
+        ) {
+            resolve_callable_field_call(
+                class.name,
+                method,
+                field_ty,
+                args,
+                arg_ranges,
+                method_range,
+                ctx,
+            )
         } else {
             expression_diagnostics::call_not_callable_or_arity(
                 ctx,
@@ -460,6 +433,118 @@ pub(super) fn resolve_class_method_type(
             method_range,
         );
         None
+    }
+}
+
+pub(super) fn resolve_structural_record_method_type(
+    object_ty: &Type,
+    method: &str,
+    args: &[HirExpr],
+    arg_ranges: &[TextRange],
+    method_range: TextRange,
+    ctx: &mut LowerCtx,
+) -> Option<Type> {
+    let Type::StructuralRecord(record) = object_ty.resolve_alias() else {
+        return None;
+    };
+    let Some(field) = record.field(method) else {
+        ctx.error_with_code_at(
+            DiagnosticCode::CLASS_MISSING_MEMBER,
+            format!(
+                "record type '{}' has no field '{method}'",
+                object_ty.display_name()
+            ),
+            method_range,
+        );
+        return None;
+    };
+    let field_ty = field.ty();
+    if !matches!(
+        field_ty.resolve_alias(),
+        Type::Callable(..) | Type::AsyncCallable(..)
+    ) {
+        expression_diagnostics::call_not_callable_or_arity(
+            ctx,
+            format!(
+                "field '{method}' of record type '{}' is not callable (type: '{}')",
+                object_ty.display_name(),
+                field_ty.display_name()
+            ),
+            method_range,
+        );
+        return None;
+    }
+    resolve_callable_field_call(
+        &object_ty.display_name(),
+        method,
+        field_ty,
+        args,
+        arg_ranges,
+        method_range,
+        ctx,
+    )
+}
+
+fn resolve_callable_field_call(
+    owner: &str,
+    field_name: &str,
+    field_ty: &Type,
+    args: &[HirExpr],
+    arg_ranges: &[TextRange],
+    method_range: TextRange,
+    ctx: &mut LowerCtx,
+) -> Option<Type> {
+    let (param_types, conventions, return_type, is_async) = match field_ty.resolve_alias() {
+        Type::Callable(param_types, conventions, return_type) => {
+            (param_types, conventions, return_type, false)
+        }
+        Type::AsyncCallable(param_types, conventions, return_type) => {
+            (param_types, conventions, return_type, true)
+        }
+        _ => return None,
+    };
+    if args.len() != param_types.len() {
+        expression_diagnostics::call_not_callable_or_arity(
+            ctx,
+            format!(
+                "{owner}.{field_name}() (callable field) takes {} argument(s), got {}",
+                param_types.len(),
+                args.len()
+            ),
+            method_count_range(args.len(), param_types.len(), arg_ranges, method_range),
+        );
+        return None;
+    }
+    for (index, (arg, param_ty)) in args.iter().zip(param_types).enumerate() {
+        let convention = conventions
+            .get(index)
+            .copied()
+            .unwrap_or_else(sifr_type_system::ParamConvention::borrow);
+        let range = arg_ranges.get(index).copied().unwrap_or(method_range);
+        if super::super::callable_fields::callable_argument_is_assignable(
+            arg.ty(),
+            param_ty,
+            convention,
+        ) {
+            validate_borrowed_structural_coercion(arg.ty(), param_ty, convention, range, ctx);
+        } else {
+            expression_diagnostics::type_mismatch(
+                ctx,
+                format!(
+                    "argument {} of {owner}.{field_name}(): expected '{}', got '{}'",
+                    index + 1,
+                    param_ty.display_name(),
+                    arg.ty().display_name()
+                ),
+                range,
+            );
+        }
+    }
+    let return_type = canonicalize_class_surface_type(return_type);
+    if is_async {
+        Some(coroutine_result_type(&return_type))
+    } else {
+        Some(return_type)
     }
 }
 

@@ -268,19 +268,14 @@ macro_rules! stmt_expr_method_call {
                 };
                 lowered_args[0] = crate::RustExpr::Literal(crate::RustLiteral::Int(scale));
             }
-            let is_callable_field = match crate::resolve_alias_type_for_plain_call(
-                &effective_object_ty,
-            ) {
-                Type::Class { fields, .. } => fields.iter().any(|(field_name, field_ty)| {
-                    field_name == method
-                        && matches!(
-                            crate::resolve_alias_type_for_plain_call(field_ty),
-                            Type::Callable(..) | Type::AsyncCallable(..)
-                        )
-                }),
-                _ => false,
-            };
-            if is_callable_field {
+            if effective_object_ty.callable_field_type(method).is_some() {
+                if let Some(method_params) = method_params.as_deref() {
+                    $emitter.apply_registry_method_arg_conventions(
+                        args,
+                        method_params,
+                        &mut lowered_args,
+                    );
+                }
                 return Ok(Some(crate::RustExpr::FnCall {
                     func: Box::new(crate::RustExpr::Paren(Box::new(crate::RustExpr::Field {
                         expr: Box::new(lowered_object),

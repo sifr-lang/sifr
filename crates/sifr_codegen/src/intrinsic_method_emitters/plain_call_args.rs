@@ -512,54 +512,48 @@ impl RustEmitter {
         object_ty: &Type,
         method: &str,
     ) -> Option<Vec<(Type, ParamConvention)>> {
-        let Type::Class {
-            name,
-            fields,
-            methods,
-            ..
-        } = crate::resolve_alias_type_for_plain_call(object_ty)
-        else {
-            return None;
-        };
-        self.func_signatures
-            .get(&format!("{name}::{method}"))
-            .map(|(params, _)| params.clone())
-            .or_else(|| {
-                methods
-                    .iter()
-                    .find(|(method_name, _)| method_name == method)
-                    .map(|(_, fty)| {
-                        fty.params
-                            .iter()
-                            .map(|(_, ty, conv)| (ty.clone(), *conv))
-                            .collect::<Vec<_>>()
-                    })
-            })
-            .or_else(|| {
-                fields
-                    .iter()
-                    .find(|(field_name, _)| field_name == method)
-                    .and_then(|(_, field_ty)| match field_ty.resolve_alias() {
-                        Type::Callable(params, conventions, _)
-                        | Type::AsyncCallable(params, conventions, _) => Some(
-                            params
+        let nominal_params = match crate::resolve_alias_type_for_plain_call(object_ty) {
+            Type::Class { name, methods, .. } => self
+                .func_signatures
+                .get(&format!("{name}::{method}"))
+                .map(|(params, _)| params.clone())
+                .or_else(|| {
+                    methods
+                        .iter()
+                        .find(|(method_name, _)| method_name == method)
+                        .map(|(_, fty)| {
+                            fty.params
                                 .iter()
-                                .cloned()
-                                .enumerate()
-                                .map(|(index, param)| {
-                                    (
-                                        param,
-                                        conventions
-                                            .get(index)
-                                            .copied()
-                                            .unwrap_or_else(ParamConvention::own),
-                                    )
-                                })
-                                .collect(),
-                        ),
-                        _ => None,
+                                .map(|(_, ty, convention)| (ty.clone(), *convention))
+                                .collect()
+                        })
+                }),
+            _ => None,
+        };
+        nominal_params.or_else(|| {
+            let field_ty = object_ty.callable_field_type(method)?;
+            let (params, conventions) = match field_ty.resolve_alias() {
+                Type::Callable(params, conventions, _)
+                | Type::AsyncCallable(params, conventions, _) => (params, conventions),
+                _ => return None,
+            };
+            Some(
+                params
+                    .iter()
+                    .cloned()
+                    .enumerate()
+                    .map(|(index, param)| {
+                        (
+                            param,
+                            conventions
+                                .get(index)
+                                .copied()
+                                .unwrap_or_else(ParamConvention::borrow),
+                        )
                     })
-            })
+                    .collect(),
+            )
+        })
     }
 
     pub(crate) fn try_lower_registry_compare_expr(

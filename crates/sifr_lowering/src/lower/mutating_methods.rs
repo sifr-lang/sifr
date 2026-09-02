@@ -241,11 +241,17 @@ pub(in crate::lower) fn reject_immutable_method_mut_borrow_arguments(
     args: &[HirExpr],
     arg_ranges: &[TextRange],
 ) -> bool {
-    let methods = match object_ty.resolve_alias() {
-        Type::Class { methods, .. } | Type::Protocol { methods, .. } => methods,
-        _ => return false,
+    let signature = match object_ty.resolve_alias() {
+        Type::Class { methods, .. } | Type::Protocol { methods, .. } => methods
+            .iter()
+            .find_map(|(name, signature)| (name == method).then(|| signature.clone()))
+            .or_else(|| super::callable_fields::callable_field_function_type(object_ty, method)),
+        Type::StructuralRecord(_) => {
+            super::callable_fields::callable_field_function_type(object_ty, method)
+        }
+        _ => None,
     };
-    let Some((_, signature)) = methods.iter().find(|(name, _)| name == method) else {
+    let Some(signature) = signature else {
         return false;
     };
 

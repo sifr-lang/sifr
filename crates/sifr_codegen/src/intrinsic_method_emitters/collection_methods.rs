@@ -346,23 +346,17 @@ impl RustEmitter {
             }
         }
 
-        if let Type::Class {
-            fields, methods, ..
-        } = crate::resolve_alias_type_for_plain_call(object_ty)
-        {
-            let is_callable_field = !methods.iter().any(|(name, _)| name == method)
-                && fields
-                    .iter()
-                    .any(|(name, ty)| name == method && matches!(ty, Type::Callable(..)));
-            if is_callable_field {
-                return Some(crate::RustExpr::FnCall {
-                    func: Box::new(crate::RustExpr::Paren(Box::new(crate::RustExpr::Field {
-                        expr: Box::new(object_expr),
-                        field: method.to_string(),
-                    }))),
-                    args: arg_exprs,
-                });
+        if object_ty.callable_field_type(method).is_some() {
+            if let Some(method_params) = method_params.as_deref() {
+                self.apply_registry_method_arg_conventions(args, method_params, &mut arg_exprs);
             }
+            return Some(crate::RustExpr::FnCall {
+                func: Box::new(crate::RustExpr::Paren(Box::new(crate::RustExpr::Field {
+                    expr: Box::new(object_expr),
+                    field: method.to_string(),
+                }))),
+                args: arg_exprs,
+            });
         }
 
         if matches!(object_ty, Type::List(_)) && method == "extend" && args.len() == 1 {

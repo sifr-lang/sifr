@@ -138,3 +138,66 @@ def main():
     assert!(rust.contains("value(count.clone())"), "{rust}");
     syn::parse_file(&rust).expect("logical-copy record should produce valid Rust syntax");
 }
+
+#[test]
+fn callable_record_field_emits_a_parenthesized_field_call() {
+    let rust = generate_rust_from_source(
+        r#"
+type Transform = {apply: Callable[[int], int]}
+
+def increment(value: int) -> int:
+    return value + 1
+
+def main():
+    transform: Transform = Transform(apply=increment)
+    assert transform.apply(4) == 5
+"#,
+    );
+    assert!(rust.contains("(transform.apply)("), "{rust}");
+    assert!(!rust.contains("transform.apply("), "{rust}");
+    syn::parse_file(&rust).expect("callable record-field codegen should produce valid Rust syntax");
+}
+
+#[test]
+fn callable_record_field_applies_shared_borrow_conventions() {
+    let rust = generate_rust_from_source(
+        r#"
+type Transform = {apply: Callable[[str], str]}
+
+def identity(value: str) -> str:
+    return value.clone()
+
+def main():
+    transform: Transform = Transform(apply=identity)
+    text: str = "value"
+    assert transform.apply(text) == "value"
+    assert text == "value"
+"#,
+    );
+    assert!(rust.contains("(transform.apply)(&text)"), "{rust}");
+    syn::parse_file(&rust)
+        .expect("borrowed callable record-field codegen should produce valid Rust syntax");
+}
+
+#[test]
+fn async_callable_record_field_emits_an_awaited_field_call() {
+    let rust = generate_rust_from_source(
+        r#"
+type Runner = {apply: AsyncCallable[[str], str]}
+
+async def echo(own value: str) -> str:
+    await task.sleep(0.0)
+    return value
+
+async def main() -> None:
+    runner: Runner = Runner(apply=echo)
+    text: str = "value"
+    result: str = await runner.apply(text)
+    assert result == "value"
+    return None
+"#,
+    );
+    assert!(rust.contains("(runner.apply)(text).await"), "{rust}");
+    syn::parse_file(&rust)
+        .expect("async callable record-field codegen should produce valid Rust syntax");
+}

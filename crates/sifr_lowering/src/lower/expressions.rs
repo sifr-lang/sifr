@@ -109,7 +109,8 @@ use method_type_collections::{
 mod method_type_objects;
 use method_type_objects::{
     resolve_class_method_on_type, resolve_enum_method_type, resolve_newtype_method_type,
-    resolve_protocol_method_type, resolve_str_method_type, resolve_tuple_method_type,
+    resolve_protocol_method_type, resolve_str_method_type, resolve_structural_record_method_type,
+    resolve_tuple_method_type,
 };
 mod python_buffer_methods;
 use python_buffer_methods::{
