@@ -13,8 +13,10 @@ fn python_probe_digest_includes_canonical_required_roots() {
     let probe = valid_probe();
 
     assert_ne!(
-        digest_python_environment_probe(&first, &probe),
-        digest_python_environment_probe(&second, &probe),
+        digest_python_environment_probe(&first, &probe)
+            .expect("first probe identity should serialize"),
+        digest_python_environment_probe(&second, &probe)
+            .expect("second probe identity should serialize"),
         "derived canonical roots must participate in Python build cache identity"
     );
 }
@@ -31,8 +33,10 @@ fn authoring_environment_digest_ignores_entrypoint_import_selection() {
     second_probe.imports[0].root = "pandas".to_string();
 
     assert_eq!(
-        digest_python_authoring_environment_probe(&first_request, &first_probe),
-        digest_python_authoring_environment_probe(&second_request, &second_probe),
+        digest_python_authoring_environment_probe(&first_request, &first_probe)
+            .expect("first authoring identity should serialize"),
+        digest_python_authoring_environment_probe(&second_request, &second_probe)
+            .expect("second authoring identity should serialize"),
     );
 }
 
@@ -50,19 +54,26 @@ fn python_probe_digest_includes_resolved_distribution_versions_and_abi() {
     abi_changed.soabi = Some("cpython-314t-darwin".to_string());
 
     assert_ne!(
-        digest_python_environment_probe(&request, &first),
+        digest_python_environment_probe(&request, &first)
+            .expect("first probe identity should serialize"),
         digest_python_environment_probe(&request, &distribution_changed)
+            .expect("changed distribution identity should serialize")
     );
     assert_ne!(
-        digest_python_environment_probe(&request, &first),
+        digest_python_environment_probe(&request, &first)
+            .expect("first probe identity should serialize"),
         digest_python_environment_probe(&request, &abi_changed)
+            .expect("changed ABI identity should serialize")
     );
     let package_key = |probe| {
-        let python_probe_digest = digest_python_environment_probe(&request, probe).hex;
+        let python_probe_digest = digest_python_environment_probe(&request, probe)
+            .expect("test probe identity should serialize")
+            .hex;
         digest_package_build_cache_inputs(&PackageBuildCacheInputs {
             python_probe_digest: Some(python_probe_digest),
             ..PackageBuildCacheInputs::default()
         })
+        .expect("package build identity should serialize")
     };
     assert_ne!(package_key(&first), package_key(&distribution_changed));
     assert_ne!(package_key(&first), package_key(&abi_changed));

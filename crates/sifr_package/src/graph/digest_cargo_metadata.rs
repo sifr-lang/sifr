@@ -2,8 +2,9 @@ use super::digest::{GraphDigest, digest_serializable};
 use crate::cargo::metadata::NormalizedCargoMetadata;
 use serde::Serialize;
 
-#[must_use]
-pub fn digest_graph_inputs(metadata: &NormalizedCargoMetadata) -> GraphDigest {
+pub fn digest_graph_inputs(
+    metadata: &NormalizedCargoMetadata,
+) -> Result<GraphDigest, serde_json::Error> {
     let canonical = CanonicalMetadata::from(metadata);
     digest_serializable(&canonical)
 }

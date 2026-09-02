@@ -4,7 +4,8 @@ use super::cargo_manifest::{
     try_generate_sysroot_dependency_plan,
 };
 use super::cargo_resolution::{
-    CargoResolutionPolicy, cargo_lock_mode_diagnostic, prepare_cargo_resolution,
+    CargoResolutionPolicy, cargo_lock_mode_diagnostic, cargo_resolution_cache_key_fragment,
+    prepare_cargo_resolution,
 };
 use super::project_codegen::GeneratedBinaryProject;
 use super::report::BuildSysrootReport;
@@ -79,7 +80,12 @@ pub(super) fn materialize_cached_binary_project_with_report(
     )
     .map_err(|error| vec![build_error(error.boundary_message())])?;
     let sysroot = sysroot_report(&dependency_plan);
-    let cache_key = binary_project_cache_key(project_name, &generated_project, &dependency_plan);
+    let cache_key = binary_project_cache_key(
+        project_name,
+        &generated_project,
+        &dependency_plan,
+        cargo_resolution,
+    )?;
     let required_paths = [
         Path::new(project_name).join("target"),
         binary_relative_path(project_name),
@@ -427,15 +433,17 @@ fn binary_project_cache_key(
     project_name: &str,
     generated_project: &GeneratedBinaryProject,
     dependency_plan: &SysrootDependencyPlan,
-) -> String {
+    cargo_resolution: &CargoResolutionPolicy,
+) -> Result<String, Vec<RenderedDiagnostic>> {
     let support_modules = generated_project
         .support_modules
         .iter()
         .map(|(name, code)| format!("{name}\n{code}"))
         .collect::<Vec<_>>()
         .join("\n===\n");
-    format!(
-        "project_name={project_name}\n[Cargo.toml]\n{}\n[main.rs]\n{}\n[support]\n{}\n[sysroot-dependency-inputs]\n{}[interop]\n{}\n[cache-key-fragment]\n{}\n[sysroot-dependency-plan]\n{}",
+    let cargo_resolution_fragment = cargo_resolution_cache_key_fragment(cargo_resolution)?;
+    Ok(format!(
+        "project_name={project_name}\n[Cargo.toml]\n{}\n[main.rs]\n{}\n[support]\n{}\n[sysroot-dependency-inputs]\n{}[interop]\n{}\n[cache-key-fragment]\n{}\n[sysroot-dependency-plan]\n{}\n[cargo-resolution]\n{}",
         generate_dependency_cargo_toml_with_interop(
             project_name,
             dependency_plan,
@@ -449,14 +457,15 @@ fn binary_project_cache_key(
             .cache_key_fragment
             .as_deref()
             .unwrap_or(""),
-        dependency_plan.cache_fingerprint
-    )
+        dependency_plan.cache_fingerprint,
+        cargo_resolution_fragment
+    ))
 }
 
 #[cfg(test)]
 mod tests {
     use super::{
-        binary_project_cache_key, should_validate_native_link_evidence,
+        CargoResolutionPolicy, binary_project_cache_key, should_validate_native_link_evidence,
         sysroot_trusted_native_links, trusted_native_links, validate_native_link_evidence,
     };
     use crate::build::project_codegen::GeneratedBinaryProject;
@@ -480,9 +489,9 @@ mod tests {
             ..base
         };
         let dependency_plan = test_dependency_plan("fingerprint-a");
-        let first = binary_project_cache_key("sifr_output", &with_python_probe, &dependency_plan);
+        let first = test_binary_project_cache_key(&with_python_probe, &dependency_plan);
         with_python_probe.cache_key_fragment = Some("python-probe-b".to_string());
-        let second = binary_project_cache_key("sifr_output", &with_python_probe, &dependency_plan);
+        let second = test_binary_project_cache_key(&with_python_probe, &dependency_plan);
 
         assert_ne!(first, second);
     }
@@ -521,12 +530,8 @@ mod tests {
         };
 
         assert_ne!(
-            binary_project_cache_key("sifr_output", &base, &test_dependency_plan("fingerprint-a")),
-            binary_project_cache_key(
-                "sifr_output",
-                &with_interop,
-                &test_dependency_plan("fingerprint-a")
-            )
+            test_binary_project_cache_key(&base, &test_dependency_plan("fingerprint-a")),
+            test_binary_project_cache_key(&with_interop, &test_dependency_plan("fingerprint-a"))
         );
     }
 
@@ -535,8 +540,8 @@ mod tests {
         let base = base_project();
 
         assert_ne!(
-            binary_project_cache_key("sifr_output", &base, &test_dependency_plan("fingerprint-a")),
-            binary_project_cache_key("sifr_output", &base, &test_dependency_plan("fingerprint-b"))
+            test_binary_project_cache_key(&base, &test_dependency_plan("fingerprint-a")),
+            test_binary_project_cache_key(&base, &test_dependency_plan("fingerprint-b"))
         );
     }
 
@@ -547,11 +552,24 @@ mod tests {
         dependency_plan.stdlib_modules = BTreeSet::from(["sifr.json".to_string()]);
         dependency_plan.required_features = BTreeSet::from([StdlibFeature::SerdeJson]);
 
-        let cache_key = binary_project_cache_key("sifr_output", &base, &dependency_plan);
+        let cache_key = test_binary_project_cache_key(&base, &dependency_plan);
 
         assert!(cache_key.contains(
             "[sysroot-dependency-inputs]\n[stdlib]\nsifr.json\n[features]\nserde_json\n"
         ));
+    }
+
+    fn test_binary_project_cache_key(
+        project: &GeneratedBinaryProject,
+        dependency_plan: &SysrootDependencyPlan,
+    ) -> String {
+        binary_project_cache_key(
+            "sifr_output",
+            project,
+            dependency_plan,
+            &CargoResolutionPolicy::normal(),
+        )
+        .expect("normal Cargo resolution policy should have a cache identity")
     }
 
     #[test]

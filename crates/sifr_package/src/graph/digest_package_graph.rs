@@ -4,8 +4,7 @@ use serde::Serialize;
 use sifr_compiler_component::{DiagnosticLifecycle, DiagnosticRegistryOwner};
 use std::collections::BTreeSet;
 
-#[must_use]
-pub fn digest_package_graph(graph: &SifrPackageGraph) -> GraphDigest {
+pub fn digest_package_graph(graph: &SifrPackageGraph) -> Result<GraphDigest, serde_json::Error> {
     let canonical = CanonicalGraph::from(graph);
     digest_serializable(&canonical)
 }

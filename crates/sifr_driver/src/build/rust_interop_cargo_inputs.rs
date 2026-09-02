@@ -34,20 +34,20 @@ pub(super) fn bridge_source_digests(
 pub(super) fn cargo_inputs(
     context: &PackageRustInteropContext,
     package: &sifr_package::SifrPackageMetadata,
-) -> RustInteropCargoInputs {
+) -> Result<RustInteropCargoInputs, serde_json::Error> {
     if let Some(trust) = context
         .sysroot_trust
         .as_ref()
         .filter(|trust| trust.package_id == package.package_id)
     {
-        return sysroot_cargo_inputs(trust, &package.manifest.trust);
+        return Ok(sysroot_cargo_inputs(trust, &package.manifest.trust));
     }
-    let graph_digest = digest_package_graph(&context.graph);
-    let source_map_digest = digest_package_source_map(&context.source_map);
+    let graph_digest = digest_package_graph(&context.graph)?;
+    let source_map_digest = digest_package_source_map(&context.source_map)?;
     let trust_policy_digest = trust_policy_digest(&package.manifest.trust);
     let mut declared_build_env = package.manifest.trust.build_env.clone();
     declared_build_env.sort();
-    RustInteropCargoInputs {
+    Ok(RustInteropCargoInputs {
         package_id: context.package_id.0.clone(),
         cargo_metadata_digest: None,
         sqlx_offline_metadata_digest: None,
@@ -63,7 +63,7 @@ pub(super) fn cargo_inputs(
         rustc_version: tool_version("rustc"),
         trust_policy_digest,
         declared_build_env,
-    }
+    })
 }
 
 pub(super) fn combined_cargo_inputs(

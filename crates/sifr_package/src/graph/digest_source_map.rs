@@ -4,8 +4,9 @@ use serde::Serialize;
 use std::fs;
 use std::io;
 
-#[must_use]
-pub fn digest_package_source_map(source_map: &PackageSourceMap) -> GraphDigest {
+pub fn digest_package_source_map(
+    source_map: &PackageSourceMap,
+) -> Result<GraphDigest, serde_json::Error> {
     let canonical = CanonicalSourceMap::from(source_map);
     digest_serializable(&canonical)
 }
@@ -24,7 +25,7 @@ pub fn digest_package_source_snapshot(source_map: &PackageSourceMap) -> io::Resu
             })
         })
         .collect::<io::Result<Vec<_>>>()?;
-    Ok(digest_serializable(&modules))
+    digest_serializable(&modules).map_err(io::Error::other)
 }
 
 #[derive(Serialize)]

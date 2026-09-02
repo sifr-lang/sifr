@@ -265,7 +265,10 @@ mod tests {
             .expect("shuffled metadata parses")
             .normalize();
 
-        assert_eq!(digest_graph_inputs(&normal), digest_graph_inputs(&shuffled));
+        assert_eq!(
+            digest_graph_inputs(&normal).expect("normal metadata identity should serialize"),
+            digest_graph_inputs(&shuffled).expect("shuffled metadata identity should serialize")
+        );
     }
 
     fn write_pure_package(package_root: &Path, cargo_name: &str, sifr_name: &str) {

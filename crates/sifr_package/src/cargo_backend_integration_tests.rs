@@ -432,22 +432,25 @@ fn package_build_cache_digest_changes_with_lock_source_and_target_inputs() {
     let mut reordered = first.clone();
     reordered.features = vec!["json".to_string(), "tls".to_string()];
     assert_eq!(
-        digest_package_build_cache_inputs(&first),
+        digest_package_build_cache_inputs(&first).expect("first cache identity should serialize"),
         digest_package_build_cache_inputs(&reordered)
+            .expect("reordered cache identity should serialize")
     );
 
     let mut changed = first.clone();
     changed.cargo_lock_digest = Some("lock-b".to_string());
     assert_ne!(
-        digest_package_build_cache_inputs(&first),
+        digest_package_build_cache_inputs(&first).expect("first cache identity should serialize"),
         digest_package_build_cache_inputs(&changed)
+            .expect("changed cache identity should serialize")
     );
 
     let mut python_changed = first.clone();
     python_changed.python_probe_digest = Some("python-probe-b".to_string());
     assert_ne!(
-        digest_package_build_cache_inputs(&first),
+        digest_package_build_cache_inputs(&first).expect("first cache identity should serialize"),
         digest_package_build_cache_inputs(&python_changed)
+            .expect("Python-changed cache identity should serialize")
     );
 }
 
