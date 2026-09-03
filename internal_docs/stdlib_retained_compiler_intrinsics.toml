@@ -97,7 +97,7 @@ state = "retained-by-design"
 owner = "first-class-bytes-language-semantics"
 issue = "permanent-language-contract"
 evidence_links = ["internal_docs/architecture.md"]
-reason = "First-class bytes.from_hex, bytes.from_ints, and bytes(size) constructors lower directly to typed compiler-language construction HIR."
+reason = "First-class bytes.from_hex, bytes.from_ints, and bytes(size) constructors lower directly to typed compiler-language construction HIR; bytes.count uses one allocation-free runtime primitive instead of generated counting ceremony."
 registry_files = ["bytes.rs"]
 lowering_files = [
   "crates/sifr_lowering/src/lower/builtin_calls/bytes_len_range.rs",
@@ -108,6 +108,7 @@ exact_intrinsics = [
   "bytes_from_integers",
   "bytes_with_size",
 ]
+direct_runtime_roots = ["sifr_runtime::count_byte"]
 
 [[surface]]
 id = "first-class-string::checked-padding"
