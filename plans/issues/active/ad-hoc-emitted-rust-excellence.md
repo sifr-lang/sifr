@@ -374,7 +374,7 @@ the post-implementation validation and exact-SHA review sequence completes.
 | I8-13 | `true`/`false` identifier-pattern ambiguity | identifier policy/canonicalizer and injectivity/literal-preservation regressions | Implemented. |
 | I8-14 | Bare-name module integer facts | `ModuleConstIntegerFacts` in `lower/mod_context.rs` | Implemented with immutable binding identity and export-name separation. |
 | I8-15 | Maintained compiler/test Clippy debt | canonicalizer/API/source expectation passes and moved responsibility-based test modules | Qualified in the candidate: workspace Clippy passed for all targets with warnings denied, and no blanket allow was added. |
-| I8-16 | Stale 701-path surface inventory | `surface_inventory.json` | Qualified at the current 723-path set by the fail-closed generated inventory gate. |
+| I8-16 | Stale 701-path surface inventory | `surface_inventory.json` | Qualified at the current 724-path set by the fail-closed generated inventory gate. |
 | I8-17 | Aggregate rustfmt debt drift | structured canonicalizer plus empty rustfmt debt | Qualified by full generated `rustfmt --check` with empty rustfmt debt. |
 | I8-18 | Optional read after invalidation diagnostic | `mutable_call_sequence_guard_tests.rs` | Decision implemented: retain canonical `SIFR-TYPE-0002`-family unsupported-operator reporting for the widened `None | T`; no special proof-history diagnostic is warranted. |
 | I8-19 | Return-ending while/else E0317 | `while_else_return_tail.sifr`, canonical control-flow pass | Implemented. |
@@ -382,7 +382,7 @@ the post-implementation validation and exact-SHA review sequence completes.
 | I8-21 | Duplicated loop/else scaffolds | canonical loop-control constructors and sync/async/block regressions | Implemented through shared structured control paths. |
 | I8-22 | Misclassified `numeric_sentinels` fixture | `e2e/pass/numeric_sentinels.sifr` | Implemented by making the source establish the required checked index proof. |
 | I8-23 | Nested sync generator dangling yielder | `reject_unsupported_nested_generator`, `nested_sync_generator_is_rejected_before_codegen` | Implemented as explicit checked rejection pending dedicated nested lazy lowering. |
-| I8-24 | 718-path inventory and formatting drift | `surface_inventory.json`, canonical source pipeline | Reconciled with I8-16/I8-17 against the current 723-path set. |
+| I8-24 | 718-path inventory and formatting drift | `surface_inventory.json`, canonical source pipeline | Reconciled with I8-16/I8-17 against the current 724-path set. |
 | I8-25 | Optional key passed to `HashSet::remove` | `sliding_window_narrowing.sifr`, optional-place/method argument normalization | Implemented with an isolated authoritative fixture. |
 | I8-26 | Bare-class compiler `open()` defaults | canonical nominal compiler-default key, `compiler_open_defaults_do_not_attach_to_local_same_basename_methods` | Implemented. |
 | I8-27 | Split class/free-function generic bound closure | `function_generic_bounds.rs`, `class_method_inherits_module_generic_function_bounds` | Implemented through one module callable-demand closure. |
@@ -413,20 +413,44 @@ identity, and each merged lint signature includes the contributing companion
 identity, count, and diagnostic signature. This is a one-way strengthening of
 evidence, not permission to carry changed Item 8 debt.
 
-The post-implementation candidate passed 723/723 E2E fixtures, the codegen,
-runtime, type-system, lowering (apart from the two exact-base assertions owned
-by #3667), and non-E2E CLI suites, workspace Clippy with warnings denied,
-formatting, diff hygiene, file-size and HIR guardrails, generated inventory,
-panic scans, generated rustfmt, determinism, and exact-binary demo freshness.
-The authoritative 262-companion run and the selected full-Clippy corpus passed
-every individual generated crate. Their only initial terminal failures were
-the expected exact-debt comparisons: the canonical cleanup removed
-`manual_let_else` from both selections and additionally removed
-`semicolon_if_nothing_returned` and `unnecessary_semicolon` from the selected
-corpus; the remaining deltas preserved counts and changed only diagnostic
-signatures. The checked-in debt now matches both summaries exactly and passes
-the shared lint-owner validator. The exact-SHA review and the two one-shot
-named gates remain open before merge.
+Compiler candidate `49f375e1619185d76e6cfc3b90d7e20ff786cce0`
+passed 1,349 codegen tests, the non-E2E CLI suites, the existing 723-fixture
+full E2E pass, direct native execution of the new 724th optional-set-remove
+fixture, workspace Clippy for all targets with warnings denied, formatting,
+diff hygiene, the 3,726-file size guardrail, HIR maintainability, generated
+inventory, panic scans, generated rustfmt, determinism, exact-binary demo
+freshness, and intrinsic-panic linting. Exact `origin/main`
+`74bbb636744adaacb8c3eca09108b6fff9725357` independently retains only the two
+stale TypeVar message assertions owned by #3667 and the stale attached-API
+fixture lock owned by #3669.
+
+The authoritative 91-project corpus and 262-companion corpus passed every
+individual generated crate. Two isolated companion runs produced byte-identical
+summaries with SHA-256
+`a00628a95f22967fb52ffe3f119ba819ed29ca1c93fb3e6ffbc0c29e4d83fd65`:
+11,324 governed diagnostics across 48 later-item lint families, with merged
+diagnostic signature
+`5231041489b4043fa7f0239abda8e3192702e1dbfd2e3fc366655be2b8fd4393`.
+Two isolated selected full-Clippy runs likewise produced byte-identical
+summaries with SHA-256
+`42d874ebca265e8260e91c8947274d4770676d07020adf1a3308a00eb2dc17aa`.
+The canonical cleanup removed `manual_let_else` from both selections and also
+removed `semicolon_if_nothing_returned` and `unnecessary_semicolon` from the
+selected corpus. The checked-in schema-2 debt matches the residual summaries
+exactly and rejects stale owners, unknown diagnostics, count growth, and
+signature drift.
+
+The [initial exact-SHA review](https://github.com/sifr-lang/sifr/pull/3668#issuecomment-5517105667)
+on `84ebe95b928cfe076d9af21e1bc06c1da3bc08c4` was NOT SATISFIED. Candidate
+`49f375e1619185d76e6cfc3b90d7e20ff786cce0` resolves all four blockers: stale
+lint owners were removed rather than re-owned; generic callables use canonical
+lexical identities rather than bare names; optional `set.remove` normalization
+has direct native regression coverage; and every Item 8 lint was eliminated
+rather than deferred. The remediation also guards branch-local shadowing and
+format captures, rejects globally ambiguous enum-owner rewrites, computes
+cross-module constants to a monotonic fixed point, preserves eager/Drop/unknown
+effects during cleanup, and fingerprints all producer inputs. The sole
+remediation review and the two one-shot named gates remain open before merge.
 
 ### Item 9: Algorithmic and Unicode performance
 
@@ -495,6 +519,7 @@ named gates remain open before merge.
 | 7 | merged | [#3637](https://github.com/sifr-lang/sifr/pull/3637) | `73465ce982b790094031d174151a8638cfbcf35b` | Compiler candidate `778e13268d0ff619791a44152e4e52c0df369053`: 1,213 codegen and 1,094 lowering tests passed with one intentional ignore; focused ownership, generic-class `Addable`, context capture, receiver mutation, checked witness, IO, recursive/DP, and clone-budget tests passed. The expanded protocol-bound fixture compiled and ran generic `Accumulator[str]`, `list.insert(&str)`, and `set.add(&str)`. Full E2E passed 717 fixtures; only exact-base `numeric_sentinels` failed under its existing Item 8 ownership. Workspace Clippy, formatting, diff, 3,612-file guardrail, HIR maintainability, audit inventory, regenerated demo freshness, and representative direct native builds passed. The sole create-PR and merge gates each stopped at preflight because both profiles omit required SQL suites `host-tools`, `migration-engine`, `mysql-live`, `mysql-provider`, `postgresql-live-differential`, `postgresql-live-migrations`, `postgresql-live-runtime`, `postgresql-live-schema-tools`, `postgresql-migrations`, `schema-polymorphism`, and `schema-tools`; neither was repeated. | [Initial exact-SHA review](https://github.com/sifr-lang/sifr/pull/3637#issuecomment-5481578415) on `27840aa67d438956b87f87f96822a4b868a69e2b` was NOT SATISFIED; [sole remediation review](https://github.com/sifr-lang/sifr/pull/3637#issuecomment-5481578704) on `778e13268d0ff619791a44152e4e52c0df369053` was NOT SATISFIED. The remediation fixed both original blockers: class-owned `__SifrAdd` support demand and raw borrowed-string clones at collection ownership boundaries. Its new receiver-effect precision regression and latent non-registry `setdefault` boundary gap are assigned to Item 7A under the no-third-review rule. | Explicit ownership/materialization planning, unsized views, clone-chain simplification and budgets, recursive borrowed options, callable-effect separation, context-target capture, checked clone diagnostics, IO clone cleanup, and ownership-correct numeric/string `Addable` support merged. The bounded second-review mechanism defects are owned by Item 7A. |
 | 7A | merged | [#3639](https://github.com/sifr-lang/sifr/pull/3639) | `917a4e898a881d7966d78e645c01143d9290eb54` | Final compiler candidate `e77bf60695f27cee1fa71a1e3eea2e8facad1b75`: 1,217 codegen and 1,101 lowering tests passed with one intentional ignore; focused receiver-summary, fact-splitting, local-binding fallback, Copy/affine ownership, emitted-shape, and release-native regressions passed. Full E2E passed 718 fixtures; only exact-base `numeric_sentinels` failed under Item 8 ownership. Workspace Clippy, formatting, diff, 3,613-file guardrail, HIR maintainability, audit inventory, regenerated demo freshness, and direct native execution passed. The sole create-PR and merge gates each stopped at preflight because both profiles omit required SQL suites `host-tools`, `migration-engine`, `mysql-live`, `mysql-provider`, `postgresql-live-differential`, `postgresql-live-migrations`, `postgresql-live-runtime`, `postgresql-live-schema-tools`, `postgresql-migrations`, `schema-polymorphism`, and `schema-tools`; neither was repeated. | [Initial exact-SHA review](https://github.com/sifr-lang/sifr/pull/3639#issuecomment-5482649819) on `57a09a3121c34f5e5504ac3c7b7791e665855e8a` was NOT SATISFIED; [sole remediation review](https://github.com/sifr-lang/sifr/pull/3639#issuecomment-5482650047) on `e77bf60695f27cee1fa71a1e3eea2e8facad1b75` was SATISFIED. The remediation split accessibility from non-`None` facts and restored Copy/affine `setdefault` ownership guards. Its new end-relative negative-index finding is assigned to Item 7B under the no-third-review rule. | One typed receiver summary now preserves length/key accessibility while invalidating exact positional/value facts; all `setdefault` entrypoints share an ownership-safe operation boundary; Copy values emit no redundant clones. Bounded end-relative and affine-return follow-ups are owned by Item 7B. |
 | 7B | merged | [#3643](https://github.com/sifr-lang/sifr/pull/3643) | `17c6e49d1be6d19834530d6475353539d0efb124` | Exact compiler candidate `5b6c68d0508c5e79b0ddfc8d598480314ef8ef14`: 1,218 codegen and 1,103 lowering tests passed with one intentional ignore; 569 E2E fail fixtures, focused negative-index append/extend, absolute-index preservation, affine `setdefault`, fact-domain, and release-native insertion/existing-return evidence passed. Full E2E passed 718 fixtures; only unchanged `numeric_sentinels` failed under Item 8 ownership. Workspace Clippy, formatting, diff, 3,614-file guardrail, HIR maintainability, audit inventory, and exact demo freshness passed. The sole create-PR and merge gates each stopped at preflight because both profiles omit required SQL suites `host-tools`, `migration-engine`, `mysql-live`, `mysql-provider`, `postgresql-live-differential`, `postgresql-live-migrations`, `postgresql-live-runtime`, `postgresql-live-schema-tools`, `postgresql-migrations`, `schema-polymorphism`, and `schema-tools`; neither was repeated. | [Exact-SHA review](https://github.com/sifr-lang/sifr/pull/3643#issuecomment-5483156923) on `5b6c68d0508c5e79b0ddfc8d598480314ef8ef14` was SATISFIED with no blockers. It independently traced literal-negative classification, growth-sensitive clearing, the affine insertion/return rejection, defensive codegen boundary, and non-collection fact domain. | Append/extend now preserve stable absolute facts while invalidating end-relative facts; affine `setdefault` is rejected before emission with one ownership contract; mutable buffers and join sets carry an explicit no-relevant-sequence-facts domain. |
+| 8 | remediation candidate | [#3668](https://github.com/sifr-lang/sifr/pull/3668) | pending | Compiler implementation `49f375e1619185d76e6cfc3b90d7e20ff786cce0`: 1,349 codegen tests, non-E2E CLI suites, workspace Clippy, formatting, diff, file-size/HIR guardrails, 724-path inventory, 91-project corpus, panic/rustfmt/determinism/freshness checks, the direct 724th native fixture, and two byte-identical 262-companion plus selected-Clippy runs passed. Exact-main failures are owned by #3667 and #3669. The one create-PR and one merge gate remain unconsumed. | [Initial exact-SHA review](https://github.com/sifr-lang/sifr/pull/3668#issuecomment-5517105667) on `84ebe95b928cfe076d9af21e1bc06c1da3bc08c4` was NOT SATISFIED. All four blockers are remediated in the candidate; the sole remediation review remains. | Canonical structured cleanup, exact generated-debt governance, canonical generic identity, optional-place normalization, source-only materialization, regenerated authoritative demos, and focused semantic/shape regressions are ready for the bounded remediation review. |
 
 ## Deferred Findings
 
@@ -587,6 +612,7 @@ named gates remain open before merge.
 | Item 7B exact-SHA review | Defensive affine `setdefault` codegen declines with `None`, which would become a silent lowering miss if the frontend contract regressed. | Item 8 | Replace defensive silent decline with a structured internal codegen invariant diagnostic while preserving the source-facing rejection. |
 | Item 7B create-PR and merge gates | Both profiles omit required SQL suites `host-tools`, `migration-engine`, `mysql-live`, `mysql-provider`, `postgresql-live-differential`, `postgresql-live-migrations`, `postgresql-live-runtime`, `postgresql-live-schema-tools`, `postgresql-migrations`, `schema-polymorphism`, and `schema-tools`, so both one-shot gates stopped at preflight. | Item 12 | Reconcile final profile composition and prove every currently required SQL suite is selected before final qualification. |
 | Item 8 package validation | Exact `origin/main` `74bbb636744adaacb8c3eca09108b6fff9725357` fails two TypeVar diagnostic-message assertions after the producer wording changed from “simple type name(s)” to “type name(s)” without updating the tests. | [#3667](https://github.com/sifr-lang/sifr/issues/3667) | Repair the stale exact-message expectations in their own owner; Item 8 does not change TypeVar semantics or absorb this exact-base failure. |
+| Item 8 package validation | Exact `origin/main` `74bbb636744adaacb8c3eca09108b6fff9725357` fails `tests::attached_api_codegen::non_string_leaf_negative_is_package_compilable` because its checked-in fixture lock is stale. | [#3669](https://github.com/sifr-lang/sifr/issues/3669) | Refresh and govern the attached-API fixture lock in its own owner; Item 8 does not absorb an exact-base artifact failure. |
 
 New out-of-scope findings must name a concrete active owner before the current
 item can close.
@@ -606,8 +632,12 @@ item can close.
 - Item 12 is implementation/qualification only. Item 12A is closure-only and
   receives the sole whole-phase review; a whole-phase implementation defect
   creates a later implementation item and later closure item.
-- Next action: commit the fully qualified Item 8 candidate, open its draft PR,
-  run the one exact-SHA Opus review (plus at most one remediation review), then
-  run the create-PR and merge gates exactly once on the final reviewed SHA.
-  Merge Item 8, update this record with the PR/review/gate evidence, and start
-  Item 9 immediately.
+- Draft PR [#3668](https://github.com/sifr-lang/sifr/pull/3668) is open. Its
+  initial exact-SHA review was not satisfied; all four blockers are remediated
+  in compiler commit `49f375e1619185d76e6cfc3b90d7e20ff786cce0` with complete constituent
+  evidence. No whole-phase review has been consumed.
+- Next action: commit this record, push the resulting exact SHA, and run the
+  sole Item 8 remediation review. If satisfied, run the create-PR and merge
+  gates exactly once on that reviewed SHA, merge Item 8, record the final
+  evidence, and start Item 9 immediately. A new mechanism defect in the
+  remediation review is recorded as a later item without a third review.
