@@ -331,10 +331,10 @@ pub(super) fn lower_index(object: &RustExpr, args: &[RustExpr]) -> Option<RustEx
                         right: Box::new(RustExpr::Ident("__stop".to_string())),
                     }),
                     op: "&&".to_string(),
-                    right: Box::new(RustExpr::BinOp {
-                        left: Box::new(RustExpr::Ident("__result".to_string())),
-                        op: "==".to_string(),
-                        right: Box::new(RustExpr::Path(vec!["None".to_string()])),
+                    right: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident("__result".to_string())),
+                        method: "is_none".to_string(),
+                        args: Vec::new(),
                     }),
                 },
                 body: vec![

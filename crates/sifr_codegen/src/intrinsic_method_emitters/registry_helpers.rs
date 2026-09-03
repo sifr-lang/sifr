@@ -63,6 +63,34 @@ pub(super) fn registry_option_inner_type(ty: &Type) -> Option<Type> {
     ty.optional_member_type()
 }
 
+pub(super) fn registry_option_none_query<'a>(
+    emitter: &RustEmitter,
+    left: &'a HirExpr,
+    ops: &[String],
+    comparators: &'a [HirExpr],
+) -> Option<(&'a HirExpr, &'static str)> {
+    let ([op], [right]) = (ops, comparators) else {
+        return None;
+    };
+    let method = match op.as_str() {
+        "is" | "==" => "is_none",
+        "is not" | "!=" => "is_some",
+        _ => return None,
+    };
+    let option = if matches!(right, HirExpr::NoneLiteral)
+        && registry_option_inner_type(&emitter.effective_registry_expr_ty(left)).is_some()
+    {
+        left
+    } else if matches!(left, HirExpr::NoneLiteral)
+        && registry_option_inner_type(&emitter.effective_registry_expr_ty(right)).is_some()
+    {
+        right
+    } else {
+        return None;
+    };
+    Some((option, method))
+}
+
 pub(super) fn registry_is_string_like_type(ty: &Type) -> bool {
     matches!(
         crate::resolve_alias_type_for_plain_call(ty),
@@ -243,6 +271,34 @@ pub(crate) fn registry_iterable_to_owned_iter_expr(
     expr: &HirExpr,
 ) -> Option<RustExpr> {
     registry_iterable_to_owned_iter_expr_with_hint(emitter, expr, None)
+}
+
+pub(crate) fn registry_iterable_to_owned_into_iter_arg_expr(
+    emitter: &mut RustEmitter,
+    expr: &HirExpr,
+) -> Option<RustExpr> {
+    let lowered = registry_iterable_to_owned_iter_expr(emitter, expr)?;
+    let plan = crate::helpers::plan_iterator_ownership(expr);
+    let can_pass_source_directly = matches!(
+        plan.source_access_mode,
+        crate::helpers::SourceAccessMode::Consume
+    ) && matches!(
+        crate::resolve_alias_type_for_plain_call(expr.ty()),
+        Type::List(_) | Type::Set(_) | Type::Iterable(_)
+    );
+    match lowered {
+        RustExpr::MethodCall {
+            receiver,
+            method,
+            args,
+        } if can_pass_source_directly && method == "into_iter" && args.is_empty() => {
+            Some(match *receiver {
+                RustExpr::Paren(expression) => *expression,
+                expression => expression,
+            })
+        }
+        expression => Some(expression),
+    }
 }
 
 pub(super) fn registry_iterable_to_owned_iter_expr_with_hint(
@@ -668,7 +724,7 @@ pub(super) fn registry_zip_iter_expr(
     let mut iter = args.iter();
     let mut acc = registry_iterable_to_owned_iter_expr(emitter, iter.next()?)?;
     for arg in iter {
-        let next_iter = registry_iterable_to_owned_iter_expr(emitter, arg)?;
+        let next_iter = registry_iterable_to_owned_into_iter_arg_expr(emitter, arg)?;
         acc = RustExpr::MethodCall {
             receiver: Box::new(acc),
             method: "zip".to_string(),

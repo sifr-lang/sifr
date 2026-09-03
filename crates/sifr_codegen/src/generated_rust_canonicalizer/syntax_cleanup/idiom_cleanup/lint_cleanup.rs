@@ -37,31 +37,6 @@ pub(super) fn rewrite_identity_constructor_closure(expression: &mut syn::Expr) {
     *expression = syn::Expr::Path(constructor.clone());
 }
 
-pub(super) fn rewrite_none_comparison(expression: &mut syn::Expr) {
-    let syn::Expr::Binary(binary) = expression else {
-        return;
-    };
-    let method = match binary.op {
-        syn::BinOp::Eq(_) => "is_none",
-        syn::BinOp::Ne(_) => "is_some",
-        _ => return,
-    };
-    let tested = if expression_is_none(&binary.left) {
-        binary.right.as_ref()
-    } else if expression_is_none(&binary.right) {
-        binary.left.as_ref()
-    } else {
-        return;
-    };
-    let method = syn::Ident::new(method, proc_macro2::Span::call_site());
-    *expression = syn::parse_quote!((#tested).#method());
-}
-
-fn expression_is_none(expression: &syn::Expr) -> bool {
-    matches!(expression, syn::Expr::Path(path)
-        if path.qself.is_none() && path.path.is_ident("None"))
-}
-
 pub(super) fn terminate_known_unit_macro_tail(statements: &mut [syn::Stmt]) {
     let Some(syn::Stmt::Expr(syn::Expr::Macro(expression_macro), semicolon @ None)) =
         statements.last_mut()

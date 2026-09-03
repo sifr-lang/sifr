@@ -1,6 +1,7 @@
 //! Shared method lowerers that are not container-specific.
 
 use crate::{RustExpr, RustLiteral, RustStmt, RustType};
+use sifr_type_system::Type;
 
 fn exact_int_from_expr(expr: RustExpr) -> RustExpr {
     RustExpr::FnCall {
@@ -136,10 +137,10 @@ pub(super) fn lower_tuple_index(
         stmts.push(RustStmt::If {
             cond: RustExpr::BinOp {
                 left: Box::new(RustExpr::BinOp {
-                    left: Box::new(RustExpr::BinOp {
-                        left: Box::new(RustExpr::Ident("__result".to_string())),
-                        op: "==".to_string(),
-                        right: Box::new(RustExpr::Path(vec!["None".to_string()])),
+                    left: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident("__result".to_string())),
+                        method: "is_none".to_string(),
+                        args: Vec::new(),
                     }),
                     op: "&&".to_string(),
                     right: Box::new(RustExpr::BinOp {
@@ -203,10 +204,38 @@ pub(super) fn lower_string_char_len(object: &RustExpr, args: &[RustExpr]) -> Opt
     }))
 }
 
-pub(super) fn lower_option_len(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
+pub(super) fn lower_option_len(
+    object_ty: &Type,
+    object: &RustExpr,
+    args: &[RustExpr],
+) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
     }
+    let length = if object_ty
+        .optional_member_type()
+        .is_some_and(|payload| matches!(payload.resolve_alias(), Type::List(_)))
+    {
+        RustExpr::Path(vec![
+            "std".to_string(),
+            "vec".to_string(),
+            "Vec".to_string(),
+            "len".to_string(),
+        ])
+    } else {
+        RustExpr::Closure {
+            params: vec![crate::RustParam::Named {
+                name: "value".to_string(),
+                ty: RustType::Named("_".to_string()),
+            }],
+            body: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident("value".to_string())),
+                method: "len".to_string(),
+                args: Vec::new(),
+            }),
+            is_move: false,
+        }
+    };
     Some(exact_int_from_expr(RustExpr::MethodCall {
         receiver: Box::new(RustExpr::MethodCall {
             receiver: Box::new(object.clone()),
@@ -219,18 +248,7 @@ pub(super) fn lower_option_len(object: &RustExpr, args: &[RustExpr]) -> Option<R
                 expr: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
                 ty: RustType::Named("usize".to_string()),
             },
-            RustExpr::Closure {
-                params: vec![crate::RustParam::Named {
-                    name: "v".to_string(),
-                    ty: RustType::Named("_".to_string()),
-                }],
-                body: Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::Ident("v".to_string())),
-                    method: "len".to_string(),
-                    args: vec![],
-                }),
-                is_move: false,
-            },
+            length,
         ],
     }))
 }

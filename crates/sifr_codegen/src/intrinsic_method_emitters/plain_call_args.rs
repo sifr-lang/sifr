@@ -2,6 +2,7 @@ use super::{
     HirExpr, ParamConvention, RustEmitter, RustExpr, Type,
     registry_can_construct_error_from_message, registry_is_box_new_ctor,
     registry_is_string_like_type, registry_iterable_to_vec_expr, registry_option_inner_type,
+    registry_option_none_query,
 };
 impl RustEmitter {
     pub(crate) fn flatten_option_argument_for_ir(
@@ -564,6 +565,13 @@ impl RustEmitter {
     ) -> Option<crate::RustExpr> {
         if ops.is_empty() || ops.len() != comparators.len() {
             return None;
+        }
+        if let Some((option, method)) = registry_option_none_query(self, left, ops, comparators) {
+            return Some(crate::RustExpr::MethodCall {
+                receiver: Box::new(self.try_lower_registry_expr_strict(option)?),
+                method: method.to_string(),
+                args: Vec::new(),
+            });
         }
         let mut lhs_expr = left;
         let mut chained: Option<crate::RustExpr> = None;

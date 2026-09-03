@@ -7596,6 +7596,7 @@ dependencies = [
  "sifr_type_system",
  "static_assertions",
  "syn 3.0.4",
+ "unicode-ident",
 ]
 
 [[package]]

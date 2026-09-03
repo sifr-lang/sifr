@@ -275,7 +275,7 @@ impl<'ast> Visit<'ast> for BodyReferenceCollector {
 
     fn visit_macro(&mut self, rust_macro: &'ast syn::Macro) {
         collect_macro_identifier_tokens(rust_macro.tokens.clone(), &mut self.names);
-        collect_format_capture_identifiers(rust_macro, &mut self.names);
+        self.names.extend(super::format_capture::names(rust_macro));
         visit::visit_macro(self, rust_macro);
     }
 }
@@ -290,43 +290,6 @@ fn collect_macro_identifier_tokens(tokens: proc_macro2::TokenStream, names: &mut
                 collect_macro_identifier_tokens(group.stream(), names);
             }
             _ => {}
-        }
-    }
-}
-
-fn collect_format_capture_identifiers(rust_macro: &syn::Macro, names: &mut HashSet<String>) {
-    let Some(macro_name) = rust_macro
-        .path
-        .segments
-        .last()
-        .map(|segment| &segment.ident)
-    else {
-        return;
-    };
-    let format_index = match macro_name.to_string().as_str() {
-        "format" | "print" | "println" | "eprint" | "eprintln" => 0,
-        "write" | "writeln" => 1,
-        _ => return,
-    };
-    let Ok(arguments) = rust_macro.parse_body_with(
-        syn::punctuated::Punctuated::<syn::Expr, syn::Token![,]>::parse_terminated,
-    ) else {
-        return;
-    };
-    let Some(syn::Expr::Lit(format_expression)) = arguments.iter().nth(format_index) else {
-        return;
-    };
-    let syn::Lit::Str(format_literal) = &format_expression.lit else {
-        return;
-    };
-    for field in format_literal.value().split(['{', '}']).skip(1).step_by(2) {
-        let name = field.split(':').next().unwrap_or_default();
-        if !name.is_empty()
-            && name
-                .chars()
-                .all(|character| character == '_' || character.is_ascii_alphanumeric())
-        {
-            names.insert(name.to_string());
         }
     }
 }

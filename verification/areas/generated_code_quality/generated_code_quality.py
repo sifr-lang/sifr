@@ -330,10 +330,13 @@ def run_command(
     *,
     cwd: Path = REPO_ROOT,
     check: bool = True,
+    cargo_target_dir: Path | None = None,
 ) -> subprocess.CompletedProcess[str]:
     env = command_env()
     shared_root = shared_artifact_root()
-    if shared_root is not None:
+    if cargo_target_dir is not None:
+        env["CARGO_TARGET_DIR"] = str(cargo_target_dir)
+    elif shared_root is not None:
         env["CARGO_TARGET_DIR"] = str(shared_root / "cargo-target")
     result = subprocess.run(
         args,
@@ -609,6 +612,7 @@ def gate_rustfmt(entries: list[Entry], args: argparse.Namespace) -> None:
 def gate_clippy(entries: list[Entry], args: argparse.Namespace) -> None:
     run = run_id("clippy")
     run_root = TARGET_ROOT / run
+    cargo_target_dir = run_root / "cargo-target"
     records = []
     try:
         negative_seeds = {
@@ -627,6 +631,7 @@ def gate_clippy(entries: list[Entry], args: argparse.Namespace) -> None:
                     run_command,
                     STRICT_CLIPPY_ARGS,
                     parse_clippy_diagnostics,
+                    cargo_target_dir,
                 ),
             )
         debt = load_debt(QUALITY_DEBT)
@@ -640,6 +645,7 @@ def gate_clippy(entries: list[Entry], args: argparse.Namespace) -> None:
                     crate_root_inner,
                     run_command,
                     STRICT_CLIPPY_ARGS,
+                    cargo_target_dir,
                 )
                 actual = parse_clippy_diagnostics(result.stdout, crate_root_inner)
                 if result.returncode != 0 and not actual:
@@ -768,6 +774,7 @@ def authoritative_companion_entries() -> list[tuple[Path, Entry]]:
 def gate_companions(_entries: list[Entry], args: argparse.Namespace) -> None:
     run = run_id("companions")
     run_root = TARGET_ROOT / run
+    cargo_target_dir = run_root / "cargo-target"
     records = []
     summaries = []
     debt = load_debt(QUALITY_DEBT)
@@ -791,6 +798,7 @@ def gate_companions(_entries: list[Entry], args: argparse.Namespace) -> None:
                     crate_root_inner,
                     run_command,
                     STRICT_CLIPPY_ARGS,
+                    cargo_target_dir,
                 )
                 diagnostics = parse_clippy_diagnostics(result.stdout, crate_root_inner)
                 if result.returncode != 0 and not diagnostics:

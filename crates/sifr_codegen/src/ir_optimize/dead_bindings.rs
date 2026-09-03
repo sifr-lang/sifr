@@ -1,4 +1,4 @@
-use crate::{RustExpr, RustItem, RustStmt};
+use crate::{RustExpr, RustItem, RustStmt, discardability::rust_ir_expression_is_discardable};
 use std::collections::HashSet;
 
 pub(crate) fn remove_unread_pure_bindings_in_items(items: &mut [RustItem]) -> usize {
@@ -41,7 +41,7 @@ fn remove_from_block(body: &mut Vec<RustStmt>) -> usize {
             RustStmt::Let { name, value, .. }
                 if name.starts_with("__sifr_")
                     && !referenced_after.contains(name)
-                    && expr_is_pure(value)
+                    && rust_ir_expression_is_discardable(value)
                     && !kept.is_empty()
         );
         if removable {
@@ -172,50 +172,6 @@ fn remove_from_stmt(stmt: &mut RustStmt) -> usize {
         | RustStmt::Return(_)
         | RustStmt::Break
         | RustStmt::Continue => 0,
-    }
-}
-
-fn expr_is_pure(expr: &RustExpr) -> bool {
-    match expr {
-        RustExpr::Literal(_) | RustExpr::Ident(_) | RustExpr::Path(_) => true,
-        RustExpr::Tuple(values) | RustExpr::Array(values) | RustExpr::Vec(values) => {
-            values.iter().all(expr_is_pure)
-        }
-        RustExpr::UnaryOp { operand, .. }
-        | RustExpr::Ref { expr: operand, .. }
-        | RustExpr::Deref(operand)
-        | RustExpr::Cast { expr: operand, .. }
-        | RustExpr::Paren(operand) => expr_is_pure(operand),
-        RustExpr::BinOp { left, right, .. }
-        | RustExpr::Range {
-            start: left,
-            end: right,
-        } => expr_is_pure(left) && expr_is_pure(right),
-        RustExpr::Field { expr, .. } => expr_is_pure(expr),
-        RustExpr::StructInit { fields, .. } => fields.iter().all(|(_, value)| expr_is_pure(value)),
-        RustExpr::FnCall { func, args }
-            if matches!(func.as_ref(), RustExpr::Path(path)
-                if path.first().is_some_and(|segment| segment == "SifrInt")) =>
-        {
-            args.iter().all(expr_is_pure)
-        }
-        RustExpr::Verbatim(_)
-        | RustExpr::MethodCall { .. }
-        | RustExpr::FnCall { .. }
-        | RustExpr::MacroCall { .. }
-        | RustExpr::FormatMacro { .. }
-        | RustExpr::Index { .. }
-        | RustExpr::Slice { .. }
-        | RustExpr::Clone(_)
-        | RustExpr::Block { .. }
-        | RustExpr::If { .. }
-        | RustExpr::Match { .. }
-        | RustExpr::Closure { .. }
-        | RustExpr::ClosureBlock { .. }
-        | RustExpr::AsyncBlock { .. }
-        | RustExpr::TimeoutAwait { .. }
-        | RustExpr::Try(_)
-        | RustExpr::Await(_) => false,
     }
 }
 
@@ -471,5 +427,38 @@ mod tests {
             &body[0],
             RustStmt::Let { name, .. } if name == "_source_dead"
         ));
+    }
+
+    #[test]
+    fn retains_unread_binary_expressions_with_unknown_operator_effects() {
+        let mut items = vec![RustItem::Fn {
+            name: "main".to_string(),
+            visibility: Visibility::Private,
+            type_params: Vec::new(),
+            params: Vec::new(),
+            ret: None,
+            body: vec![
+                RustStmt::Let {
+                    mutable: false,
+                    name: "__sifr_result".to_string(),
+                    ty: Some(RustType::I64),
+                    value: RustExpr::BinOp {
+                        left: Box::new(RustExpr::Literal(RustLiteral::Int(1))),
+                        op: "/".to_string(),
+                        right: Box::new(RustExpr::Literal(RustLiteral::Int(0))),
+                    },
+                },
+                RustStmt::Expr(RustExpr::Literal(RustLiteral::Unit)),
+            ],
+            is_async: false,
+        }];
+
+        assert_eq!(remove_unread_pure_bindings_in_items(&mut items), 0);
+        let RustItem::Fn { body, .. } = &items[0] else {
+            unreachable!();
+        };
+        assert!(
+            matches!(body.first(), Some(RustStmt::Let { name, .. }) if name == "__sifr_result")
+        );
     }
 }

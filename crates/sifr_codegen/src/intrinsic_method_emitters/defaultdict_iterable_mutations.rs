@@ -61,11 +61,7 @@ impl RustEmitter {
                 crate::RustStmt::Expr(crate::RustExpr::MethodCall {
                     receiver: Box::new(crate::RustExpr::Ident(bucket_name)),
                     method: "extend".to_string(),
-                    args: vec![crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::Ident(items_name)),
-                        method: "into_iter".to_string(),
-                        args: vec![],
-                    }],
+                    args: vec![crate::RustExpr::Ident(items_name)],
                 }),
             ],
             expr: Some(Box::new(crate::RustExpr::Literal(crate::RustLiteral::Unit))),
@@ -126,11 +122,7 @@ impl RustEmitter {
                     stmts.push(crate::RustStmt::Expr(crate::RustExpr::MethodCall {
                         receiver: Box::new(crate::RustExpr::Ident(bucket_name.clone())),
                         method: "extend".to_string(),
-                        args: vec![crate::RustExpr::MethodCall {
-                            receiver: Box::new(crate::RustExpr::Ident(items_name)),
-                            method: "into_iter".to_string(),
-                            args: vec![],
-                        }],
+                        args: vec![crate::RustExpr::Ident(items_name)],
                     }));
                 }
             }

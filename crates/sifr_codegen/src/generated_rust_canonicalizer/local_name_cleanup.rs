@@ -351,60 +351,7 @@ impl LocalReferenceRenamer<'_> {
     }
 
     fn rename_format_capture(&self, rust_macro: &mut syn::Macro) {
-        let Some(macro_name) = rust_macro
-            .path
-            .segments
-            .last()
-            .map(|segment| &segment.ident)
-        else {
-            return;
-        };
-        let format_index = match macro_name.to_string().as_str() {
-            "format" | "print" | "println" | "eprint" | "eprintln" => 0,
-            "write" | "writeln" => 1,
-            _ => return,
-        };
-        let Ok(mut arguments) = rust_macro.parse_body_with(
-            syn::punctuated::Punctuated::<syn::Expr, syn::Token![,]>::parse_terminated,
-        ) else {
-            return;
-        };
-        let Some(syn::Expr::Lit(format_expression)) = arguments.iter_mut().nth(format_index) else {
-            return;
-        };
-        let syn::Lit::Str(format_literal) = &mut format_expression.lit else {
-            return;
-        };
-        let format = format_literal.value();
-        let mut replacements = Vec::new();
-        let mut offset = 0;
-        while let Some(start_relative) = format[offset..].find('{') {
-            let start = offset + start_relative;
-            if format.as_bytes().get(start + 1) == Some(&b'{') {
-                offset = start + 2;
-                continue;
-            }
-            let Some(end_relative) = format[start + 1..].find('}') else {
-                break;
-            };
-            let end = start + 1 + end_relative;
-            let field_end = format[start + 1..end]
-                .find(':')
-                .map_or(end, |separator| start + 1 + separator);
-            if &format[start + 1..field_end] == self.from {
-                replacements.push((start + 1, field_end));
-            }
-            offset = end + 1;
-        }
-        if replacements.is_empty() {
-            return;
-        }
-        let mut renamed = format;
-        for (start, end) in replacements.into_iter().rev() {
-            renamed.replace_range(start..end, self.to);
-        }
-        *format_literal = syn::LitStr::new(&renamed, format_literal.span());
-        rust_macro.tokens = quote::quote!(#arguments);
+        super::format_capture::rename(rust_macro, self.from, self.to);
     }
 }
 

@@ -179,64 +179,15 @@ impl<'ast> Visit<'ast> for ReferenceCollector {
         } else {
             collect_token_names(rust_macro.tokens.clone(), &mut names);
         }
-        collect_format_capture_names(rust_macro, &mut names);
+        names.extend(crate::generated_rust_canonicalizer::format_capture::names(
+            rust_macro,
+        ));
         let free = names
             .into_iter()
             .filter(|name| !self.is_bound(name))
             .collect::<Vec<_>>();
         self.names.extend(free);
         visit::visit_macro(self, rust_macro);
-    }
-}
-
-fn collect_format_capture_names(rust_macro: &syn::Macro, names: &mut HashSet<String>) {
-    let Some(macro_name) = rust_macro
-        .path
-        .segments
-        .last()
-        .map(|segment| segment.ident.to_string())
-    else {
-        return;
-    };
-    let format_index = match macro_name.as_str() {
-        "format" | "print" | "println" | "eprint" | "eprintln" => 0,
-        "assert" => 1,
-        "assert_eq" | "assert_ne" => 2,
-        "write" | "writeln" => 1,
-        _ => return,
-    };
-    let Ok(arguments) = rust_macro.parse_body_with(
-        syn::punctuated::Punctuated::<syn::Expr, syn::Token![,]>::parse_terminated,
-    ) else {
-        return;
-    };
-    let Some(syn::Expr::Lit(format_expression)) = arguments.iter().nth(format_index) else {
-        return;
-    };
-    let syn::Lit::Str(format_literal) = &format_expression.lit else {
-        return;
-    };
-    let format = format_literal.value();
-    let mut offset = 0;
-    while let Some(start_relative) = format[offset..].find('{') {
-        let start = offset + start_relative;
-        if format.as_bytes().get(start + 1) == Some(&b'{') {
-            offset = start + 2;
-            continue;
-        }
-        let Some(end_relative) = format[start + 1..].find('}') else {
-            break;
-        };
-        let end = start + 1 + end_relative;
-        let field = format[start + 1..end].split(':').next().unwrap_or_default();
-        if !field.is_empty()
-            && field
-                .chars()
-                .all(|character| character == '_' || character.is_ascii_alphanumeric())
-        {
-            names.insert(field.to_string());
-        }
-        offset = end + 1;
     }
 }
 

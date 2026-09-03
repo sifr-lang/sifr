@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import re
 import shutil
-import tomllib
 from pathlib import Path
 from typing import Any, Callable, Sequence
 
@@ -114,6 +113,7 @@ def assert_negative_clippy(
     run_command: Callable[..., Any],
     strict_clippy_args: Sequence[str],
     parse_diagnostics: Callable[[str, Path], dict[str, Any]],
+    cargo_target_dir: Path,
 ) -> None:
     crate_root = run_root / "negative-clippy"
     src = crate_root / "src"
@@ -134,6 +134,7 @@ def assert_negative_clippy(
             *strict_clippy_args,
         ],
         check=False,
+        cargo_target_dir=cargo_target_dir,
     )
     if result.returncode == 0:
         raise RuntimeError("negative clippy seed unexpectedly passed")
@@ -149,27 +150,12 @@ def run_strict_clippy(
     crate_root: Path,
     run_command: Callable[..., Any],
     strict_clippy_args: Sequence[str],
+    cargo_target_dir: Path,
 ) -> Any:
     manifest = crate_root / "Cargo.toml"
-    package = tomllib.loads(manifest.read_text(encoding="utf-8")).get("package")
-    package_name = package.get("name") if isinstance(package, dict) else None
-    if not isinstance(package_name, str) or not package_name:
-        raise RuntimeError(f"generated crate has no package name: {manifest}")
-
-    # Cargo does not replay diagnostics for a fresh Clippy unit. Materialized
-    # generated crates are intentionally cached, so remove only the generated
-    # package's artifacts before collecting diagnostics. Dependencies remain in
-    # the shared target directory, while every run observes the same lint set.
-    run_command(
-        [
-            "cargo",
-            "clean",
-            "--manifest-path",
-            str(manifest),
-            "--package",
-            package_name,
-        ]
-    )
+    # Each gate invocation owns a fresh target. Cargo therefore emits the same
+    # diagnostics on every run without cleaning artifacts from another process
+    # that happens to share the materialization cache.
     return run_command(
         [
             "cargo",
@@ -181,6 +167,7 @@ def run_strict_clippy(
             *strict_clippy_args,
         ],
         check=False,
+        cargo_target_dir=cargo_target_dir,
     )
 
 

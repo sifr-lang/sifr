@@ -8,6 +8,7 @@ use syn::visit_mut::{self, VisitMut};
 mod api_cleanup;
 mod enum_variant_cleanup;
 mod field_name_cleanup;
+mod format_capture;
 mod identifier_canonicalizer;
 mod identifier_policy;
 mod item_demand;
@@ -871,7 +872,7 @@ impl<'ast> Visit<'ast> for ScopedItemReferenceCollector<'_> {
     }
 
     fn visit_macro(&mut self, rust_macro: &'ast syn::Macro) {
-        for name in item_demand::format_capture_names(rust_macro) {
+        for name in format_capture::names(rust_macro) {
             if self.definitions.contains(&name) && !self.bindings.contains(&name) {
                 self.references.insert(name);
             }
@@ -888,6 +889,10 @@ mod tests;
 #[cfg(test)]
 #[path = "generated_rust_canonicalizer_item8_tests.rs"]
 mod item8_tests;
+
+#[cfg(test)]
+#[path = "generated_rust_canonicalizer_item8a_tests.rs"]
+mod item8a_tests;
 
 #[cfg(test)]
 #[path = "generated_rust_canonicalizer_item8_remediation_tests.rs"]

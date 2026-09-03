@@ -18,13 +18,12 @@ use lint_cleanup::{
     fold_literal_result_bindings, fold_tail_bindings, fold_vec_push_sequences,
     group_long_float_literal, group_long_integer_literal, rewrite_assert_comparison,
     rewrite_empty_vec, rewrite_identity_constructor_closure, rewrite_literal_result_fallback,
-    rewrite_none_comparison, rewrite_option_expression, rewrite_option_match_with_if_let,
+    rewrite_option_expression, rewrite_option_match_with_if_let,
     rewrite_result_match_with_let_else, rewrite_single_element_exclusive_range,
     rewrite_single_value_format, rewrite_unwrap_or_default, terminate_known_unit_macro_tail,
 };
 use residual_cleanup::{
-    remove_explicit_unit_tail, remove_redundant_iterator_into_iter,
-    rewrite_static_format_to_string, rewrite_typed_redundant_len_closures,
+    remove_explicit_unit_tail, remove_redundant_iterator_into_iter, rewrite_static_format_to_string,
 };
 use result_control_cleanup::{rewrite_discarded_result_matches, rewrite_result_identity_match};
 use structured_control_cleanup::{
@@ -102,16 +101,6 @@ impl VisitMut for IdiomCleanup<'_> {
         terminate_known_unit_macro_tail(&mut block.stmts);
     }
 
-    fn visit_item_fn_mut(&mut self, function: &mut syn::ItemFn) {
-        rewrite_typed_redundant_len_closures(&function.sig, &mut function.block);
-        visit_mut::visit_item_fn_mut(self, function);
-    }
-
-    fn visit_impl_item_fn_mut(&mut self, method: &mut syn::ImplItemFn) {
-        rewrite_typed_redundant_len_closures(&method.sig, &mut method.block);
-        visit_mut::visit_impl_item_fn_mut(self, method);
-    }
-
     fn visit_local_mut(&mut self, local: &mut syn::Local) {
         rewrite_result_match_with_let_else(local);
         visit_mut::visit_local_mut(self, local);
@@ -160,7 +149,6 @@ impl VisitMut for IdiomCleanup<'_> {
         rewrite_single_value_format(expression);
         rewrite_option_match_with_if_let(expression);
         rewrite_option_expression(expression);
-        rewrite_none_comparison(expression);
         collapse_nested_if(expression);
         collapse_else_if(expression);
         collapse_identical_if_else_branches(expression);
