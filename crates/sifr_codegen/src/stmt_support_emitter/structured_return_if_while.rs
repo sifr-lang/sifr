@@ -13,8 +13,7 @@ impl RustEmitter {
             .last()
             .cloned()
             .unwrap_or(crate::TryClosureReturnWrap::Direct);
-        if wrap == crate::TryClosureReturnWrap::Direct
-            && source_value_is_none_like
+        if source_value_is_none_like
             && return_ty.is_some_and(|return_ty| {
                 matches!(
                     crate::resolve_alias_type_for_plain_call(return_ty),
@@ -361,5 +360,28 @@ impl RustEmitter {
             }
         }
         preferred.to_string()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn result_none_bare_return_uses_unit_inside_control_flow_carrier() {
+        let mut emitter = RustEmitter::new();
+        emitter
+            .try_closure_return_wrap
+            .push(crate::TryClosureReturnWrap::ControlFlow {
+                continue_type: "(SifrInt,)".to_string(),
+            });
+        let return_ty = Type::Result(Box::new(Type::None), Box::new(Type::Str));
+
+        let lowered = emitter.try_closure_unit_return_for_ir(Some(&return_ty));
+
+        assert_eq!(
+            crate::render_expr(&lowered),
+            "Ok(::std::ops::ControlFlow::Break(Ok(())))"
+        );
     }
 }

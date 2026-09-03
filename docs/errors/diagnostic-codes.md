@@ -95,7 +95,6 @@ Tooling metadata defaults: `tool_actions` is empty, `fix_all_eligible` is `false
 | [`SIFR-TYPE-0010`](SIFR-TYPE-0010.mdx) | Error | TypeVar constraints are not satisfied by the inferred concrete type. |
 | [`SIFR-TYPE-0011`](SIFR-TYPE-0011.mdx) | Error | Unsupported default argument expression. |
 | [`SIFR-TYPE-0012`](SIFR-TYPE-0012.mdx) | Error | Unsupported expression form. |
-| [`SIFR-TYPE-0901`](SIFR-TYPE-0901.mdx) | Warning | Integer arithmetic may overflow at runtime. |
 | [`SIFR-TYPE-0902`](SIFR-TYPE-0902.mdx) | Note | Reveal the inferred static type of an expression. |
 | [`SIFR-ASYNC-0001`](SIFR-ASYNC-0001.mdx) | Error | Async function body has no real suspension effect. |
 | [`SIFR-ASYNC-0002`](SIFR-ASYNC-0002.mdx) | Error | Awaited same-task coroutine has no real suspension effect. |

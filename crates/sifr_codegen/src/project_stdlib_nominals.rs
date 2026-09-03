@@ -11,6 +11,10 @@ use sifr_stdlib_manifest::StdlibFeature;
 use sifr_type_system::{FunctionType, Type, class_rust_name, is_crate_root_rust_nominal_identity};
 use std::collections::{BTreeMap, HashMap, HashSet};
 
+mod project_union_relocation;
+
+use project_union_relocation::{relocate_project_unions, shared_nominal_reexport_names};
+
 const SHARED_STDLIB_NOMINAL_MODULE: &str = "__sifr_project_nominals";
 const SHARED_MODULE_CRATE_ROOT_NOMINAL_IDENTITIES: &[&str] = &["_sifr.fs.NativeFileHandle"];
 
@@ -215,12 +219,8 @@ pub(crate) fn project_stdlib_nominal_plan(
     let shared_source = strip_rust_items_by_name(&generated.rust_source, &probe_name_refs);
     register_emitted_builtin_nominals(&shared_source, &mut registry);
     register_transitive_stdlib_nominals(&shared_source, stdlib_code, &mut registry);
-    let shared_defined_names = rust_source_defined_item_names(&shared_source);
-    for union_name in unions.keys() {
-        if shared_defined_names.contains(union_name) {
-            registry.shared_rust_names.insert(union_name.clone());
-        }
-    }
+    let (shared_source, relocated_project_unions) =
+        relocate_project_unions(&shared_source, unions, &mut registry);
     let crate_root_candidates = SHARED_MODULE_CRATE_ROOT_NOMINAL_IDENTITIES
         .iter()
         .filter_map(|identity| {
@@ -266,9 +266,11 @@ pub(crate) fn project_stdlib_nominal_plan(
     let mut crate_root_imports = registry
         .crate_root_rust_names
         .iter()
+        .chain(&relocated_project_unions)
         .filter(|name| rust_source_references_item_name(&shared_source, name))
         .collect::<Vec<_>>();
     crate_root_imports.sort();
+    crate_root_imports.dedup();
     for name in crate_root_imports {
         prelude.push_str("    use crate::");
         prelude.push_str(name);
@@ -280,13 +282,12 @@ pub(crate) fn project_stdlib_nominal_plan(
         prelude.push('\n');
     }
     prelude.push_str("}\n");
-    let mut ordered_names = registry.shared_rust_names.iter().collect::<Vec<_>>();
-    ordered_names.sort();
+    let ordered_names = shared_nominal_reexport_names(&registry, &relocated_project_unions);
     for name in ordered_names {
         prelude.push_str("pub use ");
         prelude.push_str(SHARED_STDLIB_NOMINAL_MODULE);
         prelude.push_str("::");
-        prelude.push_str(name);
+        prelude.push_str(&name);
         prelude.push_str(";\n");
     }
 

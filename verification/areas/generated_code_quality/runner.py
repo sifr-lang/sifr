@@ -47,6 +47,7 @@ PROFILE_SUITES = {
     ],
     "full": [
         ("inventory", None, None),
+        ("companions", None, None),
         ("corpus", None, None),
         ("panic-scan", None, None),
         ("intrinsic-panic-lint", None, None),
@@ -58,6 +59,7 @@ PROFILE_SUITES = {
     ],
 }
 GATE_SUITES = {
+    "companions",
     "corpus",
     "inventory",
     "panic-scan",

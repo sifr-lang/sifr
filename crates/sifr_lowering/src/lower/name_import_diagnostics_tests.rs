@@ -20,10 +20,10 @@ fn lower_errors(source: &str) -> Vec<HirDiagnostic> {
 }
 
 fn range_for(source: &str, needle: &str) -> TextRange {
-    let start = source.find(needle).expect("needle should exist") as u32;
+    let start = source.find(needle).expect("needle should exist");
     TextRange::new(
-        TextSize::new(start),
-        TextSize::new(start + needle.len() as u32),
+        TextSize::try_from(start).expect("test source offset fits in TextSize"),
+        TextSize::try_from(start + needle.len()).expect("test source offset fits in TextSize"),
     )
 }
 
@@ -377,6 +377,36 @@ fn builtin_open_never_reuses_a_local_same_basename_handle() {
             "expected canonical-identity type mismatch, got {errors:?}"
         );
     }
+}
+
+#[test]
+fn compiler_open_defaults_do_not_attach_to_local_same_basename_methods() {
+    let source = r#"class FileHandle:
+    def seek(self, offset: int, whence: int) -> int:
+        return offset
+
+def main() -> None:
+    try:
+        system_handle = open("input.bin", "rb")
+        system_handle.close()
+    except IOError:
+        pass
+    handle = FileHandle()
+    handle.seek(0)
+"#;
+    let parsed = parse_module(source).expect("parse failed");
+    let errors = match lower_module(parsed.suite()) {
+        Ok(_) => panic!("a local same-basename method must retain its required argument"),
+        Err(errors) => errors,
+    };
+
+    assert!(
+        errors.iter().any(|error| {
+            error.code == Some(DiagnosticCode::CALL_MISSING_REQUIRED_ARGUMENT)
+                && error.message.contains("missing required argument")
+        }),
+        "expected the local method to retain its required whence argument, got {errors:?}"
+    );
 }
 
 #[test]

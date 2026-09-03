@@ -1,16 +1,15 @@
 // src/main.rs
-use ::std::collections::HashMap;
-
 use ::sifr_runtime::SifrInt;
-
+use ::std::collections::HashMap;
 fn frequency_score(nums: &[SifrInt]) -> SifrInt {
     let mut counts: HashMap<SifrInt, SifrInt> = HashMap::from([]);
     for n in nums.iter().cloned() {
         {
-            let __assign_value = &SifrInt::from_i64(1) + &counts.get(&n).cloned().unwrap_or(SifrInt::from_i64(0));
+            let sifr_generated_assign_value =
+                &SifrInt::from_i64(1) + &counts.get(&n).cloned().unwrap_or(SifrInt::from_i64(0));
             {
-                let __assign_key = n.clone();
-                counts.insert(__assign_key, __assign_value);
+                let sifr_generated_assign_key = n.clone();
+                counts.insert(sifr_generated_assign_key, sifr_generated_assign_value);
             }
         }
     }
@@ -20,8 +19,23 @@ fn frequency_score(nums: &[SifrInt]) -> SifrInt {
     }
     score.clone()
 }
-
 fn main() {
-    assert!((format!("{}", frequency_score(&vec![SifrInt::from_i64(1), SifrInt::from_i64(2), SifrInt::from_i64(1)])) == "5"));
-    assert!((format!("{}", frequency_score(&vec![SifrInt::from_i64(4), SifrInt::from_i64(4), SifrInt::from_i64(4)])) == "9"));
+    assert_eq!(
+        frequency_score(&vec![
+            SifrInt::from_i64(1),
+            SifrInt::from_i64(2),
+            SifrInt::from_i64(1)
+        ])
+        .to_string(),
+        "5"
+    );
+    assert_eq!(
+        frequency_score(&vec![
+            SifrInt::from_i64(4),
+            SifrInt::from_i64(4),
+            SifrInt::from_i64(4)
+        ])
+        .to_string(),
+        "9"
+    );
 }

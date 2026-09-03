@@ -141,40 +141,27 @@ fn success_expr() -> RustExpr {
     }
 }
 
-fn open_text_arm(pattern: &str, binary_mode: &str) -> RustMatchArm {
+fn binary_mode_arm(pattern: &str, binary_mode: &str) -> RustMatchArm {
     RustMatchArm {
         pattern: pattern.to_string(),
         bindings: vec![],
         guard: None,
-        body: vec![
-            RustStmt::Let {
-                mutable: false,
-                name: "__binary_mode".to_string(),
-                ty: None,
-                value: string_literal_expr(binary_mode),
-            },
-            RustStmt::Let {
-                mutable: false,
-                name: "__handle_id".to_string(),
-                ty: None,
-                value: open_file_handle_expr(),
-            },
-            RustStmt::Return(Some(success_expr())),
-        ],
+        body: vec![RustStmt::TailExpr(string_literal_expr(binary_mode))],
     }
 }
 
-fn build_open_text_match() -> RustStmt {
-    RustStmt::Match {
+fn binary_mode_expr() -> RustExpr {
+    RustExpr::Match {
         expr: RustExpr::MethodCall {
             receiver: Box::new(RustExpr::Ident("__mode".to_string())),
             method: "as_str".to_string(),
             args: vec![],
-        },
+        }
+        .into(),
         arms: vec![
-            open_text_arm("\"r\" | \"rt\"", "rb"),
-            open_text_arm("\"w\" | \"wt\"", "wb"),
-            open_text_arm("\"a\" | \"at\"", "ab"),
+            binary_mode_arm("\"r\" | \"rt\"", "rb"),
+            binary_mode_arm("\"w\" | \"wt\"", "wb"),
+            binary_mode_arm("\"a\" | \"at\"", "ab"),
             RustMatchArm {
                 pattern: "_".to_string(),
                 bindings: vec![],
@@ -217,7 +204,19 @@ pub(crate) fn lower_builtin_open_text(args: &[RustExpr]) -> Option<RustExpr> {
                     ty: None,
                     value: owned_str(&args[3]),
                 },
-                build_open_text_match(),
+                RustStmt::Let {
+                    mutable: false,
+                    name: "__binary_mode".to_string(),
+                    ty: None,
+                    value: binary_mode_expr(),
+                },
+                RustStmt::Let {
+                    mutable: false,
+                    name: "__handle_id".to_string(),
+                    ty: None,
+                    value: open_file_handle_expr(),
+                },
+                RustStmt::Return(Some(success_expr())),
             ],
             is_move: false,
             is_async: false,

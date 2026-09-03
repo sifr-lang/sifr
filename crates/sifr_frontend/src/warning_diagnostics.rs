@@ -33,19 +33,9 @@ fn warning_diagnostic(
 ) -> RenderedDiagnostic {
     let structured_help = match diagnostic {
         LoweringWarningDiagnostic::MetaPackageIssue { help, .. } => help.clone(),
-        _ => None,
+        LoweringWarningDiagnostic::UnreachableStatement { .. } => None,
     };
     let (code, message, message_template, args, primary_range) = match diagnostic {
-        LoweringWarningDiagnostic::ArithmeticOverflowRisk {
-            operation,
-            primary_range,
-        } => (
-            DiagnosticCode::TYPE_ARITHMETIC_OVERFLOW_RISK,
-            format!("integer {operation} may overflow at runtime"),
-            "integer {operation} may overflow at runtime",
-            vec![("operation", DiagnosticArg::String(operation.clone()))],
-            *primary_range,
-        ),
         LoweringWarningDiagnostic::UnreachableStatement { primary_range } => (
             DiagnosticCode::FLOW_UNREACHABLE_STATEMENT,
             "unreachable statement ignored".to_string(),
@@ -74,7 +64,7 @@ fn warning_diagnostic(
         LoweringWarningDiagnostic::MetaPackageIssue { related_ranges, .. } => {
             related_ranges.as_slice()
         }
-        _ => &[],
+        LoweringWarningDiagnostic::UnreachableStatement { .. } => &[],
     };
     if let (Some(context), Some(range)) = (source_context, primary_range) {
         let args = args

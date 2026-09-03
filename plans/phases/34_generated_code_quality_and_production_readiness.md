@@ -429,7 +429,9 @@ division examples to float operands. The compiler now accepts the safe subset
 of exact `int / int` true division only when both operands have reliable
 compile-time integer facts, the divisor is nonzero, and both integer operands
 are exactly representable as `float`. Runtime-dependent exact `int / int`
-continues to fail closed with `SIFR-INT-0006`.
+failed closed at that time with `SIFR-INT-0006`. This is historical evidence:
+the later exact-integer architecture retired that diagnostic and now represents
+runtime-dependent true division through typed `Result` error channels.
 
 Follow-up PR: https://github.com/sifr-lang/sifr/pull/2121
 
@@ -446,9 +448,10 @@ Integer-model hardening:
 
 Follow-up evidence:
 
-- Focused HIR regression coverage for proven-safe division, runtime-dependent
-  `SIFR-INT-0006`, large exact integers, branch/loop/augassign fact clearing,
-  and narrowed optional constants.
+- Focused HIR regression coverage originally included the now-retired
+  `SIFR-INT-0006` path, plus large exact integers, branch/loop/augassign fact
+  clearing, and narrowed optional constants. Current coverage uses typed
+  division errors and contextual type diagnostics instead.
 - Targeted demo checks and runs pass for `demos/code_generation/main.sifr` and
   `demos/optional_arithmetic/main.sifr`.
 - Reviewer handoff completed for integer-model division follow-up.

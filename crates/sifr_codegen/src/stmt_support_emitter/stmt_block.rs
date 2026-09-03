@@ -4,22 +4,6 @@ use super::{
     should_force_mutable_binding, should_omit_local_type_annotation, type_contains_any_or_unknown,
 };
 impl RustEmitter {
-    pub(crate) fn validate_assignment_source_type_for_ir(
-        name: &str,
-        target_ty: &Type,
-        value: &HirExpr,
-    ) -> Result<(), crate::CodegenError> {
-        if !crate::helpers::is_option_type(target_ty)
-            && crate::helpers::is_option_type(value.ty())
-            && !value.ty().is_assignable_to(target_ty)
-        {
-            return Err(crate::CodegenError::new(format!(
-                "codegen invariant violated: optional value reached assignment to non-optional local `{name}`"
-            )));
-        }
-        Ok(())
-    }
-
     pub(crate) fn try_lower_stmt_block_for_ir_inner(
         &mut self,
         stmts: &[HirStmt],
@@ -178,13 +162,21 @@ impl RustEmitter {
                 } else {
                     Some(self.rust_ir_type_with_generics(&effective_ty))
                 };
-                let mut lowered = vec![RustStmt::Let {
-                    mutable: self.mutated_vars.contains(name)
-                        || should_force_mutable_binding(&effective_ty, &self.recursive_fields),
-                    name: name.clone(),
-                    ty: lowered_ty,
-                    value: lowered_value,
-                }];
+                let mut lowered = if name == "_"
+                    && matches!(
+                        crate::resolve_alias_type_for_plain_call(&effective_ty),
+                        Type::None
+                    ) {
+                    vec![RustStmt::Expr(lowered_value)]
+                } else {
+                    vec![RustStmt::Let {
+                        mutable: self.mutated_vars.contains(name)
+                            || should_force_mutable_binding(&effective_ty, &self.recursive_fields),
+                        name: name.clone(),
+                        ty: lowered_ty,
+                        value: lowered_value,
+                    }]
+                };
                 if recursive_borrowed_view {
                     self.recursive_option_borrowed_views.insert(name.clone());
                 }
@@ -730,25 +722,10 @@ impl RustEmitter {
                         return Ok(None);
                     };
                     (
-                        vec![RustStmt::Block(vec![
-                            RustStmt::Let {
-                                mutable: true,
-                                name: "_broke".to_string(),
-                                ty: Some(crate::RustType::Bool),
-                                value: crate::RustExpr::Literal(crate::RustLiteral::Bool(false)),
-                            },
+                        vec![Self::loop_else_scaffold_for_ir(
                             lowered_loop,
-                            RustStmt::If {
-                                cond: crate::RustExpr::UnaryOp {
-                                    op: "!".to_string(),
-                                    operand: Box::new(crate::RustExpr::Paren(Box::new(
-                                        crate::RustExpr::Ident("_broke".to_string()),
-                                    ))),
-                                },
-                                then_body: lowered_else_body,
-                                else_body: None,
-                            },
-                        ])],
+                            lowered_else_body,
+                        )],
                         true,
                     )
                 } else {
@@ -830,21 +807,40 @@ impl RustEmitter {
                 close_error_ty,
                 active_error_ty,
                 body,
+                else_body,
                 ..
             } = stmt
             {
-                let Some(lowered_async_for) = self.try_lower_async_for_stmt_for_ir(
+                self.loop_else_stack.push(else_body.is_some());
+                let lowered_async_for_result = self.try_lower_async_for_stmt_for_ir(
                     target,
                     iter,
                     iter_error_ty,
                     close_error_ty.as_ref(),
                     active_error_ty,
                     body,
-                )?
-                else {
+                );
+                let popped = self.loop_else_stack.pop();
+                debug_assert!(popped.is_some(), "loop_else_stack should not underflow");
+                let Some(lowered_async_for) = lowered_async_for_result? else {
                     return Ok(None);
                 };
-                (vec![lowered_async_for], true)
+                if let Some(else_body) = else_body {
+                    let Some(lowered_else_body) =
+                        self.try_lower_scoped_stmt_block_for_ir(else_body)?
+                    else {
+                        return Ok(None);
+                    };
+                    (
+                        vec![Self::loop_else_scaffold_for_ir(
+                            lowered_async_for,
+                            lowered_else_body,
+                        )],
+                        true,
+                    )
+                } else {
+                    (vec![lowered_async_for], true)
+                }
             } else if let HirStmt::With { items, body } = stmt {
                 let Some(lowered_with) = self.try_lower_with_stmt_for_ir(items, body)? else {
                     return Ok(None);

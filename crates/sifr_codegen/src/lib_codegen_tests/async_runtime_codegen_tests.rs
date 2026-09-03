@@ -83,10 +83,20 @@ fn test_try_finally_runs_cleanup_before_timeout_propagates() {
         .expect("cleanup marker should be emitted");
     let rethrow_pos = result
         .rust_source
-        .find("if let Err(__sifr_finally_err) = __sifr_try_finally_res")
-        .expect("try/finally should rethrow after cleanup");
+        .find("Err(__sifr_finally_err) => {")
+        .unwrap_or_else(|| {
+            panic!(
+                "try/finally should rethrow after cleanup:\n{}",
+                result.rust_source
+            )
+        });
 
     assert!(result.rust_source.contains("let __sifr_try_finally_res"));
+    assert!(
+        result
+            .rust_source
+            .contains("return Err(__sifr_finally_err.into());")
+    );
     assert!(
         result
             .rust_source

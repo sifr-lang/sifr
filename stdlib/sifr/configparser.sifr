@@ -58,14 +58,8 @@ def _normalize_option(option: str) -> str:
     return option.lower().strip()
 
 
-def _some_str(value: str) -> str | None:
-    return value + ""
-
-
 def _copy_optional_str(value: str | None) -> str | None:
-    if value is not None:
-        return _some_str(value)
-    return None
+    return value.clone()
 
 
 def _has_option_key(values: dict[str, str | None], key: str) -> bool:
@@ -139,7 +133,7 @@ def _split_option_line(
         raise ParsingError(line_no, "option name is empty")
     if raw_value is None:
         return (key, None)
-    stripped_value: str | None = _some_str(raw_value.strip())
+    stripped_value: str | None = raw_value.strip()
     return (key, stripped_value)
 
 
@@ -287,7 +281,6 @@ class ConfigParser:
                     self._defaults[option_name] = _copy_optional_str(option_value)
                 else:
                     section_key: str = current_section + ""
-                    section_found: bool = False
                     for section_name, section_values in self._sections.items():
                         if section_name != section_key:
                             continue
@@ -296,7 +289,6 @@ class ConfigParser:
                         updated_section: dict[str, str | None] = _copy_values(section_values)
                         updated_section[option_name] = _copy_optional_str(option_value)
                         self._sections[section_name] = updated_section
-                        section_found = True
                         break
             except ParsingError as e:
                 raise e

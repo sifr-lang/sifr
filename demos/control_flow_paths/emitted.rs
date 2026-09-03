@@ -1,11 +1,12 @@
 // src/main.rs
-mod __sifr_project_nominals {
+mod sifr_generated_project_nominals {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ValueError {
         pub message: String,
     }
     impl ValueError {
-        pub fn new(message: String) -> Self {
+        #[must_use]
+        pub const fn new(message: String) -> Self {
             Self { message }
         }
     }
@@ -16,23 +17,20 @@ mod __sifr_project_nominals {
     }
     impl ::std::error::Error for ValueError {}
 }
-pub use __sifr_project_nominals::ValueError;
 use ::sifr_runtime::SifrInt;
 use ::sifr_runtime::SifrRange;
+pub use sifr_generated_project_nominals::ValueError;
 fn evaluate(seed: SifrInt) -> SifrInt {
     let mut total: SifrInt = SifrInt::from_i64(0);
-    for n in SifrRange::new_known_nonzero(
-        SifrInt::from_i64(0),
-        seed.clone(),
-        SifrInt::from_i64(1),
-    ) {
-        if (&n == &SifrInt::from_i64(1)) {
+    for n in SifrRange::new_known_nonzero(SifrInt::from_i64(0), seed.clone(), SifrInt::from_i64(1))
+    {
+        if &n == &SifrInt::from_i64(1) {
             continue;
         }
-        if (&n == &SifrInt::from_i64(6)) {
+        if &n == &SifrInt::from_i64(6) {
             break;
         }
-        if (&n.floor_mod_known_nonzero(&SifrInt::from_i64(2)) == &SifrInt::from_i64(0)) {
+        if &n.floor_mod_known_nonzero(&SifrInt::from_i64(2)) == &SifrInt::from_i64(0) {
             total = &total + &n;
         } else {
             total = &total + &SifrInt::from_i64(1);
@@ -41,30 +39,20 @@ fn evaluate(seed: SifrInt) -> SifrInt {
     total.clone()
 }
 fn safe(seed: SifrInt) -> SifrInt {
-    let __sifr_try_res: Result<SifrInt, ValueError> = (|| {
+    let sifr_generated_try_res: Result<SifrInt, ValueError> = (|| {
         let value: SifrInt = evaluate(seed.clone());
-        if (&value > &SifrInt::from_i64(3)) {
+        if &value > &SifrInt::from_i64(3) {
             return Ok(value);
         }
         Err(ValueError::new("too small".to_string()))
     })();
-    match __sifr_try_res {
-        Ok(__sifr_ret_val) => {
-            return __sifr_ret_val;
-        }
-        Err(__sifr_try_err) => {
-            let e = __sifr_try_err.clone();
-            return SifrInt::from_i64(42);
-        }
-    }
+    sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
+        let _e = sifr_generated_try_err.clone();
+        SifrInt::from_i64(42)
+    })
 }
-fn unreachable_tail() -> SifrInt {
+const fn unreachable_tail() -> SifrInt {
     SifrInt::from_i64(9)
-}
-fn test_cfg_flow_matrix() {
-    assert!((& safe(SifrInt::from_i64(8)) == & SifrInt::from_i64(8)));
-    assert!((& safe(SifrInt::from_i64(3)) == & SifrInt::from_i64(42)));
-    assert!((& unreachable_tail() == & SifrInt::from_i64(9)));
 }
 fn main() {
     println!("cfg flow activation regression matrix demo:");

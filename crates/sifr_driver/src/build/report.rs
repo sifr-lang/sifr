@@ -11,6 +11,33 @@ pub enum BuildCompilationMode {
     PackageProject,
 }
 
+#[doc(hidden)]
+#[derive(Clone, Debug)]
+pub struct MaterializedRustProjectReport {
+    project_path: PathBuf,
+    frontend_diagnostics: Vec<RenderedDiagnostic>,
+}
+
+impl MaterializedRustProjectReport {
+    pub(crate) fn new(
+        project_path: PathBuf,
+        frontend_diagnostics: Vec<RenderedDiagnostic>,
+    ) -> Self {
+        Self {
+            project_path,
+            frontend_diagnostics,
+        }
+    }
+
+    pub fn project_path(&self) -> &Path {
+        &self.project_path
+    }
+
+    pub fn frontend_diagnostics(&self) -> &[RenderedDiagnostic] {
+        &self.frontend_diagnostics
+    }
+}
+
 impl BuildCompilationMode {
     pub const fn as_str(self) -> &'static str {
         match self {

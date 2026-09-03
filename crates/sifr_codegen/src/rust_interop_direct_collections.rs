@@ -103,12 +103,15 @@ fn sifr_value_to_bridge_expr(value: &str, ty: &Type, borrowed: bool, depth: usiz
                 }
             },
             |inner| {
-                let item = format!("__sifr_bridge_item_{depth}");
                 let receiver = if borrowed {
                     format!("{value}.as_ref()")
                 } else {
                     value.to_string()
                 };
+                if !composite_conversion_required(inner) {
+                    return receiver;
+                }
+                let item = format!("__sifr_bridge_item_{depth}");
                 let converted = sifr_value_to_bridge_expr(&item, inner, borrowed, depth + 1);
                 format!("{receiver}.map(|{item}| {converted})")
             },
@@ -159,6 +162,9 @@ fn bridge_value_to_sifr_expr(value: &str, ty: &Type, depth: usize) -> String {
         Type::Union(members) => optional_inner(members).map_or_else(
             || value.to_string(),
             |inner| {
+                if !composite_conversion_required(inner) {
+                    return value.to_string();
+                }
                 let item = format!("__sifr_value_{depth}");
                 let converted = bridge_value_to_sifr_expr(&item, inner, depth + 1);
                 format!("{value}.map(|{item}| {converted})")
@@ -312,6 +318,28 @@ mod tests {
         assert!(!argument.starts_with('&'));
         assert!(argument.contains("SifrIntBridge::from(__sifr_bridge_item_1)"));
         assert!(returned.contains("__sifr_value_1.into_sifr_int()"));
+    }
+
+    #[test]
+    fn scalar_options_do_not_emit_identity_maps() {
+        let optional_float = Type::Union(vec![Type::Float, Type::None]);
+        let value = RustExpr::Ident("value".to_string());
+
+        let owned_argument = render_expr(&sifr_composite_to_bridge_expr(
+            &value,
+            &optional_float,
+            false,
+        ));
+        let borrowed_argument = render_expr(&sifr_composite_to_bridge_expr(
+            &value,
+            &optional_float,
+            true,
+        ));
+        let returned = render_expr(&bridge_composite_to_sifr_expr(&value, &optional_float));
+
+        assert_eq!(owned_argument, "value");
+        assert_eq!(borrowed_argument, "value.as_ref()");
+        assert_eq!(returned, "(value)");
     }
 
     #[test]

@@ -455,7 +455,10 @@ impl Renderer {
             RustStmt::Expr(expr) => self.emit_line(&format!("{};", Self::render_expr_string(expr))),
             RustStmt::TailExpr(expr) => self.emit_line(&Self::render_expr_string(expr)),
             RustStmt::Assert { cond, msg: None } => {
-                self.emit_line(&format!("assert!({});", Self::render_expr_string(cond)));
+                self.emit_line(&format!(
+                    "assert!({});",
+                    Self::render_condition_expr_string(cond)
+                ));
             }
             RustStmt::Assert {
                 cond,
@@ -463,7 +466,7 @@ impl Renderer {
             } => {
                 self.emit_line(&format!(
                     "assert!({}, \"{{}}\", {});",
-                    Self::render_expr_string(cond),
+                    Self::render_condition_expr_string(cond),
                     Self::render_expr_string(msg)
                 ));
             }
@@ -484,7 +487,10 @@ impl Renderer {
                 then_body,
                 else_body,
             } => {
-                self.emit_line(&format!("if {} {{", Self::render_expr_string(cond)));
+                self.emit_line(&format!(
+                    "if {} {{",
+                    Self::render_condition_expr_string(cond)
+                ));
                 self.indent();
                 for stmt in then_body {
                     self.render_stmt(stmt);
@@ -587,7 +593,10 @@ impl Renderer {
                 self.emit_line("}");
             }
             RustStmt::While { cond, body } => {
-                self.emit_line(&format!("while {} {{", Self::render_expr_string(cond)));
+                self.emit_line(&format!(
+                    "while {} {{",
+                    Self::render_condition_expr_string(cond)
+                ));
                 self.indent();
                 for stmt in body {
                     self.render_stmt(stmt);

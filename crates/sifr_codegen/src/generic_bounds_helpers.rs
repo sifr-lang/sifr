@@ -684,9 +684,15 @@ impl RustEmitter {
     /// Rust trait requirements are transitive across calls on any instance of
     /// the current class, including both `self.method()` and `other.method()`.
     pub(crate) fn class_method_type_param_bounds(
+        &self,
         class: &HirClass,
         method_items: &[(&HirFunction, RustItem)],
     ) -> HashMap<String, HashMap<String, HashSet<String>>> {
+        let module_function_names = self
+            .module_generic_functions
+            .keys()
+            .map(String::as_str)
+            .collect::<HashSet<_>>();
         let mut requirements = method_items
             .iter()
             .map(|(method, item)| {
@@ -696,9 +702,14 @@ impl RustEmitter {
                     .iter()
                     .map(|param| {
                         let mut bounds =
-                            Self::extra_bound_items_for_type_param(param, &method.body)
-                                .into_iter()
-                                .collect::<HashSet<_>>();
+                            crate::function_generic_bounds::reachable_direct_type_param_bounds(
+                                method,
+                                param,
+                                &module_function_names,
+                            )
+                            .iter()
+                            .map(|bound| bound.render_for(param))
+                            .collect::<HashSet<_>>();
                         if emitted_clone && Self::body_mentions_type_param(&method.body, param) {
                             bounds.insert("Clone".to_string());
                         }
@@ -708,6 +719,36 @@ impl RustEmitter {
                 (method.name.clone(), params)
             })
             .collect::<HashMap<_, _>>();
+
+        for (method, _) in method_items {
+            let entry = requirements.entry(method.name.clone()).or_default();
+            for call in crate::function_generic_bounds::collect_reachable_module_generic_call_sites(
+                method,
+                &module_function_names,
+            ) {
+                let Some(callee) = self.module_generic_functions.get(&call.function) else {
+                    continue;
+                };
+                let Some(callee_requirements) = self.function_type_param_bounds.get(&call.function)
+                else {
+                    continue;
+                };
+                for (callee_type_param, bounds) in callee_requirements {
+                    for caller_type_param in crate::function_generic_bounds::forwarded_type_params(
+                        &class.type_params,
+                        callee,
+                        &call,
+                        callee_type_param,
+                    ) {
+                        entry.entry(caller_type_param.clone()).or_default().extend(
+                            bounds
+                                .iter()
+                                .map(|bound| bound.render_for(&caller_type_param)),
+                        );
+                    }
+                }
+            }
+        }
 
         loop {
             let mut changed = false;
@@ -760,74 +801,5 @@ impl RustEmitter {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn generic_type_rendering_preserves_compiler_owned_class_names() {
-        let emitter = RustEmitter::new();
-        for (identity, expected) in [
-            ("sifr.io.FileHandle", "__SifrIoFileHandle"),
-            ("sifr.io.TextFileHandle", "__SifrIoTextFileHandle"),
-        ] {
-            let ty = Type::Class {
-                identity: Some(identity.to_string()),
-                type_args: Vec::new(),
-                name: identity.rsplit('.').next().expect("class name").to_string(),
-                fields: Vec::new(),
-                methods: Vec::new(),
-                parent_class: None,
-            };
-            assert_eq!(emitter.render_rust_type_with_generics(&ty), expected);
-        }
-    }
-
-    #[test]
-    fn canonical_generic_class_rendering_preserves_concrete_arguments() {
-        let mut emitter = RustEmitter::new();
-        emitter.generic_classes.insert("NullContext".to_string());
-        let ty = Type::Class {
-            identity: Some("sifr.resource.NullContext".to_string()),
-            type_args: vec![Type::Int],
-            name: "NullContext".to_string(),
-            fields: vec![("value".to_string(), Type::Int)],
-            methods: Vec::new(),
-            parent_class: None,
-        };
-        let canonical = sifr_type_system::stdlib_class_rust_name("sifr.resource", "NullContext");
-
-        assert_eq!(
-            emitter.render_rust_type_with_generics(&ty),
-            format!("{canonical}<SifrInt>")
-        );
-    }
-
-    #[test]
-    fn nested_generic_classes_keep_emitter_owned_arguments() {
-        let mut emitter = RustEmitter::new();
-        emitter.generic_classes.insert("Counter".to_string());
-        emitter
-            .generic_class_params
-            .insert("Counter".to_string(), vec!["T".to_string()]);
-        let counter = Type::Class {
-            identity: None,
-            type_args: Vec::new(),
-            name: "Counter".to_string(),
-            fields: Vec::new(),
-            methods: Vec::new(),
-            parent_class: None,
-        };
-
-        assert_eq!(
-            emitter.render_rust_type_with_generics(&Type::List(Box::new(counter))),
-            "Vec<Counter<T>>"
-        );
-        assert_eq!(
-            emitter.render_rust_type_with_generics(&Type::Result(
-                Box::new(Type::Int),
-                Box::new(Type::Never),
-            )),
-            "Result<SifrInt, ::std::convert::Infallible>"
-        );
-    }
-}
+#[path = "generic_bounds_helpers_tests.rs"]
+mod tests;

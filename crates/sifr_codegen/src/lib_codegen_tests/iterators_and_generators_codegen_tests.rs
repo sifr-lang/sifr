@@ -495,7 +495,7 @@ fn test_generate_rust_test_emits_local_module_import_uses() {
         classes: vec![],
         imports: vec![HirImport {
             module: "support".to_string(),
-            names: vec!["helper".to_string()],
+            names: vec!["helper".to_string(), "UnusedError".to_string()],
             aliases: vec![],
         }],
         constants: vec![],
@@ -509,6 +509,10 @@ fn test_generate_rust_test_emits_local_module_import_uses() {
             .rust_source
             .contains("use crate::support::helper;"),
         "test codegen should emit local module uses for imported names"
+    );
+    assert!(
+        !generated.rust_source.contains("UnusedError"),
+        "test codegen should omit imported names absent from structured Rust IR"
     );
 }
 

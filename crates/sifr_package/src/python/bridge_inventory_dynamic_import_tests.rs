@@ -1,3 +1,5 @@
+use crate::test_support::{TestExpectErr as _, TestUnwrap as _};
+
 use super::bridge_inventory_tests::BridgeFixture;
 use super::discover_python_bridge_inventory;
 use sifr_diagnostics::DiagnosticCode;
@@ -65,7 +67,7 @@ fn dynamic_import_calls_and_aliases_are_rejected() {
         let fixture = BridgeFixture::new(case);
         fixture.write("dynamic.py", source);
         let diagnostics = discover_python_bridge_inventory(&fixture.package)
-            .expect_err("dynamic import calls must fail inventory");
+            .test_expect_err("dynamic import calls must fail inventory");
         assert!(diagnostics[0].message.contains(call));
         assert_eq!(
             diagnostics[0].code,
@@ -83,5 +85,5 @@ fn dynamic_import_callable_reference_without_a_call_is_allowed() {
     );
 
     discover_python_bridge_inventory(&fixture.package)
-        .expect("a callable reference without a dynamic import call is valid");
+        .test_unwrap("a callable reference without a dynamic import call is valid");
 }

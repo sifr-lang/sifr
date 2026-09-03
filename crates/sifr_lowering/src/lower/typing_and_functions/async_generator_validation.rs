@@ -20,12 +20,12 @@ pub(in crate::lower) fn reject_declared_async_generator_boundary(
     );
 }
 
-pub(in crate::lower) fn reject_unsupported_nested_async_generator(
+pub(in crate::lower) fn reject_unsupported_nested_generator(
     func: &StmtFunctionDef,
     return_type: &Type,
     ctx: &mut LowerCtx,
 ) {
-    if !func.is_async || !function_body_contains_yield(&func.body) {
+    if !function_body_contains_yield(&func.body) {
         return;
     }
     let captures = ctx
@@ -52,7 +52,7 @@ pub(in crate::lower) fn reject_affine_async_generator_boundary(
             ctx.error_with_code_at(
                 DiagnosticCode::PYZC_INVALID_DECLARATION,
                 format!(
-                    "nested async generator capture '{name}' of type '{}' contains an affine Python resource and cannot enter the lazy Send factory",
+                    "nested generator capture '{name}' of type '{}' contains an affine Python resource and cannot enter the lazy factory",
                     ty.display_name()
                 ),
                 yield_range,
@@ -60,7 +60,7 @@ pub(in crate::lower) fn reject_affine_async_generator_boundary(
         } else {
             ctx.error_with_code_at(
                 DiagnosticCode::TYPE_MISMATCH,
-                "nested async generators require dedicated lazy materialization code generation and are not supported yet"
+                "nested generators require dedicated lazy materialization code generation and are not supported yet"
                     .to_string(),
                 yield_range,
             );

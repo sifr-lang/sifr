@@ -32,10 +32,6 @@ pub struct RevealTypeDiagnostic {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum LoweringWarningDiagnostic {
-    ArithmeticOverflowRisk {
-        operation: String,
-        primary_range: Option<TextRange>,
-    },
     UnreachableStatement {
         primary_range: Option<TextRange>,
     },

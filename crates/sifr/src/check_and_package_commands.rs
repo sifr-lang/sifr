@@ -13,10 +13,11 @@ use super::python_runtime_context::{package_python_runtime, package_python_runti
 use ruff_text_size::{TextRange, TextSize};
 use sifr_diagnostics::{DiagnosticCode, RenderedDiagnostic};
 use sifr_driver::{
-    BuildReport, CachedBinaryArtifact, CompileResult, PackageEntrypoint, build_cached_project,
-    build_cached_single_file, build_package_project_report, build_project_report,
-    build_single_file_report, check_package_project, check_project, check_single_file, compile,
-    emit_project, run_tests,
+    BuildReport, CachedBinaryArtifact, CompileResult, MaterializedRustProjectReport,
+    PackageEntrypoint, build_cached_project, build_cached_single_file,
+    build_package_project_report, build_project_report, build_single_file_report,
+    check_package_project, check_project, check_single_file, compile, emit_project,
+    materialize_package_project, materialize_project, materialize_single_file, run_tests,
 };
 use sifr_format::config::{EffectiveFormatConfig, FormatConfigOverrides, effective_format_config};
 use sifr_frontend::{DiskSourceProvider, SourceProvider};
@@ -463,6 +464,43 @@ pub(super) fn compile_package_entrypoint_report(
     match run_with_panic_boundary(
         "internal compiler panic during package build command execution",
         || build_package_project_report(&entrypoint, output, provider),
+    ) {
+        Ok(Ok(report)) => Ok(Some(report)),
+        Ok(Err(errors)) => Err(render_diagnostics(&errors, diagnostic_format)),
+        Err(internal) => Err(render_diagnostics(&[*internal], diagnostic_format)),
+    }
+}
+
+pub(super) fn materialize_entrypoint_report(
+    file: &Path,
+    output: &Path,
+    provider: &mut dyn SourceProvider,
+) -> Result<MaterializedRustProjectReport, Vec<RenderedDiagnostic>> {
+    match resolve_compilation_mode(file, provider)? {
+        CompilationMode::Project => materialize_project(file, output, provider),
+        CompilationMode::SingleFile => {
+            let source = read_source(file, provider);
+            materialize_single_file(&source, file, output)
+        }
+    }
+}
+
+pub(super) fn materialize_package_entrypoint_report(
+    file: &Path,
+    output: &Path,
+    session: &sifr_package::PackageSession,
+    lock_mode: sifr_package::CargoLockMode,
+    diagnostic_format: DiagnosticFormat,
+    provider: &mut impl SourceProvider,
+) -> Result<Option<MaterializedRustProjectReport>, i32> {
+    let Some(entrypoint) =
+        package_entrypoint_for_file(file, session, lock_mode, diagnostic_format, false, provider)?
+    else {
+        return Ok(None);
+    };
+    match run_with_panic_boundary(
+        "internal compiler panic during Rust project materialization",
+        || materialize_package_project(&entrypoint, output, provider),
     ) {
         Ok(Ok(report)) => Ok(Some(report)),
         Ok(Err(errors)) => Err(render_diagnostics(&errors, diagnostic_format)),

@@ -1,55 +1,8 @@
 // src/main.rs
-mod __sifr_project_nominals {
-    pub use ::sifr_runtime::SifrInt;
-    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct IOError {
-        pub message: String,
-        pub kind: String,
-    }
-    impl IOError {
-        pub fn new(message: String) -> Self {
-            Self {
-                message,
-                kind: "Other".to_string(),
-            }
-        }
-    }
-    impl ::std::fmt::Display for IOError {
-        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-            ::std::fmt::Display::fmt(&self.message, f)
-        }
-    }
-    impl ::std::error::Error for IOError {}
-    pub fn __io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
-        let msg = e.to_string();
-        let kind = {
-            let __sifr_io_kind = (&e as &dyn ::std::any::Any)
-                .downcast_ref::<std::io::Error>()
-                .map(::std::io::Error::kind);
-            match __sifr_io_kind {
-                Some(::std::io::ErrorKind::NotFound) => "FileNotFound".to_string(),
-                Some(::std::io::ErrorKind::PermissionDenied) => {
-                    "PermissionDenied".to_string()
-                }
-                Some(::std::io::ErrorKind::AlreadyExists) => "FileExists".to_string(),
-                Some(::std::io::ErrorKind::IsADirectory) => "IsADirectory".to_string(),
-                Some(::std::io::ErrorKind::NotADirectory) => "NotADirectory".to_string(),
-                Some(::std::io::ErrorKind::DirectoryNotEmpty) => {
-                    "DirectoryNotEmpty".to_string()
-                }
-                _ => "Other".to_string(),
-            }
-        };
-        IOError { message: msg, kind }
-    }
+mod sifr_generated_project_nominals {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ParseError {
         pub message: String,
-    }
-    impl ParseError {
-        pub fn new(message: String) -> Self {
-            Self { message }
-        }
     }
     impl ::std::fmt::Display for ParseError {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
@@ -57,210 +10,34 @@ mod __sifr_project_nominals {
         }
     }
     impl ::std::error::Error for ParseError {}
-    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct ValueError {
-        pub message: String,
-    }
-    impl ValueError {
-        pub fn new(message: String) -> Self {
-            Self { message }
-        }
-    }
-    impl ::std::fmt::Display for ValueError {
-        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-            ::std::fmt::Display::fmt(&self.message, f)
-        }
-    }
-    impl ::std::error::Error for ValueError {}
-    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct JSONDecodeError {
-        pub message: String,
-        pub line: SifrInt,
-        pub column: SifrInt,
-    }
-    impl JSONDecodeError {
-        pub fn new(message: String) -> Self {
-            Self {
-                message,
-                line: SifrInt::from_i64(0),
-                column: SifrInt::from_i64(0),
-            }
-        }
-    }
-    impl ::std::fmt::Display for JSONDecodeError {
-        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-            ::std::fmt::Display::fmt(&self.message, f)
-        }
-    }
-    impl ::std::error::Error for JSONDecodeError {}
-    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct JsonIntegerRangeError {
-        pub message: String,
-        pub path: String,
-        pub profile: String,
-    }
-    impl JsonIntegerRangeError {
-        pub fn new(message: String) -> Self {
-            Self {
-                message,
-                path: String::new(),
-                profile: String::new(),
-            }
-        }
-    }
-    impl ::std::fmt::Display for JsonIntegerRangeError {
-        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-            ::std::fmt::Display::fmt(&self.message, f)
-        }
-    }
-    impl ::std::error::Error for JsonIntegerRangeError {}
-    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct JsonLimitError {
-        pub message: String,
-        pub limit: SifrInt,
-    }
-    impl JsonLimitError {
-        pub fn new(message: String) -> Self {
-            Self {
-                message,
-                limit: SifrInt::from_i64(0),
-            }
-        }
-    }
-    impl ::std::fmt::Display for JsonLimitError {
-        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-            ::std::fmt::Display::fmt(&self.message, f)
-        }
-    }
-    impl ::std::error::Error for JsonLimitError {}
-    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct TOMLDecodeError {
-        pub message: String,
-        pub line: SifrInt,
-        pub column: SifrInt,
-    }
-    impl TOMLDecodeError {
-        pub fn new(message: String) -> Self {
-            Self {
-                message,
-                line: SifrInt::from_i64(0),
-                column: SifrInt::from_i64(0),
-            }
-        }
-    }
-    impl ::std::fmt::Display for TOMLDecodeError {
-        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-            ::std::fmt::Display::fmt(&self.message, f)
-        }
-    }
-    impl ::std::error::Error for TOMLDecodeError {}
-    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct RegexError {
-        pub message: String,
-        pub detail: String,
-    }
-    impl RegexError {
-        pub fn new(message: String) -> Self {
-            Self {
-                message,
-                detail: String::new(),
-            }
-        }
-    }
-    impl ::std::fmt::Display for RegexError {
-        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-            ::std::fmt::Display::fmt(&self.message, f)
-        }
-    }
-    impl ::std::error::Error for RegexError {}
-    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct TimeoutError {
-        pub message: String,
-    }
-    impl TimeoutError {
-        pub fn new(message: String) -> Self {
-            Self { message }
-        }
-    }
-    impl ::std::fmt::Display for TimeoutError {
-        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-            ::std::fmt::Display::fmt(&self.message, f)
-        }
-    }
-    impl ::std::error::Error for TimeoutError {}
-    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct ScopeFailure {
-        pub message: String,
-    }
-    impl ScopeFailure {
-        pub fn new(message: String) -> Self {
-            Self { message }
-        }
-    }
-    impl ::std::fmt::Display for ScopeFailure {
-        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-            ::std::fmt::Display::fmt(&self.message, f)
-        }
-    }
-    impl ::std::error::Error for ScopeFailure {}
 }
-pub use __sifr_project_nominals::IOError;
-pub use __sifr_project_nominals::JSONDecodeError;
-pub use __sifr_project_nominals::JsonIntegerRangeError;
-pub use __sifr_project_nominals::JsonLimitError;
-pub use __sifr_project_nominals::ParseError;
-pub use __sifr_project_nominals::RegexError;
-pub use __sifr_project_nominals::ScopeFailure;
-pub use __sifr_project_nominals::TOMLDecodeError;
-pub use __sifr_project_nominals::TimeoutError;
-pub use __sifr_project_nominals::ValueError;
-use ::sifr_runtime::SifrInt;
-fn __io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
-    let msg = e.to_string();
-    let kind = {
-        let __sifr_io_kind = (&e as &dyn ::std::any::Any)
-            .downcast_ref::<std::io::Error>()
-            .map(::std::io::Error::kind);
-        match __sifr_io_kind {
-            Some(::std::io::ErrorKind::NotFound) => "FileNotFound".to_string(),
-            Some(::std::io::ErrorKind::PermissionDenied) => {
-                "PermissionDenied".to_string()
-            }
-            Some(::std::io::ErrorKind::AlreadyExists) => "FileExists".to_string(),
-            Some(::std::io::ErrorKind::IsADirectory) => "IsADirectory".to_string(),
-            Some(::std::io::ErrorKind::NotADirectory) => "NotADirectory".to_string(),
-            Some(::std::io::ErrorKind::DirectoryNotEmpty) => {
-                "DirectoryNotEmpty".to_string()
-            }
-            _ => "Other".to_string(),
-        }
-    };
-    IOError { message: msg, kind }
-}
+pub use sifr_generated_project_nominals::ParseError;
 fn main() {
     let encoded: Vec<u8> = vec![
-        115u8, 105u8, 102u8, 114u8, 45u8, 98u8, 121u8, 116u8, 101u8, 115u8
+        115u8, 105u8, 102u8, 114u8, 45u8, 98u8, 121u8, 116u8, 101u8, 115u8,
     ];
     let mut decode_ok: bool = false;
-    let __sifr_try_res: Result<(), ParseError> = (|| {
-        let decoded: String = ::sifr_runtime::encoding::decode_text(
-                &encoded,
-                &"utf-8".to_string(),
-                &"strict".to_string(),
-            )
-            .map_err(|__message| ParseError { message: __message })?;
-        decode_ok = (decoded == "sifr-bytes");
+    let sifr_generated_try_res: Result<(), ParseError> = (|| {
+        let decoded_value_84517ef0dce4ed91: String = ::sifr_runtime::encoding::decode_text(
+            &encoded,
+            &"utf-8".to_string(),
+            &"strict".to_string(),
+        )
+        .map_err(|sifr_generated_message| ParseError {
+            message: sifr_generated_message,
+        })?;
+        decode_ok = decoded_value_84517ef0dce4ed91 == "sifr-bytes";
         Ok(())
     })();
-    if let Err(__sifr_try_err) = __sifr_try_res {
-        let e = __sifr_try_err.clone();
-        let _ = format!("{}", e.message.clone());
+    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+        let e = sifr_generated_try_err.clone();
+        let _ = e.message.clone().to_string();
     }
     assert!(decode_ok);
     let mut hex_ok: bool = false;
-    let __sifr_try_res: Result<(), ParseError> = (|| {
-        let parsed_hex: Vec<u8> = ({
-            let s: String = "73696672".to_string().to_string();
+    let sifr_generated_try_res: Result<(), ParseError> = (|| {
+        let parsed_hex: Vec<u8> = {
+            let s: String = "73696672".to_string();
             let mut cleaned = String::new();
             for ch in s.chars() {
                 if ch.is_ascii_whitespace() {
@@ -268,46 +45,42 @@ fn main() {
                 }
                 if !ch.is_ascii_hexdigit() {
                     return Err(ParseError {
-                        message: format!("invalid hex character: {}", ch),
+                        message: format!("invalid hex character: {ch}"),
                     });
                 }
                 cleaned.push(ch);
             }
-            if (cleaned.len() % 2) != 0 {
+            if cleaned.len() % 2 != 0 {
                 return Err(ParseError {
                     message: "fromhex() arg must contain an even number of hexadecimal digits"
-                        .to_string()
                         .to_string(),
                 });
             }
             let mut result = Vec::new();
             for pair in cleaned.as_bytes().chunks(2) {
-                let pair_str = ::std::str::from_utf8(pair)
-                    .map_err(|e| ParseError {
-                        message: e.to_string(),
-                    })?;
-                result
-                    .push(
-                        u8::from_str_radix(pair_str, 16)
-                            .map_err(|e| ParseError {
-                                message: e.to_string(),
-                            })?,
-                    );
+                let pair_str = ::std::str::from_utf8(pair).map_err(|e| ParseError {
+                    message: e.to_string(),
+                })?;
+                result.push(u8::from_str_radix(pair_str, 16).map_err(|e| ParseError {
+                    message: e.to_string(),
+                })?);
             }
             Ok::<Vec<u8>, ParseError>(result)
-        })?;
+        }?;
         let decoded_hex: String = ::sifr_runtime::encoding::decode_text(
-                &parsed_hex,
-                &"utf-8".to_string(),
-                &"strict".to_string(),
-            )
-            .map_err(|__message| ParseError { message: __message })?;
-        hex_ok = (decoded_hex == "sifr");
+            &parsed_hex,
+            &"utf-8".to_string(),
+            &"strict".to_string(),
+        )
+        .map_err(|sifr_generated_message| ParseError {
+            message: sifr_generated_message,
+        })?;
+        hex_ok = decoded_hex == "sifr";
         Ok(())
     })();
-    if let Err(__sifr_try_err) = __sifr_try_res {
-        let e = __sifr_try_err.clone();
-        let _ = format!("{}", e.message.clone());
+    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+        let e = sifr_generated_try_err.clone();
+        let _ = e.message.clone().to_string();
     }
     assert!(hex_ok);
 }

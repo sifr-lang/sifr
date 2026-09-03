@@ -56,6 +56,29 @@ pub(super) fn materialize_binary_project_with_report(
     })
 }
 
+pub(super) fn materialize_binary_project_sources(
+    output_dir: &Path,
+    project_name: &str,
+    generated_project: GeneratedBinaryProject,
+    requested_vendor_mode: CargoVendorMode,
+) -> Result<PathBuf, Vec<RenderedDiagnostic>> {
+    let project_path = output_dir.join(project_name);
+    let dependency_plan = try_generate_sysroot_dependency_plan(
+        &generated_project.used_stdlib_modules,
+        &generated_project.required_features,
+        &generated_project.interop,
+        requested_vendor_mode,
+    )
+    .map_err(|error| vec![build_error(error.boundary_message())])?;
+    materialize_binary_project_files(
+        &project_path,
+        project_name,
+        generated_project,
+        &dependency_plan,
+    )?;
+    Ok(project_path)
+}
+
 pub(super) fn materialize_cached_binary_project_with_report(
     cache_namespace: &str,
     cache_scope: &Path,
@@ -210,7 +233,12 @@ fn materialize_binary_project_files(
     write_project_file(&src_dir.join("main.rs"), main_rs, "main.rs")?;
 
     for (path, source) in bridge_sources {
-        write_project_file(&src_dir.join(&path), source, &path.display().to_string())?;
+        let canonical_path = canonical_rust_module_path(&path)?;
+        write_project_file(
+            &src_dir.join(&canonical_path),
+            source,
+            &canonical_path.display().to_string(),
+        )?;
     }
 
     let mut support_modules = generated_project.support_modules;
@@ -235,7 +263,7 @@ fn materialize_binary_project_files(
             contents.push_str(&code);
             continue;
         }
-        let file_name = rust_module_file_path(&module_name);
+        let file_name = canonical_rust_module_path(&rust_module_file_path(&module_name))?;
         write_project_file(
             &src_dir.join(&file_name),
             code,
@@ -244,6 +272,7 @@ fn materialize_binary_project_files(
     }
 
     for (namespace_path, contents) in namespace_contents {
+        let namespace_path = canonical_rust_module_path(&namespace_path)?;
         write_project_file(
             &src_dir.join(&namespace_path),
             contents,
@@ -252,6 +281,41 @@ fn materialize_binary_project_files(
     }
 
     Ok(())
+}
+
+fn canonical_rust_module_path(path: &Path) -> Result<PathBuf, Vec<RenderedDiagnostic>> {
+    let mut canonical = PathBuf::new();
+    for component in path.components() {
+        let std::path::Component::Normal(component) = component else {
+            canonical.push(component);
+            continue;
+        };
+        let component = Path::new(component);
+        if component
+            .extension()
+            .is_some_and(|extension| extension == "rs")
+        {
+            let Some(stem) = component.file_stem().and_then(std::ffi::OsStr::to_str) else {
+                return Err(vec![build_error(format!(
+                    "generated Rust module filename is not valid UTF-8: {}",
+                    component.display()
+                ))]);
+            };
+            canonical.push(format!(
+                "{}.rs",
+                sifr_codegen::canonicalize_generated_rust_identifier(stem)
+            ));
+        } else {
+            let Some(name) = component.as_os_str().to_str() else {
+                return Err(vec![build_error(format!(
+                    "generated Rust module path is not valid UTF-8: {}",
+                    component.display()
+                ))]);
+            };
+            canonical.push(sifr_codegen::canonicalize_generated_rust_identifier(name));
+        }
+    }
+    Ok(canonical)
 }
 
 fn run_cargo_build(
@@ -411,6 +475,19 @@ fn write_project_file(
         std::fs::create_dir_all(parent)
             .map_err(|error| vec![build_error(format!("failed to create {label}: {error}"))])?;
     }
+    let contents = contents.as_ref();
+    let formatted;
+    let contents = if path.extension().is_some_and(|extension| extension == "rs") {
+        let source = std::str::from_utf8(contents).map_err(|error| {
+            vec![build_error(format!(
+                "generated {label} is not valid UTF-8 before Rust formatting: {error}"
+            ))]
+        })?;
+        formatted = super::rust_formatter::format_generated_rust(source, label)?;
+        formatted.as_bytes()
+    } else {
+        contents
+    };
     std::fs::write(path, contents)
         .map_err(|error| vec![build_error(format!("failed to write {label}: {error}"))])
 }
@@ -456,8 +533,9 @@ fn binary_project_cache_key(
 #[cfg(test)]
 mod tests {
     use super::{
-        binary_project_cache_key, should_validate_native_link_evidence,
-        sysroot_trusted_native_links, trusted_native_links, validate_native_link_evidence,
+        binary_project_cache_key, canonical_rust_module_path, materialize_binary_project_files,
+        should_validate_native_link_evidence, sysroot_trusted_native_links, trusted_native_links,
+        validate_native_link_evidence,
     };
     use crate::build::project_codegen::GeneratedBinaryProject;
     use crate::build::python_runtime::PackagePythonRuntime;
@@ -471,6 +549,49 @@ mod tests {
     };
     use sifr_stdlib_manifest::{CargoVendorMode, StdlibFeature, SysrootDependencyPlan};
     use std::collections::{BTreeMap, BTreeSet, HashSet};
+
+    #[test]
+    fn generated_module_paths_use_the_source_identifier_mapping() {
+        let bridge = canonical_rust_module_path(std::path::Path::new("__sifr_bridge/_sifr_fs.rs"));
+        assert!(matches!(
+            bridge.as_deref(),
+            Ok(path) if path == std::path::Path::new("sifr_generated_bridge/sifr_generated_fs.rs")
+        ));
+        let public = canonical_rust_module_path(std::path::Path::new("public/mod.rs"));
+        assert!(matches!(
+            public.as_deref(),
+            Ok(path) if path == std::path::Path::new("public/mod.rs")
+        ));
+    }
+
+    #[test]
+    fn source_materialization_writes_a_complete_uncompiled_cargo_project() {
+        let root = std::env::temp_dir().join(format!(
+            "sifr_source_materialization_{}_{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .expect("time should move forward")
+                .as_nanos()
+        ));
+        let project_path = root.join("sifr_output");
+
+        materialize_binary_project_files(
+            &project_path,
+            "sifr_output",
+            base_project(),
+            &test_dependency_plan("fingerprint-a"),
+        )
+        .expect("source-only materialization should succeed");
+
+        assert!(project_path.join("Cargo.toml").is_file());
+        let main_rs = std::fs::read_to_string(project_path.join("src/main.rs"))
+            .expect("generated main should be readable");
+        assert!(main_rs.contains("fn main()"), "{main_rs}");
+        assert!(!project_path.join("target").exists());
+
+        let _ = std::fs::remove_dir_all(root);
+    }
 
     #[test]
     fn binary_project_cache_key_includes_package_cache_fragment() {

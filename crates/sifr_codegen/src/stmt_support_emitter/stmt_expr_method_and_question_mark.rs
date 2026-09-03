@@ -375,6 +375,10 @@ macro_rules! stmt_expr_method_call {
                 crate::resolve_alias_type_for_plain_call($expr.ty()),
                 Type::Int
             ) && matches!(method.as_str(), "len" | "count")
+                && !matches!(
+                    crate::resolve_alias_type_for_plain_call(&effective_object_ty),
+                    Type::Class { .. }
+                )
             {
                 return Ok(Some(crate::RustExpr::FnCall {
                     func: Box::new(crate::RustExpr::Path(vec![
@@ -521,25 +525,6 @@ macro_rules! stmt_expr_question_mark {
     }};
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn generic_imported_project_calls_use_the_canonical_function_name() {
-        let expression = HirExpr::GenericCall {
-            func: "load::<i64>".to_string(),
-            type_args: vec![Type::Int],
-            args: Vec::new(),
-            mutable_arg_places: Vec::new(),
-            ty: Type::None,
-        };
-        let imported = std::collections::HashSet::from(["load".to_string()]);
-
-        assert!(is_imported_project_call_for_ir(&expression, &imported));
-    }
-}
-
 impl RustEmitter {
     pub(crate) fn lower_stmt_expr_for_ir(
         &mut self,
@@ -585,5 +570,24 @@ impl RustEmitter {
                 .map(|lowered| self.rewrite_stdlib_constant_idents_in_expr(lowered)));
         }
         Ok(None)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn generic_imported_project_calls_use_the_canonical_function_name() {
+        let expression = HirExpr::GenericCall {
+            func: "load::<i64>".to_string(),
+            type_args: vec![Type::Int],
+            args: Vec::new(),
+            mutable_arg_places: Vec::new(),
+            ty: Type::None,
+        };
+        let imported = std::collections::HashSet::from(["load".to_string()]);
+
+        assert!(is_imported_project_call_for_ir(&expression, &imported));
     }
 }

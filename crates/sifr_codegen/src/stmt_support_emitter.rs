@@ -27,6 +27,7 @@ mod stmt_expr_binop_option;
 mod stmt_expr_method_and_question_mark;
 
 mod assert_and_augassign;
+mod assignment_validation;
 mod async_cleanup;
 mod async_with_and_for;
 mod await_and_async_comprehension;
@@ -41,6 +42,8 @@ mod field_assignment;
 mod if_condition_lowering;
 mod iterator_lowering;
 mod loops_try_finally;
+#[cfg(test)]
+mod loops_try_finally_tests;
 mod native_async_context;
 mod native_async_for;
 mod nested_subscript_assignment_helpers;

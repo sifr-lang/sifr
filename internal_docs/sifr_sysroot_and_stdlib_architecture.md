@@ -919,6 +919,11 @@ The stdlib native intrinsic allowlist guard is also part of core validation:
 it freezes every retained compiler intrinsic identity and its source,
 lowering, dispatch, registry, preamble, codegen, dependency-feature, and direct
 `sifr_runtime::<root>` ownership to the final retained-by-design manifest.
+Compiler-owned generator state machines, task-result and asynchronous-cleanup
+evidence glue, error-hierarchy conversion, and allocation-checked primitive
+string padding are retained language/runtime surfaces in that manifest. They
+are not stdlib implementation fallbacks: each is emitted on demand for a
+typed language operation or protocol boundary.
 
 Release certification compiles and runs the same representative program with
 the source-tree compiler/sysroot and an extracted installed sysroot. The

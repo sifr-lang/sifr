@@ -1,3 +1,5 @@
+use crate::test_support::{TestExpectErr as _, TestUnwrap as _};
+
 use super::test_support::{graph, package, package_id};
 use super::{
     PythonRequirementContribution, PythonRequirementKind, resolve_python_environment,
@@ -28,7 +30,7 @@ fn dependency_python_requirement_wildcard_is_rejected() {
     ]);
 
     let diagnostics = resolve_python_environment(&graph, &package_id("app"))
-        .expect_err("dependency wildcard must fail");
+        .test_expect_err("dependency wildcard must fail");
 
     assert!(
         diagnostics
@@ -54,8 +56,8 @@ fn root_python_trust_and_requirement_allow_wildcard_local_control() {
     )]);
 
     let resolved = resolve_python_environment(&graph, &package_id("app"))
-        .expect("root wildcard trust should pass")
-        .expect("environment should be discovered");
+        .test_unwrap("root wildcard trust should pass")
+        .test_unwrap("environment should be discovered");
 
     assert_eq!(resolved.required_imports, ["*".to_string()]);
     assert!(resolved.declared_imports.is_empty());
@@ -75,7 +77,7 @@ fn required_python_root_must_be_authorized_by_root() {
     )]);
 
     let diagnostics = resolve_python_environment(&graph, &package_id("app"))
-        .expect_err("unauthorized requirement must fail");
+        .test_expect_err("unauthorized requirement must fail");
 
     assert_eq!(diagnostics.len(), 1);
     assert_eq!(
@@ -110,7 +112,7 @@ fn derived_requirement_provenance_reaches_unauthorized_root_diagnostic() {
 
     let diagnostics =
         resolve_python_environment_with_requirements(&graph, &package_id("app"), &derived)
-            .expect_err("derived unauthorized requirement must fail");
+            .test_expect_err("derived unauthorized requirement must fail");
 
     assert_eq!(diagnostics.len(), 1);
     assert_eq!(
@@ -143,8 +145,8 @@ fn wildcard_requirement_probes_explicit_native_trust_roots() {
     )]);
 
     let resolved = resolve_python_environment(&graph, &package_id("app"))
-        .expect("root wildcard trust should pass")
-        .expect("environment should be discovered");
+        .test_unwrap("root wildcard trust should pass")
+        .test_unwrap("environment should be discovered");
 
     assert_eq!(resolved.native_imports, ["numpy".to_string()]);
 }
@@ -167,7 +169,7 @@ fn dependency_cannot_authorize_its_python_requirement() {
     ]);
 
     let diagnostics = resolve_python_environment(&graph, &package_id("app"))
-        .expect_err("dependency authorization must fail");
+        .test_expect_err("dependency authorization must fail");
 
     assert!(
         diagnostics
@@ -188,7 +190,7 @@ fn native_trust_requires_a_canonical_requirement() {
     )]);
 
     let diagnostics = resolve_python_environment(&graph, &package_id("app"))
-        .expect_err("stale native trust must fail");
+        .test_expect_err("stale native trust must fail");
 
     assert_eq!(diagnostics.len(), 1);
     assert_eq!(

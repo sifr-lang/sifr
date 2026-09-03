@@ -1,3 +1,7 @@
+mod support;
+
+use support::TestUnwrap as _;
+
 use serde_json::Value;
 use sifr_stdlib_manifest::{
     StdlibFeature, feature_for_codegen_requirement, try_generated_cargo_dependencies,
@@ -59,13 +63,13 @@ fn generated_cargo_dependencies(
     required_features: &HashSet<StdlibFeature>,
 ) -> Vec<String> {
     try_generated_cargo_dependencies(stdlib_modules, required_features)
-        .expect("source-tree sysroot dependencies should resolve")
+        .test_unwrap("source-tree sysroot dependencies should resolve")
 }
 
 #[test]
 fn concurrency_runtime_dependency_snapshots_match_codegen_resolver() {
     let payload: Value =
-        serde_json::from_str(SNAPSHOT_JSON).expect("dependency snapshot JSON must parse");
+        serde_json::from_str(SNAPSHOT_JSON).test_unwrap("dependency snapshot JSON must parse");
     assert_eq!(
         payload.get("schema_version").and_then(Value::as_i64),
         Some(1)
@@ -78,13 +82,13 @@ fn concurrency_runtime_dependency_snapshots_match_codegen_resolver() {
     let snapshots = payload
         .get("snapshots")
         .and_then(Value::as_array)
-        .expect("snapshots must be an array");
+        .test_unwrap("snapshots must be an array");
     let mut ids = Vec::new();
     for snapshot in snapshots {
         let id = snapshot
             .get("id")
             .and_then(Value::as_str)
-            .expect("snapshot id must be a string");
+            .test_unwrap("snapshot id must be a string");
         ids.push(id.to_string());
 
         let stdlib_modules = string_array(snapshot, "stdlib_modules")

@@ -91,6 +91,7 @@ fn build_lock_flags_parse_and_normalize_without_collapsing_frozen() {
             locked,
             offline,
             frozen,
+            materialize_only,
             ..
         } = cli.command.expect("build command should be present")
         else {
@@ -100,7 +101,18 @@ fn build_lock_flags_parse_and_normalize_without_collapsing_frozen() {
             crate::cli_lock_modes::lock_mode_from_flags(locked, offline, frozen),
             expected
         );
+        assert!(!materialize_only);
     }
+
+    let cli = Cli::try_parse_from(["sifr", "build", "main.sifr", "--materialize-only"])
+        .expect("the internal source-only build mode should parse");
+    let Commands::Build {
+        materialize_only, ..
+    } = cli.command.expect("build command should be present")
+    else {
+        panic!("expected parsed build command");
+    };
+    assert!(materialize_only);
 }
 
 #[test]
@@ -134,6 +146,7 @@ fn constrained_modes_reject_manifestless_check_build_and_run() {
                     CargoLockMode::Frozen,
                     true,
                     DiagnosticFormat::Compact,
+                    false,
                 )
             }),
         ),
@@ -236,7 +249,7 @@ fn test_locked_offline_sifr_commands_and_warm_cache() {
         );
         let output = scenario.root.join(format!("build-{}", mode.as_str()));
         let (build_exit, captured) = sifr_driver::capture_cargo_invocations(|| {
-            cmd_build(source, &output, mode, true, DiagnosticFormat::Human)
+            cmd_build(source, &output, mode, true, DiagnosticFormat::Human, false)
         });
         cargo_invocations.extend(captured);
         assert_eq!(
@@ -394,7 +407,7 @@ fn assert_drift_rejected(case: DriftCase) {
             std::fs::remove_file(&lock_path).expect("negative case should remove copied lock");
         }
         DriftCase::StaleVersion => {
-            replace_file(&lock_path, "version = \"2.14.0\"", "version = \"2.99.0\"")
+            replace_file(&lock_path, "version = \"2.14.0\"", "version = \"2.99.0\"");
         }
         DriftCase::Checksum => replace_file(
             &lock_path,

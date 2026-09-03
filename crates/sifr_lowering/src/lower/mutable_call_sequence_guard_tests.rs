@@ -134,6 +134,21 @@ def read_after_append(mut values: list[int | None]) -> int:
 }
 
 #[test]
+fn append_preserves_nonnegative_variable_subscript_fact() {
+    let source = r#"
+def read_after_append(mut values: list[int | None], index: int) -> int:
+    if index < 0 or index >= len(values):
+        return 0
+    if values[index] is None:
+        return 0
+    values.append(None)
+    return values[index] + 1
+"#;
+    let result = lower_source(source);
+    assert!(result.is_ok(), "{result:?}");
+}
+
+#[test]
 fn append_and_extend_invalidate_end_relative_non_none_subscript_facts() {
     let cases = [
         (

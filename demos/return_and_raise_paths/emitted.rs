@@ -1,11 +1,12 @@
 // src/main.rs
-mod __sifr_project_nominals {
+mod sifr_generated_project_nominals {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ValueError {
         pub message: String,
     }
     impl ValueError {
-        pub fn new(message: String) -> Self {
+        #[must_use]
+        pub const fn new(message: String) -> Self {
             Self { message }
         }
     }
@@ -16,25 +17,18 @@ mod __sifr_project_nominals {
     }
     impl ::std::error::Error for ValueError {}
 }
-pub use __sifr_project_nominals::ValueError;
 use ::sifr_runtime::SifrInt;
+pub use sifr_generated_project_nominals::ValueError;
 fn classify(n: SifrInt) -> SifrInt {
-    let __sifr_try_res: Result<SifrInt, ValueError> = (|| {
-        if (&n > &SifrInt::from_i64(0)) {
-            return Ok(n);
-        } else {
-            return Err(ValueError::new("non-positive".to_string()));
-        }
-    })();
-    match __sifr_try_res {
-        Ok(__sifr_ret_val) => {
-            return __sifr_ret_val;
-        }
-        Err(__sifr_try_err) => {
-            let e = __sifr_try_err.clone();
-            return SifrInt::from_i64(99);
-        }
-    }
+    let sifr_generated_try_res: Result<SifrInt, ValueError> = if &n > &SifrInt::from_i64(0) {
+        Ok(n)
+    } else {
+        Err(ValueError::new("non-positive".to_string()))
+    };
+    sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
+        let _e = sifr_generated_try_err.clone();
+        SifrInt::from_i64(99)
+    })
 }
 fn main() {
     println!("return_and_raise_paths control-flow effect query unification demo:");

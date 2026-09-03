@@ -1,3 +1,5 @@
+use crate::test_support::{TestExpectErr as _, TestUnwrap as _};
+
 use crate::cargo::commands::{CargoCommandPlan, CargoFeatureSelection, CargoPackageMutation};
 use crate::cargo::errors::{CargoAction, map_cargo_failure};
 use crate::cargo::lock_modes::{CargoLockMode, validate_offline_source_availability};
@@ -15,7 +17,6 @@ use crate::manifest::sifr::{
 };
 use crate::{CompilerComponentConfig, compiler_component_registrations, resolve_package_component};
 use semver::Version;
-use sha2::{Digest, Sha256};
 use sifr_compiler_component::{
     ComponentErrorKind, ComponentIdentity, ComponentRequirement, DiagnosticRegistry,
     DiagnosticRegistryOwner, ProtocolRange,
@@ -97,7 +98,7 @@ fn offline_mode_reports_missing_sifr_source_package() {
         CargoLockMode::Offline,
         &mut DiskSourceProvider::new(),
     )
-    .expect_err("offline unavailable source should fail");
+    .test_expect_err("offline unavailable source should fail");
 
     assert_eq!(diagnostics.len(), 1);
     assert_eq!(
@@ -130,7 +131,8 @@ fn cargo_failure_mapping_redacts_private_credentials() {
 fn backend_trust_reports_untrusted_direct_backend_crate() {
     let graph = package_graph(TrustPolicy::default(), vec![backend("reqwest")]);
 
-    let diagnostics = validate_backend_trust(&graph).expect_err("untrusted backend should fail");
+    let diagnostics =
+        validate_backend_trust(&graph).test_expect_err("untrusted backend should fail");
 
     assert_eq!(diagnostics.len(), 1);
     assert_eq!(
@@ -161,7 +163,7 @@ fn backend_trust_rejects_stale_non_direct_trust_entry() {
         Vec::new(),
     );
 
-    let diagnostics = validate_backend_trust(&graph).expect_err("stale trust should fail");
+    let diagnostics = validate_backend_trust(&graph).test_expect_err("stale trust should fail");
 
     assert_eq!(diagnostics.len(), 1);
     assert_eq!(
@@ -199,7 +201,7 @@ rust-no-panic = ["app.hash.digest"]
 rust-panic-abort = ["app.exit"]
 "#,
     )
-    .expect("manifest should parse");
+    .test_unwrap("manifest should parse");
 
     assert_eq!(manifest.rust.bridges.len(), 2);
     assert!(manifest.rust.direct_crate_bindings);
@@ -240,7 +242,7 @@ diagnostics = [
 ]
 "#,
     )
-    .expect("component registration should parse");
+    .test_unwrap("component registration should parse");
 
     let component = &manifest.compiler_components["words"];
     assert_eq!(component.version.to_string(), "1.2.3");
@@ -276,7 +278,7 @@ diagnostic-namespace = "COMPONENT"
 diagnostics = []
 "#,
     )
-    .expect_err("provider must not claim the compiler namespace");
+    .test_expect_err("provider must not claim the compiler namespace");
 
     assert!(diagnostic.message.contains("compiler-owned"));
 }
@@ -288,16 +290,17 @@ fn package_component_resolution_checks_exact_identity_and_artifact_hash() {
         std::process::id()
     ));
     let component_dir = root.join("components");
-    std::fs::create_dir_all(&component_dir).expect("component fixture directory should exist");
+    std::fs::create_dir_all(&component_dir).test_unwrap("component fixture directory should exist");
     let artifact = component_dir.join("words.wasm");
     let bytes = b"fixture-component";
-    std::fs::write(&artifact, bytes).expect("component fixture should be written");
-    let sha256 = Sha256::digest(bytes)
-        .iter()
-        .map(|byte| format!("{byte:02x}"))
-        .collect::<String>();
+    std::fs::write(&artifact, bytes).test_unwrap("component fixture should be written");
+    let sha256 = crate::digest::sha256_hex(bytes);
     let mut graph = package_graph(TrustPolicy::default(), Vec::new());
-    let package = graph.packages.values_mut().next().expect("package exists");
+    let package = graph
+        .packages
+        .values_mut()
+        .next()
+        .test_unwrap("package exists");
     package.package_root.clone_from(&root);
     package.manifest.compiler_components.insert(
         "words".to_string(),
@@ -329,18 +332,22 @@ fn package_component_resolution_checks_exact_identity_and_artifact_hash() {
         protocol_major: 1,
     };
     let resolved = resolve_package_component(&graph, &requirement)
-        .expect("exact package component should resolve");
+        .test_unwrap("exact package component should resolve");
     assert_eq!(resolved.bytes, bytes);
 
-    std::fs::write(&artifact, b"drifted").expect("fixture should change");
+    std::fs::write(&artifact, b"drifted").test_unwrap("fixture should change");
     assert!(resolve_package_component(&graph, &requirement).is_err());
-    std::fs::remove_dir_all(root).expect("component fixture should be removable");
+    std::fs::remove_dir_all(root).test_unwrap("component fixture should be removable");
 }
 
 #[test]
 fn package_component_graph_rejects_duplicate_diagnostic_namespaces() {
     let mut graph = package_graph(TrustPolicy::default(), Vec::new());
-    let package = graph.packages.values_mut().next().expect("package exists");
+    let package = graph
+        .packages
+        .values_mut()
+        .next()
+        .test_unwrap("package exists");
     for (name, processor) in [("first", "fixture.first"), ("second", "fixture.second")] {
         package.manifest.compiler_components.insert(
             name.to_string(),
@@ -365,7 +372,7 @@ fn package_component_graph_rejects_duplicate_diagnostic_namespaces() {
     }
 
     let error = compiler_component_registrations(&graph)
-        .expect_err("one provider namespace must have one component owner");
+        .test_expect_err("one provider namespace must have one component owner");
     assert_eq!(error.kind, ComponentErrorKind::DiagnosticRegistry);
 }
 
@@ -399,9 +406,9 @@ fn cargo_metadata_parses_native_links_evidence() {
 }
 "#,
     )
-    .expect("metadata should parse");
+    .test_unwrap("metadata should parse");
 
-    let package = metadata.packages.first().expect("package exists");
+    let package = metadata.packages.first().test_unwrap("package exists");
     assert_eq!(package.links.as_deref(), Some("native"));
     assert!(
         package

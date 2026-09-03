@@ -165,10 +165,18 @@ impl RustEmitter {
             let propagates_scope_failure = self.current_return_type.as_ref().is_some_and(|ty| {
                 matches!(ty.resolve_alias(), Type::Result(_, err) if matches!(err.resolve_alias(), Type::Class { name, .. } if name == "ScopeFailure" || name == "Error"))
             });
+            let returns_scope_failure = self.current_return_type.as_ref().is_some_and(|ty| {
+                matches!(ty.resolve_alias(), Type::Result(_, err) if matches!(err.resolve_alias(), Type::Class { name, .. } if name == "ScopeFailure"))
+            });
             let join_expr = format!("{target}.__sifr_join_all().await");
             let stmt = if propagates_scope_failure {
+                let failure = if returns_scope_failure {
+                    "__sifr_scope_failure"
+                } else {
+                    "__sifr_scope_failure.into()"
+                };
                 format!(
-                    "if let Err(__sifr_scope_failure) = {join_expr} {{ return Err(__sifr_scope_failure.into()); }}"
+                    "if let Err(__sifr_scope_failure) = {join_expr} {{ return Err({failure}); }}"
                 )
             } else {
                 format!("let _ = {join_expr};")

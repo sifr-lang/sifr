@@ -30,6 +30,21 @@ pub(in crate::lower) fn invalid_bare_raise(ctx: &mut LowerCtx, range: TextRange)
     );
 }
 
+pub(in crate::lower) fn invalid_raise_for_return_type(
+    ctx: &mut LowerCtx,
+    raised_type: &str,
+    return_type: &str,
+    range: TextRange,
+) {
+    invalid_raise(
+        ctx,
+        format!(
+            "unhandled raise of '{raised_type}' requires a compatible Result error channel; function returns '{return_type}'"
+        ),
+        range,
+    );
+}
+
 fn invalid_raise(ctx: &mut LowerCtx, message: String, range: TextRange) {
     ctx.error_with_code_at(DiagnosticCode::RESULT_INVALID_RAISE, message, range);
 }

@@ -559,7 +559,7 @@ def classify() -> Result[str, IOError]:
     );
 
     assert!(generated.contains("__sifr_try_err.kind == \"FileNotFound\""));
-    assert!(generated.contains("return Err(__sifr_try_err);"));
+    assert!(generated.contains("Err(__sifr_try_err)"));
     syn::parse_file(&generated).expect("residual IOError propagation Rust should parse");
 }
 
@@ -583,7 +583,7 @@ def classify() -> Result[str, IOError]:
         generated.contains("match __sifr_infallible {}"),
         "{generated}"
     );
-    assert!(generated.contains("return Err(__sifr_try_err);"));
+    assert!(generated.contains("Err(__sifr_try_err)"));
     assert!(!generated.contains("structured statement emission missing"));
     syn::parse_file(&generated).expect("branchless residual Rust should parse");
 }
@@ -603,7 +603,7 @@ def classify(flag: bool) -> Result[str, IOError | ValueError]:
     );
 
     assert!(generated.contains("__sifr_try_variant_error.kind == \"FileNotFound\""));
-    assert!(generated.matches("return Err(").count() >= 2);
+    assert!(generated.matches("Err(").count() >= 2);
     assert!(!generated.contains("structured statement emission missing"));
     syn::parse_file(&generated).expect("union residual Rust should parse");
 }
@@ -637,6 +637,6 @@ def handle(flag: bool) -> Result[str, OtherError]:
     );
 
     assert!(generated.contains("Into::<BaseError>::into(__sifr_try_variant_error.clone())"));
-    assert!(generated.contains("return Err(__sifr_try_variant_error);"));
+    assert!(generated.contains("Err(__sifr_try_variant_error)"));
     syn::parse_file(&generated).expect("user error parent-handler Rust should parse");
 }

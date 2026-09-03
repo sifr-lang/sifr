@@ -599,6 +599,7 @@ mod tests {
         PRIVATE_STDLIB_MODULES, STDLIB_SOURCES, load_stdlib_sources_from_sysroot,
         load_stdlib_tooling_sources_from_sysroot, validate_stdlib_source_inventory,
     };
+    use crate::test_support::{TestExpectErr as _, TestUnwrap as _};
     use sifr_sysroot::{ResolvedSysroot, SysrootManifest, SysrootPaths};
     use std::fs;
     use std::path::{Path, PathBuf};
@@ -612,14 +613,14 @@ mod tests {
         fn new(label: &str) -> Self {
             let unique = SystemTime::now()
                 .duration_since(UNIX_EPOCH)
-                .expect("system clock should be monotonic enough for test paths")
+                .test_unwrap("system clock should be monotonic enough for test paths")
                 .as_nanos();
             let path = std::env::temp_dir().join(format!(
                 "sifr_stdlib_sources_{label}_{}_{}",
                 std::process::id(),
                 unique
             ));
-            fs::create_dir_all(&path).expect("temp root should be created");
+            fs::create_dir_all(&path).test_unwrap("temp root should be created");
             Self { path }
         }
     }
@@ -636,13 +637,14 @@ mod tests {
         let sysroot = resolved_sysroot(&root.path);
         let json_path = root.path.join("stdlib/sifr/json.sifr");
         fs::write(&json_path, "def physical_marker() -> int:\n    return 1\n")
-            .expect("overwrite physical json source");
+            .test_unwrap("overwrite physical json source");
 
-        let sources = load_stdlib_sources_from_sysroot(&sysroot).expect("inventory should load");
+        let sources =
+            load_stdlib_sources_from_sysroot(&sysroot).test_unwrap("inventory should load");
         let json = sources
             .iter()
             .find(|source| source.module == "sifr.json")
-            .expect("sifr.json should load");
+            .test_unwrap("sifr.json should load");
 
         assert_eq!(json.path, json_path);
         assert!(json.source.contains("physical_marker"));
@@ -653,20 +655,22 @@ mod tests {
         let workspace_root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .parent()
             .and_then(Path::parent)
-            .expect("crate should live under crates/<name>");
+            .test_unwrap("crate should live under crates/<name>");
         let sysroot = resolved_sysroot(workspace_root);
 
-        validate_stdlib_source_inventory(&sysroot).expect("source tree inventory should validate");
+        validate_stdlib_source_inventory(&sysroot)
+            .test_unwrap("source tree inventory should validate");
     }
 
     #[test]
     fn source_inventory_rejects_missing_public_modules() {
         let root = complete_source_tree("missing_public");
         let sysroot = resolved_sysroot(&root.path);
-        fs::remove_file(root.path.join("stdlib/sifr/json.sifr")).expect("remove public source");
+        fs::remove_file(root.path.join("stdlib/sifr/json.sifr"))
+            .test_unwrap("remove public source");
 
         let error = validate_stdlib_source_inventory(&sysroot)
-            .expect_err("missing public source should fail");
+            .test_expect_err("missing public source should fail");
 
         assert!(
             error
@@ -680,10 +684,11 @@ mod tests {
     fn source_inventory_rejects_missing_private_modules() {
         let root = complete_source_tree("missing_private");
         let sysroot = resolved_sysroot(&root.path);
-        fs::remove_file(root.path.join("stdlib/_sifr/fs.sifr")).expect("remove private source");
+        fs::remove_file(root.path.join("stdlib/_sifr/fs.sifr"))
+            .test_unwrap("remove private source");
 
         let error = validate_stdlib_source_inventory(&sysroot)
-            .expect_err("missing private source should fail");
+            .test_expect_err("missing private source should fail");
 
         assert!(
             error
@@ -698,10 +703,10 @@ mod tests {
         let root = complete_source_tree("stale_private");
         let sysroot = resolved_sysroot(&root.path);
         fs::write(root.path.join("stdlib/_sifr/stale.sifr"), "# stale\n")
-            .expect("write stale private source");
+            .test_unwrap("write stale private source");
 
         let error = validate_stdlib_source_inventory(&sysroot)
-            .expect_err("stale private source should fail");
+            .test_expect_err("stale private source should fail");
 
         assert!(
             error
@@ -717,10 +722,10 @@ mod tests {
         let sysroot = resolved_sysroot(&root.path);
         let test_path = root.path.join("stdlib/sifr/test.sifr");
         fs::write(&test_path, "from sifr.json import JsonValue\n")
-            .expect("write forward import source");
+            .test_unwrap("write forward import source");
 
         let error = load_stdlib_sources_from_sysroot(&sysroot)
-            .expect_err("forward public stdlib import should fail");
+            .test_expect_err("forward public stdlib import should fail");
 
         assert!(
             error.message.contains(
@@ -736,10 +741,10 @@ mod tests {
         let sysroot = resolved_sysroot(&root.path);
         let test_path = root.path.join("stdlib/sifr/test.sifr");
         fs::write(&test_path, "from sifr.missing import Missing\n")
-            .expect("write unknown import source");
+            .test_unwrap("write unknown import source");
 
         let error = load_stdlib_sources_from_sysroot(&sysroot)
-            .expect_err("unknown public stdlib import should fail");
+            .test_expect_err("unknown public stdlib import should fail");
 
         assert!(
             error.message.contains(
@@ -756,12 +761,12 @@ mod tests {
         let encoding_path = root.path.join("stdlib/sifr/encoding.sifr");
         let unicode_path = root.path.join("stdlib/sifr/unicode.sifr");
         fs::write(&encoding_path, "from sifr.unicode import Unicode\n")
-            .expect("write forward half of cycle");
+            .test_unwrap("write forward half of cycle");
         fs::write(&unicode_path, "from sifr.encoding import Encoding\n")
-            .expect("write backward half of cycle");
+            .test_unwrap("write backward half of cycle");
 
         let error = load_stdlib_sources_from_sysroot(&sysroot)
-            .expect_err("public stdlib import cycle should fail");
+            .test_expect_err("public stdlib import cycle should fail");
 
         assert!(error.message.contains(
             "public stdlib module sifr.encoding imports sifr.unicode before it is available"
@@ -774,10 +779,10 @@ mod tests {
         let root = complete_source_tree("private_declaration_import");
         let sysroot = resolved_sysroot(&root.path);
         let math_path = root.path.join("stdlib/_sifr/math.sifr");
-        fs::write(&math_path, "from _sifr.fs import open\n").expect("write private import");
+        fs::write(&math_path, "from _sifr.fs import open\n").test_unwrap("write private import");
 
         let error = load_stdlib_tooling_sources_from_sysroot(&sysroot)
-            .expect_err("private stdlib declaration import should fail");
+            .test_expect_err("private stdlib declaration import should fail");
 
         assert!(
             error
@@ -792,10 +797,11 @@ mod tests {
         let root = complete_source_tree("private_declaration_public_import");
         let sysroot = resolved_sysroot(&root.path);
         let math_path = root.path.join("stdlib/_sifr/math.sifr");
-        fs::write(&math_path, "from sifr.encoding import Encoding\n").expect("write public import");
+        fs::write(&math_path, "from sifr.encoding import Encoding\n")
+            .test_unwrap("write public import");
 
         let error = load_stdlib_tooling_sources_from_sysroot(&sysroot)
-            .expect_err("private stdlib declaration public import should fail");
+            .test_expect_err("private stdlib declaration public import should fail");
 
         assert!(
             error
@@ -809,21 +815,21 @@ mod tests {
         let root = TempRoot::new(label);
         let public_root = root.path.join("stdlib/sifr");
         let private_root = root.path.join("stdlib/_sifr");
-        fs::create_dir_all(&public_root).expect("public stdlib source root");
-        fs::create_dir_all(&private_root).expect("private stdlib source root");
+        fs::create_dir_all(&public_root).test_unwrap("public stdlib source root");
+        fs::create_dir_all(&private_root).test_unwrap("private stdlib source root");
         for source in STDLIB_SOURCES {
             fs::write(
                 public_module_path(&public_root, source.module),
                 source.source,
             )
-            .expect("write public source");
+            .test_unwrap("write public source");
         }
         for module in PRIVATE_STDLIB_MODULES {
             fs::write(
                 private_module_path(&private_root, module),
                 "# private declaration\n",
             )
-            .expect("write private source");
+            .test_unwrap("write private source");
         }
         root
     }
@@ -858,7 +864,7 @@ mod tests {
         let filename = module
             .strip_prefix(prefix)
             .and_then(|tail| tail.strip_prefix('.'))
-            .expect("test module should use expected prefix");
+            .test_unwrap("test module should use expected prefix");
         root.join(format!("{filename}.sifr"))
     }
 }

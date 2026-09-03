@@ -1,3 +1,5 @@
+use crate::test_support::{TestExpectErr as _, TestUnwrap as _};
+
 use crate::cargo::lock_modes::CargoLockMode;
 use crate::cargo::package::{
     PackageArchiveEntry, package_dry_run_plan, required_archive_entries, validate_package_archive,
@@ -25,7 +27,7 @@ fn archive_missing_sifr_source_reports_0401() {
     let package = package(TrustPolicy::default());
     let source_map = PackageSourceMap::default();
     let diagnostics = validate_package_archive(&package, &source_map, &[entry("sifr.toml")])
-        .expect_err("archive with no .sifr entries should fail");
+        .test_expect_err("archive with no .sifr entries should fail");
 
     assert!(
         diagnostics.iter().any(
@@ -39,7 +41,7 @@ fn archive_missing_required_entry_reports_0403() {
     let package = package(TrustPolicy::default());
     let source_map = source_map(&package);
     let diagnostics = validate_package_archive(&package, &source_map, &[entry("sifr.toml")])
-        .expect_err("missing source file should fail");
+        .test_expect_err("missing source file should fail");
 
     assert!(diagnostics.iter().any(|diagnostic| {
         diagnostic.code == DiagnosticCode::PACKAGE_INCLUDE_EXCLUDE_OMITS_SOURCE
@@ -68,7 +70,7 @@ schema-evidence = "migration-head"
 schema-strictness = "exact"
 "#,
     )
-    .expect("profile manifest")
+    .test_unwrap("profile manifest")
     .sql;
     let required = required_archive_entries(&package, &source_map(&package));
     assert!(required.contains(&PathBuf::from("db/schema.sql")));
@@ -89,7 +91,7 @@ fn archive_traversal_reports_0404() {
             entry("../escape.sifr"),
         ],
     )
-    .expect_err("traversal path should fail");
+    .test_expect_err("traversal path should fail");
 
     assert!(
         diagnostics
@@ -118,8 +120,8 @@ fn package_dry_run_includes_cargo_package_and_publish_dry_run_commands() {
         native: vec!["reqwest".to_string()],
         ..TrustPolicy::default()
     });
-    let graph = graph(package.clone(), vec![backend("reqwest")]);
-    validate_backend_trust(&graph).expect("trust should pass");
+    let graph = graph(&package, vec![backend("reqwest")]);
+    validate_backend_trust(&graph).test_unwrap("trust should pass");
     let source_map = source_map(&package);
 
     let plan = package_dry_run_plan(
@@ -134,7 +136,7 @@ fn package_dry_run_includes_cargo_package_and_publish_dry_run_commands() {
         ],
         CargoLockMode::Locked,
     )
-    .expect("dry-run plan should validate");
+    .test_unwrap("dry-run plan should validate");
 
     assert_eq!(plan.cargo_package.args, ["package", "--locked"]);
     assert_eq!(
@@ -146,7 +148,7 @@ fn package_dry_run_includes_cargo_package_and_publish_dry_run_commands() {
 #[test]
 fn package_dry_run_reports_backend_trust_failures_before_publish() {
     let package = package(TrustPolicy::default());
-    let graph = graph(package.clone(), vec![backend("reqwest")]);
+    let graph = graph(&package, vec![backend("reqwest")]);
     let source_map = source_map(&package);
 
     let diagnostics = package_dry_run_plan(
@@ -160,7 +162,7 @@ fn package_dry_run_reports_backend_trust_failures_before_publish() {
         ],
         CargoLockMode::Normal,
     )
-    .expect_err("untrusted backend should fail dry-run");
+    .test_expect_err("untrusted backend should fail dry-run");
 
     assert!(
         diagnostics
@@ -237,7 +239,7 @@ fn source_map(package: &SifrPackageMetadata) -> PackageSourceMap {
     }
 }
 fn graph(
-    package: SifrPackageMetadata,
+    package: &SifrPackageMetadata,
     backend_crates: Vec<BackendCrateMetadata>,
 ) -> SifrPackageGraph {
     SifrPackageGraph {

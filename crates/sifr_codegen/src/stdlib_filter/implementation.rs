@@ -372,6 +372,33 @@ pub(crate) fn rust_source_defined_item_names(rust_code: &str) -> HashSet<String>
     )
 }
 
+pub(crate) fn rust_source_identifier_names(rust_code: &str) -> HashSet<String> {
+    let Ok(parsed) = syn::parse_file(rust_code) else {
+        return HashSet::new();
+    };
+    let mut collector = RustIdentifierCollector::default();
+    collector.visit_file(&parsed);
+    collector.names
+}
+
+#[derive(Default)]
+struct RustIdentifierCollector {
+    names: HashSet<String>,
+}
+
+impl<'ast> Visit<'ast> for RustIdentifierCollector {
+    fn visit_ident(&mut self, ident: &'ast Ident) {
+        self.names.insert(ident.to_string());
+    }
+
+    fn visit_macro(&mut self, rust_macro: &'ast syn::Macro) {
+        collect_macro_token_refs_rec(&rust_macro.tokens, &HashSet::new(), |name| {
+            self.names.insert(name.to_string());
+        });
+        visit::visit_macro(self, rust_macro);
+    }
+}
+
 fn parse_stdlib_ir_file(rust_code: &str) -> Option<StdlibIrFile> {
     let Ok(parsed) = syn::parse_file(rust_code) else {
         return None;

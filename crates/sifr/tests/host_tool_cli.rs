@@ -1,14 +1,17 @@
+mod test_support;
+
 use std::process::Command;
+use test_support::TestUnwrap as _;
 
 #[test]
 fn direct_sql_namespace_runs_locked_host_tool_and_validates_manifest() {
-    let workspace = tempfile::tempdir().expect("workspace");
+    let workspace = tempfile::tempdir().test_unwrap("workspace");
     write_fixture(workspace.path());
     let lock = Command::new("cargo")
         .arg("generate-lockfile")
         .current_dir(workspace.path())
         .output()
-        .expect("generate lockfile");
+        .test_unwrap("generate lockfile");
     assert!(
         lock.status.success(),
         "{}",
@@ -19,7 +22,7 @@ fn direct_sql_namespace_runs_locked_host_tool_and_validates_manifest() {
         .args(["sql", "test", "provision", "--profile", "app"])
         .current_dir(workspace.path())
         .output()
-        .expect("reject missing host-tool lock");
+        .test_unwrap("reject missing host-tool lock");
     assert_eq!(missing_lock.status.code(), Some(2));
     assert!(
         String::from_utf8_lossy(&missing_lock.stderr).contains("sifr tools lock"),
@@ -31,7 +34,7 @@ fn direct_sql_namespace_runs_locked_host_tool_and_validates_manifest() {
         .args(["tools", "lock"])
         .current_dir(workspace.path())
         .output()
-        .expect("write host-tool lock");
+        .test_unwrap("write host-tool lock");
     assert!(
         tool_lock.status.success(),
         "{}",
@@ -41,14 +44,14 @@ fn direct_sql_namespace_runs_locked_host_tool_and_validates_manifest() {
         .args(["tools", "lock", "--check"])
         .current_dir(workspace.path())
         .output()
-        .expect("verify host-tool lock");
+        .test_unwrap("verify host-tool lock");
     assert!(lock_check.status.success());
 
     let output = Command::new(env!("CARGO_BIN_EXE_sifr"))
         .args(["sql", "test", "provision", "--profile=app"])
         .current_dir(workspace.path())
         .output()
-        .expect("run tool namespace");
+        .test_unwrap("run tool namespace");
     assert!(
         output.status.success(),
         "status={:?} stdout={} stderr={}",
@@ -59,7 +62,7 @@ fn direct_sql_namespace_runs_locked_host_tool_and_validates_manifest() {
     let manifest = sifr_sql_contract::TestConnectionManifest::from_json(
         String::from_utf8_lossy(&output.stdout).trim(),
     )
-    .expect("canonical connection manifest");
+    .test_unwrap("canonical connection manifest");
     assert_eq!(manifest.profile, "app");
     assert_eq!(manifest.cleanup.tool_namespace, "sql");
     assert_eq!(
@@ -72,7 +75,7 @@ fn direct_sql_namespace_runs_locked_host_tool_and_validates_manifest() {
         .current_dir(workspace.path())
         .env("SIFR_TEST_SECRET_TOKEN", "must-not-leak")
         .output()
-        .expect("run confined probe");
+        .test_unwrap("run confined probe");
     assert!(
         probe.status.success(),
         "status={:?} stdout={} stderr={}",
@@ -86,7 +89,7 @@ fn direct_sql_namespace_runs_locked_host_tool_and_validates_manifest() {
         .arg("biuld")
         .current_dir(workspace.path())
         .output()
-        .expect("run declared namespace near built-in spelling");
+        .test_unwrap("run declared namespace near built-in spelling");
     assert!(legal_near_name.status.success());
     assert_eq!(
         String::from_utf8_lossy(&legal_near_name.stdout).trim(),
@@ -97,7 +100,7 @@ fn direct_sql_namespace_runs_locked_host_tool_and_validates_manifest() {
         .args(["probe", "flood"])
         .current_dir(workspace.path())
         .output()
-        .expect("bound combined tool output");
+        .test_unwrap("bound combined tool output");
     assert!(!bounded.status.success());
     assert!(String::from_utf8_lossy(&bounded.stderr).contains("10 MiB limit"));
 
@@ -105,7 +108,7 @@ fn direct_sql_namespace_runs_locked_host_tool_and_validates_manifest() {
         .arg("unknown-tool")
         .current_dir(workspace.path())
         .output()
-        .expect("run unknown namespace");
+        .test_unwrap("run unknown namespace");
     assert_eq!(unknown.status.code(), Some(2));
     assert!(String::from_utf8_lossy(&unknown.stderr).contains("unknown tool namespace"));
 
@@ -113,7 +116,7 @@ fn direct_sql_namespace_runs_locked_host_tool_and_validates_manifest() {
         .arg("chekc")
         .current_dir(workspace.path().join("provider"))
         .output()
-        .expect("diagnose built-in typo");
+        .test_unwrap("diagnose built-in typo");
     assert_eq!(typo.status.code(), Some(2));
     assert!(String::from_utf8_lossy(&typo.stderr).contains("did you mean 'check'"));
 
@@ -121,45 +124,46 @@ fn direct_sql_namespace_runs_locked_host_tool_and_validates_manifest() {
         workspace.path().join("provider/src/drift.rs"),
         "pub const DRIFT: u8 = 1;\n",
     )
-    .expect("mutate tool source");
+    .test_unwrap("mutate tool source");
     let drift = Command::new(env!("CARGO_BIN_EXE_sifr"))
         .arg("probe")
         .current_dir(workspace.path())
         .output()
-        .expect("detect persisted tool drift");
+        .test_unwrap("detect persisted tool drift");
     assert_eq!(drift.status.code(), Some(2));
     assert!(String::from_utf8_lossy(&drift.stderr).contains("does not match"));
 }
 
 fn write_fixture(root: &std::path::Path) {
-    std::fs::create_dir_all(root.join("tools/src")).expect("tools source");
-    std::fs::create_dir_all(root.join("provider/src")).expect("provider source");
+    std::fs::create_dir_all(root.join("tools/src")).test_unwrap("tools source");
+    std::fs::create_dir_all(root.join("provider/src")).test_unwrap("provider source");
     std::fs::write(
         root.join("Cargo.toml"),
         "[workspace]\nmembers = [\"tools\", \"provider\"]\nresolver = \"2\"\n\n[workspace.metadata.sifr]\ntools-package = \"project-tools\"\n",
     )
-    .expect("workspace manifest");
+    .test_unwrap("workspace manifest");
     std::fs::write(
         root.join("tools/Cargo.toml"),
         "[package]\nname = \"project-tools\"\nversion = \"0.1.0\"\nedition = \"2024\"\n\n[dependencies]\nprovider-tools = { path = \"../provider\" }\n\n[package.metadata.sifr]\nmanifest = \"sifr.toml\"\n",
     )
-    .expect("tools Cargo manifest");
-    std::fs::write(root.join("tools/src/lib.rs"), "pub fn marker() {}\n").expect("tools marker");
+    .test_unwrap("tools Cargo manifest");
+    std::fs::write(root.join("tools/src/lib.rs"), "pub fn marker() {}\n")
+        .test_unwrap("tools marker");
     std::fs::write(
         root.join("tools/sifr.toml"),
         "[tools.sql]\npackage = \"provider-tools\"\nentrypoint = \"sql-tool\"\ncapabilities = [\"credentials\", \"network\", \"project-write\"]\n\n[tools.probe]\npackage = \"provider-tools\"\nentrypoint = \"probe-tool\"\ncapabilities = []\n\n[tools.biuld]\npackage = \"provider-tools\"\nentrypoint = \"probe-tool\"\ncapabilities = []\n",
     )
-    .expect("tools Sifr manifest");
+    .test_unwrap("tools Sifr manifest");
     std::fs::write(
         root.join("provider/Cargo.toml"),
         "[package]\nname = \"provider-tools\"\nversion = \"0.1.0\"\nedition = \"2024\"\n\n[[bin]]\nname = \"sql-tool\"\npath = \"src/main.rs\"\n\n[[bin]]\nname = \"probe-tool\"\npath = \"src/probe.rs\"\n",
     )
-    .expect("provider manifest");
+    .test_unwrap("provider manifest");
     std::fs::write(
         root.join("provider/src/lib.rs"),
         "pub const TOOL_PACKAGE_MARKER: &str = \"sql\";\n",
     )
-    .expect("provider library source");
+    .test_unwrap("provider library source");
     std::fs::write(
         root.join("provider/src/main.rs"),
         r##"fn main() {
@@ -171,9 +175,13 @@ fn write_fixture(root: &std::path::Path) {
 }
 "##,
     )
-    .expect("provider source");
+    .test_unwrap("provider source");
     let workspace_secret = root.join("workspace-secret.txt");
-    std::fs::write(&workspace_secret, "secret\n").expect("workspace secret");
+    std::fs::write(&workspace_secret, "secret\n").test_unwrap("workspace secret");
+    let workspace_secret_literal = workspace_secret
+        .to_string_lossy()
+        .escape_default()
+        .to_string();
     std::fs::write(
         root.join("provider/src/probe.rs"),
         format!(
@@ -188,15 +196,14 @@ fn write_fixture(root: &std::path::Path) {
         return;
     }}
     if std::env::var_os("SIFR_TEST_SECRET_TOKEN").is_some() {{ std::process::exit(10); }}
-    if std::fs::read_to_string({workspace_secret:?}).is_ok() {{ std::process::exit(11); }}
+    if std::fs::read_to_string("{workspace_secret_literal}").is_ok() {{ std::process::exit(11); }}
     if std::process::Command::new("/usr/bin/true").status().is_ok() {{ std::process::exit(12); }}
     if std::net::TcpListener::bind("127.0.0.1:0").is_ok() {{ std::process::exit(13); }}
     if std::env::current_exe().ok().and_then(|path| std::process::Command::new(path).arg("child").status().ok()).is_some() {{ std::process::exit(14); }}
     println!("confined");
 }}
 "#,
-            workspace_secret = workspace_secret,
         ),
     )
-    .expect("probe source");
+    .test_unwrap("probe source");
 }

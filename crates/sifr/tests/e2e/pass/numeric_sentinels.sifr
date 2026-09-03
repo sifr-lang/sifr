@@ -9,7 +9,7 @@ def minSubArrayLen(target: int, nums: list[int]) -> int:
 
     for r in range(len(nums)):
         total += nums[r]
-        while total >= target:
+        while l < len(nums) and total >= target:
             res = min(res, r - l + 1)
             total -= nums[l]
             l += 1

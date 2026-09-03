@@ -9,6 +9,8 @@ use sifr_type_system::Type;
 
 mod loop_invalidations;
 mod nonnegative_guards;
+mod subscript_guards;
+use subscript_guards::{dict_contains_guard, subscript_present_guard_from_non_none_compare};
 
 pub(in crate::lower) use loop_invalidations::loop_invalidated_sequence_targets;
 
@@ -99,6 +101,7 @@ pub(in crate::lower) fn detect_true_sequence_guards(
                 CmpOp::IsNot => subscript_present_guard_from_non_none_compare(
                     cmp.left.as_ref(),
                     &cmp.comparators[0],
+                    ctx,
                 ),
                 CmpOp::In => dict_contains_guard(cmp.left.as_ref(), &cmp.comparators[0]),
                 _ => Vec::new(),
@@ -230,85 +233,13 @@ pub(in crate::lower) fn detect_false_exit_sequence_guards(
                 CmpOp::Is => subscript_present_guard_from_non_none_compare(
                     cmp.left.as_ref(),
                     &cmp.comparators[0],
+                    ctx,
                 ),
                 _ => Vec::new(),
             }
         }
         _ => Vec::new(),
     }
-}
-
-fn subscript_present_guard_from_non_none_compare(left: &Expr, right: &Expr) -> Vec<SequenceGuard> {
-    if matches!(right, Expr::NoneLiteral(_)) {
-        return subscript_present_guard(left);
-    }
-    if matches!(left, Expr::NoneLiteral(_)) {
-        return subscript_present_guard(right);
-    }
-    Vec::new()
-}
-
-fn subscript_present_guard(expr: &Expr) -> Vec<SequenceGuard> {
-    let Expr::Subscript(subscript) = expr else {
-        return Vec::new();
-    };
-    let Some(sequence) = sequence_guard_target_name(subscript.value.as_ref()) else {
-        return Vec::new();
-    };
-    let Some(index_expr_debug) = key_guard_token(subscript.slice.as_ref()) else {
-        return Vec::new();
-    };
-    vec![
-        SequenceGuard::SubscriptAccessible {
-            sequence: sequence.clone(),
-            index_expr_debug: index_expr_debug.clone(),
-        },
-        SequenceGuard::SubscriptPresent {
-            sequence,
-            index_expr_debug,
-            reference_stability: subscript_reference_stability(subscript.slice.as_ref()),
-        },
-    ]
-}
-
-fn subscript_reference_stability(index: &Expr) -> SubscriptReferenceStability {
-    if literal_int(index).is_some_and(|value| value >= 0) {
-        SubscriptReferenceStability::StableAcrossGrowth
-    } else {
-        SubscriptReferenceStability::MayChangeOnGrowth
-    }
-}
-
-fn dict_contains_guard(key_expr: &Expr, haystack_expr: &Expr) -> Vec<SequenceGuard> {
-    let Some(key_expr_debug) = key_guard_token(key_expr) else {
-        return Vec::new();
-    };
-    if let Some(dict_name) = sequence_guard_target_name(haystack_expr) {
-        return vec![SequenceGuard::DictContains {
-            dict: dict_name,
-            key_expr_debug: key_expr_debug.clone(),
-        }];
-    }
-
-    let Expr::Call(call) = haystack_expr else {
-        return Vec::new();
-    };
-    if !call.arguments.args.is_empty() || !call.arguments.keywords.is_empty() {
-        return Vec::new();
-    }
-    let Expr::Attribute(attr) = call.func.as_ref() else {
-        return Vec::new();
-    };
-    if attr.attr.as_str() != "keys" {
-        return Vec::new();
-    }
-    let Some(dict_name) = sequence_guard_target_name(attr.value.as_ref()) else {
-        return Vec::new();
-    };
-    vec![SequenceGuard::DictContains {
-        dict: dict_name,
-        key_expr_debug,
-    }]
 }
 
 pub(in crate::lower) fn detect_range_sequence_guards(

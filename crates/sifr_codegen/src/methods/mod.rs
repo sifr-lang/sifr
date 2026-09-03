@@ -63,6 +63,11 @@ pub(crate) fn lower_method_with_context(
         (Type::Tuple(elems), "index") => common::lower_tuple_index(elems.len(), object, args),
         (Type::Str, "len") => common::lower_string_char_len(object, args),
         (ty, "len") if is_option_type(ty) => common::lower_option_len(object, args),
+        (Type::Class { .. }, "len") if args.is_empty() => Some(RustExpr::MethodCall {
+            receiver: Box::new(object.clone()),
+            method: "len".to_string(),
+            args: Vec::new(),
+        }),
         (_, "len") => common::lower_len(object, args),
         (Type::Str, "upper") => string::lower_upper(object, args),
         (Type::Str, "lower") => string::lower_lower(object, args),
@@ -301,7 +306,7 @@ mod tests {
             lower_method(&Type::Str, "split", "s", &["sep".to_string()]).expect("split sep");
         assert_eq!(
             render_expr(&split_sep.expr),
-            "s.split(&sep).map(|s| s.to_string()).collect::<Vec<String>>()"
+            "s.split(&sep).map(::std::string::ToString::to_string).collect::<Vec<String>>()"
         );
 
         let replace = lower_method(
@@ -354,16 +359,16 @@ mod tests {
         assert!(render_expr(&swap.expr).contains("is_uppercase"));
 
         let isdigit = lower_method(&Type::Str, "isdigit", "s", &[]).expect("isdigit lowers");
-        assert!(render_expr(&isdigit.expr).contains("is_ascii_digit"));
+        assert!(render_expr(&isdigit.expr).contains("|c| c.is_ascii_digit()"));
 
         let isalpha = lower_method(&Type::Str, "isalpha", "s", &[]).expect("isalpha lowers");
-        assert!(render_expr(&isalpha.expr).contains("is_alphabetic"));
+        assert!(render_expr(&isalpha.expr).contains(".all(char::is_alphabetic)"));
 
         let isalnum = lower_method(&Type::Str, "isalnum", "s", &[]).expect("isalnum lowers");
-        assert!(render_expr(&isalnum.expr).contains("is_alphanumeric"));
+        assert!(render_expr(&isalnum.expr).contains(".all(char::is_alphanumeric)"));
 
         let isspace = lower_method(&Type::Str, "isspace", "s", &[]).expect("isspace lowers");
-        assert!(render_expr(&isspace.expr).contains("is_whitespace"));
+        assert!(render_expr(&isspace.expr).contains(".all(char::is_whitespace)"));
 
         let isupper = lower_method(&Type::Str, "isupper", "s", &[]).expect("isupper lowers");
         assert!(render_expr(&isupper.expr).contains("is_uppercase"));
@@ -833,14 +838,14 @@ mod tests {
         let count = lower_method(&Type::Bytes, "count", "payload", &["needle".to_string()])
             .expect("bytes count lowers");
         let count_rendered = render_expr(&count.expr);
-        assert!(count_rendered.contains("match __needle.try_to_u8()"));
-        assert!(count_rendered.contains("Ok(__needle_u8)"));
+        assert!(count_rendered.contains("__needle.try_to_u8().map_or_else(|_|"));
+        assert!(count_rendered.contains("::sifr_runtime::count_byte"));
         assert_eq!(count_rendered.matches("payload").count(), 1);
 
         let contains = lower_method(&Type::Bytes, "contains", "payload", &["needle".to_string()])
             .expect("bytes contains lowers");
         let contains_rendered = render_expr(&contains.expr);
-        assert!(contains_rendered.contains("match __needle.try_to_u8()"));
+        assert!(contains_rendered.contains("__needle.try_to_u8().map_or_else(|_|"));
         assert!(contains_rendered.contains("__bytes_receiver.contains(&__needle_u8)"));
         assert_eq!(contains_rendered.matches("payload").count(), 1);
 
@@ -852,9 +857,10 @@ mod tests {
         )
         .expect("bytes find lowers");
         let find_rendered = render_expr(&find.expr);
-        assert!(find_rendered.contains("match __needle.try_to_u8()"));
+        assert!(find_rendered.contains("__needle.try_to_u8().map_or_else(|_|"));
         assert!(find_rendered.contains("__needle_u8"));
         assert!(find_rendered.contains("None"));
+        assert!(find_rendered.contains("__result.is_none()"));
         assert_eq!(find_rendered.matches("payload").count(), 1);
 
         let startswith = lower_method(
@@ -875,10 +881,14 @@ mod tests {
 
         let hex = lower_method(&Type::Bytes, "hex", "payload", &[]).expect("bytes hex lowers");
         let hex_rendered = render_expr(&hex.expr);
-        assert!(hex_rendered.contains("let __bytes_receiver = &payload;"));
+        assert!(hex_rendered.contains("let __bytes_receiver: &[u8] = &payload;"));
         assert_eq!(hex_rendered.matches("payload").count(), 1);
         assert!(hex_rendered.contains("__bytes_receiver.len().saturating_mul(2_usize)"));
-        assert!(hex_rendered.contains("format!(\"{:02x}\", *__byte)"));
+        assert!(hex_rendered.contains("for __byte in __bytes_receiver"));
+        assert!(hex_rendered.contains(
+            "::std::fmt::Write::write_fmt(&mut __hex, format_args!(\"{:02x}\", *__byte))"
+        ));
+        assert!(!hex_rendered.contains(".iter()"));
 
         let to_ints =
             lower_method(&Type::Bytes, "to_ints", "payload", &[]).expect("bytes to_ints lowers");

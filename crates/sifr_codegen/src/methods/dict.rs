@@ -17,6 +17,9 @@ fn is_already_borrowed_rendered_expr(arg: &RustExpr) -> bool {
 
 fn render_key_arg_expr(arg: &RustExpr) -> RustExpr {
     match arg {
+        RustExpr::Ref { expr, .. } if is_already_borrowed_rendered_expr(expr) => {
+            expr.as_ref().clone()
+        }
         RustExpr::Ref { .. } => arg.clone(),
         _ if is_already_borrowed_rendered_expr(arg) => arg.clone(),
         _ => RustExpr::Ref {
@@ -240,9 +243,10 @@ pub(super) fn lower_setdefault(
     value_ty: &Type,
     args: &[RustExpr],
 ) -> Option<RustExpr> {
-    if key_ty.contains_affine_resource() || value_ty.contains_affine_resource() {
-        return None;
-    }
+    assert!(
+        !key_ty.contains_affine_resource() && !value_ty.contains_affine_resource(),
+        "affine dict.setdefault must be rejected during typed lowering"
+    );
     match args {
         [key, default] => {
             let key = materialize_setdefault_storage_arg(key_ty, key);
@@ -280,15 +284,13 @@ mod tests {
     }
 
     #[test]
-    fn setdefault_defensively_rejects_affine_key_and_value_types() {
+    #[should_panic(expected = "affine dict.setdefault must be rejected during typed lowering")]
+    fn setdefault_affine_types_are_an_internal_invariant_violation() {
         let object = RustExpr::Ident("values".to_string());
         let key = RustExpr::Ident("key".to_string());
         let value = RustExpr::Ident("value".to_string());
         let affine =
             Type::PythonBuffer(Box::new(Type::FixedInt(sifr_type_system::FixedIntType::U8)));
-        assert!(
-            lower_setdefault(&object, &Type::Str, &affine, &[key.clone(), value.clone()]).is_none()
-        );
-        assert!(lower_setdefault(&object, &affine, &Type::Int, &[key, value]).is_none());
+        let _ = lower_setdefault(&object, &Type::Str, &affine, &[key, value]);
     }
 }

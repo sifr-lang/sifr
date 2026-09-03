@@ -1,4 +1,20 @@
 use super::*;
+
+#[test]
+fn lowers_discarded_unit_binding_as_an_expression_statement() {
+    let let_stmt = HirStmt::Let {
+        name: "_".to_string(),
+        ty: Type::None,
+        value: HirExpr::NoneLiteral,
+        is_mutable: false,
+    };
+
+    let lowered = try_lower_simple_stmt(&let_stmt, false, &HashSet::new(), &HashSet::new())
+        .expect("discarded unit binding should lower");
+
+    assert!(matches!(lowered.as_slice(), [RustStmt::Expr(_)]));
+}
+
 #[test]
 fn lowers_simple_let_with_not_bool_name_rhs() {
     let let_stmt = HirStmt::Let {

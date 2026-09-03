@@ -58,7 +58,7 @@ impl RustEmitter {
             )));
         };
         let lowered_value = self.rewrite_stdlib_constant_idents_in_expr(lowered_value);
-        let rust_name = format!("__const_{name}");
+        let rust_name = crate::lower_item::module_constant_helper_name(name);
         Ok((
             RustItem::Fn {
                 name: rust_name.clone(),

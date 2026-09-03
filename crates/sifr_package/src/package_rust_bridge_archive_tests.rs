@@ -1,3 +1,5 @@
+use crate::test_support::{TestExpectErr as _, TestUnwrap as _};
+
 use crate::cargo::metadata::CargoPackageId;
 use crate::cargo::package::{
     PackageArchiveEntry, required_archive_entries, validate_package_archive,
@@ -50,7 +52,7 @@ fn rust_bridge_archive_validation_reports_missing_bridge_projection_entry() {
             entry("src/bridges/tokenizer.rs"),
         ],
     )
-    .expect_err("missing managed bridge projection should fail");
+    .test_expect_err("missing managed bridge projection should fail");
 
     assert!(diagnostics.iter().any(|diagnostic| {
         diagnostic.code == DiagnosticCode::PACKAGE_INCLUDE_EXCLUDE_OMITS_SOURCE
@@ -66,32 +68,33 @@ impl RustBridgeFixture {
     fn new(name: &str) -> Self {
         let nonce = SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .expect("clock should be after epoch")
+            .test_unwrap("clock should be after epoch")
             .as_nanos();
         let root = std::env::temp_dir().join(format!("sifr_package_{name}_{nonce}"));
-        fs::create_dir_all(root.join("src/bridges")).expect("create bridges");
-        fs::create_dir_all(root.join("src/__sifr_bridge")).expect("create generated bridge dir");
-        fs::write(root.join("src/__init__.sifr"), "").expect("write source");
+        fs::create_dir_all(root.join("src/bridges")).test_unwrap("create bridges");
+        fs::create_dir_all(root.join("src/__sifr_bridge"))
+            .test_unwrap("create generated bridge dir");
+        fs::write(root.join("src/__init__.sifr"), "").test_unwrap("write source");
         fs::write(
             root.join("src/lib.rs"),
             "// sifr-managed: rust-interop bridge projection v1\n",
         )
-        .expect("write lib projection");
+        .test_unwrap("write lib projection");
         fs::write(
             root.join("src/bridges/mod.rs"),
             "// sifr-managed: rust-interop bridge projection v1\npub mod tokenizer;\n",
         )
-        .expect("write bridge projection");
+        .test_unwrap("write bridge projection");
         fs::write(
             root.join("src/bridges/tokenizer.rs"),
             "pub fn tokenize() {}\n",
         )
-        .expect("write user bridge");
+        .test_unwrap("write user bridge");
         fs::write(
             root.join("src/__sifr_bridge/mod.rs"),
             "// sifr-managed: rust-interop bridge projection v1\n",
         )
-        .expect("write generated bridge projection");
+        .test_unwrap("write generated bridge projection");
         Self { root }
     }
 

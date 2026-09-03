@@ -39,12 +39,22 @@ fn collect_annotated_constant(
     };
     let var_name = name.id.to_string();
     let ty = resolve_annotation_expr(&ann.annotation, ctx);
-    let Some(hir_value) = lower_annotated_module_constant_expr(value_expr, ctx, &var_name, &ty)
+    let Some((hir_value, integer_value)) =
+        lower_annotated_module_constant_expr(value_expr, ctx, &var_name, &ty)
     else {
         return;
     };
     ctx.scope
         .define_module_constant(var_name.clone(), ty.clone());
+    if let (Some(integer_value), Some(binding_id)) = (
+        integer_value,
+        ctx.scope
+            .lookup(&var_name)
+            .map(|binding| binding.binding_id),
+    ) {
+        ctx.const_integer_values
+            .record(var_name.clone(), binding_id, integer_value);
+    }
     constants.push((var_name, ty, hir_value));
 }
 
@@ -53,7 +63,7 @@ fn lower_annotated_module_constant_expr(
     ctx: &mut LowerCtx,
     var_name: &str,
     ty: &Type,
-) -> Option<HirExpr> {
+) -> Option<(HirExpr, Option<BigInt>)> {
     if let Some(mut hir_value) = lower_module_integer_const_expr(value_expr, ctx) {
         let error_count_before_initializer = ctx.error_count();
         if let Some(folded_value) = fixed_width_fitting::validate_annotated_constant_initializer(
@@ -65,9 +75,8 @@ fn lower_annotated_module_constant_expr(
             hir_value = folded_value;
         }
         if ctx.error_count() == error_count_before_initializer {
-            let remembered_value = fixed_width_fitting::remember_module_const_integer(
+            let remembered_value = fixed_width_fitting::evaluate_module_const_integer(
                 ctx,
-                var_name,
                 &hir_value,
                 value_expr.range(),
             );
@@ -76,8 +85,9 @@ fn lower_annotated_module_constant_expr(
             {
                 hir_value = folded;
             }
+            return Some((hir_value, remembered_value));
         }
-        return Some(hir_value);
+        return Some((hir_value, None));
     }
 
     let hir_value = lower_expr(value_expr, ctx)?;
@@ -92,11 +102,11 @@ fn lower_annotated_module_constant_expr(
         return None;
     }
     if let Some(folded_value) = folded_value {
-        return Some(folded_value);
+        return Some((folded_value, None));
     }
     let hir_value = canonicalize_non_finite_float_constant(hir_value);
     if is_supported_annotated_module_constant_expr(&hir_value) {
-        Some(hir_value)
+        Some((hir_value, None))
     } else {
         reject_unsupported_private_declaration_constant(ctx, var_name, value_expr);
         None
@@ -205,12 +215,8 @@ fn collect_bare_constant(
     };
 
     let ty = hir_value.ty().clone();
-    let remembered_value = fixed_width_fitting::remember_module_const_integer(
-        ctx,
-        &var_name,
-        &hir_value,
-        assign.value.range(),
-    );
+    let remembered_value =
+        fixed_width_fitting::evaluate_module_const_integer(ctx, &hir_value, assign.value.range());
     if let Some(folded) =
         oversized_int_module_constant_literal_for_codegen(&ty, remembered_value.as_ref())
     {
@@ -218,6 +224,15 @@ fn collect_bare_constant(
     }
     ctx.scope
         .define_module_constant(var_name.clone(), ty.clone());
+    if let (Some(integer_value), Some(binding_id)) = (
+        remembered_value,
+        ctx.scope
+            .lookup(&var_name)
+            .map(|binding| binding.binding_id),
+    ) {
+        ctx.const_integer_values
+            .record(var_name.clone(), binding_id, integer_value);
+    }
     constants.push((var_name, ty, hir_value));
 }
 
@@ -237,14 +252,16 @@ fn oversized_int_module_constant_literal_for_codegen(
 
 fn lower_module_integer_const_expr(expr: &Expr, ctx: &LowerCtx) -> Option<HirExpr> {
     match expr {
-        Expr::Name(name) if ctx.const_integer_values.contains_key(name.id.as_str()) => {
-            let scope_ty = &ctx.scope.lookup(name.id.as_str())?.ty;
+        Expr::Name(name) => {
+            let binding = ctx.scope.lookup(name.id.as_str())?;
+            ctx.const_integer_values.get(binding.binding_id)?;
+            let scope_ty = &binding.ty;
             if !matches!(scope_ty, Type::Int) {
                 return None;
             }
             Some(HirExpr::Name {
                 name: name.id.to_string(),
-                binding_id: Some(ctx.scope.lookup(name.id.as_str())?.binding_id),
+                binding_id: Some(binding.binding_id),
                 ty: Type::Int,
             })
         }

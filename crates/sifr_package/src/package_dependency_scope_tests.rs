@@ -1,3 +1,5 @@
+use crate::test_support::{TestExpectErr as _, TestUnwrap as _};
+
 use crate::cargo::metadata::parse_metadata_json;
 use crate::graph::derive::{SifrPackageId, derive_package_graph};
 use crate::graph::type_identity::{PackageTypeIdentity, TypeIdentityMismatch};
@@ -27,9 +29,9 @@ fn same_import_root_can_resolve_to_different_versions_in_different_scopes() {
             edge(&physics, "math", &math_v2),
         ],
     ))
-    .expect("metadata parses");
+    .test_unwrap("metadata parses");
     let graph =
-        derive_package_graph(metadata, &mut DiskSourceProvider::new()).expect("graph derives");
+        derive_package_graph(metadata, &mut DiskSourceProvider::new()).test_unwrap("graph derives");
 
     let image_scope = &graph.direct_dependency_scopes[&sifr_id(&image)];
     let physics_scope = &graph.direct_dependency_scopes[&sifr_id(&physics)];
@@ -56,9 +58,9 @@ fn duplicate_direct_import_root_in_one_scope_reports_0201() {
         &[&app, &math_v1, &math_v2],
         &[edge(&app, "math1", &math_v1), edge(&app, "math2", &math_v2)],
     ))
-    .expect("metadata parses");
+    .test_unwrap("metadata parses");
     let diagnostics = derive_package_graph(metadata, &mut DiskSourceProvider::new())
-        .expect_err("ambiguous root fails");
+        .test_expect_err("ambiguous root fails");
 
     assert_eq!(diagnostics.len(), 1);
     assert_eq!(
@@ -91,9 +93,9 @@ fn direct_dependency_aliases_allow_same_export_root_in_one_scope() {
         &[&app, &math_v1, &math_v2],
         &[edge(&app, "math1", &math_v1), edge(&app, "math2", &math_v2)],
     ))
-    .expect("metadata parses");
+    .test_unwrap("metadata parses");
     let graph = derive_package_graph(metadata, &mut DiskSourceProvider::new())
-        .expect("aliases disambiguate");
+        .test_unwrap("aliases disambiguate");
     let app_scope = &graph.direct_dependency_scopes[&sifr_id(&app)];
 
     assert!(
@@ -163,27 +165,27 @@ fn package(
 }
 
 fn write_pure_package(package_root: &Path, cargo_name: &str, version: &str, sifr_name: &str) {
-    fs::create_dir_all(package_root.join("src")).expect("create src");
+    fs::create_dir_all(package_root.join("src")).test_unwrap("create src");
     fs::write(
         package_root.join("src/lib.rs"),
         "// Pure Sifr package marker. Sifr source lives in the sifr.toml source root.\n",
     )
-    .expect("write marker");
+    .test_unwrap("write marker");
     fs::write(
         package_root.join("Cargo.toml"),
         format!(
             "[package]\nname = \"{cargo_name}\"\nversion = \"{version}\"\nedition = \"2024\"\n\n[package.metadata.sifr]\nmanifest = \"sifr.toml\"\n"
         ),
     )
-    .expect("write Cargo.toml");
+    .test_unwrap("write Cargo.toml");
     fs::write(
         package_root.join("sifr.toml"),
         format!(
             "[package]\nname = \"{sifr_name}\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n\n[source]\nroot = \"src\"\n"
         ),
     )
-    .expect("write sifr.toml");
-    fs::write(package_root.join("src/__init__.sifr"), "").expect("write init");
+    .test_unwrap("write sifr.toml");
+    fs::write(package_root.join("src/__init__.sifr"), "").test_unwrap("write init");
 }
 
 fn metadata_json(
@@ -336,16 +338,16 @@ impl TestWorkspace {
     fn new(name: &str) -> Self {
         let nonce = SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .expect("clock should be after epoch")
+            .test_unwrap("clock should be after epoch")
             .as_nanos();
         let root = std::env::temp_dir().join(format!("sifr_package_{name}_{nonce}"));
-        fs::create_dir_all(&root).expect("create temp workspace");
+        fs::create_dir_all(&root).test_unwrap("create temp workspace");
         Self { root }
     }
 
     fn package(&self, name: &str) -> PathBuf {
         let path = self.root.join(name);
-        fs::create_dir_all(&path).expect("create package");
+        fs::create_dir_all(&path).test_unwrap("create package");
         path
     }
 }

@@ -1,3 +1,7 @@
+mod support;
+
+use support::TestUnwrap as _;
+
 use serde_json::Value;
 use sifr_stdlib_manifest::{StdlibFeature, try_generated_cargo_dependencies};
 use std::collections::HashSet;
@@ -54,14 +58,14 @@ fn generated_cargo_dependencies(
     required_features: &HashSet<StdlibFeature>,
 ) -> Vec<String> {
     try_generated_cargo_dependencies(stdlib_modules, required_features)
-        .expect("source-tree sysroot dependencies should resolve")
+        .test_unwrap("source-tree sysroot dependencies should resolve")
 }
 
 fn snapshot_field_strings(payload: &Value, snapshot_id: &str, field: &str) -> Vec<String> {
     payload
         .get("production_snapshots")
         .and_then(Value::as_array)
-        .expect("production snapshots must be an array")
+        .test_unwrap("production snapshots must be an array")
         .iter()
         .find(|snapshot| snapshot.get("id").and_then(Value::as_str) == Some(snapshot_id))
         .unwrap_or_else(|| panic!("missing production snapshot {snapshot_id}"))
@@ -85,17 +89,17 @@ fn snapshot_dependencies(payload: &Value, snapshot_id: &str) -> Vec<String> {
 #[test]
 fn network_http_tls_versions_match_latest_stable_locks() {
     let manifest: toml::Value =
-        toml::from_str(WORKSPACE_MANIFEST).expect("workspace manifest must parse");
+        toml::from_str(WORKSPACE_MANIFEST).test_unwrap("workspace manifest must parse");
     let dependencies = manifest
         .get("workspace")
         .and_then(|workspace| workspace.get("dependencies"))
         .and_then(toml::Value::as_table)
-        .expect("workspace dependencies must be a table");
-    let lock: toml::Value = toml::from_str(WORKSPACE_LOCK).expect("workspace lock must parse");
+        .test_unwrap("workspace dependencies must be a table");
+    let lock: toml::Value = toml::from_str(WORKSPACE_LOCK).test_unwrap("workspace lock must parse");
     let locked_packages = lock
         .get("package")
         .and_then(toml::Value::as_array)
-        .expect("workspace lock packages must be an array");
+        .test_unwrap("workspace lock packages must be an array");
 
     for (package, manifest_version, locked_version) in [
         ("rustls", "=0.23.43", "0.23.43"),
@@ -124,8 +128,8 @@ fn network_http_tls_versions_match_latest_stable_locks() {
 
 #[test]
 fn network_http_dependency_snapshots_exclude_ring5_from_production() {
-    let payload: Value =
-        serde_json::from_str(SNAPSHOT_JSON).expect("network HTTP dependency snapshot must parse");
+    let payload: Value = serde_json::from_str(SNAPSHOT_JSON)
+        .test_unwrap("network HTTP dependency snapshot must parse");
     assert_eq!(
         payload.get("schema_version").and_then(Value::as_i64),
         Some(1)
@@ -134,31 +138,39 @@ fn network_http_dependency_snapshots_exclude_ring5_from_production() {
     let ring5_crates = payload
         .get("ring5_dev_test_demo_crates")
         .and_then(Value::as_array)
-        .expect("ring5 crate list must be present");
+        .test_unwrap("ring5 crate list must be present");
     let ring5_crates = ring5_crates
         .iter()
-        .map(|value| value.as_str().expect("ring5 crate names must be strings"))
+        .map(|value| {
+            value
+                .as_str()
+                .test_unwrap("ring5 crate names must be strings")
+        })
         .collect::<Vec<_>>();
 
     let snapshots = payload
         .get("production_snapshots")
         .and_then(Value::as_array)
-        .expect("production snapshots must be an array");
+        .test_unwrap("production snapshots must be an array");
     let mut ids = Vec::new();
     for snapshot in snapshots {
         let id = snapshot
             .get("id")
             .and_then(Value::as_str)
-            .expect("snapshot id must be a string");
+            .test_unwrap("snapshot id must be a string");
         ids.push(id.to_string());
 
         let dependencies = snapshot
             .get("production_dependencies")
             .and_then(Value::as_array)
-            .expect("production dependencies must be an array");
+            .test_unwrap("production dependencies must be an array");
         let dependency_text = dependencies
             .iter()
-            .map(|value| value.as_str().expect("dependency entries must be strings"))
+            .map(|value| {
+                value
+                    .as_str()
+                    .test_unwrap("dependency entries must be strings")
+            })
             .collect::<Vec<_>>()
             .join("\n");
 
@@ -178,8 +190,8 @@ fn network_http_dependency_snapshots_exclude_ring5_from_production() {
 
 #[test]
 fn network_http_snapshot_json_matches_generated_dependency_output() {
-    let payload: Value =
-        serde_json::from_str(SNAPSHOT_JSON).expect("network HTTP dependency snapshot must parse");
+    let payload: Value = serde_json::from_str(SNAPSHOT_JSON)
+        .test_unwrap("network HTTP dependency snapshot must parse");
     assert_eq!(
         payload.get("status").and_then(Value::as_str),
         Some("closed-audited")

@@ -1,4 +1,6 @@
-#![allow(clippy::expect_used)]
+mod support;
+
+use support::TestUnwrap as _;
 
 use std::collections::BTreeSet;
 
@@ -47,18 +49,18 @@ const POLARS_PACKAGES: &[&str] = &[
 #[test]
 fn maintained_manifests_select_latest_stable_polars() {
     let catalog: toml::Value =
-        toml::from_str(CATALOG_MANIFEST).expect("catalog manifest must parse");
+        toml::from_str(CATALOG_MANIFEST).test_unwrap("catalog manifest must parse");
     let catalog_dependencies = catalog
         .get("dependencies")
-        .expect("catalog must declare dependencies");
+        .test_unwrap("catalog must declare dependencies");
     assert_dependency(catalog_dependencies, Some(true));
 
     let fixture: toml::Value =
-        toml::from_str(FIXTURE_MANIFEST).expect("fixture manifest must parse");
+        toml::from_str(FIXTURE_MANIFEST).test_unwrap("fixture manifest must parse");
     let fixture_dependencies = fixture
         .get("workspace")
         .and_then(|workspace| workspace.get("dependencies"))
-        .expect("fixture must declare workspace dependencies");
+        .test_unwrap("fixture must declare workspace dependencies");
     assert_dependency(fixture_dependencies, None);
 }
 
@@ -73,7 +75,7 @@ fn maintained_locks_use_one_current_polars_family() {
         let packages = lock
             .get("package")
             .and_then(toml::Value::as_array)
-            .expect("lock packages must be an array");
+            .test_unwrap("lock packages must be an array");
         let actual = packages
             .iter()
             .filter_map(|package| {
@@ -102,7 +104,7 @@ fn maintained_locks_use_one_current_polars_family() {
         let polars = packages
             .iter()
             .find(|package| package.get("name").and_then(toml::Value::as_str) == Some("polars"))
-            .expect("lock must contain polars");
+            .test_unwrap("lock must contain polars");
         assert_eq!(
             polars.get("checksum").and_then(toml::Value::as_str),
             Some(POLARS_PACKAGE_HASH),
@@ -123,7 +125,7 @@ fn runtime_bridge_uses_polars_0_55_dataframe_sortedness() {
 fn assert_dependency(dependencies: &toml::Value, optional: Option<bool>) {
     let dependency = dependencies
         .get("polars")
-        .expect("manifest must declare polars");
+        .test_unwrap("manifest must declare polars");
     assert_eq!(
         dependency.get("version").and_then(toml::Value::as_str),
         Some("=0.55.2")

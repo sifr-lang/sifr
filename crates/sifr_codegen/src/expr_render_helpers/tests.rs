@@ -180,7 +180,7 @@ fn emitter_with_large_int_const() -> RustEmitter {
     let mut emitter = RustEmitter::new();
     emitter.module_constants.insert(
         "BIG_LIMIT".to_string(),
-        (Type::Int, "__const_BIG_LIMIT()".to_string()),
+        (Type::Int, "__sifr_const_4249475f4c494d4954()".to_string()),
     );
     emitter
 }
@@ -205,7 +205,7 @@ fn rewrites_large_int_module_const_arithmetic_to_sifr_int_operands() {
         left.as_ref(),
         RustExpr::FnCall { func, args }
             if args.is_empty()
-                && matches!(func.as_ref(), RustExpr::Ident(name) if name == "__const_BIG_LIMIT")
+                && matches!(func.as_ref(), RustExpr::Ident(name) if name == "__sifr_const_4249475f4c494d4954")
     ));
     assert!(matches!(
         right.as_ref(),
@@ -250,7 +250,7 @@ fn rewrites_large_int_floor_division_by_nonzero_literal_to_checked_runtime_call(
         receiver.as_ref(),
         RustExpr::FnCall { func, args }
             if args.is_empty()
-                && matches!(func.as_ref(), RustExpr::Ident(name) if name == "__const_BIG_LIMIT")
+                && matches!(func.as_ref(), RustExpr::Ident(name) if name == "__sifr_const_4249475f4c494d4954")
     ));
     assert!(matches!(
         args.as_slice(),
@@ -384,7 +384,7 @@ fn rewrites_large_int_module_const_comparison_to_sifr_int_operands() {
                 expr.as_ref(),
                 RustExpr::FnCall { func, args }
                     if args.is_empty()
-                        && matches!(func.as_ref(), RustExpr::Ident(name) if name == "__const_BIG_LIMIT")
+                        && matches!(func.as_ref(), RustExpr::Ident(name) if name == "__sifr_const_4249475f4c494d4954")
             )
     ));
     assert!(matches!(
@@ -431,7 +431,7 @@ fn rewrites_registered_sifr_int_local_comparison_to_borrowed_operands() {
                 expr.as_ref(),
                 RustExpr::FnCall { func, args }
                     if args.is_empty()
-                        && matches!(func.as_ref(), RustExpr::Ident(name) if name == "__const_BIG_LIMIT")
+                        && matches!(func.as_ref(), RustExpr::Ident(name) if name == "__sifr_const_4249475f4c494d4954")
         )
     ));
 }
@@ -783,4 +783,20 @@ fn closure_block_returns_do_not_inherit_sifr_int_return_state() {
         }))]
     ));
     assert!(emitter.current_sifr_int_return.get());
+}
+
+#[test]
+fn condition_rendering_removes_redundant_outer_parentheses() {
+    let rendered = crate::render_stmts(&[RustStmt::If {
+        cond: RustExpr::Paren(Box::new(RustExpr::BinOp {
+            left: Box::new(RustExpr::Ident("value".to_string())),
+            op: "==".to_string(),
+            right: Box::new(RustExpr::Literal(RustLiteral::Int(1))),
+        })),
+        then_body: Vec::new(),
+        else_body: None,
+    }]);
+
+    assert!(rendered.contains("if value == 1 {"), "{rendered}");
+    assert!(!rendered.contains("if ("), "{rendered}");
 }

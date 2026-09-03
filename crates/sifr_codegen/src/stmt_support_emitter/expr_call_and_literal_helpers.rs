@@ -303,15 +303,21 @@ macro_rules! stmt_expr_constructor {
             for (idx, lowered_arg) in lowered_args.iter_mut().enumerate() {
                 if let Type::StructuralRecord(record) = ty.resolve_alias()
                     && let Some(field) = record.source_fields().get(idx)
-                    && matches!(
+                {
+                    *lowered_arg = $emitter.coerce_local_value_for_target_type_for_ir(
+                        field.ty(),
+                        &args[idx],
+                        lowered_arg.clone(),
+                    )?;
+                    if matches!(
                         field.ty().resolve_alias(),
                         Type::Callable(..) | Type::AsyncCallable(..)
-                    )
-                {
-                    *lowered_arg = Self::arc_constructor_callable_value(
-                        field.ty(),
-                        lowered_arg.clone(),
-                    );
+                    ) {
+                        *lowered_arg = Self::arc_constructor_callable_value(
+                            field.ty(),
+                            lowered_arg.clone(),
+                        );
+                    }
                 }
                 let Some((param_ty, convention)) =
                     ctor_params.as_ref().and_then(|params| params.get(idx))
@@ -395,10 +401,12 @@ macro_rules! stmt_expr_literals_and_calls {
                         format_str.push_str(&text.replace('{', "{{").replace('}', "}}"));
                     }
                     HirFStringPart::Expr(inner) => {
-                        let Some(lowered_inner) = $emitter.lower_stmt_expr_for_ir(inner)? else {
+                        let Some((placeholder, lowered_inner)) =
+                            $emitter.lower_formatted_value_for_ir(inner)?
+                        else {
                             return Ok(None);
                         };
-                        format_str.push_str("{}");
+                        format_str.push_str(&placeholder);
                         args.push(lowered_inner);
                     }
                 }

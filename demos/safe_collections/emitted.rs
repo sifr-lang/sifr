@@ -1,82 +1,105 @@
 // src/main.rs
 use ::sifr_runtime::SifrInt;
-
+#[expect(
+    clippy::too_many_lines,
+    reason = "one generated Rust function preserves one typed Sifr function"
+)]
+#[expect(
+    clippy::approx_constant,
+    reason = "generated Rust preserves this exact typed Sifr source contract"
+)]
 fn main() {
-    let mut items: Vec<SifrInt> = vec![SifrInt::from_i64(10), SifrInt::from_i64(20), SifrInt::from_i64(30)];
+    let mut items: Vec<SifrInt> = vec![
+        SifrInt::from_i64(10),
+        SifrInt::from_i64(20),
+        SifrInt::from_i64(30),
+    ];
+    if let Some(sifr_generated_pos) = items
+        .iter()
+        .position(|sifr_generated_x| sifr_generated_x.eq(&SifrInt::from_i64(99)))
     {
-    if let Some(__pos) = items.iter().position(|__x| __x.eq(&SifrInt::from_i64(99))) {
-        items.remove(__pos);
+        items.remove(sifr_generated_pos);
     }
-};
     println!("After removing missing 99:");
-    println!("{:?}", items);
+    println!("{items:?}");
+    if let Some(sifr_generated_pos) = items
+        .iter()
+        .position(|sifr_generated_x| sifr_generated_x.eq(&SifrInt::from_i64(20)))
     {
-    if let Some(__pos) = items.iter().position(|__x| __x.eq(&SifrInt::from_i64(20))) {
-        items.remove(__pos);
+        items.remove(sifr_generated_pos);
     }
-};
     println!("After removing 20:");
-    println!("{:?}", items);
-    let names: Vec<String> = vec!["alice".to_string(), "bob".to_string(), "charlie".to_string()];
+    println!("{items:?}");
+    let names: Vec<String> = vec![
+        "alice".to_string(),
+        "bob".to_string(),
+        "charlie".to_string(),
+    ];
     let pos: Option<SifrInt> = {
-    let __len = names.len();
-    let __start = 0usize;
-    let __stop = __len;
-    let mut __i = __start;
-    let mut __result = None;
-    while (__i < __stop) && (__result == None) {
-        if let Some(__x) = names.get(__i) {
-            if __x.eq(&"bob".to_string()) {
-                __result = Some(SifrInt::from(__i));
+        let sifr_generated_len = names.len();
+        let sifr_generated_start = 0usize;
+        let sifr_generated_stop = sifr_generated_len;
+        let mut sifr_generated_i = sifr_generated_start;
+        let mut sifr_generated_result = None;
+        while sifr_generated_i < sifr_generated_stop && sifr_generated_result.is_none() {
+            if let Some(sifr_generated_x) = names.get(sifr_generated_i)
+                && sifr_generated_x.eq(&"bob".to_string())
+            {
+                sifr_generated_result = Some(SifrInt::from(sifr_generated_i));
             }
+            sifr_generated_i += 1;
         }
-        __i += 1;
-    }
-    __result
-};
+        sifr_generated_result
+    };
     if let Some(pos) = pos.clone() {
-        println!("Found \'bob\' at index {}", pos);
+        println!("Found 'bob' at index {pos}");
     } else {
         println!("\'bob\' not found");
     }
     let missing: Option<SifrInt> = {
-    let __len = names.len();
-    let __start = 0usize;
-    let __stop = __len;
-    let mut __i = __start;
-    let mut __result = None;
-    while (__i < __stop) && (__result == None) {
-        if let Some(__x) = names.get(__i) {
-            if __x.eq(&"dave".to_string()) {
-                __result = Some(SifrInt::from(__i));
+        let sifr_generated_len = names.len();
+        let sifr_generated_start = 0usize;
+        let sifr_generated_stop = sifr_generated_len;
+        let mut sifr_generated_i = sifr_generated_start;
+        let mut sifr_generated_result = None;
+        while sifr_generated_i < sifr_generated_stop && sifr_generated_result.is_none() {
+            if let Some(sifr_generated_x) = names.get(sifr_generated_i)
+                && sifr_generated_x.eq(&"dave".to_string())
+            {
+                sifr_generated_result = Some(SifrInt::from(sifr_generated_i));
             }
+            sifr_generated_i += 1;
         }
-        __i += 1;
-    }
-    __result
-};
+        sifr_generated_result
+    };
     if let Some(missing) = missing.clone() {
-        println!("Found \'dave\' at index {}", missing);
+        println!("Found 'dave' at index {missing}");
     } else {
         println!("\'dave\' not found (safe: returned None)");
     }
-    let nums: Vec<SifrInt> = vec![SifrInt::from_i64(5), SifrInt::from_i64(3), SifrInt::from_i64(8), SifrInt::from_i64(1), SifrInt::from_i64(9)];
-    let lo: Option<SifrInt> = (nums).iter().cloned().min();
-    let hi: Option<SifrInt> = (nums).iter().cloned().max();
-    if let Some(lo) = lo.clone() {
-        if let Some(hi) = hi.clone() {
-            println!("min={}, max={}", lo, hi);
-        }
+    let nums: Vec<SifrInt> = vec![
+        SifrInt::from_i64(5),
+        SifrInt::from_i64(3),
+        SifrInt::from_i64(8),
+        SifrInt::from_i64(1),
+        SifrInt::from_i64(9),
+    ];
+    let lo: Option<SifrInt> = nums.iter().cloned().min();
+    let hi: Option<SifrInt> = nums.iter().cloned().max();
+    if let Some(lo) = lo.clone()
+        && let Some(hi) = hi.clone()
+    {
+        println!("min={lo}, max={hi}");
     }
-    let empty: Vec<SifrInt> = vec![];
-    let empty_min: Option<SifrInt> = (empty).iter().cloned().min();
-    let empty_max: Option<SifrInt> = (empty).iter().cloned().max();
-    if let Some(empty_min) = empty_min.clone() {
+    let empty: Vec<SifrInt> = Vec::new();
+    let empty_min: Option<SifrInt> = empty.iter().cloned().min();
+    let empty_max_value_4e7fb6460174a48b: Option<SifrInt> = empty.iter().cloned().max();
+    if let Some(_empty_min) = empty_min.clone() {
         println!("ERROR: min on empty should be None");
     } else {
         println!("min([]) = None (safe!)");
     }
-    if let Some(empty_max) = empty_max.clone() {
+    if let Some(_empty_max) = empty_max_value_4e7fb6460174a48b.clone() {
         println!("ERROR: max on empty should be None");
     } else {
         println!("max([]) = None (safe!)");
@@ -84,23 +107,29 @@ fn main() {
     let floats: Vec<f64> = vec![3.14_f64, 1.0_f64, 2.71_f64, 0.5_f64];
     println!("sorted floats:");
     println!("{:?}", {
-    let mut __sifr_sorted_v = (floats).iter().copied().collect::<Vec<_>>();
-    __sifr_sorted_v.sort_by(f64::total_cmp);
-    __sifr_sorted_v
-});
+        let mut sifr_generated_sorted_v = floats.iter().copied().collect::<Vec<_>>();
+        sifr_generated_sorted_v.sort_by(f64::total_cmp);
+        sifr_generated_sorted_v
+    });
     let mut stack: Vec<SifrInt> = vec![SifrInt::from_i64(42)];
     let val1: Option<SifrInt> = stack.pop();
-    let val2: Option<SifrInt> = stack.pop();
+    let val2_value_4373ff00edde01ca: Option<SifrInt> = stack.pop();
     if let Some(val1) = val1.clone() {
-        println!("popped: {}", val1);
+        println!("popped: {val1}");
     }
-    if let Some(val2) = val2.clone() {
+    if let Some(_val2) = val2_value_4373ff00edde01ca.clone() {
         println!("ERROR: pop on empty should be None");
     } else {
         println!("pop on empty = None (safe!)");
     }
-    println!("min(3, 7) = {}", ::std::cmp::min(SifrInt::from_i64(3), SifrInt::from_i64(7)));
-    println!("max(3, 7) = {}", ::std::cmp::max(SifrInt::from_i64(3), SifrInt::from_i64(7)));
+    println!(
+        "min(3, 7) = {}",
+        ::std::cmp::min(SifrInt::from_i64(3), SifrInt::from_i64(7))
+    );
+    println!(
+        "max(3, 7) = {}",
+        ::std::cmp::max(SifrInt::from_i64(3), SifrInt::from_i64(7))
+    );
     println!();
     println!("All collection operations are panic-free!");
     println!("  - list.remove(missing) -> no-op");

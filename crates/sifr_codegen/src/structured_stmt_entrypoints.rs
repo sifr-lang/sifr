@@ -20,10 +20,22 @@ impl RustEmitter {
         }
         match self.try_lower_structured_stmt_with_following(stmt, following_stmts) {
             Ok(true) => {
-                for refresh in
-                    self.refresh_checked_place_witnesses_after_emitted_stmt(stmt, following_stmts)
+                match self.refresh_checked_place_witnesses_after_emitted_stmt(stmt, following_stmts)
                 {
-                    self.push_captured_stmt(&refresh);
+                    Ok(refreshes) => {
+                        for refresh in refreshes {
+                            self.push_captured_stmt(&refresh);
+                        }
+                    }
+                    Err(err) => {
+                        self.lowering_stats.stmt_lowering_errors += 1;
+                        self.push_captured_stmt(&RustStmt::Expr(RustExpr::MacroCall {
+                            name: "compile_error".to_string(),
+                            args: vec![RustExpr::Literal(RustLiteral::Str(format!(
+                                "checked-place refresh validation failed: {err}"
+                            )))],
+                        }));
+                    }
                 }
             }
             Ok(false) => {

@@ -101,7 +101,8 @@ mod tests {
 
     #[test]
     fn bare_stdlib_tail_matches_exact_public_module() {
-        let matched = is_bare_stdlib_tail("math").expect("math should match sifr.math");
+        let matched =
+            is_bare_stdlib_tail("math").unwrap_or_else(|| panic!("math should match sifr.math"));
 
         assert_eq!(matched.bare_module, "math");
         assert_eq!(matched.matched_tail, "math");
@@ -111,8 +112,8 @@ mod tests {
 
     #[test]
     fn bare_stdlib_tail_matches_root_fallback_for_missing_submodule() {
-        let matched =
-            is_bare_stdlib_tail("collections.abc").expect("collections root should match");
+        let matched = is_bare_stdlib_tail("collections.abc")
+            .unwrap_or_else(|| panic!("collections root should match"));
 
         assert_eq!(matched.bare_module, "collections.abc");
         assert_eq!(matched.matched_tail, "collections");
@@ -122,12 +123,14 @@ mod tests {
 
     #[test]
     fn bare_stdlib_tail_matches_reserved_text_i18n_cpython_roots() {
-        let codecs = is_bare_stdlib_tail("codecs").expect("codecs should be reserved");
-        let encodings_utf8 =
-            is_bare_stdlib_tail("encodings.utf_8").expect("encodings should be reserved");
-        let unicodedata =
-            is_bare_stdlib_tail("unicodedata").expect("unicodedata should be reserved");
-        let gettext = is_bare_stdlib_tail("gettext").expect("gettext should be reserved");
+        let codecs =
+            is_bare_stdlib_tail("codecs").unwrap_or_else(|| panic!("codecs should be reserved"));
+        let encodings_utf8 = is_bare_stdlib_tail("encodings.utf_8")
+            .unwrap_or_else(|| panic!("encodings should be reserved"));
+        let unicodedata = is_bare_stdlib_tail("unicodedata")
+            .unwrap_or_else(|| panic!("unicodedata should be reserved"));
+        let gettext =
+            is_bare_stdlib_tail("gettext").unwrap_or_else(|| panic!("gettext should be reserved"));
 
         assert_eq!(codecs.suggested_module, "sifr.encoding");
         assert_eq!(encodings_utf8.bare_module, "encodings.utf_8");
@@ -142,16 +145,22 @@ mod tests {
 
     #[test]
     fn bare_stdlib_tail_matches_reserved_concurrency_runtime_roots() {
-        let asyncio = is_bare_stdlib_tail("asyncio").expect("asyncio should be reserved");
-        let queue = is_bare_stdlib_tail("queue").expect("queue should be reserved");
-        let subprocess = is_bare_stdlib_tail("subprocess").expect("subprocess should be reserved");
-        let concurrent_futures =
-            is_bare_stdlib_tail("concurrent.futures").expect("concurrent should be reserved");
-        let multiprocessing =
-            is_bare_stdlib_tail("multiprocessing").expect("multiprocessing should be reserved");
-        let signal = is_bare_stdlib_tail("signal").expect("signal should be reserved");
-        let contextlib = is_bare_stdlib_tail("contextlib").expect("contextlib should be reserved");
-        let warnings = is_bare_stdlib_tail("warnings").expect("warnings should be reserved");
+        let asyncio =
+            is_bare_stdlib_tail("asyncio").unwrap_or_else(|| panic!("asyncio should be reserved"));
+        let queue =
+            is_bare_stdlib_tail("queue").unwrap_or_else(|| panic!("queue should be reserved"));
+        let subprocess = is_bare_stdlib_tail("subprocess")
+            .unwrap_or_else(|| panic!("subprocess should be reserved"));
+        let concurrent_futures = is_bare_stdlib_tail("concurrent.futures")
+            .unwrap_or_else(|| panic!("concurrent should be reserved"));
+        let multiprocessing = is_bare_stdlib_tail("multiprocessing")
+            .unwrap_or_else(|| panic!("multiprocessing should be reserved"));
+        let signal =
+            is_bare_stdlib_tail("signal").unwrap_or_else(|| panic!("signal should be reserved"));
+        let contextlib = is_bare_stdlib_tail("contextlib")
+            .unwrap_or_else(|| panic!("contextlib should be reserved"));
+        let warnings = is_bare_stdlib_tail("warnings")
+            .unwrap_or_else(|| panic!("warnings should be reserved"));
 
         assert_eq!(asyncio.suggested_module, "sifr.task");
         assert_eq!(queue.suggested_module, "sifr.sync");
@@ -166,14 +175,19 @@ mod tests {
 
     #[test]
     fn bare_stdlib_tail_matches_reserved_network_http_roots() {
-        let socket = is_bare_stdlib_tail("socket").expect("socket should be reserved");
-        let ssl = is_bare_stdlib_tail("ssl").expect("ssl should be reserved");
-        let select = is_bare_stdlib_tail("select").expect("select should be reserved");
-        let selectors = is_bare_stdlib_tail("selectors").expect("selectors should be reserved");
-        let urllib_parse = is_bare_stdlib_tail("urllib.parse").expect("urllib should be reserved");
-        let http_client = is_bare_stdlib_tail("http.client").expect("http should be reserved");
-        let socketserver =
-            is_bare_stdlib_tail("socketserver").expect("socketserver should be reserved");
+        let socket =
+            is_bare_stdlib_tail("socket").unwrap_or_else(|| panic!("socket should be reserved"));
+        let ssl = is_bare_stdlib_tail("ssl").unwrap_or_else(|| panic!("ssl should be reserved"));
+        let select =
+            is_bare_stdlib_tail("select").unwrap_or_else(|| panic!("select should be reserved"));
+        let selectors = is_bare_stdlib_tail("selectors")
+            .unwrap_or_else(|| panic!("selectors should be reserved"));
+        let urllib_parse = is_bare_stdlib_tail("urllib.parse")
+            .unwrap_or_else(|| panic!("urllib should be reserved"));
+        let http_client =
+            is_bare_stdlib_tail("http.client").unwrap_or_else(|| panic!("http should be reserved"));
+        let socketserver = is_bare_stdlib_tail("socketserver")
+            .unwrap_or_else(|| panic!("socketserver should be reserved"));
 
         assert_eq!(socket.suggested_module, "sifr.net");
         assert_eq!(ssl.suggested_module, "sifr.tls");

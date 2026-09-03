@@ -10,6 +10,7 @@ mod check_equality_capability_tests;
 mod collection_capabilities;
 pub mod infer;
 pub mod literal;
+mod receiver_mutation;
 mod safe_optional;
 #[cfg(test)]
 mod structural_record_tests;
@@ -36,6 +37,10 @@ pub use types::{
 pub mod narrow;
 pub use literal::{LiteralValue, widen as widen_literal};
 pub use narrow::{NarrowingCondition, narrow_type};
+pub use receiver_mutation::{
+    ReceiverFactDomain, ReceiverFactInvalidation, ReceiverMutationEffect, ReceiverMutationSummary,
+    receiver_mutation_summary,
+};
 pub use safe_optional::safe_optional_result;
 pub use substitution::{
     UnionStructureClassScope, substitute_type_vars, substitute_type_vars_with_class_scopes,

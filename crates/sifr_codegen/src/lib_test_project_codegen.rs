@@ -115,6 +115,7 @@ pub fn generate_rust_test_project_with_metadata(
             Some(&union_usage.ordinary_unions),
             Some(&union_usage.try_error_unions),
             Some(&structural_record_identities),
+            super::ProjectStructuralLayoutLocation::CrateRoot,
             Some(&structural_identity_expressions),
         );
         let imports = [

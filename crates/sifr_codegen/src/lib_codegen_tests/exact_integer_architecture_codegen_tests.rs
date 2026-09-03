@@ -26,7 +26,10 @@ def main():
 "#,
     );
 
-    assert!(rust.contains("fn __const_LIMIT() -> SifrInt"), "{rust}");
+    assert!(
+        rust.contains("fn __sifr_const_4c494d4954() -> SifrInt"),
+        "{rust}"
+    );
     assert!(rust.contains("value: SifrInt"), "{rust}");
     assert!(rust.contains("Vec<SifrInt>"), "{rust}");
     assert!(rust.contains("HashMap<String, SifrInt>"), "{rust}");

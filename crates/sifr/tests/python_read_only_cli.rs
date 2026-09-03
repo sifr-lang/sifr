@@ -1,4 +1,8 @@
 #![allow(clippy::expect_used)]
+#![expect(
+    clippy::print_stderr,
+    reason = "integration tests report explicit environmental skips"
+)]
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};

@@ -23,7 +23,7 @@ def longest_unique_window(text: str) -> int:
     res = 0
 
     for r in range(len(text)):
-        while text[r] in active:
+        while l < len(text) and text[r] in active:
             active.remove(text[l])
             l += 1
         active.add(text[r])

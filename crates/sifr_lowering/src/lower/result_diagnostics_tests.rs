@@ -74,6 +74,24 @@ fn non_error_raise_has_result_invalid_raise_primary_range() {
 }
 
 #[test]
+fn error_raise_requires_a_compatible_result_channel() {
+    for source in [
+        "def main() -> None:\n    raise ValueError(\"bad\")\n",
+        "def main() -> Result[None, IOError]:\n    raise ValueError(\"bad\")\n",
+    ] {
+        let errors = lower_source(source)
+            .expect_err("raise must agree with the enclosing Result error channel");
+        assert!(
+            errors.iter().any(|error| {
+                error.code == Some(DiagnosticCode::RESULT_INVALID_RAISE)
+                    && error.message.contains("Result")
+            }),
+            "expected an incompatible raise diagnostic, got {errors:?}"
+        );
+    }
+}
+
+#[test]
 fn unused_result_has_result_unused_value_primary_range() {
     let source = "\
 def fallible() -> Result[int, ValueError]:

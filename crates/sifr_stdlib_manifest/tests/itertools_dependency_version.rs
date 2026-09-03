@@ -1,4 +1,6 @@
-#![allow(clippy::expect_used)]
+mod support;
+
+use support::TestUnwrap as _;
 
 use itertools::structs::AllEqualValueError;
 use itertools::{Itertools, Position};
@@ -25,12 +27,12 @@ const TRANSITIVE_ITERTOOLS_VENDOR_CHECKSUM: &str =
 #[test]
 fn maintained_itertools_dependencies_use_the_latest_stable_policy() {
     let workspace: toml::Value =
-        toml::from_str(WORKSPACE_MANIFEST).expect("workspace manifest must parse");
+        toml::from_str(WORKSPACE_MANIFEST).test_unwrap("workspace manifest must parse");
     let dependency = workspace
         .get("workspace")
         .and_then(|workspace| workspace.get("dependencies"))
         .and_then(|dependencies| dependencies.get("itertools"))
-        .expect("workspace must declare Itertools");
+        .test_unwrap("workspace must declare Itertools");
     assert_eq!(
         dependency.get("version").and_then(toml::Value::as_str),
         Some(ITERTOOLS_VERSION)
@@ -43,11 +45,12 @@ fn maintained_itertools_dependencies_use_the_latest_stable_policy() {
     );
     assert_eq!(string_array(dependency, "features"), ["use_std"]);
 
-    let stdlib: toml::Value = toml::from_str(STDLIB_MANIFEST).expect("stdlib manifest must parse");
+    let stdlib: toml::Value =
+        toml::from_str(STDLIB_MANIFEST).test_unwrap("stdlib manifest must parse");
     let stdlib_dependency = stdlib
         .get("dev-dependencies")
         .and_then(|dependencies| dependencies.get("itertools"))
-        .expect("stdlib certification must inherit Itertools");
+        .test_unwrap("stdlib certification must inherit Itertools");
     assert_eq!(
         stdlib_dependency
             .get("workspace")
@@ -55,7 +58,7 @@ fn maintained_itertools_dependencies_use_the_latest_stable_policy() {
         Some(true)
     );
 
-    let ruff: toml::Value = toml::from_str(RUFF_MANIFEST).expect("Ruff manifest must parse");
+    let ruff: toml::Value = toml::from_str(RUFF_MANIFEST).test_unwrap("Ruff manifest must parse");
     assert_eq!(
         ruff.get("workspace")
             .and_then(|workspace| workspace.get("dependencies"))
@@ -82,7 +85,7 @@ fn itertools_0_15_apis_compile_with_the_canonical_iterator_contracts() {
 
     let stripped = (1..=5)
         .strip_prefix([1, 2])
-        .expect("matching prefix must be removed")
+        .test_unwrap("matching prefix must be removed")
         .collect_vec();
     assert_eq!(stripped, [3, 4, 5]);
     assert!((1..=5).strip_prefix([1, 9]).is_err());
@@ -126,7 +129,7 @@ fn itertools_0_15_apis_compile_with_the_canonical_iterator_contracts() {
 
 #[test]
 fn first_party_lock_edges_use_itertools_0_15() {
-    let lock: toml::Value = toml::from_str(WORKSPACE_LOCK).expect("Cargo.lock must parse");
+    let lock: toml::Value = toml::from_str(WORKSPACE_LOCK).test_unwrap("Cargo.lock must parse");
     let packages = lock_packages(&lock);
     let current = packages
         .iter()
@@ -134,7 +137,7 @@ fn first_party_lock_edges_use_itertools_0_15() {
             package_name(package) == Some("itertools")
                 && package_version(package) == Some(ITERTOOLS_VERSION)
         })
-        .expect("Cargo.lock must contain Itertools 0.15");
+        .test_unwrap("Cargo.lock must contain Itertools 0.15");
     assert_eq!(
         current.get("checksum").and_then(toml::Value::as_str),
         Some(ITERTOOLS_PACKAGE_HASH)
@@ -155,7 +158,7 @@ fn first_party_lock_edges_use_itertools_0_15() {
                 .filter(|dependency| dependency.starts_with("itertools"))
                 .map(move |dependency| {
                     (
-                        package_name(package).expect("first-party package must have a name"),
+                        package_name(package).test_unwrap("first-party package must have a name"),
                         dependency,
                     )
                 })
@@ -182,12 +185,12 @@ fn vendor_contains_current_and_external_transitive_itertools_releases() {
         TRANSITIVE_ITERTOOLS_PACKAGE_HASH,
     );
 
-    let lock: toml::Value = toml::from_str(WORKSPACE_LOCK).expect("Cargo.lock must parse");
+    let lock: toml::Value = toml::from_str(WORKSPACE_LOCK).test_unwrap("Cargo.lock must parse");
     let packages = lock_packages(&lock);
     let datafusion = packages
         .iter()
         .find(|package| package_name(package) == Some("datafusion"))
-        .expect("Cargo.lock must contain DataFusion");
+        .test_unwrap("Cargo.lock must contain DataFusion");
     let dependencies = datafusion
         .get("dependencies")
         .and_then(toml::Value::as_array)
@@ -205,7 +208,7 @@ fn vendor_contains_current_and_external_transitive_itertools_releases() {
     let object_store = packages
         .iter()
         .find(|package| package_name(package) == Some("object_store"))
-        .expect("Cargo.lock must contain Object Store");
+        .test_unwrap("Cargo.lock must contain Object Store");
     assert!(
         object_store
             .get("dependencies")
@@ -225,7 +228,7 @@ fn assert_vendor_release(
     expected_hash: &str,
 ) {
     let manifest: toml::Value =
-        toml::from_str(manifest_source).expect("vendor manifest must parse");
+        toml::from_str(manifest_source).test_unwrap("vendor manifest must parse");
     assert_eq!(
         manifest
             .get("package")
@@ -242,7 +245,7 @@ fn assert_vendor_release(
     );
 
     let checksum: serde_json::Value =
-        serde_json::from_str(checksum_source).expect("vendor checksum must parse");
+        serde_json::from_str(checksum_source).test_unwrap("vendor checksum must parse");
     assert_eq!(
         checksum.get("package").and_then(serde_json::Value::as_str),
         Some(expected_hash)
@@ -262,7 +265,7 @@ fn string_array<'a>(value: &'a toml::Value, key: &str) -> Vec<&'a str> {
 fn lock_packages(lock: &toml::Value) -> &[toml::Value] {
     lock.get("package")
         .and_then(toml::Value::as_array)
-        .expect("Cargo.lock packages must be an array")
+        .test_unwrap("Cargo.lock packages must be an array")
 }
 
 fn package_name(package: &toml::Value) -> Option<&str> {

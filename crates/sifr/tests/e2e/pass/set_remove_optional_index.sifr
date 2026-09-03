@@ -1,0 +1,8 @@
+def remaining_after_optional_remove(text: str, index: int) -> int:
+    active: set[str] = {"a", "b", "c"}
+    active.remove(text[index])
+    return len(active)
+
+def main():
+    assert remaining_after_optional_remove("abc", 1) == 2
+    assert remaining_after_optional_remove("abc", 8) == 3

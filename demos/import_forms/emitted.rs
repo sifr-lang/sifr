@@ -1,8 +1,6 @@
 // src/main.rs
-mod helper;
-
+pub mod helper;
 use crate::helper::value;
-
 fn main() {
     println!("import_forms import-form semantics demo:");
     println!("{}", value());
@@ -10,6 +8,7 @@ fn main() {
 
 // src/helper.rs
 pub use ::sifr_runtime::SifrInt;
-pub fn value() -> SifrInt {
+#[must_use]
+pub const fn value() -> SifrInt {
     SifrInt::from_i64(17)
 }

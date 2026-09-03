@@ -28,7 +28,7 @@ pub(crate) fn compose_test_runner_lib(
             test_lib.push_str(SUPPORT_MAIN_RUST_FILE);
             test_lib.push_str("\"]\n");
         }
-        test_lib.push_str("mod ");
+        test_lib.push_str("pub mod ");
         test_lib.push_str(&module_name);
         test_lib.push_str(";\n");
     }

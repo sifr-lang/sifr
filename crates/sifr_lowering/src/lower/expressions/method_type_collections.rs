@@ -314,10 +314,9 @@ pub(super) fn resolve_dict_method_type(
     {
         return None;
     }
-    let requires_reusable_values = matches!(
-        method,
-        "values" | "items" | "update" | "copy" | "get" | "setdefault"
-    );
+    // `setdefault` has a dedicated ownership contract immediately below. Do
+    // not duplicate it in the generic reusable-value path.
+    let requires_reusable_values = matches!(method, "values" | "items" | "update" | "copy" | "get");
     if method == "setdefault" && val_ty.contains_affine_resource() {
         ctx.error_with_code_at(
             DiagnosticCode::PYZC_INVALID_DECLARATION,
@@ -648,6 +647,25 @@ pub(super) fn resolve_set_method_type(
                     args.len(),
                     arg_ranges,
                     method_range,
+                );
+                return None;
+            }
+            let argument_ty = args[0].ty();
+            let compatible_optional_member = argument_ty
+                .optional_member_type()
+                .is_some_and(|member| member.is_assignable_to(elem_ty));
+            if !matches!(elem_ty.resolve_alias(), Type::Any | Type::Unknown)
+                && !argument_ty.is_assignable_to(elem_ty)
+                && !compatible_optional_member
+            {
+                ctx.error_with_code_at(
+                    DiagnosticCode::TYPE_CONTAINER_ELEMENT_CONFLICT,
+                    format!(
+                        "set element type conflict: expected '{}', got '{}'",
+                        elem_ty.display_name(),
+                        argument_ty.display_name()
+                    ),
+                    arg_ranges[0],
                 );
                 return None;
             }

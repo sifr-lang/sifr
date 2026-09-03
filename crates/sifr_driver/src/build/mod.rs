@@ -17,6 +17,7 @@ mod python_interop;
 mod python_interop_shared_target_tests;
 mod python_runtime;
 mod report;
+mod rust_formatter;
 mod rust_interop;
 #[cfg(test)]
 mod rust_interop_advanced_data_contract_tests;
@@ -73,7 +74,7 @@ pub use api::{
     build, build_cached_package_project, build_cached_project, build_cached_single_file,
     build_package_project_report, build_project, build_project_report, build_single_file_report,
     check_package_project, check_package_python_interop, check_project, check_single_file,
-    emit_project,
+    emit_project, materialize_package_project, materialize_project, materialize_single_file,
 };
 #[doc(hidden)]
 pub use cargo_invocation_trace::{CargoInvocation, capture_cargo_invocations};
@@ -94,9 +95,10 @@ pub use python_interop::{
 pub use python_runtime::PackagePythonRuntime;
 pub use report::{
     BuildCompilationMode, BuildReport, BuildReportInput, BuildStageReport, BuildSysrootReport,
-    PythonDeclarationCheck, PythonEnvironmentCheck, PythonInteropCheckReport, PythonTargetCheck,
-    PythonTargetCheckStatus,
+    MaterializedRustProjectReport, PythonDeclarationCheck, PythonEnvironmentCheck,
+    PythonInteropCheckReport, PythonTargetCheck, PythonTargetCheckStatus,
 };
+pub(crate) use rust_formatter::format_generated_rust;
 pub use sql_profiles::{PreparedSqlProfiles, load_sql_editor_profiles, prepare_sql_profiles};
 pub use sql_query_signatures::{QUERY_SIGNATURE_ARTIFACT_NAME, emit_query_signature_artifact};
 
@@ -107,7 +109,8 @@ pub(crate) use entrypoint::{
     RootedEntrypoint, build_cached_package_project_binary, build_cached_project_binary,
     build_cached_single_file_binary, build_rooted_entrypoint_binary_with_report,
     check_single_file_entrypoint, compile_single_file_entrypoint_with_metadata,
-    compile_single_file_frontend, emit_project_entrypoint, resolve_package_project_entrypoint_plan,
+    compile_single_file_frontend, emit_project_entrypoint,
+    materialize_rooted_entrypoint_rust_project, resolve_package_project_entrypoint_plan,
     resolve_project_entrypoint_plan,
 };
 pub(crate) use workspace::{

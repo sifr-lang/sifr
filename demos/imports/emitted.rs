@@ -1,10 +1,7 @@
 // src/main.rs
-mod models;
-
-use crate::models::User;
-
+pub mod models;
 use crate::models::Product;
-
+use crate::models::User;
 fn main() {
     let user: User = User::new("Alice".to_string(), "alice@example.com".to_string());
     println!("{}", user.display());
@@ -20,16 +17,18 @@ pub struct User {
     pub email: String,
 }
 impl User {
-    pub fn new(name: String, email: String) -> Self {
-        let __sifr_field_init_0: String = name;
-        let __sifr_field_init_1: String = email;
+    #[must_use]
+    pub const fn new(name: String, email: String) -> Self {
+        let sifr_generated_field_value_c4bcadba8e631b86_6e616d65: String = name;
+        let sifr_generated_field_value_123467b419acbc07_656d61696c: String = email;
         Self {
-            name: __sifr_field_init_0,
-            email: __sifr_field_init_1,
+            name: sifr_generated_field_value_c4bcadba8e631b86_6e616d65,
+            email: sifr_generated_field_value_123467b419acbc07_656d61696c,
         }
     }
 }
 impl User {
+    #[must_use]
     pub fn display(&self) -> String {
         format!("{} <{}>", self.name.clone(), self.email.clone())
     }
@@ -45,16 +44,18 @@ pub struct Product {
     pub price: f64,
 }
 impl Product {
-    pub fn new(name: String, price: f64) -> Self {
-        let __sifr_field_init_0: String = name;
-        let __sifr_field_init_1: f64 = price;
+    #[must_use]
+    pub const fn new(name: String, price: f64) -> Self {
+        let sifr_generated_field_value_c4bcadba8e631b86_6e616d65: String = name;
+        let sifr_generated_field_value_2f1887248c8bc0ea_7072696365: f64 = price;
         Self {
-            name: __sifr_field_init_0,
-            price: __sifr_field_init_1,
+            name: sifr_generated_field_value_c4bcadba8e631b86_6e616d65,
+            price: sifr_generated_field_value_2f1887248c8bc0ea_7072696365,
         }
     }
 }
 impl Product {
+    #[must_use]
     pub fn label(&self) -> String {
         format!("{}: ${}", self.name.clone(), self.price)
     }

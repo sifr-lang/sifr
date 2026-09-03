@@ -1,3 +1,7 @@
+mod support;
+
+use support::TestUnwrap as _;
+
 const WORKSPACE_MANIFEST: &str = include_str!("../../../Cargo.toml");
 const CODEGEN_MANIFEST: &str = include_str!("../../sifr_codegen/Cargo.toml");
 const WORKSPACE_LOCK: &str = include_str!("../../../Cargo.lock");
@@ -84,12 +88,12 @@ const VENDORED_RELEASES: &[(&str, &str, &str, &str)] = &[
 #[test]
 fn direct_syntax_dependencies_use_the_latest_stable_unit() {
     let workspace: toml::Value =
-        toml::from_str(WORKSPACE_MANIFEST).expect("workspace manifest must parse");
+        toml::from_str(WORKSPACE_MANIFEST).test_unwrap("workspace manifest must parse");
     let syn = workspace
         .get("workspace")
         .and_then(|workspace| workspace.get("dependencies"))
         .and_then(|dependencies| dependencies.get("syn"))
-        .expect("workspace must declare Syn");
+        .test_unwrap("workspace must declare Syn");
     assert_eq!(
         syn.get("version").and_then(toml::Value::as_str),
         Some("3.0.4")
@@ -109,11 +113,11 @@ fn direct_syntax_dependencies_use_the_latest_stable_unit() {
     );
 
     let codegen: toml::Value =
-        toml::from_str(CODEGEN_MANIFEST).expect("codegen manifest must parse");
+        toml::from_str(CODEGEN_MANIFEST).test_unwrap("codegen manifest must parse");
     let dependencies = codegen
         .get("dependencies")
-        .expect("codegen must have dependencies");
-    let codegen_syn = dependencies.get("syn").expect("codegen must use Syn");
+        .test_unwrap("codegen must have dependencies");
+    let codegen_syn = dependencies.get("syn").test_unwrap("codegen must use Syn");
     assert_eq!(
         codegen_syn.get("workspace").and_then(toml::Value::as_bool),
         Some(true)
@@ -166,7 +170,7 @@ fn vendor_contains_each_required_syntax_release_with_registry_hashes() {
     let packages = lock_packages(&lock);
     for (name, version, manifest_source, checksum_source) in VENDORED_RELEASES {
         let manifest: toml::Value =
-            toml::from_str(manifest_source).expect("vendored manifest must parse");
+            toml::from_str(manifest_source).test_unwrap("vendored manifest must parse");
         assert_eq!(
             manifest
                 .get("package")
@@ -189,9 +193,9 @@ fn vendor_contains_each_required_syntax_release_with_registry_hashes() {
             })
             .and_then(|package| package.get("checksum"))
             .and_then(toml::Value::as_str)
-            .expect("workspace lock must contain the vendored release");
+            .test_unwrap("workspace lock must contain the vendored release");
         let checksum: serde_json::Value =
-            serde_json::from_str(checksum_source).expect("vendor checksum must parse");
+            serde_json::from_str(checksum_source).test_unwrap("vendor checksum must parse");
         assert_eq!(
             checksum.get("package").and_then(serde_json::Value::as_str),
             Some(lock_checksum)
@@ -211,13 +215,13 @@ fn string_array(value: &toml::Value, key: &str) -> Vec<String> {
 }
 
 fn parse_lock(source: &str) -> toml::Value {
-    toml::from_str(source).expect("Cargo.lock must parse")
+    toml::from_str(source).test_unwrap("Cargo.lock must parse")
 }
 
 fn lock_packages(lock: &toml::Value) -> &[toml::Value] {
     lock.get("package")
         .and_then(toml::Value::as_array)
-        .expect("Cargo.lock packages must be an array")
+        .test_unwrap("Cargo.lock packages must be an array")
 }
 
 fn package_name(package: &toml::Value) -> Option<&str> {
@@ -232,7 +236,7 @@ fn assert_package_edges(packages: &[toml::Value], name: &str, expected: &[&str])
     let package = packages
         .iter()
         .find(|package| package_name(package) == Some(name))
-        .expect("first-party package must exist in Cargo.lock");
+        .test_unwrap("first-party package must exist in Cargo.lock");
     let dependencies = package
         .get("dependencies")
         .and_then(toml::Value::as_array)

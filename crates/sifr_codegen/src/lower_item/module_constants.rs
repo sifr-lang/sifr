@@ -37,6 +37,20 @@ pub(super) fn is_exact_module_int_type(ty: &Type) -> bool {
     matches!(resolve_alias_type(ty), Type::Int | Type::LiteralInt(_))
 }
 
+/// Return an injective, warning-clean helper name for a source constant.
+/// Encoding every UTF-8 byte avoids case-folding collisions (`BASE`/`base`)
+/// and keeps compiler-owned names in a lowercase namespace.
+pub(crate) fn module_constant_helper_name(name: &str) -> String {
+    const HEX: &[u8; 16] = b"0123456789abcdef";
+    let mut encoded = String::with_capacity("__sifr_const_".len() + name.len() * 2);
+    encoded.push_str("__sifr_const_");
+    for byte in name.bytes() {
+        encoded.push(char::from(HEX[usize::from(byte >> 4)]));
+        encoded.push(char::from(HEX[usize::from(byte & 0x0f)]));
+    }
+    encoded
+}
+
 pub fn try_lower_simple_module_constant_item_result(
     name: &str,
     ty: &Type,
@@ -54,7 +68,7 @@ pub(crate) fn module_constant_rust_reference(
     Ok(
         match try_lower_simple_module_constant_item_result(name, ty, value)? {
             Some((_, rust_reference)) => rust_reference,
-            None => format!("__const_{name}()"),
+            None => format!("{}()", module_constant_helper_name(name)),
         },
     )
 }
@@ -141,7 +155,7 @@ pub(super) fn try_lower_simple_module_constant_item_result_impl(
         let Some(lowered_value) = try_lower_leaf_or_name_expr_result(value)? else {
             return Ok(None);
         };
-        let rust_name = format!("__const_{name}");
+        let rust_name = module_constant_helper_name(name);
         return Ok(Some((
             RustItem::Fn {
                 name: rust_name.clone(),
@@ -171,7 +185,7 @@ pub(super) fn try_lower_simple_module_constant_item_result_impl(
         } else {
             return Ok(None);
         };
-        let rust_name = format!("__const_{name}");
+        let rust_name = module_constant_helper_name(name);
         return Ok(Some((
             RustItem::Fn {
                 name: rust_name.clone(),
@@ -189,7 +203,7 @@ pub(super) fn try_lower_simple_module_constant_item_result_impl(
     let Some(lowered_value) = try_lower_leaf_or_name_expr_result(value)? else {
         return Ok(None);
     };
-    let rust_name = format!("__const_{name}");
+    let rust_name = module_constant_helper_name(name);
     Ok(Some((
         RustItem::Fn {
             name: rust_name.clone(),
@@ -253,7 +267,7 @@ pub(super) fn lower_large_module_int_const_item(
         .into_iter()
         .map(|byte| RustExpr::Literal(RustLiteral::Int(i64::from(byte))))
         .collect();
-    let rust_name = format!("__const_{name}");
+    let rust_name = module_constant_helper_name(name);
     Ok((
         RustItem::Fn {
             name: rust_name.clone(),
@@ -316,7 +330,7 @@ pub fn try_lower_simple_module_string_const_item(
     if !is_simple_module_string_const_type(ty) {
         return None;
     }
-    let rust_name = format!("__const_{name}");
+    let rust_name = module_constant_helper_name(name);
     let lowered_value = if let Some(lowered) = try_lower_leaf_expr(value) {
         lowered
     } else if let HirExpr::Name { name, .. } = value {
@@ -361,7 +375,7 @@ pub fn try_lower_simple_module_none_const_item(
     } else {
         return None;
     };
-    let rust_name = format!("__const_{name}");
+    let rust_name = module_constant_helper_name(name);
     Some((
         RustItem::Fn {
             name: rust_name.clone(),
@@ -389,7 +403,7 @@ pub fn try_lower_simple_module_helper_const_item(
     {
         return None;
     }
-    let rust_name = format!("__const_{name}");
+    let rust_name = module_constant_helper_name(name);
     let lowered_value = if let Some(lowered) = try_lower_leaf_expr(value) {
         lowered
     } else if let HirExpr::Name { name, .. } = value {

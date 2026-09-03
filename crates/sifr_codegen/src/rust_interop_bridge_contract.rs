@@ -114,6 +114,7 @@ pub struct RustGeneratedBridgeType {
     pub name: String,
     pub rust_type_path: String,
     pub kind: RustGeneratedBridgeTypeKind,
+    pub supports_eq: bool,
     pub fields: Vec<RustGeneratedBridgeField>,
     pub variants: Vec<RustGeneratedBridgeVariant>,
 }

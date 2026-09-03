@@ -14,10 +14,10 @@ fn range_for_after(source: &str, after: &str, needle: &str) -> TextRange {
     let relative_start = source[after_start..]
         .find(needle)
         .expect("needle should exist after anchor");
-    let start = (after_start + relative_start) as u32;
+    let start = after_start + relative_start;
     TextRange::new(
-        TextSize::new(start),
-        TextSize::new(start + needle.len() as u32),
+        TextSize::try_from(start).expect("test source offset fits in TextSize"),
+        TextSize::try_from(start + needle.len()).expect("test source offset fits in TextSize"),
     )
 }
 
@@ -62,6 +62,40 @@ fn test_forward_direct_call_to_nested_function_type_checks() {
     assert!(
         result.is_ok(),
         "forward direct calls should see the nested helper symbol during lowering"
+    );
+}
+
+#[test]
+fn nested_generic_function_declaration_is_rejected_explicitly() {
+    let source = "def outer() -> None:\n    def identity[T](value: T) -> T:\n        return value\n    identity(1)\n";
+    let errors =
+        lower_source(source).expect_err("nested generics are not a supported lowering form");
+
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::FLOW_UNSUPPORTED_STATEMENT_FORM)
+            && error
+                .message
+                .contains("nested generic function declarations")
+            && error.primary_range == Some(range_for_after(source, "def outer", "identity"))
+    }));
+}
+
+#[test]
+fn nested_sync_generator_is_rejected_before_codegen() {
+    let source =
+        "def outer() -> None:\n    def values() -> Iterator[int]:\n        yield 1\n    values()\n";
+    let errors =
+        lower_source(source).expect_err("nested sync generators require unsupported lazy lowering");
+
+    assert!(
+        errors.iter().any(|error| {
+            error.code == Some(DiagnosticCode::TYPE_MISMATCH)
+                && error
+                    .message
+                    .contains("nested generators require dedicated lazy materialization")
+                && error.primary_range == Some(range_for_after(source, "def values", "yield 1"))
+        }),
+        "expected the nested-generator diagnostic at the first yield, got {errors:?}"
     );
 }
 

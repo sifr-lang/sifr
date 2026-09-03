@@ -48,9 +48,13 @@ pub(in crate::lower) fn import_constant(
         .constant_integer_values
         .get(module)
         .and_then(|values| values.get(source_name))
+        && let Some(binding_id) = ctx
+            .scope
+            .lookup(local_name)
+            .map(|binding| binding.binding_id)
     {
         ctx.const_integer_values
-            .insert(local_name.to_string(), value.clone());
+            .record(local_name.to_string(), binding_id, value.clone());
     }
     true
 }
@@ -509,8 +513,11 @@ pub(in crate::lower) fn resolve_imports_early(
                             .constant_integer_values
                             .get(&module_key)
                             .and_then(|module_values| module_values.get(name))
+                            && let Some(binding_id) =
+                                ctx.scope.lookup(&local).map(|binding| binding.binding_id)
                         {
-                            ctx.const_integer_values.insert(local, value.clone());
+                            ctx.const_integer_values
+                                .record(local, binding_id, value.clone());
                         }
                     }
                 }

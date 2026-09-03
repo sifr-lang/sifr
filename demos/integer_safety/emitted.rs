@@ -1,13 +1,15 @@
 // src/main.rs
 use ::sifr_runtime::SifrInt;
-
 fn factorial(n: SifrInt) -> SifrInt {
     if &n <= &SifrInt::from_i64(1) {
         return SifrInt::from_i64(1);
     }
     &n * &factorial(&n - &SifrInt::from_i64(1))
 }
-
+#[expect(
+    clippy::many_single_char_names,
+    reason = "generated Rust preserves this exact typed Sifr source contract"
+)]
 fn fibonacci(n: SifrInt) -> SifrInt {
     if &n <= &SifrInt::from_i64(1) {
         return n.clone();
@@ -23,13 +25,12 @@ fn fibonacci(n: SifrInt) -> SifrInt {
     }
     b.clone()
 }
-
 fn main() {
     println!("=== Basic exact int ===");
     let x: SifrInt = SifrInt::from_i64(42);
     let y: SifrInt = SifrInt::from_i64(100);
-    println!("{}", x);
-    println!("{}", y);
+    println!("{x}");
+    println!("{y}");
     println!("=== Arithmetic ===");
     println!("{}", &x + &y);
     println!("{}", &y - &x);
@@ -37,16 +38,16 @@ fn main() {
     println!("{}", SifrInt::from_i64(10).pow_known_valid(9_u32));
     println!("=== Exact integer constants ===");
     let exact_value: SifrInt = SifrInt::from_i64(2).pow_known_valid(30_u32);
-    println!("{}", exact_value);
+    println!("{exact_value}");
     println!("=== Comparison ===");
     let a: SifrInt = SifrInt::from_i64(100);
     let b: SifrInt = SifrInt::from_i64(200);
-    println!("{}", (&a < &b));
-    println!("{}", (&a == &SifrInt::from_i64(100)));
-    println!("{}", (&b > &a));
+    println!("{}", &a < &b);
+    println!("{}", &a == &SifrInt::from_i64(100));
+    println!("{}", &b > &a);
     println!("=== Fixed-width checks ===");
     let byte_value: u8 = 255u8;
-    println!("{}", byte_value);
+    println!("{byte_value}");
     let widened: SifrInt = SifrInt::from(byte_value);
     println!("{}", &widened + &SifrInt::from_i64(1));
     println!("=== Factorial ===");

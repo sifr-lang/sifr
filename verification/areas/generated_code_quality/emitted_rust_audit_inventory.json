@@ -284,17 +284,19 @@
       "severity": "blocking",
       "owner_item": 8,
       "mechanism": "Generated output includes unreachable statements after terminators, needless returns, identity maps, redundant closures, constant branches, and repeated formatting scaffolds.",
-      "evidence": ["demos/**/emitted.rs", "crates/sifr_codegen/src/ir_optimize", "crates/sifr_codegen/src/render"],
-      "semantic_anchor": {"kind": "text", "revision": "current", "path": "crates/sifr_codegen/src/render/render_helpers.rs", "contains": "RustLiteral::Bool(false)"},
+      "resolution": "Item 8 routes typed Rust IR through canonical control-flow and dead-binding passes, then parses the fully assembled file as a syn syntax tree for fixed-point demand, syntax, identifier, and API cleanup before final rendering. Focused structural and generated-shape regressions cover dead tails, identity transforms, constant branches, formatting scaffolds, and liveness-sensitive preservation.",
+      "evidence": ["crates/sifr_codegen/src/ir_optimize/canonical_control_flow.rs", "crates/sifr_codegen/src/ir_optimize/dead_bindings.rs", "crates/sifr_codegen/src/generated_rust_canonicalizer.rs", "crates/sifr_codegen/src/generated_rust_canonicalizer_tests.rs", "crates/sifr_codegen/src/generated_rust_canonicalizer_item8_tests.rs"],
+      "semantic_anchor": {"kind": "text", "revision": "current", "path": "crates/sifr_codegen/src/generated_rust_canonicalizer.rs", "contains": "canonicalize_syntax_to_fixed_point"},
       "sources": ["internal", "external"]
     },
     {
       "id": "ERQ-024",
-      "title": "Legacy generated main.rs snapshots are stale or mislabeled",
+      "title": "Baseline legacy generated main.rs snapshots were stale or mislabeled",
       "disposition": "confirmed",
       "severity": "blocking",
       "owner_item": 8,
-      "mechanism": "Fifteen demo main.rs files coexist with canonical emitted.rs companions; at least two contain data-dependent unwrap or unrelated pasted output and are not governed by freshness checks.",
+      "mechanism": "At the audit baseline, fifteen demo main.rs files coexisted with canonical emitted.rs companions; at least two contained data-dependent unwrap or unrelated pasted output and were not governed by freshness checks.",
+      "resolution": "Item 1 removed all fifteen legacy main.rs files. Item 8 retains this baseline finding for provenance and confirms that the current authoritative producer owns only emitted.rs companions.",
       "evidence": ["demos/**/main.rs", "demos/decorators/main.rs"],
       "semantic_anchor": {"kind": "metric", "key": "demo_legacy_main_rs_files"},
       "sources": ["internal", "external"]
@@ -305,11 +307,12 @@
       "disposition": "rejected",
       "severity": "informational",
       "owner_item": null,
-      "mechanism": "The external report contradicted the 265 checked-in demos/**/emitted.rs companions.",
+      "mechanism": "The external report contradicted the 265 checked-in demos/**/emitted.rs companions present at the audit baseline.",
       "evidence": ["demos/**/emitted.rs"],
       "semantic_anchor": {"kind": "metric", "key": "demo_emitted_rs_files"},
       "sources": ["external"],
-      "rejection_reason": "Golden-like output exists; the real defects are incomplete freshness, coverage, formatting, and semantic governance, owned by Items 1 and 8."
+      "rejection_reason": "Golden-like output exists; the real defects were incomplete freshness, coverage, formatting, and semantic governance, owned by Items 1 and 8.",
+      "resolution": "The current surface intentionally contains 262 authoritative emitted.rs companions. Test-project idiomatic.rs references without a single-file emitted.rs producer remain explicitly non-authoritative, and the stale protocol_bounds idiomatic.rs reference was retired by Item 8."
     },
     {
       "id": "ERQ-026",

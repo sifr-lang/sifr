@@ -335,7 +335,10 @@ fn snapshot_handles_are_internal_and_reject_wrong_snapshot_resolution() {
     )
     .expect("document update should advance snapshot identity");
     let next_snapshot = host.snapshot();
-    assert!(next_snapshot.workspace_snapshot_id() != snapshot.workspace_snapshot_id());
+    assert_ne!(
+        next_snapshot.workspace_snapshot_id(),
+        snapshot.workspace_snapshot_id()
+    );
     for stale_error in [
         next_snapshot.resolve_symbol_handle(&symbol_handle).err(),
         next_snapshot.resolve_type_handle(&type_handle).err(),

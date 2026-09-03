@@ -381,17 +381,6 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
         ["form"]
     ),
     active_entry!(
-        "SIFR-TYPE-0901",
-        "TYPE",
-        "Integer arithmetic may overflow at runtime.",
-        Severity::Warning,
-        "crates/sifr_driver/src/tests/single_file_frontend.rs::test_type_check_source_surfaces_arithmetic_overflow_as_structured_warning",
-        "integer {operation} may overflow at runtime",
-        "sifr_lowering::lower::arithmetic_warnings",
-        [arg!("operation")],
-        ["operation"]
-    ),
-    active_entry!(
         "SIFR-TYPE-0902",
         "TYPE",
         "Reveal the inferred static type of an expression.",

@@ -23,6 +23,10 @@ use std::io::{self, Write as _};
 use std::path::{Path, PathBuf};
 use std::process;
 
+mod materialized_project_command;
+
+use materialized_project_command::cmd_materialize_rust_project;
+
 pub(super) fn canonical_diagnostic_stream(
     errors: &[RenderedDiagnostic],
 ) -> Vec<RenderedDiagnostic> {
@@ -80,7 +84,11 @@ pub(super) fn cmd_build(
     lock_mode: sifr_package::CargoLockMode,
     quiet: bool,
     diagnostic_format: DiagnosticFormat,
+    materialize_only: bool,
 ) -> i32 {
+    if materialize_only {
+        return cmd_materialize_rust_project(file, output, lock_mode, quiet, diagnostic_format);
+    }
     let mut provider = DiskSourceProvider::new();
     match package_session_for_cwd(lock_mode, &mut provider) {
         Ok(session) if !session.manifest_less_mode => {

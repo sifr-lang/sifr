@@ -1,3 +1,5 @@
+use crate::test_support::{TestExpectErr as _, TestUnwrap as _};
+
 use super::*;
 use std::fs;
 use std::path::Path;
@@ -6,20 +8,20 @@ use std::time::{SystemTime, UNIX_EPOCH};
 #[test]
 fn binding_artifact_binds_environment_sources_and_generated_bytes() {
     let root = temp_root("valid");
-    fs::create_dir_all(root.join("src")).expect("source directory");
-    fs::create_dir_all(root.join("typing")).expect("typing directory");
-    fs::write(root.join("src/math_python.sifr"), "def sqrt(): ...\n").expect("binding");
+    fs::create_dir_all(root.join("src")).test_unwrap("source directory");
+    fs::create_dir_all(root.join("typing")).test_unwrap("typing directory");
+    fs::write(root.join("src/math_python.sifr"), "def sqrt(): ...\n").test_unwrap("binding");
     fs::write(
         root.join("typing/math.pyi"),
         "def sqrt(value: float, /) -> float: ...\n",
     )
-    .expect("typing source");
+    .test_unwrap("typing source");
     let artifact = artifact(&root);
 
-    let path = write_python_bindings(&root, &artifact).expect("artifact should write");
+    let path = write_python_bindings(&root, &artifact).test_unwrap("artifact should write");
     assert_eq!(path, root.join(PYTHON_BINDINGS_FILE));
     assert_eq!(
-        load_python_bindings(&root, "environment-a").expect("artifact should load"),
+        load_python_bindings(&root, "environment-a").test_unwrap("artifact should load"),
         artifact
     );
     assert_eq!(
@@ -30,40 +32,42 @@ fn binding_artifact_binds_environment_sources_and_generated_bytes() {
             std::path::PathBuf::from("typing/math.pyi"),
         ])
     );
-    fs::remove_dir_all(root).expect("remove fixture");
+    fs::remove_dir_all(root).test_unwrap("remove fixture");
 }
 
 #[test]
 fn binding_artifact_rejects_environment_generated_and_path_drift() {
     let root = temp_root("drift");
-    fs::create_dir_all(root.join("src")).expect("source directory");
-    fs::create_dir_all(root.join("typing")).expect("typing directory");
-    fs::write(root.join("src/math_python.sifr"), "def sqrt(): ...\n").expect("binding");
-    fs::write(root.join("typing/math.pyi"), "def sqrt() -> float: ...\n").expect("typing source");
+    fs::create_dir_all(root.join("src")).test_unwrap("source directory");
+    fs::create_dir_all(root.join("typing")).test_unwrap("typing directory");
+    fs::write(root.join("src/math_python.sifr"), "def sqrt(): ...\n").test_unwrap("binding");
+    fs::write(root.join("typing/math.pyi"), "def sqrt() -> float: ...\n")
+        .test_unwrap("typing source");
     let artifact = artifact(&root);
-    write_python_bindings(&root, &artifact).expect("artifact should write");
+    write_python_bindings(&root, &artifact).test_unwrap("artifact should write");
 
     assert!(
         load_python_bindings(&root, "environment-b")
-            .expect_err("environment drift must fail")
+            .test_expect_err("environment drift must fail")
             .contains("environment digest")
     );
     fs::write(
         root.join("typing/math.pyi"),
         "def sqrt(value: int) -> int: ...\n",
     )
-    .expect("mutate typing source");
+    .test_unwrap("mutate typing source");
     assert!(
         load_python_bindings(&root, "environment-a")
-            .expect_err("typing source drift must fail")
+            .test_expect_err("typing source drift must fail")
             .contains("typing source")
     );
     fs::write(root.join("typing/math.pyi"), "def sqrt() -> float: ...\n")
-        .expect("restore typing source");
-    fs::write(root.join("src/math_python.sifr"), "def changed(): ...\n").expect("mutate output");
+        .test_unwrap("restore typing source");
+    fs::write(root.join("src/math_python.sifr"), "def changed(): ...\n")
+        .test_unwrap("mutate output");
     assert!(
         load_python_bindings(&root, "environment-a")
-            .expect_err("generated drift must fail")
+            .test_expect_err("generated drift must fail")
             .contains("has drifted")
     );
 
@@ -71,10 +75,10 @@ fn binding_artifact_rejects_environment_generated_and_path_drift() {
     escaping.bindings[0].output = "../escape.sifr".to_string();
     assert!(
         validate_python_bindings(&root, "environment-a", &escaping)
-            .expect_err("escaping output must fail")
+            .test_expect_err("escaping output must fail")
             .contains("stay inside")
     );
-    fs::remove_dir_all(root).expect("remove fixture");
+    fs::remove_dir_all(root).test_unwrap("remove fixture");
 }
 
 #[cfg(unix)]
@@ -84,44 +88,44 @@ fn binding_artifact_rejects_symlinked_typing_sources_and_outputs() {
 
     let root = temp_root("symlink");
     let outside = temp_root("symlink-outside");
-    fs::create_dir_all(root.join("src")).expect("source directory");
-    fs::create_dir_all(root.join("typing")).expect("typing directory");
-    fs::create_dir_all(&outside).expect("outside directory");
+    fs::create_dir_all(root.join("src")).test_unwrap("source directory");
+    fs::create_dir_all(root.join("typing")).test_unwrap("typing directory");
+    fs::create_dir_all(&outside).test_unwrap("outside directory");
     let generated = "def sqrt(): ...\n";
     let typing = "def sqrt() -> float: ...\n";
-    fs::write(root.join("src/math_python.sifr"), generated).expect("binding");
-    fs::write(root.join("typing/math.pyi"), typing).expect("typing source");
-    fs::write(outside.join("math.pyi"), typing).expect("outside typing source");
-    fs::write(outside.join("math_python.sifr"), generated).expect("outside binding");
+    fs::write(root.join("src/math_python.sifr"), generated).test_unwrap("binding");
+    fs::write(root.join("typing/math.pyi"), typing).test_unwrap("typing source");
+    fs::write(outside.join("math.pyi"), typing).test_unwrap("outside typing source");
+    fs::write(outside.join("math_python.sifr"), generated).test_unwrap("outside binding");
     let artifact = artifact(&root);
-    write_python_bindings(&root, &artifact).expect("artifact should write");
+    write_python_bindings(&root, &artifact).test_unwrap("artifact should write");
 
-    fs::remove_file(root.join("typing/math.pyi")).expect("remove typing source");
-    symlink(outside.join("math.pyi"), root.join("typing/math.pyi")).expect("typing symlink");
+    fs::remove_file(root.join("typing/math.pyi")).test_unwrap("remove typing source");
+    symlink(outside.join("math.pyi"), root.join("typing/math.pyi")).test_unwrap("typing symlink");
     let typing_error = load_python_bindings(&root, "environment-a")
-        .expect_err("symlinked typing source must fail");
+        .test_expect_err("symlinked typing source must fail");
     assert!(
         typing_error.contains("regular package file"),
         "{typing_error}"
     );
 
-    fs::remove_file(root.join("typing/math.pyi")).expect("remove typing symlink");
-    fs::write(root.join("typing/math.pyi"), typing).expect("restore typing source");
-    fs::remove_file(root.join("src/math_python.sifr")).expect("remove generated source");
+    fs::remove_file(root.join("typing/math.pyi")).test_unwrap("remove typing symlink");
+    fs::write(root.join("typing/math.pyi"), typing).test_unwrap("restore typing source");
+    fs::remove_file(root.join("src/math_python.sifr")).test_unwrap("remove generated source");
     symlink(
         outside.join("math_python.sifr"),
         root.join("src/math_python.sifr"),
     )
-    .expect("output symlink");
+    .test_unwrap("output symlink");
     let output_error =
-        load_python_bindings(&root, "environment-a").expect_err("symlinked output must fail");
+        load_python_bindings(&root, "environment-a").test_expect_err("symlinked output must fail");
     assert!(
         output_error.contains("regular package file"),
         "{output_error}"
     );
 
-    fs::remove_dir_all(root).expect("remove fixture");
-    fs::remove_dir_all(outside).expect("remove outside fixture");
+    fs::remove_dir_all(root).test_unwrap("remove fixture");
+    fs::remove_dir_all(outside).test_unwrap("remove outside fixture");
 }
 
 #[test]
@@ -129,7 +133,7 @@ fn binding_output_rejects_managed_metadata_files() {
     let root = temp_root("reserved-output");
     for reserved in [PYTHON_BINDINGS_FILE, super::PYTHON_CERTIFICATIONS_FILE] {
         let error = safe_python_binding_output(&root, Path::new(reserved))
-            .expect_err("managed metadata output must be rejected");
+            .test_expect_err("managed metadata output must be rejected");
         assert!(error.contains("reserved for package metadata"), "{error}");
     }
 }
@@ -141,13 +145,13 @@ fn artifact(root: &std::path::Path) -> PythonBindingArtifact {
         kind: PythonBindingSourceKind::Override,
         identity: "override:0:math.pyi".to_string(),
         digest: python_binding_generated_digest(
-            &fs::read(root.join("typing/math.pyi")).expect("typing source"),
+            &fs::read(root.join("typing/math.pyi")).test_unwrap("typing source"),
         ),
     }];
     let soabi = "cpython-test";
     let source_fingerprint =
         python_binding_source_fingerprint("math", &symbols, soabi, None, &sources);
-    let generated = fs::read(root.join("src/math_python.sifr")).expect("generated source");
+    let generated = fs::read(root.join("src/math_python.sifr")).test_unwrap("generated source");
     PythonBindingArtifact {
         schema_version: PYTHON_BINDING_SCHEMA_VERSION,
         environment_digest: "environment-a".to_string(),
@@ -170,7 +174,7 @@ fn artifact(root: &std::path::Path) -> PythonBindingArtifact {
 fn temp_root(label: &str) -> std::path::PathBuf {
     let nonce = SystemTime::now()
         .duration_since(UNIX_EPOCH)
-        .expect("clock after epoch")
+        .test_unwrap("clock after epoch")
         .as_nanos();
     std::env::temp_dir().join(format!(
         "sifr-python-binding-{label}-{}-{nonce}",

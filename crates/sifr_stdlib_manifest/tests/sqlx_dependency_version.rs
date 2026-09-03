@@ -1,4 +1,6 @@
-#![allow(clippy::expect_used)]
+mod support;
+
+use support::TestUnwrap as _;
 
 const CATALOG_MANIFEST: &str = include_str!("../../sifr_rust_interop_catalog/Cargo.toml");
 const FIXTURE_MANIFEST: &str = include_str!(
@@ -48,15 +50,15 @@ fn maintained_sqlx_dependencies_use_the_latest_stable_policy() {
     assert_dependency("backend fixture", &fixture, FIXTURE_FEATURES);
 
     let fixture_policy: serde_json::Value =
-        serde_json::from_str(FIXTURE_POLICY).expect("fixture policy must parse");
+        serde_json::from_str(FIXTURE_POLICY).test_unwrap("fixture policy must parse");
     let fixture_sqlx = fixture_policy
         .get("features")
         .and_then(|features| features.get("sqlx"))
-        .expect("fixture must declare SQLx policy");
+        .test_unwrap("fixture must declare SQLx policy");
     assert_json_policy("fixture", fixture_sqlx);
 
     let matrix: serde_json::Value =
-        serde_json::from_str(MATRIX_POLICY).expect("matrix policy must parse");
+        serde_json::from_str(MATRIX_POLICY).test_unwrap("matrix policy must parse");
     let matrix_sqlx = matrix
         .get("fixtures")
         .and_then(serde_json::Value::as_array)
@@ -68,7 +70,7 @@ fn maintained_sqlx_dependencies_use_the_latest_stable_policy() {
         })
         .and_then(|fixture| fixture.get("features"))
         .and_then(|features| features.get("sqlx"))
-        .expect("matrix must declare SQLx policy");
+        .test_unwrap("matrix must declare SQLx policy");
     assert_json_policy("matrix", matrix_sqlx);
 }
 
@@ -91,7 +93,7 @@ fn maintained_locks_use_the_official_sqlx_0_9_0_packages() {
 
 #[test]
 fn workspace_catalog_keeps_inactive_database_drivers_out_of_the_shared_lock() {
-    let lock: toml::Value = toml::from_str(WORKSPACE_LOCK).expect("workspace lock must parse");
+    let lock: toml::Value = toml::from_str(WORKSPACE_LOCK).test_unwrap("workspace lock must parse");
     let packages = lock_packages(&lock);
     for inactive_driver in ["sqlx-mysql", "sqlx-sqlite"] {
         assert!(
@@ -139,7 +141,7 @@ fn assert_dependency(label: &str, dependency: &toml::Value, expected_features: &
     let features = dependency
         .get("features")
         .and_then(toml::Value::as_array)
-        .expect("SQLx features must be an array")
+        .test_unwrap("SQLx features must be an array")
         .iter()
         .filter_map(toml::Value::as_str)
         .collect::<Vec<_>>();
@@ -157,7 +159,7 @@ fn assert_json_policy(label: &str, policy: &serde_json::Value) {
     let features = policy
         .get("features")
         .and_then(serde_json::Value::as_array)
-        .expect("SQLx policy features must be an array")
+        .test_unwrap("SQLx policy features must be an array")
         .iter()
         .filter_map(serde_json::Value::as_str)
         .collect::<Vec<_>>();
@@ -167,7 +169,7 @@ fn assert_json_policy(label: &str, policy: &serde_json::Value) {
 fn lock_packages(lock: &toml::Value) -> &[toml::Value] {
     lock.get("package")
         .and_then(toml::Value::as_array)
-        .expect("lock packages must be an array")
+        .test_unwrap("lock packages must be an array")
 }
 
 fn assert_package(packages: &[toml::Value], name: &str, checksum: &str) {

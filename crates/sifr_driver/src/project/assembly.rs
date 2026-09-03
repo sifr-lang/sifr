@@ -20,7 +20,7 @@ pub(crate) fn assemble_project_main_rs(
     let mut main_rs = String::new();
     let ordered_non_main = ordered_non_main_module_names(compile_order, rust_files);
     for module_name in top_level_module_declarations(&ordered_non_main) {
-        main_rs.push_str("mod ");
+        main_rs.push_str("pub mod ");
         main_rs.push_str(&module_name);
         main_rs.push_str(";\n");
     }

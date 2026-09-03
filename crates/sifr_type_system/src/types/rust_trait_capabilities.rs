@@ -2,6 +2,78 @@ use super::{Type, type_queries::parent_chain_contains};
 use std::collections::HashSet;
 
 impl Type {
+    /// Whether a generated Rust aggregate containing this type may derive
+    /// `Eq`. Recursive classes are accepted when every reachable field has an
+    /// equality-total representation.
+    #[must_use]
+    pub fn supports_derived_eq(&self) -> bool {
+        self.supports_derived_eq_inner(&mut HashSet::new())
+    }
+
+    fn supports_derived_eq_inner(
+        &self,
+        visiting_classes: &mut HashSet<(String, Vec<Self>)>,
+    ) -> bool {
+        match self.resolve_alias() {
+            Self::Int
+            | Self::FixedInt(_)
+            | Self::Bool
+            | Self::Str
+            | Self::Bytes
+            | Self::None
+            | Self::Range
+            | Self::LiteralInt(_)
+            | Self::LiteralStr(_)
+            | Self::LiteralBool(_)
+            | Self::Enum { .. }
+            | Self::Decimal
+            | Self::BigDecimal
+            | Self::TypeVar(_) => true,
+            Self::List(element) => element.supports_derived_eq_inner(visiting_classes),
+            Self::Set(element) => element.supports_hash_key_inner(visiting_classes),
+            Self::Dict(key, value) => {
+                key.supports_derived_eq_inner(visiting_classes)
+                    && value.supports_derived_eq_inner(visiting_classes)
+            }
+            Self::Tuple(elements) | Self::Union(elements) => elements
+                .iter()
+                .all(|element| element.supports_derived_eq_inner(visiting_classes)),
+            Self::StructuralRecord(record) => record
+                .fields()
+                .iter()
+                .all(|field| field.ty().supports_derived_eq_inner(visiting_classes)),
+            Self::Result(ok, error) => {
+                ok.supports_derived_eq_inner(visiting_classes)
+                    && error.supports_derived_eq_inner(visiting_classes)
+            }
+            Self::Newtype { inner, .. } => inner.supports_derived_eq_inner(visiting_classes),
+            Self::Class {
+                fields,
+                methods,
+                parent_class,
+                ..
+            } => {
+                if parent_chain_contains(parent_class.as_deref(), "NonSend")
+                    || methods.iter().any(|(method, _)| method == "__eq__")
+                {
+                    return false;
+                }
+                let Some(key) = self.class_recursion_key() else {
+                    return false;
+                };
+                if !visiting_classes.insert(key.clone()) {
+                    return true;
+                }
+                let supports = fields
+                    .iter()
+                    .all(|(_, field)| field.supports_derived_eq_inner(visiting_classes));
+                visiting_classes.remove(&key);
+                supports
+            }
+            _ => false,
+        }
+    }
+
     /// Whether the generated representation implements Rust's total ordering
     /// traits. Structural records require every field to have total order.
     #[must_use]
@@ -307,5 +379,17 @@ impl Type {
             }
             _ => false,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Type;
+
+    #[test]
+    fn derived_eq_capability_tracks_nested_float_fields() {
+        assert!(Type::List(Box::new(Type::Int)).supports_derived_eq());
+        assert!(!Type::Float.supports_derived_eq());
+        assert!(!Type::List(Box::new(Type::Float)).supports_derived_eq());
     }
 }

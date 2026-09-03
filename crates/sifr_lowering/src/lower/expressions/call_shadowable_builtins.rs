@@ -56,13 +56,13 @@ fn prefer_complete_class_surface(fallback: Type, candidate: Option<Type>) -> Typ
     })
 }
 
-fn register_compiler_open_handle_defaults(ctx: &mut LowerCtx, class_name: &str) {
-    ctx.function_defaults
-        .entry(format!("{class_name}.seek"))
+fn register_compiler_open_handle_defaults(ctx: &mut LowerCtx, identity: &str) {
+    ctx.compiler_method_defaults
+        .entry(format!("{identity}.seek"))
         .or_insert_with(|| vec![(1, HirExpr::IntLiteral(0))]);
-    if class_name == "FileHandle" {
-        ctx.function_defaults
-            .entry("FileHandle.read_bytes".to_string())
+    if identity == FILE_HANDLE_IDENTITY {
+        ctx.compiler_method_defaults
+            .entry(format!("{FILE_HANDLE_IDENTITY}.read_bytes"))
             .or_insert_with(|| vec![(0, HirExpr::NoneLiteral)]);
     }
 }
@@ -312,7 +312,7 @@ pub(super) fn lower_shadowable_builtin_call(
                 class_type_with_identity(ctx, TEXT_FILE_HANDLE_IDENTITY),
             );
             fill_file_handle_receiver_conventions(&mut text_handle_ty);
-            register_compiler_open_handle_defaults(ctx, "TextFileHandle");
+            register_compiler_open_handle_defaults(ctx, TEXT_FILE_HANDLE_IDENTITY);
             if let Some(error_ty) = ctx.class_types.get("IOError") {
                 ctx.try_block_error_types.insert(error_ty.clone());
             }
@@ -438,7 +438,7 @@ pub(super) fn lower_shadowable_builtin_call(
             class_type_with_identity(ctx, FILE_HANDLE_IDENTITY),
         );
         fill_file_handle_receiver_conventions(&mut file_handle_ty);
-        register_compiler_open_handle_defaults(ctx, "FileHandle");
+        register_compiler_open_handle_defaults(ctx, FILE_HANDLE_IDENTITY);
         // Register IOError as a possible exception from this call
         if let Some(error_ty) = ctx.class_types.get("IOError") {
             ctx.try_block_error_types.insert(error_ty.clone());

@@ -1,3 +1,5 @@
+use crate::test_support::{TestExpectErr as _, TestUnwrap as _};
+
 use crate::{
     CargoDependency, CargoPackage, CargoPackageId, CargoResolveEdge, CargoSifrMetadata,
     CargoTarget, CargoWorkspaceSifrMetadata, HostToolGraph, NormalizedCargoMetadata,
@@ -13,13 +15,13 @@ fn host_tool_graph_resolves_locked_host_entrypoint() {
     let fixture = ToolFixture::new("resolves");
     let snapshot = fixture.snapshot(false);
     let graph = resolve_host_tool_graph(&snapshot, &mut DiskSourceProvider::new())
-        .expect("tool graph should resolve");
+        .test_unwrap("tool graph should resolve");
     let entry = &graph.entries["sql"];
     assert_eq!(entry.entrypoint, "sql-tool");
     assert_eq!(entry.capabilities.len(), 3);
     let plan = graph
         .build_plan("sql", "aarch64-apple-darwin")
-        .expect("command should plan");
+        .test_unwrap("command should plan");
     assert_eq!(plan.args[0], "build");
     assert!(plan.args.iter().any(|arg| arg == "--locked"));
     assert!(
@@ -38,7 +40,7 @@ fn host_tool_graph_rejects_reserved_namespaces_and_unknown_capabilities() {
         "[tools.build]\npackage = \"provider-tools\"\nentrypoint = \"sql-tool\"\ncapabilities = []\n",
     );
     let errors = resolve_host_tool_graph(&reserved.snapshot(false), &mut DiskSourceProvider::new())
-        .expect_err("reserved namespace must fail");
+        .test_expect_err("reserved namespace must fail");
     assert!(errors[0].message.contains("reserved"));
 
     let unknown = ToolFixture::new("unknown_capability");
@@ -46,7 +48,7 @@ fn host_tool_graph_rejects_reserved_namespaces_and_unknown_capabilities() {
         "[tools.sql]\npackage = \"provider-tools\"\nentrypoint = \"sql-tool\"\ncapabilities = [\"telepathy\"]\n",
     );
     let errors = resolve_host_tool_graph(&unknown.snapshot(false), &mut DiskSourceProvider::new())
-        .expect_err("unknown capability must fail");
+        .test_expect_err("unknown capability must fail");
     assert!(errors[0].message.contains("unknown capability"));
 
     let duplicate = ToolFixture::new("duplicate_namespace");
@@ -55,7 +57,7 @@ fn host_tool_graph_rejects_reserved_namespaces_and_unknown_capabilities() {
     );
     let errors =
         resolve_host_tool_graph(&duplicate.snapshot(false), &mut DiskSourceProvider::new())
-            .expect_err("duplicate namespace must fail TOML parsing");
+            .test_expect_err("duplicate namespace must fail TOML parsing");
     assert!(errors[0].message.contains("cannot parse tools manifest"));
 }
 
@@ -63,7 +65,7 @@ fn host_tool_graph_rejects_reserved_namespaces_and_unknown_capabilities() {
 fn host_tool_graph_rejects_application_contamination() {
     let fixture = ToolFixture::new("contamination");
     let errors = resolve_host_tool_graph(&fixture.snapshot(true), &mut DiskSourceProvider::new())
-        .expect_err("application dependency on a tool must fail");
+        .test_expect_err("application dependency on a tool must fail");
     assert!(
         errors
             .iter()
@@ -79,7 +81,7 @@ fn application_graph_derivation_rejects_host_tool_contamination_before_source_lo
         &snapshot.metadata,
         &mut DiskSourceProvider::new(),
     )
-    .expect_err("application graph derivation must reject host tools");
+    .test_expect_err("application graph derivation must reject host tools");
     assert!(
         errors
             .iter()
@@ -92,10 +94,10 @@ fn host_tool_graph_detects_lockfile_hash_drift() {
     let fixture = ToolFixture::new("hash_drift");
     let snapshot = fixture.snapshot(false);
     let graph: HostToolGraph =
-        resolve_host_tool_graph(&snapshot, &mut DiskSourceProvider::new()).expect("resolve");
-    std::fs::write(fixture.root.join("Cargo.lock"), "version = 4\n").expect("mutate lockfile");
+        resolve_host_tool_graph(&snapshot, &mut DiskSourceProvider::new()).test_unwrap("resolve");
+    std::fs::write(fixture.root.join("Cargo.lock"), "version = 4\n").test_unwrap("mutate lockfile");
     let error = verify_host_tool_graph(&graph, &mut DiskSourceProvider::new())
-        .expect_err("hash drift must fail");
+        .test_expect_err("hash drift must fail");
     assert!(error.message.contains("hash drifted"));
 }
 
@@ -103,20 +105,20 @@ fn host_tool_graph_detects_lockfile_hash_drift() {
 fn committed_host_tool_lock_detects_manifest_and_path_source_drift() {
     let fixture = ToolFixture::new("persisted_drift");
     let graph = resolve_host_tool_graph(&fixture.snapshot(false), &mut DiskSourceProvider::new())
-        .expect("resolve");
-    write_host_tool_lock(&graph).expect("write host-tool lock");
-    load_host_tool_lock(&graph, &mut DiskSourceProvider::new()).expect("verify lock");
+        .test_unwrap("resolve");
+    write_host_tool_lock(&graph).test_unwrap("write host-tool lock");
+    load_host_tool_lock(&graph, &mut DiskSourceProvider::new()).test_unwrap("verify lock");
 
     std::fs::write(
         fixture.root.join("provider/src/added.rs"),
         "pub const DRIFT: u8 = 1;\n",
     )
-    .expect("mutate provider");
+    .test_unwrap("mutate provider");
     let observed =
         resolve_host_tool_graph(&fixture.snapshot(false), &mut DiskSourceProvider::new())
-            .expect("resolve drifted graph");
+            .test_unwrap("resolve drifted graph");
     let error = load_host_tool_lock(&observed, &mut DiskSourceProvider::new())
-        .expect_err("persisted lock must detect drift");
+        .test_expect_err("persisted lock must detect drift");
     assert!(error.message.contains("does not match"));
 }
 
@@ -128,7 +130,7 @@ fn host_tool_graph_rejects_missing_entrypoint_and_non_normal_dependency() {
     );
     assert!(
         resolve_host_tool_graph(&missing.snapshot(false), &mut DiskSourceProvider::new())
-            .expect_err("missing entrypoint")
+            .test_expect_err("missing entrypoint")
             .iter()
             .any(|error| error.message.contains("missing binary"))
     );
@@ -138,7 +140,7 @@ fn host_tool_graph_rejects_missing_entrypoint_and_non_normal_dependency() {
         &dev_only.snapshot_with_dependency_kind(Some("dev")),
         &mut DiskSourceProvider::new(),
     )
-    .expect_err("dev dependency is not a tool declaration edge");
+    .test_expect_err("dev dependency is not a tool declaration edge");
     assert!(
         errors
             .iter()
@@ -157,19 +159,19 @@ impl ToolFixture {
     fn new(name: &str) -> Self {
         let nonce = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
-            .expect("clock")
+            .test_unwrap("clock")
             .as_nanos();
         let root = std::env::temp_dir().join(format!(
             "sifr_host_tools_{name}_{}_{nonce}",
             std::process::id()
         ));
-        std::fs::create_dir_all(root.join("tools")).expect("tools dir");
-        std::fs::create_dir_all(root.join("provider/src")).expect("provider dir");
+        std::fs::create_dir_all(root.join("tools")).test_unwrap("tools dir");
+        std::fs::create_dir_all(root.join("provider/src")).test_unwrap("provider dir");
         std::fs::write(
             root.join("Cargo.lock"),
             "version = 4\n\n[[package]]\nname = \"project-tools\"\nversion = \"0.1.0\"\n\n[[package]]\nname = \"provider-tools\"\nversion = \"1.2.3\"\n",
         )
-        .expect("lockfile");
+        .test_unwrap("lockfile");
         let fixture = Self {
             root,
             tools_id: CargoPackageId("path+project-tools@0.1.0".to_string()),
@@ -183,7 +185,7 @@ impl ToolFixture {
     }
 
     fn write_manifest(&self, source: &str) {
-        std::fs::write(self.root.join("tools/sifr.toml"), source).expect("tool manifest");
+        std::fs::write(self.root.join("tools/sifr.toml"), source).test_unwrap("tool manifest");
     }
 
     fn snapshot(&self, contaminated: bool) -> PackageGraphSnapshot {

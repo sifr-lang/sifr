@@ -288,7 +288,7 @@ class Owner:
         .find("if flag")
         .expect("self-dependent branch should be emitted");
     let local_assert = rust_code
-        .find("assert!(&n == &SifrInt::from_i64(1))")
+        .find("assert_eq!(&n, &SifrInt::from_i64(1))")
         .unwrap_or_else(|| {
             panic!("self-free statement after the branch should retain its order:\n{rust_code}")
         });
@@ -296,7 +296,7 @@ class Owner:
         .find("let doubled: SifrInt = &__sifr_self.count.clone() * &SifrInt::from_i64(2)")
         .expect("self-dependent local should use the synthetic receiver");
     let dependency_assert = rust_code
-        .find("assert!(&doubled == &SifrInt::from_i64(2))")
+        .find("assert_eq!(&doubled, &SifrInt::from_i64(2))")
         .expect("dependent statement should follow its binding");
 
     assert!(

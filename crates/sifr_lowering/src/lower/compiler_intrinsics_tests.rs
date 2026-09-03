@@ -22,10 +22,10 @@ fn errors<T>(result: Result<T, Vec<crate::HirDiagnostic>>) -> Vec<crate::HirDiag
 }
 
 fn source_range(source: &str, needle: &str) -> TextRange {
-    let start = source.find(needle).expect("needle should exist") as u32;
+    let start = source.find(needle).expect("needle should exist");
     TextRange::new(
-        TextSize::new(start),
-        TextSize::new(start + needle.len() as u32),
+        TextSize::try_from(start).expect("test source offset fits in TextSize"),
+        TextSize::try_from(start + needle.len()).expect("test source offset fits in TextSize"),
     )
 }
 

@@ -458,7 +458,7 @@ def main():
             assert!(rust_source.contains("Hello, World!"));
         }
         CompileResult::Errors { errors } => {
-            panic!("compilation failed: {:?}", errors);
+            panic!("compilation failed: {errors:?}");
         }
     }
 }
@@ -484,7 +484,7 @@ def main():
             assert!(rust_source.contains("fn main()"));
         }
         CompileResult::Errors { errors } => {
-            panic!("compilation failed: {:?}", errors);
+            panic!("compilation failed: {errors:?}");
         }
     }
 }
@@ -518,7 +518,7 @@ def main():
             );
         }
         CompileResultFull::Errors { errors } => {
-            panic!("compilation failed: {:?}", errors);
+            panic!("compilation failed: {errors:?}");
         }
     }
 }
@@ -556,7 +556,7 @@ def main():
             }));
         }
         CompileResultFull::Errors { errors } => {
-            panic!("compilation failed: {:?}", errors);
+            panic!("compilation failed: {errors:?}");
         }
     }
 }

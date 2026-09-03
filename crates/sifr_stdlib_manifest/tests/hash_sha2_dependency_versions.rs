@@ -1,3 +1,7 @@
+mod support;
+
+use support::TestUnwrap as _;
+
 const WORKSPACE_MANIFEST: &str = include_str!("../../../Cargo.toml");
 const WORKSPACE_LOCK: &str = include_str!("../../../Cargo.lock");
 const RUST_INTEROP_CATALOG: &str = include_str!("../../sifr_rust_interop_catalog/Cargo.toml");
@@ -5,12 +9,12 @@ const RUST_INTEROP_CATALOG: &str = include_str!("../../sifr_rust_interop_catalog
 #[test]
 fn sha2_direct_dependencies_use_one_canonical_stable_release() {
     let workspace: toml::Value =
-        toml::from_str(WORKSPACE_MANIFEST).expect("workspace manifest must parse");
+        toml::from_str(WORKSPACE_MANIFEST).test_unwrap("workspace manifest must parse");
     let dependencies = workspace
         .get("workspace")
         .and_then(|workspace| workspace.get("dependencies"))
         .and_then(toml::Value::as_table)
-        .expect("workspace dependencies must be a table");
+        .test_unwrap("workspace dependencies must be a table");
 
     assert_eq!(
         dependencies
@@ -27,7 +31,7 @@ fn sha2_direct_dependencies_use_one_canonical_stable_release() {
     );
 
     let catalog: toml::Value =
-        toml::from_str(RUST_INTEROP_CATALOG).expect("Rust interop catalog must parse");
+        toml::from_str(RUST_INTEROP_CATALOG).test_unwrap("Rust interop catalog must parse");
     assert_eq!(
         catalog
             .get("dependencies")
@@ -40,11 +44,11 @@ fn sha2_direct_dependencies_use_one_canonical_stable_release() {
 
 #[test]
 fn first_party_lock_edges_use_sha2_0_11() {
-    let lock: toml::Value = toml::from_str(WORKSPACE_LOCK).expect("workspace lock must parse");
+    let lock: toml::Value = toml::from_str(WORKSPACE_LOCK).test_unwrap("workspace lock must parse");
     let packages = lock
         .get("package")
         .and_then(toml::Value::as_array)
-        .expect("workspace lock packages must be an array");
+        .test_unwrap("workspace lock packages must be an array");
 
     let mut first_party_sha2_edges = packages
         .iter()

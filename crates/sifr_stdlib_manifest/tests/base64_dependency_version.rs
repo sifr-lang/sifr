@@ -1,6 +1,10 @@
+mod support;
+
 use std::collections::BTreeSet;
 use std::fs;
 use std::path::Path;
+
+use support::TestUnwrap as _;
 
 const WORKSPACE_MANIFEST: &str = include_str!("../../../Cargo.toml");
 const WORKSPACE_LOCK: &str = include_str!("../../../Cargo.lock");
@@ -10,12 +14,12 @@ const VENDORED_MANIFEST: &str = include_str!("../../../vendor/base64/Cargo.toml"
 #[test]
 fn base64_direct_dependency_uses_latest_stable_safe_features() {
     let workspace: toml::Value =
-        toml::from_str(WORKSPACE_MANIFEST).expect("workspace manifest must parse");
+        toml::from_str(WORKSPACE_MANIFEST).test_unwrap("workspace manifest must parse");
     let dependency = workspace
         .get("workspace")
         .and_then(|workspace| workspace.get("dependencies"))
         .and_then(|dependencies| dependencies.get("base64"))
-        .expect("workspace must declare base64");
+        .test_unwrap("workspace must declare base64");
 
     assert_eq!(
         dependency.get("version").and_then(toml::Value::as_str),
@@ -39,11 +43,12 @@ fn base64_direct_dependency_uses_latest_stable_safe_features() {
         ["std"]
     );
 
-    let stdlib: toml::Value = toml::from_str(STDLIB_MANIFEST).expect("stdlib manifest must parse");
+    let stdlib: toml::Value =
+        toml::from_str(STDLIB_MANIFEST).test_unwrap("stdlib manifest must parse");
     let stdlib_dependency = stdlib
         .get("dependencies")
         .and_then(|dependencies| dependencies.get("base64"))
-        .expect("stdlib must inherit base64");
+        .test_unwrap("stdlib must inherit base64");
     assert_eq!(
         stdlib_dependency
             .get("workspace")
@@ -58,7 +63,7 @@ fn base64_direct_dependency_uses_latest_stable_safe_features() {
     );
 
     let vendored: toml::Value =
-        toml::from_str(VENDORED_MANIFEST).expect("vendored base64 manifest must parse");
+        toml::from_str(VENDORED_MANIFEST).test_unwrap("vendored base64 manifest must parse");
     assert_eq!(
         vendored
             .get("package")
@@ -70,11 +75,11 @@ fn base64_direct_dependency_uses_latest_stable_safe_features() {
 
 #[test]
 fn first_party_lock_edges_use_base64_0_23_1() {
-    let lock: toml::Value = toml::from_str(WORKSPACE_LOCK).expect("workspace lock must parse");
+    let lock: toml::Value = toml::from_str(WORKSPACE_LOCK).test_unwrap("workspace lock must parse");
     let packages = lock
         .get("package")
         .and_then(toml::Value::as_array)
-        .expect("workspace lock packages must be an array");
+        .test_unwrap("workspace lock packages must be an array");
 
     let locked_versions = packages
         .iter()
@@ -117,11 +122,11 @@ fn first_party_lock_edges_use_base64_0_23_1() {
 
 #[test]
 fn vendored_base64_packages_cover_vendored_and_first_party_lock_edges() {
-    let lock: toml::Value = toml::from_str(WORKSPACE_LOCK).expect("workspace lock must parse");
+    let lock: toml::Value = toml::from_str(WORKSPACE_LOCK).test_unwrap("workspace lock must parse");
     let packages = lock
         .get("package")
         .and_then(toml::Value::as_array)
-        .expect("workspace lock packages must be an array");
+        .test_unwrap("workspace lock packages must be an array");
     let locked_base64_versions = packages
         .iter()
         .filter(|package| package.get("name").and_then(toml::Value::as_str) == Some("base64"))
@@ -130,11 +135,11 @@ fn vendored_base64_packages_cover_vendored_and_first_party_lock_edges() {
 
     let vendor_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../vendor");
     let mut vendored_packages = BTreeSet::new();
-    for entry in fs::read_dir(&vendor_root).expect("vendor directory must be readable") {
-        let entry = entry.expect("vendor entry must be readable");
+    for entry in fs::read_dir(&vendor_root).test_unwrap("vendor directory must be readable") {
+        let entry = entry.test_unwrap("vendor entry must be readable");
         if !entry
             .file_type()
-            .expect("vendor entry type must be readable")
+            .test_unwrap("vendor entry type must be readable")
             .is_dir()
         {
             continue;
@@ -157,15 +162,15 @@ fn vendored_base64_packages_cover_vendored_and_first_party_lock_edges() {
         });
         let package = manifest
             .get("package")
-            .expect("vendored manifest must contain package metadata");
+            .test_unwrap("vendored manifest must contain package metadata");
         let name = package
             .get("name")
             .and_then(toml::Value::as_str)
-            .expect("vendored package must have a string name");
+            .test_unwrap("vendored package must have a string name");
         let version = package
             .get("version")
             .and_then(toml::Value::as_str)
-            .expect("vendored package must have a string version");
+            .test_unwrap("vendored package must have a string version");
         vendored_packages.insert((name.to_string(), version.to_string()));
     }
 
@@ -204,7 +209,7 @@ fn vendored_base64_packages_cover_vendored_and_first_party_lock_edges() {
                 locked_base64_versions
                     .first()
                     .copied()
-                    .expect("the Base64 lock version must exist")
+                    .test_unwrap("the Base64 lock version must exist")
             });
             required_base64_versions.insert(dependency_version);
         }

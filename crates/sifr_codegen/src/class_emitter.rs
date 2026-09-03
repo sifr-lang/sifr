@@ -746,7 +746,7 @@ impl RustEmitter {
                 items: Vec::new(),
             });
         }
-        let method_bounds = Self::class_method_type_param_bounds(class, &method_items);
+        let method_bounds = self.class_method_type_param_bounds(class, &method_items);
         for (method, item) in method_items {
             let type_params = Self::class_function_impl_type_params(
                 class,

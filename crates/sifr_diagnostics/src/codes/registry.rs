@@ -49,7 +49,6 @@ impl DiagnosticCode {
     pub const TYPE_UNSUPPORTED_DEFAULT_ARGUMENT: Self =
         Self::new("SIFR-TYPE-0011", Severity::Error);
     pub const TYPE_UNSUPPORTED_EXPRESSION_FORM: Self = Self::new("SIFR-TYPE-0012", Severity::Error);
-    pub const TYPE_ARITHMETIC_OVERFLOW_RISK: Self = Self::new("SIFR-TYPE-0901", Severity::Warning);
     pub const TYPE_REVEAL_TYPE: Self = Self::new("SIFR-TYPE-0902", Severity::Note);
     pub const META_SPECIALIZATION_FATAL: Self = Self::new("SIFR-META-0001", Severity::Error);
     pub const META_SPECIALIZATION_WARNING: Self = Self::new("SIFR-META-0002", Severity::Warning);
@@ -693,7 +692,6 @@ pub const ACTIVE_DIAGNOSTIC_CODES: &[DiagnosticCode] = &[
     DiagnosticCode::TYPE_TYPEVAR_CONSTRAINT_NOT_SATISFIED,
     DiagnosticCode::TYPE_UNSUPPORTED_DEFAULT_ARGUMENT,
     DiagnosticCode::TYPE_UNSUPPORTED_EXPRESSION_FORM,
-    DiagnosticCode::TYPE_ARITHMETIC_OVERFLOW_RISK,
     DiagnosticCode::TYPE_REVEAL_TYPE,
     DiagnosticCode::META_SPECIALIZATION_FATAL,
     DiagnosticCode::META_SPECIALIZATION_WARNING,

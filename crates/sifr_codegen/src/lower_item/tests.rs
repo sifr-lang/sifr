@@ -87,6 +87,34 @@ fn exact_module_int_const_uses_stateful_helper_lowering() {
 }
 
 #[test]
+fn module_constant_helper_names_are_injective_and_warning_clean() {
+    let upper = module_constant_helper_name("BASE");
+    let lower = module_constant_helper_name("base");
+    let separated = module_constant_helper_name("B_ASE");
+
+    assert_eq!(upper, "__sifr_const_42415345");
+    assert_eq!(lower, "__sifr_const_62617365");
+    assert_eq!(separated, "__sifr_const_425f415345");
+    assert_ne!(upper, lower);
+    assert_ne!(upper, separated);
+    for helper in [&upper, &lower, &separated] {
+        assert!(
+            helper
+                .bytes()
+                .all(|byte| byte == b'_' || byte.is_ascii_lowercase() || byte.is_ascii_digit()),
+            "helper must be a Rust snake_case identifier: {helper}"
+        );
+        assert!(
+            helper
+                .bytes()
+                .next()
+                .is_some_and(|byte| byte == b'_' || byte.is_ascii_lowercase()),
+            "helper must not begin with a digit: {helper}"
+        );
+    }
+}
+
+#[test]
 fn dispatcher_result_lowers_large_module_int_const_as_sifr_int_helper() {
     let (item, rust_name_call) = try_lower_simple_module_constant_item_result(
         "limit",
@@ -96,7 +124,7 @@ fn dispatcher_result_lowers_large_module_int_const_as_sifr_int_helper() {
     .expect("large exact int module const should validate")
     .expect("large exact int module const should lower");
 
-    assert_eq!(rust_name_call, "__const_limit()");
+    assert_eq!(rust_name_call, "__sifr_const_6c696d6974()");
     assert!(matches!(
         item,
         RustItem::Fn {
@@ -104,11 +132,11 @@ fn dispatcher_result_lowers_large_module_int_const_as_sifr_int_helper() {
             visibility: Visibility::Private,
             ret: Some(RustType::Named(ref ret)),
             ..
-        } if name == "__const_limit" && ret == "SifrInt"
+        } if name == "__sifr_const_6c696d6974" && ret == "SifrInt"
     ));
 
     let rendered = crate::render_items(&[item]);
-    assert!(rendered.contains("fn __const_limit() -> SifrInt"));
+    assert!(rendered.contains("fn __sifr_const_6c696d6974() -> SifrInt"));
     assert!(rendered.contains("SifrInt::from_signed_bytes_be"));
     assert!(!rendered.contains("parse_decimal"));
     assert!(!rendered.contains(".unwrap("));
@@ -243,7 +271,7 @@ fn lowers_simple_module_string_const_item() {
         &HirExpr::StringLiteral("hi".to_string()),
     )
     .expect("simple string const should lower");
-    assert_eq!(rust_name_call, "__const_greeting()");
+    assert_eq!(rust_name_call, "__sifr_const_6772656574696e67()");
     assert!(matches!(
         item,
         RustItem::Fn {
@@ -251,7 +279,7 @@ fn lowers_simple_module_string_const_item() {
             visibility: Visibility::Private,
             ret: Some(RustType::String_),
             ..
-        } if name == "__const_greeting"
+        } if name == "__sifr_const_6772656574696e67"
     ));
 }
 
@@ -264,7 +292,7 @@ fn lowers_simple_module_alias_string_const_item() {
         &HirExpr::StringLiteral("hi".to_string()),
     )
     .expect("alias string const should lower");
-    assert_eq!(rust_name_call, "__const_greeting()");
+    assert_eq!(rust_name_call, "__sifr_const_6772656574696e67()");
     assert!(matches!(
         item,
         RustItem::Fn {
@@ -272,7 +300,7 @@ fn lowers_simple_module_alias_string_const_item() {
             visibility: Visibility::Private,
             ret: Some(RustType::String_),
             ..
-        } if name == "__const_greeting"
+        } if name == "__sifr_const_6772656574696e67"
     ));
 }
 
@@ -289,7 +317,7 @@ fn dispatcher_lowers_alias_string_module_const_as_string_item() {
         },
     )
     .expect("dispatcher should lower alias string constant");
-    assert_eq!(rust_name_call, "__const_greeting()");
+    assert_eq!(rust_name_call, "__sifr_const_6772656574696e67()");
     assert!(matches!(
         item,
         RustItem::Fn {
@@ -298,7 +326,7 @@ fn dispatcher_lowers_alias_string_module_const_as_string_item() {
             ret: Some(RustType::String_),
             body,
             ..
-        } if name == "__const_greeting"
+        } if name == "__sifr_const_6772656574696e67"
             && matches!(
                 body.first(),
                 Some(RustStmt::Return(Some(RustExpr::MethodCall { receiver, method, .. })))
@@ -331,7 +359,7 @@ fn lowers_simple_module_string_name_const_item() {
         },
     )
     .expect("string name const should lower");
-    assert_eq!(rust_name_call, "__const_greeting()");
+    assert_eq!(rust_name_call, "__sifr_const_6772656574696e67()");
     assert!(matches!(
         item,
         RustItem::Fn {
@@ -340,7 +368,7 @@ fn lowers_simple_module_string_name_const_item() {
             ret: Some(RustType::String_),
             body,
             ..
-        } if name == "__const_greeting"
+        } if name == "__sifr_const_6772656574696e67"
             && matches!(
                 body.first(),
                 Some(RustStmt::Return(Some(RustExpr::MethodCall { receiver, method, .. })))
@@ -357,7 +385,7 @@ fn lowers_simple_module_literal_string_const_item() {
         &HirExpr::StringLiteral("hi".to_string()),
     )
     .expect("literal string const should lower");
-    assert_eq!(rust_name_call, "__const_greeting()");
+    assert_eq!(rust_name_call, "__sifr_const_6772656574696e67()");
     assert!(matches!(
         item,
         RustItem::Fn {
@@ -365,7 +393,7 @@ fn lowers_simple_module_literal_string_const_item() {
             visibility: Visibility::Private,
             ret: Some(RustType::String_),
             ..
-        } if name == "__const_greeting"
+        } if name == "__sifr_const_6772656574696e67"
     ));
 }
 
@@ -391,7 +419,7 @@ fn lowers_simple_module_none_const_item() {
     let (item, rust_name_call) =
         try_lower_simple_module_none_const_item("nothing", &Type::None, &HirExpr::NoneLiteral)
             .expect("none const should lower");
-    assert_eq!(rust_name_call, "__const_nothing()");
+    assert_eq!(rust_name_call, "__sifr_const_6e6f7468696e67()");
     assert!(matches!(
         item,
         RustItem::Fn {
@@ -399,7 +427,7 @@ fn lowers_simple_module_none_const_item() {
             visibility: Visibility::Private,
             ret: Some(RustType::Unit),
             ..
-        } if name == "__const_nothing"
+        } if name == "__sifr_const_6e6f7468696e67"
     ));
 }
 
@@ -409,7 +437,7 @@ fn lowers_simple_module_alias_none_const_item() {
     let (item, rust_name_call) =
         try_lower_simple_module_none_const_item("nothing", &alias_none, &HirExpr::NoneLiteral)
             .expect("alias none const should lower");
-    assert_eq!(rust_name_call, "__const_nothing()");
+    assert_eq!(rust_name_call, "__sifr_const_6e6f7468696e67()");
     assert!(matches!(
         item,
         RustItem::Fn {
@@ -417,7 +445,7 @@ fn lowers_simple_module_alias_none_const_item() {
             visibility: Visibility::Private,
             ret: Some(RustType::Unit),
             ..
-        } if name == "__const_nothing"
+        } if name == "__sifr_const_6e6f7468696e67"
     ));
 }
 
@@ -433,7 +461,7 @@ fn lowers_simple_module_none_name_const_item() {
         },
     )
     .expect("none name const should lower");
-    assert_eq!(rust_name_call, "__const_nothing()");
+    assert_eq!(rust_name_call, "__sifr_const_6e6f7468696e67()");
     assert!(matches!(
         item,
         RustItem::Fn {
@@ -442,7 +470,7 @@ fn lowers_simple_module_none_name_const_item() {
             ret: Some(RustType::Unit),
             body,
             ..
-        } if name == "__const_nothing"
+        } if name == "__sifr_const_6e6f7468696e67"
             && matches!(body.first(), Some(RustStmt::Return(Some(RustExpr::Ident(n)))) if n == "n")
     ));
 }
@@ -460,7 +488,7 @@ fn lowers_simple_module_alias_none_name_const_item() {
         },
     )
     .expect("alias none name const should lower");
-    assert_eq!(rust_name_call, "__const_nothing()");
+    assert_eq!(rust_name_call, "__sifr_const_6e6f7468696e67()");
     assert!(matches!(
         item,
         RustItem::Fn {
@@ -469,7 +497,7 @@ fn lowers_simple_module_alias_none_name_const_item() {
             ret: Some(RustType::Unit),
             body,
             ..
-        } if name == "__const_nothing"
+        } if name == "__sifr_const_6e6f7468696e67"
             && matches!(body.first(), Some(RustStmt::Return(Some(RustExpr::Ident(n)))) if n == "n")
     ));
 }
@@ -480,7 +508,7 @@ fn dispatcher_lowers_alias_none_module_const_as_none_item() {
     let (item, rust_name_call) =
         try_lower_simple_module_constant_item("nothing", &alias_none, &HirExpr::NoneLiteral)
             .expect("dispatcher should lower alias none constant");
-    assert_eq!(rust_name_call, "__const_nothing()");
+    assert_eq!(rust_name_call, "__sifr_const_6e6f7468696e67()");
     assert!(matches!(
         item,
         RustItem::Fn {
@@ -488,7 +516,7 @@ fn dispatcher_lowers_alias_none_module_const_as_none_item() {
             visibility: Visibility::Private,
             ret: Some(RustType::Unit),
             ..
-        } if name == "__const_nothing"
+        } if name == "__sifr_const_6e6f7468696e67"
     ));
 }
 
@@ -505,7 +533,7 @@ fn dispatcher_lowers_alias_none_name_module_const_as_none_item() {
         },
     )
     .expect("dispatcher should lower alias none name constant");
-    assert_eq!(rust_name_call, "__const_nothing()");
+    assert_eq!(rust_name_call, "__sifr_const_6e6f7468696e67()");
     assert!(matches!(
         item,
         RustItem::Fn {
@@ -514,7 +542,7 @@ fn dispatcher_lowers_alias_none_name_module_const_as_none_item() {
             ret: Some(RustType::Unit),
             body,
             ..
-        } if name == "__const_nothing"
+        } if name == "__sifr_const_6e6f7468696e67"
             && matches!(body.first(), Some(RustStmt::Return(Some(RustExpr::Ident(n)))) if n == "n")
     ));
 }
@@ -561,7 +589,7 @@ fn lowers_simple_module_helper_const_item_for_list_literal() {
     };
     let (item, rust_name_call) = try_lower_simple_module_helper_const_item("nums", &ty, &value)
         .expect("simple non-primitive helper const should lower");
-    assert_eq!(rust_name_call, "__const_nums()");
+    assert_eq!(rust_name_call, "__sifr_const_6e756d73()");
     assert!(matches!(
         item,
         RustItem::Fn {
@@ -569,7 +597,7 @@ fn lowers_simple_module_helper_const_item_for_list_literal() {
             visibility: Visibility::Private,
             ret: Some(RustType::Vec(_)),
             ..
-        } if name == "__const_nums"
+        } if name == "__sifr_const_6e756d73"
     ));
 }
 
@@ -583,7 +611,7 @@ fn lowers_simple_module_helper_name_const_item() {
     };
     let (item, rust_name_call) = try_lower_simple_module_helper_const_item("data", &ty, &value)
         .expect("simple helper name const should lower");
-    assert_eq!(rust_name_call, "__const_data()");
+    assert_eq!(rust_name_call, "__sifr_const_64617461()");
     assert!(matches!(
         item,
         RustItem::Fn {
@@ -592,7 +620,7 @@ fn lowers_simple_module_helper_name_const_item() {
             ret: Some(RustType::Vec(_)),
             body,
             ..
-        } if name == "__const_data"
+        } if name == "__sifr_const_64617461"
             && matches!(body.first(), Some(RustStmt::Return(Some(RustExpr::Ident(n)))) if n == "nums")
     ));
 }

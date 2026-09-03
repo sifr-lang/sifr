@@ -1,3 +1,5 @@
+use crate::test_support::{TestExpectErr as _, TestUnwrap as _};
+
 use super::test_support::package;
 use super::{
     PYTHON_BRIDGE_INVENTORY, PythonBridgeImport, discover_python_bridge_inventory,
@@ -24,7 +26,7 @@ fn bridge_inventory_classifies_static_external_and_same_package_imports() {
     );
 
     let inventory = discover_python_bridge_inventory(&fixture.package)
-        .expect("static bridge inventory should be valid");
+        .test_unwrap("static bridge inventory should be valid");
 
     assert_eq!(
         inventory
@@ -38,7 +40,7 @@ fn bridge_inventory_classifies_static_external_and_same_package_imports() {
         .modules
         .iter()
         .find(|module| module.module == "pkg.adapter")
-        .expect("adapter module");
+        .test_unwrap("adapter module");
     assert_eq!(
         adapter.imports,
         [
@@ -64,7 +66,7 @@ fn invalid_python_bridge_source_reports_pyimp_0002() {
     fixture.write("broken.py", "def broken(:\n    pass\n");
 
     let diagnostics = discover_python_bridge_inventory(&fixture.package)
-        .expect_err("invalid Python syntax must fail inventory");
+        .test_expect_err("invalid Python syntax must fail inventory");
 
     assert_eq!(diagnostics.len(), 1);
     assert_eq!(
@@ -84,7 +86,7 @@ fn invalid_module_paths_duplicates_and_relative_escape_are_distinct() {
     fixture.write("escape.py", "from .. import outside\n");
 
     let diagnostics = discover_python_bridge_inventory(&fixture.package)
-        .expect_err("invalid bridge module paths must fail");
+        .test_expect_err("invalid bridge module paths must fail");
 
     assert!(
         diagnostics
@@ -114,7 +116,7 @@ fn non_utf8_bridge_source_has_an_encoding_diagnostic() {
     fixture.write_bytes("legacy.py", &[b'V', b'A', b'L', b'U', b'E', b'=', 0xff]);
 
     let diagnostics = discover_python_bridge_inventory(&fixture.package)
-        .expect_err("non-UTF-8 bridge source must fail");
+        .test_expect_err("non-UTF-8 bridge source must fail");
     assert!(diagnostics[0].message.contains("must be UTF-8 encoded"));
 }
 
@@ -133,12 +135,12 @@ fn same_package_imports_include_package_and_intermediate_ancestors() {
         "import bridge.pkg.deep.helper\nfrom bridge.pkg import local, NAME\n",
     );
 
-    let inventory = discover_python_bridge_inventory(&fixture.package).expect("inventory");
+    let inventory = discover_python_bridge_inventory(&fixture.package).test_unwrap("inventory");
     let adapter = inventory
         .modules
         .iter()
         .find(|module| module.module == "adapter")
-        .expect("adapter");
+        .test_unwrap("adapter");
     assert_eq!(
         adapter.imports,
         [
@@ -160,7 +162,7 @@ fn same_package_imports_include_package_and_intermediate_ancestors() {
         .modules
         .iter()
         .find(|module| module.module == "pkg.consumer")
-        .expect("consumer");
+        .test_unwrap("consumer");
     assert_eq!(
         consumer.imports,
         [
@@ -187,7 +189,7 @@ fn misplaced_bridge_root_and_reserved_runtime_import_are_rejected() {
     fixture.write("reserved.py", "import __sifr_bridge__.foreign\n");
 
     let diagnostics = discover_python_bridge_inventory(&fixture.package)
-        .expect_err("misplaced and reserved bridge sources must fail");
+        .test_expect_err("misplaced and reserved bridge sources must fail");
 
     assert_eq!(diagnostics.len(), 2);
     assert!(
@@ -206,8 +208,8 @@ fn misplaced_bridge_root_and_reserved_runtime_import_are_rejected() {
 fn inventory_digest_is_stable_and_changes_with_source_or_imports() {
     let fixture = BridgeFixture::new("digests");
     fixture.write("adapter.py", "import json\nVALUE = 1\n");
-    let first = discover_python_bridge_inventory(&fixture.package).expect("first inventory");
-    let second = discover_python_bridge_inventory(&fixture.package).expect("second inventory");
+    let first = discover_python_bridge_inventory(&fixture.package).test_unwrap("first inventory");
+    let second = discover_python_bridge_inventory(&fixture.package).test_unwrap("second inventory");
     assert_eq!(first.inventory_digest, second.inventory_digest);
     assert_eq!(
         first.modules[0].source_digest,
@@ -215,7 +217,8 @@ fn inventory_digest_is_stable_and_changes_with_source_or_imports() {
     );
 
     fixture.write("adapter.py", "import decimal\nVALUE = 2\n");
-    let changed = discover_python_bridge_inventory(&fixture.package).expect("changed inventory");
+    let changed =
+        discover_python_bridge_inventory(&fixture.package).test_unwrap("changed inventory");
     assert_ne!(first.inventory_digest, changed.inventory_digest);
     assert_ne!(
         first.modules[0].source_digest,
@@ -228,10 +231,10 @@ fn bridge_sources_and_generated_inventory_are_required_archive_entries() {
     let fixture = BridgeFixture::new("archive_entries");
     fixture.write("adapter.py", "VALUE = 1\n");
     fixture.write("nested/helper.py", "VALUE = 2\n");
-    let inventory = discover_python_bridge_inventory(&fixture.package).expect("inventory");
+    let inventory = discover_python_bridge_inventory(&fixture.package).test_unwrap("inventory");
     let inventory_path = write_python_bridge_inventory(&fixture.package, &inventory)
-        .expect("write inventory")
-        .expect("non-empty inventory path");
+        .test_unwrap("write inventory")
+        .test_unwrap("non-empty inventory path");
 
     assert_eq!(inventory_path, fixture.root.join(PYTHON_BRIDGE_INVENTORY));
     assert_eq!(
@@ -244,9 +247,10 @@ fn bridge_sources_and_generated_inventory_are_required_archive_entries() {
         .into_iter()
         .collect()
     );
-    let decoded: super::PythonBridgeInventory =
-        serde_json::from_str(&fs::read_to_string(inventory_path).expect("read written inventory"))
-            .expect("inventory JSON");
+    let decoded: super::PythonBridgeInventory = serde_json::from_str(
+        &fs::read_to_string(inventory_path).test_unwrap("read written inventory"),
+    )
+    .test_unwrap("inventory JSON");
     assert_eq!(decoded, inventory);
     let package_required = crate::cargo::package::required_archive_entries(
         &fixture.package,
@@ -262,10 +266,10 @@ fn bridge_sources_and_generated_inventory_are_required_archive_entries() {
 fn package_validation_rejects_missing_and_stale_generated_inventory() {
     let fixture = BridgeFixture::new("stale_inventory");
     fixture.write("adapter.py", "VALUE = 1\n");
-    let inventory = discover_python_bridge_inventory(&fixture.package).expect("inventory");
+    let inventory = discover_python_bridge_inventory(&fixture.package).test_unwrap("inventory");
 
     let missing = validate_python_bridge_inventory_manifest(&fixture.package, &inventory)
-        .expect_err("missing generated inventory must fail");
+        .test_expect_err("missing generated inventory must fail");
     assert!(missing.message.contains("missing or unreadable"));
     let archive_diagnostics = crate::cargo::package::validate_package_archive(
         &fixture.package,
@@ -282,20 +286,21 @@ fn package_validation_rejects_missing_and_stale_generated_inventory() {
             },
         ],
     )
-    .expect_err("package archive validation must inspect the generated inventory");
+    .test_expect_err("package archive validation must inspect the generated inventory");
     assert!(archive_diagnostics.iter().any(|diagnostic| {
         diagnostic.code == DiagnosticCode::PYIMP_INVALID_BRIDGE_SOURCE
             && diagnostic.message.contains("missing or unreadable")
     }));
 
-    write_python_bridge_inventory(&fixture.package, &inventory).expect("write inventory");
+    write_python_bridge_inventory(&fixture.package, &inventory).test_unwrap("write inventory");
     validate_python_bridge_inventory_manifest(&fixture.package, &inventory)
-        .expect("fresh inventory should validate");
+        .test_unwrap("fresh inventory should validate");
 
     fixture.write("adapter.py", "VALUE = 2\n");
-    let changed = discover_python_bridge_inventory(&fixture.package).expect("changed inventory");
+    let changed =
+        discover_python_bridge_inventory(&fixture.package).test_unwrap("changed inventory");
     let stale = validate_python_bridge_inventory_manifest(&fixture.package, &changed)
-        .expect_err("stale generated inventory must fail");
+        .test_expect_err("stale generated inventory must fail");
     assert!(stale.message.contains("is stale"));
 }
 
@@ -313,7 +318,7 @@ impl BridgeFixture {
             sequence,
             label
         ));
-        fs::create_dir_all(root.join("src/python_bridges")).expect("create bridge root");
+        fs::create_dir_all(root.join("src/python_bridges")).test_unwrap("create bridge root");
         let mut package = package(
             "bridge_pkg",
             PythonConfig::default(),
@@ -338,8 +343,9 @@ impl BridgeFixture {
 
     fn write_bytes_at(&self, relative: &str, source: &[u8]) {
         let path = self.root.join(relative);
-        fs::create_dir_all(path.parent().expect("source parent")).expect("create source parent");
-        fs::write(path, source).expect("write bridge source");
+        fs::create_dir_all(path.parent().test_unwrap("source parent"))
+            .test_unwrap("create source parent");
+        fs::write(path, source).test_unwrap("write bridge source");
     }
 }
 

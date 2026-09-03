@@ -146,31 +146,6 @@ fn uv_lock_check_spawn_error(
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn missing_uv_executable_is_a_probe_failure_not_stale_metadata() {
-        let request = PythonEnvironmentProbeRequest {
-            venv_root: "/tmp/venv".into(),
-            interpreter: "/tmp/venv/bin/python".into(),
-            pyproject: None,
-            lock: None,
-            required_imports: Vec::new(),
-            declared_imports: Vec::new(),
-            native_imports: Vec::new(),
-        };
-        let diagnostic = uv_lock_check_spawn_error(
-            &request,
-            &std::io::Error::new(std::io::ErrorKind::NotFound, "uv missing"),
-        );
-
-        assert_eq!(diagnostic.code, DiagnosticCode::PYENV_PROBE_FAILED);
-        assert!(diagnostic.message.contains("not installed"));
-    }
-}
-
 const PROBE_SCRIPT: &str = r#"
 import hashlib
 import importlib
@@ -263,3 +238,28 @@ payload = {
 }
 print(json.dumps(payload, sort_keys=True, separators=(",", ":")))
 "#;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn missing_uv_executable_is_a_probe_failure_not_stale_metadata() {
+        let request = PythonEnvironmentProbeRequest {
+            venv_root: "/tmp/venv".into(),
+            interpreter: "/tmp/venv/bin/python".into(),
+            pyproject: None,
+            lock: None,
+            required_imports: Vec::new(),
+            declared_imports: Vec::new(),
+            native_imports: Vec::new(),
+        };
+        let diagnostic = uv_lock_check_spawn_error(
+            &request,
+            &std::io::Error::new(std::io::ErrorKind::NotFound, "uv missing"),
+        );
+
+        assert_eq!(diagnostic.code, DiagnosticCode::PYENV_PROBE_FAILED);
+        assert!(diagnostic.message.contains("not installed"));
+    }
+}

@@ -785,7 +785,10 @@ class Buckets:
 "#,
     );
 
-    assert!(generated.contains("self.values.get_mut(&key)"));
+    assert!(
+        generated.contains("self.values.get_mut(&key)"),
+        "{generated}"
+    );
     assert!(generated.contains("__sifr_bucket.pop()"));
     assert!(generated.contains("self.values.get(&key).map_or"));
     assert!(generated.contains("if let Some(__sifr_checked_value_"));

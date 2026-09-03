@@ -1,3 +1,5 @@
+use crate::test_support::{TestExpectErr as _, TestUnwrap as _};
+
 use crate::cargo::metadata::{
     CargoPackage, CargoPackageId, CargoResolveEdge, CargoTarget, NormalizedCargoMetadata,
 };
@@ -23,20 +25,20 @@ fn filters_select_dependency_and_dependent_closures_with_negation() {
     let selected = apply_package_filters(
         &graph,
         &[
-            parse_package_filter("app...").expect("parse dependency closure"),
-            parse_package_filter("!shared").expect("parse negation"),
+            parse_package_filter("app...").test_unwrap("parse dependency closure"),
+            parse_package_filter("!shared").test_unwrap("parse negation"),
         ],
     )
-    .expect("filters apply");
+    .test_unwrap("filters apply");
     assert!(selected.contains(&package_id("app")));
     assert!(selected.contains(&package_id("lib")));
     assert!(!selected.contains(&package_id("shared")));
 
     let dependents = apply_package_filters(
         &graph,
-        &[parse_package_filter("...^shared").expect("parse dependents")],
+        &[parse_package_filter("...^shared").test_unwrap("parse dependents")],
     )
-    .expect("dependents apply");
+    .test_unwrap("dependents apply");
     assert_eq!(
         dependents,
         BTreeSet::from([package_id("app"), package_id("lib")])
@@ -53,9 +55,9 @@ fn ambiguous_filter_reports_0601() {
 
     let diagnostics = apply_package_filters(
         &graph,
-        &[parse_package_filter("app").expect("parse package filter")],
+        &[parse_package_filter("app").test_unwrap("parse package filter")],
     )
-    .expect_err("ambiguous Sifr name should fail");
+    .test_expect_err("ambiguous Sifr name should fail");
 
     assert_eq!(
         diagnostics[0].code,
@@ -67,7 +69,7 @@ fn ambiguous_filter_reports_0601() {
 fn changed_file_mapping_reports_0603() {
     let (graph, _) = graph_and_metadata();
     let diagnostics = select_changed_packages(&graph, &[PathBuf::from("/outside/file.sifr")])
-        .expect_err("outside path should fail");
+        .test_expect_err("outside path should fail");
 
     assert_eq!(
         diagnostics[0].code,
@@ -75,7 +77,7 @@ fn changed_file_mapping_reports_0603() {
     );
 
     let changed = select_changed_packages(&graph, &[PathBuf::from("/ws/lib/sifr/lib/a.sifr")])
-        .expect("package path should map");
+        .test_unwrap("package path should map");
     assert_eq!(changed.package_ids, BTreeSet::from([package_id("lib")]));
 }
 
@@ -83,7 +85,7 @@ fn changed_file_mapping_reports_0603() {
 fn explicit_rust_only_selection_reports_0102() {
     let (graph, metadata) = graph_and_metadata();
     let diagnostics = explicit_package_selection(&metadata, &graph, &["rust-helper".to_string()])
-        .expect_err("Rust-only package selection should fail");
+        .test_expect_err("Rust-only package selection should fail");
 
     assert_eq!(
         diagnostics[0].code,
@@ -95,7 +97,7 @@ fn explicit_rust_only_selection_reports_0102() {
 fn rust_only_member_depending_on_sifr_reports_0106() {
     let (graph, metadata) = graph_and_metadata();
     let diagnostics =
-        select_sifr_workspace_members(&metadata, &graph).expect_err("Rust to Sifr edge fails");
+        select_sifr_workspace_members(&metadata, &graph).test_expect_err("Rust to Sifr edge fails");
 
     assert_eq!(
         diagnostics[0].code,
@@ -127,7 +129,7 @@ fn workspace_duplicate_import_roots_report_0602() {
         &graph,
         &["sifr-lib".to_string(), "sifr-duplicate".to_string()],
     )
-    .expect_err("duplicate import roots fail");
+    .test_expect_err("duplicate import roots fail");
 
     assert_eq!(
         diagnostics[0].code,
@@ -161,7 +163,7 @@ fn workspace_duplicate_sifr_names_report_0607() {
     );
 
     let diagnostics =
-        select_sifr_workspace_members(&metadata, &graph).expect_err("duplicate names fail");
+        select_sifr_workspace_members(&metadata, &graph).test_expect_err("duplicate names fail");
 
     assert_eq!(
         diagnostics[0].code,
@@ -175,10 +177,11 @@ fn outdated_unknown_source_reports_0604() {
     let package = graph
         .packages
         .get_mut(&package_id("app"))
-        .expect("app package exists");
+        .test_unwrap("app package exists");
     package.cargo_source = Some("sparse+custom".to_string());
 
-    let diagnostics = outdated_query_report(&graph, false).expect_err("unknown source should fail");
+    let diagnostics =
+        outdated_query_report(&graph, false).test_expect_err("unknown source should fail");
 
     assert_eq!(
         diagnostics[0].code,
@@ -189,7 +192,7 @@ fn outdated_unknown_source_reports_0604() {
 #[test]
 fn outdated_query_classifies_path_registry_and_git_sources_read_only() {
     let graph = graph_and_metadata().0;
-    let reports = outdated_query_report(&graph, false).expect("known sources classify");
+    let reports = outdated_query_report(&graph, false).test_unwrap("known sources classify");
 
     assert!(
         reports

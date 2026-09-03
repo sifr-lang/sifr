@@ -1,11 +1,12 @@
 // src/main.rs
-mod __sifr_project_nominals {
+mod sifr_generated_project_nominals {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct DivisionError {
         pub message: String,
     }
     impl DivisionError {
-        pub fn new(message: String) -> Self {
+        #[must_use]
+        pub const fn new(message: String) -> Self {
             Self { message }
         }
     }
@@ -20,7 +21,8 @@ mod __sifr_project_nominals {
         pub message: String,
     }
     impl DecimalConversionError {
-        pub fn new(message: String) -> Self {
+        #[must_use]
+        pub const fn new(message: String) -> Self {
             Self { message }
         }
     }
@@ -31,86 +33,92 @@ mod __sifr_project_nominals {
     }
     impl ::std::error::Error for DecimalConversionError {}
 }
-pub use __sifr_project_nominals::DecimalConversionError;
-pub use __sifr_project_nominals::DivisionError;
-
-mod __sifr_project_unions {
+pub use sifr_generated_project_nominals::DecimalConversionError;
+pub use sifr_generated_project_nominals::DivisionError;
+mod sifr_generated_project_unions {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub enum __SifrUnion_8_x3asequence5_x3aunion1_x3a226_x3a5_x3aclass13_x3aDivisionError1_x3a035_x3a5_x3aclass22_x3aDecimalConversionError1_x3a0 {
-        __SifrUnionVariant_5_x3aclass22_x3aDecimalConversionError1_x3a0(
-            crate::__sifr_project_nominals::DecimalConversionError,
+    pub enum SifrGeneratedUnion8X3asequence5X3aunion1X3a226X3a5X3aclass13X3aDivisionError1X3a035X3a5X3aclass22X3aDecimalConversionError1X3a0
+    {
+        SifrGeneratedUnionVariant5X3aclass22X3aDecimalConversionError1X3a0(
+            crate::sifr_generated_project_nominals::DecimalConversionError,
         ),
-        __SifrUnionVariant_5_x3aclass13_x3aDivisionError1_x3a0(
-            crate::__sifr_project_nominals::DivisionError,
+        SifrGeneratedUnionVariant5X3aclass13X3aDivisionError1X3a0(
+            crate::sifr_generated_project_nominals::DivisionError,
         ),
     }
-    impl From<crate::__sifr_project_nominals::DecimalConversionError>
-    for __SifrUnion_8_x3asequence5_x3aunion1_x3a226_x3a5_x3aclass13_x3aDivisionError1_x3a035_x3a5_x3aclass22_x3aDecimalConversionError1_x3a0 {
-        fn from(value: crate::__sifr_project_nominals::DecimalConversionError) -> Self {
-            __SifrUnion_8_x3asequence5_x3aunion1_x3a226_x3a5_x3aclass13_x3aDivisionError1_x3a035_x3a5_x3aclass22_x3aDecimalConversionError1_x3a0::__SifrUnionVariant_5_x3aclass22_x3aDecimalConversionError1_x3a0(
+    impl From<crate::sifr_generated_project_nominals::DecimalConversionError>
+    for SifrGeneratedUnion8X3asequence5X3aunion1X3a226X3a5X3aclass13X3aDivisionError1X3a035X3a5X3aclass22X3aDecimalConversionError1X3a0 {
+        fn from(
+            value: crate::sifr_generated_project_nominals::DecimalConversionError,
+        ) -> Self {
+            SifrGeneratedUnion8X3asequence5X3aunion1X3a226X3a5X3aclass13X3aDivisionError1X3a035X3a5X3aclass22X3aDecimalConversionError1X3a0::SifrGeneratedUnionVariant5X3aclass22X3aDecimalConversionError1X3a0(
                 value,
             )
         }
     }
-    impl From<crate::__sifr_project_nominals::DivisionError>
-    for __SifrUnion_8_x3asequence5_x3aunion1_x3a226_x3a5_x3aclass13_x3aDivisionError1_x3a035_x3a5_x3aclass22_x3aDecimalConversionError1_x3a0 {
-        fn from(value: crate::__sifr_project_nominals::DivisionError) -> Self {
-            __SifrUnion_8_x3asequence5_x3aunion1_x3a226_x3a5_x3aclass13_x3aDivisionError1_x3a035_x3a5_x3aclass22_x3aDecimalConversionError1_x3a0::__SifrUnionVariant_5_x3aclass13_x3aDivisionError1_x3a0(
+    impl From<crate::sifr_generated_project_nominals::DivisionError>
+    for SifrGeneratedUnion8X3asequence5X3aunion1X3a226X3a5X3aclass13X3aDivisionError1X3a035X3a5X3aclass22X3aDecimalConversionError1X3a0 {
+        fn from(value: crate::sifr_generated_project_nominals::DivisionError) -> Self {
+            SifrGeneratedUnion8X3asequence5X3aunion1X3a226X3a5X3aclass13X3aDivisionError1X3a035X3a5X3aclass22X3aDecimalConversionError1X3a0::SifrGeneratedUnionVariant5X3aclass13X3aDivisionError1X3a0(
                 value,
             )
         }
     }
     impl ::std::fmt::Display
-    for __SifrUnion_8_x3asequence5_x3aunion1_x3a226_x3a5_x3aclass13_x3aDivisionError1_x3a035_x3a5_x3aclass22_x3aDecimalConversionError1_x3a0 {
+    for SifrGeneratedUnion8X3asequence5X3aunion1X3a226X3a5X3aclass13X3aDivisionError1X3a035X3a5X3aclass22X3aDecimalConversionError1X3a0 {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
             match self {
-                __SifrUnion_8_x3asequence5_x3aunion1_x3a226_x3a5_x3aclass13_x3aDivisionError1_x3a035_x3a5_x3aclass22_x3aDecimalConversionError1_x3a0::__SifrUnionVariant_5_x3aclass22_x3aDecimalConversionError1_x3a0(
+                SifrGeneratedUnion8X3asequence5X3aunion1X3a226X3a5X3aclass13X3aDivisionError1X3a035X3a5X3aclass22X3aDecimalConversionError1X3a0::SifrGeneratedUnionVariant5X3aclass22X3aDecimalConversionError1X3a0(
                     v,
-                ) => {
-                    return write!(f, "{}", v);
-                }
-                __SifrUnion_8_x3asequence5_x3aunion1_x3a226_x3a5_x3aclass13_x3aDivisionError1_x3a035_x3a5_x3aclass22_x3aDecimalConversionError1_x3a0::__SifrUnionVariant_5_x3aclass13_x3aDivisionError1_x3a0(
+                ) => write!(f, "{v}"),
+                SifrGeneratedUnion8X3asequence5X3aunion1X3a226X3a5X3aclass13X3aDivisionError1X3a035X3a5X3aclass22X3aDecimalConversionError1X3a0::SifrGeneratedUnionVariant5X3aclass13X3aDivisionError1X3a0(
                     v,
-                ) => {
-                    return write!(f, "{}", v);
-                }
+                ) => write!(f, "{v}"),
             }
         }
     }
 }
-pub use __sifr_project_unions::__SifrUnion_8_x3asequence5_x3aunion1_x3a226_x3a5_x3aclass13_x3aDivisionError1_x3a035_x3a5_x3aclass22_x3aDecimalConversionError1_x3a0;
-use ::rust_decimal::Decimal;
 use ::bigdecimal::BigDecimal;
+use ::rust_decimal::Decimal;
+pub use sifr_generated_project_unions::SifrGeneratedUnion8X3asequence5X3aunion1X3a226X3a5X3aclass13X3aDivisionError1X3a035X3a5X3aclass22X3aDecimalConversionError1X3a0;
+#[expect(
+    clippy::too_many_lines,
+    reason = "one generated Rust function preserves one typed Sifr function"
+)]
+#[expect(
+    clippy::assertions_on_constants,
+    reason = "generated Rust preserves this exact typed Sifr source contract"
+)]
 fn main() {
     println!("decimal_arithmetic deterministic arithmetic and context demo");
     let cash: Decimal = Decimal::from_i128_with_scale(1000_i128, 2);
     let fee: Decimal = Decimal::from_i128_with_scale(300_i128, 2);
-    let __sifr_try_res: Result<
+    let sifr_generated_try_res: Result<
         (),
-        __SifrUnion_8_x3asequence5_x3aunion1_x3a226_x3a5_x3aclass13_x3aDivisionError1_x3a035_x3a5_x3aclass22_x3aDecimalConversionError1_x3a0,
+        SifrGeneratedUnion8X3asequence5X3aunion1X3a226X3a5X3aclass13X3aDivisionError1X3a035X3a5X3aclass22X3aDecimalConversionError1X3a0,
     > = (|| {
-        let cash_floor: Decimal = ({
-            let __sifr_decimal_left_result = Ok(cash);
-            let __sifr_decimal_right_result = Ok(fee);
-            __sifr_decimal_left_result
-                .and_then(move |__sifr_decimal_left| {
-                    __sifr_decimal_right_result
-                        .and_then(move |__sifr_decimal_right| {
+        let cash_floor: Decimal = {
+            let sifr_generated_decimal_left_result = Ok(cash);
+            let sifr_generated_decimal_right_result = Ok(fee);
+            sifr_generated_decimal_left_result
+                .and_then(move |sifr_generated_decimal_left| {
+                    sifr_generated_decimal_right_result
+                        .and_then(move |sifr_generated_decimal_right| {
                             Decimal::checked_div(
-                                    __sifr_decimal_left,
-                                    __sifr_decimal_right,
+                                    sifr_generated_decimal_left,
+                                    sifr_generated_decimal_right,
                                 )
-                                .map(|__sifr_decimal_quotient| {
-                                    __sifr_decimal_quotient.floor()
+                                .map(|sifr_generated_decimal_quotient| {
+                                    sifr_generated_decimal_quotient.floor()
                                 })
                                 .map_or_else(
                                     || Err(
-                                        if __sifr_decimal_right.is_zero() {
-                                            __SifrUnion_8_x3asequence5_x3aunion1_x3a226_x3a5_x3aclass13_x3aDivisionError1_x3a035_x3a5_x3aclass22_x3aDecimalConversionError1_x3a0::__SifrUnionVariant_5_x3aclass13_x3aDivisionError1_x3a0(
+                                        if sifr_generated_decimal_right.is_zero() {
+                                            SifrGeneratedUnion8X3asequence5X3aunion1X3a226X3a5X3aclass13X3aDivisionError1X3a035X3a5X3aclass22X3aDecimalConversionError1X3a0::SifrGeneratedUnionVariant5X3aclass13X3aDivisionError1X3a0(
                                                 DivisionError::new("division by zero".to_string()),
                                             )
                                         } else {
-                                            __SifrUnion_8_x3asequence5_x3aunion1_x3a226_x3a5_x3aclass13_x3aDivisionError1_x3a035_x3a5_x3aclass22_x3aDecimalConversionError1_x3a0::__SifrUnionVariant_5_x3aclass22_x3aDecimalConversionError1_x3a0(
+                                            SifrGeneratedUnion8X3asequence5X3aunion1X3a226X3a5X3aclass13X3aDivisionError1X3a035X3a5X3aclass22X3aDecimalConversionError1X3a0::SifrGeneratedUnionVariant5X3aclass22X3aDecimalConversionError1X3a0(
                                                 DecimalConversionError::new(
                                                     "decimal // operation overflowed its exact representation"
                                                         .to_string(),
@@ -118,40 +126,40 @@ fn main() {
                                             )
                                         },
                                     ),
-                                    |__sifr_decimal_value| Ok(__sifr_decimal_value),
+                                    Ok,
                                 )
                         })
                 })
-        })?;
-        let cash_remainder: Decimal = ({
-            let __sifr_decimal_left_result = Ok(cash);
-            let __sifr_decimal_right_result = Ok(fee);
-            __sifr_decimal_left_result
-                .and_then(move |__sifr_decimal_left| {
-                    __sifr_decimal_right_result
-                        .and_then(move |__sifr_decimal_right| {
+        }?;
+        let cash_remainder: Decimal = {
+            let sifr_generated_decimal_left_result = Ok(cash);
+            let sifr_generated_decimal_right_result = Ok(fee);
+            sifr_generated_decimal_left_result
+                .and_then(move |sifr_generated_decimal_left| {
+                    sifr_generated_decimal_right_result
+                        .and_then(move |sifr_generated_decimal_right| {
                             Decimal::checked_div(
-                                    __sifr_decimal_left,
-                                    __sifr_decimal_right,
+                                    sifr_generated_decimal_left,
+                                    sifr_generated_decimal_right,
                                 )
-                                .and_then(|__sifr_decimal_quotient| {
+                                .and_then(|sifr_generated_decimal_quotient| {
                                     Decimal::checked_mul(
-                                            __sifr_decimal_quotient.floor(),
-                                            __sifr_decimal_right,
+                                            sifr_generated_decimal_quotient.floor(),
+                                            sifr_generated_decimal_right,
                                         )
-                                        .and_then(|__sifr_decimal_product| Decimal::checked_sub(
-                                            __sifr_decimal_left,
-                                            __sifr_decimal_product,
+                                        .and_then(|sifr_generated_decimal_product| Decimal::checked_sub(
+                                            sifr_generated_decimal_left,
+                                            sifr_generated_decimal_product,
                                         ))
                                 })
                                 .map_or_else(
                                     || Err(
-                                        if __sifr_decimal_right.is_zero() {
-                                            __SifrUnion_8_x3asequence5_x3aunion1_x3a226_x3a5_x3aclass13_x3aDivisionError1_x3a035_x3a5_x3aclass22_x3aDecimalConversionError1_x3a0::__SifrUnionVariant_5_x3aclass13_x3aDivisionError1_x3a0(
+                                        if sifr_generated_decimal_right.is_zero() {
+                                            SifrGeneratedUnion8X3asequence5X3aunion1X3a226X3a5X3aclass13X3aDivisionError1X3a035X3a5X3aclass22X3aDecimalConversionError1X3a0::SifrGeneratedUnionVariant5X3aclass13X3aDivisionError1X3a0(
                                                 DivisionError::new("division by zero".to_string()),
                                             )
                                         } else {
-                                            __SifrUnion_8_x3asequence5_x3aunion1_x3a226_x3a5_x3aclass13_x3aDivisionError1_x3a035_x3a5_x3aclass22_x3aDecimalConversionError1_x3a0::__SifrUnionVariant_5_x3aclass22_x3aDecimalConversionError1_x3a0(
+                                            SifrGeneratedUnion8X3asequence5X3aunion1X3a226X3a5X3aclass13X3aDivisionError1X3a035X3a5X3aclass22X3aDecimalConversionError1X3a0::SifrGeneratedUnionVariant5X3aclass22X3aDecimalConversionError1X3a0(
                                                 DecimalConversionError::new(
                                                     "decimal % operation overflowed its exact representation"
                                                         .to_string(),
@@ -159,23 +167,23 @@ fn main() {
                                             )
                                         },
                                     ),
-                                    |__sifr_decimal_value| Ok(__sifr_decimal_value),
+                                    Ok,
                                 )
                         })
                 })
-        })?;
-        let negative_floor: BigDecimal = ({
-            let __sifr_bigdecimal_left = BigDecimal::new(
+        }?;
+        let negative_floor: BigDecimal = {
+            let sifr_generated_bigdecimal_left = BigDecimal::new(
                     ::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&vec![237]),
                     1,
                 )
                 .clone();
-            let __sifr_bigdecimal_right = BigDecimal::new(
+            let sifr_generated_bigdecimal_right = BigDecimal::new(
                     ::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&vec![1]),
                     0,
                 )
                 .clone();
-            if ::bigdecimal::Zero::is_zero(&__sifr_bigdecimal_right) {
+            if ::bigdecimal::Zero::is_zero(&sifr_generated_bigdecimal_right) {
                 Err(DivisionError::new("division by zero".to_string()))
             } else {
                 Ok(
@@ -184,27 +192,28 @@ fn main() {
                             ::bigdecimal::RoundingMode::HalfEven,
                         )
                         .round_decimal_ref(
-                            &((&__sifr_bigdecimal_left / &__sifr_bigdecimal_right)
-                                .with_scale_round(0, ::bigdecimal::RoundingMode::Floor)),
+                            &(&sifr_generated_bigdecimal_left
+                                / &sifr_generated_bigdecimal_right)
+                                .with_scale_round(0, ::bigdecimal::RoundingMode::Floor),
                         ),
                 )
             }
-        })
-            .map_err(|__e| __SifrUnion_8_x3asequence5_x3aunion1_x3a226_x3a5_x3aclass13_x3aDivisionError1_x3a035_x3a5_x3aclass22_x3aDecimalConversionError1_x3a0::__SifrUnionVariant_5_x3aclass13_x3aDivisionError1_x3a0(
-                __e,
-            ))?;
-        let negative_remainder: BigDecimal = ({
-            let __sifr_bigdecimal_left = BigDecimal::new(
+        }
+            .map_err(
+                SifrGeneratedUnion8X3asequence5X3aunion1X3a226X3a5X3aclass13X3aDivisionError1X3a035X3a5X3aclass22X3aDecimalConversionError1X3a0::SifrGeneratedUnionVariant5X3aclass13X3aDivisionError1X3a0,
+            )?;
+        let negative_remainder: BigDecimal = {
+            let sifr_generated_bigdecimal_left = BigDecimal::new(
                     ::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&vec![237]),
                     1,
                 )
                 .clone();
-            let __sifr_bigdecimal_right = BigDecimal::new(
+            let sifr_generated_bigdecimal_right = BigDecimal::new(
                     ::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&vec![1]),
                     0,
                 )
                 .clone();
-            if ::bigdecimal::Zero::is_zero(&__sifr_bigdecimal_right) {
+            if ::bigdecimal::Zero::is_zero(&sifr_generated_bigdecimal_right) {
                 Err(DivisionError::new("division by zero".to_string()))
             } else {
                 Ok(
@@ -213,89 +222,148 @@ fn main() {
                             ::bigdecimal::RoundingMode::HalfEven,
                         )
                         .round_decimal_ref(
-                            &(&__sifr_bigdecimal_left
-                                - ((&__sifr_bigdecimal_left / &__sifr_bigdecimal_right)
+                            &(&sifr_generated_bigdecimal_left
+                                - (&sifr_generated_bigdecimal_left
+                                    / &sifr_generated_bigdecimal_right)
                                     .with_scale_round(0, ::bigdecimal::RoundingMode::Floor)
-                                    * &__sifr_bigdecimal_right)),
+                                    * &sifr_generated_bigdecimal_right),
                         ),
                 )
             }
-        })
-            .map_err(|__e| __SifrUnion_8_x3asequence5_x3aunion1_x3a226_x3a5_x3aclass13_x3aDivisionError1_x3a035_x3a5_x3aclass22_x3aDecimalConversionError1_x3a0::__SifrUnionVariant_5_x3aclass13_x3aDivisionError1_x3a0(
-                __e,
-            ))?;
-        println!("{}", cash_floor);
-        println!("{}", cash_remainder);
-        println!("{}", negative_floor);
-        println!("{}", negative_remainder);
+        }
+            .map_err(
+                SifrGeneratedUnion8X3asequence5X3aunion1X3a226X3a5X3aclass13X3aDivisionError1X3a035X3a5X3aclass22X3aDecimalConversionError1X3a0::SifrGeneratedUnionVariant5X3aclass13X3aDivisionError1X3a0,
+            )?;
+        println!("{cash_floor}");
+        println!("{cash_remainder}");
+        println!("{negative_floor}");
+        println!("{negative_remainder}");
         Ok(())
     })();
-    if let Err(__sifr_try_err) = __sifr_try_res {
-        match __sifr_try_err {
-            __SifrUnion_8_x3asequence5_x3aunion1_x3a226_x3a5_x3aclass13_x3aDivisionError1_x3a035_x3a5_x3aclass22_x3aDecimalConversionError1_x3a0::__SifrUnionVariant_5_x3aclass22_x3aDecimalConversionError1_x3a0(
-                __sifr_try_variant_error,
+    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+        match sifr_generated_try_err {
+            SifrGeneratedUnion8X3asequence5X3aunion1X3a226X3a5X3aclass13X3aDivisionError1X3a035X3a5X3aclass22X3aDecimalConversionError1X3a0::SifrGeneratedUnionVariant5X3aclass22X3aDecimalConversionError1X3a0(
+                sifr_generated_try_variant_error,
             ) => {
-                let error = __sifr_try_variant_error.clone();
-                assert!(false, "{}", format!("{}", error));
+                let error = sifr_generated_try_variant_error.clone();
+                assert!(false, "{error}");
             }
-            __SifrUnion_8_x3asequence5_x3aunion1_x3a226_x3a5_x3aclass13_x3aDivisionError1_x3a035_x3a5_x3aclass22_x3aDecimalConversionError1_x3a0::__SifrUnionVariant_5_x3aclass13_x3aDivisionError1_x3a0(
-                __sifr_try_variant_error,
+            SifrGeneratedUnion8X3asequence5X3aunion1X3a226X3a5X3aclass13X3aDivisionError1X3a035X3a5X3aclass22X3aDecimalConversionError1X3a0::SifrGeneratedUnionVariant5X3aclass13X3aDivisionError1X3a0(
+                sifr_generated_try_variant_error,
             ) => {
-                let error = __sifr_try_variant_error.clone();
-                assert!(false, "{}", format!("{}", error));
+                let error = sifr_generated_try_variant_error.clone();
+                assert!(false, "{error}");
             }
         }
     }
     println!(
-        "{}", Decimal::from_i128_with_scale(25_i128, 1).round_dp_with_strategy({ let
-        __scale = 0; (if __scale < 0 { 0 } else { __scale }) as u32 },
-        ::rust_decimal::RoundingStrategy::MidpointNearestEven)
+        "{}",
+        Decimal::from_i128_with_scale(25_i128, 1).round_dp_with_strategy(
+            {
+                let sifr_generated_scale = 0;
+                (if sifr_generated_scale < 0 {
+                    0
+                } else {
+                    sifr_generated_scale
+                }) as u32
+            },
+            ::rust_decimal::RoundingStrategy::MidpointNearestEven
+        )
     );
     println!(
-        "{}", Decimal::from_i128_with_scale(25_i128, 1).round_dp_with_strategy({ let
-        __scale = 0; (if __scale < 0 { 0 } else { __scale }) as u32 },
-        ::rust_decimal::RoundingStrategy::MidpointNearestEven)
+        "{}",
+        Decimal::from_i128_with_scale(25_i128, 1).round_dp_with_strategy(
+            {
+                let sifr_generated_scale = 0;
+                (if sifr_generated_scale < 0 {
+                    0
+                } else {
+                    sifr_generated_scale
+                }) as u32
+            },
+            ::rust_decimal::RoundingStrategy::MidpointNearestEven
+        )
     );
     let precise: BigDecimal = BigDecimal::new(
-        ::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(
-            &vec![15, 149, 26, 159, 163, 162, 134, 201, 79, 14, 118, 108, 53],
-        ),
+        ::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&vec![
+            15, 149, 26, 159, 163, 162, 134, 201, 79, 14, 118, 108, 53,
+        ]),
         30,
     );
     println!(
-        "{}", ::bigdecimal::Context::new(::std::num::NonZeroU64::MIN.saturating_add(27),
-        ::bigdecimal::RoundingMode::HalfEven).round_decimal_ref(& (precise.clone() +
-        BigDecimal::new(::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&
-        vec![0]), 0).clone()))
+        "{}",
+        ::bigdecimal::Context::new(
+            ::std::num::NonZeroU64::MIN.saturating_add(27),
+            ::bigdecimal::RoundingMode::HalfEven
+        )
+        .round_decimal_ref(
+            &(precise.clone()
+                + BigDecimal::new(
+                    ::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&vec![0]),
+                    0
+                )
+                .clone())
+        )
     );
     println!(
-        "{}", ::bigdecimal::Context::new(::std::num::NonZeroU64::MIN.saturating_add(27),
-        ::bigdecimal::RoundingMode::HalfEven).round_decimal_ref(&
-        (BigDecimal::new(::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&
-        vec![25]), 1).with_scale_round(0, ::bigdecimal::RoundingMode::HalfEven)))
+        "{}",
+        ::bigdecimal::Context::new(
+            ::std::num::NonZeroU64::MIN.saturating_add(27),
+            ::bigdecimal::RoundingMode::HalfEven
+        )
+        .round_decimal_ref(
+            &BigDecimal::new(
+                ::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&vec![25]),
+                1
+            )
+            .with_scale_round(0, ::bigdecimal::RoundingMode::HalfEven)
+        )
     );
     println!(
-        "{}", ::bigdecimal::Context::new(::std::num::NonZeroU64::MIN.saturating_add(27),
-        ::bigdecimal::RoundingMode::HalfEven).round_decimal_ref(&
-        (BigDecimal::new(::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&
-        vec![25]), 1).with_scale_round(0, ::bigdecimal::RoundingMode::HalfEven)))
+        "{}",
+        ::bigdecimal::Context::new(
+            ::std::num::NonZeroU64::MIN.saturating_add(27),
+            ::bigdecimal::RoundingMode::HalfEven
+        )
+        .round_decimal_ref(
+            &BigDecimal::new(
+                ::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&vec![25]),
+                1
+            )
+            .with_scale_round(0, ::bigdecimal::RoundingMode::HalfEven)
+        )
     );
     println!(
-        "{:?}", < Decimal as ::rust_decimal::MathematicalOps >::sqrt(&
-        Decimal::from_i128_with_scale(- 4_i128, 0)).map_or_else(||
-        Err(DecimalConversionError { message :
-        "decimal.sqrt() is undefined for negative values".to_string().to_string() }), |
-        __v | Ok(__v))
+        "{:?}",
+        <Decimal as ::rust_decimal::MathematicalOps>::sqrt(&Decimal::from_i128_with_scale(
+            -4_i128, 0
+        ))
+        .map_or_else(
+            || Err(DecimalConversionError {
+                message: "decimal.sqrt() is undefined for negative values".to_string()
+            }),
+            Ok
+        )
     );
     println!(
-        "{:?}", BigDecimal::new(::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&
-        vec![252]), 0)
-        .sqrt_with_context(&::bigdecimal::Context::new(::std::num::NonZeroU64::MIN
-        .saturating_add(27), ::bigdecimal::RoundingMode::HalfEven)).map_or_else(||
-        Err(DecimalConversionError { message :
-        "bigdecimal.sqrt() is undefined for negative values".to_string().to_string() }),
-        | __v | Ok(::bigdecimal::Context::new(::std::num::NonZeroU64::MIN
-        .saturating_add(27), ::bigdecimal::RoundingMode::HalfEven).round_decimal_ref(&
-        (__v))))
+        "{:?}",
+        BigDecimal::new(
+            ::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&vec![252]),
+            0
+        )
+        .sqrt_with_context(&::bigdecimal::Context::new(
+            ::std::num::NonZeroU64::MIN.saturating_add(27),
+            ::bigdecimal::RoundingMode::HalfEven
+        ))
+        .map_or_else(
+            || Err(DecimalConversionError {
+                message: "bigdecimal.sqrt() is undefined for negative values".to_string()
+            }),
+            |sifr_generated_v| Ok(::bigdecimal::Context::new(
+                ::std::num::NonZeroU64::MIN.saturating_add(27),
+                ::bigdecimal::RoundingMode::HalfEven
+            )
+            .round_decimal_ref(&sifr_generated_v))
+        )
     );
 }

@@ -14,6 +14,55 @@ fn none_display_expr() -> crate::RustExpr {
 }
 
 impl RustEmitter {
+    pub(crate) fn lower_formatted_value_for_ir(
+        &mut self,
+        value: &HirExpr,
+    ) -> Result<Option<(String, crate::RustExpr)>, crate::CodegenError> {
+        if is_none_type(value.ty()) {
+            return Ok(Some(("{}".to_string(), none_display_expr())));
+        }
+        let Some(lowered) = self.lower_stmt_expr_for_ir(value)? else {
+            return Ok(None);
+        };
+        if let Some(inner) = Self::option_inner_type_for_ir(value.ty()) {
+            let inner_format = if Self::uses_debug_display_format_for_ir(&inner) {
+                "{:?}"
+            } else {
+                "{}"
+            };
+            let formatted = crate::RustExpr::MethodCall {
+                receiver: Box::new(crate::RustExpr::Paren(Box::new(lowered))),
+                method: "map_or".to_string(),
+                args: vec![
+                    crate::RustExpr::MethodCall {
+                        receiver: Box::new(none_display_expr()),
+                        method: "to_string".to_string(),
+                        args: vec![],
+                    },
+                    crate::RustExpr::Closure {
+                        params: vec![crate::RustParam::Named {
+                            name: "__v".to_string(),
+                            ty: crate::RustType::Named("_".to_string()),
+                        }],
+                        body: Box::new(crate::RustExpr::FormatMacro {
+                            name: "format".to_string(),
+                            format_str: inner_format.to_string(),
+                            args: vec![crate::RustExpr::Ident("__v".to_string())],
+                        }),
+                        is_move: false,
+                    },
+                ],
+            };
+            return Ok(Some(("{}".to_string(), formatted)));
+        }
+        let placeholder = if Self::uses_debug_display_format_for_ir(value.ty()) {
+            "{:?}"
+        } else {
+            "{}"
+        };
+        Ok(Some((placeholder.to_string(), lowered)))
+    }
+
     pub(crate) fn try_lower_stmt_expr_statement_only(
         &mut self,
         expr: &HirExpr,
@@ -177,56 +226,13 @@ impl RustEmitter {
                             format_str.push_str(&text.replace('{', "{{").replace('}', "}}"));
                         }
                         HirFStringPart::Expr(inner) => {
-                            if is_none_type(inner.ty()) {
-                                format_str.push_str("{}");
-                                lowered_args.push(none_display_expr());
-                                continue;
-                            }
-                            let Some(lowered_inner) = self.lower_stmt_expr_for_ir(inner)? else {
+                            let Some((placeholder, lowered_inner)) =
+                                self.lower_formatted_value_for_ir(inner)?
+                            else {
                                 return Ok(None);
                             };
-                            format_str.push_str("{}");
-                            if let Some(option_inner_ty) =
-                                Self::option_inner_type_for_ir(inner.ty())
-                            {
-                                let option_format_str =
-                                    if Self::uses_debug_display_format_for_ir(&option_inner_ty) {
-                                        "{:?}".to_string()
-                                    } else {
-                                        "{}".to_string()
-                                    };
-                                lowered_args.push(crate::RustExpr::MethodCall {
-                                    receiver: Box::new(crate::RustExpr::Paren(Box::new(
-                                        lowered_inner,
-                                    ))),
-                                    method: "map_or".to_string(),
-                                    args: vec![
-                                        crate::RustExpr::MethodCall {
-                                            receiver: Box::new(crate::RustExpr::Literal(
-                                                crate::RustLiteral::Str("None".to_string()),
-                                            )),
-                                            method: "to_string".to_string(),
-                                            args: vec![],
-                                        },
-                                        crate::RustExpr::Closure {
-                                            params: vec![crate::RustParam::Named {
-                                                name: "__v".to_string(),
-                                                ty: crate::RustType::Named("_".to_string()),
-                                            }],
-                                            body: Box::new(crate::RustExpr::FormatMacro {
-                                                name: "format".to_string(),
-                                                format_str: option_format_str,
-                                                args: vec![crate::RustExpr::Ident(
-                                                    "__v".to_string(),
-                                                )],
-                                            }),
-                                            is_move: false,
-                                        },
-                                    ],
-                                });
-                            } else {
-                                lowered_args.push(lowered_inner);
-                            }
+                            format_str.push_str(&placeholder);
+                            lowered_args.push(lowered_inner);
                         }
                     }
                 }

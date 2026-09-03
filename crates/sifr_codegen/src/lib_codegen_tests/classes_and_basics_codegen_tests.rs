@@ -1,6 +1,21 @@
 use super::*;
 
 #[test]
+fn discarded_unit_call_is_an_expression_statement() {
+    let rust_code = generate_rust_from_source(
+        r#"def consume() -> None:
+    return None
+
+def main():
+    _: None = consume()
+"#,
+    );
+
+    assert!(rust_code.contains("consume();"), "{rust_code}");
+    assert!(!rust_code.contains("let _ = consume();"), "{rust_code}");
+}
+
+#[test]
 fn user_defined_filter_call_shadows_the_functional_builtin() {
     let rust_code = generate_rust_from_source(
         r#"def filter(own names: list[str], pattern: str) -> list[str]:
@@ -12,7 +27,7 @@ def main():
 "#,
     );
 
-    assert!(rust_code.contains("let selected: Vec<String> = filter(names,"));
+    assert!(rust_code.contains("let _selected: Vec<String> = filter(names,"));
     assert!(!rust_code.contains("names(__filter_value)"));
 }
 
@@ -45,7 +60,7 @@ def main():
 
     assert!(rust_code.contains("impl Codec {"));
     assert!(rust_code.contains("fn new() -> Self {"));
-    assert!(rust_code.contains("let codec: Codec = Codec::new();"));
+    assert!(rust_code.contains("let _codec: Codec = Codec::new();"));
 }
 
 #[test]
@@ -343,7 +358,7 @@ fn test_render_expr_lowering_rewrites_module_constant_helper_call() {
     let mut emitter = RustEmitter::new();
     emitter.module_constants.insert(
         "greeting".to_string(),
-        (Type::Str, "__const_greeting()".to_string()),
+        (Type::Str, "__sifr_const_6772656574696e67()".to_string()),
     );
     let expr = HirExpr::Name {
         name: "greeting".to_string(),
@@ -352,7 +367,7 @@ fn test_render_expr_lowering_rewrites_module_constant_helper_call() {
     };
 
     let code = render_strict_lowered_expr(&mut emitter, &expr);
-    assert_eq!(code, "__const_greeting()");
+    assert_eq!(code, "__sifr_const_6772656574696e67()");
 }
 
 #[test]
@@ -389,11 +404,15 @@ fn test_structured_stmt_path_rewrites_module_constant_name() {
     };
 
     let result = generate_rust_with_metadata(&module);
-    assert!(result.rust_source.contains("fn __const_limit() -> SifrInt"));
     assert!(
         result
             .rust_source
-            .contains("let x: SifrInt = __const_limit();"),
+            .contains("fn __sifr_const_6c696d6974() -> SifrInt")
+    );
+    assert!(
+        result
+            .rust_source
+            .contains("let _x: SifrInt = __sifr_const_6c696d6974();"),
         "{}",
         result.rust_source
     );
@@ -444,8 +463,8 @@ fn test_structured_stmt_path_rewrites_stdlib_constant_name() {
     );
 
     let result = generate_rust_with_stdlib_for_module(&module, &stdlib_code, None);
-    assert!(result.rust_source.contains("let x: f64 = PI;"));
-    assert!(!result.rust_source.contains("let x: f64 = pi;"));
+    assert!(result.rust_source.contains("let _x: f64 = PI;"));
+    assert!(!result.rust_source.contains("let _x: f64 = pi;"));
     assert!(!result.rust_source.contains("std::f64::consts::PI"));
     assert!(result.lowering_stats.stmt_structured >= 1);
 }
@@ -628,7 +647,7 @@ fn test_generate_rust_multi_exports_non_main_items() {
     assert!(main_rs.contains("fn main()"));
     assert!(!main_rs.contains("pub fn main("));
     assert!(
-        main_rs.contains("let value: SifrInt = crate::utils::__const_ANSWER();"),
+        main_rs.contains("let _value: SifrInt = crate::utils::__sifr_const_414e53574552();"),
         "{main_rs}"
     );
     assert!(
@@ -637,7 +656,7 @@ fn test_generate_rust_multi_exports_non_main_items() {
     );
     assert!(utils_rs.contains("pub fn helper() -> SifrInt"));
     assert!(utils_rs.contains("pub struct Thing"));
-    assert!(utils_rs.contains("pub fn __const_ANSWER() -> SifrInt"));
+    assert!(utils_rs.contains("pub fn __sifr_const_414e53574552() -> SifrInt"));
     assert!(utils_rs.contains("pub value: SifrInt"));
     assert!(utils_rs.contains("pub fn new(value: SifrInt) -> Self"));
 }

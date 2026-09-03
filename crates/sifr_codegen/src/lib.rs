@@ -6,7 +6,13 @@ mod lib_modules_and_codegen;
 pub use lib_modules_and_codegen::*;
 mod builtin_errors;
 pub(crate) use builtin_errors::BUILTIN_ERROR_CLASSES;
+mod generated_rust_canonicalizer;
 mod generator_runtime_needs;
+pub use generated_rust_canonicalizer::{
+    canonicalize_generated_rust_identifier, canonicalize_generated_rust_source,
+    discover_project_const_function_names, finalize_formatted_generated_rust_source,
+    finalize_formatted_generated_rust_source_with_project_consts,
+};
 mod lib_async_main_cancellation;
 mod lib_native_async_cleanup_needs;
 mod lib_runtime_needs;
@@ -187,6 +193,7 @@ mod stdlib_rust_source;
 pub use stdlib_rust_source::StdlibRustSource;
 mod static_program_codegen;
 mod static_program_slots_codegen;
+mod stdlib_demand_plan;
 mod stmt_support_emitter;
 mod string_char_cache;
 mod string_char_cache_scan;

@@ -131,14 +131,29 @@ It does not broaden the active item.
    later owned item; there is no third review.
 4. Compiler-changing items receive exactly one create-PR gate and one merge
    gate on the final candidate SHA. Neither gate is repeated. Items without
-   compiler changes omit both gates.
+   compiler changes omit both gates. For this phase, the user authorizes the
+   following narrow ordering override: run the constituent pre-review checks,
+   open the draft PR, complete the exact-SHA review/remediation sequence, and
+   only then run the named create-PR and merge gates once on the resulting
+   final SHA. This preserves the draft-PR review workflow while ensuring both
+   named gates qualify exactly the code that can merge.
 5. Merge the item, update this record, and start the next unfinished item.
-6. The final item receives the only whole-phase Opus review.
+6. The closure-only final item receives the only whole-phase Opus review.
 7. Before each item starts, rebase its branch point on current `origin/main`
    and re-audit any relevant mechanism that another merged phase changed.
    Unmerged branches are not silently treated as delivered work.
 8. Generated companions are regenerated from the candidate compiler. They are
    never manually polished.
+9. Generated-code lint debt is exact evidence, not a name-based tolerance.
+   Each retained diagnostic is selected by companion, lint name, count, and
+   stable signature. Unknown diagnostics, count growth, signature drift, and
+   diagnostics outside the recorded companion selection fail closed. Item 12
+   must remove the remaining owned debt rather than rebase it.
+10. A named one-shot gate that identifies an in-scope candidate defect stops
+    the item for explicit adjudication. The defect is not deferred, waived, or
+    hidden by changing the gate, and the one-shot gate is not rerun.
+11. Existing item commits are preserved. Follow-up work is added as new
+    commits; local history is not rewritten or squashed before review.
 
 ## Sequential Items
 
@@ -153,13 +168,17 @@ It does not broaden the active item.
 | 4B | merged | Structured-loop witness state closure | Async-for guard state cannot escape a possibly empty loop, and missing loop-carried witnesses take the loop-kind's terminating control-flow path instead of skipping progress. |
 | 4C | merged | Mutation-tail witness continuation closure | Refreshed witnesses use region-scoped continuations and current typed failure semantics across nested and straight-line mutation tails. |
 | 5 | merged | Lazy iterator and generator architecture | Yield, generator state, `count`, `islice`, chained adapters, and errors are lazy and semantically unbounded where required. |
-| 6 | pending | Stdlib emitted-semantics closure | String widths, IO reads/seeks/errors, decimal precision, iteration arguments, and every inventory-owned stdlib defect have exact behavior and resource safety. |
-| 7 | pending | Ownership, borrowing, and clone quality | Signatures and expressions use idiomatic borrowing; avoidable container, row, tree, and scalar clones are eliminated without weakening ownership safety. |
-| 8 | pending | Canonical Rust IR and emission cleanup | Structured IR represents all maintained code; dead branches/tails, identity transforms, needless returns, stale snapshots, and generated ceremony are removed at the producer. |
+| 6 | merged | Stdlib emitted-semantics closure | String widths, IO reads/seeks/errors, decimal precision, iteration arguments, and every inventory-owned stdlib defect have exact behavior and resource safety. |
+| 6A | merged | Generic-bound substitution and residual string parity | Generic arithmetic bounds use receiving-parameter identity and `str.center` matches CPython's odd-margin behavior. |
+| 7 | merged | Ownership, borrowing, and clone quality | Signatures and expressions use idiomatic borrowing; avoidable container, row, tree, and scalar clones are eliminated without weakening ownership safety. |
+| 7A | merged | Receiver-effect precision and owned-boundary closure | Receiver effects invalidate only facts they can falsify and every `setdefault` entrypoint shares one owned-value boundary. |
+| 7B | merged | End-relative receiver facts and affine boundary closure | Growth invalidates end-relative facts without discarding stable absolute facts, and affine `setdefault` has one checked ownership contract. |
+| 8 | active | Canonical Rust IR and emission cleanup | Structured IR represents all maintained code; dead branches/tails, identity transforms, needless returns, stale snapshots, and generated ceremony are removed at the producer. |
 | 9 | pending | Algorithmic and Unicode performance | Emission preserves source complexity; string traversal avoids repeated scans/materialization; collection algorithms avoid quadratic clone/front-removal behavior; budgets prevent recurrence. |
 | 10 | pending | Runtime, stdlib bridge, and API deduplication | Each demanded support body and public adapter is assembled once, unused support is absent, and generated crates have one canonical API path per operation. |
 | 11 | pending | Portable and secure generated projects | Generated manifests/artifacts are relocatable and reproducible; process arguments preserve boundaries; path, capacity, and resource-limit handling is checked. |
-| 12 | pending | Full-corpus qualification and phase closure | Regenerate all owned output, run uncompromising full-corpus and repository gates once on the final SHA, satisfy one whole-phase Opus review, archive the record, and leave zero actionable inventory rows. |
+| 12 | pending | Residual semantic completion and full-corpus qualification | Finish remaining semantic/profile work, remove all governed generated-code debt, regenerate every owned surface, and pass the uncompromising final qualification and applicable one-shot gates. |
+| 12A | pending | Phase closure and whole-phase review | Review the fully merged phase once, reconcile architecture/roadmap/evidence, and archive only when no actionable row remains. |
 
 ## Item Acceptance Contracts
 
@@ -329,6 +348,109 @@ It does not broaden the active item.
 - [ ] Generated names and support items are demand-driven and warning-clean.
 - [ ] Stale or mislabeled generated snapshots are removed or regenerated by an
   authoritative producer.
+- [ ] Every retained companion diagnostic is governed by exact companion,
+  lint, count, and signature evidence; unknown or growing debt fails closed.
+
+#### Item 8 closure ledger
+
+“Implemented” means the producer and focused regression exist in the working
+candidate. It does not mean the item is qualified; all rows remain open until
+the post-implementation validation and exact-SHA review sequence completes.
+
+| Row | Deferred mechanism | Producer/evidence | Candidate state |
+|---:|---|---|---|
+| I8-01 | Three non-authoritative test-project references | `scripts/check_demo_emitted_freshness.py` | Implemented: the exact three references are classified and fail closed if an authoritative `emitted.rs` appears. |
+| I8-02 | ERQ-025 stale snapshot wording | `emitted_rust_audit_inventory.json` | Implemented: baseline and current companion counts/roles are distinct. |
+| I8-03 | Companion rustfmt/Clippy governance | `generated_code_quality.py`, `quality_policy.py`, `inventory_gates.py` | Qualified in the candidate: all 262 authoritative companions passed; the retained summary passed exact companion-set, lint-owner, count, and signature validation after removing the eliminated `manual_let_else` debt. |
+| I8-04 | Dead `SIFR-TYPE-0901` surface | diagnostics registry/render/catalog/docs diffs | Implemented: producer, IR, registry, indexes, and dedicated page are removed; historical references remain explicitly historical. |
+| I8-05 | Dead Arrow `handle` method | `crates/sifr_stdlib/src/python/arrow.rs` | Implemented. |
+| I8-06 | Non-snake-case constant helpers | `lower_item/module_constants.rs`, identifier canonicalizer, `module_constant_helper_names_are_injective_and_warning_clean` | Implemented with injective declaration/reference rewriting. |
+| I8-07 | Bare return in promoted `Result[None, E]` try | `try_binding_bare_result_return.sifr`, canonical control-flow lowering | Implemented. |
+| I8-08 | Loop control escaping a try/finally closure | `try_finally_loop_control.sifr`, structured carrier lowering | Implemented. |
+| I8-09 | Raise without a compatible error channel | `result_diagnostics.rs`, `error_raise_requires_a_compatible_result_channel` | Implemented as a source diagnostic before codegen. |
+| I8-10 | Phase 34 retired integer diagnostic claim | `plans/phases/34_generated_code_quality_and_production_readiness.md` | Implemented as explicit historical provenance. |
+| I8-11 | `FormatMacro` missing from forbidden-failure validation | `ir_validate.rs::rejects_failure_discharge_in_every_structured_macro_variant` | Implemented. |
+| I8-12 | Dead exact-literal source bindings | `ir_optimize/dead_bindings.rs`, canonicalizer liveness regressions | Implemented structurally. |
+| I8-13 | `true`/`false` identifier-pattern ambiguity | identifier policy/canonicalizer and injectivity/literal-preservation regressions | Implemented. |
+| I8-14 | Bare-name module integer facts | `ModuleConstIntegerFacts` in `lower/mod_context.rs` | Implemented with immutable binding identity and export-name separation. |
+| I8-15 | Maintained compiler/test Clippy debt | canonicalizer/API/source expectation passes and moved responsibility-based test modules | Qualified in the candidate: workspace Clippy passed for all targets with warnings denied, and no blanket allow was added. |
+| I8-16 | Stale 701-path surface inventory | `surface_inventory.json` | Qualified at the current 724-path set by the fail-closed generated inventory gate. |
+| I8-17 | Aggregate rustfmt debt drift | structured canonicalizer plus empty rustfmt debt | Qualified by full generated `rustfmt --check` with empty rustfmt debt. |
+| I8-18 | Optional read after invalidation diagnostic | `mutable_call_sequence_guard_tests.rs` | Decision implemented: retain canonical `SIFR-TYPE-0002`-family unsupported-operator reporting for the widened `None | T`; no special proof-history diagnostic is warranted. |
+| I8-19 | Return-ending while/else E0317 | `while_else_return_tail.sifr`, canonical control-flow pass | Implemented. |
+| I8-20 | Implicit straight-line refresh fallback invariant | `checked_place/control_flow.rs`, `refresh_fallback_rejects_presence_removing_mutations` | Implemented as a checked codegen invariant. |
+| I8-21 | Duplicated loop/else scaffolds | canonical loop-control constructors and sync/async/block regressions | Implemented through shared structured control paths. |
+| I8-22 | Misclassified `numeric_sentinels` fixture | `e2e/pass/numeric_sentinels.sifr` | Implemented by making the source establish the required checked index proof. |
+| I8-23 | Nested sync generator dangling yielder | `reject_unsupported_nested_generator`, `nested_sync_generator_is_rejected_before_codegen` | Implemented as explicit checked rejection pending dedicated nested lazy lowering. |
+| I8-24 | 718-path inventory and formatting drift | `surface_inventory.json`, canonical source pipeline | Reconciled with I8-16/I8-17 against the current 724-path set. |
+| I8-25 | Optional key passed to `HashSet::remove` | `sliding_window_narrowing.sifr`, optional-place/method argument normalization | Implemented with an isolated authoritative fixture. |
+| I8-26 | Bare-class compiler `open()` defaults | canonical nominal compiler-default key, `compiler_open_defaults_do_not_attach_to_local_same_basename_methods` | Implemented. |
+| I8-27 | Split class/free-function generic bound closure | `function_generic_bounds.rs`, `class_method_inherits_module_generic_function_bounds` | Implemented through one module callable-demand closure. |
+| I8-28 | Nested lexical generic-call demand | `called_nested_function_propagates_captured_generic_demands`, shadow/leak regression | Implemented. |
+| I8-29 | Composite actual over-constrains sibling parameters | `structural_correspondence_does_not_overconstrain_sibling_parameters` | Implemented with structural correspondence. |
+| I8-30 | Same-basename generic callable contamination | canonical binding/callable identity tests in `function_generic_bounds_tests.rs` | Implemented. |
+| I8-31 | Stale `protocol_bounds/idiomatic.rs` | deleted reference plus freshness classification | Implemented: the non-authoritative stale file is retired. |
+| I8-32 | Dict silent fallback and double-reference query keys | checked-place dict-key normalization and `dict_keys_membership_guards_equivalent_indexed_reads` | Implemented. |
+| I8-33 | Nested generic declaration ambiguity | `nested_generic_function_declaration_is_rejected_explicitly` | Implemented as one checked language boundary. |
+| I8-34 | Non-collection receiver fact-domain drift | `sifr_type_system::receiver_mutation`, exhaustive summary regressions | Implemented with structural receiver domains. |
+| I8-35 | Literal-only list growth stability | `sequence_guard_detection/subscript_guards.rs`, variable-index and dict-key regressions | Implemented from typed receiver/index facts. |
+| I8-36 | Unreachable generic affine `setdefault` branch | lowering ownership contract and `methods/dict.rs` | Implemented with one source-facing owner. |
+| I8-37 | Silent affine `setdefault` codegen decline | `methods/dict.rs::setdefault_affine_types_are_an_internal_invariant_violation` | Implemented as an explicit compiler invariant. |
+
+Item 8 also integrates three qualification-discovered producer details without
+claiming later-item closure: byte counting uses one optimized runtime primitive
+to eliminate generated manual-count ceremony; the stdlib manifest carries the
+already-delivered Item 6 ordered-JSON feature in isolated companion builds; and
+module assembly invokes canonical demand/import placement. Item 9 still owns
+algorithmic budgets, Item 10 still owns the unified runtime/bridge demand graph,
+and Item 11 still owns portable materialization.
+
+The schema-1 debt file stored only aggregate signatures, so it could not prove
+per-lint ownership. Item 8's schema-2 migration removes every Item 8 lint and
+all rustfmt debt, then records the residual later-item lint set as per-lint
+counts/signatures. The companion-set selection digest includes every companion
+identity, and each merged lint signature includes the contributing companion
+identity, count, and diagnostic signature. This is a one-way strengthening of
+evidence, not permission to carry changed Item 8 debt.
+
+Compiler candidate `49f375e1619185d76e6cfc3b90d7e20ff786cce0`
+passed 1,349 codegen tests, the non-E2E CLI suites, the existing 723-fixture
+full E2E pass, direct native execution of the new 724th optional-set-remove
+fixture, workspace Clippy for all targets with warnings denied, formatting,
+diff hygiene, the 3,726-file size guardrail, HIR maintainability, generated
+inventory, panic scans, generated rustfmt, determinism, exact-binary demo
+freshness, and intrinsic-panic linting. Exact `origin/main`
+`74bbb636744adaacb8c3eca09108b6fff9725357` independently retains only the two
+stale TypeVar message assertions owned by #3667 and the stale attached-API
+fixture lock owned by #3669.
+
+The authoritative 91-project corpus and 262-companion corpus passed every
+individual generated crate. Two isolated companion runs produced byte-identical
+summaries with SHA-256
+`a00628a95f22967fb52ffe3f119ba819ed29ca1c93fb3e6ffbc0c29e4d83fd65`:
+11,324 governed diagnostics across 48 later-item lint families, with merged
+diagnostic signature
+`5231041489b4043fa7f0239abda8e3192702e1dbfd2e3fc366655be2b8fd4393`.
+Two isolated selected full-Clippy runs likewise produced byte-identical
+summaries with SHA-256
+`42d874ebca265e8260e91c8947274d4770676d07020adf1a3308a00eb2dc17aa`.
+The canonical cleanup removed `manual_let_else` from both selections and also
+removed `semicolon_if_nothing_returned` and `unnecessary_semicolon` from the
+selected corpus. The checked-in schema-2 debt matches the residual summaries
+exactly and rejects stale owners, unknown diagnostics, count growth, and
+signature drift.
+
+The [initial exact-SHA review](https://github.com/sifr-lang/sifr/pull/3668#issuecomment-5517105667)
+on `84ebe95b928cfe076d9af21e1bc06c1da3bc08c4` was NOT SATISFIED. Candidate
+`49f375e1619185d76e6cfc3b90d7e20ff786cce0` resolves all four blockers: stale
+lint owners were removed rather than re-owned; generic callables use canonical
+lexical identities rather than bare names; optional `set.remove` normalization
+has direct native regression coverage; and every Item 8 lint was eliminated
+rather than deferred. The remediation also guards branch-local shadowing and
+format captures, rejects globally ambiguous enum-owner rewrites, computes
+cross-module constants to a monotonic fixed point, preserves eager/Drop/unknown
+effects during cleanup, and fingerprints all producer inputs. The sole
+remediation review and the two one-shot named gates remain open before merge.
 
 ### Item 9: Algorithmic and Unicode performance
 
@@ -354,7 +476,7 @@ It does not broaden the active item.
   explicitly selected a shell API.
 - [ ] Allocation, path, and resource-limit conversions are checked.
 
-### Item 12: Full-corpus qualification and phase closure
+### Item 12: Residual semantic completion and full-corpus qualification
 
 - [ ] Every actionable inventory row is closed with merged evidence.
 - [ ] All generated demos, verification fixtures, project modes, and benchmark
@@ -362,9 +484,21 @@ It does not broaden the active item.
 - [ ] Full generated-code quality, e2e, stdlib, algorithmic, formatting,
   Clippy, file-size, HIR, create-PR, and merge gates pass as applicable on the
   exact final source SHA.
+- [ ] The remaining `islice` parity form, generated-code debt, qualification
+  profile composition, and cold/warm timing evidence have explicit passing
+  coverage.
+- [ ] Item 12 receives its normal exact-SHA implementation review; it does not
+  consume the whole-phase review.
+
+### Item 12A: Phase closure and whole-phase review
+
 - [ ] One exact-SHA whole-phase Opus review is satisfied.
 - [ ] Architecture and roadmap records reflect the delivered architecture.
 - [ ] This issue is archived only after every closure condition is true.
+- [ ] Closure contains no compiler implementation work. If the whole-phase
+  review finds a new implementation mechanism defect, create a later
+  implementation item and a subsequent closure item instead of repairing it
+  inside Item 12A or taking a third review round.
 
 ## Item Ledger
 
@@ -385,6 +519,7 @@ It does not broaden the active item.
 | 7 | merged | [#3637](https://github.com/sifr-lang/sifr/pull/3637) | `73465ce982b790094031d174151a8638cfbcf35b` | Compiler candidate `778e13268d0ff619791a44152e4e52c0df369053`: 1,213 codegen and 1,094 lowering tests passed with one intentional ignore; focused ownership, generic-class `Addable`, context capture, receiver mutation, checked witness, IO, recursive/DP, and clone-budget tests passed. The expanded protocol-bound fixture compiled and ran generic `Accumulator[str]`, `list.insert(&str)`, and `set.add(&str)`. Full E2E passed 717 fixtures; only exact-base `numeric_sentinels` failed under its existing Item 8 ownership. Workspace Clippy, formatting, diff, 3,612-file guardrail, HIR maintainability, audit inventory, regenerated demo freshness, and representative direct native builds passed. The sole create-PR and merge gates each stopped at preflight because both profiles omit required SQL suites `host-tools`, `migration-engine`, `mysql-live`, `mysql-provider`, `postgresql-live-differential`, `postgresql-live-migrations`, `postgresql-live-runtime`, `postgresql-live-schema-tools`, `postgresql-migrations`, `schema-polymorphism`, and `schema-tools`; neither was repeated. | [Initial exact-SHA review](https://github.com/sifr-lang/sifr/pull/3637#issuecomment-5481578415) on `27840aa67d438956b87f87f96822a4b868a69e2b` was NOT SATISFIED; [sole remediation review](https://github.com/sifr-lang/sifr/pull/3637#issuecomment-5481578704) on `778e13268d0ff619791a44152e4e52c0df369053` was NOT SATISFIED. The remediation fixed both original blockers: class-owned `__SifrAdd` support demand and raw borrowed-string clones at collection ownership boundaries. Its new receiver-effect precision regression and latent non-registry `setdefault` boundary gap are assigned to Item 7A under the no-third-review rule. | Explicit ownership/materialization planning, unsized views, clone-chain simplification and budgets, recursive borrowed options, callable-effect separation, context-target capture, checked clone diagnostics, IO clone cleanup, and ownership-correct numeric/string `Addable` support merged. The bounded second-review mechanism defects are owned by Item 7A. |
 | 7A | merged | [#3639](https://github.com/sifr-lang/sifr/pull/3639) | `917a4e898a881d7966d78e645c01143d9290eb54` | Final compiler candidate `e77bf60695f27cee1fa71a1e3eea2e8facad1b75`: 1,217 codegen and 1,101 lowering tests passed with one intentional ignore; focused receiver-summary, fact-splitting, local-binding fallback, Copy/affine ownership, emitted-shape, and release-native regressions passed. Full E2E passed 718 fixtures; only exact-base `numeric_sentinels` failed under Item 8 ownership. Workspace Clippy, formatting, diff, 3,613-file guardrail, HIR maintainability, audit inventory, regenerated demo freshness, and direct native execution passed. The sole create-PR and merge gates each stopped at preflight because both profiles omit required SQL suites `host-tools`, `migration-engine`, `mysql-live`, `mysql-provider`, `postgresql-live-differential`, `postgresql-live-migrations`, `postgresql-live-runtime`, `postgresql-live-schema-tools`, `postgresql-migrations`, `schema-polymorphism`, and `schema-tools`; neither was repeated. | [Initial exact-SHA review](https://github.com/sifr-lang/sifr/pull/3639#issuecomment-5482649819) on `57a09a3121c34f5e5504ac3c7b7791e665855e8a` was NOT SATISFIED; [sole remediation review](https://github.com/sifr-lang/sifr/pull/3639#issuecomment-5482650047) on `e77bf60695f27cee1fa71a1e3eea2e8facad1b75` was SATISFIED. The remediation split accessibility from non-`None` facts and restored Copy/affine `setdefault` ownership guards. Its new end-relative negative-index finding is assigned to Item 7B under the no-third-review rule. | One typed receiver summary now preserves length/key accessibility while invalidating exact positional/value facts; all `setdefault` entrypoints share an ownership-safe operation boundary; Copy values emit no redundant clones. Bounded end-relative and affine-return follow-ups are owned by Item 7B. |
 | 7B | merged | [#3643](https://github.com/sifr-lang/sifr/pull/3643) | `17c6e49d1be6d19834530d6475353539d0efb124` | Exact compiler candidate `5b6c68d0508c5e79b0ddfc8d598480314ef8ef14`: 1,218 codegen and 1,103 lowering tests passed with one intentional ignore; 569 E2E fail fixtures, focused negative-index append/extend, absolute-index preservation, affine `setdefault`, fact-domain, and release-native insertion/existing-return evidence passed. Full E2E passed 718 fixtures; only unchanged `numeric_sentinels` failed under Item 8 ownership. Workspace Clippy, formatting, diff, 3,614-file guardrail, HIR maintainability, audit inventory, and exact demo freshness passed. The sole create-PR and merge gates each stopped at preflight because both profiles omit required SQL suites `host-tools`, `migration-engine`, `mysql-live`, `mysql-provider`, `postgresql-live-differential`, `postgresql-live-migrations`, `postgresql-live-runtime`, `postgresql-live-schema-tools`, `postgresql-migrations`, `schema-polymorphism`, and `schema-tools`; neither was repeated. | [Exact-SHA review](https://github.com/sifr-lang/sifr/pull/3643#issuecomment-5483156923) on `5b6c68d0508c5e79b0ddfc8d598480314ef8ef14` was SATISFIED with no blockers. It independently traced literal-negative classification, growth-sensitive clearing, the affine insertion/return rejection, defensive codegen boundary, and non-collection fact domain. | Append/extend now preserve stable absolute facts while invalidating end-relative facts; affine `setdefault` is rejected before emission with one ownership contract; mutable buffers and join sets carry an explicit no-relevant-sequence-facts domain. |
+| 8 | remediation candidate | [#3668](https://github.com/sifr-lang/sifr/pull/3668) | pending | Compiler implementation `49f375e1619185d76e6cfc3b90d7e20ff786cce0`: 1,349 codegen tests, non-E2E CLI suites, workspace Clippy, formatting, diff, file-size/HIR guardrails, 724-path inventory, 91-project corpus, panic/rustfmt/determinism/freshness checks, the direct 724th native fixture, and two byte-identical 262-companion plus selected-Clippy runs passed. Exact-main failures are owned by #3667 and #3669. The one create-PR and one merge gate remain unconsumed. | [Initial exact-SHA review](https://github.com/sifr-lang/sifr/pull/3668#issuecomment-5517105667) on `84ebe95b928cfe076d9af21e1bc06c1da3bc08c4` was NOT SATISFIED. All four blockers are remediated in the candidate; the sole remediation review remains. | Canonical structured cleanup, exact generated-debt governance, canonical generic identity, optional-place normalization, source-only materialization, regenerated authoritative demos, and focused semantic/shape regressions are ready for the bounded remediation review. |
 
 ## Deferred Findings
 
@@ -476,26 +611,33 @@ It does not broaden the active item.
 | Item 7B exact-SHA review | The generic reusable-value method set retains an unreachable `setdefault` affine branch after the dedicated ownership rejection. | Item 8 | Give the affine `setdefault` contract one canonical diagnostic owner and remove the unreachable generic branch. |
 | Item 7B exact-SHA review | Defensive affine `setdefault` codegen declines with `None`, which would become a silent lowering miss if the frontend contract regressed. | Item 8 | Replace defensive silent decline with a structured internal codegen invariant diagnostic while preserving the source-facing rejection. |
 | Item 7B create-PR and merge gates | Both profiles omit required SQL suites `host-tools`, `migration-engine`, `mysql-live`, `mysql-provider`, `postgresql-live-differential`, `postgresql-live-migrations`, `postgresql-live-runtime`, `postgresql-live-schema-tools`, `postgresql-migrations`, `schema-polymorphism`, and `schema-tools`, so both one-shot gates stopped at preflight. | Item 12 | Reconcile final profile composition and prove every currently required SQL suite is selected before final qualification. |
+| Item 8 package validation | Exact `origin/main` `74bbb636744adaacb8c3eca09108b6fff9725357` fails two TypeVar diagnostic-message assertions after the producer wording changed from “simple type name(s)” to “type name(s)” without updating the tests. | [#3667](https://github.com/sifr-lang/sifr/issues/3667) | Repair the stale exact-message expectations in their own owner; Item 8 does not change TypeVar semantics or absorb this exact-base failure. |
+| Item 8 package validation | Exact `origin/main` `74bbb636744adaacb8c3eca09108b6fff9725357` fails `tests::attached_api_codegen::non_string_leaf_negative_is_package_compilable` because its checked-in fixture lock is stale. | [#3669](https://github.com/sifr-lang/sifr/issues/3669) | Refresh and govern the attached-API fixture lock in its own owner; Item 8 does not absorb an exact-base artifact failure. |
 
 New out-of-scope findings must name a concrete active owner before the current
 item can close.
 
 ## Current Handoff
 
-- Active item: Item 8, canonical Rust IR and emission cleanup, based on Item 7B
-  merge `17c6e49d1be6d19834530d6475353539d0efb124`.
-- Item 7B state: merged with typed growth stability for subscript value facts,
-  conservative dynamic-index handling, an explicit affine `setdefault`
-  insertion/return rejection, a defensive codegen boundary, and an explicit
-  non-collection receiver fact domain.
+- Active item: Item 8, canonical Rust IR and emission cleanup, based on current
+  `origin/main` merge `74bbb636744adaacb8c3eca09108b6fff9725357`.
+- Items 6, 6A, 7, 7A, and 7B are merged; the sequential table now matches the
+  detailed ledger.
 - Item 8 owns the accumulated canonical-IR, optional-place, diagnostics,
   generated-name, generic-identity, stale companion, warning/dead-code, and
   exact-base `numeric_sentinels` findings. Algorithmic allocation and last-use
   promotion remain Item 9-owned; runtime bridge deduplication remains Item
   10-owned; portability remains Item 11-owned; SQL profile composition and final
   whole-phase qualification remain Item 12-owned.
-- Next action: start Item 8 from current `origin/main`, inventory every Item
-  8-owned deferred row against the current compiler and generated artifacts,
-  implement the complete canonical IR/emission solution in one batch without
-  testing, then run focused and required validation, one exact-SHA Opus review
-  with at most one remediation, and the single exact-candidate gate sequence.
+- Item 12 is implementation/qualification only. Item 12A is closure-only and
+  receives the sole whole-phase review; a whole-phase implementation defect
+  creates a later implementation item and later closure item.
+- Draft PR [#3668](https://github.com/sifr-lang/sifr/pull/3668) is open. Its
+  initial exact-SHA review was not satisfied; all four blockers are remediated
+  in compiler commit `49f375e1619185d76e6cfc3b90d7e20ff786cce0` with complete constituent
+  evidence. No whole-phase review has been consumed.
+- Next action: commit this record, push the resulting exact SHA, and run the
+  sole Item 8 remediation review. If satisfied, run the create-PR and merge
+  gates exactly once on that reviewed SHA, merge Item 8, record the final
+  evidence, and start Item 9 immediately. A new mechanism defect in the
+  remediation review is recorded as a later item without a third review.

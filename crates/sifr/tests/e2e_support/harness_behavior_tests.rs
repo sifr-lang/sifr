@@ -259,7 +259,8 @@ pub(crate) fn smoke_rand_next(seed: &mut u64) -> u64 {
 }
 
 pub(crate) fn smoke_ascii(seed: &mut u64, max_len: usize) -> String {
-    let len = (smoke_rand_next(seed) as usize) % max_len.max(1);
+    let bound = u64::try_from(max_len.max(1)).unwrap_or(u64::MAX);
+    let len = usize::try_from(smoke_rand_next(seed) % bound).unwrap_or(0);
     let mut output = String::with_capacity(len);
     for _ in 0..len {
         let bucket = (smoke_rand_next(seed) % 8) as u8;
@@ -420,7 +421,7 @@ pub(crate) fn test_dependency_fingerprint_and_cache_key_determinism() {
     let key_a = cache_key_for_group(&group, &toolchain, &env_signature);
     let key_b = cache_key_for_group(&group, &toolchain, "different");
     assert_ne!(key_a, key_b);
-    assert!(group.id.len() > 0);
+    assert!(!group.id.is_empty());
 }
 
 #[test]

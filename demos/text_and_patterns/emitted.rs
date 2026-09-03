@@ -1,263 +1,237 @@
 // src/main.rs
-mod __sifr_project_nominals {
-    pub use ::std::collections::HashMap;
+mod sifr_generated_project_nominals {
     pub use ::sifr_runtime::SifrInt;
+    pub use ::std::collections::HashMap;
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct __SifrStdlib_sifr_x2estring_x2eTemplate {
+    pub struct SifrGeneratedStdlibSifrX2estringX2eTemplate {
         pub template: String,
     }
-    impl __SifrStdlib_sifr_x2estring_x2eTemplate {
+    impl SifrGeneratedStdlibSifrX2estringX2eTemplate {
+        #[must_use]
         pub fn new(template: String) -> Self {
-            let __sifr_field_init_0: String = {
-                let mut __sifr_concat: String = String::with_capacity(
-                    template.len() + 0usize,
-                );
-                __sifr_concat.push_str(template.as_str());
-                __sifr_concat.push_str("");
-                __sifr_concat
+            let sifr_generated_field_value_33609a5e9eb92f4b_74656d706c617465: String = {
+                let mut sifr_generated_concat: String = String::with_capacity(template.len());
+                sifr_generated_concat.push_str(template.as_str());
+                sifr_generated_concat.push_str("");
+                sifr_generated_concat
             };
             Self {
-                template: __sifr_field_init_0,
+                template: sifr_generated_field_value_33609a5e9eb92f4b_74656d706c617465,
             }
         }
     }
-    impl __SifrStdlib_sifr_x2estring_x2eTemplate {
-        pub fn substitute(
-            &self,
-            mapping: &HashMap<String, String>,
-        ) -> Result<String, ValueError> {
-            _template_substitute_impl(&self.template, mapping, false)
+    impl SifrGeneratedStdlibSifrX2estringX2eTemplate {
+        ///# Errors
+        ///Returns the typed error produced by this operation.
+        pub fn substitute(&self, mapping: &HashMap<String, String>) -> Result<String, ValueError> {
+            sifr_generated_template_substitute_impl(&self.template, mapping, false)
         }
     }
-    impl __SifrStdlib_sifr_x2estring_x2eTemplate {
-        pub fn safe_substitute(&self, mapping: &HashMap<String, String>) -> String {
-            let __sifr_try_res: Result<String, ValueError> = (|| {
-                let value: String = _template_substitute_impl(
-                    &self.template,
-                    mapping,
-                    true,
-                )?;
-                Ok(value)
-            })();
-            match __sifr_try_res {
-                Ok(__sifr_ret_val) => {
-                    return __sifr_ret_val;
-                }
-                Err(__sifr_try_err) => {
-                    let e = __sifr_try_err.clone();
-                    let _ = e.message.clone();
-                    return {
-                        let mut __sifr_concat: String = String::with_capacity(
-                            0usize + 0usize,
-                        );
-                        __sifr_concat.push_str(self.template.clone().as_str());
-                        __sifr_concat.push_str("");
-                        __sifr_concat
-                    };
-                }
-            }
-        }
-    }
-    impl ::std::fmt::Display for __SifrStdlib_sifr_x2estring_x2eTemplate {
+    impl ::std::fmt::Display for SifrGeneratedStdlibSifrX2estringX2eTemplate {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
             write!(f, "Template(template={})", self.template)
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct __SifrStdlib_sifr_x2estring_x2eFormatter {}
-    impl __SifrStdlib_sifr_x2estring_x2eFormatter {
-        pub fn new() -> Self {
+    pub struct SifrGeneratedStdlibSifrX2estringX2eFormatter {}
+    impl SifrGeneratedStdlibSifrX2estringX2eFormatter {
+        #[must_use]
+        pub const fn new() -> Self {
             Self {}
         }
     }
-    impl ::std::default::Default for __SifrStdlib_sifr_x2estring_x2eFormatter {
+    impl ::std::default::Default for SifrGeneratedStdlibSifrX2estringX2eFormatter {
         fn default() -> Self {
             Self::new()
         }
     }
-    impl __SifrStdlib_sifr_x2estring_x2eFormatter {
+    impl SifrGeneratedStdlibSifrX2estringX2eFormatter {
+        ///# Errors
+        ///Returns the typed error produced by this operation.
         pub fn format(
             &self,
             format_string: &str,
             values: &HashMap<String, String>,
         ) -> Result<String, ValueError> {
-            _formatter_format_impl(format_string, values)
+            sifr_generated_formatter_format_impl(format_string, values)
         }
     }
-    pub fn _is_identifier_start(ch: &str) -> bool {
-        ((ch == "_") || (!ch.is_empty() && ch.chars().all(|c| c.is_alphabetic())))
+    #[must_use]
+    pub fn sifr_generated_is_identifier_start(ch: &str) -> bool {
+        ch == "_" || !ch.is_empty() && ch.chars().all(char::is_alphabetic)
     }
-    pub fn _is_identifier_continue(ch: &str) -> bool {
-        (((ch == "_") || (!ch.is_empty() && ch.chars().all(|c| c.is_alphabetic())))
-            || (!ch.is_empty() && ch.chars().all(|c| c.is_ascii_digit())))
+    #[must_use]
+    pub fn sifr_generated_is_identifier_continue(ch: &str) -> bool {
+        ch == "_"
+            || !ch.is_empty() && ch.chars().all(char::is_alphabetic)
+            || !ch.is_empty() && ch.chars().all(|c| c.is_ascii_digit())
     }
-    pub fn _mapping_lookup(mapping: &HashMap<String, String>, key: &str) -> Option<String> {
+    #[must_use]
+    pub fn sifr_generated_mapping_lookup(
+        mapping: &HashMap<String, String>,
+        key: &str,
+    ) -> Option<String> {
         for (current_key, current_value) in mapping
             .iter()
-            .map(|__kv| (__kv.0.clone(), __kv.1.clone()))
+            .map(|sifr_generated_kv| (sifr_generated_kv.0.clone(), sifr_generated_kv.1.clone()))
             .collect::<Vec<_>>()
         {
             if current_key == *key {
                 return Some({
-                    let mut __sifr_concat: String = String::with_capacity(
-                        current_value.len() + 0usize,
-                    );
-                    __sifr_concat.push_str(current_value.as_str());
-                    __sifr_concat.push_str("");
-                    __sifr_concat
+                    let mut sifr_generated_concat: String =
+                        String::with_capacity(current_value.len());
+                    sifr_generated_concat.push_str(current_value.as_str());
+                    sifr_generated_concat.push_str("");
+                    sifr_generated_concat
                 });
             }
         }
         None
     }
-    pub fn _template_substitute_impl(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    #[expect(
+        clippy::too_many_lines,
+        reason = "one generated Rust function preserves one typed Sifr function"
+    )]
+    pub fn sifr_generated_template_substitute_impl(
         template: &str,
         mapping: &HashMap<String, String>,
         safe: bool,
     ) -> Result<String, ValueError> {
-        let __sifr_chars_template: Vec<char> = template.chars().collect::<Vec<char>>();
-        let mut result: String = "".to_string();
+        let sifr_generated_chars_template: Vec<char> = template.chars().collect::<Vec<char>>();
+        let mut result: String = String::new();
         let mut i: SifrInt = SifrInt::from_i64(0);
-        while (&i < &SifrInt::from(__sifr_chars_template.len())) {
-            let ch: Option<String> = ({
-                let __sifr_string_index = i.clone();
-                let __sifr_string_index_normalized = __sifr_string_index
-                    .normalize_index_or_len(__sifr_chars_template.len());
-                __sifr_chars_template.get(__sifr_string_index_normalized)
-            })
-                .map(|c| c.to_string());
+        while &i < &SifrInt::from(sifr_generated_chars_template.len()) {
+            let ch: Option<String> = {
+                let sifr_generated_string_index = i.clone();
+                let sifr_generated_string_index_normalized = sifr_generated_string_index
+                    .normalize_index_or_len(sifr_generated_chars_template.len());
+                sifr_generated_chars_template.get(sifr_generated_string_index_normalized)
+            }
+            .map(::std::string::ToString::to_string);
             let Some(ch) = ch else {
                 i = &i + &SifrInt::from_i64(1);
                 continue;
             };
-            let mut ch_value: String = "".to_string();
-            {
-                ch_value = ch;
-            }
-            if (ch_value != "$") {
+            let ch_value: String = ch;
+            if ch_value != "$" {
                 result.push_str(ch_value.as_str());
                 i = &i + &SifrInt::from_i64(1);
                 continue;
             }
-            if (&(&i + &SifrInt::from_i64(1)) >= &SifrInt::from(__sifr_chars_template.len()))
+            if &(&i + &SifrInt::from_i64(1)) >= &SifrInt::from(sifr_generated_chars_template.len())
             {
                 if safe {
                     result.push('$');
                     i = &i + &SifrInt::from_i64(1);
                     continue;
                 }
-                return Err(
-                    ValueError::new(
-                        "invalid template placeholder at end of string".to_string(),
-                    ),
-                );
+                return Err(ValueError::new(
+                    "invalid template placeholder at end of string".to_string(),
+                ));
             }
-            let next_ch: Option<String> = ({
-                let __sifr_string_index = &i + &SifrInt::from_i64(1);
-                let __sifr_string_index_normalized = __sifr_string_index
-                    .normalize_index_or_len(__sifr_chars_template.len());
-                __sifr_chars_template.get(__sifr_string_index_normalized)
-            })
-                .map(|c| c.to_string());
-            let mut next_value: String = "".to_string();
-            if (next_ch.is_none()) {
+            let next_ch: Option<String> = {
+                let sifr_generated_string_index = &i + &SifrInt::from_i64(1);
+                let sifr_generated_string_index_normalized = sifr_generated_string_index
+                    .normalize_index_or_len(sifr_generated_chars_template.len());
+                sifr_generated_chars_template.get(sifr_generated_string_index_normalized)
+            }
+            .map(::std::string::ToString::to_string);
+            let mut next_value: String = String::new();
+            if next_ch.is_none() {
                 if safe {
                     result.push('$');
                     i = &i + &SifrInt::from_i64(1);
                     continue;
                 }
                 return Err(ValueError::new("invalid template placeholder".to_string()));
-            } else {
-                if let Some(next_ch) = next_ch {
-                    next_value = next_ch;
-                }
+            } else if let Some(next_ch) = next_ch {
+                next_value = next_ch;
             }
-            if (next_value == "$") {
+            if next_value == "$" {
                 result.push('$');
                 i = &i + &SifrInt::from_i64(2);
                 continue;
             }
-            if (next_value == "{") {
+            if next_value == "{" {
                 let mut j: SifrInt = &i + &SifrInt::from_i64(2);
-                let mut name: String = "".to_string();
-                let mut __sifr_chars_name: Vec<char> = name.chars().collect::<Vec<char>>();
-                while (&j < &SifrInt::from(__sifr_chars_template.len())) {
-                    let part: Option<String> = ({
-                        let __sifr_string_index = j.clone();
-                        let __sifr_string_index_normalized = __sifr_string_index
-                            .normalize_index_or_len(__sifr_chars_template.len());
-                        __sifr_chars_template.get(__sifr_string_index_normalized)
-                    })
-                        .map(|c| c.to_string());
-                    let Some(part) = part else {
+                let mut name: String = String::new();
+                let mut sifr_generated_chars_name: Vec<char> = name.chars().collect::<Vec<char>>();
+                while &j < &SifrInt::from(sifr_generated_chars_template.len()) {
+                    let part: Option<String> = {
+                        let sifr_generated_string_index = j.clone();
+                        let sifr_generated_string_index_normalized = sifr_generated_string_index
+                            .normalize_index_or_len(sifr_generated_chars_template.len());
+                        sifr_generated_chars_template.get(sifr_generated_string_index_normalized)
+                    }
+                    .map(::std::string::ToString::to_string);
+                    let Some(part_value_03b1250debc64fd4) = part else {
                         j = &j + &SifrInt::from_i64(1);
                         continue;
                     };
-                    let mut part_value: String = "".to_string();
-                    {
-                        part_value = part;
-                    }
-                    if (part_value == "}") {
+                    let part_value: String = part_value_03b1250debc64fd4;
+                    if part_value == "}" {
                         break;
                     }
-                    let __sifr_string_concat_name_0 = part_value;
-                    name.push_str(__sifr_string_concat_name_0.as_str());
-                    __sifr_chars_name.extend((__sifr_string_concat_name_0.as_str()).chars());
+                    let sifr_generated_string_concat_name_0 = part_value;
+                    name.push_str(sifr_generated_string_concat_name_0.as_str());
+                    sifr_generated_chars_name
+                        .extend(sifr_generated_string_concat_name_0.as_str().chars());
                     j = &j + &SifrInt::from_i64(1);
                 }
-                if (&j >= &SifrInt::from(__sifr_chars_template.len())) {
+                if &j >= &SifrInt::from(sifr_generated_chars_template.len()) {
                     if safe {
-                        result
-                            .push_str(
-                                ({
-                                    let _slice_src = &__sifr_chars_template;
-                                    let _slice_len = _slice_src.len();
-                                    let _slice_start = i.clamp_slice_bound(_slice_len);
-                                    let _slice_stop = _slice_len;
-                                    String::from_iter(
-                                        _slice_src
-                                            .iter()
-                                            .skip(_slice_start)
-                                            .take(_slice_stop.saturating_sub(_slice_start))
-                                            .copied(),
-                                    )
-                                })
-                                    .as_str(),
-                            );
+                        result.push_str(
+                            {
+                                let sifr_generated_slice_src = &sifr_generated_chars_template;
+                                let sifr_generated_slice_len = sifr_generated_slice_src.len();
+                                let sifr_generated_slice_start =
+                                    i.clamp_slice_bound(sifr_generated_slice_len);
+                                let sifr_generated_slice_stop = sifr_generated_slice_len;
+                                String::from_iter(
+                                    sifr_generated_slice_src
+                                        .iter()
+                                        .skip(sifr_generated_slice_start)
+                                        .take(
+                                            sifr_generated_slice_stop
+                                                .saturating_sub(sifr_generated_slice_start),
+                                        )
+                                        .copied(),
+                                )
+                            }
+                            .as_str(),
+                        );
                         return Ok(result);
                     }
-                    return Err(
-                        ValueError::new(
-                            "invalid template placeholder: missing closing brace".to_string(),
-                        ),
-                    );
+                    return Err(ValueError::new(
+                        "invalid template placeholder: missing closing brace".to_string(),
+                    ));
                 }
-                if (&SifrInt::from(__sifr_chars_name.len()) == &SifrInt::from_i64(0)) {
+                if &SifrInt::from(sifr_generated_chars_name.len()) == &SifrInt::from_i64(0) {
                     if safe {
                         result.push_str("${}");
                         i = &j + &SifrInt::from_i64(1);
                         continue;
                     }
-                    return Err(
-                        ValueError::new(
-                            "invalid template placeholder: empty name".to_string(),
-                        ),
-                    );
+                    return Err(ValueError::new(
+                        "invalid template placeholder: empty name".to_string(),
+                    ));
                 }
-                let first_candidate: Option<String> = ({
-                    let __sifr_string_index = SifrInt::from_i64(0);
-                    let __sifr_string_index_normalized = __sifr_string_index
-                        .normalize_index_or_len(__sifr_chars_name.len());
-                    __sifr_chars_name.get(__sifr_string_index_normalized)
-                })
-                    .map(|c| c.to_string());
-                let mut first_value: String = "".to_string();
-                let mut has_first: bool = false;
-                if let Some(first_candidate) = first_candidate {
-                    has_first = true;
+                let first_candidate: Option<String> = {
+                    let sifr_generated_string_index = SifrInt::from_i64(0);
+                    let sifr_generated_string_index_normalized = sifr_generated_string_index
+                        .normalize_index_or_len(sifr_generated_chars_name.len());
+                    sifr_generated_chars_name.get(sifr_generated_string_index_normalized)
+                }
+                .map(::std::string::ToString::to_string);
+                let mut first_value: String = String::new();
+                let has_first: bool = first_candidate.is_some_and(|first_candidate| {
+                    let has_first = true;
                     first_value = first_candidate;
-                }
-                if !has_first || !_is_identifier_start(&first_value) {
+                    has_first
+                });
+                if !has_first || !sifr_generated_is_identifier_start(&first_value) {
                     if safe {
                         result.push_str("${");
                         result.push_str(name.as_str());
@@ -265,32 +239,29 @@ mod __sifr_project_nominals {
                         i = &j + &SifrInt::from_i64(1);
                         continue;
                     }
-                    return Err(
-                        ValueError::new({
-                            let mut __sifr_concat: String = String::with_capacity(
-                                30usize + name.len(),
-                            );
-                            __sifr_concat.push_str("invalid template placeholder: ");
-                            __sifr_concat.push_str(name.as_str());
-                            __sifr_concat
-                        }),
-                    );
+                    return Err(ValueError::new({
+                        let mut sifr_generated_concat: String =
+                            String::with_capacity(30usize + name.len());
+                        sifr_generated_concat.push_str("invalid template placeholder: ");
+                        sifr_generated_concat.push_str(name.as_str());
+                        sifr_generated_concat
+                    }));
                 }
                 let mut valid: bool = true;
                 let mut k: SifrInt = SifrInt::from_i64(1);
-                while (&k < &SifrInt::from(__sifr_chars_name.len())) {
-                    let part: Option<String> = ({
-                        let __sifr_string_index = k.clone();
-                        let __sifr_string_index_normalized = __sifr_string_index
-                            .normalize_index_or_len(__sifr_chars_name.len());
-                        __sifr_chars_name.get(__sifr_string_index_normalized)
-                    })
-                        .map(|c| c.to_string());
-                    if let Some(part) = part {
-                        if !_is_identifier_continue(&part) {
-                            valid = false;
-                            k = SifrInt::from(__sifr_chars_name.len());
-                        }
+                while &k < &SifrInt::from(sifr_generated_chars_name.len()) {
+                    let part: Option<String> = {
+                        let sifr_generated_string_index = k.clone();
+                        let sifr_generated_string_index_normalized = sifr_generated_string_index
+                            .normalize_index_or_len(sifr_generated_chars_name.len());
+                        sifr_generated_chars_name.get(sifr_generated_string_index_normalized)
+                    }
+                    .map(::std::string::ToString::to_string);
+                    if let Some(part) = part
+                        && !sifr_generated_is_identifier_continue(&part)
+                    {
+                        valid = false;
+                        k = SifrInt::from(sifr_generated_chars_name.len());
                     }
                     k = &k + &SifrInt::from_i64(1);
                 }
@@ -302,20 +273,17 @@ mod __sifr_project_nominals {
                         i = &j + &SifrInt::from_i64(1);
                         continue;
                     }
-                    return Err(
-                        ValueError::new({
-                            let mut __sifr_concat: String = String::with_capacity(
-                                30usize + name.len(),
-                            );
-                            __sifr_concat.push_str("invalid template placeholder: ");
-                            __sifr_concat.push_str(name.as_str());
-                            __sifr_concat
-                        }),
-                    );
+                    return Err(ValueError::new({
+                        let mut sifr_generated_concat: String =
+                            String::with_capacity(30usize + name.len());
+                        sifr_generated_concat.push_str("invalid template placeholder: ");
+                        sifr_generated_concat.push_str(name.as_str());
+                        sifr_generated_concat
+                    }));
                 }
-                let mapped_value: Option<String> = _mapping_lookup(mapping, &name);
-                let mut mapped_value_text: String = "".to_string();
-                if (mapped_value.is_none()) {
+                let mapped_value: Option<String> = sifr_generated_mapping_lookup(mapping, &name);
+                let mut mapped_value_text: String = String::new();
+                if mapped_value.is_none() {
                     if safe {
                         result.push_str("${");
                         result.push_str(name.as_str());
@@ -323,218 +291,201 @@ mod __sifr_project_nominals {
                         i = &j + &SifrInt::from_i64(1);
                         continue;
                     }
-                    return Err(
-                        ValueError::new({
-                            let mut __sifr_concat: String = String::with_capacity(
-                                32usize + name.len(),
-                            );
-                            __sifr_concat.push_str("missing template value for key: ");
-                            __sifr_concat.push_str(name.as_str());
-                            __sifr_concat
-                        }),
-                    );
-                } else {
-                    if let Some(mapped_value) = mapped_value {
-                        mapped_value_text = mapped_value;
-                    }
+                    return Err(ValueError::new({
+                        let mut sifr_generated_concat: String =
+                            String::with_capacity(32usize + name.len());
+                        sifr_generated_concat.push_str("missing template value for key: ");
+                        sifr_generated_concat.push_str(name.as_str());
+                        sifr_generated_concat
+                    }));
+                } else if let Some(mapped_value) = mapped_value {
+                    mapped_value_text = mapped_value;
                 }
                 result.push_str(mapped_value_text.as_str());
                 i = &j + &SifrInt::from_i64(1);
                 continue;
             }
-            if !_is_identifier_start(&next_value) {
+            if !sifr_generated_is_identifier_start(&next_value) {
                 if safe {
                     result.push('$');
                     result.push_str(next_value.as_str());
                     i = &i + &SifrInt::from_i64(2);
                     continue;
                 }
-                return Err(
-                    ValueError::new({
-                        let mut __sifr_concat: String = String::with_capacity(
-                            36usize + next_value.len(),
-                        );
-                        __sifr_concat.push_str("invalid template placeholder near: $");
-                        __sifr_concat.push_str(next_value.as_str());
-                        __sifr_concat
-                    }),
-                );
+                return Err(ValueError::new({
+                    let mut sifr_generated_concat: String =
+                        String::with_capacity(36usize + next_value.len());
+                    sifr_generated_concat.push_str("invalid template placeholder near: $");
+                    sifr_generated_concat.push_str(next_value.as_str());
+                    sifr_generated_concat
+                }));
             }
-            let mut name2: String = "".to_string();
+            let mut name2_value_afb6e7fff26812dc: String = String::new();
             let mut j2: SifrInt = &i + &SifrInt::from_i64(1);
-            while (&j2 < &SifrInt::from(__sifr_chars_template.len())) {
-                let part2: Option<String> = ({
-                    let __sifr_string_index = j2.clone();
-                    let __sifr_string_index_normalized = __sifr_string_index
-                        .normalize_index_or_len(__sifr_chars_template.len());
-                    __sifr_chars_template.get(__sifr_string_index_normalized)
-                })
-                    .map(|c| c.to_string());
-                let Some(part2) = part2 else {
+            while &j2 < &SifrInt::from(sifr_generated_chars_template.len()) {
+                let part2_value_0c51dca7a1f9c3d2: Option<String> = {
+                    let sifr_generated_string_index = j2.clone();
+                    let sifr_generated_string_index_normalized = sifr_generated_string_index
+                        .normalize_index_or_len(sifr_generated_chars_template.len());
+                    sifr_generated_chars_template.get(sifr_generated_string_index_normalized)
+                }
+                .map(::std::string::ToString::to_string);
+                let Some(part2_value_0c51dca7a1f9c3d2) = part2_value_0c51dca7a1f9c3d2 else {
                     j2 = &j2 + &SifrInt::from_i64(1);
                     continue;
                 };
-                let mut part2_value: String = "".to_string();
-                {
-                    part2_value = part2;
-                }
-                if !_is_identifier_continue(&part2_value) {
+                let part2_value: String = part2_value_0c51dca7a1f9c3d2;
+                if !sifr_generated_is_identifier_continue(&part2_value) {
                     break;
                 }
-                name2.push_str(part2_value.as_str());
+                name2_value_afb6e7fff26812dc.push_str(part2_value.as_str());
                 j2 = &j2 + &SifrInt::from_i64(1);
             }
-            let mapped_value2: Option<String> = _mapping_lookup(mapping, &name2);
-            let mut mapped_value2_text: String = "".to_string();
-            if (mapped_value2.is_none()) {
+            let mapped_value2_value_48081efa5265009a: Option<String> =
+                sifr_generated_mapping_lookup(mapping, &name2_value_afb6e7fff26812dc);
+            let mut mapped_value2_text_value_302fac2b5e0e93a8: String = String::new();
+            if mapped_value2_value_48081efa5265009a.is_none() {
                 if safe {
                     result.push('$');
-                    result.push_str(name2.as_str());
+                    result.push_str(name2_value_afb6e7fff26812dc.as_str());
                     i = j2.clone();
                     continue;
                 }
-                return Err(
-                    ValueError::new({
-                        let mut __sifr_concat: String = String::with_capacity(
-                            32usize + name2.len(),
-                        );
-                        __sifr_concat.push_str("missing template value for key: ");
-                        __sifr_concat.push_str(name2.as_str());
-                        __sifr_concat
-                    }),
-                );
-            } else {
-                if let Some(mapped_value2) = mapped_value2 {
-                    mapped_value2_text = mapped_value2;
-                }
+                return Err(ValueError::new({
+                    let mut sifr_generated_concat: String =
+                        String::with_capacity(32usize + name2_value_afb6e7fff26812dc.len());
+                    sifr_generated_concat.push_str("missing template value for key: ");
+                    sifr_generated_concat.push_str(name2_value_afb6e7fff26812dc.as_str());
+                    sifr_generated_concat
+                }));
+            } else if let Some(mapped_value2) = mapped_value2_value_48081efa5265009a {
+                mapped_value2_text_value_302fac2b5e0e93a8 = mapped_value2;
             }
-            result.push_str(mapped_value2_text.as_str());
+            result.push_str(mapped_value2_text_value_302fac2b5e0e93a8.as_str());
             i = j2.clone();
         }
         Ok(result)
     }
-    pub fn _formatter_format_impl(
+    ///# Errors
+    ///Returns the typed error produced by this operation.
+    #[expect(
+        clippy::too_many_lines,
+        reason = "one generated Rust function preserves one typed Sifr function"
+    )]
+    pub fn sifr_generated_formatter_format_impl(
         format_string: &str,
         values: &HashMap<String, String>,
     ) -> Result<String, ValueError> {
-        let __sifr_chars_format_string: Vec<char> = format_string
-            .chars()
-            .collect::<Vec<char>>();
-        let mut result: String = "".to_string();
+        let sifr_generated_chars_format_string: Vec<char> =
+            format_string.chars().collect::<Vec<char>>();
+        let mut result: String = String::new();
         let mut i: SifrInt = SifrInt::from_i64(0);
-        while (&i < &SifrInt::from(__sifr_chars_format_string.len())) {
-            let ch: Option<String> = ({
-                let __sifr_string_index = i.clone();
-                let __sifr_string_index_normalized = __sifr_string_index
-                    .normalize_index_or_len(__sifr_chars_format_string.len());
-                __sifr_chars_format_string.get(__sifr_string_index_normalized)
-            })
-                .map(|c| c.to_string());
+        while &i < &SifrInt::from(sifr_generated_chars_format_string.len()) {
+            let ch: Option<String> = {
+                let sifr_generated_string_index = i.clone();
+                let sifr_generated_string_index_normalized = sifr_generated_string_index
+                    .normalize_index_or_len(sifr_generated_chars_format_string.len());
+                sifr_generated_chars_format_string.get(sifr_generated_string_index_normalized)
+            }
+            .map(::std::string::ToString::to_string);
             let Some(ch) = ch else {
                 i = &i + &SifrInt::from_i64(1);
                 continue;
             };
-            let mut ch_value: String = "".to_string();
-            {
-                ch_value = ch;
-            }
-            if (ch_value == "{") {
-                if (&(&i + &SifrInt::from_i64(1))
-                    < &SifrInt::from(__sifr_chars_format_string.len()))
+            let ch_value: String = ch;
+            if ch_value == "{" {
+                if &(&i + &SifrInt::from_i64(1))
+                    < &SifrInt::from(sifr_generated_chars_format_string.len())
                 {
-                    let escaped_next: Option<String> = ({
-                        let __sifr_string_index = &i + &SifrInt::from_i64(1);
-                        let __sifr_string_index_normalized = __sifr_string_index
-                            .normalize_index_or_len(__sifr_chars_format_string.len());
-                        __sifr_chars_format_string.get(__sifr_string_index_normalized)
-                    })
-                        .map(|c| c.to_string());
-                    if (escaped_next.is_some()) && (escaped_next == Some("{".to_string())) {
+                    let escaped_next: Option<String> = {
+                        let sifr_generated_string_index = &i + &SifrInt::from_i64(1);
+                        let sifr_generated_string_index_normalized = sifr_generated_string_index
+                            .normalize_index_or_len(sifr_generated_chars_format_string.len());
+                        sifr_generated_chars_format_string
+                            .get(sifr_generated_string_index_normalized)
+                    }
+                    .map(::std::string::ToString::to_string);
+                    if escaped_next.is_some() && escaped_next == Some("{".to_string()) {
                         result.push('{');
                         i = &i + &SifrInt::from_i64(2);
                         continue;
                     }
                 }
                 let mut j: SifrInt = &i + &SifrInt::from_i64(1);
-                let mut field_name: String = "".to_string();
-                let mut __sifr_chars_field_name: Vec<char> = field_name
-                    .chars()
-                    .collect::<Vec<char>>();
-                while (&j < &SifrInt::from(__sifr_chars_format_string.len())) {
-                    let part: Option<String> = ({
-                        let __sifr_string_index = j.clone();
-                        let __sifr_string_index_normalized = __sifr_string_index
-                            .normalize_index_or_len(__sifr_chars_format_string.len());
-                        __sifr_chars_format_string.get(__sifr_string_index_normalized)
-                    })
-                        .map(|c| c.to_string());
-                    let Some(part) = part else {
+                let mut field_name: String = String::new();
+                let mut sifr_generated_chars_field_name: Vec<char> =
+                    field_name.chars().collect::<Vec<char>>();
+                while &j < &SifrInt::from(sifr_generated_chars_format_string.len()) {
+                    let part: Option<String> = {
+                        let sifr_generated_string_index = j.clone();
+                        let sifr_generated_string_index_normalized = sifr_generated_string_index
+                            .normalize_index_or_len(sifr_generated_chars_format_string.len());
+                        sifr_generated_chars_format_string
+                            .get(sifr_generated_string_index_normalized)
+                    }
+                    .map(::std::string::ToString::to_string);
+                    let Some(part_value_03b1250debc64fd4) = part else {
                         j = &j + &SifrInt::from_i64(1);
                         continue;
                     };
-                    let mut part_value: String = "".to_string();
-                    {
-                        part_value = part;
-                    }
-                    if (part_value == "}") {
+                    let part_value: String = part_value_03b1250debc64fd4;
+                    if part_value == "}" {
                         break;
                     }
-                    let __sifr_string_concat_field_name_0 = part_value;
-                    field_name.push_str(__sifr_string_concat_field_name_0.as_str());
-                    __sifr_chars_field_name
-                        .extend((__sifr_string_concat_field_name_0.as_str()).chars());
+                    let sifr_generated_string_concat_field_name_0 = part_value;
+                    field_name.push_str(sifr_generated_string_concat_field_name_0.as_str());
+                    sifr_generated_chars_field_name
+                        .extend(sifr_generated_string_concat_field_name_0.as_str().chars());
                     j = &j + &SifrInt::from_i64(1);
                 }
-                if (&j >= &SifrInt::from(__sifr_chars_format_string.len())) {
-                    return Err(
-                        ValueError::new("formatter: missing closing brace".to_string()),
-                    );
+                if &j >= &SifrInt::from(sifr_generated_chars_format_string.len()) {
+                    return Err(ValueError::new(
+                        "formatter: missing closing brace".to_string(),
+                    ));
                 }
-                if (&SifrInt::from(__sifr_chars_field_name.len()) == &SifrInt::from_i64(0)) {
-                    return Err(
-                        ValueError::new(
-                            "formatter: empty replacement field is not supported".to_string(),
-                        ),
-                    );
+                if &SifrInt::from(sifr_generated_chars_field_name.len()) == &SifrInt::from_i64(0) {
+                    return Err(ValueError::new(
+                        "formatter: empty replacement field is not supported".to_string(),
+                    ));
                 }
-                let value: Option<String> = _mapping_lookup(values, &field_name);
-                let Some(value) = value else {
-                    return Err(
-                        ValueError::new({
-                            let mut __sifr_concat: String = String::with_capacity(
-                                34usize + field_name.len(),
-                            );
-                            __sifr_concat.push_str("formatter: missing value for key: ");
-                            __sifr_concat.push_str(field_name.as_str());
-                            __sifr_concat
-                        }),
-                    );
+                let value_value_7ce4fd9430e80cea: Option<String> =
+                    sifr_generated_mapping_lookup(values, &field_name);
+                let Some(value_value_7ce4fd9430e80cea) = value_value_7ce4fd9430e80cea else {
+                    return Err(ValueError::new({
+                        let mut sifr_generated_concat: String =
+                            String::with_capacity(34usize + field_name.len());
+                        sifr_generated_concat.push_str("formatter: missing value for key: ");
+                        sifr_generated_concat.push_str(field_name.as_str());
+                        sifr_generated_concat
+                    }));
                 };
-                result.push_str(value.as_str());
+                result.push_str(value_value_7ce4fd9430e80cea.as_str());
                 i = &j + &SifrInt::from_i64(1);
                 continue;
             }
-            if (ch_value == "}") {
-                if (&(&i + &SifrInt::from_i64(1))
-                    < &SifrInt::from(__sifr_chars_format_string.len()))
+            if ch_value == "}" {
+                if &(&i + &SifrInt::from_i64(1))
+                    < &SifrInt::from(sifr_generated_chars_format_string.len())
                 {
-                    let escaped_next2: Option<String> = ({
-                        let __sifr_string_index = &i + &SifrInt::from_i64(1);
-                        let __sifr_string_index_normalized = __sifr_string_index
-                            .normalize_index_or_len(__sifr_chars_format_string.len());
-                        __sifr_chars_format_string.get(__sifr_string_index_normalized)
-                    })
-                        .map(|c| c.to_string());
-                    if (escaped_next2.is_some()) && (escaped_next2 == Some("}".to_string()))
+                    let escaped_next2_value_afe7a7cfff221700: Option<String> = {
+                        let sifr_generated_string_index = &i + &SifrInt::from_i64(1);
+                        let sifr_generated_string_index_normalized = sifr_generated_string_index
+                            .normalize_index_or_len(sifr_generated_chars_format_string.len());
+                        sifr_generated_chars_format_string
+                            .get(sifr_generated_string_index_normalized)
+                    }
+                    .map(::std::string::ToString::to_string);
+                    if escaped_next2_value_afe7a7cfff221700.is_some()
+                        && escaped_next2_value_afe7a7cfff221700 == Some("}".to_string())
                     {
                         result.push('}');
                         i = &i + &SifrInt::from_i64(2);
                         continue;
                     }
                 }
-                return Err(
-                    ValueError::new("formatter: single \'}\' is invalid".to_string()),
-                );
+                return Err(ValueError::new(
+                    "formatter: single \'}\' is invalid".to_string(),
+                ));
             }
             result.push_str(ch_value.as_str());
             i = &i + &SifrInt::from_i64(1);
@@ -542,7 +493,11 @@ mod __sifr_project_nominals {
         Ok(result)
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct __SifrStdlib_sifr_x2etextwrap_x2eTextWrapper {
+    #[expect(
+        clippy::struct_excessive_bools,
+        reason = "generated Rust preserves this exact typed Sifr source contract"
+    )]
+    pub struct SifrGeneratedStdlibSifrX2etextwrapX2eTextWrapper {
         pub width: SifrInt,
         pub initial_indent: String,
         pub subsequent_indent: String,
@@ -555,7 +510,16 @@ mod __sifr_project_nominals {
         pub max_lines: Option<SifrInt>,
         pub placeholder: String,
     }
-    impl __SifrStdlib_sifr_x2etextwrap_x2eTextWrapper {
+    impl SifrGeneratedStdlibSifrX2etextwrapX2eTextWrapper {
+        #[must_use]
+        #[expect(
+            clippy::too_many_arguments,
+            reason = "generated signature preserves the typed Sifr callable contract"
+        )]
+        #[expect(
+            clippy::fn_params_excessive_bools,
+            reason = "generated Rust preserves this exact typed Sifr source contract"
+        )]
         pub fn new(
             width: SifrInt,
             initial_indent: String,
@@ -569,69 +533,71 @@ mod __sifr_project_nominals {
             max_lines: Option<SifrInt>,
             placeholder: String,
         ) -> Self {
-            let __sifr_field_init_0: SifrInt = width.clone();
-            let __sifr_field_init_1: String = {
-                let mut __sifr_concat: String = String::with_capacity(
-                    initial_indent.len() + 0usize,
-                );
-                __sifr_concat.push_str(initial_indent.as_str());
-                __sifr_concat.push_str("");
-                __sifr_concat
+            let sifr_generated_field_value_dbdacd932fd1e9bf_7769647468: SifrInt = width.clone();
+            let sifr_generated_field_value_f1d9debc65d6e532_696e697469616c5f696e64656e74: String = {
+                let mut sifr_generated_concat: String = String::with_capacity(initial_indent.len());
+                sifr_generated_concat.push_str(initial_indent.as_str());
+                sifr_generated_concat.push_str("");
+                sifr_generated_concat
             };
-            let __sifr_field_init_2: String = {
-                let mut __sifr_concat: String = String::with_capacity(
-                    subsequent_indent.len() + 0usize,
+            let sifr_generated_field_value_45b636e6527b24bb_73756273657175656e745f696e64656e74: String = {
+                let mut sifr_generated_concat: String = String::with_capacity(
+                    subsequent_indent.len(),
                 );
-                __sifr_concat.push_str(subsequent_indent.as_str());
-                __sifr_concat.push_str("");
-                __sifr_concat
+                sifr_generated_concat.push_str(subsequent_indent.as_str());
+                sifr_generated_concat.push_str("");
+                sifr_generated_concat
             };
-            let __sifr_field_init_3: bool = expand_tabs;
+            let sifr_generated_field_value_9fdde0a58b2f170e_657870616e645f74616273: bool =
+                expand_tabs;
             let mut safe_tabsize: SifrInt = tabsize.clone();
             if &safe_tabsize <= &SifrInt::from_i64(0) {
                 safe_tabsize = SifrInt::from_i64(1);
             }
-            let __sifr_field_init_4: SifrInt = safe_tabsize.clone();
-            let __sifr_field_init_5: bool = replace_whitespace;
-            let __sifr_field_init_6: bool = drop_whitespace;
-            let __sifr_field_init_7: bool = break_on_hyphens;
-            let __sifr_field_init_8: bool = fix_sentence_endings;
-            let __sifr_field_init_9: Option<SifrInt> = max_lines.clone();
-            let __sifr_field_init_10: String = {
-                let mut __sifr_concat: String = String::with_capacity(
-                    placeholder.len() + 0usize,
-                );
-                __sifr_concat.push_str(placeholder.as_str());
-                __sifr_concat.push_str("");
-                __sifr_concat
+            let sifr_generated_field_value_0f728cbe37fa9025_74616273697a65: SifrInt =
+                safe_tabsize.clone();
+            let sifr_generated_field_value_d659e98074e25261_7265706c6163655f77686974657370616365: bool = replace_whitespace;
+            let sifr_generated_field_value_a317a122f9288b94_64726f705f77686974657370616365: bool =
+                drop_whitespace;
+            let sifr_generated_field_value_acdab20e5253523e_627265616b5f6f6e5f68797068656e73: bool =
+                break_on_hyphens;
+            let sifr_generated_field_value_116e01dc088ea88b_6669785f73656e74656e63655f656e64696e6773: bool = fix_sentence_endings;
+            let sifr_generated_field_value_441854f90b4986e9_6d61785f6c696e6573: Option<SifrInt> =
+                max_lines.clone();
+            let sifr_generated_field_value_615e79d982d9f0fa_706c616365686f6c646572: String = {
+                let mut sifr_generated_concat: String = String::with_capacity(placeholder.len());
+                sifr_generated_concat.push_str(placeholder.as_str());
+                sifr_generated_concat.push_str("");
+                sifr_generated_concat
             };
             Self {
-                width: __sifr_field_init_0,
-                initial_indent: __sifr_field_init_1,
-                subsequent_indent: __sifr_field_init_2,
-                expand_tabs: __sifr_field_init_3,
-                tabsize: __sifr_field_init_4,
-                replace_whitespace: __sifr_field_init_5,
-                drop_whitespace: __sifr_field_init_6,
-                break_on_hyphens: __sifr_field_init_7,
-                fix_sentence_endings: __sifr_field_init_8,
-                max_lines: __sifr_field_init_9,
-                placeholder: __sifr_field_init_10,
+                width: sifr_generated_field_value_dbdacd932fd1e9bf_7769647468,
+                initial_indent: sifr_generated_field_value_f1d9debc65d6e532_696e697469616c5f696e64656e74,
+                subsequent_indent: sifr_generated_field_value_45b636e6527b24bb_73756273657175656e745f696e64656e74,
+                expand_tabs: sifr_generated_field_value_9fdde0a58b2f170e_657870616e645f74616273,
+                tabsize: sifr_generated_field_value_0f728cbe37fa9025_74616273697a65,
+                replace_whitespace: sifr_generated_field_value_d659e98074e25261_7265706c6163655f77686974657370616365,
+                drop_whitespace: sifr_generated_field_value_a317a122f9288b94_64726f705f77686974657370616365,
+                break_on_hyphens: sifr_generated_field_value_acdab20e5253523e_627265616b5f6f6e5f68797068656e73,
+                fix_sentence_endings: sifr_generated_field_value_116e01dc088ea88b_6669785f73656e74656e63655f656e64696e6773,
+                max_lines: sifr_generated_field_value_441854f90b4986e9_6d61785f6c696e6573,
+                placeholder: sifr_generated_field_value_615e79d982d9f0fa_706c616365686f6c646572,
             }
         }
     }
-    impl __SifrStdlib_sifr_x2etextwrap_x2eTextWrapper {
+    impl SifrGeneratedStdlibSifrX2etextwrapX2eTextWrapper {
+        #[must_use]
         pub fn wrap(&self, text: &str) -> Vec<String> {
-            if (&self.width.clone() <= &SifrInt::from_i64(0)) {
-                return vec![];
+            if &self.width.clone() <= &SifrInt::from_i64(0) {
+                return Vec::new();
             }
-            let prepared: String = _prepare_text(
+            let prepared: String = sifr_generated_prepare_text(
                 text,
                 self.expand_tabs,
                 self.tabsize.clone(),
                 self.replace_whitespace,
             );
-            let mut lines: Vec<String> = _wrap_with_indents(
+            let mut lines: Vec<String> = sifr_generated_wrap_with_indents(
                 &prepared,
                 self.width.clone(),
                 &self.initial_indent,
@@ -640,9 +606,9 @@ mod __sifr_project_nominals {
                 self.drop_whitespace,
             );
             if self.fix_sentence_endings {
-                lines = _apply_sentence_endings_lines(&lines);
+                lines = sifr_generated_apply_sentence_endings_lines(&lines);
             }
-            _apply_max_lines(
+            sifr_generated_apply_max_lines(
                 &lines,
                 self.width.clone(),
                 self.max_lines.clone(),
@@ -651,25 +617,8 @@ mod __sifr_project_nominals {
             )
         }
     }
-    impl __SifrStdlib_sifr_x2etextwrap_x2eTextWrapper {
-        pub fn fill(&self, text: &str) -> String {
-            if (&self.width.clone() <= &SifrInt::from_i64(0)) {
-                return "".to_string();
-            }
-            let lines: Vec<String> = self.wrap(text);
-            let mut result: String = "".to_string();
-            let mut i: SifrInt = SifrInt::from_i64(0);
-            for line in lines.iter().cloned() {
-                if (&i > &SifrInt::from_i64(0)) {
-                    result.push('\n');
-                }
-                result.push_str(line.as_str());
-                i = &i + &SifrInt::from_i64(1);
-            }
-            result
-        }
-    }
-    pub fn _replace_whitespace_chars(text: &str, replace_tabs: bool) -> String {
+    #[must_use]
+    pub fn sifr_generated_replace_whitespace_chars(text: &str, replace_tabs: bool) -> String {
         let normalized: String = text
             .replace('\n', " ")
             .replace('\r', " ")
@@ -680,46 +629,47 @@ mod __sifr_project_nominals {
         }
         normalized
     }
-    pub fn _expand_tabs_impl(text: &str, tabsize: SifrInt) -> String {
-        let __sifr_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
+    #[must_use]
+    pub fn sifr_generated_expand_tabs_impl(text: &str, tabsize: SifrInt) -> String {
+        let sifr_generated_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
         let mut effective_tabsize: SifrInt = tabsize.clone();
         if &effective_tabsize <= &SifrInt::from_i64(0) {
             effective_tabsize = SifrInt::from_i64(1);
         }
-        if (&effective_tabsize == &SifrInt::from_i64(0)) {
+        if &effective_tabsize == &SifrInt::from_i64(0) {
             return text.to_owned();
         }
-        let mut result: String = "".to_string();
+        let mut result: String = String::new();
         let mut column: SifrInt = SifrInt::from_i64(0);
         let mut i: SifrInt = SifrInt::from_i64(0);
-        while (&i < &SifrInt::from(__sifr_chars_text.len())) {
-            let ch_opt: Option<String> = ({
-                let __sifr_string_index = i.clone();
-                let __sifr_string_index_normalized = __sifr_string_index
-                    .normalize_index_or_len(__sifr_chars_text.len());
-                __sifr_chars_text.get(__sifr_string_index_normalized)
-            })
-                .map(|c| c.to_string());
+        while &i < &SifrInt::from(sifr_generated_chars_text.len()) {
+            let ch_opt: Option<String> = {
+                let sifr_generated_string_index = i.clone();
+                let sifr_generated_string_index_normalized = sifr_generated_string_index
+                    .normalize_index_or_len(sifr_generated_chars_text.len());
+                sifr_generated_chars_text.get(sifr_generated_string_index_normalized)
+            }
+            .map(::std::string::ToString::to_string);
             if let Some(ch_opt) = ch_opt {
                 let ch: String = ch_opt;
-                if (ch == "\t") {
-                    let mut spaces: SifrInt = &effective_tabsize
-                        - &column.floor_mod_known_nonzero(&effective_tabsize);
-                    if (&spaces <= &SifrInt::from_i64(0)) {
+                if ch == "\t" {
+                    let mut spaces: SifrInt =
+                        &effective_tabsize - &column.floor_mod_known_nonzero(&effective_tabsize);
+                    if &spaces <= &SifrInt::from_i64(0) {
                         spaces = effective_tabsize.clone();
                     }
                     let mut j: SifrInt = SifrInt::from_i64(0);
-                    while (&j < &spaces) {
+                    while &j < &spaces {
                         result.push(' ');
                         j = &j + &SifrInt::from_i64(1);
                     }
                     column = &column + &spaces;
                 } else {
-                    if (ch == "\n") || (ch == "\r") {
-                        result.push_str(ch.as_str());
+                    let sifr_generated_shared_branch_condition = ch == "\n" || ch == "\r";
+                    result.push_str(ch.as_str());
+                    if sifr_generated_shared_branch_condition {
                         column = SifrInt::from_i64(0);
                     } else {
-                        result.push_str(ch.as_str());
                         column = &column + &SifrInt::from_i64(1);
                     }
                 }
@@ -728,151 +678,151 @@ mod __sifr_project_nominals {
         }
         result
     }
-    pub fn _prepare_text(
+    #[must_use]
+    pub fn sifr_generated_prepare_text(
         text: &str,
         expand_tabs: bool,
         tabsize: SifrInt,
         replace_whitespace: bool,
     ) -> String {
         let mut prepared: String = {
-            let mut __sifr_concat: String = String::with_capacity(text.len() + 0usize);
-            __sifr_concat.push_str(text);
-            __sifr_concat.push_str("");
-            __sifr_concat
+            let mut sifr_generated_concat: String = String::with_capacity(text.len());
+            sifr_generated_concat.push_str(text);
+            sifr_generated_concat.push_str("");
+            sifr_generated_concat
         };
         if expand_tabs {
-            prepared = _expand_tabs_impl(&prepared, tabsize.clone());
+            prepared = sifr_generated_expand_tabs_impl(&prepared, tabsize.clone());
         }
         if replace_whitespace {
-            prepared = _replace_whitespace_chars(&prepared, true);
+            prepared = sifr_generated_replace_whitespace_chars(&prepared, true);
         }
         prepared
     }
-    pub fn _split_word_units(word: &str, break_on_hyphens: bool) -> Vec<String> {
+    #[must_use]
+    pub fn sifr_generated_split_word_units(word: &str, break_on_hyphens: bool) -> Vec<String> {
         if !break_on_hyphens {
-            return vec![
-                { let mut __sifr_concat : String = String::with_capacity(word.len() +
-                0usize); __sifr_concat.push_str(word); __sifr_concat.push_str("");
-                __sifr_concat }
-            ];
+            return vec![{
+                let mut sifr_generated_concat: String = String::with_capacity(word.len());
+                sifr_generated_concat.push_str(word);
+                sifr_generated_concat.push_str("");
+                sifr_generated_concat
+            }];
         }
         let parts: Vec<String> = word
             .split('-')
-            .map(|s| s.to_string())
+            .map(::std::string::ToString::to_string)
             .collect::<Vec<String>>();
-        if (&SifrInt::from(parts.len()) <= &SifrInt::from_i64(1)) {
-            return vec![
-                { let mut __sifr_concat : String = String::with_capacity(word.len() +
-                0usize); __sifr_concat.push_str(word); __sifr_concat.push_str("");
-                __sifr_concat }
-            ];
+        if &SifrInt::from(parts.len()) <= &SifrInt::from_i64(1) {
+            return vec![{
+                let mut sifr_generated_concat: String = String::with_capacity(word.len());
+                sifr_generated_concat.push_str(word);
+                sifr_generated_concat.push_str("");
+                sifr_generated_concat
+            }];
         }
-        let mut units: Vec<String> = vec![];
+        let mut units: Vec<String> = Vec::new();
         let mut index: SifrInt = SifrInt::from_i64(0);
         for part in parts.iter().cloned() {
-            let __sifr_chars_part: Vec<char> = part.chars().collect::<Vec<char>>();
-            let is_last: bool = (&index
-                == &(&SifrInt::from(parts.len()) - &SifrInt::from_i64(1)));
+            let sifr_generated_chars_part: Vec<char> = part.chars().collect::<Vec<char>>();
+            let is_last: bool = &index == &(&SifrInt::from(parts.len()) - &SifrInt::from_i64(1));
             if is_last {
-                if (&SifrInt::from(__sifr_chars_part.len()) > &SifrInt::from_i64(0)) {
+                if &SifrInt::from(sifr_generated_chars_part.len()) > &SifrInt::from_i64(0) {
                     units.push(part.to_owned());
                 }
+            } else if &SifrInt::from(sifr_generated_chars_part.len()) == &SifrInt::from_i64(0) {
+                units.push("-".to_string());
             } else {
-                if (&SifrInt::from(__sifr_chars_part.len()) == &SifrInt::from_i64(0)) {
-                    units.push("-".to_string());
-                } else {
-                    units.push(format!("{}{}", part, "-"));
-                }
+                units.push(format!("{part}-"));
             }
             index = &index + &SifrInt::from_i64(1);
         }
-        if (&SifrInt::from(units.len()) == &SifrInt::from_i64(0)) {
-            units.push(format!("{}{}", word, ""));
+        if &SifrInt::from(units.len()) == &SifrInt::from_i64(0) {
+            units.push(word.to_string());
         }
         units
     }
-    pub fn _trim_line(line: &str) -> String {
-        let __sifr_chars_line: Vec<char> = line.chars().collect::<Vec<char>>();
+    #[must_use]
+    pub fn sifr_generated_trim_line(line: &str) -> String {
+        let sifr_generated_chars_line: Vec<char> = line.chars().collect::<Vec<char>>();
         let mut start: SifrInt = SifrInt::from_i64(0);
-        while (&start < &SifrInt::from(__sifr_chars_line.len()))
-            && ({
-                let __sifr_string_index = start.clone();
-                let __sifr_string_index_normalized = __sifr_string_index
-                    .normalize_index_or_len(__sifr_chars_line.len());
-                __sifr_chars_line.get(__sifr_string_index_normalized)
-            })
-                .map(|c| c.to_string())
-                .is_some_and(|__sifr_checked_value_2| {
-                    (__sifr_checked_value_2.clone() == " ")
-                })
+        while &start < &SifrInt::from(sifr_generated_chars_line.len()) && {
+            let sifr_generated_string_index = start.clone();
+            let sifr_generated_string_index_normalized =
+                sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_line.len());
+            sifr_generated_chars_line.get(sifr_generated_string_index_normalized)
+        }
+        .map(::std::string::ToString::to_string)
+        .is_some_and(|sifr_generated_checked_value_2| sifr_generated_checked_value_2.clone() == " ")
         {
             start = &start + &SifrInt::from_i64(1);
         }
-        let mut end: SifrInt = SifrInt::from(__sifr_chars_line.len());
-        while (&end > &start)
-            && (({
-                let __sifr_string_index = &end - &SifrInt::from_i64(1);
-                let __sifr_string_index_normalized = __sifr_string_index
-                    .normalize_index_or_len(__sifr_chars_line.len());
-                __sifr_chars_line.get(__sifr_string_index_normalized)
-            })
-                .map(|c| c.to_string()) == Some(" ".to_string()))
+        let mut end: SifrInt = SifrInt::from(sifr_generated_chars_line.len());
+        while &end > &start && {
+            let sifr_generated_string_index = &end - &SifrInt::from_i64(1);
+            let sifr_generated_string_index_normalized =
+                sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_line.len());
+            sifr_generated_chars_line.get(sifr_generated_string_index_normalized)
+        }
+        .map(::std::string::ToString::to_string)
+            == Some(" ".to_string())
         {
             end = &end - &SifrInt::from_i64(1);
         }
         {
-            let _slice_src = &__sifr_chars_line;
-            let _slice_len = _slice_src.len();
-            let _slice_start = start.clamp_slice_bound(_slice_len);
-            let _slice_stop = end.clamp_slice_bound(_slice_len);
+            let sifr_generated_slice_src = &sifr_generated_chars_line;
+            let sifr_generated_slice_len = sifr_generated_slice_src.len();
+            let sifr_generated_slice_start = start.clamp_slice_bound(sifr_generated_slice_len);
+            let sifr_generated_slice_stop = end.clamp_slice_bound(sifr_generated_slice_len);
             String::from_iter(
-                _slice_src
+                sifr_generated_slice_src
                     .iter()
-                    .skip(_slice_start)
-                    .take(_slice_stop.saturating_sub(_slice_start))
+                    .skip(sifr_generated_slice_start)
+                    .take(sifr_generated_slice_stop.saturating_sub(sifr_generated_slice_start))
                     .copied(),
             )
         }
     }
-    pub fn _finalize_line(line: &str, drop_whitespace: bool) -> String {
+    #[must_use]
+    pub fn sifr_generated_finalize_line(line: &str, drop_whitespace: bool) -> String {
         if drop_whitespace {
-            return _trim_line(line);
+            return sifr_generated_trim_line(line);
         }
         {
-            let mut __sifr_concat: String = String::with_capacity(line.len() + 0usize);
-            __sifr_concat.push_str(line);
-            __sifr_concat.push_str("");
-            __sifr_concat
+            let mut sifr_generated_concat: String = String::with_capacity(line.len());
+            sifr_generated_concat.push_str(line);
+            sifr_generated_concat.push_str("");
+            sifr_generated_concat
         }
     }
-    pub fn _effective_content_width(total_width: SifrInt, indent: &str) -> SifrInt {
-        let __sifr_chars_indent: Vec<char> = indent.chars().collect::<Vec<char>>();
-        let available: SifrInt = &total_width - &SifrInt::from(__sifr_chars_indent.len());
+    #[must_use]
+    pub fn sifr_generated_effective_content_width(total_width: SifrInt, indent: &str) -> SifrInt {
+        let sifr_generated_chars_indent: Vec<char> = indent.chars().collect::<Vec<char>>();
+        let available: SifrInt = &total_width - &SifrInt::from(sifr_generated_chars_indent.len());
         if &available <= &SifrInt::from_i64(0) {
             return SifrInt::from_i64(1);
         }
         available.clone()
     }
-    pub fn _push_current_line(
+    pub fn sifr_generated_push_current_line(
         result: &mut Vec<String>,
         line: &str,
         indent: &str,
         drop_whitespace: bool,
     ) {
-        let candidate: String = _finalize_line(
-            &format!("{}{}", indent, line),
-            drop_whitespace,
-        );
-        let __sifr_chars_candidate: Vec<char> = candidate.chars().collect::<Vec<char>>();
+        let candidate: String =
+            sifr_generated_finalize_line(&format!("{indent}{line}"), drop_whitespace);
+        let sifr_generated_chars_candidate: Vec<char> = candidate.chars().collect::<Vec<char>>();
         if drop_whitespace {
-            if (&SifrInt::from(__sifr_chars_candidate.len()) > &SifrInt::from_i64(0)) {
+            if &SifrInt::from(sifr_generated_chars_candidate.len()) > &SifrInt::from_i64(0) {
                 result.push(candidate.to_owned());
             }
         } else {
             result.push(candidate.to_owned());
         }
     }
-    pub fn _wrap_with_indents(
+    #[must_use]
+    pub fn sifr_generated_wrap_with_indents(
         text: &str,
         total_width: SifrInt,
         initial_indent: &str,
@@ -882,71 +832,72 @@ mod __sifr_project_nominals {
     ) -> Vec<String> {
         let words: Vec<String> = text
             .split(' ')
-            .map(|s| s.to_string())
+            .map(::std::string::ToString::to_string)
             .collect::<Vec<String>>();
-        let mut result: Vec<String> = vec![];
-        let mut current: String = "".to_string();
+        let mut result: Vec<String> = Vec::new();
+        let mut current: String = String::new();
         let mut first_line: bool = true;
-        let mut current_limit: SifrInt = _effective_content_width(
-            total_width.clone(),
-            initial_indent,
-        );
+        let mut current_limit: SifrInt =
+            sifr_generated_effective_content_width(total_width.clone(), initial_indent);
         for raw_word in words.iter().cloned() {
-            let units: Vec<String> = _split_word_units(&raw_word, break_on_hyphens);
+            let units: Vec<String> = sifr_generated_split_word_units(&raw_word, break_on_hyphens);
             for word in units.iter().cloned() {
-                let __sifr_chars_word: Vec<char> = word.chars().collect::<Vec<char>>();
-                if (&SifrInt::from(__sifr_chars_word.len()) == &SifrInt::from_i64(0)) {
+                let sifr_generated_chars_word: Vec<char> = word.chars().collect::<Vec<char>>();
+                if &SifrInt::from(sifr_generated_chars_word.len()) == &SifrInt::from_i64(0) {
                     if drop_whitespace {
                         continue;
                     }
-                    if (&SifrInt::from(current.chars().count()) > &SifrInt::from_i64(0)) {
-                        if (&(&SifrInt::from(current.chars().count())
-                            + &SifrInt::from_i64(1)) <= &current_limit)
-                        {
-                            current.push(' ');
-                        }
+                    if &SifrInt::from(current.chars().count()) > &SifrInt::from_i64(0)
+                        && &(&SifrInt::from(current.chars().count()) + &SifrInt::from_i64(1))
+                            <= &current_limit
+                    {
+                        current.push(' ');
                     }
                     continue;
                 }
-                if (&SifrInt::from(current.chars().count()) == &SifrInt::from_i64(0)) {
+                if &SifrInt::from(current.chars().count()) == &SifrInt::from_i64(0) {
                     current = word;
+                } else if &(&(&SifrInt::from(current.chars().count()) + &SifrInt::from_i64(1))
+                    + &SifrInt::from(sifr_generated_chars_word.len()))
+                    <= &current_limit
+                {
+                    current.push(' ');
+                    current.push_str(word.as_str());
                 } else {
-                    if (&(&(&SifrInt::from(current.chars().count()) + &SifrInt::from_i64(1))
-                        + &SifrInt::from(__sifr_chars_word.len())) <= &current_limit)
-                    {
-                        current.push(' ');
-                        current.push_str(word.as_str());
+                    if first_line {
+                        sifr_generated_push_current_line(
+                            &mut result,
+                            &current,
+                            initial_indent,
+                            drop_whitespace,
+                        );
+                        first_line = false;
+                        current_limit = sifr_generated_effective_content_width(
+                            total_width.clone(),
+                            subsequent_indent,
+                        );
                     } else {
-                        if first_line {
-                            _push_current_line(
-                                &mut result,
-                                &current,
-                                initial_indent,
-                                drop_whitespace,
-                            );
-                            first_line = false;
-                            current_limit = _effective_content_width(
-                                total_width.clone(),
-                                subsequent_indent,
-                            );
-                        } else {
-                            _push_current_line(
-                                &mut result,
-                                &current,
-                                subsequent_indent,
-                                drop_whitespace,
-                            );
-                        }
-                        current = word;
+                        sifr_generated_push_current_line(
+                            &mut result,
+                            &current,
+                            subsequent_indent,
+                            drop_whitespace,
+                        );
                     }
+                    current = word;
                 }
             }
         }
-        if (&SifrInt::from(current.chars().count()) > &SifrInt::from_i64(0)) {
+        if &SifrInt::from(current.chars().count()) > &SifrInt::from_i64(0) {
             if first_line {
-                _push_current_line(&mut result, &current, initial_indent, drop_whitespace);
+                sifr_generated_push_current_line(
+                    &mut result,
+                    &current,
+                    initial_indent,
+                    drop_whitespace,
+                );
             } else {
-                _push_current_line(
+                sifr_generated_push_current_line(
                     &mut result,
                     &current,
                     subsequent_indent,
@@ -956,59 +907,66 @@ mod __sifr_project_nominals {
         }
         result
     }
-    pub fn _apply_sentence_endings_line(text: &str) -> String {
-        let __sifr_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
-        let mut result: String = "".to_string();
+    #[must_use]
+    pub fn sifr_generated_apply_sentence_endings_line(text: &str) -> String {
+        let sifr_generated_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
+        let mut result: String = String::new();
         let mut i: SifrInt = SifrInt::from_i64(0);
-        while (&i < &SifrInt::from(__sifr_chars_text.len())) {
-            let ch_opt: Option<String> = ({
-                let __sifr_string_index = i.clone();
-                let __sifr_string_index_normalized = __sifr_string_index
-                    .normalize_index_or_len(__sifr_chars_text.len());
-                __sifr_chars_text.get(__sifr_string_index_normalized)
-            })
-                .map(|c| c.to_string());
+        while &i < &SifrInt::from(sifr_generated_chars_text.len()) {
+            let ch_opt: Option<String> = {
+                let sifr_generated_string_index = i.clone();
+                let sifr_generated_string_index_normalized = sifr_generated_string_index
+                    .normalize_index_or_len(sifr_generated_chars_text.len());
+                sifr_generated_chars_text.get(sifr_generated_string_index_normalized)
+            }
+            .map(::std::string::ToString::to_string);
             if let Some(ch_opt) = ch_opt {
                 let ch: String = ch_opt;
                 result.push_str(ch.as_str());
-                if ((ch == ".") || (ch == "!")) || (ch == "?") {
-                    let mut next_opt: Option<String> = None;
-                    if (&(&i + &SifrInt::from_i64(1))
-                        < &SifrInt::from(__sifr_chars_text.len()))
+                if ch == "." || ch == "!" || ch == "?" {
+                    let next_opt: Option<String> = if &(&i + &SifrInt::from_i64(1))
+                        < &SifrInt::from(sifr_generated_chars_text.len())
+                        && let Some(_checked_value_4) = {
+                            let sifr_generated_string_index = &i + &SifrInt::from_i64(1);
+                            let sifr_generated_string_index_normalized =
+                                sifr_generated_string_index
+                                    .normalize_index_or_len(sifr_generated_chars_text.len());
+                            sifr_generated_chars_text.get(sifr_generated_string_index_normalized)
+                        }
+                        .map(::std::string::ToString::to_string)
                     {
-                        if let Some(__sifr_checked_value_4) = ({
-                            let __sifr_string_index = &i + &SifrInt::from_i64(1);
-                            let __sifr_string_index_normalized = __sifr_string_index
-                                .normalize_index_or_len(__sifr_chars_text.len());
-                            __sifr_chars_text.get(__sifr_string_index_normalized)
-                        })
-                            .map(|c| c.to_string())
                         {
-                            next_opt = ({
-                                let __sifr_string_index = &i + &SifrInt::from_i64(1);
-                                let __sifr_string_index_normalized = __sifr_string_index
-                                    .normalize_index_or_len(__sifr_chars_text.len());
-                                __sifr_chars_text.get(__sifr_string_index_normalized)
-                            })
-                                .map(|c| c.to_string());
+                            let sifr_generated_string_index = &i + &SifrInt::from_i64(1);
+                            let sifr_generated_string_index_normalized =
+                                sifr_generated_string_index
+                                    .normalize_index_or_len(sifr_generated_chars_text.len());
+                            sifr_generated_chars_text.get(sifr_generated_string_index_normalized)
                         }
-                    }
-                    let mut next2_opt: Option<String> = None;
-                    if (&(&i + &SifrInt::from_i64(2))
-                        < &SifrInt::from(__sifr_chars_text.len()))
+                        .map(::std::string::ToString::to_string)
+                    } else {
+                        None
+                    };
+                    let next2_opt_value_88541be202984f38: Option<String> = if &(&i
+                        + &SifrInt::from_i64(2))
+                        < &SifrInt::from(sifr_generated_chars_text.len())
                     {
-                        next2_opt = ({
-                            let __sifr_string_index = &i + &SifrInt::from_i64(2);
-                            let __sifr_string_index_normalized = __sifr_string_index
-                                .normalize_index_or_len(__sifr_chars_text.len());
-                            __sifr_chars_text.get(__sifr_string_index_normalized)
-                        })
-                            .map(|c| c.to_string());
-                    }
-                    if (next_opt.is_some()) && (next_opt == Some(" ".to_string())) {
-                        if (next2_opt.is_none()) || (next2_opt != Some(" ".to_string())) {
-                            result.push(' ');
+                        {
+                            let sifr_generated_string_index = &i + &SifrInt::from_i64(2);
+                            let sifr_generated_string_index_normalized =
+                                sifr_generated_string_index
+                                    .normalize_index_or_len(sifr_generated_chars_text.len());
+                            sifr_generated_chars_text.get(sifr_generated_string_index_normalized)
                         }
+                        .map(::std::string::ToString::to_string)
+                    } else {
+                        None
+                    };
+                    if next_opt.is_some()
+                        && next_opt == Some(" ".to_string())
+                        && (next2_opt_value_88541be202984f38.is_none()
+                            || next2_opt_value_88541be202984f38 != Some(" ".to_string()))
+                    {
+                        result.push(' ');
                     }
                 }
             }
@@ -1016,21 +974,28 @@ mod __sifr_project_nominals {
         }
         result
     }
-    pub fn _apply_sentence_endings_lines(lines: &[String]) -> Vec<String> {
-        let mut result: Vec<String> = vec![];
+    #[must_use]
+    pub fn sifr_generated_apply_sentence_endings_lines(lines: &[String]) -> Vec<String> {
+        let mut result: Vec<String> = Vec::new();
         for line in lines.iter().cloned() {
-            result.push(_apply_sentence_endings_line(&line));
+            result.push(sifr_generated_apply_sentence_endings_line(&line));
         }
         result
     }
-    pub fn _clone_lines(lines: &[String]) -> Vec<String> {
-        let mut copied: Vec<String> = vec![];
+    #[must_use]
+    pub fn sifr_generated_clone_lines(lines: &[String]) -> Vec<String> {
+        let mut copied: Vec<String> = Vec::new();
         for line in lines.iter().cloned() {
             copied.push(line.to_owned());
         }
         copied
     }
-    pub fn _apply_max_lines(
+    #[must_use]
+    #[expect(
+        clippy::too_many_lines,
+        reason = "one generated Rust function preserves one typed Sifr function"
+    )]
+    pub fn sifr_generated_apply_max_lines(
         lines: &[String],
         width: SifrInt,
         max_lines: Option<SifrInt>,
@@ -1038,24 +1003,26 @@ mod __sifr_project_nominals {
         drop_whitespace: bool,
     ) -> Vec<String> {
         let Some(max_lines) = max_lines.clone() else {
-            return _clone_lines(lines);
+            return sifr_generated_clone_lines(lines);
         };
         let limit: SifrInt = max_lines.clone();
         if &limit <= &SifrInt::from_i64(0) {
-            return vec![];
+            return Vec::new();
         }
-        if (&SifrInt::from(lines.len()) <= &limit) {
-            return _clone_lines(lines);
+        if &SifrInt::from(lines.len()) <= &limit {
+            return sifr_generated_clone_lines(lines);
         }
-        let mut result: Vec<String> = vec![];
+        let mut result: Vec<String> = Vec::new();
         let mut i: SifrInt = SifrInt::from_i64(0);
-        while (&i < &limit) {
+        while &i < &limit {
             let line_opt: Option<String> = {
-                let __sifr_checked_read_collection = &lines;
-                let __sifr_checked_read_index = i.clone();
-                let __sifr_checked_read_normalized = __sifr_checked_read_index
-                    .normalize_index_or_len(__sifr_checked_read_collection.len());
-                __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+                let sifr_generated_checked_read_collection = &lines;
+                let sifr_generated_checked_read_index = i.clone();
+                let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
+                    .normalize_index_or_len(sifr_generated_checked_read_collection.len());
+                sifr_generated_checked_read_collection
+                    .get(sifr_generated_checked_read_normalized)
+                    .cloned()
             };
             if let Some(line_opt) = line_opt {
                 result.push(line_opt.to_owned());
@@ -1066,88 +1033,84 @@ mod __sifr_project_nominals {
             return result;
         }
         let mut effective_placeholder: String = {
-            let mut __sifr_concat: String = String::with_capacity(
-                placeholder.len() + 0usize,
-            );
-            __sifr_concat.push_str(placeholder);
-            __sifr_concat.push_str("");
-            __sifr_concat
+            let mut sifr_generated_concat: String = String::with_capacity(placeholder.len());
+            sifr_generated_concat.push_str(placeholder);
+            sifr_generated_concat.push_str("");
+            sifr_generated_concat
         };
-        let mut __sifr_chars_effective_placeholder: Vec<char> = effective_placeholder
-            .chars()
-            .collect::<Vec<char>>();
-        if (&width > &SifrInt::from_i64(0)) {
-            if (&SifrInt::from(__sifr_chars_effective_placeholder.len()) > &width) {
-                effective_placeholder = {
-                    let _slice_src = &__sifr_chars_effective_placeholder;
-                    let _slice_len = _slice_src.len();
-                    let _slice_start = SifrInt::from_i64(0).clamp_slice_bound(_slice_len);
-                    let _slice_stop = width.clamp_slice_bound(_slice_len);
-                    String::from_iter(
-                        _slice_src
-                            .iter()
-                            .skip(_slice_start)
-                            .take(_slice_stop.saturating_sub(_slice_start))
-                            .copied(),
-                    )
-                };
-                __sifr_chars_effective_placeholder = effective_placeholder
-                    .chars()
-                    .collect::<Vec<char>>();
-            }
+        let mut sifr_generated_chars_effective_placeholder: Vec<char> =
+            effective_placeholder.chars().collect::<Vec<char>>();
+        if &width > &SifrInt::from_i64(0)
+            && &SifrInt::from(sifr_generated_chars_effective_placeholder.len()) > &width
+        {
+            effective_placeholder = {
+                let sifr_generated_slice_src = &sifr_generated_chars_effective_placeholder;
+                let sifr_generated_slice_len = sifr_generated_slice_src.len();
+                let sifr_generated_slice_start =
+                    SifrInt::from_i64(0).clamp_slice_bound(sifr_generated_slice_len);
+                let sifr_generated_slice_stop = width.clamp_slice_bound(sifr_generated_slice_len);
+                String::from_iter(
+                    sifr_generated_slice_src
+                        .iter()
+                        .skip(sifr_generated_slice_start)
+                        .take(sifr_generated_slice_stop.saturating_sub(sifr_generated_slice_start))
+                        .copied(),
+                )
+            };
+            sifr_generated_chars_effective_placeholder =
+                effective_placeholder.chars().collect::<Vec<char>>();
         }
         let last_index: SifrInt = &SifrInt::from(result.len()) - &SifrInt::from_i64(1);
         let last_opt: Option<String> = {
-            let __sifr_checked_read_collection = &result;
-            let __sifr_checked_read_index = last_index.clone();
-            let __sifr_checked_read_normalized = __sifr_checked_read_index
-                .normalize_index_or_len(__sifr_checked_read_collection.len());
-            __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+            let sifr_generated_checked_read_collection = &result;
+            let sifr_generated_checked_read_index = last_index.clone();
+            let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
+                .normalize_index_or_len(sifr_generated_checked_read_collection.len());
+            sifr_generated_checked_read_collection
+                .get(sifr_generated_checked_read_normalized)
+                .cloned()
         };
         if let Some(last_opt) = last_opt {
             let last: String = last_opt;
-            let mut base: String = _trim_line(&last);
-            let mut __sifr_chars_base: Vec<char> = base.chars().collect::<Vec<char>>();
-            let mut available: SifrInt = &width
-                - &SifrInt::from(__sifr_chars_effective_placeholder.len());
-            if (&available < &SifrInt::from_i64(0)) {
+            let mut base: String = sifr_generated_trim_line(&last);
+            let sifr_generated_chars_base: Vec<char> = base.chars().collect::<Vec<char>>();
+            let mut available: SifrInt =
+                &width - &SifrInt::from(sifr_generated_chars_effective_placeholder.len());
+            if &available < &SifrInt::from_i64(0) {
                 available = SifrInt::from_i64(0);
             }
-            if (&SifrInt::from(__sifr_chars_base.len()) > &available) {
-                base = _trim_line(
+            if &SifrInt::from(sifr_generated_chars_base.len()) > &available {
+                base = sifr_generated_trim_line(
                     &base
                         .chars()
-                        .skip(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(0))))
+                        .skip(::sifr_runtime::to_usize_proven(&SifrInt::from_i64(0)))
                         .take(
-                            (::sifr_runtime::to_usize_proven(&(available)))
-                                - (::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(0)))),
+                            ::sifr_runtime::to_usize_proven(&available)
+                                - ::sifr_runtime::to_usize_proven(&SifrInt::from_i64(0)),
                         )
                         .collect::<String>(),
                 );
-                __sifr_chars_base = base.chars().collect::<Vec<char>>();
             }
             if drop_whitespace {
-                base = _trim_line(&base);
-                __sifr_chars_base = base.chars().collect::<Vec<char>>();
+                base = sifr_generated_trim_line(&base);
             }
-            if (&SifrInt::from_i64(0) <= &last_index)
-                && (&last_index < &SifrInt::from(result.len()))
-            {
+            if &SifrInt::from_i64(0) <= &last_index && &last_index < &SifrInt::from(result.len()) {
                 {
-                    let __assign_value = {
-                        let mut __sifr_concat: String = String::with_capacity(
-                            base.len() + effective_placeholder.len(),
-                        );
-                        __sifr_concat.push_str(base.as_str());
-                        __sifr_concat.push_str(effective_placeholder.as_str());
-                        __sifr_concat
+                    let sifr_generated_assign_value = {
+                        let mut sifr_generated_concat: String =
+                            String::with_capacity(base.len() + effective_placeholder.len());
+                        sifr_generated_concat.push_str(base.as_str());
+                        sifr_generated_concat.push_str(effective_placeholder.as_str());
+                        sifr_generated_concat
                     };
                     {
-                        let __index_raw = last_index.clone();
-                        let __index_normalized = __index_raw
-                            .normalize_index_or_len(result.len());
-                        if let Some(__elem) = result.get_mut(__index_normalized) {
-                            *__elem = __assign_value;
+                        let sifr_generated_index_raw = last_index.clone();
+                        let sifr_generated_index_normalized =
+                            sifr_generated_index_raw.normalize_index_or_len(result.len());
+                        if let Some(sifr_generated_elem) =
+                            result.get_mut(sifr_generated_index_normalized)
+                        {
+                            *sifr_generated_elem = sifr_generated_assign_value;
                         }
                     }
                 }
@@ -1160,7 +1123,8 @@ mod __sifr_project_nominals {
         pub message: String,
     }
     impl Error {
-        pub fn new(message: String) -> Self {
+        #[must_use]
+        pub const fn new(message: String) -> Self {
             Self { message }
         }
     }
@@ -1174,11 +1138,6 @@ mod __sifr_project_nominals {
     pub struct ParseError {
         pub message: String,
     }
-    impl ParseError {
-        pub fn new(message: String) -> Self {
-            Self { message }
-        }
-    }
     impl ::std::fmt::Display for ParseError {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
             ::std::fmt::Display::fmt(&self.message, f)
@@ -1190,7 +1149,8 @@ mod __sifr_project_nominals {
         pub message: String,
     }
     impl ValueError {
-        pub fn new(message: String) -> Self {
+        #[must_use]
+        pub const fn new(message: String) -> Self {
             Self { message }
         }
     }
@@ -1205,7 +1165,8 @@ mod __sifr_project_nominals {
         pub message: String,
     }
     impl FloatOverflowError {
-        pub fn new(message: String) -> Self {
+        #[must_use]
+        pub const fn new(message: String) -> Self {
             Self { message }
         }
     }
@@ -1220,7 +1181,8 @@ mod __sifr_project_nominals {
         pub message: String,
     }
     impl FloatPrecisionLossError {
-        pub fn new(message: String) -> Self {
+        #[must_use]
+        pub const fn new(message: String) -> Self {
             Self { message }
         }
     }
@@ -1251,283 +1213,107 @@ mod __sifr_project_nominals {
         }
     }
 }
-pub use __sifr_project_nominals::Error;
-pub use __sifr_project_nominals::FloatOverflowError;
-pub use __sifr_project_nominals::FloatPrecisionLossError;
-pub use __sifr_project_nominals::ParseError;
-pub use __sifr_project_nominals::ValueError;
-pub use __sifr_project_nominals::__SifrStdlib_sifr_x2estring_x2eFormatter;
-pub use __sifr_project_nominals::__SifrStdlib_sifr_x2estring_x2eTemplate;
-pub use __sifr_project_nominals::__SifrStdlib_sifr_x2etextwrap_x2eTextWrapper;
-
-mod __sifr_project_unions {
+pub use sifr_generated_project_nominals::Error;
+pub use sifr_generated_project_nominals::FloatOverflowError;
+pub use sifr_generated_project_nominals::FloatPrecisionLossError;
+pub use sifr_generated_project_nominals::ParseError;
+pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2estringX2eFormatter;
+pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2estringX2eTemplate;
+pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2etextwrapX2eTextWrapper;
+pub use sifr_generated_project_nominals::ValueError;
+mod sifr_generated_project_unions {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub enum __SifrUnion_8_x3asequence5_x3aunion1_x3a231_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a0 {
-        __SifrUnionVariant_5_x3aclass18_x3aFloatOverflowError1_x3a0(
-            crate::__sifr_project_nominals::FloatOverflowError,
+    pub enum SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0
+    {
+        SifrGeneratedUnionVariant5X3aclass18X3aFloatOverflowError1X3a0(
+            crate::sifr_generated_project_nominals::FloatOverflowError,
         ),
-        __SifrUnionVariant_5_x3aclass23_x3aFloatPrecisionLossError1_x3a0(
-            crate::__sifr_project_nominals::FloatPrecisionLossError,
+        SifrGeneratedUnionVariant5X3aclass23X3aFloatPrecisionLossError1X3a0(
+            crate::sifr_generated_project_nominals::FloatPrecisionLossError,
         ),
     }
     impl ::std::fmt::Display
-    for __SifrUnion_8_x3asequence5_x3aunion1_x3a231_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a0 {
+    for SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0 {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
             match self {
-                __SifrUnion_8_x3asequence5_x3aunion1_x3a231_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a0::__SifrUnionVariant_5_x3aclass18_x3aFloatOverflowError1_x3a0(
+                SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass18X3aFloatOverflowError1X3a0(
                     v,
-                ) => {
-                    return write!(f, "{}", v);
-                }
-                __SifrUnion_8_x3asequence5_x3aunion1_x3a231_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a0::__SifrUnionVariant_5_x3aclass23_x3aFloatPrecisionLossError1_x3a0(
+                ) => write!(f, "{v}"),
+                SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3aFloatPrecisionLossError1X3a0(
                     v,
-                ) => {
-                    return write!(f, "{}", v);
-                }
+                ) => write!(f, "{v}"),
             }
         }
     }
     #[derive(Debug, Clone)]
-    pub enum __SifrUnion_8_x3asequence5_x3aunion1_x3a331_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a017_x3a5_x3aclass5_x3aError1_x3a0 {
-        __SifrUnionVariant_5_x3aclass5_x3aError1_x3a0(crate::__sifr_project_nominals::Error),
-        __SifrUnionVariant_5_x3aclass18_x3aFloatOverflowError1_x3a0(
-            crate::__sifr_project_nominals::FloatOverflowError,
+    pub enum SifrGeneratedUnion8X3asequence5X3aunion1X3a331X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a017X3a5X3aclass5X3aError1X3a0
+    {
+        SifrGeneratedUnionVariant5X3aclass5X3aError1X3a0(
+            crate::sifr_generated_project_nominals::Error,
         ),
-        __SifrUnionVariant_5_x3aclass23_x3aFloatPrecisionLossError1_x3a0(
-            crate::__sifr_project_nominals::FloatPrecisionLossError,
+        SifrGeneratedUnionVariant5X3aclass18X3aFloatOverflowError1X3a0(
+            crate::sifr_generated_project_nominals::FloatOverflowError,
+        ),
+        SifrGeneratedUnionVariant5X3aclass23X3aFloatPrecisionLossError1X3a0(
+            crate::sifr_generated_project_nominals::FloatPrecisionLossError,
         ),
     }
-    impl From<crate::__sifr_project_nominals::Error>
-    for __SifrUnion_8_x3asequence5_x3aunion1_x3a331_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a017_x3a5_x3aclass5_x3aError1_x3a0 {
-        fn from(value: crate::__sifr_project_nominals::Error) -> Self {
-            __SifrUnion_8_x3asequence5_x3aunion1_x3a331_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a017_x3a5_x3aclass5_x3aError1_x3a0::__SifrUnionVariant_5_x3aclass5_x3aError1_x3a0(
+    impl From<crate::sifr_generated_project_nominals::Error>
+    for SifrGeneratedUnion8X3asequence5X3aunion1X3a331X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a017X3a5X3aclass5X3aError1X3a0 {
+        fn from(value: crate::sifr_generated_project_nominals::Error) -> Self {
+            SifrGeneratedUnion8X3asequence5X3aunion1X3a331X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a017X3a5X3aclass5X3aError1X3a0::SifrGeneratedUnionVariant5X3aclass5X3aError1X3a0(
                 value,
             )
         }
     }
-    impl From<crate::__sifr_project_nominals::FloatOverflowError>
-    for __SifrUnion_8_x3asequence5_x3aunion1_x3a331_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a017_x3a5_x3aclass5_x3aError1_x3a0 {
-        fn from(value: crate::__sifr_project_nominals::FloatOverflowError) -> Self {
-            __SifrUnion_8_x3asequence5_x3aunion1_x3a331_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a017_x3a5_x3aclass5_x3aError1_x3a0::__SifrUnionVariant_5_x3aclass18_x3aFloatOverflowError1_x3a0(
+    impl From<crate::sifr_generated_project_nominals::FloatOverflowError>
+    for SifrGeneratedUnion8X3asequence5X3aunion1X3a331X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a017X3a5X3aclass5X3aError1X3a0 {
+        fn from(
+            value: crate::sifr_generated_project_nominals::FloatOverflowError,
+        ) -> Self {
+            SifrGeneratedUnion8X3asequence5X3aunion1X3a331X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a017X3a5X3aclass5X3aError1X3a0::SifrGeneratedUnionVariant5X3aclass18X3aFloatOverflowError1X3a0(
                 value,
             )
         }
     }
-    impl From<crate::__sifr_project_nominals::FloatPrecisionLossError>
-    for __SifrUnion_8_x3asequence5_x3aunion1_x3a331_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a017_x3a5_x3aclass5_x3aError1_x3a0 {
-        fn from(value: crate::__sifr_project_nominals::FloatPrecisionLossError) -> Self {
-            __SifrUnion_8_x3asequence5_x3aunion1_x3a331_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a017_x3a5_x3aclass5_x3aError1_x3a0::__SifrUnionVariant_5_x3aclass23_x3aFloatPrecisionLossError1_x3a0(
+    impl From<crate::sifr_generated_project_nominals::FloatPrecisionLossError>
+    for SifrGeneratedUnion8X3asequence5X3aunion1X3a331X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a017X3a5X3aclass5X3aError1X3a0 {
+        fn from(
+            value: crate::sifr_generated_project_nominals::FloatPrecisionLossError,
+        ) -> Self {
+            SifrGeneratedUnion8X3asequence5X3aunion1X3a331X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a017X3a5X3aclass5X3aError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3aFloatPrecisionLossError1X3a0(
                 value,
             )
         }
     }
     impl ::std::fmt::Display
-    for __SifrUnion_8_x3asequence5_x3aunion1_x3a331_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a017_x3a5_x3aclass5_x3aError1_x3a0 {
+    for SifrGeneratedUnion8X3asequence5X3aunion1X3a331X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a017X3a5X3aclass5X3aError1X3a0 {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
             match self {
-                __SifrUnion_8_x3asequence5_x3aunion1_x3a331_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a017_x3a5_x3aclass5_x3aError1_x3a0::__SifrUnionVariant_5_x3aclass5_x3aError1_x3a0(
+                SifrGeneratedUnion8X3asequence5X3aunion1X3a331X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a017X3a5X3aclass5X3aError1X3a0::SifrGeneratedUnionVariant5X3aclass5X3aError1X3a0(
                     v,
-                ) => {
-                    return write!(f, "{}", v);
-                }
-                __SifrUnion_8_x3asequence5_x3aunion1_x3a331_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a017_x3a5_x3aclass5_x3aError1_x3a0::__SifrUnionVariant_5_x3aclass18_x3aFloatOverflowError1_x3a0(
+                ) => write!(f, "{v}"),
+                SifrGeneratedUnion8X3asequence5X3aunion1X3a331X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a017X3a5X3aclass5X3aError1X3a0::SifrGeneratedUnionVariant5X3aclass18X3aFloatOverflowError1X3a0(
                     v,
-                ) => {
-                    return write!(f, "{}", v);
-                }
-                __SifrUnion_8_x3asequence5_x3aunion1_x3a331_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a017_x3a5_x3aclass5_x3aError1_x3a0::__SifrUnionVariant_5_x3aclass23_x3aFloatPrecisionLossError1_x3a0(
+                ) => write!(f, "{v}"),
+                SifrGeneratedUnion8X3asequence5X3aunion1X3a331X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a017X3a5X3aclass5X3aError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3aFloatPrecisionLossError1X3a0(
                     v,
-                ) => {
-                    return write!(f, "{}", v);
-                }
+                ) => write!(f, "{v}"),
             }
         }
     }
 }
-pub use __sifr_project_unions::__SifrUnion_8_x3asequence5_x3aunion1_x3a231_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a0;
-pub use __sifr_project_unions::__SifrUnion_8_x3asequence5_x3aunion1_x3a331_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a017_x3a5_x3aclass5_x3aError1_x3a0;
-use ::std::collections::HashMap;
 use ::sifr_runtime::SifrInt;
-fn random_int(min: SifrInt, max: SifrInt) -> SifrInt {
-    ::sifr_stdlib::random::random_int(
-            ::sifr_runtime::interop::SifrIntBridge::from(min),
-            ::sifr_runtime::interop::SifrIntBridge::from(max),
-        )
-        .into_sifr_int()
-}
-fn random_float() -> f64 {
-    ::sifr_stdlib::random::random_float()
-}
-fn random_word_to_unit_float(value: SifrInt) -> f64 {
-    ::sifr_stdlib::random::random_word_to_unit_float(
-        ::sifr_runtime::interop::SifrIntBridge::from(value),
-    )
-}
-fn random_seed() -> SifrInt {
-    ::sifr_stdlib::random::random_seed().into_sifr_int()
-}
-fn random_uniform(min: f64, max: f64) -> f64 {
-    ::sifr_stdlib::random::random_uniform(min, max)
-}
-fn random_randrange(
-    start: SifrInt,
-    stop: SifrInt,
-    step: SifrInt,
-) -> Result<SifrInt, ValueError> {
-    ::sifr_stdlib::random::random_randrange(
-            ::sifr_runtime::interop::SifrIntBridge::from(start),
-            ::sifr_runtime::interop::SifrIntBridge::from(stop),
-            ::sifr_runtime::interop::SifrIntBridge::from(step),
-        )
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok.into_sifr_int())
-        .map_err(|__sifr_bridge_error| ValueError {
-            message: __sifr_bridge_error.to_string(),
-        })
-}
-fn random_gauss(mu: f64, sigma: f64) -> f64 {
-    ::sifr_stdlib::random::random_gauss(mu, sigma)
-}
-fn random_module_state_words() -> Vec<SifrInt> {
-    ::sifr_stdlib::random::random_module_state_words()
-        .into_iter()
-        .map(|__sifr_bridge_value| __sifr_bridge_value.into_sifr_int())
-        .collect()
-}
-fn random_module_state_index() -> SifrInt {
-    ::sifr_stdlib::random::random_module_state_index().into_sifr_int()
-}
-fn random_module_state_gauss_next() -> Option<f64> {
-    ::sifr_stdlib::random::random_module_state_gauss_next()
-}
-fn random_module_set_state(
-    words: &[SifrInt],
-    index: SifrInt,
-    gauss_next: Option<f64>,
-) -> Result<(), ValueError> {
-    ::sifr_stdlib::random::random_module_set_state(
-            &words
-                .iter()
-                .cloned()
-                .map(::sifr_runtime::interop::SifrIntBridge::from)
-                .collect::<Vec<_>>(),
-            ::sifr_runtime::interop::SifrIntBridge::from(index),
-            gauss_next.map(|__sifr_bridge_item_0| __sifr_bridge_item_0),
-        )
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| ValueError {
-            message: __sifr_bridge_error.to_string(),
-        })
-}
+use ::std::collections::HashMap;
+pub use sifr_generated_project_unions::SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0;
+pub use sifr_generated_project_unions::SifrGeneratedUnion8X3asequence5X3aunion1X3a331X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a017X3a5X3aclass5X3aError1X3a0;
 fn base64_encode(s: &str) -> String {
     ::sifr_stdlib::base64::base64_encode(s)
 }
-fn base64_encode_bytes(data: &[u8]) -> Vec<u8> {
-    ::sifr_stdlib::base64::base64_encode_bytes(data)
-}
 fn base64_decode(s: &str) -> Result<String, ParseError> {
-    ::sifr_stdlib::base64::base64_decode(s)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| ParseError {
-            message: __sifr_bridge_error.to_string(),
-        })
-}
-fn base64_decode_bytes(data: &[u8]) -> Result<Vec<u8>, ParseError> {
-    ::sifr_stdlib::base64::base64_decode_bytes(data)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| ParseError {
-            message: __sifr_bridge_error.to_string(),
-        })
-}
-fn base64_encode_opts(
-    s: &str,
-    altchars: &str,
-    wrapcol: SifrInt,
-) -> Result<String, ParseError> {
-    ::sifr_stdlib::base64::base64_encode_opts(
-            s,
-            altchars,
-            ::sifr_runtime::interop::SifrIntBridge::from(wrapcol),
-        )
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| ParseError {
-            message: __sifr_bridge_error.to_string(),
-        })
-}
-fn base64_decode_opts(
-    s: &str,
-    altchars: &str,
-    validate: bool,
-    ignorechars: &str,
-) -> Result<String, ParseError> {
-    ::sifr_stdlib::base64::base64_decode_opts(s, altchars, validate, ignorechars)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| ParseError {
-            message: __sifr_bridge_error.to_string(),
-        })
-}
-fn urlsafe_b64encode(s: &str) -> String {
-    ::sifr_stdlib::base64::urlsafe_b64encode(s)
-}
-fn urlsafe_b64encode_bytes(data: &[u8]) -> Vec<u8> {
-    ::sifr_stdlib::base64::urlsafe_b64encode_bytes(data)
-}
-fn urlsafe_b64decode(s: &str) -> Result<String, ParseError> {
-    ::sifr_stdlib::base64::urlsafe_b64decode(s)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| ParseError {
-            message: __sifr_bridge_error.to_string(),
-        })
-}
-fn urlsafe_b64decode_bytes(data: &[u8]) -> Result<Vec<u8>, ParseError> {
-    ::sifr_stdlib::base64::urlsafe_b64decode_bytes(data)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| ParseError {
-            message: __sifr_bridge_error.to_string(),
-        })
-}
-fn b32encode(s: &str) -> String {
-    ::sifr_stdlib::base64::b32encode(s)
-}
-fn b32decode(s: &str) -> Result<String, ParseError> {
-    ::sifr_stdlib::base64::b32decode(s)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| ParseError {
-            message: __sifr_bridge_error.to_string(),
-        })
-}
-fn b32hexencode(s: &str) -> String {
-    ::sifr_stdlib::base64::b32hexencode(s)
-}
-fn b32hexdecode(s: &str) -> Result<String, ParseError> {
-    ::sifr_stdlib::base64::b32hexdecode(s)
-        .map(|__sifr_bridge_ok| __sifr_bridge_ok)
-        .map_err(|__sifr_bridge_error| ParseError {
-            message: __sifr_bridge_error.to_string(),
-        })
-}
-fn sha256_bytes(data: &[u8]) -> Vec<u8> {
-    ::sifr_stdlib::hash::sha256_bytes(data)
-}
-fn md5_bytes(data: &[u8]) -> Vec<u8> {
-    ::sifr_stdlib::hash::md5_bytes(data)
-}
-fn sha1_bytes(data: &[u8]) -> Vec<u8> {
-    ::sifr_stdlib::hash::sha1_bytes(data)
-}
-fn sha224_bytes(data: &[u8]) -> Vec<u8> {
-    ::sifr_stdlib::hash::sha224_bytes(data)
-}
-fn sha384_bytes(data: &[u8]) -> Vec<u8> {
-    ::sifr_stdlib::hash::sha384_bytes(data)
-}
-fn sha512_bytes(data: &[u8]) -> Vec<u8> {
-    ::sifr_stdlib::hash::sha512_bytes(data)
-}
-fn blake2b_bytes(data: &[u8]) -> Vec<u8> {
-    ::sifr_stdlib::hash::blake2b_bytes(data)
-}
-fn blake2s_bytes(data: &[u8]) -> Vec<u8> {
-    ::sifr_stdlib::hash::blake2s_bytes(data)
+    ::sifr_stdlib::base64::base64_decode(s).map_err(|sifr_generated_bridge_error| ParseError {
+        message: sifr_generated_bridge_error.to_string(),
+    })
 }
 fn b64encode(s: &str) -> String {
     base64_encode(s)
@@ -1535,237 +1321,185 @@ fn b64encode(s: &str) -> String {
 fn b64decode(s: &str) -> Result<String, ParseError> {
     base64_decode(s)
 }
-fn calendar_isleap(year: SifrInt) -> bool {
-    ::sifr_stdlib::calendar::calendar_isleap(
-        ::sifr_runtime::interop::SifrIntBridge::from(year),
-    )
-}
-fn calendar_weekday(year: SifrInt, month: SifrInt, day: SifrInt) -> SifrInt {
-    ::sifr_stdlib::calendar::calendar_weekday(
-            ::sifr_runtime::interop::SifrIntBridge::from(year),
-            ::sifr_runtime::interop::SifrIntBridge::from(month),
-            ::sifr_runtime::interop::SifrIntBridge::from(day),
-        )
-        .into_sifr_int()
-}
-fn calendar_monthrange(year: SifrInt, month: SifrInt) -> Vec<SifrInt> {
-    ::sifr_stdlib::calendar::calendar_monthrange(
-            ::sifr_runtime::interop::SifrIntBridge::from(year),
-            ::sifr_runtime::interop::SifrIntBridge::from(month),
-        )
-        .into_iter()
-        .map(|__sifr_bridge_value| __sifr_bridge_value.into_sifr_int())
-        .collect()
-}
-fn __const_month_name() -> Vec<String> {
+fn sifr_generated_const_6d6f6e74685f6e616d65() -> Vec<String> {
     vec![
-        "".to_string(), "January".to_string(), "February".to_string(), "March"
-        .to_string(), "April".to_string(), "May".to_string(), "June".to_string(), "July"
-        .to_string(), "August".to_string(), "September".to_string(), "October"
-        .to_string(), "November".to_string(), "December".to_string()
+        String::new(),
+        "January".to_string(),
+        "February".to_string(),
+        "March".to_string(),
+        "April".to_string(),
+        "May".to_string(),
+        "June".to_string(),
+        "July".to_string(),
+        "August".to_string(),
+        "September".to_string(),
+        "October".to_string(),
+        "November".to_string(),
+        "December".to_string(),
     ]
 }
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct __SifrStdlib_sifr_x2ecalendar_x2eTextCalendar {
+struct SifrGeneratedStdlibSifrX2ecalendarX2eTextCalendar {
     firstweekday: SifrInt,
 }
-impl __SifrStdlib_sifr_x2ecalendar_x2eTextCalendar {
+impl SifrGeneratedStdlibSifrX2ecalendarX2eTextCalendar {
     fn new(firstweekday: SifrInt) -> Self {
-        let __sifr_field_init_0: SifrInt = _normalize_firstweekday(firstweekday.clone());
+        let sifr_generated_field_value_2daa31ad6c3bfb29_66697273747765656b646179: SifrInt =
+            sifr_generated_normalize_firstweekday(firstweekday.clone());
         Self {
-            firstweekday: __sifr_field_init_0,
+            firstweekday: sifr_generated_field_value_2daa31ad6c3bfb29_66697273747765656b646179,
         }
     }
 }
-impl __SifrStdlib_sifr_x2ecalendar_x2eTextCalendar {
+impl SifrGeneratedStdlibSifrX2ecalendarX2eTextCalendar {
     fn formatmonthname(
         &self,
         year: &SifrInt,
         month: &SifrInt,
         width: &SifrInt,
     ) -> Result<String, ValueError> {
-        let name_lookup: Option<String> = _month_name_lookup(month.clone());
-        let mut name: String = "".to_string();
-        if let Some(name_lookup) = name_lookup {
-            name = name_lookup;
+        let name_lookup: Option<String> = sifr_generated_month_name_lookup(month.clone());
+        let name: String = if let Some(name_lookup) = name_lookup {
+            name_lookup
         } else {
-            return Err(ValueError::new("calendar: month must be in 1..12".to_string()));
-        }
-        let formatted: String = {
-            let mut __sifr_concat: String = String::with_capacity(
-                (name.len() + 1usize) + 0usize,
-            );
-            __sifr_concat.push_str(name.as_str());
-            __sifr_concat.push(' ');
-            __sifr_concat.push_str(format!("{}", year).as_str());
-            __sifr_concat
+            return Err(ValueError::new(
+                "calendar: month must be in 1..12".to_string(),
+            ));
         };
-        if (width <= &SifrInt::from_i64(0)) {
+        let formatted: String = {
+            let mut sifr_generated_concat: String = String::with_capacity(name.len() + 1usize);
+            sifr_generated_concat.push_str(name.as_str());
+            sifr_generated_concat.push(' ');
+            sifr_generated_concat.push_str(year.to_string().as_str());
+            sifr_generated_concat
+        };
+        if width <= &SifrInt::from_i64(0) {
             return Ok(formatted);
         }
-        if (&SifrInt::from(formatted.chars().count()) >= width) {
+        if &SifrInt::from(formatted.chars().count()) >= width {
             return Ok(formatted);
         }
         let pad: SifrInt = width - &SifrInt::from(formatted.chars().count());
         let mut left: SifrInt = pad.floor_div_known_nonzero(&SifrInt::from_i64(2));
         let mut right: SifrInt = &pad - &left;
-        let mut result: String = "".to_string();
-        while (&left > &SifrInt::from_i64(0)) {
+        let mut result: String = String::new();
+        while &left > &SifrInt::from_i64(0) {
             result.push(' ');
             left = &left - &SifrInt::from_i64(1);
         }
         result.push_str(formatted.as_str());
-        while (&right > &SifrInt::from_i64(0)) {
+        while &right > &SifrInt::from_i64(0) {
             result.push(' ');
             right = &right - &SifrInt::from_i64(1);
         }
         Ok(result)
     }
 }
-impl ::std::fmt::Display for __SifrStdlib_sifr_x2ecalendar_x2eTextCalendar {
+impl ::std::fmt::Display for SifrGeneratedStdlibSifrX2ecalendarX2eTextCalendar {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         write!(f, "TextCalendar(firstweekday={})", self.firstweekday)
     }
 }
-fn _normalize_firstweekday(firstweekday: SifrInt) -> SifrInt {
+fn sifr_generated_normalize_firstweekday(firstweekday: SifrInt) -> SifrInt {
     let mut value: SifrInt = firstweekday.floor_mod_known_nonzero(&SifrInt::from_i64(7));
     if &value < &SifrInt::from_i64(0) {
         value = &value + &SifrInt::from_i64(7);
     }
     value.clone()
 }
-fn _month_name_lookup(month: SifrInt) -> Option<String> {
-    if (&month < &SifrInt::from_i64(1)) || (&month > &SifrInt::from_i64(12)) {
+fn sifr_generated_month_name_lookup(month: SifrInt) -> Option<String> {
+    if &month < &SifrInt::from_i64(1) || &month > &SifrInt::from_i64(12) {
         return None;
     }
     {
-        let __sifr_checked_read_collection = &__const_month_name();
-        let __sifr_checked_read_index = month.clone();
-        let __sifr_checked_read_normalized = __sifr_checked_read_index
-            .normalize_index_or_len(__sifr_checked_read_collection.len());
-        __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
+        let sifr_generated_checked_read_collection = &sifr_generated_const_6d6f6e74685f6e616d65();
+        let sifr_generated_checked_read_index = month.clone();
+        let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
+            .normalize_index_or_len(sifr_generated_checked_read_collection.len());
+        sifr_generated_checked_read_collection
+            .get(sifr_generated_checked_read_normalized)
+            .cloned()
     }
 }
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct __SifrStdlib_sifr_x2edifflib_x2eSequenceMatcher {
-    _a: String,
-    _b: String,
+struct SifrGeneratedStdlibSifrX2edifflibX2eSequenceMatcher {
+    a: String,
+    b: String,
 }
-impl __SifrStdlib_sifr_x2edifflib_x2eSequenceMatcher {
+impl SifrGeneratedStdlibSifrX2edifflibX2eSequenceMatcher {
     fn new(a: String, b: String) -> Self {
-        let __sifr_field_init_0: String = {
-            let mut __sifr_concat: String = String::with_capacity(a.len() + 0usize);
-            __sifr_concat.push_str(a.as_str());
-            __sifr_concat.push_str("");
-            __sifr_concat
+        let sifr_generated_field_value_09534707b5e0a7dd_5f61: String = {
+            let mut sifr_generated_concat: String = String::with_capacity(a.len());
+            sifr_generated_concat.push_str(a.as_str());
+            sifr_generated_concat.push_str("");
+            sifr_generated_concat
         };
-        let __sifr_field_init_1: String = {
-            let mut __sifr_concat: String = String::with_capacity(b.len() + 0usize);
-            __sifr_concat.push_str(b.as_str());
-            __sifr_concat.push_str("");
-            __sifr_concat
+        let sifr_generated_field_value_09534407b5e0a2c4_5f62: String = {
+            let mut sifr_generated_concat: String = String::with_capacity(b.len());
+            sifr_generated_concat.push_str(b.as_str());
+            sifr_generated_concat.push_str("");
+            sifr_generated_concat
         };
         Self {
-            _a: __sifr_field_init_0,
-            _b: __sifr_field_init_1,
+            a: sifr_generated_field_value_09534707b5e0a7dd_5f61,
+            b: sifr_generated_field_value_09534407b5e0a2c4_5f62,
         }
     }
 }
-impl __SifrStdlib_sifr_x2edifflib_x2eSequenceMatcher {
-    fn set_seq1(&mut self, a: &str) {
-        self._a = {
-            let mut __sifr_concat: String = String::with_capacity(a.len() + 0usize);
-            __sifr_concat.push_str(a);
-            __sifr_concat.push_str("");
-            __sifr_concat
-        };
-    }
-}
-impl __SifrStdlib_sifr_x2edifflib_x2eSequenceMatcher {
-    fn set_seq2(&mut self, b: &str) {
-        self._b = {
-            let mut __sifr_concat: String = String::with_capacity(b.len() + 0usize);
-            __sifr_concat.push_str(b);
-            __sifr_concat.push_str("");
-            __sifr_concat
-        };
-    }
-}
-impl __SifrStdlib_sifr_x2edifflib_x2eSequenceMatcher {
-    fn set_seqs(&mut self, a: &str, b: &str) {
-        self._a = {
-            let mut __sifr_concat: String = String::with_capacity(a.len() + 0usize);
-            __sifr_concat.push_str(a);
-            __sifr_concat.push_str("");
-            __sifr_concat
-        };
-        self._b = {
-            let mut __sifr_concat: String = String::with_capacity(b.len() + 0usize);
-            __sifr_concat.push_str(b);
-            __sifr_concat.push_str("");
-            __sifr_concat
-        };
-    }
-}
-impl __SifrStdlib_sifr_x2edifflib_x2eSequenceMatcher {
+impl SifrGeneratedStdlibSifrX2edifflibX2eSequenceMatcher {
     fn ratio(
         &self,
     ) -> Result<
         f64,
-        __SifrUnion_8_x3asequence5_x3aunion1_x3a231_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a0,
-    > {
-        _similarity(&self._a, &self._b)
+        SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0,
+    >{
+        sifr_generated_similarity(&self.a, &self.b)
     }
 }
-impl __SifrStdlib_sifr_x2edifflib_x2eSequenceMatcher {
-    fn get_matching_blocks(&self) -> Vec<(SifrInt, SifrInt, SifrInt)> {
-        _matching_blocks(&self._a, &self._b)
-    }
-}
-impl ::std::fmt::Display for __SifrStdlib_sifr_x2edifflib_x2eSequenceMatcher {
+impl ::std::fmt::Display for SifrGeneratedStdlibSifrX2edifflibX2eSequenceMatcher {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        write!(f, "SequenceMatcher(_a={}, _b={})", self._a, self._b)
+        write!(f, "SequenceMatcher(_a={}, _b={})", self.a, self.b)
     }
 }
-fn _similarity(
+fn sifr_generated_similarity(
     a: &str,
     b: &str,
 ) -> Result<
     f64,
-    __SifrUnion_8_x3asequence5_x3aunion1_x3a231_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a0,
-> {
-    let __sifr_chars_a: Vec<char> = a.chars().collect::<Vec<char>>();
-    let __sifr_chars_b: Vec<char> = b.chars().collect::<Vec<char>>();
-    let total: SifrInt = &SifrInt::from(__sifr_chars_a.len())
-        + &SifrInt::from(__sifr_chars_b.len());
+    SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0,
+>{
+    let sifr_generated_chars_a: Vec<char> = a.chars().collect::<Vec<char>>();
+    let sifr_generated_chars_b: Vec<char> = b.chars().collect::<Vec<char>>();
+    let total: SifrInt =
+        &SifrInt::from(sifr_generated_chars_a.len()) + &SifrInt::from(sifr_generated_chars_b.len());
     if &total == &SifrInt::from_i64(0) {
         return Ok(1.0_f64);
     }
     let mut matches: SifrInt = SifrInt::from_i64(0);
-    let blocks: Vec<(SifrInt, SifrInt, SifrInt)> = _matching_blocks(a, b);
+    let blocks: Vec<(SifrInt, SifrInt, SifrInt)> = sifr_generated_matching_blocks(a, b);
     for block in blocks.iter().cloned() {
         let (_, _, block_size) = block;
         matches = &matches + &block_size;
     }
-    let __sifr_try_res: Result<
+    let sifr_generated_try_res: Result<
         Result<
             f64,
-            __SifrUnion_8_x3asequence5_x3aunion1_x3a231_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a0,
+            SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0,
         >,
-        __SifrUnion_8_x3asequence5_x3aunion1_x3a231_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a0,
+        SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0,
     > = (|| {
         let numerator: f64 = (&SifrInt::from_i64(2) * &matches)
             .checked_to_f64()
-            .map_err(|__sifr_float_error| match __sifr_float_error {
+            .map_err(|sifr_generated_float_error| match sifr_generated_float_error {
                 ::sifr_runtime::IntegerFloatConversionError::Overflow => {
-                    __SifrUnion_8_x3asequence5_x3aunion1_x3a231_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a0::__SifrUnionVariant_5_x3aclass18_x3aFloatOverflowError1_x3a0(
+                    SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass18X3aFloatOverflowError1X3a0(
                         FloatOverflowError::new(
                             "exact integer is outside the finite float range".to_string(),
                         ),
                     )
                 }
                 ::sifr_runtime::IntegerFloatConversionError::PrecisionLoss => {
-                    __SifrUnion_8_x3asequence5_x3aunion1_x3a231_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a0::__SifrUnionVariant_5_x3aclass23_x3aFloatPrecisionLossError1_x3a0(
+                    SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3aFloatPrecisionLossError1X3a0(
                         FloatPrecisionLossError::new(
                             "exact integer cannot be represented without float precision loss"
                                 .to_string(),
@@ -1776,16 +1510,16 @@ fn _similarity(
         let denominator: f64 = total
             .clone()
             .checked_to_f64()
-            .map_err(|__sifr_float_error| match __sifr_float_error {
+            .map_err(|sifr_generated_float_error| match sifr_generated_float_error {
                 ::sifr_runtime::IntegerFloatConversionError::Overflow => {
-                    __SifrUnion_8_x3asequence5_x3aunion1_x3a231_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a0::__SifrUnionVariant_5_x3aclass18_x3aFloatOverflowError1_x3a0(
+                    SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass18X3aFloatOverflowError1X3a0(
                         FloatOverflowError::new(
                             "exact integer is outside the finite float range".to_string(),
                         ),
                     )
                 }
                 ::sifr_runtime::IntegerFloatConversionError::PrecisionLoss => {
-                    __SifrUnion_8_x3asequence5_x3aunion1_x3a231_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a0::__SifrUnionVariant_5_x3aclass23_x3aFloatPrecisionLossError1_x3a0(
+                    SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3aFloatPrecisionLossError1X3a0(
                         FloatPrecisionLossError::new(
                             "exact integer cannot be represented without float precision loss"
                                 .to_string(),
@@ -1795,111 +1529,110 @@ fn _similarity(
             })?;
         Ok(Ok(numerator / denominator))
     })();
-    match __sifr_try_res {
-        Ok(__sifr_ret_val) => {
-            return __sifr_ret_val;
-        }
-        Err(__sifr_try_err) => {
-            match __sifr_try_err {
-                __SifrUnion_8_x3asequence5_x3aunion1_x3a231_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a0::__SifrUnionVariant_5_x3aclass18_x3aFloatOverflowError1_x3a0(
-                    __sifr_try_variant_error,
-                ) => {
-                    let error = __sifr_try_variant_error.clone();
-                    return Err(
-                        __SifrUnion_8_x3asequence5_x3aunion1_x3a231_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a0::__SifrUnionVariant_5_x3aclass18_x3aFloatOverflowError1_x3a0(
-                            FloatOverflowError::new(error.message.clone()),
-                        ),
-                    );
-                }
-                __SifrUnion_8_x3asequence5_x3aunion1_x3a231_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a0::__SifrUnionVariant_5_x3aclass23_x3aFloatPrecisionLossError1_x3a0(
-                    __sifr_try_variant_error,
-                ) => {
-                    let error = __sifr_try_variant_error.clone();
-                    return Err(
-                        __SifrUnion_8_x3asequence5_x3aunion1_x3a231_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a0::__SifrUnionVariant_5_x3aclass23_x3aFloatPrecisionLossError1_x3a0(
-                            FloatPrecisionLossError::new(error.message.clone()),
-                        ),
-                    );
-                }
+    sifr_generated_try_res
+        .unwrap_or_else(|sifr_generated_try_err| match sifr_generated_try_err {
+            SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass18X3aFloatOverflowError1X3a0(
+                sifr_generated_try_variant_error,
+            ) => {
+                let error = sifr_generated_try_variant_error.clone();
+                Err(
+                    SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass18X3aFloatOverflowError1X3a0(
+                        FloatOverflowError::new(error.message.clone()),
+                    ),
+                )
             }
-        }
-    }
+            SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3aFloatPrecisionLossError1X3a0(
+                sifr_generated_try_variant_error,
+            ) => {
+                let error = sifr_generated_try_variant_error.clone();
+                Err(
+                    SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3aFloatPrecisionLossError1X3a0(
+                        FloatPrecisionLossError::new(error.message.clone()),
+                    ),
+                )
+            }
+        })
 }
-fn _longest_common_substring_range(
+#[expect(
+    clippy::many_single_char_names,
+    reason = "generated Rust preserves this exact typed Sifr source contract"
+)]
+fn sifr_generated_longest_common_substring_range(
     a: &str,
     b: &str,
     a_start: SifrInt,
     a_end: SifrInt,
-    b_start: SifrInt,
-    b_end: SifrInt,
+    b_start_argument_c9091ffae73223be: SifrInt,
+    b_end_argument_847b7941bf1533ab: SifrInt,
 ) -> (SifrInt, SifrInt, SifrInt) {
-    let __sifr_chars_a: Vec<char> = a.chars().collect::<Vec<char>>();
-    let __sifr_chars_b: Vec<char> = b.chars().collect::<Vec<char>>();
+    let sifr_generated_chars_a: Vec<char> = a.chars().collect::<Vec<char>>();
+    let sifr_generated_chars_b: Vec<char> = b.chars().collect::<Vec<char>>();
     let mut best_i: SifrInt = SifrInt::from_i64(0);
-    let mut best_j: SifrInt = SifrInt::from_i64(0);
-    let mut best_len: SifrInt = SifrInt::from_i64(0);
+    let mut best_j_value_1e1620cd9a699d86: SifrInt = SifrInt::from_i64(0);
+    let mut best_len_value_af9487aca555f05f: SifrInt = SifrInt::from_i64(0);
     let mut i: SifrInt = a_start.clone();
-    while (&i < &a_end) {
-        let mut j: SifrInt = b_start.clone();
-        while (&j < &b_end) {
+    while &i < &a_end {
+        let mut j: SifrInt = b_start_argument_c9091ffae73223be.clone();
+        while &j < &b_end_argument_847b7941bf1533ab {
             let mut k: SifrInt = SifrInt::from_i64(0);
-            while (&(&i + &k) < &a_end) && (&(&j + &k) < &b_end) {
-                let ai: Option<String> = ({
-                    let __sifr_string_index = &i + &k;
-                    let __sifr_string_index_normalized = __sifr_string_index
-                        .normalize_index_or_len(__sifr_chars_a.len());
-                    __sifr_chars_a.get(__sifr_string_index_normalized)
-                })
-                    .map(|c| c.to_string());
-                let bj: Option<String> = ({
-                    let __sifr_string_index = &j + &k;
-                    let __sifr_string_index_normalized = __sifr_string_index
-                        .normalize_index_or_len(__sifr_chars_b.len());
-                    __sifr_chars_b.get(__sifr_string_index_normalized)
-                })
-                    .map(|c| c.to_string());
+            while &(&i + &k) < &a_end && &(&j + &k) < &b_end_argument_847b7941bf1533ab {
+                let ai: Option<String> = {
+                    let sifr_generated_string_index = &i + &k;
+                    let sifr_generated_string_index_normalized = sifr_generated_string_index
+                        .normalize_index_or_len(sifr_generated_chars_a.len());
+                    sifr_generated_chars_a.get(sifr_generated_string_index_normalized)
+                }
+                .map(::std::string::ToString::to_string);
+                let bj: Option<String> = {
+                    let sifr_generated_string_index = &j + &k;
+                    let sifr_generated_string_index_normalized = sifr_generated_string_index
+                        .normalize_index_or_len(sifr_generated_chars_b.len());
+                    sifr_generated_chars_b.get(sifr_generated_string_index_normalized)
+                }
+                .map(::std::string::ToString::to_string);
                 let (Some(ai), Some(bj)) = (ai, bj) else {
                     k = &k + &SifrInt::from_i64(1);
                     continue;
                 };
-                if (ai != bj) {
+                if ai != bj {
                     break;
                 }
                 k = &k + &SifrInt::from_i64(1);
             }
-            if (&k > &best_len) {
-                best_len = k;
+            if &k > &best_len_value_af9487aca555f05f {
+                best_len_value_af9487aca555f05f = k;
                 best_i = i.clone();
-                best_j = j.clone();
+                best_j_value_1e1620cd9a699d86 = j.clone();
             }
             j = &j + &SifrInt::from_i64(1);
         }
         i = &i + &SifrInt::from_i64(1);
     }
-    (best_i.clone(), best_j.clone(), best_len.clone())
+    (
+        best_i.clone(),
+        best_j_value_1e1620cd9a699d86.clone(),
+        best_len_value_af9487aca555f05f.clone(),
+    )
 }
-fn _sort_blocks(
+fn sifr_generated_sort_blocks(
     blocks: &[(SifrInt, SifrInt, SifrInt)],
 ) -> Vec<(SifrInt, SifrInt, SifrInt)> {
-    let mut sorted_blocks: Vec<(SifrInt, SifrInt, SifrInt)> = vec![];
+    let mut sorted_blocks: Vec<(SifrInt, SifrInt, SifrInt)> = Vec::new();
     for block in blocks.iter().cloned() {
-        let (bl_a, bl_b, _) = block.clone();
+        let (bl_a, bl_b_value_c53dd39bc263efba, _) = block.clone();
         let mut found_insert_at: bool = false;
         let mut insert_at: SifrInt = SifrInt::from_i64(0);
         let mut i: SifrInt = SifrInt::from_i64(0);
         for existing in sorted_blocks.iter().cloned() {
             if !found_insert_at {
-                let (ex_a, ex_b, _) = existing;
-                let mut comes_before: bool = false;
-                if (&bl_a < &ex_a) {
-                    comes_before = true;
+                let (ex_a, ex_b_value_e8565f608f1d5555, _) = existing;
+                let comes_before: bool = if &bl_a < &ex_a
+                    || &bl_a == &ex_a && &bl_b_value_c53dd39bc263efba < &ex_b_value_e8565f608f1d5555
+                {
+                    true
                 } else {
-                    if (&bl_a == &ex_a) {
-                        if (&bl_b < &ex_b) {
-                            comes_before = true;
-                        }
-                    }
-                }
+                    false
+                };
                 if comes_before {
                     insert_at = i.clone();
                     found_insert_at = true;
@@ -1908,171 +1641,176 @@ fn _sort_blocks(
             i = &i + &SifrInt::from_i64(1);
         }
         if found_insert_at {
-            sorted_blocks
-                .insert(::sifr_runtime::to_usize_proven(&insert_at), block.clone());
+            sorted_blocks.insert(::sifr_runtime::to_usize_proven(&insert_at), block.clone());
         } else {
             sorted_blocks.push(block.clone());
         }
     }
     sorted_blocks
 }
-fn _matching_blocks(a: &str, b: &str) -> Vec<(SifrInt, SifrInt, SifrInt)> {
-    let __sifr_chars_a: Vec<char> = a.chars().collect::<Vec<char>>();
-    let __sifr_chars_b: Vec<char> = b.chars().collect::<Vec<char>>();
+fn sifr_generated_matching_blocks(a: &str, b: &str) -> Vec<(SifrInt, SifrInt, SifrInt)> {
+    let sifr_generated_chars_a: Vec<char> = a.chars().collect::<Vec<char>>();
+    let sifr_generated_chars_b: Vec<char> = b.chars().collect::<Vec<char>>();
     let mut pending_a_start: Vec<SifrInt> = vec![SifrInt::from_i64(0)];
-    let mut pending_a_end: Vec<SifrInt> = vec![SifrInt::from(__sifr_chars_a.len())];
-    let mut pending_b_start: Vec<SifrInt> = vec![SifrInt::from_i64(0)];
-    let mut pending_b_end: Vec<SifrInt> = vec![SifrInt::from(__sifr_chars_b.len())];
-    let mut unsorted_blocks: Vec<(SifrInt, SifrInt, SifrInt)> = vec![];
-    while (&SifrInt::from(pending_a_start.len()) > &SifrInt::from_i64(0)) {
-        let a_start_value: Option<SifrInt> = Some(
-            pending_a_start.remove(pending_a_start.len() - (1_usize)),
-        );
+    let mut pending_a_end: Vec<SifrInt> = vec![SifrInt::from(sifr_generated_chars_a.len())];
+    let mut pending_b_start_value_5010e609c75d1d22: Vec<SifrInt> = vec![SifrInt::from_i64(0)];
+    let mut pending_b_end_value_9589c6af9c1daa47: Vec<SifrInt> =
+        vec![SifrInt::from(sifr_generated_chars_b.len())];
+    let mut unsorted_blocks: Vec<(SifrInt, SifrInt, SifrInt)> = Vec::new();
+    while &SifrInt::from(pending_a_start.len()) > &SifrInt::from_i64(0) {
+        let a_start_value: Option<SifrInt> =
+            Some(pending_a_start.remove(pending_a_start.len() - 1_usize));
         let a_end_value: Option<SifrInt> = pending_a_end.pop();
-        let b_start_value: Option<SifrInt> = pending_b_start.pop();
-        let b_end_value: Option<SifrInt> = pending_b_end.pop();
-        if let Some(a_start_value) = a_start_value.clone() {
-            if let Some(a_end_value) = a_end_value.clone() {
-                if let Some(b_start_value) = b_start_value.clone() {
-                    if let Some(b_end_value) = b_end_value.clone() {
-                        let (ai, bj, size) = _longest_common_substring_range(
-                            a,
-                            b,
-                            a_start_value.clone(),
-                            a_end_value.clone(),
-                            b_start_value.clone(),
-                            b_end_value.clone(),
-                        );
-                        if (&size == &SifrInt::from_i64(0)) {
-                            continue;
-                        }
-                        unsorted_blocks.push((ai.clone(), bj.clone(), size.clone()));
-                        let left_a_end: SifrInt = ai.clone();
-                        let left_b_end: SifrInt = bj.clone();
-                        if (&a_start_value < &left_a_end)
-                            && (&b_start_value < &left_b_end)
-                        {
-                            pending_a_start.push(a_start_value.clone());
-                            pending_a_end.push(left_a_end.clone());
-                            pending_b_start.push(b_start_value.clone());
-                            pending_b_end.push(left_b_end.clone());
-                        }
-                        let right_a_start: SifrInt = &ai + &size;
-                        let right_b_start: SifrInt = &bj + &size;
-                        if (&right_a_start < &a_end_value)
-                            && (&right_b_start < &b_end_value)
-                        {
-                            pending_a_start.push(right_a_start.clone());
-                            pending_a_end.push(a_end_value.clone());
-                            pending_b_start.push(right_b_start.clone());
-                            pending_b_end.push(b_end_value.clone());
-                        }
-                    }
-                }
+        let b_start_value: Option<SifrInt> = pending_b_start_value_5010e609c75d1d22.pop();
+        let b_end_value: Option<SifrInt> = pending_b_end_value_9589c6af9c1daa47.pop();
+        if let Some(a_start_value) = a_start_value.clone()
+            && let Some(a_end_value) = a_end_value.clone()
+            && let Some(b_start_value) = b_start_value.clone()
+            && let Some(b_end_value) = b_end_value.clone()
+        {
+            let (ai, bj, size) = sifr_generated_longest_common_substring_range(
+                a,
+                b,
+                a_start_value.clone(),
+                a_end_value.clone(),
+                b_start_value.clone(),
+                b_end_value.clone(),
+            );
+            if &size == &SifrInt::from_i64(0) {
+                continue;
+            }
+            unsorted_blocks.push((ai.clone(), bj.clone(), size.clone()));
+            let left_a_end: SifrInt = ai.clone();
+            let left_b_end_value_2d7948a8a27a7433: SifrInt = bj.clone();
+            if &a_start_value < &left_a_end && &b_start_value < &left_b_end_value_2d7948a8a27a7433 {
+                pending_a_start.push(a_start_value.clone());
+                pending_a_end.push(left_a_end.clone());
+                pending_b_start_value_5010e609c75d1d22.push(b_start_value.clone());
+                pending_b_end_value_9589c6af9c1daa47
+                    .push(left_b_end_value_2d7948a8a27a7433.clone());
+            }
+            let right_a_start: SifrInt = &ai + &size;
+            let right_b_start_value_acd2b29c16778c53: SifrInt = &bj + &size;
+            if &right_a_start < &a_end_value && &right_b_start_value_acd2b29c16778c53 < &b_end_value
+            {
+                pending_a_start.push(right_a_start.clone());
+                pending_a_end.push(a_end_value.clone());
+                pending_b_start_value_5010e609c75d1d22
+                    .push(right_b_start_value_acd2b29c16778c53.clone());
+                pending_b_end_value_9589c6af9c1daa47.push(b_end_value.clone());
             }
         }
     }
-    let sorted_blocks: Vec<(SifrInt, SifrInt, SifrInt)> = _sort_blocks(&unsorted_blocks);
-    let mut merged_blocks: Vec<(SifrInt, SifrInt, SifrInt)> = vec![];
+    let sorted_blocks: Vec<(SifrInt, SifrInt, SifrInt)> =
+        sifr_generated_sort_blocks(&unsorted_blocks);
+    let mut merged_blocks: Vec<(SifrInt, SifrInt, SifrInt)> = Vec::new();
     let mut have_previous: bool = false;
     let mut prev_a: SifrInt = SifrInt::from_i64(0);
-    let mut prev_b: SifrInt = SifrInt::from_i64(0);
+    let mut prev_b_value_471dcfb5c284856d: SifrInt = SifrInt::from_i64(0);
     let mut prev_size: SifrInt = SifrInt::from_i64(0);
     for block in sorted_blocks.iter().cloned() {
-        let (bl_a, bl_b, bl_size) = block.clone();
+        let (bl_a, bl_b_value_c53dd39bc263efba, bl_size) = block.clone();
         if !have_previous {
             prev_a = bl_a.clone();
-            prev_b = bl_b.clone();
+            prev_b_value_471dcfb5c284856d = bl_b_value_c53dd39bc263efba.clone();
             prev_size = bl_size.clone();
             have_previous = true;
             continue;
         }
-        if (&(&prev_a + &prev_size) == &bl_a) && (&(&prev_b + &prev_size) == &bl_b) {
+        if &(&prev_a + &prev_size) == &bl_a
+            && &(&prev_b_value_471dcfb5c284856d + &prev_size) == &bl_b_value_c53dd39bc263efba
+        {
             prev_size = &prev_size + &bl_size;
         } else {
-            merged_blocks.push((prev_a.clone(), prev_b.clone(), prev_size.clone()));
+            merged_blocks.push((
+                prev_a.clone(),
+                prev_b_value_471dcfb5c284856d.clone(),
+                prev_size.clone(),
+            ));
             prev_a = bl_a.clone();
-            prev_b = bl_b.clone();
+            prev_b_value_471dcfb5c284856d = bl_b_value_c53dd39bc263efba.clone();
             prev_size = bl_size.clone();
         }
     }
     if have_previous {
-        merged_blocks.push((prev_a.clone(), prev_b.clone(), prev_size.clone()));
-    }
-    merged_blocks
-        .push((
-            SifrInt::from(a.chars().count()),
-            SifrInt::from(b.chars().count()),
-            SifrInt::from_i64(0),
+        merged_blocks.push((
+            prev_a.clone(),
+            prev_b_value_471dcfb5c284856d.clone(),
+            prev_size.clone(),
         ));
+    }
+    merged_blocks.push((
+        SifrInt::from(a.chars().count()),
+        SifrInt::from(b.chars().count()),
+        SifrInt::from_i64(0),
+    ));
     merged_blocks
 }
 fn fnmatch(name: &str, pattern: &str) -> bool {
-    _match(name, SifrInt::from_i64(0), pattern, SifrInt::from_i64(0))
+    sifr_generated_match(name, SifrInt::from_i64(0), pattern, SifrInt::from_i64(0))
 }
-fn _match(name: &str, mut ni: SifrInt, pattern: &str, mut pi: SifrInt) -> bool {
-    while (&pi < &SifrInt::from(pattern.chars().count())) {
-        let pc: Option<String> = ({
-            let __sifr_string_source = &pattern;
-            let __sifr_string_index = pi.clone();
-            let __sifr_string_index_normalized = __sifr_string_index
-                .normalize_index_or_len(__sifr_string_source.chars().count());
-            __sifr_string_source.chars().nth(__sifr_string_index_normalized)
-        })
-            .map(|c| c.to_string());
+fn sifr_generated_match(name: &str, mut ni: SifrInt, pattern: &str, mut pi: SifrInt) -> bool {
+    while &pi < &SifrInt::from(pattern.chars().count()) {
+        let pc: Option<String> = {
+            let sifr_generated_string_source = &pattern;
+            let sifr_generated_string_index = pi.clone();
+            let sifr_generated_string_index_normalized = sifr_generated_string_index
+                .normalize_index_or_len(sifr_generated_string_source.chars().count());
+            sifr_generated_string_source
+                .chars()
+                .nth(sifr_generated_string_index_normalized)
+        }
+        .map(|character| character.to_string());
         if let Some(pc) = pc {
-            if (pc == "*") {
+            if pc == "*" {
                 pi = &pi + &SifrInt::from_i64(1);
-                if (&pi == &SifrInt::from(pattern.chars().count())) {
+                if &pi == &SifrInt::from(pattern.chars().count()) {
                     return true;
                 }
                 let mut j: SifrInt = ni.clone();
-                while (&j <= &SifrInt::from(name.chars().count())) {
-                    if _match(name, j.clone(), pattern, pi.clone()) {
+                while &j <= &SifrInt::from(name.chars().count()) {
+                    if sifr_generated_match(name, j.clone(), pattern, pi.clone()) {
                         return true;
                     }
                     j = &j + &SifrInt::from_i64(1);
                 }
                 return false;
-            } else {
-                if (pc == "?") {
-                    if (&ni >= &SifrInt::from(name.chars().count())) {
-                        return false;
-                    }
-                    ni = &ni + &SifrInt::from_i64(1);
-                    pi = &pi + &SifrInt::from_i64(1);
+            }
+            let sifr_generated_shared_branch_condition = pc == "?";
+            if &ni >= &SifrInt::from(name.chars().count()) {
+                return false;
+            }
+            {
+                if sifr_generated_shared_branch_condition {
                 } else {
-                    if (&ni >= &SifrInt::from(name.chars().count())) {
-                        return false;
+                    let nc: Option<String> = {
+                        let sifr_generated_string_source = &name;
+                        let sifr_generated_string_index = ni.clone();
+                        let sifr_generated_string_index_normalized = sifr_generated_string_index
+                            .normalize_index_or_len(sifr_generated_string_source.chars().count());
+                        sifr_generated_string_source
+                            .chars()
+                            .nth(sifr_generated_string_index_normalized)
                     }
-                    let nc: Option<String> = ({
-                        let __sifr_string_source = &name;
-                        let __sifr_string_index = ni.clone();
-                        let __sifr_string_index_normalized = __sifr_string_index
-                            .normalize_index_or_len(
-                                __sifr_string_source.chars().count(),
-                            );
-                        __sifr_string_source.chars().nth(__sifr_string_index_normalized)
-                    })
-                        .map(|c| c.to_string());
+                    .map(|character| character.to_string());
                     if let Some(nc) = nc {
-                        if (nc != pc) {
+                        if nc != pc {
                             return false;
                         }
                     } else {
                         return false;
                     }
-                    ni = &ni + &SifrInt::from_i64(1);
-                    pi = &pi + &SifrInt::from_i64(1);
                 }
+                ni = &ni + &SifrInt::from_i64(1);
+                pi = &pi + &SifrInt::from_i64(1);
             }
         } else {
             return false;
         }
     }
-    (&ni == &SifrInt::from(name.chars().count()))
+    &ni == &SifrInt::from(name.chars().count())
 }
-fn _translate_literal(ch: &str) -> String {
+fn sifr_generated_translate_literal(ch: &str) -> String {
     if ch == "." {
         return "\\.".to_string();
     }
@@ -2110,45 +1848,41 @@ fn _translate_literal(ch: &str) -> String {
         return "\\\\".to_string();
     }
     {
-        let mut __sifr_concat: String = String::with_capacity(ch.len() + 0usize);
-        __sifr_concat.push_str(ch);
-        __sifr_concat.push_str("");
-        __sifr_concat
+        let mut sifr_generated_concat: String = String::with_capacity(ch.len());
+        sifr_generated_concat.push_str(ch);
+        sifr_generated_concat.push_str("");
+        sifr_generated_concat
     }
 }
 fn translate(pattern: &str) -> String {
-    let __sifr_chars_pattern: Vec<char> = pattern.chars().collect::<Vec<char>>();
-    let mut body: String = "".to_string();
+    let sifr_generated_chars_pattern: Vec<char> = pattern.chars().collect::<Vec<char>>();
+    let mut body: String = String::new();
     let mut i: SifrInt = SifrInt::from_i64(0);
-    while (&i < &SifrInt::from(__sifr_chars_pattern.len())) {
-        let ch: Option<String> = ({
-            let __sifr_string_index = i.clone();
-            let __sifr_string_index_normalized = __sifr_string_index
-                .normalize_index_or_len(__sifr_chars_pattern.len());
-            __sifr_chars_pattern.get(__sifr_string_index_normalized)
-        })
-            .map(|c| c.to_string());
+    while &i < &SifrInt::from(sifr_generated_chars_pattern.len()) {
+        let ch: Option<String> = {
+            let sifr_generated_string_index = i.clone();
+            let sifr_generated_string_index_normalized = sifr_generated_string_index
+                .normalize_index_or_len(sifr_generated_chars_pattern.len());
+            sifr_generated_chars_pattern.get(sifr_generated_string_index_normalized)
+        }
+        .map(::std::string::ToString::to_string);
         if let Some(ch) = ch {
-            if (ch == "*") {
+            if ch == "*" {
                 body.push_str(".*");
+            } else if ch == "?" {
+                body.push('.');
             } else {
-                if (ch == "?") {
-                    body.push('.');
-                } else {
-                    body.push_str(_translate_literal(&ch).as_str());
-                }
+                body.push_str(sifr_generated_translate_literal(&ch).as_str());
             }
         }
         i = &i + &SifrInt::from_i64(1);
     }
     {
-        let mut __sifr_concat: String = String::with_capacity(
-            (4usize + body.len()) + 3usize,
-        );
-        __sifr_concat.push_str("(?s:");
-        __sifr_concat.push_str(body.as_str());
-        __sifr_concat.push_str(")\\z");
-        __sifr_concat
+        let mut sifr_generated_concat: String = String::with_capacity(4usize + body.len() + 3usize);
+        sifr_generated_concat.push_str("(?s:");
+        sifr_generated_concat.push_str(body.as_str());
+        sifr_generated_concat.push_str(")\\z");
+        sifr_generated_concat
     }
 }
 fn html_escape(s: &str) -> String {
@@ -2167,1085 +1901,153 @@ fn escape(s: &str, quote: bool) -> String {
 fn unescape(s: &str) -> String {
     html_unescape(s)
 }
-fn _is_identifier_start(ch: &str) -> bool {
-    ((ch == "_") || (!ch.is_empty() && ch.chars().all(|c| c.is_alphabetic())))
-}
-fn _is_identifier_continue(ch: &str) -> bool {
-    (((ch == "_") || (!ch.is_empty() && ch.chars().all(|c| c.is_alphabetic())))
-        || (!ch.is_empty() && ch.chars().all(|c| c.is_ascii_digit())))
-}
-fn _mapping_lookup(mapping: &HashMap<String, String>, key: &str) -> Option<String> {
-    for (current_key, current_value) in mapping
-        .iter()
-        .map(|__kv| (__kv.0.clone(), __kv.1.clone()))
-        .collect::<Vec<_>>()
-    {
-        if current_key == *key {
-            return Some({
-                let mut __sifr_concat: String = String::with_capacity(
-                    current_value.len() + 0usize,
-                );
-                __sifr_concat.push_str(current_value.as_str());
-                __sifr_concat.push_str("");
-                __sifr_concat
-            });
-        }
-    }
-    None
-}
-fn _template_substitute_impl(
-    template: &str,
-    mapping: &HashMap<String, String>,
-    safe: bool,
-) -> Result<String, ValueError> {
-    let __sifr_chars_template: Vec<char> = template.chars().collect::<Vec<char>>();
-    let mut result: String = "".to_string();
-    let mut i: SifrInt = SifrInt::from_i64(0);
-    while (&i < &SifrInt::from(__sifr_chars_template.len())) {
-        let ch: Option<String> = ({
-            let __sifr_string_index = i.clone();
-            let __sifr_string_index_normalized = __sifr_string_index
-                .normalize_index_or_len(__sifr_chars_template.len());
-            __sifr_chars_template.get(__sifr_string_index_normalized)
-        })
-            .map(|c| c.to_string());
-        let Some(ch) = ch else {
-            i = &i + &SifrInt::from_i64(1);
-            continue;
-        };
-        let mut ch_value: String = "".to_string();
-        {
-            ch_value = ch;
-        }
-        if (ch_value != "$") {
-            result.push_str(ch_value.as_str());
-            i = &i + &SifrInt::from_i64(1);
-            continue;
-        }
-        if (&(&i + &SifrInt::from_i64(1)) >= &SifrInt::from(__sifr_chars_template.len()))
-        {
-            if safe {
-                result.push('$');
-                i = &i + &SifrInt::from_i64(1);
-                continue;
-            }
-            return Err(
-                ValueError::new(
-                    "invalid template placeholder at end of string".to_string(),
-                ),
-            );
-        }
-        let next_ch: Option<String> = ({
-            let __sifr_string_index = &i + &SifrInt::from_i64(1);
-            let __sifr_string_index_normalized = __sifr_string_index
-                .normalize_index_or_len(__sifr_chars_template.len());
-            __sifr_chars_template.get(__sifr_string_index_normalized)
-        })
-            .map(|c| c.to_string());
-        let mut next_value: String = "".to_string();
-        if (next_ch.is_none()) {
-            if safe {
-                result.push('$');
-                i = &i + &SifrInt::from_i64(1);
-                continue;
-            }
-            return Err(ValueError::new("invalid template placeholder".to_string()));
-        } else {
-            if let Some(next_ch) = next_ch {
-                next_value = next_ch;
-            }
-        }
-        if (next_value == "$") {
-            result.push('$');
-            i = &i + &SifrInt::from_i64(2);
-            continue;
-        }
-        if (next_value == "{") {
-            let mut j: SifrInt = &i + &SifrInt::from_i64(2);
-            let mut name: String = "".to_string();
-            let mut __sifr_chars_name: Vec<char> = name.chars().collect::<Vec<char>>();
-            while (&j < &SifrInt::from(__sifr_chars_template.len())) {
-                let part: Option<String> = ({
-                    let __sifr_string_index = j.clone();
-                    let __sifr_string_index_normalized = __sifr_string_index
-                        .normalize_index_or_len(__sifr_chars_template.len());
-                    __sifr_chars_template.get(__sifr_string_index_normalized)
-                })
-                    .map(|c| c.to_string());
-                let Some(part) = part else {
-                    j = &j + &SifrInt::from_i64(1);
-                    continue;
-                };
-                let mut part_value: String = "".to_string();
-                {
-                    part_value = part;
-                }
-                if (part_value == "}") {
-                    break;
-                }
-                let __sifr_string_concat_name_0 = part_value;
-                name.push_str(__sifr_string_concat_name_0.as_str());
-                __sifr_chars_name.extend((__sifr_string_concat_name_0.as_str()).chars());
-                j = &j + &SifrInt::from_i64(1);
-            }
-            if (&j >= &SifrInt::from(__sifr_chars_template.len())) {
-                if safe {
-                    result
-                        .push_str(
-                            ({
-                                let _slice_src = &__sifr_chars_template;
-                                let _slice_len = _slice_src.len();
-                                let _slice_start = i.clamp_slice_bound(_slice_len);
-                                let _slice_stop = _slice_len;
-                                String::from_iter(
-                                    _slice_src
-                                        .iter()
-                                        .skip(_slice_start)
-                                        .take(_slice_stop.saturating_sub(_slice_start))
-                                        .copied(),
-                                )
-                            })
-                                .as_str(),
-                        );
-                    return Ok(result);
-                }
-                return Err(
-                    ValueError::new(
-                        "invalid template placeholder: missing closing brace".to_string(),
-                    ),
-                );
-            }
-            if (&SifrInt::from(__sifr_chars_name.len()) == &SifrInt::from_i64(0)) {
-                if safe {
-                    result.push_str("${}");
-                    i = &j + &SifrInt::from_i64(1);
-                    continue;
-                }
-                return Err(
-                    ValueError::new(
-                        "invalid template placeholder: empty name".to_string(),
-                    ),
-                );
-            }
-            let first_candidate: Option<String> = ({
-                let __sifr_string_index = SifrInt::from_i64(0);
-                let __sifr_string_index_normalized = __sifr_string_index
-                    .normalize_index_or_len(__sifr_chars_name.len());
-                __sifr_chars_name.get(__sifr_string_index_normalized)
-            })
-                .map(|c| c.to_string());
-            let mut first_value: String = "".to_string();
-            let mut has_first: bool = false;
-            if let Some(first_candidate) = first_candidate {
-                has_first = true;
-                first_value = first_candidate;
-            }
-            if !has_first || !_is_identifier_start(&first_value) {
-                if safe {
-                    result.push_str("${");
-                    result.push_str(name.as_str());
-                    result.push('}');
-                    i = &j + &SifrInt::from_i64(1);
-                    continue;
-                }
-                return Err(
-                    ValueError::new({
-                        let mut __sifr_concat: String = String::with_capacity(
-                            30usize + name.len(),
-                        );
-                        __sifr_concat.push_str("invalid template placeholder: ");
-                        __sifr_concat.push_str(name.as_str());
-                        __sifr_concat
-                    }),
-                );
-            }
-            let mut valid: bool = true;
-            let mut k: SifrInt = SifrInt::from_i64(1);
-            while (&k < &SifrInt::from(__sifr_chars_name.len())) {
-                let part: Option<String> = ({
-                    let __sifr_string_index = k.clone();
-                    let __sifr_string_index_normalized = __sifr_string_index
-                        .normalize_index_or_len(__sifr_chars_name.len());
-                    __sifr_chars_name.get(__sifr_string_index_normalized)
-                })
-                    .map(|c| c.to_string());
-                if let Some(part) = part {
-                    if !_is_identifier_continue(&part) {
-                        valid = false;
-                        k = SifrInt::from(__sifr_chars_name.len());
-                    }
-                }
-                k = &k + &SifrInt::from_i64(1);
-            }
-            if !valid {
-                if safe {
-                    result.push_str("${");
-                    result.push_str(name.as_str());
-                    result.push('}');
-                    i = &j + &SifrInt::from_i64(1);
-                    continue;
-                }
-                return Err(
-                    ValueError::new({
-                        let mut __sifr_concat: String = String::with_capacity(
-                            30usize + name.len(),
-                        );
-                        __sifr_concat.push_str("invalid template placeholder: ");
-                        __sifr_concat.push_str(name.as_str());
-                        __sifr_concat
-                    }),
-                );
-            }
-            let mapped_value: Option<String> = _mapping_lookup(mapping, &name);
-            let mut mapped_value_text: String = "".to_string();
-            if (mapped_value.is_none()) {
-                if safe {
-                    result.push_str("${");
-                    result.push_str(name.as_str());
-                    result.push('}');
-                    i = &j + &SifrInt::from_i64(1);
-                    continue;
-                }
-                return Err(
-                    ValueError::new({
-                        let mut __sifr_concat: String = String::with_capacity(
-                            32usize + name.len(),
-                        );
-                        __sifr_concat.push_str("missing template value for key: ");
-                        __sifr_concat.push_str(name.as_str());
-                        __sifr_concat
-                    }),
-                );
-            } else {
-                if let Some(mapped_value) = mapped_value {
-                    mapped_value_text = mapped_value;
-                }
-            }
-            result.push_str(mapped_value_text.as_str());
-            i = &j + &SifrInt::from_i64(1);
-            continue;
-        }
-        if !_is_identifier_start(&next_value) {
-            if safe {
-                result.push('$');
-                result.push_str(next_value.as_str());
-                i = &i + &SifrInt::from_i64(2);
-                continue;
-            }
-            return Err(
-                ValueError::new({
-                    let mut __sifr_concat: String = String::with_capacity(
-                        36usize + next_value.len(),
-                    );
-                    __sifr_concat.push_str("invalid template placeholder near: $");
-                    __sifr_concat.push_str(next_value.as_str());
-                    __sifr_concat
-                }),
-            );
-        }
-        let mut name2: String = "".to_string();
-        let mut j2: SifrInt = &i + &SifrInt::from_i64(1);
-        while (&j2 < &SifrInt::from(__sifr_chars_template.len())) {
-            let part2: Option<String> = ({
-                let __sifr_string_index = j2.clone();
-                let __sifr_string_index_normalized = __sifr_string_index
-                    .normalize_index_or_len(__sifr_chars_template.len());
-                __sifr_chars_template.get(__sifr_string_index_normalized)
-            })
-                .map(|c| c.to_string());
-            let Some(part2) = part2 else {
-                j2 = &j2 + &SifrInt::from_i64(1);
-                continue;
-            };
-            let mut part2_value: String = "".to_string();
-            {
-                part2_value = part2;
-            }
-            if !_is_identifier_continue(&part2_value) {
-                break;
-            }
-            name2.push_str(part2_value.as_str());
-            j2 = &j2 + &SifrInt::from_i64(1);
-        }
-        let mapped_value2: Option<String> = _mapping_lookup(mapping, &name2);
-        let mut mapped_value2_text: String = "".to_string();
-        if (mapped_value2.is_none()) {
-            if safe {
-                result.push('$');
-                result.push_str(name2.as_str());
-                i = j2.clone();
-                continue;
-            }
-            return Err(
-                ValueError::new({
-                    let mut __sifr_concat: String = String::with_capacity(
-                        32usize + name2.len(),
-                    );
-                    __sifr_concat.push_str("missing template value for key: ");
-                    __sifr_concat.push_str(name2.as_str());
-                    __sifr_concat
-                }),
-            );
-        } else {
-            if let Some(mapped_value2) = mapped_value2 {
-                mapped_value2_text = mapped_value2;
-            }
-        }
-        result.push_str(mapped_value2_text.as_str());
-        i = j2.clone();
-    }
-    Ok(result)
-}
-fn _formatter_format_impl(
-    format_string: &str,
-    values: &HashMap<String, String>,
-) -> Result<String, ValueError> {
-    let __sifr_chars_format_string: Vec<char> = format_string
-        .chars()
-        .collect::<Vec<char>>();
-    let mut result: String = "".to_string();
-    let mut i: SifrInt = SifrInt::from_i64(0);
-    while (&i < &SifrInt::from(__sifr_chars_format_string.len())) {
-        let ch: Option<String> = ({
-            let __sifr_string_index = i.clone();
-            let __sifr_string_index_normalized = __sifr_string_index
-                .normalize_index_or_len(__sifr_chars_format_string.len());
-            __sifr_chars_format_string.get(__sifr_string_index_normalized)
-        })
-            .map(|c| c.to_string());
-        let Some(ch) = ch else {
-            i = &i + &SifrInt::from_i64(1);
-            continue;
-        };
-        let mut ch_value: String = "".to_string();
-        {
-            ch_value = ch;
-        }
-        if (ch_value == "{") {
-            if (&(&i + &SifrInt::from_i64(1))
-                < &SifrInt::from(__sifr_chars_format_string.len()))
-            {
-                let escaped_next: Option<String> = ({
-                    let __sifr_string_index = &i + &SifrInt::from_i64(1);
-                    let __sifr_string_index_normalized = __sifr_string_index
-                        .normalize_index_or_len(__sifr_chars_format_string.len());
-                    __sifr_chars_format_string.get(__sifr_string_index_normalized)
-                })
-                    .map(|c| c.to_string());
-                if (escaped_next.is_some()) && (escaped_next == Some("{".to_string())) {
-                    result.push('{');
-                    i = &i + &SifrInt::from_i64(2);
-                    continue;
-                }
-            }
-            let mut j: SifrInt = &i + &SifrInt::from_i64(1);
-            let mut field_name: String = "".to_string();
-            let mut __sifr_chars_field_name: Vec<char> = field_name
-                .chars()
-                .collect::<Vec<char>>();
-            while (&j < &SifrInt::from(__sifr_chars_format_string.len())) {
-                let part: Option<String> = ({
-                    let __sifr_string_index = j.clone();
-                    let __sifr_string_index_normalized = __sifr_string_index
-                        .normalize_index_or_len(__sifr_chars_format_string.len());
-                    __sifr_chars_format_string.get(__sifr_string_index_normalized)
-                })
-                    .map(|c| c.to_string());
-                let Some(part) = part else {
-                    j = &j + &SifrInt::from_i64(1);
-                    continue;
-                };
-                let mut part_value: String = "".to_string();
-                {
-                    part_value = part;
-                }
-                if (part_value == "}") {
-                    break;
-                }
-                let __sifr_string_concat_field_name_0 = part_value;
-                field_name.push_str(__sifr_string_concat_field_name_0.as_str());
-                __sifr_chars_field_name
-                    .extend((__sifr_string_concat_field_name_0.as_str()).chars());
-                j = &j + &SifrInt::from_i64(1);
-            }
-            if (&j >= &SifrInt::from(__sifr_chars_format_string.len())) {
-                return Err(
-                    ValueError::new("formatter: missing closing brace".to_string()),
-                );
-            }
-            if (&SifrInt::from(__sifr_chars_field_name.len()) == &SifrInt::from_i64(0)) {
-                return Err(
-                    ValueError::new(
-                        "formatter: empty replacement field is not supported".to_string(),
-                    ),
-                );
-            }
-            let value: Option<String> = _mapping_lookup(values, &field_name);
-            let Some(value) = value else {
-                return Err(
-                    ValueError::new({
-                        let mut __sifr_concat: String = String::with_capacity(
-                            34usize + field_name.len(),
-                        );
-                        __sifr_concat.push_str("formatter: missing value for key: ");
-                        __sifr_concat.push_str(field_name.as_str());
-                        __sifr_concat
-                    }),
-                );
-            };
-            result.push_str(value.as_str());
-            i = &j + &SifrInt::from_i64(1);
-            continue;
-        }
-        if (ch_value == "}") {
-            if (&(&i + &SifrInt::from_i64(1))
-                < &SifrInt::from(__sifr_chars_format_string.len()))
-            {
-                let escaped_next2: Option<String> = ({
-                    let __sifr_string_index = &i + &SifrInt::from_i64(1);
-                    let __sifr_string_index_normalized = __sifr_string_index
-                        .normalize_index_or_len(__sifr_chars_format_string.len());
-                    __sifr_chars_format_string.get(__sifr_string_index_normalized)
-                })
-                    .map(|c| c.to_string());
-                if (escaped_next2.is_some()) && (escaped_next2 == Some("}".to_string()))
-                {
-                    result.push('}');
-                    i = &i + &SifrInt::from_i64(2);
-                    continue;
-                }
-            }
-            return Err(
-                ValueError::new("formatter: single \'}\' is invalid".to_string()),
-            );
-        }
-        result.push_str(ch_value.as_str());
-        i = &i + &SifrInt::from_i64(1);
-    }
-    Ok(result)
-}
-fn _replace_whitespace_chars(text: &str, replace_tabs: bool) -> String {
-    let normalized: String = text
-        .replace('\n', " ")
-        .replace('\r', " ")
-        .replace('\u{b}', " ")
-        .replace('\u{c}', " ");
-    if replace_tabs {
-        return normalized.replace('\t', " ");
-    }
-    normalized
-}
-fn _expand_tabs_impl(text: &str, tabsize: SifrInt) -> String {
-    let __sifr_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
-    let mut effective_tabsize: SifrInt = tabsize.clone();
-    if &effective_tabsize <= &SifrInt::from_i64(0) {
-        effective_tabsize = SifrInt::from_i64(1);
-    }
-    if (&effective_tabsize == &SifrInt::from_i64(0)) {
-        return text.to_owned();
-    }
-    let mut result: String = "".to_string();
-    let mut column: SifrInt = SifrInt::from_i64(0);
-    let mut i: SifrInt = SifrInt::from_i64(0);
-    while (&i < &SifrInt::from(__sifr_chars_text.len())) {
-        let ch_opt: Option<String> = ({
-            let __sifr_string_index = i.clone();
-            let __sifr_string_index_normalized = __sifr_string_index
-                .normalize_index_or_len(__sifr_chars_text.len());
-            __sifr_chars_text.get(__sifr_string_index_normalized)
-        })
-            .map(|c| c.to_string());
-        if let Some(ch_opt) = ch_opt {
-            let ch: String = ch_opt;
-            if (ch == "\t") {
-                let mut spaces: SifrInt = &effective_tabsize
-                    - &column.floor_mod_known_nonzero(&effective_tabsize);
-                if (&spaces <= &SifrInt::from_i64(0)) {
-                    spaces = effective_tabsize.clone();
-                }
-                let mut j: SifrInt = SifrInt::from_i64(0);
-                while (&j < &spaces) {
-                    result.push(' ');
-                    j = &j + &SifrInt::from_i64(1);
-                }
-                column = &column + &spaces;
-            } else {
-                if (ch == "\n") || (ch == "\r") {
-                    result.push_str(ch.as_str());
-                    column = SifrInt::from_i64(0);
-                } else {
-                    result.push_str(ch.as_str());
-                    column = &column + &SifrInt::from_i64(1);
-                }
-            }
-        }
-        i = &i + &SifrInt::from_i64(1);
-    }
-    result
-}
-fn _prepare_text(
-    text: &str,
-    expand_tabs: bool,
-    tabsize: SifrInt,
-    replace_whitespace: bool,
-) -> String {
-    let mut prepared: String = {
-        let mut __sifr_concat: String = String::with_capacity(text.len() + 0usize);
-        __sifr_concat.push_str(text);
-        __sifr_concat.push_str("");
-        __sifr_concat
-    };
-    if expand_tabs {
-        prepared = _expand_tabs_impl(&prepared, tabsize.clone());
-    }
-    if replace_whitespace {
-        prepared = _replace_whitespace_chars(&prepared, true);
-    }
-    prepared
-}
-fn _split_word_units(word: &str, break_on_hyphens: bool) -> Vec<String> {
-    if !break_on_hyphens {
-        return vec![
-            { let mut __sifr_concat : String = String::with_capacity(word.len() +
-            0usize); __sifr_concat.push_str(word); __sifr_concat.push_str("");
-            __sifr_concat }
-        ];
-    }
-    let parts: Vec<String> = word
-        .split('-')
-        .map(|s| s.to_string())
-        .collect::<Vec<String>>();
-    if (&SifrInt::from(parts.len()) <= &SifrInt::from_i64(1)) {
-        return vec![
-            { let mut __sifr_concat : String = String::with_capacity(word.len() +
-            0usize); __sifr_concat.push_str(word); __sifr_concat.push_str("");
-            __sifr_concat }
-        ];
-    }
-    let mut units: Vec<String> = vec![];
-    let mut index: SifrInt = SifrInt::from_i64(0);
-    for part in parts.iter().cloned() {
-        let __sifr_chars_part: Vec<char> = part.chars().collect::<Vec<char>>();
-        let is_last: bool = (&index
-            == &(&SifrInt::from(parts.len()) - &SifrInt::from_i64(1)));
-        if is_last {
-            if (&SifrInt::from(__sifr_chars_part.len()) > &SifrInt::from_i64(0)) {
-                units.push(part.to_owned());
-            }
-        } else {
-            if (&SifrInt::from(__sifr_chars_part.len()) == &SifrInt::from_i64(0)) {
-                units.push("-".to_string());
-            } else {
-                units.push(format!("{}{}", part, "-"));
-            }
-        }
-        index = &index + &SifrInt::from_i64(1);
-    }
-    if (&SifrInt::from(units.len()) == &SifrInt::from_i64(0)) {
-        units.push(format!("{}{}", word, ""));
-    }
-    units
-}
-fn _trim_line(line: &str) -> String {
-    let __sifr_chars_line: Vec<char> = line.chars().collect::<Vec<char>>();
-    let mut start: SifrInt = SifrInt::from_i64(0);
-    while (&start < &SifrInt::from(__sifr_chars_line.len()))
-        && ({
-            let __sifr_string_index = start.clone();
-            let __sifr_string_index_normalized = __sifr_string_index
-                .normalize_index_or_len(__sifr_chars_line.len());
-            __sifr_chars_line.get(__sifr_string_index_normalized)
-        })
-            .map(|c| c.to_string())
-            .is_some_and(|__sifr_checked_value_2| {
-                (__sifr_checked_value_2.clone() == " ")
-            })
-    {
-        start = &start + &SifrInt::from_i64(1);
-    }
-    let mut end: SifrInt = SifrInt::from(__sifr_chars_line.len());
-    while (&end > &start)
-        && (({
-            let __sifr_string_index = &end - &SifrInt::from_i64(1);
-            let __sifr_string_index_normalized = __sifr_string_index
-                .normalize_index_or_len(__sifr_chars_line.len());
-            __sifr_chars_line.get(__sifr_string_index_normalized)
-        })
-            .map(|c| c.to_string()) == Some(" ".to_string()))
-    {
-        end = &end - &SifrInt::from_i64(1);
-    }
-    {
-        let _slice_src = &__sifr_chars_line;
-        let _slice_len = _slice_src.len();
-        let _slice_start = start.clamp_slice_bound(_slice_len);
-        let _slice_stop = end.clamp_slice_bound(_slice_len);
-        String::from_iter(
-            _slice_src
-                .iter()
-                .skip(_slice_start)
-                .take(_slice_stop.saturating_sub(_slice_start))
-                .copied(),
-        )
-    }
-}
-fn _finalize_line(line: &str, drop_whitespace: bool) -> String {
-    if drop_whitespace {
-        return _trim_line(line);
-    }
-    {
-        let mut __sifr_concat: String = String::with_capacity(line.len() + 0usize);
-        __sifr_concat.push_str(line);
-        __sifr_concat.push_str("");
-        __sifr_concat
-    }
-}
-fn _effective_content_width(total_width: SifrInt, indent: &str) -> SifrInt {
-    let __sifr_chars_indent: Vec<char> = indent.chars().collect::<Vec<char>>();
-    let available: SifrInt = &total_width - &SifrInt::from(__sifr_chars_indent.len());
-    if &available <= &SifrInt::from_i64(0) {
-        return SifrInt::from_i64(1);
-    }
-    available.clone()
-}
-fn _push_current_line(
-    result: &mut Vec<String>,
-    line: &str,
-    indent: &str,
-    drop_whitespace: bool,
-) {
-    let candidate: String = _finalize_line(
-        &format!("{}{}", indent, line),
-        drop_whitespace,
-    );
-    let __sifr_chars_candidate: Vec<char> = candidate.chars().collect::<Vec<char>>();
-    if drop_whitespace {
-        if (&SifrInt::from(__sifr_chars_candidate.len()) > &SifrInt::from_i64(0)) {
-            result.push(candidate.to_owned());
-        }
-    } else {
-        result.push(candidate.to_owned());
-    }
-}
-fn _wrap_with_indents(
-    text: &str,
-    total_width: SifrInt,
-    initial_indent: &str,
-    subsequent_indent: &str,
-    break_on_hyphens: bool,
-    drop_whitespace: bool,
-) -> Vec<String> {
-    let words: Vec<String> = text
-        .split(' ')
-        .map(|s| s.to_string())
-        .collect::<Vec<String>>();
-    let mut result: Vec<String> = vec![];
-    let mut current: String = "".to_string();
-    let mut first_line: bool = true;
-    let mut current_limit: SifrInt = _effective_content_width(
-        total_width.clone(),
-        initial_indent,
-    );
-    for raw_word in words.iter().cloned() {
-        let units: Vec<String> = _split_word_units(&raw_word, break_on_hyphens);
-        for word in units.iter().cloned() {
-            let __sifr_chars_word: Vec<char> = word.chars().collect::<Vec<char>>();
-            if (&SifrInt::from(__sifr_chars_word.len()) == &SifrInt::from_i64(0)) {
-                if drop_whitespace {
-                    continue;
-                }
-                if (&SifrInt::from(current.chars().count()) > &SifrInt::from_i64(0)) {
-                    if (&(&SifrInt::from(current.chars().count())
-                        + &SifrInt::from_i64(1)) <= &current_limit)
-                    {
-                        current.push(' ');
-                    }
-                }
-                continue;
-            }
-            if (&SifrInt::from(current.chars().count()) == &SifrInt::from_i64(0)) {
-                current = word;
-            } else {
-                if (&(&(&SifrInt::from(current.chars().count()) + &SifrInt::from_i64(1))
-                    + &SifrInt::from(__sifr_chars_word.len())) <= &current_limit)
-                {
-                    current.push(' ');
-                    current.push_str(word.as_str());
-                } else {
-                    if first_line {
-                        _push_current_line(
-                            &mut result,
-                            &current,
-                            initial_indent,
-                            drop_whitespace,
-                        );
-                        first_line = false;
-                        current_limit = _effective_content_width(
-                            total_width.clone(),
-                            subsequent_indent,
-                        );
-                    } else {
-                        _push_current_line(
-                            &mut result,
-                            &current,
-                            subsequent_indent,
-                            drop_whitespace,
-                        );
-                    }
-                    current = word;
-                }
-            }
-        }
-    }
-    if (&SifrInt::from(current.chars().count()) > &SifrInt::from_i64(0)) {
-        if first_line {
-            _push_current_line(&mut result, &current, initial_indent, drop_whitespace);
-        } else {
-            _push_current_line(
-                &mut result,
-                &current,
-                subsequent_indent,
-                drop_whitespace,
-            );
-        }
-    }
-    result
-}
-fn _apply_sentence_endings_line(text: &str) -> String {
-    let __sifr_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
-    let mut result: String = "".to_string();
-    let mut i: SifrInt = SifrInt::from_i64(0);
-    while (&i < &SifrInt::from(__sifr_chars_text.len())) {
-        let ch_opt: Option<String> = ({
-            let __sifr_string_index = i.clone();
-            let __sifr_string_index_normalized = __sifr_string_index
-                .normalize_index_or_len(__sifr_chars_text.len());
-            __sifr_chars_text.get(__sifr_string_index_normalized)
-        })
-            .map(|c| c.to_string());
-        if let Some(ch_opt) = ch_opt {
-            let ch: String = ch_opt;
-            result.push_str(ch.as_str());
-            if ((ch == ".") || (ch == "!")) || (ch == "?") {
-                let mut next_opt: Option<String> = None;
-                if (&(&i + &SifrInt::from_i64(1))
-                    < &SifrInt::from(__sifr_chars_text.len()))
-                {
-                    if let Some(__sifr_checked_value_4) = ({
-                        let __sifr_string_index = &i + &SifrInt::from_i64(1);
-                        let __sifr_string_index_normalized = __sifr_string_index
-                            .normalize_index_or_len(__sifr_chars_text.len());
-                        __sifr_chars_text.get(__sifr_string_index_normalized)
-                    })
-                        .map(|c| c.to_string())
-                    {
-                        next_opt = ({
-                            let __sifr_string_index = &i + &SifrInt::from_i64(1);
-                            let __sifr_string_index_normalized = __sifr_string_index
-                                .normalize_index_or_len(__sifr_chars_text.len());
-                            __sifr_chars_text.get(__sifr_string_index_normalized)
-                        })
-                            .map(|c| c.to_string());
-                    }
-                }
-                let mut next2_opt: Option<String> = None;
-                if (&(&i + &SifrInt::from_i64(2))
-                    < &SifrInt::from(__sifr_chars_text.len()))
-                {
-                    next2_opt = ({
-                        let __sifr_string_index = &i + &SifrInt::from_i64(2);
-                        let __sifr_string_index_normalized = __sifr_string_index
-                            .normalize_index_or_len(__sifr_chars_text.len());
-                        __sifr_chars_text.get(__sifr_string_index_normalized)
-                    })
-                        .map(|c| c.to_string());
-                }
-                if (next_opt.is_some()) && (next_opt == Some(" ".to_string())) {
-                    if (next2_opt.is_none()) || (next2_opt != Some(" ".to_string())) {
-                        result.push(' ');
-                    }
-                }
-            }
-        }
-        i = &i + &SifrInt::from_i64(1);
-    }
-    result
-}
-fn _apply_sentence_endings_lines(lines: &[String]) -> Vec<String> {
-    let mut result: Vec<String> = vec![];
-    for line in lines.iter().cloned() {
-        result.push(_apply_sentence_endings_line(&line));
-    }
-    result
-}
-fn _clone_lines(lines: &[String]) -> Vec<String> {
-    let mut copied: Vec<String> = vec![];
-    for line in lines.iter().cloned() {
-        copied.push(line.to_owned());
-    }
-    copied
-}
-fn _apply_max_lines(
-    lines: &[String],
-    width: SifrInt,
-    max_lines: Option<SifrInt>,
-    placeholder: &str,
-    drop_whitespace: bool,
-) -> Vec<String> {
-    let Some(max_lines) = max_lines.clone() else {
-        return _clone_lines(lines);
-    };
-    let limit: SifrInt = max_lines.clone();
-    if &limit <= &SifrInt::from_i64(0) {
-        return vec![];
-    }
-    if (&SifrInt::from(lines.len()) <= &limit) {
-        return _clone_lines(lines);
-    }
-    let mut result: Vec<String> = vec![];
-    let mut i: SifrInt = SifrInt::from_i64(0);
-    while (&i < &limit) {
-        let line_opt: Option<String> = {
-            let __sifr_checked_read_collection = &lines;
-            let __sifr_checked_read_index = i.clone();
-            let __sifr_checked_read_normalized = __sifr_checked_read_index
-                .normalize_index_or_len(__sifr_checked_read_collection.len());
-            __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
-        };
-        if let Some(line_opt) = line_opt {
-            result.push(line_opt.to_owned());
-        }
-        i = &i + &SifrInt::from_i64(1);
-    }
-    if &SifrInt::from(result.len()) == &SifrInt::from_i64(0) {
-        return result;
-    }
-    let mut effective_placeholder: String = {
-        let mut __sifr_concat: String = String::with_capacity(
-            placeholder.len() + 0usize,
-        );
-        __sifr_concat.push_str(placeholder);
-        __sifr_concat.push_str("");
-        __sifr_concat
-    };
-    let mut __sifr_chars_effective_placeholder: Vec<char> = effective_placeholder
-        .chars()
-        .collect::<Vec<char>>();
-    if (&width > &SifrInt::from_i64(0)) {
-        if (&SifrInt::from(__sifr_chars_effective_placeholder.len()) > &width) {
-            effective_placeholder = {
-                let _slice_src = &__sifr_chars_effective_placeholder;
-                let _slice_len = _slice_src.len();
-                let _slice_start = SifrInt::from_i64(0).clamp_slice_bound(_slice_len);
-                let _slice_stop = width.clamp_slice_bound(_slice_len);
-                String::from_iter(
-                    _slice_src
-                        .iter()
-                        .skip(_slice_start)
-                        .take(_slice_stop.saturating_sub(_slice_start))
-                        .copied(),
-                )
-            };
-            __sifr_chars_effective_placeholder = effective_placeholder
-                .chars()
-                .collect::<Vec<char>>();
-        }
-    }
-    let last_index: SifrInt = &SifrInt::from(result.len()) - &SifrInt::from_i64(1);
-    let last_opt: Option<String> = {
-        let __sifr_checked_read_collection = &result;
-        let __sifr_checked_read_index = last_index.clone();
-        let __sifr_checked_read_normalized = __sifr_checked_read_index
-            .normalize_index_or_len(__sifr_checked_read_collection.len());
-        __sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()
-    };
-    if let Some(last_opt) = last_opt {
-        let last: String = last_opt;
-        let mut base: String = _trim_line(&last);
-        let mut __sifr_chars_base: Vec<char> = base.chars().collect::<Vec<char>>();
-        let mut available: SifrInt = &width
-            - &SifrInt::from(__sifr_chars_effective_placeholder.len());
-        if (&available < &SifrInt::from_i64(0)) {
-            available = SifrInt::from_i64(0);
-        }
-        if (&SifrInt::from(__sifr_chars_base.len()) > &available) {
-            base = _trim_line(
-                &base
-                    .chars()
-                    .skip(::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(0))))
-                    .take(
-                        (::sifr_runtime::to_usize_proven(&(available)))
-                            - (::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(0)))),
-                    )
-                    .collect::<String>(),
-            );
-            __sifr_chars_base = base.chars().collect::<Vec<char>>();
-        }
-        if drop_whitespace {
-            base = _trim_line(&base);
-            __sifr_chars_base = base.chars().collect::<Vec<char>>();
-        }
-        if (&SifrInt::from_i64(0) <= &last_index)
-            && (&last_index < &SifrInt::from(result.len()))
-        {
-            {
-                let __assign_value = {
-                    let mut __sifr_concat: String = String::with_capacity(
-                        base.len() + effective_placeholder.len(),
-                    );
-                    __sifr_concat.push_str(base.as_str());
-                    __sifr_concat.push_str(effective_placeholder.as_str());
-                    __sifr_concat
-                };
-                {
-                    let __index_raw = last_index.clone();
-                    let __index_normalized = __index_raw
-                        .normalize_index_or_len(result.len());
-                    if let Some(__elem) = result.get_mut(__index_normalized) {
-                        *__elem = __assign_value;
-                    }
-                }
-            }
-        }
-    }
-    result
-}
+#[expect(
+    clippy::too_many_lines,
+    reason = "one generated Rust function preserves one typed Sifr function"
+)]
+#[expect(
+    clippy::assertions_on_constants,
+    reason = "generated Rust preserves this exact typed Sifr source contract"
+)]
 fn main() {
-    let template: __SifrStdlib_sifr_x2estring_x2eTemplate = __SifrStdlib_sifr_x2estring_x2eTemplate::new(
-        "Hello $name, mode=${mode}".to_string(),
-    );
+    let template: SifrGeneratedStdlibSifrX2estringX2eTemplate =
+        SifrGeneratedStdlibSifrX2estringX2eTemplate::new("Hello $name, mode=${mode}".to_string());
     let mut rendered_ok: bool = false;
-    let __sifr_try_res: Result<(), ValueError> = (|| {
-        let rendered: String = template
-            .substitute(
-                &HashMap::from([
-                    ("name".to_string(), "Sifr".to_string()),
-                    ("mode".to_string(), "c2".to_string()),
-                ]),
-            )?;
-        rendered_ok = (rendered == "Hello Sifr, mode=c2");
+    let sifr_generated_try_res: Result<(), ValueError> = (|| {
+        let rendered: String = template.substitute(&HashMap::from([
+            ("name".to_string(), "Sifr".to_string()),
+            ("mode".to_string(), "c2".to_string()),
+        ]))?;
+        rendered_ok = rendered == "Hello Sifr, mode=c2";
         Ok(())
     })();
-    if let Err(__sifr_try_err) = __sifr_try_res {
-        let e = __sifr_try_err.clone();
+    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+        let e = sifr_generated_try_err.clone();
         let _ = e.message.clone();
     }
     assert!(rendered_ok);
-    let formatter: __SifrStdlib_sifr_x2estring_x2eFormatter = __SifrStdlib_sifr_x2estring_x2eFormatter::new();
+    let formatter: SifrGeneratedStdlibSifrX2estringX2eFormatter =
+        SifrGeneratedStdlibSifrX2estringX2eFormatter::new();
     let mut rendered_fmt_ok: bool = false;
-    let __sifr_try_res: Result<(), ValueError> = (|| {
-        let rendered_fmt: String = formatter
-            .format(
-                &"Status {label}: {status}".to_string(),
-                &HashMap::from([
-                    ("label".to_string(), "c2".to_string()),
-                    ("status".to_string(), "ok".to_string()),
-                ]),
-            )?;
-        rendered_fmt_ok = (rendered_fmt == "Status c2: ok");
+    let sifr_generated_try_res: Result<(), ValueError> = (|| {
+        let rendered_fmt_value_a80ff414b6eb8e54: String = formatter.format(
+            &"Status {label}: {status}".to_string(),
+            &HashMap::from([
+                ("label".to_string(), "c2".to_string()),
+                ("status".to_string(), "ok".to_string()),
+            ]),
+        )?;
+        rendered_fmt_ok = rendered_fmt_value_a80ff414b6eb8e54 == "Status c2: ok";
         Ok(())
     })();
-    if let Err(__sifr_try_err) = __sifr_try_res {
-        let e = __sifr_try_err.clone();
+    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+        let e = sifr_generated_try_err.clone();
         let _ = e.message.clone();
     }
     assert!(rendered_fmt_ok);
-    let wrapper: __SifrStdlib_sifr_x2etextwrap_x2eTextWrapper = __SifrStdlib_sifr_x2etextwrap_x2eTextWrapper::new(
-        SifrInt::from_i64(8),
-        "> ".to_string(),
-        ".. ".to_string(),
-        true,
-        SifrInt::from_i64(8),
-        true,
-        true,
-        true,
-        false,
-        None,
-        " [...]".to_string(),
+    let wrapper: SifrGeneratedStdlibSifrX2etextwrapX2eTextWrapper =
+        SifrGeneratedStdlibSifrX2etextwrapX2eTextWrapper::new(
+            SifrInt::from_i64(8),
+            "> ".to_string(),
+            ".. ".to_string(),
+            true,
+            SifrInt::from_i64(8),
+            true,
+            true,
+            true,
+            false,
+            None,
+            " [...]".to_string(),
+        );
+    let wrapped_value_2bd4345c4f3b90ce: Vec<String> = wrapper.wrap(&"alpha beta gamma".to_string());
+    assert_eq!(
+        format!("{wrapped_value_2bd4345c4f3b90ce:?}"),
+        "[\"> alpha\", \".. beta\", \".. gamma\"]"
     );
-    let wrapped: Vec<String> = wrapper.wrap(&"alpha beta gamma".to_string());
-    assert!((format!("{:?}", wrapped) == "[\"> alpha\", \".. beta\", \".. gamma\"]"));
     let encoded: String = b64encode(&"hello".to_string());
     let mut decoded_ok: bool = false;
-    let __sifr_try_res: Result<(), ParseError> = (|| {
+    let sifr_generated_try_res: Result<(), ParseError> = (|| {
         let decoded: String = b64decode(&encoded)?;
-        decoded_ok = (decoded == "hello");
+        decoded_ok = decoded == "hello";
         Ok(())
     })();
-    if let Err(__sifr_try_err) = __sifr_try_res {
-        let e = __sifr_try_err.clone();
+    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+        let e = sifr_generated_try_err.clone();
         let _ = e.message.clone();
     }
     assert!(decoded_ok);
     let escaped: String = escape(&"<b>safe</b>".to_string(), true);
-    assert!((unescape(& escaped) == "<b>safe</b>"));
-    assert!(fnmatch(& "report.txt".to_string(), & "*.txt".to_string()));
-    assert!((translate(& "*.txt".to_string()) == "(?s:.*\\.txt)\\z"));
-    let __sifr_try_res: Result<
+    assert_eq!(unescape(&escaped), "<b>safe</b>");
+    assert!(fnmatch(&"report.txt".to_string(), &"*.txt".to_string()));
+    assert_eq!(translate(&"*.txt".to_string()), "(?s:.*\\.txt)\\z");
+    let sifr_generated_try_res: Result<
         (),
-        __SifrUnion_8_x3asequence5_x3aunion1_x3a331_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a017_x3a5_x3aclass5_x3aError1_x3a0,
+        SifrGeneratedUnion8X3asequence5X3aunion1X3a331X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a017X3a5X3aclass5X3aError1X3a0,
     > = (|| {
-        let ratio: f64 = (__SifrStdlib_sifr_x2edifflib_x2eSequenceMatcher::new(
+        let ratio: f64 = SifrGeneratedStdlibSifrX2edifflibX2eSequenceMatcher::new(
                 "abcd".to_string(),
                 "abed".to_string(),
             )
-            .ratio())
-            .map_err(|__e| match __e {
-                __SifrUnion_8_x3asequence5_x3aunion1_x3a231_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a0::__SifrUnionVariant_5_x3aclass18_x3aFloatOverflowError1_x3a0(
-                    __sifr_union_value,
+            .ratio()
+            .map_err(|sifr_generated_e| match sifr_generated_e {
+                SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass18X3aFloatOverflowError1X3a0(
+                    sifr_generated_union_value,
                 ) => {
-                    __SifrUnion_8_x3asequence5_x3aunion1_x3a331_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a017_x3a5_x3aclass5_x3aError1_x3a0::__SifrUnionVariant_5_x3aclass18_x3aFloatOverflowError1_x3a0(
-                        __sifr_union_value,
+                    SifrGeneratedUnion8X3asequence5X3aunion1X3a331X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a017X3a5X3aclass5X3aError1X3a0::SifrGeneratedUnionVariant5X3aclass18X3aFloatOverflowError1X3a0(
+                        sifr_generated_union_value,
                     )
                 }
-                __SifrUnion_8_x3asequence5_x3aunion1_x3a231_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a0::__SifrUnionVariant_5_x3aclass23_x3aFloatPrecisionLossError1_x3a0(
-                    __sifr_union_value,
+                SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3aFloatPrecisionLossError1X3a0(
+                    sifr_generated_union_value,
                 ) => {
-                    __SifrUnion_8_x3asequence5_x3aunion1_x3a331_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a017_x3a5_x3aclass5_x3aError1_x3a0::__SifrUnionVariant_5_x3aclass23_x3aFloatPrecisionLossError1_x3a0(
-                        __sifr_union_value,
+                    SifrGeneratedUnion8X3asequence5X3aunion1X3a331X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a017X3a5X3aclass5X3aError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3aFloatPrecisionLossError1X3a0(
+                        sifr_generated_union_value,
                     )
                 }
             })?;
-        assert!(ratio > (0.4_f64));
+        assert!(ratio > 0.4_f64);
         Ok(())
     })();
-    if let Err(__sifr_try_err) = __sifr_try_res {
-        match __sifr_try_err {
-            __SifrUnion_8_x3asequence5_x3aunion1_x3a331_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a017_x3a5_x3aclass5_x3aError1_x3a0::__SifrUnionVariant_5_x3aclass5_x3aError1_x3a0(
-                __sifr_try_variant_error,
+    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+        match sifr_generated_try_err {
+            SifrGeneratedUnion8X3asequence5X3aunion1X3a331X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a017X3a5X3aclass5X3aError1X3a0::SifrGeneratedUnionVariant5X3aclass5X3aError1X3a0(
+                sifr_generated_try_variant_error,
             ) => {
-                let _e = __sifr_try_variant_error.clone();
+                let _e_5f65 = sifr_generated_try_variant_error.clone();
                 assert!(false);
             }
-            __SifrUnion_8_x3asequence5_x3aunion1_x3a331_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a017_x3a5_x3aclass5_x3aError1_x3a0::__SifrUnionVariant_5_x3aclass18_x3aFloatOverflowError1_x3a0(
-                __sifr_try_variant_error,
+            SifrGeneratedUnion8X3asequence5X3aunion1X3a331X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a017X3a5X3aclass5X3aError1X3a0::SifrGeneratedUnionVariant5X3aclass18X3aFloatOverflowError1X3a0(
+                sifr_generated_try_variant_error,
             ) => {
-                let _e = Error::new(__sifr_try_variant_error.clone().message);
+                let _e_5f65 = Error::new(
+                    sifr_generated_try_variant_error.clone().message,
+                );
                 assert!(false);
             }
-            __SifrUnion_8_x3asequence5_x3aunion1_x3a331_x3a5_x3aclass18_x3aFloatOverflowError1_x3a036_x3a5_x3aclass23_x3aFloatPrecisionLossError1_x3a017_x3a5_x3aclass5_x3aError1_x3a0::__SifrUnionVariant_5_x3aclass23_x3aFloatPrecisionLossError1_x3a0(
-                __sifr_try_variant_error,
+            SifrGeneratedUnion8X3asequence5X3aunion1X3a331X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a017X3a5X3aclass5X3aError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3aFloatPrecisionLossError1X3a0(
+                sifr_generated_try_variant_error,
             ) => {
-                let _e = Error::new(__sifr_try_variant_error.clone().message);
+                let _e_5f65 = Error::new(
+                    sifr_generated_try_variant_error.clone().message,
+                );
                 assert!(false);
             }
         }
     }
     let mut month_label_ok: bool = false;
-    let __sifr_try_res: Result<(), ValueError> = (|| {
-        let month_label: String = __SifrStdlib_sifr_x2ecalendar_x2eTextCalendar::new(
-                SifrInt::from_i64(0),
-            )
-            .formatmonthname(
-                &SifrInt::from_i64(2024),
-                &SifrInt::from_i64(2),
-                &SifrInt::from_i64(0),
-            )?;
-        month_label_ok = (month_label == "February 2024");
+    let sifr_generated_try_res: Result<(), ValueError> = (|| {
+        let month_label: String =
+            SifrGeneratedStdlibSifrX2ecalendarX2eTextCalendar::new(SifrInt::from_i64(0))
+                .formatmonthname(
+                    &SifrInt::from_i64(2024),
+                    &SifrInt::from_i64(2),
+                    &SifrInt::from_i64(0),
+                )?;
+        month_label_ok = month_label == "February 2024";
         Ok(())
     })();
-    if let Err(__sifr_try_err) = __sifr_try_res {
-        let e = __sifr_try_err.clone();
+    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+        let e = sifr_generated_try_err.clone();
         let _ = e.message.clone();
     }
     assert!(month_label_ok);

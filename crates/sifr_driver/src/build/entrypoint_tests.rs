@@ -69,8 +69,47 @@ fn test_project_entrypoint_plan_generates_support_modules() {
             .collect::<Vec<_>>(),
         vec!["helper".to_string()]
     );
-    assert!(generated_project.main_rs.starts_with("mod helper;"));
+    assert!(generated_project.main_rs.starts_with("pub mod helper;"));
     assert!(generated_project.main_rs.contains("fn main"));
+
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
+#[ignore = "generated build integration coverage runs in full validation profiles"]
+fn test_project_entrypoint_plan_propagates_const_apis_across_modules() {
+    let dir = mktemp_dir("project_const_api");
+    let main_file = dir.join("main.sifr");
+    std::fs::write(
+        &main_file,
+        "from consumer import value\n\ndef main():\n    print(value())\n",
+    )
+    .expect("main should be written");
+    std::fs::write(
+        dir.join("consumer.sifr"),
+        "from provider import provided\n\ndef value() -> int:\n    return provided()\n",
+    )
+    .expect("consumer should be written");
+    std::fs::write(
+        dir.join("provider.sifr"),
+        "def provided() -> int:\n    return 19\n",
+    )
+    .expect("provider should be written");
+
+    let plan = RootedEntrypointPlan::from_entrypoint(RootedEntrypoint::Project {
+        main_file: &main_file,
+        provider: &mut DiskSourceProvider::new(),
+    })
+    .expect("project entrypoint should compile");
+    let generated_project = plan
+        .into_generated_binary_project()
+        .expect("project generated project should succeed");
+
+    let consumer = generated_project
+        .support_modules
+        .get("consumer")
+        .expect("consumer module should be generated");
+    assert!(consumer.contains("pub const fn value"), "{consumer}");
 
     let _ = std::fs::remove_dir_all(dir);
 }

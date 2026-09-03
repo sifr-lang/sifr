@@ -600,6 +600,7 @@ impl Renderer {
                 | RustExpr::ClosureBlock { .. }
                 | RustExpr::AsyncBlock { .. }
                 | RustExpr::Block { .. }
+                | RustExpr::UnaryOp { .. }
                 | RustExpr::Range { .. }
         ) {
             return true;
@@ -674,10 +675,24 @@ impl Renderer {
         if name.starts_with("r#") || !Self::is_plain_ascii_identifier(name) {
             return name.to_string();
         }
+        // Rust does not permit `r#true` or `r#false`. Boolean values are
+        // represented by `RustLiteral`, so an identifier with either spelling
+        // is necessarily a source binding and must use a disjoint encoding.
+        if let Some(encoded) = Self::reserved_literal_identifier(name) {
+            return encoded.to_string();
+        }
         if Self::is_escape_required_keyword(name) {
             format!("r#{name}")
         } else {
             name.to_string()
+        }
+    }
+
+    fn reserved_literal_identifier(name: &str) -> Option<&'static str> {
+        match name {
+            "true" => Some("sifr_source_74727565"),
+            "false" => Some("sifr_source_66616c7365"),
+            _ => None,
         }
     }
 
@@ -771,7 +786,7 @@ impl Renderer {
             let guard = arm
                 .guard
                 .as_ref()
-                .map(|g| format!(" if {}", Self::render_expr_string(g)))
+                .map(|g| format!(" if {}", Self::render_condition_expr_string(g)))
                 .unwrap_or_default();
             self.emit_line(&format!(
                 "{}{} => {{",
@@ -785,5 +800,12 @@ impl Renderer {
             self.dedent();
             self.emit_line("},");
         }
+    }
+
+    pub(crate) fn render_condition_expr_string(expr: &RustExpr) -> String {
+        if let RustExpr::Paren(inner) = expr {
+            return Self::render_condition_expr_string(inner);
+        }
+        Self::render_expr_string(expr)
     }
 }

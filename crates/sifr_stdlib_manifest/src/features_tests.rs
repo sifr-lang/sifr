@@ -2,6 +2,7 @@ use super::{
     CargoVendorMode, StdlibFeature, feature_for_codegen_requirement, planned_sifr_stdlib_features,
     try_generated_cargo_dependencies, try_sysroot_dependency_plan,
 };
+use crate::test_support::TestUnwrap as _;
 use std::collections::HashSet;
 
 fn generated_cargo_dependencies(
@@ -9,7 +10,7 @@ fn generated_cargo_dependencies(
     required_features: &HashSet<StdlibFeature>,
 ) -> Vec<String> {
     try_generated_cargo_dependencies(stdlib_modules, required_features)
-        .expect("source-tree sysroot dependencies should resolve")
+        .test_unwrap("source-tree sysroot dependencies should resolve")
 }
 
 #[test]
@@ -405,7 +406,7 @@ fn sysroot_dependency_plan_captures_identity_features_and_vendor_mode() {
         &HashSet::from([StdlibFeature::SerdeJson]),
         CargoVendorMode::SysrootOnly,
     )
-    .expect("source-tree sysroot should resolve");
+    .test_unwrap("source-tree sysroot should resolve");
 
     assert_eq!(plan.cargo_vendor_mode, CargoVendorMode::SysrootOnly);
     assert_eq!(
@@ -429,7 +430,7 @@ fn sysroot_dependency_plan_captures_identity_features_and_vendor_mode() {
             .contains(&format!("content_sha256={}", plan.sysroot_content_sha256))
     );
     let live_lock_sha256 = sifr_sysroot::sha256_file(&plan.sysroot_root.join("Cargo.lock"))
-        .expect("resolved source-tree Cargo.lock must remain readable");
+        .test_unwrap("resolved source-tree Cargo.lock must remain readable");
     assert!(
         plan.cache_fingerprint
             .contains(&format!("cargo_lock_content_sha256={live_lock_sha256}"))

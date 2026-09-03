@@ -324,6 +324,7 @@ fn push_unicode_escape(output: &mut String, value: u32) {
 #[cfg(test)]
 mod tests {
     use super::{StdlibFeature, SysrootCrate, SysrootCrateDependency, retained_dependency_specs};
+    use crate::test_support::TestUnwrap as _;
     use std::collections::BTreeSet;
     use std::path::PathBuf;
 
@@ -356,16 +357,16 @@ mod tests {
                 });
                 let dependencies = parsed["dependencies"]
                     .as_table()
-                    .expect("dependencies must be a TOML table");
+                    .test_unwrap("dependencies must be a TOML table");
                 let (_package, specification) = dependencies
                     .iter()
                     .next()
-                    .expect("one retained dependency must be parsed");
+                    .test_unwrap("one retained dependency must be parsed");
                 let version = match specification {
                     toml::Value::String(version) => version,
                     toml::Value::Table(table) => table["version"]
                         .as_str()
-                        .expect("inline retained dependency tables must declare a version"),
+                        .test_unwrap("inline retained dependency tables must declare a version"),
                     _ => panic!("unsupported retained dependency form: {dependency}"),
                 };
                 assert!(

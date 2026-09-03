@@ -1,3 +1,5 @@
+use crate::test_support::{TestExpectErr as _, TestUnwrap as _};
+
 use crate::CargoPackageId;
 use crate::cargo::metadata::parse_metadata_json;
 use crate::graph::derive::{SifrPackageId, derive_package_graph};
@@ -37,8 +39,8 @@ fn source_layout_public_namespaces_derive_from_init_sifr() {
         "def decode_json() -> int:\n    return 1\n",
     );
     let graph = graph(&temp, &[&app, &json], &[edge(&app, "demo_json", &json)]);
-    let source_map =
-        PackageSourceMap::build(&graph, &mut DiskSourceProvider::new()).expect("source map builds");
+    let source_map = PackageSourceMap::build(&graph, &mut DiskSourceProvider::new())
+        .test_unwrap("source map builds");
 
     let PackageImportResolutionResult::Resolved(root) = source_map.resolve_import_result(
         &graph,
@@ -95,8 +97,8 @@ fn local_package_can_import_own_private_implementation_module() {
         "def parse_json() -> int:\n    return 1\n",
     );
     let graph = graph(&temp, &[&json], &[]);
-    let source_map =
-        PackageSourceMap::build(&graph, &mut DiskSourceProvider::new()).expect("source map builds");
+    let source_map = PackageSourceMap::build(&graph, &mut DiskSourceProvider::new())
+        .test_unwrap("source map builds");
 
     let PackageImportResolutionResult::Resolved(own) = source_map.resolve_import_result(
         &graph,
@@ -121,7 +123,7 @@ fn duplicate_init_public_symbol_reports_0713() {
     write_src_file(&json.root, "value.sifr", "");
     let graph = graph(&temp, &[&json], &[]);
     let diagnostics = PackageSourceMap::build(&graph, &mut DiskSourceProvider::new())
-        .expect_err("duplicate public symbol fails");
+        .test_expect_err("duplicate public symbol fails");
 
     assert!(
         diagnostics.iter().any(
@@ -139,7 +141,7 @@ fn production_manifest_defaults_source_root_to_src_and_preserves_unknown_keys() 
         &manifest_path,
         "[package]\nname = \"demo\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n\n[tooling]\nunknown = true\n",
     )
-    .expect("manifest parses");
+    .test_unwrap("manifest parses");
 
     assert_eq!(manifest.source_root.0, PathBuf::from("src"));
 }
@@ -151,7 +153,7 @@ fn manifest_exports_use_normal_unsupported_field_diagnostic() {
         Path::new("/tmp/demo/sifr.toml"),
         "[package]\nname = \"demo\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n\n[source]\nroot = \"src\"\n\n[exports]\nmodules = [\"demo\"]\n",
     )
-    .expect_err("production exports are rejected");
+    .test_expect_err("production exports are rejected");
 
     assert_eq!(
         diagnostic.code,
@@ -171,7 +173,7 @@ fn manifest_bin_tables_use_normal_unsupported_field_diagnostic() {
         Path::new("/tmp/demo/sifr.toml"),
         "[package]\nname = \"demo\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n\n[[bin]]\nname = \"demo\"\npath = \"src/main.sifr\"\n",
     )
-    .expect_err("production bin tables are rejected");
+    .test_expect_err("production bin tables are rejected");
 
     assert_eq!(
         diagnostic.code,
@@ -185,9 +187,9 @@ fn graph(
     packages: &[&TestPackage],
     edges: &[ResolveEdge],
 ) -> crate::SifrPackageGraph {
-    let metadata =
-        parse_metadata_json(&metadata_json(&temp.root, packages, edges)).expect("metadata parses");
-    derive_package_graph(metadata, &mut DiskSourceProvider::new()).expect("graph derives")
+    let metadata = parse_metadata_json(&metadata_json(&temp.root, packages, edges))
+        .test_unwrap("metadata parses");
+    derive_package_graph(metadata, &mut DiskSourceProvider::new()).test_unwrap("graph derives")
 }
 
 fn production_package(
@@ -198,26 +200,26 @@ fn production_package(
     sifr_name: &str,
 ) -> TestPackage {
     let root = temp.package(dir);
-    fs::create_dir_all(root.join("src")).expect("create src");
+    fs::create_dir_all(root.join("src")).test_unwrap("create src");
     fs::write(
         root.join("src/lib.rs"),
         "// Pure Sifr package marker. Sifr source lives in the sifr.toml source root.\n",
     )
-    .expect("write marker");
+    .test_unwrap("write marker");
     fs::write(
         root.join("Cargo.toml"),
         format!(
             "[package]\nname = \"{cargo_name}\"\nversion = \"{version}\"\nedition = \"2024\"\n\n[package.metadata.sifr]\nmanifest = \"sifr.toml\"\n"
         ),
     )
-    .expect("write Cargo.toml");
+    .test_unwrap("write Cargo.toml");
     fs::write(
         root.join("sifr.toml"),
         format!(
             "[package]\nname = \"{sifr_name}\"\nedition = \"2026\"\nsifr-version = \">=0.3,<0.4\"\n\n[source]\nroot = \"src\"\n"
         ),
     )
-    .expect("write sifr.toml");
+    .test_unwrap("write sifr.toml");
     write_src_file(&root, "__init__.sifr", "");
     TestPackage {
         root,
@@ -228,8 +230,9 @@ fn production_package(
 
 fn write_src_file(package_root: &Path, relative: &str, source: &str) {
     let path = package_root.join("src").join(relative);
-    fs::create_dir_all(path.parent().expect("source has parent")).expect("create source parent");
-    fs::write(path, source).expect("write source");
+    fs::create_dir_all(path.parent().test_unwrap("source has parent"))
+        .test_unwrap("create source parent");
+    fs::write(path, source).test_unwrap("write source");
 }
 
 fn metadata_json(
@@ -338,16 +341,16 @@ impl TestWorkspace {
     fn new(name: &str) -> Self {
         let nonce = SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .expect("clock should be after epoch")
+            .test_unwrap("clock should be after epoch")
             .as_nanos();
         let root = std::env::temp_dir().join(format!("sifr_package_{name}_{nonce}"));
-        fs::create_dir_all(&root).expect("create temp workspace");
+        fs::create_dir_all(&root).test_unwrap("create temp workspace");
         Self { root }
     }
 
     fn package(&self, name: &str) -> PathBuf {
         let path = self.root.join(name);
-        fs::create_dir_all(&path).expect("create package");
+        fs::create_dir_all(&path).test_unwrap("create package");
         path
     }
 }
