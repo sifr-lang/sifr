@@ -133,7 +133,7 @@ fn main() {
     let mut bad_utf8: bool = false;
     let sifr_generated_try_res: Result<(), ParseError> = (|| {
         let _invalid_utf8: String = ::sifr_runtime::encoding::decode_text(
-            &vec![255u8],
+            &vec![255_u8],
             &"utf-8".to_string(),
             &"strict".to_string(),
         )

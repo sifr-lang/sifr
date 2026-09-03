@@ -71,7 +71,7 @@ mod sifr_generated_project_nominals {
             for key in self.counts.keys().cloned().collect::<Vec<_>>() {
                 let count: Option<SifrInt> = self.counts.get(&key).cloned();
                 if let Some(count) = count.clone() {
-                    let entry: (T, SifrInt) = (key, count.clone());
+                    let entry: (T, SifrInt) = (key.clone(), count.clone());
                     result.push(entry.clone());
                 }
             }
@@ -237,7 +237,7 @@ mod sifr_generated_project_nominals {
     }
     impl<T: ::std::hash::Hash + Eq> SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T> {
         pub fn clear(&mut self) {
-            self.counts = HashMap::from([]);
+            self.counts = HashMap::new();
         }
     }
     impl<T: ::std::hash::Hash + Eq + Clone>
@@ -246,7 +246,7 @@ mod sifr_generated_project_nominals {
     {
         type Output = SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T>;
         fn add(self, other: &SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T>) -> Self::Output {
-            let mut new_counts: HashMap<T, SifrInt> = HashMap::from([]);
+            let mut new_counts: HashMap<T, SifrInt> = HashMap::new();
             for key in Box::new(self.counts.keys().cloned().collect::<Vec<_>>().into_iter()) {
                 let a_val: Option<SifrInt> = self.counts.get(&key).cloned();
                 if let Some(a_val) = a_val {
@@ -295,7 +295,7 @@ mod sifr_generated_project_nominals {
     {
         type Output = SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T>;
         fn sub(self, other: &SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T>) -> Self::Output {
-            let mut new_counts: HashMap<T, SifrInt> = HashMap::from([]);
+            let mut new_counts: HashMap<T, SifrInt> = HashMap::new();
             for key in Box::new(self.counts.keys().cloned().collect::<Vec<_>>().into_iter()) {
                 let a_val: Option<SifrInt> = self.counts.get(&key).cloned();
                 if let Some(a_val) = a_val {

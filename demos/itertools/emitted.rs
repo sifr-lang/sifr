@@ -154,10 +154,10 @@ fn pairwise<T: Clone + 'static>(data: &[T]) -> Vec<Vec<T>> {
                     .cloned()
             };
             if let Some(prev) = prev {
-                pair.push(prev.clone());
+                pair.push(prev);
             }
             pair.push(value.clone());
-            result.push(pair.to_vec());
+            result.push(pair);
             {
                 let sifr_generated_assign_value = value.clone();
                 {
@@ -172,7 +172,7 @@ fn pairwise<T: Clone + 'static>(data: &[T]) -> Vec<Vec<T>> {
                 }
             }
         } else {
-            prev_values.push(value.clone());
+            prev_values.push(value);
         }
     }
     result
@@ -184,14 +184,14 @@ fn batched<T: Clone + 'static>(data: &[T], n: SifrInt) -> Result<Vec<Vec<T>>, Va
     let mut result: Vec<Vec<T>> = Vec::new();
     let mut current_batch: Vec<T> = Vec::new();
     for value in data.iter().cloned() {
-        current_batch.push(value.clone());
+        current_batch.push(value);
         if &SifrInt::from(current_batch.len()) == &n {
             result.push(current_batch.to_vec());
             current_batch = Vec::new();
         }
     }
     if &SifrInt::from(current_batch.len()) > &SifrInt::from_i64(0) {
-        result.push(current_batch.to_vec());
+        result.push(current_batch);
     }
     Ok(result)
 }
@@ -203,7 +203,7 @@ fn accumulate<T: Clone + 'static + SifrGeneratedAdd>(
         async move |sifr_generated_yielder: SifrGeneratedYielder<T>| {
             let mut state: Vec<T> = Vec::new();
             if let Some(initial) = initial {
-                state.push(initial.clone());
+                state.push(initial);
                 let initial_value: Option<T> = {
                     let sifr_generated_checked_read_collection = &state;
                     let sifr_generated_checked_read_index = SifrInt::from_i64(0);
@@ -219,7 +219,7 @@ fn accumulate<T: Clone + 'static + SifrGeneratedAdd>(
             }
             for item in data {
                 if &SifrInt::from(state.len()) == &SifrInt::from_i64(0) {
-                    state.push(item.clone());
+                    state.push(item);
                 } else {
                     let prev: Option<T> = {
                         let sifr_generated_checked_read_collection = &state;

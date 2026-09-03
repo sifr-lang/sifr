@@ -92,8 +92,9 @@ def count_groups(text: str) -> int:
 
     assert!(generated.contains("for ch in text.chars()"), "{generated}");
     assert!(generated.contains("seen.contains(&ch)"), "{generated}");
+    assert!(generated.contains("seen.insert(ch)"), "{generated}");
     assert!(
-        generated.contains("seen.insert((ch).clone())"),
+        !generated.contains("seen.insert((ch).clone())"),
         "{generated}"
     );
     assert!(

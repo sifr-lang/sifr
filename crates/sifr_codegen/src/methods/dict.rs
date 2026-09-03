@@ -30,21 +30,12 @@ fn render_key_arg_expr(arg: &RustExpr) -> RustExpr {
 }
 
 fn materialize_setdefault_storage_arg(ty: &Type, arg: &RustExpr) -> RustExpr {
-    if crate::helpers::is_copy_type_for_codegen(ty) {
-        return arg.clone();
-    }
-    let reusable_place = match arg {
-        RustExpr::Ident(_) | RustExpr::Field { .. } | RustExpr::Index { .. } => true,
-        RustExpr::Paren(inner) => matches!(
-            inner.as_ref(),
-            RustExpr::Ident(_) | RustExpr::Field { .. } | RustExpr::Index { .. }
-        ),
-        _ => false,
-    };
-    if reusable_place {
-        crate::ownership_plan::materialize_owned_value(ty, arg.clone())
-    } else {
+    if crate::helpers::is_copy_type_for_codegen(ty)
+        || !crate::RustEmitter::rust_expr_is_reusable_place_for_ir(arg)
+    {
         arg.clone()
+    } else {
+        crate::ownership_plan::materialize_owned_value(ty, arg.clone())
     }
 }
 
@@ -242,6 +233,7 @@ pub(super) fn lower_setdefault(
     key_ty: &Type,
     value_ty: &Type,
     args: &[RustExpr],
+    discard_result: bool,
 ) -> Option<RustExpr> {
     assert!(
         !key_ty.contains_affine_resource() && !value_ty.contains_affine_resource(),
@@ -249,8 +241,16 @@ pub(super) fn lower_setdefault(
     );
     match args {
         [key, default] => {
-            let key = materialize_setdefault_storage_arg(key_ty, key);
-            let default = materialize_setdefault_storage_arg(value_ty, default);
+            let key = if discard_result {
+                key.clone()
+            } else {
+                materialize_setdefault_storage_arg(key_ty, key)
+            };
+            let default = if discard_result {
+                default.clone()
+            } else {
+                materialize_setdefault_storage_arg(value_ty, default)
+            };
             let inserted = RustExpr::MethodCall {
                 receiver: Box::new(RustExpr::MethodCall {
                     receiver: Box::new(object.clone()),
@@ -260,7 +260,9 @@ pub(super) fn lower_setdefault(
                 method: "or_insert".to_string(),
                 args: vec![default],
             };
-            Some(if crate::helpers::is_copy_type_for_codegen(value_ty) {
+            Some(if discard_result {
+                inserted
+            } else if crate::helpers::is_copy_type_for_codegen(value_ty) {
                 RustExpr::Deref(Box::new(inserted))
             } else {
                 crate::ownership_plan::materialize_owned_value(value_ty, inserted)
@@ -275,15 +277,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn setdefault_storage_materialization_preserves_copy_places() {
-        let place = RustExpr::Ident("value".to_string());
-        assert_eq!(
-            materialize_setdefault_storage_arg(&Type::Bool, &place),
-            place
-        );
-    }
-
-    #[test]
     #[should_panic(expected = "affine dict.setdefault must be rejected during typed lowering")]
     fn setdefault_affine_types_are_an_internal_invariant_violation() {
         let object = RustExpr::Ident("values".to_string());
@@ -291,6 +284,6 @@ mod tests {
         let value = RustExpr::Ident("value".to_string());
         let affine =
             Type::PythonBuffer(Box::new(Type::FixedInt(sifr_type_system::FixedIntType::U8)));
-        let _ = lower_setdefault(&object, &Type::Str, &affine, &[key, value]);
+        let _ = lower_setdefault(&object, &Type::Str, &affine, &[key, value], false);
     }
 }

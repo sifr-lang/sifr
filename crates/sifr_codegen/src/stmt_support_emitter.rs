@@ -4,6 +4,8 @@ use sifr_ir::{HirExceptHandler, HirExpr, HirFStringPart, HirIteratorOp, HirStmt}
 use sifr_type_system::Type;
 
 #[macro_use]
+mod stmt_expr_await_and_registry;
+#[macro_use]
 mod expr_call_and_literal_helpers;
 mod expr_call_metadata;
 pub(crate) use expr_call_metadata::{

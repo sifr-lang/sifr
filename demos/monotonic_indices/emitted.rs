@@ -20,7 +20,7 @@ fn active_indices(flags: &[bool]) -> Vec<SifrInt> {
             continue;
         };
         if sifr_generated_checked_value_0 {
-            out.push(index.clone());
+            out.push(index);
         }
     }
     out

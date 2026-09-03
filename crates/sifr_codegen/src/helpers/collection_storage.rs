@@ -57,6 +57,27 @@ pub(crate) fn adapt_collection_value_for_target(
     )
 }
 
+/// Lower a value into byte-vector storage only when its byte range is statically represented.
+/// Integer literals are range-checked here; computed values must already have the fixed `u8` type.
+pub(crate) fn adapt_bytes_element_for_storage(
+    source_expr: &HirExpr,
+    value: RustExpr,
+) -> Option<RustExpr> {
+    if let HirExpr::IntLiteral(value) = source_expr
+        && (0..=u8::MAX.into()).contains(value)
+    {
+        return Some(RustExpr::Cast {
+            expr: Box::new(RustExpr::Literal(crate::RustLiteral::Int(*value))),
+            ty: crate::RustType::Named("u8".to_string()),
+        });
+    }
+
+    match crate::resolve_alias_type_for_plain_call(source_expr.ty()) {
+        Type::FixedInt(sifr_type_system::FixedIntType::U8) => Some(value),
+        _ => None,
+    }
+}
+
 /// Adapt representation-significant optional wrappers inside an owned collection value.
 pub(crate) fn adapt_collection_storage_for_target(
     target: &Type,

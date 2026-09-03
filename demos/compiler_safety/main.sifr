@@ -98,7 +98,7 @@ def main():
 
     events.append("=== Callable Struct Field ===")
     c: Config = Config(21, double)
-    events.append(str(c.value))
+    events.append(str(c.callback(c.value)))
 
     events.append("=== Compiler Hardening Demo Complete ===")
 
@@ -125,7 +125,7 @@ def main():
         "Disconnecting: postgres",
         "Closing: input.txt",
         "=== Callable Struct Field ===",
-        "21",
+        "42",
         "=== Compiler Hardening Demo Complete ===",
     ]
 

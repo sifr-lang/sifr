@@ -576,7 +576,7 @@ pub(super) fn registry_dict_source_to_map_expr(
                 method: "into_iter".to_string(),
                 args: vec![],
             }),
-            method: "collect::<HashMap<_, _>>".to_string(),
+            method: "collect::<std::collections::HashMap<_, _>>".to_string(),
             args: vec![],
         }),
         Type::Any | Type::Unknown => Some(RustExpr::MethodCall {
@@ -585,7 +585,7 @@ pub(super) fn registry_dict_source_to_map_expr(
                 method: "into_iter".to_string(),
                 args: vec![],
             }),
-            method: "collect::<HashMap<_, _>>".to_string(),
+            method: "collect::<std::collections::HashMap<_, _>>".to_string(),
             args: vec![],
         }),
         _ => None,
@@ -651,11 +651,10 @@ pub(super) fn registry_call_callable_with_owned_args(
     })
 }
 
-/// Calls a callable from a comparator whose bindings are already shared
-/// references. Shared-borrow parameters receive the reference directly;
-/// owned parameters require an explicit clone of the referent. Mutable-borrow
-/// parameters cannot be satisfied from an immutable sort comparator.
-pub(super) fn registry_call_callable_with_shared_ref_args(
+/// Calls a callable while retaining each owned binding for later use.
+/// Shared-borrow parameters receive a reference; owned parameters receive a
+/// clone. Mutable-borrow parameters cannot be satisfied by this boundary.
+pub(super) fn registry_call_callable_with_retained_owned_args(
     emitter: &mut RustEmitter,
     callable: &HirExpr,
     arg_bindings: &[(String, Type)],
@@ -673,15 +672,18 @@ pub(super) fn registry_call_callable_with_shared_ref_args(
             if convention.is_mut_borrow() || arg_ty != param_ty {
                 return None;
             }
-            let reference = RustExpr::Ident(name.clone());
+            let value = RustExpr::Ident(name.clone());
             if convention.is_owned() {
                 Some(RustExpr::MethodCall {
-                    receiver: Box::new(reference),
+                    receiver: Box::new(value),
                     method: "clone".to_string(),
                     args: vec![],
                 })
             } else {
-                Some(reference)
+                Some(RustExpr::Ref {
+                    mutable: false,
+                    expr: Box::new(value),
+                })
             }
         })
         .collect::<Option<Vec<_>>>()?;

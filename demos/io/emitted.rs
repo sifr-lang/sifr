@@ -427,26 +427,24 @@ fn collect_open_actual() -> Vec<bool> {
     let mut missing_rejected: bool = false;
     let sifr_generated_try_res: Result<(), IOError> = (|| {
         let lines: Vec<String> = read_lines(&path)?;
-        first_ok =
-            &SifrInt::from(lines.len()) >= &SifrInt::from_i64(1) && {
-                let sifr_generated_index_list = &lines;
-                let sifr_generated_index_i = SifrInt::from_i64(0);
-                let sifr_generated_index_norm =
-                    sifr_generated_index_i.normalize_index_or_len(sifr_generated_index_list.len());
-                sifr_generated_index_list
-                    .get(sifr_generated_index_norm)
-                    .cloned()
-            } == Some("hello".to_string());
-        second_ok =
-            &SifrInt::from(lines.len()) >= &SifrInt::from_i64(2) && {
-                let sifr_generated_index_list = &lines;
-                let sifr_generated_index_i = SifrInt::from_i64(1);
-                let sifr_generated_index_norm =
-                    sifr_generated_index_i.normalize_index_or_len(sifr_generated_index_list.len());
-                sifr_generated_index_list
-                    .get(sifr_generated_index_norm)
-                    .cloned()
-            } == Some("world".to_string());
+        first_ok = &SifrInt::from(lines.len()) >= &SifrInt::from_i64(1) && {
+            let sifr_generated_cmp_list = &lines;
+            let sifr_generated_cmp_i = SifrInt::from_i64(0);
+            let sifr_generated_cmp_norm =
+                sifr_generated_cmp_i.normalize_index_or_len(sifr_generated_cmp_list.len());
+            sifr_generated_cmp_list
+                .get(::sifr_runtime::to_usize_proven(&sifr_generated_cmp_norm))
+                .map(::std::string::String::as_str)
+        } == Some("hello");
+        second_ok = &SifrInt::from(lines.len()) >= &SifrInt::from_i64(2) && {
+            let sifr_generated_cmp_list = &lines;
+            let sifr_generated_cmp_i = SifrInt::from_i64(1);
+            let sifr_generated_cmp_norm =
+                sifr_generated_cmp_i.normalize_index_or_len(sifr_generated_cmp_list.len());
+            sifr_generated_cmp_list
+                .get(::sifr_runtime::to_usize_proven(&sifr_generated_cmp_norm))
+                .map(::std::string::String::as_str)
+        } == Some("world");
         eof_ok = &SifrInt::from(lines.len()) == &SifrInt::from_i64(2);
         Ok(())
     })();

@@ -237,7 +237,7 @@ mod sifr_generated_project_nominals {
     {
         type Output = SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T>;
         fn add(self, other: &SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T>) -> Self::Output {
-            let mut new_counts: HashMap<T, SifrInt> = HashMap::from([]);
+            let mut new_counts: HashMap<T, SifrInt> = HashMap::new();
             for key in Box::new(self.counts.keys().cloned().collect::<Vec<_>>().into_iter()) {
                 let a_val: Option<SifrInt> = self.counts.get(&key).cloned();
                 if let Some(a_val) = a_val {
@@ -286,7 +286,7 @@ mod sifr_generated_project_nominals {
     {
         type Output = SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T>;
         fn sub(self, other: &SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T>) -> Self::Output {
-            let mut new_counts: HashMap<T, SifrInt> = HashMap::from([]);
+            let mut new_counts: HashMap<T, SifrInt> = HashMap::new();
             for key in Box::new(self.counts.keys().cloned().collect::<Vec<_>>().into_iter()) {
                 let a_val: Option<SifrInt> = self.counts.get(&key).cloned();
                 if let Some(a_val) = a_val {
@@ -498,7 +498,7 @@ fn accumulate<T: Clone + 'static + SifrGeneratedAdd>(
         async move |sifr_generated_yielder: SifrGeneratedYielder<T>| {
             let mut state: Vec<T> = Vec::new();
             if let Some(initial) = initial {
-                state.push(initial.clone());
+                state.push(initial);
                 let initial_value: Option<T> = {
                     let sifr_generated_checked_read_collection = &state;
                     let sifr_generated_checked_read_index = SifrInt::from_i64(0);
@@ -514,7 +514,7 @@ fn accumulate<T: Clone + 'static + SifrGeneratedAdd>(
             }
             for item in data {
                 if &SifrInt::from(state.len()) == &SifrInt::from_i64(0) {
-                    state.push(item.clone());
+                    state.push(item);
                 } else {
                     let prev: Option<T> = {
                         let sifr_generated_checked_read_collection = &state;
@@ -655,12 +655,12 @@ fn zip_longest<T: Clone + 'static>(
                 }
                 let mut pair: Vec<T> = Vec::new();
                 if let Some(left_value) = left_value {
-                    pair.push(left_value.clone());
+                    pair.push(left_value);
                 } else {
                     pair.push(fill.clone());
                 }
                 if let Some(right_value) = right_value {
-                    pair.push(right_value.clone());
+                    pair.push(right_value);
                 } else {
                     pair.push(fill.clone());
                 }
@@ -1038,7 +1038,7 @@ impl SifrGeneratedStdlibSifrX2erandomX2eRandom {
             ));
         }
         let mut normalized: Vec<SifrInt> = Vec::new();
-        for word in state.state_words.clone().iter().cloned() {
+        for word in state.state_words.iter().cloned() {
             if &word < &SifrInt::from_i64(0)
                 || &word > &sifr_generated_const_5f4d545f574f52445f4d41534b()
             {
@@ -1070,7 +1070,7 @@ fn sifr_generated_state_word_at(words: &[SifrInt], index: SifrInt) -> SifrInt {
 fn sifr_generated_clone_words(words: &[SifrInt]) -> Vec<SifrInt> {
     let mut copied: Vec<SifrInt> = Vec::new();
     for word in words.iter().cloned() {
-        copied.push(word.clone());
+        copied.push(word);
     }
     copied
 }
@@ -1090,7 +1090,7 @@ fn sifr_generated_seed_words_from_seed(seed_value: SifrInt) -> Vec<SifrInt> {
             * &(&prev ^ &prev.floor_div_known_nonzero(&SifrInt::from_i64(1_073_741_824))))
             + &i)
             & &sifr_generated_const_5f4d545f574f52445f4d41534b();
-        words.push(next_word.clone());
+        words.push(next_word);
         i = &i + &SifrInt::from_i64(1);
     }
     words
@@ -1161,7 +1161,7 @@ fn sample<T: Clone + 'static>(items: &[T], k: SifrInt) -> Result<Vec<T>, ValueEr
     }
     let mut pool: Vec<T> = Vec::new();
     for item in items.iter().cloned() {
-        pool.push(item.clone());
+        pool.push(item);
     }
     let mut generator: SifrGeneratedStdlibSifrX2erandomX2eRandom = sifr_generated_module_random();
     let mut result: Vec<T> = Vec::new();
@@ -1184,7 +1184,7 @@ fn sample<T: Clone + 'static>(items: &[T], k: SifrInt) -> Result<Vec<T>, ValueEr
                 .cloned()
         };
         if let Some(picked) = picked {
-            result.push(picked.clone());
+            result.push(picked);
         }
         let last: Option<T> = {
             let sifr_generated_checked_read_collection = &pool;
@@ -1433,9 +1433,15 @@ fn median(data: &[f64]) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eSt
         ));
     }
     let sorted_data: Vec<f64> = {
-        let mut sifr_generated_sorted_v = data.iter().copied().collect::<Vec<_>>();
-        sifr_generated_sorted_v.sort_by(f64::total_cmp);
-        sifr_generated_sorted_v
+        let mut sifr_generated_sorted_values = data.iter().copied().collect::<Vec<_>>();
+        sifr_generated_sorted_values.sort_by(
+            |sifr_generated_sorted_left, sifr_generated_sorted_right| {
+                sifr_generated_sorted_left
+                    .partial_cmp(sifr_generated_sorted_right)
+                    .unwrap_or(::std::cmp::Ordering::Equal)
+            },
+        );
+        sifr_generated_sorted_values
     };
     let mid: SifrInt = n.floor_div_known_nonzero(&SifrInt::from_i64(2));
     if &n.floor_mod_known_nonzero(&SifrInt::from_i64(2)) == &SifrInt::from_i64(0) {
@@ -1687,9 +1693,15 @@ fn quantiles(
         ));
     }
     let sorted_data: Vec<f64> = {
-        let mut sifr_generated_sorted_v = data.iter().copied().collect::<Vec<_>>();
-        sifr_generated_sorted_v.sort_by(f64::total_cmp);
-        sifr_generated_sorted_v
+        let mut sifr_generated_sorted_values = data.iter().copied().collect::<Vec<_>>();
+        sifr_generated_sorted_values.sort_by(
+            |sifr_generated_sorted_left, sifr_generated_sorted_right| {
+                sifr_generated_sorted_left
+                    .partial_cmp(sifr_generated_sorted_right)
+                    .unwrap_or(::std::cmp::Ordering::Equal)
+            },
+        );
+        sifr_generated_sorted_values
     };
     let m: SifrInt = SifrInt::from(sorted_data.len());
     let mut result: Vec<f64> = Vec::new();

@@ -111,6 +111,15 @@ impl RustEmitter {
                 None => Ok(None),
             },
             Some(ReceiverConvention::SharedBorrow) => {
+                if let HirExpr::Index {
+                    object: collection,
+                    index,
+                    ..
+                } = object
+                    && let Some(witness) = self.checked_place_read_borrow_witness(collection, index)
+                {
+                    return Ok(Some(witness));
+                }
                 if let Some(path) = self.emit_shared_receiver_path(object) {
                     return Ok(Some(path));
                 }
@@ -176,9 +185,19 @@ impl RustEmitter {
                 Some(MutableReceiverTarget::SpecializedIndexedStorage(_)) => None,
                 None => None,
             },
-            Some(ReceiverConvention::SharedBorrow) => self
-                .emit_shared_receiver_path(object)
-                .or_else(|| self.try_lower_registry_expr_strict(object)),
+            Some(ReceiverConvention::SharedBorrow) => {
+                if let HirExpr::Index {
+                    object: collection,
+                    index,
+                    ..
+                } = object
+                    && let Some(witness) = self.checked_place_read_borrow_witness(collection, index)
+                {
+                    return Some(witness);
+                }
+                self.emit_shared_receiver_path(object)
+                    .or_else(|| self.try_lower_registry_expr_strict(object))
+            }
             Some(ReceiverConvention::Owned | ReceiverConvention::OwnedMutable) => {
                 self.try_lower_registry_expr_strict(object)
             }

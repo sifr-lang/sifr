@@ -1,6 +1,6 @@
 //! List method lowerers for registry lowering.
 
-use crate::{RustExpr, RustParam, RustStmt, RustType};
+use crate::{RustExpr, RustParam, RustStmt, RustType, Type};
 
 use super::common::exact_int_to_usize_expr;
 
@@ -104,37 +104,74 @@ pub(super) fn lower_reverse(object: &RustExpr, args: &[RustExpr]) -> Option<Rust
     })
 }
 
-pub(super) fn lower_sort(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
+pub(super) fn lower_sort(
+    object: &RustExpr,
+    element_ty: &Type,
+    args: &[RustExpr],
+) -> Option<RustExpr> {
     match args {
-        [] => Some(RustExpr::MethodCall {
-            receiver: Box::new(object.clone()),
-            method: "sort".to_string(),
-            args: vec![],
-        }),
+        [] => Some(sort_list_expr(object, element_ty, None)),
         [reverse] => Some(RustExpr::If {
             cond: Box::new(reverse.clone()),
-            then_expr: Box::new(RustExpr::Block {
-                stmts: vec![
-                    RustStmt::Expr(RustExpr::MethodCall {
-                        receiver: Box::new(object.clone()),
-                        method: "sort".to_string(),
-                        args: vec![],
-                    }),
-                    RustStmt::Expr(RustExpr::MethodCall {
-                        receiver: Box::new(object.clone()),
-                        method: "reverse".to_string(),
-                        args: vec![],
-                    }),
-                ],
-                expr: None,
-            }),
-            else_expr: Some(Box::new(RustExpr::MethodCall {
-                receiver: Box::new(object.clone()),
-                method: "sort".to_string(),
-                args: vec![],
-            })),
+            then_expr: Box::new(sort_list_expr(object, element_ty, Some(true))),
+            else_expr: Some(Box::new(sort_list_expr(object, element_ty, Some(false)))),
         }),
         _ => None,
+    }
+}
+
+fn sort_list_expr(object: &RustExpr, element_ty: &Type, descending: Option<bool>) -> RustExpr {
+    if descending.is_none() && !matches!(element_ty.resolve_alias(), Type::Float) {
+        return RustExpr::MethodCall {
+            receiver: Box::new(object.clone()),
+            method: "sort".to_string(),
+            args: Vec::new(),
+        };
+    }
+    let (left, right) = if descending == Some(true) {
+        ("__right", "__left")
+    } else {
+        ("__left", "__right")
+    };
+    let comparison = if matches!(element_ty.resolve_alias(), Type::Float) {
+        RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident(left.to_string())),
+                method: "partial_cmp".to_string(),
+                args: vec![RustExpr::Ident(right.to_string())],
+            }),
+            method: "unwrap_or".to_string(),
+            args: vec![RustExpr::Path(vec![
+                "std".to_string(),
+                "cmp".to_string(),
+                "Ordering".to_string(),
+                "Equal".to_string(),
+            ])],
+        }
+    } else {
+        RustExpr::MethodCall {
+            receiver: Box::new(RustExpr::Ident(left.to_string())),
+            method: "cmp".to_string(),
+            args: vec![RustExpr::Ident(right.to_string())],
+        }
+    };
+    RustExpr::MethodCall {
+        receiver: Box::new(object.clone()),
+        method: "sort_by".to_string(),
+        args: vec![RustExpr::Closure {
+            params: vec![
+                RustParam::Named {
+                    name: "__left".to_string(),
+                    ty: RustType::Named("_".to_string()),
+                },
+                RustParam::Named {
+                    name: "__right".to_string(),
+                    ty: RustType::Named("_".to_string()),
+                },
+            ],
+            body: Box::new(comparison),
+            is_move: false,
+        }],
     }
 }
 

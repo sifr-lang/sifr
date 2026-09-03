@@ -235,7 +235,8 @@ fn main() {
             ))
         })()?;
         writer.write_bytes(&vec![
-            98u8, 121u8, 116u8, 101u8, 115u8, 95u8, 102u8, 105u8, 108u8, 101u8, 95u8, 105u8, 111u8,
+            98_u8, 121_u8, 116_u8, 101_u8, 115_u8, 95_u8, 102_u8, 105_u8, 108_u8, 101_u8, 95_u8,
+            105_u8, 111_u8,
         ])?;
         writer.close();
         let mut reader: SifrGeneratedIoFileHandle = (|| {
@@ -255,8 +256,8 @@ fn main() {
         reader.close();
         loaded_ok = loaded
             == vec![
-                98u8, 121u8, 116u8, 101u8, 115u8, 95u8, 102u8, 105u8, 108u8, 101u8, 95u8, 105u8,
-                111u8,
+                98_u8, 121_u8, 116_u8, 101_u8, 115_u8, 95_u8, 102_u8, 105_u8, 108_u8, 101_u8,
+                95_u8, 105_u8, 111_u8,
             ];
         ints_ok = format!(
             "{:?}",

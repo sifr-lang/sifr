@@ -45,3 +45,18 @@ pub(super) fn lower_popleft(object: &RustExpr, args: &[RustExpr]) -> Option<Rust
         args: vec![],
     })
 }
+
+pub(super) fn lower_reverse(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
+    if !args.is_empty() {
+        return None;
+    }
+    Some(RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(object.clone()),
+            method: "make_contiguous".to_string(),
+            args: Vec::new(),
+        }),
+        method: "reverse".to_string(),
+        args: Vec::new(),
+    })
+}

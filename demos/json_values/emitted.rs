@@ -117,7 +117,7 @@ mod sifr_generated_project_nominals {
             if !self.is_object() {
                 return None;
             }
-            for (item_key, item_value) in self.object_items.as_ref().clone().iter().cloned() {
+            for (item_key, item_value) in self.object_items.iter().cloned() {
                 if item_key == *key {
                     return Some(item_value);
                 }
@@ -166,16 +166,16 @@ mod sifr_generated_project_nominals {
             if str_value.is_none() {
                 tokens.push(String::new());
             } else if let Some(str_value) = str_value {
-                tokens.push(str_value.to_owned());
+                tokens.push(str_value);
             }
         } else if value.kind.clone() == "array" {
             tokens.push(SifrInt::from(value.array_items.len()).to_string());
-            for item in value.array_items.as_ref().clone().iter().cloned() {
+            for item in value.array_items.iter().cloned() {
                 tokens = sifr_generated_json_append_tokens(tokens, &item);
             }
         } else if value.kind.clone() == "object" {
             tokens.push(SifrInt::from(value.object_items.len()).to_string());
-            for (key, item_value) in value.object_items.as_ref().clone().iter().cloned() {
+            for (key, item_value) in value.object_items.iter().cloned() {
                 tokens.push(key.to_owned());
                 tokens = sifr_generated_json_append_tokens(tokens, &item_value);
             }
@@ -304,7 +304,7 @@ fn sifr_generated_append_array_item(
     mut value: SifrGeneratedStdlibSifrX2ejsonX2eJsonValue,
     item: SifrGeneratedStdlibSifrX2ejsonX2eJsonValue,
 ) -> SifrGeneratedStdlibSifrX2ejsonX2eJsonValue {
-    value.array_items.push(item.clone());
+    value.array_items.push(item);
     value
 }
 fn sifr_generated_append_object_item(
@@ -312,9 +312,7 @@ fn sifr_generated_append_object_item(
     key: String,
     item_value: SifrGeneratedStdlibSifrX2ejsonX2eJsonValue,
 ) -> SifrGeneratedStdlibSifrX2ejsonX2eJsonValue {
-    value
-        .object_items
-        .push((key.to_owned(), item_value.clone()));
+    value.object_items.push((key, item_value));
     value
 }
 fn from_array(
@@ -609,13 +607,11 @@ fn sifr_generated_json_decode_value_at(
                         tokens,
                         &next_index + &SifrInt::from_i64(1),
                     )?;
-                object_value
-                    .object_items
-                    .push((key.to_owned(), item_result.0));
+                object_value.object_items.push((key, item_result.0));
                 next_index = item_result.1.clone();
                 consumed = &consumed + &SifrInt::from_i64(1);
             }
-            return Ok(Ok((object_value, next_index.clone())));
+            return Ok(Ok((object_value, next_index)));
         }
         Err(JSONDecodeError::new({
             let mut sifr_generated_concat: String = String::with_capacity(43usize + tag.len());
@@ -681,16 +677,16 @@ fn sifr_generated_json_append_tokens(
         if str_value.is_none() {
             tokens.push(String::new());
         } else if let Some(str_value) = str_value {
-            tokens.push(str_value.to_owned());
+            tokens.push(str_value);
         }
     } else if value.kind.clone() == "array" {
         tokens.push(SifrInt::from(value.array_items.len()).to_string());
-        for item in value.array_items.as_ref().clone().iter().cloned() {
+        for item in value.array_items.iter().cloned() {
             tokens = sifr_generated_json_append_tokens(tokens, &item);
         }
     } else if value.kind.clone() == "object" {
         tokens.push(SifrInt::from(value.object_items.len()).to_string());
-        for (key, item_value) in value.object_items.as_ref().clone().iter().cloned() {
+        for (key, item_value) in value.object_items.iter().cloned() {
             tokens.push(key.to_owned());
             tokens = sifr_generated_json_append_tokens(tokens, &item_value);
         }

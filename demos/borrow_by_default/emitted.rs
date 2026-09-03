@@ -10,9 +10,11 @@ fn get_first_char(s: &str) -> String {
         let sifr_generated_string_index = SifrInt::from_i64(0);
         let sifr_generated_string_index_normalized =
             sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_s.len());
-        sifr_generated_chars_s.get(sifr_generated_string_index_normalized)
+        sifr_generated_chars_s
+            .get(sifr_generated_string_index_normalized)
+            .copied()
     }
-    .map(::std::string::ToString::to_string);
+    .map(|character| character.to_string());
     let Some(result_value_9b51cd7cd76778c4) = result else {
         return String::new();
     };

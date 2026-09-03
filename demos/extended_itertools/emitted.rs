@@ -112,7 +112,7 @@ fn sifr_generated_collect_iterator<T: Clone + 'static>(
 ) -> Vec<T> {
     let mut collected: Vec<T> = Vec::new();
     for item in data {
-        collected.push(item.clone());
+        collected.push(item);
     }
     collected
 }
@@ -134,7 +134,7 @@ fn product<T: Clone + 'static>(
             let mut repetition: SifrInt = SifrInt::from_i64(0);
             while &repetition < &repeat {
                 for iterable in iterables.iter().cloned() {
-                    pools.push(iterable.to_vec());
+                    pools.push(iterable);
                 }
                 repetition = &repetition + &SifrInt::from_i64(1);
             }
@@ -198,7 +198,7 @@ fn product<T: Clone + 'static>(
                     let Some(value_value_7ce4fd9430e80cea) = value else {
                         return;
                     };
-                    row.push(value_value_7ce4fd9430e80cea.clone());
+                    row.push(value_value_7ce4fd9430e80cea);
                     pool_index = &pool_index + &SifrInt::from_i64(1);
                 }
                 sifr_generated_yielder.suspend(row.to_vec()).await;
@@ -361,7 +361,7 @@ fn permutations<T: Clone + 'static>(
                 let Some(value_value_7ce4fd9430e80cea) = value else {
                     return;
                 };
-                first.push(value_value_7ce4fd9430e80cea.clone());
+                first.push(value_value_7ce4fd9430e80cea);
                 index = &index + &SifrInt::from_i64(1);
             }
             sifr_generated_yielder.suspend(first.to_vec()).await;
@@ -621,7 +621,7 @@ fn permutations<T: Clone + 'static>(
                             let Some(item_value_2841a0c596d6f426) = item else {
                                 return;
                             };
-                            row.push(item_value_2841a0c596d6f426.clone());
+                            row.push(item_value_2841a0c596d6f426);
                             row_index = &row_index + &SifrInt::from_i64(1);
                         }
                         sifr_generated_yielder.suspend(row.to_vec()).await;
@@ -677,7 +677,7 @@ fn combinations<T: Clone + 'static>(
                     let Some(value_value_7ce4fd9430e80cea) = value else {
                         return;
                     };
-                    row.push(value_value_7ce4fd9430e80cea.clone());
+                    row.push(value_value_7ce4fd9430e80cea);
                 }
                 sifr_generated_yielder.suspend(row.to_vec()).await;
                 let mut position: SifrInt = &r - &SifrInt::from_i64(1);
@@ -834,7 +834,7 @@ fn combinations_with_replacement<T: Clone + 'static>(
                     let Some(value_value_7ce4fd9430e80cea) = value else {
                         return;
                     };
-                    row.push(value_value_7ce4fd9430e80cea.clone());
+                    row.push(value_value_7ce4fd9430e80cea);
                 }
                 sifr_generated_yielder.suspend(row.to_vec()).await;
                 let mut position: SifrInt = &r - &SifrInt::from_i64(1);
@@ -927,7 +927,7 @@ fn accumulate<T: Clone + 'static + SifrGeneratedAdd>(
         async move |sifr_generated_yielder: SifrGeneratedYielder<T>| {
             let mut state: Vec<T> = Vec::new();
             if let Some(initial) = initial {
-                state.push(initial.clone());
+                state.push(initial);
                 let initial_value: Option<T> = {
                     let sifr_generated_checked_read_collection = &state;
                     let sifr_generated_checked_read_index = SifrInt::from_i64(0);
@@ -943,7 +943,7 @@ fn accumulate<T: Clone + 'static + SifrGeneratedAdd>(
             }
             for item in data {
                 if &SifrInt::from(state.len()) == &SifrInt::from_i64(0) {
-                    state.push(item.clone());
+                    state.push(item);
                 } else {
                     let prev: Option<T> = {
                         let sifr_generated_checked_read_collection = &state;
@@ -1084,12 +1084,12 @@ fn zip_longest<T: Clone + 'static>(
                 }
                 let mut pair: Vec<T> = Vec::new();
                 if let Some(left_value) = left_value {
-                    pair.push(left_value.clone());
+                    pair.push(left_value);
                 } else {
                     pair.push(fill.clone());
                 }
                 if let Some(right_value) = right_value {
-                    pair.push(right_value.clone());
+                    pair.push(right_value);
                 } else {
                     pair.push(fill.clone());
                 }

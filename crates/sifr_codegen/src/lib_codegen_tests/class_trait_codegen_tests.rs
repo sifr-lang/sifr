@@ -107,10 +107,15 @@ def order() -> list[Local]:
 "#,
     );
 
-    assert!(rust_code.contains("rank_of(__left)"), "{rust_code}");
-    assert!(rust_code.contains("rank_of(__right)"), "{rust_code}");
-    assert!(!rust_code.contains("__left.clone()"), "{rust_code}");
-    assert!(!rust_code.contains("__right.clone()"), "{rust_code}");
+    assert!(
+        rust_code.contains("rank_of(&__sifr_sorted_value)"),
+        "{rust_code}"
+    );
+    assert_eq!(rust_code.matches("rank_of(").count(), 2, "{rust_code}");
+    assert!(
+        !rust_code.contains("__sifr_sorted_value.clone()"),
+        "{rust_code}"
+    );
 }
 
 #[test]

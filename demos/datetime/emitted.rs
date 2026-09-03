@@ -532,9 +532,11 @@ fn sifr_generated_substring(value: &str, start: SifrInt, end: SifrInt) -> String
             let sifr_generated_string_index = i.clone();
             let sifr_generated_string_index_normalized = sifr_generated_string_index
                 .normalize_index_or_len(sifr_generated_chars_value.len());
-            sifr_generated_chars_value.get(sifr_generated_string_index_normalized)
+            sifr_generated_chars_value
+                .get(sifr_generated_string_index_normalized)
+                .copied()
         }
-        .map(::std::string::ToString::to_string);
+        .map(|character| character.to_string());
         if let Some(ch) = ch {
             result.push_str(ch.as_str());
         }
@@ -550,57 +552,137 @@ fn sifr_generated_parse_datetime_iso(
     value: &str,
 ) -> Result<(SifrInt, SifrInt, SifrInt, SifrInt, SifrInt, SifrInt), ValueError> {
     let sifr_generated_chars_value: Vec<char> = value.chars().collect::<Vec<char>>();
-    let Some(sifr_generated_checked_value_2) = {
+    let Some(_checked_value_2) = {
         let sifr_generated_string_index = SifrInt::from_i64(4);
         let sifr_generated_string_index_normalized =
             sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_value.len());
-        sifr_generated_chars_value.get(sifr_generated_string_index_normalized)
+        sifr_generated_chars_value
+            .get(sifr_generated_string_index_normalized)
+            .copied()
     }
-    .map(::std::string::ToString::to_string) else {
+    .map(|character| character.to_string()) else {
         return Err(ValueError::new("invalid datetime string".to_string()));
     };
-    let Some(sifr_generated_checked_value_3) = {
+    let Some(_checked_value_3) = {
         let sifr_generated_string_index = SifrInt::from_i64(7);
         let sifr_generated_string_index_normalized =
             sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_value.len());
-        sifr_generated_chars_value.get(sifr_generated_string_index_normalized)
+        sifr_generated_chars_value
+            .get(sifr_generated_string_index_normalized)
+            .copied()
     }
-    .map(::std::string::ToString::to_string) else {
+    .map(|character| character.to_string()) else {
         return Err(ValueError::new("invalid datetime string".to_string()));
     };
-    let Some(sifr_generated_checked_value_4) = {
+    let Some(_checked_value_4) = {
         let sifr_generated_string_index = SifrInt::from_i64(10);
         let sifr_generated_string_index_normalized =
             sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_value.len());
-        sifr_generated_chars_value.get(sifr_generated_string_index_normalized)
+        sifr_generated_chars_value
+            .get(sifr_generated_string_index_normalized)
+            .copied()
     }
-    .map(::std::string::ToString::to_string) else {
+    .map(|character| character.to_string()) else {
         return Err(ValueError::new("invalid datetime string".to_string()));
     };
-    let Some(sifr_generated_checked_value_5) = {
+    let Some(_checked_value_5) = {
         let sifr_generated_string_index = SifrInt::from_i64(13);
         let sifr_generated_string_index_normalized =
             sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_value.len());
-        sifr_generated_chars_value.get(sifr_generated_string_index_normalized)
+        sifr_generated_chars_value
+            .get(sifr_generated_string_index_normalized)
+            .copied()
     }
-    .map(::std::string::ToString::to_string) else {
+    .map(|character| character.to_string()) else {
         return Err(ValueError::new("invalid datetime string".to_string()));
     };
-    let Some(sifr_generated_checked_value_6) = {
+    let Some(_checked_value_6) = {
         let sifr_generated_string_index = SifrInt::from_i64(16);
         let sifr_generated_string_index_normalized =
             sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_value.len());
-        sifr_generated_chars_value.get(sifr_generated_string_index_normalized)
+        sifr_generated_chars_value
+            .get(sifr_generated_string_index_normalized)
+            .copied()
     }
-    .map(::std::string::ToString::to_string) else {
+    .map(|character| character.to_string()) else {
         return Err(ValueError::new("invalid datetime string".to_string()));
     };
-    if sifr_generated_checked_value_2.clone() != "-"
-        || sifr_generated_checked_value_3.clone() != "-"
-        || sifr_generated_checked_value_4.clone() != "T"
-        || sifr_generated_checked_value_5.clone() != ":"
-        || sifr_generated_checked_value_6.clone() != ":"
-    {
+    if {
+        let sifr_generated_string_index = SifrInt::from_i64(4);
+        let sifr_generated_string_index_normalized =
+            sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_value.len());
+        sifr_generated_chars_value
+            .get(sifr_generated_string_index_normalized)
+            .copied()
+    } != Some("-").and_then(|sifr_generated_cmp_s| {
+        let mut sifr_generated_cmp_chars = sifr_generated_cmp_s.chars();
+        let sifr_generated_cmp_first = sifr_generated_cmp_chars.next();
+        if sifr_generated_cmp_chars.next().is_some() {
+            None
+        } else {
+            sifr_generated_cmp_first
+        }
+    }) || {
+        let sifr_generated_string_index = SifrInt::from_i64(7);
+        let sifr_generated_string_index_normalized =
+            sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_value.len());
+        sifr_generated_chars_value
+            .get(sifr_generated_string_index_normalized)
+            .copied()
+    } != Some("-").and_then(|sifr_generated_cmp_s| {
+        let mut sifr_generated_cmp_chars = sifr_generated_cmp_s.chars();
+        let sifr_generated_cmp_first = sifr_generated_cmp_chars.next();
+        if sifr_generated_cmp_chars.next().is_some() {
+            None
+        } else {
+            sifr_generated_cmp_first
+        }
+    }) || {
+        let sifr_generated_string_index = SifrInt::from_i64(10);
+        let sifr_generated_string_index_normalized =
+            sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_value.len());
+        sifr_generated_chars_value
+            .get(sifr_generated_string_index_normalized)
+            .copied()
+    } != Some("T").and_then(|sifr_generated_cmp_s| {
+        let mut sifr_generated_cmp_chars = sifr_generated_cmp_s.chars();
+        let sifr_generated_cmp_first = sifr_generated_cmp_chars.next();
+        if sifr_generated_cmp_chars.next().is_some() {
+            None
+        } else {
+            sifr_generated_cmp_first
+        }
+    }) || {
+        let sifr_generated_string_index = SifrInt::from_i64(13);
+        let sifr_generated_string_index_normalized =
+            sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_value.len());
+        sifr_generated_chars_value
+            .get(sifr_generated_string_index_normalized)
+            .copied()
+    } != Some(":").and_then(|sifr_generated_cmp_s| {
+        let mut sifr_generated_cmp_chars = sifr_generated_cmp_s.chars();
+        let sifr_generated_cmp_first = sifr_generated_cmp_chars.next();
+        if sifr_generated_cmp_chars.next().is_some() {
+            None
+        } else {
+            sifr_generated_cmp_first
+        }
+    }) || {
+        let sifr_generated_string_index = SifrInt::from_i64(16);
+        let sifr_generated_string_index_normalized =
+            sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_value.len());
+        sifr_generated_chars_value
+            .get(sifr_generated_string_index_normalized)
+            .copied()
+    } != Some(":").and_then(|sifr_generated_cmp_s| {
+        let mut sifr_generated_cmp_chars = sifr_generated_cmp_s.chars();
+        let sifr_generated_cmp_first = sifr_generated_cmp_chars.next();
+        if sifr_generated_cmp_chars.next().is_some() {
+            None
+        } else {
+            sifr_generated_cmp_first
+        }
+    }) {
         return Err(ValueError::new("invalid datetime string".to_string()));
     }
     let sifr_generated_try_res: Result<
@@ -649,14 +731,7 @@ fn sifr_generated_parse_datetime_iso(
         .map_err(|e| ParseError {
             message: e.to_string(),
         })?;
-        Ok(Ok((
-            year.clone(),
-            month.clone(),
-            day.clone(),
-            hour.clone(),
-            minute.clone(),
-            second.clone(),
-        )))
+        Ok(Ok((year, month, day, hour, minute, second)))
     })();
     sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
         let _e_5f65 = sifr_generated_try_err.clone();
@@ -683,11 +758,18 @@ fn sifr_generated_timezone_offset_from_text(text: &str) -> Result<SifrInt, Value
         let sifr_generated_string_index = SifrInt::from_i64(6);
         let sifr_generated_string_index_normalized =
             sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_text.len());
-        sifr_generated_chars_text.get(sifr_generated_string_index_normalized)
-    }
-    .map(::std::string::ToString::to_string)
-        != Some(":".to_string())
-    {
+        sifr_generated_chars_text
+            .get(sifr_generated_string_index_normalized)
+            .copied()
+    } != Some(":").and_then(|sifr_generated_cmp_s| {
+        let mut sifr_generated_cmp_chars = sifr_generated_cmp_s.chars();
+        let sifr_generated_cmp_first = sifr_generated_cmp_chars.next();
+        if sifr_generated_cmp_chars.next().is_some() {
+            None
+        } else {
+            sifr_generated_cmp_first
+        }
+    }) {
         return Err(ValueError::new("invalid timezone string".to_string()));
     }
     let sifr_generated_try_res: Result<Result<SifrInt, ValueError>, ParseError> = (|| {

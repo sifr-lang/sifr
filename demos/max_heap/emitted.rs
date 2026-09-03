@@ -218,7 +218,7 @@ fn drain(heap: &mut Vec<SifrInt>) -> Vec<SifrInt> {
     while &SifrInt::from(heap.len()) > &SifrInt::from_i64(0) {
         let value: Option<SifrInt> = sifr_generated_heappop_max(heap);
         if let Some(value) = value.clone() {
-            result.push(value.clone());
+            result.push(value);
         }
     }
     result

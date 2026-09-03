@@ -21,8 +21,12 @@ fn main() {
         .collect::<Vec<_>>()
     );
     println!("{:?}", {
-        let mut sifr_generated_sorted_v = Box::new(nums.iter().cloned()).collect::<Vec<_>>();
-        sifr_generated_sorted_v.sort();
-        sifr_generated_sorted_v
+        let mut sifr_generated_sorted_values = Box::new(nums.iter().cloned()).collect::<Vec<_>>();
+        sifr_generated_sorted_values.sort_by(
+            |sifr_generated_sorted_left, sifr_generated_sorted_right| {
+                sifr_generated_sorted_left.cmp(&sifr_generated_sorted_right)
+            },
+        );
+        sifr_generated_sorted_values
     });
 }

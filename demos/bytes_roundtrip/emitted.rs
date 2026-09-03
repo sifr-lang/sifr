@@ -16,8 +16,8 @@ fn main() {
     let payload: Vec<u8> = vec![
         98u8, 105u8, 110u8, 97u8, 114u8, 121u8, 45u8, 115u8, 97u8, 109u8, 112u8, 108u8, 101u8,
     ];
-    assert!(payload.starts_with(&vec![98u8, 105u8, 110u8, 97u8, 114u8, 121u8]));
-    assert!(payload.ends_with(&vec![115u8, 97u8, 109u8, 112u8, 108u8, 101u8]));
+    assert!(payload.starts_with(&vec![98_u8, 105_u8, 110_u8, 97_u8, 114_u8, 121_u8]));
+    assert!(payload.ends_with(&vec![115_u8, 97_u8, 109_u8, 112_u8, 108_u8, 101_u8]));
     let mut conversion_ok: bool = false;
     let sifr_generated_try_res: Result<(), ParseError> = (|| {
         let as_hex: String = {

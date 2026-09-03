@@ -71,6 +71,7 @@ pub(crate) use helpers::{
     collect_locally_defined_vars, collect_mutated_vars_with_sigs,
     collect_referenced_vars_with_types, default_param_convention,
 };
+mod body_analysis;
 mod borrowed_string_compare;
 mod checked_place;
 mod checked_place_mutation;

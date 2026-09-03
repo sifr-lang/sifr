@@ -66,7 +66,10 @@ fn borrowed_string_iterable_literals_store_owned_values() {
         rust_code.contains("let chunk: Vec<String> = vec![text.to_owned()];"),
         "{rust_code}"
     );
-    assert!(rust_code.contains("HashSet::from([text.to_owned()])"));
+    assert!(
+        rust_code.contains("__sifr_registry_set_literal.insert(text.to_owned())"),
+        "{rust_code}"
+    );
     assert!(rust_code.contains("(chunk).iter().cloned().collect::<Vec<_>>()"));
 }
 

@@ -9,7 +9,7 @@ fn main() {
     let b: Vec<u8> = vec![1u8, 2u8];
     let c: Vec<u8> = {
         let mut sifr_generated_v = b.to_vec();
-        sifr_generated_v.extend(vec![3u8].iter().cloned());
+        sifr_generated_v.extend(vec![3_u8].iter().cloned());
         sifr_generated_v
     };
     assert_eq!(a, c);

@@ -17,7 +17,11 @@ fn main() {
     println!("{words:?}");
     let mut mapping: HashMap<String, SifrInt> =
         HashMap::from([("base".to_string(), SifrInt::from_i64(1))]);
-    mapping.extend(HashMap::from([("extra".to_string(), SifrInt::from_i64(2))]));
+    mapping.extend({
+        let mut sifr_generated_registry_dict_literal = ::std::collections::HashMap::new();
+        sifr_generated_registry_dict_literal.insert("extra".to_string(), SifrInt::from_i64(2));
+        sifr_generated_registry_dict_literal
+    });
     println!(
         "{}",
         mapping

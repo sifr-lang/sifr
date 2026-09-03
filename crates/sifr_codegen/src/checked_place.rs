@@ -6,8 +6,8 @@ mod nonempty_lists;
 mod option_reads;
 mod witnesses;
 
-pub(crate) use witnesses::{CheckedDictReadGuard, CheckedPlaceReadWitness};
-use witnesses::{checked_place_dependencies, checked_place_expr_token, checked_place_read_key};
+pub(crate) use witnesses::{CheckedDictReadGuard, CheckedPlaceReadWitness, checked_place_read_key};
+use witnesses::{checked_place_dependencies, checked_place_expr_token};
 
 fn condition_supports_checked_sequence_read(
     condition: &crate::HirExpr,
@@ -447,8 +447,9 @@ impl RustEmitter {
             return Ok(None);
         }
 
-        let reads =
-            crate::hir_analysis::queries::proven_collection_reads(std::slice::from_ref(stmt));
+        let reads = self
+            .body_analysis
+            .proven_reads_in(std::slice::from_ref(stmt));
         let mut guards = Vec::new();
         let mut previous_witnesses = Vec::new();
         for read in reads {

@@ -102,7 +102,7 @@ mod sifr_generated_project_nominals {
             for key in self.counts.keys().cloned().collect::<Vec<_>>() {
                 let count: Option<SifrInt> = self.counts.get(&key).cloned();
                 if let Some(count) = count.clone() {
-                    let entry: (T, SifrInt) = (key, count.clone());
+                    let entry: (T, SifrInt) = (key.clone(), count.clone());
                     result.push(entry.clone());
                 }
             }
@@ -278,7 +278,7 @@ mod sifr_generated_project_nominals {
     {
         type Output = SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T>;
         fn add(self, other: &SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T>) -> Self::Output {
-            let mut new_counts: HashMap<T, SifrInt> = HashMap::from([]);
+            let mut new_counts: HashMap<T, SifrInt> = HashMap::new();
             for key in Box::new(self.counts.keys().cloned().collect::<Vec<_>>().into_iter()) {
                 let a_val: Option<SifrInt> = self.counts.get(&key).cloned();
                 if let Some(a_val) = a_val {
@@ -327,7 +327,7 @@ mod sifr_generated_project_nominals {
     {
         type Output = SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T>;
         fn sub(self, other: &SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T>) -> Self::Output {
-            let mut new_counts: HashMap<T, SifrInt> = HashMap::from([]);
+            let mut new_counts: HashMap<T, SifrInt> = HashMap::new();
             for key in Box::new(self.counts.keys().cloned().collect::<Vec<_>>().into_iter()) {
                 let a_val: Option<SifrInt> = self.counts.get(&key).cloned();
                 if let Some(a_val) = a_val {
@@ -405,10 +405,12 @@ fn main() {
     println!("{}", c.total());
     let c2: SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<String> =
         SifrGeneratedStdlibSifrX2ecollectionsX2eCounter::new(
-            Some(HashMap::from([
-                ("x".to_string(), SifrInt::from_i64(10)),
-                ("y".to_string(), SifrInt::from_i64(20)),
-            ])),
+            Some({
+                let mut sifr_generated_registry_dict_literal = ::std::collections::HashMap::new();
+                sifr_generated_registry_dict_literal.insert("x".to_string(), SifrInt::from_i64(10));
+                sifr_generated_registry_dict_literal.insert("y".to_string(), SifrInt::from_i64(20));
+                sifr_generated_registry_dict_literal
+            }),
             None,
         );
     println!("{}", c2.get(&"x".to_string(), &SifrInt::from_i64(0)));

@@ -132,7 +132,7 @@ mod sifr_generated_project_nominals {
                 return None;
             }
             let mut result: Vec<SifrGeneratedStdlibSifrX2etomllibX2eTomlValue> = Vec::new();
-            for item in self.array_items.as_ref().clone().iter().cloned() {
+            for item in self.array_items.iter().cloned() {
                 result.push(item.clone());
             }
             Some(result)
@@ -148,7 +148,7 @@ mod sifr_generated_project_nominals {
             }
             let mut result: Vec<(String, SifrGeneratedStdlibSifrX2etomllibX2eTomlValue)> =
                 Vec::new();
-            for (key, value) in self.table_items.as_ref().clone().iter().cloned() {
+            for (key, value) in self.table_items.iter().cloned() {
                 result.push((key.to_owned(), value.clone()));
             }
             Some(result)
@@ -180,7 +180,7 @@ mod sifr_generated_project_nominals {
             if !self.is_table() {
                 return None;
             }
-            for (item_key, item_value) in self.table_items.as_ref().clone().iter().cloned() {
+            for (item_key, item_value) in self.table_items.iter().cloned() {
                 if item_key == *key {
                     return Some(item_value);
                 }
@@ -195,7 +195,7 @@ mod sifr_generated_project_nominals {
             if !self.is_table() {
                 return result;
             }
-            for (item_key, _item_value) in self.table_items.as_ref().clone().iter().cloned() {
+            for (item_key, _item_value) in self.table_items.iter().cloned() {
                 result.push(item_key.to_owned());
             }
             result
@@ -208,7 +208,7 @@ mod sifr_generated_project_nominals {
             if !self.is_table() {
                 return result;
             }
-            for (_item_key, item_value) in self.table_items.as_ref().clone().iter().cloned() {
+            for (_item_key, item_value) in self.table_items.iter().cloned() {
                 result.push(item_value.clone());
             }
             result
@@ -222,7 +222,7 @@ mod sifr_generated_project_nominals {
             }
             let mut result: Vec<(String, SifrGeneratedStdlibSifrX2etomllibX2eTomlValue)> =
                 Vec::new();
-            for (key, value) in self.table_items.as_ref().clone().iter().cloned() {
+            for (key, value) in self.table_items.iter().cloned() {
                 result.push((key.to_owned(), value.clone()));
             }
             result
@@ -573,13 +573,11 @@ pub fn sifr_generated_decode_toml_value_at(
                         tokens,
                         &next_index + &SifrInt::from_i64(1),
                     )?;
-                table_value
-                    .table_items
-                    .push((key.to_owned(), item_result.0));
+                table_value.table_items.push((key, item_result.0));
                 next_index = item_result.1.clone();
                 consumed = &consumed + &SifrInt::from_i64(1);
             }
-            return Ok(Ok((table_value, next_index.clone())));
+            return Ok(Ok((table_value, next_index)));
         }
         Err(TOMLDecodeError::new({
             let mut sifr_generated_concat: String = String::with_capacity(43usize + tag.len());

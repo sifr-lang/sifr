@@ -270,7 +270,7 @@ fn nsmallest<T: Clone + 'static + PartialOrd>(n: SifrInt, data: &[T]) -> Vec<T> 
         }
         let val: Option<T> = heappop(&mut heap);
         if let Some(val) = val {
-            result.push(val.clone());
+            result.push(val);
         }
         count = &count + &SifrInt::from_i64(1);
     }
@@ -283,7 +283,7 @@ fn nlargest<T: Clone + 'static + PartialOrd>(n: SifrInt, data: &[T]) -> Vec<T> {
     if &n >= &SifrInt::from(data.len()) {
         let mut result: Vec<T> = Vec::new();
         for val in data.iter().cloned() {
-            result.push(val.clone());
+            result.push(val);
         }
         return result;
     }
@@ -293,7 +293,7 @@ fn nlargest<T: Clone + 'static + PartialOrd>(n: SifrInt, data: &[T]) -> Vec<T> {
     while &SifrInt::from(heap.len()) > &SifrInt::from_i64(0) {
         let val2: Option<T> = heappop(&mut heap);
         if let Some(val2) = val2 {
-            all_sorted.push(val2.clone());
+            all_sorted.push(val2);
         }
     }
     let mut result2: Vec<T> = Vec::new();
@@ -313,7 +313,7 @@ fn nlargest<T: Clone + 'static + PartialOrd>(n: SifrInt, data: &[T]) -> Vec<T> {
                 .cloned()
         };
         if let Some(v) = v {
-            result2.push(v.clone());
+            result2.push(v);
         }
         i = &i - &SifrInt::from_i64(1);
         count = &count + &SifrInt::from_i64(1);

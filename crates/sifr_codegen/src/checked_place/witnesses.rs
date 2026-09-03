@@ -40,7 +40,7 @@ pub(super) fn checked_place_expr_token(expr: &crate::HirExpr) -> Option<String> 
     }
 }
 
-pub(super) fn checked_place_read_key(
+pub(crate) fn checked_place_read_key(
     object: &crate::HirExpr,
     index: &crate::HirExpr,
 ) -> Option<String> {

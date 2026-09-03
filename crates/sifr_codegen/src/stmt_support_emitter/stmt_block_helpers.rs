@@ -599,6 +599,7 @@ impl RustEmitter {
                     )
             }))
             || stmt_needs_performance_lowering(stmt)
+            || self.body_analysis.aggregate_statement_has_last_use(stmt)
     }
 
     pub(crate) fn try_lower_borrowed_move_name_clone_for_ir(

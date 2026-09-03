@@ -46,6 +46,34 @@ impl RustEmitter {
             args,
             places,
             method_return_ty,
+            false,
+        ))
+    }
+
+    pub(crate) fn try_lower_registry_discarded_method_call_expr(
+        &mut self,
+        object: &HirExpr,
+        method: &str,
+        args: &[HirExpr],
+        places: MethodCallPlaces<'_>,
+        method_return_ty: &Type,
+    ) -> Result<Option<crate::RustExpr>, crate::CodegenError> {
+        if method != "setdefault" {
+            return self.try_lower_registry_method_call_expr(
+                object,
+                method,
+                args,
+                places,
+                method_return_ty,
+            );
+        }
+        Ok(self.try_lower_registry_method_call_expr_unchecked(
+            object,
+            method,
+            args,
+            places,
+            method_return_ty,
+            true,
         ))
     }
 
@@ -56,6 +84,7 @@ impl RustEmitter {
         args: &[HirExpr],
         places: MethodCallPlaces<'_>,
         method_return_ty: &Type,
+        discard_result: bool,
     ) -> Option<crate::RustExpr> {
         let effective_object_ty = self.effective_method_object_ty(object);
         let object_ty = crate::resolve_alias_type_for_plain_call(&effective_object_ty);
@@ -118,8 +147,7 @@ impl RustEmitter {
                     let key_arg = Self::build_dict_lookup_key_arg_for_ir(
                         Self::clone_non_copy_name_expr_for_ir(index, lowered_index),
                     );
-                    let pushed_arg =
-                        Self::clone_owned_append_arg_expr_for_ir(&args[0], lowered_arg);
+                    let pushed_arg = self.clone_owned_append_arg_expr_for_ir(&args[0], lowered_arg);
                     return Some(crate::RustExpr::Block {
                         stmts: vec![crate::RustStmt::IfLet {
                             pattern: "Some(__elem)".to_string(),
@@ -147,6 +175,9 @@ impl RustEmitter {
                 ..
             } = object
             {
+                if let Some(bucket) = self.checked_place_read_borrow_witness(index_object, index) {
+                    return Some(self.lower_checked_place_len_with_witness(object, bucket));
+                }
                 let effective_index_object_ty = self.effective_registry_expr_ty(index_object);
                 if let Type::Dict(_, value_ty) =
                     crate::resolve_alias_type_for_plain_call(&effective_index_object_ty)
@@ -253,7 +284,7 @@ impl RustEmitter {
             }
             (Type::List(element_ty), "insert") => vec![(1, element_ty.as_ref())],
             (Type::Set(element_ty), "add") => vec![(0, element_ty.as_ref())],
-            (Type::Dict(key_ty, value_ty), "setdefault") => {
+            (Type::Dict(key_ty, value_ty), "setdefault") if discard_result => {
                 vec![(0, key_ty.as_ref()), (1, value_ty.as_ref())]
             }
             _ => Vec::new(),
@@ -266,16 +297,8 @@ impl RustEmitter {
                     argument,
                     lowered_arg.clone(),
                 );
-                *lowered_arg = if matches!((object_ty, method), (Type::Dict(_, _), "setdefault")) {
-                    lowered_arg.clone()
-                } else if matches!((object_ty, method), (Type::Set(_), "add")) {
-                    self.materialize_borrowed_parameter_for_owned_boundary(
-                        argument,
-                        lowered_arg.clone(),
-                    )
-                } else {
-                    Self::clone_owned_append_arg_expr_for_ir(argument, lowered_arg.clone())
-                };
+                *lowered_arg =
+                    self.clone_owned_append_arg_expr_for_ir(argument, lowered_arg.clone());
             }
         }
 
@@ -415,12 +438,13 @@ impl RustEmitter {
             }
         }
 
-        let lowered = methods::lower_method_with_context(
+        let lowered = methods::lower_method_with_discard_context(
             object_ty,
             method,
             &object_expr,
             &arg_exprs,
             is_deque_data_field,
+            discard_result,
         )?;
         let lowered_expr = Self::unwrap_compiler_verified_nonempty_pop_result(
             object_ty,
@@ -633,72 +657,6 @@ impl RustEmitter {
         None
     }
 
-    pub(crate) fn try_lower_last_use_set_add_expr(
-        &mut self,
-        expr: &HirExpr,
-        preceding_stmts: &[crate::HirStmt],
-        following_stmts: &[crate::HirStmt],
-    ) -> Option<crate::RustExpr> {
-        let HirExpr::MethodCall {
-            object,
-            method,
-            args,
-            receiver_convention,
-            receiver_target,
-            ..
-        } = expr
-        else {
-            return None;
-        };
-        if method != "add" || args.len() != 1 {
-            return None;
-        }
-        if self.stmt_block_depth > 2 {
-            return None;
-        }
-        if !matches!(
-            crate::resolve_alias_type_for_plain_call(object.ty()),
-            Type::Set(_)
-        ) {
-            return None;
-        }
-        let HirExpr::Name { name, ty, .. } = &args[0] else {
-            return None;
-        };
-        if self.borrowed_params.contains(name)
-            || self.mut_borrowed_params.contains(name)
-            || crate::helpers::is_copy_type_for_codegen(ty)
-        {
-            return None;
-        }
-        if !preceding_stmts.iter().any(|stmt| {
-            matches!(
-                stmt,
-                crate::HirStmt::Let {
-                    name: binding_name,
-                    ..
-                } if binding_name == name
-            )
-        }) {
-            return None;
-        }
-        if crate::collect_referenced_vars_with_types(following_stmts)
-            .iter()
-            .any(|(referenced, _)| referenced == name)
-        {
-            return None;
-        }
-        Some(crate::RustExpr::MethodCall {
-            receiver: Box::new(self.lower_method_receiver_place_for_registry(
-                object,
-                *receiver_convention,
-                receiver_target.as_ref(),
-            )?),
-            method: "insert".to_string(),
-            args: vec![crate::RustExpr::Ident(name.clone())],
-        })
-    }
-
     pub(crate) fn try_lower_registry_exprs_strict(
         &mut self,
         exprs: &[HirExpr],
@@ -714,6 +672,15 @@ impl RustEmitter {
         &mut self,
         expr: &HirExpr,
     ) -> Option<crate::RustExpr> {
+        if matches!(
+            expr,
+            HirExpr::ListLiteral { .. }
+                | HirExpr::TupleLiteral { .. }
+                | HirExpr::DictLiteral { .. }
+                | HirExpr::SetLiteral { .. }
+        ) {
+            return self.try_lower_registry_expr_recursive(expr);
+        }
         match self.try_lower_registry_expr_result(expr) {
             Ok(Some(lowered_expr)) => Some(lowered_expr),
             Ok(None) => self.try_lower_registry_expr_recursive(expr),

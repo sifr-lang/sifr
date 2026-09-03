@@ -10,7 +10,7 @@ impl RustEmitter {
         let lowered = self
             .try_lower_registry_expr_strict(iterable)
             .or_else(|| self.lower_stmt_expr_for_ir(iterable).ok().flatten())?;
-        let lowered = Self::clone_moved_names_in_borrowed_aggregate(iterable, lowered);
+        let lowered = self.clone_moved_names_in_borrowed_aggregate(iterable, lowered);
         let owned_iter =
             registry_iterable_to_owned_iter_expr_from_lowered(iterable, Some(element_ty), lowered)?;
         Some(crate::RustExpr::MethodCall {

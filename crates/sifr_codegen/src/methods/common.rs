@@ -212,8 +212,9 @@ pub(super) fn lower_option_len(
     if !args.is_empty() {
         return None;
     }
-    let length = if object_ty
-        .optional_member_type()
+    let payload = object_ty.optional_member_type();
+    let length = if payload
+        .as_ref()
         .is_some_and(|payload| matches!(payload.resolve_alias(), Type::List(_)))
     {
         RustExpr::Path(vec![
@@ -223,16 +224,32 @@ pub(super) fn lower_option_len(
             "len".to_string(),
         ])
     } else {
+        let value = RustExpr::Ident("value".to_string());
+        let body = if payload.as_ref().is_some_and(|payload| {
+            matches!(payload.resolve_alias(), Type::Str | Type::LiteralStr(_))
+        }) {
+            RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::MethodCall {
+                    receiver: Box::new(value),
+                    method: "chars".to_string(),
+                    args: Vec::new(),
+                }),
+                method: "count".to_string(),
+                args: Vec::new(),
+            }
+        } else {
+            RustExpr::MethodCall {
+                receiver: Box::new(value),
+                method: "len".to_string(),
+                args: Vec::new(),
+            }
+        };
         RustExpr::Closure {
             params: vec![crate::RustParam::Named {
                 name: "value".to_string(),
                 ty: RustType::Named("_".to_string()),
             }],
-            body: Box::new(RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Ident("value".to_string())),
-                method: "len".to_string(),
-                args: Vec::new(),
-            }),
+            body: Box::new(body),
             is_move: false,
         }
     };

@@ -170,7 +170,7 @@ impl RustEmitter {
                 receiver_target,
                 mutable_arg_places,
                 ..
-            } => self.try_lower_registry_method_call_expr(
+            } => self.try_lower_registry_discarded_method_call_expr(
                 object,
                 method,
                 args,

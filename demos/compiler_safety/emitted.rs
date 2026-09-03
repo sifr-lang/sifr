@@ -120,7 +120,7 @@ fn main() {
     events.push("=== Context Manager: Early Return ===".to_string());
     let result_events: Vec<String> = demo_early_return();
     for item in result_events.iter().cloned() {
-        events.push(item.to_owned());
+        events.push(item);
     }
     events.push("=== Context Manager: Break in Loop ===".to_string());
     let mut i: SifrInt = SifrInt::from_i64(0);
@@ -193,7 +193,7 @@ fn main() {
     events.push("Closing: input.txt".to_string());
     events.push("=== Callable Struct Field ===".to_string());
     let c: Config = Config::new(SifrInt::from_i64(21), double);
-    events.push(c.value.clone().to_string());
+    events.push((c.callback)(c.value.clone()).to_string());
     events.push("=== Compiler Hardening Demo Complete ===".to_string());
     assert_eq!(
         events,
@@ -220,7 +220,7 @@ fn main() {
             "Disconnecting: postgres".to_string(),
             "Closing: input.txt".to_string(),
             "=== Callable Struct Field ===".to_string(),
-            "21".to_string(),
+            "42".to_string(),
             "=== Compiler Hardening Demo Complete ===".to_string()
         ]
     );

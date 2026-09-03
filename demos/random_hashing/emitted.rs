@@ -490,7 +490,7 @@ impl SifrGeneratedStdlibSifrX2erandomX2eRandom {
             ));
         }
         let mut normalized: Vec<SifrInt> = Vec::new();
-        for word in state.state_words.clone().iter().cloned() {
+        for word in state.state_words.iter().cloned() {
             if &word < &SifrInt::from_i64(0)
                 || &word > &sifr_generated_const_5f4d545f574f52445f4d41534b()
             {
@@ -522,7 +522,7 @@ fn sifr_generated_state_word_at(words: &[SifrInt], index: SifrInt) -> SifrInt {
 fn sifr_generated_clone_words(words: &[SifrInt]) -> Vec<SifrInt> {
     let mut copied: Vec<SifrInt> = Vec::new();
     for word in words.iter().cloned() {
-        copied.push(word.clone());
+        copied.push(word);
     }
     copied
 }
@@ -542,7 +542,7 @@ fn sifr_generated_seed_words_from_seed(seed_value: SifrInt) -> Vec<SifrInt> {
             * &(&prev ^ &prev.floor_div_known_nonzero(&SifrInt::from_i64(1_073_741_824))))
             + &i)
             & &sifr_generated_const_5f4d545f574f52445f4d41534b();
-        words.push(next_word.clone());
+        words.push(next_word);
         i = &i + &SifrInt::from_i64(1);
     }
     words

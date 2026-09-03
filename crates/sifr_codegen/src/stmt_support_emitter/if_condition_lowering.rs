@@ -1,5 +1,4 @@
 use super::{HirExpr, HirStmt, RustEmitter, RustStmt, Type};
-use crate::hir_analysis::queries;
 impl RustEmitter {
     pub(crate) fn try_lower_isinstance_union_chain_for_ir(
         &mut self,
@@ -42,7 +41,7 @@ impl RustEmitter {
             .collect::<Vec<_>>();
         let mut arms = Vec::with_capacity(branch_specs.len() + usize::from(else_body.is_some()));
         for (variant_name, body) in branch_specs {
-            let mutated = queries::collect_mutated_vars(body, None);
+            let mutated = self.body_analysis.mutated_in(body);
             let binding = if mutated.contains(&var_name) {
                 format!("mut {var_name}")
             } else {
@@ -66,7 +65,7 @@ impl RustEmitter {
             .collect::<Vec<_>>();
         if let Some(else_body) = else_body {
             if !remaining_variants.is_empty() {
-                let else_mutated = queries::collect_mutated_vars(else_body, None);
+                let else_mutated = self.body_analysis.mutated_in(else_body);
                 let else_binding = if else_mutated.contains(&var_name) {
                     format!("mut {var_name}")
                 } else {

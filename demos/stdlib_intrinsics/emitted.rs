@@ -516,9 +516,11 @@ fn sifr_generated_substring(value: &str, start: SifrInt, end: SifrInt) -> String
             let sifr_generated_string_index = i.clone();
             let sifr_generated_string_index_normalized = sifr_generated_string_index
                 .normalize_index_or_len(sifr_generated_chars_value.len());
-            sifr_generated_chars_value.get(sifr_generated_string_index_normalized)
+            sifr_generated_chars_value
+                .get(sifr_generated_string_index_normalized)
+                .copied()
         }
-        .map(::std::string::ToString::to_string);
+        .map(|character| character.to_string());
         if let Some(ch) = ch {
             result.push_str(ch.as_str());
         }
@@ -571,9 +573,11 @@ fn sifr_generated_parse_decimal(text: &str) -> Option<SifrInt> {
             let sifr_generated_string_index = i.clone();
             let sifr_generated_string_index_normalized =
                 sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_text.len());
-            sifr_generated_chars_text.get(sifr_generated_string_index_normalized)
+            sifr_generated_chars_text
+                .get(sifr_generated_string_index_normalized)
+                .copied()
         }
-        .map(::std::string::ToString::to_string);
+        .map(|character| character.to_string());
         let ch_opt_value_58c5362056f71db8 = ch_opt?;
         let ch: String = ch_opt_value_58c5362056f71db8;
         let digit_opt: Option<SifrInt> = sifr_generated_digit_value(&ch);
@@ -651,59 +655,143 @@ fn sifr_generated_invalid_struct_time() -> SifrGeneratedStdlibSifrX2etimeX2estru
         SifrInt::from_i64(0),
     )
 }
+#[expect(
+    clippy::too_many_lines,
+    reason = "one generated Rust function preserves one typed Sifr function"
+)]
 fn sifr_generated_to_struct_time(rendered: &str) -> SifrGeneratedStdlibSifrX2etimeX2estructTime {
     let sifr_generated_chars_rendered: Vec<char> = rendered.chars().collect::<Vec<char>>();
-    let Some(sifr_generated_checked_value_3) = {
+    let Some(_checked_value_3) = {
         let sifr_generated_string_index = SifrInt::from_i64(4);
         let sifr_generated_string_index_normalized =
             sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_rendered.len());
-        sifr_generated_chars_rendered.get(sifr_generated_string_index_normalized)
+        sifr_generated_chars_rendered
+            .get(sifr_generated_string_index_normalized)
+            .copied()
     }
-    .map(::std::string::ToString::to_string) else {
+    .map(|character| character.to_string()) else {
         return sifr_generated_invalid_struct_time();
     };
-    let Some(sifr_generated_checked_value_4) = {
+    let Some(_checked_value_4) = {
         let sifr_generated_string_index = SifrInt::from_i64(7);
         let sifr_generated_string_index_normalized =
             sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_rendered.len());
-        sifr_generated_chars_rendered.get(sifr_generated_string_index_normalized)
+        sifr_generated_chars_rendered
+            .get(sifr_generated_string_index_normalized)
+            .copied()
     }
-    .map(::std::string::ToString::to_string) else {
+    .map(|character| character.to_string()) else {
         return sifr_generated_invalid_struct_time();
     };
-    let Some(sifr_generated_checked_value_5) = {
+    let Some(_checked_value_5) = {
         let sifr_generated_string_index = SifrInt::from_i64(10);
         let sifr_generated_string_index_normalized =
             sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_rendered.len());
-        sifr_generated_chars_rendered.get(sifr_generated_string_index_normalized)
+        sifr_generated_chars_rendered
+            .get(sifr_generated_string_index_normalized)
+            .copied()
     }
-    .map(::std::string::ToString::to_string) else {
+    .map(|character| character.to_string()) else {
         return sifr_generated_invalid_struct_time();
     };
-    let Some(sifr_generated_checked_value_6) = {
+    let Some(_checked_value_6) = {
         let sifr_generated_string_index = SifrInt::from_i64(13);
         let sifr_generated_string_index_normalized =
             sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_rendered.len());
-        sifr_generated_chars_rendered.get(sifr_generated_string_index_normalized)
+        sifr_generated_chars_rendered
+            .get(sifr_generated_string_index_normalized)
+            .copied()
     }
-    .map(::std::string::ToString::to_string) else {
+    .map(|character| character.to_string()) else {
         return sifr_generated_invalid_struct_time();
     };
-    let Some(sifr_generated_checked_value_7) = {
+    let Some(_checked_value_7) = {
         let sifr_generated_string_index = SifrInt::from_i64(16);
         let sifr_generated_string_index_normalized =
             sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_rendered.len());
-        sifr_generated_chars_rendered.get(sifr_generated_string_index_normalized)
+        sifr_generated_chars_rendered
+            .get(sifr_generated_string_index_normalized)
+            .copied()
     }
-    .map(::std::string::ToString::to_string) else {
+    .map(|character| character.to_string()) else {
         return sifr_generated_invalid_struct_time();
     };
-    if sifr_generated_checked_value_3.clone() != "-"
-        || sifr_generated_checked_value_4.clone() != "-"
-        || sifr_generated_checked_value_5.clone() != "T"
-        || sifr_generated_checked_value_6.clone() != ":"
-        || sifr_generated_checked_value_7.clone() != ":"
-    {
+    if {
+        let sifr_generated_string_index = SifrInt::from_i64(4);
+        let sifr_generated_string_index_normalized =
+            sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_rendered.len());
+        sifr_generated_chars_rendered
+            .get(sifr_generated_string_index_normalized)
+            .copied()
+    } != Some("-").and_then(|sifr_generated_cmp_s| {
+        let mut sifr_generated_cmp_chars = sifr_generated_cmp_s.chars();
+        let sifr_generated_cmp_first = sifr_generated_cmp_chars.next();
+        if sifr_generated_cmp_chars.next().is_some() {
+            None
+        } else {
+            sifr_generated_cmp_first
+        }
+    }) || {
+        let sifr_generated_string_index = SifrInt::from_i64(7);
+        let sifr_generated_string_index_normalized =
+            sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_rendered.len());
+        sifr_generated_chars_rendered
+            .get(sifr_generated_string_index_normalized)
+            .copied()
+    } != Some("-").and_then(|sifr_generated_cmp_s| {
+        let mut sifr_generated_cmp_chars = sifr_generated_cmp_s.chars();
+        let sifr_generated_cmp_first = sifr_generated_cmp_chars.next();
+        if sifr_generated_cmp_chars.next().is_some() {
+            None
+        } else {
+            sifr_generated_cmp_first
+        }
+    }) || {
+        let sifr_generated_string_index = SifrInt::from_i64(10);
+        let sifr_generated_string_index_normalized =
+            sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_rendered.len());
+        sifr_generated_chars_rendered
+            .get(sifr_generated_string_index_normalized)
+            .copied()
+    } != Some("T").and_then(|sifr_generated_cmp_s| {
+        let mut sifr_generated_cmp_chars = sifr_generated_cmp_s.chars();
+        let sifr_generated_cmp_first = sifr_generated_cmp_chars.next();
+        if sifr_generated_cmp_chars.next().is_some() {
+            None
+        } else {
+            sifr_generated_cmp_first
+        }
+    }) || {
+        let sifr_generated_string_index = SifrInt::from_i64(13);
+        let sifr_generated_string_index_normalized =
+            sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_rendered.len());
+        sifr_generated_chars_rendered
+            .get(sifr_generated_string_index_normalized)
+            .copied()
+    } != Some(":").and_then(|sifr_generated_cmp_s| {
+        let mut sifr_generated_cmp_chars = sifr_generated_cmp_s.chars();
+        let sifr_generated_cmp_first = sifr_generated_cmp_chars.next();
+        if sifr_generated_cmp_chars.next().is_some() {
+            None
+        } else {
+            sifr_generated_cmp_first
+        }
+    }) || {
+        let sifr_generated_string_index = SifrInt::from_i64(16);
+        let sifr_generated_string_index_normalized =
+            sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_rendered.len());
+        sifr_generated_chars_rendered
+            .get(sifr_generated_string_index_normalized)
+            .copied()
+    } != Some(":").and_then(|sifr_generated_cmp_s| {
+        let mut sifr_generated_cmp_chars = sifr_generated_cmp_s.chars();
+        let sifr_generated_cmp_first = sifr_generated_cmp_chars.next();
+        if sifr_generated_cmp_chars.next().is_some() {
+            None
+        } else {
+            sifr_generated_cmp_first
+        }
+    }) {
         return sifr_generated_invalid_struct_time();
     }
     let year: SifrInt = sifr_generated_int_or_negative_one(sifr_generated_parse_decimal(

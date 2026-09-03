@@ -120,9 +120,9 @@ fn collect_primary_actual(payload: &[u8]) -> Vec<String> {
             }
         }),
         payload
-            .starts_with(&vec![98u8, 121u8, 116u8, 101u8, 115u8])
+            .starts_with(&vec![98_u8, 121_u8, 116_u8, 101_u8, 115_u8])
             .to_string(),
-        payload.ends_with(&vec![101u8, 51u8, 48u8]).to_string(),
+        payload.ends_with(&vec![101_u8, 51_u8, 48_u8]).to_string(),
     ]
 }
 fn bytes_to_hex_or_empty(payload: &[u8]) -> String {
@@ -240,7 +240,7 @@ fn collect_invalid_actual_ok() -> Vec<bool> {
     }
     let sifr_generated_try_res: Result<(), ParseError> = (|| {
         let bad_utf8: String = ::sifr_runtime::encoding::decode_text(
-            &vec![255u8],
+            &vec![255_u8],
             &"utf-8".to_string(),
             &"strict".to_string(),
         )
@@ -270,7 +270,7 @@ fn main() {
     ];
     let actual: Vec<String> = collect_primary_actual(&payload);
     assert_vector_eq(&actual, &expected);
-    let hex_text: String = bytes_to_hex_or_empty(&vec![72u8, 105u8]);
+    let hex_text: String = bytes_to_hex_or_empty(&vec![72_u8, 105_u8]);
     let _chars_hex_text: Vec<char> = hex_text.chars().collect::<Vec<char>>();
     assert_eq!(
         (&SifrInt::from(hex_text.chars().count()) > &SifrInt::from_i64(0)).to_string(),

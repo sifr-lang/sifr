@@ -54,9 +54,13 @@ fn main() {
         SifrInt::from_i64(2),
     ];
     println!("{:?}", {
-        let mut sifr_generated_sorted_v = unsorted.iter().cloned().collect::<Vec<_>>();
-        sifr_generated_sorted_v.sort();
-        sifr_generated_sorted_v
+        let mut sifr_generated_sorted_values = unsorted.iter().cloned().collect::<Vec<_>>();
+        sifr_generated_sorted_values.sort_by(
+            |sifr_generated_sorted_left, sifr_generated_sorted_right| {
+                sifr_generated_sorted_left.cmp(&sifr_generated_sorted_right)
+            },
+        );
+        sifr_generated_sorted_values
     });
     println!(
         "{:?}",

@@ -228,7 +228,7 @@ fn main() {
     let result: f64 = sqrt(9.0_f64);
     assert_eq!(result, 3.0_f64);
     assert!(PI > 3.14_f64);
-    let h: String = sha256(&vec![104u8, 101u8, 108u8, 108u8, 111u8]).hexdigest();
+    let h: String = sha256(&vec![104_u8, 101_u8, 108_u8, 108_u8, 111_u8]).hexdigest();
     let _chars_h: Vec<char> = h.chars().collect::<Vec<char>>();
     assert_eq!(&SifrInt::from(h.chars().count()), &SifrInt::from_i64(64));
     let encoded: String = b64encode(&"Hello!".to_string());

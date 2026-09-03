@@ -1,14 +1,100 @@
 use sifr_ir::HirExpr;
 
 use crate::{
-    RustEmitter, RustExpr, RustParam, RustStmt, RustType, Type, resolve_alias_type_for_plain_call,
+    RustEmitter, RustExpr, RustLiteral, RustParam, RustStmt, RustType, Type,
+    resolve_alias_type_for_plain_call,
 };
 
+enum StringCompareValue {
+    Char(RustExpr),
+    Str { direct: RustExpr, view: RustExpr },
+    OptionalStr(RustExpr),
+}
+
 impl RustEmitter {
+    pub(crate) fn try_lower_string_equality_for_compare(
+        &mut self,
+        left: &HirExpr,
+        right: &HirExpr,
+        op: &str,
+    ) -> Result<Option<RustExpr>, crate::CodegenError> {
+        let Some(left) = self.lower_string_compare_value(left)? else {
+            return Ok(None);
+        };
+        let Some(right) = self.lower_string_compare_value(right)? else {
+            return Ok(None);
+        };
+        let (left, right) = match (left, right) {
+            (StringCompareValue::Char(left), StringCompareValue::Char(right)) => (left, right),
+            (
+                StringCompareValue::Str { direct: left, .. },
+                StringCompareValue::Str { direct: right, .. },
+            ) => (left, right),
+            (StringCompareValue::OptionalStr(left), StringCompareValue::OptionalStr(right)) => {
+                (left, right)
+            }
+            (StringCompareValue::Char(left), StringCompareValue::Str { view: right, .. }) => {
+                (left, string_option_to_char_option(some_expr(right)))
+            }
+            (StringCompareValue::Str { view: left, .. }, StringCompareValue::Char(right)) => {
+                (string_option_to_char_option(some_expr(left)), right)
+            }
+            (StringCompareValue::Char(left), StringCompareValue::OptionalStr(right)) => {
+                (left, string_option_to_char_option(right))
+            }
+            (StringCompareValue::OptionalStr(left), StringCompareValue::Char(right)) => {
+                (string_option_to_char_option(left), right)
+            }
+            (
+                StringCompareValue::Str { view: left, .. },
+                StringCompareValue::OptionalStr(right),
+            ) => (some_expr(left), right),
+            (
+                StringCompareValue::OptionalStr(left),
+                StringCompareValue::Str { view: right, .. },
+            ) => (left, some_expr(right)),
+        };
+        Ok(Some(RustExpr::BinOp {
+            left: Box::new(left),
+            op: op.to_string(),
+            right: Box::new(right),
+        }))
+    }
+
+    fn lower_string_compare_value(
+        &mut self,
+        expr: &HirExpr,
+    ) -> Result<Option<StringCompareValue>, crate::CodegenError> {
+        if let HirExpr::Index { object, index, .. } = expr
+            && matches!(
+                resolve_alias_type_for_plain_call(object.ty()),
+                Type::Str | Type::LiteralStr(_)
+            )
+        {
+            return self
+                .lower_borrowed_string_index_char_for_compare(object, index)
+                .map(|value| value.map(StringCompareValue::Char));
+        }
+        if let Some(value) = self.try_lower_borrowed_string_lookup_for_compare(expr)? {
+            return Ok(Some(StringCompareValue::OptionalStr(value)));
+        }
+        if let Some((direct, view)) = self.lower_borrowed_string_name_for_compare(expr) {
+            return Ok(Some(StringCompareValue::Str { direct, view }));
+        }
+        let HirExpr::StringLiteral(value) = expr else {
+            return Ok(None);
+        };
+        let literal = RustExpr::Literal(RustLiteral::StaticStr(value.clone()));
+        Ok(Some(StringCompareValue::Str {
+            direct: literal.clone(),
+            view: literal,
+        }))
+    }
+
     pub(crate) fn lower_borrowed_string_name_for_compare(
         &self,
         expr: &HirExpr,
-    ) -> Option<RustExpr> {
+    ) -> Option<(RustExpr, RustExpr)> {
         let HirExpr::Name { name, ty, .. } = expr else {
             return None;
         };
@@ -18,10 +104,9 @@ impl RustEmitter {
         ) {
             return None;
         }
-        Some(RustExpr::FnCall {
-            func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
-            args: vec![self.string_view_expr(expr, RustExpr::Ident(name.clone()))],
-        })
+        let direct = RustExpr::Ident(name.clone());
+        let view = self.string_view_expr(expr, direct.clone());
+        Some((direct, view))
     }
 
     pub(crate) fn try_lower_borrowed_string_lookup_for_compare(
@@ -50,74 +135,23 @@ impl RustEmitter {
         object: &HirExpr,
         index: &HirExpr,
     ) -> Result<Option<RustExpr>, crate::CodegenError> {
-        let Some(cache_name) = self.string_char_cache_for_expr(object) else {
-            return Ok(None);
+        let lowered_object = if self.string_char_cache_for_expr(object).is_some() {
+            RustExpr::Literal(RustLiteral::Str(String::new()))
+        } else {
+            let Some(lowered) = self.lower_stmt_expr_for_ir(object)? else {
+                return Ok(None);
+            };
+            lowered
         };
         let Some(lowered_index) = self.lower_stmt_expr_for_ir(index)? else {
             return Ok(None);
         };
         let lowered_index = Self::clone_non_copy_name_expr_for_ir(index, lowered_index);
-        Ok(Some(RustExpr::Block {
-            stmts: vec![
-                RustStmt::Let {
-                    mutable: false,
-                    name: "__sifr_cmp_chars".to_string(),
-                    ty: None,
-                    value: RustExpr::Ref {
-                        mutable: false,
-                        expr: Box::new(RustExpr::Ident(cache_name)),
-                    },
-                },
-                RustStmt::Let {
-                    mutable: false,
-                    name: "__sifr_cmp_i".to_string(),
-                    ty: None,
-                    value: lowered_index,
-                },
-                RustStmt::Let {
-                    mutable: false,
-                    name: "__sifr_cmp_norm".to_string(),
-                    ty: None,
-                    value: RustExpr::If {
-                        cond: Box::new(RustExpr::BinOp {
-                            left: Box::new(RustExpr::Ident("__sifr_cmp_i".to_string())),
-                            op: "<".to_string(),
-                            right: Box::new(RustExpr::Literal(crate::RustLiteral::Int(0))),
-                        }),
-                        then_expr: Box::new(RustExpr::Cast {
-                            expr: Box::new(RustExpr::Paren(Box::new(RustExpr::BinOp {
-                                left: Box::new(RustExpr::Cast {
-                                    expr: Box::new(RustExpr::MethodCall {
-                                        receiver: Box::new(RustExpr::Ident(
-                                            "__sifr_cmp_chars".to_string(),
-                                        )),
-                                        method: "len".to_string(),
-                                        args: vec![],
-                                    }),
-                                    ty: RustType::I64,
-                                }),
-                                op: "+".to_string(),
-                                right: Box::new(RustExpr::Ident("__sifr_cmp_i".to_string())),
-                            }))),
-                            ty: RustType::Named("usize".to_string()),
-                        }),
-                        else_expr: Some(Box::new(RustExpr::Cast {
-                            expr: Box::new(RustExpr::Ident("__sifr_cmp_i".to_string())),
-                            ty: RustType::Named("usize".to_string()),
-                        })),
-                    },
-                },
-            ],
-            expr: Some(Box::new(RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::Ident("__sifr_cmp_chars".to_string())),
-                    method: "get".to_string(),
-                    args: vec![RustExpr::Ident("__sifr_cmp_norm".to_string())],
-                }),
-                method: "copied".to_string(),
-                args: vec![],
-            })),
-        }))
+        Ok(Some(self.lower_string_index_char_option_with_cache(
+            object,
+            lowered_object,
+            lowered_index,
+        )))
     }
 
     fn lower_borrowed_list_string_index_for_compare(
@@ -299,18 +333,69 @@ impl RustEmitter {
         RustExpr::MethodCall {
             receiver: Box::new(option_expr),
             method: "map".to_string(),
-            args: vec![RustExpr::Closure {
-                params: vec![RustParam::Named {
-                    name: "__sifr_cmp_s".to_string(),
-                    ty: RustType::Named("_".to_string()),
-                }],
-                body: Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::Ident("__sifr_cmp_s".to_string())),
-                    method: "as_str".to_string(),
-                    args: vec![],
-                }),
-                is_move: false,
-            }],
+            args: vec![RustExpr::Path(vec![
+                "std".to_string(),
+                "string".to_string(),
+                "String".to_string(),
+                "as_str".to_string(),
+            ])],
         }
+    }
+}
+
+fn some_expr(value: RustExpr) -> RustExpr {
+    RustExpr::FnCall {
+        func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
+        args: vec![value],
+    }
+}
+
+fn string_option_to_char_option(option: RustExpr) -> RustExpr {
+    RustExpr::MethodCall {
+        receiver: Box::new(option),
+        method: "and_then".to_string(),
+        args: vec![RustExpr::ClosureBlock {
+            params: vec![RustParam::Named {
+                name: "__sifr_cmp_s".to_string(),
+                ty: RustType::Named("_".to_string()),
+            }],
+            body: vec![
+                RustStmt::Let {
+                    mutable: true,
+                    name: "__sifr_cmp_chars".to_string(),
+                    ty: None,
+                    value: RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident("__sifr_cmp_s".to_string())),
+                        method: "chars".to_string(),
+                        args: Vec::new(),
+                    },
+                },
+                RustStmt::Let {
+                    mutable: false,
+                    name: "__sifr_cmp_first".to_string(),
+                    ty: None,
+                    value: RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::Ident("__sifr_cmp_chars".to_string())),
+                        method: "next".to_string(),
+                        args: Vec::new(),
+                    },
+                },
+                RustStmt::Return(Some(RustExpr::If {
+                    cond: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(RustExpr::MethodCall {
+                            receiver: Box::new(RustExpr::Ident("__sifr_cmp_chars".to_string())),
+                            method: "next".to_string(),
+                            args: Vec::new(),
+                        }),
+                        method: "is_some".to_string(),
+                        args: Vec::new(),
+                    }),
+                    then_expr: Box::new(RustExpr::Path(vec!["None".to_string()])),
+                    else_expr: Some(Box::new(RustExpr::Ident("__sifr_cmp_first".to_string()))),
+                })),
+            ],
+            is_move: false,
+            is_async: false,
+        }],
     }
 }

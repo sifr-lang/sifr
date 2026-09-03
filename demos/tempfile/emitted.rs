@@ -46,9 +46,11 @@ fn basename(path: &str) -> String {
             let sifr_generated_string_index = i.clone();
             let sifr_generated_string_index_normalized =
                 sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_path.len());
-            sifr_generated_chars_path.get(sifr_generated_string_index_normalized)
+            sifr_generated_chars_path
+                .get(sifr_generated_string_index_normalized)
+                .copied()
         }
-        .map(::std::string::ToString::to_string);
+        .map(|character| character.to_string());
         if let Some(ch) = ch
             && ch == "/"
         {
@@ -84,9 +86,11 @@ fn dirname(path: &str) -> String {
             let sifr_generated_string_index = i.clone();
             let sifr_generated_string_index_normalized =
                 sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_path.len());
-            sifr_generated_chars_path.get(sifr_generated_string_index_normalized)
+            sifr_generated_chars_path
+                .get(sifr_generated_string_index_normalized)
+                .copied()
         }
-        .map(::std::string::ToString::to_string);
+        .map(|character| character.to_string());
         if let Some(ch) = ch
             && ch == "/"
         {
@@ -131,9 +135,11 @@ fn mktemp_path(prefix: &str) -> String {
                 SifrInt::from(root.chars().count()) - SifrInt::from_i64(1);
             let sifr_generated_string_index_normalized =
                 sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_root.len());
-            sifr_generated_chars_root.get(sifr_generated_string_index_normalized)
+            sifr_generated_chars_root
+                .get(sifr_generated_string_index_normalized)
+                .copied()
         }
-        .map(::std::string::ToString::to_string);
+        .map(|character| character.to_string());
         if let Some(last) = last
             && last == "/"
         {

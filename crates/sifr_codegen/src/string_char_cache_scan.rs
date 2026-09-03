@@ -219,3 +219,74 @@ pub(crate) fn collect_string_cache_uses(expr: &HirExpr, used: &mut HashSet<Strin
         | HirExpr::EnumVariant { .. } => {}
     }
 }
+
+pub(crate) fn collect_repeated_string_len_uses(
+    stmts: &[crate::HirStmt],
+    used: &mut HashSet<String>,
+) {
+    traversal::walk_stmts(
+        stmts,
+        TraversalConfig::LOCAL_SCOPE_ONLY,
+        &mut |stmt| match stmt {
+            crate::HirStmt::While {
+                condition, body, ..
+            } => {
+                collect_string_len_calls_in_expr(condition, used);
+                collect_string_len_calls_in_stmts(body, used);
+            }
+            crate::HirStmt::For { body, .. } | crate::HirStmt::AsyncFor { body, .. } => {
+                collect_string_len_calls_in_stmts(body, used);
+            }
+            _ => {}
+        },
+        &mut |_| {},
+    );
+}
+
+fn collect_string_len_calls_in_stmts(stmts: &[crate::HirStmt], used: &mut HashSet<String>) {
+    traversal::walk_stmts(
+        stmts,
+        TraversalConfig::LOCAL_SCOPE_ONLY,
+        &mut |_| {},
+        &mut |expr| collect_string_len_call(expr, used),
+    );
+}
+
+fn collect_string_len_calls_in_expr(expr: &HirExpr, used: &mut HashSet<String>) {
+    traversal::walk_expr(expr, &mut |candidate| {
+        collect_string_len_call(candidate, used);
+    });
+}
+
+fn collect_string_len_call(expr: &HirExpr, used: &mut HashSet<String>) {
+    if let HirExpr::MethodCall {
+        object,
+        method,
+        args,
+        ..
+    } = expr
+        && method == "len"
+        && args.is_empty()
+        && let HirExpr::Name { name, ty, .. } = object.as_ref()
+        && matches!(ty.resolve_alias(), Type::Str | Type::LiteralStr(_))
+    {
+        used.insert(name.clone());
+        return;
+    }
+    let (HirExpr::Call { func, args, .. } | HirExpr::GenericCall { func, args, .. }) = expr else {
+        return;
+    };
+    if crate::stmt_support_emitter::canonical_plain_call_name_for_ir(func)
+        .rsplit('.')
+        .next()
+        != Some("len")
+    {
+        return;
+    }
+    let [HirExpr::Name { name, ty, .. }] = args.as_slice() else {
+        return;
+    };
+    if matches!(ty.resolve_alias(), Type::Str | Type::LiteralStr(_)) {
+        used.insert(name.clone());
+    }
+}

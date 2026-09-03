@@ -34,7 +34,10 @@ fn optional_string_length_keeps_a_payload_compatible_callback() {
 "#,
     );
 
-    assert!(rust_code.contains("|value| value.len()"), "{rust_code}");
+    assert!(
+        rust_code.contains("|value| value.chars().count()"),
+        "{rust_code}"
+    );
     assert!(!rust_code.contains("::std::vec::Vec::len"), "{rust_code}");
 }
 

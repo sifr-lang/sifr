@@ -129,7 +129,7 @@ fn chain<T: Clone + 'static>(iterables: &[Vec<T>]) -> Box<dyn Iterator<Item = T>
 fn repeat<T: Clone + 'static>(value: T, times: SifrInt) -> Box<dyn Iterator<Item = T>> {
     Box::new(SifrGeneratedGenerator::new(
         async move |sifr_generated_yielder: SifrGeneratedYielder<T>| {
-            let holder: Vec<T> = vec![value.clone()];
+            let holder: Vec<T> = vec![value];
             let mut i: SifrInt = SifrInt::from_i64(0);
             while &i < &times {
                 if &SifrInt::from(holder.len()) > &SifrInt::from_i64(0) {

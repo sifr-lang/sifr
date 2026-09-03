@@ -119,7 +119,7 @@ fn sifr_generated_collect_iterator<T: Clone + 'static>(
 ) -> Vec<T> {
     let mut collected: Vec<T> = Vec::new();
     for item in data {
-        collected.push(item.clone());
+        collected.push(item);
     }
     collected
 }
@@ -138,7 +138,7 @@ fn chain<T: Clone + 'static>(iterables: &[Vec<T>]) -> Box<dyn Iterator<Item = T>
 fn repeat<T: Clone + 'static>(value: T, times: SifrInt) -> Box<dyn Iterator<Item = T>> {
     Box::new(SifrGeneratedGenerator::new(
         async move |sifr_generated_yielder: SifrGeneratedYielder<T>| {
-            let holder: Vec<T> = vec![value.clone()];
+            let holder: Vec<T> = vec![value];
             let mut i: SifrInt = SifrInt::from_i64(0);
             while &i < &times {
                 if &SifrInt::from(holder.len()) > &SifrInt::from_i64(0) {
@@ -266,7 +266,7 @@ fn product<T: Clone + 'static>(
             let mut repetition: SifrInt = SifrInt::from_i64(0);
             while &repetition < &repeat {
                 for iterable in iterables.iter().cloned() {
-                    pools.push(iterable.to_vec());
+                    pools.push(iterable);
                 }
                 repetition = &repetition + &SifrInt::from_i64(1);
             }
@@ -330,7 +330,7 @@ fn product<T: Clone + 'static>(
                     let Some(value_value_7ce4fd9430e80cea) = value else {
                         return;
                     };
-                    row.push(value_value_7ce4fd9430e80cea.clone());
+                    row.push(value_value_7ce4fd9430e80cea);
                     pool_index = &pool_index + &SifrInt::from_i64(1);
                 }
                 sifr_generated_yielder.suspend(row.to_vec()).await;
@@ -473,7 +473,7 @@ fn combinations<T: Clone + 'static>(
                     let Some(value_value_7ce4fd9430e80cea) = value else {
                         return;
                     };
-                    row.push(value_value_7ce4fd9430e80cea.clone());
+                    row.push(value_value_7ce4fd9430e80cea);
                 }
                 sifr_generated_yielder.suspend(row.to_vec()).await;
                 let mut position: SifrInt = &r - &SifrInt::from_i64(1);

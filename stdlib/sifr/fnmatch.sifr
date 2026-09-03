@@ -19,22 +19,17 @@ def _match(name: str, mut ni: int, pattern: str, mut pi: int) -> bool:
                         return True
                     j = j + 1
                 return False
-            elif pc == "?":
-                if ni >= len(name):
-                    return False
-                ni = ni + 1
-                pi = pi + 1
-            else:
-                if ni >= len(name):
-                    return False
+            if ni >= len(name):
+                return False
+            if pc != "?":
                 nc: str | None = name[ni]
                 if nc is not None:
                     if nc != pc:
                         return False
                 else:
                     return False
-                ni = ni + 1
-                pi = pi + 1
+            ni = ni + 1
+            pi = pi + 1
         else:
             return False
     return ni == len(name)

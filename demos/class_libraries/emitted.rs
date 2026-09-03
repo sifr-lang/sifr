@@ -1229,9 +1229,11 @@ mod sifr_generated_project_nominals {
                 let sifr_generated_string_index = i.clone();
                 let sifr_generated_string_index_normalized = sifr_generated_string_index
                     .normalize_index_or_len(sifr_generated_chars_path.len());
-                sifr_generated_chars_path.get(sifr_generated_string_index_normalized)
+                sifr_generated_chars_path
+                    .get(sifr_generated_string_index_normalized)
+                    .copied()
             }
-            .map(::std::string::ToString::to_string);
+            .map(|character| character.to_string());
             if let Some(ch) = ch
                 && ch == "/"
             {
@@ -1272,9 +1274,11 @@ mod sifr_generated_project_nominals {
                 let sifr_generated_string_index = i.clone();
                 let sifr_generated_string_index_normalized = sifr_generated_string_index
                     .normalize_index_or_len(sifr_generated_chars_path.len());
-                sifr_generated_chars_path.get(sifr_generated_string_index_normalized)
+                sifr_generated_chars_path
+                    .get(sifr_generated_string_index_normalized)
+                    .copied()
             }
-            .map(::std::string::ToString::to_string);
+            .map(|character| character.to_string());
             if let Some(ch) = ch
                 && ch == "/"
             {
@@ -1309,9 +1313,11 @@ mod sifr_generated_project_nominals {
                 let sifr_generated_string_index = i.clone();
                 let sifr_generated_string_index_normalized = sifr_generated_string_index
                     .normalize_index_or_len(sifr_generated_chars_path.len());
-                sifr_generated_chars_path.get(sifr_generated_string_index_normalized)
+                sifr_generated_chars_path
+                    .get(sifr_generated_string_index_normalized)
+                    .copied()
             }
-            .map(::std::string::ToString::to_string);
+            .map(|character| character.to_string());
             if let Some(ch) = ch {
                 if ch == "." {
                     return {
@@ -1351,9 +1357,11 @@ mod sifr_generated_project_nominals {
                 let sifr_generated_string_index = i.clone();
                 let sifr_generated_string_index_normalized = sifr_generated_string_index
                     .normalize_index_or_len(sifr_generated_chars_base.len());
-                sifr_generated_chars_base.get(sifr_generated_string_index_normalized)
+                sifr_generated_chars_base
+                    .get(sifr_generated_string_index_normalized)
+                    .copied()
             }
-            .map(::std::string::ToString::to_string);
+            .map(|character| character.to_string());
             if let Some(ch) = ch
                 && ch == "."
             {
@@ -1394,16 +1402,20 @@ mod sifr_generated_project_nominals {
                 let sifr_generated_string_index = SifrInt::from_i64(1);
                 let sifr_generated_string_index_normalized = sifr_generated_string_index
                     .normalize_index_or_len(sifr_generated_chars_path.len());
-                sifr_generated_chars_path.get(sifr_generated_string_index_normalized)
+                sifr_generated_chars_path
+                    .get(sifr_generated_string_index_normalized)
+                    .copied()
             }
-            .map(::std::string::ToString::to_string);
+            .map(|character| character.to_string());
             let sep: Option<String> = {
                 let sifr_generated_string_index = SifrInt::from_i64(2);
                 let sifr_generated_string_index_normalized = sifr_generated_string_index
                     .normalize_index_or_len(sifr_generated_chars_path.len());
-                sifr_generated_chars_path.get(sifr_generated_string_index_normalized)
+                sifr_generated_chars_path
+                    .get(sifr_generated_string_index_normalized)
+                    .copied()
             }
-            .map(::std::string::ToString::to_string);
+            .map(|character| character.to_string());
             if let Some(colon) = colon
                 && let Some(sep) = sep
                 && colon == ":"
@@ -1416,9 +1428,11 @@ mod sifr_generated_project_nominals {
             let sifr_generated_string_index = SifrInt::from_i64(0);
             let sifr_generated_string_index_normalized =
                 sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_path.len());
-            sifr_generated_chars_path.get(sifr_generated_string_index_normalized)
+            sifr_generated_chars_path
+                .get(sifr_generated_string_index_normalized)
+                .copied()
         }
-        .map(::std::string::ToString::to_string);
+        .map(|character| character.to_string());
         if let Some(first) = first
             && (first == "/" || first == "\\")
         {
@@ -1502,13 +1516,13 @@ mod sifr_generated_project_nominals {
             let mut i: SifrInt = SifrInt::from_i64(0);
             while &i < &SifrInt::from(self.hex.chars().count()) {
                 let ch: Option<String> = {
-                    let sifr_generated_string_source = &self.hex;
+                    let sifr_generated_string_chars = self.hex.chars().collect::<Vec<char>>();
                     let sifr_generated_string_index = i.clone();
                     let sifr_generated_string_index_normalized = sifr_generated_string_index
-                        .normalize_index_or_len(sifr_generated_string_source.chars().count());
-                    sifr_generated_string_source
-                        .chars()
-                        .nth(sifr_generated_string_index_normalized)
+                        .normalize_index_or_len(sifr_generated_string_chars.len());
+                    sifr_generated_string_chars
+                        .get(sifr_generated_string_index_normalized)
+                        .copied()
                 }
                 .map(|character| character.to_string());
                 if let Some(ch) = ch
@@ -1525,13 +1539,13 @@ mod sifr_generated_project_nominals {
         #[must_use]
         pub fn version(&self) -> SifrInt {
             let marker: Option<String> = {
-                let sifr_generated_string_source = &self.hex;
+                let sifr_generated_string_chars = self.hex.chars().collect::<Vec<char>>();
                 let sifr_generated_string_index = SifrInt::from_i64(14);
                 let sifr_generated_string_index_normalized = sifr_generated_string_index
-                    .normalize_index_or_len(sifr_generated_string_source.chars().count());
-                sifr_generated_string_source
-                    .chars()
-                    .nth(sifr_generated_string_index_normalized)
+                    .normalize_index_or_len(sifr_generated_string_chars.len());
+                sifr_generated_string_chars
+                    .get(sifr_generated_string_index_normalized)
+                    .copied()
             }
             .map(|character| character.to_string());
             let Some(marker_value_eddcb72b15486e77) = marker else {

@@ -486,24 +486,27 @@ fn contains(values: &[String], needle: &str) -> bool {
 fn collect_positive_actual(tmp_path: &str) -> Vec<String> {
     let mut actual: Vec<String> = Vec::new();
     let mut h: SifrGeneratedStdlibSifrX2ehashlibX2eHashObject = sha256(&Vec::new());
-    h.update(&vec![97u8]);
-    h.update(&vec![98u8, 99u8]);
+    h.update(&vec![97_u8]);
+    h.update(&vec![98_u8, 99_u8]);
     actual.push(
-        (h.hexdigest().as_str() == sha256(&vec![97u8, 98u8, 99u8]).hexdigest().as_str())
+        (h.hexdigest().as_str() == sha256(&vec![97_u8, 98_u8, 99_u8]).hexdigest().as_str())
             .to_string(),
     );
     actual.push((&SifrInt::from(h.digest().len()) == &SifrInt::from_i64(32)).to_string());
     let mut c: SifrGeneratedStdlibSifrX2ehashlibX2eHashObject = copy_hash(&h);
-    c.update(&vec![120u8]);
+    c.update(&vec![120_u8]);
     actual.push(
-        (c.hexdigest().as_str() == sha256(&vec![97u8, 98u8, 99u8, 120u8]).hexdigest().as_str())
-            .to_string(),
+        (c.hexdigest().as_str()
+            == sha256(&vec![97_u8, 98_u8, 99_u8, 120_u8])
+                .hexdigest()
+                .as_str())
+        .to_string(),
     );
     let m: SifrGeneratedStdlibSifrX2ehashlibX2eHashObject =
-        md5(&vec![104u8, 101u8, 108u8, 108u8, 111u8]);
+        md5(&vec![104_u8, 101_u8, 108_u8, 108_u8, 111_u8]);
     actual.push(
         (m.hexdigest().as_str()
-            == md5(&vec![104u8, 101u8, 108u8, 108u8, 111u8])
+            == md5(&vec![104_u8, 101_u8, 108_u8, 108_u8, 111_u8])
                 .hexdigest()
                 .as_str())
         .to_string(),
@@ -513,7 +516,7 @@ fn collect_positive_actual(tmp_path: &str) -> Vec<String> {
     let sifr_generated_try_res: Result<(), SifrGeneratedStdlibSifrX2ehashlibX2eHashlibError> =
         (|| {
             let out: String = file_digest(tmp_path, &"sha256".to_string())?;
-            actual.push(out.to_owned());
+            actual.push(out);
             Ok(())
         })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {

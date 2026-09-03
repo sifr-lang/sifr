@@ -6,13 +6,13 @@ fn fnmatch(name: &str, pattern: &str) -> bool {
 fn sifr_generated_match(name: &str, mut ni: SifrInt, pattern: &str, mut pi: SifrInt) -> bool {
     while &pi < &SifrInt::from(pattern.chars().count()) {
         let pc: Option<String> = {
-            let sifr_generated_string_source = &pattern;
+            let sifr_generated_string_chars = pattern.chars().collect::<Vec<char>>();
             let sifr_generated_string_index = pi.clone();
             let sifr_generated_string_index_normalized = sifr_generated_string_index
-                .normalize_index_or_len(sifr_generated_string_source.chars().count());
-            sifr_generated_string_source
-                .chars()
-                .nth(sifr_generated_string_index_normalized)
+                .normalize_index_or_len(sifr_generated_string_chars.len());
+            sifr_generated_string_chars
+                .get(sifr_generated_string_index_normalized)
+                .copied()
         }
         .map(|character| character.to_string());
         if let Some(pc) = pc {
@@ -30,22 +30,18 @@ fn sifr_generated_match(name: &str, mut ni: SifrInt, pattern: &str, mut pi: Sifr
                 }
                 return false;
             }
-            let sifr_generated_shared_branch_condition = pc == "?";
             if &ni >= &SifrInt::from(name.chars().count()) {
                 return false;
             }
-            if sifr_generated_shared_branch_condition {
-                ni = &ni + &SifrInt::from_i64(1);
-                pi = &pi + &SifrInt::from_i64(1);
-            } else {
+            if pc != "?" {
                 let nc: Option<String> = {
-                    let sifr_generated_string_source = &name;
+                    let sifr_generated_string_chars = name.chars().collect::<Vec<char>>();
                     let sifr_generated_string_index = ni.clone();
                     let sifr_generated_string_index_normalized = sifr_generated_string_index
-                        .normalize_index_or_len(sifr_generated_string_source.chars().count());
-                    sifr_generated_string_source
-                        .chars()
-                        .nth(sifr_generated_string_index_normalized)
+                        .normalize_index_or_len(sifr_generated_string_chars.len());
+                    sifr_generated_string_chars
+                        .get(sifr_generated_string_index_normalized)
+                        .copied()
                 }
                 .map(|character| character.to_string());
                 if let Some(nc) = nc {
@@ -55,9 +51,9 @@ fn sifr_generated_match(name: &str, mut ni: SifrInt, pattern: &str, mut pi: Sifr
                 } else {
                     return false;
                 }
-                ni = &ni + &SifrInt::from_i64(1);
-                pi = &pi + &SifrInt::from_i64(1);
             }
+            ni = &ni + &SifrInt::from_i64(1);
+            pi = &pi + &SifrInt::from_i64(1);
         } else {
             return false;
         }
@@ -68,7 +64,7 @@ fn filter(names: &[String], pattern: &str) -> Vec<String> {
     let mut result: Vec<String> = Vec::new();
     for name in names.iter().cloned() {
         if fnmatch(&name, pattern) {
-            result.push(name.to_owned());
+            result.push(name);
         }
     }
     result
