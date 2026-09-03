@@ -601,8 +601,10 @@ fn sifr_generated_parse_datetime_iso(
             second.clone(),
         )))
     })();
-    sifr_generated_try_res
-        .unwrap_or_else(|_| Err(ValueError::new("invalid datetime string".to_string())))
+    sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
+        let _e_5f65 = sifr_generated_try_err.clone();
+        Err(ValueError::new("invalid datetime string".to_string()))
+    })
 }
 fn sifr_generated_timezone_offset_from_text(text: &str) -> Result<SifrInt, ValueError> {
     let sifr_generated_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
@@ -653,8 +655,10 @@ fn sifr_generated_timezone_offset_from_text(text: &str) -> Result<SifrInt, Value
         }
         Ok(Ok(offset))
     })();
-    sifr_generated_try_res
-        .unwrap_or_else(|_| Err(ValueError::new("invalid timezone string".to_string())))
+    sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
+        let _e_5f65 = sifr_generated_try_err.clone();
+        Err(ValueError::new("invalid timezone string".to_string()))
+    })
 }
 #[expect(
     clippy::too_many_lines,
@@ -1015,17 +1019,15 @@ fn is_valid_ipv4(addr: &str) -> bool {
     }
     for part in parts.iter().cloned() {
         let sifr_generated_chars_part: Vec<char> = part.chars().collect::<Vec<char>>();
-        if {
+        let Some(_checked_value_0) = {
             let sifr_generated_string_index = SifrInt::from_i64(0);
             let sifr_generated_string_index_normalized =
                 sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_part.len());
             sifr_generated_chars_part.get(sifr_generated_string_index_normalized)
         }
-        .map(::std::string::ToString::to_string)
-        .is_none()
-        {
+        .map(::std::string::ToString::to_string) else {
             return false;
-        }
+        };
         if &SifrInt::from(sifr_generated_chars_part.len()) > &SifrInt::from_i64(3) {
             return false;
         }
@@ -1548,12 +1550,14 @@ fn sifr_generated_expand_tabs_impl(text: &str, tabsize: SifrInt) -> String {
                     j = &j + &SifrInt::from_i64(1);
                 }
                 column = &column + &spaces;
-            } else if ch == "\n" || ch == "\r" {
-                result.push_str(ch.as_str());
-                column = SifrInt::from_i64(0);
             } else {
+                let sifr_generated_shared_branch_condition = ch == "\n" || ch == "\r";
                 result.push_str(ch.as_str());
-                column = &column + &SifrInt::from_i64(1);
+                if sifr_generated_shared_branch_condition {
+                    column = SifrInt::from_i64(0);
+                } else {
+                    column = &column + &SifrInt::from_i64(1);
+                }
             }
         }
         i = &i + &SifrInt::from_i64(1);
@@ -1941,15 +1945,18 @@ fn sifr_generated_canonical_uuid_text(input_text: &str) -> Result<String, ValueE
         sifr_generated_concat
     };
     let mut sifr_generated_chars_normalized_input: Vec<char> =
-        normalized_input.chars().collect::<Vec<char>>();
-    if sifr_generated_starts_with(&normalized_input, &"urn:uuid:".to_string()) {
-        normalized_input = sifr_generated_substring(
-            &normalized_input,
-            SifrInt::from_i64(9),
-            SifrInt::from(normalized_input.chars().count()),
-        );
-        sifr_generated_chars_normalized_input = normalized_input.chars().collect::<Vec<char>>();
-    }
+        if sifr_generated_starts_with(&normalized_input, &"urn:uuid:".to_string()) {
+            {
+                normalized_input = sifr_generated_substring(
+                    &normalized_input,
+                    SifrInt::from_i64(9),
+                    SifrInt::from(normalized_input.chars().count()),
+                );
+                normalized_input.chars().collect::<Vec<char>>()
+            }
+        } else {
+            normalized_input.chars().collect::<Vec<char>>()
+        };
     if &SifrInt::from(sifr_generated_chars_normalized_input.len()) >= &SifrInt::from_i64(2) {
         let first: Option<String> = {
             let sifr_generated_string_index = SifrInt::from_i64(0);
@@ -2089,7 +2096,7 @@ fn uuid_from_hex(hex_str: &str) -> Result<SifrGeneratedStdlibSifrX2euuidX2eUUID,
 fn main() {
     println!("=== 1. random.randint: Validates a <= b ===");
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
-        let _ = randint(SifrInt::from_i64(1), SifrInt::from_i64(10))?;
+        let _r: SifrInt = randint(SifrInt::from_i64(1), SifrInt::from_i64(10))?;
         println!("randint(1, 10) = ok");
         Ok(())
     })();
@@ -2098,7 +2105,7 @@ fn main() {
         println!("error: {}", e.message.clone());
     }
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
-        let _ = randint(SifrInt::from_i64(5), SifrInt::from_i64(3))?;
+        let _r2: SifrInt = randint(SifrInt::from_i64(5), SifrInt::from_i64(3))?;
         println!("should not reach here");
         Ok(())
     })();
@@ -2108,7 +2115,7 @@ fn main() {
     }
     println!("=== 2. secrets.randbelow: Validates n > 0 ===");
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
-        let _ = randbelow(SifrInt::from_i64(100))?;
+        let _s: SifrInt = randbelow(SifrInt::from_i64(100))?;
         println!("randbelow(100) = ok");
         Ok(())
     })();
@@ -2117,7 +2124,7 @@ fn main() {
         println!("error: {}", e.message.clone());
     }
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
-        let _ = randbelow(SifrInt::from_i64(0))?;
+        let _s2: SifrInt = randbelow(SifrInt::from_i64(0))?;
         println!("should not reach here");
         Ok(())
     })();
@@ -2147,7 +2154,7 @@ fn main() {
         });
     }
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
-        let _ = wrap(&"hello".to_string(), SifrInt::from_i64(0))?;
+        let _lines2: Vec<String> = wrap(&"hello".to_string(), SifrInt::from_i64(0))?;
         println!("should not reach here");
         Ok(())
     })();
@@ -2192,7 +2199,7 @@ fn main() {
         });
     }
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
-        let _ = batched(
+        let _b2: Vec<Vec<SifrInt>> = batched(
             &data.iter().cloned().collect::<Vec<_>>(),
             SifrInt::from_i64(0),
         )?;
@@ -2235,7 +2242,7 @@ fn main() {
     }
     let sifr_generated_try_res: Result<(), SifrGeneratedStdlibSifrX2egraphlibX2eCycleError> =
         (|| {
-            let _ = topological_sort(
+            let _order2: Vec<SifrInt> = topological_sort(
                 SifrInt::from_i64(2),
                 &vec![SifrInt::from_i64(0), SifrInt::from_i64(1)],
                 &vec![SifrInt::from_i64(1), SifrInt::from_i64(0)],
@@ -2249,7 +2256,8 @@ fn main() {
     }
     println!("=== 6. uuid.uuid_from_hex: Validates hex format ===");
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
-        let _ = uuid_from_hex(&"550e8400e29b41d4a716446655440000".to_string())?;
+        let _u: SifrGeneratedStdlibSifrX2euuidX2eUUID =
+            uuid_from_hex(&"550e8400e29b41d4a716446655440000".to_string())?;
         println!("valid UUID hex: ok");
         Ok(())
     })();
@@ -2258,7 +2266,8 @@ fn main() {
         println!("error: {}", e.message.clone());
     }
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
-        let _ = uuid_from_hex(&"xyz-invalid!".to_string())?;
+        let _u2: SifrGeneratedStdlibSifrX2euuidX2eUUID =
+            uuid_from_hex(&"xyz-invalid!".to_string())?;
         println!("should not reach here");
         Ok(())
     })();
@@ -2267,7 +2276,7 @@ fn main() {
         println!("invalid chars -> ValueError: {}", e.message.clone());
     }
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
-        let _ = uuid_from_hex(&"abcd1234".to_string())?;
+        let _u3: SifrGeneratedStdlibSifrX2euuidX2eUUID = uuid_from_hex(&"abcd1234".to_string())?;
         println!("should not reach here");
         Ok(())
     })();
@@ -2277,7 +2286,7 @@ fn main() {
     }
     println!("=== 7. ipaddress.ip_to_int: Validates IPv4 format ===");
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
-        let _ = ip_to_int(&"192.168.1.1".to_string())?;
+        let _ip: SifrInt = ip_to_int(&"192.168.1.1".to_string())?;
         println!("ip_to_int(192.168.1.1) = ok");
         Ok(())
     })();
@@ -2291,7 +2300,7 @@ fn main() {
         });
     }
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
-        let _ = ip_to_int(&"bad".to_string())?;
+        let _ip2: SifrInt = ip_to_int(&"bad".to_string())?;
         println!("should not reach here");
         Ok(())
     })();
@@ -2306,7 +2315,7 @@ fn main() {
     }
     println!("=== 8. datetime.from_timestamp: Validates timestamp ===");
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
-        let _ = from_timestamp(0.0_f64, &None)?;
+        let _dt: SifrGeneratedStdlibSifrX2edatetimeX2edatetime = from_timestamp(0.0_f64, &None)?;
         println!("from_timestamp(0.0) = ok");
         Ok(())
     })();
@@ -2315,7 +2324,8 @@ fn main() {
         println!("error: {}", e.message.clone());
     }
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
-        let _ = from_timestamp(-99_999_999_999_999.0_f64, &None)?;
+        let _dt2: SifrGeneratedStdlibSifrX2edatetimeX2edatetime =
+            from_timestamp(-99_999_999_999_999.0_f64, &None)?;
         println!("should not reach here");
         Ok(())
     })();
@@ -2354,7 +2364,8 @@ fn main() {
         }
         Ok(())
     })();
-    if sifr_generated_try_res.is_err() {
+    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+        let _e_5f65 = sifr_generated_try_err.clone();
         println!("out-of-bounds assign -> IndexError");
     }
     println!("{}", {

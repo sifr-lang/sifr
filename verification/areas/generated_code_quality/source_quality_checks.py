@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 import shutil
+import tomllib
 from pathlib import Path
 from typing import Any, Callable, Sequence
 
@@ -142,6 +143,45 @@ def assert_negative_clippy(
             f"negative Clippy seed {seed.name} did not trigger {expected_lint}; "
             f"got {diagnostics}"
         )
+
+
+def run_strict_clippy(
+    crate_root: Path,
+    run_command: Callable[..., Any],
+    strict_clippy_args: Sequence[str],
+) -> Any:
+    manifest = crate_root / "Cargo.toml"
+    package = tomllib.loads(manifest.read_text(encoding="utf-8")).get("package")
+    package_name = package.get("name") if isinstance(package, dict) else None
+    if not isinstance(package_name, str) or not package_name:
+        raise RuntimeError(f"generated crate has no package name: {manifest}")
+
+    # Cargo does not replay diagnostics for a fresh Clippy unit. Materialized
+    # generated crates are intentionally cached, so remove only the generated
+    # package's artifacts before collecting diagnostics. Dependencies remain in
+    # the shared target directory, while every run observes the same lint set.
+    run_command(
+        [
+            "cargo",
+            "clean",
+            "--manifest-path",
+            str(manifest),
+            "--package",
+            package_name,
+        ]
+    )
+    return run_command(
+        [
+            "cargo",
+            "clippy",
+            "--message-format=json",
+            "--manifest-path",
+            str(manifest),
+            "--",
+            *strict_clippy_args,
+        ],
+        check=False,
+    )
 
 
 def assert_negative_determinism(a: Path, b: Path) -> None:

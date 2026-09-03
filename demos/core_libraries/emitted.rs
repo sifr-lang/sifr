@@ -385,10 +385,7 @@ mod sifr_generated_project_nominals {
         } else if algorithm == "blake2s" {
             return blake2s_bytes(data);
         }
-        {
-            let sifr_generated_empty_bytes_literal: Vec<u8> = Vec::new();
-            sifr_generated_empty_bytes_literal
-        }
+        Vec::new()
     }
     #[must_use]
     pub fn sifr_generated_hash_hex(algorithm: &str, data: &[u8]) -> String {
@@ -684,8 +681,10 @@ fn sifr_generated_parse_datetime_iso(
             second.clone(),
         )))
     })();
-    sifr_generated_try_res
-        .unwrap_or_else(|_| Err(ValueError::new("invalid datetime string".to_string())))
+    sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
+        let _e_5f65 = sifr_generated_try_err.clone();
+        Err(ValueError::new("invalid datetime string".to_string()))
+    })
 }
 fn sifr_generated_timezone_offset_from_text(text: &str) -> Result<SifrInt, ValueError> {
     let sifr_generated_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
@@ -736,8 +735,10 @@ fn sifr_generated_timezone_offset_from_text(text: &str) -> Result<SifrInt, Value
         }
         Ok(Ok(offset))
     })();
-    sifr_generated_try_res
-        .unwrap_or_else(|_| Err(ValueError::new("invalid timezone string".to_string())))
+    sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
+        let _e_5f65 = sifr_generated_try_err.clone();
+        Err(ValueError::new("invalid timezone string".to_string()))
+    })
 }
 #[expect(
     clippy::too_many_lines,

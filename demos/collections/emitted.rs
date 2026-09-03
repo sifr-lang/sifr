@@ -615,7 +615,7 @@ fn collect_deque_actual() -> Vec<bool> {
     d.append(&SifrInt::from_i64(30));
     actual.push(&d.len() == &SifrInt::from_i64(2) && d.popleft() == Some(SifrInt::from_i64(20)));
     let _: Option<SifrInt> = d.pop();
-    actual.push(d.pop() == None);
+    actual.push(d.pop().is_none());
     actual
 }
 fn append_all(target: &mut Vec<bool>, values: &[bool]) {

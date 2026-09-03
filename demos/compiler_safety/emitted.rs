@@ -52,17 +52,14 @@ impl ::std::fmt::Display for DBConnection {
 }
 struct Config {
     value: SifrInt,
-    callback: Box<dyn Fn(SifrInt) -> SifrInt>,
 }
 impl Config {
     fn new(value: SifrInt, callback: impl Fn(SifrInt) -> SifrInt + 'static) -> Self {
         let sifr_generated_field_value_7ce4fd9430e80cea_76616c7565: SifrInt = value.clone();
-        let sifr_generated_field_value_31d52eaacb529206_63616c6c6261636b: Box<
-            dyn Fn(SifrInt) -> SifrInt,
-        > = Box::new(callback);
+        let _field_value_31d52eaacb529206_63616c6c6261636b: Box<dyn Fn(SifrInt) -> SifrInt> =
+            Box::new(callback);
         Self {
             value: sifr_generated_field_value_7ce4fd9430e80cea_76616c7565,
-            callback: sifr_generated_field_value_31d52eaacb529206_63616c6c6261636b,
         }
     }
 }

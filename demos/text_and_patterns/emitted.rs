@@ -114,10 +114,7 @@ mod sifr_generated_project_nominals {
                 i = &i + &SifrInt::from_i64(1);
                 continue;
             };
-            let mut ch_value: String = String::new();
-            {
-                ch_value = ch;
-            }
+            let ch_value: String = ch;
             if ch_value != "$" {
                 result.push_str(ch_value.as_str());
                 i = &i + &SifrInt::from_i64(1);
@@ -173,10 +170,7 @@ mod sifr_generated_project_nominals {
                         j = &j + &SifrInt::from_i64(1);
                         continue;
                     };
-                    let mut part_value: String = String::new();
-                    {
-                        part_value = part_value_03b1250debc64fd4;
-                    }
+                    let part_value: String = part_value_03b1250debc64fd4;
                     if part_value == "}" {
                         break;
                     }
@@ -232,11 +226,11 @@ mod sifr_generated_project_nominals {
                 }
                 .map(::std::string::ToString::to_string);
                 let mut first_value: String = String::new();
-                let mut has_first: bool = false;
-                if let Some(first_candidate) = first_candidate {
-                    has_first = true;
+                let has_first: bool = first_candidate.is_some_and(|first_candidate| {
+                    let has_first = true;
                     first_value = first_candidate;
-                }
+                    has_first
+                });
                 if !has_first || !sifr_generated_is_identifier_start(&first_value) {
                     if safe {
                         result.push_str("${");
@@ -340,10 +334,7 @@ mod sifr_generated_project_nominals {
                     j2 = &j2 + &SifrInt::from_i64(1);
                     continue;
                 };
-                let mut part2_value: String = String::new();
-                {
-                    part2_value = part2_value_0c51dca7a1f9c3d2;
-                }
+                let part2_value: String = part2_value_0c51dca7a1f9c3d2;
                 if !sifr_generated_is_identifier_continue(&part2_value) {
                     break;
                 }
@@ -401,10 +392,7 @@ mod sifr_generated_project_nominals {
                 i = &i + &SifrInt::from_i64(1);
                 continue;
             };
-            let mut ch_value: String = String::new();
-            {
-                ch_value = ch;
-            }
+            let ch_value: String = ch;
             if ch_value == "{" {
                 if &(&i + &SifrInt::from_i64(1))
                     < &SifrInt::from(sifr_generated_chars_format_string.len())
@@ -440,10 +428,7 @@ mod sifr_generated_project_nominals {
                         j = &j + &SifrInt::from_i64(1);
                         continue;
                     };
-                    let mut part_value: String = String::new();
-                    {
-                        part_value = part_value_03b1250debc64fd4;
-                    }
+                    let part_value: String = part_value_03b1250debc64fd4;
                     if part_value == "}" {
                         break;
                     }
@@ -679,12 +664,14 @@ mod sifr_generated_project_nominals {
                         j = &j + &SifrInt::from_i64(1);
                     }
                     column = &column + &spaces;
-                } else if ch == "\n" || ch == "\r" {
-                    result.push_str(ch.as_str());
-                    column = SifrInt::from_i64(0);
                 } else {
+                    let sifr_generated_shared_branch_condition = ch == "\n" || ch == "\r";
                     result.push_str(ch.as_str());
-                    column = &column + &SifrInt::from_i64(1);
+                    if sifr_generated_shared_branch_condition {
+                        column = SifrInt::from_i64(0);
+                    } else {
+                        column = &column + &SifrInt::from_i64(1);
+                    }
                 }
             }
             i = &i + &SifrInt::from_i64(1);
@@ -939,7 +926,7 @@ mod sifr_generated_project_nominals {
                 if ch == "." || ch == "!" || ch == "?" {
                     let next_opt: Option<String> = if &(&i + &SifrInt::from_i64(1))
                         < &SifrInt::from(sifr_generated_chars_text.len())
-                        && {
+                        && let Some(_checked_value_4) = {
                             let sifr_generated_string_index = &i + &SifrInt::from_i64(1);
                             let sifr_generated_string_index_normalized =
                                 sifr_generated_string_index
@@ -947,7 +934,6 @@ mod sifr_generated_project_nominals {
                             sifr_generated_chars_text.get(sifr_generated_string_index_normalized)
                         }
                         .map(::std::string::ToString::to_string)
-                        .is_some()
                     {
                         {
                             let sifr_generated_string_index = &i + &SifrInt::from_i64(1);
@@ -1567,6 +1553,10 @@ fn sifr_generated_similarity(
             }
         })
 }
+#[expect(
+    clippy::many_single_char_names,
+    reason = "generated Rust preserves this exact typed Sifr source contract"
+)]
 fn sifr_generated_longest_common_substring_range(
     a: &str,
     b: &str,
@@ -1785,32 +1775,31 @@ fn sifr_generated_match(name: &str, mut ni: SifrInt, pattern: &str, mut pi: Sifr
                     j = &j + &SifrInt::from_i64(1);
                 }
                 return false;
-            } else if pc == "?" {
-                if &ni >= &SifrInt::from(name.chars().count()) {
-                    return false;
-                }
-                ni = &ni + &SifrInt::from_i64(1);
-                pi = &pi + &SifrInt::from_i64(1);
-            } else {
-                if &ni >= &SifrInt::from(name.chars().count()) {
-                    return false;
-                }
-                let nc: Option<String> = {
-                    let sifr_generated_string_source = &name;
-                    let sifr_generated_string_index = ni.clone();
-                    let sifr_generated_string_index_normalized = sifr_generated_string_index
-                        .normalize_index_or_len(sifr_generated_string_source.chars().count());
-                    sifr_generated_string_source
-                        .chars()
-                        .nth(sifr_generated_string_index_normalized)
-                }
-                .map(|character| character.to_string());
-                if let Some(nc) = nc {
-                    if nc != pc {
+            }
+            let sifr_generated_shared_branch_condition = pc == "?";
+            if &ni >= &SifrInt::from(name.chars().count()) {
+                return false;
+            }
+            {
+                if sifr_generated_shared_branch_condition {
+                } else {
+                    let nc: Option<String> = {
+                        let sifr_generated_string_source = &name;
+                        let sifr_generated_string_index = ni.clone();
+                        let sifr_generated_string_index_normalized = sifr_generated_string_index
+                            .normalize_index_or_len(sifr_generated_string_source.chars().count());
+                        sifr_generated_string_source
+                            .chars()
+                            .nth(sifr_generated_string_index_normalized)
+                    }
+                    .map(|character| character.to_string());
+                    if let Some(nc) = nc {
+                        if nc != pc {
+                            return false;
+                        }
+                    } else {
                         return false;
                     }
-                } else {
-                    return false;
                 }
                 ni = &ni + &SifrInt::from_i64(1);
                 pi = &pi + &SifrInt::from_i64(1);
@@ -2022,20 +2011,25 @@ fn main() {
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
         match sifr_generated_try_err {
             SifrGeneratedUnion8X3asequence5X3aunion1X3a331X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a017X3a5X3aclass5X3aError1X3a0::SifrGeneratedUnionVariant5X3aclass5X3aError1X3a0(
-                _,
+                sifr_generated_try_variant_error,
             ) => {
+                let _e_5f65 = sifr_generated_try_variant_error.clone();
                 assert!(false);
             }
             SifrGeneratedUnion8X3asequence5X3aunion1X3a331X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a017X3a5X3aclass5X3aError1X3a0::SifrGeneratedUnionVariant5X3aclass18X3aFloatOverflowError1X3a0(
                 sifr_generated_try_variant_error,
             ) => {
-                let _ = Error::new(sifr_generated_try_variant_error.clone().message);
+                let _e_5f65 = Error::new(
+                    sifr_generated_try_variant_error.clone().message,
+                );
                 assert!(false);
             }
             SifrGeneratedUnion8X3asequence5X3aunion1X3a331X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a017X3a5X3aclass5X3aError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3aFloatPrecisionLossError1X3a0(
                 sifr_generated_try_variant_error,
             ) => {
-                let _ = Error::new(sifr_generated_try_variant_error.clone().message);
+                let _e_5f65 = Error::new(
+                    sifr_generated_try_variant_error.clone().message,
+                );
                 assert!(false);
             }
         }

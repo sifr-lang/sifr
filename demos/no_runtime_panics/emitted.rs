@@ -401,17 +401,15 @@ fn is_valid_ipv4(addr: &str) -> bool {
     }
     for part in parts.iter().cloned() {
         let sifr_generated_chars_part: Vec<char> = part.chars().collect::<Vec<char>>();
-        if {
+        let Some(_checked_value_0) = {
             let sifr_generated_string_index = SifrInt::from_i64(0);
             let sifr_generated_string_index_normalized =
                 sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_part.len());
             sifr_generated_chars_part.get(sifr_generated_string_index_normalized)
         }
-        .map(::std::string::ToString::to_string)
-        .is_none()
-        {
+        .map(::std::string::ToString::to_string) else {
             return false;
-        }
+        };
         if &SifrInt::from(sifr_generated_chars_part.len()) > &SifrInt::from_i64(3) {
             return false;
         }
@@ -594,8 +592,9 @@ fn sifr_generated_json_token_int(
                 Err(JSONDecodeError::new(e.message.clone()))
             }
             SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(
-                _,
+                sifr_generated_try_variant_error,
             ) => {
+                let _e = sifr_generated_try_variant_error.clone();
                 Err(
                     JSONDecodeError::new(
                         "JSON bridge payload has invalid integer metadata".to_string(),
@@ -638,8 +637,9 @@ fn sifr_generated_json_token_float(
                 Err(JSONDecodeError::new(e.message.clone()))
             }
             SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(
-                _,
+                sifr_generated_try_variant_error,
             ) => {
+                let _e = sifr_generated_try_variant_error.clone();
                 Err(
                     JSONDecodeError::new(
                         "JSON bridge payload has invalid float metadata".to_string(),
@@ -1261,12 +1261,14 @@ fn sifr_generated_expand_tabs_impl(text: &str, tabsize: SifrInt) -> String {
                     j = &j + &SifrInt::from_i64(1);
                 }
                 column = &column + &spaces;
-            } else if ch == "\n" || ch == "\r" {
-                result.push_str(ch.as_str());
-                column = SifrInt::from_i64(0);
             } else {
+                let sifr_generated_shared_branch_condition = ch == "\n" || ch == "\r";
                 result.push_str(ch.as_str());
-                column = &column + &SifrInt::from_i64(1);
+                if sifr_generated_shared_branch_condition {
+                    column = SifrInt::from_i64(0);
+                } else {
+                    column = &column + &SifrInt::from_i64(1);
+                }
             }
         }
         i = &i + &SifrInt::from_i64(1);
@@ -1621,7 +1623,7 @@ fn main() {
         let sifr_generated_stop = sifr_generated_len;
         let mut sifr_generated_i = sifr_generated_start;
         let mut sifr_generated_result = None;
-        while sifr_generated_i < sifr_generated_stop && sifr_generated_result == None {
+        while sifr_generated_i < sifr_generated_stop && sifr_generated_result.is_none() {
             if let Some(sifr_generated_x) = numbers.get(sifr_generated_i)
                 && sifr_generated_x.eq(&SifrInt::from_i64(99))
             {
@@ -1648,7 +1650,7 @@ fn main() {
         println!("randint(5, 3) -> ValueError: {}", e.message.clone());
     }
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
-        let _ = wrap(&"text".to_string(), SifrInt::from_i64(0))?;
+        let _wrapped: Vec<String> = wrap(&"text".to_string(), SifrInt::from_i64(0))?;
         println!("Wrapped text: ok");
         Ok(())
     })();
@@ -1668,7 +1670,8 @@ fn main() {
     ];
     let sifr_generated_try_res: Result<(), SifrGeneratedStdlibSifrX2egraphlibX2eCycleError> =
         (|| {
-            let _ = topological_sort(SifrInt::from_i64(3), &from_n, &to_n)?;
+            let _sorted_nodes: Vec<SifrInt> =
+                topological_sort(SifrInt::from_i64(3), &from_n, &to_n)?;
             println!("Topologically sorted: ok");
             Ok(())
         })();
@@ -1725,7 +1728,8 @@ fn main() {
         }
         Ok(())
     })();
-    if sifr_generated_try_res.is_err() {
+    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+        let _e = sifr_generated_try_err.clone();
         println!(
             "nums[99] = 42 -> IndexError, list len still {}",
             SifrInt::from(nums.len())

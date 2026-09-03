@@ -91,12 +91,14 @@ fn sifr_generated_expand_tabs_impl(text: &str, tabsize: SifrInt) -> String {
                     j = &j + &SifrInt::from_i64(1);
                 }
                 column = &column + &spaces;
-            } else if ch == "\n" || ch == "\r" {
-                result.push_str(ch.as_str());
-                column = SifrInt::from_i64(0);
             } else {
+                let sifr_generated_shared_branch_condition = ch == "\n" || ch == "\r";
                 result.push_str(ch.as_str());
-                column = &column + &SifrInt::from_i64(1);
+                if sifr_generated_shared_branch_condition {
+                    column = SifrInt::from_i64(0);
+                } else {
+                    column = &column + &SifrInt::from_i64(1);
+                }
             }
         }
         i = &i + &SifrInt::from_i64(1);
@@ -499,10 +501,10 @@ fn indent(text: &str, prefix: &str) -> String {
             result.push('\n');
         }
         first = false;
-        if sifr_generated_has_non_whitespace(&line) {
-            result.push_str(prefix);
-            result.push_str(line.as_str());
-        } else {
+        {
+            if sifr_generated_has_non_whitespace(&line) {
+                result.push_str(prefix);
+            }
             result.push_str(line.as_str());
         }
     }
@@ -548,7 +550,8 @@ fn collect_wrap_fill_actual() -> Vec<bool> {
         );
         Ok(())
     })();
-    if sifr_generated_try_res.is_err() {
+    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+        let _e = sifr_generated_try_err.clone();
         actual.push(false);
     }
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
@@ -556,7 +559,8 @@ fn collect_wrap_fill_actual() -> Vec<bool> {
         actual.push(filled == "alpha beta\ngamma");
         Ok(())
     })();
-    if sifr_generated_try_res.is_err() {
+    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+        let _e = sifr_generated_try_err.clone();
         actual.push(false);
     }
     actual
@@ -574,7 +578,8 @@ fn collect_other_actual() -> Vec<bool> {
         actual.push(format!("{wrap_empty:?}").as_str() == "[]".to_string().as_str());
         Ok(())
     })();
-    if sifr_generated_try_res.is_err() {
+    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+        let _e = sifr_generated_try_err.clone();
         actual.push(false);
     }
     actual

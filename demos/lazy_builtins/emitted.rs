@@ -30,8 +30,8 @@ fn main() {
     let zipped_it: Box<dyn Iterator<Item = (SifrInt, String, bool)>> = Box::new(
         vec![SifrInt::from_i64(1), SifrInt::from_i64(2)]
             .into_iter()
-            .zip(vec!["x".to_string(), "y".to_string()].into_iter())
-            .zip(vec![true, false].into_iter())
+            .zip(vec!["x".to_string(), "y".to_string()])
+            .zip(vec![true, false])
             .map(|sifr_generated_zip_item| {
                 (
                     sifr_generated_zip_item.0.0,

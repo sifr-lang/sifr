@@ -200,6 +200,8 @@ fn collect_format_capture_names(rust_macro: &syn::Macro, names: &mut HashSet<Str
     };
     let format_index = match macro_name.as_str() {
         "format" | "print" | "println" | "eprint" | "eprintln" => 0,
+        "assert" => 1,
+        "assert_eq" | "assert_ne" => 2,
         "write" | "writeln" => 1,
         _ => return,
     };

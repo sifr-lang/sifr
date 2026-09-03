@@ -74,7 +74,7 @@ fn main() {
             ];
             let mut sifr_generated_out = Vec::new();
             for sifr_generated_pair in sifr_generated_vals.iter().enumerate() {
-                sifr_generated_out.push(sifr_generated_pair.1.try_to_u8().map_err(|_| {
+                sifr_generated_out.push(sifr_generated_pair.1.try_to_u8().map_err(|_error| {
                     ValueError {
                         message: format!(
                             "byte out of range at index {}: {}",

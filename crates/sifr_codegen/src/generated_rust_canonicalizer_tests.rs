@@ -364,7 +364,7 @@ fn preserves_trait_dependencies_complex_renames_mutability_and_pattern_liveness(
 }
 
 #[test]
-fn simplifies_wildcard_option_tests_and_empty_conditionals() {
+fn preserves_unused_option_payload_drop_timing_and_simplifies_empty_conditionals() {
     let source = r#"
         fn main() {
             let value = Some(1);
@@ -374,11 +374,15 @@ fn simplifies_wildcard_option_tests_and_empty_conditionals() {
         }
     "#;
 
-    let canonical = canonicalize_generated_rust_source(source)
-        .expect("wildcard tests and empty conditionals should simplify structurally");
+    let canonical = canonicalize_generated_rust_source(source).expect(
+        "unused payload bindings must preserve drop timing while empty conditionals simplify",
+    );
 
-    assert!(canonical.contains("value.is_some()"), "{canonical}");
-    assert!(!canonical.contains("if let Some(_)"), "{canonical}");
+    assert!(
+        canonical.contains("if let Some(_unused) = value"),
+        "{canonical}"
+    );
+    assert!(!canonical.contains("value.is_some()"), "{canonical}");
     assert!(!canonical.contains("if result.is_err()"), "{canonical}");
     assert!(
         canonical.contains("let _ = result.is_err();"),
@@ -588,9 +592,10 @@ fn removes_infallible_result_scaffolding_and_folds_initial_assignment() {
     assert!(!canonical.contains("generated_result"), "{canonical}");
     assert!(!canonical.contains("assert!(false)"), "{canonical}");
     assert!(
-        canonical.contains("let values: Vec<String> = vec![\"ready\".to_string()]"),
+        canonical.contains("vec![\"ready\".to_string()]"),
         "{canonical}"
     );
+    assert!(!canonical.contains("let mut values"), "{canonical}");
 }
 
 #[test]
@@ -609,9 +614,12 @@ fn moves_default_declarations_to_their_first_straight_line_assignment() {
         .expect("dead default initialization should not survive before a guaranteed assignment");
 
     assert!(!canonical.contains("ready: bool = false"), "{canonical}");
-    assert!(canonical.contains("let ready: bool = true"), "{canonical}");
     assert!(
-        canonical.find("side_effect();") < canonical.find("let ready: bool = true"),
+        canonical.contains("side_effect();\n    true"),
+        "{canonical}"
+    );
+    assert!(
+        canonical.find("side_effect();") < canonical.find("true"),
         "{canonical}"
     );
 }
@@ -656,10 +664,13 @@ fn ignores_references_to_nested_shadow_bindings_when_cleaning_let_else() {
     "#;
 
     let canonical = canonicalize_generated_rust_source(source)
-        .expect("nested shadow bindings must not keep an unused outer proof binding alive");
+        .expect("nested shadow bindings must not make the outer payload appear used");
 
-    assert!(canonical.contains("if first.is_none()"), "{canonical}");
-    assert_eq!(canonical.matches("let Some(").count(), 1, "{canonical}");
+    assert!(
+        canonical.contains("let Some(_checked_value) = first"),
+        "{canonical}"
+    );
+    assert_eq!(canonical.matches("let Some(").count(), 2, "{canonical}");
 }
 
 #[test]

@@ -72,7 +72,7 @@ fn classify_score(score: SifrInt) -> String {
     }
 }
 fn describe_optional(x: Option<SifrInt>) -> String {
-    if let _ = x {
+    if x.is_none() {
         "nothing".to_string()
     } else {
         "something".to_string()
@@ -110,24 +110,34 @@ fn classify_point(p: &Point) -> String {
             ..
         } => "origin".to_string(),
         Point {
-            x: _,
+            x: px,
             y: SifrInt::Small(0),
             ..
-        } => "on x-axis".to_string(),
+        } => {
+            let _px = px.clone();
+            "on x-axis".to_string()
+        }
         Point {
             x: SifrInt::Small(0),
-            y: _,
+            y: py,
             ..
-        } => "on y-axis".to_string(),
-        Point { x: _, y: _, .. } => "general".to_string(),
+        } => {
+            let _py = py.clone();
+            "on y-axis".to_string()
+        }
+        Point { x: px, y: py, .. } => {
+            let _px = px.clone();
+            let _py = py.clone();
+            "general".to_string()
+        }
     }
 }
 fn classify_pair(p: (SifrInt, SifrInt)) -> String {
     match p {
         (SifrInt::Small(0), SifrInt::Small(0)) => "origin".to_string(),
-        (_, SifrInt::Small(0)) => "x-axis".to_string(),
-        (SifrInt::Small(0), _) => "y-axis".to_string(),
-        (_, _) => "general".to_string(),
+        (_x, SifrInt::Small(0)) => "x-axis".to_string(),
+        (SifrInt::Small(0), _y) => "y-axis".to_string(),
+        (_x, _y) => "general".to_string(),
     }
 }
 fn classify_quadrant(p: &Point) -> String {
@@ -140,11 +150,15 @@ fn classify_quadrant(p: &Point) -> String {
         Point { x: px, y: py, .. }
             if &*px > &SifrInt::from_i64(0) && &*py > &SifrInt::from_i64(0) =>
         {
+            let _px = px.clone();
+            let _py = py.clone();
             "Q1".to_string()
         }
         Point { x: px, y: py, .. }
             if &*px < &SifrInt::from_i64(0) && &*py > &SifrInt::from_i64(0) =>
         {
+            let _px = px.clone();
+            let _py = py.clone();
             "Q2".to_string()
         }
         _ => "other".to_string(),

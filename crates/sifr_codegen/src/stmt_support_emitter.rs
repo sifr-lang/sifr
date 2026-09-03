@@ -42,6 +42,8 @@ mod field_assignment;
 mod if_condition_lowering;
 mod iterator_lowering;
 mod loops_try_finally;
+#[cfg(test)]
+mod loops_try_finally_tests;
 mod native_async_context;
 mod native_async_for;
 mod nested_subscript_assignment_helpers;

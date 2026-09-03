@@ -5,12 +5,11 @@ fn shadow_parameter(mut value: SifrInt) -> SifrInt {
     value.clone()
 }
 fn choose_label(flag: bool) -> String {
-    let label: String = if flag {
+    if flag {
         "warm".to_string()
     } else {
         "cold".to_string()
-    };
-    label
+    }
 }
 fn main() {
     assert_eq!(

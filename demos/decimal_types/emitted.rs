@@ -63,7 +63,7 @@ fn main() {
                                         .to_string(),
                                 ))
                             },
-                            |sifr_generated_decimal_value| Ok(sifr_generated_decimal_value),
+                            Ok,
                         )
                 })
             })
@@ -79,6 +79,6 @@ fn main() {
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
         let error = sifr_generated_try_err.clone();
-        assert!(false, "{}", error.to_string());
+        assert!(false, "{error}");
     }
 }

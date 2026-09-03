@@ -10,7 +10,8 @@ mod generated_rust_canonicalizer;
 mod generator_runtime_needs;
 pub use generated_rust_canonicalizer::{
     canonicalize_generated_rust_identifier, canonicalize_generated_rust_source,
-    finalize_formatted_generated_rust_source,
+    discover_project_const_function_names, finalize_formatted_generated_rust_source,
+    finalize_formatted_generated_rust_source_with_project_consts,
 };
 mod lib_async_main_cancellation;
 mod lib_native_async_cleanup_needs;

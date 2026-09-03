@@ -550,7 +550,8 @@ fn accumulate<T: Clone + 'static + SifrGeneratedAdd>(
                             Ok(())
                         })(
                         );
-                        if sifr_generated_try_res.is_err() {
+                        if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+                            let _e = sifr_generated_try_err.clone();
                             return;
                         }
                     }
@@ -2095,6 +2096,10 @@ fn less_than_three(x: SifrInt) -> bool {
     clippy::too_many_lines,
     reason = "one generated Rust function preserves one typed Sifr function"
 )]
+#[expect(
+    clippy::many_single_char_names,
+    reason = "generated Rust preserves this exact typed Sifr source contract"
+)]
 fn main() {
     println!("=== math additions ===");
     println!("{}", {
@@ -2270,7 +2275,7 @@ fn main() {
     let sifr_generated_try_res: Result<(), SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> =
         (|| {
             let empty: Vec<f64> = Vec::new();
-            let _ = mean(&empty)?;
+            let _bad: f64 = mean(&empty)?;
             Ok(())
         })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
@@ -2339,7 +2344,7 @@ fn main() {
             sifr_generated_concat
         });
     }
-    let _ = gauss(0.0_f64, 1.0_f64);
+    let _g: f64 = gauss(0.0_f64, 1.0_f64);
     println!("gauss sample is float = True");
     println!("=== functools.reduce ===");
     let nums: Vec<SifrInt> = vec![

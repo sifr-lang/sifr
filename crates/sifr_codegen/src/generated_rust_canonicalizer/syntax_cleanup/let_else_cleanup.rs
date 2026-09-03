@@ -1,5 +1,5 @@
 use super::liveness::references_after_statements;
-use super::{discard_unused_pattern_bindings, expression_into_block, is_wildcard_result_pattern};
+use super::{expression_into_block, is_wildcard_result_pattern, suppress_unused_pattern_bindings};
 
 pub(super) fn remove_unused_bindings(statements: &mut [syn::Stmt]) {
     for index in 0..statements.len() {
@@ -13,7 +13,7 @@ pub(super) fn remove_unused_bindings(statements: &mut [syn::Stmt]) {
         let Some((_, diverge)) = init.diverge.take() else {
             continue;
         };
-        discard_unused_pattern_bindings(&mut local.pat, &referenced_later);
+        suppress_unused_pattern_bindings(&mut local.pat, &referenced_later);
         let predicate = if is_wildcard_result_pattern(&local.pat, "Some") {
             Some("is_none")
         } else if is_wildcard_result_pattern(&local.pat, "Ok") {

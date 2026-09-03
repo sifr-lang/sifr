@@ -1,4 +1,5 @@
 use quote::ToTokens;
+use std::collections::HashSet;
 use syn::visit::{self, Visit};
 
 const EXPECTATION_REASON: &str = "generated Rust preserves this exact typed Sifr source contract";
@@ -16,7 +17,7 @@ pub(super) fn refresh_function_expectations(
     if bool_parameter_count(signature) > 3 {
         add_expectation(attrs, "fn_params_excessive_bools");
     }
-    if shape.asserts_constant_false {
+    if shape.asserts_constant {
         add_expectation(attrs, "assertions_on_constants");
     }
     if shape.has_approximate_constant {
@@ -89,19 +90,100 @@ fn bool_parameter_count(signature: &syn::Signature) -> usize {
 }
 
 fn single_character_binding_count(signature: &syn::Signature, body: &syn::Block) -> usize {
-    signature
-        .inputs
-        .iter()
-        .filter_map(|argument| match argument {
-            syn::FnArg::Receiver(_) => None,
-            syn::FnArg::Typed(typed) => simple_pattern_name(&typed.pat),
-        })
-        .chain(body.stmts.iter().filter_map(|statement| match statement {
-            syn::Stmt::Local(local) => simple_pattern_name(&local.pat),
-            _ => None,
-        }))
-        .filter(|name| name.chars().count() == 1)
-        .count()
+    let mut counter = SingleCharacterBindingCounter {
+        scopes: vec![HashSet::new()],
+        maximum: 0,
+    };
+    for argument in &signature.inputs {
+        if let syn::FnArg::Typed(typed) = argument {
+            counter.record_pattern(&typed.pat);
+        }
+    }
+    counter.visit_block(body);
+    counter.maximum
+}
+
+#[derive(Default)]
+struct SingleCharacterBindingCounter {
+    scopes: Vec<HashSet<String>>,
+    maximum: usize,
+}
+
+impl SingleCharacterBindingCounter {
+    fn record_pattern(&mut self, pattern: &syn::Pat) {
+        let mut names = Vec::new();
+        collect_pattern_names(pattern, &mut names);
+        for name in names {
+            if name.chars().count() == 1
+                && !self.scopes.iter().any(|scope| scope.contains(&name))
+                && let Some(scope) = self.scopes.last_mut()
+            {
+                scope.insert(name);
+            }
+        }
+        self.maximum = self.maximum.max(self.scopes.iter().map(HashSet::len).sum());
+    }
+}
+
+impl<'ast> Visit<'ast> for SingleCharacterBindingCounter {
+    fn visit_local(&mut self, local: &'ast syn::Local) {
+        if let Some(init) = &local.init {
+            self.visit_expr(&init.expr);
+            if let Some((_, diverge)) = &init.diverge {
+                self.visit_expr(diverge);
+            }
+        }
+        self.record_pattern(&local.pat);
+    }
+
+    fn visit_block(&mut self, block: &'ast syn::Block) {
+        self.scopes.push(HashSet::new());
+        visit::visit_block(self, block);
+        self.scopes.pop();
+    }
+
+    fn visit_arm(&mut self, arm: &'ast syn::Arm) {
+        self.scopes.push(HashSet::new());
+        self.record_pattern(&arm.pat);
+        if let syn::Pat::Guard(guard) = &arm.pat {
+            self.visit_expr(&guard.guard);
+        }
+        self.visit_expr(&arm.body);
+        self.scopes.pop();
+    }
+
+    fn visit_item(&mut self, _item: &'ast syn::Item) {}
+}
+
+fn collect_pattern_names(pattern: &syn::Pat, names: &mut Vec<String>) {
+    match pattern {
+        syn::Pat::Ident(binding) => names.push(binding.ident.to_string()),
+        syn::Pat::Guard(guard) => collect_pattern_names(&guard.pat, names),
+        syn::Pat::Paren(paren) => collect_pattern_names(&paren.pat, names),
+        syn::Pat::Reference(reference) => collect_pattern_names(&reference.pat, names),
+        syn::Pat::Slice(slice) => {
+            for element in &slice.elems {
+                collect_pattern_names(element, names);
+            }
+        }
+        syn::Pat::Struct(struct_) => {
+            for field in &struct_.fields {
+                collect_pattern_names(&field.pat, names);
+            }
+        }
+        syn::Pat::Tuple(tuple) => {
+            for element in &tuple.elems {
+                collect_pattern_names(element, names);
+            }
+        }
+        syn::Pat::TupleStruct(tuple) => {
+            for element in &tuple.elems {
+                collect_pattern_names(element, names);
+            }
+        }
+        syn::Pat::Type(typed) => collect_pattern_names(&typed.pat, names),
+        _ => {}
+    }
 }
 
 fn simple_pattern_name(pattern: &syn::Pat) -> Option<String> {
@@ -137,7 +219,7 @@ fn is_snake_case(name: &str) -> bool {
 
 #[derive(Default)]
 struct FunctionShape {
-    asserts_constant_false: bool,
+    asserts_constant: bool,
     has_approximate_constant: bool,
 }
 
@@ -157,18 +239,15 @@ impl<'ast> Visit<'ast> for FunctionShape {
     }
 
     fn visit_macro(&mut self, rust_macro: &'ast syn::Macro) {
-        let first_argument_is_false = rust_macro
+        let first_argument_is_constant = rust_macro
             .parse_body_with(
                 syn::punctuated::Punctuated::<syn::Expr, syn::Token![,]>::parse_terminated,
             )
             .ok()
             .and_then(|arguments| arguments.first().cloned())
-            .is_some_and(|expression| {
-                matches!(expression, syn::Expr::Lit(literal)
-                    if matches!(&literal.lit, syn::Lit::Bool(value) if !value.value))
-            });
-        if rust_macro.path.is_ident("assert") && first_argument_is_false {
-            self.asserts_constant_false = true;
+            .is_some_and(|expression| expression_is_syntactic_constant(&expression));
+        if rust_macro.path.is_ident("assert") && first_argument_is_constant {
+            self.asserts_constant = true;
         }
         if let Ok(arguments) = rust_macro.parse_body_with(
             syn::punctuated::Punctuated::<syn::Expr, syn::Token![,]>::parse_terminated,
@@ -178,5 +257,26 @@ impl<'ast> Visit<'ast> for FunctionShape {
             }
         }
         visit::visit_macro(self, rust_macro);
+    }
+}
+
+fn expression_is_syntactic_constant(expression: &syn::Expr) -> bool {
+    match expression {
+        syn::Expr::Lit(_) => true,
+        syn::Expr::Path(path) => path.path.segments.last().is_some_and(|segment| {
+            let name = segment.ident.to_string();
+            name.chars().any(|character| character.is_ascii_uppercase())
+                && name.chars().all(|character| {
+                    character == '_' || character.is_ascii_uppercase() || character.is_ascii_digit()
+                })
+        }),
+        syn::Expr::Paren(paren) => expression_is_syntactic_constant(&paren.expr),
+        syn::Expr::Group(group) => expression_is_syntactic_constant(&group.expr),
+        syn::Expr::Unary(unary) => expression_is_syntactic_constant(&unary.expr),
+        syn::Expr::Binary(binary) => {
+            expression_is_syntactic_constant(&binary.left)
+                && expression_is_syntactic_constant(&binary.right)
+        }
+        _ => false,
     }
 }

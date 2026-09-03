@@ -1,11 +1,11 @@
-use super::report::{BuildReport, PythonInteropCheckReport};
+use super::report::{BuildReport, MaterializedRustProjectReport, PythonInteropCheckReport};
 use super::rust_interop_probe_policy::DirectProbePolicy;
 use crate::build::{
     CachedBinaryArtifact, PackageEntrypoint, RootedEntrypoint, build_cached_package_project_binary,
     build_cached_project_binary, build_cached_single_file_binary,
     build_rooted_entrypoint_binary_with_report, check_single_file_entrypoint,
-    emit_project_entrypoint, resolve_package_project_entrypoint_plan,
-    resolve_project_entrypoint_plan,
+    emit_project_entrypoint, materialize_rooted_entrypoint_rust_project,
+    resolve_package_project_entrypoint_plan, resolve_project_entrypoint_plan,
 };
 use crate::diagnostics::{CompileResult, RenderedDiagnostic};
 use sifr_frontend::SourceProvider;
@@ -44,6 +44,53 @@ pub fn build_package_project_report(
         RootedEntrypoint::PackageProject {
             entrypoint,
             provider,
+        },
+        output_dir,
+    )
+}
+
+#[doc(hidden)]
+pub fn materialize_package_project(
+    entrypoint: &PackageEntrypoint,
+    output_dir: &Path,
+    provider: &mut dyn SourceProvider,
+) -> Result<MaterializedRustProjectReport, Vec<RenderedDiagnostic>> {
+    materialize_rooted_entrypoint_rust_project(
+        RootedEntrypoint::PackageProject {
+            entrypoint,
+            provider,
+        },
+        output_dir,
+    )
+}
+
+#[doc(hidden)]
+pub fn materialize_project(
+    main_file: &Path,
+    output_dir: &Path,
+    provider: &mut dyn SourceProvider,
+) -> Result<MaterializedRustProjectReport, Vec<RenderedDiagnostic>> {
+    materialize_rooted_entrypoint_rust_project(
+        RootedEntrypoint::Project {
+            main_file,
+            provider,
+        },
+        output_dir,
+    )
+}
+
+#[doc(hidden)]
+pub fn materialize_single_file(
+    source: &str,
+    entrypoint_file: &Path,
+    output_dir: &Path,
+) -> Result<MaterializedRustProjectReport, Vec<RenderedDiagnostic>> {
+    let display_path = entrypoint_file.to_string_lossy();
+    materialize_rooted_entrypoint_rust_project(
+        RootedEntrypoint::SingleFile {
+            source,
+            display_path: &display_path,
+            lowering_options: LoweringOptions::default(),
         },
         output_dir,
     )

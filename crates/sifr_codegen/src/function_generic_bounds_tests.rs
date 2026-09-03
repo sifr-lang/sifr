@@ -414,3 +414,43 @@ fn structural_correspondence_does_not_overconstrain_sibling_parameters() {
     );
     assert!(closed["caller"]["Right"].is_empty());
 }
+
+#[test]
+fn same_basename_functions_in_distinct_modules_have_distinct_closure_identity() {
+    let left_type = Type::TypeVar("Left".to_string());
+    let left = function(
+        "transform",
+        "Left",
+        vec![parameter("value", left_type.clone())],
+        left_type.clone(),
+        vec![HirStmt::Return {
+            value: Some(HirExpr::BinOp {
+                left: Box::new(name("value", left_type.clone())),
+                op: "+".to_string(),
+                right: Box::new(name("value", left_type.clone())),
+                ty: left_type,
+            }),
+        }],
+    );
+    let right_type = Type::TypeVar("Right".to_string());
+    let right = function(
+        "transform",
+        "Right",
+        vec![parameter("value", right_type.clone())],
+        right_type.clone(),
+        vec![HirStmt::Return {
+            value: Some(name("value", right_type)),
+        }],
+    );
+
+    let left_closed =
+        RustEmitter::closed_function_type_param_bounds(&module(vec![left], HashMap::new()));
+    let right_closed =
+        RustEmitter::closed_function_type_param_bounds(&module(vec![right], HashMap::new()));
+
+    assert!(
+        left_closed["transform"]["Left"]
+            .contains(&FunctionTypeParamBound::Trait("__SifrAdd".to_string()))
+    );
+    assert!(right_closed["transform"]["Right"].is_empty());
+}

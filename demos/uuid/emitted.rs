@@ -345,15 +345,18 @@ fn sifr_generated_canonical_uuid_text(input_text: &str) -> Result<String, ValueE
         sifr_generated_concat
     };
     let mut sifr_generated_chars_normalized_input: Vec<char> =
-        normalized_input.chars().collect::<Vec<char>>();
-    if sifr_generated_starts_with(&normalized_input, &"urn:uuid:".to_string()) {
-        normalized_input = sifr_generated_substring(
-            &normalized_input,
-            SifrInt::from_i64(9),
-            SifrInt::from(normalized_input.chars().count()),
-        );
-        sifr_generated_chars_normalized_input = normalized_input.chars().collect::<Vec<char>>();
-    }
+        if sifr_generated_starts_with(&normalized_input, &"urn:uuid:".to_string()) {
+            {
+                normalized_input = sifr_generated_substring(
+                    &normalized_input,
+                    SifrInt::from_i64(9),
+                    SifrInt::from(normalized_input.chars().count()),
+                );
+                normalized_input.chars().collect::<Vec<char>>()
+            }
+        } else {
+            normalized_input.chars().collect::<Vec<char>>()
+        };
     if &SifrInt::from(sifr_generated_chars_normalized_input.len()) >= &SifrInt::from_i64(2) {
         let first: Option<String> = {
             let sifr_generated_string_index = SifrInt::from_i64(0);
@@ -599,7 +602,7 @@ fn collect_negative_and_class_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = Vec::new();
     let mut invalid_rejected: bool = false;
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
-        let _ = uuid_from_hex(&"invalid".to_string())?;
+        let _bad: SifrGeneratedStdlibSifrX2euuidX2eUUID = uuid_from_hex(&"invalid".to_string())?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {

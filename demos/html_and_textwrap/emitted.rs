@@ -173,12 +173,14 @@ mod sifr_generated_project_nominals {
                         j = &j + &SifrInt::from_i64(1);
                     }
                     column = &column + &spaces;
-                } else if ch == "\n" || ch == "\r" {
-                    result.push_str(ch.as_str());
-                    column = SifrInt::from_i64(0);
                 } else {
+                    let sifr_generated_shared_branch_condition = ch == "\n" || ch == "\r";
                     result.push_str(ch.as_str());
-                    column = &column + &SifrInt::from_i64(1);
+                    if sifr_generated_shared_branch_condition {
+                        column = SifrInt::from_i64(0);
+                    } else {
+                        column = &column + &SifrInt::from_i64(1);
+                    }
                 }
             }
             i = &i + &SifrInt::from_i64(1);
@@ -433,7 +435,7 @@ mod sifr_generated_project_nominals {
                 if ch == "." || ch == "!" || ch == "?" {
                     let next_opt: Option<String> = if &(&i + &SifrInt::from_i64(1))
                         < &SifrInt::from(sifr_generated_chars_text.len())
-                        && {
+                        && let Some(_checked_value_4) = {
                             let sifr_generated_string_index = &i + &SifrInt::from_i64(1);
                             let sifr_generated_string_index_normalized =
                                 sifr_generated_string_index
@@ -441,7 +443,6 @@ mod sifr_generated_project_nominals {
                             sifr_generated_chars_text.get(sifr_generated_string_index_normalized)
                         }
                         .map(::std::string::ToString::to_string)
-                        .is_some()
                     {
                         {
                             let sifr_generated_string_index = &i + &SifrInt::from_i64(1);

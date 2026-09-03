@@ -148,7 +148,7 @@ fn product<T: Clone + 'static>(
                 }
             }
             let mut indices: Vec<SifrInt> = Vec::new();
-            for _ in pools.iter().cloned() {
+            for _pool in pools.iter().cloned() {
                 indices.push(SifrInt::from_i64(0));
             }
             let mut finished: bool = false;
@@ -258,7 +258,8 @@ fn product<T: Clone + 'static>(
                             Ok(())
                         })(
                         );
-                        if sifr_generated_try_res.is_err() {
+                        if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+                            let _e = sifr_generated_try_err.clone();
                             return;
                         }
                         advanced = true;
@@ -284,7 +285,8 @@ fn product<T: Clone + 'static>(
                             Ok(())
                         })(
                         );
-                        if sifr_generated_try_res.is_err() {
+                        if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+                            let _e = sifr_generated_try_err.clone();
                             return;
                         }
                         position = &position - &SifrInt::from_i64(1);
@@ -403,7 +405,8 @@ fn permutations<T: Clone + 'static>(
                         }
                         Ok(())
                     })();
-                    if sifr_generated_try_res.is_err() {
+                    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+                        let _e = sifr_generated_try_err.clone();
                         return;
                     }
                     if &next_remaining == &SifrInt::from_i64(0) {
@@ -461,7 +464,8 @@ fn permutations<T: Clone + 'static>(
                                 Ok(())
                             })(
                             );
-                            if sifr_generated_try_res.is_err() {
+                            if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+                                let _e = sifr_generated_try_err.clone();
                                 return;
                             }
                             cursor = &cursor + &SifrInt::from_i64(1);
@@ -505,7 +509,8 @@ fn permutations<T: Clone + 'static>(
                             Ok(())
                         })(
                         );
-                        if sifr_generated_try_res.is_err() {
+                        if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+                            let _e = sifr_generated_try_err.clone();
                             return;
                         }
                         position = &position - &SifrInt::from_i64(1);
@@ -580,7 +585,8 @@ fn permutations<T: Clone + 'static>(
                             Ok(())
                         })(
                         );
-                        if sifr_generated_try_res.is_err() {
+                        if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+                            let _e = sifr_generated_try_err.clone();
                             return;
                         }
                         let mut row: Vec<T> = Vec::new();
@@ -732,7 +738,8 @@ fn combinations<T: Clone + 'static>(
                     }
                     Ok(())
                 })();
-                if sifr_generated_try_res.is_err() {
+                if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+                    let _e = sifr_generated_try_err.clone();
                     return;
                 }
                 let mut cursor: SifrInt = &position.clone() + &SifrInt::from_i64(1);
@@ -772,7 +779,8 @@ fn combinations<T: Clone + 'static>(
                         }
                         Ok(())
                     })();
-                    if sifr_generated_try_res.is_err() {
+                    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+                        let _e = sifr_generated_try_err.clone();
                         return;
                     }
                     cursor = &cursor + &SifrInt::from_i64(1);
@@ -889,7 +897,8 @@ fn combinations_with_replacement<T: Clone + 'static>(
                         }
                         Ok(())
                     })();
-                    if sifr_generated_try_res.is_err() {
+                    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+                        let _e = sifr_generated_try_err.clone();
                         return;
                     }
                     cursor = &cursor + &SifrInt::from_i64(1);
@@ -970,7 +979,8 @@ fn accumulate<T: Clone + 'static + SifrGeneratedAdd>(
                             Ok(())
                         })(
                         );
-                        if sifr_generated_try_res.is_err() {
+                        if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+                            let _e = sifr_generated_try_err.clone();
                             return;
                         }
                     }

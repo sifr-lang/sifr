@@ -310,6 +310,11 @@ impl<'metadata> CalledMethodCollector<'metadata> {
             }
             syn::Expr::MethodCall(call) => {
                 let owner = self.receiver_owner(&call.receiver)?;
+                if matches!(call.method.to_string().as_str(), "clone" | "to_owned")
+                    && call.args.is_empty()
+                {
+                    return Some(owner);
+                }
                 self.metadata
                     .method_returns
                     .get(&(owner, call.method.to_string()))
@@ -388,8 +393,15 @@ impl<'ast> Visit<'ast> for CalledMethodCollector<'_> {
     }
 
     fn visit_macro(&mut self, macro_: &'ast syn::Macro) {
-        visit::visit_macro(self, macro_);
-        self.collect_macro_tokens(macro_.tokens.clone());
+        if let Ok(arguments) = macro_.parse_body_with(
+            syn::punctuated::Punctuated::<syn::Expr, syn::Token![,]>::parse_terminated,
+        ) {
+            for argument in &arguments {
+                self.visit_expr(argument);
+            }
+        } else {
+            self.collect_macro_tokens(macro_.tokens.clone());
+        }
     }
 }
 

@@ -184,10 +184,7 @@ fn sifr_generated_hash_bytes(algorithm: &str, data: &[u8]) -> Vec<u8> {
     } else if algorithm == "blake2s" {
         return blake2s_bytes(data);
     }
-    {
-        let sifr_generated_empty_bytes_literal: Vec<u8> = Vec::new();
-        sifr_generated_empty_bytes_literal
-    }
+    Vec::new()
 }
 fn sifr_generated_hash_hex(algorithm: &str, data: &[u8]) -> String {
     {
@@ -215,6 +212,10 @@ fn sqrt(x: f64) -> f64 {
     ::sifr_stdlib::math::sqrt(x)
 }
 #[expect(
+    clippy::assertions_on_constants,
+    reason = "generated Rust preserves this exact typed Sifr source contract"
+)]
+#[expect(
     clippy::approx_constant,
     reason = "generated Rust preserves this exact typed Sifr source contract"
 )]
@@ -228,7 +229,7 @@ fn main() {
     assert_eq!(result, 3.0_f64);
     assert!(PI > 3.14_f64);
     let h: String = sha256(&vec![104u8, 101u8, 108u8, 108u8, 111u8]).hexdigest();
-    let _ = h.chars().collect::<Vec<char>>();
+    let _chars_h: Vec<char> = h.chars().collect::<Vec<char>>();
     assert_eq!(&SifrInt::from(h.chars().count()), &SifrInt::from_i64(64));
     let encoded: String = b64encode(&"Hello!".to_string());
     let sifr_generated_try_res: Result<(), ParseError> = (|| {

@@ -46,7 +46,10 @@ fn safe(seed: SifrInt) -> SifrInt {
         }
         Err(ValueError::new("too small".to_string()))
     })();
-    sifr_generated_try_res.unwrap_or(SifrInt::from_i64(42))
+    sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
+        let _e = sifr_generated_try_err.clone();
+        SifrInt::from_i64(42)
+    })
 }
 const fn unreachable_tail() -> SifrInt {
     SifrInt::from_i64(9)

@@ -44,7 +44,7 @@ fn main() {
         ("alice".to_string(), SifrInt::from_i64(95)),
         ("bob".to_string(), SifrInt::from_i64(87)),
     ];
-    for (name, _) in pairs.iter().cloned() {
+    for (name, _score) in pairs.iter().cloned() {
         println!("{name}");
     }
 }

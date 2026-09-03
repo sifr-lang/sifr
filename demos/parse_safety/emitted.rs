@@ -131,19 +131,6 @@ mod sifr_generated_project_nominals {
             None
         }
     }
-    impl SifrGeneratedStdlibSifrX2ejsonX2eJsonValue {
-        #[must_use]
-        pub fn keys(&self) -> Vec<String> {
-            let mut result: Vec<String> = Vec::new();
-            if !self.is_object() {
-                return result;
-            }
-            for (item_key, _) in self.object_items.as_ref().clone().iter().cloned() {
-                result.push(item_key.to_owned());
-            }
-            result
-        }
-    }
     impl ::std::fmt::Display for SifrGeneratedStdlibSifrX2ejsonX2eJsonValue {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
             write!(
@@ -242,8 +229,9 @@ mod sifr_generated_project_nominals {
                     Err(JSONDecodeError::new(e.message.clone()))
                 }
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(
-                    _,
+                    sifr_generated_try_variant_error,
                 ) => {
+                    let _e = sifr_generated_try_variant_error.clone();
                     Err(
                         JSONDecodeError::new(
                             "JSON bridge payload has invalid integer metadata"
@@ -289,8 +277,9 @@ mod sifr_generated_project_nominals {
                     Err(JSONDecodeError::new(e.message.clone()))
                 }
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(
-                    _,
+                    sifr_generated_try_variant_error,
                 ) => {
+                    let _e = sifr_generated_try_variant_error.clone();
                     Err(
                         JSONDecodeError::new(
                             "JSON bridge payload has invalid float metadata".to_string(),
@@ -659,7 +648,7 @@ mod sifr_generated_project_nominals {
             if !self.is_table() {
                 return result;
             }
-            for (item_key, _) in self.table_items.as_ref().clone().iter().cloned() {
+            for (item_key, _item_value) in self.table_items.as_ref().clone().iter().cloned() {
                 result.push(item_key.to_owned());
             }
             result
@@ -980,8 +969,9 @@ fn sifr_generated_token_int(tokens: &[String], index: SifrInt) -> Result<SifrInt
     sifr_generated_try_res
         .unwrap_or_else(|sifr_generated_try_err| match sifr_generated_try_err {
             SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aTOMLDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(
-                _,
+                sifr_generated_try_variant_error,
             ) => {
+                let _e = sifr_generated_try_variant_error.clone();
                 Err(
                     TOMLDecodeError::new(
                         "TOML bridge payload has invalid integer metadata".to_string(),
@@ -1021,8 +1011,9 @@ fn sifr_generated_token_float(tokens: &[String], index: SifrInt) -> Result<f64, 
     sifr_generated_try_res
         .unwrap_or_else(|sifr_generated_try_err| match sifr_generated_try_err {
             SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aTOMLDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(
-                _,
+                sifr_generated_try_variant_error,
             ) => {
+                let _e = sifr_generated_try_variant_error.clone();
                 Err(
                     TOMLDecodeError::new(
                         "TOML bridge payload has invalid float metadata".to_string(),
@@ -1340,7 +1331,7 @@ fn demo_regex() {
         println!("unexpected: {}", e.message.clone());
     }
     let sifr_generated_try_res: Result<(), RegexError> = (|| {
-        let _ = has_match(&"[unclosed".to_string(), &"text".to_string())?;
+        let _bad_match: bool = has_match(&"[unclosed".to_string(), &"text".to_string())?;
         println!("should not reach here");
         Ok(())
     })();
@@ -1362,7 +1353,7 @@ fn demo_base64() {
         println!("unexpected: {}", e.message.clone());
     }
     let sifr_generated_try_res: Result<(), ParseError> = (|| {
-        let _ = b64decode(&"!!!not-base64!!!".to_string())?;
+        let _bad_decoded: String = b64decode(&"!!!not-base64!!!".to_string())?;
         println!("should not reach here");
         Ok(())
     })();
@@ -1397,7 +1388,7 @@ fn demo_bytes() {
     }
     let sifr_generated_try_res: Result<(), ParseError> = (|| {
         let bad_bytes: Vec<u8> = vec![255u8, 254u8, 253u8];
-        let _ = ::sifr_runtime::encoding::decode_text(
+        let _bad_text: String = ::sifr_runtime::encoding::decode_text(
             &bad_bytes,
             &"utf-8".to_string(),
             &"strict".to_string(),
@@ -1460,7 +1451,7 @@ fn demo_bytes() {
         println!("unexpected: {}", e.message.clone());
     }
     let sifr_generated_try_res: Result<(), ParseError> = (|| {
-        let _ = {
+        let _bad_hex: Vec<u8> = {
             let s: String = "ZZZZ".to_string();
             let mut cleaned = String::new();
             for ch in s.chars() {

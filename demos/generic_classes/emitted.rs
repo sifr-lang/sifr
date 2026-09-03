@@ -102,7 +102,7 @@ fn main() {
         sifr_generated_concat
     });
     let sp: Pair<String> = Pair::new("hello".to_string(), "world".to_string());
-    let _ = sp.swap();
+    let _sp2: Pair<String> = sp.swap();
     println!("str pair swap ok = true");
     let mut s: Stack<SifrInt> = Stack::new(Vec::new());
     s.push(&SifrInt::from_i64(1));

@@ -12,7 +12,7 @@ fn main() {
     println!("{totals:?}");
     let mixed: Vec<Box<dyn ::std::any::Any>> = Vec::new();
     let mut count: SifrInt = SifrInt::from_i64(0);
-    for _ in mixed.iter() {
+    for _value in mixed.iter() {
         count = &count + &SifrInt::from_i64(1);
     }
     println!("{count}");

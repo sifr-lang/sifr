@@ -30,12 +30,9 @@ fn main() {
     println!("{flags}");
     flags = flags.shr_known_valid(2_usize);
     println!("{flags}");
-    let mut p: SifrInt = SifrInt::from_i64(0);
-    let mut q: SifrInt = SifrInt::from_i64(0);
-    let mut r: SifrInt = SifrInt::from_i64(0);
-    r = SifrInt::from_i64(99);
-    q = r.clone();
-    p = q.clone();
+    let r: SifrInt = SifrInt::from_i64(99);
+    let q: SifrInt = r.clone();
+    let p: SifrInt = q.clone();
     println!("{p}");
     println!("{q}");
     println!("{r}");

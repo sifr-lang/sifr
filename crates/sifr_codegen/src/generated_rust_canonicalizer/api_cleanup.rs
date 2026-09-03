@@ -7,11 +7,73 @@ use super::source_expectations::{
 };
 
 pub(super) fn improve_generated_api_items(items: &mut [syn::Item], source: &str) {
+    improve_generated_api_items_with_project_consts(items, source, &HashSet::new());
+}
+
+pub fn discover_project_const_function_names<'source>(
+    sources: impl IntoIterator<Item = &'source str>,
+) -> Result<HashSet<String>, String> {
+    let mut states = std::collections::HashMap::<String, bool>::new();
+    for source in sources {
+        let file = syn::parse_file(source)
+            .map_err(|error| format!("failed to parse generated project Rust: {error}"))?;
+        collect_free_function_const_states(&file.items, &mut states);
+    }
+    Ok(states
+        .into_iter()
+        .filter_map(|(name, all_const)| all_const.then_some(name))
+        .collect())
+}
+
+pub fn finalize_formatted_generated_rust_source_with_project_consts(
+    source: &str,
+    project_const_functions: &HashSet<String>,
+) -> Result<String, String> {
+    let mut file = syn::parse_file(source)
+        .map_err(|error| format!("failed to parse formatted generated Rust: {error}"))?;
+    improve_generated_api_items_with_project_consts(
+        &mut file.items,
+        source,
+        project_const_functions,
+    );
+    Ok(prettyplease::unparse(&file))
+}
+
+fn collect_free_function_const_states(
+    items: &[syn::Item],
+    states: &mut std::collections::HashMap<String, bool>,
+) {
+    for item in items {
+        match item {
+            syn::Item::Fn(function) => {
+                states
+                    .entry(function.sig.ident.to_string())
+                    .and_modify(|all_const| *all_const &= function.sig.constness.is_some())
+                    .or_insert(function.sig.constness.is_some());
+            }
+            syn::Item::Mod(module) => {
+                if let Some((_, nested)) = &module.content {
+                    collect_free_function_const_states(nested, states);
+                }
+            }
+            _ => {}
+        }
+    }
+}
+
+fn improve_generated_api_items_with_project_consts(
+    items: &mut [syn::Item],
+    source: &str,
+    project_const_functions: &HashSet<String>,
+) {
     loop {
-        let before_const = const_callable_paths(items);
+        let mut before_const = const_callable_paths(items);
+        before_const.extend(project_const_functions.iter().cloned());
         let before_eq = derived_eq_owners(items);
         improve_generated_api_items_once(items, &before_const, &before_eq, source);
-        if const_callable_paths(items) == before_const && derived_eq_owners(items) == before_eq {
+        let mut after_const = const_callable_paths(items);
+        after_const.extend(project_const_functions.iter().cloned());
+        if after_const == before_const && derived_eq_owners(items) == before_eq {
             break;
         }
     }
@@ -468,8 +530,15 @@ impl<'ast> Visit<'ast> for ConstCompatibilityChecker<'_> {
         self.compatible = false;
     }
 
-    fn visit_expr_unary(&mut self, _expression: &'ast syn::ExprUnary) {
-        self.compatible = false;
+    fn visit_expr_unary(&mut self, expression: &'ast syn::ExprUnary) {
+        if matches!(expression.op, syn::UnOp::Deref(_))
+            && self.has_borrowed_self
+            && expression_is_rooted_in_self(&expression.expr)
+        {
+            visit::visit_expr_unary(self, expression);
+        } else {
+            self.compatible = false;
+        }
     }
 
     fn visit_expr_field(&mut self, expression: &'ast syn::ExprField) {
@@ -496,7 +565,7 @@ impl<'ast> Visit<'ast> for ConstCompatibilityChecker<'_> {
         let is_known_external_const = matches!(call.func.as_ref(), syn::Expr::Path(path)
         if path.path.segments.last().is_some_and(|segment| matches!(
             segment.ident.to_string().as_str(),
-            "isnan" | "isinf" | "isfinite" | "signbit"
+            "isnan" | "isinf" | "isfinite" | "isnormal" | "signbit"
         )));
         let known_const = match call.func.as_ref() {
             syn::Expr::Path(path) => {
@@ -511,6 +580,8 @@ impl<'ast> Visit<'ast> for ConstCompatibilityChecker<'_> {
                         };
                         self.const_callables
                             .contains(&format!("{owner_name}::{}", function.ident))
+                            || (owner_name.chars().next().is_some_and(char::is_lowercase)
+                                && self.const_callables.contains(&function.ident.to_string()))
                     }
                     _ => false,
                 }

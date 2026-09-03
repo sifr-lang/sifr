@@ -776,7 +776,7 @@ fn main() {
         (),
         SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aValueError1X3a019X3a5X3aclass7X3aIOError1X3a0,
     > = (|| {
-        let _ = run_command(&format!("mkdir -p {base}/nested"))
+        let _mk: String = run_command(&format!("mkdir -p {base}/nested"))
             .map_err(
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aValueError1X3a019X3a5X3aclass7X3aIOError1X3a0::SifrGeneratedUnionVariant5X3aclass7X3aIOError1X3a0,
             )?;
@@ -799,10 +799,7 @@ fn main() {
         let sliced_entries: Box<dyn Iterator<Item = String>> = islice(
                 Box::new(entries_it),
                 SifrInt::from_i64(2),
-                &{
-                    let sifr_generated_empty_list_literal: Vec<Option<SifrInt>> = Vec::new();
-                    sifr_generated_empty_list_literal
-                },
+                &Vec::new(),
             )
             .map_err(
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aValueError1X3a019X3a5X3aclass7X3aIOError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aValueError1X3a0,
@@ -833,7 +830,7 @@ fn main() {
         }
     }
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        let _ = run_command(&format!("rm -rf {base}"))?;
+        let _rm: String = run_command(&format!("rm -rf {base}"))?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {

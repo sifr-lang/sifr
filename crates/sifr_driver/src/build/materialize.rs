@@ -56,6 +56,29 @@ pub(super) fn materialize_binary_project_with_report(
     })
 }
 
+pub(super) fn materialize_binary_project_sources(
+    output_dir: &Path,
+    project_name: &str,
+    generated_project: GeneratedBinaryProject,
+    requested_vendor_mode: CargoVendorMode,
+) -> Result<PathBuf, Vec<RenderedDiagnostic>> {
+    let project_path = output_dir.join(project_name);
+    let dependency_plan = try_generate_sysroot_dependency_plan(
+        &generated_project.used_stdlib_modules,
+        &generated_project.required_features,
+        &generated_project.interop,
+        requested_vendor_mode,
+    )
+    .map_err(|error| vec![build_error(error.boundary_message())])?;
+    materialize_binary_project_files(
+        &project_path,
+        project_name,
+        generated_project,
+        &dependency_plan,
+    )?;
+    Ok(project_path)
+}
+
 pub(super) fn materialize_cached_binary_project_with_report(
     cache_namespace: &str,
     cache_scope: &Path,
@@ -510,8 +533,9 @@ fn binary_project_cache_key(
 #[cfg(test)]
 mod tests {
     use super::{
-        binary_project_cache_key, canonical_rust_module_path, should_validate_native_link_evidence,
-        sysroot_trusted_native_links, trusted_native_links, validate_native_link_evidence,
+        binary_project_cache_key, canonical_rust_module_path, materialize_binary_project_files,
+        should_validate_native_link_evidence, sysroot_trusted_native_links, trusted_native_links,
+        validate_native_link_evidence,
     };
     use crate::build::project_codegen::GeneratedBinaryProject;
     use crate::build::python_runtime::PackagePythonRuntime;
@@ -538,6 +562,35 @@ mod tests {
             public.as_deref(),
             Ok(path) if path == std::path::Path::new("public/mod.rs")
         ));
+    }
+
+    #[test]
+    fn source_materialization_writes_a_complete_uncompiled_cargo_project() {
+        let root = std::env::temp_dir().join(format!(
+            "sifr_source_materialization_{}_{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .expect("time should move forward")
+                .as_nanos()
+        ));
+        let project_path = root.join("sifr_output");
+
+        materialize_binary_project_files(
+            &project_path,
+            "sifr_output",
+            base_project(),
+            &test_dependency_plan("fingerprint-a"),
+        )
+        .expect("source-only materialization should succeed");
+
+        assert!(project_path.join("Cargo.toml").is_file());
+        let main_rs = std::fs::read_to_string(project_path.join("src/main.rs"))
+            .expect("generated main should be readable");
+        assert!(main_rs.contains("fn main()"), "{main_rs}");
+        assert!(!project_path.join("target").exists());
+
+        let _ = std::fs::remove_dir_all(root);
     }
 
     #[test]

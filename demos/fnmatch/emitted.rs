@@ -29,32 +29,31 @@ fn sifr_generated_match(name: &str, mut ni: SifrInt, pattern: &str, mut pi: Sifr
                     j = &j + &SifrInt::from_i64(1);
                 }
                 return false;
-            } else if pc == "?" {
-                if &ni >= &SifrInt::from(name.chars().count()) {
-                    return false;
-                }
-                ni = &ni + &SifrInt::from_i64(1);
-                pi = &pi + &SifrInt::from_i64(1);
-            } else {
-                if &ni >= &SifrInt::from(name.chars().count()) {
-                    return false;
-                }
-                let nc: Option<String> = {
-                    let sifr_generated_string_source = &name;
-                    let sifr_generated_string_index = ni.clone();
-                    let sifr_generated_string_index_normalized = sifr_generated_string_index
-                        .normalize_index_or_len(sifr_generated_string_source.chars().count());
-                    sifr_generated_string_source
-                        .chars()
-                        .nth(sifr_generated_string_index_normalized)
-                }
-                .map(|character| character.to_string());
-                if let Some(nc) = nc {
-                    if nc != pc {
+            }
+            let sifr_generated_shared_branch_condition = pc == "?";
+            if &ni >= &SifrInt::from(name.chars().count()) {
+                return false;
+            }
+            {
+                if sifr_generated_shared_branch_condition {
+                } else {
+                    let nc: Option<String> = {
+                        let sifr_generated_string_source = &name;
+                        let sifr_generated_string_index = ni.clone();
+                        let sifr_generated_string_index_normalized = sifr_generated_string_index
+                            .normalize_index_or_len(sifr_generated_string_source.chars().count());
+                        sifr_generated_string_source
+                            .chars()
+                            .nth(sifr_generated_string_index_normalized)
+                    }
+                    .map(|character| character.to_string());
+                    if let Some(nc) = nc {
+                        if nc != pc {
+                            return false;
+                        }
+                    } else {
                         return false;
                     }
-                } else {
-                    return false;
                 }
                 ni = &ni + &SifrInt::from_i64(1);
                 pi = &pi + &SifrInt::from_i64(1);

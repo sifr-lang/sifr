@@ -250,7 +250,8 @@ fn collect_decode_actual_ok(inputs: &[String]) -> Vec<bool> {
             actual_ok.push(true);
             Ok(())
         })();
-        if sifr_generated_try_res.is_err() {
+        if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+            let _e = sifr_generated_try_err.clone();
             actual_ok.push(false);
         }
     }

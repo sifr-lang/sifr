@@ -74,8 +74,8 @@ fn main() {
     assert_eq!(without_default.is_none().to_string(), "true");
     let invalid_expected_lookup_found: Vec<bool> = vec![false, false];
     let invalid_actual_lookup_found: Vec<bool> = vec![
-        getenv_opt(&String::new()) != None,
-        getenv_opt(&"A=B".to_string()) != None,
+        getenv_opt(&String::new()).is_some(),
+        getenv_opt(&"A=B".to_string()).is_some(),
     ];
     assert_bool_vector_eq(&invalid_actual_lookup_found, &invalid_expected_lookup_found);
     assert_eq!(

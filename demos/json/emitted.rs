@@ -346,8 +346,9 @@ fn sifr_generated_json_token_int(
                 Err(JSONDecodeError::new(e.message.clone()))
             }
             SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(
-                _,
+                sifr_generated_try_variant_error,
             ) => {
+                let _e = sifr_generated_try_variant_error.clone();
                 Err(
                     JSONDecodeError::new(
                         "JSON bridge payload has invalid integer metadata".to_string(),
@@ -390,8 +391,9 @@ fn sifr_generated_json_token_float(
                 Err(JSONDecodeError::new(e.message.clone()))
             }
             SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(
-                _,
+                sifr_generated_try_variant_error,
             ) => {
+                let _e = sifr_generated_try_variant_error.clone();
                 Err(
                     JSONDecodeError::new(
                         "JSON bridge payload has invalid float metadata".to_string(),

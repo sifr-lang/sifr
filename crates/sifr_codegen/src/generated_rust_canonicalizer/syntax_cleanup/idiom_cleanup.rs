@@ -2,26 +2,35 @@ use std::collections::HashSet;
 
 use quote::quote;
 use syn::punctuated::Punctuated;
-use syn::visit::{self, Visit};
 use syn::visit_mut::{self, VisitMut};
 
+mod assignment_cleanup;
 mod lint_cleanup;
+mod residual_cleanup;
 mod result_control_cleanup;
 mod structured_control_cleanup;
 
-use super::mutability_cleanup::statements_mutate_name;
+use assignment_cleanup::{
+    expression_is_pure_initializer, expression_uses_identifier, fold_assignment_conditionals,
+};
 use lint_cleanup::{
     flatten_infallible_result_scaffolding, fold_delayed_initializations, fold_initial_assignments,
-    fold_literal_result_bindings, fold_vec_push_sequences, group_long_float_literal,
-    group_long_integer_literal, rewrite_assert_comparison, rewrite_empty_vec,
-    rewrite_literal_result_fallback, rewrite_option_expression, rewrite_result_match_with_let_else,
-    rewrite_single_element_exclusive_range, rewrite_single_value_format, rewrite_unwrap_or_default,
+    fold_literal_result_bindings, fold_tail_bindings, fold_vec_push_sequences,
+    group_long_float_literal, group_long_integer_literal, rewrite_assert_comparison,
+    rewrite_empty_vec, rewrite_identity_constructor_closure, rewrite_literal_result_fallback,
+    rewrite_none_comparison, rewrite_option_expression, rewrite_option_match_with_if_let,
+    rewrite_result_match_with_let_else, rewrite_single_element_exclusive_range,
+    rewrite_single_value_format, rewrite_unwrap_or_default, terminate_known_unit_macro_tail,
+};
+use residual_cleanup::{
+    remove_explicit_unit_tail, remove_redundant_iterator_into_iter,
+    rewrite_static_format_to_string, rewrite_typed_redundant_len_closures,
 };
 use result_control_cleanup::{rewrite_discarded_result_matches, rewrite_result_identity_match};
 use structured_control_cleanup::{
     collapse_else_if, collapse_identical_if_else_branches, collapse_nested_if,
-    factor_tuple_struct_or_pattern, flatten_or_pattern, invert_negative_condition_with_else,
-    remove_single_expression_block,
+    factor_shared_if_prefix, factor_shared_if_suffix, factor_tuple_struct_or_pattern,
+    flatten_or_pattern, invert_negative_condition_with_else, remove_single_expression_block,
 };
 
 pub(super) fn canonicalize_idioms(file: &mut syn::File, mutating_methods: &HashSet<String>) {
@@ -54,6 +63,8 @@ impl VisitMut for IdiomCleanup<'_> {
                 | "eprintln"
                 | "format"
                 | "format_args"
+                | "write"
+                | "writeln"
         ) {
             return;
         }
@@ -65,6 +76,7 @@ impl VisitMut for IdiomCleanup<'_> {
         for argument in &mut arguments {
             self.visit_expr_mut(argument);
         }
+        flatten_nested_format_argument(&name, &mut arguments);
         rust_macro.tokens = quote!(#arguments);
         if name == "assert" {
             rewrite_assert_comparison(rust_macro);
@@ -81,10 +93,23 @@ impl VisitMut for IdiomCleanup<'_> {
         fold_literal_result_bindings(&mut block.stmts);
         fold_assignment_conditionals(&mut block.stmts, self.mutating_methods);
         fold_vec_push_sequences(&mut block.stmts);
+        fold_tail_bindings(&mut block.stmts);
         remove_redundant_else_blocks(&mut block.stmts);
         rewrite_discarded_result_matches(&mut block.stmts);
         rewrite_identity_error_propagation(&mut block.stmts);
         remove_uninhabited_match_semicolons(&mut block.stmts);
+        remove_explicit_unit_tail(&mut block.stmts);
+        terminate_known_unit_macro_tail(&mut block.stmts);
+    }
+
+    fn visit_item_fn_mut(&mut self, function: &mut syn::ItemFn) {
+        rewrite_typed_redundant_len_closures(&function.sig, &mut function.block);
+        visit_mut::visit_item_fn_mut(self, function);
+    }
+
+    fn visit_impl_item_fn_mut(&mut self, method: &mut syn::ImplItemFn) {
+        rewrite_typed_redundant_len_closures(&method.sig, &mut method.block);
+        visit_mut::visit_impl_item_fn_mut(self, method);
     }
 
     fn visit_local_mut(&mut self, local: &mut syn::Local) {
@@ -119,6 +144,7 @@ impl VisitMut for IdiomCleanup<'_> {
         rewrite_empty_string_comparison(expression);
         rewrite_redundant_borrowed_method_closure(expression);
         rewrite_redundant_method_closure(expression);
+        rewrite_identity_constructor_closure(expression);
         rewrite_immediate_async_closure(expression);
         rewrite_result_identity_match(expression);
         rewrite_literal_result_fallback(expression);
@@ -127,16 +153,56 @@ impl VisitMut for IdiomCleanup<'_> {
         make_constant_unwrap_default_eager(expression);
         rewrite_unwrap_or_default(expression);
         remove_known_identity_conversion(expression);
+        remove_redundant_iterator_into_iter(expression);
         rewrite_single_element_exclusive_range(expression);
         flatten_generated_format(expression);
+        rewrite_static_format_to_string(expression);
         rewrite_single_value_format(expression);
+        rewrite_option_match_with_if_let(expression);
         rewrite_option_expression(expression);
+        rewrite_none_comparison(expression);
         collapse_nested_if(expression);
         collapse_else_if(expression);
         collapse_identical_if_else_branches(expression);
+        factor_shared_if_prefix(expression);
+        factor_shared_if_suffix(expression);
         invert_negative_condition_with_else(expression);
         remove_single_expression_block(expression);
     }
+}
+
+fn flatten_nested_format_argument(
+    macro_name: &str,
+    arguments: &mut Punctuated<syn::Expr, syn::Token![,]>,
+) {
+    let format_index = match macro_name {
+        "write" | "writeln" => 1,
+        "format" | "print" | "println" | "eprint" | "eprintln" => 0,
+        _ => return,
+    };
+    let values = arguments.iter().cloned().collect::<Vec<_>>();
+    if values.len() != format_index + 2 {
+        return;
+    }
+    let syn::Expr::Lit(outer) = &values[format_index] else {
+        return;
+    };
+    let syn::Lit::Str(outer_format) = &outer.lit else {
+        return;
+    };
+    if outer_format.value() != "{}" {
+        return;
+    }
+    let Some((inner_format, inner_values)) = parsed_format_macro(&values[format_index + 1]) else {
+        return;
+    };
+    let mut flattened = values[..format_index].to_vec();
+    flattened.push(syn::Expr::Lit(syn::ExprLit {
+        attrs: Vec::new(),
+        lit: syn::Lit::Str(syn::LitStr::new(&inner_format, outer_format.span())),
+    }));
+    flattened.extend(inner_values);
+    *arguments = flattened.into_iter().collect();
 }
 
 fn move_scoped_items_before_statements(statements: &mut Vec<syn::Stmt>) {
@@ -204,197 +270,6 @@ fn rewrite_identity_error_propagation(statements: &mut [syn::Stmt]) {
     }
 }
 
-fn fold_assignment_conditionals(
-    statements: &mut Vec<syn::Stmt>,
-    mutating_methods: &HashSet<String>,
-) {
-    let mut index = 0;
-    while index + 1 < statements.len() {
-        let Some(name) = mutable_local_name(&statements[index]) else {
-            index += 1;
-            continue;
-        };
-        let Some(init_value) = (match &statements[index] {
-            syn::Stmt::Local(local) => local
-                .init
-                .as_ref()
-                .filter(|init| init.diverge.is_none())
-                .map(|init| *init.expr.clone()),
-            _ => None,
-        }) else {
-            index += 1;
-            continue;
-        };
-        let initializer_may_have_effects = !expression_is_pure_initializer(&init_value);
-        let Some((condition, then_value, else_value)) =
-            assignment_if_values(&statements[index + 1], &name, init_value)
-        else {
-            index += 1;
-            continue;
-        };
-        if initializer_may_have_effects
-            || expression_uses_identifier(&condition, &name)
-            || expression_uses_identifier(&then_value, &name)
-            || expression_uses_identifier(&else_value, &name)
-        {
-            index += 1;
-            continue;
-        }
-        let mutated_later =
-            statements_mutate_name(&statements[index + 2..], &name, mutating_methods);
-        let syn::Stmt::Local(local) = &mut statements[index] else {
-            index += 1;
-            continue;
-        };
-        if !mutated_later {
-            remove_simple_pattern_mutability(&mut local.pat);
-        }
-        if let Some(init) = &mut local.init {
-            *init.expr = syn::parse_quote! {
-                if #condition { #then_value } else { #else_value }
-            };
-        }
-        statements.remove(index + 1);
-        index += 1;
-    }
-}
-
-fn expression_uses_identifier(expression: &syn::Expr, name: &str) -> bool {
-    struct IdentifierUse<'name> {
-        name: &'name str,
-        found: bool,
-    }
-
-    impl<'ast> Visit<'ast> for IdentifierUse<'_> {
-        fn visit_expr_path(&mut self, path: &'ast syn::ExprPath) {
-            if path.qself.is_none() && path.path.is_ident(self.name) {
-                self.found = true;
-                return;
-            }
-            visit::visit_expr_path(self, path);
-        }
-    }
-
-    let mut use_ = IdentifierUse { name, found: false };
-    use_.visit_expr(expression);
-    use_.found
-}
-
-fn expression_is_pure_initializer(expression: &syn::Expr) -> bool {
-    match expression {
-        syn::Expr::Lit(_) | syn::Expr::Path(_) => true,
-        syn::Expr::Paren(paren) => expression_is_pure_initializer(&paren.expr),
-        syn::Expr::Reference(reference) => expression_is_pure_initializer(&reference.expr),
-        syn::Expr::Unary(unary) => expression_is_pure_initializer(&unary.expr),
-        syn::Expr::MethodCall(call)
-            if call.args.is_empty()
-                && matches!(
-                    call.method.to_string().as_str(),
-                    "len" | "to_string" | "to_owned"
-                ) =>
-        {
-            expression_is_pure_initializer(&call.receiver)
-        }
-        syn::Expr::Call(call)
-            if call.args.is_empty()
-                && matches!(call.func.as_ref(), syn::Expr::Path(path)
-                    if path.path.segments.last().is_some_and(|segment| segment.ident == "new")) =>
-        {
-            true
-        }
-        syn::Expr::Call(call)
-            if matches!(call.func.as_ref(), syn::Expr::Path(path)
-                if path.path.segments.last().is_some_and(|segment|
-                    matches!(segment.ident.to_string().as_str(), "from" | "from_i64"))
-                    && path.path.segments.iter().rev().nth(1).is_some_and(|segment| segment.ident == "SifrInt")) =>
-        {
-            call.args.iter().all(expression_is_pure_initializer)
-        }
-        _ => false,
-    }
-}
-
-fn mutable_local_name(statement: &syn::Stmt) -> Option<String> {
-    let syn::Stmt::Local(local) = statement else {
-        return None;
-    };
-    simple_mutable_pattern_name(&local.pat)
-}
-
-fn simple_mutable_pattern_name(pattern: &syn::Pat) -> Option<String> {
-    match pattern {
-        syn::Pat::Ident(binding) if binding.mutability.is_some() && binding.subpat.is_none() => {
-            Some(binding.ident.to_string())
-        }
-        syn::Pat::Type(typed) => simple_mutable_pattern_name(&typed.pat),
-        _ => None,
-    }
-}
-
-fn remove_simple_pattern_mutability(pattern: &mut syn::Pat) {
-    match pattern {
-        syn::Pat::Ident(binding) => binding.mutability = None,
-        syn::Pat::Type(typed) => remove_simple_pattern_mutability(&mut typed.pat),
-        _ => {}
-    }
-}
-
-fn assignment_if_values(
-    statement: &syn::Stmt,
-    name: &str,
-    fallback: syn::Expr,
-) -> Option<(syn::Expr, syn::Expr, syn::Expr)> {
-    let syn::Stmt::Expr(syn::Expr::If(branch), _) = statement else {
-        return None;
-    };
-    let then_value = sole_assignment_value(&branch.then_branch, name)?;
-    let else_value = if let Some((_, else_expression)) = &branch.else_branch {
-        let syn::Expr::Block(else_block) = else_expression.as_ref() else {
-            return None;
-        };
-        sole_assignment_value(&else_block.block, name)
-            .or_else(|| diverging_block_expression(&else_block.block))?
-    } else {
-        fallback
-    };
-    Some((*branch.cond.clone(), then_value, else_value))
-}
-
-fn diverging_block_expression(block: &syn::Block) -> Option<syn::Expr> {
-    let last = block.stmts.last()?;
-    if !matches!(
-        last,
-        syn::Stmt::Expr(
-            syn::Expr::Return(_) | syn::Expr::Break(_) | syn::Expr::Continue(_),
-            _
-        )
-    ) {
-        return None;
-    }
-    Some(syn::Expr::Block(syn::ExprBlock {
-        attrs: Vec::new(),
-        label: None,
-        block: block.clone(),
-    }))
-}
-
-fn sole_assignment_value(block: &syn::Block, name: &str) -> Option<syn::Expr> {
-    let (last, prefix) = block.stmts.split_last()?;
-    let syn::Stmt::Expr(syn::Expr::Assign(assign), _) = last else {
-        return None;
-    };
-    if !matches!(assign.left.as_ref(), syn::Expr::Path(path) if path.qself.is_none() && path.path.is_ident(name))
-    {
-        return None;
-    }
-    let value = assign.right.as_ref();
-    if prefix.is_empty() {
-        Some(value.clone())
-    } else {
-        Some(syn::parse_quote!({ #(#prefix)* #value }))
-    }
-}
-
 fn remove_redundant_else_blocks(statements: &mut Vec<syn::Stmt>) {
     let mut index = 0;
     while index < statements.len() {
@@ -402,6 +277,14 @@ fn remove_redundant_else_blocks(statements: &mut Vec<syn::Stmt>) {
             index += 1;
             continue;
         };
+        if matches!(&branch.else_branch,
+            Some((_, alternative))
+                if matches!(alternative.as_ref(), syn::Expr::Block(block) if block.block.stmts.is_empty()))
+        {
+            branch.else_branch = None;
+            index += 1;
+            continue;
+        }
         if !block_always_diverges(&branch.then_branch) {
             index += 1;
             continue;
@@ -715,6 +598,15 @@ fn make_constant_unwrap_default_eager(expression: &mut syn::Expr) {
         return;
     };
     if closure.inputs.len() > 1 || !expression_is_pure_initializer(&closure.body) {
+        return;
+    }
+    if closure.inputs.iter().any(|input| match input {
+        syn::Pat::Wild(_) => false,
+        syn::Pat::Ident(binding) => {
+            expression_uses_identifier(&closure.body, &binding.ident.to_string())
+        }
+        _ => true,
+    }) {
         return;
     }
     let default = closure.body.as_ref().clone();

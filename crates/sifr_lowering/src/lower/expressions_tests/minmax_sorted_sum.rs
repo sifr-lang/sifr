@@ -570,6 +570,35 @@ pub(super) fn test_set_method_wrong_positional_count_has_call_code() {
 }
 
 #[test]
+pub(super) fn test_set_remove_accepts_an_optional_element_for_noop_on_absence() {
+    let source = "def remove_at(text: str, index: int) -> None:\n    active: set[str] = {'a'}\n    active.remove(text[index])\n";
+    let result = lower_source(source);
+    assert!(result.is_ok(), "{:#?}", result.unwrap_err());
+}
+
+#[test]
+pub(super) fn test_set_remove_rejects_an_optional_wrong_element_type() {
+    let source = "def remove_at(values: list[int], index: int) -> None:\n    active: set[str] = {'a'}\n    active.remove(values[index])\n";
+    let result = lower_source(source);
+    assert!(result.is_err());
+    let errors = result.unwrap_err();
+    assert!(errors.iter().any(|error| {
+        error.code == Some(DiagnosticCode::TYPE_CONTAINER_ELEMENT_CONFLICT)
+            && error.message.contains("set element type conflict")
+            && error.message.contains("expected 'str'")
+            && error.primary_range
+                == Some(range_for_after(source, "active.remove(", "values[index]"))
+    }));
+}
+
+#[test]
+pub(super) fn test_set_remove_accepts_a_checked_index_argument() {
+    let source = "def remove_at(text: str, index: int) -> None:\n    active: set[str] = {'a'}\n    if 0 <= index and index < len(text):\n        active.remove(text[index])\n";
+    let result = lower_source(source);
+    assert!(result.is_ok(), "{:#?}", result.unwrap_err());
+}
+
+#[test]
 pub(super) fn test_set_missing_method_has_stdlib_code() {
     let source = "def main():\n    values: set[int] = {1}\n    values.missing()\n";
     let result = lower_source(source);

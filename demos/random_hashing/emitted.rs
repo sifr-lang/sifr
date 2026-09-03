@@ -92,10 +92,7 @@ mod sifr_generated_project_nominals {
         } else if algorithm == "blake2s" {
             return blake2s_bytes(data);
         }
-        {
-            let sifr_generated_empty_bytes_literal: Vec<u8> = Vec::new();
-            sifr_generated_empty_bytes_literal
-        }
+        Vec::new()
     }
     #[must_use]
     pub fn sifr_generated_hash_hex(algorithm: &str, data: &[u8]) -> String {

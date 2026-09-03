@@ -10,6 +10,9 @@ pub(crate) enum FunctionTypeParamBound {
 pub(crate) type FunctionTypeParamBounds =
     HashMap<String, HashMap<String, HashSet<FunctionTypeParamBound>>>;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+struct ModuleFunctionIdentity(usize);
+
 impl FunctionTypeParamBound {
     pub(crate) fn render_for(&self, type_param: &str) -> String {
         match self {
@@ -131,14 +134,16 @@ impl RustEmitter {
         let functions = module
             .functions
             .iter()
-            .map(|function| (function.name.as_str(), function))
+            .enumerate()
+            .map(|(index, function)| (function.name.as_str(), ModuleFunctionIdentity(index)))
             .collect::<HashMap<_, _>>();
         let module_function_names = functions.keys().copied().collect::<HashSet<_>>();
         let mut requirements = module
             .functions
             .iter()
-            .filter(|function| !function.type_params.is_empty())
-            .map(|function| {
+            .enumerate()
+            .filter(|(_, function)| !function.type_params.is_empty())
+            .map(|(index, function)| {
                 let by_param = function
                     .type_params
                     .iter()
@@ -170,24 +175,27 @@ impl RustEmitter {
                         (type_param.clone(), bounds)
                     })
                     .collect::<HashMap<_, _>>();
-                (function.name.clone(), by_param)
+                (ModuleFunctionIdentity(index), by_param)
             })
             .collect::<HashMap<_, _>>();
 
         loop {
             let mut changed = false;
-            for caller in module
+            for (caller_index, caller) in module
                 .functions
                 .iter()
-                .filter(|function| !function.type_params.is_empty())
+                .enumerate()
+                .filter(|(_, function)| !function.type_params.is_empty())
             {
                 for call in
                     collect_reachable_module_generic_call_sites(caller, &module_function_names)
                 {
-                    let Some(callee) = functions.get(call.function.as_str()) else {
+                    let Some(callee_identity) = functions.get(call.function.as_str()) else {
                         continue;
                     };
-                    let Some(callee_requirements) = requirements.get(&callee.name).cloned() else {
+                    let callee = &module.functions[callee_identity.0];
+                    let Some(callee_requirements) = requirements.get(callee_identity).cloned()
+                    else {
                         continue;
                     };
                     for (callee_type_param, bounds) in callee_requirements {
@@ -199,7 +207,7 @@ impl RustEmitter {
                         );
                         for caller_type_param in forwarded {
                             let target = requirements
-                                .entry(caller.name.clone())
+                                .entry(ModuleFunctionIdentity(caller_index))
                                 .or_default()
                                 .entry(caller_type_param)
                                 .or_default();
@@ -216,6 +224,9 @@ impl RustEmitter {
         }
 
         requirements
+            .into_iter()
+            .map(|(identity, bounds)| (module.functions[identity.0].name.clone(), bounds))
+            .collect()
     }
 }
 

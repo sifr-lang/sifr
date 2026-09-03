@@ -165,10 +165,10 @@ fn assert_none<T: Clone + 'static>(value: Option<T>) {
 )]
 fn assert_ok<T: Clone + 'static>(value: Result<T, Error>) {
     let sifr_generated_try_res: Result<(), Error> = (|| {
-        let _ = value?;
+        let _out: T = value?;
         Ok(())
     })();
-    if sifr_generated_try_res.is_err() {
+    if let Err(_e) = sifr_generated_try_res {
         assert!(false);
     }
 }
@@ -178,11 +178,11 @@ fn assert_ok<T: Clone + 'static>(value: Result<T, Error>) {
 )]
 fn assert_err<T: Clone + 'static>(value: Result<T, Error>) {
     let sifr_generated_try_res: Result<(), Error> = (|| {
-        let _ = value?;
+        let _out: T = value?;
         assert!(false);
         Ok(())
     })();
-    let _ = sifr_generated_try_res.is_err();
+    let _ = sifr_generated_try_res;
 }
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Error {
@@ -262,7 +262,7 @@ fn main() {
     assert!(&SifrInt::from_i64(2) > &SifrInt::from_i64(1));
     {
         let sifr_generated_cond = &SifrInt::from_i64(1) > &SifrInt::from_i64(2);
-        assert!(!sifr_generated_cond)
+        assert!(!sifr_generated_cond);
     };
     println!("core assertions ok");
     println!("=== Almost-equality semantics ===");
@@ -273,11 +273,8 @@ fn main() {
         assert!(
             sifr_generated_lhs == sifr_generated_rhs
                 || (sifr_generated_lhs - sifr_generated_rhs).abs() <= sifr_generated_tol,
-            "assert_almost_eq failed: {} != {} (tolerance {})",
-            sifr_generated_lhs,
-            sifr_generated_rhs,
-            sifr_generated_tol
-        )
+            "assert_almost_eq failed: {sifr_generated_lhs} != {sifr_generated_rhs} (tolerance {sifr_generated_tol})"
+        );
     };
     {
         let sifr_generated_lhs = INF;
@@ -286,11 +283,8 @@ fn main() {
         assert!(
             sifr_generated_lhs == sifr_generated_rhs
                 || (sifr_generated_lhs - sifr_generated_rhs).abs() <= sifr_generated_tol,
-            "assert_almost_eq failed: {} != {} (tolerance {})",
-            sifr_generated_lhs,
-            sifr_generated_rhs,
-            sifr_generated_tol
-        )
+            "assert_almost_eq failed: {sifr_generated_lhs} != {sifr_generated_rhs} (tolerance {sifr_generated_tol})"
+        );
     };
     assert_not_almost_eq(1.1_f64, 1.0_f64, 0.05_f64);
     println!("almost assertions ok");
@@ -304,9 +298,7 @@ fn main() {
     assert_ge(&SifrInt::from_i64(5), &SifrInt::from_i64(5));
     assert!(
         "a".to_string() < "b".to_string(),
-        "assert_lt failed: {} is not < {}",
-        "a",
-        "b"
+        "assert_lt failed: a is not < b"
     );
     assert_le(&"b".to_string(), &"b".to_string());
     println!("comparison assertions ok");

@@ -390,7 +390,7 @@ mod sifr_generated_project_nominals {
             if !self.is_object() {
                 return result;
             }
-            for (item_key, _) in self.object_items.as_ref().clone().iter().cloned() {
+            for (item_key, _item_value) in self.object_items.as_ref().clone().iter().cloned() {
                 result.push(item_key.to_owned());
             }
             result
@@ -753,32 +753,31 @@ fn sifr_generated_match(name: &str, mut ni: SifrInt, pattern: &str, mut pi: Sifr
                     j = &j + &SifrInt::from_i64(1);
                 }
                 return false;
-            } else if pc == "?" {
-                if &ni >= &SifrInt::from(name.chars().count()) {
-                    return false;
-                }
-                ni = &ni + &SifrInt::from_i64(1);
-                pi = &pi + &SifrInt::from_i64(1);
-            } else {
-                if &ni >= &SifrInt::from(name.chars().count()) {
-                    return false;
-                }
-                let nc: Option<String> = {
-                    let sifr_generated_string_source = &name;
-                    let sifr_generated_string_index = ni.clone();
-                    let sifr_generated_string_index_normalized = sifr_generated_string_index
-                        .normalize_index_or_len(sifr_generated_string_source.chars().count());
-                    sifr_generated_string_source
-                        .chars()
-                        .nth(sifr_generated_string_index_normalized)
-                }
-                .map(|character| character.to_string());
-                if let Some(nc) = nc {
-                    if nc != pc {
+            }
+            let sifr_generated_shared_branch_condition = pc == "?";
+            if &ni >= &SifrInt::from(name.chars().count()) {
+                return false;
+            }
+            {
+                if sifr_generated_shared_branch_condition {
+                } else {
+                    let nc: Option<String> = {
+                        let sifr_generated_string_source = &name;
+                        let sifr_generated_string_index = ni.clone();
+                        let sifr_generated_string_index_normalized = sifr_generated_string_index
+                            .normalize_index_or_len(sifr_generated_string_source.chars().count());
+                        sifr_generated_string_source
+                            .chars()
+                            .nth(sifr_generated_string_index_normalized)
+                    }
+                    .map(|character| character.to_string());
+                    if let Some(nc) = nc {
+                        if nc != pc {
+                            return false;
+                        }
+                    } else {
                         return false;
                     }
-                } else {
-                    return false;
                 }
                 ni = &ni + &SifrInt::from_i64(1);
                 pi = &pi + &SifrInt::from_i64(1);
@@ -1264,8 +1263,9 @@ fn sifr_generated_json_token_int(
                 Err(JSONDecodeError::new(e.message.clone()))
             }
             SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(
-                _,
+                sifr_generated_try_variant_error,
             ) => {
+                let _e = sifr_generated_try_variant_error.clone();
                 Err(
                     JSONDecodeError::new(
                         "JSON bridge payload has invalid integer metadata".to_string(),
@@ -1308,8 +1308,9 @@ fn sifr_generated_json_token_float(
                 Err(JSONDecodeError::new(e.message.clone()))
             }
             SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(
-                _,
+                sifr_generated_try_variant_error,
             ) => {
+                let _e = sifr_generated_try_variant_error.clone();
                 Err(
                     JSONDecodeError::new(
                         "JSON bridge payload has invalid float metadata".to_string(),
@@ -2169,12 +2170,14 @@ fn sifr_generated_expand_tabs_impl(text: &str, tabsize: SifrInt) -> String {
                     j = &j + &SifrInt::from_i64(1);
                 }
                 column = &column + &spaces;
-            } else if ch == "\n" || ch == "\r" {
-                result.push_str(ch.as_str());
-                column = SifrInt::from_i64(0);
             } else {
+                let sifr_generated_shared_branch_condition = ch == "\n" || ch == "\r";
                 result.push_str(ch.as_str());
-                column = &column + &SifrInt::from_i64(1);
+                if sifr_generated_shared_branch_condition {
+                    column = SifrInt::from_i64(0);
+                } else {
+                    column = &column + &SifrInt::from_i64(1);
+                }
             }
         }
         i = &i + &SifrInt::from_i64(1);
@@ -2466,11 +2469,8 @@ fn main() {
         assert!(
             sifr_generated_lhs == sifr_generated_rhs
                 || (sifr_generated_lhs - sifr_generated_rhs).abs() <= sifr_generated_tol,
-            "assert_almost_eq failed: {} != {} (tolerance {})",
-            sifr_generated_lhs,
-            sifr_generated_rhs,
-            sifr_generated_tol
-        )
+            "assert_almost_eq failed: {sifr_generated_lhs} != {sifr_generated_rhs} (tolerance {sifr_generated_tol})"
+        );
     };
     {
         let sifr_generated_lhs = sin(PI / 2.0_f64);
@@ -2479,11 +2479,8 @@ fn main() {
         assert!(
             sifr_generated_lhs == sifr_generated_rhs
                 || (sifr_generated_lhs - sifr_generated_rhs).abs() <= sifr_generated_tol,
-            "assert_almost_eq failed: {} != {} (tolerance {})",
-            sifr_generated_lhs,
-            sifr_generated_rhs,
-            sifr_generated_tol
-        )
+            "assert_almost_eq failed: {sifr_generated_lhs} != {sifr_generated_rhs} (tolerance {sifr_generated_tol})"
+        );
     };
     {
         let sifr_generated_lhs = cos(0.0_f64);
@@ -2492,11 +2489,8 @@ fn main() {
         assert!(
             sifr_generated_lhs == sifr_generated_rhs
                 || (sifr_generated_lhs - sifr_generated_rhs).abs() <= sifr_generated_tol,
-            "assert_almost_eq failed: {} != {} (tolerance {})",
-            sifr_generated_lhs,
-            sifr_generated_rhs,
-            sifr_generated_tol
-        )
+            "assert_almost_eq failed: {sifr_generated_lhs} != {sifr_generated_rhs} (tolerance {sifr_generated_tol})"
+        );
     };
     assert_eq!(factorial(SifrInt::from_i64(5)), SifrInt::from_i64(120));
     assert_eq!(
@@ -2524,11 +2518,8 @@ fn main() {
                 assert!(
                     sifr_generated_lhs == sifr_generated_rhs
                         || (sifr_generated_lhs - sifr_generated_rhs).abs() <= sifr_generated_tol,
-                    "assert_almost_eq failed: {} != {} (tolerance {})",
-                    sifr_generated_lhs,
-                    sifr_generated_rhs,
-                    sifr_generated_tol
-                )
+                    "assert_almost_eq failed: {sifr_generated_lhs} != {sifr_generated_rhs} (tolerance {sifr_generated_tol})"
+                );
             };
             let med_val: f64 = median(&data)?;
             {
@@ -2538,11 +2529,8 @@ fn main() {
                 assert!(
                     sifr_generated_lhs == sifr_generated_rhs
                         || (sifr_generated_lhs - sifr_generated_rhs).abs() <= sifr_generated_tol,
-                    "assert_almost_eq failed: {} != {} (tolerance {})",
-                    sifr_generated_lhs,
-                    sifr_generated_rhs,
-                    sifr_generated_tol
-                )
+                    "assert_almost_eq failed: {sifr_generated_lhs} != {sifr_generated_rhs} (tolerance {sifr_generated_tol})"
+                );
             };
             let sd_val: f64 = stdev(&data)?;
             {
@@ -2552,11 +2540,8 @@ fn main() {
                 assert!(
                     sifr_generated_lhs == sifr_generated_rhs
                         || (sifr_generated_lhs - sifr_generated_rhs).abs() <= sifr_generated_tol,
-                    "assert_almost_eq failed: {} != {} (tolerance {})",
-                    sifr_generated_lhs,
-                    sifr_generated_rhs,
-                    sifr_generated_tol
-                )
+                    "assert_almost_eq failed: {sifr_generated_lhs} != {sifr_generated_rhs} (tolerance {sifr_generated_tol})"
+                );
             };
             Ok(())
         })();
@@ -2571,7 +2556,7 @@ fn main() {
         let no_match: bool = has_match(&"xyz".to_string(), &"hello".to_string())?;
         {
             let sifr_generated_cond = no_match;
-            assert!(!sifr_generated_cond)
+            assert!(!sifr_generated_cond);
         };
         let r: Vec<String> = findall(&"\\d+".to_string(), &"a1b2c3".to_string())?;
         assert_eq!(SifrInt::from(r.len()), SifrInt::from_i64(3));
@@ -2587,7 +2572,7 @@ fn main() {
     assert!(fnmatch(&"test.py".to_string(), &"*.py".to_string()));
     {
         let sifr_generated_cond = fnmatch(&"test.rb".to_string(), &"*.py".to_string());
-        assert!(!sifr_generated_cond)
+        assert!(!sifr_generated_cond);
     };
     let names: Vec<String> = vec!["a.py".to_string(), "b.txt".to_string(), "c.py".to_string()];
     let filtered: Vec<String> = filter(&names, &"*.py".to_string());
@@ -2636,7 +2621,7 @@ fn main() {
         let wrapped: Vec<String> = wrap(&"Hello World".to_string(), SifrInt::from_i64(5))?;
         assert_eq!(SifrInt::from(wrapped.len()), SifrInt::from_i64(2));
         let filled: String = fill(&"Hello World".to_string(), SifrInt::from_i64(5))?;
-        let _ = filled.chars().collect::<Vec<char>>();
+        let _chars_filled: Vec<char> = filled.chars().collect::<Vec<char>>();
         assert!(SifrInt::from(filled.chars().count()) > SifrInt::from_i64(0));
         println!("textwrap: OK");
         Ok(())

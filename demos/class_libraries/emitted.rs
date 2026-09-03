@@ -1468,17 +1468,6 @@ mod sifr_generated_project_nominals {
             self.end.clone()
         }
     }
-    impl SifrGeneratedStdlibSifrX2ereX2eMatch {
-        #[must_use]
-        pub fn to_str(&self) -> String {
-            {
-                let mut sifr_generated_concat: String = String::new();
-                sifr_generated_concat.push_str(self.matched.clone().as_str());
-                sifr_generated_concat.push_str("");
-                sifr_generated_concat
-            }
-        }
-    }
     impl ::std::fmt::Display for SifrGeneratedStdlibSifrX2ereX2eMatch {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
             write!(
@@ -1530,17 +1519,6 @@ mod sifr_generated_project_nominals {
                 i = &i + &SifrInt::from_i64(1);
             }
             result
-        }
-    }
-    impl SifrGeneratedStdlibSifrX2euuidX2eUUID {
-        #[must_use]
-        pub fn to_str(&self) -> String {
-            {
-                let mut sifr_generated_concat: String = String::new();
-                sifr_generated_concat.push_str(self.hex.clone().as_str());
-                sifr_generated_concat.push_str("");
-                sifr_generated_concat
-            }
         }
     }
     impl SifrGeneratedStdlibSifrX2euuidX2eUUID {

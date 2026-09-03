@@ -865,7 +865,7 @@ fn collect_parse_and_safety_actual() -> Vec<bool> {
     actual.push(parsed_ok);
     let mut parse_error_ok: bool = false;
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
-        let _ = strptime(&"bad".to_string(), &"%Y-%m-%d %H:%M:%S".to_string())?;
+        let _bad: String = strptime(&"bad".to_string(), &"%Y-%m-%d %H:%M:%S".to_string())?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
@@ -911,26 +911,33 @@ fn collect_parse_and_safety_actual() -> Vec<bool> {
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
         match sifr_generated_try_err {
             SifrGeneratedUnion8X3asequence5X3aunion1X3a423X3a5X3aclass10X3aValueError1X3a031X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a017X3a5X3aclass5X3aError1X3a0::SifrGeneratedUnionVariant5X3aclass5X3aError1X3a0(
-                _,
+                sifr_generated_try_variant_error,
             ) => {
+                let _e_5f65 = sifr_generated_try_variant_error.clone();
                 actual.push(false);
             }
             SifrGeneratedUnion8X3asequence5X3aunion1X3a423X3a5X3aclass10X3aValueError1X3a031X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a017X3a5X3aclass5X3aError1X3a0::SifrGeneratedUnionVariant5X3aclass18X3aFloatOverflowError1X3a0(
                 sifr_generated_try_variant_error,
             ) => {
-                let _ = Error::new(sifr_generated_try_variant_error.clone().message);
+                let _e_5f65 = Error::new(
+                    sifr_generated_try_variant_error.clone().message,
+                );
                 actual.push(false);
             }
             SifrGeneratedUnion8X3asequence5X3aunion1X3a423X3a5X3aclass10X3aValueError1X3a031X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a017X3a5X3aclass5X3aError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3aFloatPrecisionLossError1X3a0(
                 sifr_generated_try_variant_error,
             ) => {
-                let _ = Error::new(sifr_generated_try_variant_error.clone().message);
+                let _e_5f65 = Error::new(
+                    sifr_generated_try_variant_error.clone().message,
+                );
                 actual.push(false);
             }
             SifrGeneratedUnion8X3asequence5X3aunion1X3a423X3a5X3aclass10X3aValueError1X3a031X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a017X3a5X3aclass5X3aError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aValueError1X3a0(
                 sifr_generated_try_variant_error,
             ) => {
-                let _ = Error::new(sifr_generated_try_variant_error.clone().message);
+                let _e_5f65 = Error::new(
+                    sifr_generated_try_variant_error.clone().message,
+                );
                 actual.push(false);
             }
         }

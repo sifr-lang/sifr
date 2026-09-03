@@ -25,7 +25,10 @@ fn classify(n: SifrInt) -> SifrInt {
     } else {
         Err(ValueError::new("non-positive".to_string()))
     };
-    sifr_generated_try_res.unwrap_or(SifrInt::from_i64(99))
+    sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
+        let _e = sifr_generated_try_err.clone();
+        SifrInt::from_i64(99)
+    })
 }
 fn main() {
     println!("return_and_raise_paths control-flow effect query unification demo:");

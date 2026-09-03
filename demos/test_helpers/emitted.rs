@@ -389,11 +389,8 @@ fn main() {
                 assert!(
                     sifr_generated_lhs == sifr_generated_rhs
                         || (sifr_generated_lhs - sifr_generated_rhs).abs() <= sifr_generated_tol,
-                    "assert_almost_eq failed: {} != {} (tolerance {})",
-                    sifr_generated_lhs,
-                    sifr_generated_rhs,
-                    sifr_generated_tol
-                )
+                    "assert_almost_eq failed: {sifr_generated_lhs} != {sifr_generated_rhs} (tolerance {sifr_generated_tol})"
+                );
             };
             {
                 let sifr_generated_lhs = sv;
@@ -402,11 +399,8 @@ fn main() {
                 assert!(
                     sifr_generated_lhs == sifr_generated_rhs
                         || (sifr_generated_lhs - sifr_generated_rhs).abs() <= sifr_generated_tol,
-                    "assert_almost_eq failed: {} != {} (tolerance {})",
-                    sifr_generated_lhs,
-                    sifr_generated_rhs,
-                    sifr_generated_tol
-                )
+                    "assert_almost_eq failed: {sifr_generated_lhs} != {sifr_generated_rhs} (tolerance {sifr_generated_tol})"
+                );
             };
             {
                 let sifr_generated_lhs = pv;
@@ -415,11 +409,8 @@ fn main() {
                 assert!(
                     sifr_generated_lhs == sifr_generated_rhs
                         || (sifr_generated_lhs - sifr_generated_rhs).abs() <= sifr_generated_tol,
-                    "assert_almost_eq failed: {} != {} (tolerance {})",
-                    sifr_generated_lhs,
-                    sifr_generated_rhs,
-                    sifr_generated_tol
-                )
+                    "assert_almost_eq failed: {sifr_generated_lhs} != {sifr_generated_rhs} (tolerance {sifr_generated_tol})"
+                );
             };
             {
                 let sifr_generated_lhs = sd;
@@ -428,11 +419,8 @@ fn main() {
                 assert!(
                     sifr_generated_lhs == sifr_generated_rhs
                         || (sifr_generated_lhs - sifr_generated_rhs).abs() <= sifr_generated_tol,
-                    "assert_almost_eq failed: {} != {} (tolerance {})",
-                    sifr_generated_lhs,
-                    sifr_generated_rhs,
-                    sifr_generated_tol
-                )
+                    "assert_almost_eq failed: {sifr_generated_lhs} != {sifr_generated_rhs} (tolerance {sifr_generated_tol})"
+                );
             };
             {
                 let sifr_generated_lhs = pd;
@@ -441,11 +429,8 @@ fn main() {
                 assert!(
                     sifr_generated_lhs == sifr_generated_rhs
                         || (sifr_generated_lhs - sifr_generated_rhs).abs() <= sifr_generated_tol,
-                    "assert_almost_eq failed: {} != {} (tolerance {})",
-                    sifr_generated_lhs,
-                    sifr_generated_rhs,
-                    sifr_generated_tol
-                )
+                    "assert_almost_eq failed: {sifr_generated_lhs} != {sifr_generated_rhs} (tolerance {sifr_generated_tol})"
+                );
             };
             Ok(())
         })();

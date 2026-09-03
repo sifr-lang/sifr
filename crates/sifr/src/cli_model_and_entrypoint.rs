@@ -85,6 +85,9 @@ pub(crate) enum Commands {
         /// Combine --locked and --offline
         #[arg(long)]
         frozen: bool,
+        /// Write the generated Cargo project without compiling it
+        #[arg(long, hide = true)]
+        materialize_only: bool,
     },
     /// Compile and run a .sifr file
     Run {
@@ -446,12 +449,14 @@ fn run_cli(cli: Cli) -> i32 {
             locked,
             offline,
             frozen,
+            materialize_only,
         } => cmd_build(
             &file,
             &output,
             lock_mode_from_flags(locked, offline, frozen),
             quiet,
             diagnostic_format,
+            materialize_only,
         ),
         Commands::Run {
             target,

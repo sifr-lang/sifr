@@ -344,8 +344,9 @@ fn sifr_generated_json_token_int(
                 Err(JSONDecodeError::new(e.message.clone()))
             }
             SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(
-                _,
+                sifr_generated_try_variant_error,
             ) => {
+                let _e = sifr_generated_try_variant_error.clone();
                 Err(
                     JSONDecodeError::new(
                         "JSON bridge payload has invalid integer metadata".to_string(),
@@ -388,8 +389,9 @@ fn sifr_generated_json_token_float(
                 Err(JSONDecodeError::new(e.message.clone()))
             }
             SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(
-                _,
+                sifr_generated_try_variant_error,
             ) => {
+                let _e = sifr_generated_try_variant_error.clone();
                 Err(
                     JSONDecodeError::new(
                         "JSON bridge payload has invalid float metadata".to_string(),
@@ -649,16 +651,19 @@ fn has_match(pattern: &str, text: &str) -> Result<bool, RegexError> {
 fn demo_specific_subclass() {
     println!("=== 1. Specific Subclass Handling ===");
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        let _ = read_text(&"/nonexistent/file.txt".to_string())?;
+        let _content: String = read_text(&"/nonexistent/file.txt".to_string())?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        if sifr_generated_try_err.kind == "FileNotFound".to_string() {
+        {
+            let sifr_generated_shared_branch_condition =
+                sifr_generated_try_err.kind == "FileNotFound".to_string();
             let e = sifr_generated_try_err.clone();
-            println!("FileNotFoundError: {}", e.message.clone());
-        } else {
-            let e = sifr_generated_try_err.clone();
-            println!("Other IOError: {}", e.message.clone());
+            if sifr_generated_shared_branch_condition {
+                println!("FileNotFoundError: {}", e.message.clone());
+            } else {
+                println!("Other IOError: {}", e.message.clone());
+            }
         }
     }
     println!("FileNotFoundError caught by specific handler");
@@ -666,7 +671,7 @@ fn demo_specific_subclass() {
 fn demo_parent_catch_all() {
     println!("=== 2. Parent Catch-All ===");
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        let _ = read_text(&"/nonexistent/file.txt".to_string())?;
+        let _content: String = read_text(&"/nonexistent/file.txt".to_string())?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
@@ -693,7 +698,7 @@ fn demo_json_fields() {
 fn demo_regex_fields() {
     println!("=== 4. RegexError with detail ===");
     let sifr_generated_try_res: Result<(), RegexError> = (|| {
-        let _ = has_match(&"[unclosed".to_string(), &"test".to_string())?;
+        let _m: bool = has_match(&"[unclosed".to_string(), &"test".to_string())?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
@@ -706,16 +711,19 @@ fn demo_regex_fields() {
 fn demo_mixed_families() {
     println!("=== 5. Mixed Error Families ===");
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        let _ = read_text(&"/nonexistent/data.json".to_string())?;
+        let _data: String = read_text(&"/nonexistent/data.json".to_string())?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        if sifr_generated_try_err.kind == "FileNotFound".to_string() {
+        {
+            let sifr_generated_shared_branch_condition =
+                sifr_generated_try_err.kind == "FileNotFound".to_string();
             let e = sifr_generated_try_err.clone();
-            println!("FileNotFoundError: {}", e.message.clone());
-        } else {
-            let e = sifr_generated_try_err.clone();
-            println!("Other IOError: {}", e.message.clone());
+            if sifr_generated_shared_branch_condition {
+                println!("FileNotFoundError: {}", e.message.clone());
+            } else {
+                println!("Other IOError: {}", e.message.clone());
+            }
         }
     }
     println!("Multiple error families in one try block");
@@ -723,7 +731,7 @@ fn demo_mixed_families() {
 fn demo_print_display() {
     println!("=== 6. print(e) via Display ===");
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        let _ = read_text(&"/nonexistent/file.txt".to_string())?;
+        let _content: String = read_text(&"/nonexistent/file.txt".to_string())?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {

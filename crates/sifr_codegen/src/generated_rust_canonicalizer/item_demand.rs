@@ -1,6 +1,57 @@
 use std::collections::{HashMap, HashSet};
 use syn::visit::{self, Visit};
 
+pub(super) fn format_capture_names(rust_macro: &syn::Macro) -> HashSet<String> {
+    let Some(name) = rust_macro.path.segments.last() else {
+        return HashSet::new();
+    };
+    let format_index = match name.ident.to_string().as_str() {
+        "format" | "print" | "println" | "eprint" | "eprintln" => 0,
+        "assert" | "write" | "writeln" => 1,
+        "assert_eq" | "assert_ne" => 2,
+        _ => return HashSet::new(),
+    };
+    let Ok(arguments) = rust_macro.parse_body_with(
+        syn::punctuated::Punctuated::<syn::Expr, syn::Token![,]>::parse_terminated,
+    ) else {
+        return HashSet::new();
+    };
+    let Some(syn::Expr::Lit(format_expression)) = arguments.iter().nth(format_index) else {
+        return HashSet::new();
+    };
+    let syn::Lit::Str(format_literal) = &format_expression.lit else {
+        return HashSet::new();
+    };
+    let format = format_literal.value();
+    let bytes = format.as_bytes();
+    let mut names = HashSet::new();
+    let mut offset = 0;
+    while offset < bytes.len() {
+        let Some(relative_start) = format[offset..].find('{') else {
+            break;
+        };
+        let start = offset + relative_start;
+        if bytes.get(start + 1) == Some(&b'{') {
+            offset = start + 2;
+            continue;
+        }
+        let Some(relative_end) = format[start + 1..].find('}') else {
+            break;
+        };
+        let end = start + 1 + relative_end;
+        let name = format[start + 1..end].split(':').next().unwrap_or_default();
+        if !name.is_empty()
+            && name
+                .chars()
+                .all(|character| character == '_' || character.is_ascii_alphanumeric())
+        {
+            names.insert(name.to_string());
+        }
+        offset = end + 1;
+    }
+    names
+}
+
 pub(super) fn concrete_trait_impl_roots(items: &[syn::Item]) -> HashSet<String> {
     let implementations = items
         .iter()

@@ -324,8 +324,9 @@ fn sifr_generated_json_token_int(
                 Err(JSONDecodeError::new(e.message.clone()))
             }
             SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(
-                _,
+                sifr_generated_try_variant_error,
             ) => {
+                let _e = sifr_generated_try_variant_error.clone();
                 Err(
                     JSONDecodeError::new(
                         "JSON bridge payload has invalid integer metadata".to_string(),
@@ -368,8 +369,9 @@ fn sifr_generated_json_token_float(
                 Err(JSONDecodeError::new(e.message.clone()))
             }
             SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(
-                _,
+                sifr_generated_try_variant_error,
             ) => {
+                let _e = sifr_generated_try_variant_error.clone();
                 Err(
                     JSONDecodeError::new(
                         "JSON bridge payload has invalid float metadata".to_string(),
@@ -579,6 +581,16 @@ fn sifr_generated_decode_json(
 fn loads(s: &str) -> Result<SifrGeneratedStdlibSifrX2ejsonX2eJsonValue, JSONDecodeError> {
     sifr_generated_decode_json(s)
 }
+#[expect(
+    clippy::approx_constant,
+    reason = "generated Rust preserves this exact typed Sifr source contract"
+)]
+const PI: f64 = 3.141_592_653_589_793_f64;
+#[expect(
+    clippy::approx_constant,
+    reason = "generated Rust preserves this exact typed Sifr source contract"
+)]
+const E: f64 = 2.718_281_828_459_045_f64;
 fn sqrt(x: f64) -> f64 {
     ::sifr_stdlib::math::sqrt(x)
 }

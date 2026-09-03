@@ -51,18 +51,20 @@ from source_quality_checks import (
     assert_negative_rustfmt,
     compare_bytes,
     gate_intrinsic_panic_lint as run_intrinsic_panic_lint_gate,
+    run_strict_clippy,
 )
 
 # Inputs that change generated Rust or its compile environment. Manifest metadata
 # remains part of per-entry selection, not producer cache invalidation.
 PRODUCER_FINGERPRINT_CRATES = (
     "sifr", "sifr_codegen", "sifr_driver", "sifr_frontend", "sifr_ipc",
-    "sifr_lowering", "sifr_package", "sifr_runtime",
+    "sifr_lowering", "sifr_package", "sifr_runtime", "sifr_stdlib",
     "sifr_stdlib_imports", "sifr_stdlib_manifest", "sifr_syntax",
 )
 PRODUCER_FINGERPRINT_INPUTS = [
     "Cargo.lock",
     "Cargo.toml",
+    "stdlib",
     *[
         f"crates/{crate}/{path}"
         for crate in PRODUCER_FINGERPRINT_CRATES
@@ -358,6 +360,7 @@ def sifr_binary() -> str:
 
 
 def materialize_entry(entry: Entry, run_root: Path) -> Path:
+    run_root.mkdir(parents=True, exist_ok=True)
     shared_root = shared_artifact_root()
     cache_key = entry_cache_key(entry)
     entry_root = (
@@ -384,6 +387,7 @@ def materialize_entry(entry: Entry, run_root: Path) -> Path:
                 entry.source_path,
                 "-o",
                 str(entry_root),
+                "--materialize-only",
             ]
         )
     cargo_toml = crate_root / "Cargo.toml"
@@ -632,17 +636,10 @@ def gate_clippy(entries: list[Entry], args: argparse.Namespace) -> None:
         for entry in selected:
             def clippy_entry() -> Path:
                 crate_root_inner = materialize_entry(entry, run_root)
-                result = run_command(
-                    [
-                        "cargo",
-                        "clippy",
-                        "--message-format=json",
-                        "--manifest-path",
-                        str(crate_root_inner / "Cargo.toml"),
-                        "--",
-                        *STRICT_CLIPPY_ARGS,
-                    ],
-                    check=False,
+                result = run_strict_clippy(
+                    crate_root_inner,
+                    run_command,
+                    STRICT_CLIPPY_ARGS,
                 )
                 actual = parse_clippy_diagnostics(result.stdout, crate_root_inner)
                 if result.returncode != 0 and not actual:
@@ -790,17 +787,10 @@ def gate_companions(_entries: list[Entry], args: argparse.Namespace) -> None:
                     ]
                 )
                 crate_root_inner = materialize_entry(entry, run_root)
-                result = run_command(
-                    [
-                        "cargo",
-                        "clippy",
-                        "--message-format=json",
-                        "--manifest-path",
-                        str(crate_root_inner / "Cargo.toml"),
-                        "--",
-                        *STRICT_CLIPPY_ARGS,
-                    ],
-                    check=False,
+                result = run_strict_clippy(
+                    crate_root_inner,
+                    run_command,
+                    STRICT_CLIPPY_ARGS,
                 )
                 diagnostics = parse_clippy_diagnostics(result.stdout, crate_root_inner)
                 if result.returncode != 0 and not diagnostics:

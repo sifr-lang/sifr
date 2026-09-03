@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use syn::visit::{self, Visit};
 
 pub(super) fn collect_mutating_method_names(file: &syn::File) -> HashSet<String> {
@@ -7,12 +7,75 @@ pub(super) fn collect_mutating_method_names(file: &syn::File) -> HashSet<String>
     collector.names
 }
 
+#[derive(Default)]
+pub(super) struct LocalMethodFacts {
+    returns_by_method: HashMap<String, HashSet<String>>,
+    mutable: HashSet<(String, String)>,
+    shared: HashSet<(String, String)>,
+}
+
+pub(super) fn collect_local_method_facts(file: &syn::File) -> LocalMethodFacts {
+    let mut collector = LocalMethodFactCollector::default();
+    collector.visit_file(file);
+    collector.facts
+}
+
+#[derive(Default)]
+struct LocalMethodFactCollector {
+    facts: LocalMethodFacts,
+}
+
+impl<'ast> Visit<'ast> for LocalMethodFactCollector {
+    fn visit_item_impl(&mut self, implementation: &'ast syn::ItemImpl) {
+        let Some(owner) = type_owner_name(&implementation.self_ty) else {
+            visit::visit_item_impl(self, implementation);
+            return;
+        };
+        for item in &implementation.items {
+            let syn::ImplItem::Fn(method) = item else {
+                continue;
+            };
+            let key = (owner.clone(), method.sig.ident.to_string());
+            if signature_has_mutable_receiver(&method.sig) {
+                self.facts.mutable.insert(key);
+            } else if method.sig.receiver().is_some() {
+                self.facts.shared.insert(key);
+            }
+            if let syn::ReturnType::Type(_, ty) = &method.sig.output
+                && let Some(returned) = type_owner_name(ty)
+            {
+                self.facts
+                    .returns_by_method
+                    .entry(method.sig.ident.to_string())
+                    .or_default()
+                    .insert(returned);
+            }
+        }
+        visit::visit_item_impl(self, implementation);
+    }
+}
+
+fn type_owner_name(ty: &syn::Type) -> Option<String> {
+    match ty {
+        syn::Type::Reference(reference) => type_owner_name(&reference.elem),
+        syn::Type::Group(group) => type_owner_name(&group.elem),
+        syn::Type::Paren(paren) => type_owner_name(&paren.elem),
+        syn::Type::Path(path) => path
+            .path
+            .segments
+            .last()
+            .map(|segment| segment.ident.to_string()),
+        _ => None,
+    }
+}
+
 pub(super) fn remove_unneeded_parameter_mutability(
     signature: &mut syn::Signature,
     body: &syn::Block,
     mutating_methods: &HashSet<String>,
+    local_method_facts: &LocalMethodFacts,
 ) {
-    let mut collector = MutatingUseCollector::new(mutating_methods);
+    let mut collector = MutatingUseCollector::new(mutating_methods, local_method_facts);
     collector.visit_block(body);
     for argument in &mut signature.inputs {
         if let syn::FnArg::Typed(typed) = argument {
@@ -24,8 +87,9 @@ pub(super) fn remove_unneeded_parameter_mutability(
 pub(super) fn remove_unneeded_mutability(
     statements: &mut [syn::Stmt],
     mutating_methods: &HashSet<String>,
+    local_method_facts: &LocalMethodFacts,
 ) {
-    let mut collector = MutatingUseCollector::new(mutating_methods);
+    let mut collector = MutatingUseCollector::new(mutating_methods, local_method_facts);
     for statement in statements.iter() {
         collector.visit_stmt(statement);
     }
@@ -49,7 +113,8 @@ pub(super) fn statements_mutate_name(
     name: &str,
     mutating_methods: &HashSet<String>,
 ) -> bool {
-    let mut collector = MutatingUseCollector::new(mutating_methods);
+    let empty_facts = LocalMethodFacts::default();
+    let mut collector = MutatingUseCollector::new(mutating_methods, &empty_facts);
     for statement in statements {
         collector.visit_stmt(statement);
     }
@@ -151,17 +216,23 @@ pub(super) fn collect_token_identifiers(
     }
 }
 
-#[derive(Default)]
-struct MutatingUseCollector {
+struct MutatingUseCollector<'facts> {
     names: HashSet<String>,
     mutating_methods: HashSet<String>,
+    binding_owners: HashMap<String, HashSet<String>>,
+    local_method_facts: &'facts LocalMethodFacts,
 }
 
-impl MutatingUseCollector {
-    fn new(mutating_methods: &HashSet<String>) -> Self {
+impl<'facts> MutatingUseCollector<'facts> {
+    fn new(
+        mutating_methods: &HashSet<String>,
+        local_method_facts: &'facts LocalMethodFacts,
+    ) -> Self {
         Self {
             names: HashSet::new(),
             mutating_methods: mutating_methods.clone(),
+            binding_owners: HashMap::new(),
+            local_method_facts,
         }
     }
 
@@ -195,7 +266,11 @@ impl MutatingUseCollector {
             )
     }
 
-    fn method_requires_mutability(&self, method: &syn::Ident) -> bool {
+    fn method_requires_mutability(&self, call: &syn::ExprMethodCall) -> bool {
+        if self.call_is_proven_shared(call) {
+            return false;
+        }
+        let method = &call.method;
         self.mutating_methods.contains(&method.to_string())
             || matches!(
                 method.to_string().as_str(),
@@ -249,9 +324,91 @@ impl MutatingUseCollector {
                     | "write_all"
             )
     }
+
+    fn call_is_proven_shared(&self, call: &syn::ExprMethodCall) -> bool {
+        let syn::Expr::Path(path) = call.receiver.as_ref() else {
+            return false;
+        };
+        let Some(name) = path.path.get_ident().map(ToString::to_string) else {
+            return false;
+        };
+        let Some(owners) = self.binding_owners.get(&name) else {
+            return false;
+        };
+        let method = call.method.to_string();
+        let relevant = owners
+            .iter()
+            .filter(|owner| {
+                contains_method_fact(&self.local_method_facts.shared, owner, &method)
+                    || contains_method_fact(&self.local_method_facts.mutable, owner, &method)
+            })
+            .collect::<Vec<_>>();
+        !relevant.is_empty()
+            && relevant
+                .iter()
+                .all(|owner| contains_method_fact(&self.local_method_facts.shared, owner, &method))
+    }
+
+    fn expression_owner_candidates(&self, expression: &syn::Expr) -> HashSet<String> {
+        match expression {
+            syn::Expr::Reference(reference) => self.expression_owner_candidates(&reference.expr),
+            syn::Expr::Group(group) => self.expression_owner_candidates(&group.expr),
+            syn::Expr::Paren(paren) => self.expression_owner_candidates(&paren.expr),
+            syn::Expr::Path(path) => path
+                .path
+                .get_ident()
+                .and_then(|ident| self.binding_owners.get(&ident.to_string()))
+                .cloned()
+                .unwrap_or_default(),
+            syn::Expr::Struct(struct_) => struct_
+                .path
+                .segments
+                .last()
+                .map(|segment| HashSet::from([segment.ident.to_string()]))
+                .unwrap_or_default(),
+            syn::Expr::Call(call) => match call.func.as_ref() {
+                syn::Expr::Path(path) if path.path.segments.len() > 1 => {
+                    HashSet::from([path.path.segments[path.path.segments.len() - 2]
+                        .ident
+                        .to_string()])
+                }
+                _ => HashSet::new(),
+            },
+            syn::Expr::MethodCall(call) => self
+                .local_method_facts
+                .returns_by_method
+                .get(&call.method.to_string())
+                .cloned()
+                .unwrap_or_default(),
+            _ => HashSet::new(),
+        }
+    }
 }
 
-impl<'ast> Visit<'ast> for MutatingUseCollector {
+fn contains_method_fact(facts: &HashSet<(String, String)>, owner: &str, method: &str) -> bool {
+    facts
+        .iter()
+        .any(|(known_owner, known_method)| known_owner == owner && known_method == method)
+}
+
+impl<'ast> Visit<'ast> for MutatingUseCollector<'_> {
+    fn visit_local(&mut self, local: &'ast syn::Local) {
+        if let Some(init) = &local.init {
+            self.visit_expr(&init.expr);
+            if let Some(name) = simple_pattern_name(&local.pat) {
+                let explicit = pattern_type_owner(&local.pat).map(|owner| HashSet::from([owner]));
+                let owners =
+                    explicit.unwrap_or_else(|| self.expression_owner_candidates(&init.expr));
+                if !owners.is_empty() {
+                    self.binding_owners.insert(name, owners);
+                }
+            }
+            if let Some((_, diverge)) = &init.diverge {
+                self.visit_expr(diverge);
+            }
+        }
+    }
+
     fn visit_macro(&mut self, rust_macro: &'ast syn::Macro) {
         if macro_is_read_only(&rust_macro.path) {
             let Ok(arguments) = rust_macro.parse_body_with(
@@ -305,12 +462,27 @@ impl<'ast> Visit<'ast> for MutatingUseCollector {
     }
 
     fn visit_expr_method_call(&mut self, call: &'ast syn::ExprMethodCall) {
-        if self.method_requires_mutability(&call.method)
-            && !Self::is_read_only_generated_cache_call(call)
-        {
+        if self.method_requires_mutability(call) && !Self::is_read_only_generated_cache_call(call) {
             self.collect_place(&call.receiver);
         }
         visit::visit_expr_method_call(self, call);
+    }
+}
+
+fn simple_pattern_name(pattern: &syn::Pat) -> Option<String> {
+    match pattern {
+        syn::Pat::Ident(binding) if binding.subpat.is_none() => Some(binding.ident.to_string()),
+        syn::Pat::Type(typed) => simple_pattern_name(&typed.pat),
+        syn::Pat::Paren(paren) => simple_pattern_name(&paren.pat),
+        _ => None,
+    }
+}
+
+fn pattern_type_owner(pattern: &syn::Pat) -> Option<String> {
+    match pattern {
+        syn::Pat::Type(typed) => type_owner_name(&typed.ty),
+        syn::Pat::Paren(paren) => pattern_type_owner(&paren.pat),
+        _ => None,
     }
 }
 

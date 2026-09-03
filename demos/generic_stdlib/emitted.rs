@@ -990,7 +990,8 @@ fn accumulate<T: Clone + 'static + SifrGeneratedAdd>(
                             Ok(())
                         })(
                         );
-                        if sifr_generated_try_res.is_err() {
+                        if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+                            let _e = sifr_generated_try_err.clone();
                             return;
                         }
                     }

@@ -6,6 +6,10 @@ fn factorial(n: SifrInt) -> SifrInt {
     }
     &n * &factorial(&n - &SifrInt::from_i64(1))
 }
+#[expect(
+    clippy::many_single_char_names,
+    reason = "generated Rust preserves this exact typed Sifr source contract"
+)]
 fn fibonacci(n: SifrInt) -> SifrInt {
     if &n <= &SifrInt::from_i64(1) {
         return n.clone();

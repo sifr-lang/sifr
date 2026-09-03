@@ -51,7 +51,7 @@ impl PartialEq for Vec2 {
 }
 impl ::std::fmt::Display for Vec2 {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        write!(f, "{}", format!("Vec2({}, {})", self.x, self.y))
+        write!(f, "Vec2({}, {})", self.x, self.y)
     }
 }
 impl Printable for Vec2 {}
@@ -111,9 +111,6 @@ struct Email(String);
 impl Email {
     const fn new(value: String) -> Self {
         Self(value)
-    }
-    fn value(&self) -> String {
-        self.0.clone()
     }
 }
 impl ::std::fmt::Display for Email {

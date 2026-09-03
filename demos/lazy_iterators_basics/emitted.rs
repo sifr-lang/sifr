@@ -158,15 +158,12 @@ fn main() {
             Box::new(
                 nums.iter()
                     .cloned()
-                    .zip(
-                        vec![
-                            "a".to_string(),
-                            "b".to_string(),
-                            "c".to_string(),
-                            "d".to_string()
-                        ]
-                        .into_iter()
-                    )
+                    .zip(vec![
+                        "a".to_string(),
+                        "b".to_string(),
+                        "c".to_string(),
+                        "d".to_string()
+                    ])
                     .map(|sifr_generated_zip_item| (
                         sifr_generated_zip_item.0,
                         sifr_generated_zip_item.1

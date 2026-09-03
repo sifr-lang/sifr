@@ -10,7 +10,7 @@ fn main() {
 // src/helper.rs
 pub use ::sifr_runtime::SifrInt;
 #[must_use]
-pub fn value() -> SifrInt {
+pub const fn value() -> SifrInt {
     crate::shared::sifr_generated_const_42415345()
 }
 

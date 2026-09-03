@@ -397,12 +397,11 @@ fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
     }
 }
 fn collect_path_helpers_actual() -> Vec<bool> {
-    let actual: Vec<bool> = vec![
+    vec![
         basename(&"/tmp/demo.txt".to_string()).as_str() == "demo.txt".to_string().as_str(),
         join_path(&"/tmp".to_string(), &"demo.txt".to_string()).as_str()
             == "/tmp/demo.txt".to_string().as_str(),
-    ];
-    actual
+    ]
 }
 fn collect_path_class_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = Vec::new();
@@ -445,7 +444,7 @@ fn collect_missing_path_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = Vec::new();
     let mut missing_rejected: bool = false;
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        let _ = SifrGeneratedStdlibSifrX2epathlibX2ePath::new(
+        let _bad: String = SifrGeneratedStdlibSifrX2epathlibX2ePath::new(
             "/tmp/sifr_pathlib_pathlib_demo_missing.txt".to_string(),
         )
         .read_text()?;

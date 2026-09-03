@@ -163,7 +163,7 @@ mod sifr_generated_project_nominals {
             if index < &SifrInt::from_i64(0) || index >= &SifrInt::from(self.array_items.len()) {
                 return None;
             }
-            let value: Option<SifrGeneratedStdlibSifrX2etomllibX2eTomlValue> = {
+            {
                 let sifr_generated_checked_read_collection = &self.array_items;
                 let sifr_generated_checked_read_index = index.clone();
                 let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
@@ -171,8 +171,7 @@ mod sifr_generated_project_nominals {
                 sifr_generated_checked_read_collection
                     .get(sifr_generated_checked_read_normalized)
                     .cloned()
-            };
-            value
+            }
         }
     }
     impl SifrGeneratedStdlibSifrX2etomllibX2eTomlValue {
@@ -196,7 +195,7 @@ mod sifr_generated_project_nominals {
             if !self.is_table() {
                 return result;
             }
-            for (item_key, _) in self.table_items.as_ref().clone().iter().cloned() {
+            for (item_key, _item_value) in self.table_items.as_ref().clone().iter().cloned() {
                 result.push(item_key.to_owned());
             }
             result
@@ -209,7 +208,7 @@ mod sifr_generated_project_nominals {
             if !self.is_table() {
                 return result;
             }
-            for (_, item_value) in self.table_items.as_ref().clone().iter().cloned() {
+            for (_item_key, item_value) in self.table_items.as_ref().clone().iter().cloned() {
                 result.push(item_value.clone());
             }
             result
@@ -358,8 +357,9 @@ pub fn sifr_generated_token_int(
     sifr_generated_try_res
         .unwrap_or_else(|sifr_generated_try_err| match sifr_generated_try_err {
             SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aTOMLDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(
-                _,
+                sifr_generated_try_variant_error,
             ) => {
+                let _e = sifr_generated_try_variant_error.clone();
                 Err(
                     TOMLDecodeError::new(
                         "TOML bridge payload has invalid integer metadata".to_string(),
@@ -404,8 +404,9 @@ pub fn sifr_generated_token_float(
     sifr_generated_try_res
         .unwrap_or_else(|sifr_generated_try_err| match sifr_generated_try_err {
             SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aTOMLDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(
-                _,
+                sifr_generated_try_variant_error,
             ) => {
+                let _e = sifr_generated_try_variant_error.clone();
                 Err(
                     TOMLDecodeError::new(
                         "TOML bridge payload has invalid float metadata".to_string(),
@@ -655,7 +656,9 @@ pub fn render() -> String {
             parsed.get(&"name".to_string());
         let value_value: Option<SifrGeneratedStdlibSifrX2etomllibX2eTomlValue> =
             parsed.get(&"value".to_string());
-        if name_value.is_some() && value_value.is_some() {
+        if let Some(_name_value) = name_value
+            && let Some(_value_value) = value_value
+        {
             return Ok("dependency closure demo: pass".to_string());
         }
         Ok("dependency closure demo: empty".to_string())

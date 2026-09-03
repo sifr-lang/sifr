@@ -274,7 +274,7 @@ fn collect_tooling_and_cleanup_actual() -> Vec<bool> {
     actual.push(missing_copy_rejected);
     let mut cleanup_ok: bool = false;
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        let _ = run_command(&format!("rm -rf {base}"))?;
+        let _cleanup: String = run_command(&format!("rm -rf {base}"))?;
         cleanup_ok = !exists(&base);
         Ok(())
     })();

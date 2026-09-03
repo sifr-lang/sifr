@@ -78,12 +78,11 @@ fn collect_core_actual() -> Vec<bool> {
     actual
 }
 fn collect_host_actual() -> Vec<bool> {
-    let actual: Vec<bool> = vec![
+    vec![
         &SifrInt::from(node().chars().count()) > &SifrInt::from_i64(0),
         &SifrInt::from(release().chars().count()) > &SifrInt::from_i64(0),
         &SifrInt::from(version().chars().count()) > &SifrInt::from_i64(0),
-    ];
-    actual
+    ]
 }
 fn append_all(target: &mut Vec<bool>, values: &[bool]) {
     for value in values.iter().copied() {

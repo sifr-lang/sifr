@@ -70,13 +70,13 @@ fn classify(
 ) -> String {
     match x {
         SifrGeneratedUnion8X3asequence5X3aunion1X3a311X3a4X3aatom3X3aint11X3a4X3aatom3X3astr12X3a4X3aatom4X3abool::SifrGeneratedUnionVariant4X3aatom3X3aint(
-            _,
+            _x,
         ) => "int".to_string(),
         SifrGeneratedUnion8X3asequence5X3aunion1X3a311X3a4X3aatom3X3aint11X3a4X3aatom3X3astr12X3a4X3aatom4X3abool::SifrGeneratedUnionVariant4X3aatom3X3astr(
-            _,
+            _x,
         ) => "str".to_string(),
         SifrGeneratedUnion8X3asequence5X3aunion1X3a311X3a4X3aatom3X3aint11X3a4X3aatom3X3astr12X3a4X3aatom4X3abool::SifrGeneratedUnionVariant4X3aatom4X3abool(
-            _,
+            _x,
         ) => "bool".to_string(),
     }
 }

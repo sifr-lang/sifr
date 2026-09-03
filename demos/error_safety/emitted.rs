@@ -180,7 +180,7 @@ fn process_age(age: SifrInt) -> Result<SifrInt, ValueError> {
 fn main() {
     println!("=== Built-in Error Classes ===");
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
-        let _ = validate_age(-&SifrInt::from_i64(5))?;
+        let _age: SifrInt = validate_age(-&SifrInt::from_i64(5))?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
@@ -188,7 +188,7 @@ fn main() {
         println!("caught ValueError: {}", e.message.clone());
     }
     let sifr_generated_try_res: Result<(), DivisionError> = (|| {
-        let _ = safe_divide(SifrInt::from_i64(10), SifrInt::from_i64(0))?;
+        let _result: SifrInt = safe_divide(SifrInt::from_i64(10), SifrInt::from_i64(0))?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
@@ -196,7 +196,7 @@ fn main() {
         println!("caught DivisionError: {}", e.message.clone());
     }
     let sifr_generated_try_res: Result<(), ParseError> = (|| {
-        let _ = SifrInt::parse_decimal(
+        let _n: SifrInt = SifrInt::parse_decimal(
             &"not_a_number".to_string(),
             ::sifr_runtime::DEFAULT_MAX_INTEGER_DIGITS,
         )
@@ -211,7 +211,7 @@ fn main() {
     }
     println!("=== Custom Error Classes ===");
     let sifr_generated_try_res: Result<(), AppError> = (|| {
-        let _ = check_input(-&SifrInt::from_i64(1))?;
+        let _val: SifrInt = check_input(-&SifrInt::from_i64(1))?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
@@ -220,7 +220,7 @@ fn main() {
     }
     println!("=== Exhaustiveness: Specific Except Arms ===");
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
-        let _ = validate_age(-&SifrInt::from_i64(10))?;
+        let _a: SifrInt = validate_age(-&SifrInt::from_i64(10))?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
@@ -232,7 +232,7 @@ fn main() {
         (),
         SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aValueError1X3a017X3a5X3aclass5X3aError1X3a0,
     > = (|| {
-        let _ = validate_age(SifrInt::from_i64(200))
+        let _b: SifrInt = validate_age(SifrInt::from_i64(200))
             .map_err(
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aValueError1X3a017X3a5X3aclass5X3aError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aValueError1X3a0,
             )?;
@@ -256,7 +256,7 @@ fn main() {
     }
     println!("=== Error Propagation ===");
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
-        let _ = process_age(-&SifrInt::from_i64(1))?;
+        let _c: SifrInt = process_age(-&SifrInt::from_i64(1))?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {

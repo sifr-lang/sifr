@@ -179,7 +179,7 @@ mod sifr_generated_project_nominals {
                             line_no.clone(),
                         )?;
                     let (option_name, option_value) = parsed_option_pair;
-                    let _ = option_name.chars().collect::<Vec<char>>();
+                    let _chars_option_name: Vec<char> = option_name.chars().collect::<Vec<char>>();
                     if current_section.is_empty() || current_section == default_section {
                         {
                             let sifr_generated_assign_value =
@@ -1334,7 +1334,9 @@ fn demo_zipfile() {
         remove_file(&"/tmp/sifr_demo_zipfile.zip".to_string())?;
         Ok(())
     })();
-    let _ = sifr_generated_try_res.is_err();
+    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+        let _e = sifr_generated_try_err.clone();
+    }
 }
 fn main() {
     demo_operator();

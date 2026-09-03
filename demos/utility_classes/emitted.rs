@@ -372,7 +372,8 @@ mod sifr_generated_project_nominals {
                     Ok(sifr_generated_ret_val) => {
                         return sifr_generated_ret_val;
                     }
-                    Err(_) => {
+                    Err(sifr_generated_try_err) => {
+                        let _e = sifr_generated_try_err.clone();
                         return None;
                     }
                 }
@@ -389,7 +390,8 @@ mod sifr_generated_project_nominals {
                     Ok(sifr_generated_ret_val) => {
                         return sifr_generated_ret_val;
                     }
-                    Err(_) => {
+                    Err(sifr_generated_try_err) => {
+                        let _e = sifr_generated_try_err.clone();
                         return None;
                     }
                 }
@@ -495,7 +497,8 @@ mod sifr_generated_project_nominals {
                     }
                     Ok(())
                 })();
-                if sifr_generated_try_res.is_err() {
+                if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+                    let _e = sifr_generated_try_err.clone();
                     exact = SifrInt::from_i64(1);
                 }
             }
@@ -614,7 +617,8 @@ mod sifr_generated_project_nominals {
                     }
                     Ok(())
                 })();
-                if sifr_generated_try_res.is_err() {
+                if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+                    let _e = sifr_generated_try_err.clone();
                     exact = SifrInt::from_i64(1);
                 }
             }
@@ -743,23 +747,23 @@ mod sifr_generated_project_nominals {
                 if token.starts_with("-") && !force_positional {
                     let (inline_has_value, inline_name, inline_value) =
                         sifr_generated_split_inline_option(&token);
-                    let _ = inline_name.chars().collect::<Vec<char>>();
-                    let _ = inline_value.chars().collect::<Vec<char>>();
-                    let mut lookup_name: String = {
-                        let mut sifr_generated_concat: String = String::with_capacity(token.len());
-                        sifr_generated_concat.push_str(token.as_str());
-                        sifr_generated_concat.push_str("");
-                        sifr_generated_concat
-                    };
-                    if inline_has_value {
-                        lookup_name = {
+                    let _chars_inline_name: Vec<char> = inline_name.chars().collect::<Vec<char>>();
+                    let _chars_inline_value: Vec<char> =
+                        inline_value.chars().collect::<Vec<char>>();
+                    let lookup_name: String = if inline_has_value {
+                        {
                             let mut sifr_generated_concat: String =
                                 String::with_capacity(inline_name.len());
                             sifr_generated_concat.push_str(inline_name.as_str());
                             sifr_generated_concat.push_str("");
                             sifr_generated_concat
-                        };
-                    }
+                        }
+                    } else {
+                        let mut sifr_generated_concat: String = String::with_capacity(token.len());
+                        sifr_generated_concat.push_str(token.as_str());
+                        sifr_generated_concat.push_str("");
+                        sifr_generated_concat
+                    };
                     let mut handled_option: bool = false;
                     for option_spec in self.specs.clone().iter().cloned() {
                         if option_spec.kind.clone() == "positional" {
@@ -774,10 +778,12 @@ mod sifr_generated_project_nominals {
                             i = &i + &SifrInt::from_i64(1);
                             break;
                         }
-                        let mut values: Vec<String> = Vec::new();
-                        if inline_has_value {
-                            values = vec![inline_value.to_owned()];
-                            i = &i + &SifrInt::from_i64(1);
+                        let values: Vec<String> = if inline_has_value {
+                            {
+                                let values = vec![inline_value.to_owned()];
+                                i = &i + &SifrInt::from_i64(1);
+                                values
+                            }
                         } else {
                             let (sifr_generated_tuple_unpack_0, sifr_generated_tuple_unpack_1) =
                                 self.sifr_generated_collect_option_values(
@@ -786,9 +792,10 @@ mod sifr_generated_project_nominals {
                                     &option_spec,
                                     force_positional,
                                 );
-                            values = sifr_generated_tuple_unpack_0;
+                            let values = sifr_generated_tuple_unpack_0;
                             i = sifr_generated_tuple_unpack_1;
-                        }
+                            values
+                        };
                         if sifr_generated_nargs_is_multi(&option_spec.nargs.clone())
                             || option_spec.nargs.clone() == "*"
                             || option_spec.nargs.clone() == "+"
@@ -1025,8 +1032,9 @@ mod sifr_generated_project_nominals {
                 Ok(Some(sifr_generated_ret_val)) => {
                     return sifr_generated_ret_val;
                 }
-                Ok(_) => {}
-                Err(_) => {
+                Ok(None) => {}
+                Err(sifr_generated_try_err) => {
+                    let _e = sifr_generated_try_err.clone();
                     return "1".to_string();
                 }
             }
@@ -1052,7 +1060,8 @@ mod sifr_generated_project_nominals {
                 Ok(sifr_generated_ret_val) => {
                     return sifr_generated_ret_val;
                 }
-                Err(_) => {
+                Err(sifr_generated_try_err) => {
+                    let _e = sifr_generated_try_err.clone();
                     return false;
                 }
             }
@@ -1084,7 +1093,7 @@ mod sifr_generated_project_nominals {
     }
     #[must_use]
     pub fn sifr_generated_derive_dest(name: &str) -> String {
-        let _ = name.chars().collect::<Vec<char>>();
+        let _chars_name: Vec<char> = name.chars().collect::<Vec<char>>();
         if name.starts_with("--") {
             return name
                 .chars()
@@ -1127,23 +1136,22 @@ mod sifr_generated_project_nominals {
         }
         let (inline_has_value, inline_name, inline_value) =
             sifr_generated_split_inline_option(token);
-        let _ = inline_name.chars().collect::<Vec<char>>();
-        let _ = inline_value.chars().collect::<Vec<char>>();
+        let _chars_inline_name: Vec<char> = inline_name.chars().collect::<Vec<char>>();
+        let _chars_inline_value: Vec<char> = inline_value.chars().collect::<Vec<char>>();
         let _ = inline_value;
-        let mut lookup_name: String = {
+        let lookup_name: String = if inline_has_value {
+            {
+                let mut sifr_generated_concat: String = String::with_capacity(inline_name.len());
+                sifr_generated_concat.push_str(inline_name.as_str());
+                sifr_generated_concat.push_str("");
+                sifr_generated_concat
+            }
+        } else {
             let mut sifr_generated_concat: String = String::with_capacity(token.len());
             sifr_generated_concat.push_str(token);
             sifr_generated_concat.push_str("");
             sifr_generated_concat
         };
-        if inline_has_value {
-            lookup_name = {
-                let mut sifr_generated_concat: String = String::with_capacity(inline_name.len());
-                sifr_generated_concat.push_str(inline_name.as_str());
-                sifr_generated_concat.push_str("");
-                sifr_generated_concat
-            };
-        }
         for spec in specs.iter().cloned() {
             if spec.kind.clone() == "positional" {
                 continue;
@@ -1424,12 +1432,16 @@ mod sifr_generated_project_nominals {
                 sifr_generated_concat.push_str("");
                 sifr_generated_concat
             };
-            let mut normalized_value: SifrInt = -&SifrInt::from_i64(1);
-            if is_valid_ipv4(&addr) {
-                let parsed: SifrInt = sifr_generated_ip_to_int_raw(&addr);
-                normalized_value = parsed.clone();
-                normalized_text = int_to_ip(parsed.clone());
-            }
+            let normalized_value: SifrInt = if is_valid_ipv4(&addr) {
+                {
+                    let parsed: SifrInt = sifr_generated_ip_to_int_raw(&addr);
+                    let normalized_value = parsed.clone();
+                    normalized_text = int_to_ip(parsed.clone());
+                    normalized_value
+                }
+            } else {
+                -&SifrInt::from_i64(1)
+            };
             let sifr_generated_field_value_bc70a4514792b60f_5f76616c7565: SifrInt =
                 normalized_value.clone();
             let sifr_generated_field_value_c0423f4fcc2bdeed_5f74657874: String = normalized_text;
@@ -1448,12 +1460,6 @@ mod sifr_generated_project_nominals {
                 sifr_generated_concat.push_str("");
                 sifr_generated_concat
             }
-        }
-    }
-    impl SifrGeneratedStdlibSifrX2eipaddressX2eIPv4Address {
-        #[must_use]
-        pub const fn version(&self) -> SifrInt {
-            SifrInt::from_i64(4)
         }
     }
     impl SifrGeneratedStdlibSifrX2eipaddressX2eIPv4Address {
@@ -1484,17 +1490,15 @@ mod sifr_generated_project_nominals {
         }
         for part in parts.iter().cloned() {
             let sifr_generated_chars_part: Vec<char> = part.chars().collect::<Vec<char>>();
-            if {
+            let Some(_checked_value_0) = {
                 let sifr_generated_string_index = SifrInt::from_i64(0);
                 let sifr_generated_string_index_normalized = sifr_generated_string_index
                     .normalize_index_or_len(sifr_generated_chars_part.len());
                 sifr_generated_chars_part.get(sifr_generated_string_index_normalized)
             }
-            .map(::std::string::ToString::to_string)
-            .is_none()
-            {
+            .map(::std::string::ToString::to_string) else {
                 return false;
-            }
+            };
             if &SifrInt::from(sifr_generated_chars_part.len()) > &SifrInt::from_i64(3) {
                 return false;
             }
@@ -1914,17 +1918,15 @@ fn is_valid_ipv4(addr: &str) -> bool {
     }
     for part in parts.iter().cloned() {
         let sifr_generated_chars_part: Vec<char> = part.chars().collect::<Vec<char>>();
-        if {
+        let Some(_checked_value_0) = {
             let sifr_generated_string_index = SifrInt::from_i64(0);
             let sifr_generated_string_index_normalized =
                 sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_part.len());
             sifr_generated_chars_part.get(sifr_generated_string_index_normalized)
         }
-        .map(::std::string::ToString::to_string)
-        .is_none()
-        {
+        .map(::std::string::ToString::to_string) else {
             return false;
-        }
+        };
         if &SifrInt::from(sifr_generated_chars_part.len()) > &SifrInt::from_i64(3) {
             return false;
         }
@@ -2168,15 +2170,18 @@ fn sifr_generated_canonical_uuid_text(input_text: &str) -> Result<String, ValueE
         sifr_generated_concat
     };
     let mut sifr_generated_chars_normalized_input: Vec<char> =
-        normalized_input.chars().collect::<Vec<char>>();
-    if sifr_generated_starts_with(&normalized_input, &"urn:uuid:".to_string()) {
-        normalized_input = sifr_generated_substring(
-            &normalized_input,
-            SifrInt::from_i64(9),
-            SifrInt::from(normalized_input.chars().count()),
-        );
-        sifr_generated_chars_normalized_input = normalized_input.chars().collect::<Vec<char>>();
-    }
+        if sifr_generated_starts_with(&normalized_input, &"urn:uuid:".to_string()) {
+            {
+                normalized_input = sifr_generated_substring(
+                    &normalized_input,
+                    SifrInt::from_i64(9),
+                    SifrInt::from(normalized_input.chars().count()),
+                );
+                normalized_input.chars().collect::<Vec<char>>()
+            }
+        } else {
+            normalized_input.chars().collect::<Vec<char>>()
+        };
     if &SifrInt::from(sifr_generated_chars_normalized_input.len()) >= &SifrInt::from_i64(2) {
         let first: Option<String> = {
             let sifr_generated_string_index = SifrInt::from_i64(0);

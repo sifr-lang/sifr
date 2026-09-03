@@ -373,10 +373,7 @@ fn sifr_generated_hash_bytes(algorithm: &str, data: &[u8]) -> Vec<u8> {
     } else if algorithm == "blake2s" {
         return blake2s_bytes(data);
     }
-    {
-        let sifr_generated_empty_bytes_literal: Vec<u8> = Vec::new();
-        sifr_generated_empty_bytes_literal
-    }
+    Vec::new()
 }
 fn sifr_generated_hash_hex(algorithm: &str, data: &[u8]) -> String {
     {
@@ -973,7 +970,7 @@ fn demo_time() {
             &"2024-01-15 10:30:00".to_string(),
             &"%Y-%m-%d %H:%M:%S".to_string(),
         )?;
-        let _ = parsed.chars().collect::<Vec<char>>();
+        let _chars_parsed: Vec<char> = parsed.chars().collect::<Vec<char>>();
         println!("{}", {
             let mut sifr_generated_concat: String = String::with_capacity(14usize);
             sifr_generated_concat.push_str("strptime ok = ");
@@ -999,7 +996,7 @@ fn demo_time() {
 fn demo_base64() {
     println!("=== base64 new intrinsics ===");
     let encoded: String = b32encode(&"hello world".to_string());
-    let _ = encoded.chars().collect::<Vec<char>>();
+    let _chars_encoded: Vec<char> = encoded.chars().collect::<Vec<char>>();
     println!("{}", {
         let mut sifr_generated_concat: String = String::with_capacity(20usize);
         sifr_generated_concat.push_str("b32encode len > 0 = ");

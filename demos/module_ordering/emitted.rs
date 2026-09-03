@@ -11,7 +11,7 @@ fn main() {
 pub use crate::provider::provided;
 pub use ::sifr_runtime::SifrInt;
 #[must_use]
-pub fn value() -> SifrInt {
+pub const fn value() -> SifrInt {
     provided()
 }
 

@@ -72,24 +72,22 @@ fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
     }
 }
 fn collect_capwords_actual() -> Vec<bool> {
-    let actual: Vec<bool> = vec![
+    vec![
         capwords(&"hello world".to_string()).as_str() == "Hello World".to_string().as_str(),
         capwords(&"hello\tworld".to_string()).as_str() == "Hello World".to_string().as_str(),
         capwords(&"hello\nworld".to_string()).as_str() == "Hello World".to_string().as_str(),
         capwords(&"one\u{b}two\u{c}three".to_string()).as_str()
             == "One Two Three".to_string().as_str(),
         capwords(&"  one   two  ".to_string()).as_str() == "One Two".to_string().as_str(),
-    ];
-    actual
+    ]
 }
 fn collect_constants_actual() -> Vec<bool> {
-    let actual: Vec<bool> = vec![
+    vec![
         sifr_generated_const_61736369695f6c6f77657263617365() == "abcdefghijklmnopqrstuvwxyz",
         sifr_generated_const_646967697473() == "0123456789",
         &SifrInt::from(sifr_generated_const_77686974657370616365().chars().count())
             == &SifrInt::from_i64(6),
-    ];
-    actual
+    ]
 }
 fn append_all(target: &mut Vec<bool>, values: &[bool]) {
     for value in values.iter().copied() {

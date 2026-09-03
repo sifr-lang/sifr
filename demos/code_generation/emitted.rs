@@ -6,8 +6,8 @@ fn main() {
     let b: SifrInt = pair.1.clone();
     println!("Tuple index: {a}, {b}");
     assert_eq!(format!("Tuple index: {a}, {b}"), "Tuple index: 10, 20");
-    let _ = SifrInt::from_i64(10);
-    let _ = SifrInt::from_i64(2);
+    let _x: SifrInt = SifrInt::from_i64(10);
+    let _y: SifrInt = SifrInt::from_i64(2);
     let result: f64 = 10.0 / 2.0;
     println!("Division 10/2: {result}");
     assert_eq!(format!("Division 10/2: {result}"), "Division 10/2: 5");
@@ -37,7 +37,7 @@ fn main() {
     base = base.pow_known_valid(0_u32);
     println!("2**0 = {base}");
     assert_eq!(format!("2**0 = {base}"), "2**0 = 1");
-    let _ = SifrInt::from_i64(10);
+    let _i: SifrInt = SifrInt::from_i64(10);
     let f: f64 = 3.5_f64;
     let mixed: f64 = 10.0 + f;
     println!("10 + 3.5 = {mixed}");

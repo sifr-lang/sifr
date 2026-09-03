@@ -152,7 +152,7 @@ fn main() {
     let missing: bool = numbers.contains(&SifrInt::from_i64(9));
     println!("9 in list: {missing}");
     println!("=== Tuples ===");
-    let _ = (
+    let _point: (SifrInt, SifrInt, String) = (
         SifrInt::from_i64(10),
         SifrInt::from_i64(20),
         "origin".to_string(),
@@ -161,7 +161,7 @@ fn main() {
     println!("=== Tuple Unpacking ===");
     let pair: (String, SifrInt) = ("Sifr".to_string(), SifrInt::from_i64(2025));
     let (name, year) = pair;
-    let _ = name.chars().collect::<Vec<char>>();
+    let _chars_name: Vec<char> = name.chars().collect::<Vec<char>>();
     println!("{name} was born in {year}");
     println!("=== F-Strings ===");
     let a: SifrInt = SifrInt::from_i64(7);

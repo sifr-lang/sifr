@@ -4,7 +4,7 @@ use ::sifr_runtime::SifrRange;
 fn write_indices(size: SifrInt) -> Vec<SifrInt> {
     let mut out: Vec<SifrInt> = {
         let mut sifr_generated_list_comp = Vec::new();
-        for _ in
+        for _i in
             SifrRange::new_known_nonzero(SifrInt::from_i64(0), size.clone(), SifrInt::from_i64(1))
         {
             sifr_generated_list_comp.push(SifrInt::from_i64(0));

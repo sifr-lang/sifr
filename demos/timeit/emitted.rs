@@ -118,14 +118,13 @@ fn collect_repeat_actual() -> Vec<bool> {
     actual
 }
 fn collect_edge_actual() -> Vec<bool> {
-    let actual: Vec<bool> = vec![
+    vec![
         &SifrInt::from(repeat(workload, SifrInt::from_i64(0), SifrInt::from_i64(5)).len())
             == &SifrInt::from_i64(0),
         timeit(workload, SifrInt::from_i64(0)) >= 0.0_f64,
         &SifrInt::from(repeat(workload, SifrInt::from_i64(2), SifrInt::from_i64(0)).len())
             == &SifrInt::from_i64(2),
-    ];
-    actual
+    ]
 }
 fn append_all(target: &mut Vec<bool>, values: &[bool]) {
     for value in values.iter().copied() {

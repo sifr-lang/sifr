@@ -384,11 +384,11 @@ fn collect_tempfile_actual() -> Vec<bool> {
             sifr_generated_concat.push_str("/bad_");
             sifr_generated_concat
         };
-        let _ = run_command(&format!("rm -rf {missing_parent_path}"))?;
+        let _rm_missing: String = run_command(&format!("rm -rf {missing_parent_path}"))?;
         let mut missing_error: bool = false;
         let sifr_generated_try_res: Result<(), IOError> = (|| {
             let unexpected_file: String = mkstemp(&missing_prefix)?;
-            let _ = run_command(&format!("rm -f {unexpected_file}"))?;
+            let _rm_unexpected: String = run_command(&format!("rm -f {unexpected_file}"))?;
             missing_error = false;
             Ok(())
         })();
@@ -398,14 +398,14 @@ fn collect_tempfile_actual() -> Vec<bool> {
             missing_error = true;
         }
         actual.push(missing_error);
-        let _ = run_command(&format!("rm -f {file_path}"))?;
-        let _ = run_command(&format!("rm -rf {dir_path}"))?;
-        let _ = run_command(&format!("rm -rf {missing_parent_path}"))?;
+        let _c1: String = run_command(&format!("rm -f {file_path}"))?;
+        let _c2: String = run_command(&format!("rm -rf {dir_path}"))?;
+        let _c3: String = run_command(&format!("rm -rf {missing_parent_path}"))?;
         let cleaned: bool = !exists(&file_path) && !exists(&dir_path);
         actual.push(cleaned);
         let next_path: String = mkstemp(&"sifr_tempfile_tmp_".to_string())?;
         actual.push(next_path != file_path);
-        let _ = run_command(&format!("rm -f {next_path}"))?;
+        let _c4: String = run_command(&format!("rm -f {next_path}"))?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {

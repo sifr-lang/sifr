@@ -49,32 +49,31 @@ fn sifr_generated_match(name: &str, mut ni: SifrInt, pattern: &str, mut pi: Sifr
                     j = &j + &SifrInt::from_i64(1);
                 }
                 return false;
-            } else if pc == "?" {
-                if &ni >= &SifrInt::from(name.chars().count()) {
-                    return false;
-                }
-                ni = &ni + &SifrInt::from_i64(1);
-                pi = &pi + &SifrInt::from_i64(1);
-            } else {
-                if &ni >= &SifrInt::from(name.chars().count()) {
-                    return false;
-                }
-                let nc: Option<String> = {
-                    let sifr_generated_string_source = &name;
-                    let sifr_generated_string_index = ni.clone();
-                    let sifr_generated_string_index_normalized = sifr_generated_string_index
-                        .normalize_index_or_len(sifr_generated_string_source.chars().count());
-                    sifr_generated_string_source
-                        .chars()
-                        .nth(sifr_generated_string_index_normalized)
-                }
-                .map(|character| character.to_string());
-                if let Some(nc) = nc {
-                    if nc != pc {
+            }
+            let sifr_generated_shared_branch_condition = pc == "?";
+            if &ni >= &SifrInt::from(name.chars().count()) {
+                return false;
+            }
+            {
+                if sifr_generated_shared_branch_condition {
+                } else {
+                    let nc: Option<String> = {
+                        let sifr_generated_string_source = &name;
+                        let sifr_generated_string_index = ni.clone();
+                        let sifr_generated_string_index_normalized = sifr_generated_string_index
+                            .normalize_index_or_len(sifr_generated_string_source.chars().count());
+                        sifr_generated_string_source
+                            .chars()
+                            .nth(sifr_generated_string_index_normalized)
+                    }
+                    .map(|character| character.to_string());
+                    if let Some(nc) = nc {
+                        if nc != pc {
+                            return false;
+                        }
+                    } else {
                         return false;
                     }
-                } else {
-                    return false;
                 }
                 ni = &ni + &SifrInt::from_i64(1);
                 pi = &pi + &SifrInt::from_i64(1);
@@ -195,7 +194,7 @@ fn collect_glob_actual() -> Vec<bool> {
         sifr_generated_concat
     };
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        let _ = run_command(&format!("mkdir -p {base}"))?;
+        let _mk: String = run_command(&format!("mkdir -p {base}"))?;
         write_text(&format!("{base}/a.txt"), &"a".to_string())?;
         write_text(&format!("{base}/b.txt"), &"b".to_string())?;
         write_text(&format!("{base}/.hidden.txt"), &"h".to_string())?;
@@ -279,7 +278,7 @@ fn collect_glob_actual() -> Vec<bool> {
         actual = vec![false, false, false, false, false];
     }
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        let _ = run_command(&format!("rm -rf {base}"))?;
+        let _clean: String = run_command(&format!("rm -rf {base}"))?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {

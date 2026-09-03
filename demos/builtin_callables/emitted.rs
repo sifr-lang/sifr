@@ -21,10 +21,10 @@ pub use sifr_generated_project_nominals::ValueError;
 )]
 fn assert_ok<T: Clone + 'static>(value: Result<T, Error>) {
     let sifr_generated_try_res: Result<(), Error> = (|| {
-        let _ = value?;
+        let _out: T = value?;
         Ok(())
     })();
-    if sifr_generated_try_res.is_err() {
+    if let Err(_e) = sifr_generated_try_res {
         assert!(false);
     }
 }
@@ -34,11 +34,11 @@ fn assert_ok<T: Clone + 'static>(value: Result<T, Error>) {
 )]
 fn assert_err<T: Clone + 'static>(value: Result<T, Error>) {
     let sifr_generated_try_res: Result<(), Error> = (|| {
-        let _ = value?;
+        let _out: T = value?;
         assert!(false);
         Ok(())
     })();
-    let _ = sifr_generated_try_res.is_err();
+    let _ = sifr_generated_try_res;
 }
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Error {
@@ -167,8 +167,8 @@ fn main() {
         Box::new(
             vec![SifrInt::from_i64(1), SifrInt::from_i64(2)]
                 .into_iter()
-                .zip(vec!["a".to_string(), "b".to_string()].into_iter())
-                .zip(vec![true, false].into_iter())
+                .zip(vec!["a".to_string(), "b".to_string()])
+                .zip(vec![true, false])
                 .map(|sifr_generated_zip_item| (
                     sifr_generated_zip_item.0.0,
                     sifr_generated_zip_item.0.1,
@@ -186,20 +186,16 @@ fn main() {
                 SifrInt::from_i64(3)
             ]
             .into_iter()
-            .zip(
-                vec![
-                    SifrInt::from_i64(4),
-                    SifrInt::from_i64(5),
-                    SifrInt::from_i64(6)
-                ]
-                .into_iter()
-            )
+            .zip(vec![
+                SifrInt::from_i64(4),
+                SifrInt::from_i64(5),
+                SifrInt::from_i64(6)
+            ])
             .map(|sifr_generated_map_item| {
                 let sifr_generated_map_arg_0 = sifr_generated_map_item.0;
                 let sifr_generated_map_arg_1 = sifr_generated_map_item.1;
                 add(sifr_generated_map_arg_0, sifr_generated_map_arg_1)
             })
-            .into_iter()
         )
         .collect::<Vec<_>>()
     );

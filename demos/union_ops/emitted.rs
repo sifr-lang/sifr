@@ -13,7 +13,7 @@ fn double(x: Option<f64>) -> f64 {
     x * 2.0_f64
 }
 fn safe_len(items: &Option<Vec<String>>) -> SifrInt {
-    SifrInt::from(items.as_ref().map_or(0_usize, |v| v.len()))
+    SifrInt::from(items.as_ref().map_or(0_usize, ::std::vec::Vec::len))
 }
 fn merge_lists(a: Vec<SifrInt>, b: Vec<SifrInt>) -> Vec<SifrInt> {
     {

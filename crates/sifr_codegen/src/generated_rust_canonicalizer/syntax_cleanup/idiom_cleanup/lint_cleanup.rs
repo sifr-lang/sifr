@@ -4,6 +4,86 @@ use quote::{ToTokens, quote};
 use syn::punctuated::Punctuated;
 use syn::visit::{self, Visit};
 
+pub(super) fn rewrite_identity_constructor_closure(expression: &mut syn::Expr) {
+    let syn::Expr::Closure(closure) = expression else {
+        return;
+    };
+    if closure.inputs.len() != 1 {
+        return;
+    }
+    let Some(syn::Pat::Ident(binding)) = closure.inputs.first() else {
+        return;
+    };
+    let syn::Expr::Call(call) = closure.body.as_ref() else {
+        return;
+    };
+    if call.args.len() != 1
+        || !matches!(call.args.first(), Some(syn::Expr::Path(path))
+            if path.qself.is_none() && path.path.is_ident(&binding.ident))
+    {
+        return;
+    }
+    let syn::Expr::Path(constructor) = call.func.as_ref() else {
+        return;
+    };
+    if constructor.path.segments.last().is_some_and(|segment| {
+        matches!(
+            segment.ident.to_string().as_str(),
+            "abort" | "exit" | "panic_any" | "resume_unwind"
+        )
+    }) {
+        return;
+    }
+    *expression = syn::Expr::Path(constructor.clone());
+}
+
+pub(super) fn rewrite_none_comparison(expression: &mut syn::Expr) {
+    let syn::Expr::Binary(binary) = expression else {
+        return;
+    };
+    let method = match binary.op {
+        syn::BinOp::Eq(_) => "is_none",
+        syn::BinOp::Ne(_) => "is_some",
+        _ => return,
+    };
+    let tested = if expression_is_none(&binary.left) {
+        binary.right.as_ref()
+    } else if expression_is_none(&binary.right) {
+        binary.left.as_ref()
+    } else {
+        return;
+    };
+    let method = syn::Ident::new(method, proc_macro2::Span::call_site());
+    *expression = syn::parse_quote!((#tested).#method());
+}
+
+fn expression_is_none(expression: &syn::Expr) -> bool {
+    matches!(expression, syn::Expr::Path(path)
+        if path.qself.is_none() && path.path.is_ident("None"))
+}
+
+pub(super) fn terminate_known_unit_macro_tail(statements: &mut [syn::Stmt]) {
+    let Some(syn::Stmt::Expr(syn::Expr::Macro(expression_macro), semicolon @ None)) =
+        statements.last_mut()
+    else {
+        return;
+    };
+    if expression_macro
+        .mac
+        .path
+        .segments
+        .last()
+        .is_some_and(|segment| {
+            matches!(
+                segment.ident.to_string().as_str(),
+                "assert" | "assert_eq" | "assert_ne" | "eprint" | "eprintln" | "print" | "println"
+            )
+        })
+    {
+        *semicolon = Some(syn::token::Semi::default());
+    }
+}
+
 pub(super) fn rewrite_result_match_with_let_else(local: &mut syn::Local) {
     let Some(init) = &mut local.init else {
         return;
@@ -201,17 +281,10 @@ pub(super) fn fold_initial_assignments(statements: &mut Vec<syn::Stmt>) {
             index += 1;
             continue;
         };
-        let syn::Stmt::Expr(syn::Expr::Assign(assignment), Some(_)) = &statements[index + 1] else {
+        let Some(replacement) = direct_assignment_value(&statements[index + 1], &name) else {
             index += 1;
             continue;
         };
-        if !matches!(assignment.left.as_ref(), syn::Expr::Path(path) if path.path.is_ident(&name))
-            || expression_references_name(&assignment.right, &name)
-        {
-            index += 1;
-            continue;
-        }
-        let replacement = assignment.right.as_ref().clone();
         let syn::Stmt::Local(local) = &mut statements[index] else {
             index += 1;
             continue;
@@ -221,6 +294,36 @@ pub(super) fn fold_initial_assignments(statements: &mut Vec<syn::Stmt>) {
         }
         statements.remove(index + 1);
     }
+}
+
+pub(super) fn fold_tail_bindings(statements: &mut Vec<syn::Stmt>) {
+    let [
+        prefix @ ..,
+        syn::Stmt::Local(local),
+        syn::Stmt::Expr(tail, semicolon),
+    ] = statements.as_slice()
+    else {
+        return;
+    };
+    let Some(name) = simple_binding_name(&local.pat) else {
+        return;
+    };
+    if !local.attrs.is_empty()
+        || local
+            .init
+            .as_ref()
+            .is_none_or(|init| init.diverge.is_some())
+        || !matches!(tail, syn::Expr::Path(path) if path.qself.is_none() && path.path.is_ident(&name))
+    {
+        return;
+    }
+    let Some(init) = &local.init else {
+        return;
+    };
+    let replacement = syn::Stmt::Expr(init.expr.as_ref().clone(), *semicolon);
+    let prefix_len = prefix.len();
+    statements.truncate(prefix_len);
+    statements.push(replacement);
 }
 
 pub(super) fn fold_delayed_initializations(
@@ -273,6 +376,12 @@ fn movable_default_declaration(
 }
 
 fn direct_assignment_value(statement: &syn::Stmt, name: &str) -> Option<syn::Expr> {
+    if let syn::Stmt::Expr(syn::Expr::Block(block), _) = statement {
+        let [inner] = block.block.stmts.as_slice() else {
+            return None;
+        };
+        return direct_assignment_value(inner, name);
+    }
     let syn::Stmt::Expr(syn::Expr::Assign(assignment), Some(_)) = statement else {
         return None;
     };
@@ -314,10 +423,18 @@ fn is_discardable_initializer(expression: &syn::Expr) -> bool {
         syn::Expr::Macro(expression_macro) => {
             expression_macro.mac.path.is_ident("vec") && expression_macro.mac.tokens.is_empty()
         }
-        syn::Expr::Call(call) if call.args.is_empty() => matches!(call.func.as_ref(),
-            syn::Expr::Path(path)
-                if path.path.segments.last().is_some_and(|segment|
-                    matches!(segment.ident.to_string().as_str(), "new" | "default"))),
+        syn::Expr::Call(call) => {
+            (call.args.is_empty()
+                && matches!(call.func.as_ref(), syn::Expr::Path(path)
+                    if path.path.segments.last().is_some_and(|segment|
+                        matches!(segment.ident.to_string().as_str(), "new" | "default"))))
+                || (matches!(call.func.as_ref(), syn::Expr::Path(path)
+                    if path.path.segments.last().is_some_and(|segment| segment.ident == "from_i64"))
+                    && call
+                        .args
+                        .iter()
+                        .all(|argument| matches!(argument, syn::Expr::Lit(_))))
+        }
         _ => false,
     }
 }
@@ -614,6 +731,36 @@ pub(super) fn rewrite_option_expression(expression: &mut syn::Expr) {
     };
 }
 
+pub(super) fn rewrite_option_match_with_if_let(expression: &mut syn::Expr) {
+    let syn::Expr::Match(match_) = expression else {
+        return;
+    };
+    let [first, second] = match_.arms.as_slice() else {
+        return;
+    };
+    if !first.attrs.is_empty() || !second.attrs.is_empty() {
+        return;
+    }
+    let (selected, fallback) = if is_some_pattern(&first.pat) && is_none_pattern(&second.pat) {
+        (first, second)
+    } else if is_some_pattern(&second.pat) && is_none_pattern(&first.pat) {
+        (second, first)
+    } else {
+        return;
+    };
+    let tested = match_.expr.as_ref();
+    let pattern = &selected.pat;
+    let selected_body = selected.body.as_ref();
+    let fallback_body = fallback.body.as_ref();
+    *expression = syn::parse_quote! {
+        if let #pattern = #tested {
+            #selected_body
+        } else {
+            #fallback_body
+        }
+    };
+}
+
 fn expression_is_false(expression: &syn::Expr) -> bool {
     matches!(expression, syn::Expr::Lit(literal)
         if matches!(&literal.lit, syn::Lit::Bool(value) if !value.value))
@@ -637,6 +784,18 @@ fn some_binding_name(pattern: &syn::Pat) -> Option<syn::Ident> {
         return None;
     };
     binding.subpat.is_none().then(|| binding.ident.clone())
+}
+
+fn is_some_pattern(pattern: &syn::Pat) -> bool {
+    matches!(pattern, syn::Pat::TupleStruct(tuple)
+        if tuple.path.segments.last().is_some_and(|segment| segment.ident == "Some"))
+}
+
+fn is_none_pattern(pattern: &syn::Pat) -> bool {
+    matches!(pattern, syn::Pat::Path(path)
+        if path.path.segments.last().is_some_and(|segment| segment.ident == "None"))
+        || matches!(pattern, syn::Pat::Ident(binding)
+            if binding.ident == "None" && binding.subpat.is_none())
 }
 
 pub(super) fn fold_vec_push_sequences(statements: &mut Vec<syn::Stmt>) {

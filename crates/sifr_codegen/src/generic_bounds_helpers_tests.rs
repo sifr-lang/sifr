@@ -72,7 +72,7 @@ fn nested_generic_classes_keep_emitter_owned_arguments() {
 }
 
 #[test]
-fn class_method_inherits_module_generic_function_bounds() {
+fn same_basename_class_method_inherits_only_its_module_function_bounds() {
     let type_var = Type::TypeVar("T".to_string());
     let display = HirFunction {
         name: "display".to_string(),
@@ -107,7 +107,7 @@ fn class_method_inherits_module_generic_function_bounds() {
     };
     let class_type = Type::TypeVar("Item".to_string());
     let method = HirFunction {
-        name: "show".to_string(),
+        name: "display".to_string(),
         params: Vec::new(),
         return_type: Type::None,
         body: vec![HirStmt::Expr {
@@ -165,7 +165,7 @@ fn class_method_inherits_module_generic_function_bounds() {
         .module_generic_functions
         .insert(display.name.clone(), display);
     let item = RustItem::Fn {
-        name: "show".to_string(),
+        name: "display".to_string(),
         visibility: Visibility::Private,
         type_params: Vec::new(),
         params: Vec::<RustParam>::new(),
@@ -176,5 +176,8 @@ fn class_method_inherits_module_generic_function_bounds() {
 
     let bounds = emitter.class_method_type_param_bounds(&class, &[(&method, item)]);
 
-    assert!(bounds["show"]["Item"].contains("std::fmt::Display"));
+    assert_eq!(
+        bounds["display"]["Item"],
+        HashSet::from(["std::fmt::Display".to_string()])
+    );
 }

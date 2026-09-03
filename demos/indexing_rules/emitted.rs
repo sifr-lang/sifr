@@ -76,7 +76,9 @@ fn main() {
         }
         Ok(())
     })();
-    let _ = sifr_generated_try_res.is_err();
+    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+        let _e = sifr_generated_try_err.clone();
+    }
     println!("indexing_rules indexing and semantics parity fixes demo:");
     println!("{items:?}");
 }

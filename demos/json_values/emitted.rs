@@ -100,7 +100,7 @@ mod sifr_generated_project_nominals {
             if index < &SifrInt::from_i64(0) || index >= &SifrInt::from(self.array_items.len()) {
                 return None;
             }
-            let value: Option<SifrGeneratedStdlibSifrX2ejsonX2eJsonValue> = {
+            {
                 let sifr_generated_checked_read_collection = &self.array_items;
                 let sifr_generated_checked_read_index = index.clone();
                 let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
@@ -108,8 +108,7 @@ mod sifr_generated_project_nominals {
                 sifr_generated_checked_read_collection
                     .get(sifr_generated_checked_read_normalized)
                     .cloned()
-            };
-            value
+            }
         }
     }
     impl SifrGeneratedStdlibSifrX2ejsonX2eJsonValue {
@@ -412,8 +411,9 @@ fn sifr_generated_json_token_int(
                 Err(JSONDecodeError::new(e.message.clone()))
             }
             SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(
-                _,
+                sifr_generated_try_variant_error,
             ) => {
+                let _e = sifr_generated_try_variant_error.clone();
                 Err(
                     JSONDecodeError::new(
                         "JSON bridge payload has invalid integer metadata".to_string(),
@@ -456,8 +456,9 @@ fn sifr_generated_json_token_float(
                 Err(JSONDecodeError::new(e.message.clone()))
             }
             SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(
-                _,
+                sifr_generated_try_variant_error,
             ) => {
+                let _e = sifr_generated_try_variant_error.clone();
                 Err(
                     JSONDecodeError::new(
                         "JSON bridge payload has invalid float metadata".to_string(),

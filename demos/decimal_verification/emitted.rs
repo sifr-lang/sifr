@@ -304,9 +304,7 @@ fn main() {
                                             )
                                         },
                                     ),
-                                    |sifr_generated_decimal_value| Ok(
-                                        sifr_generated_decimal_value,
-                                    ),
+                                    Ok,
                                 )
                         })
                 })
@@ -349,9 +347,7 @@ fn main() {
                                             )
                                         },
                                     ),
-                                    |sifr_generated_decimal_value| Ok(
-                                        sifr_generated_decimal_value,
-                                    ),
+                                    Ok,
                                 )
                         })
                 })
@@ -436,9 +432,7 @@ fn main() {
                                                 .to_string(),
                                         ),
                                     ),
-                                    |sifr_generated_decimal_value| Ok(
-                                        sifr_generated_decimal_value,
-                                    ),
+                                    Ok,
                                 )
                         })
                 })
@@ -502,9 +496,7 @@ fn main() {
                                                     .to_string(),
                                             ),
                                         ),
-                                        |sifr_generated_decimal_value| Ok(
-                                            sifr_generated_decimal_value,
-                                        ),
+                                        Ok,
                                     )
                             })
                     })
@@ -539,13 +531,13 @@ fn main() {
                 sifr_generated_try_variant_error,
             ) => {
                 let error = sifr_generated_try_variant_error.clone();
-                assert!(false, "{}", error.to_string());
+                assert!(false, "{error}");
             }
             SifrGeneratedUnion8X3asequence5X3aunion1X3a226X3a5X3aclass13X3aDivisionError1X3a035X3a5X3aclass22X3aDecimalConversionError1X3a0::SifrGeneratedUnionVariant5X3aclass13X3aDivisionError1X3a0(
                 sifr_generated_try_variant_error,
             ) => {
                 let error = sifr_generated_try_variant_error.clone();
-                assert!(false, "{}", error.to_string());
+                assert!(false, "{error}");
             }
         }
     }

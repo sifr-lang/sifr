@@ -1,5 +1,6 @@
 use crate::diagnostics::{RenderedDiagnostic, diagnostic_with_code};
 use sifr_diagnostics::DiagnosticCode;
+use std::collections::HashSet;
 use std::ffi::OsString;
 use std::io::Write;
 use std::process::{Command, Stdio};
@@ -43,6 +44,35 @@ pub(crate) fn format_generated_rust(
             DiagnosticCode::BUILD_RUSTC_OR_CARGO_FAILURE,
         )]
     })
+}
+
+pub(crate) fn discover_project_const_functions<'source>(
+    sources: impl IntoIterator<Item = &'source str>,
+) -> Result<HashSet<String>, Vec<RenderedDiagnostic>> {
+    sifr_codegen::discover_project_const_function_names(sources).map_err(|message| {
+        vec![diagnostic_with_code(
+            format!("failed to inspect generated project APIs: {message}"),
+            DiagnosticCode::BUILD_RUSTC_OR_CARGO_FAILURE,
+        )]
+    })
+}
+
+pub(crate) fn format_generated_rust_with_project_consts(
+    source: &str,
+    label: &str,
+    project_const_functions: &HashSet<String>,
+) -> Result<String, Vec<RenderedDiagnostic>> {
+    let finalized = sifr_codegen::finalize_formatted_generated_rust_source_with_project_consts(
+        source,
+        project_const_functions,
+    )
+    .map_err(|message| {
+        vec![diagnostic_with_code(
+            format!("failed to finalize generated project APIs in {label}: {message}"),
+            DiagnosticCode::BUILD_RUSTC_OR_CARGO_FAILURE,
+        )]
+    })?;
+    format_generated_rust(&finalized, label)
 }
 
 fn format_generated_rust_with(
@@ -103,10 +133,7 @@ mod tests {
         let formatted = format_generated_rust("fn value()->i64{let x=1;x}\n", "test.rs")
             .unwrap_or_else(|errors| panic!("formatting must succeed: {errors:?}"));
 
-        assert_eq!(
-            formatted,
-            "const fn value() -> i64 {\n    let x = 1;\n    x\n}\n"
-        );
+        assert_eq!(formatted, "const fn value() -> i64 {\n    1\n}\n");
     }
 
     #[test]

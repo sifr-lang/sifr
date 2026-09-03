@@ -2,7 +2,7 @@ use super::cargo_resolution::CargoResolutionPolicy;
 use super::entrypoint_artifact::CachedBinaryArtifact;
 use super::entrypoint_stages::{import_closure_label, measure_stage, module_analysis_label};
 use super::materialize::{
-    cached_binary_path, materialize_binary_project_with_report,
+    cached_binary_path, materialize_binary_project_sources, materialize_binary_project_with_report,
     materialize_cached_binary_project_with_report,
 };
 use super::project_codegen::{
@@ -12,7 +12,10 @@ use super::project_codegen::{
 use super::python_bridges::apply_package_python_bridge_metadata;
 use super::python_bridges::package_bridge_lowering_options;
 use super::python_runtime::PackagePythonRuntime;
-use super::report::{BuildCompilationMode, BuildReport, BuildReportInput, BuildStageReport};
+use super::report::{
+    BuildCompilationMode, BuildReport, BuildReportInput, BuildStageReport,
+    MaterializedRustProjectReport,
+};
 use super::rust_interop::{PackageRustInteropContext, RustInteropModuleSource};
 use super::rust_interop_probe_policy::DirectProbePolicy;
 use super::single_file_interop_cache::{CompiledSingleFileMetadata, resolve_single_file_metadata};
@@ -179,14 +182,9 @@ pub(crate) fn emit_project_entrypoint(
         false,
         DirectProbePolicy::DeferTrustedSysroot,
     ) {
-        Ok(generated_project) => {
-            match super::project_codegen::format_generated_binary_project(generated_project) {
-                Ok(generated_project) => CompileResult::Success {
-                    rust_source: generated_project.emit_source_listing(),
-                },
-                Err(errors) => CompileResult::Errors { errors },
-            }
-        }
+        Ok(generated_project) => CompileResult::Success {
+            rust_source: generated_project.emit_source_listing(),
+        },
         Err(errors) => CompileResult::Errors { errors },
     }
 }
@@ -240,6 +238,27 @@ pub(crate) fn build_rooted_entrypoint_binary_with_report(
         cache_hit: false,
         query_signature_artifact_path: Some(query_signature_artifact_path),
     }))
+}
+
+pub(crate) fn materialize_rooted_entrypoint_rust_project(
+    entrypoint: RootedEntrypoint<'_>,
+    output_dir: &Path,
+) -> Result<MaterializedRustProjectReport, Vec<RenderedDiagnostic>> {
+    let mode = entrypoint.build_mode();
+    let plan = RootedEntrypointPlan::from_entrypoint(entrypoint)?;
+    let frontend_diagnostics = plan.frontend_diagnostics();
+    let generated_project = plan.into_generated_binary_project()?;
+    let requested_vendor_mode = super::entrypoint_resolution::requested_vendor_mode_for_build(mode);
+    let project_path = materialize_binary_project_sources(
+        output_dir,
+        "sifr_output",
+        generated_project,
+        requested_vendor_mode,
+    )?;
+    Ok(MaterializedRustProjectReport::new(
+        project_path,
+        frontend_diagnostics,
+    ))
 }
 
 pub(crate) fn build_cached_project_binary(
@@ -689,7 +708,7 @@ impl RootedEntrypointPlan {
             )?;
             apply_package_runtime_metadata(generated, python_runtime)?
         };
-        Ok(generated)
+        super::project_codegen::format_generated_binary_project(generated)
     }
 }
 

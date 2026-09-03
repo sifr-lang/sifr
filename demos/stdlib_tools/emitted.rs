@@ -164,32 +164,31 @@ fn sifr_generated_match(name: &str, mut ni: SifrInt, pattern: &str, mut pi: Sifr
                     j = &j + &SifrInt::from_i64(1);
                 }
                 return false;
-            } else if pc == "?" {
-                if &ni >= &SifrInt::from(name.chars().count()) {
-                    return false;
-                }
-                ni = &ni + &SifrInt::from_i64(1);
-                pi = &pi + &SifrInt::from_i64(1);
-            } else {
-                if &ni >= &SifrInt::from(name.chars().count()) {
-                    return false;
-                }
-                let nc: Option<String> = {
-                    let sifr_generated_string_source = &name;
-                    let sifr_generated_string_index = ni.clone();
-                    let sifr_generated_string_index_normalized = sifr_generated_string_index
-                        .normalize_index_or_len(sifr_generated_string_source.chars().count());
-                    sifr_generated_string_source
-                        .chars()
-                        .nth(sifr_generated_string_index_normalized)
-                }
-                .map(|character| character.to_string());
-                if let Some(nc) = nc {
-                    if nc != pc {
+            }
+            let sifr_generated_shared_branch_condition = pc == "?";
+            if &ni >= &SifrInt::from(name.chars().count()) {
+                return false;
+            }
+            {
+                if sifr_generated_shared_branch_condition {
+                } else {
+                    let nc: Option<String> = {
+                        let sifr_generated_string_source = &name;
+                        let sifr_generated_string_index = ni.clone();
+                        let sifr_generated_string_index_normalized = sifr_generated_string_index
+                            .normalize_index_or_len(sifr_generated_string_source.chars().count());
+                        sifr_generated_string_source
+                            .chars()
+                            .nth(sifr_generated_string_index_normalized)
+                    }
+                    .map(|character| character.to_string());
+                    if let Some(nc) = nc {
+                        if nc != pc {
+                            return false;
+                        }
+                    } else {
                         return false;
                     }
-                } else {
-                    return false;
                 }
                 ni = &ni + &SifrInt::from_i64(1);
                 pi = &pi + &SifrInt::from_i64(1);
@@ -387,8 +386,9 @@ fn sifr_generated_token_int(tokens: &[String], index: SifrInt) -> Result<SifrInt
     sifr_generated_try_res
         .unwrap_or_else(|sifr_generated_try_err| match sifr_generated_try_err {
             SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aTOMLDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(
-                _,
+                sifr_generated_try_variant_error,
             ) => {
+                let _e = sifr_generated_try_variant_error.clone();
                 Err(
                     TOMLDecodeError::new(
                         "TOML bridge payload has invalid integer metadata".to_string(),
@@ -428,8 +428,9 @@ fn sifr_generated_token_float(tokens: &[String], index: SifrInt) -> Result<f64, 
     sifr_generated_try_res
         .unwrap_or_else(|sifr_generated_try_err| match sifr_generated_try_err {
             SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aTOMLDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(
-                _,
+                sifr_generated_try_variant_error,
             ) => {
+                let _e = sifr_generated_try_variant_error.clone();
                 Err(
                     TOMLDecodeError::new(
                         "TOML bridge payload has invalid float metadata".to_string(),
@@ -703,7 +704,7 @@ fn main() {
     println!("{}", SifrInt::from(results.len()));
     println!("=== glob ===");
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        let _ = run_command(&"mkdir -p /tmp/sifr_polish_demo".to_string())?;
+        let _r1: String = run_command(&"mkdir -p /tmp/sifr_polish_demo".to_string())?;
         write_text(
             &"/tmp/sifr_polish_demo/a.txt".to_string(),
             &"aaa".to_string(),
@@ -760,7 +761,7 @@ fn main() {
         exists(&"/tmp/sifr_polish_demo/a_copy.txt".to_string())
     );
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        let _ = run_command(&"mkdir -p /tmp/sifr_polish_demo/sub".to_string())?;
+        let _r2: String = run_command(&"mkdir -p /tmp/sifr_polish_demo/sub".to_string())?;
         write_text(
             &"/tmp/sifr_polish_demo/sub/nested.txt".to_string(),
             &"nested".to_string(),
@@ -787,7 +788,7 @@ fn main() {
         println!("toml loads error: {}", err.message.clone());
     }
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        let _ = run_command(&"rm -rf /tmp/sifr_polish_demo".to_string())?;
+        let _cleanup: String = run_command(&"rm -rf /tmp/sifr_polish_demo".to_string())?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {

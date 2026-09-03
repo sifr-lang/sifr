@@ -22,7 +22,7 @@ fn remainder(x: f64, y: f64) -> f64 {
 fn fma(x: f64, y: f64, z: f64) -> f64 {
     ::sifr_stdlib::math::fma(x, y, z)
 }
-fn isnormal(x: f64) -> bool {
+const fn isnormal(x: f64) -> bool {
     ::sifr_stdlib::math::isnormal(x)
 }
 fn issubnormal(x: f64) -> bool {
@@ -193,11 +193,10 @@ fn collect_positive_actual() -> Vec<String> {
     actual
 }
 fn collect_negative_actual_false() -> Vec<bool> {
-    let actual_false: Vec<bool> = vec![
+    vec![
         isclose(1.0_f64, 1.0_f64, -0.1_f64, 0.0_f64),
         isclose(1.0_f64, 1.0_f64, 0.1_f64, -0.1_f64),
-    ];
-    actual_false
+    ]
 }
 fn main() {
     let expected: Vec<String> = vec![

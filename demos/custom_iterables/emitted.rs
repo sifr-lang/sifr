@@ -13,11 +13,6 @@ impl CountdownIter {
     }
 }
 impl CountdownIter {
-    fn sifr_generated_iter__(&self) -> Box<dyn Iterator<Item = SifrInt>> {
-        Box::new(vec![self.current.clone()].into_iter())
-    }
-}
-impl CountdownIter {
     fn sifr_generated_next__(&mut self) -> Option<SifrInt> {
         if &self.current.clone() <= &SifrInt::from_i64(0) {
             return None;
@@ -82,7 +77,7 @@ fn main() {
     );
     println!(
         "{:?}",
-        Box::new(countdown.clone().sifr_generated_reversed__().into_iter()).collect::<Vec<_>>()
+        Box::new(countdown.clone().sifr_generated_reversed__()).collect::<Vec<_>>()
     );
     let mut running_total: SifrInt = SifrInt::from_i64(0);
     for value in Countdown::new(SifrInt::from_i64(4)).sifr_generated_iter__() {

@@ -255,18 +255,17 @@ mod sifr_generated_project_nominals {
             if self.closed {
                 return Err(IOError::new(sifr_generated_closed_stream_error()));
             }
-            let mut origin: SifrInt = SifrInt::from_i64(0);
-            if whence == &SifrInt::from_i64(0) {
-                origin = SifrInt::from_i64(0);
+            let origin: SifrInt = if whence == &SifrInt::from_i64(0) {
+                SifrInt::from_i64(0)
             } else if whence == &SifrInt::from_i64(1) {
-                origin = self.cursor.clone();
+                self.cursor.clone()
             } else if whence == &SifrInt::from_i64(2) {
-                origin = SifrInt::from(self.buffer.chars().count());
+                SifrInt::from(self.buffer.chars().count())
             } else {
                 return Err(IOError::new(sifr_generated_invalid_whence_error(
                     whence.clone(),
                 )));
-            }
+            };
             let mut next_pos: SifrInt = &origin + offset;
             if &next_pos < &SifrInt::from_i64(0) {
                 return Err(IOError::new(sifr_generated_negative_seek_error(
@@ -378,12 +377,8 @@ mod sifr_generated_project_nominals {
                 )
             };
             let tail_start: SifrInt = &self.cursor.clone() + &SifrInt::from(data.len());
-            let mut right: Vec<u8> = {
-                let sifr_generated_empty_bytes_literal: Vec<u8> = Vec::new();
-                sifr_generated_empty_bytes_literal
-            };
-            if &tail_start < &SifrInt::from(self.buffer.len()) {
-                right = {
+            let right: Vec<u8> = if &tail_start < &SifrInt::from(self.buffer.len()) {
+                {
                     let sifr_generated_slice_src = &self.buffer.clone();
                     let sifr_generated_slice_len = sifr_generated_slice_src.len();
                     let sifr_generated_slice_start =
@@ -399,8 +394,10 @@ mod sifr_generated_project_nominals {
                             )
                             .cloned(),
                     )
-                };
-            }
+                }
+            } else {
+                Vec::new()
+            };
             self.buffer = {
                 let mut sifr_generated_v = {
                     let mut sifr_generated_v = left.to_vec();
@@ -422,18 +419,17 @@ mod sifr_generated_project_nominals {
             if self.closed {
                 return Err(IOError::new(sifr_generated_closed_stream_error()));
             }
-            let mut origin: SifrInt = SifrInt::from_i64(0);
-            if whence == &SifrInt::from_i64(0) {
-                origin = SifrInt::from_i64(0);
+            let origin: SifrInt = if whence == &SifrInt::from_i64(0) {
+                SifrInt::from_i64(0)
             } else if whence == &SifrInt::from_i64(1) {
-                origin = self.cursor.clone();
+                self.cursor.clone()
             } else if whence == &SifrInt::from_i64(2) {
-                origin = SifrInt::from(self.buffer.len());
+                SifrInt::from(self.buffer.len())
             } else {
                 return Err(IOError::new(sifr_generated_invalid_whence_error(
                     whence.clone(),
                 )));
-            }
+            };
             let mut next_pos: SifrInt = &origin + offset;
             if &next_pos < &SifrInt::from_i64(0) {
                 return Err(IOError::new(sifr_generated_negative_seek_error(
@@ -592,7 +588,7 @@ fn main() {
         let mut sio: SifrGeneratedStdlibSifrX2eioX2eStringIO =
             SifrGeneratedStdlibSifrX2eioX2eStringIO::new("sample".to_string());
         sio.write(&"1".to_string())?;
-        let _ = sio.seek(&SifrInt::from_i64(0), &SifrInt::from_i64(0))?;
+        let _seek: SifrInt = sio.seek(&SifrInt::from_i64(0), &SifrInt::from_i64(0))?;
         let text_value: String = sio.read(&None)?;
         stringio_ok = text_value == "1ample";
         let sifr_generated_try_res: Result<(), IOError> = (|| {
@@ -608,9 +604,10 @@ fn main() {
         }
         let mut bio: SifrGeneratedStdlibSifrX2eioX2eBytesIO =
             SifrGeneratedStdlibSifrX2eioX2eBytesIO::new(vec![97u8, 98u8, 99u8]);
-        let _ = bio.seek(&SifrInt::from_i64(3), &SifrInt::from_i64(0))?;
+        let _seek_b_value_78f19d0c500eec0b: SifrInt =
+            bio.seek(&SifrInt::from_i64(3), &SifrInt::from_i64(0))?;
         bio.write_bytes(&vec![100u8])?;
-        let _ = bio.seek(&SifrInt::from_i64(0), &SifrInt::from_i64(0))?;
+        let _seek_b0: SifrInt = bio.seek(&SifrInt::from_i64(0), &SifrInt::from_i64(0))?;
         let bytes_value: Vec<u8> = bio.read_bytes(&None)?;
         bytesio_ok = bytes_value == vec![97u8, 98u8, 99u8, 100u8];
         let sifr_generated_try_res: Result<(), IOError> = (|| {

@@ -26,13 +26,12 @@ fn main() {
     );
     let mut seen: HashSet<SifrInt> = HashSet::from([SifrInt::from_i64(1)]);
     {
-        seen.extend(vec![SifrInt::from_i64(2), SifrInt::from_i64(3)].into_iter());
+        seen.extend(vec![SifrInt::from_i64(2), SifrInt::from_i64(3)]);
         seen.extend(SifrRange::new_known_nonzero(
             SifrInt::from_i64(4),
             SifrInt::from_i64(6),
             SifrInt::from_i64(1),
         ));
-        ()
     };
     {
         let sifr_generated_other = vec![SifrInt::from_i64(3), SifrInt::from_i64(9)]
@@ -42,7 +41,6 @@ fn main() {
             .symmetric_difference(&sifr_generated_other)
             .cloned()
             .collect::<std::collections::HashSet<_>>();
-        ()
     };
     println!("{}", seen.contains(&SifrInt::from_i64(9)));
     let pair: (SifrInt, SifrInt, SifrInt) = (
@@ -69,19 +67,19 @@ fn main() {
             let sifr_generated_start = SifrInt::from_i64(1).clamp_slice_bound(3usize);
             let sifr_generated_stop = 3usize;
             let mut sifr_generated_result = None;
-            if sifr_generated_result == None
+            if sifr_generated_result.is_none()
                 && (0usize >= sifr_generated_start && 0usize < sifr_generated_stop)
                 && &pair.0 == &SifrInt::from_i64(4)
             {
                 sifr_generated_result = Some(SifrInt::from(0usize));
             }
-            if sifr_generated_result == None
+            if sifr_generated_result.is_none()
                 && (1usize >= sifr_generated_start && 1usize < sifr_generated_stop)
                 && &pair.1 == &SifrInt::from_i64(4)
             {
                 sifr_generated_result = Some(SifrInt::from(1usize));
             }
-            if sifr_generated_result == None
+            if sifr_generated_result.is_none()
                 && (2usize >= sifr_generated_start && 2usize < sifr_generated_stop)
                 && &pair.2 == &SifrInt::from_i64(4)
             {

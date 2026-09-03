@@ -116,7 +116,7 @@ fn main() {
         let sifr_generated_guard_0 = SifrGeneratedWithGuard0 {
             ctx: sifr_generated_ctx_0,
         };
-        let _ = sifr_generated_guard_0.ctx.sifr_generated_enter__();
+        let _t = sifr_generated_guard_0.ctx.sifr_generated_enter__();
         println!("doing work inside with block");
     }
     let item: Item = Item::new("Widget".to_string());

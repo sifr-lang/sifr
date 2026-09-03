@@ -80,7 +80,36 @@ pub(super) fn format_generated_binary_project(
         let label = format!("project module {module_name}");
         *source = super::rust_formatter::format_generated_rust(source, &label)?;
     }
-    Ok(generated)
+    loop {
+        let before = super::rust_formatter::discover_project_const_functions(
+            std::iter::once(generated.main_rs.as_str())
+                .chain(generated.support_modules.values().map(String::as_str)),
+        )?;
+        generated.main_rs = super::rust_formatter::format_generated_rust_with_project_consts(
+            &generated.main_rs,
+            "project main.rs",
+            &before,
+        )?;
+        for (module_name, source) in &mut generated.support_modules {
+            let label = format!("project module {module_name}");
+            *source = super::rust_formatter::format_generated_rust_with_project_consts(
+                source, &label, &before,
+            )?;
+        }
+        let after = super::rust_formatter::discover_project_const_functions(
+            std::iter::once(generated.main_rs.as_str())
+                .chain(generated.support_modules.values().map(String::as_str)),
+        )?;
+        if after == before {
+            return Ok(generated);
+        }
+        if !after.is_superset(&before) {
+            return Err(vec![crate::diagnostics::diagnostic_with_code(
+                "generated project const API discovery was not monotonic".to_string(),
+                sifr_diagnostics::DiagnosticCode::BUILD_RUSTC_OR_CARGO_FAILURE,
+            )]);
+        }
+    }
 }
 
 pub(super) fn generated_single_file_binary_project(

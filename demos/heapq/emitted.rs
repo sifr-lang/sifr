@@ -383,7 +383,7 @@ fn collect_actual() -> Vec<bool> {
             == "[9, 7]".to_string().as_str(),
     );
     let mut empty_heap: Vec<SifrInt> = Vec::new();
-    actual.push(heappop(&mut empty_heap) == None);
+    actual.push(heappop(&mut empty_heap).is_none());
     actual.push(format!("{items:?}").as_str() == "[9, 3, 7, 1, 5]".to_string().as_str());
     actual
 }

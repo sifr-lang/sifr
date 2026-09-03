@@ -8,7 +8,6 @@ pub(super) fn prune_item_members(
     trait_methods: &HashMap<String, HashSet<String>>,
     demanded_variants: &HashSet<(String, String)>,
     demanded_trait_methods: &HashSet<String>,
-    removed_type_arguments: &mut HashMap<String, HashSet<usize>>,
 ) {
     for item in items {
         match item {
@@ -20,10 +19,6 @@ pub(super) fn prune_item_members(
                         demanded_variants.contains(&(owner.clone(), variant.ident.to_string()))
                     })
                     .collect();
-                let removed = remove_unused_enum_type_parameters(enum_);
-                if !removed.is_empty() {
-                    removed_type_arguments.insert(owner, removed);
-                }
             }
             syn::Item::Trait(trait_) => {
                 let methods = trait_.items.iter().filter_map(|item| match item {
@@ -55,6 +50,32 @@ pub(super) fn prune_item_members(
             }
             _ => {}
         }
+    }
+}
+
+pub(super) fn prune_unused_aggregate_type_parameters(items: &mut [syn::Item]) {
+    loop {
+        let mut removed_type_arguments = HashMap::new();
+        for item in items.iter_mut() {
+            let removed = match item {
+                syn::Item::Enum(enum_) => {
+                    let owner = enum_.ident.to_string();
+                    (owner, remove_unused_enum_type_parameters(enum_))
+                }
+                syn::Item::Struct(struct_) => {
+                    let owner = struct_.ident.to_string();
+                    (owner, remove_unused_struct_type_parameters(struct_))
+                }
+                _ => continue,
+            };
+            if !removed.1.is_empty() {
+                removed_type_arguments.insert(removed.0, removed.1);
+            }
+        }
+        if removed_type_arguments.is_empty() {
+            return;
+        }
+        cleanup_removed_type_arguments(items, &removed_type_arguments);
     }
 }
 
@@ -111,6 +132,45 @@ fn remove_unused_enum_type_parameters(enum_: &mut syn::ItemEnum) -> HashSet<usiz
         })
         .collect::<HashSet<_>>();
     remove_generic_parameters(&mut enum_.generics, &removed_names);
+    removed_positions
+}
+
+fn remove_unused_struct_type_parameters(struct_: &mut syn::ItemStruct) -> HashSet<usize> {
+    let parameter_names = struct_
+        .generics
+        .params
+        .iter()
+        .map(|parameter| match parameter {
+            syn::GenericParam::Type(type_) => Some(type_.ident.to_string()),
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+    let candidates = parameter_names
+        .iter()
+        .flatten()
+        .cloned()
+        .collect::<HashSet<_>>();
+    let mut uses = GenericNameUseCollector {
+        candidates: &candidates,
+        used: HashSet::new(),
+    };
+    uses.visit_fields(&struct_.fields);
+    let removed_names = parameter_names
+        .iter()
+        .flatten()
+        .filter(|name| !uses.used.contains(*name))
+        .cloned()
+        .collect::<HashSet<_>>();
+    let removed_positions = parameter_names
+        .iter()
+        .enumerate()
+        .filter_map(|(index, name)| {
+            name.as_ref()
+                .is_some_and(|name| removed_names.contains(name))
+                .then_some(index)
+        })
+        .collect::<HashSet<_>>();
+    remove_generic_parameters(&mut struct_.generics, &removed_names);
     removed_positions
 }
 

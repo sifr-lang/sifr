@@ -42,7 +42,7 @@ mod sifr_generated_project_nominals {
             while exists(&candidate) {
                 candidate = mktemp_path(&prefix);
             }
-            let _ = write_text(&candidate, &String::new());
+            let _created_result: Result<(), IOError> = write_text(&candidate, &String::new());
             let sifr_generated_field_value_0e74a76ec4f48c05_5f70617468: String = {
                 let mut sifr_generated_concat: String = String::with_capacity(candidate.len());
                 sifr_generated_concat.push_str(candidate.as_str());
@@ -437,7 +437,7 @@ const fn sifr_generated_const_5a49505f53544f524544() -> SifrInt {
 }
 fn is_zipfile(path: &str) -> bool {
     let sifr_generated_try_res: Result<bool, IOError> = (|| {
-        let _ = zip_namelist(path)?;
+        let _names: Vec<String> = zip_namelist(path)?;
         Ok(true)
     })();
     sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
@@ -508,7 +508,8 @@ fn main() {
         > = reader.open(&"bin/raw.bin".to_string(), &"rb".to_string());
         let mut open_rejected: bool = false;
         let sifr_generated_try_res: Result<(), IOError> = (|| {
-            let _ = sifr_generated_open_handle_result?;
+            let _open_handle: SifrGeneratedStdlibSifrX2ezipfileX2eZipReadHandle =
+                sifr_generated_open_handle_result?;
             Ok(())
         })();
         if let Err(sifr_generated_try_err) = sifr_generated_try_res {

@@ -74,7 +74,7 @@ fn render_opt_int(value: Option<SifrInt>) -> String {
     value.to_string()
 }
 fn collect_primary_actual(payload: &[u8]) -> Vec<String> {
-    let actual: Vec<String> = vec![
+    vec![
         {
             let sifr_generated_bytes_receiver: &[u8] = &payload;
             {
@@ -123,8 +123,7 @@ fn collect_primary_actual(payload: &[u8]) -> Vec<String> {
             .starts_with(&vec![98u8, 121u8, 116u8, 101u8, 115u8])
             .to_string(),
         payload.ends_with(&vec![101u8, 51u8, 48u8]).to_string(),
-    ];
-    actual
+    ]
 }
 fn bytes_to_hex_or_empty(payload: &[u8]) -> String {
     let sifr_generated_try_res: Result<String, ParseError> = {
@@ -235,7 +234,8 @@ fn collect_invalid_actual_ok() -> Vec<bool> {
         invalid_actual_ok.push(true);
         Ok(())
     })();
-    if sifr_generated_try_res.is_err() {
+    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+        let _e = sifr_generated_try_err.clone();
         invalid_actual_ok.push(false);
     }
     let sifr_generated_try_res: Result<(), ParseError> = (|| {
@@ -251,7 +251,8 @@ fn collect_invalid_actual_ok() -> Vec<bool> {
         invalid_actual_ok.push(true);
         Ok(())
     })();
-    if sifr_generated_try_res.is_err() {
+    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+        let _e = sifr_generated_try_err.clone();
         invalid_actual_ok.push(false);
     }
     invalid_actual_ok
@@ -270,14 +271,14 @@ fn main() {
     let actual: Vec<String> = collect_primary_actual(&payload);
     assert_vector_eq(&actual, &expected);
     let hex_text: String = bytes_to_hex_or_empty(&vec![72u8, 105u8]);
-    let _ = hex_text.chars().collect::<Vec<char>>();
+    let _chars_hex_text: Vec<char> = hex_text.chars().collect::<Vec<char>>();
     assert_eq!(
         (&SifrInt::from(hex_text.chars().count()) > &SifrInt::from_i64(0)).to_string(),
         "true"
     );
     assert_eq!(hex_text.to_string(), "4869");
     let roundtrip_text: String = bytes_from_hex_to_text_or_empty(&"48 69".to_string());
-    let _ = roundtrip_text.chars().collect::<Vec<char>>();
+    let _chars_roundtrip_text: Vec<char> = roundtrip_text.chars().collect::<Vec<char>>();
     assert_eq!(
         (&SifrInt::from(roundtrip_text.chars().count()) > &SifrInt::from_i64(0)).to_string(),
         "true"

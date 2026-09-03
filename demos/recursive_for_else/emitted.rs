@@ -5,7 +5,7 @@ fn main() {
         let items: Vec<SifrInt> = vec![SifrInt::from_i64(1)];
         {
             let sifr_generated_broke: bool = false;
-            for _ in items.iter().cloned() {}
+            for _i in items.iter().cloned() {}
             if !sifr_generated_broke && &n > &SifrInt::from_i64(0) {
                 return rec(&n - &SifrInt::from_i64(1));
             }

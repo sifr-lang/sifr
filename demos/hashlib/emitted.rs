@@ -107,10 +107,7 @@ mod sifr_generated_project_nominals {
         } else if algorithm == "blake2s" {
             return blake2s_bytes(data);
         }
-        {
-            let sifr_generated_empty_bytes_literal: Vec<u8> = Vec::new();
-            sifr_generated_empty_bytes_literal
-        }
+        Vec::new()
     }
     #[must_use]
     pub fn sifr_generated_hash_hex(algorithm: &str, data: &[u8]) -> String {
@@ -488,10 +485,7 @@ fn contains(values: &[String], needle: &str) -> bool {
 }
 fn collect_positive_actual(tmp_path: &str) -> Vec<String> {
     let mut actual: Vec<String> = Vec::new();
-    let mut h: SifrGeneratedStdlibSifrX2ehashlibX2eHashObject = sha256(&{
-        let sifr_generated_empty_bytes_literal: Vec<u8> = Vec::new();
-        sifr_generated_empty_bytes_literal
-    });
+    let mut h: SifrGeneratedStdlibSifrX2ehashlibX2eHashObject = sha256(&Vec::new());
     h.update(&vec![97u8]);
     h.update(&vec![98u8, 99u8]);
     actual.push(
@@ -522,7 +516,8 @@ fn collect_positive_actual(tmp_path: &str) -> Vec<String> {
             actual.push(out.to_owned());
             Ok(())
         })();
-    if sifr_generated_try_res.is_err() {
+    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+        let _e = sifr_generated_try_err.clone();
         actual.push("ERR".to_string());
     }
     actual
@@ -530,15 +525,14 @@ fn collect_positive_actual(tmp_path: &str) -> Vec<String> {
 fn collect_negative_actual_ok() -> Vec<bool> {
     let mut actual_ok: Vec<bool> = Vec::new();
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
-        let bad: SifrGeneratedStdlibSifrX2ehashlibX2eHashObject = new(&"sha3_256".to_string(), &{
-            let sifr_generated_empty_bytes_literal: Vec<u8> = Vec::new();
-            sifr_generated_empty_bytes_literal
-        })?;
+        let bad: SifrGeneratedStdlibSifrX2ehashlibX2eHashObject =
+            new(&"sha3_256".to_string(), &Vec::new())?;
         let _ = bad.name.clone().to_string();
         actual_ok.push(true);
         Ok(())
     })();
-    if sifr_generated_try_res.is_err() {
+    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+        let _e = sifr_generated_try_err.clone();
         actual_ok.push(false);
     }
     actual_ok

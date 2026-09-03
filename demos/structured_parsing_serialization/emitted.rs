@@ -179,7 +179,7 @@ mod sifr_generated_project_nominals {
                             line_no.clone(),
                         )?;
                     let (option_name, option_value) = parsed_option_pair;
-                    let _ = option_name.chars().collect::<Vec<char>>();
+                    let _chars_option_name: Vec<char> = option_name.chars().collect::<Vec<char>>();
                     if current_section.is_empty() || current_section == default_section {
                         {
                             let sifr_generated_assign_value =
@@ -381,7 +381,10 @@ mod sifr_generated_project_nominals {
                         })?;
                 Ok(Some(parsed))
             })();
-            sifr_generated_try_res.unwrap_or_else(|_| fallback.clone())
+            sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
+                let _e = sifr_generated_try_err.clone();
+                fallback.clone()
+            })
         }
     }
     impl SifrGeneratedStdlibSifrX2econfigparserX2eConfigParser {
@@ -587,17 +590,27 @@ mod sifr_generated_project_nominals {
     }
     #[must_use]
     pub fn sifr_generated_char_at(text: &str, index: SifrInt) -> String {
-        let sifr_generated_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
+        let sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874: Vec<
+            char,
+        > = text.chars().collect::<Vec<char>>();
         if &index < &SifrInt::from_i64(0)
-            || &index >= &SifrInt::from(sifr_generated_chars_text.len())
+            || &index
+                >= &SifrInt::from(
+                    sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
+                        .len(),
+                )
         {
             return String::new();
         }
         let ch: Option<String> = {
             let sifr_generated_string_index = index.clone();
-            let sifr_generated_string_index_normalized =
-                sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_text.len());
-            sifr_generated_chars_text.get(sifr_generated_string_index_normalized)
+            let sifr_generated_string_index_normalized = sifr_generated_string_index
+                .normalize_index_or_len(
+                sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
+                    .len(),
+            );
+            sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
+                .get(sifr_generated_string_index_normalized)
         }
         .map(::std::string::ToString::to_string);
         let Some(ch) = ch else {
@@ -1165,7 +1178,7 @@ mod sifr_generated_project_nominals {
     }
     #[must_use]
     pub fn sifr_generated_last_char(text: &str) -> String {
-        let _ = text.chars().collect::<Vec<char>>();
+        let _chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
         sifr_generated_char_at(
             text,
             SifrInt::from(text.chars().count()) - SifrInt::from_i64(1),
@@ -1191,7 +1204,9 @@ mod sifr_generated_project_nominals {
         quoting: SifrInt,
     ) -> Vec<Vec<String>> {
         let quotechar = quotechar.to_owned();
-        let sifr_generated_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
+        let sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874: Vec<
+            char,
+        > = text.chars().collect::<Vec<char>>();
         let resolved: SifrGeneratedStdlibSifrX2ecsvX2eDialect = sifr_generated_resolve_dialect(
             dialect,
             delimiter,
@@ -1208,17 +1223,27 @@ mod sifr_generated_project_nominals {
         let mut in_quotes: bool = false;
         let mut field_started: bool = false;
         let mut i: SifrInt = SifrInt::from_i64(0);
-        while &i < &SifrInt::from(sifr_generated_chars_text.len()) {
+        while &i
+            < &SifrInt::from(
+                sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
+                    .len(),
+            )
+        {
             let ch_value: String = sifr_generated_char_at(text, i.clone());
             if in_quotes {
                 if !resolved.escapechar.clone().is_empty()
                     && ch_value == resolved.escapechar.clone()
                 {
                     if &(&i + &SifrInt::from_i64(1))
-                        < &SifrInt::from(sifr_generated_chars_text.len())
+                        < &SifrInt::from(
+                            sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
+                                .len(),
+                        )
                     {
-                        let escaped_value: String =
-                            sifr_generated_char_at(text, &i + &SifrInt::from_i64(1));
+                        let escaped_value: String = sifr_generated_char_at(
+                            text,
+                            &i + &SifrInt::from_i64(1),
+                        );
                         field.push_str(escaped_value.as_str());
                         i = &i + &SifrInt::from_i64(2);
                         continue;
@@ -1232,8 +1257,12 @@ mod sifr_generated_project_nominals {
                     let quotechar: String = sifr_generated_quotechar_value(&resolved);
                     if resolved.doublequote
                         && &(&i + &SifrInt::from_i64(1))
-                            < &SifrInt::from(sifr_generated_chars_text.len())
-                        && sifr_generated_char_at(text, &i + &SifrInt::from_i64(1)) == quotechar
+                            < &SifrInt::from(
+                                sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
+                                    .len(),
+                            )
+                        && sifr_generated_char_at(text, &i + &SifrInt::from_i64(1))
+                            == quotechar
                     {
                         field.push_str(quotechar.as_str());
                         i = &i + &SifrInt::from_i64(2);
@@ -1252,9 +1281,16 @@ mod sifr_generated_project_nominals {
                 continue;
             }
             if !resolved.escapechar.clone().is_empty() && ch_value == resolved.escapechar.clone() {
-                if &(&i + &SifrInt::from_i64(1)) < &SifrInt::from(sifr_generated_chars_text.len()) {
-                    let escaped_plain_value: String =
-                        sifr_generated_char_at(text, &i + &SifrInt::from_i64(1));
+                if &(&i + &SifrInt::from_i64(1))
+                    < &SifrInt::from(
+                        sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
+                            .len(),
+                    )
+                {
+                    let escaped_plain_value: String = sifr_generated_char_at(
+                        text,
+                        &i + &SifrInt::from_i64(1),
+                    );
                     field.push_str(escaped_plain_value.as_str());
                     field_started = true;
                     i = &i + &SifrInt::from_i64(2);
@@ -1287,7 +1323,10 @@ mod sifr_generated_project_nominals {
             if ch_value == "\n" || ch_value == "\r" {
                 if ch_value == "\r"
                     && &(&i + &SifrInt::from_i64(1))
-                        < &SifrInt::from(sifr_generated_chars_text.len())
+                        < &SifrInt::from(
+                            sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
+                                .len(),
+                        )
                     && sifr_generated_char_at(text, &i + &SifrInt::from_i64(1)) == "\n"
                 {
                     i = &i + &SifrInt::from_i64(1);
@@ -1691,7 +1730,7 @@ mod sifr_generated_project_nominals {
             if index < &SifrInt::from_i64(0) || index >= &SifrInt::from(self.array_items.len()) {
                 return None;
             }
-            let value: Option<SifrGeneratedStdlibSifrX2ejsonX2eJsonValue> = {
+            {
                 let sifr_generated_checked_read_collection = &self.array_items;
                 let sifr_generated_checked_read_index = index.clone();
                 let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
@@ -1699,8 +1738,7 @@ mod sifr_generated_project_nominals {
                 sifr_generated_checked_read_collection
                     .get(sifr_generated_checked_read_normalized)
                     .cloned()
-            };
-            value
+            }
         }
     }
     impl SifrGeneratedStdlibSifrX2ejsonX2eJsonValue {
@@ -1724,7 +1762,7 @@ mod sifr_generated_project_nominals {
             if !self.is_object() {
                 return result;
             }
-            for (item_key, _) in self.object_items.as_ref().clone().iter().cloned() {
+            for (item_key, _item_value) in self.object_items.as_ref().clone().iter().cloned() {
                 result.push(item_key.to_owned());
             }
             result
@@ -1889,7 +1927,7 @@ mod sifr_generated_project_nominals {
             if index < &SifrInt::from_i64(0) || index >= &SifrInt::from(self.array_items.len()) {
                 return None;
             }
-            let value: Option<SifrGeneratedStdlibSifrX2etomllibX2eTomlValue> = {
+            {
                 let sifr_generated_checked_read_collection = &self.array_items;
                 let sifr_generated_checked_read_index = index.clone();
                 let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
@@ -1897,8 +1935,7 @@ mod sifr_generated_project_nominals {
                 sifr_generated_checked_read_collection
                     .get(sifr_generated_checked_read_normalized)
                     .cloned()
-            };
-            value
+            }
         }
     }
     impl SifrGeneratedStdlibSifrX2etomllibX2eTomlValue {
@@ -1922,7 +1959,7 @@ mod sifr_generated_project_nominals {
             if !self.is_table() {
                 return result;
             }
-            for (item_key, _) in self.table_items.as_ref().clone().iter().cloned() {
+            for (item_key, _item_value) in self.table_items.as_ref().clone().iter().cloned() {
                 result.push(item_key.to_owned());
             }
             result
@@ -2105,15 +2142,27 @@ fn write_text(path: &str, content: &str) -> Result<(), IOError> {
     ::sifr_stdlib::fs::write_text(path, content).map_err(sifr_generated_io_err)
 }
 fn sifr_generated_char_at(text: &str, index: SifrInt) -> String {
-    let sifr_generated_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
-    if &index < &SifrInt::from_i64(0) || &index >= &SifrInt::from(sifr_generated_chars_text.len()) {
+    let sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874: Vec<
+        char,
+    > = text.chars().collect::<Vec<char>>();
+    if &index < &SifrInt::from_i64(0)
+        || &index
+            >= &SifrInt::from(
+                sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
+                    .len(),
+            )
+    {
         return String::new();
     }
     let ch: Option<String> = {
         let sifr_generated_string_index = index.clone();
-        let sifr_generated_string_index_normalized =
-            sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_text.len());
-        sifr_generated_chars_text.get(sifr_generated_string_index_normalized)
+        let sifr_generated_string_index_normalized = sifr_generated_string_index
+            .normalize_index_or_len(
+                sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
+                    .len(),
+            );
+        sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
+            .get(sifr_generated_string_index_normalized)
     }
     .map(::std::string::ToString::to_string);
     let Some(ch) = ch else {
@@ -2192,7 +2241,7 @@ fn sifr_generated_first_char(text: &str) -> String {
     sifr_generated_char_at(text, SifrInt::from_i64(0))
 }
 fn sifr_generated_last_char(text: &str) -> String {
-    let _ = text.chars().collect::<Vec<char>>();
+    let _chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
     sifr_generated_char_at(
         text,
         SifrInt::from(text.chars().count()) - SifrInt::from_i64(1),
@@ -2547,8 +2596,9 @@ fn sifr_generated_json_token_int(
                 Err(JSONDecodeError::new(e.message.clone()))
             }
             SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(
-                _,
+                sifr_generated_try_variant_error,
             ) => {
+                let _e = sifr_generated_try_variant_error.clone();
                 Err(
                     JSONDecodeError::new(
                         "JSON bridge payload has invalid integer metadata".to_string(),
@@ -2591,8 +2641,9 @@ fn sifr_generated_json_token_float(
                 Err(JSONDecodeError::new(e.message.clone()))
             }
             SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(
-                _,
+                sifr_generated_try_variant_error,
             ) => {
+                let _e = sifr_generated_try_variant_error.clone();
                 Err(
                     JSONDecodeError::new(
                         "JSON bridge payload has invalid float metadata".to_string(),
@@ -2973,8 +3024,9 @@ fn sifr_generated_token_int(tokens: &[String], index: SifrInt) -> Result<SifrInt
     sifr_generated_try_res
         .unwrap_or_else(|sifr_generated_try_err| match sifr_generated_try_err {
             SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aTOMLDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(
-                _,
+                sifr_generated_try_variant_error,
             ) => {
+                let _e = sifr_generated_try_variant_error.clone();
                 Err(
                     TOMLDecodeError::new(
                         "TOML bridge payload has invalid integer metadata".to_string(),
@@ -3014,8 +3066,9 @@ fn sifr_generated_token_float(tokens: &[String], index: SifrInt) -> Result<f64, 
     sifr_generated_try_res
         .unwrap_or_else(|sifr_generated_try_err| match sifr_generated_try_err {
             SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aTOMLDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(
-                _,
+                sifr_generated_try_variant_error,
             ) => {
+                let _e = sifr_generated_try_variant_error.clone();
                 Err(
                     TOMLDecodeError::new(
                         "TOML bridge payload has invalid float metadata".to_string(),

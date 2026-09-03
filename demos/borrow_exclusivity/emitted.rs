@@ -69,7 +69,7 @@ fn main() {
         SifrInt::from_i64(15),
     ];
     let mut loop_total: SifrInt = SifrInt::from_i64(0);
-    for _ in SifrRange::new_known_nonzero(
+    for _i in SifrRange::new_known_nonzero(
         SifrInt::from_i64(0),
         SifrInt::from_i64(3),
         SifrInt::from_i64(1),

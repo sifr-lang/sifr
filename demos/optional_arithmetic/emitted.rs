@@ -12,7 +12,9 @@ fn main() {
     println!("{}", safe_add_one(None));
     let total: Option<SifrInt> = Some(SifrInt::from_i64(9));
     let count: Option<SifrInt> = Some(SifrInt::from_i64(3));
-    if total.clone().is_some() && count.clone().is_some() {
+    if let Some(_total) = total.clone()
+        && let Some(_count) = count.clone()
+    {
         println!("{}", 9.0 / 3.0);
     }
     let missing_total: Option<SifrInt> = None;

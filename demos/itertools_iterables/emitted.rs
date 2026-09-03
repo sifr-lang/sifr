@@ -514,7 +514,8 @@ fn accumulate<T: Clone + 'static + SifrGeneratedAdd>(
                             Ok(())
                         })(
                         );
-                        if sifr_generated_try_res.is_err() {
+                        if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+                            let _e = sifr_generated_try_err.clone();
                             return;
                         }
                     }
@@ -667,7 +668,7 @@ fn main() {
         (),
         SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aValueError1X3a019X3a5X3aclass7X3aIOError1X3a0,
     > = (|| {
-        let _ = run_command(&format!("mkdir -p {base}"))
+        let _mk: String = run_command(&format!("mkdir -p {base}"))
             .map_err(
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aValueError1X3a019X3a5X3aclass7X3aIOError1X3a0::SifrGeneratedUnionVariant5X3aclass7X3aIOError1X3a0,
             )?;
@@ -690,10 +691,7 @@ fn main() {
         let sliced_entries: Box<dyn Iterator<Item = String>> = islice(
                 Box::new(entries_it),
                 SifrInt::from_i64(1),
-                &{
-                    let sifr_generated_empty_list_literal: Vec<Option<SifrInt>> = Vec::new();
-                    sifr_generated_empty_list_literal
-                },
+                &Vec::new(),
             )
             .map_err(
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aValueError1X3a019X3a5X3aclass7X3aIOError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aValueError1X3a0,
@@ -728,7 +726,7 @@ fn main() {
         }
     }
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        let _ = run_command(&format!("rm -rf {base}"))?;
+        let _rm: String = run_command(&format!("rm -rf {base}"))?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {

@@ -1042,7 +1042,7 @@ fn main() {
     let sifr_generated_try_res: Result<(), IOError> = (|| {
         let shell_out: String = run_command(&"echo system-tools-sample".to_string())?;
         let cwd: String = getcwd()?;
-        let _ = cwd.chars().collect::<Vec<char>>();
+        let _chars_cwd: Vec<char> = cwd.chars().collect::<Vec<char>>();
         println!("{}", {
             let mut sifr_generated_concat: String =
                 String::with_capacity(17usize + shell_out.len());

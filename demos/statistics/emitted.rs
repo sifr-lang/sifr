@@ -942,7 +942,8 @@ fn collect_positive_actual() -> Vec<String> {
             mean_v_value_2128bd76457bb465 = out_mean;
             Ok(())
         })();
-    if sifr_generated_try_res.is_err() {
+    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+        let _e = sifr_generated_try_err.clone();
         mean_ok = false;
     }
     actual.push((mean_ok && near(mean_v_value_2128bd76457bb465, 3.0_f64, 0.0001_f64)).to_string());
@@ -954,7 +955,8 @@ fn collect_positive_actual() -> Vec<String> {
             median_v_value_629d73c6ad2d498a = out_median_value_e18b9a6a10cf229e;
             Ok(())
         })();
-    if sifr_generated_try_res.is_err() {
+    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+        let _e = sifr_generated_try_err.clone();
         median_ok = false;
     }
     actual.push(
@@ -968,7 +970,8 @@ fn collect_positive_actual() -> Vec<String> {
             variance_v_value_c6ec119b40af5f5f = out_variance;
             Ok(())
         })();
-    if sifr_generated_try_res.is_err() {
+    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+        let _e = sifr_generated_try_err.clone();
         variance_ok = false;
     }
     actual.push(
@@ -982,7 +985,8 @@ fn collect_positive_actual() -> Vec<String> {
             stdev_v_value_999a1eeb2e7130ac = out_stdev;
             Ok(())
         })();
-    if sifr_generated_try_res.is_err() {
+    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+        let _e = sifr_generated_try_err.clone();
         stdev_ok = false;
     }
     actual.push(
@@ -1003,7 +1007,8 @@ fn collect_positive_actual() -> Vec<String> {
             mode_v_value_bb35113315d412f3 = out_mode;
             Ok(())
         })();
-    if sifr_generated_try_res.is_err() {
+    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+        let _e = sifr_generated_try_err.clone();
         mode_ok = false;
     }
     actual.push((mode_ok && &mode_v_value_bb35113315d412f3 == &SifrInt::from_i64(3)).to_string());
@@ -1021,7 +1026,8 @@ fn collect_positive_actual() -> Vec<String> {
             mm_v = out_mm_value_a8c419f8b8e571ce;
             Ok(())
         })();
-    if sifr_generated_try_res.is_err() {
+    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+        let _e = sifr_generated_try_err.clone();
         mm_ok = false;
     }
     actual.push((mm_ok && &SifrInt::from(mm_v.len()) == &SifrInt::from_i64(2)).to_string());
@@ -1038,7 +1044,8 @@ fn collect_positive_actual() -> Vec<String> {
             q_v = out_q;
             Ok(())
         })();
-    if sifr_generated_try_res.is_err() {
+    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+        let _e = sifr_generated_try_err.clone();
         q_ok = false;
     }
     actual.push((q_ok && &SifrInt::from(q_v.len()) == &SifrInt::from_i64(3)).to_string());
@@ -1052,7 +1059,8 @@ fn collect_positive_actual() -> Vec<String> {
             cov_v_value_a9f7ab8e40310a86 = out_cov_value_53f72fa1fcbfdd1c;
             Ok(())
         })();
-    if sifr_generated_try_res.is_err() {
+    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+        let _e = sifr_generated_try_err.clone();
         cov_ok = false;
     }
     actual.push((cov_ok && near(cov_v_value_a9f7ab8e40310a86, 5.0_f64, 0.0001_f64)).to_string());
@@ -1064,7 +1072,8 @@ fn collect_positive_actual() -> Vec<String> {
             corr_v_value_89c9b7db45ca7e3a = out_corr;
             Ok(())
         })();
-    if sifr_generated_try_res.is_err() {
+    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+        let _e = sifr_generated_try_err.clone();
         corr_ok = false;
     }
     actual.push((corr_ok && near(corr_v_value_89c9b7db45ca7e3a, 1.0_f64, 0.0001_f64)).to_string());
@@ -1076,7 +1085,8 @@ fn collect_positive_actual() -> Vec<String> {
             lr_v = out_lr_value_a8c002f8b8e161e2;
             Ok(())
         })();
-    if sifr_generated_try_res.is_err() {
+    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+        let _e = sifr_generated_try_err.clone();
         lr_ok = false;
     }
     let mut lr_slope_ok: bool = false;
@@ -1123,7 +1133,8 @@ fn collect_positive_actual() -> Vec<String> {
             hmean_v_value_05026d4b1054e60b = out_hmean_value_2d8e4460e35f2ab9;
             Ok(())
         })();
-    if sifr_generated_try_res.is_err() {
+    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+        let _e = sifr_generated_try_err.clone();
         hmean_ok_value_d81d368cc0568a61 = false;
     }
     actual.push(
@@ -1143,7 +1154,8 @@ fn collect_positive_actual() -> Vec<String> {
             gmean_v_value_b72d30944950c71e = out_gmean_value_8f3a392a67552bd4;
             Ok(())
         })();
-    if sifr_generated_try_res.is_err() {
+    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+        let _e = sifr_generated_try_err.clone();
         gmean_ok_value_92aed8f8945ba566 = false;
     }
     actual.push(
@@ -1162,7 +1174,8 @@ fn collect_error_actual_ok() -> Vec<bool> {
             actual_ok.push(true);
             Ok(())
         })();
-    if sifr_generated_try_res.is_err() {
+    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+        let _e = sifr_generated_try_err.clone();
         actual_ok.push(false);
     }
     let sifr_generated_try_res: Result<(), SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> =
@@ -1172,7 +1185,8 @@ fn collect_error_actual_ok() -> Vec<bool> {
             actual_ok.push(true);
             Ok(())
         })();
-    if sifr_generated_try_res.is_err() {
+    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+        let _e = sifr_generated_try_err.clone();
         actual_ok.push(false);
     }
     actual_ok

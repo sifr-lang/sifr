@@ -6,7 +6,7 @@ mod generic_cleanup;
 mod wildcards;
 
 use generic_cleanup::{
-    cleanup_removed_type_arguments, prune_item_members, prune_unconstrained_impl_generics,
+    prune_item_members, prune_unconstrained_impl_generics, prune_unused_aggregate_type_parameters,
 };
 use wildcards::rewrite_exhaustive_enum_wildcards;
 
@@ -18,6 +18,7 @@ fn prune_unused_members_in_scope(
     items: &mut [syn::Item],
     external_variant_demand: &HashSet<(String, String)>,
 ) {
+    prune_unused_private_fields(items);
     let enum_variants = collect_enum_variants(items);
     let trait_methods = collect_trait_methods(items);
     let mut demand = MemberDemandCollector {
@@ -69,16 +70,14 @@ fn prune_unused_members_in_scope(
     {
         pattern_cleanup.visit_item_mut(item);
     }
-    let mut removed_type_arguments = HashMap::new();
     prune_item_members(
         items,
         &trait_methods,
         &demand.demanded_variants,
         &demand.demanded_trait_methods,
-        &mut removed_type_arguments,
     );
     rewrite_exhaustive_enum_wildcards(items);
-    cleanup_removed_type_arguments(items, &removed_type_arguments);
+    prune_unused_aggregate_type_parameters(items);
     prune_unconstrained_impl_generics(items);
     for module_index in 0..items.len() {
         let module_plan = match &items[module_index] {
@@ -472,15 +471,8 @@ impl<'ast> Visit<'ast> for NonMatchPatternDemandCollector<'_> {
     fn visit_expr_match(&mut self, match_: &'ast syn::ExprMatch) {
         self.visit_expr(&match_.expr);
         for arm in &match_.arms {
-            match &arm.pat {
-                syn::Pat::Or(_) => self.visit_pat(&arm.pat),
-                syn::Pat::Guard(guard) => {
-                    if matches!(guard.pat.as_ref(), syn::Pat::Or(_)) {
-                        self.visit_pat(&guard.pat);
-                    }
-                    self.visit_expr(&guard.guard);
-                }
-                _ => {}
+            if let syn::Pat::Guard(guard) = &arm.pat {
+                self.visit_expr(&guard.guard);
             }
             self.visit_expr(&arm.body);
         }
@@ -497,18 +489,6 @@ struct RemovedVariantPatternCleanup<'definitions> {
     impl_owner: Option<String>,
 }
 
-impl RemovedVariantPatternCleanup<'_> {
-    fn pattern_uses_removed_variant(&self, pattern: &syn::Pat) -> bool {
-        let mut finder = RemovedVariantPatternFinder {
-            removed_variants: self.removed_variants,
-            impl_owner: self.impl_owner.as_deref(),
-            found: false,
-        };
-        finder.visit_pat(pattern);
-        finder.found
-    }
-}
-
 impl VisitMut for RemovedVariantPatternCleanup<'_> {
     fn visit_item_impl_mut(&mut self, impl_: &mut syn::ItemImpl) {
         let previous = self.impl_owner.replace(type_name(&impl_.self_ty));
@@ -518,14 +498,205 @@ impl VisitMut for RemovedVariantPatternCleanup<'_> {
 
     fn visit_expr_match_mut(&mut self, match_: &mut syn::ExprMatch) {
         visit_mut::visit_expr_mut(self, &mut match_.expr);
-        match_.arms.retain(|arm| {
-            matches!(arm.pat, syn::Pat::Or(_)) || !self.pattern_uses_removed_variant(&arm.pat)
+        match_.arms.retain_mut(|arm| {
+            remove_removed_pattern_alternatives(
+                &mut arm.pat,
+                self.removed_variants,
+                self.impl_owner.as_deref(),
+            )
         });
         for arm in &mut match_.arms {
             if let syn::Pat::Guard(guard) = &mut arm.pat {
                 visit_mut::visit_expr_mut(self, &mut guard.guard);
             }
             visit_mut::visit_expr_mut(self, &mut arm.body);
+        }
+    }
+}
+
+fn prune_unused_private_fields(items: &mut [syn::Item]) {
+    let mut demand = FieldDemandCollector::default();
+    for item in items
+        .iter()
+        .filter(|item| !matches!(item, syn::Item::Mod(_)))
+    {
+        demand.visit_item(item);
+    }
+    let mut removed = HashMap::<String, HashSet<String>>::new();
+    for item in items.iter_mut() {
+        let syn::Item::Struct(struct_) = item else {
+            continue;
+        };
+        if !matches!(struct_.vis, syn::Visibility::Inherited)
+            || struct_
+                .attrs
+                .iter()
+                .any(|attribute| attribute.path().is_ident("derive"))
+        {
+            continue;
+        }
+        let syn::Fields::Named(fields) = &mut struct_.fields else {
+            continue;
+        };
+        let owner = struct_.ident.to_string();
+        let owner_removed = fields
+            .named
+            .iter()
+            .filter_map(|field| {
+                let name = field.ident.as_ref()?.to_string();
+                (!demand.names.contains(&name)).then_some(name)
+            })
+            .collect::<HashSet<_>>();
+        if owner_removed.is_empty() {
+            continue;
+        }
+        fields.named = std::mem::take(&mut fields.named)
+            .into_iter()
+            .filter(|field| {
+                field
+                    .ident
+                    .as_ref()
+                    .is_none_or(|name| !owner_removed.contains(&name.to_string()))
+            })
+            .collect();
+        removed.insert(owner, owner_removed);
+    }
+    if !removed.is_empty() {
+        let mut pruner = PrivateFieldPruner {
+            removed: &removed,
+            impl_owner: None,
+        };
+        for item in items {
+            pruner.visit_item_mut(item);
+        }
+    }
+}
+
+#[derive(Default)]
+struct FieldDemandCollector {
+    names: HashSet<String>,
+}
+
+impl FieldDemandCollector {
+    fn collect_macro_tokens(&mut self, tokens: proc_macro2::TokenStream) {
+        let tokens = tokens.into_iter().collect::<Vec<_>>();
+        for pair in tokens.windows(2) {
+            if let [
+                proc_macro2::TokenTree::Punct(dot),
+                proc_macro2::TokenTree::Ident(field),
+            ] = pair
+                && dot.as_char() == '.'
+            {
+                self.names.insert(field.to_string());
+            }
+        }
+        for token in tokens {
+            if let proc_macro2::TokenTree::Group(group) = token {
+                self.collect_macro_tokens(group.stream());
+            }
+        }
+    }
+}
+
+impl<'ast> Visit<'ast> for FieldDemandCollector {
+    fn visit_expr_field(&mut self, field: &'ast syn::ExprField) {
+        if let syn::Member::Named(name) = &field.member {
+            self.names.insert(name.to_string());
+        }
+        visit::visit_expr_field(self, field);
+    }
+
+    fn visit_field_pat(&mut self, field: &'ast syn::FieldPat) {
+        if let syn::Member::Named(name) = &field.member {
+            self.names.insert(name.to_string());
+        }
+        visit::visit_field_pat(self, field);
+    }
+
+    fn visit_macro(&mut self, rust_macro: &'ast syn::Macro) {
+        self.collect_macro_tokens(rust_macro.tokens.clone());
+    }
+}
+
+struct PrivateFieldPruner<'removed> {
+    removed: &'removed HashMap<String, HashSet<String>>,
+    impl_owner: Option<String>,
+}
+
+impl VisitMut for PrivateFieldPruner<'_> {
+    fn visit_item_impl_mut(&mut self, implementation: &mut syn::ItemImpl) {
+        let previous = self.impl_owner.replace(type_name(&implementation.self_ty));
+        visit_mut::visit_item_impl_mut(self, implementation);
+        self.impl_owner = previous;
+    }
+
+    fn visit_expr_struct_mut(&mut self, expression: &mut syn::ExprStruct) {
+        visit_mut::visit_expr_struct_mut(self, expression);
+        let owner = expression.path.segments.last().map(|segment| {
+            if segment.ident == "Self" {
+                self.impl_owner
+                    .clone()
+                    .unwrap_or_else(|| "Self".to_string())
+            } else {
+                segment.ident.to_string()
+            }
+        });
+        let Some(removed) = owner.as_ref().and_then(|owner| self.removed.get(owner)) else {
+            return;
+        };
+        expression.fields = std::mem::take(&mut expression.fields)
+            .into_iter()
+            .filter(|field| match &field.member {
+                syn::Member::Named(name) => !removed.contains(&name.to_string()),
+                syn::Member::Unnamed(_) => true,
+            })
+            .collect();
+    }
+}
+
+fn remove_removed_pattern_alternatives(
+    pattern: &mut syn::Pat,
+    removed_variants: &HashSet<(String, String)>,
+    impl_owner: Option<&str>,
+) -> bool {
+    match pattern {
+        syn::Pat::Or(or) => {
+            let retained = std::mem::take(&mut or.cases)
+                .into_iter()
+                .filter_map(|mut alternative| {
+                    remove_removed_pattern_alternatives(
+                        &mut alternative,
+                        removed_variants,
+                        impl_owner,
+                    )
+                    .then_some(alternative)
+                })
+                .collect::<Vec<_>>();
+            match retained.as_slice() {
+                [] => false,
+                [only] => {
+                    *pattern = only.clone();
+                    true
+                }
+                _ => {
+                    if let syn::Pat::Or(or) = pattern {
+                        or.cases = retained.into_iter().collect();
+                    }
+                    true
+                }
+            }
+        }
+        syn::Pat::Guard(guard) => {
+            remove_removed_pattern_alternatives(&mut guard.pat, removed_variants, impl_owner)
+        }
+        _ => {
+            let mut finder = RemovedVariantPatternFinder {
+                removed_variants,
+                impl_owner,
+                found: false,
+            };
+            finder.visit_pat(pattern);
+            !finder.found
         }
     }
 }

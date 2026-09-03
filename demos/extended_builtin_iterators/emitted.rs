@@ -33,7 +33,7 @@ fn main() {
     let zip_it: Box<dyn Iterator<Item = (SifrInt, String)>> = Box::new(
         vec![SifrInt::from_i64(1), SifrInt::from_i64(2)]
             .into_iter()
-            .zip(vec!["x".to_string(), "y".to_string()].into_iter())
+            .zip(vec!["x".to_string(), "y".to_string()])
             .map(|sifr_generated_zip_item| (sifr_generated_zip_item.0, sifr_generated_zip_item.1)),
     );
     assert_eq!(
@@ -47,20 +47,16 @@ fn main() {
             SifrInt::from_i64(3),
         ]
         .into_iter()
-        .zip(
-            vec![
-                SifrInt::from_i64(4),
-                SifrInt::from_i64(5),
-                SifrInt::from_i64(6),
-            ]
-            .into_iter(),
-        )
+        .zip(vec![
+            SifrInt::from_i64(4),
+            SifrInt::from_i64(5),
+            SifrInt::from_i64(6),
+        ])
         .map(|sifr_generated_map_item| {
             let sifr_generated_map_arg_0 = sifr_generated_map_item.0;
             let sifr_generated_map_arg_1 = sifr_generated_map_item.1;
             add(sifr_generated_map_arg_0, sifr_generated_map_arg_1)
-        })
-        .into_iter(),
+        }),
     );
     assert_eq!(mapped_it.next(), Some(SifrInt::from_i64(5)));
     assert_eq!(format!("{:?}", mapped_it.collect::<Vec<_>>()), "[7, 9]");

@@ -87,7 +87,7 @@ impl ::std::fmt::Display for Rectangle {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         write!(f, "{}", {
             let mut sifr_generated_concat: String =
-                String::with_capacity((10usize + 1usize) + 1usize);
+                String::with_capacity(10usize + 1usize + 1usize);
             sifr_generated_concat.push_str("Rectangle(");
             sifr_generated_concat.push_str(self.width.clone().to_string().as_str());
             sifr_generated_concat.push('x');

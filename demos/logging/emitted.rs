@@ -1283,7 +1283,7 @@ fn collect_cleanup_actual(base: &str) -> Vec<bool> {
     let mut actual: Vec<bool> = Vec::new();
     let mut cleanup_ok: bool = false;
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        let _ = run_command(&format!("rm -rf {base}"))?;
+        let _cleanup: String = run_command(&format!("rm -rf {base}"))?;
         cleanup_ok = !exists(base);
         Ok(())
     })();
@@ -1305,7 +1305,7 @@ fn main() {
     let mut actual: Vec<bool> = Vec::new();
     let base: String = mktemp_path(&"sifr_logging_logging_demo_".to_string());
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        let _ = run_command(&format!("mkdir -p {base}"))?;
+        let _mk: String = run_command(&format!("mkdir -p {base}"))?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {

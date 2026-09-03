@@ -48,7 +48,7 @@ fn assert_vector_eq(actual: &[String], expected: &[String]) {
 }
 fn main() {
     let sifr_generated_try_res: Result<(), ParseError> = (|| {
-        let _ = ::sifr_runtime::encoding::decode_text(
+        let _bad: String = ::sifr_runtime::encoding::decode_text(
             &vec![255u8],
             &"utf-8".to_string(),
             &"strict".to_string(),
@@ -60,7 +60,8 @@ fn main() {
         assert_eq!(false.to_string(), "true");
         Ok(())
     })();
-    if sifr_generated_try_res.is_err() {
+    if let Err(sifr_generated_try_err) = sifr_generated_try_res {
+        let _e = sifr_generated_try_err.clone();
         println!("{}", true);
         assert_eq!(true.to_string(), "true");
     }

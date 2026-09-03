@@ -66,14 +66,12 @@ fn main() {
             .entry("hit".to_string())
             .or_insert(Vec::new())
             .push("hot".to_string());
-        ()
     };
     {
         groups
             .entry("hit".to_string())
             .or_insert(Vec::new())
             .push("hut".to_string());
-        ()
     };
     assert_eq!(
         &groups.get("hit").map_or_else(
@@ -87,13 +85,11 @@ fn main() {
         seen.entry(SifrInt::from_i64(1))
             .or_insert(HashSet::new())
             .insert("a".to_string());
-        ()
     };
     {
         seen.entry(SifrInt::from_i64(1))
             .or_insert(HashSet::new())
             .insert("b".to_string());
-        ()
     };
     assert!(
         seen.get(&SifrInt::from_i64(1))

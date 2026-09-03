@@ -97,6 +97,21 @@ fn module_constant_helper_names_are_injective_and_warning_clean() {
     assert_eq!(separated, "__sifr_const_425f415345");
     assert_ne!(upper, lower);
     assert_ne!(upper, separated);
+    for helper in [&upper, &lower, &separated] {
+        assert!(
+            helper
+                .bytes()
+                .all(|byte| byte == b'_' || byte.is_ascii_lowercase() || byte.is_ascii_digit()),
+            "helper must be a Rust snake_case identifier: {helper}"
+        );
+        assert!(
+            helper
+                .bytes()
+                .next()
+                .is_some_and(|byte| byte == b'_' || byte.is_ascii_lowercase()),
+            "helper must not begin with a digit: {helper}"
+        );
+    }
 }
 
 #[test]

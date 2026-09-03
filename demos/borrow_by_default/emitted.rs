@@ -36,7 +36,8 @@ fn process_data(data: &[SifrInt]) -> SifrInt {
 }
 fn sum_multiple_times(items: &[SifrInt], times: SifrInt) -> SifrInt {
     let mut total: SifrInt = SifrInt::from_i64(0);
-    for _ in SifrRange::new_known_nonzero(SifrInt::from_i64(0), times.clone(), SifrInt::from_i64(1))
+    for _i in
+        SifrRange::new_known_nonzero(SifrInt::from_i64(0), times.clone(), SifrInt::from_i64(1))
     {
         total = &total + &get_length(items);
     }

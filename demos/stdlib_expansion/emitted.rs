@@ -28,28 +28,48 @@ fn parse_flag(args: &[String], flag: &str) -> bool {
     false
 }
 fn sifr_generated_split_inline_option(token: &str) -> (bool, String, String) {
-    let sifr_generated_chars_token: Vec<char> = token.chars().collect::<Vec<char>>();
+    let sifr_generated_chars_token_user_736966725f67656e6572617465645f63686172735f746f6b656e: Vec<
+        char,
+    > = token.chars().collect::<Vec<char>>();
     let mut key: String = String::new();
     let mut i: SifrInt = SifrInt::from_i64(0);
-    while &i < &SifrInt::from(sifr_generated_chars_token.len()) {
+    while &i
+        < &SifrInt::from(
+            sifr_generated_chars_token_user_736966725f67656e6572617465645f63686172735f746f6b656e
+                .len(),
+        )
+    {
         let ch: Option<String> = {
             let sifr_generated_string_index = i.clone();
             let sifr_generated_string_index_normalized = sifr_generated_string_index
-                .normalize_index_or_len(sifr_generated_chars_token.len());
-            sifr_generated_chars_token.get(sifr_generated_string_index_normalized)
+                .normalize_index_or_len(
+                    sifr_generated_chars_token_user_736966725f67656e6572617465645f63686172735f746f6b656e
+                        .len(),
+                );
+            sifr_generated_chars_token_user_736966725f67656e6572617465645f63686172735f746f6b656e
+                .get(sifr_generated_string_index_normalized)
         }
-        .map(::std::string::ToString::to_string);
+            .map(::std::string::ToString::to_string);
         if ch.is_some() && ch == Some("=".to_string()) {
             let mut value: String = String::new();
             let mut j: SifrInt = &i + &SifrInt::from_i64(1);
-            while &j < &SifrInt::from(sifr_generated_chars_token.len()) {
+            while &j
+                < &SifrInt::from(
+                    sifr_generated_chars_token_user_736966725f67656e6572617465645f63686172735f746f6b656e
+                        .len(),
+                )
+            {
                 let part: Option<String> = {
                     let sifr_generated_string_index = j.clone();
                     let sifr_generated_string_index_normalized = sifr_generated_string_index
-                        .normalize_index_or_len(sifr_generated_chars_token.len());
-                    sifr_generated_chars_token.get(sifr_generated_string_index_normalized)
+                        .normalize_index_or_len(
+                            sifr_generated_chars_token_user_736966725f67656e6572617465645f63686172735f746f6b656e
+                                .len(),
+                        );
+                    sifr_generated_chars_token_user_736966725f67656e6572617465645f63686172735f746f6b656e
+                        .get(sifr_generated_string_index_normalized)
                 }
-                .map(::std::string::ToString::to_string);
+                    .map(::std::string::ToString::to_string);
                 if let Some(part) = part {
                     value.push_str(part.as_str());
                 }
@@ -111,8 +131,8 @@ fn parse_option(args: &[String], name: &str, default: &str) -> String {
             }
             let (inline_has_value, inline_name, inline_value) =
                 sifr_generated_split_inline_option(&arg);
-            let _ = inline_name.chars().collect::<Vec<char>>();
-            let _ = inline_value.chars().collect::<Vec<char>>();
+            let _chars_inline_name: Vec<char> = inline_name.chars().collect::<Vec<char>>();
+            let _chars_inline_value: Vec<char> = inline_value.chars().collect::<Vec<char>>();
             if inline_has_value && inline_name == *name {
                 return {
                     let mut sifr_generated_concat: String =
@@ -325,15 +345,27 @@ fn sifr_generated_append_row(rows: &mut Vec<Vec<String>>, row: Vec<String>) {
     rows.push(row.to_vec());
 }
 fn sifr_generated_char_at(text: &str, index: SifrInt) -> String {
-    let sifr_generated_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
-    if &index < &SifrInt::from_i64(0) || &index >= &SifrInt::from(sifr_generated_chars_text.len()) {
+    let sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874: Vec<
+        char,
+    > = text.chars().collect::<Vec<char>>();
+    if &index < &SifrInt::from_i64(0)
+        || &index
+            >= &SifrInt::from(
+                sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
+                    .len(),
+            )
+    {
         return String::new();
     }
     let ch: Option<String> = {
         let sifr_generated_string_index = index.clone();
-        let sifr_generated_string_index_normalized =
-            sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_text.len());
-        sifr_generated_chars_text.get(sifr_generated_string_index_normalized)
+        let sifr_generated_string_index_normalized = sifr_generated_string_index
+            .normalize_index_or_len(
+                sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
+                    .len(),
+            );
+        sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
+            .get(sifr_generated_string_index_normalized)
     }
     .map(::std::string::ToString::to_string);
     let Some(ch) = ch else {
@@ -345,7 +377,7 @@ fn sifr_generated_first_char(text: &str) -> String {
     sifr_generated_char_at(text, SifrInt::from_i64(0))
 }
 fn sifr_generated_last_char(text: &str) -> String {
-    let _ = text.chars().collect::<Vec<char>>();
+    let _chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
     sifr_generated_char_at(
         text,
         SifrInt::from(text.chars().count()) - SifrInt::from_i64(1),
@@ -413,7 +445,9 @@ fn parse_csv(
     quoting: SifrInt,
 ) -> Vec<Vec<String>> {
     let quotechar = quotechar.to_owned();
-    let sifr_generated_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
+    let sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874: Vec<
+        char,
+    > = text.chars().collect::<Vec<char>>();
     let resolved: SifrGeneratedStdlibSifrX2ecsvX2eDialect = sifr_generated_resolve_dialect(
         dialect,
         delimiter,
@@ -430,13 +464,24 @@ fn parse_csv(
     let mut in_quotes: bool = false;
     let mut field_started: bool = false;
     let mut i: SifrInt = SifrInt::from_i64(0);
-    while &i < &SifrInt::from(sifr_generated_chars_text.len()) {
+    while &i
+        < &SifrInt::from(
+            sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874.len(),
+        )
+    {
         let ch_value: String = sifr_generated_char_at(text, i.clone());
         if in_quotes {
             if !resolved.escapechar.clone().is_empty() && ch_value == resolved.escapechar.clone() {
-                if &(&i + &SifrInt::from_i64(1)) < &SifrInt::from(sifr_generated_chars_text.len()) {
-                    let escaped_value: String =
-                        sifr_generated_char_at(text, &i + &SifrInt::from_i64(1));
+                if &(&i + &SifrInt::from_i64(1))
+                    < &SifrInt::from(
+                        sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
+                            .len(),
+                    )
+                {
+                    let escaped_value: String = sifr_generated_char_at(
+                        text,
+                        &i + &SifrInt::from_i64(1),
+                    );
                     field.push_str(escaped_value.as_str());
                     i = &i + &SifrInt::from_i64(2);
                     continue;
@@ -449,8 +494,12 @@ fn parse_csv(
                 let quotechar: String = sifr_generated_quotechar_value(&resolved);
                 if resolved.doublequote
                     && &(&i + &SifrInt::from_i64(1))
-                        < &SifrInt::from(sifr_generated_chars_text.len())
-                    && sifr_generated_char_at(text, &i + &SifrInt::from_i64(1)) == quotechar
+                        < &SifrInt::from(
+                            sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
+                                .len(),
+                        )
+                    && sifr_generated_char_at(text, &i + &SifrInt::from_i64(1))
+                        == quotechar
                 {
                     field.push_str(quotechar.as_str());
                     i = &i + &SifrInt::from_i64(2);
@@ -469,9 +518,16 @@ fn parse_csv(
             continue;
         }
         if !resolved.escapechar.clone().is_empty() && ch_value == resolved.escapechar.clone() {
-            if &(&i + &SifrInt::from_i64(1)) < &SifrInt::from(sifr_generated_chars_text.len()) {
-                let escaped_plain_value: String =
-                    sifr_generated_char_at(text, &i + &SifrInt::from_i64(1));
+            if &(&i + &SifrInt::from_i64(1))
+                < &SifrInt::from(
+                    sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
+                        .len(),
+                )
+            {
+                let escaped_plain_value: String = sifr_generated_char_at(
+                    text,
+                    &i + &SifrInt::from_i64(1),
+                );
                 field.push_str(escaped_plain_value.as_str());
                 field_started = true;
                 i = &i + &SifrInt::from_i64(2);
@@ -503,8 +559,11 @@ fn parse_csv(
         }
         if ch_value == "\n" || ch_value == "\r" {
             if ch_value == "\r"
-                && &(&i + &SifrInt::from_i64(1)) < &SifrInt::from(sifr_generated_chars_text.len())
-                && sifr_generated_char_at(text, &i + &SifrInt::from_i64(1)) == "\n"
+                && &(&i + &SifrInt::from_i64(1))
+                    < &SifrInt::from(
+                        sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
+                            .len(),
+                    ) && sifr_generated_char_at(text, &i + &SifrInt::from_i64(1)) == "\n"
             {
                 i = &i + &SifrInt::from_i64(1);
             }
@@ -713,32 +772,31 @@ fn sifr_generated_match(name: &str, mut ni: SifrInt, pattern: &str, mut pi: Sifr
                     j = &j + &SifrInt::from_i64(1);
                 }
                 return false;
-            } else if pc == "?" {
-                if &ni >= &SifrInt::from(name.chars().count()) {
-                    return false;
-                }
-                ni = &ni + &SifrInt::from_i64(1);
-                pi = &pi + &SifrInt::from_i64(1);
-            } else {
-                if &ni >= &SifrInt::from(name.chars().count()) {
-                    return false;
-                }
-                let nc: Option<String> = {
-                    let sifr_generated_string_source = &name;
-                    let sifr_generated_string_index = ni.clone();
-                    let sifr_generated_string_index_normalized = sifr_generated_string_index
-                        .normalize_index_or_len(sifr_generated_string_source.chars().count());
-                    sifr_generated_string_source
-                        .chars()
-                        .nth(sifr_generated_string_index_normalized)
-                }
-                .map(|character| character.to_string());
-                if let Some(nc) = nc {
-                    if nc != pc {
+            }
+            let sifr_generated_shared_branch_condition = pc == "?";
+            if &ni >= &SifrInt::from(name.chars().count()) {
+                return false;
+            }
+            {
+                if sifr_generated_shared_branch_condition {
+                } else {
+                    let nc: Option<String> = {
+                        let sifr_generated_string_source = &name;
+                        let sifr_generated_string_index = ni.clone();
+                        let sifr_generated_string_index_normalized = sifr_generated_string_index
+                            .normalize_index_or_len(sifr_generated_string_source.chars().count());
+                        sifr_generated_string_source
+                            .chars()
+                            .nth(sifr_generated_string_index_normalized)
+                    }
+                    .map(|character| character.to_string());
+                    if let Some(nc) = nc {
+                        if nc != pc {
+                            return false;
+                        }
+                    } else {
                         return false;
                     }
-                } else {
-                    return false;
                 }
                 ni = &ni + &SifrInt::from_i64(1);
                 pi = &pi + &SifrInt::from_i64(1);
@@ -1341,7 +1399,9 @@ fn sifr_generated_replace_whitespace_chars(text: &str, replace_tabs: bool) -> St
     normalized
 }
 fn sifr_generated_expand_tabs_impl(text: &str, tabsize: SifrInt) -> String {
-    let sifr_generated_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
+    let sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874: Vec<
+        char,
+    > = text.chars().collect::<Vec<char>>();
     let mut effective_tabsize: SifrInt = tabsize.clone();
     if &effective_tabsize <= &SifrInt::from_i64(0) {
         effective_tabsize = SifrInt::from_i64(1);
@@ -1352,12 +1412,20 @@ fn sifr_generated_expand_tabs_impl(text: &str, tabsize: SifrInt) -> String {
     let mut result: String = String::new();
     let mut column: SifrInt = SifrInt::from_i64(0);
     let mut i: SifrInt = SifrInt::from_i64(0);
-    while &i < &SifrInt::from(sifr_generated_chars_text.len()) {
+    while &i
+        < &SifrInt::from(
+            sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874.len(),
+        )
+    {
         let ch_opt: Option<String> = {
             let sifr_generated_string_index = i.clone();
-            let sifr_generated_string_index_normalized =
-                sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_text.len());
-            sifr_generated_chars_text.get(sifr_generated_string_index_normalized)
+            let sifr_generated_string_index_normalized = sifr_generated_string_index
+                .normalize_index_or_len(
+                sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
+                    .len(),
+            );
+            sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
+                .get(sifr_generated_string_index_normalized)
         }
         .map(::std::string::ToString::to_string);
         if let Some(ch_opt) = ch_opt {
@@ -1374,12 +1442,14 @@ fn sifr_generated_expand_tabs_impl(text: &str, tabsize: SifrInt) -> String {
                     j = &j + &SifrInt::from_i64(1);
                 }
                 column = &column + &spaces;
-            } else if ch == "\n" || ch == "\r" {
-                result.push_str(ch.as_str());
-                column = SifrInt::from_i64(0);
             } else {
+                let sifr_generated_shared_branch_condition = ch == "\n" || ch == "\r";
                 result.push_str(ch.as_str());
-                column = &column + &SifrInt::from_i64(1);
+                if sifr_generated_shared_branch_condition {
+                    column = SifrInt::from_i64(0);
+                } else {
+                    column = &column + &SifrInt::from_i64(1);
+                }
             }
         }
         i = &i + &SifrInt::from_i64(1);
@@ -1714,7 +1784,7 @@ fn main() {
     );
     assert_eq!(total, SifrInt::from_i64(15));
     let token: String = token_hex(SifrInt::from_i64(8));
-    let _ = token.chars().collect::<Vec<char>>();
+    let _chars_token: Vec<char> = token.chars().collect::<Vec<char>>();
     assert_eq!(
         &SifrInt::from(token.chars().count()),
         &SifrInt::from_i64(16)
@@ -1777,7 +1847,7 @@ fn main() {
     assert_eq!(SifrInt::from(first3.len()), SifrInt::from_i64(3));
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
         let filled: String = fill(&"hello world foo bar".to_string(), SifrInt::from_i64(12))?;
-        let _ = filled.chars().collect::<Vec<char>>();
+        let _chars_filled: Vec<char> = filled.chars().collect::<Vec<char>>();
         assert!(SifrInt::from(filled.chars().count()) > SifrInt::from_i64(0));
         Ok(())
     })();

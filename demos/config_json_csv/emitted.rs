@@ -179,7 +179,7 @@ mod sifr_generated_project_nominals {
                             line_no.clone(),
                         )?;
                     let (option_name, option_value) = parsed_option_pair;
-                    let _ = option_name.chars().collect::<Vec<char>>();
+                    let _chars_option_name: Vec<char> = option_name.chars().collect::<Vec<char>>();
                     if current_section.is_empty() || current_section == default_section {
                         {
                             let sifr_generated_assign_value =
@@ -761,9 +761,7 @@ mod sifr_generated_project_nominals {
     impl SifrGeneratedStdlibSifrX2ecsvX2eDialectRegistry {
         #[must_use]
         pub fn get(&self, name: &str) -> Option<SifrGeneratedStdlibSifrX2ecsvX2eDialect> {
-            if self.dialects.get(name).is_none() {
-                return None;
-            }
+            let _checked_value_2 = self.dialects.get(name)?;
             for (key, value) in self
                 .dialects
                 .iter()
@@ -1230,7 +1228,7 @@ mod sifr_generated_project_nominals {
             if !self.is_object() {
                 return result;
             }
-            for (item_key, _) in self.object_items.as_ref().clone().iter().cloned() {
+            for (item_key, _item_value) in self.object_items.as_ref().clone().iter().cloned() {
                 result.push(item_key.to_owned());
             }
             result
@@ -1368,8 +1366,9 @@ mod sifr_generated_project_nominals {
                     Err(JSONDecodeError::new(e.message.clone()))
                 }
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(
-                    _,
+                    sifr_generated_try_variant_error,
                 ) => {
+                    let _e = sifr_generated_try_variant_error.clone();
                     Err(
                         JSONDecodeError::new(
                             "JSON bridge payload has invalid integer metadata"
@@ -1415,8 +1414,9 @@ mod sifr_generated_project_nominals {
                     Err(JSONDecodeError::new(e.message.clone()))
                 }
                 SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(
-                    _,
+                    sifr_generated_try_variant_error,
                 ) => {
+                    let _e = sifr_generated_try_variant_error.clone();
                     Err(
                         JSONDecodeError::new(
                             "JSON bridge payload has invalid float metadata".to_string(),

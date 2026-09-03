@@ -87,7 +87,7 @@ fn demo_safe_read_write() {
 fn demo_file_not_found() {
     println!("=== File Not Found (no panic) ===");
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        let _ = read_text(&"/tmp/sifr_io_demo_missing_file.txt".to_string())?;
+        let _data: String = read_text(&"/tmp/sifr_io_demo_missing_file.txt".to_string())?;
         println!("should not reach here");
         Ok(())
     })();
@@ -115,7 +115,7 @@ fn demo_directory_ops() {
         println!("error: {}", e.message.clone());
     }
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        let _ = listdir(&"/tmp/sifr_io_demo_nonexistent_xyz".to_string())?;
+        let _bad_entries: Vec<String> = listdir(&"/tmp/sifr_io_demo_nonexistent_xyz".to_string())?;
         println!("should not reach here");
         Ok(())
     })();
@@ -191,7 +191,7 @@ fn demo_append() {
 fn demo_getcwd() {
     println!("=== Get Current Directory ===");
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        let _ = getcwd()?;
+        let _cwd: String = getcwd()?;
         println!("getcwd succeeded");
         Ok(())
     })();

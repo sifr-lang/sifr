@@ -6,6 +6,7 @@ use syn::visit::{self, Visit};
 use syn::visit_mut::{self, VisitMut};
 
 mod api_cleanup;
+mod enum_variant_cleanup;
 mod field_name_cleanup;
 mod identifier_canonicalizer;
 mod identifier_policy;
@@ -17,6 +18,10 @@ mod source_expectations;
 mod syntax_cleanup;
 
 use api_cleanup::improve_generated_api_items;
+pub use api_cleanup::{
+    discover_project_const_function_names,
+    finalize_formatted_generated_rust_source_with_project_consts,
+};
 use field_name_cleanup::canonicalize_generated_field_names;
 pub use identifier_canonicalizer::canonicalize_generated_rust_identifier;
 use member_demand::prune_unused_members;
@@ -48,19 +53,15 @@ pub fn canonicalize_generated_rust_source(source: &str) -> Result<String, String
     Err("generated Rust canonicalization did not reach a fixed point".to_string())
 }
 
-/// Refresh compiler-owned API attributes after `rustfmt` has established the
-/// exact source layout that downstream Rust lints inspect.
 pub fn finalize_formatted_generated_rust_source(source: &str) -> Result<String, String> {
-    let mut file = syn::parse_file(source)
-        .map_err(|error| format!("failed to parse formatted generated Rust: {error}"))?;
-    improve_generated_api_items(&mut file.items, source);
-    Ok(prettyplease::unparse(&file))
+    finalize_formatted_generated_rust_source_with_project_consts(source, &HashSet::new())
 }
 
 fn prune_closed_generated_binary(source: &str) -> Result<Option<String>, String> {
     let mut file = syn::parse_file(source)
         .map_err(|error| format!("failed to parse assembled generated Rust: {error}"))?;
     let before = file.to_token_stream().to_string();
+    enum_variant_cleanup::canonicalize_local_enum_variants(&mut file);
     if !file
         .items
         .iter()
@@ -69,7 +70,10 @@ fn prune_closed_generated_binary(source: &str) -> Result<Option<String>, String>
         return Ok(None);
     }
     if file.items.iter().any(|item| {
-        matches!(item, syn::Item::Mod(module) if module.content.is_none() && module.ident != "__sifr_bridge")
+        matches!(item, syn::Item::Mod(module)
+            if module.content.is_none()
+                && module.ident != "__sifr_bridge"
+                && !module.ident.to_string().starts_with("sifr_generated_"))
     }) {
         return Ok(None);
     }
@@ -230,6 +234,7 @@ fn inline_simple_format_arguments(rust_macro: &mut syn::Macro) -> bool {
     };
     let format_index = match name.as_str() {
         "format" => 0,
+        "assert" => 1,
         "print" | "println" | "eprint" | "eprintln" => 0,
         "write" | "writeln" => 1,
         _ => return false,
@@ -866,6 +871,11 @@ impl<'ast> Visit<'ast> for ScopedItemReferenceCollector<'_> {
     }
 
     fn visit_macro(&mut self, rust_macro: &'ast syn::Macro) {
+        for name in item_demand::format_capture_names(rust_macro) {
+            if self.definitions.contains(&name) && !self.bindings.contains(&name) {
+                self.references.insert(name);
+            }
+        }
         self.collect_macro_tokens(rust_macro.tokens.clone());
         visit::visit_macro(self, rust_macro);
     }
@@ -878,3 +888,7 @@ mod tests;
 #[cfg(test)]
 #[path = "generated_rust_canonicalizer_item8_tests.rs"]
 mod item8_tests;
+
+#[cfg(test)]
+#[path = "generated_rust_canonicalizer_item8_remediation_tests.rs"]
+mod item8_remediation_tests;

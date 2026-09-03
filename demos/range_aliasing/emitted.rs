@@ -67,7 +67,7 @@ fn sum_reverse_while(nums: &[SifrInt]) -> SifrInt {
 fn append_growth_product(nums: &[SifrInt]) -> SifrInt {
     let n: SifrInt = SifrInt::from(nums.len());
     let mut weights: Vec<SifrInt> = Vec::new();
-    for _ in SifrRange::new_known_nonzero(SifrInt::from_i64(0), n.clone(), SifrInt::from_i64(1)) {
+    for _i in SifrRange::new_known_nonzero(SifrInt::from_i64(0), n.clone(), SifrInt::from_i64(1)) {
         weights.push(SifrInt::from_i64(1));
     }
     let mut i: SifrInt = &n - &SifrInt::from_i64(1);

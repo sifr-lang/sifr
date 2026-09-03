@@ -15,11 +15,13 @@ fn main() {
             .get(sifr_generated_checked_read_normalized)
             .cloned()
     };
-    if let Some(value) = value.clone() {
+    {
+        let sifr_generated_shared_branch_value = value.clone();
         println!("optional_indexing remove data-dependent unwrap/expect demo:");
-        println!("{value}");
-    } else {
-        println!("optional_indexing remove data-dependent unwrap/expect demo:");
-        println!("missing");
+        if let Some(value) = sifr_generated_shared_branch_value {
+            println!("{value}");
+        } else {
+            println!("missing");
+        }
     }
 }

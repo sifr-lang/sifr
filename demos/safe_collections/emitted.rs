@@ -41,7 +41,7 @@ fn main() {
         let sifr_generated_stop = sifr_generated_len;
         let mut sifr_generated_i = sifr_generated_start;
         let mut sifr_generated_result = None;
-        while sifr_generated_i < sifr_generated_stop && sifr_generated_result == None {
+        while sifr_generated_i < sifr_generated_stop && sifr_generated_result.is_none() {
             if let Some(sifr_generated_x) = names.get(sifr_generated_i)
                 && sifr_generated_x.eq(&"bob".to_string())
             {
@@ -62,7 +62,7 @@ fn main() {
         let sifr_generated_stop = sifr_generated_len;
         let mut sifr_generated_i = sifr_generated_start;
         let mut sifr_generated_result = None;
-        while sifr_generated_i < sifr_generated_stop && sifr_generated_result == None {
+        while sifr_generated_i < sifr_generated_stop && sifr_generated_result.is_none() {
             if let Some(sifr_generated_x) = names.get(sifr_generated_i)
                 && sifr_generated_x.eq(&"dave".to_string())
             {
@@ -94,12 +94,12 @@ fn main() {
     let empty: Vec<SifrInt> = Vec::new();
     let empty_min: Option<SifrInt> = empty.iter().cloned().min();
     let empty_max_value_4e7fb6460174a48b: Option<SifrInt> = empty.iter().cloned().max();
-    if empty_min.clone().is_some() {
+    if let Some(_empty_min) = empty_min.clone() {
         println!("ERROR: min on empty should be None");
     } else {
         println!("min([]) = None (safe!)");
     }
-    if empty_max_value_4e7fb6460174a48b.clone().is_some() {
+    if let Some(_empty_max) = empty_max_value_4e7fb6460174a48b.clone() {
         println!("ERROR: max on empty should be None");
     } else {
         println!("max([]) = None (safe!)");
@@ -117,7 +117,7 @@ fn main() {
     if let Some(val1) = val1.clone() {
         println!("popped: {val1}");
     }
-    if val2_value_4373ff00edde01ca.clone().is_some() {
+    if let Some(_val2) = val2_value_4373ff00edde01ca.clone() {
         println!("ERROR: pop on empty should be None");
     } else {
         println!("pop on empty = None (safe!)");

@@ -650,6 +650,25 @@ pub(super) fn resolve_set_method_type(
                 );
                 return None;
             }
+            let argument_ty = args[0].ty();
+            let compatible_optional_member = argument_ty
+                .optional_member_type()
+                .is_some_and(|member| member.is_assignable_to(elem_ty));
+            if !matches!(elem_ty.resolve_alias(), Type::Any | Type::Unknown)
+                && !argument_ty.is_assignable_to(elem_ty)
+                && !compatible_optional_member
+            {
+                ctx.error_with_code_at(
+                    DiagnosticCode::TYPE_CONTAINER_ELEMENT_CONFLICT,
+                    format!(
+                        "set element type conflict: expected '{}', got '{}'",
+                        elem_ty.display_name(),
+                        argument_ty.display_name()
+                    ),
+                    arg_ranges[0],
+                );
+                return None;
+            }
             Some(Type::None)
         }
         "contains" => {

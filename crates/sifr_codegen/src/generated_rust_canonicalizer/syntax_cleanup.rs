@@ -1,6 +1,5 @@
 use quote::ToTokens;
 use std::collections::HashSet;
-use syn::visit::Visit;
 use syn::visit_mut::{self, VisitMut};
 
 use super::local_name_cleanup::{
@@ -9,6 +8,7 @@ use super::local_name_cleanup::{
 };
 
 mod dead_assignment_cleanup;
+mod identifier_collection;
 mod identity_conversion_cleanup;
 mod idiom_cleanup;
 mod let_else_cleanup;
@@ -17,15 +17,25 @@ mod mutability_cleanup;
 mod typed_fallback_cleanup;
 
 use dead_assignment_cleanup::remove_dead_generated_assignments;
-use liveness::update_references_crossing_statement;
-use mutability_cleanup::{collect_mutating_method_names, remove_unneeded_parameter_mutability};
-use mutability_cleanup::{collect_token_identifiers, remove_unneeded_mutability};
+pub(super) use identifier_collection::{
+    expression_has_control_carrier, statement_identifier_names,
+};
+use identifier_collection::{
+    identifier_names_in_expr, identifier_names_in_pattern, referenced_identifier_names_in_expr,
+};
+use liveness::{references_after_statements, update_references_crossing_statement};
+use mutability_cleanup::remove_unneeded_mutability;
+use mutability_cleanup::{
+    collect_local_method_facts, collect_mutating_method_names, remove_unneeded_parameter_mutability,
+};
 
 pub(super) fn canonicalize_syntax(file: &mut syn::File) {
     identity_conversion_cleanup::remove_known_sifr_int_identity_conversions(file);
     let mutating_methods = collect_mutating_method_names(file);
+    let local_method_facts = collect_local_method_facts(file);
     CanonicalSyntaxRewriter {
         mutating_methods: &mutating_methods,
+        local_method_facts: &local_method_facts,
     }
     .visit_file_mut(file);
     idiom_cleanup::canonicalize_idioms(file, &mutating_methods);
@@ -34,6 +44,7 @@ pub(super) fn canonicalize_syntax(file: &mut syn::File) {
 
 struct CanonicalSyntaxRewriter<'methods> {
     mutating_methods: &'methods HashSet<String>,
+    local_method_facts: &'methods mutability_cleanup::LocalMethodFacts,
 }
 
 impl VisitMut for CanonicalSyntaxRewriter<'_> {
@@ -44,6 +55,7 @@ impl VisitMut for CanonicalSyntaxRewriter<'_> {
             &mut function.sig,
             &function.block,
             self.mutating_methods,
+            self.local_method_facts,
         );
         visit_mut::visit_item_fn_mut(self, function);
         disambiguate_similar_names_across_nested_scopes(&function.sig, &mut function.block);
@@ -55,7 +67,12 @@ impl VisitMut for CanonicalSyntaxRewriter<'_> {
     fn visit_impl_item_fn_mut(&mut self, method: &mut syn::ImplItemFn) {
         remove_explicit_unit_return(&mut method.sig);
         disambiguate_similar_parameter_names(&mut method.sig, &mut method.block);
-        remove_unneeded_parameter_mutability(&mut method.sig, &method.block, self.mutating_methods);
+        remove_unneeded_parameter_mutability(
+            &mut method.sig,
+            &method.block,
+            self.mutating_methods,
+            self.local_method_facts,
+        );
         visit_mut::visit_impl_item_fn_mut(self, method);
         disambiguate_similar_names_across_nested_scopes(&method.sig, &mut method.block);
         remove_dead_generated_assignments(&mut method.block);
@@ -66,14 +83,14 @@ impl VisitMut for CanonicalSyntaxRewriter<'_> {
     fn visit_arm_mut(&mut self, arm: &mut syn::Arm) {
         visit_mut::visit_arm_mut(self, arm);
         let used = identifier_names_in_expr(&arm.body);
-        discard_unused_pattern_bindings(&mut arm.pat, &used);
+        suppress_unused_pattern_bindings(&mut arm.pat, &used);
     }
 
     fn visit_expr_closure_mut(&mut self, closure: &mut syn::ExprClosure) {
         visit_mut::visit_expr_closure_mut(self, closure);
         let used = identifier_names_in_expr(&closure.body);
         for input in &mut closure.inputs {
-            discard_unused_pattern_bindings(input, &used);
+            suppress_unused_pattern_bindings(input, &used);
         }
     }
 
@@ -85,7 +102,7 @@ impl VisitMut for CanonicalSyntaxRewriter<'_> {
             .iter()
             .flat_map(statement_identifier_names)
             .collect();
-        discard_unused_pattern_bindings(&mut for_loop.pat, &used);
+        suppress_unused_pattern_bindings(&mut for_loop.pat, &used);
     }
 
     fn visit_block_mut(&mut self, block: &mut syn::Block) {
@@ -95,20 +112,23 @@ impl VisitMut for CanonicalSyntaxRewriter<'_> {
         remove_unused_bindings(&mut block.stmts);
         let_else_cleanup::remove_unused_bindings(&mut block.stmts);
         replace_empty_conditionals_with_condition_evaluation(&mut block.stmts);
-        remove_unneeded_mutability(&mut block.stmts, self.mutating_methods);
+        remove_unneeded_mutability(
+            &mut block.stmts,
+            self.mutating_methods,
+            self.local_method_facts,
+        );
     }
 
     fn visit_expr_mut(&mut self, expression: &mut syn::Expr) {
         visit_mut::visit_expr_mut(self, expression);
         rewrite_single_pattern_match(expression);
+        if let syn::Expr::If(if_) = expression {
+            let mut used_after = references_after_statements(&if_.then_branch.stmts);
+            suppress_unused_condition_bindings(&mut if_.cond, &mut used_after);
+        }
         if let syn::Expr::If(if_) = expression
             && let syn::Expr::Let(let_) = if_.cond.as_mut()
         {
-            let mut used = HashSet::new();
-            for statement in &if_.then_branch.stmts {
-                used.extend(statement_identifier_names(statement));
-            }
-            discard_unused_pattern_bindings(&mut let_.pat, &used);
             if is_wildcard_result_pattern(&let_.pat, "Err") {
                 let tested = &let_.expr;
                 *if_.cond = syn::parse_quote!((#tested).is_err());
@@ -118,6 +138,9 @@ impl VisitMut for CanonicalSyntaxRewriter<'_> {
             } else if is_wildcard_option_pattern(&let_.pat, "Some") {
                 let tested = &let_.expr;
                 *if_.cond = syn::parse_quote!((#tested).is_some());
+            } else if is_none_pattern(&let_.pat) {
+                let tested = &let_.expr;
+                *if_.cond = syn::parse_quote!((#tested).is_none());
             }
         }
         if let syn::Expr::Call(call) = expression
@@ -134,6 +157,28 @@ impl VisitMut for CanonicalSyntaxRewriter<'_> {
             && let syn::Expr::Block(block) = closure.body.as_mut()
         {
             normalize_tail_position(&mut block.block.stmts);
+        }
+    }
+}
+
+fn suppress_unused_condition_bindings(condition: &mut syn::Expr, used_after: &mut HashSet<String>) {
+    match condition {
+        syn::Expr::Binary(binary) if matches!(binary.op, syn::BinOp::And(_)) => {
+            suppress_unused_condition_bindings(&mut binary.right, used_after);
+            suppress_unused_condition_bindings(&mut binary.left, used_after);
+        }
+        syn::Expr::Let(let_) => {
+            suppress_unused_pattern_bindings(&mut let_.pat, used_after);
+            used_after.extend(referenced_identifier_names_in_expr(&let_.expr));
+        }
+        syn::Expr::Paren(paren) => {
+            suppress_unused_condition_bindings(&mut paren.expr, used_after);
+        }
+        syn::Expr::Group(group) => {
+            suppress_unused_condition_bindings(&mut group.expr, used_after);
+        }
+        _ => {
+            used_after.extend(referenced_identifier_names_in_expr(condition));
         }
     }
 }
@@ -464,13 +509,13 @@ fn remove_unused_bindings(statements: &mut Vec<syn::Stmt>) {
                         {
                             keep = false;
                         } else {
-                            local.pat = wildcard_pattern();
+                            suppress_unused_pattern_bindings(&mut local.pat, &referenced_later);
                             local.init = Some(init);
                         }
                     }
                 }
             } else if binding.is_none() {
-                discard_unused_pattern_bindings(&mut local.pat, &referenced_later);
+                suppress_unused_pattern_bindings(&mut local.pat, &referenced_later);
             }
         }
         if let Some(replacement) = replacement {
@@ -558,6 +603,15 @@ fn is_wildcard_option_pattern(pattern: &syn::Pat, variant: &str) -> bool {
     is_wildcard_result_pattern(pattern, variant)
 }
 
+fn is_none_pattern(pattern: &syn::Pat) -> bool {
+    matches!(pattern,
+        syn::Pat::Path(path) if path.path.is_ident("None")
+    ) || matches!(pattern,
+        syn::Pat::Ident(binding)
+            if binding.ident == "None" && binding.subpat.is_none()
+    )
+}
+
 fn expression_always_returns(expression: &syn::Expr) -> bool {
     match expression {
         syn::Expr::Return(_) => true,
@@ -570,54 +624,76 @@ fn expression_always_returns(expression: &syn::Expr) -> bool {
     }
 }
 
-fn wildcard_pattern() -> syn::Pat {
-    syn::Pat::Wild(syn::PatWild {
-        attrs: Vec::new(),
-        underscore_token: syn::token::Underscore::default(),
-    })
+pub(super) fn suppress_unused_pattern_bindings(pattern: &mut syn::Pat, used: &HashSet<String>) {
+    let mut reserved = used.clone();
+    reserved.extend(identifier_names_in_pattern(pattern));
+    suppress_unused_pattern_bindings_inner(pattern, used, &mut reserved);
 }
 
-pub(super) fn discard_unused_pattern_bindings(pattern: &mut syn::Pat, used: &HashSet<String>) {
+fn suppress_unused_pattern_bindings_inner(
+    pattern: &mut syn::Pat,
+    used: &HashSet<String>,
+    reserved: &mut HashSet<String>,
+) {
     match pattern {
-        syn::Pat::Ident(binding)
-            if binding.subpat.is_none() && !used.contains(&binding.ident.to_string()) =>
-        {
-            *pattern = syn::Pat::Wild(syn::PatWild {
-                attrs: Vec::new(),
-                underscore_token: syn::token::Underscore::default(),
-            });
-        }
         syn::Pat::Ident(binding) => {
+            let original = binding.ident.to_string();
+            if !used.contains(&original)
+                && !original.starts_with('_')
+                && !matches!(original.as_str(), "None" | "true" | "false")
+            {
+                let stable = original
+                    .strip_prefix("sifr_generated_")
+                    .unwrap_or(&original);
+                let base = format!("_{stable}");
+                let mut candidate = base.clone();
+                let mut suffix = 2_usize;
+                while reserved.contains(&candidate) {
+                    candidate = format!("{base}_{suffix}");
+                    suffix += 1;
+                }
+                reserved.insert(candidate.clone());
+                binding.ident = syn::Ident::new(&candidate, binding.ident.span());
+            }
             if let Some((_, subpattern)) = &mut binding.subpat {
-                discard_unused_pattern_bindings(subpattern, used);
+                suppress_unused_pattern_bindings_inner(subpattern, used, reserved);
             }
         }
         syn::Pat::Tuple(tuple) => {
             for element in &mut tuple.elems {
-                discard_unused_pattern_bindings(element, used);
+                suppress_unused_pattern_bindings_inner(element, used, reserved);
             }
         }
         syn::Pat::TupleStruct(tuple) => {
             for element in &mut tuple.elems {
-                discard_unused_pattern_bindings(element, used);
+                suppress_unused_pattern_bindings_inner(element, used, reserved);
             }
         }
         syn::Pat::Struct(struct_) => {
             for field in &mut struct_.fields {
-                discard_unused_pattern_bindings(&mut field.pat, used);
-                if matches!(field.pat.as_ref(), syn::Pat::Wild(_)) {
+                suppress_unused_pattern_bindings_inner(&mut field.pat, used, reserved);
+                if field.colon_token.is_none()
+                    && matches!(field.pat.as_ref(), syn::Pat::Ident(binding)
+                        if matches!(&field.member, syn::Member::Named(member) if member != &binding.ident))
+                {
                     field.colon_token = Some(syn::token::Colon::default());
                 }
             }
         }
         syn::Pat::Slice(slice) => {
             for element in &mut slice.elems {
-                discard_unused_pattern_bindings(element, used);
+                suppress_unused_pattern_bindings_inner(element, used, reserved);
             }
         }
-        syn::Pat::Reference(reference) => discard_unused_pattern_bindings(&mut reference.pat, used),
-        syn::Pat::Type(typed) => discard_unused_pattern_bindings(&mut typed.pat, used),
-        syn::Pat::Paren(paren) => discard_unused_pattern_bindings(&mut paren.pat, used),
+        syn::Pat::Reference(reference) => {
+            suppress_unused_pattern_bindings_inner(&mut reference.pat, used, reserved);
+        }
+        syn::Pat::Type(typed) => {
+            suppress_unused_pattern_bindings_inner(&mut typed.pat, used, reserved);
+        }
+        syn::Pat::Paren(paren) => {
+            suppress_unused_pattern_bindings_inner(&mut paren.pat, used, reserved);
+        }
         _ => {}
     }
 }
@@ -633,14 +709,8 @@ fn simple_binding_name(pattern: &syn::Pat) -> Option<String> {
 
 fn expression_is_discardable(expression: &syn::Expr) -> bool {
     match expression {
-        syn::Expr::Lit(_) | syn::Expr::Path(_) => true,
+        syn::Expr::Lit(_) => true,
         syn::Expr::Paren(paren) => expression_is_discardable(&paren.expr),
-        syn::Expr::Reference(reference) => expression_is_discardable(&reference.expr),
-        syn::Expr::Unary(unary) => expression_is_discardable(&unary.expr),
-        syn::Expr::Binary(binary) => {
-            expression_is_discardable(&binary.left) && expression_is_discardable(&binary.right)
-        }
-        syn::Expr::MethodCall(call) if call.args.is_empty() && call.method == "clone" => true,
         _ => false,
     }
 }
@@ -667,122 +737,5 @@ fn disposable_typed_unit_binding(pattern: &syn::Pat, referenced_later: &HashSet<
         syn::Pat::Wild(_) => true,
         syn::Pat::Ident(binding) => !referenced_later.contains(&binding.ident.to_string()),
         _ => false,
-    }
-}
-
-pub(super) fn statement_identifier_names(statement: &syn::Stmt) -> HashSet<String> {
-    let mut collector = IdentifierCollector::default();
-    collector.visit_stmt(statement);
-    collector.names
-}
-
-fn identifier_names_in_expr(expression: &syn::Expr) -> HashSet<String> {
-    let mut collector = IdentifierCollector::default();
-    collector.visit_expr(expression);
-    collector.names
-}
-
-fn expression_has_control_carrier(expression: &syn::Expr) -> bool {
-    let mut collector = ControlCarrierCollector { found: false };
-    collector.visit_expr(expression);
-    collector.found
-}
-
-#[derive(Default)]
-struct IdentifierCollector {
-    names: HashSet<String>,
-}
-
-impl<'ast> Visit<'ast> for IdentifierCollector {
-    fn visit_ident(&mut self, identifier: &'ast proc_macro2::Ident) {
-        self.names.insert(identifier.to_string());
-    }
-
-    fn visit_macro(&mut self, rust_macro: &'ast syn::Macro) {
-        if let Ok(arguments) = rust_macro.parse_body_with(
-            syn::punctuated::Punctuated::<syn::Expr, syn::Token![,]>::parse_terminated,
-        ) {
-            for argument in &arguments {
-                self.visit_expr(argument);
-            }
-        } else {
-            collect_token_identifiers(rust_macro.tokens.clone(), &mut self.names);
-        }
-        collect_format_capture_names(rust_macro, &mut self.names);
-    }
-}
-
-fn collect_format_capture_names(rust_macro: &syn::Macro, names: &mut HashSet<String>) {
-    let Some(macro_name) = rust_macro
-        .path
-        .segments
-        .last()
-        .map(|segment| segment.ident.to_string())
-    else {
-        return;
-    };
-    let format_index = match macro_name.as_str() {
-        "format" | "print" | "println" | "eprint" | "eprintln" => 0,
-        "write" | "writeln" => 1,
-        _ => return,
-    };
-    let Ok(arguments) = rust_macro.parse_body_with(
-        syn::punctuated::Punctuated::<syn::Expr, syn::Token![,]>::parse_terminated,
-    ) else {
-        return;
-    };
-    let Some(syn::Expr::Lit(format_expression)) = arguments.iter().nth(format_index) else {
-        return;
-    };
-    let syn::Lit::Str(format_literal) = &format_expression.lit else {
-        return;
-    };
-    let format = format_literal.value();
-    let mut offset = 0;
-    while let Some(start_relative) = format[offset..].find('{') {
-        let start = offset + start_relative;
-        if format.as_bytes().get(start + 1) == Some(&b'{') {
-            offset = start + 2;
-            continue;
-        }
-        let Some(end_relative) = format[start + 1..].find('}') else {
-            break;
-        };
-        let end = start + 1 + end_relative;
-        let field = format[start + 1..end].split(':').next().unwrap_or_default();
-        if !field.is_empty()
-            && field
-                .chars()
-                .all(|character| character == '_' || character.is_ascii_alphanumeric())
-        {
-            names.insert(field.to_string());
-        }
-        offset = end + 1;
-    }
-}
-
-struct ControlCarrierCollector {
-    found: bool,
-}
-
-impl<'ast> Visit<'ast> for ControlCarrierCollector {
-    fn visit_expr_async(&mut self, _expression: &'ast syn::ExprAsync) {}
-
-    fn visit_expr_closure(&mut self, _expression: &'ast syn::ExprClosure) {}
-
-    fn visit_expr_try(&mut self, _expression: &'ast syn::ExprTry) {
-        self.found = true;
-    }
-
-    fn visit_expr_return(&mut self, _expression: &'ast syn::ExprReturn) {
-        self.found = true;
-    }
-
-    fn visit_expr_break(&mut self, _expression: &'ast syn::ExprBreak) {
-        self.found = true;
-    }
-
-    fn visit_expr_continue(&mut self, _expression: &'ast syn::ExprContinue) {
-        self.found = true;
     }
 }

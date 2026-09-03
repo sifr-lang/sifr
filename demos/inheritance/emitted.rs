@@ -14,18 +14,6 @@ impl Shape {
         }
     }
 }
-impl Shape {
-    fn describe(&self) -> String {
-        {
-            let mut sifr_generated_concat: String = String::with_capacity(2usize + 1usize);
-            sifr_generated_concat.push_str(self.name.clone().as_str());
-            sifr_generated_concat.push_str(" (");
-            sifr_generated_concat.push_str(self.color.clone().as_str());
-            sifr_generated_concat.push(')');
-            sifr_generated_concat
-        }
-    }
-}
 impl ::std::fmt::Display for Shape {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         write!(f, "Shape(name={}, color={})", self.name, self.color)

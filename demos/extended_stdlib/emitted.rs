@@ -260,10 +260,7 @@ fn sifr_generated_hash_bytes(algorithm: &str, data: &[u8]) -> Vec<u8> {
     } else if algorithm == "blake2s" {
         return blake2s_bytes(data);
     }
-    {
-        let sifr_generated_empty_bytes_literal: Vec<u8> = Vec::new();
-        sifr_generated_empty_bytes_literal
-    }
+    Vec::new()
 }
 fn sifr_generated_hash_hex(algorithm: &str, data: &[u8]) -> String {
     {
