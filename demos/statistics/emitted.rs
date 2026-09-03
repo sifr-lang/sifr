@@ -155,9 +155,15 @@ fn median(data: &[f64]) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eSt
         ));
     }
     let sorted_data: Vec<f64> = {
-        let mut sifr_generated_sorted_v = data.iter().copied().collect::<Vec<_>>();
-        sifr_generated_sorted_v.sort_by(f64::total_cmp);
-        sifr_generated_sorted_v
+        let mut sifr_generated_sorted_values = data.iter().copied().collect::<Vec<_>>();
+        sifr_generated_sorted_values.sort_by(
+            |sifr_generated_sorted_left, sifr_generated_sorted_right| {
+                sifr_generated_sorted_left
+                    .partial_cmp(sifr_generated_sorted_right)
+                    .unwrap_or(::std::cmp::Ordering::Equal)
+            },
+        );
+        sifr_generated_sorted_values
     };
     let mid: SifrInt = n.floor_div_known_nonzero(&SifrInt::from_i64(2));
     if &n.floor_mod_known_nonzero(&SifrInt::from_i64(2)) == &SifrInt::from_i64(0) {
@@ -473,9 +479,15 @@ fn quantiles(
         ));
     }
     let sorted_data: Vec<f64> = {
-        let mut sifr_generated_sorted_v = data.iter().copied().collect::<Vec<_>>();
-        sifr_generated_sorted_v.sort_by(f64::total_cmp);
-        sifr_generated_sorted_v
+        let mut sifr_generated_sorted_values = data.iter().copied().collect::<Vec<_>>();
+        sifr_generated_sorted_values.sort_by(
+            |sifr_generated_sorted_left, sifr_generated_sorted_right| {
+                sifr_generated_sorted_left
+                    .partial_cmp(sifr_generated_sorted_right)
+                    .unwrap_or(::std::cmp::Ordering::Equal)
+            },
+        );
+        sifr_generated_sorted_values
     };
     let m: SifrInt = SifrInt::from(sorted_data.len());
     let mut result: Vec<f64> = Vec::new();

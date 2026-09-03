@@ -13,6 +13,7 @@ use sifr_ir::{HirExpr, HirFunction, HirModule, HirParam, HirStmt};
 use sifr_type_system::{OwnershipKind, ParamConvention, Type, make_union};
 use std::collections::{HashMap, HashSet};
 
+mod function_types;
 mod generator_bodies;
 mod generic_bounds;
 mod local_binding_registry;

@@ -120,7 +120,9 @@ impl RustEmitter {
                             return Ok(None);
                         };
                         lowered
-                    } else if let Some(lowered) = self.lower_rendered_expr_for_ir(value)? {
+                    } else if !self.body_analysis.aggregate_statement_has_last_use(stmt)
+                        && let Some(lowered) = self.lower_rendered_expr_for_ir(value)?
+                    {
                         lowered
                     } else {
                         let Some(lowered) = self.lower_stmt_expr_for_ir(value)? else {
@@ -201,7 +203,9 @@ impl RustEmitter {
                     let value_is_target_typed = checked_option_value.is_some();
                     let lowered_value = if let Some(lowered) = checked_option_value {
                         lowered
-                    } else if let Some(lowered) = self.lower_rendered_expr_for_ir(value)? {
+                    } else if !self.body_analysis.aggregate_statement_has_last_use(stmt)
+                        && let Some(lowered) = self.lower_rendered_expr_for_ir(value)?
+                    {
                         lowered
                     } else {
                         let Some(lowered) = self.lower_stmt_expr_for_ir(value)? else {
@@ -560,22 +564,17 @@ impl RustEmitter {
                     true,
                 )
             } else if let HirStmt::Expr { expr } = stmt {
-                let lowered_expr = if let Some(lowered) = self.try_lower_last_use_set_add_expr(
-                    expr,
-                    &stmts[..stmt_index],
-                    &stmts[stmt_index + 1..],
-                ) {
-                    lowered
-                } else if let Some(lowered) = self.try_lower_stmt_expr_statement_only(expr)? {
-                    lowered
-                } else if let Some(lowered) = self.lower_rendered_expr_for_ir(expr)? {
-                    lowered
-                } else {
-                    let Some(lowered) = self.lower_stmt_expr_for_ir(expr)? else {
-                        return Ok(None);
+                let lowered_expr =
+                    if let Some(lowered) = self.try_lower_stmt_expr_statement_only(expr)? {
+                        lowered
+                    } else if let Some(lowered) = self.lower_rendered_expr_for_ir(expr)? {
+                        lowered
+                    } else {
+                        let Some(lowered) = self.lower_stmt_expr_for_ir(expr)? else {
+                            return Ok(None);
+                        };
+                        lowered
                     };
-                    lowered
-                };
                 (vec![RustStmt::Expr(lowered_expr)], true)
             } else if let HirStmt::Return { value } = stmt {
                 let return_ty_snapshot = self.current_return_type.clone();
@@ -697,8 +696,11 @@ impl RustEmitter {
                     let _ = self.loop_else_stack.pop();
                     return Ok(None);
                 };
-                let checked_read_guards =
-                    self.checked_sequence_loop_guards_for_ir(condition, body)?;
+                let checked_read_guards = self
+                    .checked_sequence_loop_guards_for_ir(condition, body)?
+                    .into_iter()
+                    .filter(|guard| !condition_refresh_keys.contains(&guard.key))
+                    .collect::<Vec<_>>();
                 let lowered_body = self.lower_checked_sequence_loop_body_for_ir(
                     body,
                     &checked_read_guards,

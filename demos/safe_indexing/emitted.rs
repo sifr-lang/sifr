@@ -64,26 +64,26 @@ fn main() {
     println!("=== Safe String Indexing ===");
     let s: String = "hello".to_string();
     let ch: Option<String> = {
-        let sifr_generated_string_source = &s;
+        let sifr_generated_string_chars = s.chars().collect::<Vec<char>>();
         let sifr_generated_string_index = SifrInt::from_i64(0);
-        let sifr_generated_string_index_normalized = sifr_generated_string_index
-            .normalize_index_or_len(sifr_generated_string_source.chars().count());
-        sifr_generated_string_source
-            .chars()
-            .nth(sifr_generated_string_index_normalized)
+        let sifr_generated_string_index_normalized =
+            sifr_generated_string_index.normalize_index_or_len(sifr_generated_string_chars.len());
+        sifr_generated_string_chars
+            .get(sifr_generated_string_index_normalized)
+            .copied()
     }
     .map(|character| character.to_string());
     if let Some(ch) = ch {
         println!("s[0] = {ch}");
     }
     let oob_ch: Option<String> = {
-        let sifr_generated_string_source = &s;
+        let sifr_generated_string_chars = s.chars().collect::<Vec<char>>();
         let sifr_generated_string_index = SifrInt::from_i64(99);
-        let sifr_generated_string_index_normalized = sifr_generated_string_index
-            .normalize_index_or_len(sifr_generated_string_source.chars().count());
-        sifr_generated_string_source
-            .chars()
-            .nth(sifr_generated_string_index_normalized)
+        let sifr_generated_string_index_normalized =
+            sifr_generated_string_index.normalize_index_or_len(sifr_generated_string_chars.len());
+        sifr_generated_string_chars
+            .get(sifr_generated_string_index_normalized)
+            .copied()
     }
     .map(|character| character.to_string());
     if let Some(oob_ch) = oob_ch {
@@ -112,13 +112,13 @@ fn main() {
         println!("last item: {last}");
     }
     let last_ch: Option<String> = {
-        let sifr_generated_string_source = &s;
+        let sifr_generated_string_chars = s.chars().collect::<Vec<char>>();
         let sifr_generated_string_index = -SifrInt::from_i64(1);
-        let sifr_generated_string_index_normalized = sifr_generated_string_index
-            .normalize_index_or_len(sifr_generated_string_source.chars().count());
-        sifr_generated_string_source
-            .chars()
-            .nth(sifr_generated_string_index_normalized)
+        let sifr_generated_string_index_normalized =
+            sifr_generated_string_index.normalize_index_or_len(sifr_generated_string_chars.len());
+        sifr_generated_string_chars
+            .get(sifr_generated_string_index_normalized)
+            .copied()
     }
     .map(|character| character.to_string());
     if let Some(last_ch) = last_ch {

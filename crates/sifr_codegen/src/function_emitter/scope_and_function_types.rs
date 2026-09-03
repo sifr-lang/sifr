@@ -1,5 +1,5 @@
 use super::{
-    HashMap, HashSet, HirFunction, HirModule, HirParam, HirStmt, NestedFnCapture, OwnershipKind,
+    HashMap, HashSet, HirModule, HirParam, HirStmt, NestedFnCapture, OwnershipKind,
     ParamConvention, RustEmitter, RustExpr, RustParam, RustStmt, RustType, Type,
     collect_function_local_shadow_names, collect_function_sifr_int_forced_locals_with_extra,
     collect_locally_defined_vars, collect_mutated_vars_with_sigs,
@@ -11,8 +11,8 @@ use super::{
     collect_sifr_int_result_call_arg_method_params, collect_sifr_int_result_function_param_names,
     collect_sifr_int_result_method_param_names, function_returns_result_sifr_int,
     hir_function_returns_sifr_int_with_extra_forced,
-    hir_function_returns_sifr_int_with_extra_forced_and_shadowed, is_result_int_type,
-    nested_function_mutates_capture, result_int_return_type_to_sifr_int, result_method_key,
+    hir_function_returns_sifr_int_with_extra_forced_and_shadowed, nested_function_mutates_capture,
+    result_int_return_type_to_sifr_int, result_method_key,
 };
 impl RustEmitter {
     pub(crate) fn effective_nested_param_convention(
@@ -415,6 +415,11 @@ impl RustEmitter {
             .get(&func.name)
             .cloned()
             .unwrap_or_default();
+        let lexical_captures = self
+            .collect_nested_fn_lexical_captures(func)
+            .into_iter()
+            .filter(|capture| self.local_binding_types.contains_key(&capture.name))
+            .collect::<Vec<_>>();
         let outer_forced_locals = self.sifr_int_forced_local_bindings.borrow().clone();
         let sifr_int_captured_forced_locals =
             collect_sifr_int_captured_forced_locals(func, &outer_forced_locals);
@@ -428,7 +433,7 @@ impl RustEmitter {
             func,
             &outer_shadowed_module_bindings,
         );
-        let sifr_int_recursive_captures = recursive_captures
+        let sifr_int_recursive_captures = lexical_captures
             .iter()
             .filter(|capture| self.recursive_capture_lowers_to_sifr_int(capture))
             .map(|capture| capture.name.clone())
@@ -484,6 +489,8 @@ impl RustEmitter {
         let saved_none_widened_local_bindings = self.none_widened_local_bindings.clone();
         let saved_string_char_cache_vars = self.string_char_cache_vars.clone();
         let saved_string_char_cache_required_names = self.string_char_cache_required_names.clone();
+        let saved_string_char_cache_loop_local_names =
+            self.string_char_cache_loop_local_names.clone();
         let saved_sifr_int_local_bindings = self.sifr_int_local_bindings.borrow().clone();
         let saved_sifr_int_forced_local_bindings =
             self.sifr_int_forced_local_bindings.borrow().clone();
@@ -517,6 +524,7 @@ impl RustEmitter {
         if is_recursive {
             self.string_char_cache_vars.clear();
             self.string_char_cache_required_names.clear();
+            self.string_char_cache_loop_local_names.clear();
         }
         self.sifr_int_local_bindings.borrow_mut().clear();
         self.sifr_int_forced_local_bindings.borrow_mut().clear();
@@ -545,8 +553,28 @@ impl RustEmitter {
                     .unwrap_or(&param.convention),
             );
         }
-        for capture in &recursive_captures {
-            self.register_function_scope_binding(&capture.name, &capture.ty, capture.convention);
+        let captures_by_value = func.is_async || *move_captures;
+        for capture in &lexical_captures {
+            if is_recursive || !captures_by_value {
+                self.register_function_scope_binding(
+                    &capture.name,
+                    &capture.ty,
+                    capture.convention,
+                );
+            } else {
+                self.local_binding_types
+                    .insert(capture.name.clone(), capture.ty.clone());
+                if saved_borrowed_params.contains(&capture.name) {
+                    self.borrowed_params.insert(capture.name.clone());
+                }
+                if saved_mut_borrowed_params.contains(&capture.name) {
+                    self.mut_borrowed_params.insert(capture.name.clone());
+                }
+                if saved_recursive_option_borrowed_views.contains(&capture.name) {
+                    self.recursive_option_borrowed_views
+                        .insert(capture.name.clone());
+                }
+            }
             if sifr_int_nested_capture_bindings.contains(&capture.name) {
                 self.sifr_int_local_bindings
                     .borrow_mut()
@@ -593,6 +621,7 @@ impl RustEmitter {
         self.option_unwrapped_vars = saved_option_unwrapped_vars;
         self.string_char_cache_vars = saved_string_char_cache_vars;
         self.string_char_cache_required_names = saved_string_char_cache_required_names;
+        self.string_char_cache_loop_local_names = saved_string_char_cache_loop_local_names;
         *self.sifr_int_local_bindings.borrow_mut() = saved_sifr_int_local_bindings;
         *self.sifr_int_forced_local_bindings.borrow_mut() = saved_sifr_int_forced_local_bindings;
         *self.sifr_int_result_local_bindings.borrow_mut() = saved_sifr_int_result_local_bindings;
@@ -718,152 +747,6 @@ impl RustEmitter {
                 value: value.clone(),
             })
             .collect()
-    }
-
-    pub(crate) fn returns_result_none(ty: &Type) -> bool {
-        match crate::resolve_alias_type_for_plain_call(ty) {
-            Type::Result(ok_ty, _) => matches!(
-                crate::resolve_alias_type_for_plain_call(ok_ty.as_ref()),
-                Type::None
-            ),
-            _ => false,
-        }
-    }
-
-    pub(crate) fn lower_function_param_type(
-        &self,
-        ty: &Type,
-        convention: ParamConvention,
-    ) -> RustType {
-        if convention.is_shared_borrow()
-            && let Type::StructuralRecord(record) = ty.resolve_alias()
-        {
-            return RustType::Ref {
-                mutable: false,
-                inner: Box::new(RustType::ImplTrait {
-                    trait_: crate::RustTrait::Named {
-                        name: crate::structural_identity_codegen::structural_record_view_trait_name(
-                            record,
-                        ),
-                        params: record
-                            .fields()
-                            .iter()
-                            .map(|field| crate::sifr_type_to_rust_type(field.ty()))
-                            .collect(),
-                        associated_types: Vec::new(),
-                    },
-                    auto_traits: Vec::new(),
-                }),
-            };
-        }
-        let base = self.rust_ir_type_with_generics(ty);
-        if convention.is_shared_borrow()
-            && let Some(view) = self.recursive_option_borrowed_type(ty)
-        {
-            return view;
-        }
-        if convention.is_shared_borrow()
-            && (!crate::helpers::is_copy_type_for_codegen(ty)
-                || matches!(
-                    ty.resolve_alias(),
-                    Type::Callable(..) | Type::AsyncCallable(..)
-                ))
-        {
-            crate::ownership_plan::shared_borrowed_param_type(ty, base)
-        } else if convention.is_mut_borrow()
-            && (!crate::helpers::is_copy_type_for_codegen(ty)
-                || matches!(ty.resolve_alias(), Type::TypeVar(_) | Type::Any))
-        {
-            RustType::Ref {
-                mutable: true,
-                inner: Box::new(base),
-            }
-        } else {
-            base
-        }
-    }
-
-    pub(crate) fn lower_python_callback_param_type(
-        &self,
-        ty: &Type,
-        convention: ParamConvention,
-        require_static: bool,
-    ) -> RustType {
-        let resolved = ty.resolve_alias();
-        if !matches!(resolved, Type::Callable(..) | Type::AsyncCallable(..)) {
-            return self.lower_function_param_type(ty, convention);
-        }
-        let mut bounded = self.rust_ir_type_with_generics(ty);
-        if let RustType::ImplTrait { auto_traits, .. } | RustType::DynTrait { auto_traits, .. } =
-            &mut bounded
-        {
-            if !matches!(resolved, Type::AsyncCallable(..)) {
-                auto_traits.extend(["Send".to_string(), "Sync".to_string()]);
-            }
-            if require_static {
-                auto_traits.push("'static".to_string());
-            }
-        }
-        if !crate::helpers::is_copy_type_for_codegen(ty) && convention.is_borrowed() {
-            RustType::Ref {
-                mutable: convention.is_mut_borrow(),
-                inner: Box::new(bounded),
-            }
-        } else {
-            bounded
-        }
-    }
-
-    pub(crate) fn lower_module_function_param_type(
-        &self,
-        func_name: &str,
-        param_idx: usize,
-        param: &HirParam,
-    ) -> RustType {
-        if matches!(func_name, "py_local_callback" | "py_threadsafe_callback")
-            && matches!(param.ty.resolve_alias(), Type::Callable(..))
-        {
-            return self.lower_python_callback_param_type(&param.ty, param.convention, true);
-        }
-        if self.function_param_lowers_to_sifr_int(func_name, param_idx)
-            && matches!(
-                crate::resolve_alias_type_for_plain_call(&param.ty),
-                Type::Int
-            )
-        {
-            return self.lower_function_param_type(&param.ty, param.convention);
-        }
-        if self.function_param_lowers_to_sifr_int_result(func_name, param_idx)
-            && is_result_int_type(&param.ty)
-        {
-            return result_int_return_type_to_sifr_int(&param.ty);
-        }
-        self.lower_function_param_type(&param.ty, param.convention)
-    }
-
-    pub(crate) fn lower_function_return_type(
-        &self,
-        func: &HirFunction,
-        is_generator: bool,
-    ) -> Option<RustType> {
-        if is_generator {
-            return Some(self.rust_ir_type_with_generics(&func.return_type));
-        }
-
-        if func.return_type == Type::None {
-            return None;
-        }
-        if self.function_returns_sifr_int(&func.name) {
-            return Some(RustType::Named("SifrInt".to_string()));
-        }
-        if self
-            .sifr_int_result_function_returns
-            .borrow()
-            .contains(&func.name)
-        {
-            return Some(result_int_return_type_to_sifr_int(&func.return_type));
-        }
-        Some(self.rust_ir_type_with_generics(&func.return_type))
     }
 
     pub(crate) fn lower_stmt_strict_for_function(

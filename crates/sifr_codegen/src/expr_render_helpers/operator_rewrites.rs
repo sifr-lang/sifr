@@ -318,83 +318,11 @@ impl RustEmitter {
                             })),
                         }
                     }
-                    Type::Str => {
-                        if self.string_char_cache_for_expr(object).is_some() {
-                            return Some(self.lower_string_index_option_with_cache(
-                                object,
-                                container_expr,
-                                Self::clone_non_copy_name_expr_for_ir(index, lowered_index.clone()),
-                            ));
-                        }
-                        let object_name = "__sifr_index_str".to_string();
-                        let index_name = "__sifr_index_i".to_string();
-                        let normalized_name = "__sifr_index_norm".to_string();
-                        crate::RustExpr::Block {
-                            stmts: vec![
-                                crate::RustStmt::Let {
-                                    mutable: false,
-                                    name: object_name.clone(),
-                                    ty: None,
-                                    value: crate::RustExpr::Ref {
-                                        mutable: false,
-                                        expr: Box::new(container_expr),
-                                    },
-                                },
-                                crate::RustStmt::Let {
-                                    mutable: false,
-                                    name: index_name.clone(),
-                                    ty: None,
-                                    value: Self::clone_non_copy_name_expr_for_ir(
-                                        index,
-                                        lowered_index.clone(),
-                                    ),
-                                },
-                                crate::RustStmt::Let {
-                                    mutable: false,
-                                    name: normalized_name.clone(),
-                                    ty: None,
-                                    value: crate::build_normalized_index_expr(
-                                        &index_name,
-                                        crate::RustExpr::MethodCall {
-                                            receiver: Box::new(crate::RustExpr::MethodCall {
-                                                receiver: Box::new(crate::RustExpr::Ident(
-                                                    object_name.clone(),
-                                                )),
-                                                method: "chars".to_string(),
-                                                args: vec![],
-                                            }),
-                                            method: "count".to_string(),
-                                            args: vec![],
-                                        },
-                                    ),
-                                },
-                            ],
-                            expr: Some(Box::new(crate::RustExpr::MethodCall {
-                                receiver: Box::new(crate::RustExpr::MethodCall {
-                                    receiver: Box::new(crate::RustExpr::MethodCall {
-                                        receiver: Box::new(crate::RustExpr::Ident(object_name)),
-                                        method: "chars".to_string(),
-                                        args: vec![],
-                                    }),
-                                    method: "nth".to_string(),
-                                    args: vec![crate::RustExpr::Ident(normalized_name)],
-                                }),
-                                method: "map".to_string(),
-                                args: vec![crate::RustExpr::Closure {
-                                    params: vec![crate::RustParam::Named {
-                                        name: "c".to_string(),
-                                        ty: crate::RustType::Named("_".to_string()),
-                                    }],
-                                    body: Box::new(crate::RustExpr::MethodCall {
-                                        receiver: Box::new(crate::RustExpr::Ident("c".to_string())),
-                                        method: "to_string".to_string(),
-                                        args: vec![],
-                                    }),
-                                    is_move: false,
-                                }],
-                            })),
-                        }
-                    }
+                    Type::Str => self.lower_string_index_option_with_cache(
+                        object,
+                        container_expr,
+                        Self::clone_non_copy_name_expr_for_ir(index, lowered_index.clone()),
+                    ),
                     Type::Tuple(elements) => {
                         let HirExpr::IntLiteral(idx) = index else {
                             return None;

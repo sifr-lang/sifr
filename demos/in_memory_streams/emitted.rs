@@ -178,15 +178,16 @@ mod sifr_generated_project_nominals {
                 }
             }
             let piece: String = {
-                let sifr_generated_slice_src = &self.buffer.clone();
-                let sifr_generated_slice_len = sifr_generated_slice_src.chars().count();
+                let sifr_generated_slice_src = self.buffer.clone().chars().collect::<Vec<char>>();
+                let sifr_generated_slice_len = sifr_generated_slice_src.len();
                 let sifr_generated_slice_start = start.clamp_slice_bound(sifr_generated_slice_len);
                 let sifr_generated_slice_stop = end.clamp_slice_bound(sifr_generated_slice_len);
                 String::from_iter(
                     sifr_generated_slice_src
-                        .chars()
+                        .iter()
                         .skip(sifr_generated_slice_start)
-                        .take(sifr_generated_slice_stop.saturating_sub(sifr_generated_slice_start)),
+                        .take(sifr_generated_slice_stop.saturating_sub(sifr_generated_slice_start))
+                        .copied(),
                 )
             };
             self.cursor = end.clone();
@@ -201,8 +202,8 @@ mod sifr_generated_project_nominals {
                 return Err(IOError::new(sifr_generated_closed_stream_error()));
             }
             let left: String = {
-                let sifr_generated_slice_src = &self.buffer.clone();
-                let sifr_generated_slice_len = sifr_generated_slice_src.chars().count();
+                let sifr_generated_slice_src = self.buffer.clone().chars().collect::<Vec<char>>();
+                let sifr_generated_slice_len = sifr_generated_slice_src.len();
                 let sifr_generated_slice_start = 0;
                 let sifr_generated_slice_stop = self
                     .cursor
@@ -210,27 +211,30 @@ mod sifr_generated_project_nominals {
                     .clamp_slice_bound(sifr_generated_slice_len);
                 String::from_iter(
                     sifr_generated_slice_src
-                        .chars()
+                        .iter()
                         .skip(sifr_generated_slice_start)
-                        .take(sifr_generated_slice_stop.saturating_sub(sifr_generated_slice_start)),
+                        .take(sifr_generated_slice_stop.saturating_sub(sifr_generated_slice_start))
+                        .copied(),
                 )
             };
             let tail_start: SifrInt = &self.cursor.clone() + &SifrInt::from(data.chars().count());
             let right: String = if &tail_start < &SifrInt::from(self.buffer.chars().count()) {
                 {
-                    let sifr_generated_slice_src = &self.buffer.clone();
-                    let sifr_generated_slice_len = sifr_generated_slice_src.chars().count();
+                    let sifr_generated_slice_src =
+                        self.buffer.clone().chars().collect::<Vec<char>>();
+                    let sifr_generated_slice_len = sifr_generated_slice_src.len();
                     let sifr_generated_slice_start =
                         tail_start.clamp_slice_bound(sifr_generated_slice_len);
                     let sifr_generated_slice_stop = sifr_generated_slice_len;
                     String::from_iter(
                         sifr_generated_slice_src
-                            .chars()
+                            .iter()
                             .skip(sifr_generated_slice_start)
                             .take(
                                 sifr_generated_slice_stop
                                     .saturating_sub(sifr_generated_slice_start),
-                            ),
+                            )
+                            .copied(),
                     )
                 }
             } else {
@@ -603,13 +607,13 @@ fn main() {
             stringio_negative_seek_ok = true;
         }
         let mut bio: SifrGeneratedStdlibSifrX2eioX2eBytesIO =
-            SifrGeneratedStdlibSifrX2eioX2eBytesIO::new(vec![97u8, 98u8, 99u8]);
+            SifrGeneratedStdlibSifrX2eioX2eBytesIO::new(vec![97_u8, 98_u8, 99_u8]);
         let _seek_b_value_78f19d0c500eec0b: SifrInt =
             bio.seek(&SifrInt::from_i64(3), &SifrInt::from_i64(0))?;
-        bio.write_bytes(&vec![100u8])?;
+        bio.write_bytes(&vec![100_u8])?;
         let _seek_b0: SifrInt = bio.seek(&SifrInt::from_i64(0), &SifrInt::from_i64(0))?;
         let bytes_value: Vec<u8> = bio.read_bytes(&None)?;
-        bytesio_ok = bytes_value == vec![97u8, 98u8, 99u8, 100u8];
+        bytesio_ok = bytes_value == vec![97_u8, 98_u8, 99_u8, 100_u8];
         let sifr_generated_try_res: Result<(), IOError> = (|| {
             let sifr_generated_bad_seek_b: SifrInt =
                 bio.seek(&-SifrInt::from_i64(1), &SifrInt::from_i64(0))?;
@@ -623,9 +627,9 @@ fn main() {
         }
         let mut writer: SifrGeneratedIoBinaryFileHandle = open_binary(&path, &"wb".to_string())?;
         writer.write_bytes(&vec![
-            114u8, 117u8, 110u8, 116u8, 105u8, 109u8, 101u8, 45u8, 105u8, 110u8, 95u8, 109u8,
-            101u8, 109u8, 111u8, 114u8, 121u8, 95u8, 115u8, 116u8, 114u8, 101u8, 97u8, 109u8,
-            115u8,
+            114_u8, 117_u8, 110_u8, 116_u8, 105_u8, 109_u8, 101_u8, 45_u8, 105_u8, 110_u8, 95_u8,
+            109_u8, 101_u8, 109_u8, 111_u8, 114_u8, 121_u8, 95_u8, 115_u8, 116_u8, 114_u8, 101_u8,
+            97_u8, 109_u8, 115_u8,
         ])?;
         writer.close();
         let mut reader: SifrGeneratedIoBinaryFileHandle = open_binary(&path, &"rb".to_string())?;
@@ -633,9 +637,9 @@ fn main() {
         reader.close();
         binary_file_ok = loaded
             == vec![
-                114u8, 117u8, 110u8, 116u8, 105u8, 109u8, 101u8, 45u8, 105u8, 110u8, 95u8, 109u8,
-                101u8, 109u8, 111u8, 114u8, 121u8, 95u8, 115u8, 116u8, 114u8, 101u8, 97u8, 109u8,
-                115u8,
+                114_u8, 117_u8, 110_u8, 116_u8, 105_u8, 109_u8, 101_u8, 45_u8, 105_u8, 110_u8,
+                95_u8, 109_u8, 101_u8, 109_u8, 111_u8, 114_u8, 121_u8, 95_u8, 115_u8, 116_u8,
+                114_u8, 101_u8, 97_u8, 109_u8, 115_u8,
             ];
         Ok(())
     })();

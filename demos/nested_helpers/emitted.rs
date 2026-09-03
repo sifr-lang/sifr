@@ -29,13 +29,13 @@ fn expand_keyed_strings(keys: &str) -> Vec<String> {
             return;
         }
         let Some(sifr_generated_checked_value_0) = {
-            let sifr_generated_string_source = &keys;
+            let sifr_generated_string_chars = keys.chars().collect::<Vec<char>>();
             let sifr_generated_string_index = i.clone();
             let sifr_generated_string_index_normalized = sifr_generated_string_index
-                .normalize_index_or_len(sifr_generated_string_source.chars().count());
-            sifr_generated_string_source
-                .chars()
-                .nth(sifr_generated_string_index_normalized)
+                .normalize_index_or_len(sifr_generated_string_chars.len());
+            sifr_generated_string_chars
+                .get(sifr_generated_string_index_normalized)
+                .copied()
         }
         .map(|character| character.to_string()) else {
             res.push(cur.to_string());
@@ -125,7 +125,7 @@ fn find_root(n: SifrInt, par: &[SifrInt]) -> SifrInt {
             .get(sifr_generated_checked_read_normalized)
             .cloned()
     }
-    .is_some_and(|sifr_generated_checked_value_2| &sifr_generated_checked_value_2.clone() != &p)
+    .is_some_and(|sifr_generated_checked_value_2| sifr_generated_checked_value_2.clone() != p)
     {
         let Some(sifr_generated_checked_value_3) = ({
             let sifr_generated_checked_read_collection = &par;

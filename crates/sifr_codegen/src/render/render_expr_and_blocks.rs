@@ -216,14 +216,21 @@ impl Renderer {
                 receiver,
                 method,
                 args,
-            } => format!(
-                "{}.{method}({})",
-                Self::wrap_expr(receiver),
-                args.iter()
-                    .map(Self::render_expr_string)
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            ),
+            } => {
+                let receiver =
+                    if matches!(receiver.as_ref(), RustExpr::Ref { .. } | RustExpr::Deref(_)) {
+                        format!("({})", Self::render_expr_string(receiver))
+                    } else {
+                        Self::wrap_expr(receiver)
+                    };
+                format!(
+                    "{receiver}.{method}({})",
+                    args.iter()
+                        .map(Self::render_expr_string)
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                )
+            }
             RustExpr::FnCall { func, args } => format!(
                 "{}({})",
                 Self::wrap_expr(func),

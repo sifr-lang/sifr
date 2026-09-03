@@ -48,34 +48,47 @@ fn root_string_concat_needs_performance_lowering(stmt: &HirStmt) -> bool {
 }
 
 fn stmt_shape_needs_performance_lowering(stmt: &HirStmt) -> bool {
-    matches!(
-        stmt,
-        HirStmt::TupleUnpack { targets, .. }
-            if targets.iter().any(|target| matches!(
-                crate::resolve_alias_type_for_plain_call(&target.ty),
-                Type::Str | Type::LiteralStr(_)
-            ))
-    ) || matches!(
-        stmt,
-        HirStmt::AugAssign { value, .. }
-            if matches!(
-                crate::resolve_alias_type_for_plain_call(value.ty()),
-                Type::Str | Type::LiteralStr(_)
-            )
-    ) || matches!(
-        stmt,
-        HirStmt::Delete {
-            object,
-            ..
-        } if matches!(
-            object,
-            HirExpr::FieldAccess { ty, .. }
+    matches!(stmt, HirStmt::For { iter, .. } if iterates_field_storage(iter))
+        || matches!(
+            stmt,
+            HirStmt::TupleUnpack { targets, .. }
+                if targets.iter().any(|target| matches!(
+                    crate::resolve_alias_type_for_plain_call(&target.ty),
+                    Type::Str | Type::LiteralStr(_)
+                ))
+        )
+        || matches!(
+            stmt,
+            HirStmt::AugAssign { value, .. }
                 if matches!(
-                    crate::resolve_alias_type_for_plain_call(ty),
-                    Type::Dict(_, _) | Type::List(_)
+                    crate::resolve_alias_type_for_plain_call(value.ty()),
+                    Type::Str | Type::LiteralStr(_)
                 )
         )
-    )
+        || matches!(
+            stmt,
+            HirStmt::Delete {
+                object,
+                ..
+            } if matches!(
+                object,
+                HirExpr::FieldAccess { ty, .. }
+                    if matches!(
+                        crate::resolve_alias_type_for_plain_call(ty),
+                        Type::Dict(_, _) | Type::List(_)
+                    )
+            )
+        )
+}
+
+fn iterates_field_storage(iter: &HirExpr) -> bool {
+    match iter {
+        HirExpr::FieldAccess { .. } => true,
+        HirExpr::IteratorCall { args, .. } | HirExpr::Call { args, .. } if args.len() == 1 => {
+            iterates_field_storage(&args[0])
+        }
+        _ => false,
+    }
 }
 
 fn expr_shape_needs_performance_lowering(expr: &HirExpr) -> bool {

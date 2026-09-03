@@ -120,7 +120,7 @@ fn sifr_generated_collect_iterator<T: Clone + 'static>(
 ) -> Vec<T> {
     let mut collected: Vec<T> = Vec::new();
     for item in data {
-        collected.push(item.clone());
+        collected.push(item);
     }
     collected
 }
@@ -229,7 +229,7 @@ fn product<T: Clone + 'static>(
             let mut repetition: SifrInt = SifrInt::from_i64(0);
             while &repetition < &repeat {
                 for iterable in iterables.iter().cloned() {
-                    pools.push(iterable.to_vec());
+                    pools.push(iterable);
                 }
                 repetition = &repetition + &SifrInt::from_i64(1);
             }
@@ -293,7 +293,7 @@ fn product<T: Clone + 'static>(
                     let Some(value_value_7ce4fd9430e80cea) = value else {
                         return;
                     };
-                    row.push(value_value_7ce4fd9430e80cea.clone());
+                    row.push(value_value_7ce4fd9430e80cea);
                     pool_index = &pool_index + &SifrInt::from_i64(1);
                 }
                 sifr_generated_yielder.suspend(row.to_vec()).await;
@@ -456,7 +456,7 @@ fn permutations<T: Clone + 'static>(
                 let Some(value_value_7ce4fd9430e80cea) = value else {
                     return;
                 };
-                first.push(value_value_7ce4fd9430e80cea.clone());
+                first.push(value_value_7ce4fd9430e80cea);
                 index = &index + &SifrInt::from_i64(1);
             }
             sifr_generated_yielder.suspend(first.to_vec()).await;
@@ -716,7 +716,7 @@ fn permutations<T: Clone + 'static>(
                             let Some(item_value_2841a0c596d6f426) = item else {
                                 return;
                             };
-                            row.push(item_value_2841a0c596d6f426.clone());
+                            row.push(item_value_2841a0c596d6f426);
                             row_index = &row_index + &SifrInt::from_i64(1);
                         }
                         sifr_generated_yielder.suspend(row.to_vec()).await;
@@ -772,7 +772,7 @@ fn combinations<T: Clone + 'static>(
                     let Some(value_value_7ce4fd9430e80cea) = value else {
                         return;
                     };
-                    row.push(value_value_7ce4fd9430e80cea.clone());
+                    row.push(value_value_7ce4fd9430e80cea);
                 }
                 sifr_generated_yielder.suspend(row.to_vec()).await;
                 let mut position: SifrInt = &r - &SifrInt::from_i64(1);
@@ -1146,7 +1146,7 @@ impl SifrGeneratedStdlibSifrX2erandomX2eRandom {
             ));
         }
         let mut normalized: Vec<SifrInt> = Vec::new();
-        for word in state.state_words.clone().iter().cloned() {
+        for word in state.state_words.iter().cloned() {
             if &word < &SifrInt::from_i64(0)
                 || &word > &sifr_generated_const_5f4d545f574f52445f4d41534b()
             {
@@ -1178,7 +1178,7 @@ fn sifr_generated_state_word_at(words: &[SifrInt], index: SifrInt) -> SifrInt {
 fn sifr_generated_clone_words(words: &[SifrInt]) -> Vec<SifrInt> {
     let mut copied: Vec<SifrInt> = Vec::new();
     for word in words.iter().cloned() {
-        copied.push(word.clone());
+        copied.push(word);
     }
     copied
 }
@@ -1198,7 +1198,7 @@ fn sifr_generated_seed_words_from_seed(seed_value: SifrInt) -> Vec<SifrInt> {
             * &(&prev ^ &prev.floor_div_known_nonzero(&SifrInt::from_i64(1_073_741_824))))
             + &i)
             & &sifr_generated_const_5f4d545f574f52445f4d41534b();
-        words.push(next_word.clone());
+        words.push(next_word);
         i = &i + &SifrInt::from_i64(1);
     }
     words
@@ -1307,7 +1307,7 @@ fn choices<T: Clone + 'static>(items: &[T], k: SifrInt) -> Result<Vec<T>, ValueE
                 .cloned()
         };
         if let Some(picked) = picked {
-            result.push(picked.clone());
+            result.push(picked);
         } else {
             return Err(ValueError::new("choices: index out of range".to_string()));
         }
@@ -1396,13 +1396,13 @@ fn token_hex(nbytes: SifrInt) -> String {
     while &i < &(&nbytes * &SifrInt::from_i64(2)) {
         let idx: SifrInt = random_int(SifrInt::from_i64(0), SifrInt::from_i64(15));
         let ch: Option<String> = {
-            let sifr_generated_string_source = &hex_chars;
+            let sifr_generated_string_chars = hex_chars.chars().collect::<Vec<char>>();
             let sifr_generated_string_index = idx.clone();
             let sifr_generated_string_index_normalized = sifr_generated_string_index
-                .normalize_index_or_len(sifr_generated_string_source.chars().count());
-            sifr_generated_string_source
-                .chars()
-                .nth(sifr_generated_string_index_normalized)
+                .normalize_index_or_len(sifr_generated_string_chars.len());
+            sifr_generated_string_chars
+                .get(sifr_generated_string_index_normalized)
+                .copied()
         }
         .map(|character| character.to_string());
         if let Some(ch) = ch {

@@ -11,18 +11,22 @@ fn edge_pairs_text(text: &str) -> String {
             let sifr_generated_string_index = left.clone();
             let sifr_generated_string_index_normalized =
                 sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_text.len());
-            sifr_generated_chars_text.get(sifr_generated_string_index_normalized)
+            sifr_generated_chars_text
+                .get(sifr_generated_string_index_normalized)
+                .copied()
         }
-        .map(::std::string::ToString::to_string) else {
+        .map(|character| character.to_string()) else {
             break;
         };
         let Some(sifr_generated_checked_value_1) = {
             let sifr_generated_string_index = right.clone();
             let sifr_generated_string_index_normalized =
                 sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_text.len());
-            sifr_generated_chars_text.get(sifr_generated_string_index_normalized)
+            sifr_generated_chars_text
+                .get(sifr_generated_string_index_normalized)
+                .copied()
         }
-        .map(::std::string::ToString::to_string) else {
+        .map(|character| character.to_string()) else {
             break;
         };
         out.push('(');

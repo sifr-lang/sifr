@@ -123,16 +123,16 @@ fn sifr_generated_json_append_tokens(
         if str_value.is_none() {
             tokens.push(String::new());
         } else if let Some(str_value) = str_value {
-            tokens.push(str_value.to_owned());
+            tokens.push(str_value);
         }
     } else if value.kind.clone() == "array" {
         tokens.push(SifrInt::from(value.array_items.len()).to_string());
-        for item in value.array_items.as_ref().clone().iter().cloned() {
+        for item in value.array_items.iter().cloned() {
             tokens = sifr_generated_json_append_tokens(tokens, &item);
         }
     } else if value.kind.clone() == "object" {
         tokens.push(SifrInt::from(value.object_items.len()).to_string());
-        for (key, item_value) in value.object_items.as_ref().clone().iter().cloned() {
+        for (key, item_value) in value.object_items.iter().cloned() {
             tokens.push(key.to_owned());
             tokens = sifr_generated_json_append_tokens(tokens, &item_value);
         }

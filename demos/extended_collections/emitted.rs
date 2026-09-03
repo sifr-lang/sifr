@@ -139,7 +139,7 @@ mod sifr_generated_project_nominals {
     {
         type Output = SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T>;
         fn add(self, other: &SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T>) -> Self::Output {
-            let mut new_counts: HashMap<T, SifrInt> = HashMap::from([]);
+            let mut new_counts: HashMap<T, SifrInt> = HashMap::new();
             for key in Box::new(self.counts.keys().cloned().collect::<Vec<_>>().into_iter()) {
                 let a_val: Option<SifrInt> = self.counts.get(&key).cloned();
                 if let Some(a_val) = a_val {
@@ -188,7 +188,7 @@ mod sifr_generated_project_nominals {
     {
         type Output = SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T>;
         fn sub(self, other: &SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T>) -> Self::Output {
-            let mut new_counts: HashMap<T, SifrInt> = HashMap::from([]);
+            let mut new_counts: HashMap<T, SifrInt> = HashMap::new();
             for key in Box::new(self.counts.keys().cloned().collect::<Vec<_>>().into_iter()) {
                 let a_val: Option<SifrInt> = self.counts.get(&key).cloned();
                 if let Some(a_val) = a_val {
@@ -333,11 +333,11 @@ fn main() {
     println!("=== Bytes ===");
     println!(
         "\'hello\' encoded: {} bytes",
-        SifrInt::from(vec![104u8, 101u8, 108u8, 108u8, 111u8].len())
+        SifrInt::from(vec![104_u8, 101_u8, 108_u8, 108_u8, 111_u8].len())
     );
     let sifr_generated_try_res: Result<(), ParseError> = (|| {
         let roundtrip: String = ::sifr_runtime::encoding::decode_text(
-            &vec![83u8, 105u8, 102u8, 114u8],
+            &vec![83_u8, 105_u8, 102_u8, 114_u8],
             &"utf-8".to_string(),
             &"strict".to_string(),
         )
@@ -352,7 +352,7 @@ fn main() {
         println!("decode error: {}", err.message.clone());
     }
     let hex_hello: String = {
-        let sifr_generated_bytes_receiver: &[u8] = &vec![104u8, 101u8, 108u8, 108u8, 111u8];
+        let sifr_generated_bytes_receiver: &[u8] = &vec![104_u8, 101_u8, 108_u8, 108_u8, 111_u8];
         let mut sifr_generated_hex =
             String::with_capacity(sifr_generated_bytes_receiver.len().saturating_mul(2_usize));
         for sifr_generated_byte in sifr_generated_bytes_receiver {

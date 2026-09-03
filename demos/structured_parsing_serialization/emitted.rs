@@ -122,17 +122,27 @@ mod sifr_generated_project_nominals {
                     continue;
                 }
                 if line.starts_with("[") && line.ends_with("]") {
-                    let section_name: String = line
-                        .chars()
-                        .skip(::sifr_runtime::to_usize_proven(&SifrInt::from_i64(1)))
-                        .take(
-                            ::sifr_runtime::to_usize_proven(
-                                &(SifrInt::from(line.chars().count()) - SifrInt::from_i64(1)),
-                            ) - ::sifr_runtime::to_usize_proven(&SifrInt::from_i64(1)),
-                        )
-                        .collect::<String>()
-                        .trim()
-                        .to_string();
+                    let section_name: String = {
+                        let sifr_generated_slice_src = line.chars().collect::<Vec<char>>();
+                        let sifr_generated_slice_len = sifr_generated_slice_src.len();
+                        let sifr_generated_slice_start =
+                            SifrInt::from_i64(1).clamp_slice_bound(sifr_generated_slice_len);
+                        let sifr_generated_slice_stop =
+                            (&SifrInt::from(sifr_generated_slice_src.len())
+                                - &SifrInt::from_i64(1))
+                                .clamp_slice_bound(sifr_generated_slice_len);
+                        sifr_generated_slice_src
+                            .iter()
+                            .skip(sifr_generated_slice_start)
+                            .take(
+                                sifr_generated_slice_stop
+                                    .saturating_sub(sifr_generated_slice_start),
+                            )
+                            .copied()
+                            .collect::<String>()
+                    }
+                    .trim()
+                    .to_string();
                     if section_name.is_empty() {
                         return Err(SifrGeneratedStdlibSifrX2econfigparserX2eParsingError::new(
                             line_no.clone(),
@@ -158,7 +168,7 @@ mod sifr_generated_project_nominals {
                     };
                     if !self.sections.contains_key(&section_name) {
                         {
-                            let sifr_generated_assign_value = HashMap::from([]);
+                            let sifr_generated_assign_value = HashMap::new();
                             {
                                 let sifr_generated_assign_key = section_name.to_owned();
                                 self.sections
@@ -611,8 +621,9 @@ mod sifr_generated_project_nominals {
             );
             sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
                 .get(sifr_generated_string_index_normalized)
+                .copied()
         }
-        .map(::std::string::ToString::to_string);
+        .map(|character| character.to_string());
         let Some(ch) = ch else {
             return String::new();
         };
@@ -960,7 +971,7 @@ mod sifr_generated_project_nominals {
         #[must_use]
         pub fn rows(&self) -> Vec<HashMap<String, String>> {
             let mut result: Vec<HashMap<String, String>> = Vec::new();
-            for row in self.rows.clone().iter().cloned() {
+            for row in self.rows.iter().cloned() {
                 if &SifrInt::from(row.len()) == &SifrInt::from_i64(0) {
                     continue;
                 }
@@ -1043,7 +1054,7 @@ mod sifr_generated_project_nominals {
     impl SifrGeneratedStdlibSifrX2ecsvX2eDictWriter {
         pub fn writerow(&mut self, row: &HashMap<String, String>) {
             let mut ordered: Vec<String> = Vec::new();
-            for fieldname in self.fieldnames.clone().iter().cloned() {
+            for fieldname in self.fieldnames.iter().cloned() {
                 if row.contains_key(&fieldname) {
                     ordered.push(sifr_generated_dict_value_at(row, &fieldname));
                 } else {
@@ -1126,7 +1137,7 @@ mod sifr_generated_project_nominals {
         row.push(field.to_string());
     }
     pub fn sifr_generated_append_row(rows: &mut Vec<Vec<String>>, row: Vec<String>) {
-        rows.push(row.to_vec());
+        rows.push(row);
     }
     #[must_use]
     pub fn sifr_generated_list_value_at(values: &[String], index: SifrInt) -> String {
@@ -1747,7 +1758,7 @@ mod sifr_generated_project_nominals {
             if !self.is_object() {
                 return None;
             }
-            for (item_key, item_value) in self.object_items.as_ref().clone().iter().cloned() {
+            for (item_key, item_value) in self.object_items.iter().cloned() {
                 if item_key == *key {
                     return Some(item_value);
                 }
@@ -1762,7 +1773,7 @@ mod sifr_generated_project_nominals {
             if !self.is_object() {
                 return result;
             }
-            for (item_key, _item_value) in self.object_items.as_ref().clone().iter().cloned() {
+            for (item_key, _item_value) in self.object_items.iter().cloned() {
                 result.push(item_key.to_owned());
             }
             result
@@ -1809,16 +1820,16 @@ mod sifr_generated_project_nominals {
             if str_value.is_none() {
                 tokens.push(String::new());
             } else if let Some(str_value) = str_value {
-                tokens.push(str_value.to_owned());
+                tokens.push(str_value);
             }
         } else if value.kind.clone() == "array" {
             tokens.push(SifrInt::from(value.array_items.len()).to_string());
-            for item in value.array_items.as_ref().clone().iter().cloned() {
+            for item in value.array_items.iter().cloned() {
                 tokens = sifr_generated_json_append_tokens(tokens, &item);
             }
         } else if value.kind.clone() == "object" {
             tokens.push(SifrInt::from(value.object_items.len()).to_string());
-            for (key, item_value) in value.object_items.as_ref().clone().iter().cloned() {
+            for (key, item_value) in value.object_items.iter().cloned() {
                 tokens.push(key.to_owned());
                 tokens = sifr_generated_json_append_tokens(tokens, &item_value);
             }
@@ -1944,7 +1955,7 @@ mod sifr_generated_project_nominals {
             if !self.is_table() {
                 return None;
             }
-            for (item_key, item_value) in self.table_items.as_ref().clone().iter().cloned() {
+            for (item_key, item_value) in self.table_items.iter().cloned() {
                 if item_key == *key {
                     return Some(item_value);
                 }
@@ -1959,7 +1970,7 @@ mod sifr_generated_project_nominals {
             if !self.is_table() {
                 return result;
             }
-            for (item_key, _item_value) in self.table_items.as_ref().clone().iter().cloned() {
+            for (item_key, _item_value) in self.table_items.iter().cloned() {
                 result.push(item_key.to_owned());
             }
             result
@@ -2163,8 +2174,9 @@ fn sifr_generated_char_at(text: &str, index: SifrInt) -> String {
             );
         sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
             .get(sifr_generated_string_index_normalized)
+            .copied()
     }
-    .map(::std::string::ToString::to_string);
+    .map(|character| character.to_string());
     let Some(ch) = ch else {
         return String::new();
     };
@@ -2489,7 +2501,7 @@ fn sifr_generated_append_array_item(
     mut value: SifrGeneratedStdlibSifrX2ejsonX2eJsonValue,
     item: SifrGeneratedStdlibSifrX2ejsonX2eJsonValue,
 ) -> SifrGeneratedStdlibSifrX2ejsonX2eJsonValue {
-    value.array_items.push(item.clone());
+    value.array_items.push(item);
     value
 }
 fn sifr_generated_append_object_item(
@@ -2497,9 +2509,7 @@ fn sifr_generated_append_object_item(
     key: String,
     item_value: SifrGeneratedStdlibSifrX2ejsonX2eJsonValue,
 ) -> SifrGeneratedStdlibSifrX2ejsonX2eJsonValue {
-    value
-        .object_items
-        .push((key.to_owned(), item_value.clone()));
+    value.object_items.push((key, item_value));
     value
 }
 fn from_array(
@@ -2794,13 +2804,11 @@ fn sifr_generated_json_decode_value_at(
                         tokens,
                         &next_index + &SifrInt::from_i64(1),
                     )?;
-                object_value
-                    .object_items
-                    .push((key.to_owned(), item_result.0));
+                object_value.object_items.push((key, item_result.0));
                 next_index = item_result.1.clone();
                 consumed = &consumed + &SifrInt::from_i64(1);
             }
-            return Ok(Ok((object_value, next_index.clone())));
+            return Ok(Ok((object_value, next_index)));
         }
         Err(JSONDecodeError::new({
             let mut sifr_generated_concat: String = String::with_capacity(43usize + tag.len());
@@ -2866,16 +2874,16 @@ fn sifr_generated_json_append_tokens(
         if str_value.is_none() {
             tokens.push(String::new());
         } else if let Some(str_value) = str_value {
-            tokens.push(str_value.to_owned());
+            tokens.push(str_value);
         }
     } else if value.kind.clone() == "array" {
         tokens.push(SifrInt::from(value.array_items.len()).to_string());
-        for item in value.array_items.as_ref().clone().iter().cloned() {
+        for item in value.array_items.iter().cloned() {
             tokens = sifr_generated_json_append_tokens(tokens, &item);
         }
     } else if value.kind.clone() == "object" {
         tokens.push(SifrInt::from(value.object_items.len()).to_string());
-        for (key, item_value) in value.object_items.as_ref().clone().iter().cloned() {
+        for (key, item_value) in value.object_items.iter().cloned() {
             tokens.push(key.to_owned());
             tokens = sifr_generated_json_append_tokens(tokens, &item_value);
         }
@@ -3231,13 +3239,11 @@ fn sifr_generated_decode_toml_value_at(
                         tokens,
                         &next_index + &SifrInt::from_i64(1),
                     )?;
-                table_value
-                    .table_items
-                    .push((key.to_owned(), item_result.0));
+                table_value.table_items.push((key, item_result.0));
                 next_index = item_result.1.clone();
                 consumed = &consumed + &SifrInt::from_i64(1);
             }
-            return Ok(Ok((table_value, next_index.clone())));
+            return Ok(Ok((table_value, next_index)));
         }
         Err(TOMLDecodeError::new({
             let mut sifr_generated_concat: String = String::with_capacity(43usize + tag.len());
@@ -3486,10 +3492,12 @@ fn main() {
             SifrInt::from_i64(0),
         );
     dict_writer.writeheader();
-    dict_writer.writerow(&HashMap::from([
-        ("name".to_string(), "alice".to_string()),
-        ("age".to_string(), "30".to_string()),
-    ]));
+    dict_writer.writerow(&{
+        let mut sifr_generated_dict = HashMap::new();
+        sifr_generated_dict.insert("name".to_string(), "alice".to_string());
+        sifr_generated_dict.insert("age".to_string(), "30".to_string());
+        sifr_generated_dict
+    });
     println!("{}", dict_writer.getvalue());
     let mut defaults: HashMap<String, Option<String>> = HashMap::from([]);
     let encoding_value: Option<String> = Some("utf-8".to_string());

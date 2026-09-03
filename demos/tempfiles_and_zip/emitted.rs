@@ -188,9 +188,11 @@ fn mktemp_path(prefix: &str) -> String {
                 SifrInt::from(root.chars().count()) - SifrInt::from_i64(1);
             let sifr_generated_string_index_normalized =
                 sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_root.len());
-            sifr_generated_chars_root.get(sifr_generated_string_index_normalized)
+            sifr_generated_chars_root
+                .get(sifr_generated_string_index_normalized)
+                .copied()
         }
-        .map(::std::string::ToString::to_string);
+        .map(|character| character.to_string());
         if let Some(last) = last
             && last == "/"
         {
@@ -373,8 +375,16 @@ fn main() {
                     .get(sifr_generated_checked_read_normalized)
                     .cloned()
             }
-            .is_some_and(|sifr_generated_checked_value_0| {
-                sifr_generated_checked_value_0.clone() == "entry.txt"
+            .is_some_and(|_checked_value_0| {
+                ({
+                    let sifr_generated_cmp_list = &names;
+                    let sifr_generated_cmp_i = SifrInt::from_i64(0);
+                    let sifr_generated_cmp_norm =
+                        sifr_generated_cmp_i.normalize_index_or_len(sifr_generated_cmp_list.len());
+                    sifr_generated_cmp_list
+                        .get(::sifr_runtime::to_usize_proven(&sifr_generated_cmp_norm))
+                        .map(::std::string::String::as_str)
+                } == Some("entry.txt"))
             })
             && content == "payload";
         Ok(())

@@ -31,6 +31,8 @@ impl RustEmitter {
         let saved_callable_var_conventions = self.callable_var_conventions.clone();
         let saved_local_binding_types = self.local_binding_types.clone();
         let saved_string_char_cache_vars = self.string_char_cache_vars.clone();
+        let saved_body_analysis = std::mem::take(&mut self.body_analysis);
+        let saved_last_use_move_exprs = std::mem::take(&mut self.last_use_move_exprs);
         let saved_hoistable_static_dict_locals = self.hoistable_static_dict_locals.clone();
         let saved_none_widened_local_bindings = self.none_widened_local_bindings.clone();
         let saved_sifr_int_local_bindings = self.sifr_int_local_bindings.borrow().clone();
@@ -76,6 +78,8 @@ impl RustEmitter {
         let active_function_returns = self.function_sifr_int_returns_for_body(&func.body);
         *self.sifr_int_function_returns.borrow_mut() = active_function_returns;
         self.register_local_body_binding_types(&func.body);
+        (self.body_analysis, self.last_use_move_exprs) =
+            crate::body_analysis::BodyAnalysis::build(func, &self.func_signatures);
 
         let visibility = if !test_mode && module_public && func.name != "main" {
             Visibility::Pub
@@ -240,6 +244,8 @@ impl RustEmitter {
         self.callable_var_conventions = saved_callable_var_conventions;
         self.local_binding_types = saved_local_binding_types;
         self.string_char_cache_vars = saved_string_char_cache_vars;
+        self.body_analysis = saved_body_analysis;
+        self.last_use_move_exprs = saved_last_use_move_exprs;
         self.hoistable_static_dict_locals = saved_hoistable_static_dict_locals;
         self.none_widened_local_bindings = saved_none_widened_local_bindings;
         self.python_context_counter = saved_python_context_counter;

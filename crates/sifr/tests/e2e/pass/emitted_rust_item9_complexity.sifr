@@ -1,0 +1,68 @@
+from sifr.collections import deque
+
+
+def decade(value: int) -> int:
+    return value // 10
+
+
+def recursive_character(depth: int, text: str, expected: str) -> bool:
+    if depth == 0:
+        return text[1] == expected
+    return recursive_character(depth - 1, text, expected)
+
+
+def unicode_element_len(rows: list[str]) -> int:
+    if len(rows) > 0:
+        return len(rows[0])
+    return 0
+
+
+def local_string_match(words: list[str]) -> bool:
+    target: str = "abc"
+    return words[0] == target
+
+
+def closure_capture_remains_live(mut output: list[str]) -> int:
+    label: str = "x"
+
+    def describe() -> str:
+        return label
+
+    output.append(label)
+    return len(describe()) + len(output)
+
+
+def signed_zero_key(item: tuple[float, str]) -> float:
+    return item[0]
+
+
+def slice_with_user_bound(value: str, _slice_len: int) -> str:
+    return value[_slice_len:]
+
+
+def main():
+    assert recursive_character(2, "a🦀z", "🦀")
+    assert not recursive_character(1, "a🦀z", "ab")
+    assert unicode_element_len(["🦀"]) == 1
+    assert local_string_match(["abc"])
+    captured: list[str] = []
+    assert closure_capture_remains_live(captured) == 2
+    assert captured == ["x"]
+    assert slice_with_user_bound("a🦀z", 1) == "🦀z"
+
+    values: list[int] = [21, 22, 11, 12]
+    assert sorted(values, key=decade, reverse=True) == [21, 22, 11, 12]
+    signed_zeroes: list[tuple[float, str]] = [(0.0, "positive"), (-0.0, "negative")]
+    assert sorted(signed_zeroes, key=signed_zero_key) == signed_zeroes
+
+    queue: deque[int] = deque([1, 2, 3])
+    queue.appendleft(0)
+    assert queue.popleft() == 0
+    queue.reverse()
+    assert queue.to_list() == [3, 2, 1]
+
+    mapping: dict[str, str] = {}
+    key: str = "answer"
+    value: str = "forty-two"
+    mapping.setdefault(key, value)
+    assert mapping["answer"] == "forty-two"

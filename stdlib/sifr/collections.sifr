@@ -334,11 +334,7 @@ class deque[T]:
         return deque(self.to_list(), maxlen=self.maxlen)
 
     def reverse(mut self) -> None:
-        items: list[T] = self.to_list()
-        items.reverse()
-        self._data.clear()
-        for item in items:
-            self._data.append(item)
+        self._data.reverse()
 
     def rotate(mut self, n: int = 1) -> None:
         length: int = len(self._data)

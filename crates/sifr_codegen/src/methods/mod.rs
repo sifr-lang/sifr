@@ -5,6 +5,7 @@ mod common;
 mod decimal;
 mod deque;
 mod dict;
+mod dispatch;
 mod fixed_width;
 mod list;
 mod set;
@@ -14,47 +15,18 @@ use crate::RustExpr;
 use crate::helpers::is_option_type;
 use sifr_type_system::Type;
 
-pub(crate) struct LoweredMethod {
-    pub(crate) expr: RustExpr,
-}
+pub(crate) use dispatch::{
+    LoweredMethod, is_in_place_collection_method, lower_method, lower_method_with_context,
+    lower_method_with_discard_context,
+};
 
-pub(crate) fn is_in_place_collection_method(object_ty: &Type, method: &str) -> bool {
-    match object_ty.resolve_alias() {
-        Type::List(_) => matches!(
-            method,
-            "append" | "extend" | "insert" | "clear" | "reverse" | "sort" | "pop" | "remove"
-        ),
-        Type::Set(_) => matches!(
-            method,
-            "add"
-                | "update"
-                | "intersection_update"
-                | "difference_update"
-                | "symmetric_difference_update"
-                | "remove"
-                | "discard"
-                | "clear"
-                | "pop"
-        ),
-        _ => false,
-    }
-}
-
-pub(crate) fn lower_method(
-    object_ty: &Type,
-    method: &str,
-    object: &RustExpr,
-    args: &[RustExpr],
-) -> Option<LoweredMethod> {
-    lower_method_with_context(object_ty, method, object, args, false)
-}
-
-pub(crate) fn lower_method_with_context(
+fn lower_method_impl(
     object_ty: &Type,
     method: &str,
     object: &RustExpr,
     args: &[RustExpr],
     is_deque_data_field: bool,
+    discard_result: bool,
 ) -> Option<LoweredMethod> {
     let resolved_object_ty = object_ty.resolve_alias();
     let expr = match (resolved_object_ty, method) {
@@ -115,13 +87,14 @@ pub(crate) fn lower_method_with_context(
             .map(|expr| crate::helpers::normalize_safe_option_result(elem, expr)),
         (Type::List(elem), "popleft") if is_deque_data_field => deque::lower_popleft(object, args)
             .map(|expr| crate::helpers::normalize_safe_option_result(elem, expr)),
+        (Type::List(_), "reverse") if is_deque_data_field => deque::lower_reverse(object, args),
         (Type::List(_), "append") => list::lower_append(object, args),
         (Type::List(_), "extend") => list::lower_extend(object, args),
         (Type::List(_), "insert") => list::lower_insert(object, args),
         (Type::List(_), "clear") => list::lower_clear(object, args),
         (Type::List(_), "copy") => list::lower_copy(object, args),
         (Type::List(_), "reverse") => list::lower_reverse(object, args),
-        (Type::List(_), "sort") => list::lower_sort(object, args),
+        (Type::List(elem), "sort") => list::lower_sort(object, elem, args),
         (Type::List(_), "count") => list::lower_count(object, args),
         (Type::List(_), "contains") => list::lower_contains(object, args),
         (Type::List(elem), "pop") => list::lower_pop(object, args)
@@ -168,7 +141,9 @@ pub(crate) fn lower_method_with_context(
                 expr
             }
         }),
-        (Type::Dict(key, value), "setdefault") => dict::lower_setdefault(object, key, value, args),
+        (Type::Dict(key, value), "setdefault") => {
+            dict::lower_setdefault(object, key, value, args, discard_result)
+        }
         (Type::Set(_), "add") => set::lower_add(object, args),
         (Type::Set(_), "remove") => set::lower_remove(object, args),
         (Type::Set(_), "discard") => set::lower_discard(object, args),
@@ -271,6 +246,14 @@ mod tests {
         assert_eq!(
             render_expr(&option_len.expr),
             "SifrInt::from(opt.as_ref().map_or(0_usize, ::std::vec::Vec::len))"
+        );
+
+        let optional_string_len =
+            lower_method(&Type::Union(vec![Type::Str, Type::None]), "len", "opt", &[])
+                .expect("optional string len lowers");
+        assert_eq!(
+            render_expr(&optional_string_len.expr),
+            "SifrInt::from(opt.as_ref().map_or(0_usize, |value| value.chars().count()))"
         );
 
         let generic_len = lower_method(
@@ -647,7 +630,7 @@ mod tests {
         let set_ty = Type::Set(Box::new(Type::Int));
         let set_add =
             lower_method(&set_ty, "add", "s", &["1".to_string()]).expect("set add lowers");
-        assert_eq!(render_expr(&set_add.expr), "s.insert((1).clone())");
+        assert_eq!(render_expr(&set_add.expr), "s.insert(1)");
 
         let set_remove =
             lower_method(&set_ty, "remove", "s", &["1".to_string()]).expect("set remove lowers");
@@ -734,8 +717,9 @@ mod tests {
         .expect("list sort reverse lowers");
         let rendered = render_expr(&lowered.expr);
         assert!(rendered.contains("if desc"));
-        assert!(rendered.contains("xs.sort()"));
-        assert!(rendered.contains("xs.reverse()"));
+        assert!(rendered.contains("xs.sort_by"));
+        assert!(rendered.contains("__right.cmp(__left)"));
+        assert!(!rendered.contains("xs.reverse()"));
     }
 
     #[test]

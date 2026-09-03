@@ -145,9 +145,11 @@ mod sifr_generated_project_nominals {
                     SifrInt::from(root.chars().count()) - SifrInt::from_i64(1);
                 let sifr_generated_string_index_normalized = sifr_generated_string_index
                     .normalize_index_or_len(sifr_generated_chars_root.len());
-                sifr_generated_chars_root.get(sifr_generated_string_index_normalized)
+                sifr_generated_chars_root
+                    .get(sifr_generated_string_index_normalized)
+                    .copied()
             }
-            .map(::std::string::ToString::to_string);
+            .map(|character| character.to_string());
             if let Some(last) = last
                 && last == "/"
             {
@@ -489,7 +491,7 @@ fn main() {
             );
         writer.create()?;
         writer.write(&"note.txt".to_string(), &"runtime-zipfile_io".to_string())?;
-        writer.write_bytes(&"bin/raw.bin".to_string(), &vec![0u8, 1u8, 2u8])?;
+        writer.write_bytes(&"bin/raw.bin".to_string(), &vec![0_u8, 1_u8, 2_u8])?;
         let reader: SifrGeneratedStdlibSifrX2ezipfileX2eZipFile =
             SifrGeneratedStdlibSifrX2ezipfileX2eZipFile::new(
                 zip_path.to_string(),
@@ -498,10 +500,10 @@ fn main() {
             );
         let payload: Vec<u8> = reader.read_bytes(&"bin/raw.bin".to_string())?;
         let mut handle: SifrGeneratedStdlibSifrX2ezipfileX2eZipReadHandle =
-            SifrGeneratedStdlibSifrX2ezipfileX2eZipReadHandle::new(vec![97u8, 98u8, 99u8]);
+            SifrGeneratedStdlibSifrX2ezipfileX2eZipReadHandle::new(vec![97_u8, 98_u8, 99_u8]);
         let read_all_value_a00acea05f629b7d: Vec<u8> =
             handle.read_bytes(&Some((-SifrInt::from_i64(1)).clone()))?;
-        let handle_negative_ok: bool = read_all_value_a00acea05f629b7d == vec![97u8, 98u8, 99u8];
+        let handle_negative_ok: bool = read_all_value_a00acea05f629b7d == vec![97_u8, 98_u8, 99_u8];
         let sifr_generated_open_handle_result: Result<
             SifrGeneratedStdlibSifrX2ezipfileX2eZipReadHandle,
             IOError,
@@ -537,7 +539,7 @@ fn main() {
         }
         demo_ok = tempfile_ok
             && is_zipfile(&zip_path)
-            && payload == vec![0u8, 1u8, 2u8]
+            && payload == vec![0_u8, 1_u8, 2_u8]
             && handle_negative_ok
             && open_rejected
             && bad_mode_rejected;

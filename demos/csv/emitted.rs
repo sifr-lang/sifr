@@ -153,7 +153,7 @@ mod sifr_generated_project_nominals {
         #[must_use]
         pub fn rows(&self) -> Vec<Vec<String>> {
             let mut result: Vec<Vec<String>> = Vec::new();
-            for row in self.rows.clone().iter().cloned() {
+            for row in self.rows.iter().cloned() {
                 let mut copied: Vec<String> = Vec::new();
                 for field in row.iter().cloned() {
                     copied.push(field.to_string());
@@ -294,7 +294,7 @@ mod sifr_generated_project_nominals {
         row.push(field.to_string());
     }
     pub fn sifr_generated_append_row(rows: &mut Vec<Vec<String>>, row: Vec<String>) {
-        rows.push(row.to_vec());
+        rows.push(row);
     }
     #[must_use]
     pub fn sifr_generated_char_at(text: &str, index: SifrInt) -> String {
@@ -319,8 +319,9 @@ mod sifr_generated_project_nominals {
             );
             sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
                 .get(sifr_generated_string_index_normalized)
+                .copied()
         }
-        .map(::std::string::ToString::to_string);
+        .map(|character| character.to_string());
         let Some(ch) = ch else {
             return String::new();
         };
@@ -825,7 +826,7 @@ fn sifr_generated_append_field(row: &mut Vec<String>, field: String) {
     row.push(field.to_string());
 }
 fn sifr_generated_append_row(rows: &mut Vec<Vec<String>>, row: Vec<String>) {
-    rows.push(row.to_vec());
+    rows.push(row);
 }
 fn sifr_generated_char_at(text: &str, index: SifrInt) -> String {
     let sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874: Vec<
@@ -849,8 +850,9 @@ fn sifr_generated_char_at(text: &str, index: SifrInt) -> String {
             );
         sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
             .get(sifr_generated_string_index_normalized)
+            .copied()
     }
-    .map(::std::string::ToString::to_string);
+    .map(|character| character.to_string());
     let Some(ch) = ch else {
         return String::new();
     };

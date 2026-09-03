@@ -49,7 +49,7 @@ fn assert_vector_eq(actual: &[String], expected: &[String]) {
 fn main() {
     let sifr_generated_try_res: Result<(), ParseError> = (|| {
         let _bad: String = ::sifr_runtime::encoding::decode_text(
-            &vec![255u8],
+            &vec![255_u8],
             &"utf-8".to_string(),
             &"strict".to_string(),
         )

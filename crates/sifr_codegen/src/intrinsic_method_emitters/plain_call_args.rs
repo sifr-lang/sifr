@@ -315,7 +315,7 @@ impl RustEmitter {
             if (requires_shared_borrow || requires_mut_borrow)
                 && !needs_borrowed_structural_coercion
             {
-                lowered_arg = Self::clone_moved_names_in_borrowed_aggregate(arg, lowered_arg);
+                lowered_arg = self.clone_moved_names_in_borrowed_aggregate(arg, lowered_arg);
             }
             if (requires_shared_borrow || requires_mut_borrow)
                 && matches!(arg, HirExpr::FieldAccess { object, .. }
@@ -831,60 +831,7 @@ impl RustEmitter {
             return None;
         }
 
-        let chars_count_usize = crate::RustExpr::Cast {
-            expr: Box::new(crate::RustExpr::MethodCall {
-                receiver: Box::new(crate::RustExpr::MethodCall {
-                    receiver: Box::new(object_expr.clone()),
-                    method: "chars".to_string(),
-                    args: vec![],
-                }),
-                method: "count".to_string(),
-                args: vec![],
-            }),
-            ty: crate::RustType::Named("usize".to_string()),
-        };
-        let start_usize = if let Some(start_expr) = start {
-            crate::RustExpr::Cast {
-                expr: Box::new(self.try_lower_registry_expr_strict(start_expr)?),
-                ty: crate::RustType::Named("usize".to_string()),
-            }
-        } else {
-            crate::RustExpr::Cast {
-                expr: Box::new(crate::RustExpr::Literal(crate::RustLiteral::Int(0))),
-                ty: crate::RustType::Named("usize".to_string()),
-            }
-        };
-        let stop_usize = if let Some(stop_expr) = stop {
-            crate::RustExpr::Cast {
-                expr: Box::new(self.try_lower_registry_expr_strict(stop_expr)?),
-                ty: crate::RustType::Named("usize".to_string()),
-            }
-        } else {
-            chars_count_usize
-        };
-        let take_len = crate::RustExpr::BinOp {
-            left: Box::new(stop_usize),
-            op: "-".to_string(),
-            right: Box::new(start_usize.clone()),
-        };
-
-        Some(crate::RustExpr::MethodCall {
-            receiver: Box::new(crate::RustExpr::MethodCall {
-                receiver: Box::new(crate::RustExpr::MethodCall {
-                    receiver: Box::new(crate::RustExpr::MethodCall {
-                        receiver: Box::new(object_expr),
-                        method: "chars".to_string(),
-                        args: vec![],
-                    }),
-                    method: "skip".to_string(),
-                    args: vec![start_usize],
-                }),
-                method: "take".to_string(),
-                args: vec![take_len],
-            }),
-            method: "collect::<String>".to_string(),
-            args: vec![],
-        })
+        self.lower_registry_unit_string_slice(object, object_expr, start, stop)
     }
 }
 

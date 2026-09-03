@@ -68,7 +68,11 @@ impl RustEmitter {
             let _ = self.loop_else_stack.pop();
             return Ok(false);
         };
-        let checked_read_guards = self.checked_sequence_loop_guards_for_ir(condition, body)?;
+        let checked_read_guards = self
+            .checked_sequence_loop_guards_for_ir(condition, body)?
+            .into_iter()
+            .filter(|guard| !condition_refresh_keys.contains(&guard.key))
+            .collect::<Vec<_>>();
         let lowered_body = self.lower_checked_sequence_loop_body_for_ir(
             body,
             &checked_read_guards,

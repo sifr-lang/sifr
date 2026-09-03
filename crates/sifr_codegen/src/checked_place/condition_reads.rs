@@ -45,7 +45,7 @@ impl RustEmitter {
             return Ok(None);
         }
 
-        let lowered = self.lower_condition_expr_for_ir(condition);
+        let lowered = self.lower_stmt_expr_for_ir(condition);
         self.restore_checked_condition_witnesses(previous_witnesses);
         let Some(mut lowered) = lowered? else {
             return Ok(None);

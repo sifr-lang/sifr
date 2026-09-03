@@ -174,8 +174,14 @@ pub struct RustEmitter {
     pub(crate) local_binding_types: HashMap<String, Type>,
     /// Per-function cache variables for borrowed string parameters that are indexed or sliced.
     pub(crate) string_char_cache_vars: HashMap<String, String>,
+    /// One recursive prepass over the active function body, keyed by HIR block identity.
+    pub(crate) body_analysis: crate::body_analysis::BodyAnalysis,
+    /// HIR name-expression identities proven safe to move at their final owned boundary.
+    pub(crate) last_use_move_exprs: HashSet<usize>,
     /// String names that are indexed/sliced/length-read and may need a local char cache.
     pub(crate) string_char_cache_required_names: HashSet<String>,
+    /// Local string names whose loop body repeatedly reads their Unicode length.
+    pub(crate) string_char_cache_loop_local_names: HashSet<String>,
     /// Read-only local dict literals that can be materialized once per process.
     pub(crate) hoistable_static_dict_locals: HashSet<String>,
     /// Monotonic suffix for generated hoisted literal static names.
@@ -305,7 +311,10 @@ impl RustEmitter {
             callable_var_conventions: HashMap::new(),
             local_binding_types: HashMap::new(),
             string_char_cache_vars: HashMap::new(),
+            body_analysis: crate::body_analysis::BodyAnalysis::default(),
+            last_use_move_exprs: HashSet::new(),
             string_char_cache_required_names: HashSet::new(),
+            string_char_cache_loop_local_names: HashSet::new(),
             hoistable_static_dict_locals: HashSet::new(),
             hoisted_literal_counter: 0,
             none_widened_local_bindings: HashSet::new(),
@@ -343,6 +352,13 @@ impl RustEmitter {
             return Vec::new();
         }
 
+        self.collect_nested_fn_lexical_captures(func)
+    }
+
+    pub(crate) fn collect_nested_fn_lexical_captures(
+        &self,
+        func: &HirFunction,
+    ) -> Vec<NestedFnCapture> {
         let param_names = func
             .params
             .iter()

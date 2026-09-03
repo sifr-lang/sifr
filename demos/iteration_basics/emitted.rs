@@ -12,12 +12,12 @@ fn main() {
     let mut output: Vec<String> = Vec::new();
     let s: String = "hello".to_string();
     for c in s.chars().map(|c| c.to_string()) {
-        output.push(c.to_owned());
+        output.push(c);
     }
     let _d = &*SIFR_GENERATED_SIFR_HOISTED_DICT_0;
     let keys: Vec<String> = vec!["a".to_string(), "b".to_string()];
     for k in keys.iter().cloned() {
-        output.push(k.to_owned());
+        output.push(k);
     }
     println!("Iteration demo output:");
     for item in output.iter().cloned() {

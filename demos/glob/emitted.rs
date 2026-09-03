@@ -26,13 +26,13 @@ fn fnmatch(name: &str, pattern: &str) -> bool {
 fn sifr_generated_match(name: &str, mut ni: SifrInt, pattern: &str, mut pi: SifrInt) -> bool {
     while &pi < &SifrInt::from(pattern.chars().count()) {
         let pc: Option<String> = {
-            let sifr_generated_string_source = &pattern;
+            let sifr_generated_string_chars = pattern.chars().collect::<Vec<char>>();
             let sifr_generated_string_index = pi.clone();
             let sifr_generated_string_index_normalized = sifr_generated_string_index
-                .normalize_index_or_len(sifr_generated_string_source.chars().count());
-            sifr_generated_string_source
-                .chars()
-                .nth(sifr_generated_string_index_normalized)
+                .normalize_index_or_len(sifr_generated_string_chars.len());
+            sifr_generated_string_chars
+                .get(sifr_generated_string_index_normalized)
+                .copied()
         }
         .map(|character| character.to_string());
         if let Some(pc) = pc {
@@ -50,22 +50,18 @@ fn sifr_generated_match(name: &str, mut ni: SifrInt, pattern: &str, mut pi: Sifr
                 }
                 return false;
             }
-            let sifr_generated_shared_branch_condition = pc == "?";
             if &ni >= &SifrInt::from(name.chars().count()) {
                 return false;
             }
-            if sifr_generated_shared_branch_condition {
-                ni = &ni + &SifrInt::from_i64(1);
-                pi = &pi + &SifrInt::from_i64(1);
-            } else {
+            if pc != "?" {
                 let nc: Option<String> = {
-                    let sifr_generated_string_source = &name;
+                    let sifr_generated_string_chars = name.chars().collect::<Vec<char>>();
                     let sifr_generated_string_index = ni.clone();
                     let sifr_generated_string_index_normalized = sifr_generated_string_index
-                        .normalize_index_or_len(sifr_generated_string_source.chars().count());
-                    sifr_generated_string_source
-                        .chars()
-                        .nth(sifr_generated_string_index_normalized)
+                        .normalize_index_or_len(sifr_generated_string_chars.len());
+                    sifr_generated_string_chars
+                        .get(sifr_generated_string_index_normalized)
+                        .copied()
                 }
                 .map(|character| character.to_string());
                 if let Some(nc) = nc {
@@ -75,9 +71,9 @@ fn sifr_generated_match(name: &str, mut ni: SifrInt, pattern: &str, mut pi: Sifr
                 } else {
                     return false;
                 }
-                ni = &ni + &SifrInt::from_i64(1);
-                pi = &pi + &SifrInt::from_i64(1);
             }
+            ni = &ni + &SifrInt::from_i64(1);
+            pi = &pi + &SifrInt::from_i64(1);
         } else {
             return false;
         }
@@ -91,11 +87,28 @@ fn glob(directory: &str, pattern: &str) -> Vec<String> {
             let sifr_generated_string_index = SifrInt::from_i64(0);
             let sifr_generated_string_index_normalized = sifr_generated_string_index
                 .normalize_index_or_len(sifr_generated_chars_pattern.len());
-            sifr_generated_chars_pattern.get(sifr_generated_string_index_normalized)
+            sifr_generated_chars_pattern
+                .get(sifr_generated_string_index_normalized)
+                .copied()
         }
-        .map(::std::string::ToString::to_string)
-        .is_some_and(|sifr_generated_checked_value_0| {
-            sifr_generated_checked_value_0.clone() == "."
+        .map(|character| character.to_string())
+        .is_some_and(|_checked_value_0| {
+            ({
+                let sifr_generated_string_index = SifrInt::from_i64(0);
+                let sifr_generated_string_index_normalized = sifr_generated_string_index
+                    .normalize_index_or_len(sifr_generated_chars_pattern.len());
+                sifr_generated_chars_pattern
+                    .get(sifr_generated_string_index_normalized)
+                    .copied()
+            } == Some(".").and_then(|sifr_generated_cmp_s| {
+                let mut sifr_generated_cmp_chars = sifr_generated_cmp_s.chars();
+                let sifr_generated_cmp_first = sifr_generated_cmp_chars.next();
+                if sifr_generated_cmp_chars.next().is_some() {
+                    None
+                } else {
+                    sifr_generated_cmp_first
+                }
+            }))
         });
     let mut matches: Vec<String> = Vec::new();
     let sifr_generated_try_res: Result<(), IOError> = (|| {
@@ -109,16 +122,33 @@ fn glob(directory: &str, pattern: &str) -> Vec<String> {
                 let sifr_generated_string_index = SifrInt::from_i64(0);
                 let sifr_generated_string_index_normalized = sifr_generated_string_index
                     .normalize_index_or_len(sifr_generated_chars_entry.len());
-                sifr_generated_chars_entry.get(sifr_generated_string_index_normalized)
+                sifr_generated_chars_entry
+                    .get(sifr_generated_string_index_normalized)
+                    .copied()
             }
-            .map(::std::string::ToString::to_string)
-            .is_some_and(|sifr_generated_checked_value_1| {
-                sifr_generated_checked_value_1.clone() == "."
+            .map(|character| character.to_string())
+            .is_some_and(|_checked_value_1| {
+                ({
+                    let sifr_generated_string_index = SifrInt::from_i64(0);
+                    let sifr_generated_string_index_normalized = sifr_generated_string_index
+                        .normalize_index_or_len(sifr_generated_chars_entry.len());
+                    sifr_generated_chars_entry
+                        .get(sifr_generated_string_index_normalized)
+                        .copied()
+                } == Some(".").and_then(|sifr_generated_cmp_s| {
+                    let mut sifr_generated_cmp_chars = sifr_generated_cmp_s.chars();
+                    let sifr_generated_cmp_first = sifr_generated_cmp_chars.next();
+                    if sifr_generated_cmp_chars.next().is_some() {
+                        None
+                    } else {
+                        sifr_generated_cmp_first
+                    }
+                }))
             }) {
                 continue;
             }
             if fnmatch(&entry, pattern) {
-                matches.push(entry.to_owned());
+                matches.push(entry);
             }
         }
         Ok(())
@@ -129,9 +159,13 @@ fn glob(directory: &str, pattern: &str) -> Vec<String> {
         return Vec::new();
     }
     {
-        let mut sifr_generated_sorted_v = matches.iter().cloned().collect::<Vec<_>>();
-        sifr_generated_sorted_v.sort();
-        sifr_generated_sorted_v
+        let mut sifr_generated_sorted_values = matches.iter().cloned().collect::<Vec<_>>();
+        sifr_generated_sorted_values.sort_by(
+            |sifr_generated_sorted_left, sifr_generated_sorted_right| {
+                sifr_generated_sorted_left.cmp(&sifr_generated_sorted_right)
+            },
+        );
+        sifr_generated_sorted_values
     }
 }
 fn run_command(cmd: &str) -> Result<String, IOError> {
@@ -185,6 +219,10 @@ fn sifr_generated_io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
     };
     IOError { message: msg, kind }
 }
+#[expect(
+    clippy::too_many_lines,
+    reason = "one generated Rust function preserves one typed Sifr function"
+)]
 fn collect_glob_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = Vec::new();
     let base: String = {
@@ -209,8 +247,16 @@ fn collect_glob_actual() -> Vec<bool> {
                     .get(sifr_generated_checked_read_normalized)
                     .cloned()
             }
-            .is_some_and(|sifr_generated_checked_value_0| {
-                sifr_generated_checked_value_0.clone() == "a.txt"
+            .is_some_and(|_checked_value_0| {
+                ({
+                    let sifr_generated_cmp_list = &txt;
+                    let sifr_generated_cmp_i = SifrInt::from_i64(0);
+                    let sifr_generated_cmp_norm =
+                        sifr_generated_cmp_i.normalize_index_or_len(sifr_generated_cmp_list.len());
+                    sifr_generated_cmp_list
+                        .get(::sifr_runtime::to_usize_proven(&sifr_generated_cmp_norm))
+                        .map(::std::string::String::as_str)
+                } == Some("a.txt"))
             })
             && {
                 let sifr_generated_checked_read_collection = &txt;
@@ -221,8 +267,16 @@ fn collect_glob_actual() -> Vec<bool> {
                     .get(sifr_generated_checked_read_normalized)
                     .cloned()
             }
-            .is_some_and(|sifr_generated_checked_value_1| {
-                sifr_generated_checked_value_1.clone() == "b.txt"
+            .is_some_and(|_checked_value_1| {
+                ({
+                    let sifr_generated_cmp_list = &txt;
+                    let sifr_generated_cmp_i = SifrInt::from_i64(1);
+                    let sifr_generated_cmp_norm =
+                        sifr_generated_cmp_i.normalize_index_or_len(sifr_generated_cmp_list.len());
+                    sifr_generated_cmp_list
+                        .get(::sifr_runtime::to_usize_proven(&sifr_generated_cmp_norm))
+                        .map(::std::string::String::as_str)
+                } == Some("b.txt"))
             });
         actual.push(txt_ok);
         let hidden: Vec<String> = glob(&base, &".*.txt".to_string());
@@ -235,8 +289,16 @@ fn collect_glob_actual() -> Vec<bool> {
                 .get(sifr_generated_checked_read_normalized)
                 .cloned()
         }
-        .is_some_and(|sifr_generated_checked_value_2| {
-            sifr_generated_checked_value_2.clone() == ".hidden.txt"
+        .is_some_and(|_checked_value_2| {
+            ({
+                let sifr_generated_cmp_list = &hidden;
+                let sifr_generated_cmp_i = SifrInt::from_i64(0);
+                let sifr_generated_cmp_norm =
+                    sifr_generated_cmp_i.normalize_index_or_len(sifr_generated_cmp_list.len());
+                sifr_generated_cmp_list
+                    .get(::sifr_runtime::to_usize_proven(&sifr_generated_cmp_norm))
+                    .map(::std::string::String::as_str)
+            } == Some(".hidden.txt"))
         });
         actual.push(hidden_ok);
         let wildcard_q: Vec<String> = glob(&base, &"?.txt".to_string());
@@ -250,8 +312,16 @@ fn collect_glob_actual() -> Vec<bool> {
                     .get(sifr_generated_checked_read_normalized)
                     .cloned()
             }
-            .is_some_and(|sifr_generated_checked_value_3| {
-                sifr_generated_checked_value_3.clone() == "a.txt"
+            .is_some_and(|_checked_value_3| {
+                ({
+                    let sifr_generated_cmp_list = &wildcard_q;
+                    let sifr_generated_cmp_i = SifrInt::from_i64(0);
+                    let sifr_generated_cmp_norm =
+                        sifr_generated_cmp_i.normalize_index_or_len(sifr_generated_cmp_list.len());
+                    sifr_generated_cmp_list
+                        .get(::sifr_runtime::to_usize_proven(&sifr_generated_cmp_norm))
+                        .map(::std::string::String::as_str)
+                } == Some("a.txt"))
             })
             && {
                 let sifr_generated_checked_read_collection = &wildcard_q;
@@ -262,8 +332,16 @@ fn collect_glob_actual() -> Vec<bool> {
                     .get(sifr_generated_checked_read_normalized)
                     .cloned()
             }
-            .is_some_and(|sifr_generated_checked_value_4| {
-                sifr_generated_checked_value_4.clone() == "b.txt"
+            .is_some_and(|_checked_value_4| {
+                ({
+                    let sifr_generated_cmp_list = &wildcard_q;
+                    let sifr_generated_cmp_i = SifrInt::from_i64(1);
+                    let sifr_generated_cmp_norm =
+                        sifr_generated_cmp_i.normalize_index_or_len(sifr_generated_cmp_list.len());
+                    sifr_generated_cmp_list
+                        .get(::sifr_runtime::to_usize_proven(&sifr_generated_cmp_norm))
+                        .map(::std::string::String::as_str)
+                } == Some("b.txt"))
             });
         actual.push(wildcard_q_ok);
         let none: Vec<String> = glob(&base, &"*.csv".to_string());

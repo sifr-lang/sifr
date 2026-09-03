@@ -364,7 +364,7 @@ mod sifr_generated_project_nominals {
             if !self.is_table() {
                 return None;
             }
-            for (item_key, item_value) in self.table_items.as_ref().clone().iter().cloned() {
+            for (item_key, item_value) in self.table_items.iter().cloned() {
                 if item_key == *key {
                     return Some(item_value);
                 }
@@ -379,7 +379,7 @@ mod sifr_generated_project_nominals {
             if !self.is_table() {
                 return result;
             }
-            for (item_key, _item_value) in self.table_items.as_ref().clone().iter().cloned() {
+            for (item_key, _item_value) in self.table_items.iter().cloned() {
                 result.push(item_key.to_owned());
             }
             result
@@ -774,9 +774,11 @@ fn sifr_generated_substring(value: &str, start: SifrInt, end: SifrInt) -> String
             let sifr_generated_string_index = i.clone();
             let sifr_generated_string_index_normalized = sifr_generated_string_index
                 .normalize_index_or_len(sifr_generated_chars_value.len());
-            sifr_generated_chars_value.get(sifr_generated_string_index_normalized)
+            sifr_generated_chars_value
+                .get(sifr_generated_string_index_normalized)
+                .copied()
         }
-        .map(::std::string::ToString::to_string);
+        .map(|character| character.to_string());
         if let Some(ch) = ch {
             result.push_str(ch.as_str());
         }
@@ -792,57 +794,137 @@ fn sifr_generated_parse_datetime_iso(
     value: &str,
 ) -> Result<(SifrInt, SifrInt, SifrInt, SifrInt, SifrInt, SifrInt), ValueError> {
     let sifr_generated_chars_value: Vec<char> = value.chars().collect::<Vec<char>>();
-    let Some(sifr_generated_checked_value_2) = {
+    let Some(_checked_value_2) = {
         let sifr_generated_string_index = SifrInt::from_i64(4);
         let sifr_generated_string_index_normalized =
             sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_value.len());
-        sifr_generated_chars_value.get(sifr_generated_string_index_normalized)
+        sifr_generated_chars_value
+            .get(sifr_generated_string_index_normalized)
+            .copied()
     }
-    .map(::std::string::ToString::to_string) else {
+    .map(|character| character.to_string()) else {
         return Err(ValueError::new("invalid datetime string".to_string()));
     };
-    let Some(sifr_generated_checked_value_3) = {
+    let Some(_checked_value_3) = {
         let sifr_generated_string_index = SifrInt::from_i64(7);
         let sifr_generated_string_index_normalized =
             sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_value.len());
-        sifr_generated_chars_value.get(sifr_generated_string_index_normalized)
+        sifr_generated_chars_value
+            .get(sifr_generated_string_index_normalized)
+            .copied()
     }
-    .map(::std::string::ToString::to_string) else {
+    .map(|character| character.to_string()) else {
         return Err(ValueError::new("invalid datetime string".to_string()));
     };
-    let Some(sifr_generated_checked_value_4) = {
+    let Some(_checked_value_4) = {
         let sifr_generated_string_index = SifrInt::from_i64(10);
         let sifr_generated_string_index_normalized =
             sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_value.len());
-        sifr_generated_chars_value.get(sifr_generated_string_index_normalized)
+        sifr_generated_chars_value
+            .get(sifr_generated_string_index_normalized)
+            .copied()
     }
-    .map(::std::string::ToString::to_string) else {
+    .map(|character| character.to_string()) else {
         return Err(ValueError::new("invalid datetime string".to_string()));
     };
-    let Some(sifr_generated_checked_value_5) = {
+    let Some(_checked_value_5) = {
         let sifr_generated_string_index = SifrInt::from_i64(13);
         let sifr_generated_string_index_normalized =
             sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_value.len());
-        sifr_generated_chars_value.get(sifr_generated_string_index_normalized)
+        sifr_generated_chars_value
+            .get(sifr_generated_string_index_normalized)
+            .copied()
     }
-    .map(::std::string::ToString::to_string) else {
+    .map(|character| character.to_string()) else {
         return Err(ValueError::new("invalid datetime string".to_string()));
     };
-    let Some(sifr_generated_checked_value_6) = {
+    let Some(_checked_value_6) = {
         let sifr_generated_string_index = SifrInt::from_i64(16);
         let sifr_generated_string_index_normalized =
             sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_value.len());
-        sifr_generated_chars_value.get(sifr_generated_string_index_normalized)
+        sifr_generated_chars_value
+            .get(sifr_generated_string_index_normalized)
+            .copied()
     }
-    .map(::std::string::ToString::to_string) else {
+    .map(|character| character.to_string()) else {
         return Err(ValueError::new("invalid datetime string".to_string()));
     };
-    if sifr_generated_checked_value_2.clone() != "-"
-        || sifr_generated_checked_value_3.clone() != "-"
-        || sifr_generated_checked_value_4.clone() != "T"
-        || sifr_generated_checked_value_5.clone() != ":"
-        || sifr_generated_checked_value_6.clone() != ":"
-    {
+    if {
+        let sifr_generated_string_index = SifrInt::from_i64(4);
+        let sifr_generated_string_index_normalized =
+            sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_value.len());
+        sifr_generated_chars_value
+            .get(sifr_generated_string_index_normalized)
+            .copied()
+    } != Some("-").and_then(|sifr_generated_cmp_s| {
+        let mut sifr_generated_cmp_chars = sifr_generated_cmp_s.chars();
+        let sifr_generated_cmp_first = sifr_generated_cmp_chars.next();
+        if sifr_generated_cmp_chars.next().is_some() {
+            None
+        } else {
+            sifr_generated_cmp_first
+        }
+    }) || {
+        let sifr_generated_string_index = SifrInt::from_i64(7);
+        let sifr_generated_string_index_normalized =
+            sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_value.len());
+        sifr_generated_chars_value
+            .get(sifr_generated_string_index_normalized)
+            .copied()
+    } != Some("-").and_then(|sifr_generated_cmp_s| {
+        let mut sifr_generated_cmp_chars = sifr_generated_cmp_s.chars();
+        let sifr_generated_cmp_first = sifr_generated_cmp_chars.next();
+        if sifr_generated_cmp_chars.next().is_some() {
+            None
+        } else {
+            sifr_generated_cmp_first
+        }
+    }) || {
+        let sifr_generated_string_index = SifrInt::from_i64(10);
+        let sifr_generated_string_index_normalized =
+            sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_value.len());
+        sifr_generated_chars_value
+            .get(sifr_generated_string_index_normalized)
+            .copied()
+    } != Some("T").and_then(|sifr_generated_cmp_s| {
+        let mut sifr_generated_cmp_chars = sifr_generated_cmp_s.chars();
+        let sifr_generated_cmp_first = sifr_generated_cmp_chars.next();
+        if sifr_generated_cmp_chars.next().is_some() {
+            None
+        } else {
+            sifr_generated_cmp_first
+        }
+    }) || {
+        let sifr_generated_string_index = SifrInt::from_i64(13);
+        let sifr_generated_string_index_normalized =
+            sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_value.len());
+        sifr_generated_chars_value
+            .get(sifr_generated_string_index_normalized)
+            .copied()
+    } != Some(":").and_then(|sifr_generated_cmp_s| {
+        let mut sifr_generated_cmp_chars = sifr_generated_cmp_s.chars();
+        let sifr_generated_cmp_first = sifr_generated_cmp_chars.next();
+        if sifr_generated_cmp_chars.next().is_some() {
+            None
+        } else {
+            sifr_generated_cmp_first
+        }
+    }) || {
+        let sifr_generated_string_index = SifrInt::from_i64(16);
+        let sifr_generated_string_index_normalized =
+            sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_value.len());
+        sifr_generated_chars_value
+            .get(sifr_generated_string_index_normalized)
+            .copied()
+    } != Some(":").and_then(|sifr_generated_cmp_s| {
+        let mut sifr_generated_cmp_chars = sifr_generated_cmp_s.chars();
+        let sifr_generated_cmp_first = sifr_generated_cmp_chars.next();
+        if sifr_generated_cmp_chars.next().is_some() {
+            None
+        } else {
+            sifr_generated_cmp_first
+        }
+    }) {
         return Err(ValueError::new("invalid datetime string".to_string()));
     }
     let sifr_generated_try_res: Result<
@@ -891,14 +973,7 @@ fn sifr_generated_parse_datetime_iso(
         .map_err(|e| ParseError {
             message: e.to_string(),
         })?;
-        Ok(Ok((
-            year.clone(),
-            month.clone(),
-            day.clone(),
-            hour.clone(),
-            minute.clone(),
-            second.clone(),
-        )))
+        Ok(Ok((year, month, day, hour, minute, second)))
     })();
     sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
         let _e_5f65 = sifr_generated_try_err.clone();
@@ -925,11 +1000,18 @@ fn sifr_generated_timezone_offset_from_text(text: &str) -> Result<SifrInt, Value
         let sifr_generated_string_index = SifrInt::from_i64(6);
         let sifr_generated_string_index_normalized =
             sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_text.len());
-        sifr_generated_chars_text.get(sifr_generated_string_index_normalized)
-    }
-    .map(::std::string::ToString::to_string)
-        != Some(":".to_string())
-    {
+        sifr_generated_chars_text
+            .get(sifr_generated_string_index_normalized)
+            .copied()
+    } != Some(":").and_then(|sifr_generated_cmp_s| {
+        let mut sifr_generated_cmp_chars = sifr_generated_cmp_s.chars();
+        let sifr_generated_cmp_first = sifr_generated_cmp_chars.next();
+        if sifr_generated_cmp_chars.next().is_some() {
+            None
+        } else {
+            sifr_generated_cmp_first
+        }
+    }) {
         return Err(ValueError::new("invalid timezone string".to_string()));
     }
     let sifr_generated_try_res: Result<Result<SifrInt, ValueError>, ParseError> = (|| {
@@ -1332,7 +1414,7 @@ fn get_close_matches(
             }
         };
         if score_value_c10e63fbe7f624f5_binding >= cutoff {
-            result.push(candidate.to_owned());
+            result.push(candidate);
             scores.push(score_value_c10e63fbe7f624f5_binding);
         }
     }
@@ -1384,7 +1466,7 @@ fn get_close_matches(
                     .cloned()
             };
             if let Some(val) = val {
-                top.push(val.to_owned());
+                top.push(val);
             }
         }
         count = &count + &SifrInt::from_i64(1);
@@ -1510,16 +1592,20 @@ fn sifr_generated_longest_common_substring_range(
                     let sifr_generated_string_index = &i + &k;
                     let sifr_generated_string_index_normalized = sifr_generated_string_index
                         .normalize_index_or_len(sifr_generated_chars_a.len());
-                    sifr_generated_chars_a.get(sifr_generated_string_index_normalized)
+                    sifr_generated_chars_a
+                        .get(sifr_generated_string_index_normalized)
+                        .copied()
                 }
-                .map(::std::string::ToString::to_string);
+                .map(|character| character.to_string());
                 let bj: Option<String> = {
                     let sifr_generated_string_index = &j + &k;
                     let sifr_generated_string_index_normalized = sifr_generated_string_index
                         .normalize_index_or_len(sifr_generated_chars_b.len());
-                    sifr_generated_chars_b.get(sifr_generated_string_index_normalized)
+                    sifr_generated_chars_b
+                        .get(sifr_generated_string_index_normalized)
+                        .copied()
                 }
-                .map(::std::string::ToString::to_string);
+                .map(|character| character.to_string());
                 let (Some(ai), Some(bj)) = (ai, bj) else {
                     k = &k + &SifrInt::from_i64(1);
                     continue;
@@ -1613,21 +1699,19 @@ fn sifr_generated_matching_blocks(a: &str, b: &str) -> Vec<(SifrInt, SifrInt, Si
             let left_a_end: SifrInt = ai.clone();
             let left_b_end_value_2d7948a8a27a7433: SifrInt = bj.clone();
             if &a_start_value < &left_a_end && &b_start_value < &left_b_end_value_2d7948a8a27a7433 {
-                pending_a_start.push(a_start_value.clone());
-                pending_a_end.push(left_a_end.clone());
-                pending_b_start_value_5010e609c75d1d22.push(b_start_value.clone());
-                pending_b_end_value_9589c6af9c1daa47
-                    .push(left_b_end_value_2d7948a8a27a7433.clone());
+                pending_a_start.push(a_start_value);
+                pending_a_end.push(left_a_end);
+                pending_b_start_value_5010e609c75d1d22.push(b_start_value);
+                pending_b_end_value_9589c6af9c1daa47.push(left_b_end_value_2d7948a8a27a7433);
             }
             let right_a_start: SifrInt = &ai + &size;
             let right_b_start_value_acd2b29c16778c53: SifrInt = &bj + &size;
             if &right_a_start < &a_end_value && &right_b_start_value_acd2b29c16778c53 < &b_end_value
             {
-                pending_a_start.push(right_a_start.clone());
-                pending_a_end.push(a_end_value.clone());
-                pending_b_start_value_5010e609c75d1d22
-                    .push(right_b_start_value_acd2b29c16778c53.clone());
-                pending_b_end_value_9589c6af9c1daa47.push(b_end_value.clone());
+                pending_a_start.push(right_a_start);
+                pending_a_end.push(a_end_value);
+                pending_b_start_value_5010e609c75d1d22.push(right_b_start_value_acd2b29c16778c53);
+                pending_b_end_value_9589c6af9c1daa47.push(b_end_value);
             }
         }
     }
@@ -1814,15 +1898,9 @@ fn is_valid_ipv4(addr: &str) -> bool {
     }
     for part in parts.iter().cloned() {
         let sifr_generated_chars_part: Vec<char> = part.chars().collect::<Vec<char>>();
-        let Some(_checked_value_0) = {
-            let sifr_generated_string_index = SifrInt::from_i64(0);
-            let sifr_generated_string_index_normalized =
-                sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_part.len());
-            sifr_generated_chars_part.get(sifr_generated_string_index_normalized)
-        }
-        .map(::std::string::ToString::to_string) else {
+        if &SifrInt::from(sifr_generated_chars_part.len()) == &SifrInt::from_i64(0) {
             return false;
-        };
+        }
         if &SifrInt::from(sifr_generated_chars_part.len()) > &SifrInt::from_i64(3) {
             return false;
         }
@@ -1831,9 +1909,11 @@ fn is_valid_ipv4(addr: &str) -> bool {
                 let sifr_generated_string_index = SifrInt::from_i64(0);
                 let sifr_generated_string_index_normalized = sifr_generated_string_index
                     .normalize_index_or_len(sifr_generated_chars_part.len());
-                sifr_generated_chars_part.get(sifr_generated_string_index_normalized)
+                sifr_generated_chars_part
+                    .get(sifr_generated_string_index_normalized)
+                    .copied()
             }
-            .map(::std::string::ToString::to_string);
+            .map(|character| character.to_string());
             if first_digit.is_some() && first_digit == Some("0".to_string()) {
                 return false;
             }
@@ -1857,9 +1937,11 @@ fn sifr_generated_parse_int(s: &str) -> SifrInt {
             let sifr_generated_string_index = i.clone();
             let sifr_generated_string_index_normalized =
                 sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_s.len());
-            sifr_generated_chars_s.get(sifr_generated_string_index_normalized)
+            sifr_generated_chars_s
+                .get(sifr_generated_string_index_normalized)
+                .copied()
         }
-        .map(::std::string::ToString::to_string);
+        .map(|character| character.to_string());
         if let Some(ch) = ch {
             if ch == "0" {
                 result = &result * &SifrInt::from_i64(10);
@@ -2041,9 +2123,11 @@ fn join_path(base: &str, child: &str) -> String {
             SifrInt::from(base.chars().count()) - SifrInt::from_i64(1);
         let sifr_generated_string_index_normalized =
             sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_base.len());
-        sifr_generated_chars_base.get(sifr_generated_string_index_normalized)
+        sifr_generated_chars_base
+            .get(sifr_generated_string_index_normalized)
+            .copied()
     }
-    .map(::std::string::ToString::to_string);
+    .map(|character| character.to_string());
     if let Some(last) = last
         && last.as_str() == "/".to_string().as_str()
     {
@@ -2071,9 +2155,11 @@ fn basename(path: &str) -> String {
             let sifr_generated_string_index = i.clone();
             let sifr_generated_string_index_normalized =
                 sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_path.len());
-            sifr_generated_chars_path.get(sifr_generated_string_index_normalized)
+            sifr_generated_chars_path
+                .get(sifr_generated_string_index_normalized)
+                .copied()
         }
-        .map(::std::string::ToString::to_string);
+        .map(|character| character.to_string());
         if let Some(ch) = ch
             && ch == "/"
         {
@@ -2109,9 +2195,11 @@ fn extension(path: &str) -> String {
             let sifr_generated_string_index = i.clone();
             let sifr_generated_string_index_normalized =
                 sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_path.len());
-            sifr_generated_chars_path.get(sifr_generated_string_index_normalized)
+            sifr_generated_chars_path
+                .get(sifr_generated_string_index_normalized)
+                .copied()
         }
-        .map(::std::string::ToString::to_string);
+        .map(|character| character.to_string());
         if let Some(ch) = ch {
             if ch == "." {
                 return {
@@ -2454,13 +2542,11 @@ fn sifr_generated_decode_toml_value_at(
                         tokens,
                         &next_index + &SifrInt::from_i64(1),
                     )?;
-                table_value
-                    .table_items
-                    .push((key.to_owned(), item_result.0));
+                table_value.table_items.push((key, item_result.0));
                 next_index = item_result.1.clone();
                 consumed = &consumed + &SifrInt::from_i64(1);
             }
-            return Ok(Ok((table_value, next_index.clone())));
+            return Ok(Ok((table_value, next_index)));
         }
         Err(TOMLDecodeError::new({
             let mut sifr_generated_concat: String = String::with_capacity(43usize + tag.len());

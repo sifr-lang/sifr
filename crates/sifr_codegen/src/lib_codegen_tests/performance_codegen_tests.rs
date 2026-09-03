@@ -22,7 +22,7 @@ def count_marks(text: str) -> int:
 }
 
 #[test]
-fn recursive_string_param_indexing_uses_nth_not_per_call_vec_cache() {
+fn recursive_string_param_indexing_materializes_chars_once_per_access() {
     let generated = generate_rust_from_source(
         r#"
 def score(mask: int, text: str) -> int:
@@ -38,7 +38,12 @@ def score(mask: int, text: str) -> int:
         !generated.contains("let mut __sifr_chars_text"),
         "{generated}"
     );
-    assert!(generated.contains(".chars().nth"), "{generated}");
+    assert!(
+        generated.contains(".chars().collect::<Vec<char>>()"),
+        "{generated}"
+    );
+    assert!(!generated.contains(".chars().count()"), "{generated}");
+    assert!(!generated.contains(".chars().nth("), "{generated}");
 }
 
 #[test]
@@ -52,10 +57,10 @@ def has_prefix_at(text: str, prefix: str, start: int) -> bool:
     );
 
     assert!(generated.contains("__sifr_chars_text"));
-    assert!(generated.contains("let _slice_src = &__sifr_chars_text"));
-    assert!(generated.contains("_slice_src.len()"));
-    assert!(!generated.contains("_slice_src.chars().skip"));
-    assert!(!generated.contains("_slice_src.chars().count()"));
+    assert!(generated.contains("let __sifr_slice_src = &__sifr_chars_text"));
+    assert!(generated.contains("__sifr_slice_src.len()"));
+    assert!(!generated.contains("__sifr_slice_src.chars().skip"));
+    assert!(!generated.contains("__sifr_slice_src.chars().count()"));
 }
 
 #[test]
@@ -166,7 +171,10 @@ def same(mapped: dict[str, str], key: str, value: str) -> bool:
 "#,
     );
 
-    assert!(generated.contains("mapped.get(key).map"), "{generated}");
+    assert!(
+        generated.contains("mapped.get(key).map(::std::string::String::as_str)"),
+        "{generated}"
+    );
     assert!(generated.contains("Some(value)"), "{generated}");
     assert!(generated.contains(".is_some_and("), "{generated}");
 }
@@ -308,7 +316,7 @@ def collect(values: list[str]) -> int:
     );
 
     assert!(
-        generated.contains("selected.insert((current).clone())"),
+        generated.contains("selected.insert(current.to_owned())"),
         "{generated}"
     );
     assert!(generated.contains("seen.insert(current)"), "{generated}");
@@ -479,7 +487,7 @@ def partitions(text: str) -> int:
 }
 
 #[test]
-fn local_string_slicing_uses_chars_without_copied() {
+fn local_string_slicing_materializes_characters_once() {
     let generated = generate_rust_from_source(
         r#"
 def trim_one(text: str) -> str:
@@ -488,9 +496,13 @@ def trim_one(text: str) -> str:
 "#,
     );
 
-    assert!(generated.contains("_slice_src.chars().skip"));
-    assert!(generated.contains("let _slice_src = &local"));
-    assert!(!generated.contains("_slice_src.chars().skip(_slice_start_i64 as usize).take((_slice_stop_i64 - _slice_start_i64).max(0) as usize).copied()"));
+    assert!(
+        generated.contains("__sifr_slice_src.iter().skip"),
+        "{generated}"
+    );
+    assert_eq!(generated.matches("local.chars()").count(), 1, "{generated}");
+    assert!(generated.contains("collect::<Vec<char>>()"), "{generated}");
+    assert!(!generated.contains("local.chars().count()"), "{generated}");
 }
 
 #[test]
@@ -504,11 +516,15 @@ def shrink() -> str:
 "#,
     );
 
-    assert!(generated.contains("let _slice_src = &value"), "{generated}");
     assert!(
-        !generated.contains("let _slice_src = value;"),
+        generated.contains("let __sifr_slice_src = value.chars().collect::<Vec<char>>()"),
         "{generated}"
     );
+    assert!(
+        generated.contains("SifrInt::from(__sifr_slice_src.len())"),
+        "{generated}"
+    );
+    assert!(!generated.contains("value.chars().count()"), "{generated}");
 }
 
 #[test]
@@ -790,9 +806,17 @@ class Buckets:
         "{generated}"
     );
     assert!(generated.contains("__sifr_bucket.pop()"));
-    assert!(generated.contains("self.values.get(&key).map_or"));
-    assert!(generated.contains("if let Some(__sifr_checked_value_"));
+    assert!(
+        generated.contains(".is_some_and(|__sifr_checked_value_"),
+        "{generated}"
+    );
     assert!(generated.contains("self.values.get(key)"));
+    assert_eq!(
+        generated.matches("self.values.get(").count(),
+        1,
+        "{generated}"
+    );
+    assert!(!generated.contains("map_or_else"), "{generated}");
     assert!(!generated.contains(".entry("), "{generated}");
     assert!(!generated.contains("self.values.clone().get_mut"));
     assert!(!generated.contains("self.values.clone().contains_key"));
@@ -821,9 +845,11 @@ class Tweets:
 
     assert!(generated.contains(".get("));
     assert!(
-        generated.contains(
-            "__sifr_checked_read_collection.get(__sifr_checked_read_normalized).cloned()"
-        ),
+        generated.contains("self.values.get(&key).and_then(|__sifr_bucket|"),
+        "{generated}"
+    );
+    assert!(
+        generated.contains("__sifr_bucket.get(__sifr_index_norm).cloned()"),
         "{generated}"
     );
     assert!(

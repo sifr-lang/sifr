@@ -1,6 +1,4 @@
-use super::{
-    HirExpr, HirStmt, RustEmitter, RustExpr, RustStmt, Type, is_none_like_result_value, queries,
-};
+use super::{HirExpr, HirStmt, RustEmitter, RustExpr, RustStmt, Type, is_none_like_result_value};
 impl RustEmitter {
     pub(crate) fn try_closure_return_value_for_ir(
         &self,
@@ -266,7 +264,7 @@ impl RustEmitter {
                 needed_variants.extend(other_variants.iter().map(|(variant, _)| variant.clone()));
                 let enum_name = self.resolve_union_enum_name(&enum_name, &needed_variants);
 
-                let then_mutated = queries::collect_mutated_vars(then_body, None);
+                let then_mutated = self.body_analysis.mutated_in(then_body);
                 let then_binding = if then_mutated.contains(&var_name) {
                     format!("mut {var_name}")
                 } else {
@@ -284,7 +282,7 @@ impl RustEmitter {
                 }];
 
                 if let Some(else_body) = else_body {
-                    let else_mutated = queries::collect_mutated_vars(else_body, None);
+                    let else_mutated = self.body_analysis.mutated_in(else_body);
                     let else_binding = if else_mutated.contains(&var_name) {
                         format!("mut {var_name}")
                     } else {

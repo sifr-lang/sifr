@@ -29,13 +29,15 @@ impl RustEmitter {
     }
 
     pub(crate) fn clone_moved_names_in_borrowed_aggregate(
+        &self,
         arg: &HirExpr,
         lowered: crate::RustExpr,
     ) -> crate::RustExpr {
-        Self::clone_moved_names_in_borrowed_aggregate_inner(arg, lowered, false)
+        self.clone_moved_names_in_borrowed_aggregate_inner(arg, lowered, false)
     }
 
     fn clone_moved_names_in_borrowed_aggregate_inner(
+        &self,
         arg: &HirExpr,
         lowered: crate::RustExpr,
         in_aggregate: bool,
@@ -47,7 +49,7 @@ impl RustEmitter {
                         .iter()
                         .zip(items)
                         .map(|(element, item)| {
-                            Self::clone_moved_names_in_borrowed_aggregate_inner(element, item, true)
+                            self.clone_moved_names_in_borrowed_aggregate_inner(element, item, true)
                         })
                         .collect(),
                 )
@@ -58,7 +60,7 @@ impl RustEmitter {
                         .iter()
                         .zip(items)
                         .map(|(element, item)| {
-                            Self::clone_moved_names_in_borrowed_aggregate_inner(element, item, true)
+                            self.clone_moved_names_in_borrowed_aggregate_inner(element, item, true)
                         })
                         .collect(),
                 )
@@ -66,6 +68,9 @@ impl RustEmitter {
             (HirExpr::Name { ty, .. }, lowered_expr)
                 if in_aggregate
                     && !crate::helpers::is_copy_type_for_codegen(ty)
+                    && !self
+                        .last_use_move_exprs
+                        .contains(&crate::body_analysis::expr_key(arg))
                     && !matches!(&lowered_expr, crate::RustExpr::Clone(_))
                     && !matches!(
                         &lowered_expr,

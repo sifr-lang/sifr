@@ -259,7 +259,7 @@ fn drain_sorted(values: &[SifrInt]) -> Vec<SifrInt> {
     while !heap.is_empty() {
         let item: Option<SifrInt> = heappop(&mut heap);
         if let Some(item) = item.clone() {
-            order.push(item.clone());
+            order.push(item);
         }
     }
     order

@@ -221,6 +221,10 @@ fn sifr_generated_io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
     };
     IOError { message: msg, kind }
 }
+#[expect(
+    clippy::too_many_lines,
+    reason = "one generated Rust function preserves one typed Sifr function"
+)]
 fn main() {
     let path: String = "/tmp/sifr_runtime_file_streams_demo.txt".to_string();
     let mut text_ok: bool = false;
@@ -239,8 +243,16 @@ fn main() {
                     .get(sifr_generated_checked_read_normalized)
                     .cloned()
             }
-            .is_some_and(|sifr_generated_checked_value_0| {
-                sifr_generated_checked_value_0.clone() == "alpha"
+            .is_some_and(|_checked_value_0| {
+                ({
+                    let sifr_generated_cmp_list = &lines;
+                    let sifr_generated_cmp_i = SifrInt::from_i64(0);
+                    let sifr_generated_cmp_norm =
+                        sifr_generated_cmp_i.normalize_index_or_len(sifr_generated_cmp_list.len());
+                    sifr_generated_cmp_list
+                        .get(::sifr_runtime::to_usize_proven(&sifr_generated_cmp_norm))
+                        .map(::std::string::String::as_str)
+                } == Some("alpha"))
             })
             && {
                 let sifr_generated_checked_read_collection = &lines;
@@ -251,8 +263,16 @@ fn main() {
                     .get(sifr_generated_checked_read_normalized)
                     .cloned()
             }
-            .is_some_and(|sifr_generated_checked_value_1| {
-                sifr_generated_checked_value_1.clone() == "beta"
+            .is_some_and(|_checked_value_1| {
+                ({
+                    let sifr_generated_cmp_list = &lines;
+                    let sifr_generated_cmp_i = SifrInt::from_i64(1);
+                    let sifr_generated_cmp_norm =
+                        sifr_generated_cmp_i.normalize_index_or_len(sifr_generated_cmp_list.len());
+                    sifr_generated_cmp_list
+                        .get(::sifr_runtime::to_usize_proven(&sifr_generated_cmp_norm))
+                        .map(::std::string::String::as_str)
+                } == Some("beta"))
             });
         let mut wb: SifrGeneratedIoFileHandle = (|| {
             let sifr_generated_path = path.to_string();
@@ -268,7 +288,7 @@ fn main() {
             ))
         })()?;
         wb.write_bytes(&vec![
-            114u8, 97u8, 119u8, 45u8, 98u8, 121u8, 116u8, 101u8, 115u8,
+            114_u8, 97_u8, 119_u8, 45_u8, 98_u8, 121_u8, 116_u8, 101_u8, 115_u8,
         ])?;
         wb.close();
         let mut rb: SifrGeneratedIoFileHandle = (|| {
@@ -286,7 +306,10 @@ fn main() {
         })()?;
         let payload: Vec<u8> = rb.read_bytes(&None)?;
         rb.close();
-        binary_ok = payload == vec![114u8, 97u8, 119u8, 45u8, 98u8, 121u8, 116u8, 101u8, 115u8];
+        binary_ok = payload
+            == vec![
+                114_u8, 97_u8, 119_u8, 45_u8, 98_u8, 121_u8, 116_u8, 101_u8, 115_u8,
+            ];
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {

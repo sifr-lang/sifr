@@ -6,22 +6,8 @@ use super::{
 };
 
 impl RustEmitter {
-    fn checked_place_read_is_used(key: &str, stmts: &[crate::HirStmt]) -> bool {
-        let mut used = false;
-        crate::hir_analysis::traversal::walk_stmts(
-            stmts,
-            crate::hir_analysis::traversal::TraversalConfig::LOCAL_SCOPE_ONLY,
-            &mut |_| {},
-            &mut |expr| {
-                let crate::HirExpr::Index { object, index, .. } = expr else {
-                    return;
-                };
-                if checked_place_read_key(object, index).as_deref() == Some(key) {
-                    used = true;
-                }
-            },
-        );
-        used
+    fn checked_place_read_is_used(&self, key: &str, stmts: &[crate::HirStmt]) -> bool {
+        self.body_analysis.checked_read_is_used(stmts, key)
     }
 
     fn checked_place_witness_is_invalidated_by_stmt(
@@ -169,8 +155,7 @@ impl RustEmitter {
         &self,
         stmts: &[crate::HirStmt],
     ) -> Vec<(String, super::CheckedPlaceReadWitness)> {
-        let mutated =
-            crate::hir_analysis::queries::collect_mutated_vars(stmts, Some(&self.func_signatures));
+        let mutated = self.body_analysis.mutated_in(stmts);
         let mut affected = self
             .checked_place_read_witnesses
             .iter()
@@ -205,7 +190,7 @@ impl RustEmitter {
         for (key, mut witness) in self.checked_place_witnesses_affected_by_stmt(stmt) {
             if !witness.borrowed
                 || Self::checked_place_witness_is_invalidated_by_stmt(&witness, stmt)
-                || !Self::checked_place_read_is_used(&key, following)
+                || !self.checked_place_read_is_used(&key, following)
             {
                 continue;
             }
@@ -300,7 +285,7 @@ impl RustEmitter {
         for (key, witness) in affected {
             self.checked_place_read_witnesses.remove(&key);
             if Self::checked_place_witness_is_invalidated_by_stmt(&witness, stmt)
-                || !following.is_some_and(|tail| Self::checked_place_read_is_used(&key, tail))
+                || !following.is_some_and(|tail| self.checked_place_read_is_used(&key, tail))
             {
                 continue;
             }
@@ -361,7 +346,7 @@ impl RustEmitter {
         let mut refreshed = Vec::new();
         for (key, witness) in affected {
             if Self::checked_place_witness_is_invalidated_by_stmt(&witness, stmt)
-                || !Self::checked_place_read_is_used(&key, following)
+                || !self.checked_place_read_is_used(&key, following)
             {
                 continue;
             }
@@ -465,7 +450,9 @@ impl RustEmitter {
         let else_body = else_body.unwrap_or(&empty);
         let present_hir = if guard.negated { else_body } else { then_body };
         let absent_hir = if guard.negated { then_body } else { else_body };
-        let consumes_witness = crate::hir_analysis::queries::proven_collection_reads(present_hir)
+        let consumes_witness = self
+            .body_analysis
+            .proven_reads_in(present_hir)
             .iter()
             .any(|read| {
                 matches!(
@@ -507,7 +494,7 @@ impl RustEmitter {
         let present_hir = if negated { else_body } else { then_body };
         let absent_hir = if negated { then_body } else { else_body };
         let mut guards = Vec::new();
-        for read in crate::hir_analysis::queries::proven_collection_reads(present_hir) {
+        for read in self.body_analysis.proven_reads_in(present_hir) {
             let crate::HirExpr::Index { object, index, .. } = &read else {
                 continue;
             };
@@ -565,7 +552,7 @@ impl RustEmitter {
         body: &[crate::HirStmt],
     ) -> Result<Vec<CheckedDictReadGuard>, crate::CodegenError> {
         let mut guards = Vec::new();
-        for read in crate::hir_analysis::queries::proven_collection_reads(body) {
+        for read in self.body_analysis.proven_reads_in(body) {
             let crate::HirExpr::Index { object, index, .. } = &read else {
                 continue;
             };
@@ -605,7 +592,7 @@ impl RustEmitter {
             .filter(|(key, _)| {
                 !guard_keys.contains(key.as_str())
                     && !already_refreshed.contains(key)
-                    && Self::checked_place_read_is_used(key, body)
+                    && self.checked_place_read_is_used(key, body)
             })
             .collect::<Vec<_>>();
         let previous = guards
@@ -719,7 +706,7 @@ impl RustEmitter {
         }
         let range_object_token = checked_place_expr_token(range_object);
         let mut guards = Vec::new();
-        for read in crate::hir_analysis::queries::proven_collection_reads(body) {
+        for read in self.body_analysis.proven_reads_in(body) {
             let crate::HirExpr::Index { object, index, .. } = &read else {
                 continue;
             };
@@ -802,7 +789,7 @@ impl RustEmitter {
         {
             return Ok(None);
         }
-        let reads = crate::hir_analysis::queries::proven_collection_reads(following_stmts);
+        let reads = self.body_analysis.proven_reads_in(following_stmts);
         let mut guards = Vec::new();
         let mut condition_fully_replaced = true;
         for read in reads {

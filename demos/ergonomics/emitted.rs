@@ -87,15 +87,15 @@ fn demo_negative_indexing() {
     println!(
         "Last char: {}",
         {
-            let sifr_generated_index_str = &s;
-            let sifr_generated_index_i = -&SifrInt::from_i64(1);
-            let sifr_generated_index_norm = sifr_generated_index_i
-                .normalize_index_or_len(sifr_generated_index_str.chars().count());
-            sifr_generated_index_str
-                .chars()
-                .nth(sifr_generated_index_norm)
-                .map(|c| c.to_string())
+            let sifr_generated_string_chars = s.chars().collect::<Vec<char>>();
+            let sifr_generated_string_index = -&SifrInt::from_i64(1);
+            let sifr_generated_string_index_normalized = sifr_generated_string_index
+                .normalize_index_or_len(sifr_generated_string_chars.len());
+            sifr_generated_string_chars
+                .get(sifr_generated_string_index_normalized)
+                .copied()
         }
+        .map(|character| character.to_string())
         .map_or_else(
             || "None".to_string(),
             |sifr_generated_v| sifr_generated_v.to_string()

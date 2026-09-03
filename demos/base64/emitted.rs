@@ -228,7 +228,7 @@ fn collect_positive_actual() -> Vec<String> {
         sifr_generated_concat.push_str("");
         sifr_generated_concat
     };
-    actual.push(urlsafe_encoded.to_owned());
+    actual.push(urlsafe_encoded);
     actual.push(decode_urlsafe_b64_or_empty(&urlsafe_encoded_for_decode));
     let b16_encoded: String = b16_encode_or_empty(&"Hi".to_string());
     let b16_encoded_for_decode: String = {
@@ -237,7 +237,7 @@ fn collect_positive_actual() -> Vec<String> {
         sifr_generated_concat.push_str("");
         sifr_generated_concat
     };
-    actual.push(b16_encoded.to_owned());
+    actual.push(b16_encoded);
     actual.push(b16_decode_or_empty(&b16_encoded_for_decode));
     actual
 }

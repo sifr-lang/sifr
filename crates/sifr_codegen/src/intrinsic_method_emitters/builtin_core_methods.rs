@@ -1,9 +1,8 @@
 use super::{
     HirExpr, RustEmitter, RustExpr, Type, intrinsics, registry_box_iterator_expr,
-    registry_call_callable_with_owned_args, registry_call_callable_with_shared_ref_args,
-    registry_callable_signature, registry_class_has_next, registry_class_method_signature,
-    registry_dict_source_to_map_expr, registry_iter_from_next_method_expr,
-    registry_iterable_to_owned_iter_expr, registry_iterable_to_vec_expr,
+    registry_call_callable_with_owned_args, registry_class_has_next,
+    registry_class_method_signature, registry_dict_source_to_map_expr,
+    registry_iter_from_next_method_expr, registry_iterable_to_owned_iter_expr,
     registry_iterable_to_vec_expr_with_hint, registry_nested_zip_field_expr,
     registry_zip_iter_expr,
 };
@@ -413,129 +412,7 @@ impl RustEmitter {
                 })
             }
             "sorted" if matches!(args.len(), 1 | 3) => {
-                let elem_ty = crate::resolve_alias_type_for_plain_call(args[0].ty())
-                    .iterable_element_type()?;
-                let vec_name = "__sifr_sorted_v".to_string();
-                let collect_expr = registry_iterable_to_vec_expr(self, &args[0])?;
-                let mut stmts = vec![crate::RustStmt::Let {
-                    mutable: true,
-                    name: vec_name.clone(),
-                    ty: None,
-                    value: collect_expr,
-                }];
-                if args.len() == 3 && !matches!(args[1], HirExpr::NoneLiteral) {
-                    let (_param_types, _conventions, key_return_ty) =
-                        registry_callable_signature(&args[1])?;
-                    if matches!(key_return_ty, Type::Float) {
-                        let left_call = registry_call_callable_with_shared_ref_args(
-                            self,
-                            &args[1],
-                            &[("__left".to_string(), elem_ty.clone())],
-                        )?;
-                        let right_call = registry_call_callable_with_shared_ref_args(
-                            self,
-                            &args[1],
-                            &[("__right".to_string(), elem_ty.clone())],
-                        )?;
-                        stmts.push(crate::RustStmt::Expr(RustExpr::MethodCall {
-                            receiver: Box::new(RustExpr::Ident(vec_name.clone())),
-                            method: "sort_by".to_string(),
-                            args: vec![RustExpr::ClosureBlock {
-                                params: vec![
-                                    crate::RustParam::Named {
-                                        name: "__left".to_string(),
-                                        ty: crate::RustType::Named("_".to_string()),
-                                    },
-                                    crate::RustParam::Named {
-                                        name: "__right".to_string(),
-                                        ty: crate::RustType::Named("_".to_string()),
-                                    },
-                                ],
-                                body: vec![crate::RustStmt::Return(Some(RustExpr::MethodCall {
-                                    receiver: Box::new(left_call),
-                                    method: "total_cmp".to_string(),
-                                    args: vec![RustExpr::Ref {
-                                        mutable: false,
-                                        expr: Box::new(right_call),
-                                    }],
-                                }))],
-                                is_move: false,
-                                is_async: false,
-                            }],
-                        }));
-                    } else {
-                        let left_call = registry_call_callable_with_shared_ref_args(
-                            self,
-                            &args[1],
-                            &[("__left".to_string(), elem_ty.clone())],
-                        )?;
-                        let right_call = registry_call_callable_with_shared_ref_args(
-                            self,
-                            &args[1],
-                            &[("__right".to_string(), elem_ty.clone())],
-                        )?;
-                        stmts.push(crate::RustStmt::Expr(RustExpr::MethodCall {
-                            receiver: Box::new(RustExpr::Ident(vec_name.clone())),
-                            method: "sort_by".to_string(),
-                            args: vec![RustExpr::ClosureBlock {
-                                params: vec![
-                                    crate::RustParam::Named {
-                                        name: "__left".to_string(),
-                                        ty: crate::RustType::Named("_".to_string()),
-                                    },
-                                    crate::RustParam::Named {
-                                        name: "__right".to_string(),
-                                        ty: crate::RustType::Named("_".to_string()),
-                                    },
-                                ],
-                                body: vec![crate::RustStmt::Return(Some(RustExpr::MethodCall {
-                                    receiver: Box::new(left_call),
-                                    method: "cmp".to_string(),
-                                    args: vec![RustExpr::Ref {
-                                        mutable: false,
-                                        expr: Box::new(right_call),
-                                    }],
-                                }))],
-                                is_move: false,
-                                is_async: false,
-                            }],
-                        }));
-                    }
-                } else if matches!(elem_ty, Type::Float) {
-                    stmts.push(crate::RustStmt::Expr(RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::Ident(vec_name.clone())),
-                        method: "sort_by".to_string(),
-                        args: vec![RustExpr::Path(vec![
-                            "f64".to_string(),
-                            "total_cmp".to_string(),
-                        ])],
-                    }));
-                } else {
-                    stmts.push(crate::RustStmt::Expr(RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::Ident(vec_name.clone())),
-                        method: "sort".to_string(),
-                        args: vec![],
-                    }));
-                }
-                if args.len() == 3 {
-                    let reverse_expr = self.try_lower_registry_expr_strict(&args[2])?;
-                    stmts.push(crate::RustStmt::Expr(RustExpr::If {
-                        cond: Box::new(reverse_expr),
-                        then_expr: Box::new(RustExpr::Block {
-                            stmts: vec![crate::RustStmt::Expr(RustExpr::MethodCall {
-                                receiver: Box::new(RustExpr::Ident(vec_name.clone())),
-                                method: "reverse".to_string(),
-                                args: vec![],
-                            })],
-                            expr: None,
-                        }),
-                        else_expr: None,
-                    }));
-                }
-                Some(RustExpr::Block {
-                    stmts,
-                    expr: Some(Box::new(RustExpr::Ident(vec_name))),
-                })
+                super::ordering_sort::lower_sorted(self, args)
             }
             "enumerate" if matches!(args.len(), 1 | 2) => {
                 let iter_expr = registry_iterable_to_owned_iter_expr(self, &args[0])?;

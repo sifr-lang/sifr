@@ -13,7 +13,6 @@ mod sifr_generated_project_nominals {
 }
 use ::sifr_runtime::SifrInt;
 use ::sifr_runtime::SifrRange;
-use ::std::collections::HashMap;
 pub use sifr_generated_project_nominals::ValueError;
 #[expect(
     clippy::assertions_on_constants,
@@ -92,51 +91,94 @@ fn main() {
         let mut sifr_generated_dict_ctor = vec![("compiler".to_string(), SifrInt::from_i64(1))]
             .clone()
             .into_iter()
-            .collect::<HashMap<_, _>>();
-        sifr_generated_dict_ctor
-            .extend(HashMap::from([("demo".to_string(), SifrInt::from_i64(2))]).clone());
+            .collect::<std::collections::HashMap<_, _>>();
+        sifr_generated_dict_ctor.extend(
+            {
+                let mut sifr_generated_registry_dict_literal = ::std::collections::HashMap::new();
+                sifr_generated_registry_dict_literal
+                    .insert("demo".to_string(), SifrInt::from_i64(2));
+                sifr_generated_registry_dict_literal
+            }
+            .clone(),
+        );
         sifr_generated_dict_ctor
     });
     println!("=== helpers ===");
     println!("{:?}", {
-        let mut sifr_generated_sorted_v = vec![
+        let mut sifr_generated_sorted_values = vec![
             SifrInt::from_i64(3),
             SifrInt::from_i64(1),
             SifrInt::from_i64(2),
         ]
         .into_iter()
         .collect::<Vec<_>>();
-        sifr_generated_sorted_v.sort();
-        ();
-        sifr_generated_sorted_v
+        let sifr_generated_sorted_reverse = false;
+        sifr_generated_sorted_values.sort_by(
+            |sifr_generated_sorted_left, sifr_generated_sorted_right| {
+                if sifr_generated_sorted_reverse {
+                    sifr_generated_sorted_right.cmp(&sifr_generated_sorted_left)
+                } else {
+                    sifr_generated_sorted_left.cmp(&sifr_generated_sorted_right)
+                }
+            },
+        );
+        sifr_generated_sorted_values
     });
     println!("{:?}", {
-        let mut sifr_generated_sorted_v = vec![
+        let sifr_generated_sorted_values = vec![
             SifrInt::from_i64(3),
             SifrInt::from_i64(1),
             SifrInt::from_i64(2),
         ]
         .into_iter()
         .collect::<Vec<_>>();
-        sifr_generated_sorted_v.sort_by(|sifr_generated_left, sifr_generated_right| {
-            negate(sifr_generated_left.clone()).cmp(&negate(sifr_generated_right.clone()))
-        });
-        ();
-        sifr_generated_sorted_v
+        let sifr_generated_sorted_reverse = false;
+        let mut sifr_generated_sorted_pairs = sifr_generated_sorted_values
+            .into_iter()
+            .map(|sifr_generated_sorted_value| {
+                (
+                    negate(sifr_generated_sorted_value.clone()),
+                    sifr_generated_sorted_value,
+                )
+            })
+            .collect::<Vec<_>>();
+        sifr_generated_sorted_pairs.sort_by(
+            |sifr_generated_sorted_left, sifr_generated_sorted_right| {
+                if sifr_generated_sorted_reverse {
+                    sifr_generated_sorted_right
+                        .0
+                        .cmp(&sifr_generated_sorted_left.0)
+                } else {
+                    sifr_generated_sorted_left
+                        .0
+                        .cmp(&sifr_generated_sorted_right.0)
+                }
+            },
+        );
+        sifr_generated_sorted_pairs
+            .into_iter()
+            .map(|sifr_generated_sorted_pair| sifr_generated_sorted_pair.1)
+            .collect::<Vec<_>>()
     });
     println!("{:?}", {
-        let mut sifr_generated_sorted_v = vec![
+        let mut sifr_generated_sorted_values = vec![
             SifrInt::from_i64(3),
             SifrInt::from_i64(1),
             SifrInt::from_i64(2),
         ]
         .into_iter()
         .collect::<Vec<_>>();
-        sifr_generated_sorted_v.sort();
-        {
-            sifr_generated_sorted_v.reverse();
-        };
-        sifr_generated_sorted_v
+        let sifr_generated_sorted_reverse = true;
+        sifr_generated_sorted_values.sort_by(
+            |sifr_generated_sorted_left, sifr_generated_sorted_right| {
+                if sifr_generated_sorted_reverse {
+                    sifr_generated_sorted_right.cmp(&sifr_generated_sorted_left)
+                } else {
+                    sifr_generated_sorted_left.cmp(&sifr_generated_sorted_right)
+                }
+            },
+        );
+        sifr_generated_sorted_values
     });
     println!(
         "{:?}",

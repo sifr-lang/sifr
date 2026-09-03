@@ -84,10 +84,10 @@ fn pairwise<T: Clone + 'static>(data: &[T]) -> Vec<Vec<T>> {
                     .cloned()
             };
             if let Some(prev) = prev {
-                pair.push(prev.clone());
+                pair.push(prev);
             }
             pair.push(value.clone());
-            result.push(pair.to_vec());
+            result.push(pair);
             {
                 let sifr_generated_assign_value = value.clone();
                 {
@@ -102,7 +102,7 @@ fn pairwise<T: Clone + 'static>(data: &[T]) -> Vec<Vec<T>> {
                 }
             }
         } else {
-            prev_values.push(value.clone());
+            prev_values.push(value);
         }
     }
     result
@@ -114,14 +114,14 @@ fn batched<T: Clone + 'static>(data: &[T], n: SifrInt) -> Result<Vec<Vec<T>>, Va
     let mut result: Vec<Vec<T>> = Vec::new();
     let mut current_batch: Vec<T> = Vec::new();
     for value in data.iter().cloned() {
-        current_batch.push(value.clone());
+        current_batch.push(value);
         if &SifrInt::from(current_batch.len()) == &n {
             result.push(current_batch.to_vec());
             current_batch = Vec::new();
         }
     }
     if &SifrInt::from(current_batch.len()) > &SifrInt::from_i64(0) {
-        result.push(current_batch.to_vec());
+        result.push(current_batch);
     }
     Ok(result)
 }
@@ -244,9 +244,11 @@ fn basename(path: &str) -> String {
             let sifr_generated_string_index = i.clone();
             let sifr_generated_string_index_normalized =
                 sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_path.len());
-            sifr_generated_chars_path.get(sifr_generated_string_index_normalized)
+            sifr_generated_chars_path
+                .get(sifr_generated_string_index_normalized)
+                .copied()
         }
-        .map(::std::string::ToString::to_string);
+        .map(|character| character.to_string());
         if let Some(ch) = ch
             && ch == "/"
         {
@@ -283,9 +285,11 @@ fn stem(path: &str) -> String {
             let sifr_generated_string_index = i.clone();
             let sifr_generated_string_index_normalized =
                 sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_base.len());
-            sifr_generated_chars_base.get(sifr_generated_string_index_normalized)
+            sifr_generated_chars_base
+                .get(sifr_generated_string_index_normalized)
+                .copied()
         }
-        .map(::std::string::ToString::to_string);
+        .map(|character| character.to_string());
         if let Some(ch) = ch
             && ch == "."
         {
@@ -322,16 +326,20 @@ fn is_absolute(path: &str) -> bool {
             let sifr_generated_string_index = SifrInt::from_i64(1);
             let sifr_generated_string_index_normalized =
                 sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_path.len());
-            sifr_generated_chars_path.get(sifr_generated_string_index_normalized)
+            sifr_generated_chars_path
+                .get(sifr_generated_string_index_normalized)
+                .copied()
         }
-        .map(::std::string::ToString::to_string);
+        .map(|character| character.to_string());
         let sep: Option<String> = {
             let sifr_generated_string_index = SifrInt::from_i64(2);
             let sifr_generated_string_index_normalized =
                 sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_path.len());
-            sifr_generated_chars_path.get(sifr_generated_string_index_normalized)
+            sifr_generated_chars_path
+                .get(sifr_generated_string_index_normalized)
+                .copied()
         }
-        .map(::std::string::ToString::to_string);
+        .map(|character| character.to_string());
         if let Some(colon) = colon
             && let Some(sep) = sep
             && colon == ":"
@@ -344,9 +352,11 @@ fn is_absolute(path: &str) -> bool {
         let sifr_generated_string_index = SifrInt::from_i64(0);
         let sifr_generated_string_index_normalized =
             sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_path.len());
-        sifr_generated_chars_path.get(sifr_generated_string_index_normalized)
+        sifr_generated_chars_path
+            .get(sifr_generated_string_index_normalized)
+            .copied()
     }
-    .map(::std::string::ToString::to_string);
+    .map(|character| character.to_string());
     if let Some(first) = first
         && (first == "/" || first == "\\")
     {
@@ -496,9 +506,15 @@ fn median_low(data: &[f64]) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX
         ));
     }
     let sorted_data: Vec<f64> = {
-        let mut sifr_generated_sorted_v = data.iter().copied().collect::<Vec<_>>();
-        sifr_generated_sorted_v.sort_by(f64::total_cmp);
-        sifr_generated_sorted_v
+        let mut sifr_generated_sorted_values = data.iter().copied().collect::<Vec<_>>();
+        sifr_generated_sorted_values.sort_by(
+            |sifr_generated_sorted_left, sifr_generated_sorted_right| {
+                sifr_generated_sorted_left
+                    .partial_cmp(sifr_generated_sorted_right)
+                    .unwrap_or(::std::cmp::Ordering::Equal)
+            },
+        );
+        sifr_generated_sorted_values
     };
     let mid: SifrInt = n.floor_div_known_nonzero(&SifrInt::from_i64(2));
     if &n.floor_mod_known_nonzero(&SifrInt::from_i64(2)) == &SifrInt::from_i64(0) {
@@ -545,9 +561,15 @@ fn median_high(
         ));
     }
     let sorted_data: Vec<f64> = {
-        let mut sifr_generated_sorted_v = data.iter().copied().collect::<Vec<_>>();
-        sifr_generated_sorted_v.sort_by(f64::total_cmp);
-        sifr_generated_sorted_v
+        let mut sifr_generated_sorted_values = data.iter().copied().collect::<Vec<_>>();
+        sifr_generated_sorted_values.sort_by(
+            |sifr_generated_sorted_left, sifr_generated_sorted_right| {
+                sifr_generated_sorted_left
+                    .partial_cmp(sifr_generated_sorted_right)
+                    .unwrap_or(::std::cmp::Ordering::Equal)
+            },
+        );
+        sifr_generated_sorted_values
     };
     let mid: SifrInt = n.floor_div_known_nonzero(&SifrInt::from_i64(2));
     let val: Option<f64> = {

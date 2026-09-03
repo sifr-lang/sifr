@@ -1,5 +1,7 @@
 use crate::hir_analysis::traversal::{self, TraversalConfig};
-use crate::string_char_cache_scan::{collect_string_cache_uses, function_calls_itself};
+use crate::string_char_cache_scan::{
+    collect_repeated_string_len_uses, collect_string_cache_uses, function_calls_itself,
+};
 use crate::{HirExpr, HirFunction, RustEmitter, RustExpr, RustLiteral, RustStmt, RustType, Type};
 use std::collections::HashSet;
 
@@ -18,12 +20,18 @@ impl RustEmitter {
                 collect_string_cache_uses(expr, &mut used_string_names);
             },
         );
+        let mut repeated_local_uses = HashSet::new();
+        collect_repeated_string_len_uses(&func.body, &mut repeated_local_uses);
+        used_string_names.extend(repeated_local_uses.iter().cloned());
+        self.string_char_cache_loop_local_names
+            .clone_from(&repeated_local_uses);
         self.string_char_cache_required_names
             .clone_from(&used_string_names);
         if function_calls_itself(func) {
             for param in &func.params {
                 used_string_names.remove(&param.name);
                 self.string_char_cache_required_names.remove(&param.name);
+                self.string_char_cache_loop_local_names.remove(&param.name);
             }
         }
 
@@ -94,10 +102,54 @@ impl RustEmitter {
         lowered_object: RustExpr,
         lowered_index: RustExpr,
     ) -> RustExpr {
-        if let Some(cache_name) = self.string_char_cache_for_expr(object) {
-            return char_option_to_string(normalized_string_cache_get(cache_name, lowered_index));
+        char_option_to_string(self.lower_string_index_char_option_with_cache(
+            object,
+            lowered_object,
+            lowered_index,
+        ))
+    }
+
+    pub(crate) fn lower_checked_place_len_with_witness(
+        &self,
+        object: &HirExpr,
+        witness: RustExpr,
+    ) -> RustExpr {
+        if matches!(
+            crate::resolve_alias_type_for_plain_call(object.ty()),
+            Type::Str | Type::LiteralStr(_)
+        ) {
+            let witness = match witness {
+                RustExpr::Ref {
+                    mutable: false,
+                    expr,
+                } => *expr,
+                other => other,
+            };
+            return self.lower_string_len_with_cache(object, witness);
         }
-        char_option_to_string(normalized_string_nth(lowered_object, lowered_index))
+        RustExpr::FnCall {
+            func: Box::new(RustExpr::Path(vec![
+                "SifrInt".to_string(),
+                "from".to_string(),
+            ])),
+            args: vec![RustExpr::MethodCall {
+                receiver: Box::new(witness),
+                method: "len".to_string(),
+                args: Vec::new(),
+            }],
+        }
+    }
+
+    pub(crate) fn lower_string_index_char_option_with_cache(
+        &self,
+        object: &HirExpr,
+        lowered_object: RustExpr,
+        lowered_index: RustExpr,
+    ) -> RustExpr {
+        if let Some(cache_name) = self.string_char_cache_for_expr(object) {
+            return normalized_string_cache_get(cache_name, lowered_index);
+        }
+        normalized_string_chars_get(lowered_object, lowered_index)
     }
 
     pub(crate) fn try_lower_dict_indexed_list_append_expr(
@@ -143,7 +195,7 @@ impl RustEmitter {
         let lowered_index = self.try_lower_registry_expr_strict(index)?;
         let lowered_arg = self.try_lower_registry_expr_strict(&args[0])?;
         let key_arg = self.list_indexed_dict_lookup_key_arg(index, lowered_index);
-        let pushed_arg = Self::clone_owned_append_arg_expr_for_ir(&args[0], lowered_arg);
+        let pushed_arg = self.clone_owned_append_arg_expr_for_ir(&args[0], lowered_arg);
         Some(RustExpr::Block {
             stmts: vec![RustStmt::IfLet {
                 pattern: "Some(__elem)".to_string(),
@@ -447,6 +499,20 @@ impl RustEmitter {
             return None;
         }
 
+        if let Some(bucket) = self.checked_place_read_borrow_witness(index_object, index) {
+            return Some(RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    "SifrInt".to_string(),
+                    "from".to_string(),
+                ])),
+                args: vec![RustExpr::MethodCall {
+                    receiver: Box::new(bucket),
+                    method: "len".to_string(),
+                    args: Vec::new(),
+                }],
+            });
+        }
+
         let lowered_object = self.try_lower_dict_indexed_list_mutation_object(index_object)?;
         let lowered_index = self.try_lower_registry_expr_strict(index)?;
         let key_arg = self.list_indexed_dict_lookup_key_arg(index, lowered_index);
@@ -748,25 +814,34 @@ fn normalized_string_cache_get(cache_name: String, lowered_index: RustExpr) -> R
             },
         ],
         expr: Some(Box::new(RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::Ident(cache_name)),
-            method: "get".to_string(),
-            args: vec![RustExpr::Ident(
-                "__sifr_string_index_normalized".to_string(),
-            )],
+            receiver: Box::new(RustExpr::MethodCall {
+                receiver: Box::new(RustExpr::Ident(cache_name)),
+                method: "get".to_string(),
+                args: vec![RustExpr::Ident(
+                    "__sifr_string_index_normalized".to_string(),
+                )],
+            }),
+            method: "copied".to_string(),
+            args: Vec::new(),
         })),
     }
 }
 
-fn normalized_string_nth(lowered_object: RustExpr, lowered_index: RustExpr) -> RustExpr {
+fn normalized_string_chars_get(lowered_object: RustExpr, lowered_index: RustExpr) -> RustExpr {
     RustExpr::Block {
         stmts: vec![
             RustStmt::Let {
                 mutable: false,
-                name: "__sifr_string_source".to_string(),
+                name: "__sifr_string_chars".to_string(),
                 ty: None,
-                value: RustExpr::Ref {
-                    mutable: false,
-                    expr: Box::new(lowered_object),
+                value: RustExpr::MethodCall {
+                    receiver: Box::new(RustExpr::MethodCall {
+                        receiver: Box::new(lowered_object),
+                        method: "chars".to_string(),
+                        args: Vec::new(),
+                    }),
+                    method: "collect::<Vec<char>>".to_string(),
+                    args: Vec::new(),
                 },
             },
             RustStmt::Let {
@@ -782,12 +857,8 @@ fn normalized_string_nth(lowered_object: RustExpr, lowered_index: RustExpr) -> R
                 value: crate::build_normalized_index_expr(
                     "__sifr_string_index",
                     RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::MethodCall {
-                            receiver: Box::new(RustExpr::Ident("__sifr_string_source".to_string())),
-                            method: "chars".to_string(),
-                            args: Vec::new(),
-                        }),
-                        method: "count".to_string(),
+                        receiver: Box::new(RustExpr::Ident("__sifr_string_chars".to_string())),
+                        method: "len".to_string(),
                         args: Vec::new(),
                     },
                 ),
@@ -795,14 +866,14 @@ fn normalized_string_nth(lowered_object: RustExpr, lowered_index: RustExpr) -> R
         ],
         expr: Some(Box::new(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::Ident("__sifr_string_source".to_string())),
-                method: "chars".to_string(),
-                args: Vec::new(),
+                receiver: Box::new(RustExpr::Ident("__sifr_string_chars".to_string())),
+                method: "get".to_string(),
+                args: vec![RustExpr::Ident(
+                    "__sifr_string_index_normalized".to_string(),
+                )],
             }),
-            method: "nth".to_string(),
-            args: vec![RustExpr::Ident(
-                "__sifr_string_index_normalized".to_string(),
-            )],
+            method: "copied".to_string(),
+            args: Vec::new(),
         })),
     }
 }

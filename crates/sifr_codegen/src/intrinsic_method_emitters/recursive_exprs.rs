@@ -192,7 +192,7 @@ impl RustEmitter {
                                 };
                             }
                         }
-                        arg_exprs[0] = Self::clone_owned_append_arg_expr_for_ir(&args[0], adjusted);
+                        arg_exprs[0] = self.clone_owned_append_arg_expr_for_ir(&args[0], adjusted);
                     }
                 }
                 if effective_object_ty.callable_field_type(method).is_some() {
@@ -438,35 +438,11 @@ impl RustEmitter {
                                     is_move: false,
                                 }],
                             },
-                            Type::Str => crate::RustExpr::MethodCall {
-                                receiver: Box::new(crate::RustExpr::MethodCall {
-                                    receiver: Box::new(crate::RustExpr::MethodCall {
-                                        receiver: Box::new(crate::RustExpr::Ident(
-                                            "__v".to_string(),
-                                        )),
-                                        method: "chars".to_string(),
-                                        args: vec![],
-                                    }),
-                                    method: "nth".to_string(),
-                                    args: vec![crate::RustExpr::Cast {
-                                        expr: Box::new(lowered_index),
-                                        ty: crate::RustType::Named("usize".to_string()),
-                                    }],
-                                }),
-                                method: "map".to_string(),
-                                args: vec![crate::RustExpr::Closure {
-                                    params: vec![crate::RustParam::Named {
-                                        name: "c".to_string(),
-                                        ty: crate::RustType::Named("_".to_string()),
-                                    }],
-                                    body: Box::new(crate::RustExpr::MethodCall {
-                                        receiver: Box::new(crate::RustExpr::Ident("c".to_string())),
-                                        method: "to_string".to_string(),
-                                        args: vec![],
-                                    }),
-                                    is_move: false,
-                                }],
-                            },
+                            Type::Str => self.lower_string_index_option_with_cache(
+                                object,
+                                crate::RustExpr::Ident("__v".to_string()),
+                                lowered_index,
+                            ),
                             _ => return None,
                         };
                         let option_expr = crate::RustExpr::MethodCall {
@@ -810,7 +786,7 @@ impl RustEmitter {
                     .iter()
                     .map(|element| {
                         let lowered = self.try_lower_registry_expr_strict(element)?;
-                        Some(if let Type::List(element_ty) = list_ty {
+                        let lowered = if let Type::List(element_ty) = list_ty {
                             crate::helpers::adapt_collection_value_for_target(
                                 element_ty.as_ref(),
                                 element,
@@ -818,24 +794,28 @@ impl RustEmitter {
                             )
                         } else {
                             lowered
-                        })
+                        };
+                        Some(self.clone_owned_append_arg_expr_for_ir(element, lowered))
                     })
                     .collect::<Option<Vec<_>>>()?;
                 if matches!(list_ty, Type::Bytes) {
                     lowered = lowered
                         .into_iter()
-                        .map(|element| crate::RustExpr::Cast {
-                            expr: Box::new(element),
-                            ty: crate::RustType::Named("u8".to_string()),
+                        .zip(elements)
+                        .map(|(lowered, element)| {
+                            crate::helpers::adapt_bytes_element_for_storage(element, lowered)
                         })
-                        .collect();
+                        .collect::<Option<Vec<_>>>()?;
                 }
                 Some(crate::RustExpr::Vec(lowered))
             }
             HirExpr::TupleLiteral { elements, ty } => {
                 let lowered = elements
                     .iter()
-                    .map(|element| self.try_lower_registry_expr_strict(element))
+                    .map(|element| {
+                        let lowered = self.try_lower_registry_expr_strict(element)?;
+                        Some(self.clone_owned_append_arg_expr_for_ir(element, lowered))
+                    })
                     .collect::<Option<Vec<_>>>()?;
                 if crate::homogeneous_large_tuple_backing_array(ty).is_some() {
                     Some(crate::RustExpr::Array(lowered))

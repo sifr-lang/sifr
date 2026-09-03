@@ -146,7 +146,7 @@ mod sifr_generated_project_nominals {
         #[must_use]
         pub fn count(&self, value: &T) -> SifrInt {
             let mut total: SifrInt = SifrInt::from_i64(0);
-            for item in self.data_field.clone().iter().cloned() {
+            for item in self.data_field.iter().cloned() {
                 if item == *value {
                     total = &total + &SifrInt::from_i64(1);
                 }
@@ -973,7 +973,7 @@ mod sifr_generated_project_nominals {
         #[must_use]
         pub fn rows(&self) -> Vec<Vec<String>> {
             let mut result: Vec<Vec<String>> = Vec::new();
-            for row in self.rows.clone().iter().cloned() {
+            for row in self.rows.iter().cloned() {
                 let mut copied: Vec<String> = Vec::new();
                 for field in row.iter().cloned() {
                     copied.push(field.to_string());
@@ -1157,7 +1157,7 @@ mod sifr_generated_project_nominals {
         #[must_use]
         pub fn fieldnames(&self) -> Vec<String> {
             let mut copied: Vec<String> = Vec::new();
-            for field in self.fieldnames_field.clone().iter().cloned() {
+            for field in self.fieldnames_field.iter().cloned() {
                 copied.push(field.to_string());
             }
             copied
@@ -1167,7 +1167,7 @@ mod sifr_generated_project_nominals {
         #[must_use]
         pub fn rows(&self) -> Vec<HashMap<String, String>> {
             let mut result: Vec<HashMap<String, String>> = Vec::new();
-            for row in self.rows.clone().iter().cloned() {
+            for row in self.rows.iter().cloned() {
                 if &SifrInt::from(row.len()) == &SifrInt::from_i64(0) {
                     continue;
                 }
@@ -1250,7 +1250,7 @@ mod sifr_generated_project_nominals {
     impl SifrGeneratedStdlibSifrX2ecsvX2eDictWriter {
         pub fn writerow(&mut self, row: &HashMap<String, String>) {
             let mut ordered: Vec<String> = Vec::new();
-            for fieldname in self.fieldnames.clone().iter().cloned() {
+            for fieldname in self.fieldnames.iter().cloned() {
                 if row.contains_key(&fieldname) {
                     ordered.push(sifr_generated_dict_value_at(row, &fieldname));
                 } else {
@@ -1333,7 +1333,7 @@ mod sifr_generated_project_nominals {
         row.push(field.to_string());
     }
     pub fn sifr_generated_append_row(rows: &mut Vec<Vec<String>>, row: Vec<String>) {
-        rows.push(row.to_vec());
+        rows.push(row);
     }
     #[must_use]
     pub fn sifr_generated_char_at(text: &str, index: SifrInt) -> String {
@@ -1358,8 +1358,9 @@ mod sifr_generated_project_nominals {
             );
             sifr_generated_chars_text_user_736966725f67656e6572617465645f63686172735f74657874
                 .get(sifr_generated_string_index_normalized)
+                .copied()
         }
-        .map(::std::string::ToString::to_string);
+        .map(|character| character.to_string());
         let Some(ch) = ch else {
             return String::new();
         };
@@ -2469,9 +2470,11 @@ mod sifr_generated_project_nominals {
                 let sifr_generated_string_index = i.clone();
                 let sifr_generated_string_index_normalized = sifr_generated_string_index
                     .normalize_index_or_len(sifr_generated_chars_path.len());
-                sifr_generated_chars_path.get(sifr_generated_string_index_normalized)
+                sifr_generated_chars_path
+                    .get(sifr_generated_string_index_normalized)
+                    .copied()
             }
-            .map(::std::string::ToString::to_string);
+            .map(|character| character.to_string());
             if let Some(ch) = ch
                 && ch == "/"
             {
@@ -2512,9 +2515,11 @@ mod sifr_generated_project_nominals {
                 let sifr_generated_string_index = i.clone();
                 let sifr_generated_string_index_normalized = sifr_generated_string_index
                     .normalize_index_or_len(sifr_generated_chars_path.len());
-                sifr_generated_chars_path.get(sifr_generated_string_index_normalized)
+                sifr_generated_chars_path
+                    .get(sifr_generated_string_index_normalized)
+                    .copied()
             }
-            .map(::std::string::ToString::to_string);
+            .map(|character| character.to_string());
             if let Some(ch) = ch
                 && ch == "/"
             {
@@ -2550,9 +2555,11 @@ mod sifr_generated_project_nominals {
                 let sifr_generated_string_index = i.clone();
                 let sifr_generated_string_index_normalized = sifr_generated_string_index
                     .normalize_index_or_len(sifr_generated_chars_base.len());
-                sifr_generated_chars_base.get(sifr_generated_string_index_normalized)
+                sifr_generated_chars_base
+                    .get(sifr_generated_string_index_normalized)
+                    .copied()
             }
-            .map(::std::string::ToString::to_string);
+            .map(|character| character.to_string());
             if let Some(ch) = ch
                 && ch == "."
             {

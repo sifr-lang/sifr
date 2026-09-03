@@ -52,17 +52,24 @@ impl RustEmitter {
     }
 
     pub(crate) fn clone_owned_append_arg_expr_for_ir(
+        &self,
         expr: &HirExpr,
         lowered: crate::RustExpr,
     ) -> crate::RustExpr {
         if expr.ty().contains_affine_resource() {
             return lowered;
         }
-        let lowered = Self::clone_moved_names_in_borrowed_aggregate(expr, lowered);
+        let lowered = self.clone_moved_names_in_borrowed_aggregate(expr, lowered);
         if matches!(expr, HirExpr::Name { .. })
             && !crate::helpers::is_copy_type_for_codegen(expr.ty())
             && Self::rust_expr_is_reusable_place_for_ir(&lowered)
         {
+            if self
+                .last_use_move_exprs
+                .contains(&crate::body_analysis::expr_key(expr))
+            {
+                return lowered;
+            }
             crate::ownership_plan::materialize_owned_value(expr.ty(), lowered)
         } else {
             lowered

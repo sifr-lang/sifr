@@ -10,9 +10,11 @@ fn collect_vowels(text: &str) -> String {
             let sifr_generated_string_index = i.clone();
             let sifr_generated_string_index_normalized =
                 sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_text.len());
-            sifr_generated_chars_text.get(sifr_generated_string_index_normalized)
+            sifr_generated_chars_text
+                .get(sifr_generated_string_index_normalized)
+                .copied()
         }
-        .map(::std::string::ToString::to_string) else {
+        .map(|character| character.to_string()) else {
             break;
         };
         let ch: String = sifr_generated_checked_value_0.clone();

@@ -69,7 +69,9 @@ impl RustEmitter {
             )
             || matches!(stmt, HirStmt::Let { ty, .. } if self.type_contains_generic_class(ty))
             || matches!(stmt, HirStmt::Let { name, .. } if self.hoistable_static_dict_locals.contains(name))
-            || stmt_needs_performance_lowering(stmt);
+            || matches!(stmt, HirStmt::Let { name, .. } if self.string_char_cache_loop_local_names.contains(name))
+            || stmt_needs_performance_lowering(stmt)
+            || self.body_analysis.aggregate_statement_has_last_use(stmt);
         if !should_bypass_simple_lowering {
             if let Some(lowered_stmts) = try_lower_simple_stmt_with_scope_result_and_bindings(
                 stmt,
@@ -232,7 +234,9 @@ impl RustEmitter {
             } else if let Some(clone_expr) = lowered_value {
                 clone_expr
             } else {
-                if let Some(lowered) = self.lower_rendered_expr_for_ir(value)? {
+                if !self.body_analysis.aggregate_statement_has_last_use(stmt)
+                    && let Some(lowered) = self.lower_rendered_expr_for_ir(value)?
+                {
                     self.coerce_local_value_for_target_type_for_ir(&effective_ty, value, lowered)?
                 } else if let Some(lowered) = self.lower_stmt_expr_for_ir(value)? {
                     self.coerce_local_value_for_target_type_for_ir(&effective_ty, value, lowered)?
@@ -337,7 +341,9 @@ impl RustEmitter {
             };
             let lowered_value = if let Some(lowered) = checked_option_value {
                 lowered
-            } else if let Some(lowered) = self.lower_rendered_expr_for_ir(value)? {
+            } else if !self.body_analysis.aggregate_statement_has_last_use(stmt)
+                && let Some(lowered) = self.lower_rendered_expr_for_ir(value)?
+            {
                 if let Some(target_ty) = target_ty.clone() {
                     Self::validate_assignment_source_type_for_ir(name, &target_ty, value)?;
                     self.coerce_local_value_for_target_type_for_ir(&target_ty, value, lowered)?

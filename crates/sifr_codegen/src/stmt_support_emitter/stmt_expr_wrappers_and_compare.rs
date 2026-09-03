@@ -171,33 +171,11 @@ macro_rules! stmt_expr_wrappers_range_index {
                             is_move: false,
                         }],
                     },
-                    Type::Str => crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::MethodCall {
-                            receiver: Box::new(crate::RustExpr::MethodCall {
-                                receiver: Box::new(crate::RustExpr::Ident("__v".to_string())),
-                                method: "chars".to_string(),
-                                args: vec![],
-                            }),
-                            method: "nth".to_string(),
-                            args: vec![crate::RustExpr::Cast {
-                                expr: Box::new(lowered_index),
-                                ty: crate::RustType::Named("usize".to_string()),
-                            }],
-                        }),
-                        method: "map".to_string(),
-                        args: vec![crate::RustExpr::Closure {
-                            params: vec![crate::RustParam::Named {
-                                name: "c".to_string(),
-                                ty: crate::RustType::Named("_".to_string()),
-                            }],
-                            body: Box::new(crate::RustExpr::MethodCall {
-                                receiver: Box::new(crate::RustExpr::Ident("c".to_string())),
-                                method: "to_string".to_string(),
-                                args: vec![],
-                            }),
-                            is_move: false,
-                        }],
-                    },
+                    Type::Str => $emitter.lower_string_index_option_with_cache(
+                        object,
+                        crate::RustExpr::Ident("__v".to_string()),
+                        lowered_index,
+                    ),
                     _ => return Ok(None),
                 };
                 return Ok(Some(crate::RustExpr::MethodCall {
@@ -305,35 +283,12 @@ macro_rules! stmt_expr_wrappers_range_index {
                     return Ok(None);
                 }
                 Type::Str => {
-                    let nth_expr = crate::RustExpr::MethodCall {
-                        receiver: Box::new(crate::RustExpr::MethodCall {
-                            receiver: Box::new(lowered_object),
-                            method: "chars".to_string(),
-                            args: vec![],
-                        }),
-                        method: "nth".to_string(),
-                        args: vec![crate::RustExpr::Cast {
-                            expr: Box::new(lowered_index),
-                            ty: crate::RustType::Named("usize".to_string()),
-                        }],
-                    };
                     if index_returns_option {
-                        return Ok(Some(crate::RustExpr::MethodCall {
-                            receiver: Box::new(nth_expr),
-                            method: "map".to_string(),
-                            args: vec![crate::RustExpr::Closure {
-                                params: vec![crate::RustParam::Named {
-                                    name: "c".to_string(),
-                                    ty: crate::RustType::Named("_".to_string()),
-                                }],
-                                body: Box::new(crate::RustExpr::MethodCall {
-                                    receiver: Box::new(crate::RustExpr::Ident("c".to_string())),
-                                    method: "to_string".to_string(),
-                                    args: vec![],
-                                }),
-                                is_move: false,
-                            }],
-                        }));
+                        return Ok(Some($emitter.lower_string_index_option_with_cache(
+                            object,
+                            lowered_object,
+                            lowered_index,
+                        )));
                     }
                     return Err(crate::CodegenError::new(
                         "internal codegen invariant violated: string index produced non-optional result type",
@@ -410,7 +365,7 @@ macro_rules! stmt_expr_contains_unary_compare_bool {
             };
             let collection_element_ty = collection.ty().contains_element_type();
             let union_wrapped_element = collection_element_ty.as_ref().and_then(|target_ty| {
-                let owned = crate::RustEmitter::clone_owned_append_arg_expr_for_ir(
+                let owned = $emitter.clone_owned_append_arg_expr_for_ir(
                     element,
                     lowered_element.clone(),
                 );
@@ -653,25 +608,13 @@ macro_rules! stmt_expr_contains_unary_compare_bool {
                         continue;
                     }
                     if matches!(lowered_op.as_str(), "==" | "!=") {
-                        let borrowed_left =
-                            $emitter.try_lower_borrowed_string_lookup_for_compare(lhs_expr)?;
-                        let borrowed_right =
-                            $emitter.try_lower_borrowed_string_lookup_for_compare(rhs_expr)?;
-                        let borrowed_left_name =
-                            $emitter.lower_borrowed_string_name_for_compare(lhs_expr);
-                        let borrowed_right_name =
-                            $emitter.lower_borrowed_string_name_for_compare(rhs_expr);
-                        if let Some((lowered_left, lowered_right)) = borrowed_left
-                            .clone()
-                            .zip(borrowed_right.clone())
-                            .or_else(|| borrowed_left.zip(borrowed_right_name))
-                            .or_else(|| borrowed_left_name.zip(borrowed_right))
+                        if let Some(lowered_cmp) = $emitter
+                            .try_lower_string_equality_for_compare(
+                                lhs_expr,
+                                rhs_expr,
+                                &lowered_op,
+                            )?
                         {
-                            let lowered_cmp = crate::RustExpr::BinOp {
-                                left: Box::new(lowered_left),
-                                op: lowered_op,
-                                right: Box::new(lowered_right),
-                            };
                             lowered_chain = Some(if let Some(existing) = lowered_chain {
                                 crate::RustExpr::BinOp {
                                     left: Box::new(existing),

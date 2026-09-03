@@ -455,7 +455,13 @@ fn test_structured_stmt_path_lowers_non_optional_string_index_for_optional_targe
     let captured = emitter.capture_structured_stmts(|inner| inner.emit_stmt(&stmt));
     assert_eq!(captured.len(), 1, "{captured:#?}");
     let rendered = crate::render_stmts(&captured);
-    assert!(rendered.contains(".chars().nth("), "{rendered}");
+    assert!(
+        rendered.contains("chars().collect::<Vec<char>>()"),
+        "{rendered}"
+    );
+    assert!(rendered.contains(".get("), "{rendered}");
+    assert!(!rendered.contains("chars().count()"), "{rendered}");
+    assert!(!rendered.contains("chars().nth("), "{rendered}");
     assert!(
         rendered.contains(".map(|character| character.to_string())"),
         "{rendered}"

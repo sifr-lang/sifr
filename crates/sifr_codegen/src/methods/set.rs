@@ -48,22 +48,13 @@ fn lower_set_op_collect(object: &RustExpr, args: &[RustExpr], method: &str) -> O
 }
 
 pub(super) fn lower_add(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
-    if args.len() != 1 {
+    let [lowered_value] = args else {
         return None;
-    }
-    let lowered_value = if matches!(&args[0], RustExpr::Ident(_)) {
-        RustExpr::MethodCall {
-            receiver: Box::new(RustExpr::Paren(Box::new(args[0].clone()))),
-            method: "clone".to_string(),
-            args: vec![],
-        }
-    } else {
-        args[0].clone()
     };
     Some(RustExpr::MethodCall {
         receiver: Box::new(object.clone()),
         method: "insert".to_string(),
-        args: vec![lowered_value],
+        args: vec![lowered_value.clone()],
     })
 }
 

@@ -371,10 +371,6 @@ impl RustEmitter {
             return Ok(Some(lowered_dict_list_iter));
         }
 
-        let Some(lowered_source) = self.lower_rendered_expr_for_ir(source)? else {
-            return Ok(None);
-        };
-        let lowered_source = Self::normalize_for_loop_iter_expr(lowered_source);
         let source_ty = Self::resolve_alias_type_for_loop_iter(source.ty());
         let mut plan =
             crate::helpers::plan_iterator_ownership_with_element_hint(source, element_type_hint);
@@ -387,6 +383,25 @@ impl RustEmitter {
                 plan.yield_mode = crate::helpers::YieldMode::Move;
             }
         }
+        let lowered_source = if matches!(
+            plan.source_access_mode,
+            crate::helpers::SourceAccessMode::Preserve
+        ) {
+            if let Some(path) = self.emit_shared_receiver_path(source) {
+                path
+            } else {
+                let Some(lowered) = self.lower_rendered_expr_for_ir(source)? else {
+                    return Ok(None);
+                };
+                lowered
+            }
+        } else {
+            let Some(lowered) = self.lower_rendered_expr_for_ir(source)? else {
+                return Ok(None);
+            };
+            lowered
+        };
+        let lowered_source = Self::normalize_for_loop_iter_expr(lowered_source);
 
         if matches!(source_ty, Type::Iterator(_))
             || matches!(source, HirExpr::GeneratorExpr { .. })

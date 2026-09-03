@@ -102,7 +102,7 @@ mod sifr_generated_project_nominals {
             for key in self.counts.keys().cloned().collect::<Vec<_>>() {
                 let count: Option<SifrInt> = self.counts.get(&key).cloned();
                 if let Some(count) = count.clone() {
-                    let entry: (T, SifrInt) = (key, count.clone());
+                    let entry: (T, SifrInt) = (key.clone(), count.clone());
                     result.push(entry.clone());
                 }
             }
@@ -278,7 +278,7 @@ mod sifr_generated_project_nominals {
     {
         type Output = SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T>;
         fn add(self, other: &SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T>) -> Self::Output {
-            let mut new_counts: HashMap<T, SifrInt> = HashMap::from([]);
+            let mut new_counts: HashMap<T, SifrInt> = HashMap::new();
             for key in Box::new(self.counts.keys().cloned().collect::<Vec<_>>().into_iter()) {
                 let a_val: Option<SifrInt> = self.counts.get(&key).cloned();
                 if let Some(a_val) = a_val {
@@ -327,7 +327,7 @@ mod sifr_generated_project_nominals {
     {
         type Output = SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T>;
         fn sub(self, other: &SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T>) -> Self::Output {
-            let mut new_counts: HashMap<T, SifrInt> = HashMap::from([]);
+            let mut new_counts: HashMap<T, SifrInt> = HashMap::new();
             for key in Box::new(self.counts.keys().cloned().collect::<Vec<_>>().into_iter()) {
                 let a_val: Option<SifrInt> = self.counts.get(&key).cloned();
                 if let Some(a_val) = a_val {
@@ -758,7 +758,7 @@ fn nsmallest<T: Clone + 'static + PartialOrd>(n: SifrInt, data: &[T]) -> Vec<T> 
         }
         let val: Option<T> = heappop(&mut heap);
         if let Some(val) = val {
-            result.push(val.clone());
+            result.push(val);
         }
         count = &count + &SifrInt::from_i64(1);
     }
@@ -771,7 +771,7 @@ fn nlargest<T: Clone + 'static + PartialOrd>(n: SifrInt, data: &[T]) -> Vec<T> {
     if &n >= &SifrInt::from(data.len()) {
         let mut result: Vec<T> = Vec::new();
         for val in data.iter().cloned() {
-            result.push(val.clone());
+            result.push(val);
         }
         return result;
     }
@@ -781,7 +781,7 @@ fn nlargest<T: Clone + 'static + PartialOrd>(n: SifrInt, data: &[T]) -> Vec<T> {
     while &SifrInt::from(heap.len()) > &SifrInt::from_i64(0) {
         let val2: Option<T> = heappop(&mut heap);
         if let Some(val2) = val2 {
-            all_sorted.push(val2.clone());
+            all_sorted.push(val2);
         }
     }
     let mut result2: Vec<T> = Vec::new();
@@ -801,7 +801,7 @@ fn nlargest<T: Clone + 'static + PartialOrd>(n: SifrInt, data: &[T]) -> Vec<T> {
                 .cloned()
         };
         if let Some(v) = v {
-            result2.push(v.clone());
+            result2.push(v);
         }
         i = &i - &SifrInt::from_i64(1);
         count = &count + &SifrInt::from_i64(1);
@@ -1064,7 +1064,7 @@ fn demo_itertools() {
         SifrInt::from_i64(50),
         SifrInt::from_i64(60),
     ];
-    let combined: Vec<SifrInt> = chain(&vec![x.to_vec(), y.to_vec()]).collect::<Vec<_>>();
+    let combined: Vec<SifrInt> = chain(&vec![x, y]).collect::<Vec<_>>();
     println!("chain result:");
     println!("{combined:?}");
 }

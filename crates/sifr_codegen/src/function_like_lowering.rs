@@ -24,6 +24,11 @@ impl RustEmitter {
         let saved_recursive_option_borrowed_views = self.recursive_option_borrowed_views.clone();
         let saved_local_binding_types = self.local_binding_types.clone();
         let saved_string_char_cache_vars = self.string_char_cache_vars.clone();
+        let saved_string_char_cache_required_names = self.string_char_cache_required_names.clone();
+        let saved_string_char_cache_loop_local_names =
+            self.string_char_cache_loop_local_names.clone();
+        let saved_body_analysis = std::mem::take(&mut self.body_analysis);
+        let saved_last_use_move_exprs = std::mem::take(&mut self.last_use_move_exprs);
         let saved_sifr_int_local_bindings = self.sifr_int_local_bindings.borrow().clone();
         let saved_sifr_int_forced_local_bindings =
             self.sifr_int_forced_local_bindings.borrow().clone();
@@ -60,6 +65,8 @@ impl RustEmitter {
                 .insert(param.name.clone(), param.ty.clone());
         }
         self.register_local_body_binding_types(&func.body);
+        (self.body_analysis, self.last_use_move_exprs) =
+            crate::body_analysis::BodyAnalysis::build(func, &self.func_signatures);
 
         let scope_ctx = ScopeContext {
             function_return_type: self.current_return_type.clone(),
@@ -77,7 +84,9 @@ impl RustEmitter {
                 self.lowering_stats.stmt_candidate_total += 1;
             }
             let simple_lowered = if stmt_needs_performance_lowering(stmt)
+                || self.body_analysis.aggregate_statement_has_last_use(stmt)
                 || Self::stmt_defines_nonempty_list(stmt)
+                || matches!(stmt, HirStmt::Let { name, .. } if self.string_char_cache_loop_local_names.contains(name))
             {
                 Ok(None)
             } else {
@@ -139,6 +148,10 @@ impl RustEmitter {
         self.recursive_option_borrowed_views = saved_recursive_option_borrowed_views;
         self.local_binding_types = saved_local_binding_types;
         self.string_char_cache_vars = saved_string_char_cache_vars;
+        self.string_char_cache_required_names = saved_string_char_cache_required_names;
+        self.string_char_cache_loop_local_names = saved_string_char_cache_loop_local_names;
+        self.body_analysis = saved_body_analysis;
+        self.last_use_move_exprs = saved_last_use_move_exprs;
         *self.sifr_int_local_bindings.borrow_mut() = saved_sifr_int_local_bindings;
         *self.sifr_int_forced_local_bindings.borrow_mut() = saved_sifr_int_forced_local_bindings;
         self.checked_place_read_witnesses = saved_checked_place_read_witnesses;

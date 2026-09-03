@@ -462,7 +462,7 @@ fn accumulate<T: Clone + 'static + SifrGeneratedAdd>(
         async move |sifr_generated_yielder: SifrGeneratedYielder<T>| {
             let mut state: Vec<T> = Vec::new();
             if let Some(initial) = initial {
-                state.push(initial.clone());
+                state.push(initial);
                 let initial_value: Option<T> = {
                     let sifr_generated_checked_read_collection = &state;
                     let sifr_generated_checked_read_index = SifrInt::from_i64(0);
@@ -478,7 +478,7 @@ fn accumulate<T: Clone + 'static + SifrGeneratedAdd>(
             }
             for item in data {
                 if &SifrInt::from(state.len()) == &SifrInt::from_i64(0) {
-                    state.push(item.clone());
+                    state.push(item);
                 } else {
                     let prev: Option<T> = {
                         let sifr_generated_checked_read_collection = &state;
