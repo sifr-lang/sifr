@@ -181,7 +181,7 @@ It does not broaden the active item.
 | 7A | merged | Receiver-effect precision and owned-boundary closure | Receiver effects invalidate only facts they can falsify and every `setdefault` entrypoint shares one owned-value boundary. |
 | 7B | merged | End-relative receiver facts and affine boundary closure | Growth invalidates end-relative facts without discarding stable absolute facts, and affine `setdefault` has one checked ownership contract. |
 | 8 | merged | Canonical Rust IR and emission cleanup | Structured IR represents all maintained code; dead branches/tails, identity transforms, needless returns, stale snapshots, and generated ceremony are removed at the producer. |
-| 8A | active | Canonical cleanup effect and identity hardening | Every second-review cleanup edge is effect-, type-, scope-, and concurrency-safe, with one shared format-capture mechanism and no target invalidation between concurrent quality runs. |
+| 8A | merged | Canonical cleanup effect and identity hardening | Every second-review cleanup edge is effect-, type-, scope-, and concurrency-safe, with one shared format-capture mechanism and no target invalidation between concurrent quality runs. |
 | 9 | pending | Algorithmic and Unicode performance | Emission preserves source complexity; string traversal avoids repeated scans/materialization; collection algorithms avoid quadratic clone/front-removal behavior; budgets prevent recurrence. |
 | 10 | pending | Runtime, stdlib bridge, and API deduplication | Each demanded support body and public adapter is assembled once, unused support is absent, and generated crates have one canonical API path per operation. |
 | 11 | pending | Portable and secure generated projects | Generated manifests/artifacts are relocatable and reproducible; process arguments preserve boundaries; path, capacity, and resource-limit handling is checked. |
@@ -478,16 +478,16 @@ repeated. [PR #3668](https://github.com/sifr-lang/sifr/pull/3668) merged as
 
 ### Item 8A: Canonical cleanup effect and identity hardening
 
-- [ ] Shared branch suffix factoring preserves effects and lexical drop order.
-- [ ] IR and syntax cleanup share one conservative discardability contract,
+- [x] Shared branch suffix factoring preserves effects and lexical drop order.
+- [x] IR and syntax cleanup share one conservative discardability contract,
   including unknown binary effects.
-- [ ] Private-field pruning preserves initializer effects and nested-module
+- [x] Private-field pruning preserves initializer effects and nested-module
   demand.
-- [ ] Iterator, length, and `None` rewrites require structural/type proof rather
+- [x] Iterator, length, and `None` rewrites require structural/type proof rather
   than method or token names.
-- [ ] All liveness consumers share one format-capture parser that handles
+- [x] All liveness consumers share one format-capture parser that handles
   width/precision captures.
-- [ ] Generated Clippy isolation prevents concurrent runs from invalidating a
+- [x] Generated Clippy isolation prevents concurrent runs from invalidating a
   shared target while retaining deterministic diagnostics.
 
 ### Item 9: Algorithmic and Unicode performance
@@ -558,7 +558,7 @@ repeated. [PR #3668](https://github.com/sifr-lang/sifr/pull/3668) merged as
 | 7A | merged | [#3639](https://github.com/sifr-lang/sifr/pull/3639) | `917a4e898a881d7966d78e645c01143d9290eb54` | Final compiler candidate `e77bf60695f27cee1fa71a1e3eea2e8facad1b75`: 1,217 codegen and 1,101 lowering tests passed with one intentional ignore; focused receiver-summary, fact-splitting, local-binding fallback, Copy/affine ownership, emitted-shape, and release-native regressions passed. Full E2E passed 718 fixtures; only exact-base `numeric_sentinels` failed under Item 8 ownership. Workspace Clippy, formatting, diff, 3,613-file guardrail, HIR maintainability, audit inventory, regenerated demo freshness, and direct native execution passed. The sole create-PR and merge gates each stopped at preflight because both profiles omit required SQL suites `host-tools`, `migration-engine`, `mysql-live`, `mysql-provider`, `postgresql-live-differential`, `postgresql-live-migrations`, `postgresql-live-runtime`, `postgresql-live-schema-tools`, `postgresql-migrations`, `schema-polymorphism`, and `schema-tools`; neither was repeated. | [Initial exact-SHA review](https://github.com/sifr-lang/sifr/pull/3639#issuecomment-5482649819) on `57a09a3121c34f5e5504ac3c7b7791e665855e8a` was NOT SATISFIED; [sole remediation review](https://github.com/sifr-lang/sifr/pull/3639#issuecomment-5482650047) on `e77bf60695f27cee1fa71a1e3eea2e8facad1b75` was SATISFIED. The remediation split accessibility from non-`None` facts and restored Copy/affine `setdefault` ownership guards. Its new end-relative negative-index finding is assigned to Item 7B under the no-third-review rule. | One typed receiver summary now preserves length/key accessibility while invalidating exact positional/value facts; all `setdefault` entrypoints share an ownership-safe operation boundary; Copy values emit no redundant clones. Bounded end-relative and affine-return follow-ups are owned by Item 7B. |
 | 7B | merged | [#3643](https://github.com/sifr-lang/sifr/pull/3643) | `17c6e49d1be6d19834530d6475353539d0efb124` | Exact compiler candidate `5b6c68d0508c5e79b0ddfc8d598480314ef8ef14`: 1,218 codegen and 1,103 lowering tests passed with one intentional ignore; 569 E2E fail fixtures, focused negative-index append/extend, absolute-index preservation, affine `setdefault`, fact-domain, and release-native insertion/existing-return evidence passed. Full E2E passed 718 fixtures; only unchanged `numeric_sentinels` failed under Item 8 ownership. Workspace Clippy, formatting, diff, 3,614-file guardrail, HIR maintainability, audit inventory, and exact demo freshness passed. The sole create-PR and merge gates each stopped at preflight because both profiles omit required SQL suites `host-tools`, `migration-engine`, `mysql-live`, `mysql-provider`, `postgresql-live-differential`, `postgresql-live-migrations`, `postgresql-live-runtime`, `postgresql-live-schema-tools`, `postgresql-migrations`, `schema-polymorphism`, and `schema-tools`; neither was repeated. | [Exact-SHA review](https://github.com/sifr-lang/sifr/pull/3643#issuecomment-5483156923) on `5b6c68d0508c5e79b0ddfc8d598480314ef8ef14` was SATISFIED with no blockers. It independently traced literal-negative classification, growth-sensitive clearing, the affine insertion/return rejection, defensive codegen boundary, and non-collection fact domain. | Append/extend now preserve stable absolute facts while invalidating end-relative facts; affine `setdefault` is rejected before emission with one ownership contract; mutable buffers and join sets carry an explicit no-relevant-sequence-facts domain. |
 | 8 | merged | [#3668](https://github.com/sifr-lang/sifr/pull/3668) | `99ec90c15e1dbffd68626fa5f9eaa90528d0624a` | Compiler implementation `49f375e1619185d76e6cfc3b90d7e20ff786cce0`: 1,349 codegen tests, non-E2E CLI suites, workspace Clippy, formatting, diff, file-size/HIR guardrails, 724-path inventory, 91-project corpus, panic/rustfmt/determinism/freshness checks, the direct 724th native fixture, and two byte-identical 262-companion plus selected-Clippy runs passed. The sole create-PR gate found one missing runtime-root manifest entry after all preceding checks passed; explicit documentation-only candidate `fa661c6eccd4c1fa3eb0092e3106ac4d44dddeda` fixed it and the targeted guard passed without repeating the gate. The sole merge gate passed all Item 8 checks and stopped only on unchanged SQL coverage/taxonomy failures owned by Item 12. | [Initial exact-SHA review](https://github.com/sifr-lang/sifr/pull/3668#issuecomment-5517105667) on `84ebe95b928cfe076d9af21e1bc06c1da3bc08c4` was NOT SATISFIED; [sole remediation review](https://github.com/sifr-lang/sifr/pull/3668#issuecomment-5523601034) on `a77acce704ccab8bf568ea4156ff05dd706c66c1` was SATISFIED with no blockers. Its new non-blocking mechanisms are Item 8A/#3670-owned without a third review. | Canonical structured cleanup, exact generated-debt governance, canonical generic identity, optional-place normalization, source-only materialization, regenerated authoritative demos, and focused semantic/shape regressions merged. |
-| 8A | active | [#3670](https://github.com/sifr-lang/sifr/issues/3670) | pending | Implementation and validation pending. | Exact-SHA review pending. | Six second-review effect/type/scope/concurrency mechanisms must close before Item 9. |
+| 8A | merged | [#3672](https://github.com/sifr-lang/sifr/pull/3672) | `484717a156995ccf637b87fcd4ee33f29fd1c4af` | Exact compiler candidate `46c95c86582761c9a1f4003577f97ae8fb723ead`: 1,359 codegen tests and all non-E2E Sifr suites passed; workspace Clippy, formatting, Python syntax, HIR, diff, 3,730-file guardrail, demo freshness, full generated inventory/panic/rustfmt, required-demo corpus/determinism, and two concurrent strict-Clippy runs with distinct run-owned targets and identical diagnostics passed. Full E2E reached 720/724, exposing one in-scope optional-string length callback defect plus one unchanged timeout miss; the callback proof was corrected and all four affected fixtures then passed 4/4. The sole create-PR and merge gates passed every reached Item 8A guardrail and Rust interop check, then stopped only on the same pre-existing SQL coverage/taxonomy readiness debt owned by Item 12; neither gate was repeated. | [Exact-SHA review](https://github.com/sifr-lang/sifr/pull/3672#issuecomment-5525818647) on `46c95c86582761c9a1f4003577f97ae8fb723ead` was SATISFIED with no blockers. Five pre-existing mechanism findings and one infrastructure observation are assigned to Item 12. | Shared conservative discardability, drop-safe branch suffix factoring, effect-safe private-field demand, structurally typed Option/iterator rewrites, one complete format-capture parser, and deterministic run-owned Clippy targets merged. |
 
 ## Deferred Findings
 
@@ -659,30 +659,36 @@ repeated. [PR #3668](https://github.com/sifr-lang/sifr/pull/3668) merged as
 | Item 8 remediation review | Three format-capture collectors are duplicated and omit dynamic width/precision captures such as `{:width$}`. | Item 8A / [#3670](https://github.com/sifr-lang/sifr/issues/3670) | Consolidate capture parsing and prove all liveness consumers preserve width/precision bindings. |
 | Item 8 remediation review | Per-package generated Clippy cleanup can invalidate a shared target when two quality runs overlap. | Item 8A / [#3670](https://github.com/sifr-lang/sifr/issues/3670) | Isolate or synchronize cleanup while retaining deterministic diagnostics and explicit concurrency evidence. |
 | Item 8 merge gate | The sole merge gate passed every Item 8 guardrail and stopped in coverage/taxonomy readiness on unclassified SQL packages/targets and stale SQL milestone wording; no reported failure path changed in Item 8. | Item 12 | Reconcile the final coverage/profile taxonomy and prove every current SQL package and target is classified before final qualification. |
+| Item 8A exact-SHA review | `assignment_cleanup.rs` still deletes some unused initializers through a separate name-based purity rule instead of the shared conservative discardability contract. | Item 12 | Route every deletion-adjacent cleanup through one proved discardability contract and add effectful lookalike regressions. |
+| Item 8A exact-SHA review | Implicit captures in `panic!`, `unreachable!`, and `todo!` are not recognized by the shared format parser's macro-family routing. | Item 12 | Make macro-family coverage explicit and exhaustive, or prove those macros cannot occur on governed generated surfaces. |
+| Item 8A exact-SHA review | Struct literals nested inside macro token streams are invisible to private-field demand, effect retention, and pruning. | Item 12 | Traverse or conservatively retain macro-contained struct construction so definitions and literals cannot diverge. |
+| Item 8A exact-SHA review | The `Option[str]` length callback uses `String::len` byte length while ordinary Sifr string length counts Unicode scalar values. | Item 12 | Emit the canonical character-count operation for optional strings and add non-ASCII semantic coverage. |
+| Item 8A exact-SHA review | IR iterator classification in `stmt_support_emitter/iterator_lowering.rs` still uses method names instead of structural type proof. | Item 12 | Replace the remaining name-based iterator classification with the canonical typed proof and negative lookalike coverage. |
+| Item 8A exact-SHA review | Failed generated-Clippy runs preserve invocation-owned Cargo targets, which can accumulate substantial disk usage. | Item 12 | Add bounded evidence retention or explicit safe cleanup while preserving failed-run diagnostics and concurrent isolation. |
+| Item 8A create-PR and merge gates | Both one-shot gates passed every reached Item 8A guardrail and Rust interop check, then stopped on the unchanged unclassified SQL packages/targets and stale SQL milestone taxonomy already reproduced by Item 8. | Item 12 | Reconcile coverage/profile taxonomy and prove every current SQL package and target is classified before final qualification. |
 
 New out-of-scope findings must name a concrete active owner before the current
 item can close.
 
 ## Current Handoff
 
-- Active item: Item 8A, canonical cleanup effect and identity hardening,
-  [#3670](https://github.com/sifr-lang/sifr/issues/3670), based on Item 8 merge
-  `99ec90c15e1dbffd68626fa5f9eaa90528d0624a`.
-- Item 8 is merged through [PR #3668](https://github.com/sifr-lang/sifr/pull/3668).
-  Its initial review failed, its sole remediation review passed, the explicitly
-  adjudicated runtime-root manifest correction passed its targeted guard, and
-  neither named gate was repeated. The sole merge-gate SQL readiness failure
-  remains Item 12-owned.
-- Item 8A owns only the six second-review follow-ups: branch suffix effect/drop
-  order, shared conservative discardability, effect-safe/nested-module private
-  field demand, structurally proven rewrites, unified complete format captures,
-  and concurrency-safe deterministic generated Clippy cleanup. Algorithmic
-  allocation and last-use promotion remain Item 9-owned; runtime bridge
+- Item 8A is merged through [PR #3672](https://github.com/sifr-lang/sifr/pull/3672)
+  as `484717a156995ccf637b87fcd4ee33f29fd1c4af`. Its sole exact-SHA review was
+  SATISFIED with no blockers. Both named one-shot gates passed all reached Item
+  8A checks and stopped only on unchanged SQL coverage/taxonomy debt owned by
+  Item 12; neither gate was repeated.
+- Next sequential item: Item 9, algorithmic and Unicode performance. It owns
+  indexed-string rescans, one-character comparison allocations, queue/deque
+  and sorting algorithms, last-use move promotion, discarded-return
+  materialization, repeated nested-body collection, and enforceable complexity
+  and allocation budgets.
+- Item 8A's five pre-existing review mechanisms and failed-run Clippy target
+  retention observation are explicitly Item 12-owned. Runtime bridge
   deduplication remains Item 10-owned; portability remains Item 11-owned.
 - Item 12 is implementation/qualification only. Item 12A is closure-only and
   receives the sole whole-phase review; a whole-phase implementation defect
   creates a later implementation item and later closure item.
 - No whole-phase review has been consumed.
-- Next action: merge this record-only closure update, branch Item 8A from the
-  resulting latest `origin/main`, implement all six mechanisms without testing,
-  then run focused and broad validation before its one exact-SHA Opus review.
+- Next action: merge this record-only closure update, create the Item 9 issue,
+  branch Item 9 from the resulting latest `origin/main`, re-audit its owned
+  mechanisms, and implement the complete item before running tests.
