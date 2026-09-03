@@ -182,7 +182,8 @@ It does not broaden the active item.
 | 7B | merged | End-relative receiver facts and affine boundary closure | Growth invalidates end-relative facts without discarding stable absolute facts, and affine `setdefault` has one checked ownership contract. |
 | 8 | merged | Canonical Rust IR and emission cleanup | Structured IR represents all maintained code; dead branches/tails, identity transforms, needless returns, stale snapshots, and generated ceremony are removed at the producer. |
 | 8A | merged | Canonical cleanup effect and identity hardening | Every second-review cleanup edge is effect-, type-, scope-, and concurrency-safe, with one shared format-capture mechanism and no target invalidation between concurrent quality runs. |
-| 9 | pending | Algorithmic and Unicode performance | Emission preserves source complexity; string traversal avoids repeated scans/materialization; collection algorithms avoid quadratic clone/front-removal behavior; budgets prevent recurrence. |
+| 9 | merged | Algorithmic and Unicode performance | Emission preserves source complexity; string traversal avoids repeated scans/materialization; collection algorithms avoid quadratic clone/front-removal behavior; budgets prevent recurrence. |
+| 9A | pending | Character comparison state disambiguation | Allocation-free character/string comparison keeps an absent indexed character distinct from a present empty or multi-character string in every operand and optionality form. |
 | 10 | pending | Runtime, stdlib bridge, and API deduplication | Each demanded support body and public adapter is assembled once, unused support is absent, and generated crates have one canonical API path per operation. |
 | 11 | pending | Portable and secure generated projects | Generated manifests/artifacts are relocatable and reproducible; process arguments preserve boundaries; path, capacity, and resource-limit handling is checked. |
 | 12 | pending | Residual semantic completion and full-corpus qualification | Finish remaining semantic/profile work, remove all governed generated-code debt, regenerate every owned surface, and pass the uncompromising final qualification and applicable one-shot gates. |
@@ -492,11 +493,23 @@ repeated. [PR #3668](https://github.com/sifr-lang/sifr/pull/3668) merged as
 
 ### Item 9: Algorithmic and Unicode performance
 
-- [ ] Indexed string operations do not repeatedly rescan Unicode text.
-- [ ] Character comparison does not allocate one-character strings.
-- [ ] Queue/deque and sorting operations use appropriate Rust structures and
+- [x] Indexed string operations do not repeatedly rescan Unicode text.
+- [x] Character comparison does not allocate one-character strings.
+- [x] Queue/deque and sorting operations use appropriate Rust structures and
   algorithms.
-- [ ] Representative corpus cases enforce asymptotic and allocation budgets.
+- [x] Representative corpus cases enforce asymptotic and allocation budgets.
+
+### Item 9A: Character comparison state disambiguation
+
+- [ ] Out-of-range indexed characters compare unequal to present empty and
+  multi-character strings, and inequality is the exact inverse.
+- [ ] Both operand orders, literals, variables, optional strings, negative and
+  positive out-of-range indices, and valid Unicode scalar matches are covered.
+- [ ] Two genuinely absent optional values preserve their existing equality
+  contract without allocating one-character strings.
+- [ ] The unrelated `compiler_safety` demo source behavior drift introduced in
+  Item 9 is restored or moved under an explicit owner, and its companion is
+  regenerated from the corrected source.
 
 ### Item 10: Runtime, stdlib bridge, and API deduplication
 
@@ -559,6 +572,7 @@ repeated. [PR #3668](https://github.com/sifr-lang/sifr/pull/3668) merged as
 | 7B | merged | [#3643](https://github.com/sifr-lang/sifr/pull/3643) | `17c6e49d1be6d19834530d6475353539d0efb124` | Exact compiler candidate `5b6c68d0508c5e79b0ddfc8d598480314ef8ef14`: 1,218 codegen and 1,103 lowering tests passed with one intentional ignore; 569 E2E fail fixtures, focused negative-index append/extend, absolute-index preservation, affine `setdefault`, fact-domain, and release-native insertion/existing-return evidence passed. Full E2E passed 718 fixtures; only unchanged `numeric_sentinels` failed under Item 8 ownership. Workspace Clippy, formatting, diff, 3,614-file guardrail, HIR maintainability, audit inventory, and exact demo freshness passed. The sole create-PR and merge gates each stopped at preflight because both profiles omit required SQL suites `host-tools`, `migration-engine`, `mysql-live`, `mysql-provider`, `postgresql-live-differential`, `postgresql-live-migrations`, `postgresql-live-runtime`, `postgresql-live-schema-tools`, `postgresql-migrations`, `schema-polymorphism`, and `schema-tools`; neither was repeated. | [Exact-SHA review](https://github.com/sifr-lang/sifr/pull/3643#issuecomment-5483156923) on `5b6c68d0508c5e79b0ddfc8d598480314ef8ef14` was SATISFIED with no blockers. It independently traced literal-negative classification, growth-sensitive clearing, the affine insertion/return rejection, defensive codegen boundary, and non-collection fact domain. | Append/extend now preserve stable absolute facts while invalidating end-relative facts; affine `setdefault` is rejected before emission with one ownership contract; mutable buffers and join sets carry an explicit no-relevant-sequence-facts domain. |
 | 8 | merged | [#3668](https://github.com/sifr-lang/sifr/pull/3668) | `99ec90c15e1dbffd68626fa5f9eaa90528d0624a` | Compiler implementation `49f375e1619185d76e6cfc3b90d7e20ff786cce0`: 1,349 codegen tests, non-E2E CLI suites, workspace Clippy, formatting, diff, file-size/HIR guardrails, 724-path inventory, 91-project corpus, panic/rustfmt/determinism/freshness checks, the direct 724th native fixture, and two byte-identical 262-companion plus selected-Clippy runs passed. The sole create-PR gate found one missing runtime-root manifest entry after all preceding checks passed; explicit documentation-only candidate `fa661c6eccd4c1fa3eb0092e3106ac4d44dddeda` fixed it and the targeted guard passed without repeating the gate. The sole merge gate passed all Item 8 checks and stopped only on unchanged SQL coverage/taxonomy failures owned by Item 12. | [Initial exact-SHA review](https://github.com/sifr-lang/sifr/pull/3668#issuecomment-5517105667) on `84ebe95b928cfe076d9af21e1bc06c1da3bc08c4` was NOT SATISFIED; [sole remediation review](https://github.com/sifr-lang/sifr/pull/3668#issuecomment-5523601034) on `a77acce704ccab8bf568ea4156ff05dd706c66c1` was SATISFIED with no blockers. Its new non-blocking mechanisms are Item 8A/#3670-owned without a third review. | Canonical structured cleanup, exact generated-debt governance, canonical generic identity, optional-place normalization, source-only materialization, regenerated authoritative demos, and focused semantic/shape regressions merged. |
 | 8A | merged | [#3672](https://github.com/sifr-lang/sifr/pull/3672) | `484717a156995ccf637b87fcd4ee33f29fd1c4af` | Exact compiler candidate `46c95c86582761c9a1f4003577f97ae8fb723ead`: 1,359 codegen tests and all non-E2E Sifr suites passed; workspace Clippy, formatting, Python syntax, HIR, diff, 3,730-file guardrail, demo freshness, full generated inventory/panic/rustfmt, required-demo corpus/determinism, and two concurrent strict-Clippy runs with distinct run-owned targets and identical diagnostics passed. Full E2E reached 720/724, exposing one in-scope optional-string length callback defect plus one unchanged timeout miss; the callback proof was corrected and all four affected fixtures then passed 4/4. The sole create-PR and merge gates passed every reached Item 8A guardrail and Rust interop check, then stopped only on the same pre-existing SQL coverage/taxonomy readiness debt owned by Item 12; neither gate was repeated. | [Exact-SHA review](https://github.com/sifr-lang/sifr/pull/3672#issuecomment-5525818647) on `46c95c86582761c9a1f4003577f97ae8fb723ead` was SATISFIED with no blockers. Five pre-existing mechanism findings and one infrastructure observation are assigned to Item 12. | Shared conservative discardability, drop-safe branch suffix factoring, effect-safe private-field demand, structurally typed Option/iterator rewrites, one complete format-capture parser, and deterministic run-owned Clippy targets merged. |
+| 9 | merged | [#3675](https://github.com/sifr-lang/sifr/pull/3675) | `145fc217606bf3ba85d819d0065b80ec29ea6579` | Exact compiler candidate `6ab6adc08f3ad253bcb4d1d080d5f2c5554cae70`: 1,379 codegen tests and every non-E2E Sifr group passed; full E2E passed 725/725; workspace Clippy, formatting, HIR, diff, 3,739-file guardrail, regenerated demo freshness, and the authoritative 262-companion exact-debt audit passed. Generated panic, intrinsic-panic, rustfmt, and determinism modes passed before the final narrow capture-ABI correction, which was then covered by full E2E and all companions. Fresh generated text/i18n corpus and demo builds stopped only in `tinyvec 1.13.0` under Rust 1.98; changing only the temporary lock to `tinyvec 1.11.0` passed, so Item 11 owns dependency-resolution portability. The sole create-PR and merge gates passed all reached guardrails and Rust interop checks, then stopped on the unchanged SQL coverage/taxonomy readiness debt owned by Item 12; neither gate was repeated. | [Initial exact-SHA review](https://github.com/sifr-lang/sifr/pull/3675#issuecomment-5533536041) on `59b8a6e8b0c586c096510d5f461d968dd409cad2` requested six remediations, all implemented. [Sole remediation review](https://github.com/sifr-lang/sifr/pull/3675#issuecomment-5533471365) on `6ab6adc08f3ad253bcb4d1d080d5f2c5554cae70` was NOT SATISFIED after finding a new character-comparison state-collapse mechanism. Under the no-third-review rule it is immediate Item 9A/[#3676](https://github.com/sifr-lang/sifr/issues/3676). | Unicode scan caching, allocation-free character comparison, constant-time deque front operations, key-once stable sorting, memoized body analysis, deduplicated while witnesses, last-use collection moves, statement `setdefault`, generated complexity budgets, and regenerated companions merged. The bounded second-review semantic defect is owned by Item 9A. |
 
 ## Deferred Findings
 
@@ -666,29 +680,36 @@ repeated. [PR #3668](https://github.com/sifr-lang/sifr/pull/3668) merged as
 | Item 8A exact-SHA review | IR iterator classification in `stmt_support_emitter/iterator_lowering.rs` still uses method names instead of structural type proof. | Item 12 | Replace the remaining name-based iterator classification with the canonical typed proof and negative lookalike coverage. |
 | Item 8A exact-SHA review | Failed generated-Clippy runs preserve invocation-owned Cargo targets, which can accumulate substantial disk usage. | Item 12 | Add bounded evidence retention or explicit safe cleanup while preserving failed-run diagnostics and concurrent isolation. |
 | Item 8A create-PR and merge gates | Both one-shot gates passed every reached Item 8A guardrail and Rust interop check, then stopped on the unchanged unclassified SQL packages/targets and stale SQL milestone taxonomy already reproduced by Item 8. | Item 12 | Reconcile coverage/profile taxonomy and prove every current SQL package and target is classified before final qualification. |
+| Item 9 remediation review | Allocation-free `Char`/`Str` comparison collapses an absent indexed character and a present empty or multi-character string to the same `None`, making out-of-range equality true and inequality false. | Item 9A / [#3676](https://github.com/sifr-lang/sifr/issues/3676) | Keep absence distinct from failed single-character extraction across operand order, literals, variables, optionals, Unicode, and both comparison operators without restoring one-character allocation. |
+| Item 9 remediation review | The unified body prepass does not record the `anext(x)` mutation source retained by the previous query implementation. | Item 12 | Reconcile iterator-advance mutation fidelity in the canonical prepass and add a reachable negative or proof that the omitted fact cannot affect witnesses or narrowing. |
+| Item 9 remediation review | Isinstance-arm mutation now includes signature and nested-capture effects and can conservatively add `mut` bindings beyond the former query. | Item 12 | Remove any resulting generated `unused_mut` debt while preserving the wider sound mutation analysis. |
+| Item 9 remediation review | `demos/compiler_safety/main.sifr` changed its callable-field behavior and asserted output even though Item 9 required producer and generated-companion work, not demo behavior changes. | Item 9A / [#3676](https://github.com/sifr-lang/sifr/issues/3676) | Restore the prior demo contract or move the coverage under an explicit semantic owner, then regenerate the authoritative companion. |
+| Item 9 generated-project validation | Fresh generated text/i18n projects resolve `tinyvec 1.13.0`, which fails to compile under Rust 1.98; changing only the temporary generated lock to the workspace-compatible `tinyvec 1.11.0` passes. | Item 11 | Give generated projects a reproducible, toolchain-compatible dependency-resolution contract and prove fresh materialization without hand-edited temporary locks. |
+| Item 9 initial review | The checked-read collector's narrow lowering path can fail closed on nested boolean conditions and lose optimization facts even though semantic lowering remains correct. | Item 12 | Reconcile checked-read collection with canonical short-circuit condition lowering and add negative lookalike and nested-boolean coverage. |
+| Item 9 create-PR and merge gates | Both one-shot gates passed every reached Item 9 guardrail and Rust interop check, then stopped on the unchanged unclassified SQL packages/targets and stale SQL milestone taxonomy already owned by Item 12. | Item 12 | Reconcile coverage/profile taxonomy and prove every current SQL package and target is classified before final qualification. |
 
 New out-of-scope findings must name a concrete active owner before the current
 item can close.
 
 ## Current Handoff
 
-- Item 8A is merged through [PR #3672](https://github.com/sifr-lang/sifr/pull/3672)
-  as `484717a156995ccf637b87fcd4ee33f29fd1c4af`. Its sole exact-SHA review was
-  SATISFIED with no blockers. Both named one-shot gates passed all reached Item
-  8A checks and stopped only on unchanged SQL coverage/taxonomy debt owned by
-  Item 12; neither gate was repeated.
-- Next sequential item: Item 9, algorithmic and Unicode performance. It owns
-  indexed-string rescans, one-character comparison allocations, queue/deque
-  and sorting algorithms, last-use move promotion, discarded-return
-  materialization, repeated nested-body collection, and enforceable complexity
-  and allocation budgets.
-- Item 8A's five pre-existing review mechanisms and failed-run Clippy target
-  retention observation are explicitly Item 12-owned. Runtime bridge
-  deduplication remains Item 10-owned; portability remains Item 11-owned.
-- Item 12 is implementation/qualification only. Item 12A is closure-only and
-  receives the sole whole-phase review; a whole-phase implementation defect
-  creates a later implementation item and later closure item.
+- Item 9 is merged through [PR #3675](https://github.com/sifr-lang/sifr/pull/3675)
+  as `145fc217606bf3ba85d819d0065b80ec29ea6579`; exact compiler candidate
+  `6ab6adc08f3ad253bcb4d1d080d5f2c5554cae70` passed the focused and broad
+  Item 9 evidence above.
+- The sole remediation review found a new mechanism-level comparison defect.
+  Under the explicit no-third-review rule, immediate next Item 9A is tracked by
+  [#3676](https://github.com/sifr-lang/sifr/issues/3676). Item 9A must keep
+  absent indexed characters distinct from present empty or multi-character
+  strings and reconcile the unrelated `compiler_safety` source drift.
+- Item 11 owns fresh generated-project dependency resolution, including the
+  Rust 1.98/`tinyvec 1.13.0` failure. Item 12 owns `anext` mutation fidelity,
+  conservative `mut` cleanup, checked-read condition fidelity, and the
+  unchanged SQL coverage/taxonomy gate failures.
+- Item 10 runtime/bridge deduplication follows Item 9A. Item 12 is
+  implementation/qualification only. Item 12A is closure-only and receives the
+  sole whole-phase review.
 - No whole-phase review has been consumed.
-- Next action: merge this record-only closure update, create the Item 9 issue,
-  branch Item 9 from the resulting latest `origin/main`, re-audit its owned
-  mechanisms, and implement the complete item before running tests.
+- Next action: merge this record-only update, close [#3674](https://github.com/sifr-lang/sifr/issues/3674),
+  branch Item 9A from the resulting latest `origin/main`, implement its full
+  semantic matrix before testing, and run its own bounded review and gates.
