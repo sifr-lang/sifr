@@ -708,11 +708,7 @@ fn simple_binding_name(pattern: &syn::Pat) -> Option<String> {
 }
 
 fn expression_is_discardable(expression: &syn::Expr) -> bool {
-    match expression {
-        syn::Expr::Lit(_) => true,
-        syn::Expr::Paren(paren) => expression_is_discardable(&paren.expr),
-        _ => false,
-    }
+    crate::discardability::syntax_expression_is_discardable(expression)
 }
 
 fn expression_is_literal_unit(expression: &syn::Expr) -> bool {

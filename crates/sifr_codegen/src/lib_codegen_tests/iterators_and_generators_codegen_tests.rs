@@ -809,3 +809,21 @@ fn test_structured_aug_assign_uses_string_and_list_methods() {
     assert!(!generated.rust_source.contains("s += "));
     assert!(!generated.rust_source.contains("items += "));
 }
+
+#[test]
+fn consuming_collection_into_iterator_arguments_use_the_collection_directly() {
+    let expression = HirExpr::ListLiteral {
+        elements: vec![HirExpr::IntLiteral(1), HirExpr::IntLiteral(2)],
+        ty: Type::List(Box::new(Type::Int)),
+    };
+    let lowered = crate::intrinsic_method_emitters::registry_iterable_to_owned_into_iter_arg_expr(
+        &mut RustEmitter::new(),
+        &expression,
+    )
+    .expect("a consuming list must lower as an IntoIterator argument");
+
+    assert_eq!(
+        crate::render_expr(&lowered),
+        "vec![SifrInt::from_i64(1), SifrInt::from_i64(2)]"
+    );
+}

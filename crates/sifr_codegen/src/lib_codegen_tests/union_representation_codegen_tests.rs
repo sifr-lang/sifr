@@ -15,6 +15,30 @@ fn generic_option_none_comparisons_use_option_predicates_without_partial_eq() {
 }
 
 #[test]
+fn computed_option_none_comparisons_use_option_predicates() {
+    let rust_code = generate_rust_from_source(
+        r#"def missing(values: dict[str, int]) -> bool:
+    return values.get("missing") == None
+"#,
+    );
+
+    assert!(rust_code.contains(".is_none()"), "{rust_code}");
+    assert!(!rust_code.contains("== None"), "{rust_code}");
+}
+
+#[test]
+fn optional_string_length_keeps_a_payload_compatible_callback() {
+    let rust_code = generate_rust_from_source(
+        r#"def optional_length(value: str | None) -> int:
+    return len(value)
+"#,
+    );
+
+    assert!(rust_code.contains("|value| value.len()"), "{rust_code}");
+    assert!(!rust_code.contains("::std::vec::Vec::len"), "{rust_code}");
+}
+
+#[test]
 fn owned_optional_argument_widening_is_not_force_unwrapped_after_conversion() {
     let target = sifr_type_system::make_union(vec![Type::Int, Type::Str, Type::None]);
     let rust_code = generate_rust_from_source(

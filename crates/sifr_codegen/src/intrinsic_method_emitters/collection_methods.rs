@@ -478,10 +478,7 @@ impl RustEmitter {
                     stmts.push(crate::RustStmt::Expr(crate::RustExpr::MethodCall {
                         receiver: Box::new(object_expr.clone()),
                         method: "extend".to_string(),
-                        args: vec![
-                            registry_iterable_to_owned_iter_expr(self, arg)
-                                .map(|expr| crate::RustExpr::Paren(Box::new(expr)))?,
-                        ],
+                        args: vec![crate::intrinsic_method_emitters::registry_iterable_to_owned_into_iter_arg_expr(self, arg)?],
                     }));
                 }
                 return Some(crate::RustExpr::Block {
@@ -504,10 +501,7 @@ impl RustEmitter {
                     stmts.push(crate::RustStmt::Expr(crate::RustExpr::MethodCall {
                         receiver: Box::new(crate::RustExpr::Ident("__result".to_string())),
                         method: "extend".to_string(),
-                        args: vec![
-                            registry_iterable_to_owned_iter_expr(self, arg)
-                                .map(|expr| crate::RustExpr::Paren(Box::new(expr)))?,
-                        ],
+                        args: vec![crate::intrinsic_method_emitters::registry_iterable_to_owned_into_iter_arg_expr(self, arg)?],
                     }));
                 }
                 return Some(crate::RustExpr::Block {

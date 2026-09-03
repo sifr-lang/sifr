@@ -3,11 +3,13 @@ use syn::visit::{self, Visit};
 use syn::visit_mut::{self, VisitMut};
 
 mod generic_cleanup;
+mod private_field_effects;
 mod wildcards;
 
 use generic_cleanup::{
     prune_item_members, prune_unconstrained_impl_generics, prune_unused_aggregate_type_parameters,
 };
+use private_field_effects::{retain_effectful_initializers, type_has_trivial_drop};
 use wildcards::rewrite_exhaustive_enum_wildcards;
 
 pub(super) fn prune_unused_members(file: &mut syn::File) {
@@ -516,14 +518,16 @@ impl VisitMut for RemovedVariantPatternCleanup<'_> {
 
 fn prune_unused_private_fields(items: &mut [syn::Item]) {
     let mut demand = FieldDemandCollector::default();
-    for item in items
-        .iter()
-        .filter(|item| !matches!(item, syn::Item::Mod(_)))
-    {
+    // Inline modules can access a parent field through `super` or a re-export.
+    // Visiting them is conservative for same-named fields and prevents a child
+    // use from deleting storage that the child still observes.
+    for item in items.iter() {
+        demand.retain_struct_initializers = matches!(item, syn::Item::Mod(_));
         demand.visit_item(item);
     }
-    let mut removed = HashMap::<String, HashSet<String>>::new();
-    for item in items.iter_mut() {
+    demand.retain_struct_initializers = false;
+    let mut candidates = HashMap::<String, HashSet<String>>::new();
+    for item in items.iter() {
         let syn::Item::Struct(struct_) = item else {
             continue;
         };
@@ -535,21 +539,42 @@ fn prune_unused_private_fields(items: &mut [syn::Item]) {
         {
             continue;
         }
-        let syn::Fields::Named(fields) = &mut struct_.fields else {
+        let syn::Fields::Named(fields) = &struct_.fields else {
             continue;
         };
         let owner = struct_.ident.to_string();
-        let owner_removed = fields
+        let owner_candidates = fields
             .named
             .iter()
             .filter_map(|field| {
                 let name = field.ident.as_ref()?.to_string();
-                (!demand.names.contains(&name)).then_some(name)
+                (!demand.names.contains(&name) && type_has_trivial_drop(&field.ty)).then_some(name)
             })
             .collect::<HashSet<_>>();
-        if owner_removed.is_empty() {
-            continue;
+        if !owner_candidates.is_empty() {
+            candidates.insert(owner, owner_candidates);
         }
+    }
+    if candidates.is_empty() {
+        return;
+    }
+
+    retain_effectful_initializers(items, &mut candidates);
+    let removed = candidates;
+    if removed.is_empty() {
+        return;
+    }
+
+    for item in items.iter_mut() {
+        let syn::Item::Struct(struct_) = item else {
+            continue;
+        };
+        let Some(owner_removed) = removed.get(&struct_.ident.to_string()) else {
+            continue;
+        };
+        let syn::Fields::Named(fields) = &mut struct_.fields else {
+            continue;
+        };
         fields.named = std::mem::take(&mut fields.named)
             .into_iter()
             .filter(|field| {
@@ -559,22 +584,20 @@ fn prune_unused_private_fields(items: &mut [syn::Item]) {
                     .is_none_or(|name| !owner_removed.contains(&name.to_string()))
             })
             .collect();
-        removed.insert(owner, owner_removed);
     }
-    if !removed.is_empty() {
-        let mut pruner = PrivateFieldPruner {
-            removed: &removed,
-            impl_owner: None,
-        };
-        for item in items {
-            pruner.visit_item_mut(item);
-        }
+    let mut pruner = PrivateFieldPruner {
+        removed: &removed,
+        impl_owner: None,
+    };
+    for item in items {
+        pruner.visit_item_mut(item);
     }
 }
 
 #[derive(Default)]
 struct FieldDemandCollector {
     names: HashSet<String>,
+    retain_struct_initializers: bool,
 }
 
 impl FieldDemandCollector {
@@ -613,6 +636,19 @@ impl<'ast> Visit<'ast> for FieldDemandCollector {
         visit::visit_field_pat(self, field);
     }
 
+    fn visit_expr_struct(&mut self, expression: &'ast syn::ExprStruct) {
+        if self.retain_struct_initializers {
+            self.names
+                .extend(expression.fields.iter().filter_map(|field| {
+                    let syn::Member::Named(name) = &field.member else {
+                        return None;
+                    };
+                    Some(name.to_string())
+                }));
+        }
+        visit::visit_expr_struct(self, expression);
+    }
+
     fn visit_macro(&mut self, rust_macro: &'ast syn::Macro) {
         self.collect_macro_tokens(rust_macro.tokens.clone());
     }
@@ -624,6 +660,10 @@ struct PrivateFieldPruner<'removed> {
 }
 
 impl VisitMut for PrivateFieldPruner<'_> {
+    fn visit_item_mod_mut(&mut self, _module: &mut syn::ItemMod) {
+        // Nested scopes compute and apply their own owner-qualified pruning.
+    }
+
     fn visit_item_impl_mut(&mut self, implementation: &mut syn::ItemImpl) {
         let previous = self.impl_owner.replace(type_name(&implementation.self_ty));
         visit_mut::visit_item_impl_mut(self, implementation);

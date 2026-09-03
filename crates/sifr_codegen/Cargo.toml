@@ -18,6 +18,7 @@ syn = { workspace = true, features = ["printing", "visit-mut"] }
 prettyplease = "0.3.0"
 proc-macro2 = { version = "1.0.107", features = ["span-locations"] }
 quote = "1.0.45"
+unicode-ident = { workspace = true }
 bigdecimal = { workspace = true }
 rust_decimal = { workspace = true }
 

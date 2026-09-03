@@ -128,12 +128,26 @@ pub(super) fn factor_shared_if_suffix(expression: &mut syn::Expr) {
         &mut branch_bindings,
     );
     collect_statement_bindings(&else_block.block.stmts[..else_split], &mut branch_bindings);
+    // Moving the suffix outside either branch also moves it past the drop of
+    // every branch-local binding. Without resolved types, no local's `Drop`
+    // implementation can be assumed unobservable. Statement macros are also
+    // excluded because they can expand to a binding whose lexical lifetime is
+    // not visible in the parsed syntax tree.
+    let branch_prefixes_are_lifetime_transparent = branch_bindings.is_empty()
+        && branch.then_branch.stmts[..then_split]
+            .iter()
+            .chain(&else_block.block.stmts[..else_split])
+            .all(statement_cannot_introduce_branch_local);
     let mut shared_identifiers = HashSet::new();
     for statement in &shared {
         collect_statement_identifiers(statement, &mut shared_identifiers);
     }
     let condition_bindings = condition_binding_names(&branch.cond);
-    if !branch_bindings.is_disjoint(&shared_identifiers)
+    // A let-chain binding lives through the selected branch in the original
+    // expression. Hoisting any suffix would make that binding drop first.
+    if !branch_prefixes_are_lifetime_transparent
+        || !condition_bindings.is_empty()
+        || !branch_bindings.is_disjoint(&shared_identifiers)
         || !condition_bindings.is_disjoint(&shared_identifiers)
     {
         return;
@@ -158,9 +172,10 @@ struct FormatCaptureCollector<'names> {
 
 impl<'ast> Visit<'ast> for FormatCaptureCollector<'_> {
     fn visit_macro(&mut self, rust_macro: &'ast syn::Macro) {
-        self.names.extend(
-            crate::generated_rust_canonicalizer::item_demand::format_capture_names(rust_macro),
-        );
+        self.names
+            .extend(crate::generated_rust_canonicalizer::format_capture::names(
+                rust_macro,
+            ));
         syn::visit::visit_macro(self, rust_macro);
     }
 }
@@ -185,6 +200,10 @@ fn condition_binding_names(condition: &syn::Expr) -> HashSet<String> {
 }
 
 fn statement_is_movable_suffix(statement: &syn::Stmt) -> bool {
+    matches!(statement, syn::Stmt::Expr(_, Some(_)))
+}
+
+fn statement_cannot_introduce_branch_local(statement: &syn::Stmt) -> bool {
     matches!(statement, syn::Stmt::Expr(_, Some(_)))
 }
 

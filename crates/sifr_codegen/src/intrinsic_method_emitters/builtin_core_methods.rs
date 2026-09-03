@@ -628,31 +628,27 @@ impl RustEmitter {
                 let arg_count = args.len() - 1;
                 if arg_count == 1 {
                     Some(registry_box_iterator_expr(RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::MethodCall {
-                            receiver: Box::new(iter_expr),
-                            method: "map".to_string(),
-                            args: vec![RustExpr::ClosureBlock {
-                                params: vec![crate::RustParam::Named {
-                                    name: "__map_item".to_string(),
-                                    ty: crate::RustType::Named("_".to_string()),
-                                }],
-                                body: vec![crate::RustStmt::Return(Some(
-                                    registry_call_callable_with_owned_args(
-                                        self,
-                                        &args[0],
-                                        &[(
-                                            "__map_item".to_string(),
-                                            crate::resolve_alias_type_for_plain_call(args[1].ty())
-                                                .iterable_element_type()?,
-                                        )],
-                                    )?,
-                                ))],
-                                is_move: false,
-                                is_async: false,
+                        receiver: Box::new(iter_expr),
+                        method: "map".to_string(),
+                        args: vec![RustExpr::ClosureBlock {
+                            params: vec![crate::RustParam::Named {
+                                name: "__map_item".to_string(),
+                                ty: crate::RustType::Named("_".to_string()),
                             }],
-                        }),
-                        method: "into_iter".to_string(),
-                        args: vec![],
+                            body: vec![crate::RustStmt::Return(Some(
+                                registry_call_callable_with_owned_args(
+                                    self,
+                                    &args[0],
+                                    &[(
+                                        "__map_item".to_string(),
+                                        crate::resolve_alias_type_for_plain_call(args[1].ty())
+                                            .iterable_element_type()?,
+                                    )],
+                                )?,
+                            ))],
+                            is_move: false,
+                            is_async: false,
+                        }],
                     }))
                 } else {
                     let mut body = Vec::new();
@@ -677,21 +673,17 @@ impl RustEmitter {
                         registry_call_callable_with_owned_args(self, &args[0], &bindings)?,
                     )));
                     Some(registry_box_iterator_expr(RustExpr::MethodCall {
-                        receiver: Box::new(RustExpr::MethodCall {
-                            receiver: Box::new(iter_expr),
-                            method: "map".to_string(),
-                            args: vec![RustExpr::ClosureBlock {
-                                params: vec![crate::RustParam::Named {
-                                    name: "__map_item".to_string(),
-                                    ty: crate::RustType::Named("_".to_string()),
-                                }],
-                                body,
-                                is_move: false,
-                                is_async: false,
+                        receiver: Box::new(iter_expr),
+                        method: "map".to_string(),
+                        args: vec![RustExpr::ClosureBlock {
+                            params: vec![crate::RustParam::Named {
+                                name: "__map_item".to_string(),
+                                ty: crate::RustType::Named("_".to_string()),
                             }],
-                        }),
-                        method: "into_iter".to_string(),
-                        args: vec![],
+                            body,
+                            is_move: false,
+                            is_async: false,
+                        }],
                     }))
                 }
             }

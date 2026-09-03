@@ -6,6 +6,7 @@ mod lib_modules_and_codegen;
 pub use lib_modules_and_codegen::*;
 mod builtin_errors;
 pub(crate) use builtin_errors::BUILTIN_ERROR_CLASSES;
+mod discardability;
 mod generated_rust_canonicalizer;
 mod generator_runtime_needs;
 pub use generated_rust_canonicalizer::{

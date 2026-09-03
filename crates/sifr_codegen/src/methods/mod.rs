@@ -62,7 +62,7 @@ pub(crate) fn lower_method_with_context(
         (Type::Tuple(elems), "count") => common::lower_tuple_count(elems.len(), object, args),
         (Type::Tuple(elems), "index") => common::lower_tuple_index(elems.len(), object, args),
         (Type::Str, "len") => common::lower_string_char_len(object, args),
-        (ty, "len") if is_option_type(ty) => common::lower_option_len(object, args),
+        (ty, "len") if is_option_type(ty) => common::lower_option_len(ty, object, args),
         (Type::Class { .. }, "len") if args.is_empty() => Some(RustExpr::MethodCall {
             receiver: Box::new(object.clone()),
             method: "len".to_string(),
@@ -270,7 +270,7 @@ mod tests {
         .expect("option len lowers");
         assert_eq!(
             render_expr(&option_len.expr),
-            "SifrInt::from(opt.as_ref().map_or(0_usize, |v| v.len()))"
+            "SifrInt::from(opt.as_ref().map_or(0_usize, ::std::vec::Vec::len))"
         );
 
         let generic_len = lower_method(

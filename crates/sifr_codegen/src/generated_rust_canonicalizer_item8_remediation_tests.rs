@@ -177,7 +177,7 @@ fn folds_tail_bindings_and_empty_else_blocks() {
 }
 
 #[test]
-fn rewrites_identity_constructors_none_comparisons_and_iterator_identity() {
+fn rewrites_only_identity_constructors_with_structural_proof() {
     let source = r#"
         fn convert(value: Option<i64>, values: Vec<i64>) {
             let _ = value.map_or_else(|| Err::<i64, ()>(()), |item| Ok(item));
@@ -194,9 +194,11 @@ fn rewrites_identity_constructors_none_comparisons_and_iterator_identity() {
         canonical.contains("map_or_else(|| Err::<i64, ()>(()), Ok)"),
         "{canonical}"
     );
-    assert!(canonical.contains("value.is_some()"), "{canonical}");
-    assert!(canonical.contains("value.is_none()"), "{canonical}");
-    assert_eq!(canonical.matches(".into_iter()").count(), 1, "{canonical}");
+    assert!(canonical.contains("assert_ne!(value, None)"), "{canonical}");
+    assert!(canonical.contains("assert_eq!(None, value)"), "{canonical}");
+    assert!(!canonical.contains(".is_none()"), "{canonical}");
+    assert!(!canonical.contains(".is_some()"), "{canonical}");
+    assert_eq!(canonical.matches(".into_iter()").count(), 2, "{canonical}");
 }
 
 #[test]
@@ -289,7 +291,7 @@ fn preserves_if_let_prefix_that_reads_a_shadowing_pattern_binding() {
 }
 
 #[test]
-fn factors_shared_branch_suffix_without_leaking_branch_bindings() {
+fn retains_shared_branch_suffix_before_branch_local_drop() {
     let source = r#"
         fn advance(flag: bool, mut left: i64, mut right: i64) {
             if flag {
@@ -307,10 +309,10 @@ fn factors_shared_branch_suffix_without_leaking_branch_bindings() {
     "#;
 
     let canonical = canonicalize_generated_rust_source(source)
-        .expect("common branch suffixes should execute once after the selected branch");
+        .expect("common branch suffixes must not cross a branch-local drop boundary");
 
-    assert_eq!(canonical.matches("left += 1").count(), 1, "{canonical}");
-    assert_eq!(canonical.matches("right += 1").count(), 1, "{canonical}");
+    assert_eq!(canonical.matches("left += 1").count(), 2, "{canonical}");
+    assert_eq!(canonical.matches("right += 1").count(), 2, "{canonical}");
     assert!(canonical.contains("let detail = \"long\""), "{canonical}");
 }
 
@@ -472,7 +474,7 @@ fn removes_mutability_when_local_method_facts_prove_a_shared_receiver() {
 }
 
 #[test]
-fn removes_residual_unit_iterator_and_static_format_ceremony() {
+fn removes_only_proven_residual_unit_iterator_and_static_format_ceremony() {
     let source = r#"
         struct Generated;
         impl Generated {
@@ -493,11 +495,11 @@ fn removes_residual_unit_iterator_and_static_format_ceremony() {
         .expect("residual unit, iterator, and static-format ceremony should canonicalize");
 
     assert!(
-        !canonical.contains(".extend(vec![1, 2].into_iter())"),
+        canonical.contains(".extend(vec![1, 2].into_iter())"),
         "{canonical}"
     );
     assert!(
-        !canonical.contains(".zip(vec![2].into_iter())"),
+        canonical.contains(".zip(vec![2].into_iter())"),
         "{canonical}"
     );
     assert!(
@@ -509,7 +511,7 @@ fn removes_residual_unit_iterator_and_static_format_ceremony() {
 }
 
 #[test]
-fn rewrites_typed_vec_len_closures_and_nested_format_arguments() {
+fn leaves_post_parse_len_closures_unchanged_and_rewrites_nested_format_arguments() {
     let source = r#"
         struct Vec2 { x: i64, y: i64 }
         impl std::fmt::Display for Vec2 {
@@ -529,8 +531,7 @@ fn rewrites_typed_vec_len_closures_and_nested_format_arguments() {
     let canonical = canonicalize_generated_rust_source(source)
         .expect("typed closures and nested formatting should canonicalize");
 
-    assert!(canonical.contains("::std::vec::Vec::len"), "{canonical}");
-    assert!(!canonical.contains("|value| value.len()"), "{canonical}");
+    assert!(canonical.contains("|value| value.len()"), "{canonical}");
     assert!(
         !canonical.contains("write!(f, \"{}\", format!"),
         "{canonical}"
@@ -579,7 +580,7 @@ fn canonicalizes_source_enum_variants_without_changing_their_names() {
 }
 
 #[test]
-fn prunes_unread_private_fields_and_same_named_undemanded_methods() {
+fn retains_unread_drop_fields_and_prunes_same_named_undemanded_methods() {
     let source = r#"
         struct Config { value: i64, callback: Box<dyn Fn(i64) -> i64> }
         impl Config {
@@ -604,7 +605,7 @@ fn prunes_unread_private_fields_and_same_named_undemanded_methods() {
     let canonical = canonicalize_generated_rust_source(source)
         .expect("closed binaries should retain only demanded private members");
 
-    assert!(!canonical.contains("callback: Box"), "{canonical}");
+    assert!(canonical.contains("callback: Box"), "{canonical}");
     assert!(
         !canonical.contains("impl Base {\n    fn describe"),
         "{canonical}"
