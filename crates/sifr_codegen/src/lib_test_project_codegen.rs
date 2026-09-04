@@ -16,7 +16,7 @@ use crate::project_stdlib_nominals::{
 };
 use crate::project_union_prelude::render_project_union_prelude;
 use crate::render_project_structural_record_prelude;
-use crate::stdlib_filter::{rust_source_defined_item_names, rust_source_identifier_names};
+use crate::stdlib_filter::rust_source_defined_item_names;
 use sifr_stdlib_manifest::StdlibFeature;
 
 /// Generated Rust sources and aggregate dependency metadata for one test crate.
@@ -221,7 +221,11 @@ pub fn generate_rust_test_project_with_metadata(
             &project_union_prelude,
             &support_names,
         );
-        if !prelude_support_refs.is_empty() {
+        let prelude_support_traits = crate::stdlib_filter::rust_source_required_trait_names(
+            &project_union_prelude,
+            &visible_support,
+        );
+        if !prelude_support_refs.is_empty() || !prelude_support_traits.is_empty() {
             project_union_prelude =
                 crate::import_generated_support_in_project_nominals(&project_union_prelude)
                     .unwrap_or_else(|error| {
@@ -231,11 +235,14 @@ pub fn generate_rust_test_project_with_metadata(
                     });
         }
         for (module_name, source) in &mut support_rust_files {
-            let body_names = rust_source_identifier_names(source);
+            let body_support_refs =
+                crate::stdlib_filter::rust_source_referenced_item_names(source, &support_names);
+            let body_support_traits =
+                crate::stdlib_filter::rust_source_required_trait_names(source, &visible_support);
             if support_module_demands
                 .get(module_name)
                 .is_some_and(ModuleSupportDemand::needs_support)
-                && !support_names.is_disjoint(&body_names)
+                && (!body_support_refs.is_empty() || !body_support_traits.is_empty())
             {
                 *source = format!(
                     "use crate::__sifr_generated_support::*;\n\n{}",
@@ -244,10 +251,14 @@ pub fn generate_rust_test_project_with_metadata(
             }
         }
         let tests_need_support = test_rust_files.iter().any(|(module_name, source)| {
+            let body_support_refs =
+                crate::stdlib_filter::rust_source_referenced_item_names(source, &support_names);
+            let body_support_traits =
+                crate::stdlib_filter::rust_source_required_trait_names(source, &visible_support);
             test_module_demands
                 .get(module_name)
                 .is_some_and(ModuleSupportDemand::needs_support)
-                && !support_names.is_disjoint(&rust_source_identifier_names(source))
+                && (!body_support_refs.is_empty() || !body_support_traits.is_empty())
         });
         let support_module = format!(
             "mod __sifr_generated_support {{\n{}}}\n",

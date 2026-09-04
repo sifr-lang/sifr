@@ -117,7 +117,7 @@ pub(crate) fn project_stdlib_nominal_plan(
         collect_module_nominals(module, &mut declarations, &mut builtin_types);
         let intrinsic_functions =
             crate::error_refs::collect_module_intrinsic_function_names(module);
-        for name in crate::error_refs::collect_complete_referenced_builtin_error_classes(
+        for name in crate::error_refs::collect_referenced_builtin_error_classes(
             module,
             "",
             &intrinsic_functions,

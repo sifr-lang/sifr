@@ -21,22 +21,15 @@ pub(crate) use generated_rust_canonicalizer::{
     import_project_prelude_bindings_in_generated_support, prune_generated_project_owners,
 };
 mod lib_async_main_cancellation;
-mod lib_native_async_cleanup_needs;
 mod lib_runtime_needs;
 pub(crate) use generated_visibility::{
     crate_visible_generated_support_source, publicize_generated_module_source,
 };
 pub(crate) use lib_async_main_cancellation::scope_async_main_cancellation;
-pub(crate) use lib_native_async_cleanup_needs::module_uses_native_async_cleanup;
 pub(crate) use lib_runtime_needs::{
-    annotate_async_main_entrypoint, body_contains_await, module_uses_async_generator_type,
-    module_uses_failure_type, module_uses_join_set, module_uses_spawn_cpu, module_uses_task_scope,
-    replace_sync_channel_runtime_items, sync_channel_runtime_needed,
+    annotate_async_main_entrypoint, body_contains_await, replace_sync_channel_runtime_items,
+    sync_channel_runtime_needed,
 };
-mod lib_join_set_needs;
-pub(crate) use lib_join_set_needs::module_uses_join_set_spawn_cpu;
-mod lib_task_scope_offload_needs;
-pub(crate) use lib_task_scope_offload_needs::module_uses_task_scope_spawn_cpu;
 mod lib_project_codegen;
 mod lib_project_signatures;
 mod lib_test_project_codegen;

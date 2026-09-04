@@ -47,6 +47,10 @@ pub(crate) fn prune_generated_support_for_consumers(
             source,
             &support_names,
         ));
+        consumer_roots.extend(crate::stdlib_filter::rust_source_required_trait_names(
+            source,
+            support_source,
+        ));
         let file = syn::parse_file(source)
             .map_err(|error| format!("failed to parse generated support consumer: {error}"))?;
         consumer_items.extend(file.items);
@@ -360,6 +364,28 @@ mod tests {
         assert!(pruned_prelude.contains("pub async fn wait"));
         assert!(pruned_support.contains("async fn process_async_wait"));
         assert!(pruned_support.contains("fn status_from_parts"));
+        assert!(!pruned_support.contains("fn unused_support"));
+    }
+
+    #[test]
+    fn consumer_method_calls_retain_support_trait_contracts() {
+        let support = r#"
+            struct Wrapper;
+            trait RenderSupport {
+                fn render(&self) -> i64;
+            }
+            impl RenderSupport for Wrapper {
+                fn render(&self) -> i64 { 1 }
+            }
+            fn unused_support() {}
+        "#;
+        let body = "fn run(value: Wrapper) -> i64 { value.render() }";
+
+        let (_, pruned_support) = prune_generated_project_owners("", support, &[body])
+            .expect("generated owners should prune");
+
+        assert!(pruned_support.contains("trait RenderSupport"));
+        assert!(pruned_support.contains("impl RenderSupport for Wrapper"));
         assert!(!pruned_support.contains("fn unused_support"));
     }
 

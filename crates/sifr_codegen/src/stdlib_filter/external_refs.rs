@@ -1,7 +1,5 @@
-use super::implementation::{
-    LocalBindingCollector, collect_macro_token_refs_rec, collect_use_paths,
-};
-use std::collections::HashSet;
+use super::implementation::{collect_macro_token_refs_rec, collect_use_paths};
+use std::collections::{HashMap, HashSet};
 use syn::visit::{self, Visit};
 
 /// Return references from `rust_code` to names defined by a separate generated
@@ -13,11 +11,8 @@ pub(crate) fn rust_source_referenced_item_names(
     let Ok(parsed) = syn::parse_file(rust_code) else {
         return HashSet::new();
     };
-    let mut local_bindings = LocalBindingCollector::default();
-    local_bindings.visit_file(&parsed);
     let mut collector = ExternalItemRefCollector {
         candidate_names,
-        locals: local_bindings.locals,
         refs: HashSet::new(),
     };
     collector.visit_file(&parsed);
@@ -26,18 +21,11 @@ pub(crate) fn rust_source_referenced_item_names(
 
 struct ExternalItemRefCollector<'a> {
     candidate_names: &'a HashSet<String>,
-    locals: HashSet<String>,
     refs: HashSet<String>,
 }
 
 impl ExternalItemRefCollector<'_> {
     fn collect_path(&mut self, path: &syn::Path) {
-        let single_local = path.leading_colon.is_none()
-            && path.segments.len() == 1
-            && self.locals.contains(&path.segments[0].ident.to_string());
-        if single_local {
-            return;
-        }
         self.refs.extend(
             path.segments
                 .iter()
@@ -66,12 +54,91 @@ impl<'ast> Visit<'ast> for ExternalItemRefCollector<'_> {
     }
 
     fn visit_macro(&mut self, rust_macro: &'ast syn::Macro) {
-        let locals = self.locals.clone();
-        collect_macro_token_refs_rec(&rust_macro.tokens, &locals, |name| {
+        collect_macro_token_refs_rec(&rust_macro.tokens, &HashSet::new(), |name| {
             if self.candidate_names.contains(name) {
                 self.refs.insert(name.to_string());
             }
         });
         visit::visit_macro(self, rust_macro);
+    }
+}
+
+/// Return support traits that a consumer may require solely through method-call
+/// syntax. Rust method resolution requires those traits to be in scope even
+/// though the generated call does not contain the trait identifier.
+pub(crate) fn rust_source_required_trait_names(
+    consumer_source: &str,
+    support_source: &str,
+) -> HashSet<String> {
+    let (Ok(consumer), Ok(support)) = (
+        syn::parse_file(consumer_source),
+        syn::parse_file(support_source),
+    ) else {
+        return HashSet::new();
+    };
+    let mut method_traits = HashMap::<String, HashSet<String>>::new();
+    for item in support.items {
+        let syn::Item::Trait(trait_) = item else {
+            continue;
+        };
+        let trait_name = trait_.ident.to_string();
+        for item in trait_.items {
+            if let syn::TraitItem::Fn(method) = item {
+                method_traits
+                    .entry(method.sig.ident.to_string())
+                    .or_default()
+                    .insert(trait_name.clone());
+            }
+        }
+    }
+    if method_traits.is_empty() {
+        return HashSet::new();
+    }
+    let mut collector = MethodCallCollector {
+        method_traits: &method_traits,
+        required_traits: HashSet::new(),
+    };
+    collector.visit_file(&consumer);
+    collector.required_traits
+}
+
+struct MethodCallCollector<'a> {
+    method_traits: &'a HashMap<String, HashSet<String>>,
+    required_traits: HashSet<String>,
+}
+
+impl<'ast> Visit<'ast> for MethodCallCollector<'_> {
+    fn visit_expr_method_call(&mut self, call: &'ast syn::ExprMethodCall) {
+        if let Some(traits) = self.method_traits.get(&call.method.to_string()) {
+            self.required_traits.extend(traits.iter().cloned());
+        }
+        visit::visit_expr_method_call(self, call);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{rust_source_referenced_item_names, rust_source_required_trait_names};
+    use std::collections::HashSet;
+
+    #[test]
+    fn local_name_collisions_retain_support_conservatively() {
+        let candidates = HashSet::from(["support_value".to_string()]);
+        let referenced = rust_source_referenced_item_names(
+            "fn run() { let support_value = 1; consume(support_value); }",
+            &candidates,
+        );
+
+        assert_eq!(referenced, candidates);
+    }
+
+    #[test]
+    fn method_calls_require_matching_support_traits() {
+        let required = rust_source_required_trait_names(
+            "fn run(value: Wrapper) { value.render(); }",
+            "trait RenderSupport { fn render(&self); }",
+        );
+
+        assert_eq!(required, HashSet::from(["RenderSupport".to_string()]));
     }
 }

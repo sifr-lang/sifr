@@ -11,7 +11,7 @@ use crate::project_stdlib_nominals::{
 };
 use crate::project_union_prelude::render_project_union_prelude;
 use crate::render_project_structural_record_prelude;
-use crate::stdlib_filter::{rust_source_defined_item_names, rust_source_identifier_names};
+use crate::stdlib_filter::rust_source_defined_item_names;
 use sifr_stdlib_manifest::{StdlibFeature, try_generated_cargo_dependencies};
 use sifr_type_system::source_class_rust_name;
 
@@ -457,7 +457,11 @@ pub fn generate_rust_multi_with_metadata(
             &project_union_prelude,
             &support_names,
         );
-        if !prelude_support_refs.is_empty() {
+        let prelude_support_traits = crate::stdlib_filter::rust_source_required_trait_names(
+            &project_union_prelude,
+            &visible_support,
+        );
+        if !prelude_support_refs.is_empty() || !prelude_support_traits.is_empty() {
             project_union_prelude =
                 crate::import_generated_support_in_project_nominals(&project_union_prelude)
                     .unwrap_or_else(|error| {
@@ -468,8 +472,13 @@ pub fn generate_rust_multi_with_metadata(
             let module_needs_support = module_support_demands
                 .get(module_name)
                 .is_some_and(ModuleSupportDemand::needs_support);
-            let body_names = rust_source_identifier_names(source);
-            if module_needs_support && !support_names.is_disjoint(&body_names) {
+            let body_support_refs =
+                crate::stdlib_filter::rust_source_referenced_item_names(source, &support_names);
+            let body_support_traits =
+                crate::stdlib_filter::rust_source_required_trait_names(source, &visible_support);
+            if module_needs_support
+                && (!body_support_refs.is_empty() || !body_support_traits.is_empty())
+            {
                 *source = format!(
                     "use crate::__sifr_generated_support::*;\n\n{}",
                     source.trim_start()

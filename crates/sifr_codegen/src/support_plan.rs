@@ -39,6 +39,7 @@ pub(crate) struct ModuleSupportDemand {
     directly_used_stdlib_modules: HashSet<String>,
     imported_stdlib_names: HashMap<String, HashSet<String>>,
     suppressed_union_definitions: HashSet<String>,
+    suppressed_error_classes: HashSet<String>,
     referenced_error_classes: HashSet<String>,
     python_error_rust_types: BTreeSet<String>,
     required_features: HashSet<StdlibFeature>,
@@ -73,6 +74,10 @@ impl ModuleSupportDemand {
             directly_used_stdlib_modules: emitter.used_stdlib_modules.clone(),
             imported_stdlib_names: emitter.imported_stdlib_names.clone(),
             suppressed_union_definitions: emitter.union_enums.keys().cloned().collect(),
+            suppressed_error_classes: user_defined_error_classes
+                .into_iter()
+                .map(str::to_string)
+                .collect(),
             referenced_error_classes,
             python_error_rust_types: crate::python_interop_common::python_error_contract_rust_types(
                 module,
@@ -102,6 +107,8 @@ impl ModuleSupportDemand {
         }
         self.suppressed_union_definitions
             .extend(other.suppressed_union_definitions.iter().cloned());
+        self.suppressed_error_classes
+            .extend(other.suppressed_error_classes.iter().cloned());
         self.referenced_error_classes
             .extend(other.referenced_error_classes.iter().cloned());
         self.python_error_rust_types
@@ -145,6 +152,7 @@ impl ModuleSupportDemand {
         if needs_file_handles {
             referenced.insert("IOError".to_string());
         }
+        referenced.retain(|name| !self.suppressed_error_classes.contains(name));
         referenced
     }
 }
@@ -171,6 +179,7 @@ pub(crate) fn render_support(
         referenced_error_classes.insert("IOError".to_string());
     }
     add_runtime_error_classes(&demand.runtime, &mut referenced_error_classes);
+    referenced_error_classes.retain(|name| !demand.suppressed_error_classes.contains(name));
 
     let stdlib_emits_task_context = stdlib.source.contains("__sifr_task_current_context")
         || stdlib.source.contains("__SIFR_TASK_CONTEXT_LABEL");
@@ -589,4 +598,38 @@ fn add_runtime_error_classes(runtime: &RuntimeSupportDemand, referenced: &mut Ha
 
 fn use_item(path: &[&str]) -> RustItem {
     RustItem::Use(path.iter().map(|segment| (*segment).to_string()).collect())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{ModuleSupportDemand, render_support};
+    use crate::StdlibCode;
+
+    #[test]
+    fn user_error_classes_suppress_late_runtime_error_demand() {
+        let mut demand = ModuleSupportDemand::default();
+        demand.runtime.task_scope = true;
+        demand
+            .suppressed_error_classes
+            .insert("SecondaryError".to_string());
+
+        let rendered = render_support(&demand, &StdlibCode::default());
+
+        assert!(!rendered.source.contains("struct SecondaryError"));
+    }
+
+    #[test]
+    fn user_error_classes_suppress_late_source_error_demand() {
+        let mut demand = ModuleSupportDemand::default();
+        demand
+            .suppressed_error_classes
+            .insert("ValueError".to_string());
+
+        let referenced = demand.referenced_error_classes_with_source(
+            "fn operation() -> Result<(), ValueError> { Ok(()) }",
+            false,
+        );
+
+        assert!(!referenced.contains("ValueError"));
+    }
 }
