@@ -242,6 +242,11 @@ def repeat_text(text: str, count: int) -> str:
 
 def main():
     assert repeat_text("ab", 3) == "ababab"
+    text = "a,b,c"
+    repeated = text * 2
+    assert text == "a,b,c"
+    assert repeated == "a,b,ca,b,c"
+    assert text.split(",", 1) == ["a", "b,c"]
 "#;
     let first = tempfile::tempdir().expect("first materialization root");
     let report = sifr_driver::materialize_single_file(

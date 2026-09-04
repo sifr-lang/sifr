@@ -72,8 +72,11 @@ macro_rules! stmt_expr_binop {
                         crate::RustStmt::Let {
                             mutable: false,
                             name: "__sifr_repeat_src".to_string(),
-                            ty: None,
-                            value: string_expr,
+                            ty: Some(crate::RustType::Named("&str".to_string())),
+                            value: crate::RustExpr::Ref {
+                                mutable: false,
+                                expr: Box::new(crate::RustExpr::Paren(Box::new(string_expr))),
+                            },
                         },
                         crate::RustStmt::Let {
                             mutable: false,
@@ -145,12 +148,9 @@ macro_rules! stmt_expr_binop {
                                                 "__sifr_repeat_out".to_string(),
                                             )),
                                             method: "push_str".to_string(),
-                                            args: vec![crate::RustExpr::Ref {
-                                                mutable: false,
-                                                expr: Box::new(crate::RustExpr::Ident(
-                                                    "__sifr_repeat_src".to_string(),
-                                                )),
-                                            }],
+                                            args: vec![crate::RustExpr::Ident(
+                                                "__sifr_repeat_src".to_string(),
+                                            )],
                                         }),
                                         crate::RustStmt::AugAssign {
                                             target: crate::RustExpr::Ident(

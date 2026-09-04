@@ -10,6 +10,11 @@ def exercise(mut values: list[int], index: int, text: str, count: int) -> tuple[
     parts = text.split(",", count)
     replaced = text.replace("x", "y", count)
     return (values, repeated, parts, replaced)
+
+def reuse_owned_string() -> str:
+    source = "owned"
+    repeated = source * 2
+    return source + repeated
 "#,
     );
 
@@ -25,6 +30,11 @@ def exercise(mut values: list[int], index: int, text: str, count: int) -> tuple[
         generated.contains("while &__sifr_repeat_i < &__n"),
         "{generated}"
     );
+    assert!(
+        generated.contains("let __sifr_repeat_src: &str = &"),
+        "{generated}"
+    );
+    assert!(generated.contains("+ SifrInt::from_i64(1)"), "{generated}");
     assert!(!generated.contains("to_usize_proven"), "{generated}");
     assert!(!generated.contains(".repeat("), "{generated}");
 }

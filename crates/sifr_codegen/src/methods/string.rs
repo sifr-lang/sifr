@@ -281,9 +281,15 @@ pub(super) fn lower_split(object: &RustExpr, args: &[RustExpr]) -> Option<RustEx
                                             RustExpr::Paren(Box::new(RustExpr::BinOp {
                                                 left: Box::new(maxsplit),
                                                 op: "+".to_string(),
-                                                right: Box::new(RustExpr::Literal(
-                                                    RustLiteral::Int(1),
-                                                )),
+                                                right: Box::new(RustExpr::FnCall {
+                                                    func: Box::new(RustExpr::Path(vec![
+                                                        "SifrInt".to_string(),
+                                                        "from_i64".to_string(),
+                                                    ])),
+                                                    args: vec![RustExpr::Literal(
+                                                        RustLiteral::Int(1),
+                                                    )],
+                                                }),
                                             })),
                                             replacement_or_split_limit(object),
                                         ),
@@ -337,7 +343,13 @@ pub(super) fn lower_split(object: &RustExpr, args: &[RustExpr]) -> Option<RustEx
                                         RustExpr::Paren(Box::new(RustExpr::BinOp {
                                             left: Box::new(args[1].clone()),
                                             op: "+".to_string(),
-                                            right: Box::new(RustExpr::Literal(RustLiteral::Int(1))),
+                                            right: Box::new(RustExpr::FnCall {
+                                                func: Box::new(RustExpr::Path(vec![
+                                                    "SifrInt".to_string(),
+                                                    "from_i64".to_string(),
+                                                ])),
+                                                args: vec![RustExpr::Literal(RustLiteral::Int(1))],
+                                            }),
                                         })),
                                         replacement_or_split_limit(object),
                                     ),
