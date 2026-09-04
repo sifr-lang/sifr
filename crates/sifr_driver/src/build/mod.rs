@@ -8,6 +8,7 @@ mod entrypoint_resolution;
 mod entrypoint_single_file;
 mod entrypoint_stages;
 mod materialize;
+mod portable_project;
 mod project_codegen;
 mod python_bridges;
 mod python_certification;

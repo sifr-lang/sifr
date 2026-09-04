@@ -235,6 +235,73 @@ fn missing_metadata_is_not_repaired_from_generated_rust() {
 }
 
 #[test]
+fn item11_materialized_project_is_locked_portable_and_relocatable() {
+    let source = r#"
+def repeat_text(text: str, count: int) -> str:
+    return text * count
+
+def main():
+    assert repeat_text("ab", 3) == "ababab"
+"#;
+    let first = tempfile::tempdir().expect("first materialization root");
+    let report = sifr_driver::materialize_single_file(
+        source,
+        Path::new("item11_portable.sifr"),
+        first.path(),
+    )
+    .unwrap_or_else(|errors| {
+        panic!(
+            "portable materialization should succeed: {}",
+            errors
+                .iter()
+                .map(|error| error.message.as_str())
+                .collect::<Vec<_>>()
+                .join("; ")
+        )
+    });
+    let project = report.project_path();
+    let manifest = std::fs::read_to_string(project.join("Cargo.toml"))
+        .expect("portable manifest should be readable");
+    let lock = std::fs::read_to_string(project.join("Cargo.lock"))
+        .expect("portable lock should be readable");
+    let worktree = env!("CARGO_MANIFEST_DIR");
+    assert!(!manifest.contains(worktree), "{manifest}");
+    assert!(!lock.contains(worktree), "{lock}");
+    assert!(manifest.contains("git = \"https://github.com/sifr-lang/sifr.git\""));
+
+    let relocated = tempfile::tempdir().expect("relocation root");
+    let relocated_project = relocated.path().join("artifact");
+    copy_dir_recursive(project, &relocated_project);
+    let metadata = Command::new("cargo")
+        .args(["check", "--locked"])
+        .current_dir(&relocated_project)
+        .output()
+        .expect("relocated Cargo check should execute");
+    assert!(
+        metadata.status.success(),
+        "relocated Cargo check should remain locked: {}",
+        String::from_utf8_lossy(&metadata.stderr)
+    );
+}
+
+fn copy_dir_recursive(source: &Path, destination: &Path) {
+    std::fs::create_dir_all(destination).expect("destination should be created");
+    for entry in std::fs::read_dir(source).expect("source directory should be readable") {
+        let entry = entry.expect("source entry should be readable");
+        let target = destination.join(entry.file_name());
+        if entry
+            .file_type()
+            .expect("entry type should be readable")
+            .is_dir()
+        {
+            copy_dir_recursive(&entry.path(), &target);
+        } else {
+            std::fs::copy(entry.path(), target).expect("artifact file should relocate");
+        }
+    }
+}
+
+#[test]
 fn fixtures_with_different_production_plans_cannot_repair_each_other() {
     let missing = case_with_plan(
         "missing_metadata",

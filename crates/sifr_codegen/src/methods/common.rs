@@ -13,16 +13,11 @@ fn exact_int_from_expr(expr: RustExpr) -> RustExpr {
     }
 }
 
-pub(super) fn exact_int_to_usize_expr(expr: RustExpr) -> RustExpr {
-    RustExpr::FnCall {
-        func: Box::new(RustExpr::Path(vec![
-            "sifr_runtime".to_string(),
-            "to_usize_proven".to_string(),
-        ])),
-        args: vec![RustExpr::Ref {
-            mutable: false,
-            expr: Box::new(expr),
-        }],
+pub(super) fn exact_int_to_bound_expr(expr: RustExpr, bound: RustExpr) -> RustExpr {
+    RustExpr::MethodCall {
+        receiver: Box::new(expr),
+        method: "clamp_slice_bound".to_string(),
+        args: vec![bound],
     }
 }
 

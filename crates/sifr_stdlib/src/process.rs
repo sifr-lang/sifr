@@ -464,4 +464,17 @@ mod tests {
                 .contains("process timeout must be finite and non-negative")
         );
     }
+
+    #[test]
+    fn item11_process_arguments_remain_distinct_without_implicit_shell_parsing() {
+        let payload = "$(printf injected); spaced * argument".to_string();
+        let args = vec!["%s".to_string(), payload.clone()];
+        let handle = process_output_text("printf", &args, &empty(), "", false, b"", false, "utf-8")
+            .expect("printf should execute directly");
+        assert_eq!(
+            process_output_stdout_text(&handle).expect("stdout text"),
+            payload
+        );
+        process_output_close(&handle);
+    }
 }

@@ -1,8 +1,20 @@
 use crate::{RustExpr, RustLiteral, RustParam, RustStmt, RustType};
 
-use super::common::exact_int_to_usize_expr;
+use super::common::exact_int_to_bound_expr;
 
 mod search;
+
+fn replacement_or_split_limit(object: &RustExpr) -> RustExpr {
+    RustExpr::MethodCall {
+        receiver: Box::new(RustExpr::MethodCall {
+            receiver: Box::new(object.clone()),
+            method: "len".to_string(),
+            args: vec![],
+        }),
+        method: "saturating_add".to_string(),
+        args: vec![RustExpr::Verbatim("1usize".to_string())],
+    }
+}
 
 fn lower_zero_arg_method(object: &RustExpr, args: &[RustExpr], method: &str) -> Option<RustExpr> {
     if !args.is_empty() {
@@ -265,15 +277,16 @@ pub(super) fn lower_split(object: &RustExpr, args: &[RustExpr]) -> Option<RustEx
                                     receiver: Box::new(object.clone()),
                                     method: "splitn".to_string(),
                                     args: vec![
-                                        exact_int_to_usize_expr(RustExpr::Paren(Box::new(
-                                            RustExpr::BinOp {
+                                        exact_int_to_bound_expr(
+                                            RustExpr::Paren(Box::new(RustExpr::BinOp {
                                                 left: Box::new(maxsplit),
                                                 op: "+".to_string(),
                                                 right: Box::new(RustExpr::Literal(
                                                     RustLiteral::Int(1),
                                                 )),
-                                            },
-                                        ))),
+                                            })),
+                                            replacement_or_split_limit(object),
+                                        ),
                                         RustExpr::Closure {
                                             params: vec![RustParam::Named {
                                                 name: "c".to_string(),
@@ -320,13 +333,14 @@ pub(super) fn lower_split(object: &RustExpr, args: &[RustExpr]) -> Option<RustEx
                                 receiver: Box::new(object.clone()),
                                 method: "splitn".to_string(),
                                 args: vec![
-                                    exact_int_to_usize_expr(RustExpr::Paren(Box::new(
-                                        RustExpr::BinOp {
+                                    exact_int_to_bound_expr(
+                                        RustExpr::Paren(Box::new(RustExpr::BinOp {
                                             left: Box::new(args[1].clone()),
                                             op: "+".to_string(),
                                             right: Box::new(RustExpr::Literal(RustLiteral::Int(1))),
-                                        },
-                                    ))),
+                                        })),
+                                        replacement_or_split_limit(object),
+                                    ),
                                     string_pattern_arg(&args[0]),
                                 ],
                             }),
@@ -376,7 +390,7 @@ pub(super) fn lower_replace(object: &RustExpr, args: &[RustExpr]) -> Option<Rust
                 args: vec![
                     string_pattern_arg(old),
                     render_borrowed_arg_expr(new),
-                    exact_int_to_usize_expr(count.clone()),
+                    exact_int_to_bound_expr(count.clone(), replacement_or_split_limit(object)),
                 ],
             })),
         }),

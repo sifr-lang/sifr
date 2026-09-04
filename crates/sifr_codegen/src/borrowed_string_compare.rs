@@ -321,10 +321,7 @@ impl RustEmitter {
             expr: Some(Box::new(Self::as_str_option(RustExpr::MethodCall {
                 receiver: Box::new(RustExpr::Ident("__sifr_cmp_list".to_string())),
                 method: "get".to_string(),
-                args: vec![RustExpr::Cast {
-                    expr: Box::new(RustExpr::Ident("__sifr_cmp_norm".to_string())),
-                    ty: RustType::Named("usize".to_string()),
-                }],
+                args: vec![RustExpr::Ident("__sifr_cmp_norm".to_string())],
             }))),
         }))
     }

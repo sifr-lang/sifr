@@ -26,6 +26,15 @@ pub(crate) fn generate_dependency_cargo_toml_with_interop(
     render_dependency_cargo_toml(project_name, dependency_plan, interop)
 }
 
+pub(crate) fn generate_portable_dependency_cargo_toml_with_interop(
+    project_name: &str,
+    dependency_plan: &SysrootDependencyPlan,
+    interop: &InteropBuildPlan,
+    sifr_revision: &str,
+) -> Result<String, String> {
+    render_portable_dependency_cargo_toml(project_name, dependency_plan, interop, sifr_revision)
+}
+
 pub fn try_generate_standalone_dependency_plan(
     stdlib_modules: &HashSet<String>,
     required_features: &HashSet<StdlibFeature>,
@@ -117,6 +126,145 @@ edition = "2024"
     }
 
     cargo_toml
+}
+
+fn render_portable_dependency_cargo_toml(
+    project_name: &str,
+    dependency_plan: &SysrootDependencyPlan,
+    interop: &InteropBuildPlan,
+    sifr_revision: &str,
+) -> Result<String, String> {
+    if sifr_revision.len() != 40 || !sifr_revision.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+        return Err(
+            "portable generated Cargo projects require an exact 40-character Sifr revision"
+                .to_string(),
+        );
+    }
+    let mut cargo_toml = format!(
+        r#"[package]
+name = "{project_name}"
+version = "0.1.0"
+edition = "2024"
+
+[workspace]
+"#
+    );
+    let mut dependencies = dependency_plan
+        .crates
+        .iter()
+        .map(|dependency| portable_sysroot_dependency_line(dependency, sifr_revision))
+        .collect::<Vec<_>>();
+    dependencies.extend(dependency_plan.retained_direct_dependencies.iter().cloned());
+    dependencies.extend(portable_rust_interop_dependencies(interop)?);
+    if !dependencies.is_empty() {
+        cargo_toml.push_str("\n[dependencies]\n");
+        for dependency in dependencies {
+            cargo_toml.push_str(&dependency);
+            cargo_toml.push('\n');
+        }
+    }
+    Ok(cargo_toml)
+}
+
+fn portable_sysroot_dependency_line(
+    dependency: &SysrootCrateDependency,
+    sifr_revision: &str,
+) -> String {
+    let package = dependency.krate.package_name();
+    let mut fields = vec![
+        format!("git = {}", toml_quote_string(SIFR_GIT_SOURCE)),
+        format!("rev = {}", toml_quote_string(sifr_revision)),
+        "default-features = false".to_string(),
+    ];
+    if !dependency.features.is_empty() {
+        fields.push(format!(
+            "features = [{}]",
+            dependency
+                .features
+                .iter()
+                .map(|feature| toml_quote_string(feature))
+                .collect::<Vec<_>>()
+                .join(", ")
+        ));
+    }
+    format!("{package} = {{ {} }}", fields.join(", "))
+}
+
+fn portable_rust_interop_dependencies(interop: &InteropBuildPlan) -> Result<Vec<String>, String> {
+    let mut dependencies = BTreeMap::new();
+    for target in &interop.rust.resolved_targets {
+        let fields = match &target.root {
+            RustInteropResolvedRoot::DirectCargoDependency {
+                dependency_name,
+                cargo_package_name,
+                cargo_version,
+                cargo_source,
+                ..
+            }
+            | RustInteropResolvedRoot::PackageBridge {
+                dependency_name,
+                cargo_package_name,
+                cargo_version,
+                cargo_source,
+                ..
+            } => Some((
+                dependency_name,
+                portable_dependency_line(
+                    dependency_name,
+                    cargo_package_name,
+                    cargo_version,
+                    cargo_source.as_deref(),
+                )?,
+            )),
+            RustInteropResolvedRoot::SysrootCrate { .. }
+            | RustInteropResolvedRoot::SelfMethod { .. } => None,
+        };
+        if let Some((name, line)) = fields {
+            dependencies.insert(name.clone(), line);
+        }
+    }
+    Ok(dependencies.into_values().collect())
+}
+
+fn portable_dependency_line(
+    dependency_name: &str,
+    cargo_package_name: &str,
+    cargo_version: &str,
+    cargo_source: Option<&str>,
+) -> Result<String, String> {
+    let package = (dependency_name != cargo_package_name)
+        .then(|| format!("package = {}, ", toml_quote_string(cargo_package_name)))
+        .unwrap_or_default();
+    let Some(source) = cargo_source else {
+        return Err(format!(
+            "local Rust dependency `{dependency_name}` cannot be included in a portable generated project; publish it through an exact registry or Git source"
+        ));
+    };
+    if source.starts_with("registry+") {
+        return Ok(format!(
+            "{dependency_name} = {{ {package}version = {} }}",
+            toml_quote_string(&format!("={cargo_version}"))
+        ));
+    }
+    let Some(git) = source.strip_prefix("git+") else {
+        return Err(format!(
+            "Rust dependency `{dependency_name}` uses unsupported Cargo source `{source}`"
+        ));
+    };
+    let (location, revision) = git.rsplit_once('#').ok_or_else(|| {
+        format!("Git dependency `{dependency_name}` has no exact locked revision")
+    })?;
+    let url = location.split('?').next().unwrap_or(location);
+    if revision.len() != 40 || !revision.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+        return Err(format!(
+            "Git dependency `{dependency_name}` has no exact 40-character locked revision"
+        ));
+    }
+    Ok(format!(
+        "{dependency_name} = {{ {package}git = {}, rev = {} }}",
+        toml_quote_string(url),
+        toml_quote_string(revision)
+    ))
 }
 
 fn rust_interop_path_dependencies(interop: &InteropBuildPlan) -> BTreeMap<String, String> {
@@ -444,6 +592,8 @@ mod tests {
                 package_id: "local-blake3-bridge@0.1.0#path".to_string(),
                 dependency_name: "__sifr_bridge_package_local_blake3_bridge".to_string(),
                 cargo_package_name: "local-blake3-bridge".to_string(),
+                cargo_version: "0.1.0".to_string(),
+                cargo_source: None,
                 cargo_manifest_path: "/ws/local_blake3_bridge/Cargo.toml".to_string(),
                 bridge_roots: vec!["src/bridges".to_string()],
             },
@@ -496,6 +646,32 @@ sifr_stdlib = { path = "/opt/sifr/crates/sifr_stdlib", default-features = false,
 serde_json = { version = "1.0.151", features = ["preserve_order"] }
 "#
         );
+    }
+
+    #[test]
+    fn item11_portable_manifest_replaces_host_paths_with_exact_sources() {
+        let mut dependency_plan = test_dependency_plan(
+            CargoVendorMode::SysrootOnly,
+            PathBuf::from("/host/sysroot/vendor"),
+        );
+        dependency_plan.crates = vec![SysrootCrateDependency {
+            krate: SysrootCrate::SifrRuntime,
+            path: PathBuf::from("/host/sysroot/crates/sifr_runtime"),
+            features: BTreeSet::new(),
+        }];
+        let revision = "0123456789abcdef0123456789abcdef01234567";
+
+        let manifest = generate_portable_dependency_cargo_toml_with_interop(
+            "sifr_output",
+            &dependency_plan,
+            &InteropBuildPlan::default(),
+            revision,
+        )
+        .expect("portable manifest should render");
+
+        assert!(!manifest.contains("/host/"), "{manifest}");
+        assert!(manifest.contains("git = \"https://github.com/sifr-lang/sifr.git\""));
+        assert!(manifest.contains(&format!("rev = \"{revision}\"")));
     }
 
     fn test_dependency_plan(

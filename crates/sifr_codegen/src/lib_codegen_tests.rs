@@ -77,6 +77,8 @@ mod item10_support_assembly_codegen_tests;
 #[cfg(test)]
 mod item10a_error_identity_codegen_tests;
 #[cfg(test)]
+mod item11_portable_secure_codegen_tests;
+#[cfg(test)]
 mod item8_canonical_codegen_tests;
 #[cfg(test)]
 mod item9_emitted_rust_quality_codegen_tests;
