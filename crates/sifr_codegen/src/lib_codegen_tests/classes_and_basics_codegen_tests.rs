@@ -638,7 +638,8 @@ fn test_generate_rust_multi_exports_non_main_items() {
         ("main", &main_module),
         ("facade", &facade_module),
         ("utils", &utils_module),
-    ]);
+    ])
+    .expect("project generation should succeed");
     let main_rs = files.get("main").expect("main module should be generated");
     let utils_rs = files
         .get("utils")
@@ -699,7 +700,8 @@ fn test_generate_rust_multi_publicizes_non_main_reexports() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let files = generate_rust_multi(&[("root", &root_module), ("root.leaf", &leaf_module)]);
+    let files = generate_rust_multi(&[("root", &root_module), ("root.leaf", &leaf_module)])
+        .expect("project generation should succeed");
     let root_rs = files.get("root").expect("root module should be generated");
 
     assert!(root_rs.contains("pub use crate::root::leaf::leaf_value;"));
@@ -773,7 +775,8 @@ fn test_generate_rust_multi_skips_stdlib_use_paths_in_non_main_modules() {
         type_param_bounds: std::collections::HashMap::new(),
     };
 
-    let files = generate_rust_multi(&[("main", &main_module), ("utils", &utils_module)]);
+    let files = generate_rust_multi(&[("main", &main_module), ("utils", &utils_module)])
+        .expect("project generation should succeed");
     let utils_rs = files
         .get("utils")
         .expect("utils module should be generated");
@@ -855,7 +858,8 @@ fn test_generate_rust_multi_with_metadata_omits_unused_dependency_closure() {
     let result = generate_rust_multi_with_metadata(
         &[("main", &main_module), ("helper", &helper_module)],
         &stdlib_code,
-    );
+    )
+    .expect("project generation should succeed");
 
     assert!(result.rust_files.contains_key("main"));
     assert!(result.rust_files.contains_key("helper"));

@@ -8,13 +8,13 @@ fn main() {
         SifrInt::from_i64(6),
         SifrInt::from_i64(1),
     ) {
-        if &i.floor_mod_known_nonzero(&SifrInt::from_i64(2)) == &SifrInt::from_i64(0) {
-            total = &total + &i;
+        if i.floor_mod_known_nonzero(&SifrInt::from_i64(2)) == SifrInt::from_i64(0) {
+            total = ::std::ops::Add::add(&total, &i);
         } else {
-            total = &total + &(&i * &SifrInt::from_i64(2));
+            total = ::std::ops::Add::add(&total, &::std::ops::Mul::mul(&i, &SifrInt::from_i64(2)));
         }
     }
-    let verdict: String = if &total > &SifrInt::from_i64(10) {
+    let verdict: String = if total > SifrInt::from_i64(10) {
         "high".to_string()
     } else {
         "low".to_string()

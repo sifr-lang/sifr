@@ -1,42 +1,51 @@
 // src/main.rs
 use ::sifr_runtime::SifrInt;
 fn pattern_basic() -> SifrInt {
-    let add = |a: SifrInt, b: SifrInt| &a + &b;
+    let add = |a: SifrInt, b: SifrInt| ::std::ops::Add::add(&a, &b);
     add(SifrInt::from_i64(3), SifrInt::from_i64(7))
 }
 fn pattern_closure() -> SifrInt {
     let multiplier: SifrInt = SifrInt::from_i64(3);
-    let multiply_value_4a658105ca1038e5 = |x: SifrInt| &x * &multiplier;
+    let multiply_value_4a658105ca1038e5 = |x: SifrInt| ::std::ops::Mul::mul(&x, &multiplier);
     multiply_value_4a658105ca1038e5(SifrInt::from_i64(5))
 }
 fn pattern_recursive() -> SifrInt {
-    fn factorial(n: SifrInt) -> SifrInt {
-        if &n <= &SifrInt::from_i64(1) {
+    fn factorial(n: &SifrInt) -> SifrInt {
+        if n <= &SifrInt::from_i64(1) {
             return SifrInt::from_i64(1);
         }
-        &n * &factorial(&n - &SifrInt::from_i64(1))
+        ::std::ops::Mul::mul(
+            n,
+            &factorial(&::std::ops::Sub::sub(n, &SifrInt::from_i64(1))),
+        )
     }
-    factorial(SifrInt::from_i64(6))
+    factorial(&SifrInt::from_i64(6))
 }
 fn pattern_recursive_capture() -> SifrInt {
-    fn sum_up(i: SifrInt, acc: SifrInt, limit: SifrInt) -> SifrInt {
-        if &i > &limit {
+    fn sum_up(i: &SifrInt, acc: &SifrInt, limit: &SifrInt) -> SifrInt {
+        if i > limit {
             return acc.clone();
         }
-        sum_up(&i + &SifrInt::from_i64(1), &acc + &i, limit.clone())
+        sum_up(
+            &::std::ops::Add::add(i, &SifrInt::from_i64(1)),
+            &::std::ops::Add::add(acc, i),
+            &limit.clone(),
+        )
     }
     let limit: SifrInt = SifrInt::from_i64(100);
-    sum_up(SifrInt::from_i64(1), SifrInt::from_i64(0), limit.clone())
+    sum_up(&SifrInt::from_i64(1), &SifrInt::from_i64(0), &limit)
 }
 fn pattern_multiple() -> String {
     let greet = |name: &str| {
-        let mut sifr_generated_concat: String = String::with_capacity(7usize + name.len());
+        let mut sifr_generated_concat: String =
+            String::with_capacity(7usize.saturating_add(name.len()));
         sifr_generated_concat.push_str("Hello, ");
         sifr_generated_concat.push_str(name);
         sifr_generated_concat
     };
     let exclaim = |msg: &str| {
-        let mut sifr_generated_concat: String = String::with_capacity(msg.len() + 1usize);
+        let mut sifr_generated_concat: String =
+            String::with_capacity(msg.len().saturating_add(1usize));
         sifr_generated_concat.push_str(msg);
         sifr_generated_concat.push('!');
         sifr_generated_concat
@@ -44,15 +53,21 @@ fn pattern_multiple() -> String {
     exclaim(&greet(&"Sifr".to_string()))
 }
 fn pattern_params() -> SifrInt {
-    fn power(base: SifrInt, exp: SifrInt) -> SifrInt {
-        if &exp <= &SifrInt::from_i64(0) {
+    fn power(base: &SifrInt, exp: &SifrInt) -> SifrInt {
+        if exp <= &SifrInt::from_i64(0) {
             return SifrInt::from_i64(1);
         }
-        &base * &power(base.clone(), &exp - &SifrInt::from_i64(1))
+        ::std::ops::Mul::mul(
+            base,
+            &power(
+                &base.clone(),
+                &::std::ops::Sub::sub(exp, &SifrInt::from_i64(1)),
+            ),
+        )
     }
-    let a: SifrInt = power(SifrInt::from_i64(2), SifrInt::from_i64(10));
-    let b: SifrInt = power(SifrInt::from_i64(3), SifrInt::from_i64(4));
-    &a + &b
+    let a: SifrInt = power(&SifrInt::from_i64(2), &SifrInt::from_i64(10));
+    let b: SifrInt = power(&SifrInt::from_i64(3), &SifrInt::from_i64(4));
+    ::std::ops::Add::add(&a, &b)
 }
 fn main() {
     println!("Pattern 1 - Basic nested function:");

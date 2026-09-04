@@ -11,12 +11,8 @@ mod sifr_generated_project_unions {
     {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
             match self {
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a211X3a4X3aatom3X3aint11X3a4X3aatom3X3astr::SifrGeneratedUnionVariant4X3aatom3X3aint(
-                    v,
-                ) => write!(f, "{v}"),
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a211X3a4X3aatom3X3aint11X3a4X3aatom3X3astr::SifrGeneratedUnionVariant4X3aatom3X3astr(
-                    v,
-                ) => write!(f, "{v}"),
+                Self::SifrGeneratedUnionVariant4X3aatom3X3aint(v) => write!(f, "{v}"),
+                Self::SifrGeneratedUnionVariant4X3aatom3X3astr(v) => write!(f, "{v}"),
             }
         }
     }
@@ -31,15 +27,9 @@ mod sifr_generated_project_unions {
     for SifrGeneratedUnion8X3asequence5X3aunion1X3a311X3a4X3aatom3X3aint11X3a4X3aatom3X3astr12X3a4X3aatom4X3abool {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
             match self {
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a311X3a4X3aatom3X3aint11X3a4X3aatom3X3astr12X3a4X3aatom4X3abool::SifrGeneratedUnionVariant4X3aatom4X3abool(
-                    v,
-                ) => write!(f, "{v}"),
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a311X3a4X3aatom3X3aint11X3a4X3aatom3X3astr12X3a4X3aatom4X3abool::SifrGeneratedUnionVariant4X3aatom3X3aint(
-                    v,
-                ) => write!(f, "{v}"),
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a311X3a4X3aatom3X3aint11X3a4X3aatom3X3astr12X3a4X3aatom4X3abool::SifrGeneratedUnionVariant4X3aatom3X3astr(
-                    v,
-                ) => write!(f, "{v}"),
+                Self::SifrGeneratedUnionVariant4X3aatom4X3abool(v) => write!(f, "{v}"),
+                Self::SifrGeneratedUnionVariant4X3aatom3X3aint(v) => write!(f, "{v}"),
+                Self::SifrGeneratedUnionVariant4X3aatom3X3astr(v) => write!(f, "{v}"),
             }
         }
     }
@@ -80,6 +70,10 @@ fn classify(
         ) => "bool".to_string(),
     }
 }
+#[expect(
+    clippy::ref_option,
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+)]
 fn process_optional(x: &Option<String>) -> String {
     let Some(x) = x.as_ref() else {
         return "none".to_string();
@@ -90,11 +84,11 @@ const fn consume(s: String) -> String {
     s
 }
 fn main() {
-    let result: Option<String> = find_user(&"alice".to_string());
+    let result: Option<String> = find_user("alice");
     if let Some(result) = result {
         println!("{result}");
     }
-    let missing: Option<String> = find_user(&"bob".to_string());
+    let missing: Option<String> = find_user("bob");
     if missing.is_none() {
         println!("not found");
     }
@@ -105,7 +99,7 @@ fn main() {
     println!(
         "{}", process(&
         SifrGeneratedUnion8X3asequence5X3aunion1X3a211X3a4X3aatom3X3aint11X3a4X3aatom3X3astr::SifrGeneratedUnionVariant4X3aatom3X3astr("hello"
-        .to_string().to_owned()))
+        .to_string()))
     );
     println!(
         "{}", classify(&
@@ -114,16 +108,13 @@ fn main() {
     println!(
         "{}", classify(&
         SifrGeneratedUnion8X3asequence5X3aunion1X3a311X3a4X3aatom3X3aint11X3a4X3aatom3X3astr12X3a4X3aatom4X3abool::SifrGeneratedUnionVariant4X3aatom3X3astr("hi"
-        .to_string().to_owned()))
+        .to_string()))
     );
     println!(
         "{}", classify(&
         SifrGeneratedUnion8X3asequence5X3aunion1X3a311X3a4X3aatom3X3aint11X3a4X3aatom3X3astr12X3a4X3aatom4X3abool::SifrGeneratedUnionVariant4X3aatom4X3abool(true))
     );
-    println!(
-        "{}",
-        process_optional(&Some("world".to_string().to_owned()))
-    );
+    println!("{}", process_optional(&Some("world".to_string())));
     println!("{}", process_optional(&None));
     let mut s: String = "hello".to_string();
     let x: String = consume(s);

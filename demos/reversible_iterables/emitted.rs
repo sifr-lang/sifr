@@ -3,7 +3,7 @@ use ::sifr_runtime::SifrInt;
 fn tail_first(values: &[SifrInt]) -> SifrInt {
     let mut rev: Box<dyn Iterator<Item = SifrInt>> = Box::new(values.iter().cloned().rev());
     let first: Option<SifrInt> = rev.next();
-    let Some(first_value_89d7ed7f996f1d41) = first.clone() else {
+    let Some(first_value_89d7ed7f996f1d41) = first else {
         return SifrInt::from_i64(0);
     };
     first_value_89d7ed7f996f1d41
@@ -14,7 +14,7 @@ fn main() {
         SifrInt::from_i64(20),
         SifrInt::from_i64(30),
     ];
-    println!("{}", tail_first(&nums.iter().cloned().collect::<Vec<_>>()));
+    println!("{}", tail_first(&nums));
     let tup: (SifrInt, SifrInt, SifrInt) = (
         SifrInt::from_i64(4),
         SifrInt::from_i64(5),
@@ -26,20 +26,20 @@ fn main() {
         vec![
             sifr_generated_tuple_iter_src.0.clone(),
             sifr_generated_tuple_iter_src.1.clone(),
-            sifr_generated_tuple_iter_src.2.clone(),
+            sifr_generated_tuple_iter_src.2,
         ]
         .into_iter()
     } {
-        total = &total + &item;
+        total = ::std::ops::Add::add(&total, &item);
     }
     println!("{total}");
     let rev_tup: Box<dyn Iterator<Item = SifrInt>> = Box::new(
         {
-            let sifr_generated_tuple_iter_src = tup.clone();
+            let sifr_generated_tuple_iter_src = tup;
             vec![
                 sifr_generated_tuple_iter_src.0.clone(),
                 sifr_generated_tuple_iter_src.1.clone(),
-                sifr_generated_tuple_iter_src.2.clone(),
+                sifr_generated_tuple_iter_src.2,
             ]
             .into_iter()
         }

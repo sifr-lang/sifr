@@ -91,17 +91,17 @@ fn main() {
         else {
             return Err(ValueError::new("not enough values to unpack".to_string()));
         };
-        let a = sifr_generated_before_0.clone();
+        let a = sifr_generated_before_0;
         let mid = sifr_generated_star.to_vec();
-        let b = sifr_generated_after_0.clone();
+        let b = sifr_generated_after_0;
         println!("{a}");
         println!("{mid:?}");
         println!("{b}");
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let error = sifr_generated_try_err.clone();
-        println!("{}", error.message.clone());
+        let error = sifr_generated_try_err;
+        println!("{}", error.message);
     }
     println!("{:?}", {
         let sifr_generated_v_5f76 = &nums;

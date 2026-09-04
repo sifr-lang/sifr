@@ -6,7 +6,7 @@ fn payload_size(data: &[SifrInt]) -> SifrInt {
 fn main() {
     println!(
         "{}",
-        payload_size(&vec![
+        payload_size(&[
             SifrInt::from_i64(1),
             SifrInt::from_i64(2),
             SifrInt::from_i64(3)

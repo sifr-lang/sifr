@@ -94,6 +94,35 @@ impl RustEmitter {
         }
     }
 
+    pub(crate) fn sifr_int_exact_arithmetic_expr(
+        &self,
+        op: &str,
+        left: crate::RustExpr,
+        right: crate::RustExpr,
+    ) -> crate::RustExpr {
+        let operation = match op {
+            "+" => "Add",
+            "-" => "Sub",
+            "*" => "Mul",
+            "&" => "BitAnd",
+            "|" => "BitOr",
+            "^" => "BitXor",
+            _ => unreachable!("SifrInt exact arithmetic rewrite received an unsupported operator"),
+        };
+        crate::RustExpr::FnCall {
+            func: Box::new(crate::RustExpr::Path(vec![
+                "std".to_string(),
+                "ops".to_string(),
+                operation.to_string(),
+                operation.to_ascii_lowercase(),
+            ])),
+            args: vec![
+                self.coerce_expr_to_sifr_int(left),
+                self.coerce_expr_to_sifr_int(right),
+            ],
+        }
+    }
+
     pub(crate) fn coerce_expr_to_sifr_int_method_receiver(
         &self,
         expr: crate::RustExpr,

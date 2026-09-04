@@ -15,19 +15,31 @@ fn first<T: Clone + 'static>(items: &[T]) -> Option<T> {
     }
 }
 fn apply(f: impl Fn(SifrInt) -> SifrInt, x: SifrInt) -> SifrInt {
-    f(x.clone())
+    f(x)
 }
 fn apply_twice(f: impl Fn(SifrInt) -> SifrInt, x: SifrInt) -> SifrInt {
-    f(f(x.clone()))
+    f(f(x))
 }
+#[expect(
+    clippy::needless_pass_by_value,
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+)]
 fn double(x: SifrInt) -> SifrInt {
-    &x * &SifrInt::from_i64(2)
+    ::std::ops::Mul::mul(&x, &SifrInt::from_i64(2))
 }
+#[expect(
+    clippy::needless_pass_by_value,
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+)]
 fn add_one(x: SifrInt) -> SifrInt {
-    &x + &SifrInt::from_i64(1)
+    ::std::ops::Add::add(&x, &SifrInt::from_i64(1))
 }
+#[expect(
+    clippy::needless_pass_by_value,
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+)]
 fn square(x: SifrInt) -> SifrInt {
-    &x * &x
+    ::std::ops::Mul::mul(&x, &x)
 }
 fn main() {
     let a: SifrInt = identity(&SifrInt::from_i64(42));
@@ -42,7 +54,7 @@ fn main() {
     let words: Vec<String> = vec!["alpha".to_string(), "beta".to_string(), "gamma".to_string()];
     let empty_words: Vec<String> = Vec::new();
     let first_num: Option<SifrInt> = first(&nums);
-    if let Some(first_num) = first_num.clone() {
+    if let Some(first_num) = first_num {
         println!("{first_num}");
     }
     let first_word: Option<String> = first(&words);

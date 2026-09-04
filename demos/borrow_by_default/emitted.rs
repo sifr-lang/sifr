@@ -20,44 +20,64 @@ fn get_first_char(s: &str) -> String {
     };
     result_value_9b51cd7cd76778c4
 }
+#[expect(
+    clippy::needless_pass_by_value,
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+)]
 fn consume_and_count(items: Vec<SifrInt>) -> SifrInt {
     SifrInt::from(items.len())
 }
+#[expect(
+    clippy::needless_pass_by_value,
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+)]
 fn add(x: SifrInt, y: SifrInt) -> SifrInt {
-    &x + &y
+    ::std::ops::Add::add(&x, &y)
 }
 fn is_positive(n: f64) -> bool {
     n > 0.0_f64
 }
 fn process_data(data: &[SifrInt]) -> SifrInt {
     let mut total: SifrInt = SifrInt::from_i64(0);
-    for item in data.iter().cloned() {
-        total = &total + &item;
+    #[expect(
+        clippy::explicit_iter_loop,
+        reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner Item 12; remove when direct IntoIterator preserves the same source lifetime"
+    )]
+    for item in data.iter() {
+        total = ::std::ops::Add::add(&total, item);
     }
-    total.clone()
+    total
 }
+#[expect(
+    clippy::needless_pass_by_value,
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+)]
 fn sum_multiple_times(items: &[SifrInt], times: SifrInt) -> SifrInt {
     let mut total: SifrInt = SifrInt::from_i64(0);
     for _i in
         SifrRange::new_known_nonzero(SifrInt::from_i64(0), times.clone(), SifrInt::from_i64(1))
     {
-        total = &total + &get_length(items);
+        total = ::std::ops::Add::add(&total, &get_length(items));
     }
-    total.clone()
+    total
 }
 fn apply_and_return(f: impl Fn(&[SifrInt]) -> SifrInt, items: &[SifrInt]) -> SifrInt {
     f(items)
 }
 fn compute_sum(nums: &[SifrInt]) -> SifrInt {
     let mut total: SifrInt = SifrInt::from_i64(0);
-    for n in nums.iter().cloned() {
-        total = &total + &n;
+    #[expect(
+        clippy::explicit_iter_loop,
+        reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner Item 12; remove when direct IntoIterator preserves the same source lifetime"
+    )]
+    for n in nums.iter() {
+        total = ::std::ops::Add::add(&total, n);
     }
-    total.clone()
+    total
 }
 #[expect(
     clippy::approx_constant,
-    reason = "generated Rust preserves this exact typed Sifr source contract"
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
 )]
 fn main() {
     let my_list: Vec<SifrInt> = vec![

@@ -16,6 +16,31 @@ fn replacement_or_split_limit(object: &RustExpr) -> RustExpr {
     }
 }
 
+fn bind_nontrivial_string_receiver_once(
+    object: &RustExpr,
+    args: &[RustExpr],
+    expected_arg_count: usize,
+    lower: fn(&RustExpr, &[RustExpr]) -> Option<RustExpr>,
+) -> Option<RustExpr> {
+    if args.len() != expected_arg_count || matches!(object, RustExpr::Ident(_)) {
+        return None;
+    }
+    let binding = "__sifr_string_receiver".to_string();
+    let lowered = lower(&RustExpr::Ident(binding.clone()), args)?;
+    Some(RustExpr::Block {
+        stmts: vec![RustStmt::Let {
+            mutable: false,
+            name: binding,
+            ty: None,
+            value: RustExpr::Ref {
+                mutable: false,
+                expr: Box::new(object.clone()),
+            },
+        }],
+        expr: Some(Box::new(lowered)),
+    })
+}
+
 fn lower_zero_arg_method(object: &RustExpr, args: &[RustExpr], method: &str) -> Option<RustExpr> {
     if !args.is_empty() {
         return None;
@@ -217,6 +242,9 @@ pub(super) fn lower_endswith(object: &RustExpr, args: &[RustExpr]) -> Option<Rus
 }
 
 pub(super) fn lower_split(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
+    if let Some(lowered) = bind_nontrivial_string_receiver_once(object, args, 2, lower_split) {
+        return Some(lowered);
+    }
     match args.len() {
         0 => Some(RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {
@@ -379,6 +407,9 @@ fn to_string_method_path() -> RustExpr {
 }
 
 pub(super) fn lower_replace(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
+    if let Some(lowered) = bind_nontrivial_string_receiver_once(object, args, 3, lower_replace) {
+        return Some(lowered);
+    }
     match args {
         [old, new] => Some(RustExpr::MethodCall {
             receiver: Box::new(object.clone()),

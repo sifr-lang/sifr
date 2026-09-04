@@ -299,10 +299,10 @@ fn string_concat_capacity_expr(parts: &[&HirExpr]) -> RustExpr {
         .next()
         .unwrap_or_else(|| RustExpr::Verbatim("0usize".to_string()));
     for part in iter {
-        capacity = RustExpr::BinOp {
-            left: Box::new(capacity),
-            op: "+".to_string(),
-            right: Box::new(part),
+        capacity = RustExpr::MethodCall {
+            receiver: Box::new(capacity),
+            method: "saturating_add".to_string(),
+            args: vec![part],
         };
     }
     capacity

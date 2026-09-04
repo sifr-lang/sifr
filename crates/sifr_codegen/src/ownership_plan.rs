@@ -186,6 +186,7 @@ pub(crate) fn materialize_borrowed_option_value(value: RustExpr) -> RustExpr {
 pub(crate) fn clone_once(value: RustExpr) -> RustExpr {
     match value {
         RustExpr::Clone(_) => value,
+        RustExpr::FnCall { .. } | RustExpr::StructInit { .. } | RustExpr::Vec(_) => value,
         RustExpr::MethodCall {
             ref method,
             ref args,

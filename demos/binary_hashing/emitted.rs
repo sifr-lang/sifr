@@ -1,48 +1,48 @@
 // src/main.rs
-mod sifr_generated_generated_support {
+pub mod sifr_generated_generated_support {
     use crate::{ParseError, SifrGeneratedStdlibSifrX2ehashlibX2eHashObject, ValueError};
-    pub(crate) use ::sifr_runtime::SifrInt;
-    pub(crate) fn base64_encode_bytes(data: &[u8]) -> Vec<u8> {
+    pub(super) use ::sifr_runtime::SifrInt;
+    pub(super) fn base64_encode_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::base64::base64_encode_bytes(data)
     }
-    pub(crate) fn base64_decode_bytes(data: &[u8]) -> Result<Vec<u8>, ParseError> {
+    pub(super) fn base64_decode_bytes(data: &[u8]) -> Result<Vec<u8>, ParseError> {
         ::sifr_stdlib::base64::base64_decode_bytes(data).map_err(|sifr_generated_bridge_error| {
             ParseError {
-                message: sifr_generated_bridge_error.to_string(),
+                message: sifr_generated_bridge_error,
             }
         })
     }
-    pub(crate) fn sha256_bytes(data: &[u8]) -> Vec<u8> {
+    pub(super) fn sha256_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::hash::sha256_bytes(data)
     }
-    pub(crate) fn md5_bytes(data: &[u8]) -> Vec<u8> {
+    pub(super) fn md5_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::hash::md5_bytes(data)
     }
-    pub(crate) fn sha1_bytes(data: &[u8]) -> Vec<u8> {
+    pub(super) fn sha1_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::hash::sha1_bytes(data)
     }
-    pub(crate) fn sha224_bytes(data: &[u8]) -> Vec<u8> {
+    pub(super) fn sha224_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::hash::sha224_bytes(data)
     }
-    pub(crate) fn sha384_bytes(data: &[u8]) -> Vec<u8> {
+    pub(super) fn sha384_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::hash::sha384_bytes(data)
     }
-    pub(crate) fn sha512_bytes(data: &[u8]) -> Vec<u8> {
+    pub(super) fn sha512_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::hash::sha512_bytes(data)
     }
-    pub(crate) fn blake2b_bytes(data: &[u8]) -> Vec<u8> {
+    pub(super) fn blake2b_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::hash::blake2b_bytes(data)
     }
-    pub(crate) fn blake2s_bytes(data: &[u8]) -> Vec<u8> {
+    pub(super) fn blake2s_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::hash::blake2s_bytes(data)
     }
-    pub(crate) fn b64encode_bytes(data: &[u8]) -> Vec<u8> {
+    pub(super) fn b64encode_bytes(data: &[u8]) -> Vec<u8> {
         base64_encode_bytes(data)
     }
-    pub(crate) fn b64decode_bytes(data: &[u8]) -> Result<Vec<u8>, ParseError> {
+    pub(super) fn b64decode_bytes(data: &[u8]) -> Result<Vec<u8>, ParseError> {
         base64_decode_bytes(data)
     }
-    pub(crate) fn sifr_generated_build_hash(
+    pub(super) fn sifr_generated_build_hash(
         algorithm: &str,
         data: &[u8],
     ) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
@@ -120,7 +120,7 @@ mod sifr_generated_generated_support {
             SifrInt::from_i64(0),
         )
     }
-    pub(crate) fn sifr_generated_is_supported_algorithm(name: &str) -> bool {
+    pub(super) fn sifr_generated_is_supported_algorithm(name: &str) -> bool {
         let n: String = name.to_lowercase();
         n == "md5"
             || n == "sha1"
@@ -131,7 +131,7 @@ mod sifr_generated_generated_support {
             || n == "blake2b"
             || n == "blake2s"
     }
-    pub(crate) fn sifr_generated_hash_bytes(algorithm: &str, data: &[u8]) -> Vec<u8> {
+    pub(super) fn sifr_generated_hash_bytes(algorithm: &str, data: &[u8]) -> Vec<u8> {
         if algorithm == "md5" {
             return md5_bytes(data);
         } else if algorithm == "sha1" {
@@ -151,7 +151,7 @@ mod sifr_generated_generated_support {
         }
         Vec::new()
     }
-    pub(crate) fn sifr_generated_hash_hex(algorithm: &str, data: &[u8]) -> String {
+    pub(super) fn sifr_generated_hash_hex(algorithm: &str, data: &[u8]) -> String {
         {
             let sifr_generated_bytes_receiver: &[u8] = &sifr_generated_hash_bytes(algorithm, data);
             let mut sifr_generated_hex =
@@ -165,13 +165,14 @@ mod sifr_generated_generated_support {
             sifr_generated_hex
         }
     }
-    pub(crate) fn new(
+    pub(super) fn new(
         name: &str,
         data: &[u8],
     ) -> Result<SifrGeneratedStdlibSifrX2ehashlibX2eHashObject, ValueError> {
         if !sifr_generated_is_supported_algorithm(name) {
             return Err(ValueError::new({
-                let mut sifr_generated_concat: String = String::with_capacity(28usize + name.len());
+                let mut sifr_generated_concat: String =
+                    String::with_capacity(28usize.saturating_add(name.len()));
                 sifr_generated_concat.push_str("unsupported hash algorithm: ");
                 sifr_generated_concat.push_str(name);
                 sifr_generated_concat
@@ -181,7 +182,9 @@ mod sifr_generated_generated_support {
     }
 }
 mod sifr_generated_project_nominals {
-    use crate::sifr_generated_generated_support::*;
+    use crate::sifr_generated_generated_support::{
+        sifr_generated_hash_bytes, sifr_generated_hash_hex,
+    };
     use ::sifr_runtime::SifrInt;
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
@@ -193,7 +196,7 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
         #[must_use]
-        pub fn new(
+        pub const fn new(
             algorithm: String,
             data: Vec<u8>,
             name: String,
@@ -205,9 +208,9 @@ mod sifr_generated_project_nominals {
             let sifr_generated_field_value_90770dc80a1c57ce_5f64617461: Vec<u8> = data;
             let sifr_generated_field_value_c4bcadba8e631b86_6e616d65: String = name;
             let sifr_generated_field_value_6344303e03c9f7c7_6469676573745f73697a65: SifrInt =
-                digest_size.clone();
+                digest_size;
             let sifr_generated_field_value_e190162752f8783e_626c6f636b5f73697a65: SifrInt =
-                block_size.clone();
+                block_size;
             Self {
                 algorithm: sifr_generated_field_value_ddb1f39e0a66bbbb_5f616c676f726974686d,
                 data: sifr_generated_field_value_90770dc80a1c57ce_5f64617461,
@@ -261,94 +264,89 @@ pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2ehashlibX2eHas
 pub use sifr_generated_project_nominals::ValueError;
 mod sifr_generated_project_unions {
     #[derive(Debug, Clone)]
-    pub enum SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a023X3a5X3aclass10X3aValueError1X3a0
+    pub enum SifrGeneratedUnion8X3asequence5X3aunion1X3a236X3a5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0
     {
-        SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(
+        SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a0(
             crate::sifr_generated_project_nominals::ParseError,
         ),
-        SifrGeneratedUnionVariant5X3aclass10X3aValueError1X3a0(
+        SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0(
             crate::sifr_generated_project_nominals::ValueError,
         ),
     }
     impl From<crate::sifr_generated_project_nominals::ParseError>
-    for SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a023X3a5X3aclass10X3aValueError1X3a0 {
+    for SifrGeneratedUnion8X3asequence5X3aunion1X3a236X3a5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0 {
         fn from(value: crate::sifr_generated_project_nominals::ParseError) -> Self {
-            SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a023X3a5X3aclass10X3aValueError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(
+            Self::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a0(
                 value,
             )
         }
     }
     impl From<crate::sifr_generated_project_nominals::ValueError>
-    for SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a023X3a5X3aclass10X3aValueError1X3a0 {
+    for SifrGeneratedUnion8X3asequence5X3aunion1X3a236X3a5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0 {
         fn from(value: crate::sifr_generated_project_nominals::ValueError) -> Self {
-            SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a023X3a5X3aclass10X3aValueError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aValueError1X3a0(
+            Self::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0(
                 value,
             )
         }
     }
     impl ::std::fmt::Display
-    for SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a023X3a5X3aclass10X3aValueError1X3a0 {
+    for SifrGeneratedUnion8X3asequence5X3aunion1X3a236X3a5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0 {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
             match self {
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a023X3a5X3aclass10X3aValueError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(
+                Self::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a0(
                     v,
                 ) => write!(f, "{v}"),
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a023X3a5X3aclass10X3aValueError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aValueError1X3a0(
+                Self::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0(
                     v,
                 ) => write!(f, "{v}"),
             }
         }
     }
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::{b64decode_bytes, b64encode_bytes, new};
 use ::sifr_runtime::SifrInt;
-pub use sifr_generated_project_unions::SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a023X3a5X3aclass10X3aValueError1X3a0;
+pub use sifr_generated_project_unions::SifrGeneratedUnion8X3asequence5X3aunion1X3a236X3a5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0;
 fn main() {
     let sifr_generated_try_res: Result<
         (),
-        SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a023X3a5X3aclass10X3aValueError1X3a0,
+        SifrGeneratedUnion8X3asequence5X3aunion1X3a236X3a5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0,
     > = (|| {
         let data: Vec<u8> = vec![
             98u8, 105u8, 110u8, 97u8, 114u8, 121u8, 95u8, 104u8, 97u8, 115u8, 104u8,
             105u8, 110u8, 103u8, 45u8, 98u8, 121u8, 116u8, 101u8, 115u8, 45u8, 100u8,
             101u8, 109u8, 111u8
         ];
-        let h: SifrGeneratedStdlibSifrX2ehashlibX2eHashObject = new(
-                &"sha256".to_string(),
-                &data,
-            )
+        let h: SifrGeneratedStdlibSifrX2ehashlibX2eHashObject = new("sha256", &data)
             .map_err(
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a023X3a5X3aclass10X3aValueError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aValueError1X3a0,
+                SifrGeneratedUnion8X3asequence5X3aunion1X3a236X3a5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0,
             )?;
-        assert_eq!(& SifrInt::from(h.digest().len()), & SifrInt::from_i64(32));
-        assert_eq!(
-            & SifrInt::from(h.hexdigest().chars().count()), & SifrInt::from_i64(64)
-        );
+        assert_eq!(SifrInt::from(h.digest().len()), SifrInt::from_i64(32));
+        assert_eq!(SifrInt::from(h.hexdigest().chars().count()), SifrInt::from_i64(64));
         let enc: Vec<u8> = b64encode_bytes(&data);
         let dec: Vec<u8> = b64decode_bytes(&enc)
             .map_err(
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a023X3a5X3aclass10X3aValueError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0,
+                SifrGeneratedUnion8X3asequence5X3aunion1X3a236X3a5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a0,
             )?;
         assert_eq!(dec, data);
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
         match sifr_generated_try_err {
-            SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a023X3a5X3aclass10X3aValueError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(
+            SifrGeneratedUnion8X3asequence5X3aunion1X3a236X3a5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a0(
                 sifr_generated_try_variant_error,
             ) => {
-                let e = sifr_generated_try_variant_error.clone();
+                let e = sifr_generated_try_variant_error;
                 assert_eq!(
-                    format!("unexpected parse error: {}", e.message.clone()),
+                    format!("unexpected parse error: {}", e.message),
                     "rng_binary_hashing_base64_bytes_demo: pass"
                 );
             }
-            SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a023X3a5X3aclass10X3aValueError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aValueError1X3a0(
+            SifrGeneratedUnion8X3asequence5X3aunion1X3a236X3a5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0(
                 sifr_generated_try_variant_error,
             ) => {
-                let e = sifr_generated_try_variant_error.clone();
+                let e = sifr_generated_try_variant_error;
                 assert_eq!(
-                    format!("unexpected value error: {}", e.message.clone()),
+                    format!("unexpected value error: {}", e.message),
                     "rng_binary_hashing_base64_bytes_demo: pass"
                 );
             }

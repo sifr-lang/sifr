@@ -9,6 +9,8 @@ pub(crate) use builtin_errors::{BUILTIN_ERROR_CLASSES, builtin_error_identity};
 mod discardability;
 mod generated_dependency_metadata;
 mod generated_rust_canonicalizer;
+#[cfg(test)]
+mod generated_rust_canonicalizer_item12_tests;
 mod generated_visibility;
 pub(crate) use generated_dependency_metadata::retain_generated_dependency_metadata;
 pub use generated_rust_canonicalizer::{
@@ -19,6 +21,7 @@ pub use generated_rust_canonicalizer::{
 pub(crate) use generated_rust_canonicalizer::{
     import_generated_support_in_project_nominals,
     import_project_prelude_bindings_in_generated_support, prune_generated_project_owners,
+    render_generated_support_import,
 };
 mod lib_async_main_cancellation;
 mod lib_runtime_needs;

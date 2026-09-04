@@ -20,13 +20,13 @@ mod sifr_generated_project_nominals {
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::ValueError;
 fn classify(n: SifrInt) -> SifrInt {
-    let sifr_generated_try_res: Result<SifrInt, ValueError> = if &n > &SifrInt::from_i64(0) {
+    let sifr_generated_try_res: Result<SifrInt, ValueError> = if n > SifrInt::from_i64(0) {
         Ok(n)
     } else {
         Err(ValueError::new("non-positive".to_string()))
     };
     sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-        let _e = sifr_generated_try_err.clone();
+        let _ = sifr_generated_try_err;
         SifrInt::from_i64(99)
     })
 }

@@ -1,15 +1,15 @@
 // src/main.rs
-mod sifr_generated_generated_support {
-    pub(crate) fn log(x: f64) -> f64 {
+pub mod sifr_generated_generated_support {
+    pub(super) fn log(x: f64) -> f64 {
         ::sifr_stdlib::math::log(x)
     }
-    pub(crate) fn sin(x: f64) -> f64 {
+    pub(super) fn sin(x: f64) -> f64 {
         ::sifr_stdlib::math::sin(x)
     }
-    pub(crate) fn cos(x: f64) -> f64 {
+    pub(super) fn cos(x: f64) -> f64 {
         ::sifr_stdlib::math::cos(x)
     }
-    pub(crate) fn fabs(x: f64) -> f64 {
+    pub(super) fn fabs(x: f64) -> f64 {
         ::sifr_stdlib::math::fabs(x)
     }
 }
@@ -25,7 +25,7 @@ mod sifr_generated_project_nominals {
     }
     impl ::std::error::Error for ValueError {}
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::{cos, fabs, log, sin};
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::ValueError;
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -67,7 +67,7 @@ impl User {
 }
 impl User {
     fn display(&self) -> String {
-        format!("User({})", self.name.clone())
+        format!("User({})", self.name)
     }
 }
 impl ::std::fmt::Display for User {
@@ -77,7 +77,7 @@ impl ::std::fmt::Display for User {
 }
 impl Printable for User {
     fn display(&self) -> String {
-        User::display(self)
+        Self::display(self)
     }
 }
 #[derive(Debug, Clone, PartialEq)]
@@ -97,7 +97,7 @@ impl Product {
 }
 impl Product {
     fn display(&self) -> String {
-        format!("Product({}, ${})", self.title.clone(), self.price)
+        format!("Product({}, ${})", self.title, self.price)
     }
 }
 impl ::std::fmt::Display for Product {
@@ -107,18 +107,22 @@ impl ::std::fmt::Display for Product {
 }
 impl Printable for Product {
     fn display(&self) -> String {
-        Product::display(self)
+        Self::display(self)
     }
 }
 fn identity<T: Clone + 'static>(x: &T) -> T {
     x.clone()
 }
+#[expect(
+    clippy::needless_pass_by_value,
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+)]
 fn repeat<T: Clone + 'static>(x: &T, n: SifrInt) -> Vec<T> {
     let mut result: Vec<T> = Vec::new();
     let mut i: SifrInt = SifrInt::from_i64(0);
-    while &i < &n {
+    while i < n {
         result.push(x.clone());
-        i = &i + &SifrInt::from_i64(1);
+        i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
     }
     result
 }
@@ -127,7 +131,11 @@ fn show(item: Box<dyn Printable>) {
 }
 #[expect(
     clippy::approx_constant,
-    reason = "generated Rust preserves this exact typed Sifr source contract"
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+)]
+#[expect(
+    clippy::suboptimal_flops,
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
 )]
 fn main() {
     println!("=== PEP 695 Generic Functions ===");
@@ -164,7 +172,11 @@ fn main() {
     ];
     let flat: Vec<SifrInt> = {
         let mut sifr_generated_list_comp = Vec::new();
-        for row in matrix.iter().cloned() {
+        #[expect(
+            clippy::explicit_iter_loop,
+            reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner Item 12; remove when direct IntoIterator preserves the same source lifetime"
+        )]
+        for row in matrix.iter() {
             for x in row.iter().cloned() {
                 sifr_generated_list_comp.push(x);
             }
@@ -177,7 +189,7 @@ fn main() {
     println!("{}", sin(0.0_f64));
     println!("{}", cos(0.0_f64));
     println!("{}", fabs(-42.0_f64));
-    println!("{}", (2.0_f64 as f64).powf(10.0_f64 as f64));
+    println!("{}", 2_f64.powf(10_f64));
     println!(
         "{:?}",
         SifrInt::from_f64_trunc(3.14_f64.round_ties_even()).ok_or_else(|| ValueError {

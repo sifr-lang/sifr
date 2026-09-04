@@ -1,8 +1,8 @@
 // src/main.rs
-mod sifr_generated_generated_support {
+pub mod sifr_generated_generated_support {
     use crate::RegexError;
-    pub(crate) use ::sifr_runtime::SifrInt;
-    pub(crate) fn re_find(pattern: &str, text: &str) -> Result<Option<String>, RegexError> {
+    pub(super) use ::sifr_runtime::SifrInt;
+    pub(super) fn re_find(pattern: &str, text: &str) -> Result<Option<String>, RegexError> {
         ::sifr_stdlib::regex::re_find(pattern, text).map_err(|sifr_generated_bridge_error| {
             RegexError {
                 message: sifr_generated_bridge_error.to_string(),
@@ -10,7 +10,7 @@ mod sifr_generated_generated_support {
             }
         })
     }
-    pub(crate) fn re_replace(
+    pub(super) fn re_replace(
         pattern: &str,
         replacement: &str,
         text: &str,
@@ -22,7 +22,7 @@ mod sifr_generated_generated_support {
             },
         )
     }
-    pub(crate) fn re_findall(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
+    pub(super) fn re_findall(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
         ::sifr_stdlib::regex::re_findall(pattern, text).map_err(|sifr_generated_bridge_error| {
             RegexError {
                 message: sifr_generated_bridge_error.to_string(),
@@ -30,7 +30,7 @@ mod sifr_generated_generated_support {
             }
         })
     }
-    pub(crate) fn re_split(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
+    pub(super) fn re_split(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
         ::sifr_stdlib::regex::re_split(pattern, text).map_err(|sifr_generated_bridge_error| {
             RegexError {
                 message: sifr_generated_bridge_error.to_string(),
@@ -38,7 +38,7 @@ mod sifr_generated_generated_support {
             }
         })
     }
-    pub(crate) fn re_find_flags(
+    pub(super) fn re_find_flags(
         pattern: &str,
         text: &str,
         flags: SifrInt,
@@ -53,32 +53,32 @@ mod sifr_generated_generated_support {
             detail: sifr_generated_bridge_error.to_string(),
         })
     }
-    pub(crate) const fn sifr_generated_const_49474e4f524543415345() -> SifrInt {
+    pub(super) const fn sifr_generated_const_49474e4f524543415345() -> SifrInt {
         SifrInt::from_i64(2)
     }
-    pub(crate) fn search(pattern: &str, text: &str) -> Result<Option<String>, RegexError> {
+    pub(super) fn search(pattern: &str, text: &str) -> Result<Option<String>, RegexError> {
         re_find(pattern, text)
     }
-    pub(crate) fn search_flags(
+    pub(super) fn search_flags(
         pattern: &str,
         text: &str,
         flags: SifrInt,
     ) -> Result<Option<String>, RegexError> {
-        re_find_flags(pattern, text, flags.clone())
+        re_find_flags(pattern, text, flags)
     }
-    pub(crate) fn sub(pattern: &str, replacement: &str, text: &str) -> Result<String, RegexError> {
+    pub(super) fn sub(pattern: &str, replacement: &str, text: &str) -> Result<String, RegexError> {
         re_replace(pattern, replacement, text)
     }
-    pub(crate) fn findall(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
+    pub(super) fn findall(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
         re_findall(pattern, text)
     }
-    pub(crate) fn split(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
+    pub(super) fn split(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
         re_split(pattern, text)
     }
-    pub(crate) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
+    pub(super) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
-        while &i < &SifrInt::from(actual.len()) {
+        while i < actual.len() {
             assert_eq!(
                 {
                     let sifr_generated_condition_list = &actual;
@@ -99,7 +99,7 @@ mod sifr_generated_generated_support {
                         .copied()
                 }
             );
-            i = &i + &SifrInt::from_i64(1);
+            i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
         }
     }
 }
@@ -125,7 +125,10 @@ mod sifr_generated_project_nominals {
     }
     impl ::std::error::Error for RegexError {}
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::{
+    assert_bool_vector_eq, findall, search, search_flags,
+    sifr_generated_const_49474e4f524543415345, split, sub,
+};
 pub use sifr_generated_project_nominals::RegexError;
 fn has_match(pattern: &str, text: &str) -> Result<bool, RegexError> {
     let sifr_generated_try_res: Result<Result<bool, RegexError>, RegexError> = (|| {
@@ -133,8 +136,8 @@ fn has_match(pattern: &str, text: &str) -> Result<bool, RegexError> {
         Ok(Ok(found.is_some()))
     })();
     sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-        let error = sifr_generated_try_err.clone();
-        Err(RegexError::new(error.message.clone()))
+        let error = sifr_generated_try_err;
+        Err(RegexError::new(error.message))
     })
 }
 fn collect_primary_actual() -> Vec<bool> {
@@ -146,34 +149,27 @@ fn collect_primary_actual() -> Vec<bool> {
     let mut split_ok: bool = false;
     let mut case_fold_ok: bool = false;
     let sifr_generated_try_res: Result<(), RegexError> = (|| {
-        let m: bool = has_match(&"[0-9]+".to_string(), &"42 bottles".to_string())?;
+        let m: bool = has_match("[0-9]+", "42 bottles")?;
         match_ok = m;
-        let found_num: Option<String> = search(&"[0-9]+".to_string(), &"id=9000".to_string())?;
-        find_ok = found_num.map_or_else(
-            || "None".to_string(),
-            |sifr_generated_v| sifr_generated_v.to_string(),
-        ) == "9000";
-        let replaced_value_e7f16644073d5f45: String = sub(
-            &"\\s+".to_string(),
-            &"-".to_string(),
-            &"hello   world".to_string(),
-        )?;
+        let found_num: Option<String> = search("[0-9]+", "id=9000")?;
+        find_ok = found_num.unwrap_or_else(|| "None".to_string()) == "9000";
+        let replaced_value_e7f16644073d5f45: String = sub("\\s+", "-", "hello   world")?;
         replace_ok = replaced_value_e7f16644073d5f45 == "hello-world";
-        let all_alpha: Vec<String> = findall(&"[a-z]+".to_string(), &"ab 12 cd".to_string())?;
+        let all_alpha: Vec<String> = findall("[a-z]+", "ab 12 cd")?;
         findall_ok = format!("{all_alpha:?}") == "[\"ab\", \"cd\"]";
-        let split_parts: Vec<String> = split(&":+".to_string(), &"a:b::c".to_string())?;
+        let split_parts: Vec<String> = split(":+", "a:b::c")?;
         split_ok = format!("{split_parts:?}") == "[\"a\", \"b\", \"c\"]";
         let case_fold: Option<String> = search_flags(
-            &"hello".to_string(),
-            &"HELLO".to_string(),
+            "hello",
+            "HELLO",
             sifr_generated_const_49474e4f524543415345(),
         )?;
         case_fold_ok = case_fold.is_some();
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        let _ = e.message.clone().to_string();
+        let e = sifr_generated_try_err;
+        let _ = e.message;
     }
     actual.push(match_ok);
     actual.push(find_ok);

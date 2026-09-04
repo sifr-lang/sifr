@@ -2,7 +2,7 @@
 use ::sifr_runtime::SifrInt;
 #[expect(
     non_snake_case,
-    reason = "generated Rust preserves this exact typed Sifr source contract"
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
 )]
 fn parseDigit(ch: &str) -> SifrInt {
     if ch == "0" {
@@ -35,17 +35,17 @@ fn parseDigit(ch: &str) -> SifrInt {
     if ch == "9" {
         return SifrInt::from_i64(9);
     }
-    -&SifrInt::from_i64(1)
+    ::std::ops::Neg::neg(&SifrInt::from_i64(1))
 }
 #[expect(
     non_snake_case,
-    reason = "generated Rust preserves this exact typed Sifr source contract"
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
 )]
 fn parseNumber(s: &str) -> SifrInt {
     let sifr_generated_chars_s: Vec<char> = s.chars().collect::<Vec<char>>();
     let mut value: SifrInt = SifrInt::from_i64(0);
     let mut i: SifrInt = SifrInt::from_i64(0);
-    while &i < &SifrInt::from(sifr_generated_chars_s.len()) {
+    while i < sifr_generated_chars_s.len() {
         let Some(sifr_generated_checked_value_0) = {
             let sifr_generated_string_index = i.clone();
             let sifr_generated_string_index_normalized =
@@ -57,31 +57,25 @@ fn parseNumber(s: &str) -> SifrInt {
         .map(|character| character.to_string()) else {
             break;
         };
-        let ch: String = sifr_generated_checked_value_0.clone();
+        let ch: String = sifr_generated_checked_value_0;
         let d: SifrInt = parseDigit(&ch);
-        if &d < &SifrInt::from_i64(0) {
-            return -&SifrInt::from_i64(1);
+        if d < SifrInt::from_i64(0) {
+            return ::std::ops::Neg::neg(&SifrInt::from_i64(1));
         }
-        value = &(&value * &SifrInt::from_i64(10)) + &d;
-        i = &i + &SifrInt::from_i64(1);
+        value = ::std::ops::Add::add(&::std::ops::Mul::mul(&value, &SifrInt::from_i64(10)), &d);
+        i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
     }
-    value.clone()
+    value
 }
 fn multiply(num1: &str, num2_argument_5b9f8cba52849293: &str) -> String {
     let n1: SifrInt = parseNumber(num1);
     let n2: SifrInt = parseNumber(num2_argument_5b9f8cba52849293);
-    if &n1 < &SifrInt::from_i64(0) || &n2 < &SifrInt::from_i64(0) {
+    if n1 < SifrInt::from_i64(0) || n2 < SifrInt::from_i64(0) {
         return "0".to_string();
     }
-    (&n1 * &n2).to_string()
+    ::std::ops::Mul::mul(&n1, &n2).to_string()
 }
 fn main() {
-    assert_eq!(
-        multiply(&"2".to_string(), &"3".to_string()).to_string(),
-        "6"
-    );
-    assert_eq!(
-        multiply(&"123".to_string(), &"456".to_string()).to_string(),
-        "56088"
-    );
+    assert_eq!(multiply("2", "3"), "6");
+    assert_eq!(multiply("123", "456"), "56088");
 }

@@ -10,11 +10,7 @@ fn main() {
     assert_eq!(
         format!(
             "{:?}",
-            drain_queue(&mut vec![
-                "parse".to_string(),
-                "check".to_string(),
-                "emit".to_string()
-            ])
+            drain_queue(&["parse".to_string(), "check".to_string(), "emit".to_string()])
         ),
         "[\"parse\", \"check\", \"emit\"]"
     );

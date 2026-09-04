@@ -6,26 +6,38 @@ fn get_length(items: &[SifrInt]) -> SifrInt {
 }
 fn get_sum(items: &[SifrInt]) -> SifrInt {
     let mut total: SifrInt = SifrInt::from_i64(0);
-    for item in items.iter().cloned() {
-        total = &total + &item;
+    #[expect(
+        clippy::explicit_iter_loop,
+        reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner Item 12; remove when direct IntoIterator preserves the same source lifetime"
+    )]
+    for item in items.iter() {
+        total = ::std::ops::Add::add(&total, item);
     }
-    total.clone()
+    total
 }
+#[expect(
+    clippy::needless_pass_by_value,
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+)]
 fn consume_and_reverse(items: Vec<SifrInt>) -> Vec<SifrInt> {
     Box::new(items.iter().cloned().rev()).collect::<Vec<_>>()
 }
 fn add_lengths(a: &[SifrInt], b: &[SifrInt]) -> SifrInt {
-    &SifrInt::from(a.len()) + &SifrInt::from(b.len())
+    ::std::ops::Add::add(&SifrInt::from(a.len()), &SifrInt::from(b.len()))
 }
+#[expect(
+    clippy::needless_pass_by_value,
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+)]
 fn double(x: SifrInt) -> SifrInt {
-    &x * &SifrInt::from_i64(2)
+    ::std::ops::Mul::mul(&x, &SifrInt::from_i64(2))
 }
 fn negate(x: f64) -> f64 {
     -x
 }
 #[expect(
     clippy::approx_constant,
-    reason = "generated Rust preserves this exact typed Sifr source contract"
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
 )]
 fn main() {
     let data: Vec<SifrInt> = vec![
@@ -56,7 +68,7 @@ fn main() {
     println!("{combined}");
     println!("{nums:?}");
     let x: SifrInt = SifrInt::from_i64(42);
-    let d: SifrInt = double(x.clone());
+    let d: SifrInt = double(x);
     println!("{d}");
     println!("{x}");
     let pi: f64 = 3.14_f64;
@@ -74,7 +86,7 @@ fn main() {
         SifrInt::from_i64(3),
         SifrInt::from_i64(1),
     ) {
-        loop_total = &loop_total + &get_sum(&loop_data);
+        loop_total = ::std::ops::Add::add(&loop_total, &get_sum(&loop_data));
     }
     println!("{loop_total}");
     println!("{loop_data:?}");

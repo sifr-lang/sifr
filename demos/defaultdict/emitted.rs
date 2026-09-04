@@ -13,17 +13,17 @@ mod sifr_generated_project_nominals {
             let mut data: Vec<T> = Vec::new();
             if let Some(items) = items {
                 let start: SifrInt = if let Some(maxlen) = maxlen.clone()
-                    && &SifrInt::from(items.len()) > &maxlen
+                    && items.len() > maxlen
                 {
-                    &SifrInt::from(items.len()) - &maxlen
+                    ::std::ops::Sub::sub(&SifrInt::from(items.len()), &maxlen)
                 } else {
                     SifrInt::from_i64(0)
                 };
                 let mut i: SifrInt = start;
-                while &i < &SifrInt::from(items.len()) {
+                while i < items.len() {
                     let item_value_2841a0c596d6f426: Option<T> = {
                         let sifr_generated_checked_read_collection = &items;
-                        let sifr_generated_checked_read_index = i.clone();
+                        let sifr_generated_checked_read_index = &i;
                         let sifr_generated_checked_read_normalized =
                             sifr_generated_checked_read_index.normalize_index_or_len(
                                 sifr_generated_checked_read_collection.len(),
@@ -33,13 +33,12 @@ mod sifr_generated_project_nominals {
                             .cloned()
                     };
                     if let Some(item) = item_value_2841a0c596d6f426 {
-                        data.push(item.clone());
+                        data.push(item);
                     }
-                    i = &i + &SifrInt::from_i64(1);
+                    i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
                 }
             }
-            let sifr_generated_field_value_169953f6befb0270_6d61786c656e: Option<SifrInt> =
-                maxlen.clone();
+            let sifr_generated_field_value_169953f6befb0270_6d61786c656e: Option<SifrInt> = maxlen;
             let sifr_generated_field_value_90770dc80a1c57ce_5f64617461: VecDeque<T> =
                 VecDeque::from(data);
             Self {
@@ -74,11 +73,11 @@ fn main() {
             .push("hut".to_string());
     };
     assert_eq!(
-        &groups.get("hit").map_or_else(
+        groups.get("hit").map_or_else(
             || SifrInt::from_i64(0),
             |sifr_generated_bucket| SifrInt::from(sifr_generated_bucket.len())
         ),
-        &SifrInt::from_i64(2)
+        SifrInt::from_i64(2)
     );
     let mut seen: HashMap<SifrInt, HashSet<String>> = HashMap::new();
     {
@@ -103,13 +102,13 @@ fn main() {
         let sifr_generated_elem = counts
             .entry("steps".to_string())
             .or_insert(SifrInt::from_i64(0));
-        *sifr_generated_elem += SifrInt::from_i64(1);
+        *sifr_generated_elem = ::std::ops::Add::add(&*sifr_generated_elem, &SifrInt::from_i64(1));
     }
     {
         let sifr_generated_elem = counts
             .entry("steps".to_string())
             .or_insert(SifrInt::from_i64(0));
-        *sifr_generated_elem += SifrInt::from_i64(2);
+        *sifr_generated_elem = ::std::ops::Add::add(&*sifr_generated_elem, &SifrInt::from_i64(2));
     }
     assert_eq!(
         &*counts

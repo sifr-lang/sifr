@@ -1,55 +1,82 @@
 // src/main.rs
 use ::sifr_runtime::SifrInt;
+#[expect(
+    clippy::needless_pass_by_value,
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+)]
 fn factorial(n: SifrInt) -> SifrInt {
-    if &n <= &SifrInt::from_i64(1) {
+    if n <= SifrInt::from_i64(1) {
         return SifrInt::from_i64(1);
     }
-    &n * &factorial(&n - &SifrInt::from_i64(1))
+    ::std::ops::Mul::mul(
+        &n,
+        &factorial(::std::ops::Sub::sub(&n, &SifrInt::from_i64(1))),
+    )
 }
+#[expect(
+    clippy::needless_pass_by_value,
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+)]
 fn fibonacci(n: SifrInt) -> SifrInt {
-    if &n <= &SifrInt::from_i64(0) {
+    if n <= SifrInt::from_i64(0) {
         return SifrInt::from_i64(0);
     }
-    if &n == &SifrInt::from_i64(1) {
+    if n == SifrInt::from_i64(1) {
         return SifrInt::from_i64(1);
     }
-    &fibonacci(&n - &SifrInt::from_i64(1)) + &fibonacci(&n - &SifrInt::from_i64(2))
+    ::std::ops::Add::add(
+        &fibonacci(::std::ops::Sub::sub(&n, &SifrInt::from_i64(1))),
+        &fibonacci(::std::ops::Sub::sub(&n, &SifrInt::from_i64(2))),
+    )
 }
 fn greet(name: &str) -> String {
     {
-        let mut sifr_generated_concat: String = String::with_capacity(7usize + name.len() + 1usize);
+        let mut sifr_generated_concat: String =
+            String::with_capacity(7usize.saturating_add(name.len()).saturating_add(1usize));
         sifr_generated_concat.push_str("Hello, ");
         sifr_generated_concat.push_str(name);
         sifr_generated_concat.push('!');
         sifr_generated_concat
     }
 }
+#[expect(
+    clippy::needless_pass_by_value,
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+)]
 fn classify(x: SifrInt) -> String {
-    if &x > &SifrInt::from_i64(0) {
+    if x > SifrInt::from_i64(0) {
         return "positive".to_string();
     }
-    if &x < &SifrInt::from_i64(0) {
+    if x < SifrInt::from_i64(0) {
         return "negative".to_string();
     }
     "zero".to_string()
 }
+#[expect(
+    clippy::needless_pass_by_value,
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+)]
 fn double(n: SifrInt) -> SifrInt {
-    &n * &SifrInt::from_i64(2)
+    ::std::ops::Mul::mul(&n, &SifrInt::from_i64(2))
 }
+#[expect(
+    clippy::needless_pass_by_value,
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+)]
 fn is_even(n: SifrInt) -> bool {
-    if &n == &SifrInt::from_i64(0) {
+    if n == SifrInt::from_i64(0) {
         return true;
     }
-    if &n == &SifrInt::from_i64(1) {
+    if n == SifrInt::from_i64(1) {
         return false;
     }
-    is_even(&n - &SifrInt::from_i64(2))
+    is_even(::std::ops::Sub::sub(&n, &SifrInt::from_i64(2)))
 }
 fn main() {
     let x: SifrInt = SifrInt::from_i64(42);
     let name: String = "Sifr".to_string();
-    let sum: SifrInt = &x + &SifrInt::from_i64(8);
-    let product: SifrInt = double(sum.clone());
+    let sum: SifrInt = ::std::ops::Add::add(&x, &SifrInt::from_i64(8));
+    let product: SifrInt = double(sum);
     println!("{product}");
     let fact: SifrInt = factorial(SifrInt::from_i64(5));
     println!("{fact}");
@@ -57,9 +84,9 @@ fn main() {
     println!("{fib}");
     let msg: String = greet(&name);
     println!("{msg}");
-    let label: String = classify(x.clone());
+    let label: String = classify(x);
     println!("{label}");
-    let neg_label: String = classify(-&SifrInt::from_i64(7));
+    let neg_label: String = classify(::std::ops::Neg::neg(&SifrInt::from_i64(7)));
     println!("{neg_label}");
     let zero_label: String = classify(SifrInt::from_i64(0));
     println!("{zero_label}");

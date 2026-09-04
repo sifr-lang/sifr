@@ -27,6 +27,7 @@ from .profiles import (
     failure_reproduction_command,
     load_all_profiles,
     required_rust_interop_suites,
+    required_sql_platform_suites,
     selected_resource_classes,
     validate_crate_test_membership,
     validate_selected_area_suites,
@@ -53,6 +54,7 @@ def run_all() -> list[str]:
         ("cache-aware step budget self-test", step_budget_self_test),
         ("crate membership self-test", _crate_membership_self_test),
         ("Rust interop profile execution self-test", _rust_interop_profile_self_test),
+        ("SQL platform profile composition self-test", _sql_platform_profile_self_test),
         ("documentation profile execution self-test", _documentation_profile_self_test),
         (
             "release report precondition self-test",
@@ -193,11 +195,21 @@ def _profile_schema_self_test() -> None:
         "enforcement": "blocking",
     }:
         raise AssertionError(f"create-pr Rust interop budget drifted: {rust_interop_budget}")
+    runtime_budget = create_pr_step_budgets.get("area_runtime_platform")
+    expected_runtime_budget = {
+        "warm_budget_ms": 120_000,
+        "cold_budget_ms": 600_000,
+        "cache_classifier": "successful-input-receipt",
+        "enforcement": "blocking",
+    }
+    if runtime_budget != expected_runtime_budget:
+        raise AssertionError(f"create-pr runtime cache budget drifted: {runtime_budget}")
+    if profiles["merge"].get("step_budgets", {}).get("area_runtime_platform") != expected_runtime_budget:
+        raise AssertionError("merge runtime cache budget drifted")
     required_blocking_steps = {
         "area_generated_code_quality",
         "area_rust_interop",
         "toolchain_cargo_test_sifr_smoke",
-        "area_runtime_platform",
         "toolchain_e2e_pass",
     }
     missing_step_budgets = sorted(required_blocking_steps.difference(create_pr_step_budgets))
@@ -258,6 +270,42 @@ def _profile_coverage_self_test(profiles: dict[str, dict[str, Any]]) -> None:
             str(step).startswith("cargo-test-sifr-") for step in toolchain
         ):
             raise AssertionError(f"{profile_name} lost crate-test or e2e coverage")
+
+
+def _sql_platform_profile_self_test() -> None:
+    profiles = load_all_profiles()
+    required = required_sql_platform_suites()
+    for profile_name in ("create-pr", "merge", "nightly", "release"):
+        profile = profiles[profile_name]
+        selected = next(
+            (
+                set(selection["suites"])
+                for selection in profile["selected_areas"]
+                if selection.get("area") == "sql_platform"
+            ),
+            set(),
+        )
+        if not required.issubset(selected):
+            raise AssertionError(
+                f"{profile_name} omits required SQL platform suites: "
+                f"{sorted(required.difference(selected))}"
+            )
+
+    mutation = copy.deepcopy(profiles["merge"])
+    sql_selection = next(
+        selection
+        for selection in mutation["selected_areas"]
+        if selection.get("area") == "sql_platform"
+    )
+    removed = sorted(required)[0]
+    sql_selection["suites"].remove(removed)
+    try:
+        validate_selected_area_suites(mutation)
+    except ProfileError as exc:
+        if f"omits required SQL platform verification suites: {removed}" not in str(exc):
+            raise
+    else:
+        raise AssertionError("profile validation accepted a missing required SQL suite")
     for profile_name in ("nightly", "release"):
         if "hardening-determinism-scale" not in profiles[profile_name]["guardrail_steps"]:
             raise AssertionError(f"{profile_name} lost determinism-scale coverage")

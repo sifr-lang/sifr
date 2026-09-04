@@ -110,7 +110,8 @@ fn ordinary_union_codegen_skips_structural_impls_without_demand() {
     let project = crate::generate_rust_multi_with_metadata(
         &[("main", &module)],
         &crate::StdlibCode::default(),
-    );
+    )
+    .expect("project generation should succeed");
     let prelude = project.project_union_prelude;
     assert!(prelude.contains("enum __SifrUnion"));
     assert!(!prelude.contains("StructuralType"));
@@ -136,7 +137,8 @@ fn direct_ordinary_union_gets_structural_impls_when_demanded() {
     let project = crate::generate_rust_multi_with_metadata(
         &[("main", &module)],
         &crate::StdlibCode::default(),
-    );
+    )
+    .expect("project generation should succeed");
     let prelude = project.project_union_prelude;
     assert!(prelude.contains("StructuralKind::Union"), "{prelude}");
     assert!(prelude.contains("ActiveMember"), "{prelude}");
@@ -164,7 +166,8 @@ fn project_union_resolves_structural_members_from_their_defining_module() {
     let project = crate::generate_rust_multi_with_metadata(
         &[("models", &models), ("main", &api)],
         &crate::StdlibCode::default(),
-    );
+    )
+    .expect("project generation should succeed");
     let prelude = project.project_union_prelude;
 
     assert!(prelude.contains("crate::models::Payload"), "{prelude}");
@@ -211,7 +214,8 @@ fn project_record_eligibility_resolves_nested_imported_members() {
     let project = crate::generate_rust_multi_with_metadata(
         &[("models", &models), ("records", &records), ("main", &api)],
         &crate::StdlibCode::default(),
-    );
+    )
+    .expect("project generation should succeed");
     let records_rust = project
         .rust_files
         .get("records")
@@ -241,7 +245,8 @@ fn project_root_record_keeps_qualified_structural_identity() {
     let project = crate::generate_rust_multi_with_metadata(
         &[("main", &module)],
         &crate::StdlibCode::default(),
-    );
+    )
+    .expect("project generation should succeed");
     let main_rust = project
         .rust_files
         .get("main")
@@ -338,7 +343,8 @@ fn platform_integer_union_does_not_receive_structural_impls() {
     let project = crate::generate_rust_multi_with_metadata(
         &[("main", &module)],
         &crate::StdlibCode::default(),
-    );
+    )
+    .expect("project generation should succeed");
     let prelude = project.project_union_prelude;
 
     assert!(prelude.contains("enum __SifrUnion"));
@@ -352,7 +358,8 @@ fn project_structural_demand_enables_implicit_classes_across_modules() {
     let models = module(Vec::new(), vec![payload_class()]);
     let api = module(vec![structural_function()], Vec::new());
 
-    let generated = generate_rust_multi(&[("models", &models), ("api", &api)]);
+    let generated = generate_rust_multi(&[("models", &models), ("api", &api)])
+        .expect("project generation should succeed");
     let models_rust = generated.get("models").expect("models module is generated");
 
     assert!(models_rust.contains("StructuralType"));
@@ -364,7 +371,8 @@ fn project_structural_demand_enables_implicit_classes_across_modules() {
     let metadata = crate::generate_rust_multi_with_metadata(
         &[("models", &models), ("api", &api)],
         &crate::StdlibCode::default(),
-    );
+    )
+    .expect("project generation should succeed");
     assert!(
         metadata
             .required_features
@@ -379,7 +387,8 @@ fn test_project_root_record_keeps_qualified_structural_identity() {
         &[],
         &[("case", &case)],
         &crate::StdlibCode::default(),
-    );
+    )
+    .expect("test-project generation should succeed");
     let case_rust = generated
         .test_rust_files
         .get("case")
@@ -398,7 +407,8 @@ fn structural_impls_escape_rust_keyword_field_identifiers() {
     let models = module(Vec::new(), vec![keyword]);
     let api = module(vec![structural_function()], Vec::new());
 
-    let generated = generate_rust_multi(&[("models", &models), ("api", &api)]);
+    let generated = generate_rust_multi(&[("models", &models), ("api", &api)])
+        .expect("project generation should succeed");
     let models_rust = generated.get("models").expect("models module is generated");
 
     assert!(models_rust.contains("let (__sifr_field_0,) ="));

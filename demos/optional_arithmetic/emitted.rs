@@ -1,10 +1,10 @@
 // src/main.rs
 use ::sifr_runtime::SifrInt;
 fn safe_add_one(x: Option<SifrInt>) -> SifrInt {
-    let Some(x) = x.clone() else {
+    let Some(x) = x else {
         return SifrInt::from_i64(0);
     };
-    &x + &SifrInt::from_i64(1)
+    ::std::ops::Add::add(&x, &SifrInt::from_i64(1))
 }
 fn main() {
     println!("optional_arithmetic optional arithmetic soundness demo:");
@@ -12,8 +12,8 @@ fn main() {
     println!("{}", safe_add_one(None));
     let total: Option<SifrInt> = Some(SifrInt::from_i64(9));
     let count: Option<SifrInt> = Some(SifrInt::from_i64(3));
-    if let Some(_total) = total.clone()
-        && let Some(_count) = count.clone()
+    if let Some(_total) = total
+        && let Some(_count) = count
     {
         println!("{}", 9.0 / 3.0);
     }

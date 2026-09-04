@@ -3,12 +3,12 @@ use ::sifr_runtime::SifrInt;
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Entry {
     value: SifrInt,
-    next: Option<Box<Entry>>,
+    next: Option<Box<Self>>,
 }
 impl Entry {
-    fn new(value: SifrInt, next: Option<Box<Entry>>) -> Self {
-        let sifr_generated_field_value_7ce4fd9430e80cea_76616c7565: SifrInt = value.clone();
-        let sifr_generated_field_value_e5316cbaa025f028_6e657874: Option<Box<Entry>> = next;
+    const fn new(value: SifrInt, next: Option<Box<Self>>) -> Self {
+        let sifr_generated_field_value_7ce4fd9430e80cea_76616c7565: SifrInt = value;
+        let sifr_generated_field_value_e5316cbaa025f028_6e657874: Option<Box<Self>> = next;
         Self {
             value: sifr_generated_field_value_7ce4fd9430e80cea_76616c7565,
             next: sifr_generated_field_value_e5316cbaa025f028_6e657874,

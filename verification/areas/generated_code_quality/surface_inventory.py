@@ -33,6 +33,17 @@ REQUIRED_ENTRYPOINT_DISCOVERIES = {
     "static-program": {"rust-interop-positive-sources"},
     "sysroot-project": {"sysroot-release-sources"},
 }
+REQUIRED_ENTRYPOINT_QUALIFICATIONS = {
+    "algorithmic-corpus": {"algorithmic_compatibility:leetcode-full"},
+    "cli-build-project": {"project_workspace:audit-fixtures"},
+    "cli-build-single": {"generated_code_quality:full"},
+    "cli-emit-single": {"generated_code_quality:full"},
+    "cli-run-single": {"generated_code_quality:full"},
+    "cli-test-project": {"project_workspace:audit-fixtures"},
+    "rust-interop-project": {"rust_interop:matrix"},
+    "static-program": {"rust_interop:matrix"},
+    "sysroot-project": {"sysroot_release:host-installed-stdlib-heavy"},
+}
 REQUIRED_DISCOVERY_IDS = {
     "algorithmic-sources",
     "demo-emitted-companions",
@@ -78,6 +89,14 @@ def discover_paths(repo_root: Path, root: str, pattern: str) -> list[str]:
 
 def validate_surface_inventory(payload: dict[str, Any], repo_root: Path) -> list[str]:
     errors: list[str] = []
+    qualification_profile = json.loads(
+        (repo_root / "verification/profiles/release.json").read_text(encoding="utf-8")
+    )
+    selected_qualifications = {
+        f"{selection['area']}:{suite}"
+        for selection in qualification_profile.get("selected_areas", [])
+        for suite in selection.get("suites", [])
+    }
     if payload.get("schema_version") != 1:
         errors.append("schema_version must equal 1")
     entrypoints = payload.get("entrypoint_classes")
@@ -113,6 +132,26 @@ def validate_surface_inventory(payload: dict[str, Any], repo_root: Path) -> list
                 or len(discoveries) != len(discovery_set)
             ):
                 errors.append(f"entrypoint class {entry_id} must name its exact discovery set")
+            qualifications = entry.get("qualifications")
+            valid_qualifications = (
+                isinstance(qualifications, list)
+                and all(isinstance(value, str) for value in qualifications)
+            )
+            qualification_set = set(qualifications) if valid_qualifications else set()
+            if isinstance(entry_id, str) and (
+                not valid_qualifications
+                or qualification_set != REQUIRED_ENTRYPOINT_QUALIFICATIONS.get(entry_id)
+                or len(qualifications) != len(qualification_set)
+            ):
+                errors.append(
+                    f"entrypoint class {entry_id} must name its exact qualification set"
+                )
+            missing_qualifications = qualification_set.difference(selected_qualifications)
+            if missing_qualifications:
+                errors.append(
+                    f"entrypoint class {entry_id} qualifications are absent from the release profile: "
+                    f"{sorted(missing_qualifications)}"
+                )
             representative = entry.get("representative")
             if isinstance(representative, str):
                 resolved = (repo_root / representative).resolve()
@@ -202,6 +241,10 @@ def run_self_test(payload: dict[str, Any], repo_root: Path) -> None:
     missing_class_discovery["entrypoint_classes"][0]["discoveries"] = []
     expect_invalid(missing_class_discovery, repo_root, "exact discovery set")
 
+    missing_class_qualification = copy.deepcopy(payload)
+    missing_class_qualification["entrypoint_classes"][0]["qualifications"] = []
+    expect_invalid(missing_class_qualification, repo_root, "exact qualification set")
+
     missing_discovery = copy.deepcopy(payload)
     missing_discovery["discoveries"].pop()
     expect_invalid(missing_discovery, repo_root, "exact required discovery set")
@@ -243,6 +286,12 @@ def evidence(payload: dict[str, Any], repo_root: Path) -> dict[str, Any]:
             }
         )
     return {
-        "entrypoint_classes": sorted(REQUIRED_ENTRYPOINT_CLASSES),
+        "entrypoint_classes": [
+            {
+                "id": entry["id"],
+                "qualifications": entry["qualifications"],
+            }
+            for entry in sorted(payload["entrypoint_classes"], key=lambda entry: entry["id"])
+        ],
         "discoveries": discoveries,
     }

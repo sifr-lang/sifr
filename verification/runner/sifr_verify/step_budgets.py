@@ -122,7 +122,7 @@ def enforce_step_budget(context: StepBudgetContext | None, elapsed_ms: int) -> i
     return 0
 
 
-def record_step_success(context: StepBudgetContext | None) -> None:
+def record_step_success(context: StepBudgetContext | None, elapsed_ms: int) -> None:
     if (
         context is None
         or context.receipt_path is None
@@ -131,11 +131,23 @@ def record_step_success(context: StepBudgetContext | None) -> None:
         or any(not cache_path_available(path) for path in context.required_cache_paths)
     ):
         return
+    observations: list[dict[str, Any]] = []
+    try:
+        previous = json.loads(context.receipt_path.read_text(encoding="utf-8"))
+        if previous.get("input_fingerprint") == context.cache_fingerprint:
+            observations = list(previous.get("observations", []))
+    except (OSError, json.JSONDecodeError, AttributeError):
+        pass
+    observations.append(
+        {"cache_state": context.cache_state, "elapsed_ms": elapsed_ms}
+    )
+    observations = observations[-4:]
     payload = {
         "schema_version": RECEIPT_SCHEMA_VERSION,
         "classifier": CACHE_CLASSIFIER,
         "step": context.name,
         "input_fingerprint": context.cache_fingerprint,
+        "observations": observations,
     }
     atomic_write_json(context.receipt_path, payload)
 
@@ -211,7 +223,7 @@ def input_fingerprint(
 
 
 def selected_suites(profile: dict[str, Any], step_name: str) -> list[str]:
-    area = "python_interop" if step_name == "python_interop" else step_name
+    area = step_name.removeprefix("area_")
     return [
         str(suite)
         for selection in profile.get("selected_areas", [])
@@ -295,7 +307,7 @@ def run_self_test() -> None:
             receipt_eligible=True,
             required_cache_paths=(required,),
         )
-        record_step_success(context)
+        record_step_success(context, 300_000)
         if classify_receipt(
             receipt_path=receipt, fingerprint="a" * 64, required_paths=(required,)
         ) != (
@@ -320,7 +332,7 @@ def run_self_test() -> None:
             "receipt-invalid",
         ):
             raise AssertionError("invalid cache receipt was not classified cold")
-        record_step_success(context)
+        record_step_success(context, 300_000)
         (required / "artifact").unlink()
         if classify_receipt(
             receipt_path=receipt, fingerprint="a" * 64, required_paths=(required,)

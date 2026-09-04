@@ -27,9 +27,9 @@ fn active_indices(flags: &[bool]) -> Vec<SifrInt> {
 }
 fn main() {
     assert_eq!(
-        format!("{:?}", active_indices(&vec![true, false, true, true])),
+        format!("{:?}", active_indices(&[true, false, true, true])),
         "[0, 2, 3]"
     );
-    assert_eq!(format!("{:?}", active_indices(&vec![false, false])), "[]");
+    assert_eq!(format!("{:?}", active_indices(&[false, false])), "[]");
     println!("monotonic_indices: ok");
 }

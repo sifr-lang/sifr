@@ -18,8 +18,10 @@ mod project_support_pruning;
 pub(crate) use project_support_pruning::{
     import_generated_support_in_project_nominals,
     import_project_prelude_bindings_in_generated_support, prune_generated_project_owners,
+    render_generated_support_import,
 };
 mod source_expectations;
+mod support_import_cleanup;
 mod syntax_cleanup;
 
 use api_cleanup::improve_generated_api_items;
@@ -34,6 +36,7 @@ use item_dependencies::IdentifierCollector;
 use item_dependencies::{
     all_item_identifier_names, impl_self_type_name, item_definition_name, item_dependency_names,
 };
+use member_demand::prune_removed_generated_trait_methods;
 use member_demand::prune_unused_members;
 use method_demand::{demanded_inherent_method_names, prune_inherent_methods};
 use syntax_cleanup::canonicalize_syntax;
@@ -67,6 +70,27 @@ pub fn finalize_formatted_generated_rust_source(source: &str) -> Result<String, 
     finalize_formatted_generated_rust_source_with_project_consts(source, &HashSet::new())
 }
 
+pub(crate) fn rewrite_project_borrowed_string_literals(
+    sources: &mut [&mut String],
+) -> Result<(), String> {
+    let mut files = sources
+        .iter()
+        .map(|source| {
+            syn::parse_file(source).map_err(|error| {
+                format!("failed to parse assembled generated project Rust: {error}")
+            })
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    let signatures = syntax_cleanup::collect_project_borrowed_string_params(&files);
+    for file in &mut files {
+        syntax_cleanup::rewrite_project_borrowed_string_literals(file, &signatures);
+    }
+    for (source, file) in sources.iter_mut().zip(files) {
+        **source = prettyplease::unparse(&file);
+    }
+    Ok(())
+}
+
 fn prune_closed_generated_binary(source: &str) -> Result<Option<String>, String> {
     let mut file = syn::parse_file(source)
         .map_err(|error| format!("failed to parse assembled generated Rust: {error}"))?;
@@ -93,7 +117,11 @@ fn prune_closed_generated_binary(source: &str) -> Result<Option<String>, String>
     let demanded_methods = demanded_inherent_method_names(&file);
     prune_inherent_methods(&mut file.items, &demanded_methods);
     prune_unused_members(&mut file);
+    prune_removed_generated_trait_methods(&mut file.items);
     prune_item_scope(&mut file.items, &HashSet::from(["main".to_string()]), true);
+    prune_unused_members(&mut file);
+    prune_removed_generated_trait_methods(&mut file.items);
+    support_import_cleanup::remove_unused_generated_support_imports(&mut file.items);
     if file.to_token_stream().to_string() == before {
         Ok(None)
     } else {

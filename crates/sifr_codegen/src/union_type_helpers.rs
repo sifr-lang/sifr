@@ -11,11 +11,11 @@ impl RustEmitter {
         if self.project_nominal_type_paths.is_empty() {
             return None;
         }
-        let builtin_identity = identity
-            .is_none()
-            .then(|| crate::builtin_error_identity(name))
-            .flatten();
-        let key = identity.or(builtin_identity.as_deref()).unwrap_or(name);
+        assert!(
+            identity.is_some() || crate::builtin_error_identity(name).is_none(),
+            "project union builtin error '{name}' requires its canonical nominal identity"
+        );
+        let key = identity.unwrap_or(name);
         if let Some(path) = self.project_nominal_type_paths.get(key) {
             return Some(path);
         }
@@ -383,7 +383,7 @@ impl RustEmitter {
                                 ret: Some(RustType::Named("Self".to_string())),
                                 body: vec![RustStmt::Return(Some(RustExpr::FnCall {
                                     func: Box::new(RustExpr::Path(vec![
-                                        enum_name.clone(),
+                                        "Self".to_string(),
                                         variant,
                                     ])),
                                     args: vec![RustExpr::Ident("value".to_string())],
@@ -412,7 +412,7 @@ impl RustEmitter {
                         "{:?}"
                     };
                     RustMatchArm {
-                        pattern: format!("{enum_name}::{variant}(v)"),
+                        pattern: format!("Self::{variant}(v)"),
                         bindings: Vec::new(),
                         guard: None,
                         body: vec![RustStmt::Return(Some(RustExpr::MacroCall {

@@ -10,6 +10,10 @@ fn main() {
 // src/helper.rs
 pub use ::sifr_runtime::SifrInt;
 #[must_use]
+#[expect(
+    clippy::needless_pass_by_value,
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+)]
 pub fn doubled(x: SifrInt) -> SifrInt {
-    &x * &SifrInt::from_i64(2)
+    ::std::ops::Mul::mul(&x, &SifrInt::from_i64(2))
 }

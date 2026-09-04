@@ -13,11 +13,15 @@ impl Timer {
     }
 }
 impl Timer {
-    fn sifr_generated_enter__(&self) -> Timer {
+    fn sifr_generated_enter__(&self) -> Self {
         self.clone()
     }
 }
 impl Timer {
+    #[expect(
+        clippy::unused_self,
+        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+    )]
     const fn sifr_generated_exit__(&self) {}
 }
 impl ::std::fmt::Display for Timer {
@@ -43,7 +47,8 @@ impl Item {
 impl Item {
     fn describe(&self) -> String {
         {
-            let mut sifr_generated_concat: String = String::with_capacity(6usize);
+            let mut sifr_generated_concat: String =
+                String::with_capacity(6usize.saturating_add(0usize));
             sifr_generated_concat.push_str("Item: ");
             sifr_generated_concat.push_str(self.name.clone().as_str());
             sifr_generated_concat
@@ -57,7 +62,7 @@ impl ::std::fmt::Display for Item {
 }
 impl Describable for Item {
     fn describe(&self) -> String {
-        Item::describe(self)
+        Self::describe(self)
     }
 }
 fn main() {
@@ -70,24 +75,26 @@ fn main() {
     ];
     let lo: Option<SifrInt> = nums.iter().cloned().min();
     let hi: Option<SifrInt> = nums.iter().cloned().max();
-    if let Some(lo) = lo.clone() {
+    if let Some(lo) = lo {
         println!("{lo}");
     }
-    if let Some(hi) = hi.clone() {
+    if let Some(hi) = hi {
         println!("{hi}");
     }
-    let evens: Vec<SifrInt> = Box::new(nums.iter().cloned().filter(
-        move |sifr_generated_filter_item| {
-            let x = sifr_generated_filter_item.clone();
-            &x.floor_mod_known_nonzero(&SifrInt::from_i64(2)) == &SifrInt::from_i64(0)
-        },
-    ))
+    let evens: Vec<SifrInt> = Box::new(
+        nums.iter()
+            .filter(move |&sifr_generated_filter_item| {
+                let x = sifr_generated_filter_item.clone();
+                x.floor_mod_known_nonzero(&SifrInt::from_i64(2)) == SifrInt::from_i64(0)
+            })
+            .cloned(),
+    )
     .collect::<Vec<_>>();
     println!("{evens:?}");
     let big: Vec<SifrInt> = {
         let mut sifr_generated_list_comp = Vec::new();
         for x in nums.iter().cloned() {
-            if &x > &SifrInt::from_i64(2) {
+            if x > SifrInt::from_i64(2) {
                 sifr_generated_list_comp.push(x);
             }
         }
@@ -96,7 +103,8 @@ fn main() {
     println!("{big:?}");
     let name: String = "World".to_string();
     let greeting: String = {
-        let mut sifr_generated_concat: String = String::with_capacity(7usize + name.len() + 1usize);
+        let mut sifr_generated_concat: String =
+            String::with_capacity(7usize.saturating_add(name.len()).saturating_add(1usize));
         sifr_generated_concat.push_str("Hello, ");
         sifr_generated_concat.push_str(name.as_str());
         sifr_generated_concat.push('!');
@@ -116,7 +124,7 @@ fn main() {
         let sifr_generated_guard_0 = SifrGeneratedWithGuard0 {
             ctx: sifr_generated_ctx_0,
         };
-        let _t = sifr_generated_guard_0.ctx.sifr_generated_enter__();
+        let _ = sifr_generated_guard_0.ctx.sifr_generated_enter__();
         println!("doing work inside with block");
     }
     let item: Item = Item::new("Widget".to_string());

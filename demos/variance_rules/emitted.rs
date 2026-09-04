@@ -5,8 +5,8 @@ struct Entity {
     id: SifrInt,
 }
 impl Entity {
-    fn new(id: SifrInt) -> Self {
-        let sifr_generated_field_value_08b72e07b55c3ac0_6964: SifrInt = id.clone();
+    const fn new(id: SifrInt) -> Self {
+        let sifr_generated_field_value_08b72e07b55c3ac0_6964: SifrInt = id;
         Self {
             id: sifr_generated_field_value_08b72e07b55c3ac0_6964,
         }
@@ -39,7 +39,7 @@ impl ::std::convert::From<Person> for Entity {
     }
 }
 impl Person {
-    fn new(id: SifrInt, name: String) -> Self {
+    const fn new(id: SifrInt, name: String) -> Self {
         let sifr_generated_parent = Entity::new(id);
         let sifr_generated_field_value_c4bcadba8e631b86_6e616d65: String = name;
         Self {
@@ -75,9 +75,9 @@ impl ::std::convert::From<Employee> for Person {
     }
 }
 impl Employee {
-    fn new(id: SifrInt, name: String, level: SifrInt) -> Self {
+    const fn new(id: SifrInt, name: String, level: SifrInt) -> Self {
         let sifr_generated_parent = Person::new(id, name);
-        let sifr_generated_field_value_e8ddc90a9d7c709d_6c6576656c: SifrInt = level.clone();
+        let sifr_generated_field_value_e8ddc90a9d7c709d_6c6576656c: SifrInt = level;
         Self {
             person: sifr_generated_parent,
             level: sifr_generated_field_value_e8ddc90a9d7c709d_6c6576656c,
@@ -91,10 +91,14 @@ impl ::std::fmt::Display for Employee {
 }
 fn sum_items(values: &[SifrInt]) -> SifrInt {
     let mut total: SifrInt = SifrInt::from_i64(0);
-    for value in values.iter().cloned() {
-        total = &total + &value;
+    #[expect(
+        clippy::explicit_iter_loop,
+        reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner Item 12; remove when direct IntoIterator preserves the same source lifetime"
+    )]
+    for value in values.iter() {
+        total = ::std::ops::Add::add(&total, value);
     }
-    total.clone()
+    total
 }
 fn main() {
     println!("variance_rules inheritance and variance corrections demo:");
@@ -103,10 +107,10 @@ fn main() {
         "Lin".to_string(),
         SifrInt::from_i64(4),
     );
-    println!("{}", emp.person.name.clone());
+    println!("{}", emp.person.name);
     println!(
         "{}",
-        sum_items(&vec![
+        sum_items(&[
             SifrInt::from_i64(1),
             SifrInt::from_i64(2),
             SifrInt::from_i64(3)

@@ -20,7 +20,7 @@ fn increment_all(mut values: Vec<SifrInt>) -> Vec<SifrInt> {
         };
         {
             let sifr_generated_assign_value =
-                &sifr_generated_checked_value_0.clone() + &SifrInt::from_i64(1);
+                ::std::ops::Add::add(&sifr_generated_checked_value_0, &SifrInt::from_i64(1));
             {
                 let sifr_generated_index_raw = i.clone();
                 let sifr_generated_index_normalized =

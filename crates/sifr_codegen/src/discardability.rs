@@ -59,6 +59,16 @@ pub(crate) fn syntax_expression_is_discardable(expression: &syn::Expr) -> bool {
         syn::Expr::Paren(paren) => syntax_expression_is_discardable(&paren.expr),
         syn::Expr::Tuple(tuple) => tuple.elems.iter().all(syntax_expression_is_discardable),
         syn::Expr::Array(array) => array.elems.iter().all(syntax_expression_is_discardable),
+        syn::Expr::Call(call)
+            if call.args.len() == 1
+                && matches!(call.func.as_ref(), syn::Expr::Path(path)
+                    if path.qself.is_none()
+                        && path.path.segments.len() == 2
+                        && path.path.segments[0].ident == "SifrInt"
+                        && path.path.segments[1].ident == "from_i64") =>
+        {
+            call.args.iter().all(syntax_expression_is_discardable)
+        }
         _ => false,
     }
 }

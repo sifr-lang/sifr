@@ -2,7 +2,7 @@
 use ::sifr_runtime::SifrInt;
 #[expect(
     clippy::approx_constant,
-    reason = "generated Rust preserves this exact typed Sifr source contract"
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
 )]
 const PI: f64 = 3.14159_f64;
 const fn sifr_generated_const_4d41585f52455452494553() -> SifrInt {
@@ -25,8 +25,8 @@ impl Temperature {
     }
 }
 impl Temperature {
-    fn from_fahrenheit(f: f64) -> Temperature {
-        Temperature::new((f - 32.0_f64) * 5.0_f64 / 9.0_f64)
+    fn from_fahrenheit(f: f64) -> Self {
+        Self::new((f - 32.0_f64) * 5.0_f64 / 9.0_f64)
     }
 }
 impl ::std::fmt::Display for Temperature {

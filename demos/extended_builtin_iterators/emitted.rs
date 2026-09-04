@@ -1,7 +1,11 @@
 // src/main.rs
 use ::sifr_runtime::SifrInt;
+#[expect(
+    clippy::needless_pass_by_value,
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+)]
 fn add(x: SifrInt, y: SifrInt) -> SifrInt {
-    &x + &y
+    ::std::ops::Add::add(&x, &y)
 }
 fn main() {
     let mut rev_it: Box<dyn Iterator<Item = SifrInt>> = Box::new(
@@ -21,7 +25,10 @@ fn main() {
             .enumerate()
             .map(|sifr_generated_pair| {
                 (
-                    SifrInt::from(sifr_generated_pair.0) + SifrInt::from_i64(3),
+                    ::std::ops::Add::add(
+                        SifrInt::from(sifr_generated_pair.0),
+                        SifrInt::from_i64(3),
+                    ),
                     sifr_generated_pair.1,
                 )
             }),

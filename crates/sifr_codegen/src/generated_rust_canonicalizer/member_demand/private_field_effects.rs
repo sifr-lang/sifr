@@ -2,6 +2,8 @@ use std::collections::{HashMap, HashSet};
 
 use syn::visit::{self, Visit};
 
+use proc_macro2::{TokenStream, TokenTree};
+
 pub(super) fn type_has_trivial_drop(ty: &syn::Type) -> bool {
     match ty {
         syn::Type::Array(array) => type_has_trivial_drop(&array.elem),
@@ -109,6 +111,40 @@ impl Visit<'_> for FieldInitializerEffectCollector<'_> {
             }
         }
         visit::visit_expr_struct(self, expression);
+    }
+
+    fn visit_macro(&mut self, rust_macro: &syn::Macro) {
+        self.retain_macro_struct_candidates(&rust_macro.tokens);
+        visit::visit_macro(self, rust_macro);
+    }
+}
+
+impl FieldInitializerEffectCollector<'_> {
+    fn retain_macro_struct_candidates(&mut self, tokens: &TokenStream) {
+        let trees = tokens.clone().into_iter().collect::<Vec<_>>();
+        for (index, tree) in trees.iter().enumerate() {
+            if let TokenTree::Ident(owner) = tree
+                && trees.get(index + 1).is_some_and(|next| {
+                    matches!(next, TokenTree::Group(group)
+                        if group.delimiter() == proc_macro2::Delimiter::Brace)
+                })
+            {
+                let owner = if owner == "Self" {
+                    self.impl_owner
+                        .clone()
+                        .unwrap_or_else(|| "Self".to_string())
+                } else {
+                    owner.to_string()
+                };
+                if let Some(fields) = self.candidates.get(&owner) {
+                    self.unsafe_to_remove
+                        .extend(fields.iter().cloned().map(|field| (owner.clone(), field)));
+                }
+            }
+            if let TokenTree::Group(group) = tree {
+                self.retain_macro_struct_candidates(&group.stream());
+            }
+        }
     }
 }
 

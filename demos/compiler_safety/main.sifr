@@ -98,6 +98,7 @@ def main():
 
     events.append("=== Callable Struct Field ===")
     c: Config = Config(21, double)
+    # Keep the callable field live while this fixture checks the surrounding output contract.
     c.callback(c.value)
     events.append(str(c.value))
 

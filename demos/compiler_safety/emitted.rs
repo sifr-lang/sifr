@@ -13,11 +13,15 @@ impl FileResource {
     }
 }
 impl FileResource {
-    fn sifr_generated_enter__(&self) -> FileResource {
+    fn sifr_generated_enter__(&self) -> Self {
         self.clone()
     }
 }
 impl FileResource {
+    #[expect(
+        clippy::unused_self,
+        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+    )]
     const fn sifr_generated_exit__(&self) {}
 }
 impl ::std::fmt::Display for FileResource {
@@ -38,11 +42,15 @@ impl DBConnection {
     }
 }
 impl DBConnection {
-    fn sifr_generated_enter__(&self) -> DBConnection {
+    fn sifr_generated_enter__(&self) -> Self {
         self.clone()
     }
 }
 impl DBConnection {
+    #[expect(
+        clippy::unused_self,
+        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+    )]
     const fn sifr_generated_exit__(&self) {}
 }
 impl ::std::fmt::Display for DBConnection {
@@ -56,7 +64,7 @@ struct Config {
 }
 impl Config {
     fn new(value: SifrInt, callback: impl Fn(SifrInt) -> SifrInt + 'static) -> Self {
-        let sifr_generated_field_value_7ce4fd9430e80cea_76616c7565: SifrInt = value.clone();
+        let sifr_generated_field_value_7ce4fd9430e80cea_76616c7565: SifrInt = value;
         let sifr_generated_field_value_31d52eaacb529206_63616c6c6261636b: Box<
             dyn Fn(SifrInt) -> SifrInt,
         > = Box::new(callback);
@@ -66,8 +74,12 @@ impl Config {
         }
     }
 }
+#[expect(
+    clippy::needless_pass_by_value,
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+)]
 fn double(x: SifrInt) -> SifrInt {
-    &x * &SifrInt::from_i64(2)
+    ::std::ops::Mul::mul(&x, &SifrInt::from_i64(2))
 }
 fn demo_early_return() -> Vec<String> {
     let mut output: Vec<String> = vec!["Opening: data.csv".to_string()];
@@ -85,7 +97,7 @@ fn demo_early_return() -> Vec<String> {
             ctx: sifr_generated_ctx_0,
         };
         let f = sifr_generated_guard_0.ctx.sifr_generated_enter__();
-        output.push(format!("Reading: {}", f.path.clone()));
+        output.push(format!("Reading: {}", f.path));
     }
     output.push("Closing: data.csv".to_string());
     output.push("42".to_string());
@@ -114,7 +126,7 @@ fn main() {
             ctx: sifr_generated_ctx_0,
         };
         let f = sifr_generated_guard_0.ctx.sifr_generated_enter__();
-        events.push(format!("Using: {}", f.path.clone()));
+        events.push(format!("Using: {}", f.path));
     }
     events.push("Closing: config.json".to_string());
     events.push("=== Context Manager: Early Return ===".to_string());
@@ -124,7 +136,7 @@ fn main() {
     }
     events.push("=== Context Manager: Break in Loop ===".to_string());
     let mut i: SifrInt = SifrInt::from_i64(0);
-    while &i < &SifrInt::from_i64(3) {
+    while i < SifrInt::from_i64(3) {
         events.push("Connecting: db".to_string());
         let mut should_break: bool = false;
         {
@@ -141,17 +153,17 @@ fn main() {
                 ctx: sifr_generated_ctx_0,
             };
             let conn = sifr_generated_guard_0.ctx.sifr_generated_enter__();
-            if &i == &SifrInt::from_i64(1) {
+            if i == SifrInt::from_i64(1) {
                 should_break = true;
             } else {
-                events.push(format!("Query on: {}", conn.name.clone()));
+                events.push(format!("Query on: {}", conn.name));
             }
         }
         events.push("Disconnecting: db".to_string());
         if should_break {
             break;
         }
-        i = &i + &SifrInt::from_i64(1);
+        i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
     }
     events.push("=== Multiple Context Managers ===".to_string());
     events.push("Opening: input.txt".to_string());
@@ -183,18 +195,14 @@ fn main() {
             ctx: sifr_generated_ctx_1,
         };
         let db = sifr_generated_guard_1.ctx.sifr_generated_enter__();
-        events.push(format!(
-            "Processing with: {} and {}",
-            fin.path.clone(),
-            db.name.clone()
-        ));
+        events.push(format!("Processing with: {} and {}", fin.path, db.name));
     }
     events.push("Disconnecting: postgres".to_string());
     events.push("Closing: input.txt".to_string());
     events.push("=== Callable Struct Field ===".to_string());
     let c: Config = Config::new(SifrInt::from_i64(21), double);
     (c.callback)(c.value.clone());
-    events.push(c.value.clone().to_string());
+    events.push(c.value.to_string());
     events.push("=== Compiler Hardening Demo Complete ===".to_string());
     assert_eq!(
         events,
@@ -226,7 +234,11 @@ fn main() {
         ]
     );
     println!("Compiler hardening demo trace:");
-    for entry in events.iter().cloned() {
+    #[expect(
+        clippy::explicit_iter_loop,
+        reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner Item 12; remove when direct IntoIterator preserves the same source lifetime"
+    )]
+    for entry in events.iter() {
         println!("{entry}");
     }
 }

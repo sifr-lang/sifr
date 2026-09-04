@@ -17,6 +17,71 @@ pub(super) fn prune_unused_members(file: &mut syn::File) {
     prune_unused_members_in_scope(&mut file.items, &HashSet::new(), &HashSet::new());
 }
 
+pub(super) fn prune_removed_generated_trait_methods(items: &mut [syn::Item]) {
+    let mut retained = HashMap::<String, HashSet<String>>::new();
+    collect_generated_trait_methods(items, &mut retained);
+    prune_trait_implementations(items, &retained);
+}
+
+fn collect_generated_trait_methods(
+    items: &[syn::Item],
+    retained: &mut HashMap<String, HashSet<String>>,
+) {
+    for item in items {
+        match item {
+            syn::Item::Trait(trait_) if trait_.ident.to_string().starts_with("SifrGenerated") => {
+                retained.insert(
+                    trait_.ident.to_string(),
+                    trait_
+                        .items
+                        .iter()
+                        .filter_map(|item| match item {
+                            syn::TraitItem::Fn(method) => Some(method.sig.ident.to_string()),
+                            _ => None,
+                        })
+                        .collect(),
+                );
+            }
+            syn::Item::Mod(module) => {
+                if let Some((_, nested)) = &module.content {
+                    collect_generated_trait_methods(nested, retained);
+                }
+            }
+            _ => {}
+        }
+    }
+}
+
+fn prune_trait_implementations(
+    items: &mut [syn::Item],
+    retained: &HashMap<String, HashSet<String>>,
+) {
+    for item in items {
+        match item {
+            syn::Item::Impl(impl_) => {
+                let Some(methods) = impl_
+                    .trait_
+                    .as_ref()
+                    .and_then(|(path, _)| path.segments.last())
+                    .and_then(|segment| retained.get(&segment.ident.to_string()))
+                else {
+                    continue;
+                };
+                impl_.items.retain(|item| {
+                    !matches!(item, syn::ImplItem::Fn(method)
+                        if !methods.contains(&method.sig.ident.to_string()))
+                });
+            }
+            syn::Item::Mod(module) => {
+                if let Some((_, nested)) = &mut module.content {
+                    prune_trait_implementations(nested, retained);
+                }
+            }
+            _ => {}
+        }
+    }
+}
+
 fn prune_unused_members_in_scope(
     items: &mut [syn::Item],
     external_variant_demand: &HashSet<(String, String)>,

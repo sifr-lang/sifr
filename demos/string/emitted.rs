@@ -1,21 +1,19 @@
 // src/main.rs
-mod sifr_generated_generated_support {
-    pub(crate) use ::sifr_runtime::SifrInt;
-    pub(crate) fn sifr_generated_const_61736369695f6c6f77657263617365() -> String {
+pub mod sifr_generated_generated_support {
+    pub(super) use ::sifr_runtime::SifrInt;
+    pub(super) fn sifr_generated_const_61736369695f6c6f77657263617365() -> String {
         "abcdefghijklmnopqrstuvwxyz".to_string()
     }
-    pub(crate) fn sifr_generated_const_646967697473() -> String {
+    pub(super) fn sifr_generated_const_646967697473() -> String {
         "0123456789".to_string()
     }
-    pub(crate) fn sifr_generated_const_77686974657370616365() -> String {
+    pub(super) fn sifr_generated_const_77686974657370616365() -> String {
         " \t\n\r\u{b}\u{c}".to_string()
     }
-    pub(crate) fn capwords(s: &str) -> String {
+    pub(super) fn capwords(s: &str) -> String {
         let normalized: String = s
-            .replace('\t', " ")
-            .replace('\n', " ")
-            .replace('\r', " ")
-            .replace('\u{b}', " ")
+            .replace(['\n', '\t'], " ")
+            .replace(['\u{b}', '\r'], " ")
             .replace('\u{c}', " ");
         let words: Vec<String> = normalized
             .split(' ')
@@ -23,9 +21,12 @@ mod sifr_generated_generated_support {
             .collect::<Vec<String>>();
         let mut result: String = String::new();
         let mut first: bool = true;
-        for word in words.iter().cloned() {
-            let sifr_generated_chars_word: Vec<char> = word.chars().collect::<Vec<char>>();
-            if &SifrInt::from(sifr_generated_chars_word.len()) > &SifrInt::from_i64(0) {
+        #[expect(
+            clippy::explicit_iter_loop,
+            reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner Item 12; remove when direct IntoIterator preserves the same source lifetime"
+        )]
+        for word in words.iter() {
+            if word.chars().count() > SifrInt::from_i64(0) {
                 if !first {
                     result.push(' ');
                 }
@@ -45,10 +46,10 @@ mod sifr_generated_generated_support {
         }
         result
     }
-    pub(crate) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
+    pub(super) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
-        while &i < &SifrInt::from(actual.len()) {
+        while i < actual.len() {
             assert_eq!(
                 {
                     let sifr_generated_condition_list = &actual;
@@ -69,28 +70,29 @@ mod sifr_generated_generated_support {
                         .copied()
                 }
             );
-            i = &i + &SifrInt::from_i64(1);
+            i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
         }
     }
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::{
+    assert_bool_vector_eq, capwords, sifr_generated_const_77686974657370616365,
+    sifr_generated_const_61736369695f6c6f77657263617365, sifr_generated_const_646967697473,
+};
 use ::sifr_runtime::SifrInt;
 fn collect_capwords_actual() -> Vec<bool> {
     vec![
-        capwords(&"hello world".to_string()).as_str() == "Hello World".to_string().as_str(),
-        capwords(&"hello\tworld".to_string()).as_str() == "Hello World".to_string().as_str(),
-        capwords(&"hello\nworld".to_string()).as_str() == "Hello World".to_string().as_str(),
-        capwords(&"one\u{b}two\u{c}three".to_string()).as_str()
-            == "One Two Three".to_string().as_str(),
-        capwords(&"  one   two  ".to_string()).as_str() == "One Two".to_string().as_str(),
+        capwords("hello world").as_str() == "Hello World".to_string().as_str(),
+        capwords("hello\tworld").as_str() == "Hello World".to_string().as_str(),
+        capwords("hello\nworld").as_str() == "Hello World".to_string().as_str(),
+        capwords("one\u{b}two\u{c}three").as_str() == "One Two Three".to_string().as_str(),
+        capwords("  one   two  ").as_str() == "One Two".to_string().as_str(),
     ]
 }
 fn collect_constants_actual() -> Vec<bool> {
     vec![
         sifr_generated_const_61736369695f6c6f77657263617365() == "abcdefghijklmnopqrstuvwxyz",
         sifr_generated_const_646967697473() == "0123456789",
-        &SifrInt::from(sifr_generated_const_77686974657370616365().chars().count())
-            == &SifrInt::from_i64(6),
+        sifr_generated_const_77686974657370616365().chars().count() == SifrInt::from_i64(6),
     ]
 }
 fn append_all(target: &mut Vec<bool>, values: &[bool]) {

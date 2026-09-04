@@ -5,8 +5,8 @@ struct CountdownIter {
     current: SifrInt,
 }
 impl CountdownIter {
-    fn new(start: SifrInt) -> Self {
-        let sifr_generated_field_value_2a2e8a5afcc8d89a_63757272656e74: SifrInt = start.clone();
+    const fn new(start: SifrInt) -> Self {
+        let sifr_generated_field_value_2a2e8a5afcc8d89a_63757272656e74: SifrInt = start;
         Self {
             current: sifr_generated_field_value_2a2e8a5afcc8d89a_63757272656e74,
         }
@@ -14,11 +14,11 @@ impl CountdownIter {
 }
 impl CountdownIter {
     fn sifr_generated_next__(&mut self) -> Option<SifrInt> {
-        if &self.current.clone() <= &SifrInt::from_i64(0) {
+        if self.current <= SifrInt::from_i64(0) {
             return None;
         }
         let value: SifrInt = self.current.clone();
-        self.current = &self.current.clone() - &SifrInt::from_i64(1);
+        self.current = ::std::ops::Sub::sub(&self.current.clone(), &SifrInt::from_i64(1));
         Some(value)
     }
 }
@@ -32,8 +32,8 @@ struct Countdown {
     start: SifrInt,
 }
 impl Countdown {
-    fn new(start: SifrInt) -> Self {
-        let sifr_generated_field_value_ee5d97ad45ad251f_7374617274: SifrInt = start.clone();
+    const fn new(start: SifrInt) -> Self {
+        let sifr_generated_field_value_ee5d97ad45ad251f_7374617274: SifrInt = start;
         Self {
             start: sifr_generated_field_value_ee5d97ad45ad251f_7374617274,
         }
@@ -43,9 +43,9 @@ impl Countdown {
     fn sifr_generated_iter__(&self) -> Box<dyn Iterator<Item = SifrInt>> {
         let mut values: Vec<SifrInt> = Vec::new();
         let mut i: SifrInt = self.start.clone();
-        while &i > &SifrInt::from_i64(0) {
+        while i > SifrInt::from_i64(0) {
             values.push(i.clone());
-            i = &i - &SifrInt::from_i64(1);
+            i = ::std::ops::Sub::sub(&i, &SifrInt::from_i64(1));
         }
         Box::new(values.into_iter())
     }
@@ -54,9 +54,9 @@ impl Countdown {
     fn sifr_generated_reversed__(&self) -> Box<dyn Iterator<Item = SifrInt>> {
         let mut values: Vec<SifrInt> = Vec::new();
         let mut i: SifrInt = SifrInt::from_i64(1);
-        while &i <= &self.start.clone() {
+        while i <= self.start {
             values.push(i.clone());
-            i = &i + &SifrInt::from_i64(1);
+            i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
         }
         Box::new(values.into_iter())
     }
@@ -77,11 +77,11 @@ fn main() {
     );
     println!(
         "{:?}",
-        Box::new(countdown.clone().sifr_generated_reversed__()).collect::<Vec<_>>()
+        Box::new(countdown.sifr_generated_reversed__()).collect::<Vec<_>>()
     );
     let mut running_total: SifrInt = SifrInt::from_i64(0);
     for value in Countdown::new(SifrInt::from_i64(4)).sifr_generated_iter__() {
-        running_total = &running_total + &value;
+        running_total = ::std::ops::Add::add(&running_total, &value);
     }
     println!("{running_total}");
     let mut it: CountdownIter = CountdownIter::new(SifrInt::from_i64(2));

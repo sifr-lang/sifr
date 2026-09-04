@@ -3,14 +3,14 @@ use ::sifr_runtime::SifrInt;
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct TreeNode {
     val: SifrInt,
-    left: Option<Box<TreeNode>>,
-    right: Option<Box<TreeNode>>,
+    left: Option<Box<Self>>,
+    right: Option<Box<Self>>,
 }
 impl TreeNode {
-    fn new(val: SifrInt, left: Option<Box<TreeNode>>, right: Option<Box<TreeNode>>) -> Self {
-        let sifr_generated_field_value_690422194ed16e3c_76616c: SifrInt = val.clone();
-        let sifr_generated_field_value_24b070ada2041cb0_6c656674: Option<Box<TreeNode>> = left;
-        let sifr_generated_field_value_76aaaa535714d805_7269676874: Option<Box<TreeNode>> = right;
+    const fn new(val: SifrInt, left: Option<Box<Self>>, right: Option<Box<Self>>) -> Self {
+        let sifr_generated_field_value_690422194ed16e3c_76616c: SifrInt = val;
+        let sifr_generated_field_value_24b070ada2041cb0_6c656674: Option<Box<Self>> = left;
+        let sifr_generated_field_value_76aaaa535714d805_7269676874: Option<Box<Self>> = right;
         Self {
             val: sifr_generated_field_value_690422194ed16e3c_76616c,
             left: sifr_generated_field_value_24b070ada2041cb0_6c656674,
@@ -24,7 +24,10 @@ fn tree_value_sum(node: Option<&TreeNode>) -> SifrInt {
     };
     let left: Option<&TreeNode> = node.left.as_deref();
     let right: Option<&TreeNode> = node.right.as_deref();
-    &(&node.val.clone() + &tree_value_sum(left)) + &tree_value_sum(right)
+    ::std::ops::Add::add(
+        &::std::ops::Add::add(&node.val, &tree_value_sum(left)),
+        &tree_value_sum(right),
+    )
 }
 fn main() {
     let left: TreeNode = TreeNode::new(SifrInt::from_i64(2), None, None);
@@ -34,7 +37,7 @@ fn main() {
         Some(Box::new(left)),
         Some(Box::new(right)),
     );
-    assert_eq!(&tree_value_sum(Some(&root)), &SifrInt::from_i64(6));
+    assert_eq!(tree_value_sum(Some(&root)), SifrInt::from_i64(6));
     println!("tree sum ok");
     println!("packet alias declared");
 }

@@ -11,12 +11,8 @@ mod sifr_generated_project_unions {
     {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
             match self {
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a211X3a4X3aatom3X3aint11X3a4X3aatom3X3astr::SifrGeneratedUnionVariant4X3aatom3X3aint(
-                    v,
-                ) => write!(f, "{v}"),
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a211X3a4X3aatom3X3aint11X3a4X3aatom3X3astr::SifrGeneratedUnionVariant4X3aatom3X3astr(
-                    v,
-                ) => write!(f, "{v}"),
+                Self::SifrGeneratedUnionVariant4X3aatom3X3aint(v) => write!(f, "{v}"),
+                Self::SifrGeneratedUnionVariant4X3aatom3X3astr(v) => write!(f, "{v}"),
             }
         }
     }
@@ -64,13 +60,17 @@ fn classify_http(method: &str) -> String {
 }
 fn classify_score(score: SifrInt) -> String {
     match score {
-        n if &n >= &SifrInt::from_i64(90) => "A".to_string(),
-        n if &n >= &SifrInt::from_i64(80) => "B".to_string(),
-        n if &n >= &SifrInt::from_i64(70) => "C".to_string(),
-        n if &n >= &SifrInt::from_i64(60) => "D".to_string(),
+        n if n >= SifrInt::from_i64(90) => "A".to_string(),
+        n if n >= SifrInt::from_i64(80) => "B".to_string(),
+        n if n >= SifrInt::from_i64(70) => "C".to_string(),
+        n if n >= SifrInt::from_i64(60) => "D".to_string(),
         _ => "F".to_string(),
     }
 }
+#[expect(
+    clippy::needless_pass_by_value,
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+)]
 fn describe_optional(x: Option<SifrInt>) -> String {
     if x.is_none() {
         "nothing".to_string()
@@ -114,7 +114,7 @@ fn classify_point(p: &Point) -> String {
             y: SifrInt::Small(0),
             ..
         } => {
-            let _px = px.clone();
+            let _ = px.clone();
             "on x-axis".to_string()
         }
         Point {
@@ -122,12 +122,12 @@ fn classify_point(p: &Point) -> String {
             y: py,
             ..
         } => {
-            let _py = py.clone();
+            let _ = py.clone();
             "on y-axis".to_string()
         }
         Point { x: px, y: py, .. } => {
-            let _px = px.clone();
-            let _py = py.clone();
+            let _ = px.clone();
+            let _ = py.clone();
             "general".to_string()
         }
     }
@@ -147,18 +147,14 @@ fn classify_quadrant(p: &Point) -> String {
             y: SifrInt::Small(0),
             ..
         } => "origin".to_string(),
-        Point { x: px, y: py, .. }
-            if &*px > &SifrInt::from_i64(0) && &*py > &SifrInt::from_i64(0) =>
-        {
-            let _px = px.clone();
-            let _py = py.clone();
+        Point { x: px, y: py, .. } if *px > SifrInt::from_i64(0) && *py > SifrInt::from_i64(0) => {
+            let _ = px.clone();
+            let _ = py.clone();
             "Q1".to_string()
         }
-        Point { x: px, y: py, .. }
-            if &*px < &SifrInt::from_i64(0) && &*py > &SifrInt::from_i64(0) =>
-        {
-            let _px = px.clone();
-            let _py = py.clone();
+        Point { x: px, y: py, .. } if *px < SifrInt::from_i64(0) && *py > SifrInt::from_i64(0) => {
+            let _ = px.clone();
+            let _ = py.clone();
             "Q2".to_string()
         }
         _ => "other".to_string(),
@@ -170,10 +166,10 @@ fn main() {
     println!("{}", describe_number(SifrInt::from_i64(1)));
     println!("{}", describe_number(SifrInt::from_i64(42)));
     println!("=== OR Patterns ===");
-    println!("{}", classify_http(&"GET".to_string()));
-    println!("{}", classify_http(&"POST".to_string()));
-    println!("{}", classify_http(&"DELETE".to_string()));
-    println!("{}", classify_http(&"OPTIONS".to_string()));
+    println!("{}", classify_http("GET"));
+    println!("{}", classify_http("POST"));
+    println!("{}", classify_http("DELETE"));
+    println!("{}", classify_http("OPTIONS"));
     println!("=== Guard Patterns ===");
     println!("{}", classify_score(SifrInt::from_i64(95)));
     println!("{}", classify_score(SifrInt::from_i64(85)));
@@ -202,10 +198,10 @@ fn main() {
     let t2: (SifrInt, SifrInt) = (SifrInt::from_i64(3), SifrInt::from_i64(0));
     let t3: (SifrInt, SifrInt) = (SifrInt::from_i64(0), SifrInt::from_i64(4));
     let t4: (SifrInt, SifrInt) = (SifrInt::from_i64(3), SifrInt::from_i64(4));
-    println!("{}", classify_pair(t1.clone()));
-    println!("{}", classify_pair(t2.clone()));
-    println!("{}", classify_pair(t3.clone()));
-    println!("{}", classify_pair(t4.clone()));
+    println!("{}", classify_pair(t1));
+    println!("{}", classify_pair(t2));
+    println!("{}", classify_pair(t3));
+    println!("{}", classify_pair(t4));
     println!("=== Nested Patterns ===");
     println!(
         "{}",
@@ -217,10 +213,16 @@ fn main() {
     );
     println!(
         "{}",
-        classify_quadrant(&Point::new(-&SifrInt::from_i64(2), SifrInt::from_i64(5)))
+        classify_quadrant(&Point::new(
+            ::std::ops::Neg::neg(&SifrInt::from_i64(2)),
+            SifrInt::from_i64(5)
+        ))
     );
     println!(
         "{}",
-        classify_quadrant(&Point::new(-&SifrInt::from_i64(1), -&SifrInt::from_i64(1)))
+        classify_quadrant(&Point::new(
+            ::std::ops::Neg::neg(&SifrInt::from_i64(1)),
+            ::std::ops::Neg::neg(&SifrInt::from_i64(1))
+        ))
     );
 }

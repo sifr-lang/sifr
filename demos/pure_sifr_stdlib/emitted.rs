@@ -1,46 +1,46 @@
 // src/main.rs
-mod sifr_generated_generated_support {
+pub mod sifr_generated_generated_support {
     use crate::{ParseError, SifrGeneratedStdlibSifrX2ehashlibX2eHashObject};
-    pub(crate) use ::sifr_runtime::SifrInt;
-    pub(crate) fn base64_encode(s: &str) -> String {
+    pub(super) use ::sifr_runtime::SifrInt;
+    pub(super) fn base64_encode(s: &str) -> String {
         ::sifr_stdlib::base64::base64_encode(s)
     }
-    pub(crate) fn base64_decode(s: &str) -> Result<String, ParseError> {
+    pub(super) fn base64_decode(s: &str) -> Result<String, ParseError> {
         ::sifr_stdlib::base64::base64_decode(s).map_err(|sifr_generated_bridge_error| ParseError {
-            message: sifr_generated_bridge_error.to_string(),
+            message: sifr_generated_bridge_error,
         })
     }
-    pub(crate) fn sha256_bytes(data: &[u8]) -> Vec<u8> {
+    pub(super) fn sha256_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::hash::sha256_bytes(data)
     }
-    pub(crate) fn md5_bytes(data: &[u8]) -> Vec<u8> {
+    pub(super) fn md5_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::hash::md5_bytes(data)
     }
-    pub(crate) fn sha1_bytes(data: &[u8]) -> Vec<u8> {
+    pub(super) fn sha1_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::hash::sha1_bytes(data)
     }
-    pub(crate) fn sha224_bytes(data: &[u8]) -> Vec<u8> {
+    pub(super) fn sha224_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::hash::sha224_bytes(data)
     }
-    pub(crate) fn sha384_bytes(data: &[u8]) -> Vec<u8> {
+    pub(super) fn sha384_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::hash::sha384_bytes(data)
     }
-    pub(crate) fn sha512_bytes(data: &[u8]) -> Vec<u8> {
+    pub(super) fn sha512_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::hash::sha512_bytes(data)
     }
-    pub(crate) fn blake2b_bytes(data: &[u8]) -> Vec<u8> {
+    pub(super) fn blake2b_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::hash::blake2b_bytes(data)
     }
-    pub(crate) fn blake2s_bytes(data: &[u8]) -> Vec<u8> {
+    pub(super) fn blake2s_bytes(data: &[u8]) -> Vec<u8> {
         ::sifr_stdlib::hash::blake2s_bytes(data)
     }
-    pub(crate) fn b64encode(s: &str) -> String {
+    pub(super) fn b64encode(s: &str) -> String {
         base64_encode(s)
     }
-    pub(crate) fn b64decode(s: &str) -> Result<String, ParseError> {
+    pub(super) fn b64decode(s: &str) -> Result<String, ParseError> {
         base64_decode(s)
     }
-    pub(crate) fn sifr_generated_build_hash(
+    pub(super) fn sifr_generated_build_hash(
         algorithm: &str,
         data: &[u8],
     ) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
@@ -118,7 +118,7 @@ mod sifr_generated_generated_support {
             SifrInt::from_i64(0),
         )
     }
-    pub(crate) fn sifr_generated_hash_bytes(algorithm: &str, data: &[u8]) -> Vec<u8> {
+    pub(super) fn sifr_generated_hash_bytes(algorithm: &str, data: &[u8]) -> Vec<u8> {
         if algorithm == "md5" {
             return md5_bytes(data);
         } else if algorithm == "sha1" {
@@ -138,7 +138,7 @@ mod sifr_generated_generated_support {
         }
         Vec::new()
     }
-    pub(crate) fn sifr_generated_hash_hex(algorithm: &str, data: &[u8]) -> String {
+    pub(super) fn sifr_generated_hash_hex(algorithm: &str, data: &[u8]) -> String {
         {
             let sifr_generated_bytes_receiver: &[u8] = &sifr_generated_hash_bytes(algorithm, data);
             let mut sifr_generated_hex =
@@ -152,20 +152,20 @@ mod sifr_generated_generated_support {
             sifr_generated_hex
         }
     }
-    pub(crate) fn sha256(data: &[u8]) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
-        sifr_generated_build_hash(&"sha256".to_string(), data)
+    pub(super) fn sha256(data: &[u8]) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
+        sifr_generated_build_hash("sha256", data)
     }
     #[expect(
         clippy::approx_constant,
-        reason = "generated Rust preserves this exact typed Sifr source contract"
+        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
     )]
-    pub(crate) const PI: f64 = 3.141_592_653_589_793_f64;
-    pub(crate) fn sqrt(x: f64) -> f64 {
+    pub(super) const PI: f64 = 3.141_592_653_589_793_f64;
+    pub(super) fn sqrt(x: f64) -> f64 {
         ::sifr_stdlib::math::sqrt(x)
     }
 }
 mod sifr_generated_project_nominals {
-    use crate::sifr_generated_generated_support::*;
+    use crate::sifr_generated_generated_support::sifr_generated_hash_hex;
     use ::sifr_runtime::SifrInt;
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
@@ -177,7 +177,7 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
         #[must_use]
-        pub fn new(
+        pub const fn new(
             algorithm: String,
             data: Vec<u8>,
             name: String,
@@ -189,9 +189,9 @@ mod sifr_generated_project_nominals {
             let sifr_generated_field_value_90770dc80a1c57ce_5f64617461: Vec<u8> = data;
             let sifr_generated_field_value_c4bcadba8e631b86_6e616d65: String = name;
             let sifr_generated_field_value_6344303e03c9f7c7_6469676573745f73697a65: SifrInt =
-                digest_size.clone();
+                digest_size;
             let sifr_generated_field_value_e190162752f8783e_626c6f636b5f73697a65: SifrInt =
-                block_size.clone();
+                block_size;
             Self {
                 algorithm: sifr_generated_field_value_ddb1f39e0a66bbbb_5f616c676f726974686d,
                 data: sifr_generated_field_value_90770dc80a1c57ce_5f64617461,
@@ -218,41 +218,41 @@ mod sifr_generated_project_nominals {
     }
     impl ::std::error::Error for ParseError {}
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::{PI, b64decode, b64encode, sha256, sqrt};
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::ParseError;
 pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2ehashlibX2eHashObject;
 #[expect(
     clippy::assertions_on_constants,
-    reason = "generated Rust preserves this exact typed Sifr source contract"
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
 )]
 #[expect(
     clippy::approx_constant,
-    reason = "generated Rust preserves this exact typed Sifr source contract"
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
 )]
 fn main() {
     assert_eq!(
-        &SifrInt::from_i64(1) + &SifrInt::from_i64(1),
+        ::std::ops::Add::add(&SifrInt::from_i64(1), &SifrInt::from_i64(1)),
         SifrInt::from_i64(2)
     );
     assert!(true);
     let result: f64 = sqrt(9.0_f64);
     assert_eq!(result, 3.0_f64);
     assert!(PI > 3.14_f64);
-    let h: String = sha256(&vec![104_u8, 101_u8, 108_u8, 108_u8, 111_u8]).hexdigest();
-    let _chars_h: Vec<char> = h.chars().collect::<Vec<char>>();
-    assert_eq!(&SifrInt::from(h.chars().count()), &SifrInt::from_i64(64));
-    let encoded: String = b64encode(&"Hello!".to_string());
+    let h: String = sha256(&[104_u8, 101_u8, 108_u8, 108_u8, 111_u8]).hexdigest();
+    let _ = h.chars().collect::<Vec<char>>();
+    assert_eq!(h.chars().count(), SifrInt::from_i64(64));
+    let encoded: String = b64encode("Hello!");
     let sifr_generated_try_res: Result<(), ParseError> = (|| {
         let decoded: String = b64decode(&encoded)?;
         assert_eq!(decoded, "Hello!");
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let err = sifr_generated_try_err.clone();
-        println!("base64 error: {}", err.message.clone());
+        let err = sifr_generated_try_err;
+        println!("base64 error: {}", err.message);
         assert_eq!(
-            format!("base64 error: {}", err.message.clone()),
+            format!("base64 error: {}", err.message),
             "stdlib_migration demo: all checks passed!"
         );
     }

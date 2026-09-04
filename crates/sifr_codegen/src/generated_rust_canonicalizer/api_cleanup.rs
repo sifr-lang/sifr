@@ -1,10 +1,14 @@
 use quote::{ToTokens, quote};
 use std::collections::HashSet;
 use syn::visit::{self, Visit};
+use syn::visit_mut::VisitMut;
 
 use super::source_expectations::{
     refresh_const_expectations, refresh_function_expectations, refresh_struct_expectations,
 };
+
+mod slice_parameter_cleanup;
+use slice_parameter_cleanup::rewrite_slice_only_vec_parameters;
 
 pub(super) fn improve_generated_api_items(items: &mut [syn::Item], source: &str) {
     improve_generated_api_items_with_project_consts(items, source, &HashSet::new());
@@ -97,18 +101,24 @@ fn improve_generated_api_items_once(
                     allow_const: true,
                     owner: None,
                     owner_has_display: false,
+                    trait_impl: false,
                     const_callables,
                     source,
                 },
             ),
             syn::Item::Impl(item_impl) => {
                 let allow_const = item_impl.trait_.is_none();
+                let trait_impl = item_impl.trait_.is_some();
                 let owner = impl_self_type_name(item_impl.self_ty.as_ref());
                 let owner_has_display = owner
                     .as_ref()
                     .is_some_and(|owner| display_owners.contains(owner));
                 for impl_item in &mut item_impl.items {
                     if let syn::ImplItem::Fn(method) = impl_item {
+                        if let Some(owner) = owner.as_deref() {
+                            UseSelfRewriter { owner }.visit_signature_mut(&mut method.sig);
+                            UseSelfRewriter { owner }.visit_block_mut(&mut method.block);
+                        }
                         improve_function_api(
                             &mut method.attrs,
                             &method.vis,
@@ -118,6 +128,7 @@ fn improve_generated_api_items_once(
                                 allow_const,
                                 owner: owner.as_deref(),
                                 owner_has_display,
+                                trait_impl,
                                 const_callables,
                                 source,
                             },
@@ -131,6 +142,8 @@ fn improve_generated_api_items_once(
                 }
             }
             syn::Item::Struct(item_struct) => {
+                let owner = item_struct.ident.to_string();
+                UseSelfRewriter { owner: &owner }.visit_fields_mut(&mut item_struct.fields);
                 refresh_struct_expectations(&mut item_struct.attrs, &item_struct.fields);
                 let generic_types = generic_type_names(&item_struct.generics);
                 add_eq_to_eligible_derives(
@@ -158,6 +171,39 @@ fn improve_generated_api_items_once(
             }
             _ => {}
         }
+    }
+}
+
+struct UseSelfRewriter<'owner> {
+    owner: &'owner str,
+}
+
+impl syn::visit_mut::VisitMut for UseSelfRewriter<'_> {
+    fn visit_path_mut(&mut self, path: &mut syn::Path) {
+        syn::visit_mut::visit_path_mut(self, path);
+        replace_owner_path_with_self(path, self.owner);
+    }
+
+    fn visit_expr_path_mut(&mut self, path: &mut syn::ExprPath) {
+        syn::visit_mut::visit_expr_path_mut(self, path);
+        replace_owner_path_with_self(&mut path.path, self.owner);
+    }
+
+    fn visit_type_path_mut(&mut self, path: &mut syn::TypePath) {
+        syn::visit_mut::visit_type_path_mut(self, path);
+        replace_owner_path_with_self(&mut path.path, self.owner);
+    }
+
+    fn visit_item_mut(&mut self, _item: &mut syn::Item) {}
+}
+
+fn replace_owner_path_with_self(path: &mut syn::Path, owner: &str) {
+    if path.leading_colon.is_none()
+        && let Some(first) = path.segments.first_mut()
+        && first.ident == owner
+    {
+        first.ident = syn::Ident::new("Self", first.ident.span());
+        first.arguments = syn::PathArguments::None;
     }
 }
 
@@ -195,6 +241,7 @@ struct ApiContext<'context> {
     allow_const: bool,
     owner: Option<&'context str>,
     owner_has_display: bool,
+    trait_impl: bool,
     const_callables: &'context HashSet<String>,
     source: &'context str,
 }
@@ -207,9 +254,17 @@ fn improve_function_api(
     context: ApiContext<'_>,
 ) {
     replace_unused_parameters(signature, body);
+    rewrite_slice_only_vec_parameters(signature, body);
     let rendered_body_lines = rendered_function_body_lines(body, context.source);
     add_source_shape_expectations(attrs, signature, rendered_body_lines);
-    refresh_function_expectations(attrs, signature, body, context.owner_has_display);
+    refresh_function_expectations(
+        attrs,
+        signature,
+        body,
+        context.owner_has_display,
+        context.trait_impl,
+        !matches!(visibility, syn::Visibility::Public(_)),
+    );
     if matches!(visibility, syn::Visibility::Public(_)) {
         if !matches!(signature.output, syn::ReturnType::Default)
             && !returns_result(signature)
@@ -231,9 +286,7 @@ fn improve_function_api(
             body,
             context.owner,
             context.const_callables,
-            signature.inputs.iter().any(
-                |argument| matches!(argument, syn::FnArg::Receiver(receiver) if matches!(receiver.kind, syn::ReceiverKind::Reference(..))),
-            ),
+            &borrowed_parameter_names(signature),
         )
     {
         signature.constness = Some(syn::token::Const::default());
@@ -461,13 +514,13 @@ fn block_is_const_compatible(
     block: &syn::Block,
     owner: Option<&str>,
     const_callables: &HashSet<String>,
-    has_borrowed_self: bool,
+    borrowed_parameters: &HashSet<String>,
 ) -> bool {
     let mut checker = ConstCompatibilityChecker {
         compatible: true,
         owner,
         const_callables,
-        has_borrowed_self,
+        borrowed_parameters,
     };
     checker.visit_block(block);
     checker.compatible
@@ -477,7 +530,7 @@ struct ConstCompatibilityChecker<'scope> {
     compatible: bool,
     owner: Option<&'scope str>,
     const_callables: &'scope HashSet<String>,
-    has_borrowed_self: bool,
+    borrowed_parameters: &'scope HashSet<String>,
 }
 
 impl<'ast> Visit<'ast> for ConstCompatibilityChecker<'_> {
@@ -495,8 +548,10 @@ impl<'ast> Visit<'ast> for ConstCompatibilityChecker<'_> {
 
     fn visit_expr_unary(&mut self, expression: &'ast syn::ExprUnary) {
         if matches!(expression.op, syn::UnOp::Deref(_))
-            && self.has_borrowed_self
-            && expression_is_rooted_in_self(&expression.expr)
+            && expression_is_rooted_in_borrowed_parameter(
+                &expression.expr,
+                self.borrowed_parameters,
+            )
         {
             visit::visit_expr_unary(self, expression);
         } else {
@@ -505,7 +560,7 @@ impl<'ast> Visit<'ast> for ConstCompatibilityChecker<'_> {
     }
 
     fn visit_expr_field(&mut self, expression: &'ast syn::ExprField) {
-        if !self.has_borrowed_self || !expression_is_rooted_in_self(&expression.base) {
+        if !expression_is_rooted_in_borrowed_parameter(&expression.base, self.borrowed_parameters) {
             self.compatible = false;
             return;
         }
@@ -558,11 +613,53 @@ impl<'ast> Visit<'ast> for ConstCompatibilityChecker<'_> {
     }
 }
 
-fn expression_is_rooted_in_self(expression: &syn::Expr) -> bool {
+fn borrowed_parameter_names(signature: &syn::Signature) -> HashSet<String> {
+    signature
+        .inputs
+        .iter()
+        .filter_map(|argument| match argument {
+            syn::FnArg::Receiver(receiver)
+                if matches!(receiver.kind, syn::ReceiverKind::Reference(..)) =>
+            {
+                Some("self".to_string())
+            }
+            syn::FnArg::Typed(parameter)
+                if matches!(parameter.ty.as_ref(), syn::Type::Reference(_)) =>
+            {
+                simple_pattern_name(&parameter.pat)
+            }
+            _ => None,
+        })
+        .collect()
+}
+
+fn simple_pattern_name(pattern: &syn::Pat) -> Option<String> {
+    match pattern {
+        syn::Pat::Ident(binding) if binding.subpat.is_none() => Some(binding.ident.to_string()),
+        syn::Pat::Type(typed) => simple_pattern_name(&typed.pat),
+        syn::Pat::Paren(paren) => simple_pattern_name(&paren.pat),
+        _ => None,
+    }
+}
+
+fn expression_is_rooted_in_borrowed_parameter(
+    expression: &syn::Expr,
+    borrowed_parameters: &HashSet<String>,
+) -> bool {
     match expression {
-        syn::Expr::Path(path) => path.qself.is_none() && path.path.is_ident("self"),
-        syn::Expr::Field(field) => expression_is_rooted_in_self(&field.base),
-        syn::Expr::Paren(paren) => expression_is_rooted_in_self(&paren.expr),
+        syn::Expr::Path(path) => {
+            path.qself.is_none()
+                && path
+                    .path
+                    .get_ident()
+                    .is_some_and(|name| borrowed_parameters.contains(&name.to_string()))
+        }
+        syn::Expr::Field(field) => {
+            expression_is_rooted_in_borrowed_parameter(&field.base, borrowed_parameters)
+        }
+        syn::Expr::Paren(paren) => {
+            expression_is_rooted_in_borrowed_parameter(&paren.expr, borrowed_parameters)
+        }
         _ => false,
     }
 }

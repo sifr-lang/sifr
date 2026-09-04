@@ -1,6 +1,8 @@
 use super::python_bridges::embedded_bridge_sources;
 use super::python_runtime::{PackagePythonRuntime, inject_python_runtime_bootstrap};
-use crate::diagnostics::{RenderedDiagnostic, run_codegen_with_boundary};
+use crate::diagnostics::{
+    RenderedDiagnostic, run_checked_codegen_with_boundary, run_codegen_with_boundary,
+};
 use crate::frontend::FrontendCompiled;
 use crate::project::{
     ProjectLowering, assemble_project_main_rs, ordered_non_main_module_names, rust_module_file_path,
@@ -161,8 +163,8 @@ pub(super) fn generated_project_binary_project(
                 .map(|module| (module_name.as_str(), module))
         })
         .collect();
-    let mut codegen_result = run_codegen_with_boundary(
-        "internal compiler panic during project code generation",
+    let mut codegen_result = run_checked_codegen_with_boundary(
+        "internal compiler failure during project code generation",
         || generate_rust_multi_with_metadata(&module_refs, stdlib_code),
     )
     .map_err(|error| vec![*error])?;

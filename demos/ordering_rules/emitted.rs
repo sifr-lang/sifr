@@ -1,15 +1,15 @@
 // src/main.rs
-mod sifr_generated_generated_support {
+pub mod sifr_generated_generated_support {
     use crate::{
         JSONDecodeError, ParseError, RegexError, SifrGeneratedStdlibSifrX2ejsonX2eJsonValue,
     };
-    pub(crate) use ::sifr_runtime::SifrInt;
-    pub(crate) struct SifrGeneratedYielder<T> {
-        pub(crate) slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+    pub(super) use ::sifr_runtime::SifrInt;
+    pub(super) struct SifrGeneratedYielder<T> {
+        pub(super) slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
     }
-    pub(crate) struct SifrGeneratedYieldFuture<T> {
-        pub(crate) slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
-        pub(crate) value: Option<T>,
+    pub(super) struct SifrGeneratedYieldFuture<T> {
+        pub(super) slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+        pub(super) value: Option<T>,
     }
     impl<T> Unpin for SifrGeneratedYieldFuture<T> {}
     impl<T> ::std::future::Future for SifrGeneratedYieldFuture<T> {
@@ -27,14 +27,14 @@ mod sifr_generated_generated_support {
         }
     }
     impl<T> SifrGeneratedYielder<T> {
-        pub(crate) fn suspend(&self, value: T) -> SifrGeneratedYieldFuture<T> {
+        pub(super) fn suspend(&self, value: T) -> SifrGeneratedYieldFuture<T> {
             SifrGeneratedYieldFuture {
                 slot: ::std::sync::Arc::clone(&self.slot),
                 value: Some(value),
             }
         }
     }
-    pub(crate) fn sifr_generated_store_suspended<T>(
+    pub(super) fn sifr_generated_store_suspended<T>(
         slot: &::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
         value: T,
     ) {
@@ -43,7 +43,7 @@ mod sifr_generated_generated_support {
             Err(poisoned) => *poisoned.into_inner() = Some(value),
         }
     }
-    pub(crate) fn sifr_generated_take_suspended<T>(
+    pub(super) fn sifr_generated_take_suspended<T>(
         slot: &::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
     ) -> Option<T> {
         match slot.lock() {
@@ -51,14 +51,14 @@ mod sifr_generated_generated_support {
             Err(poisoned) => poisoned.into_inner().take(),
         }
     }
-    pub(crate) struct SifrGeneratedGenerator<T> {
-        pub(crate) producer:
+    pub(super) struct SifrGeneratedGenerator<T> {
+        pub(super) producer:
             Option<::std::pin::Pin<Box<dyn ::std::future::Future<Output = ()> + 'static>>>,
-        pub(crate) yielded: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
-        pub(crate) complete: bool,
+        pub(super) yielded: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+        pub(super) complete: bool,
     }
     impl<T> SifrGeneratedGenerator<T> {
-        pub(crate) fn new<
+        pub(super) fn new<
             F: FnOnce(SifrGeneratedYielder<T>) -> Fut + 'static,
             Fut: ::std::future::Future<Output = ()> + 'static,
         >(
@@ -97,23 +97,31 @@ mod sifr_generated_generated_support {
             yielded
         }
     }
-    pub(crate) trait SifrGeneratedAdd: Sized {}
+    pub(super) trait SifrGeneratedAdd: Sized {}
     impl SifrGeneratedAdd for ::sifr_runtime::SifrInt {}
     impl SifrGeneratedAdd for f64 {}
     impl SifrGeneratedAdd for String {}
-    pub(crate) fn chain<T: Clone + 'static>(iterables: &[Vec<T>]) -> Box<dyn Iterator<Item = T>> {
+    pub(super) fn chain<T: Clone + 'static>(iterables: &[Vec<T>]) -> Box<dyn Iterator<Item = T>> {
         let iterables = iterables.to_vec();
         Box::new(SifrGeneratedGenerator::new(
             async move |sifr_generated_yielder: SifrGeneratedYielder<T>| {
-                for iterable in iterables.iter().cloned() {
-                    for item in iterable.iter().cloned() {
+                #[expect(
+                    clippy::explicit_iter_loop,
+                    reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner Item 12; remove when direct IntoIterator preserves the same source lifetime"
+                )]
+                for iterable in iterables.iter() {
+                    #[expect(
+                        clippy::explicit_iter_loop,
+                        reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner Item 12; remove when direct IntoIterator preserves the same source lifetime"
+                    )]
+                    for item in iterable.iter() {
                         sifr_generated_yielder.suspend(item.clone()).await;
                     }
                 }
             },
         ))
     }
-    pub(crate) fn repeat<T: Clone + 'static>(
+    pub(super) fn repeat<T: Clone + 'static>(
         value: T,
         times: SifrInt,
     ) -> Box<dyn Iterator<Item = T>> {
@@ -121,8 +129,8 @@ mod sifr_generated_generated_support {
             async move |sifr_generated_yielder: SifrGeneratedYielder<T>| {
                 let holder: Vec<T> = vec![value];
                 let mut i: SifrInt = SifrInt::from_i64(0);
-                while &i < &times {
-                    if &SifrInt::from(holder.len()) > &SifrInt::from_i64(0) {
+                while i < times {
+                    if holder.len() > SifrInt::from_i64(0) {
                         let current: Option<T> = {
                             let sifr_generated_checked_read_collection = &holder;
                             let sifr_generated_checked_read_index = SifrInt::from_i64(0);
@@ -135,27 +143,31 @@ mod sifr_generated_generated_support {
                                 .cloned()
                         };
                         if let Some(current) = current {
-                            sifr_generated_yielder.suspend(current.clone()).await;
+                            sifr_generated_yielder.suspend(current).await;
                         }
                     }
-                    i = &i + &SifrInt::from_i64(1);
+                    i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
                 }
             },
         ))
     }
-    pub(crate) fn take<T: Clone + 'static>(n: SifrInt, data: &[T]) -> Vec<T> {
+    #[expect(
+        clippy::needless_pass_by_value,
+        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+    )]
+    pub(super) fn take<T: Clone + 'static>(n: SifrInt, data: &[T]) -> Vec<T> {
         let mut result: Vec<T> = Vec::new();
         let mut count: SifrInt = SifrInt::from_i64(0);
         for item in data.iter().cloned() {
-            if &count >= &n {
+            if count >= n {
                 return result;
             }
             result.push(item);
-            count = &count + &SifrInt::from_i64(1);
+            count = ::std::ops::Add::add(&count, &SifrInt::from_i64(1));
         }
         result
     }
-    pub(crate) fn json_load_tokens(text: &str) -> Result<Vec<String>, JSONDecodeError> {
+    pub(super) fn json_load_tokens(text: &str) -> Result<Vec<String>, JSONDecodeError> {
         ::sifr_stdlib::json::json_load_tokens(text).map_err(|sifr_generated_bridge_error| {
             JSONDecodeError {
                 message: sifr_generated_bridge_error.message().to_string(),
@@ -164,19 +176,21 @@ mod sifr_generated_generated_support {
             }
         })
     }
-    pub(crate) fn json_dump_tokens(tokens: &[String]) -> String {
+    pub(super) fn json_dump_tokens(tokens: &[String]) -> String {
         ::sifr_stdlib::json::json_dump_tokens(tokens)
     }
     #[derive(Debug, Clone)]
-    pub(crate) enum SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0
+    pub(super) enum SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0
     {
-        SifrGeneratedUnionVariant5X3aclass15X3aJSONDecodeError1X3a0(JSONDecodeError),
-        SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(ParseError),
+        SifrGeneratedUnionVariant5X3aclass28X3asifrX2ebuiltinX2eJSONDecodeError1X3a0(
+            JSONDecodeError,
+        ),
+        SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a0(ParseError),
     }
     impl From<JSONDecodeError>
     for SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0 {
         fn from(value: JSONDecodeError) -> Self {
-            SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass15X3aJSONDecodeError1X3a0(
+            Self::SifrGeneratedUnionVariant5X3aclass28X3asifrX2ebuiltinX2eJSONDecodeError1X3a0(
                 value,
             )
         }
@@ -184,7 +198,7 @@ mod sifr_generated_generated_support {
     impl From<ParseError>
     for SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0 {
         fn from(value: ParseError) -> Self {
-            SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(
+            Self::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a0(
                 value,
             )
         }
@@ -193,17 +207,17 @@ mod sifr_generated_generated_support {
     for SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0 {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
             match self {
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass15X3aJSONDecodeError1X3a0(
+                Self::SifrGeneratedUnionVariant5X3aclass28X3asifrX2ebuiltinX2eJSONDecodeError1X3a0(
                     v,
                 ) => write!(f, "{v}"),
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(
+                Self::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a0(
                     v,
                 ) => write!(f, "{v}"),
             }
         }
     }
     #[derive(Debug, Clone, PartialEq)]
-    pub(crate) enum SifrGeneratedUnion8X3asequence5X3aunion1X3a719X3a4X3aatom10X3abigdecimal11X3a4X3aatom3X3aint11X3a4X3aatom3X3astr12X3a4X3aatom4X3abool13X3a4X3aatom5X3afloat15X3a4X3aatom7X3adecimal32X3a5X3aclass19X3asifrX2ejsonX2eJsonValue1X3a0
+    pub(super) enum SifrGeneratedUnion8X3asequence5X3aunion1X3a719X3a4X3aatom10X3abigdecimal11X3a4X3aatom3X3aint11X3a4X3aatom3X3astr12X3a4X3aatom4X3abool13X3a4X3aatom5X3afloat15X3a4X3aatom7X3adecimal32X3a5X3aclass19X3asifrX2ejsonX2eJsonValue1X3a0
     {
         SifrGeneratedUnionVariant5X3aclass19X3asifrX2ejsonX2eJsonValue1X3a0(
             SifrGeneratedStdlibSifrX2ejsonX2eJsonValue,
@@ -213,19 +227,23 @@ mod sifr_generated_generated_support {
     for SifrGeneratedUnion8X3asequence5X3aunion1X3a719X3a4X3aatom10X3abigdecimal11X3a4X3aatom3X3aint11X3a4X3aatom3X3astr12X3a4X3aatom4X3abool13X3a4X3aatom5X3afloat15X3a4X3aatom7X3adecimal32X3a5X3aclass19X3asifrX2ejsonX2eJsonValue1X3a0 {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
             match self {
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a719X3a4X3aatom10X3abigdecimal11X3a4X3aatom3X3aint11X3a4X3aatom3X3astr12X3a4X3aatom4X3abool13X3a4X3aatom5X3afloat15X3a4X3aatom7X3adecimal32X3a5X3aclass19X3asifrX2ejsonX2eJsonValue1X3a0::SifrGeneratedUnionVariant5X3aclass19X3asifrX2ejsonX2eJsonValue1X3a0(
+                Self::SifrGeneratedUnionVariant5X3aclass19X3asifrX2ejsonX2eJsonValue1X3a0(
                     v,
                 ) => write!(f, "{v}"),
             }
         }
     }
-    pub(crate) fn sifr_generated_json_token_at(
+    #[expect(
+        clippy::needless_pass_by_value,
+        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+    )]
+    pub(super) fn sifr_generated_json_token_at(
         tokens: &[String],
         index: SifrInt,
     ) -> Result<String, JSONDecodeError> {
         let value: Option<String> = {
             let sifr_generated_checked_read_collection = &tokens;
-            let sifr_generated_checked_read_index = index.clone();
+            let sifr_generated_checked_read_index = &index;
             let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
                 .normalize_index_or_len(sifr_generated_checked_read_collection.len());
             sifr_generated_checked_read_collection
@@ -239,13 +257,17 @@ mod sifr_generated_generated_support {
         };
         Ok({
             let mut sifr_generated_concat: String =
-                String::with_capacity(value_value_7ce4fd9430e80cea.len());
+                String::with_capacity(value_value_7ce4fd9430e80cea.len().saturating_add(0usize));
             sifr_generated_concat.push_str(value_value_7ce4fd9430e80cea.as_str());
             sifr_generated_concat.push_str("");
             sifr_generated_concat
         })
     }
-    pub(crate) fn sifr_generated_json_token_int(
+    #[expect(
+        clippy::needless_pass_by_value,
+        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+    )]
+    pub(super) fn sifr_generated_json_token_int(
         tokens: &[String],
         index: SifrInt,
     ) -> Result<SifrInt, JSONDecodeError> {
@@ -258,7 +280,7 @@ mod sifr_generated_generated_support {
                     index.clone(),
                 )
                 .map_err(
-                    SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass15X3aJSONDecodeError1X3a0,
+                    SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass28X3asifrX2ebuiltinX2eJSONDecodeError1X3a0,
                 )?;
             let parsed: SifrInt = SifrInt::parse_decimal(
                     &token_value_26c4b17d50b3c152,
@@ -268,22 +290,22 @@ mod sifr_generated_generated_support {
                     message: e.to_string(),
                 })
                 .map_err(
-                    SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0,
+                    SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a0,
                 )?;
             Ok(Ok(parsed))
         })();
         sifr_generated_try_res
             .unwrap_or_else(|sifr_generated_try_err| match sifr_generated_try_err {
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass15X3aJSONDecodeError1X3a0(
+                SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass28X3asifrX2ebuiltinX2eJSONDecodeError1X3a0(
                     sifr_generated_try_variant_error,
                 ) => {
-                    let e = sifr_generated_try_variant_error.clone();
-                    Err(JSONDecodeError::new(e.message.clone()))
+                    let e = sifr_generated_try_variant_error;
+                    Err(JSONDecodeError::new(e.message))
                 }
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(
+                SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a0(
                     sifr_generated_try_variant_error,
                 ) => {
-                    let _e = sifr_generated_try_variant_error.clone();
+                    let _ = sifr_generated_try_variant_error;
                     Err(
                         JSONDecodeError::new(
                             "JSON bridge payload has invalid integer metadata"
@@ -293,7 +315,11 @@ mod sifr_generated_generated_support {
                 }
             })
     }
-    pub(crate) fn sifr_generated_json_token_float(
+    #[expect(
+        clippy::needless_pass_by_value,
+        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+    )]
+    pub(super) fn sifr_generated_json_token_float(
         tokens: &[String],
         index: SifrInt,
     ) -> Result<f64, JSONDecodeError> {
@@ -306,7 +332,7 @@ mod sifr_generated_generated_support {
                     index.clone(),
                 )
                 .map_err(
-                    SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass15X3aJSONDecodeError1X3a0,
+                    SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass28X3asifrX2ebuiltinX2eJSONDecodeError1X3a0,
                 )?;
             let parsed: f64 = token_value_26c4b17d50b3c152
                 .parse::<f64>()
@@ -314,22 +340,22 @@ mod sifr_generated_generated_support {
                     message: e.to_string(),
                 })
                 .map_err(
-                    SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0,
+                    SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a0,
                 )?;
             Ok(Ok(parsed))
         })();
         sifr_generated_try_res
             .unwrap_or_else(|sifr_generated_try_err| match sifr_generated_try_err {
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass15X3aJSONDecodeError1X3a0(
+                SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass28X3asifrX2ebuiltinX2eJSONDecodeError1X3a0(
                     sifr_generated_try_variant_error,
                 ) => {
-                    let e = sifr_generated_try_variant_error.clone();
-                    Err(JSONDecodeError::new(e.message.clone()))
+                    let e = sifr_generated_try_variant_error;
+                    Err(JSONDecodeError::new(e.message))
                 }
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(
+                SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a028X3a5X3aclass15X3aJSONDecodeError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a0(
                     sifr_generated_try_variant_error,
                 ) => {
-                    let _e = sifr_generated_try_variant_error.clone();
+                    let _ = sifr_generated_try_variant_error;
                     Err(
                         JSONDecodeError::new(
                             "JSON bridge payload has invalid float metadata".to_string(),
@@ -338,7 +364,7 @@ mod sifr_generated_generated_support {
                 }
             })
     }
-    pub(crate) fn sifr_generated_json_decode_bool_token(
+    pub(super) fn sifr_generated_json_decode_bool_token(
         value: &str,
     ) -> Result<bool, JSONDecodeError> {
         if value == "true" {
@@ -355,7 +381,11 @@ mod sifr_generated_generated_support {
         clippy::too_many_lines,
         reason = "one generated Rust function preserves one typed Sifr function"
     )]
-    pub(crate) fn sifr_generated_json_decode_value_at(
+    #[expect(
+        clippy::needless_pass_by_value,
+        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+    )]
+    pub(super) fn sifr_generated_json_decode_value_at(
         tokens: &[String],
         index: SifrInt,
     ) -> Result<(SifrGeneratedStdlibSifrX2ejsonX2eJsonValue, SifrInt), JSONDecodeError> {
@@ -364,7 +394,7 @@ mod sifr_generated_generated_support {
             JSONDecodeError,
         > = (|| {
             let tag: String = sifr_generated_json_token_at(tokens, index.clone())?;
-            let payload_index: SifrInt = &index + &SifrInt::from_i64(1);
+            let payload_index: SifrInt = ::std::ops::Add::add(&index, &SifrInt::from_i64(1));
             if tag == "null" {
                 return Ok(Ok((
                     SifrGeneratedStdlibSifrX2ejsonX2eJsonValue::new(
@@ -374,7 +404,7 @@ mod sifr_generated_generated_support {
                         None,
                         None,
                     ),
-                    payload_index.clone(),
+                    payload_index,
                 )));
             }
             if tag == "bool" {
@@ -389,7 +419,7 @@ mod sifr_generated_generated_support {
                         None,
                         None,
                     ),
-                    &payload_index + &SifrInt::from_i64(1),
+                    ::std::ops::Add::add(&payload_index, &SifrInt::from_i64(1)),
                 )));
             }
             if tag == "int" {
@@ -403,7 +433,7 @@ mod sifr_generated_generated_support {
                         None,
                         None,
                     ),
-                    &payload_index + &SifrInt::from_i64(1),
+                    ::std::ops::Add::add(&payload_index, &SifrInt::from_i64(1)),
                 )));
             }
             if tag == "float" {
@@ -417,7 +447,7 @@ mod sifr_generated_generated_support {
                         Some(float_value),
                         None,
                     ),
-                    &payload_index + &SifrInt::from_i64(1),
+                    ::std::ops::Add::add(&payload_index, &SifrInt::from_i64(1)),
                 )));
             }
             if tag == "str" {
@@ -431,13 +461,13 @@ mod sifr_generated_generated_support {
                         None,
                         Some(str_value),
                     ),
-                    &payload_index + &SifrInt::from_i64(1),
+                    ::std::ops::Add::add(&payload_index, &SifrInt::from_i64(1)),
                 )));
             }
             if tag == "array" {
                 let array_count: SifrInt =
                     sifr_generated_json_token_int(tokens, payload_index.clone())?;
-                if &array_count < &SifrInt::from_i64(0) {
+                if array_count < SifrInt::from_i64(0) {
                     return Err(JSONDecodeError::new(
                         "JSON bridge payload has invalid array length".to_string(),
                     ));
@@ -450,21 +480,22 @@ mod sifr_generated_generated_support {
                         None,
                         None,
                     );
-                let mut next_index: SifrInt = &payload_index + &SifrInt::from_i64(1);
+                let mut next_index: SifrInt =
+                    ::std::ops::Add::add(&payload_index, &SifrInt::from_i64(1));
                 let mut consumed: SifrInt = SifrInt::from_i64(0);
-                while &consumed < &array_count {
+                while consumed < array_count {
                     let item_result: (SifrGeneratedStdlibSifrX2ejsonX2eJsonValue, SifrInt) =
                         sifr_generated_json_decode_value_at(tokens, next_index.clone())?;
                     array_value.array_items.push(item_result.0);
-                    next_index = item_result.1.clone();
-                    consumed = &consumed + &SifrInt::from_i64(1);
+                    next_index.clone_from(&item_result.1);
+                    consumed = ::std::ops::Add::add(&consumed, &SifrInt::from_i64(1));
                 }
-                return Ok(Ok((array_value, next_index.clone())));
+                return Ok(Ok((array_value, next_index)));
             }
             if tag == "object" {
                 let object_count: SifrInt =
                     sifr_generated_json_token_int(tokens, payload_index.clone())?;
-                if &object_count < &SifrInt::from_i64(0) {
+                if object_count < SifrInt::from_i64(0) {
                     return Err(JSONDecodeError::new(
                         "JSON bridge payload has invalid object length".to_string(),
                     ));
@@ -477,34 +508,36 @@ mod sifr_generated_generated_support {
                         None,
                         None,
                     );
-                let mut next_index: SifrInt = &payload_index + &SifrInt::from_i64(1);
+                let mut next_index: SifrInt =
+                    ::std::ops::Add::add(&payload_index, &SifrInt::from_i64(1));
                 let mut consumed: SifrInt = SifrInt::from_i64(0);
-                while &consumed < &object_count {
+                while consumed < object_count {
                     let key: String = sifr_generated_json_token_at(tokens, next_index.clone())?;
                     let item_result: (SifrGeneratedStdlibSifrX2ejsonX2eJsonValue, SifrInt) =
                         sifr_generated_json_decode_value_at(
                             tokens,
-                            &next_index + &SifrInt::from_i64(1),
+                            ::std::ops::Add::add(&next_index, &SifrInt::from_i64(1)),
                         )?;
                     object_value.object_items.push((key, item_result.0));
-                    next_index = item_result.1.clone();
-                    consumed = &consumed + &SifrInt::from_i64(1);
+                    next_index.clone_from(&item_result.1);
+                    consumed = ::std::ops::Add::add(&consumed, &SifrInt::from_i64(1));
                 }
                 return Ok(Ok((object_value, next_index)));
             }
             Err(JSONDecodeError::new({
-                let mut sifr_generated_concat: String = String::with_capacity(43usize + tag.len());
+                let mut sifr_generated_concat: String =
+                    String::with_capacity(43usize.saturating_add(tag.len()));
                 sifr_generated_concat.push_str("JSON bridge payload has unknown value tag: ");
                 sifr_generated_concat.push_str(tag.as_str());
                 sifr_generated_concat
             }))
         })();
         sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-            let e = sifr_generated_try_err.clone();
-            Err(JSONDecodeError::new(e.message.clone()))
+            let e = sifr_generated_try_err;
+            Err(JSONDecodeError::new(e.message))
         })
     }
-    pub(crate) fn sifr_generated_json_decode_tokens(
+    pub(super) fn sifr_generated_json_decode_tokens(
         tokens: &[String],
     ) -> Result<SifrGeneratedStdlibSifrX2ejsonX2eJsonValue, JSONDecodeError> {
         let sifr_generated_try_res: Result<
@@ -513,72 +546,72 @@ mod sifr_generated_generated_support {
         > = (|| {
             let decoded: (SifrGeneratedStdlibSifrX2ejsonX2eJsonValue, SifrInt) =
                 sifr_generated_json_decode_value_at(tokens, SifrInt::from_i64(0))?;
-            if &decoded.1.clone() != &SifrInt::from(tokens.len()) {
+            if decoded.1 != tokens.len() {
                 return Err(JSONDecodeError::new(
                     "JSON bridge payload has trailing data".to_string(),
                 ));
             }
-            Ok(Ok(decoded.0.clone()))
+            Ok(Ok(decoded.0))
         })();
         sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-            let e = sifr_generated_try_err.clone();
-            Err(JSONDecodeError::new(e.message.clone()))
+            let e = sifr_generated_try_err;
+            Err(JSONDecodeError::new(e.message))
         })
     }
-    pub(crate) fn sifr_generated_json_append_tokens(
+    pub(super) fn sifr_generated_json_append_tokens(
         mut tokens: Vec<String>,
         value: &SifrGeneratedStdlibSifrX2ejsonX2eJsonValue,
     ) -> Vec<String> {
-        tokens.push(value.kind.clone().to_string());
-        if value.kind.clone() == "bool" {
+        tokens.push(value.kind.clone());
+        if value.kind == "bool" {
             let bool_value: Option<bool> = value.bool_value;
             if bool_value.is_none() {
                 tokens.push("false".to_string());
             } else if let Some(bool_value) = bool_value {
                 tokens.push(bool_value.to_string().to_lowercase());
             }
-        } else if value.kind.clone() == "int" {
+        } else if value.kind == "int" {
             let int_value: Option<SifrInt> = value.int_value.clone();
             if int_value.is_none() {
                 tokens.push("0".to_string());
-            } else if let Some(int_value) = int_value.clone() {
+            } else if let Some(int_value) = int_value {
                 tokens.push(int_value.to_string());
             }
-        } else if value.kind.clone() == "float" {
+        } else if value.kind == "float" {
             let float_value: Option<f64> = value.float_value;
             if float_value.is_none() {
                 tokens.push("0.0".to_string());
             } else if let Some(float_value) = float_value {
                 tokens.push(float_value.to_string());
             }
-        } else if value.kind.clone() == "str" {
+        } else if value.kind == "str" {
             let str_value: Option<String> = value.as_str();
             if str_value.is_none() {
                 tokens.push(String::new());
             } else if let Some(str_value) = str_value {
                 tokens.push(str_value);
             }
-        } else if value.kind.clone() == "array" {
+        } else if value.kind == "array" {
             tokens.push(SifrInt::from(value.array_items.len()).to_string());
-            for item in value.array_items.iter().cloned() {
-                tokens = sifr_generated_json_append_tokens(tokens, &item);
+            for item in value.array_items.iter() {
+                tokens = sifr_generated_json_append_tokens(tokens, item);
             }
-        } else if value.kind.clone() == "object" {
+        } else if value.kind == "object" {
             tokens.push(SifrInt::from(value.object_items.len()).to_string());
-            for (key, item_value) in value.object_items.iter().cloned() {
-                tokens.push(key.to_owned());
-                tokens = sifr_generated_json_append_tokens(tokens, &item_value);
+            for (key, item_value) in value.object_items.iter() {
+                tokens.push(key.clone());
+                tokens = sifr_generated_json_append_tokens(tokens, item_value);
             }
         }
         tokens
     }
-    pub(crate) fn sifr_generated_json_bridge_tokens(
+    pub(super) fn sifr_generated_json_bridge_tokens(
         value: &SifrGeneratedStdlibSifrX2ejsonX2eJsonValue,
     ) -> Vec<String> {
         let tokens: Vec<String> = Vec::new();
         sifr_generated_json_append_tokens(tokens, value)
     }
-    pub(crate) fn sifr_generated_decode_json(
+    pub(super) fn sifr_generated_decode_json(
         s: &str,
     ) -> Result<SifrGeneratedStdlibSifrX2ejsonX2eJsonValue, JSONDecodeError> {
         let sifr_generated_try_res: Result<
@@ -589,16 +622,16 @@ mod sifr_generated_generated_support {
             Ok(sifr_generated_json_decode_tokens(&tokens))
         })();
         sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-            let e = sifr_generated_try_err.clone();
+            let e = sifr_generated_try_err;
             Err(e)
         })
     }
-    pub(crate) fn loads(
+    pub(super) fn loads(
         s: &str,
     ) -> Result<SifrGeneratedStdlibSifrX2ejsonX2eJsonValue, JSONDecodeError> {
         sifr_generated_decode_json(s)
     }
-    pub(crate) fn dumps(
+    pub(super) fn dumps(
         value: &SifrGeneratedUnion8X3asequence5X3aunion1X3a719X3a4X3aatom10X3abigdecimal11X3a4X3aatom3X3aint11X3a4X3aatom3X3astr12X3a4X3aatom4X3abool13X3a4X3aatom5X3afloat15X3a4X3aatom7X3adecimal32X3a5X3aclass19X3asifrX2ejsonX2eJsonValue1X3a0,
     ) -> String {
         match value {
@@ -607,7 +640,7 @@ mod sifr_generated_generated_support {
             ) => json_dump_tokens(&sifr_generated_json_bridge_tokens(value)),
         }
     }
-    pub(crate) fn re_find(pattern: &str, text: &str) -> Result<Option<String>, RegexError> {
+    pub(super) fn re_find(pattern: &str, text: &str) -> Result<Option<String>, RegexError> {
         ::sifr_stdlib::regex::re_find(pattern, text).map_err(|sifr_generated_bridge_error| {
             RegexError {
                 message: sifr_generated_bridge_error.to_string(),
@@ -615,7 +648,7 @@ mod sifr_generated_generated_support {
             }
         })
     }
-    pub(crate) fn re_replace(
+    pub(super) fn re_replace(
         pattern: &str,
         replacement: &str,
         text: &str,
@@ -627,7 +660,7 @@ mod sifr_generated_generated_support {
             },
         )
     }
-    pub(crate) fn re_findall(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
+    pub(super) fn re_findall(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
         ::sifr_stdlib::regex::re_findall(pattern, text).map_err(|sifr_generated_bridge_error| {
             RegexError {
                 message: sifr_generated_bridge_error.to_string(),
@@ -635,7 +668,7 @@ mod sifr_generated_generated_support {
             }
         })
     }
-    pub(crate) fn re_split(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
+    pub(super) fn re_split(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
         ::sifr_stdlib::regex::re_split(pattern, text).map_err(|sifr_generated_bridge_error| {
             RegexError {
                 message: sifr_generated_bridge_error.to_string(),
@@ -643,21 +676,24 @@ mod sifr_generated_generated_support {
             }
         })
     }
-    pub(crate) fn search(pattern: &str, text: &str) -> Result<Option<String>, RegexError> {
+    pub(super) fn search(pattern: &str, text: &str) -> Result<Option<String>, RegexError> {
         re_find(pattern, text)
     }
-    pub(crate) fn sub(pattern: &str, replacement: &str, text: &str) -> Result<String, RegexError> {
+    pub(super) fn sub(pattern: &str, replacement: &str, text: &str) -> Result<String, RegexError> {
         re_replace(pattern, replacement, text)
     }
-    pub(crate) fn findall(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
+    pub(super) fn findall(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
         re_findall(pattern, text)
     }
-    pub(crate) fn split(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
+    pub(super) fn split(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
         re_split(pattern, text)
     }
 }
 mod sifr_generated_project_nominals {
-    use crate::sifr_generated_generated_support::*;
+    use crate::sifr_generated_generated_support::{
+        SifrGeneratedUnion8X3asequence5X3aunion1X3a719X3a4X3aatom10X3abigdecimal11X3a4X3aatom3X3aint11X3a4X3aatom3X3astr12X3a4X3aatom4X3abool13X3a4X3aatom5X3afloat15X3a4X3aatom7X3adecimal32X3a5X3aclass19X3asifrX2ejsonX2eJsonValue1X3a0,
+        dumps, f64,
+    };
     use ::sifr_runtime::SifrInt;
     #[derive(Debug, Clone, PartialEq)]
     pub struct SifrGeneratedStdlibSifrX2ejsonX2eJsonValue {
@@ -666,8 +702,8 @@ mod sifr_generated_project_nominals {
         pub int_value: Option<SifrInt>,
         pub float_value: Option<f64>,
         pub str_value: Option<String>,
-        pub array_items: Box<Vec<SifrGeneratedStdlibSifrX2ejsonX2eJsonValue>>,
-        pub object_items: Box<Vec<(String, SifrGeneratedStdlibSifrX2ejsonX2eJsonValue)>>,
+        pub array_items: Box<Vec<Self>>,
+        pub object_items: Box<Vec<(String, Self)>>,
     }
     impl SifrGeneratedStdlibSifrX2ejsonX2eJsonValue {
         #[must_use]
@@ -682,16 +718,15 @@ mod sifr_generated_project_nominals {
             let sifr_generated_field_value_49c3632d5fc42247_626f6f6c5f76616c7565: Option<bool> =
                 bool_value;
             let sifr_generated_field_value_3e267a8f73b9f8b0_696e745f76616c7565: Option<SifrInt> =
-                int_value.clone();
+                int_value;
             let sifr_generated_field_value_08384ece94446e4f_666c6f61745f76616c7565: Option<f64> =
                 float_value;
             let sifr_generated_field_value_100b36b139835e22_7374725f76616c7565: Option<String> =
                 str_value;
-            let sifr_generated_field_value_45232d46c202975d_61727261795f6974656d73: Box<
-                Vec<SifrGeneratedStdlibSifrX2ejsonX2eJsonValue>,
-            > = Box::default();
+            let sifr_generated_field_value_45232d46c202975d_61727261795f6974656d73: Box<Vec<Self>> =
+                Box::default();
             let sifr_generated_field_value_4b0f6d30620fe831_6f626a6563745f6974656d73: Box<
-                Vec<(String, SifrGeneratedStdlibSifrX2ejsonX2eJsonValue)>,
+                Vec<(String, Self)>,
             > = Box::default();
             Self {
                 kind: sifr_generated_field_value_ef9c96d721673243_6b696e64,
@@ -707,7 +742,7 @@ mod sifr_generated_project_nominals {
     impl SifrGeneratedStdlibSifrX2ejsonX2eJsonValue {
         #[must_use]
         pub fn is_object(&self) -> bool {
-            self.kind.clone() == "object"
+            self.kind == "object"
         }
     }
     impl SifrGeneratedStdlibSifrX2ejsonX2eJsonValue {
@@ -718,7 +753,7 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2ejsonX2eJsonValue {
         #[must_use]
-        pub fn get(&self, key: &str) -> Option<SifrGeneratedStdlibSifrX2ejsonX2eJsonValue> {
+        pub fn get(&self, key: &str) -> Option<Self> {
             if !self.is_object() {
                 return None;
             }
@@ -783,7 +818,9 @@ mod sifr_generated_project_nominals {
     }
     impl ::std::error::Error for RegexError {}
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::{
+    chain, findall, loads, repeat, search, split, sub, take,
+};
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::JSONDecodeError;
 pub use sifr_generated_project_nominals::ParseError;
@@ -805,8 +842,12 @@ impl Processor {
         }
     }
 }
+#[expect(
+    clippy::needless_pass_by_value,
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+)]
 fn triple(x: SifrInt) -> SifrInt {
-    &x * &SifrInt::from_i64(3)
+    ::std::ops::Mul::mul(&x, &SifrInt::from_i64(3))
 }
 fn main() {
     let repeated: Vec<SifrInt> =
@@ -815,7 +856,7 @@ fn main() {
     for val in repeat(SifrInt::from_i64(42), SifrInt::from_i64(2)) {
         println!("{val}");
     }
-    let chained: Vec<SifrInt> = chain(&vec![
+    let chained: Vec<SifrInt> = chain(&[
         vec![SifrInt::from_i64(1), SifrInt::from_i64(2)],
         vec![SifrInt::from_i64(3), SifrInt::from_i64(4)],
     ])
@@ -834,34 +875,33 @@ fn main() {
     );
     println!("{first_two:?}");
     let sifr_generated_try_res: Result<(), JSONDecodeError> = (|| {
-        let parsed: SifrGeneratedStdlibSifrX2ejsonX2eJsonValue =
-            loads(&"{\"key\": 42}".to_string())?;
+        let parsed: SifrGeneratedStdlibSifrX2ejsonX2eJsonValue = loads("{\"key\": 42}")?;
         println!("{parsed}");
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let err = sifr_generated_try_err.clone();
-        println!("json error: {}", err.message.clone());
+        let err = sifr_generated_try_err;
+        println!("json error: {}", err.message);
     }
     let sifr_generated_try_res: Result<(), RegexError> = (|| {
-        let found: Option<String> = search(&"\\d+".to_string(), &"abc123".to_string())?;
+        let found: Option<String> = search("\\d+", "abc123")?;
         if let Some(found) = found {
             println!("{found}");
         }
-        let replaced: String = sub(&"\\d".to_string(), &"X".to_string(), &"a1b2c3".to_string())?;
+        let replaced: String = sub("\\d", "X", "a1b2c3")?;
         println!("{replaced}");
-        let words: Vec<String> = findall(&"\\w+".to_string(), &"hello world".to_string())?;
+        let words: Vec<String> = findall("\\w+", "hello world")?;
         println!("{words:?}");
-        let parts: Vec<String> = split(&",".to_string(), &"a,b,c".to_string())?;
+        let parts: Vec<String> = split(",", "a,b,c")?;
         println!("{parts:?}");
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let err = sifr_generated_try_err.clone();
-        println!("regex error: {}", err.message.clone());
+        let err = sifr_generated_try_err;
+        println!("regex error: {}", err.message);
     }
     let p: Processor = Processor::new("tripler".to_string(), triple);
-    println!("{}", p.name.clone());
+    println!("{}", p.name);
     let result: SifrInt = (p.transform)(SifrInt::from_i64(10));
     println!("{result}");
 }

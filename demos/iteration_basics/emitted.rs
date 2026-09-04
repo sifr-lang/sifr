@@ -14,13 +14,17 @@ fn main() {
     for c in s.chars().map(|c| c.to_string()) {
         output.push(c);
     }
-    let _d = &*SIFR_GENERATED_SIFR_HOISTED_DICT_0;
+    let _ = &*SIFR_GENERATED_SIFR_HOISTED_DICT_0;
     let keys: Vec<String> = vec!["a".to_string(), "b".to_string()];
     for k in keys.iter().cloned() {
         output.push(k);
     }
     println!("Iteration demo output:");
-    for item in output.iter().cloned() {
+    #[expect(
+        clippy::explicit_iter_loop,
+        reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner Item 12; remove when direct IntoIterator preserves the same source lifetime"
+    )]
+    for item in output.iter() {
         println!("{item}");
     }
     assert_eq!(

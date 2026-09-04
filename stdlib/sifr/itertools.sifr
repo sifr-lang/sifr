@@ -96,16 +96,20 @@ def _islice_impl[T](own data: Iterator[T], start: int, stop: int, unbounded: boo
         index = index + 1
 
 
-def islice(own data: Iterator[T], start_or_stop: int, *slice_args: int | None) -> Result[Iterator[T], ValueError]:
+def islice(own data: Iterator[T], start_or_stop: int | None, *slice_args: int | None) -> Result[Iterator[T], ValueError]:
     if len(slice_args) > 2:
         raise ValueError("islice: expected at most stop and step after start")
     actual_start: int = 0
-    actual_stop: int = start_or_stop.clone()
-    unbounded: bool = False
+    actual_stop: int = 0
+    unbounded: bool = start_or_stop is None
+    if start_or_stop is not None:
+        actual_stop = start_or_stop.clone()
     actual_step: int = 1
     argument_index: int = 0
     for argument in slice_args:
         if argument_index == 0:
+            if start_or_stop is None:
+                raise ValueError("islice: start must be an integer when stop is provided")
             actual_start = start_or_stop.clone()
             if argument is None:
                 unbounded = True

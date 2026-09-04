@@ -18,5 +18,5 @@ fn classify(items: &[SifrInt]) -> String {
 fn main() {
     println!("while_else while-else structured support demo:");
     println!("{}", classify(&Vec::new()));
-    println!("{}", classify(&vec![SifrInt::from_i64(1)]));
+    println!("{}", classify(&[SifrInt::from_i64(1)]));
 }

@@ -11,20 +11,16 @@ mod sifr_generated_project_unions {
     {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
             match self {
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a211X3a4X3aatom3X3aint11X3a4X3aatom3X3astr::SifrGeneratedUnionVariant4X3aatom3X3aint(
-                    v,
-                ) => write!(f, "{v}"),
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a211X3a4X3aatom3X3aint11X3a4X3aatom3X3astr::SifrGeneratedUnionVariant4X3aatom3X3astr(
-                    v,
-                ) => write!(f, "{v}"),
+                Self::SifrGeneratedUnionVariant4X3aatom3X3aint(v) => write!(f, "{v}"),
+                Self::SifrGeneratedUnionVariant4X3aatom3X3astr(v) => write!(f, "{v}"),
             }
         }
     }
 }
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_unions::SifrGeneratedUnion8X3asequence5X3aunion1X3a211X3a4X3aatom3X3aint11X3a4X3aatom3X3astr;
-fn create_user(id: SifrInt, _: &str) -> SifrInt {
-    id.clone()
+const fn create_user(id: SifrInt, _: &str) -> SifrInt {
+    id
 }
 fn handle_command(cmd: &str) -> String {
     if cmd == "start" {
@@ -39,7 +35,7 @@ fn describe(
     match x {
         SifrGeneratedUnion8X3asequence5X3aunion1X3a211X3a4X3aatom3X3aint11X3a4X3aatom3X3astr::SifrGeneratedUnionVariant4X3aatom3X3aint(
             x,
-        ) => format!("number: {}", x + & SifrInt::from_i64(1)),
+        ) => format!("number: {}", ::std::ops::Add::add(x, & SifrInt::from_i64(1))),
         SifrGeneratedUnion8X3asequence5X3aunion1X3a211X3a4X3aatom3X3aint11X3a4X3aatom3X3astr::SifrGeneratedUnionVariant4X3aatom3X3astr(
             x,
         ) => format!("text: {x}"),
@@ -52,10 +48,10 @@ fn find_user(name: &str) -> Option<String> {
     None
 }
 fn main() {
-    let uid: SifrInt = create_user(SifrInt::from_i64(42), &"alice".to_string());
+    let uid: SifrInt = create_user(SifrInt::from_i64(42), "alice");
     println!("{uid}");
-    println!("{}", handle_command(&"start".to_string()));
-    println!("{}", handle_command(&"stop".to_string()));
+    println!("{}", handle_command("start"));
+    println!("{}", handle_command("stop"));
     println!(
         "{}", describe(&
         SifrGeneratedUnion8X3asequence5X3aunion1X3a211X3a4X3aatom3X3aint11X3a4X3aatom3X3astr::SifrGeneratedUnionVariant4X3aatom3X3aint(SifrInt::from_i64(42)))
@@ -63,9 +59,9 @@ fn main() {
     println!(
         "{}", describe(&
         SifrGeneratedUnion8X3asequence5X3aunion1X3a211X3a4X3aatom3X3aint11X3a4X3aatom3X3astr::SifrGeneratedUnionVariant4X3aatom3X3astr("hello"
-        .to_string().to_owned()))
+        .to_string()))
     );
-    let user: Option<String> = find_user(&"alice".to_string());
+    let user: Option<String> = find_user("alice");
     if let Some(user) = user {
         println!("{user}");
     } else {

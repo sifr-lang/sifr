@@ -364,10 +364,10 @@ impl RustEmitter {
             return crate::RustExpr::Verbatim("0usize".to_string());
         };
         for part in iter {
-            capacity = crate::RustExpr::BinOp {
-                left: Box::new(capacity),
-                op: "+".to_string(),
-                right: Box::new(part),
+            capacity = crate::RustExpr::MethodCall {
+                receiver: Box::new(capacity),
+                method: "saturating_add".to_string(),
+                args: vec![part],
             };
         }
         capacity

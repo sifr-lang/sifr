@@ -278,12 +278,7 @@ class datetime:
     def astimezone(self, tz: timezone | None = None) -> Result[datetime, ValueError]:
         target: timezone = timezone(0)
         if tz is not None:
-            try:
-                tz_text: str = str(tz)
-                target_offset: int = _timezone_offset_from_text(tz_text)
-                target = timezone(target_offset)
-            except ValueError as e:
-                raise ValueError(e.message)
+            target = timezone(tz.offset())
         return _from_timestamp_microseconds_with_tz(self.timestamp_microseconds(), target)
 
     def __eq__(self, other: datetime) -> bool:
@@ -366,8 +361,7 @@ def _from_timestamp_with_tz(ts: float, tz: timezone | None) -> Result[datetime, 
         tz_offset_value: int = 0
         tz_has_offset: bool = False
         if tz is not None:
-            tz_text: str = str(tz)
-            tz_offset: int = _timezone_offset_from_text(tz_text)
+            tz_offset: int = tz.offset()
             adjusted_seconds = whole_seconds + tz_offset
             tz_offset_value = tz_offset
             tz_has_offset = True
@@ -452,11 +446,7 @@ def now(tz: timezone | None = None) -> datetime:
             if i == 5:
                 sc = v.clone()
         if tz is not None:
-            try:
-                parsed_offset: int = _timezone_offset_from_text(str(tz))
-                return datetime(yr, mo, dy, hr, mn, sc, 0, parsed_offset)
-            except ValueError:
-                return datetime(yr, mo, dy, hr, mn, sc, 0, None)
+            return datetime(yr, mo, dy, hr, mn, sc, 0, tz.offset())
         return datetime(yr, mo, dy, hr, mn, sc, 0, None)
 
 

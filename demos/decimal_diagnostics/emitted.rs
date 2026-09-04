@@ -5,7 +5,7 @@ fn main() {
     println!("decimal_diagnostics decimal diagnostics behavior demo");
     let d: Decimal = Decimal::from_i128_with_scale(105_000_i128, 4);
     let b: BigDecimal = BigDecimal::new(
-        ::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&vec![3, 42, 140]),
+        ::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&[3, 42, 140]),
         4,
     );
     assert_eq!(

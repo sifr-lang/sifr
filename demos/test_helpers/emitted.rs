@@ -1,25 +1,27 @@
 // src/main.rs
-mod sifr_generated_generated_support {
+pub mod sifr_generated_generated_support {
     use crate::{
         FloatOverflowError, FloatPrecisionLossError,
         SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError,
     };
-    pub(crate) use ::sifr_runtime::SifrInt;
-    pub(crate) fn sqrt(x: f64) -> f64 {
+    pub(super) use ::sifr_runtime::SifrInt;
+    pub(super) fn sqrt(x: f64) -> f64 {
         ::sifr_stdlib::math::sqrt(x)
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub(crate) enum SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0
+    pub(super) enum SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0
     {
-        SifrGeneratedUnionVariant5X3aclass18X3aFloatOverflowError1X3a0(FloatOverflowError),
-        SifrGeneratedUnionVariant5X3aclass23X3aFloatPrecisionLossError1X3a0(
+        SifrGeneratedUnionVariant5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a0(
+            FloatOverflowError,
+        ),
+        SifrGeneratedUnionVariant5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0(
             FloatPrecisionLossError,
         ),
     }
     impl From<FloatOverflowError>
     for SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0 {
         fn from(value: FloatOverflowError) -> Self {
-            SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass18X3aFloatOverflowError1X3a0(
+            Self::SifrGeneratedUnionVariant5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a0(
                 value,
             )
         }
@@ -27,7 +29,7 @@ mod sifr_generated_generated_support {
     impl From<FloatPrecisionLossError>
     for SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0 {
         fn from(value: FloatPrecisionLossError) -> Self {
-            SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3aFloatPrecisionLossError1X3a0(
+            Self::SifrGeneratedUnionVariant5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0(
                 value,
             )
         }
@@ -36,23 +38,27 @@ mod sifr_generated_generated_support {
     for SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0 {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
             match self {
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass18X3aFloatOverflowError1X3a0(
+                Self::SifrGeneratedUnionVariant5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a0(
                     v,
                 ) => write!(f, "{v}"),
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3aFloatPrecisionLossError1X3a0(
+                Self::SifrGeneratedUnionVariant5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0(
                     v,
                 ) => write!(f, "{v}"),
             }
         }
     }
-    pub(crate) fn sifr_generated_sum(data: &[f64]) -> f64 {
+    pub(super) fn sifr_generated_sum(data: &[f64]) -> f64 {
         let mut total: f64 = 0.0_f64;
         for val in data.iter().copied() {
             total += val;
         }
         total
     }
-    pub(crate) fn sifr_generated_float_int(
+    #[expect(
+        clippy::needless_pass_by_value,
+        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+    )]
+    pub(super) fn sifr_generated_float_int(
         value: SifrInt,
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         let sifr_generated_try_res: Result<
@@ -60,11 +66,10 @@ mod sifr_generated_generated_support {
             SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0,
         > = (|| {
             let converted: f64 = value
-                .clone()
                 .checked_to_f64()
                 .map_err(|sifr_generated_float_error| match sifr_generated_float_error {
                     ::sifr_runtime::IntegerFloatConversionError::Overflow => {
-                        SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass18X3aFloatOverflowError1X3a0(
+                        SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a0(
                             FloatOverflowError::new(
                                 "exact integer is outside the finite float range"
                                     .to_string(),
@@ -72,7 +77,7 @@ mod sifr_generated_generated_support {
                         )
                     }
                     ::sifr_runtime::IntegerFloatConversionError::PrecisionLoss => {
-                        SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3aFloatPrecisionLossError1X3a0(
+                        SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0(
                             FloatPrecisionLossError::new(
                                 "exact integer cannot be represented without float precision loss"
                                     .to_string(),
@@ -84,29 +89,33 @@ mod sifr_generated_generated_support {
         })();
         sifr_generated_try_res
             .unwrap_or_else(|sifr_generated_try_err| match sifr_generated_try_err {
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass18X3aFloatOverflowError1X3a0(
+                SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a0(
                     sifr_generated_try_variant_error,
                 ) => {
-                    let error = sifr_generated_try_variant_error.clone();
+                    let error = sifr_generated_try_variant_error;
                     Err(
                         SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
-                            error.message.clone(),
+                            error.message,
                         ),
                     )
                 }
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3aFloatPrecisionLossError1X3a0(
+                SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0(
                     sifr_generated_try_variant_error,
                 ) => {
-                    let error = sifr_generated_try_variant_error.clone();
+                    let error = sifr_generated_try_variant_error;
                     Err(
                         SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
-                            error.message.clone(),
+                            error.message,
                         ),
                     )
                 }
             })
     }
-    pub(crate) fn sifr_generated_divide_by_int(
+    #[expect(
+        clippy::needless_pass_by_value,
+        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+    )]
+    pub(super) fn sifr_generated_divide_by_int(
         numerator: f64,
         denominator: SifrInt,
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
@@ -118,29 +127,29 @@ mod sifr_generated_generated_support {
             Ok(Ok(numerator / divisor))
         })();
         sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-            let error = sifr_generated_try_err.clone();
+            let error = sifr_generated_try_err;
             Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
-                error.message.clone(),
+                error.message,
             ))
         })
     }
-    pub(crate) fn mean(
+    pub(super) fn mean(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         let count: SifrInt = SifrInt::from(data.len());
-        if &count == &SifrInt::from_i64(0) {
+        if count == SifrInt::from_i64(0) {
             return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
                 "mean requires at least one data point".to_string(),
             ));
         }
         let total: f64 = sifr_generated_sum(data);
-        sifr_generated_divide_by_int(total, count.clone())
+        sifr_generated_divide_by_int(total, count)
     }
-    pub(crate) fn variance(
+    pub(super) fn variance(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         let n: SifrInt = SifrInt::from(data.len());
-        if &n < &SifrInt::from_i64(2) {
+        if n < SifrInt::from_i64(2) {
             return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
                 "variance requires at least two data points".to_string(),
             ));
@@ -155,9 +164,9 @@ mod sifr_generated_generated_support {
         let (avg,) = match sifr_generated_try_res {
             Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
             Err(sifr_generated_try_err) => {
-                let error = sifr_generated_try_err.clone();
+                let error = sifr_generated_try_err;
                 return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
-                    error.message.clone(),
+                    error.message,
                 ));
             }
         };
@@ -166,13 +175,13 @@ mod sifr_generated_generated_support {
             let diff: f64 = val - avg;
             total += diff * diff;
         }
-        sifr_generated_divide_by_int(total, &n - &SifrInt::from_i64(1))
+        sifr_generated_divide_by_int(total, ::std::ops::Sub::sub(&n, &SifrInt::from_i64(1)))
     }
-    pub(crate) fn pvariance(
+    pub(super) fn pvariance(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         let n: SifrInt = SifrInt::from(data.len());
-        if &n == &SifrInt::from_i64(0) {
+        if n == SifrInt::from_i64(0) {
             return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
                 "pvariance requires at least one data point".to_string(),
             ));
@@ -187,9 +196,9 @@ mod sifr_generated_generated_support {
         let (avg,) = match sifr_generated_try_res {
             Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
             Err(sifr_generated_try_err) => {
-                let error = sifr_generated_try_err.clone();
+                let error = sifr_generated_try_err;
                 return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
-                    error.message.clone(),
+                    error.message,
                 ));
             }
         };
@@ -200,11 +209,11 @@ mod sifr_generated_generated_support {
         }
         sifr_generated_divide_by_int(total, n.clone())
     }
-    pub(crate) fn stdev(
+    pub(super) fn stdev(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         let n: SifrInt = SifrInt::from(data.len());
-        if &n < &SifrInt::from_i64(2) {
+        if n < SifrInt::from_i64(2) {
             return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
                 "stdev requires at least two data points".to_string(),
             ));
@@ -219,9 +228,9 @@ mod sifr_generated_generated_support {
         let (avg,) = match sifr_generated_try_res {
             Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
             Err(sifr_generated_try_err) => {
-                let error = sifr_generated_try_err.clone();
+                let error = sifr_generated_try_err;
                 return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
-                    error.message.clone(),
+                    error.message,
                 ));
             }
         };
@@ -234,25 +243,28 @@ mod sifr_generated_generated_support {
             (f64,),
             SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError,
         > = (|| {
-            let v: f64 = sifr_generated_divide_by_int(total, &n - &SifrInt::from_i64(1))?;
+            let v: f64 = sifr_generated_divide_by_int(
+                total,
+                ::std::ops::Sub::sub(&n, &SifrInt::from_i64(1)),
+            )?;
             Ok((v,))
         })();
         let (v,) = match sifr_generated_try_res {
             Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
             Err(sifr_generated_try_err) => {
-                let error = sifr_generated_try_err.clone();
+                let error = sifr_generated_try_err;
                 return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
-                    error.message.clone(),
+                    error.message,
                 ));
             }
         };
         Ok(sqrt(v))
     }
-    pub(crate) fn pstdev(
+    pub(super) fn pstdev(
         data: &[f64],
     ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
         let n: SifrInt = SifrInt::from(data.len());
-        if &n == &SifrInt::from_i64(0) {
+        if n == SifrInt::from_i64(0) {
             return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
                 "pstdev requires at least one data point".to_string(),
             ));
@@ -267,9 +279,9 @@ mod sifr_generated_generated_support {
         let (avg,) = match sifr_generated_try_res {
             Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
             Err(sifr_generated_try_err) => {
-                let error = sifr_generated_try_err.clone();
+                let error = sifr_generated_try_err;
                 return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
-                    error.message.clone(),
+                    error.message,
                 ));
             }
         };
@@ -288,9 +300,9 @@ mod sifr_generated_generated_support {
         let (v,) = match sifr_generated_try_res {
             Ok(sifr_generated_try_bindings) => sifr_generated_try_bindings,
             Err(sifr_generated_try_err) => {
-                let error = sifr_generated_try_err.clone();
+                let error = sifr_generated_try_err;
                 return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
-                    error.message.clone(),
+                    error.message,
                 ));
             }
         };
@@ -354,7 +366,7 @@ mod sifr_generated_project_nominals {
     }
     impl ::std::error::Error for FloatPrecisionLossError {}
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::{mean, pstdev, pvariance, stdev, variance};
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::FloatOverflowError;
 pub use sifr_generated_project_nominals::FloatPrecisionLossError;
@@ -375,14 +387,16 @@ fn main() {
             let sd: f64 = stdev(&data)?;
             let pd: f64 = pstdev(&data)?;
             println!("{}", {
-                let mut sifr_generated_concat: String = String::with_capacity(7usize);
+                let mut sifr_generated_concat: String =
+                    String::with_capacity(7usize.saturating_add(0usize));
                 sifr_generated_concat.push_str("mean = ");
                 sifr_generated_concat.push_str(m.to_string().as_str());
                 sifr_generated_concat
             });
             assert_eq!(format!("mean = {m}"), "mean = 5");
             println!("{}", {
-                let mut sifr_generated_concat: String = String::with_capacity(18usize);
+                let mut sifr_generated_concat: String =
+                    String::with_capacity(18usize.saturating_add(0usize));
                 sifr_generated_concat.push_str("sample variance = ");
                 sifr_generated_concat.push_str(sv.to_string().as_str());
                 sifr_generated_concat
@@ -392,7 +406,8 @@ fn main() {
                 "sample variance = 4.571428571428571"
             );
             println!("{}", {
-                let mut sifr_generated_concat: String = String::with_capacity(22usize);
+                let mut sifr_generated_concat: String =
+                    String::with_capacity(22usize.saturating_add(0usize));
                 sifr_generated_concat.push_str("population variance = ");
                 sifr_generated_concat.push_str(pv.to_string().as_str());
                 sifr_generated_concat
@@ -402,7 +417,8 @@ fn main() {
                 "population variance = 4"
             );
             println!("{}", {
-                let mut sifr_generated_concat: String = String::with_capacity(15usize);
+                let mut sifr_generated_concat: String =
+                    String::with_capacity(15usize.saturating_add(0usize));
                 sifr_generated_concat.push_str("sample stdev = ");
                 sifr_generated_concat.push_str(sd.to_string().as_str());
                 sifr_generated_concat
@@ -412,7 +428,8 @@ fn main() {
                 "sample stdev = 2.138089935299395"
             );
             println!("{}", {
-                let mut sifr_generated_concat: String = String::with_capacity(19usize);
+                let mut sifr_generated_concat: String =
+                    String::with_capacity(19usize.saturating_add(0usize));
                 sifr_generated_concat.push_str("population stdev = ");
                 sifr_generated_concat.push_str(pd.to_string().as_str());
                 sifr_generated_concat
@@ -471,38 +488,39 @@ fn main() {
             Ok(())
         })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
+        let e = sifr_generated_try_err;
         println!("{}", {
-            let mut sifr_generated_concat: String = String::with_capacity(18usize);
+            let mut sifr_generated_concat: String =
+                String::with_capacity(18usize.saturating_add(0usize));
             sifr_generated_concat.push_str("statistics error: ");
             sifr_generated_concat.push_str(e.message.clone().as_str());
             sifr_generated_concat
         });
         assert_eq!(
-            format!("statistics error: {}", e.message.clone()),
+            format!("statistics error: {}", e.message),
             "All assertions passed!"
         );
     }
     assert!(
-        &SifrInt::from_i64(10) > &SifrInt::from_i64(5),
+        SifrInt::from_i64(10) > SifrInt::from_i64(5),
         "assert_gt failed: {} is not > {}",
         SifrInt::from_i64(10),
         SifrInt::from_i64(5)
     );
     assert!(
-        &SifrInt::from_i64(3) < &SifrInt::from_i64(7),
+        SifrInt::from_i64(3) < SifrInt::from_i64(7),
         "assert_lt failed: {} is not < {}",
         SifrInt::from_i64(3),
         SifrInt::from_i64(7)
     );
     assert!(
-        &SifrInt::from_i64(100) > &SifrInt::from_i64(0),
+        SifrInt::from_i64(100) > SifrInt::from_i64(0),
         "assert_gt failed: {} is not > {}",
         SifrInt::from_i64(100),
         SifrInt::from_i64(0)
     );
     assert!(
-        &SifrInt::from_i64(0) < &SifrInt::from_i64(1),
+        SifrInt::from_i64(0) < SifrInt::from_i64(1),
         "assert_lt failed: {} is not < {}",
         SifrInt::from_i64(0),
         SifrInt::from_i64(1)

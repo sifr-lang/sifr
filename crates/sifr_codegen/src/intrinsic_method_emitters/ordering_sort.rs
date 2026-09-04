@@ -1,18 +1,23 @@
 use super::{
     HirExpr, RustEmitter, Type, registry_call_callable_with_retained_owned_args,
-    registry_callable_signature, registry_iterable_to_vec_expr,
+    registry_callable_signature, registry_iterable_to_owned_iter_expr,
+    registry_iterable_to_vec_expr,
 };
 use crate::{RustExpr, RustParam, RustStmt, RustType};
 
 pub(super) fn lower_sorted(emitter: &mut RustEmitter, args: &[HirExpr]) -> Option<RustExpr> {
     let element_ty =
         crate::resolve_alias_type_for_plain_call(args.first()?.ty()).iterable_element_type()?;
-    let mut stmts = vec![RustStmt::Let {
-        mutable: true,
-        name: "__sifr_sorted_values".to_string(),
-        ty: None,
-        value: registry_iterable_to_vec_expr(emitter, &args[0])?,
-    }];
+    let keyed = args.len() == 3 && !matches!(args[1], HirExpr::NoneLiteral);
+    let mut stmts = Vec::new();
+    if !keyed {
+        stmts.push(RustStmt::Let {
+            mutable: true,
+            name: "__sifr_sorted_values".to_string(),
+            ty: None,
+            value: registry_iterable_to_vec_expr(emitter, &args[0])?,
+        });
+    }
     let reverse_name = (args.len() == 3).then(|| "__sifr_sorted_reverse".to_string());
     if let Some(reverse_name) = &reverse_name {
         stmts.push(RustStmt::Let {
@@ -23,11 +28,13 @@ pub(super) fn lower_sorted(emitter: &mut RustEmitter, args: &[HirExpr]) -> Optio
         });
     }
 
-    if args.len() == 3 && !matches!(args[1], HirExpr::NoneLiteral) {
+    if keyed {
+        let values = registry_iterable_to_owned_iter_expr(emitter, &args[0])?;
         lower_keyed_sort(
             emitter,
             &args[1],
             &element_ty,
+            values,
             reverse_name.as_deref(),
             &mut stmts,
         )?;
@@ -55,6 +62,7 @@ fn lower_keyed_sort(
     emitter: &mut RustEmitter,
     key: &HirExpr,
     element_ty: &Type,
+    values: RustExpr,
     reverse_name: Option<&str>,
     stmts: &mut Vec<RustStmt>,
 ) -> Option<()> {
@@ -70,11 +78,7 @@ fn lower_keyed_sort(
         ty: None,
         value: RustExpr::MethodCall {
             receiver: Box::new(RustExpr::MethodCall {
-                receiver: Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(RustExpr::Ident("__sifr_sorted_values".to_string())),
-                    method: "into_iter".to_string(),
-                    args: Vec::new(),
-                }),
+                receiver: Box::new(values),
                 method: "map".to_string(),
                 args: vec![RustExpr::Closure {
                     params: vec![RustParam::Named {

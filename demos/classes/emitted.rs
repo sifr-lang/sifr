@@ -10,12 +10,12 @@ mod sifr_generated_project_unions {
     for SifrGeneratedUnion8X3asequence5X3aunion1X3a224X3a5X3aclass11X3amainX2eCircle1X3a024X3a5X3aclass11X3amainX2eSquare1X3a0 {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
             match self {
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a224X3a5X3aclass11X3amainX2eCircle1X3a024X3a5X3aclass11X3amainX2eSquare1X3a0::SifrGeneratedUnionVariant5X3aclass11X3amainX2eCircle1X3a0(
-                    v,
-                ) => write!(f, "{v}"),
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a224X3a5X3aclass11X3amainX2eCircle1X3a024X3a5X3aclass11X3amainX2eSquare1X3a0::SifrGeneratedUnionVariant5X3aclass11X3amainX2eSquare1X3a0(
-                    v,
-                ) => write!(f, "{v}"),
+                Self::SifrGeneratedUnionVariant5X3aclass11X3amainX2eCircle1X3a0(v) => {
+                    write!(f, "{v}")
+                }
+                Self::SifrGeneratedUnionVariant5X3aclass11X3amainX2eSquare1X3a0(v) => {
+                    write!(f, "{v}")
+                }
             }
         }
     }
@@ -38,10 +38,14 @@ impl Point {
     }
 }
 impl Point {
-    fn distance(&self, other: &Point) -> f64 {
+    #[expect(
+        clippy::suboptimal_flops,
+        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+    )]
+    fn distance(&self, other: &Self) -> f64 {
         let dx: f64 = self.x - other.x;
         let dy: f64 = self.y - other.y;
-        (dx * dx + dy * dy).powf(0.5_f64 as f64)
+        (dx * dx + dy * dy).powf(0.5_f64)
     }
 }
 impl ::std::fmt::Display for Point {
@@ -120,10 +124,10 @@ struct Color {
     b: SifrInt,
 }
 impl Color {
-    fn new(r: SifrInt, g: SifrInt, b: SifrInt) -> Self {
-        let sifr_generated_field_value_af63ef4c86020cd5_72: SifrInt = r.clone();
-        let sifr_generated_field_value_af63da4c8601e926_67: SifrInt = g.clone();
-        let sifr_generated_field_value_af63df4c8601f1a5_62: SifrInt = b.clone();
+    const fn new(r: SifrInt, g: SifrInt, b: SifrInt) -> Self {
+        let sifr_generated_field_value_af63ef4c86020cd5_72: SifrInt = r;
+        let sifr_generated_field_value_af63da4c8601e926_67: SifrInt = g;
+        let sifr_generated_field_value_af63df4c8601f1a5_62: SifrInt = b;
         Self {
             r: sifr_generated_field_value_af63ef4c86020cd5_72,
             g: sifr_generated_field_value_af63da4c8601e926_67,
@@ -170,12 +174,12 @@ fn main() {
     let s: Square = Square::new(7.0_f64);
     describe_shape(
         &SifrGeneratedUnion8X3asequence5X3aunion1X3a224X3a5X3aclass11X3amainX2eCircle1X3a024X3a5X3aclass11X3amainX2eSquare1X3a0::SifrGeneratedUnionVariant5X3aclass11X3amainX2eCircle1X3a0(
-            c.clone(),
+            c,
         ),
     );
     describe_shape(
         &SifrGeneratedUnion8X3asequence5X3aunion1X3a224X3a5X3aclass11X3amainX2eCircle1X3a024X3a5X3aclass11X3amainX2eSquare1X3a0::SifrGeneratedUnionVariant5X3aclass11X3amainX2eSquare1X3a0(
-            s.clone(),
+            s,
         ),
     );
     println!("=== Hash ===");
@@ -199,6 +203,6 @@ fn main() {
         ::std::hash::Hash::hash(&also_red, &mut sifr_generated_hash);
         SifrInt::from(::std::hash::Hasher::finish(&sifr_generated_hash))
     };
-    println!("Same color same hash: {}", &h1 == &h2);
+    println!("Same color same hash: {}", h1 == h2);
     println!("=== Done ===");
 }

@@ -63,17 +63,25 @@ impl ::std::fmt::Display for ValidationError {
     }
 }
 impl ::std::error::Error for ValidationError {}
+#[expect(
+    clippy::needless_pass_by_value,
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+)]
 fn validate_range(x: SifrInt, lo: SifrInt, hi: SifrInt) -> Result<SifrInt, ValidationError> {
-    if &x < &lo {
+    if x < lo {
         return Err(ValidationError::new(format!("value out of range: {x}")));
     }
-    if &x > &hi {
+    if x > hi {
         return Err(ValidationError::new(format!("value out of range: {x}")));
     }
-    Ok(x.clone())
+    Ok(x)
 }
+#[expect(
+    clippy::needless_pass_by_value,
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+)]
 fn safe_divide(a: SifrInt, b: SifrInt) -> Result<SifrInt, DivisionError> {
-    if &b == &SifrInt::from_i64(0) {
+    if b == SifrInt::from_i64(0) {
         return Err(DivisionError::new("division by zero".to_string()));
     }
     Ok(a.floor_div_known_nonzero(&b))
@@ -96,8 +104,8 @@ fn main() {
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        println!("parse failed: {}", e.message.clone());
+        let e = sifr_generated_try_err;
+        println!("parse failed: {}", e.message);
     }
     let sifr_generated_try_res: Result<(), ParseError> = (|| {
         let n2: SifrInt = SifrInt::parse_decimal(
@@ -111,8 +119,8 @@ fn main() {
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        println!("parse failed (expected): {}", e.message.clone());
+        let e = sifr_generated_try_err;
+        println!("parse failed (expected): {}", e.message);
     }
     println!("=== Custom Error Types ===");
     let sifr_generated_try_res: Result<(), ValidationError> = (|| {
@@ -125,12 +133,12 @@ fn main() {
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        println!("caught: {}", e.message.clone());
+        let e = sifr_generated_try_err;
+        println!("caught: {}", e.message);
     }
     let sifr_generated_try_res: Result<(), ValidationError> = (|| {
         let v2: SifrInt = validate_range(
-            -&SifrInt::from_i64(5),
+            ::std::ops::Neg::neg(&SifrInt::from_i64(5)),
             SifrInt::from_i64(0),
             SifrInt::from_i64(100),
         )?;
@@ -138,8 +146,8 @@ fn main() {
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        println!("caught: {}", e.message.clone());
+        let e = sifr_generated_try_err;
+        println!("caught: {}", e.message);
     }
     println!("=== Try/Except with Auto-Unwrap ===");
     let sifr_generated_try_res: Result<(), ValidationError> = (|| {
@@ -152,8 +160,8 @@ fn main() {
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        println!("error handled: {}", e.message.clone());
+        let e = sifr_generated_try_err;
+        println!("error handled: {}", e.message);
     }
     let sifr_generated_try_res: Result<(), ValidationError> = (|| {
         let b: SifrInt = validate_range(
@@ -165,8 +173,8 @@ fn main() {
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        println!("error handled: {}", e.message.clone());
+        let e = sifr_generated_try_err;
+        println!("error handled: {}", e.message);
     }
     println!("=== Explicit Conversions ===");
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
@@ -177,14 +185,14 @@ fn main() {
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        println!("conversion error: {}", e.message.clone());
+        let e = sifr_generated_try_err;
+        println!("conversion error: {}", e.message);
     }
     let x2: f64 = 5.0;
     println!("float(5) = {x2}");
     let x3: String = SifrInt::from_i64(42).to_string();
     println!("str(42) = {x3}");
-    let x4: bool = &SifrInt::from_i64(1) != &0;
+    let x4: bool = SifrInt::from_i64(1) != 0;
     println!("bool(1) = {x4}");
     println!("=== Raise in Result Functions ===");
     let sifr_generated_try_res: Result<(), DivisionError> = (|| {
@@ -193,8 +201,8 @@ fn main() {
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        println!("divide error: {}", e.message.clone());
+        let e = sifr_generated_try_err;
+        println!("divide error: {}", e.message);
     }
     let sifr_generated_try_res: Result<(), DivisionError> = (|| {
         let d2: SifrInt = safe_divide(SifrInt::from_i64(10), SifrInt::from_i64(0))?;
@@ -202,8 +210,8 @@ fn main() {
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        println!("divide(10, 0) error: {}", e.message.clone());
+        let e = sifr_generated_try_err;
+        println!("divide(10, 0) error: {}", e.message);
     }
     println!("=== Assert Statement ===");
     println!("all assertions passed");

@@ -1,6 +1,10 @@
 // src/main.rs
 use ::sifr_runtime::SifrInt;
 use ::sifr_runtime::SifrRange;
+#[expect(
+    clippy::needless_pass_by_value,
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+)]
 fn write_indices(size: SifrInt) -> Vec<SifrInt> {
     let mut out: Vec<SifrInt> = {
         let mut sifr_generated_list_comp = Vec::new();
@@ -17,7 +21,7 @@ fn write_indices(size: SifrInt) -> Vec<SifrInt> {
         SifrInt::from_i64(1),
     ) {
         {
-            let sifr_generated_assign_value = &i + &SifrInt::from_i64(1);
+            let sifr_generated_assign_value = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
             {
                 let sifr_generated_index_raw = i.clone();
                 let sifr_generated_index_normalized =

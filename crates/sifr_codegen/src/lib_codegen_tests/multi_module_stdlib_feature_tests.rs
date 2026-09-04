@@ -51,7 +51,8 @@ fn test_generate_rust_multi_with_metadata_infers_fs_feature_from_private_stdlib_
         },
     );
 
-    let result = generate_rust_multi_with_metadata(&[("main", &main_module)], &stdlib_code);
+    let result = generate_rust_multi_with_metadata(&[("main", &main_module)], &stdlib_code)
+        .expect("project generation should succeed");
 
     assert!(
         result
@@ -115,7 +116,8 @@ fn test_generate_rust_multi_omits_runtime_for_unused_private_stdlib_bridge() {
         },
     );
 
-    let result = generate_rust_multi_with_metadata(&[("main", &main_module)], &stdlib_code);
+    let result = generate_rust_multi_with_metadata(&[("main", &main_module)], &stdlib_code)
+        .expect("project generation should succeed");
 
     assert!(result.used_stdlib_modules.is_empty());
     assert!(result.required_features.is_empty());

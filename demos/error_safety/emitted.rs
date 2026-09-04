@@ -80,39 +80,39 @@ pub use sifr_generated_project_nominals::ParseError;
 pub use sifr_generated_project_nominals::ValueError;
 mod sifr_generated_project_unions {
     #[derive(Debug, Clone)]
-    pub enum SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aValueError1X3a017X3a5X3aclass5X3aError1X3a0
+    pub enum SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3asifrX2ebuiltinX2eError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0
     {
-        SifrGeneratedUnionVariant5X3aclass5X3aError1X3a0(
+        SifrGeneratedUnionVariant5X3aclass18X3asifrX2ebuiltinX2eError1X3a0(
             crate::sifr_generated_project_nominals::Error,
         ),
-        SifrGeneratedUnionVariant5X3aclass10X3aValueError1X3a0(
+        SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0(
             crate::sifr_generated_project_nominals::ValueError,
         ),
     }
     impl From<crate::sifr_generated_project_nominals::Error>
-    for SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aValueError1X3a017X3a5X3aclass5X3aError1X3a0 {
+    for SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3asifrX2ebuiltinX2eError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0 {
         fn from(value: crate::sifr_generated_project_nominals::Error) -> Self {
-            SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aValueError1X3a017X3a5X3aclass5X3aError1X3a0::SifrGeneratedUnionVariant5X3aclass5X3aError1X3a0(
+            Self::SifrGeneratedUnionVariant5X3aclass18X3asifrX2ebuiltinX2eError1X3a0(
                 value,
             )
         }
     }
     impl From<crate::sifr_generated_project_nominals::ValueError>
-    for SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aValueError1X3a017X3a5X3aclass5X3aError1X3a0 {
+    for SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3asifrX2ebuiltinX2eError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0 {
         fn from(value: crate::sifr_generated_project_nominals::ValueError) -> Self {
-            SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aValueError1X3a017X3a5X3aclass5X3aError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aValueError1X3a0(
+            Self::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0(
                 value,
             )
         }
     }
     impl ::std::fmt::Display
-    for SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aValueError1X3a017X3a5X3aclass5X3aError1X3a0 {
+    for SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3asifrX2ebuiltinX2eError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0 {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
             match self {
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aValueError1X3a017X3a5X3aclass5X3aError1X3a0::SifrGeneratedUnionVariant5X3aclass5X3aError1X3a0(
+                Self::SifrGeneratedUnionVariant5X3aclass18X3asifrX2ebuiltinX2eError1X3a0(
                     v,
                 ) => write!(f, "{v}"),
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aValueError1X3a017X3a5X3aclass5X3aError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aValueError1X3a0(
+                Self::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0(
                     v,
                 ) => write!(f, "{v}"),
             }
@@ -120,7 +120,7 @@ mod sifr_generated_project_unions {
     }
 }
 use ::sifr_runtime::SifrInt;
-pub use sifr_generated_project_unions::SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aValueError1X3a017X3a5X3aclass5X3aError1X3a0;
+pub use sifr_generated_project_unions::SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3asifrX2ebuiltinX2eError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0;
 #[derive(Clone, PartialEq, Eq, Hash)]
 struct AppError {
     message: String,
@@ -144,34 +144,38 @@ impl ::std::fmt::Display for AppError {
 }
 impl ::std::error::Error for AppError {}
 fn validate_age(age: SifrInt) -> Result<SifrInt, ValueError> {
-    if &age < &SifrInt::from_i64(0) {
+    if age < SifrInt::from_i64(0) {
         return Err(ValueError::new("age must be positive".to_string()));
     }
-    if &age > &SifrInt::from_i64(150) {
+    if age > SifrInt::from_i64(150) {
         return Err(ValueError::new("too large".to_string()));
     }
-    Ok(age.clone())
+    Ok(age)
 }
+#[expect(
+    clippy::needless_pass_by_value,
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+)]
 fn safe_divide(a: SifrInt, b: SifrInt) -> Result<SifrInt, DivisionError> {
-    if &b == &SifrInt::from_i64(0) {
+    if b == SifrInt::from_i64(0) {
         return Err(DivisionError::new("division by zero".to_string()));
     }
     Ok(a.floor_div_known_nonzero(&b))
 }
 fn check_input(x: SifrInt) -> Result<SifrInt, AppError> {
-    if &x < &SifrInt::from_i64(0) {
+    if x < SifrInt::from_i64(0) {
         return Err(AppError::new("invalid input".to_string()));
     }
-    Ok(x.clone())
+    Ok(x)
 }
 fn process_age(age: SifrInt) -> Result<SifrInt, ValueError> {
-    if &age < &SifrInt::from_i64(0) {
+    if age < SifrInt::from_i64(0) {
         return Err(ValueError::new("age must be positive".to_string()));
     }
-    if &age > &SifrInt::from_i64(150) {
+    if age > SifrInt::from_i64(150) {
         return Err(ValueError::new("too large".to_string()));
     }
-    Ok(age.clone())
+    Ok(age)
 }
 #[expect(
     clippy::too_many_lines,
@@ -180,23 +184,23 @@ fn process_age(age: SifrInt) -> Result<SifrInt, ValueError> {
 fn main() {
     println!("=== Built-in Error Classes ===");
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
-        let _age: SifrInt = validate_age(-&SifrInt::from_i64(5))?;
+        let _ = validate_age(::std::ops::Neg::neg(&SifrInt::from_i64(5)))?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        println!("caught ValueError: {}", e.message.clone());
+        let e = sifr_generated_try_err;
+        println!("caught ValueError: {}", e.message);
     }
     let sifr_generated_try_res: Result<(), DivisionError> = (|| {
-        let _result: SifrInt = safe_divide(SifrInt::from_i64(10), SifrInt::from_i64(0))?;
+        let _ = safe_divide(SifrInt::from_i64(10), SifrInt::from_i64(0))?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        println!("caught DivisionError: {}", e.message.clone());
+        let e = sifr_generated_try_err;
+        println!("caught DivisionError: {}", e.message);
     }
     let sifr_generated_try_res: Result<(), ParseError> = (|| {
-        let _n: SifrInt = SifrInt::parse_decimal(
+        let _ = SifrInt::parse_decimal(
             &"not_a_number".to_string(),
             ::sifr_runtime::DEFAULT_MAX_INTEGER_DIGITS,
         )
@@ -206,62 +210,62 @@ fn main() {
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        println!("caught ParseError: {}", e.message.clone());
+        let e = sifr_generated_try_err;
+        println!("caught ParseError: {}", e.message);
     }
     println!("=== Custom Error Classes ===");
     let sifr_generated_try_res: Result<(), AppError> = (|| {
-        let _val: SifrInt = check_input(-&SifrInt::from_i64(1))?;
+        let _ = check_input(::std::ops::Neg::neg(&SifrInt::from_i64(1)))?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        println!("caught AppError: {}", e.message.clone());
+        let e = sifr_generated_try_err;
+        println!("caught AppError: {}", e.message);
     }
     println!("=== Exhaustiveness: Specific Except Arms ===");
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
-        let _a: SifrInt = validate_age(-&SifrInt::from_i64(10))?;
+        let _ = validate_age(::std::ops::Neg::neg(&SifrInt::from_i64(10)))?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        println!("caught ValueError: {}", e.message.clone());
+        let e = sifr_generated_try_err;
+        println!("caught ValueError: {}", e.message);
     }
     println!("=== Exhaustiveness: Catch-All ===");
     let sifr_generated_try_res: Result<
         (),
-        SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aValueError1X3a017X3a5X3aclass5X3aError1X3a0,
+        SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3asifrX2ebuiltinX2eError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0,
     > = (|| {
-        let _b: SifrInt = validate_age(SifrInt::from_i64(200))
+        let _ = validate_age(SifrInt::from_i64(200))
             .map_err(
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aValueError1X3a017X3a5X3aclass5X3aError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aValueError1X3a0,
+                SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3asifrX2ebuiltinX2eError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0,
             )?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
         match sifr_generated_try_err {
-            SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aValueError1X3a017X3a5X3aclass5X3aError1X3a0::SifrGeneratedUnionVariant5X3aclass5X3aError1X3a0(
+            SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3asifrX2ebuiltinX2eError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0::SifrGeneratedUnionVariant5X3aclass18X3asifrX2ebuiltinX2eError1X3a0(
                 sifr_generated_try_variant_error,
             ) => {
-                let e = sifr_generated_try_variant_error.clone();
-                println!("caught: {}", e.message.clone());
+                let e = sifr_generated_try_variant_error;
+                println!("caught: {}", e.message);
             }
-            SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aValueError1X3a017X3a5X3aclass5X3aError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aValueError1X3a0(
+            SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3asifrX2ebuiltinX2eError1X3a036X3a5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eValueError1X3a0(
                 sifr_generated_try_variant_error,
             ) => {
-                let e = Error::new(sifr_generated_try_variant_error.clone().message);
-                println!("caught: {}", e.message.clone());
+                let e = Error::new(sifr_generated_try_variant_error.message);
+                println!("caught: {}", e.message);
             }
         }
     }
     println!("=== Error Propagation ===");
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
-        let _c: SifrInt = process_age(-&SifrInt::from_i64(1))?;
+        let _ = process_age(::std::ops::Neg::neg(&SifrInt::from_i64(1)))?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        println!("pipeline error: {}", e.message.clone());
+        let e = sifr_generated_try_err;
+        println!("pipeline error: {}", e.message);
     }
     println!("=== Multiple Try/Except ===");
     let sifr_generated_try_res: Result<(), ParseError> = (|| {
@@ -276,8 +280,8 @@ fn main() {
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        println!("parse error: {}", e.message.clone());
+        let e = sifr_generated_try_err;
+        println!("parse error: {}", e.message);
     }
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
         let validated: SifrInt = validate_age(SifrInt::from_i64(42))?;
@@ -285,8 +289,8 @@ fn main() {
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        println!("validation error: {}", e.message.clone());
+        let e = sifr_generated_try_err;
+        println!("validation error: {}", e.message);
     }
     let sifr_generated_try_res: Result<(), DivisionError> = (|| {
         let divided: SifrInt = safe_divide(SifrInt::from_i64(42), SifrInt::from_i64(6))?;
@@ -294,8 +298,8 @@ fn main() {
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        println!("division error: {}", e.message.clone());
+        let e = sifr_generated_try_err;
+        println!("division error: {}", e.message);
     }
     println!("demo complete!");
 }

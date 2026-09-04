@@ -2,14 +2,14 @@
 use ::sifr_runtime::SifrInt;
 #[expect(
     clippy::assertions_on_constants,
-    reason = "generated Rust preserves this exact typed Sifr source contract"
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
 )]
 fn main() {
     let a: Vec<u8> = vec![1u8, 2u8, 3u8];
     let b: Vec<u8> = vec![1u8, 2u8];
     let c: Vec<u8> = {
-        let mut sifr_generated_v = b.to_vec();
-        sifr_generated_v.extend(vec![3_u8].iter().cloned());
+        let mut sifr_generated_v = b;
+        sifr_generated_v.extend(vec![3_u8].iter().copied());
         sifr_generated_v
     };
     assert_eq!(a, c);
@@ -21,7 +21,7 @@ fn main() {
             .normalize_index_or_len(sifr_generated_checked_read_collection.len());
         sifr_generated_checked_read_collection
             .get(sifr_generated_checked_read_normalized)
-            .cloned()
+            .copied()
     };
     let idx1_value_9ec3e0c5494675fb: Option<u8> = {
         let sifr_generated_checked_read_collection = &a;
@@ -30,7 +30,7 @@ fn main() {
             .normalize_index_or_len(sifr_generated_checked_read_collection.len());
         sifr_generated_checked_read_collection
             .get(sifr_generated_checked_read_normalized)
-            .cloned()
+            .copied()
     };
     let idx2_value_9ec3e1c5494677ae: Option<u8> = {
         let sifr_generated_checked_read_collection = &a;
@@ -39,7 +39,7 @@ fn main() {
             .normalize_index_or_len(sifr_generated_checked_read_collection.len());
         sifr_generated_checked_read_collection
             .get(sifr_generated_checked_read_normalized)
-            .cloned()
+            .copied()
     };
     if let Some(idx0) = idx0 {
         let expected0: u8 = 1u8;
@@ -64,8 +64,12 @@ fn main() {
         .iter()
         .map(|sifr_generated_byte| SifrInt::from(*sifr_generated_byte))
         .collect::<Vec<SifrInt>>();
-    for item in items.iter().cloned() {
-        acc = &acc + &item;
+    #[expect(
+        clippy::explicit_iter_loop,
+        reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner Item 12; remove when direct IntoIterator preserves the same source lifetime"
+    )]
+    for item in items.iter() {
+        acc = ::std::ops::Add::add(&acc, item);
     }
     assert_eq!(&acc, &SifrInt::from_i64(6));
 }

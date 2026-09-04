@@ -346,8 +346,31 @@ fn movable_default_declaration(
         return None;
     };
     let name = simple_binding_name(&local.pat)?;
-    is_discardable_initializer(local.init.as_ref()?.expr.as_ref())
-        .then(|| (name, local.pat.clone(), local.attrs.clone()))
+    (is_discardable_initializer(local.init.as_ref()?.expr.as_ref())
+        || local_is_empty_collection_declaration(local))
+    .then(|| (name, local.pat.clone(), local.attrs.clone()))
+}
+
+fn local_is_empty_collection_declaration(local: &syn::Local) -> bool {
+    let syn::Pat::Type(typed) = &local.pat else {
+        return false;
+    };
+    let Some(owner) = (match typed.ty.as_ref() {
+        syn::Type::Path(path) => path.path.segments.last().map(|segment| &segment.ident),
+        _ => None,
+    }) else {
+        return false;
+    };
+    if owner != "String" && owner != "Vec" {
+        return false;
+    }
+    matches!(local.init.as_ref().map(|init| init.expr.as_ref()),
+        Some(syn::Expr::Call(call))
+            if call.args.is_empty()
+                && matches!(call.func.as_ref(), syn::Expr::Path(path)
+                    if path.path.segments.len() == 2
+                        && path.path.segments[0].ident == *owner
+                        && path.path.segments[1].ident == "new"))
 }
 
 fn direct_assignment_value(statement: &syn::Stmt, name: &str) -> Option<syn::Expr> {
@@ -356,6 +379,20 @@ fn direct_assignment_value(statement: &syn::Stmt, name: &str) -> Option<syn::Exp
             return None;
         };
         return direct_assignment_value(inner, name);
+    }
+    if let syn::Stmt::Expr(syn::Expr::If(branch), _) = statement {
+        let [then_statement] = branch.then_branch.stmts.as_slice() else {
+            return None;
+        };
+        let then_value = direct_assignment_value(then_statement, name)?;
+        let (_, alternative) = branch.else_branch.as_ref()?;
+        if !matches!(alternative.as_ref(), syn::Expr::Block(block)
+            if matches!(block.block.stmts.last(), Some(syn::Stmt::Expr(syn::Expr::Return(_), _))))
+        {
+            return None;
+        }
+        let condition = branch.cond.as_ref();
+        return Some(syn::parse_quote!(if #condition { #then_value } else #alternative));
     }
     let syn::Stmt::Expr(syn::Expr::Assign(assignment), Some(_)) = statement else {
         return None;
@@ -388,30 +425,13 @@ fn initializable_local_name(statement: &syn::Stmt) -> Option<String> {
         return None;
     };
     let name = simple_binding_name(&local.pat)?;
-    is_discardable_initializer(local.init.as_ref()?.expr.as_ref()).then_some(name)
+    (is_discardable_initializer(local.init.as_ref()?.expr.as_ref())
+        || local_is_empty_collection_declaration(local))
+    .then_some(name)
 }
 
 fn is_discardable_initializer(expression: &syn::Expr) -> bool {
-    match expression {
-        syn::Expr::Lit(_) | syn::Expr::Path(_) => true,
-        syn::Expr::Tuple(tuple) => tuple.elems.is_empty(),
-        syn::Expr::Macro(expression_macro) => {
-            expression_macro.mac.path.is_ident("vec") && expression_macro.mac.tokens.is_empty()
-        }
-        syn::Expr::Call(call) => {
-            (call.args.is_empty()
-                && matches!(call.func.as_ref(), syn::Expr::Path(path)
-                    if path.path.segments.last().is_some_and(|segment|
-                        matches!(segment.ident.to_string().as_str(), "new" | "default"))))
-                || (matches!(call.func.as_ref(), syn::Expr::Path(path)
-                    if path.path.segments.last().is_some_and(|segment| segment.ident == "from_i64"))
-                    && call
-                        .args
-                        .iter()
-                        .all(|argument| matches!(argument, syn::Expr::Lit(_))))
-        }
-        _ => false,
-    }
+    crate::discardability::syntax_expression_is_discardable(expression)
 }
 
 fn expression_references_name(expression: &syn::Expr, name: &str) -> bool {

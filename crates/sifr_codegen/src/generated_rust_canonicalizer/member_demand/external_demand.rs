@@ -85,7 +85,6 @@ pub(super) fn trait_method_demand(
             root_aliases.clone()
         };
         let mut collector = ExternalTraitMethodDemandCollector {
-            module_name,
             trait_methods,
             aliases: &aliases,
             demanded: HashSet::new(),
@@ -277,47 +276,12 @@ impl<'ast> Visit<'ast> for ExternalVariantDemandCollector<'_> {
 }
 
 struct ExternalTraitMethodDemandCollector<'definitions> {
-    module_name: &'definitions str,
     trait_methods: &'definitions HashMap<String, HashSet<String>>,
     aliases: &'definitions HashMap<String, String>,
     demanded: HashSet<String>,
 }
 
-impl ExternalTraitMethodDemandCollector<'_> {
-    fn trait_owner(&self, path: &syn::Path) -> Option<String> {
-        let segments = path
-            .segments
-            .iter()
-            .map(|segment| segment.ident.to_string())
-            .collect::<Vec<_>>();
-        if let Some(owner) = segments.last().and_then(|name| self.aliases.get(name)) {
-            return Some(owner.clone());
-        }
-        segments.windows(2).find_map(|pair| {
-            (pair[0] == self.module_name && self.trait_methods.contains_key(&pair[1]))
-                .then(|| pair[1].clone())
-        })
-    }
-}
-
 impl<'ast> Visit<'ast> for ExternalTraitMethodDemandCollector<'_> {
-    fn visit_item_impl(&mut self, implementation: &'ast syn::ItemImpl) {
-        if let Some((trait_path, _)) = &implementation.trait_
-            && let Some(owner) = self.trait_owner(trait_path)
-            && let Some(methods) = self.trait_methods.get(&owner)
-        {
-            self.demanded
-                .extend(implementation.items.iter().filter_map(|item| {
-                    let syn::ImplItem::Fn(method) = item else {
-                        return None;
-                    };
-                    let name = method.sig.ident.to_string();
-                    methods.contains(&name).then_some(name)
-                }));
-        }
-        visit::visit_item_impl(self, implementation);
-    }
-
     fn visit_expr_method_call(&mut self, call: &'ast syn::ExprMethodCall) {
         let method = call.method.to_string();
         if self.aliases.values().any(|owner| {

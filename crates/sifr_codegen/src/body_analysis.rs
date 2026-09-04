@@ -556,6 +556,11 @@ fn collect_expr_mutation(
             {
                 mutated.insert(name.to_string());
             }
+            if canonical.rsplit('.').next() == Some("anext")
+                && let Some(name) = args.first().and_then(expression_root_name)
+            {
+                mutated.insert(name.to_string());
+            }
         }
         HirExpr::IteratorCall {
             op: HirIteratorOp::Next,

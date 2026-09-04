@@ -204,12 +204,12 @@ fn nominal_reexport_name(item: &syn::Item) -> Option<String> {
 
 pub(crate) fn import_generated_support_in_project_nominals(
     prelude_source: &str,
+    required: &HashSet<String>,
 ) -> Result<String, String> {
     let mut prelude = syn::parse_file(prelude_source)
         .map_err(|error| format!("failed to parse generated project prelude: {error}"))?;
-    let support_import: syn::Item = syn::parse_quote! {
-        use crate::__sifr_generated_support::*;
-    };
+    let support_import = syn::parse_str::<syn::Item>(&render_generated_support_import(required))
+        .map_err(|error| format!("failed to build generated support import: {error}"))?;
     for item in &mut prelude.items {
         if let syn::Item::Mod(module) = item
             && module.ident == "__sifr_project_nominals"
@@ -220,6 +220,15 @@ pub(crate) fn import_generated_support_in_project_nominals(
         }
     }
     Ok(prettyplease::unparse(&prelude))
+}
+
+pub(crate) fn render_generated_support_import(required: &HashSet<String>) -> String {
+    let mut required = required.iter().collect::<Vec<_>>();
+    required.sort();
+    format!(
+        "use crate::__sifr_generated_support::{{{}}};",
+        required.into_iter().cloned().collect::<Vec<_>>().join(",")
+    )
 }
 
 pub(crate) fn import_project_prelude_bindings_in_generated_support(

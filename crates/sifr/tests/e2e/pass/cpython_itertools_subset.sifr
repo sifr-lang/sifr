@@ -44,6 +44,11 @@ def collect_core_actual() -> list[bool]:
     actual.append(str(collect_islice(iter([10, 20, 30, 40]), 3)) == "[10, 20, 30]")
     actual.append(str(collect_islice_range(iter([10, 20, 30, 40]), 1, None)) == "[20, 30, 40]")
     actual.append(str(collect_islice_range(iter([10, 20, 30, 40]), 1, None, None)) == "[20, 30, 40]")
+    try:
+        unbounded: Iterator[int] = islice(iter([10, 20, 30, 40]), None)
+        actual.append(str(list(unbounded)) == "[10, 20, 30, 40]")
+    except ValueError:
+        actual.append(False)
     actual.append(str(list(accumulate(iter([1, 2, 3, 4])))) == "[1, 3, 6, 10]")
     actual.append(str(list(accumulate(iter([1, 2, 3]), initial=0))) == "[0, 1, 3, 6]")
     actual.append(str(list(compress(iter([1, 2, 3]), iter([True, False, True])))) == "[1, 3]")
@@ -119,7 +124,7 @@ def main():
         True, True, True, True, True, True, True, True,
         True, True, True, True, True, True, True, True,
         True, True, True, True, True, True, True, True,
-        True
+        True, True
     ]
     actual: list[bool] = []
     append_all(actual, collect_core_actual())

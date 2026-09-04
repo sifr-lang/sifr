@@ -609,6 +609,22 @@ def gate_rustfmt(entries: list[Entry], args: argparse.Namespace) -> None:
             shutil.rmtree(run_root, ignore_errors=True)
 
 
+def discard_failed_run_cargo_target(run_root: Path, cargo_target_dir: Path) -> None:
+    """Keep source/diagnostic evidence but bound failed-run compiler artifacts."""
+    shutil.rmtree(cargo_target_dir, ignore_errors=True)
+    marker = run_root / "failed-cargo-target-cleanup.json"
+    marker.parent.mkdir(parents=True, exist_ok=True)
+    marker.write_text(
+        json.dumps(
+            {"removed": cargo_target_dir.relative_to(run_root).as_posix()},
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+
 def gate_clippy(entries: list[Entry], args: argparse.Namespace) -> None:
     run = run_id("clippy")
     run_root = TARGET_ROOT / run
@@ -686,6 +702,7 @@ def gate_clippy(entries: list[Entry], args: argparse.Namespace) -> None:
         evidence = record_evidence("clippy", run, records)
         print(f"generated-code clippy passed; evidence={evidence.relative_to(REPO_ROOT)}")
     except Exception:
+        discard_failed_run_cargo_target(run_root, cargo_target_dir)
         print(f"generated-code clippy failed; preserved={run_root}", file=sys.stderr)
         raise
     else:
@@ -850,6 +867,7 @@ def gate_companions(_entries: list[Entry], args: argparse.Namespace) -> None:
             f"evidence={evidence.relative_to(REPO_ROOT)}"
         )
     except Exception:
+        discard_failed_run_cargo_target(run_root, cargo_target_dir)
         print(
             f"authoritative demo companion quality failed; preserved={run_root}",
             file=sys.stderr,

@@ -1,7 +1,7 @@
 // src/main.rs
 use ::sifr_runtime::SifrInt;
-fn pick_value(maybe: Option<SifrInt>) -> SifrInt {
-    let Some(maybe) = maybe.clone() else {
+const fn pick_value(maybe: Option<SifrInt>) -> SifrInt {
+    let Some(maybe) = maybe else {
         return SifrInt::from_i64(0);
     };
     maybe

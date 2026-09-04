@@ -1,0 +1,86 @@
+#[derive(Default)]
+struct CopyVectorSourceCollector {
+    sources: HashSet<String>,
+}
+
+impl Visit<'_> for CopyVectorSourceCollector {
+    fn visit_local(&mut self, local: &syn::Local) {
+        if let syn::Pat::Type(typed) = &local.pat
+            && type_is_copy_vector(&typed.ty)
+            && let Some(name) = simple_pattern_name(&typed.pat)
+        {
+            self.sources.insert(name);
+        } else if let Some(init) = &local.init
+            && let syn::Expr::Reference(reference) = init.expr.as_ref()
+            && let syn::Expr::Path(path) = reference.expr.as_ref()
+            && path.path.get_ident().is_some_and(|name|
+                self.sources.contains(&name.to_string()))
+            && let Some(name) = simple_pattern_name(&local.pat)
+        {
+            self.sources.insert(name);
+        }
+        visit::visit_local(self, local);
+    }
+
+    fn visit_item(&mut self, _item: &syn::Item) {}
+}
+
+fn type_is_copy_vector(ty: &syn::Type) -> bool {
+    let syn::Type::Path(path) = ty else {
+        return false;
+    };
+    let Some(segment) = path.path.segments.last() else {
+        return false;
+    };
+    let syn::PathArguments::AngleBracketed(arguments) = &segment.arguments else {
+        return false;
+    };
+    segment.ident == "Vec"
+        && matches!(arguments.args.first(), Some(syn::GenericArgument::Type(syn::Type::Path(element)))
+            if element.path.segments.last().is_some_and(|segment|
+                matches!(segment.ident.to_string().as_str(),
+                    "bool" | "char" | "f32" | "f64" | "i8" | "i16" | "i32" | "i64"
+                        | "i128" | "isize" | "u8" | "u16" | "u32" | "u64" | "u128"
+                        | "usize")))
+}
+
+struct CopyIteratorRewriter<'names> {
+    sources: &'names HashSet<String>,
+}
+
+impl VisitMut for CopyIteratorRewriter<'_> {
+    fn visit_expr_method_call_mut(&mut self, call: &mut syn::ExprMethodCall) {
+        visit_mut::visit_expr_method_call_mut(self, call);
+        if call.method == "map"
+            && let Some(syn::Expr::Closure(closure)) = call.args.first()
+            && closure.inputs.len() == 1
+            && let Some(syn::Pat::Ident(binding)) = closure.inputs.first()
+            && let syn::Expr::Unary(unary) = closure.body.as_ref()
+            && matches!(unary.op, syn::UnOp::Deref(_))
+            && matches!(unary.expr.as_ref(), syn::Expr::Path(path)
+                if path.path.is_ident(&binding.ident))
+            && matches!(call.receiver.as_ref(), syn::Expr::MethodCall(source)
+                if matches!(source.method.to_string().as_str(), "get" | "iter"))
+        {
+            call.method = syn::Ident::new("copied", call.method.span());
+            call.args.clear();
+            return;
+        }
+        if call.method != "cloned" || !call.args.is_empty() {
+            return;
+        }
+        let mut receiver = call.receiver.as_ref();
+        while let syn::Expr::MethodCall(parent) = receiver {
+            receiver = parent.receiver.as_ref();
+        }
+        if expression_root_name(receiver).is_some_and(|name| self.sources.contains(&name)) {
+            call.method = syn::Ident::new("copied", call.method.span());
+        }
+    }
+
+    fn visit_item_mut(&mut self, _item: &mut syn::Item) {}
+
+    fn visit_macro_mut(&mut self, rust_macro: &mut syn::Macro) {
+        rewrite_macro_expressions(self, rust_macro);
+    }
+}

@@ -4,10 +4,10 @@ fn drain(values: &mut Vec<SifrInt>) -> SifrInt {
     let mut total: SifrInt = SifrInt::from_i64(0);
     while !values.is_empty() {
         if let Some(item) = values.pop() {
-            total = &total + &item;
+            total = ::std::ops::Add::add(&total, &item);
         }
     }
-    total.clone()
+    total
 }
 fn drain_front(values: &mut Vec<SifrInt>) -> SifrInt {
     let mut total: SifrInt = SifrInt::from_i64(0);
@@ -22,30 +22,30 @@ fn drain_front(values: &mut Vec<SifrInt>) -> SifrInt {
                 Some(values.remove(sifr_generated_index))
             }
         } {
-            total = &total + &item;
+            total = ::std::ops::Add::add(&total, &item);
         }
     }
-    total.clone()
+    total
 }
 fn main() {
     assert_eq!(
-        &drain(&mut vec![
+        drain(&[
             SifrInt::from_i64(1),
             SifrInt::from_i64(2),
             SifrInt::from_i64(3),
             SifrInt::from_i64(4)
         ]),
-        &SifrInt::from_i64(10)
+        SifrInt::from_i64(10)
     );
-    assert_eq!(&drain(&mut Vec::new()), &SifrInt::from_i64(0));
+    assert_eq!(drain(&mut Vec::new()), SifrInt::from_i64(0));
     assert_eq!(
-        &drain_front(&mut vec![
+        drain_front(&[
             SifrInt::from_i64(1),
             SifrInt::from_i64(2),
             SifrInt::from_i64(3),
             SifrInt::from_i64(4)
         ]),
-        &SifrInt::from_i64(10)
+        SifrInt::from_i64(10)
     );
-    assert_eq!(&drain_front(&mut Vec::new()), &SifrInt::from_i64(0));
+    assert_eq!(drain_front(&mut Vec::new()), SifrInt::from_i64(0));
 }

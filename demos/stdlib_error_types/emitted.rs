@@ -96,9 +96,9 @@ pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2egraphlibX2eCy
 pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError;
 mod sifr_generated_project_unions {
     #[derive(Debug, Clone)]
-    pub enum SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a044X3a5X3aclass31X3asifrX2estatisticsX2eStatisticsError1X3a0
+    pub enum SifrGeneratedUnion8X3asequence5X3aunion1X3a236X3a5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a044X3a5X3aclass31X3asifrX2estatisticsX2eStatisticsError1X3a0
     {
-        SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(
+        SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a0(
             crate::sifr_generated_project_nominals::ParseError,
         ),
         SifrGeneratedUnionVariant5X3aclass31X3asifrX2estatisticsX2eStatisticsError1X3a0(
@@ -106,9 +106,9 @@ mod sifr_generated_project_unions {
         ),
     }
     impl From<crate::sifr_generated_project_nominals::ParseError>
-    for SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a044X3a5X3aclass31X3asifrX2estatisticsX2eStatisticsError1X3a0 {
+    for SifrGeneratedUnion8X3asequence5X3aunion1X3a236X3a5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a044X3a5X3aclass31X3asifrX2estatisticsX2eStatisticsError1X3a0 {
         fn from(value: crate::sifr_generated_project_nominals::ParseError) -> Self {
-            SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a044X3a5X3aclass31X3asifrX2estatisticsX2eStatisticsError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(
+            Self::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a0(
                 value,
             )
         }
@@ -116,66 +116,66 @@ mod sifr_generated_project_unions {
     impl From<
         crate::sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError,
     >
-    for SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a044X3a5X3aclass31X3asifrX2estatisticsX2eStatisticsError1X3a0 {
+    for SifrGeneratedUnion8X3asequence5X3aunion1X3a236X3a5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a044X3a5X3aclass31X3asifrX2estatisticsX2eStatisticsError1X3a0 {
         fn from(
             value: crate::sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError,
         ) -> Self {
-            SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a044X3a5X3aclass31X3asifrX2estatisticsX2eStatisticsError1X3a0::SifrGeneratedUnionVariant5X3aclass31X3asifrX2estatisticsX2eStatisticsError1X3a0(
+            Self::SifrGeneratedUnionVariant5X3aclass31X3asifrX2estatisticsX2eStatisticsError1X3a0(
                 value,
             )
         }
     }
     impl ::std::fmt::Display
-    for SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a044X3a5X3aclass31X3asifrX2estatisticsX2eStatisticsError1X3a0 {
+    for SifrGeneratedUnion8X3asequence5X3aunion1X3a236X3a5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a044X3a5X3aclass31X3asifrX2estatisticsX2eStatisticsError1X3a0 {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
             match self {
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a044X3a5X3aclass31X3asifrX2estatisticsX2eStatisticsError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(
+                Self::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a0(
                     v,
                 ) => write!(f, "{v}"),
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a044X3a5X3aclass31X3asifrX2estatisticsX2eStatisticsError1X3a0::SifrGeneratedUnionVariant5X3aclass31X3asifrX2estatisticsX2eStatisticsError1X3a0(
+                Self::SifrGeneratedUnionVariant5X3aclass31X3asifrX2estatisticsX2eStatisticsError1X3a0(
                     v,
                 ) => write!(f, "{v}"),
             }
         }
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub enum SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0
+    pub enum SifrGeneratedUnion8X3asequence5X3aunion1X3a244X3a5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a049X3a5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0
     {
-        SifrGeneratedUnionVariant5X3aclass18X3aFloatOverflowError1X3a0(
+        SifrGeneratedUnionVariant5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a0(
             crate::sifr_generated_project_nominals::FloatOverflowError,
         ),
-        SifrGeneratedUnionVariant5X3aclass23X3aFloatPrecisionLossError1X3a0(
+        SifrGeneratedUnionVariant5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0(
             crate::sifr_generated_project_nominals::FloatPrecisionLossError,
         ),
     }
     impl From<crate::sifr_generated_project_nominals::FloatOverflowError>
-    for SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0 {
+    for SifrGeneratedUnion8X3asequence5X3aunion1X3a244X3a5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a049X3a5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0 {
         fn from(
             value: crate::sifr_generated_project_nominals::FloatOverflowError,
         ) -> Self {
-            SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass18X3aFloatOverflowError1X3a0(
+            Self::SifrGeneratedUnionVariant5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a0(
                 value,
             )
         }
     }
     impl From<crate::sifr_generated_project_nominals::FloatPrecisionLossError>
-    for SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0 {
+    for SifrGeneratedUnion8X3asequence5X3aunion1X3a244X3a5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a049X3a5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0 {
         fn from(
             value: crate::sifr_generated_project_nominals::FloatPrecisionLossError,
         ) -> Self {
-            SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3aFloatPrecisionLossError1X3a0(
+            Self::SifrGeneratedUnionVariant5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0(
                 value,
             )
         }
     }
     impl ::std::fmt::Display
-    for SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0 {
+    for SifrGeneratedUnion8X3asequence5X3aunion1X3a244X3a5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a049X3a5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0 {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
             match self {
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass18X3aFloatOverflowError1X3a0(
+                Self::SifrGeneratedUnionVariant5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a0(
                     v,
                 ) => write!(f, "{v}"),
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3aFloatPrecisionLossError1X3a0(
+                Self::SifrGeneratedUnionVariant5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0(
                     v,
                 ) => write!(f, "{v}"),
             }
@@ -183,12 +183,12 @@ mod sifr_generated_project_unions {
     }
 }
 use ::sifr_runtime::SifrInt;
-pub use sifr_generated_project_unions::SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a044X3a5X3aclass31X3asifrX2estatisticsX2eStatisticsError1X3a0;
-pub use sifr_generated_project_unions::SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0;
+pub use sifr_generated_project_unions::SifrGeneratedUnion8X3asequence5X3aunion1X3a236X3a5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a044X3a5X3aclass31X3asifrX2estatisticsX2eStatisticsError1X3a0;
+pub use sifr_generated_project_unions::SifrGeneratedUnion8X3asequence5X3aunion1X3a244X3a5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a049X3a5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0;
 fn compute_mean(
     data: &[f64],
 ) -> Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> {
-    if &SifrInt::from(data.len()) == &SifrInt::from_i64(0) {
+    if data.len() == SifrInt::from_i64(0) {
         return Err(SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
             "cannot compute mean of empty dataset".to_string(),
         ));
@@ -199,20 +199,20 @@ fn compute_mean(
     }
     let sifr_generated_try_res: Result<
         Result<f64, SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError>,
-        SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0,
+        SifrGeneratedUnion8X3asequence5X3aunion1X3a244X3a5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a049X3a5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0,
     > = (|| {
         let count: f64 = SifrInt::from(data.len())
             .checked_to_f64()
             .map_err(|sifr_generated_float_error| match sifr_generated_float_error {
                 ::sifr_runtime::IntegerFloatConversionError::Overflow => {
-                    SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass18X3aFloatOverflowError1X3a0(
+                    SifrGeneratedUnion8X3asequence5X3aunion1X3a244X3a5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a049X3a5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a0(
                         FloatOverflowError::new(
                             "exact integer is outside the finite float range".to_string(),
                         ),
                     )
                 }
                 ::sifr_runtime::IntegerFloatConversionError::PrecisionLoss => {
-                    SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3aFloatPrecisionLossError1X3a0(
+                    SifrGeneratedUnion8X3asequence5X3aunion1X3a244X3a5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a049X3a5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0(
                         FloatPrecisionLossError::new(
                             "exact integer cannot be represented without float precision loss"
                                 .to_string(),
@@ -224,23 +224,23 @@ fn compute_mean(
     })();
     sifr_generated_try_res
         .unwrap_or_else(|sifr_generated_try_err| match sifr_generated_try_err {
-            SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass18X3aFloatOverflowError1X3a0(
+            SifrGeneratedUnion8X3asequence5X3aunion1X3a244X3a5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a049X3a5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a0(
                 sifr_generated_try_variant_error,
             ) => {
-                let error = sifr_generated_try_variant_error.clone();
+                let error = sifr_generated_try_variant_error;
                 Err(
                     SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
-                        error.message.clone(),
+                        error.message,
                     ),
                 )
             }
-            SifrGeneratedUnion8X3asequence5X3aunion1X3a231X3a5X3aclass18X3aFloatOverflowError1X3a036X3a5X3aclass23X3aFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3aFloatPrecisionLossError1X3a0(
+            SifrGeneratedUnion8X3asequence5X3aunion1X3a244X3a5X3aclass31X3asifrX2ebuiltinX2eFloatOverflowError1X3a049X3a5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0::SifrGeneratedUnionVariant5X3aclass36X3asifrX2ebuiltinX2eFloatPrecisionLossError1X3a0(
                 sifr_generated_try_variant_error,
             ) => {
-                let error = sifr_generated_try_variant_error.clone();
+                let error = sifr_generated_try_variant_error;
                 Err(
                     SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError::new(
-                        error.message.clone(),
+                        error.message,
                     ),
                 )
             }
@@ -257,23 +257,23 @@ fn topo_sort(has_cycle: bool) -> Result<SifrInt, SifrGeneratedStdlibSifrX2egraph
 fn main() {
     let sifr_generated_try_res: Result<(), SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> =
         (|| {
-            let mean: f64 = compute_mean(&vec![1.0_f64, 2.0_f64, 3.0_f64])?;
+            let mean: f64 = compute_mean(&[1.0_f64, 2.0_f64, 3.0_f64])?;
             println!("mean = {mean}");
             Ok(())
         })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        println!("stats error: {}", e.message.clone());
+        let e = sifr_generated_try_err;
+        println!("stats error: {}", e.message);
     }
     let empty: Vec<f64> = Vec::new();
     let sifr_generated_try_res: Result<(), SifrGeneratedStdlibSifrX2estatisticsX2eStatisticsError> =
         (|| {
-            let _mean2: f64 = compute_mean(&empty)?;
+            let _ = compute_mean(&empty)?;
             Ok(())
         })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        println!("caught StatisticsError: {}", e.message.clone());
+        let e = sifr_generated_try_err;
+        println!("caught StatisticsError: {}", e.message);
     }
     let sifr_generated_try_res: Result<(), SifrGeneratedStdlibSifrX2egraphlibX2eCycleError> =
         (|| {
@@ -282,23 +282,23 @@ fn main() {
             Ok(())
         })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        println!("cycle error: {}", e.message.clone());
+        let e = sifr_generated_try_err;
+        println!("cycle error: {}", e.message);
     }
     let sifr_generated_try_res: Result<(), SifrGeneratedStdlibSifrX2egraphlibX2eCycleError> =
         (|| {
-            let _order2: SifrInt = topo_sort(true)?;
+            let _ = topo_sort(true)?;
             Ok(())
         })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        println!("caught CycleError: {}", e.message.clone());
+        let e = sifr_generated_try_err;
+        println!("caught CycleError: {}", e.message);
     }
     let sifr_generated_try_res: Result<
         (),
-        SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a044X3a5X3aclass31X3asifrX2estatisticsX2eStatisticsError1X3a0,
+        SifrGeneratedUnion8X3asequence5X3aunion1X3a236X3a5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a044X3a5X3aclass31X3asifrX2estatisticsX2eStatisticsError1X3a0,
     > = (|| {
-        let _val: SifrInt = SifrInt::parse_decimal(
+        let _ = SifrInt::parse_decimal(
                 &"not_a_number".to_string(),
                 ::sifr_runtime::DEFAULT_MAX_INTEGER_DIGITS,
             )
@@ -306,27 +306,27 @@ fn main() {
                 message: e.to_string(),
             })
             .map_err(
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a044X3a5X3aclass31X3asifrX2estatisticsX2eStatisticsError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0,
+                SifrGeneratedUnion8X3asequence5X3aunion1X3a236X3a5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a044X3a5X3aclass31X3asifrX2estatisticsX2eStatisticsError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a0,
             )?;
-        let _mean3_value_1dfeeebaa86aa660: f64 = compute_mean(&empty)
+        let _ = compute_mean(&empty)
             .map_err(
-                SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a044X3a5X3aclass31X3asifrX2estatisticsX2eStatisticsError1X3a0::SifrGeneratedUnionVariant5X3aclass31X3asifrX2estatisticsX2eStatisticsError1X3a0,
+                SifrGeneratedUnion8X3asequence5X3aunion1X3a236X3a5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a044X3a5X3aclass31X3asifrX2estatisticsX2eStatisticsError1X3a0::SifrGeneratedUnionVariant5X3aclass31X3asifrX2estatisticsX2eStatisticsError1X3a0,
             )?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
         match sifr_generated_try_err {
-            SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a044X3a5X3aclass31X3asifrX2estatisticsX2eStatisticsError1X3a0::SifrGeneratedUnionVariant5X3aclass10X3aParseError1X3a0(
+            SifrGeneratedUnion8X3asequence5X3aunion1X3a236X3a5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a044X3a5X3aclass31X3asifrX2estatisticsX2eStatisticsError1X3a0::SifrGeneratedUnionVariant5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a0(
                 sifr_generated_try_variant_error,
             ) => {
-                let e = sifr_generated_try_variant_error.clone();
-                println!("caught ParseError: {}", e.message.clone());
+                let e = sifr_generated_try_variant_error;
+                println!("caught ParseError: {}", e.message);
             }
-            SifrGeneratedUnion8X3asequence5X3aunion1X3a223X3a5X3aclass10X3aParseError1X3a044X3a5X3aclass31X3asifrX2estatisticsX2eStatisticsError1X3a0::SifrGeneratedUnionVariant5X3aclass31X3asifrX2estatisticsX2eStatisticsError1X3a0(
+            SifrGeneratedUnion8X3asequence5X3aunion1X3a236X3a5X3aclass23X3asifrX2ebuiltinX2eParseError1X3a044X3a5X3aclass31X3asifrX2estatisticsX2eStatisticsError1X3a0::SifrGeneratedUnionVariant5X3aclass31X3asifrX2estatisticsX2eStatisticsError1X3a0(
                 sifr_generated_try_variant_error,
             ) => {
-                let e = sifr_generated_try_variant_error.clone();
-                println!("caught StatisticsError: {}", e.message.clone());
+                let e = sifr_generated_try_variant_error;
+                println!("caught StatisticsError: {}", e.message);
             }
         }
     }

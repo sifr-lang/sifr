@@ -137,7 +137,7 @@ class ProfileRunner:
             return result.status
         budget_status = enforce_prepared_step_budget(budget, result.elapsed_ms)
         if budget_status == 0:
-            record_step_success(budget)
+            record_step_success(budget, result.elapsed_ms)
         return budget_status
 
     def prepare_cargo_cache(self) -> None:

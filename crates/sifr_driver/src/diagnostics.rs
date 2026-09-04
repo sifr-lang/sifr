@@ -440,3 +440,16 @@ pub(crate) fn run_codegen_with_boundary<T>(
         ))),
     }
 }
+
+pub(crate) fn run_checked_codegen_with_boundary<T>(
+    context: impl Into<String>,
+    f: impl FnOnce() -> Result<T, sifr_codegen::CodegenError>,
+) -> Result<T, Box<RenderedDiagnostic>> {
+    let context = context.into();
+    run_codegen_with_boundary(context.clone(), f)?.map_err(|error| {
+        Box::new(diagnostic_with_code(
+            format!("{context}: {error}"),
+            DiagnosticCode::INTERNAL_COMPILER_PANIC,
+        ))
+    })
+}

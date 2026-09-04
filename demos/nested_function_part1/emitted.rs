@@ -1,25 +1,33 @@
 // src/main.rs
 use ::sifr_runtime::SifrInt;
 fn apply_twice(f: impl Fn(SifrInt) -> SifrInt, value: SifrInt) -> SifrInt {
-    f(f(value.clone()))
+    f(f(value))
 }
 fn score(base: SifrInt) -> SifrInt {
     let offset: SifrInt = SifrInt::from_i64(3);
-    let add_offset = |x: SifrInt| &x + &offset;
-    let amplify = |x: SifrInt| &x * &SifrInt::from_i64(2);
-    let adjusted: SifrInt = apply_twice(add_offset, base.clone());
-    amplify(adjusted.clone())
+    let add_offset = |x: SifrInt| ::std::ops::Add::add(&x, &offset);
+    let amplify = |x: SifrInt| ::std::ops::Mul::mul(&x, &SifrInt::from_i64(2));
+    let adjusted: SifrInt = apply_twice(add_offset, base);
+    amplify(adjusted)
 }
+#[expect(
+    clippy::needless_pass_by_value,
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+)]
 fn bounded_sum(limit: SifrInt) -> SifrInt {
-    fn helper(i: SifrInt, acc: SifrInt, limit: SifrInt) -> SifrInt {
-        if &i > &limit {
+    fn helper(i: &SifrInt, acc: &SifrInt, limit: &SifrInt) -> SifrInt {
+        if i > limit {
             return acc.clone();
         }
-        helper(&i + &SifrInt::from_i64(1), &acc + &i, limit.clone())
+        helper(
+            &::std::ops::Add::add(i, &SifrInt::from_i64(1)),
+            &::std::ops::Add::add(acc, i),
+            &limit.clone(),
+        )
     }
-    helper(SifrInt::from_i64(1), SifrInt::from_i64(0), limit.clone())
+    helper(&SifrInt::from_i64(1), &SifrInt::from_i64(0), &limit)
 }
 fn main() {
-    assert_eq!(&score(SifrInt::from_i64(4)), &SifrInt::from_i64(20));
-    assert_eq!(&bounded_sum(SifrInt::from_i64(5)), &SifrInt::from_i64(15));
+    assert_eq!(score(SifrInt::from_i64(4)), SifrInt::from_i64(20));
+    assert_eq!(bounded_sum(SifrInt::from_i64(5)), SifrInt::from_i64(15));
 }

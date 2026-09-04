@@ -142,7 +142,7 @@ fn main() {
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e = sifr_generated_try_err.clone();
+        let _ = sifr_generated_try_err;
         return;
     }
     println!(
@@ -227,7 +227,8 @@ fn main() {
                 let sifr_generated_index_normalized =
                     sifr_generated_index_raw.normalize_index_or_len(scores.len());
                 if let Some(sifr_generated_elem) = scores.get_mut(sifr_generated_index_normalized) {
-                    *sifr_generated_elem += sifr_generated_assign_value;
+                    *sifr_generated_elem =
+                        ::std::ops::Add::add(&*sifr_generated_elem, &sifr_generated_assign_value);
                 } else {
                     return Err(IndexError::new("collection index out of range".to_string()));
                 }
@@ -262,7 +263,7 @@ fn main() {
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e = sifr_generated_try_err.clone();
+        let _ = sifr_generated_try_err;
         return;
     }
     let s0: Option<SifrInt> = {
@@ -292,18 +293,18 @@ fn main() {
             .get(sifr_generated_checked_read_normalized)
             .cloned()
     };
-    if let Some(s0) = s0.clone() {
+    if let Some(s0) = s0 {
         println!("{s0}");
     }
-    if let Some(s1) = s1.clone() {
+    if let Some(s1) = s1 {
         println!("{s1}");
     }
-    if let Some(s2) = s2.clone() {
+    if let Some(s2) = s2 {
         println!("{s2}");
     }
     let mut c = Counter::new(SifrInt::from_i64(0));
     c.increment();
     c.increment();
     c.increment();
-    println!("{}", c.count.clone());
+    println!("{}", c.count);
 }

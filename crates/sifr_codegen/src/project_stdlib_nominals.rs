@@ -3,12 +3,15 @@ use crate::stdlib_filter::{
     strip_relocated_rust_items_by_name,
 };
 use crate::{HirModule, Renderer, RustFile, StdlibCode, publicize_generated_module_source};
-use sifr_ir::HirFunction;
-use sifr_type_system::{FunctionType, Type, class_rust_name, is_crate_root_rust_nominal_identity};
+use sifr_type_system::{Type, class_rust_name, is_crate_root_rust_nominal_identity};
 use std::collections::{BTreeMap, HashMap, HashSet};
 
+mod nominal_collection;
 mod project_union_relocation;
 
+use nominal_collection::{
+    collect_module_nominals, collect_shared_nominals, is_compiler_builtin_error,
+};
 use project_union_relocation::{relocate_project_unions, shared_nominal_reexport_names};
 
 const SHARED_STDLIB_NOMINAL_MODULE: &str = "__sifr_project_nominals";
@@ -115,10 +118,52 @@ pub(crate) fn relocate_project_stdlib_nominals_owned_by(
     format!("{imports}\n{stripped}")
 }
 
+pub(crate) fn canonicalize_project_builtin_union_variant_names(
+    source: &str,
+    union_name_replacements: &HashMap<String, String>,
+) -> String {
+    let mut normalized = source.to_string();
+    let mut replacements = union_name_replacements.iter().collect::<Vec<_>>();
+    replacements.sort_by_key(|(old, _)| std::cmp::Reverse(old.len()));
+    for (old, new) in replacements {
+        normalized = normalized.replace(old, new);
+    }
+    for name in crate::BUILTIN_ERROR_CLASSES {
+        let legacy = Type::Class {
+            identity: None,
+            type_args: Vec::new(),
+            name: (*name).to_string(),
+            fields: Vec::new(),
+            methods: Vec::new(),
+            parent_class: None,
+        };
+        let canonical = Type::Class {
+            identity: crate::builtin_error_identity(name),
+            type_args: Vec::new(),
+            name: (*name).to_string(),
+            fields: Vec::new(),
+            methods: Vec::new(),
+            parent_class: None,
+        };
+        normalized = normalized.replace(
+            &legacy.union_variant_name(),
+            &canonical.union_variant_name(),
+        );
+    }
+    normalized
+}
+
 pub(crate) fn project_stdlib_nominal_plan(
     unions: &HashMap<String, Vec<Type>>,
     modules: &[(&str, &HirModule)],
-) -> ProjectStdlibNominalPlan {
+) -> Result<ProjectStdlibNominalPlan, crate::CodegenError> {
+    for member in unions.values().flatten() {
+        if let Some(name) = identityless_builtin_name(member) {
+            return Err(crate::CodegenError::new(format!(
+                "project union builtin error '{name}' is missing its canonical nominal identity"
+            )));
+        }
+    }
     let mut declarations = BTreeMap::<String, HashSet<String>>::new();
     let mut builtin_types = BTreeMap::<String, Type>::new();
     for members in unions.values() {
@@ -197,7 +242,77 @@ pub(crate) fn project_stdlib_nominal_plan(
         }
     }
 
-    ProjectStdlibNominalPlan { registry }
+    Ok(ProjectStdlibNominalPlan { registry })
+}
+
+fn identityless_builtin_name(ty: &Type) -> Option<&str> {
+    match ty.resolve_alias() {
+        Type::Class {
+            identity: None,
+            name,
+            ..
+        } if crate::BUILTIN_ERROR_CLASSES.contains(&name.as_str()) => Some(name),
+        Type::Class {
+            type_args,
+            fields,
+            methods,
+            ..
+        } => type_args
+            .iter()
+            .chain(fields.iter().map(|(_, ty)| ty))
+            .find_map(identityless_builtin_name)
+            .or_else(|| {
+                methods
+                    .iter()
+                    .map(|(_, function)| function)
+                    .find_map(|function| {
+                        function
+                            .params
+                            .iter()
+                            .map(|(_, ty, _)| ty)
+                            .chain(std::iter::once(function.return_type.as_ref()))
+                            .find_map(identityless_builtin_name)
+                    })
+            }),
+        Type::Newtype { inner, .. }
+        | Type::List(inner)
+        | Type::Set(inner)
+        | Type::Iterable(inner)
+        | Type::Iterator(inner)
+        | Type::Awaitable(inner)
+        | Type::Failure(inner)
+        | Type::TimeoutResult(inner)
+        | Type::PythonBuffer(inner)
+        | Type::PythonDlpackTensor(inner) => identityless_builtin_name(inner),
+        Type::Dict(left, right)
+        | Type::Result(left, right)
+        | Type::Coroutine(left, right)
+        | Type::Task(left, right)
+        | Type::TaskResult(left, right)
+        | Type::Select2(left, right)
+        | Type::BlockingTask(left, right)
+        | Type::JoinSet(left, right)
+        | Type::AsyncIterator(left, right)
+        | Type::AsyncGenerator(left, right) => {
+            identityless_builtin_name(left).or_else(|| identityless_builtin_name(right))
+        }
+        Type::Tuple(items) | Type::Union(items) | Type::Intersection(items) => {
+            items.iter().find_map(identityless_builtin_name)
+        }
+        Type::Function(function) | Type::AsyncFunction(function) => function
+            .params
+            .iter()
+            .map(|(_, ty, _)| ty)
+            .chain(std::iter::once(function.return_type.as_ref()))
+            .find_map(identityless_builtin_name),
+        Type::Callable(parameters, _, result) | Type::AsyncCallable(parameters, _, result) => {
+            parameters
+                .iter()
+                .chain(std::iter::once(result.as_ref()))
+                .find_map(identityless_builtin_name)
+        }
+        _ => None,
+    }
 }
 
 pub(crate) fn extract_project_stdlib_nominal_prelude(
@@ -298,7 +413,7 @@ pub(crate) fn extract_project_stdlib_nominal_prelude(
 
 fn builtin_error_type(name: &str) -> Type {
     Type::Class {
-        identity: None,
+        identity: crate::builtin_error_identity(name),
         type_args: Vec::new(),
         name: name.to_string(),
         fields: vec![("message".to_string(), Type::Str)],
@@ -337,189 +452,11 @@ fn register_emitted_builtin_nominals(shared_source: &str, registry: &mut Project
     }
 }
 
-fn collect_function_nominals(
-    function: &FunctionType,
-    declarations: &mut BTreeMap<String, HashSet<String>>,
-    builtin_types: &mut BTreeMap<String, Type>,
-) {
-    for (_, parameter, _) in &function.params {
-        collect_shared_nominals(parameter, declarations, builtin_types);
-    }
-    collect_shared_nominals(&function.return_type, declarations, builtin_types);
-}
-
-fn collect_hir_function_nominals(
-    function: &HirFunction,
-    declarations: &mut BTreeMap<String, HashSet<String>>,
-    builtin_types: &mut BTreeMap<String, Type>,
-) {
-    for parameter in &function.params {
-        collect_shared_nominals(&parameter.ty, declarations, builtin_types);
-    }
-    collect_shared_nominals(&function.return_type, declarations, builtin_types);
-    for ty in crate::hir_analysis::queries::collect_let_declared_types(&function.body) {
-        collect_shared_nominals(&ty, declarations, builtin_types);
-    }
-}
-
-fn collect_module_nominals(
-    module: &HirModule,
-    declarations: &mut BTreeMap<String, HashSet<String>>,
-    builtin_types: &mut BTreeMap<String, Type>,
-) {
-    for function in &module.functions {
-        collect_hir_function_nominals(function, declarations, builtin_types);
-    }
-    for class in &module.classes {
-        for (_, field) in &class.fields {
-            collect_shared_nominals(field, declarations, builtin_types);
-        }
-        if let Some(parent) = &class.parent_type {
-            collect_shared_nominals(parent, declarations, builtin_types);
-        }
-        for method in &class.methods {
-            collect_hir_function_nominals(method, declarations, builtin_types);
-        }
-        for (_, operator) in &class.operator_impls {
-            collect_hir_function_nominals(operator, declarations, builtin_types);
-        }
-    }
-    for (_, ty, _) in &module.constants {
-        collect_shared_nominals(ty, declarations, builtin_types);
-    }
-}
-
-fn collect_shared_nominals(
-    ty: &Type,
-    declarations: &mut BTreeMap<String, HashSet<String>>,
-    builtin_types: &mut BTreeMap<String, Type>,
-) {
-    match ty.resolve_alias() {
-        class @ Type::Class {
-            identity,
-            type_args,
-            name,
-            fields,
-            methods,
-            ..
-        } => {
-            if is_compiler_builtin_error(identity.as_deref(), name)
-                && sifr_type_system::io_error_kind(name).is_none()
-            {
-                builtin_types
-                    .entry(name.clone())
-                    .or_insert_with(|| class.clone());
-            }
-            if !class.is_python_object_contract() && !class.is_python_resource_identity_contract() {
-                collect_nominal_identity(identity.as_deref(), declarations);
-            }
-            for type_arg in type_args {
-                collect_shared_nominals(type_arg, declarations, builtin_types);
-            }
-            if identity.as_deref().is_some_and(|identity| {
-                identity.starts_with("sifr.") || identity.starts_with("_sifr.")
-            }) {
-                for (_, field) in fields {
-                    collect_shared_nominals(field, declarations, builtin_types);
-                }
-                for (_, method) in methods {
-                    collect_function_nominals(method, declarations, builtin_types);
-                }
-            }
-        }
-        Type::Protocol {
-            identity, methods, ..
-        } => {
-            collect_nominal_identity(identity.as_deref(), declarations);
-            for (_, method) in methods {
-                collect_function_nominals(method, declarations, builtin_types);
-            }
-        }
-        Type::Newtype {
-            identity, inner, ..
-        } => {
-            collect_nominal_identity(identity.as_deref(), declarations);
-            collect_shared_nominals(inner, declarations, builtin_types);
-        }
-        Type::Enum { identity, .. } => collect_nominal_identity(identity.as_deref(), declarations),
-        Type::List(inner)
-        | Type::Set(inner)
-        | Type::Iterable(inner)
-        | Type::Iterator(inner)
-        | Type::Awaitable(inner)
-        | Type::Failure(inner)
-        | Type::TimeoutResult(inner)
-        | Type::PythonBuffer(inner)
-        | Type::PythonDlpackTensor(inner) => {
-            collect_shared_nominals(inner, declarations, builtin_types);
-        }
-        Type::Dict(left, right)
-        | Type::Result(left, right)
-        | Type::Coroutine(left, right)
-        | Type::Task(left, right)
-        | Type::TaskResult(left, right)
-        | Type::Select2(left, right)
-        | Type::BlockingTask(left, right)
-        | Type::JoinSet(left, right)
-        | Type::AsyncIterator(left, right)
-        | Type::AsyncGenerator(left, right) => {
-            collect_shared_nominals(left, declarations, builtin_types);
-            collect_shared_nominals(right, declarations, builtin_types);
-        }
-        Type::Tuple(items) | Type::Union(items) | Type::Intersection(items) => {
-            for item in items {
-                collect_shared_nominals(item, declarations, builtin_types);
-            }
-        }
-        Type::Function(function) | Type::AsyncFunction(function) => {
-            collect_function_nominals(function, declarations, builtin_types);
-        }
-        Type::Callable(parameters, _, result) | Type::AsyncCallable(parameters, _, result) => {
-            for parameter in parameters {
-                collect_shared_nominals(parameter, declarations, builtin_types);
-            }
-            collect_shared_nominals(result, declarations, builtin_types);
-        }
-        _ => {}
-    }
-}
-
-fn collect_nominal_identity(
-    identity: Option<&str>,
-    declarations: &mut BTreeMap<String, HashSet<String>>,
-) {
-    let Some(identity) = identity else {
-        return;
-    };
-    if is_crate_root_rust_nominal_identity(identity)
-        || (!identity.starts_with("sifr.") && !identity.starts_with("_sifr."))
-    {
-        return;
-    }
-    let Some((module, name)) = identity.rsplit_once('.') else {
-        return;
-    };
-    if is_compiler_builtin_error(Some(identity), name) {
-        return;
-    }
-    declarations
-        .entry(module.to_string())
-        .or_default()
-        .insert(name.to_string());
-}
-
-fn is_compiler_builtin_error(identity: Option<&str>, name: &str) -> bool {
-    crate::BUILTIN_ERROR_CLASSES.contains(&name)
-        && identity.is_none_or(|identity| {
-            identity.starts_with("sifr.builtin.")
-                || sifr_type_system::is_global_rust_nominal_identity(identity)
-        })
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use sifr_ir::{HirStmt, MethodKind};
+    use nominal_collection::collect_shared_nominals;
+    use sifr_ir::{HirFunction, HirStmt, MethodKind};
 
     fn stdlib_error(identity: &str) -> Type {
         Type::Class {
@@ -563,7 +500,8 @@ mod tests {
         let config = stdlib_error("sifr.configparser.Error");
         let unions = HashMap::from([("ImportedErrors".to_string(), vec![csv, config])]);
 
-        let plan = project_stdlib_nominal_plan(&unions, &[]);
+        let plan = project_stdlib_nominal_plan(&unions, &[])
+            .expect("project nominal plan should be valid");
         let csv_path = plan
             .registry
             .rust_paths
@@ -592,7 +530,8 @@ mod tests {
         };
         let unions = HashMap::from([("NativeFile".to_string(), vec![native_file])]);
 
-        let plan = project_stdlib_nominal_plan(&unions, &[]);
+        let plan = project_stdlib_nominal_plan(&unions, &[])
+            .expect("project nominal plan should be valid");
 
         assert_eq!(
             plan.registry.rust_paths.get("_sifr.fs.NativeFileHandle"),
@@ -618,7 +557,7 @@ mod tests {
             vec![
                 timeout_error,
                 Type::Class {
-                    identity: None,
+                    identity: crate::builtin_error_identity("ValueError"),
                     type_args: Vec::new(),
                     name: "ValueError".to_string(),
                     fields: vec![("message".to_string(), Type::Str)],
@@ -628,7 +567,8 @@ mod tests {
             ],
         )]);
 
-        let plan = project_stdlib_nominal_plan(&unions, &[]);
+        let plan = project_stdlib_nominal_plan(&unions, &[])
+            .expect("project nominal plan should be valid");
 
         assert!(
             plan.registry
@@ -636,6 +576,32 @@ mod tests {
                 .contains_key("sifr.builtin.TimeoutError")
         );
         assert!(!plan.registry.crate_root_rust_names.contains("TimeoutError"));
+    }
+
+    #[test]
+    fn item12_identityless_builtin_union_member_is_a_codegen_error() {
+        let unions = HashMap::from([(
+            "BrokenBuiltin".to_string(),
+            vec![Type::Class {
+                identity: None,
+                type_args: Vec::new(),
+                name: "ValueError".to_string(),
+                fields: Vec::new(),
+                methods: Vec::new(),
+                parent_class: Some("Error".to_string()),
+            }],
+        )]);
+
+        let error = match project_stdlib_nominal_plan(&unions, &[]) {
+            Ok(_) => panic!("identity-less builtin lookalikes must fail closed"),
+            Err(error) => error,
+        };
+
+        assert!(
+            error
+                .message
+                .contains("missing its canonical nominal identity")
+        );
     }
 
     #[test]
@@ -670,7 +636,8 @@ mod tests {
         };
 
         let generated =
-            crate::generate_rust_multi_with_metadata(&[("main", &module)], &StdlibCode::default());
+            crate::generate_rust_multi_with_metadata(&[("main", &module)], &StdlibCode::default())
+                .expect("project generation should succeed");
         assert_eq!(
             generated
                 .project_union_prelude
@@ -794,7 +761,8 @@ mod tests {
         };
         let unions = HashMap::from([("DirectKind".to_string(), vec![direct_kind])]);
 
-        let plan = project_stdlib_nominal_plan(&unions, &[]);
+        let plan = project_stdlib_nominal_plan(&unions, &[])
+            .expect("project nominal plan should be valid");
 
         assert!(!plan.registry.rust_paths.contains_key("FileNotFoundError"));
         assert!(
@@ -839,7 +807,8 @@ mod tests {
         };
 
         let generated =
-            crate::generate_rust_multi_with_metadata(&[("main", &module)], &StdlibCode::default());
+            crate::generate_rust_multi_with_metadata(&[("main", &module)], &StdlibCode::default())
+                .expect("project generation should succeed");
 
         assert!(
             !generated

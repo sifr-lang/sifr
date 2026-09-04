@@ -278,6 +278,7 @@ impl<'facts> MutatingUseCollector<'facts> {
                     | "as_mut_slice"
                     | "blocking_recv"
                     | "clear"
+                    | "clone_from"
                     | "dedup"
                     | "drain"
                     | "entry"

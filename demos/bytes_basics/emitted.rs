@@ -6,21 +6,25 @@ fn total(data: &[u8]) -> SifrInt {
         .iter()
         .map(|sifr_generated_byte| SifrInt::from(*sifr_generated_byte))
         .collect::<Vec<SifrInt>>();
-    for value in values.iter().cloned() {
-        out = &out + &value;
+    #[expect(
+        clippy::explicit_iter_loop,
+        reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner Item 12; remove when direct IntoIterator preserves the same source lifetime"
+    )]
+    for value in values.iter() {
+        out = ::std::ops::Add::add(&out, value);
     }
-    out.clone()
+    out
 }
 #[expect(
     clippy::assertions_on_constants,
-    reason = "generated Rust preserves this exact typed Sifr source contract"
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
 )]
 fn main() {
     let payload: Vec<u8> = vec![115u8, 105u8, 102u8, 114u8];
     let suffix: Vec<u8> = vec![0u8, 1u8];
     let combined: Vec<u8> = {
-        let mut sifr_generated_v = payload.to_vec();
-        sifr_generated_v.extend(suffix.iter().cloned());
+        let mut sifr_generated_v = payload;
+        sifr_generated_v.extend(suffix.iter().copied());
         sifr_generated_v
     };
     assert_eq!(&SifrInt::from(combined.len()), &SifrInt::from_i64(6));
@@ -31,7 +35,7 @@ fn main() {
             .normalize_index_or_len(sifr_generated_checked_read_collection.len());
         sifr_generated_checked_read_collection
             .get(sifr_generated_checked_read_normalized)
-            .cloned()
+            .copied()
     };
     if let Some(head) = head {
         let expected_head: u8 = 115u8;
@@ -51,10 +55,10 @@ fn main() {
                 .iter()
                 .skip(sifr_generated_slice_start)
                 .take(sifr_generated_slice_stop.saturating_sub(sifr_generated_slice_start))
-                .cloned(),
+                .copied(),
         )
     };
-    assert_eq!(&total(&window), &SifrInt::from_i64(321));
+    assert_eq!(total(&window), SifrInt::from_i64(321));
     let raw: Vec<SifrInt> = window
         .iter()
         .map(|sifr_generated_byte| SifrInt::from(*sifr_generated_byte))

@@ -40,6 +40,17 @@ def slice_with_user_bound(value: str, _slice_len: int) -> str:
     return value[_slice_len:]
 
 
+class StringSource:
+    calls: int
+
+    def __init__(self):
+        self.calls = 0
+
+    def text(mut self) -> str:
+        self.calls = self.calls + 1
+        return "x,x"
+
+
 def main():
     assert recursive_character(2, "a🦀z", "🦀")
     assert not recursive_character(1, "a🦀z", "ab")
@@ -49,6 +60,11 @@ def main():
     assert closure_capture_remains_live(captured) == 2
     assert captured == ["x"]
     assert slice_with_user_bound("a🦀z", 1) == "🦀z"
+    source = StringSource()
+    assert source.text().split(",", 1) == ["x", "x"]
+    assert source.calls == 1
+    assert source.text().replace("x", "y", 1) == "y,x"
+    assert source.calls == 2
 
     values: list[int] = [21, 22, 11, 12]
     assert sorted(values, key=decade, reverse=True) == [21, 22, 11, 12]

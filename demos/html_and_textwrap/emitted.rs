@@ -1,49 +1,47 @@
 // src/main.rs
-mod sifr_generated_generated_support {
-    pub(crate) use ::sifr_runtime::SifrInt;
-    pub(crate) fn html_escape(s: &str) -> String {
+pub mod sifr_generated_generated_support {
+    pub(super) use ::sifr_runtime::SifrInt;
+    pub(super) fn html_escape(s: &str) -> String {
         ::sifr_stdlib::html::html_escape(s)
     }
-    pub(crate) fn html_unescape(s: &str) -> String {
+    pub(super) fn html_unescape(s: &str) -> String {
         ::sifr_stdlib::html::html_unescape(s)
     }
-    pub(crate) fn escape(s: &str, quote: bool) -> String {
+    pub(super) fn escape(s: &str, quote: bool) -> String {
         let escaped: String = html_escape(s);
         if quote {
             return escaped;
         }
         escaped.replace("&quot;", "\"").replace("&#x27;", "\'")
     }
-    pub(crate) fn unescape(s: &str) -> String {
+    pub(super) fn unescape(s: &str) -> String {
         html_unescape(s)
     }
-    pub(crate) fn sifr_generated_replace_whitespace_chars(
+    pub(super) fn sifr_generated_replace_whitespace_chars(
         text: &str,
         replace_tabs: bool,
     ) -> String {
         let normalized: String = text
-            .replace('\n', " ")
-            .replace('\r', " ")
-            .replace('\u{b}', " ")
-            .replace('\u{c}', " ");
+            .replace(['\r', '\n'], " ")
+            .replace(['\u{c}', '\u{b}'], " ");
         if replace_tabs {
             return normalized.replace('\t', " ");
         }
         normalized
     }
-    pub(crate) fn sifr_generated_expand_tabs_impl(text: &str, tabsize: SifrInt) -> String {
+    pub(super) fn sifr_generated_expand_tabs_impl(text: &str, tabsize: SifrInt) -> String {
         let sifr_generated_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
-        let mut effective_tabsize: SifrInt = tabsize.clone();
-        if &effective_tabsize <= &SifrInt::from_i64(0) {
+        let mut effective_tabsize: SifrInt = tabsize;
+        if effective_tabsize <= SifrInt::from_i64(0) {
             effective_tabsize = SifrInt::from_i64(1);
         }
-        if &effective_tabsize == &SifrInt::from_i64(0) {
+        if effective_tabsize == SifrInt::from_i64(0) {
             return text.to_owned();
         }
         let mut result: String = String::new();
         let mut column: SifrInt = SifrInt::from_i64(0);
         let mut i: SifrInt = SifrInt::from_i64(0);
-        while &i < &SifrInt::from(sifr_generated_chars_text.len()) {
+        while i < sifr_generated_chars_text.len() {
             let ch_opt: Option<String> = {
                 let sifr_generated_string_index = i.clone();
                 let sifr_generated_string_index_normalized = sifr_generated_string_index
@@ -56,58 +54,62 @@ mod sifr_generated_generated_support {
             if let Some(ch_opt) = ch_opt {
                 let ch: String = ch_opt;
                 if ch == "\t" {
-                    let mut spaces: SifrInt =
-                        &effective_tabsize - &column.floor_mod_known_nonzero(&effective_tabsize);
-                    if &spaces <= &SifrInt::from_i64(0) {
-                        spaces = effective_tabsize.clone();
+                    let mut spaces: SifrInt = ::std::ops::Sub::sub(
+                        &effective_tabsize,
+                        &column.floor_mod_known_nonzero(&effective_tabsize),
+                    );
+                    if spaces <= SifrInt::from_i64(0) {
+                        spaces.clone_from(&effective_tabsize);
                     }
                     let mut j: SifrInt = SifrInt::from_i64(0);
-                    while &j < &spaces {
+                    while j < spaces {
                         result.push(' ');
-                        j = &j + &SifrInt::from_i64(1);
+                        j = ::std::ops::Add::add(&j, &SifrInt::from_i64(1));
                     }
-                    column = &column + &spaces;
+                    column = ::std::ops::Add::add(&column, &spaces);
                 } else {
                     let sifr_generated_shared_branch_condition = ch == "\n" || ch == "\r";
                     result.push_str(ch.as_str());
                     if sifr_generated_shared_branch_condition {
                         column = SifrInt::from_i64(0);
                     } else {
-                        column = &column + &SifrInt::from_i64(1);
+                        column = ::std::ops::Add::add(&column, &SifrInt::from_i64(1));
                     }
                 }
             }
-            i = &i + &SifrInt::from_i64(1);
+            i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
         }
         result
     }
-    pub(crate) fn sifr_generated_prepare_text(
+    pub(super) fn sifr_generated_prepare_text(
         text: &str,
         expand_tabs: bool,
         tabsize: SifrInt,
         replace_whitespace: bool,
     ) -> String {
         let mut prepared: String = {
-            let mut sifr_generated_concat: String = String::with_capacity(text.len());
+            let mut sifr_generated_concat: String =
+                String::with_capacity(text.len().saturating_add(0usize));
             sifr_generated_concat.push_str(text);
             sifr_generated_concat.push_str("");
             sifr_generated_concat
         };
         if expand_tabs {
-            prepared = sifr_generated_expand_tabs_impl(&prepared, tabsize.clone());
+            prepared = sifr_generated_expand_tabs_impl(&prepared, tabsize);
         }
         if replace_whitespace {
             prepared = sifr_generated_replace_whitespace_chars(&prepared, true);
         }
         prepared
     }
-    pub(crate) fn sifr_generated_split_word_units(
+    pub(super) fn sifr_generated_split_word_units(
         word: &str,
         break_on_hyphens: bool,
     ) -> Vec<String> {
         if !break_on_hyphens {
             return vec![{
-                let mut sifr_generated_concat: String = String::with_capacity(word.len());
+                let mut sifr_generated_concat: String =
+                    String::with_capacity(word.len().saturating_add(0usize));
                 sifr_generated_concat.push_str(word);
                 sifr_generated_concat.push_str("");
                 sifr_generated_concat
@@ -117,9 +119,10 @@ mod sifr_generated_generated_support {
             .split('-')
             .map(::std::string::ToString::to_string)
             .collect::<Vec<String>>();
-        if &SifrInt::from(parts.len()) <= &SifrInt::from_i64(1) {
+        if parts.len() <= SifrInt::from_i64(1) {
             return vec![{
-                let mut sifr_generated_concat: String = String::with_capacity(word.len());
+                let mut sifr_generated_concat: String =
+                    String::with_capacity(word.len().saturating_add(0usize));
                 sifr_generated_concat.push_str(word);
                 sifr_generated_concat.push_str("");
                 sifr_generated_concat
@@ -129,27 +132,28 @@ mod sifr_generated_generated_support {
         let mut index: SifrInt = SifrInt::from_i64(0);
         for part in parts.iter().cloned() {
             let sifr_generated_chars_part: Vec<char> = part.chars().collect::<Vec<char>>();
-            let is_last: bool = &index == &(&SifrInt::from(parts.len()) - &SifrInt::from_i64(1));
+            let is_last: bool =
+                index == ::std::ops::Sub::sub(&SifrInt::from(parts.len()), &SifrInt::from_i64(1));
             if is_last {
-                if &SifrInt::from(sifr_generated_chars_part.len()) > &SifrInt::from_i64(0) {
+                if sifr_generated_chars_part.len() > SifrInt::from_i64(0) {
                     units.push(part);
                 }
-            } else if &SifrInt::from(sifr_generated_chars_part.len()) == &SifrInt::from_i64(0) {
+            } else if sifr_generated_chars_part.len() == SifrInt::from_i64(0) {
                 units.push("-".to_string());
             } else {
                 units.push(format!("{part}-"));
             }
-            index = &index + &SifrInt::from_i64(1);
+            index = ::std::ops::Add::add(&index, &SifrInt::from_i64(1));
         }
-        if &SifrInt::from(units.len()) == &SifrInt::from_i64(0) {
+        if units.len() == SifrInt::from_i64(0) {
             units.push(word.to_string());
         }
         units
     }
-    pub(crate) fn sifr_generated_trim_line(line: &str) -> String {
+    pub(super) fn sifr_generated_trim_line(line: &str) -> String {
         let sifr_generated_chars_line: Vec<char> = line.chars().collect::<Vec<char>>();
         let mut start: SifrInt = SifrInt::from_i64(0);
-        while &start < &SifrInt::from(sifr_generated_chars_line.len()) && {
+        while start < sifr_generated_chars_line.len() && {
             let sifr_generated_string_index = start.clone();
             let sifr_generated_string_index_normalized =
                 sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_line.len());
@@ -170,11 +174,11 @@ mod sifr_generated_generated_support {
             .map(Some)
                 == Some(Some(' '))
         }) {
-            start = &start + &SifrInt::from_i64(1);
+            start = ::std::ops::Add::add(&start, &SifrInt::from_i64(1));
         }
         let mut end: SifrInt = SifrInt::from(sifr_generated_chars_line.len());
-        while &end > &start && {
-            let sifr_generated_string_index = &end - &SifrInt::from_i64(1);
+        while end > start && {
+            let sifr_generated_string_index = ::std::ops::Sub::sub(&end, &SifrInt::from_i64(1));
             let sifr_generated_string_index_normalized =
                 sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_line.len());
             sifr_generated_chars_line
@@ -184,7 +188,7 @@ mod sifr_generated_generated_support {
         .map(Some)
             == Some(Some(' '))
         {
-            end = &end - &SifrInt::from_i64(1);
+            end = ::std::ops::Sub::sub(&end, &SifrInt::from_i64(1));
         }
         {
             let sifr_generated_slice_src = &sifr_generated_chars_line;
@@ -200,29 +204,34 @@ mod sifr_generated_generated_support {
             )
         }
     }
-    pub(crate) fn sifr_generated_finalize_line(line: &str, drop_whitespace: bool) -> String {
+    pub(super) fn sifr_generated_finalize_line(line: &str, drop_whitespace: bool) -> String {
         if drop_whitespace {
             return sifr_generated_trim_line(line);
         }
         {
-            let mut sifr_generated_concat: String = String::with_capacity(line.len());
+            let mut sifr_generated_concat: String =
+                String::with_capacity(line.len().saturating_add(0usize));
             sifr_generated_concat.push_str(line);
             sifr_generated_concat.push_str("");
             sifr_generated_concat
         }
     }
-    pub(crate) fn sifr_generated_effective_content_width(
+    #[expect(
+        clippy::needless_pass_by_value,
+        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+    )]
+    pub(super) fn sifr_generated_effective_content_width(
         total_width: SifrInt,
         indent: &str,
     ) -> SifrInt {
-        let sifr_generated_chars_indent: Vec<char> = indent.chars().collect::<Vec<char>>();
-        let available: SifrInt = &total_width - &SifrInt::from(sifr_generated_chars_indent.len());
-        if &available <= &SifrInt::from_i64(0) {
+        let available: SifrInt =
+            ::std::ops::Sub::sub(&total_width, &SifrInt::from(indent.chars().count()));
+        if available <= SifrInt::from_i64(0) {
             return SifrInt::from_i64(1);
         }
-        available.clone()
+        available
     }
-    pub(crate) fn sifr_generated_push_current_line(
+    pub(super) fn sifr_generated_push_current_line(
         result: &mut Vec<String>,
         line: &str,
         indent: &str,
@@ -230,16 +239,19 @@ mod sifr_generated_generated_support {
     ) {
         let candidate: String =
             sifr_generated_finalize_line(&format!("{indent}{line}"), drop_whitespace);
-        let sifr_generated_chars_candidate: Vec<char> = candidate.chars().collect::<Vec<char>>();
         if drop_whitespace {
-            if &SifrInt::from(sifr_generated_chars_candidate.len()) > &SifrInt::from_i64(0) {
+            if candidate.chars().count() > SifrInt::from_i64(0) {
                 result.push(candidate);
             }
         } else {
             result.push(candidate);
         }
     }
-    pub(crate) fn sifr_generated_wrap_with_indents(
+    #[expect(
+        clippy::needless_pass_by_value,
+        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+    )]
+    pub(super) fn sifr_generated_wrap_with_indents(
         text: &str,
         total_width: SifrInt,
         initial_indent: &str,
@@ -257,31 +269,39 @@ mod sifr_generated_generated_support {
         let mut first_line: bool = true;
         let mut current_limit: SifrInt =
             sifr_generated_effective_content_width(total_width.clone(), initial_indent);
-        for raw_word in words.iter().cloned() {
-            let units: Vec<String> = sifr_generated_split_word_units(&raw_word, break_on_hyphens);
+        #[expect(
+            clippy::explicit_iter_loop,
+            reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner Item 12; remove when direct IntoIterator preserves the same source lifetime"
+        )]
+        for raw_word in words.iter() {
+            let units: Vec<String> = sifr_generated_split_word_units(raw_word, break_on_hyphens);
             for word in units.iter().cloned() {
                 let sifr_generated_chars_word: Vec<char> = word.chars().collect::<Vec<char>>();
-                if &SifrInt::from(sifr_generated_chars_word.len()) == &SifrInt::from_i64(0) {
+                if sifr_generated_chars_word.len() == SifrInt::from_i64(0) {
                     if drop_whitespace {
                         continue;
                     }
-                    if &SifrInt::from(sifr_generated_chars_current.len()) > &SifrInt::from_i64(0)
-                        && &(&SifrInt::from(sifr_generated_chars_current.len())
-                            + &SifrInt::from_i64(1))
-                            <= &current_limit
+                    if sifr_generated_chars_current.len() > SifrInt::from_i64(0)
+                        && ::std::ops::Add::add(
+                            &SifrInt::from(sifr_generated_chars_current.len()),
+                            &SifrInt::from_i64(1),
+                        ) <= current_limit
                     {
                         current.push(' ');
                         sifr_generated_chars_current.push(' ');
                     }
                     continue;
                 }
-                if &SifrInt::from(sifr_generated_chars_current.len()) == &SifrInt::from_i64(0) {
+                if sifr_generated_chars_current.len() == SifrInt::from_i64(0) {
                     current = word;
                     sifr_generated_chars_current = current.chars().collect::<Vec<char>>();
-                } else if &(&(&SifrInt::from(sifr_generated_chars_current.len())
-                    + &SifrInt::from_i64(1))
-                    + &SifrInt::from(sifr_generated_chars_word.len()))
-                    <= &current_limit
+                } else if ::std::ops::Add::add(
+                    &::std::ops::Add::add(
+                        &SifrInt::from(sifr_generated_chars_current.len()),
+                        &SifrInt::from_i64(1),
+                    ),
+                    &SifrInt::from(sifr_generated_chars_word.len()),
+                ) <= current_limit
                 {
                     current.push(' ');
                     sifr_generated_chars_current.push(' ');
@@ -315,7 +335,7 @@ mod sifr_generated_generated_support {
                 }
             }
         }
-        if &SifrInt::from(sifr_generated_chars_current.len()) > &SifrInt::from_i64(0) {
+        if sifr_generated_chars_current.len() > SifrInt::from_i64(0) {
             if first_line {
                 sifr_generated_push_current_line(
                     &mut result,
@@ -334,11 +354,11 @@ mod sifr_generated_generated_support {
         }
         result
     }
-    pub(crate) fn sifr_generated_apply_sentence_endings_line(text: &str) -> String {
+    pub(super) fn sifr_generated_apply_sentence_endings_line(text: &str) -> String {
         let sifr_generated_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
         let mut result: String = String::new();
         let mut i: SifrInt = SifrInt::from_i64(0);
-        while &i < &SifrInt::from(sifr_generated_chars_text.len()) {
+        while i < sifr_generated_chars_text.len() {
             let ch_opt: Option<String> = {
                 let sifr_generated_string_index = i.clone();
                 let sifr_generated_string_index_normalized = sifr_generated_string_index
@@ -352,49 +372,53 @@ mod sifr_generated_generated_support {
                 let ch: String = ch_opt;
                 result.push_str(ch.as_str());
                 if ch == "." || ch == "!" || ch == "?" {
-                    let next_opt: Option<String> = if &(&i + &SifrInt::from_i64(1))
-                        < &SifrInt::from(sifr_generated_chars_text.len())
-                        && let Some(_checked_value_4) = {
-                            let sifr_generated_string_index = &i + &SifrInt::from_i64(1);
-                            let sifr_generated_string_index_normalized =
-                                sifr_generated_string_index
-                                    .normalize_index_or_len(sifr_generated_chars_text.len());
-                            sifr_generated_chars_text
-                                .get(sifr_generated_string_index_normalized)
-                                .copied()
-                        }
-                        .map(|character| character.to_string())
-                    {
+                    let next_opt: Option<String> =
+                        if ::std::ops::Add::add(&i, &SifrInt::from_i64(1))
+                            < sifr_generated_chars_text.len()
+                            && let Some(_checked_value_4) = {
+                                let sifr_generated_string_index =
+                                    ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
+                                let sifr_generated_string_index_normalized =
+                                    sifr_generated_string_index
+                                        .normalize_index_or_len(sifr_generated_chars_text.len());
+                                sifr_generated_chars_text
+                                    .get(sifr_generated_string_index_normalized)
+                                    .copied()
+                            }
+                            .map(|character| character.to_string())
                         {
-                            let sifr_generated_string_index = &i + &SifrInt::from_i64(1);
-                            let sifr_generated_string_index_normalized =
-                                sifr_generated_string_index
-                                    .normalize_index_or_len(sifr_generated_chars_text.len());
-                            sifr_generated_chars_text
-                                .get(sifr_generated_string_index_normalized)
-                                .copied()
-                        }
-                        .map(|character| character.to_string())
-                    } else {
-                        None
-                    };
-                    let next2_opt_value_88541be202984f38: Option<String> = if &(&i
-                        + &SifrInt::from_i64(2))
-                        < &SifrInt::from(sifr_generated_chars_text.len())
-                    {
+                            {
+                                let sifr_generated_string_index =
+                                    ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
+                                let sifr_generated_string_index_normalized =
+                                    sifr_generated_string_index
+                                        .normalize_index_or_len(sifr_generated_chars_text.len());
+                                sifr_generated_chars_text
+                                    .get(sifr_generated_string_index_normalized)
+                                    .copied()
+                            }
+                            .map(|character| character.to_string())
+                        } else {
+                            None
+                        };
+                    let next2_opt_value_88541be202984f38: Option<String> =
+                        if ::std::ops::Add::add(&i, &SifrInt::from_i64(2))
+                            < sifr_generated_chars_text.len()
                         {
-                            let sifr_generated_string_index = &i + &SifrInt::from_i64(2);
-                            let sifr_generated_string_index_normalized =
-                                sifr_generated_string_index
-                                    .normalize_index_or_len(sifr_generated_chars_text.len());
-                            sifr_generated_chars_text
-                                .get(sifr_generated_string_index_normalized)
-                                .copied()
-                        }
-                        .map(|character| character.to_string())
-                    } else {
-                        None
-                    };
+                            {
+                                let sifr_generated_string_index =
+                                    ::std::ops::Add::add(&i, &SifrInt::from_i64(2));
+                                let sifr_generated_string_index_normalized =
+                                    sifr_generated_string_index
+                                        .normalize_index_or_len(sifr_generated_chars_text.len());
+                                sifr_generated_chars_text
+                                    .get(sifr_generated_string_index_normalized)
+                                    .copied()
+                            }
+                            .map(|character| character.to_string())
+                        } else {
+                            None
+                        };
                     if next_opt.is_some()
                         && next_opt == Some(" ".to_string())
                         && (next2_opt_value_88541be202984f38.is_none()
@@ -404,18 +428,22 @@ mod sifr_generated_generated_support {
                     }
                 }
             }
-            i = &i + &SifrInt::from_i64(1);
+            i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
         }
         result
     }
-    pub(crate) fn sifr_generated_apply_sentence_endings_lines(lines: &[String]) -> Vec<String> {
+    pub(super) fn sifr_generated_apply_sentence_endings_lines(lines: &[String]) -> Vec<String> {
         let mut result: Vec<String> = Vec::new();
-        for line in lines.iter().cloned() {
-            result.push(sifr_generated_apply_sentence_endings_line(&line));
+        #[expect(
+            clippy::explicit_iter_loop,
+            reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner Item 12; remove when direct IntoIterator preserves the same source lifetime"
+        )]
+        for line in lines.iter() {
+            result.push(sifr_generated_apply_sentence_endings_line(line));
         }
         result
     }
-    pub(crate) fn sifr_generated_clone_lines(lines: &[String]) -> Vec<String> {
+    pub(super) fn sifr_generated_clone_lines(lines: &[String]) -> Vec<String> {
         let mut copied: Vec<String> = Vec::new();
         for line in lines.iter().cloned() {
             copied.push(line);
@@ -426,29 +454,33 @@ mod sifr_generated_generated_support {
         clippy::too_many_lines,
         reason = "one generated Rust function preserves one typed Sifr function"
     )]
-    pub(crate) fn sifr_generated_apply_max_lines(
+    #[expect(
+        clippy::needless_pass_by_value,
+        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+    )]
+    pub(super) fn sifr_generated_apply_max_lines(
         lines: &[String],
         width: SifrInt,
         max_lines: Option<SifrInt>,
         placeholder: &str,
         drop_whitespace: bool,
     ) -> Vec<String> {
-        let Some(max_lines) = max_lines.clone() else {
+        let Some(max_lines) = max_lines else {
             return sifr_generated_clone_lines(lines);
         };
-        let limit: SifrInt = max_lines.clone();
-        if &limit <= &SifrInt::from_i64(0) {
+        let limit: SifrInt = max_lines;
+        if limit <= SifrInt::from_i64(0) {
             return Vec::new();
         }
-        if &SifrInt::from(lines.len()) <= &limit {
+        if lines.len() <= limit {
             return sifr_generated_clone_lines(lines);
         }
         let mut result: Vec<String> = Vec::new();
         let mut i: SifrInt = SifrInt::from_i64(0);
-        while &i < &limit {
+        while i < limit {
             let line_opt: Option<String> = {
                 let sifr_generated_checked_read_collection = &lines;
-                let sifr_generated_checked_read_index = i.clone();
+                let sifr_generated_checked_read_index = &i;
                 let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
                     .normalize_index_or_len(sifr_generated_checked_read_collection.len());
                 sifr_generated_checked_read_collection
@@ -458,21 +490,21 @@ mod sifr_generated_generated_support {
             if let Some(line_opt) = line_opt {
                 result.push(line_opt);
             }
-            i = &i + &SifrInt::from_i64(1);
+            i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
         }
-        if &SifrInt::from(result.len()) == &SifrInt::from_i64(0) {
+        if result.len() == SifrInt::from_i64(0) {
             return result;
         }
         let mut effective_placeholder: String = {
-            let mut sifr_generated_concat: String = String::with_capacity(placeholder.len());
+            let mut sifr_generated_concat: String =
+                String::with_capacity(placeholder.len().saturating_add(0usize));
             sifr_generated_concat.push_str(placeholder);
             sifr_generated_concat.push_str("");
             sifr_generated_concat
         };
         let mut sifr_generated_chars_effective_placeholder: Vec<char> =
             effective_placeholder.chars().collect::<Vec<char>>();
-        if &width > &SifrInt::from_i64(0)
-            && &SifrInt::from(sifr_generated_chars_effective_placeholder.len()) > &width
+        if width > SifrInt::from_i64(0) && sifr_generated_chars_effective_placeholder.len() > width
         {
             effective_placeholder = {
                 let sifr_generated_slice_src = &sifr_generated_chars_effective_placeholder;
@@ -491,10 +523,11 @@ mod sifr_generated_generated_support {
             sifr_generated_chars_effective_placeholder =
                 effective_placeholder.chars().collect::<Vec<char>>();
         }
-        let last_index: SifrInt = &SifrInt::from(result.len()) - &SifrInt::from_i64(1);
+        let last_index: SifrInt =
+            ::std::ops::Sub::sub(&SifrInt::from(result.len()), &SifrInt::from_i64(1));
         let last_opt: Option<String> = {
             let sifr_generated_checked_read_collection = &result;
-            let sifr_generated_checked_read_index = last_index.clone();
+            let sifr_generated_checked_read_index = &last_index;
             let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
                 .normalize_index_or_len(sifr_generated_checked_read_collection.len());
             sifr_generated_checked_read_collection
@@ -505,12 +538,14 @@ mod sifr_generated_generated_support {
             let last: String = last_opt;
             let mut base: String = sifr_generated_trim_line(&last);
             let sifr_generated_chars_base: Vec<char> = base.chars().collect::<Vec<char>>();
-            let mut available: SifrInt =
-                &width - &SifrInt::from(sifr_generated_chars_effective_placeholder.len());
-            if &available < &SifrInt::from_i64(0) {
+            let mut available: SifrInt = ::std::ops::Sub::sub(
+                &width,
+                &SifrInt::from(sifr_generated_chars_effective_placeholder.len()),
+            );
+            if available < SifrInt::from_i64(0) {
                 available = SifrInt::from_i64(0);
             }
-            if &SifrInt::from(sifr_generated_chars_base.len()) > &available {
+            if sifr_generated_chars_base.len() > available {
                 base = sifr_generated_trim_line(&{
                     let sifr_generated_slice_src = &sifr_generated_chars_base;
                     let sifr_generated_slice_len = sifr_generated_slice_src.len();
@@ -529,17 +564,18 @@ mod sifr_generated_generated_support {
             if drop_whitespace {
                 base = sifr_generated_trim_line(&base);
             }
-            if &SifrInt::from_i64(0) <= &last_index && &last_index < &SifrInt::from(result.len()) {
+            if SifrInt::from_i64(0) <= last_index && last_index < result.len() {
                 {
                     let sifr_generated_assign_value = {
-                        let mut sifr_generated_concat: String =
-                            String::with_capacity(base.len() + effective_placeholder.len());
+                        let mut sifr_generated_concat: String = String::with_capacity(
+                            base.len().saturating_add(effective_placeholder.len()),
+                        );
                         sifr_generated_concat.push_str(base.as_str());
                         sifr_generated_concat.push_str(effective_placeholder.as_str());
                         sifr_generated_concat
                     };
                     {
-                        let sifr_generated_index_raw = last_index.clone();
+                        let sifr_generated_index_raw = last_index;
                         let sifr_generated_index_normalized =
                             sifr_generated_index_raw.normalize_index_or_len(result.len());
                         if let Some(sifr_generated_elem) =
@@ -555,12 +591,15 @@ mod sifr_generated_generated_support {
     }
 }
 mod sifr_generated_project_nominals {
-    use crate::sifr_generated_generated_support::*;
+    use crate::sifr_generated_generated_support::{
+        sifr_generated_apply_max_lines, sifr_generated_apply_sentence_endings_lines,
+        sifr_generated_prepare_text, sifr_generated_wrap_with_indents,
+    };
     use ::sifr_runtime::SifrInt;
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[expect(
         clippy::struct_excessive_bools,
-        reason = "generated Rust preserves this exact typed Sifr source contract"
+        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
     )]
     pub struct SifrGeneratedStdlibSifrX2etextwrapX2eTextWrapper {
         pub width: SifrInt,
@@ -583,7 +622,7 @@ mod sifr_generated_project_nominals {
         )]
         #[expect(
             clippy::fn_params_excessive_bools,
-            reason = "generated Rust preserves this exact typed Sifr source contract"
+            reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
         )]
         pub fn new(
             width: SifrInt,
@@ -598,29 +637,17 @@ mod sifr_generated_project_nominals {
             max_lines: Option<SifrInt>,
             placeholder: String,
         ) -> Self {
-            let sifr_generated_field_value_dbdacd932fd1e9bf_7769647468: SifrInt = width.clone();
-            let sifr_generated_field_value_f1d9debc65d6e532_696e697469616c5f696e64656e74: String = {
-                let mut sifr_generated_concat: String = String::with_capacity(initial_indent.len());
-                sifr_generated_concat.push_str(initial_indent.as_str());
-                sifr_generated_concat.push_str("");
-                sifr_generated_concat
-            };
-            let sifr_generated_field_value_45b636e6527b24bb_73756273657175656e745f696e64656e74: String = {
-                let mut sifr_generated_concat: String = String::with_capacity(
-                    subsequent_indent.len(),
-                );
-                sifr_generated_concat.push_str(subsequent_indent.as_str());
-                sifr_generated_concat.push_str("");
-                sifr_generated_concat
-            };
+            let sifr_generated_field_value_dbdacd932fd1e9bf_7769647468: SifrInt = width;
+            let sifr_generated_field_value_f1d9debc65d6e532_696e697469616c5f696e64656e74: String =
+                initial_indent;
+            let sifr_generated_field_value_45b636e6527b24bb_73756273657175656e745f696e64656e74: String = subsequent_indent;
             let sifr_generated_field_value_9fdde0a58b2f170e_657870616e645f74616273: bool =
                 expand_tabs;
-            let mut safe_tabsize: SifrInt = tabsize.clone();
-            if &safe_tabsize <= &SifrInt::from_i64(0) {
+            let mut safe_tabsize: SifrInt = tabsize;
+            if safe_tabsize <= SifrInt::from_i64(0) {
                 safe_tabsize = SifrInt::from_i64(1);
             }
-            let sifr_generated_field_value_0f728cbe37fa9025_74616273697a65: SifrInt =
-                safe_tabsize.clone();
+            let sifr_generated_field_value_0f728cbe37fa9025_74616273697a65: SifrInt = safe_tabsize;
             let sifr_generated_field_value_d659e98074e25261_7265706c6163655f77686974657370616365: bool = replace_whitespace;
             let sifr_generated_field_value_a317a122f9288b94_64726f705f77686974657370616365: bool =
                 drop_whitespace;
@@ -628,13 +655,9 @@ mod sifr_generated_project_nominals {
                 break_on_hyphens;
             let sifr_generated_field_value_116e01dc088ea88b_6669785f73656e74656e63655f656e64696e6773: bool = fix_sentence_endings;
             let sifr_generated_field_value_441854f90b4986e9_6d61785f6c696e6573: Option<SifrInt> =
-                max_lines.clone();
-            let sifr_generated_field_value_615e79d982d9f0fa_706c616365686f6c646572: String = {
-                let mut sifr_generated_concat: String = String::with_capacity(placeholder.len());
-                sifr_generated_concat.push_str(placeholder.as_str());
-                sifr_generated_concat.push_str("");
-                sifr_generated_concat
-            };
+                max_lines;
+            let sifr_generated_field_value_615e79d982d9f0fa_706c616365686f6c646572: String =
+                placeholder;
             Self {
                 width: sifr_generated_field_value_dbdacd932fd1e9bf_7769647468,
                 initial_indent: sifr_generated_field_value_f1d9debc65d6e532_696e697469616c5f696e64656e74,
@@ -653,7 +676,7 @@ mod sifr_generated_project_nominals {
     impl SifrGeneratedStdlibSifrX2etextwrapX2eTextWrapper {
         #[must_use]
         pub fn wrap(&self, text: &str) -> Vec<String> {
-            if &self.width.clone() <= &SifrInt::from_i64(0) {
+            if self.width <= SifrInt::from_i64(0) {
                 return Vec::new();
             }
             let prepared: String = sifr_generated_prepare_text(
@@ -683,7 +706,7 @@ mod sifr_generated_project_nominals {
         }
     }
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::{escape, unescape};
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2etextwrapX2eTextWrapper;
 fn main() {
@@ -701,7 +724,7 @@ fn main() {
             None,
             " [...]".to_string(),
         );
-    let lines: Vec<String> = wrapper.wrap(&"alpha-beta gamma".to_string());
+    let lines: Vec<String> = wrapper.wrap("alpha-beta gamma");
     assert_eq!(format!("{lines:?}"), "[\"alpha-beta\", \"gamma\"]");
     let keep_ws: SifrGeneratedStdlibSifrX2etextwrapX2eTextWrapper =
         SifrGeneratedStdlibSifrX2etextwrapX2eTextWrapper::new(
@@ -717,10 +740,7 @@ fn main() {
             None,
             " [...]".to_string(),
         );
-    assert_eq!(
-        format!("{:?}", keep_ws.wrap(&"a  b".to_string())),
-        "[\"a  b\"]"
-    );
+    assert_eq!(format!("{:?}", keep_ws.wrap("a  b")), "[\"a  b\"]");
     let text: String = "<a href=\"x\">\'ok\' & done</a>".to_string();
     let escaped_default: String = escape(&text, true);
     let escaped_no_quote: String = escape(&text, false);

@@ -140,32 +140,41 @@ impl RustEmitter {
 }
 
 fn ordering_compare_requires_present_read(condition: &crate::HirExpr, read_key: &str) -> bool {
-    let crate::HirExpr::Compare {
-        left,
-        ops,
-        comparators,
-        ..
-    } = condition
-    else {
-        return false;
-    };
-    let mut operands = Vec::with_capacity(comparators.len() + 1);
-    operands.push(left.as_ref());
-    operands.extend(comparators.iter());
-    ops.iter().enumerate().any(|(index, op)| {
-        matches!(op.as_str(), "<" | "<=" | ">" | ">=")
-            && operands.get(index..=index + 1).is_some_and(|pair| {
-                pair.iter()
-                    .any(|operand| expr_has_index_read_key(operand, read_key))
-            })
-    })
+    let mut requires_present = false;
+    crate::hir_analysis::traversal::walk_expr(condition, &mut |candidate| {
+        let crate::HirExpr::Compare {
+            left,
+            ops,
+            comparators,
+            ..
+        } = candidate
+        else {
+            return;
+        };
+        let mut operands = Vec::with_capacity(comparators.len() + 1);
+        operands.push(left.as_ref());
+        operands.extend(comparators.iter());
+        requires_present |= ops.iter().enumerate().any(|(index, op)| {
+            matches!(op.as_str(), "<" | "<=" | ">" | ">=")
+                && operands.get(index..=index + 1).is_some_and(|pair| {
+                    pair.iter()
+                        .any(|operand| expr_has_index_read_key(operand, read_key))
+                })
+        });
+    });
+    requires_present
 }
 
 fn expr_has_index_read_key(expr: &crate::HirExpr, read_key: &str) -> bool {
-    let crate::HirExpr::Index { object, index, .. } = expr else {
-        return false;
-    };
-    super::checked_place_read_key(object, index).as_deref() == Some(read_key)
+    let mut found = false;
+    crate::hir_analysis::traversal::walk_expr(expr, &mut |candidate| {
+        if let crate::HirExpr::Index { object, index, .. } = candidate
+            && super::checked_place_read_key(object, index).as_deref() == Some(read_key)
+        {
+            found = true;
+        }
+    });
+    found
 }
 
 fn condition_projects_from_read(condition: &crate::HirExpr, read_key: &str) -> bool {

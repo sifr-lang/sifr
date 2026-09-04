@@ -14,7 +14,7 @@ static SIFR_GENERATED_SIFR_HOISTED_DICT_0: ::std::sync::LazyLock<HashMap<String,
 )]
 #[expect(
     clippy::many_single_char_names,
-    reason = "generated Rust preserves this exact typed Sifr source contract"
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
 )]
 fn main() {
     println!("=== Safe List Indexing ===");
@@ -32,7 +32,7 @@ fn main() {
             .get(sifr_generated_checked_read_normalized)
             .cloned()
     };
-    if let Some(val) = val.clone() {
+    if let Some(val) = val {
         println!("nums[1] = {val}");
     }
     let oob: Option<SifrInt> = {
@@ -44,7 +44,7 @@ fn main() {
             .get(sifr_generated_checked_read_normalized)
             .cloned()
     };
-    if let Some(oob) = oob.clone() {
+    if let Some(oob) = oob {
         println!("nums[99] = {oob}");
     } else {
         println!("nums[99] = None (safe!)");
@@ -52,11 +52,11 @@ fn main() {
     println!("=== Safe Dict Indexing ===");
     let ages = &*SIFR_GENERATED_SIFR_HOISTED_DICT_0;
     let a: Option<SifrInt> = ages.get("alice").cloned();
-    if let Some(a) = a.clone() {
+    if let Some(a) = a {
         println!("ages[alice] = {a}");
     }
     let c: Option<SifrInt> = ages.get("charlie").cloned();
-    if let Some(c) = c.clone() {
+    if let Some(c) = c {
         println!("ages[charlie] = {c}");
     } else {
         println!("ages[charlie] = None (safe!)");
@@ -101,19 +101,19 @@ fn main() {
     ];
     let last: Option<SifrInt> = {
         let sifr_generated_checked_read_collection = &items;
-        let sifr_generated_checked_read_index = -SifrInt::from_i64(1);
+        let sifr_generated_checked_read_index = ::std::ops::Neg::neg(SifrInt::from_i64(1));
         let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
             .normalize_index_or_len(sifr_generated_checked_read_collection.len());
         sifr_generated_checked_read_collection
             .get(sifr_generated_checked_read_normalized)
             .cloned()
     };
-    if let Some(last) = last.clone() {
+    if let Some(last) = last {
         println!("last item: {last}");
     }
     let last_ch: Option<String> = {
         let sifr_generated_string_chars = s.chars().collect::<Vec<char>>();
-        let sifr_generated_string_index = -SifrInt::from_i64(1);
+        let sifr_generated_string_index = ::std::ops::Neg::neg(SifrInt::from_i64(1));
         let sifr_generated_string_index_normalized =
             sifr_generated_string_index.normalize_index_or_len(sifr_generated_string_chars.len());
         sifr_generated_string_chars
@@ -131,13 +131,13 @@ fn main() {
         SifrInt::from_i64(30),
     ];
     let top: Option<SifrInt> = stack.pop();
-    if let Some(top) = top.clone() {
+    if let Some(top) = top {
         println!("popped: {top}");
     }
     let _: Option<SifrInt> = stack.pop();
     let _: Option<SifrInt> = stack.pop();
     let empty: Option<SifrInt> = stack.pop();
-    if let Some(empty) = empty.clone() {
+    if let Some(empty) = empty {
         println!("got: {empty}");
     } else {
         println!("empty pop: None");
@@ -148,27 +148,27 @@ fn main() {
         ("bob".to_string(), SifrInt::from_i64(30)),
     ]);
     let g: Option<SifrInt> = data.get("alice".to_string().as_str()).cloned();
-    if let Some(g) = g.clone() {
+    if let Some(g) = g {
         println!("get alice: {g}");
     }
     let gm: Option<SifrInt> = data.get("missing".to_string().as_str()).cloned();
-    if let Some(gm) = gm.clone() {
+    if let Some(gm) = gm {
         println!("get missing: {gm}");
     } else {
         println!("get missing: None");
     }
     let p: Option<SifrInt> = data.remove("bob".to_string().as_str());
-    if let Some(p) = p.clone() {
+    if let Some(p) = p {
         println!("popped bob: {p}");
     }
     println!("=== String find() ===");
     let text: String = "hello, world!".to_string();
     let pos: Option<SifrInt> = text.find("world").map(SifrInt::from);
-    if let Some(pos) = pos.clone() {
+    if let Some(pos) = pos {
         println!("found world at: {pos}");
     }
     let miss: Option<SifrInt> = text.find("xyz").map(SifrInt::from);
-    if let Some(miss) = miss.clone() {
+    if let Some(miss) = miss {
         println!("found xyz at: {miss}");
     } else {
         println!("xyz not found");
@@ -180,8 +180,8 @@ fn main() {
         ("c".to_string(), SifrInt::from_i64(3)),
     ]);
     println!("before del: {}", SifrInt::from(config.len()));
-    if config.contains_key(&"b".to_string()) {
-        let _ = config.remove(&"b".to_string());
+    if config.contains_key("b") {
+        let _ = config.remove("b");
     }
     println!("after del: {}", SifrInt::from(config.len()));
     println!("demo complete!");

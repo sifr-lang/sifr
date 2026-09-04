@@ -18,8 +18,12 @@ fn main() {
         SifrInt::from_i64(30),
     ]);
     let mut total: SifrInt = SifrInt::from_i64(0);
-    for n in nums.iter().cloned() {
-        total = &total + &n;
+    #[expect(
+        clippy::explicit_iter_loop,
+        reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner Item 12; remove when direct IntoIterator preserves the same source lifetime"
+    )]
+    for n in nums.iter() {
+        total = ::std::ops::Add::add(&total, n);
     }
     println!("{total}");
 }

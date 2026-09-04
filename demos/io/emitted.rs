@@ -1,26 +1,26 @@
 // src/main.rs
-mod sifr_generated_generated_support {
+pub mod sifr_generated_generated_support {
     use crate::IOError;
-    pub(crate) use ::sifr_runtime::SifrInt;
-    pub(crate) fn read_text(path: &str) -> Result<String, IOError> {
+    pub(super) use ::sifr_runtime::SifrInt;
+    pub(super) fn read_text(path: &str) -> Result<String, IOError> {
         ::sifr_stdlib::fs::read_text(path).map_err(sifr_generated_io_err)
     }
-    pub(crate) fn write_text(path: &str, content: &str) -> Result<(), IOError> {
+    pub(super) fn write_text(path: &str, content: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::write_text(path, content).map_err(sifr_generated_io_err)
     }
-    pub(crate) fn exists(path: &str) -> bool {
+    pub(super) fn exists(path: &str) -> bool {
         ::sifr_stdlib::fs::exists(path)
     }
-    pub(crate) fn read_lines(path: &str) -> Result<Vec<String>, IOError> {
+    pub(super) fn read_lines(path: &str) -> Result<Vec<String>, IOError> {
         ::sifr_stdlib::fs::read_lines(path).map_err(sifr_generated_io_err)
     }
-    pub(crate) fn append_text(path: &str, content: &str) -> Result<(), IOError> {
+    pub(super) fn append_text(path: &str, content: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::append_text(path, content).map_err(sifr_generated_io_err)
     }
-    pub(crate) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
+    pub(super) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
         assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
         let mut i: SifrInt = SifrInt::from_i64(0);
-        while &i < &SifrInt::from(actual.len()) {
+        while i < actual.len() {
             assert_eq!(
                 {
                     let sifr_generated_condition_list = &actual;
@@ -41,10 +41,10 @@ mod sifr_generated_generated_support {
                         .copied()
                 }
             );
-            i = &i + &SifrInt::from_i64(1);
+            i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
         }
     }
-    pub(crate) fn sifr_generated_io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
+    pub(super) fn sifr_generated_io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
         let msg = e.to_string();
         let kind = {
             let sifr_generated_io_kind = (&e as &dyn ::std::any::Any)
@@ -89,13 +89,8 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2eencodingX2eEncoding {
         #[must_use]
-        pub fn new(label: String) -> Self {
-            let sifr_generated_field_value_39f7fcec8fcb623d_6c6162656c: String = {
-                let mut sifr_generated_concat: String = String::with_capacity(label.len());
-                sifr_generated_concat.push_str(label.as_str());
-                sifr_generated_concat.push_str("");
-                sifr_generated_concat
-            };
+        pub const fn new(label: String) -> Self {
+            let sifr_generated_field_value_39f7fcec8fcb623d_6c6162656c: String = label;
             Self {
                 label: sifr_generated_field_value_39f7fcec8fcb623d_6c6162656c,
             }
@@ -112,13 +107,8 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2eencodingX2eDecodeErrorHandler {
         #[must_use]
-        pub fn new(name: String) -> Self {
-            let sifr_generated_field_value_c4bcadba8e631b86_6e616d65: String = {
-                let mut sifr_generated_concat: String = String::with_capacity(name.len());
-                sifr_generated_concat.push_str(name.as_str());
-                sifr_generated_concat.push_str("");
-                sifr_generated_concat
-            };
+        pub const fn new(name: String) -> Self {
+            let sifr_generated_field_value_c4bcadba8e631b86_6e616d65: String = name;
             Self {
                 name: sifr_generated_field_value_c4bcadba8e631b86_6e616d65,
             }
@@ -135,13 +125,8 @@ mod sifr_generated_project_nominals {
     }
     impl SifrGeneratedStdlibSifrX2eencodingX2eEncodeErrorHandler {
         #[must_use]
-        pub fn new(name: String) -> Self {
-            let sifr_generated_field_value_c4bcadba8e631b86_6e616d65: String = {
-                let mut sifr_generated_concat: String = String::with_capacity(name.len());
-                sifr_generated_concat.push_str(name.as_str());
-                sifr_generated_concat.push_str("");
-                sifr_generated_concat
-            };
+        pub const fn new(name: String) -> Self {
+            let sifr_generated_field_value_c4bcadba8e631b86_6e616d65: String = name;
             Self {
                 name: sifr_generated_field_value_c4bcadba8e631b86_6e616d65,
             }
@@ -230,7 +215,10 @@ mod sifr_generated_project_nominals {
     }
     impl ::std::error::Error for IOError {}
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::{
+    append_text, assert_bool_vector_eq, exists, read_lines, read_text, sifr_generated_io_err,
+    write_text,
+};
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::IOError;
 pub use sifr_generated_project_nominals::SifrGeneratedIoBinaryFileHandle;
@@ -243,15 +231,15 @@ fn collect_io_roundtrip_actual() -> Vec<bool> {
     let path: String = "/tmp/sifr_io_io_demo.txt".to_string();
     let mut text_roundtrip_ok: bool = false;
     let sifr_generated_try_res: Result<(), IOError> = (|| {
-        write_text(&path, &"hello".to_string())?;
-        append_text(&path, &"\nworld".to_string())?;
+        write_text(&path, "hello")?;
+        append_text(&path, "\nworld")?;
         let content: String = read_text(&path)?;
         text_roundtrip_ok = content == "hello\nworld";
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        let _ = e.message.clone().to_string();
+        let e = sifr_generated_try_err;
+        let _ = e.message;
     }
     actual.push(text_roundtrip_ok);
     actual.push(exists(&path));
@@ -266,7 +254,7 @@ fn collect_open_actual() -> Vec<bool> {
     let mut missing_rejected: bool = false;
     let sifr_generated_try_res: Result<(), IOError> = (|| {
         let lines: Vec<String> = read_lines(&path)?;
-        first_ok = &SifrInt::from(lines.len()) >= &SifrInt::from_i64(1) && {
+        first_ok = lines.len() >= SifrInt::from_i64(1) && {
             let sifr_generated_cmp_list = &lines;
             let sifr_generated_cmp_i = SifrInt::from_i64(0);
             let sifr_generated_cmp_norm =
@@ -275,7 +263,7 @@ fn collect_open_actual() -> Vec<bool> {
                 .get(sifr_generated_cmp_norm)
                 .map(::std::string::String::as_str)
         } == Some("hello");
-        second_ok = &SifrInt::from(lines.len()) >= &SifrInt::from_i64(2) && {
+        second_ok = lines.len() >= SifrInt::from_i64(2) && {
             let sifr_generated_cmp_list = &lines;
             let sifr_generated_cmp_i = SifrInt::from_i64(1);
             let sifr_generated_cmp_norm =
@@ -284,12 +272,12 @@ fn collect_open_actual() -> Vec<bool> {
                 .get(sifr_generated_cmp_norm)
                 .map(::std::string::String::as_str)
         } == Some("world");
-        eof_ok = &SifrInt::from(lines.len()) == &SifrInt::from_i64(2);
+        eof_ok = lines.len() == SifrInt::from_i64(2);
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        let _ = e.message.clone().to_string();
+        let e = sifr_generated_try_err;
+        let _ = e.message;
     }
     let sifr_generated_try_res: Result<(), IOError> = (|| {
         let _ = (|| {
@@ -316,7 +304,7 @@ fn collect_open_actual() -> Vec<bool> {
             Ok::<SifrGeneratedIoTextFileHandle, IOError>(SifrGeneratedIoTextFileHandle::new(
                 SifrGeneratedIoBinaryFileHandle::new(
                     SifrGeneratedIoNativeFileHandle::new(sifr_generated_handle_id),
-                    sifr_generated_binary_mode.to_string(),
+                    sifr_generated_binary_mode,
                 ),
                 SifrGeneratedStdlibSifrX2eencodingX2eEncoding::new(sifr_generated_encoding),
                 SifrGeneratedStdlibSifrX2eencodingX2eDecodeErrorHandler::new(
@@ -328,8 +316,8 @@ fn collect_open_actual() -> Vec<bool> {
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        let _ = e.message.clone().to_string();
+        let e = sifr_generated_try_err;
+        let _ = e.message;
         missing_rejected = true;
     }
     actual.push(first_ok);

@@ -12,8 +12,12 @@ fn main() {
     println!("{totals:?}");
     let mixed: Vec<Box<dyn ::std::any::Any>> = Vec::new();
     let mut count: SifrInt = SifrInt::from_i64(0);
-    for _value in mixed.iter() {
-        count = &count + &SifrInt::from_i64(1);
+    #[expect(
+        clippy::explicit_iter_loop,
+        reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner Item 12; remove when direct IntoIterator preserves the same source lifetime"
+    )]
+    for _ in mixed.iter() {
+        count = ::std::ops::Add::add(&count, &SifrInt::from_i64(1));
     }
     println!("{count}");
     println!("clone_generic_cloning_hardening_demo: pass");

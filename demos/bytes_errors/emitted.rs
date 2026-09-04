@@ -32,8 +32,8 @@ fn main() {
     let mut bad_size: bool = false;
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
         let _ = {
-            let sifr_generated_size = -&SifrInt::from_i64(1);
-            if &sifr_generated_size < &0 {
+            let sifr_generated_size = ::std::ops::Neg::neg(&SifrInt::from_i64(1));
+            if sifr_generated_size < 0 {
                 return Err(ValueError {
                     message: "bytes(size) requires a non-negative size".to_string(),
                 });
@@ -48,7 +48,7 @@ fn main() {
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e = sifr_generated_try_err.clone();
+        let _ = sifr_generated_try_err;
         bad_size = true;
     }
     let mut bad_values: bool = false;
@@ -71,7 +71,7 @@ fn main() {
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e = sifr_generated_try_err.clone();
+        let _ = sifr_generated_try_err;
         bad_values = true;
     }
     let mut bad_hex: bool = false;
@@ -90,7 +90,7 @@ fn main() {
                 }
                 cleaned.push(ch);
             }
-            if cleaned.len() % 2 != 0 {
+            if !cleaned.len().is_multiple_of(2) {
                 return Err(ParseError {
                     message: "fromhex() arg must contain an even number of hexadecimal digits"
                         .to_string(),
@@ -110,40 +110,34 @@ fn main() {
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e = sifr_generated_try_err.clone();
+        let _ = sifr_generated_try_err;
         bad_hex = true;
     }
     let mut bad_codec: bool = false;
     let sifr_generated_try_res: Result<(), ParseError> = (|| {
         let codec: String = "definitely-not-a-codec".to_string();
-        let _encoded: Vec<u8> = ::sifr_runtime::encoding::encode_bytes(
-            &"abc".to_string(),
-            &codec,
-            &"strict".to_string(),
-        )
-        .map_err(|sifr_generated_message| ParseError {
-            message: sifr_generated_message,
-        })?;
+        let _ = ::sifr_runtime::encoding::encode_bytes("abc", &codec, "strict").map_err(
+            |sifr_generated_message| ParseError {
+                message: sifr_generated_message,
+            },
+        )?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e = sifr_generated_try_err.clone();
+        let _ = sifr_generated_try_err;
         bad_codec = true;
     }
     let mut bad_utf8: bool = false;
     let sifr_generated_try_res: Result<(), ParseError> = (|| {
-        let _invalid_utf8: String = ::sifr_runtime::encoding::decode_text(
-            &vec![255_u8],
-            &"utf-8".to_string(),
-            &"strict".to_string(),
-        )
-        .map_err(|sifr_generated_message| ParseError {
-            message: sifr_generated_message,
-        })?;
+        let _ = ::sifr_runtime::encoding::decode_text(&[255_u8], "utf-8", "strict").map_err(
+            |sifr_generated_message| ParseError {
+                message: sifr_generated_message,
+            },
+        )?;
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e = sifr_generated_try_err.clone();
+        let _ = sifr_generated_try_err;
         bad_utf8 = true;
     }
     assert!(bad_size);

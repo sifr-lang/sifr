@@ -82,7 +82,9 @@
       "enforcement": "blocking"
     },
     "area_runtime_platform": {
-      "budget_ms": 120000,
+      "warm_budget_ms": 120000,
+      "cold_budget_ms": 600000,
+      "cache_classifier": "successful-input-receipt",
       "enforcement": "blocking"
     },
     "area_algorithmic_compatibility": {

@@ -21,7 +21,10 @@ fn main() {
             .enumerate()
             .map(|sifr_generated_pair| {
                 (
-                    SifrInt::from(sifr_generated_pair.0) + SifrInt::from_i64(5),
+                    ::std::ops::Add::add(
+                        SifrInt::from(sifr_generated_pair.0),
+                        SifrInt::from_i64(5),
+                    ),
                     sifr_generated_pair.1,
                 )
             }),

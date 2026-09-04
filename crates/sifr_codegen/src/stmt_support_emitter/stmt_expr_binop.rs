@@ -285,7 +285,11 @@ macro_rules! stmt_expr_binop {
                                                     method: "iter".to_string(),
                                                     args: vec![],
                                                 }),
-                                                method: "cloned".to_string(),
+                                                method: if matches!(resolved_left_ty, Type::Bytes) {
+                                                    "copied".to_string()
+                                                } else {
+                                                    "cloned".to_string()
+                                                },
                                                 args: vec![],
                                             }],
                                         }),
@@ -345,7 +349,11 @@ macro_rules! stmt_expr_binop {
                                     method: "iter".to_string(),
                                     args: vec![],
                                 }),
-                                method: "cloned".to_string(),
+                                method: if matches!(resolved_result_ty, Type::Bytes) {
+                                    "copied".to_string()
+                                } else {
+                                    "cloned".to_string()
+                                },
                                 args: vec![],
                             }],
                         }),

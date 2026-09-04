@@ -114,14 +114,14 @@ impl<T: Clone> Channel<T> {
 
     fn register_sender(&self) {
         self.__sifr_with_state(|state| {
-            state.sender_count += 1;
+            state.sender_count = state.sender_count.saturating_add(1);
         });
     }
 
     fn release_sender(&self) {
         self.__sifr_with_state(|state| {
             if state.sender_count > 0 {
-                state.sender_count -= 1;
+                state.sender_count = state.sender_count.saturating_sub(1);
             }
             if state.sender_count == 0 {
                 state.closed = true;

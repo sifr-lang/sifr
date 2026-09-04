@@ -12,7 +12,7 @@ fn accumulate(values: &[SifrInt]) -> SifrInt {
 }
 fn main() {
     assert_eq!(
-        accumulate(&vec![
+        accumulate(&[
             SifrInt::from_i64(3),
             SifrInt::from_i64(1),
             SifrInt::from_i64(4),

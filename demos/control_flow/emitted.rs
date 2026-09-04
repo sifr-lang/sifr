@@ -2,44 +2,52 @@
 use ::sifr_runtime::SifrInt;
 use ::sifr_runtime::SifrRange;
 use ::std::collections::HashMap;
+#[expect(
+    clippy::needless_pass_by_value,
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+)]
 fn sum_range(n: SifrInt) -> SifrInt {
     let mut total: SifrInt = SifrInt::from_i64(0);
     for i in SifrRange::new_known_nonzero(SifrInt::from_i64(0), n.clone(), SifrInt::from_i64(1)) {
-        total = &total + &i;
+        total = ::std::ops::Add::add(&total, &i);
     }
-    total.clone()
+    total
 }
+#[expect(
+    clippy::needless_pass_by_value,
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+)]
 fn fizzbuzz(n: SifrInt) {
     for i in SifrRange::new_known_nonzero(
         SifrInt::from_i64(1),
-        &n + &SifrInt::from_i64(1),
+        ::std::ops::Add::add(&n, &SifrInt::from_i64(1)),
         SifrInt::from_i64(1),
     ) {
-        if &i.floor_mod_known_nonzero(&SifrInt::from_i64(15)) == &SifrInt::from_i64(0) {
+        if i.floor_mod_known_nonzero(&SifrInt::from_i64(15)) == SifrInt::from_i64(0) {
             println!("FizzBuzz");
         }
-        if &i.floor_mod_known_nonzero(&SifrInt::from_i64(3)) == &SifrInt::from_i64(0)
-            && &i.floor_mod_known_nonzero(&SifrInt::from_i64(5)) != &SifrInt::from_i64(0)
+        if i.floor_mod_known_nonzero(&SifrInt::from_i64(3)) == SifrInt::from_i64(0)
+            && i.floor_mod_known_nonzero(&SifrInt::from_i64(5)) != SifrInt::from_i64(0)
         {
             println!("Fizz");
         }
-        if &i.floor_mod_known_nonzero(&SifrInt::from_i64(5)) == &SifrInt::from_i64(0)
-            && &i.floor_mod_known_nonzero(&SifrInt::from_i64(3)) != &SifrInt::from_i64(0)
+        if i.floor_mod_known_nonzero(&SifrInt::from_i64(5)) == SifrInt::from_i64(0)
+            && i.floor_mod_known_nonzero(&SifrInt::from_i64(3)) != SifrInt::from_i64(0)
         {
             println!("Buzz");
         }
-        if &i.floor_mod_known_nonzero(&SifrInt::from_i64(3)) != &SifrInt::from_i64(0)
-            && &i.floor_mod_known_nonzero(&SifrInt::from_i64(5)) != &SifrInt::from_i64(0)
+        if i.floor_mod_known_nonzero(&SifrInt::from_i64(3)) != SifrInt::from_i64(0)
+            && i.floor_mod_known_nonzero(&SifrInt::from_i64(5)) != SifrInt::from_i64(0)
         {
             println!("{i}");
         }
     }
 }
 fn countdown(n: SifrInt) {
-    let mut i: SifrInt = n.clone();
-    while &i > &SifrInt::from_i64(0) {
+    let mut i: SifrInt = n;
+    while i > SifrInt::from_i64(0) {
         println!("{i}");
-        i = &i - &SifrInt::from_i64(1);
+        i = ::std::ops::Sub::sub(&i, &SifrInt::from_i64(1));
     }
     println!("Go!");
 }
@@ -72,18 +80,18 @@ fn main() {
             SifrInt::from_i64(4),
             SifrInt::from_i64(1),
         ) {
-            let product: SifrInt = &i * &j;
+            let product: SifrInt = ::std::ops::Mul::mul(&i, &j);
             println!("{i} x {j} = {product}");
         }
     }
     println!("=== Break/Continue ===");
     let mut i: SifrInt = SifrInt::from_i64(0);
-    while &i < &SifrInt::from_i64(10) {
-        i = &i + &SifrInt::from_i64(1);
-        if &i == &SifrInt::from_i64(3) {
+    while i < SifrInt::from_i64(10) {
+        i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
+        if i == SifrInt::from_i64(3) {
             continue;
         }
-        if &i == &SifrInt::from_i64(7) {
+        if i == SifrInt::from_i64(7) {
             break;
         }
         println!("{i}");
@@ -106,7 +114,7 @@ fn main() {
             .get(sifr_generated_checked_read_normalized)
             .cloned()
     };
-    if let Some(first) = first.clone() {
+    if let Some(first) = first {
         println!("First: {first}");
     }
     let last: Option<SifrInt> = {
@@ -118,12 +126,16 @@ fn main() {
             .get(sifr_generated_checked_read_normalized)
             .cloned()
     };
-    if let Some(last) = last.clone() {
+    if let Some(last) = last {
         println!("Last: {last}");
     }
     let mut total: SifrInt = SifrInt::from_i64(0);
-    for n in nums.iter().cloned() {
-        total = &total + &n;
+    #[expect(
+        clippy::explicit_iter_loop,
+        reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner Item 12; remove when direct IntoIterator preserves the same source lifetime"
+    )]
+    for n in nums.iter() {
+        total = ::std::ops::Add::add(&total, n);
     }
     println!("Sum: {total}");
     let mut fruits: Vec<String> = vec!["apple".to_string(), "banana".to_string()];
@@ -132,11 +144,11 @@ fn main() {
     println!("=== Dict ===");
     let ages = &*SIFR_GENERATED_SIFR_HOISTED_DICT_0;
     let alice_age: Option<SifrInt> = ages.get("Alice").cloned();
-    if let Some(alice_age) = alice_age.clone() {
+    if let Some(alice_age) = alice_age {
         println!("Alice is {alice_age} years old");
     }
     let bob_age: Option<SifrInt> = ages.get("Bob").cloned();
-    if let Some(bob_age) = bob_age.clone() {
+    if let Some(bob_age) = bob_age {
         println!("Bob is {bob_age} years old");
     }
     println!("=== In Operator ===");
@@ -152,7 +164,7 @@ fn main() {
     let missing: bool = numbers.contains(&SifrInt::from_i64(9));
     println!("9 in list: {missing}");
     println!("=== Tuples ===");
-    let _point: (SifrInt, SifrInt, String) = (
+    let _ = (
         SifrInt::from_i64(10),
         SifrInt::from_i64(20),
         "origin".to_string(),
@@ -161,13 +173,13 @@ fn main() {
     println!("=== Tuple Unpacking ===");
     let pair: (String, SifrInt) = ("Sifr".to_string(), SifrInt::from_i64(2025));
     let (name, year) = pair;
-    let _chars_name: Vec<char> = name.chars().collect::<Vec<char>>();
+    let _ = name.chars().collect::<Vec<char>>();
     println!("{name} was born in {year}");
     println!("=== F-Strings ===");
     let a: SifrInt = SifrInt::from_i64(7);
     let b: SifrInt = SifrInt::from_i64(8);
-    println!("{} * {} = {}", a, b, &a * &b);
-    println!("Is {} > {}? {}", a, b, &a > &b);
+    println!("{} * {} = {}", a, b, ::std::ops::Mul::mul(&a, &b));
+    println!("Is {} > {}? {}", a, b, a > b);
     println!("=== String Operations ===");
     let greeting: String = "  Hello, World!  ".to_string();
     println!("{}", greeting.trim());

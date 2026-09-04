@@ -30,14 +30,14 @@ pub use sifr_generated_project_nominals::ValueError;
 )]
 #[expect(
     clippy::assertions_on_constants,
-    reason = "generated Rust preserves this exact typed Sifr source contract"
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
 )]
 fn main() {
     let mut size_ok: bool = false;
     let sifr_generated_try_res: Result<(), ValueError> = (|| {
         let zeros: Vec<u8> = {
             let sifr_generated_size = SifrInt::from_i64(6);
-            if &sifr_generated_size < &0 {
+            if sifr_generated_size < 0 {
                 return Err(ValueError {
                     message: "bytes(size) requires a non-negative size".to_string(),
                 });
@@ -54,11 +54,12 @@ fn main() {
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
+        let e = sifr_generated_try_err;
         println!("{}", {
-            let mut sifr_generated_concat: String = String::with_capacity(23usize);
+            let mut sifr_generated_concat: String =
+                String::with_capacity(23usize.saturating_add(0usize));
             sifr_generated_concat.push_str("unexpected ValueError: ");
-            sifr_generated_concat.push_str(e.message.clone().as_str());
+            sifr_generated_concat.push_str(e.message.as_str());
             sifr_generated_concat
         });
     }
@@ -92,7 +93,7 @@ fn main() {
                 .normalize_index_or_len(sifr_generated_checked_read_collection.len());
             sifr_generated_checked_read_collection
                 .get(sifr_generated_checked_read_normalized)
-                .cloned()
+                .copied()
         };
         let last: Option<u8> = {
             let sifr_generated_checked_read_collection = &from_list;
@@ -101,7 +102,7 @@ fn main() {
                 .normalize_index_or_len(sifr_generated_checked_read_collection.len());
             sifr_generated_checked_read_collection
                 .get(sifr_generated_checked_read_normalized)
-                .cloned()
+                .copied()
         };
         if let Some(first) = first {
             let expected_first: u8 = 83u8;
@@ -119,11 +120,12 @@ fn main() {
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
+        let e = sifr_generated_try_err;
         println!("{}", {
-            let mut sifr_generated_concat: String = String::with_capacity(23usize);
+            let mut sifr_generated_concat: String =
+                String::with_capacity(23usize.saturating_add(0usize));
             sifr_generated_concat.push_str("unexpected ValueError: ");
-            sifr_generated_concat.push_str(e.message.clone().as_str());
+            sifr_generated_concat.push_str(e.message.as_str());
             sifr_generated_concat
         });
     }
@@ -144,7 +146,7 @@ fn main() {
                 }
                 cleaned.push(ch);
             }
-            if cleaned.len() % 2 != 0 {
+            if !cleaned.len().is_multiple_of(2) {
                 return Err(ParseError {
                     message: "fromhex() arg must contain an even number of hexadecimal digits"
                         .to_string(),
@@ -162,9 +164,7 @@ fn main() {
             Ok::<Vec<u8>, ParseError>(result)
         }?;
         let from_hex_text_value_6272bce207218a0f: String = ::sifr_runtime::encoding::decode_text(
-            &from_hex,
-            &"utf-8".to_string(),
-            &"strict".to_string(),
+            &from_hex, "utf-8", "strict",
         )
         .map_err(|sifr_generated_message| ParseError {
             message: sifr_generated_message,
@@ -177,29 +177,27 @@ fn main() {
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
+        let e = sifr_generated_try_err;
         println!("{}", {
-            let mut sifr_generated_concat: String = String::with_capacity(23usize);
+            let mut sifr_generated_concat: String =
+                String::with_capacity(23usize.saturating_add(0usize));
             sifr_generated_concat.push_str("unexpected ParseError: ");
-            sifr_generated_concat.push_str(e.message.clone().as_str());
+            sifr_generated_concat.push_str(e.message.as_str());
             sifr_generated_concat
         });
     }
     assert!(from_hex_ok);
     let mut encode_ok: bool = false;
     let sifr_generated_try_res: Result<(), ParseError> = (|| {
-        let encoded_value_8b21351fd8aea299: Vec<u8> = ::sifr_runtime::encoding::encode_bytes(
-            &"bytes_constructors-demo".to_string(),
-            &"utf-8".to_string(),
-            &"strict".to_string(),
-        )
-        .map_err(|sifr_generated_message| ParseError {
-            message: sifr_generated_message,
-        })?;
+        let encoded_value_8b21351fd8aea299: Vec<u8> =
+            ::sifr_runtime::encoding::encode_bytes("bytes_constructors-demo", "utf-8", "strict")
+                .map_err(|sifr_generated_message| ParseError {
+                    message: sifr_generated_message,
+                })?;
         let decoded: String = ::sifr_runtime::encoding::decode_text(
             &encoded_value_8b21351fd8aea299,
-            &"utf-8".to_string(),
-            &"strict".to_string(),
+            "utf-8",
+            "strict",
         )
         .map_err(|sifr_generated_message| ParseError {
             message: sifr_generated_message,
@@ -212,11 +210,12 @@ fn main() {
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
+        let e = sifr_generated_try_err;
         println!("{}", {
-            let mut sifr_generated_concat: String = String::with_capacity(23usize);
+            let mut sifr_generated_concat: String =
+                String::with_capacity(23usize.saturating_add(0usize));
             sifr_generated_concat.push_str("unexpected ParseError: ");
-            sifr_generated_concat.push_str(e.message.clone().as_str());
+            sifr_generated_concat.push_str(e.message.as_str());
             sifr_generated_concat
         });
     }

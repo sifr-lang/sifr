@@ -8,7 +8,8 @@ fn multi_module_support_has_one_private_owner_and_a_strict_size_budget() {
     let generated = generate_rust_multi_with_metadata(
         &[("main", &main), ("worker", &worker)],
         &shared_stdlib(),
-    );
+    )
+    .expect("project generation should succeed");
 
     let all_source = std::iter::once(generated.project_union_prelude.as_str())
         .chain(generated.rust_files.values().map(String::as_str))
@@ -40,7 +41,7 @@ fn multi_module_support_has_one_private_owner_and_a_strict_size_budget() {
         assert!(!source.contains("fn shared_operation"));
         assert_eq!(
             source
-                .matches("use crate::__sifr_generated_support::*;")
+                .matches("use crate::__sifr_generated_support::{shared_operation};")
                 .count(),
             1
         );
@@ -55,7 +56,8 @@ fn multi_module_project_omits_support_when_no_module_demands_it() {
     let generated = generate_rust_multi_with_metadata(
         &[("main", &main), ("worker", &worker)],
         &StdlibCode::default(),
-    );
+    )
+    .expect("project generation should succeed");
 
     assert!(
         !generated
@@ -83,7 +85,8 @@ fn test_project_support_is_rendered_once_for_support_and_test_modules() {
         &[("support", &support)],
         &[("test_shared", &test)],
         &shared_stdlib(),
-    );
+    )
+    .expect("test-project generation should succeed");
 
     let all_source = std::iter::once(generated.project_union_prelude.as_str())
         .chain(generated.support_rust_files.values().map(String::as_str))
@@ -107,6 +110,46 @@ fn test_project_support_is_rendered_once_for_support_and_test_modules() {
             .values()
             .all(|source| !source.contains("fn shared_operation"))
     );
+}
+
+#[test]
+fn item12_project_support_layout_failure_returns_codegen_error() {
+    let main = module_calling_shared("main");
+    let mut stdlib = shared_stdlib();
+    stdlib
+        .module_rust_code
+        .get_mut("sifr.shared")
+        .expect("fixture module should exist")
+        .rust = "mod nested { pub trait RenderSupport {} }\nfn shared_operation() {}\n".to_string();
+
+    let error = match generate_rust_multi_with_metadata(&[("main", &main)], &stdlib) {
+        Ok(_) => panic!("nested support trait layout must fail closed"),
+        Err(error) => error,
+    };
+
+    assert!(error.message.contains("support trait"), "{error}");
+}
+
+#[test]
+fn item12_test_project_support_layout_failure_returns_codegen_error() {
+    let test = module_calling_shared("test_shared_value");
+    let mut stdlib = shared_stdlib();
+    stdlib
+        .module_rust_code
+        .get_mut("sifr.shared")
+        .expect("fixture module should exist")
+        .rust = "mod nested { pub trait RenderSupport {} }\nfn shared_operation() {}\n".to_string();
+
+    let error = match crate::generate_rust_test_project_with_metadata(
+        &[],
+        &[("test_shared", &test)],
+        &stdlib,
+    ) {
+        Ok(_) => panic!("nested test support trait layout must fail closed"),
+        Err(error) => error,
+    };
+
+    assert!(error.message.contains("support trait"), "{error}");
 }
 
 fn module_calling_shared(function_name: &str) -> HirModule {

@@ -54,7 +54,8 @@ fn concrete_generic_child_flattens_parent_fields_for_structural_bridge() {
     let main = module(vec![structural_function()], vec![child, nested]);
     let modules = [("models", &models), ("main", &main)];
 
-    let project = crate::generate_rust_multi_with_metadata(&modules, &crate::StdlibCode::default());
+    let project = crate::generate_rust_multi_with_metadata(&modules, &crate::StdlibCode::default())
+        .expect("project generation should succeed");
     let main_rust = project
         .rust_files
         .get("main")

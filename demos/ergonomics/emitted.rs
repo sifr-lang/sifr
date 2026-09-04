@@ -22,9 +22,9 @@ use ::std::collections::HashMap;
 pub use sifr_generated_project_nominals::ValueError;
 fn demo_augmented_assign() {
     let mut x: SifrInt = SifrInt::from_i64(10);
-    x = &x + &SifrInt::from_i64(5);
-    x = &x - &SifrInt::from_i64(2);
-    x = &x * &SifrInt::from_i64(3);
+    x = ::std::ops::Add::add(&x, &SifrInt::from_i64(5));
+    x = ::std::ops::Sub::sub(&x, &SifrInt::from_i64(2));
+    x = ::std::ops::Mul::mul(&x, &SifrInt::from_i64(3));
     println!("Augmented assign result: {x}");
     let mut s: String = "Hello".to_string();
     s.push_str(" World");
@@ -33,8 +33,12 @@ fn demo_augmented_assign() {
     items.extend(vec![SifrInt::from_i64(3), SifrInt::from_i64(4)]);
     println!("List += length: {}", SifrInt::from(items.len()));
 }
+#[expect(
+    clippy::needless_pass_by_value,
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+)]
 fn classify(n: SifrInt) -> String {
-    if &n > &SifrInt::from_i64(0) {
+    if n > SifrInt::from_i64(0) {
         "positive".to_string()
     } else {
         "non-positive".to_string()
@@ -55,7 +59,7 @@ fn demo_negative_indexing() {
         "Last element: {}",
         {
             let sifr_generated_index_list = &items;
-            let sifr_generated_index_i = -&SifrInt::from_i64(1);
+            let sifr_generated_index_i = ::std::ops::Neg::neg(&SifrInt::from_i64(1));
             let sifr_generated_index_norm =
                 sifr_generated_index_i.normalize_index_or_len(sifr_generated_index_list.len());
             sifr_generated_index_list
@@ -71,7 +75,7 @@ fn demo_negative_indexing() {
         "Second to last: {}",
         {
             let sifr_generated_index_list = &items;
-            let sifr_generated_index_i = -&SifrInt::from_i64(2);
+            let sifr_generated_index_i = ::std::ops::Neg::neg(&SifrInt::from_i64(2));
             let sifr_generated_index_norm =
                 sifr_generated_index_i.normalize_index_or_len(sifr_generated_index_list.len());
             sifr_generated_index_list
@@ -88,7 +92,7 @@ fn demo_negative_indexing() {
         "Last char: {}",
         {
             let sifr_generated_string_chars = s.chars().collect::<Vec<char>>();
-            let sifr_generated_string_index = -&SifrInt::from_i64(1);
+            let sifr_generated_string_index = ::std::ops::Neg::neg(&SifrInt::from_i64(1));
             let sifr_generated_string_index_normalized = sifr_generated_string_index
                 .normalize_index_or_len(sifr_generated_string_chars.len());
             sifr_generated_string_chars
@@ -135,7 +139,7 @@ fn demo_step_slicing() {
             sifr_generated_len,
             None,
             None,
-            &-SifrInt::from_i64(1),
+            &::std::ops::Neg::neg(SifrInt::from_i64(1)),
         )
         .filter_map(|sifr_generated_i| sifr_generated_v_5f76.get(sifr_generated_i).cloned())
         .collect::<Vec<_>>()
@@ -157,7 +161,7 @@ fn demo_step_slicing() {
         ),
         {
             let sifr_generated_index_list = &reversed;
-            let sifr_generated_index_i = -&SifrInt::from_i64(1);
+            let sifr_generated_index_i = ::std::ops::Neg::neg(&SifrInt::from_i64(1));
             let sifr_generated_index_norm =
                 sifr_generated_index_i.normalize_index_or_len(sifr_generated_index_list.len());
             sifr_generated_index_list
@@ -223,15 +227,10 @@ fn demo_list_methods() {
     println!("After append: length={}", SifrInt::from(items.len()));
     println!(
         "Count of 1: {}",
-        SifrInt::from(
-            items
-                .iter()
-                .filter(|x| &**x == &SifrInt::from_i64(1))
-                .count()
-        )
+        SifrInt::from(items.iter().filter(|x| **x == SifrInt::from_i64(1)).count())
     );
     println!("Contains 4: {}", items.contains(&SifrInt::from_i64(4)));
-    let mut copy: Vec<SifrInt> = items.clone();
+    let mut copy: Vec<SifrInt> = items;
     copy.reverse();
     println!(
         "Reversed copy first: {}",
@@ -266,11 +265,11 @@ fn demo_dict_methods() {
 }
 fn demo_chained_comparisons() {
     let x: SifrInt = SifrInt::from_i64(5);
-    if &SifrInt::from_i64(1) < &x && &x < &SifrInt::from_i64(10) {
+    if SifrInt::from_i64(1) < x && x < SifrInt::from_i64(10) {
         println!("5 is between 1 and 10");
     }
     let y: SifrInt = SifrInt::from_i64(15);
-    if &SifrInt::from_i64(1) < &y && &y < &SifrInt::from_i64(10) {
+    if SifrInt::from_i64(1) < y && y < SifrInt::from_i64(10) {
         println!("This won't print");
     } else {
         println!("15 is NOT between 1 and 10");
@@ -280,14 +279,15 @@ fn demo_string_multiply() {
     println!("{}", {
         let sifr_generated_repeat_src: &str = &"=".to_string();
         let sifr_generated_n = SifrInt::from_i64(30);
-        if &sifr_generated_n <= &0 {
+        if sifr_generated_n <= 0 {
             String::new()
         } else {
             let mut sifr_generated_repeat_out = String::new();
             let mut sifr_generated_repeat_i = SifrInt::from_i64(0);
-            while &sifr_generated_repeat_i < &sifr_generated_n {
+            while sifr_generated_repeat_i < sifr_generated_n {
                 sifr_generated_repeat_out.push_str(sifr_generated_repeat_src);
-                sifr_generated_repeat_i = &sifr_generated_repeat_i + SifrInt::from_i64(1);
+                sifr_generated_repeat_i =
+                    ::std::ops::Add::add(&sifr_generated_repeat_i, SifrInt::from_i64(1));
             }
             sifr_generated_repeat_out
         }
@@ -296,14 +296,15 @@ fn demo_string_multiply() {
     println!("{}", {
         let sifr_generated_repeat_src: &str = &"-".to_string();
         let sifr_generated_n = SifrInt::from_i64(30);
-        if &sifr_generated_n <= &0 {
+        if sifr_generated_n <= 0 {
             String::new()
         } else {
             let mut sifr_generated_repeat_out = String::new();
             let mut sifr_generated_repeat_i = SifrInt::from_i64(0);
-            while &sifr_generated_repeat_i < &sifr_generated_n {
+            while sifr_generated_repeat_i < sifr_generated_n {
                 sifr_generated_repeat_out.push_str(sifr_generated_repeat_src);
-                sifr_generated_repeat_i = &sifr_generated_repeat_i + SifrInt::from_i64(1);
+                sifr_generated_repeat_i =
+                    ::std::ops::Add::add(&sifr_generated_repeat_i, SifrInt::from_i64(1));
             }
             sifr_generated_repeat_out
         }
@@ -324,7 +325,7 @@ fn demo_star_unpacking() {
         else {
             return Err(ValueError::new("not enough values to unpack".to_string()));
         };
-        let first = sifr_generated_before_0.clone();
+        let first = sifr_generated_before_0;
         let rest = sifr_generated_star.to_vec();
         println!(
             "First: {}, Rest length: {}",
@@ -334,8 +335,8 @@ fn demo_star_unpacking() {
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let error = sifr_generated_try_err.clone();
-        println!("Unpack failed: {}", error.message.clone());
+        let error = sifr_generated_try_err;
+        println!("Unpack failed: {}", error.message);
     }
 }
 fn demo_loop_else() {
@@ -347,8 +348,12 @@ fn demo_loop_else() {
     ];
     let target: SifrInt = SifrInt::from_i64(5);
     let mut sifr_generated_broke = false;
-    for item in items.iter().cloned() {
-        if &item == &target {
+    #[expect(
+        clippy::explicit_iter_loop,
+        reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner Item 12; remove when direct IntoIterator preserves the same source lifetime"
+    )]
+    for item in items.iter() {
+        if item == target {
             println!("Found target!");
             sifr_generated_broke = true;
             break;
@@ -376,13 +381,16 @@ fn demo_walrus() {
         SifrInt::from_i64(10),
     ];
     let n = SifrInt::from(items.len());
-    if &n > &SifrInt::from_i64(5) {
+    if n > SifrInt::from_i64(5) {
         println!("List has {n} items (more than 5)");
     }
 }
 const fn placeholder() {}
 fn demo_builtins() {
-    println!("abs(-42) = {}", (-&SifrInt::from_i64(42)).abs());
+    println!(
+        "abs(-42) = {}",
+        ::std::ops::Neg::neg(&SifrInt::from_i64(42)).abs()
+    );
     println!(
         "round(3.7) = {:?}",
         SifrInt::from_f64_trunc(3.7_f64.round_ties_even()).ok_or_else(|| ValueError {
@@ -394,19 +402,13 @@ fn demo_builtins() {
 fn main() {
     demo_augmented_assign();
     println!("classify(5): {}", classify(SifrInt::from_i64(5)));
-    println!("classify(-3): {}", classify(-&SifrInt::from_i64(3)));
     println!(
-        "{}",
-        greet(&"Alice".to_string(), &"Hello".to_string(), &"!".to_string())
+        "classify(-3): {}",
+        classify(::std::ops::Neg::neg(&SifrInt::from_i64(3)))
     );
-    println!(
-        "{}",
-        greet(&"Bob".to_string(), &"Hi".to_string(), &"!".to_string())
-    );
-    println!(
-        "{}",
-        greet(&"Charlie".to_string(), &"Hey".to_string(), &"?".to_string())
-    );
+    println!("{}", greet("Alice", "Hello", "!"));
+    println!("{}", greet("Bob", "Hi", "!"));
+    println!("{}", greet("Charlie", "Hey", "?"));
     demo_negative_indexing();
     demo_step_slicing();
     demo_string_methods();

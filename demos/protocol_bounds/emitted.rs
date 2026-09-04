@@ -6,10 +6,14 @@ pub trait SifrGeneratedAdd: Sized {
 }
 impl SifrGeneratedAdd for ::sifr_runtime::SifrInt {
     fn sifr_generated_add(self, rhs: Self) -> Self {
-        self + rhs
+        ::std::ops::Add::add(self, rhs)
     }
 }
 impl SifrGeneratedAdd for String {
+    #[expect(
+        clippy::needless_pass_by_value,
+        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+    )]
     fn sifr_generated_add(mut self, rhs: Self) -> Self {
         self.push_str(&rhs);
         self

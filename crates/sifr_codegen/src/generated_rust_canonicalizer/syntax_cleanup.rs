@@ -42,6 +42,19 @@ pub(super) fn canonicalize_syntax(file: &mut syn::File) {
     typed_fallback_cleanup::canonicalize_typed_fallbacks(file);
 }
 
+pub(super) fn collect_project_borrowed_string_params(
+    files: &[syn::File],
+) -> std::collections::HashMap<String, Vec<bool>> {
+    idiom_cleanup::collect_project_borrowed_string_params(files)
+}
+
+pub(super) fn rewrite_project_borrowed_string_literals(
+    file: &mut syn::File,
+    signatures: &std::collections::HashMap<String, Vec<bool>>,
+) {
+    idiom_cleanup::rewrite_project_borrowed_string_literals(file, signatures);
+}
+
 struct CanonicalSyntaxRewriter<'methods> {
     mutating_methods: &'methods HashSet<String>,
     local_method_facts: &'methods mutability_cleanup::LocalMethodFacts,
@@ -50,6 +63,7 @@ struct CanonicalSyntaxRewriter<'methods> {
 impl VisitMut for CanonicalSyntaxRewriter<'_> {
     fn visit_item_fn_mut(&mut self, function: &mut syn::ItemFn) {
         remove_explicit_unit_return(&mut function.sig);
+        borrow_nested_recursive_sifr_int_parameters(&mut function.block);
         disambiguate_similar_parameter_names(&mut function.sig, &mut function.block);
         remove_unneeded_parameter_mutability(
             &mut function.sig,
@@ -57,6 +71,8 @@ impl VisitMut for CanonicalSyntaxRewriter<'_> {
             self.mutating_methods,
             self.local_method_facts,
         );
+        idiom_cleanup::rewrite_owned_string_clones(&function.sig, &mut function.block);
+        idiom_cleanup::remove_last_use_parameter_clones(&function.sig, &mut function.block);
         visit_mut::visit_item_fn_mut(self, function);
         disambiguate_similar_names_across_nested_scopes(&function.sig, &mut function.block);
         remove_dead_generated_assignments(&mut function.block);
@@ -73,6 +89,8 @@ impl VisitMut for CanonicalSyntaxRewriter<'_> {
             self.mutating_methods,
             self.local_method_facts,
         );
+        idiom_cleanup::rewrite_owned_string_clones(&method.sig, &mut method.block);
+        idiom_cleanup::remove_last_use_parameter_clones(&method.sig, &mut method.block);
         visit_mut::visit_impl_item_fn_mut(self, method);
         disambiguate_similar_names_across_nested_scopes(&method.sig, &mut method.block);
         remove_dead_generated_assignments(&mut method.block);
@@ -157,6 +175,112 @@ impl VisitMut for CanonicalSyntaxRewriter<'_> {
             && let syn::Expr::Block(block) = closure.body.as_mut()
         {
             normalize_tail_position(&mut block.block.stmts);
+        }
+    }
+}
+
+fn borrow_nested_recursive_sifr_int_parameters(body: &mut syn::Block) {
+    let candidates = body
+        .stmts
+        .iter()
+        .filter_map(|statement| match statement {
+            syn::Stmt::Item(syn::Item::Fn(function)) => Some(function),
+            _ => None,
+        })
+        .filter_map(|function| {
+            let borrowed = function
+                .sig
+                .inputs
+                .iter()
+                .enumerate()
+                .filter_map(|(index, argument)| {
+                    let syn::FnArg::Typed(parameter) = argument else {
+                        return None;
+                    };
+                    let syn::Pat::Ident(binding) = parameter.pat.as_ref() else {
+                        return None;
+                    };
+                    matches!(parameter.ty.as_ref(), syn::Type::Path(path)
+                        if path.path.segments.last().is_some_and(|segment|
+                            segment.ident == "SifrInt"))
+                    .then(|| {
+                        super::source_expectations::parameter_is_only_borrowed(
+                            &function.block,
+                            &binding.ident.to_string(),
+                        )
+                        .then_some((index, binding.ident.to_string()))
+                    })
+                    .flatten()
+                })
+                .collect::<Vec<_>>();
+            (!borrowed.is_empty()
+                && super::source_expectations::body_calls_function(
+                    &function.block,
+                    &function.sig.ident,
+                ))
+            .then(|| (function.sig.ident.to_string(), borrowed))
+        })
+        .collect::<Vec<_>>();
+    for (function_name, parameters) in candidates {
+        for statement in &mut body.stmts {
+            let syn::Stmt::Item(syn::Item::Fn(function)) = statement else {
+                continue;
+            };
+            if function.sig.ident != function_name {
+                continue;
+            }
+            for (index, name) in &parameters {
+                let Some(syn::FnArg::Typed(parameter)) = function.sig.inputs.iter_mut().nth(*index)
+                else {
+                    continue;
+                };
+                let ty = parameter.ty.as_ref();
+                parameter.ty = Box::new(syn::parse_quote!(&#ty));
+                RemoveDirectReferenceToName { name }.visit_block_mut(&mut function.block);
+            }
+        }
+        BorrowRecursiveCallArguments {
+            function_name: &function_name,
+            indices: parameters.iter().map(|(index, _)| *index).collect(),
+        }
+        .visit_block_mut(body);
+    }
+}
+
+struct RemoveDirectReferenceToName<'name> {
+    name: &'name str,
+}
+
+impl VisitMut for RemoveDirectReferenceToName<'_> {
+    fn visit_expr_mut(&mut self, expression: &mut syn::Expr) {
+        visit_mut::visit_expr_mut(self, expression);
+        if let syn::Expr::Reference(reference) = expression
+            && matches!(reference.expr.as_ref(), syn::Expr::Path(path)
+                if path.path.is_ident(self.name))
+        {
+            *expression = reference.expr.as_ref().clone();
+        }
+    }
+}
+
+struct BorrowRecursiveCallArguments<'name> {
+    function_name: &'name str,
+    indices: HashSet<usize>,
+}
+
+impl VisitMut for BorrowRecursiveCallArguments<'_> {
+    fn visit_expr_call_mut(&mut self, call: &mut syn::ExprCall) {
+        visit_mut::visit_expr_call_mut(self, call);
+        if !matches!(call.func.as_ref(), syn::Expr::Path(path)
+            if path.path.is_ident(self.function_name))
+        {
+            return;
+        }
+        for (index, argument) in call.args.iter_mut().enumerate() {
+            if self.indices.contains(&index) && !matches!(argument, syn::Expr::Reference(_)) {
+                let value = argument.clone();
+                *argument = syn::parse_quote!(&#value);
+            }
         }
     }
 }

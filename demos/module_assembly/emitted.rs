@@ -20,7 +20,8 @@ pub use crate::z_provider::z;
 #[must_use]
 pub fn joined() -> String {
     {
-        let mut sifr_generated_concat: String = String::with_capacity(1usize);
+        let mut sifr_generated_concat: String =
+            String::with_capacity(0usize.saturating_add(1usize).saturating_add(0usize));
         sifr_generated_concat.push_str(a().as_str());
         sifr_generated_concat.push('-');
         sifr_generated_concat.push_str(z().as_str());

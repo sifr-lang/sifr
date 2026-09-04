@@ -12,11 +12,11 @@ fn main() {
 pub use ::sifr_runtime::SifrInt;
 #[must_use]
 pub fn evaluate(n: SifrInt) -> SifrInt {
-    if &n > &SifrInt::from_i64(0) {
-        if &n > &SifrInt::from_i64(10) {
-            n.clone()
+    if n > SifrInt::from_i64(0) {
+        if n > SifrInt::from_i64(10) {
+            n
         } else {
-            &n + &SifrInt::from_i64(10)
+            ::std::ops::Add::add(&n, &SifrInt::from_i64(10))
         }
     } else {
         SifrInt::from_i64(45)

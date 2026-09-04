@@ -22,12 +22,12 @@ use ::rust_decimal::Decimal;
 pub use sifr_generated_project_nominals::DecimalConversionError;
 #[expect(
     clippy::assertions_on_constants,
-    reason = "generated Rust preserves this exact typed Sifr source contract"
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
 )]
 fn main() {
     let d: Decimal = Decimal::from_i128_with_scale(1250_i128, 2);
     let b: BigDecimal = BigDecimal::new(
-        ::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&vec![1, 69]),
+        ::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&[1, 69]),
         2,
     );
     let b_plus: BigDecimal = ::bigdecimal::Context::new(
@@ -35,17 +35,16 @@ fn main() {
         ::bigdecimal::RoundingMode::HalfEven,
     )
     .round_decimal_ref(
-        &(b.clone()
-            + BigDecimal::new(
-                ::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&vec![4]),
-                0,
-            )
-            .clone()),
+        &(b + BigDecimal::new(
+            ::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&[4]),
+            0,
+        )
+        .clone()),
     );
     assert_eq!(
         b_plus,
         BigDecimal::new(
-            ::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&vec![2, 213]),
+            ::bigdecimal::num_bigint::BigInt::from_signed_bytes_be(&[2, 213]),
             2
         )
     );
@@ -78,7 +77,7 @@ fn main() {
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let error = sifr_generated_try_err.clone();
+        let error = sifr_generated_try_err;
         assert!(false, "{error}");
     }
 }

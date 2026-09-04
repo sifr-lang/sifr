@@ -1,11 +1,11 @@
 // src/main.rs
-mod sifr_generated_generated_support {
-    pub(crate) struct SifrGeneratedYielder<T> {
-        pub(crate) slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+pub mod sifr_generated_generated_support {
+    pub(super) struct SifrGeneratedYielder<T> {
+        pub(super) slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
     }
-    pub(crate) struct SifrGeneratedYieldFuture<T> {
-        pub(crate) slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
-        pub(crate) value: Option<T>,
+    pub(super) struct SifrGeneratedYieldFuture<T> {
+        pub(super) slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+        pub(super) value: Option<T>,
     }
     impl<T> Unpin for SifrGeneratedYieldFuture<T> {}
     impl<T> ::std::future::Future for SifrGeneratedYieldFuture<T> {
@@ -23,14 +23,14 @@ mod sifr_generated_generated_support {
         }
     }
     impl<T> SifrGeneratedYielder<T> {
-        pub(crate) fn suspend(&self, value: T) -> SifrGeneratedYieldFuture<T> {
+        pub(super) fn suspend(&self, value: T) -> SifrGeneratedYieldFuture<T> {
             SifrGeneratedYieldFuture {
                 slot: ::std::sync::Arc::clone(&self.slot),
                 value: Some(value),
             }
         }
     }
-    pub(crate) fn sifr_generated_store_suspended<T>(
+    pub(super) fn sifr_generated_store_suspended<T>(
         slot: &::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
         value: T,
     ) {
@@ -39,7 +39,7 @@ mod sifr_generated_generated_support {
             Err(poisoned) => *poisoned.into_inner() = Some(value),
         }
     }
-    pub(crate) fn sifr_generated_take_suspended<T>(
+    pub(super) fn sifr_generated_take_suspended<T>(
         slot: &::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
     ) -> Option<T> {
         match slot.lock() {
@@ -47,14 +47,14 @@ mod sifr_generated_generated_support {
             Err(poisoned) => poisoned.into_inner().take(),
         }
     }
-    pub(crate) struct SifrGeneratedGenerator<T> {
-        pub(crate) producer:
+    pub(super) struct SifrGeneratedGenerator<T> {
+        pub(super) producer:
             Option<::std::pin::Pin<Box<dyn ::std::future::Future<Output = ()> + 'static>>>,
-        pub(crate) yielded: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
-        pub(crate) complete: bool,
+        pub(super) yielded: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+        pub(super) complete: bool,
     }
     impl<T> SifrGeneratedGenerator<T> {
-        pub(crate) fn new<
+        pub(super) fn new<
             F: FnOnce(SifrGeneratedYielder<T>) -> Fut + 'static,
             Fut: ::std::future::Future<Output = ()> + 'static,
         >(
@@ -94,7 +94,7 @@ mod sifr_generated_generated_support {
         }
     }
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::{SifrGeneratedGenerator, SifrGeneratedYielder};
 use ::sifr_runtime::SifrInt;
 fn fibonacci(n: SifrInt) -> Box<dyn Iterator<Item = SifrInt>> {
     Box::new(SifrGeneratedGenerator::new(
@@ -102,12 +102,12 @@ fn fibonacci(n: SifrInt) -> Box<dyn Iterator<Item = SifrInt>> {
             let mut a: SifrInt = SifrInt::from_i64(0);
             let mut b: SifrInt = SifrInt::from_i64(1);
             let mut count: SifrInt = SifrInt::from_i64(0);
-            while &count < &n {
+            while count < n {
                 sifr_generated_yielder.suspend(a.clone()).await;
-                let temp: SifrInt = &a + &b;
-                a = b.clone();
-                b = temp.clone();
-                count = &count + &SifrInt::from_i64(1);
+                let temp: SifrInt = ::std::ops::Add::add(&a, &b);
+                a.clone_from(&b);
+                b.clone_from(&temp);
+                count = ::std::ops::Add::add(&count, &SifrInt::from_i64(1));
             }
         },
     ))
@@ -116,9 +116,11 @@ fn squares(n: SifrInt) -> Box<dyn Iterator<Item = SifrInt>> {
     Box::new(SifrGeneratedGenerator::new(
         async move |sifr_generated_yielder: SifrGeneratedYielder<SifrInt>| {
             let mut i: SifrInt = SifrInt::from_i64(0);
-            while &i < &n {
-                sifr_generated_yielder.suspend(&i * &i).await;
-                i = &i + &SifrInt::from_i64(1);
+            while i < n {
+                sifr_generated_yielder
+                    .suspend(::std::ops::Mul::mul(&i, &i))
+                    .await;
+                i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
             }
         },
     ))
@@ -127,11 +129,11 @@ fn evens(limit: SifrInt) -> Box<dyn Iterator<Item = SifrInt>> {
     Box::new(SifrGeneratedGenerator::new(
         async move |sifr_generated_yielder: SifrGeneratedYielder<SifrInt>| {
             let mut i: SifrInt = SifrInt::from_i64(0);
-            while &i < &limit {
-                if &i.floor_mod_known_nonzero(&SifrInt::from_i64(2)) == &SifrInt::from_i64(0) {
+            while i < limit {
+                if i.floor_mod_known_nonzero(&SifrInt::from_i64(2)) == SifrInt::from_i64(0) {
                     sifr_generated_yielder.suspend(i.clone()).await;
                 }
-                i = &i + &SifrInt::from_i64(1);
+                i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
             }
         },
     ))
@@ -140,23 +142,23 @@ fn count_up(n: SifrInt) -> Box<dyn Iterator<Item = SifrInt>> {
     Box::new(SifrGeneratedGenerator::new(
         async move |sifr_generated_yielder: SifrGeneratedYielder<SifrInt>| {
             let mut i: SifrInt = SifrInt::from_i64(0);
-            while &i < &n {
+            while i < n {
                 sifr_generated_yielder.suspend(i.clone()).await;
-                i = &i + &SifrInt::from_i64(1);
+                i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
             }
         },
     ))
 }
 fn format_int_list(values: &[SifrInt]) -> String {
-    if &SifrInt::from(values.len()) == &SifrInt::from_i64(0) {
+    if values.len() == SifrInt::from_i64(0) {
         return "[]".to_string();
     }
     let mut formatted: String = "[".to_string();
     let mut i: SifrInt = SifrInt::from_i64(0);
-    while &i < &SifrInt::from(values.len()) {
+    while i < values.len() {
         let Some(sifr_generated_checked_value_0) = ({
             let sifr_generated_checked_read_collection = &values;
-            let sifr_generated_checked_read_index = i.clone();
+            let sifr_generated_checked_read_index = &i;
             let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
                 .normalize_index_or_len(sifr_generated_checked_read_collection.len());
             sifr_generated_checked_read_collection
@@ -165,11 +167,11 @@ fn format_int_list(values: &[SifrInt]) -> String {
         }) else {
             break;
         };
-        formatted.push_str(sifr_generated_checked_value_0.clone().to_string().as_str());
-        if &(&i + &SifrInt::from_i64(1)) < &SifrInt::from(values.len()) {
+        formatted.push_str(sifr_generated_checked_value_0.to_string().as_str());
+        if ::std::ops::Add::add(&i, &SifrInt::from_i64(1)) < values.len() {
             formatted.push_str(", ");
         }
-        i = &i + &SifrInt::from_i64(1);
+        i = ::std::ops::Add::add(&i, &SifrInt::from_i64(1));
     }
     formatted.push(']');
     formatted
@@ -222,7 +224,11 @@ fn main() {
         ]
     );
     println!("Lazy iterator demo output:");
-    for item in output.iter().cloned() {
+    #[expect(
+        clippy::explicit_iter_loop,
+        reason = "language necessity: generated Rust borrows this typed Sifr iteration source; owner Item 12; remove when direct IntoIterator preserves the same source lifetime"
+    )]
+    for item in output.iter() {
         println!("{item}");
     }
 }

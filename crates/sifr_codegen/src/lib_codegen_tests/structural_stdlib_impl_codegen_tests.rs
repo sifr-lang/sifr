@@ -19,7 +19,8 @@ fn multi_module_stdlib_structural_impl_is_emitted_for_each_imported_nominal() {
     let generated = crate::generate_rust_multi_with_metadata(
         &[("zeta", &zeta), ("main", &main), ("alpha", &alpha)],
         &json_stdlib(),
-    );
+    )
+    .expect("project generation should succeed");
     let count = generated
         .rust_files
         .values()

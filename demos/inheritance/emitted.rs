@@ -53,7 +53,7 @@ impl Circle {
 impl Circle {
     #[expect(
         clippy::approx_constant,
-        reason = "generated Rust preserves this exact typed Sifr source contract"
+        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
     )]
     fn area(&self) -> f64 {
         3.14159_f64 * self.radius * self.radius
@@ -62,7 +62,8 @@ impl Circle {
 impl Circle {
     fn describe(&self) -> String {
         {
-            let mut sifr_generated_concat: String = String::with_capacity(3usize);
+            let mut sifr_generated_concat: String =
+                String::with_capacity(0usize.saturating_add(3usize).saturating_add(0usize));
             sifr_generated_concat.push_str(self.shape.name.clone().as_str());
             sifr_generated_concat.push_str(" r=");
             sifr_generated_concat.push_str(self.radius.to_string().as_str());
@@ -117,7 +118,13 @@ impl Rectangle {
 impl Rectangle {
     fn describe(&self) -> String {
         {
-            let mut sifr_generated_concat: String = String::with_capacity(1usize + 1usize);
+            let mut sifr_generated_concat: String = String::with_capacity(
+                0usize
+                    .saturating_add(1usize)
+                    .saturating_add(0usize)
+                    .saturating_add(1usize)
+                    .saturating_add(0usize),
+            );
             sifr_generated_concat.push_str(self.shape.name.clone().as_str());
             sifr_generated_concat.push(' ');
             sifr_generated_concat.push_str(self.width.to_string().as_str());
@@ -149,13 +156,13 @@ impl Temperature {
     }
 }
 impl Temperature {
-    fn from_fahrenheit(f: f64) -> Temperature {
-        Temperature::new((f - 32.0_f64) * 5.0_f64 / 9.0_f64)
+    fn from_fahrenheit(f: f64) -> Self {
+        Self::new((f - 32.0_f64) * 5.0_f64 / 9.0_f64)
     }
 }
 impl Temperature {
-    const fn freezing() -> Temperature {
-        Temperature::new(0.0_f64)
+    const fn freezing() -> Self {
+        Self::new(0.0_f64)
     }
 }
 impl Temperature {
@@ -201,10 +208,10 @@ fn main() {
     let r: Rectangle = Rectangle::new("blue".to_string(), 3.0_f64, 4.0_f64);
     println!("{}", c.describe());
     println!("{}", c.area());
-    println!("{}", c.shape.color.clone());
+    println!("{}", c.shape.color);
     println!("{}", r.describe());
     println!("{}", r.area());
-    println!("{}", r.shape.color.clone());
+    println!("{}", r.shape.color);
     let boiling: Temperature = Temperature::new(100.0_f64);
     println!("{}", boiling.to_fahrenheit());
     let body: Temperature = Temperature::from_fahrenheit(98.6_f64);

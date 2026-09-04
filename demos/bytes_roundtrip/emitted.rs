@@ -16,8 +16,8 @@ fn main() {
     let payload: Vec<u8> = vec![
         98u8, 105u8, 110u8, 97u8, 114u8, 121u8, 45u8, 115u8, 97u8, 109u8, 112u8, 108u8, 101u8,
     ];
-    assert!(payload.starts_with(&vec![98_u8, 105_u8, 110_u8, 97_u8, 114_u8, 121_u8]));
-    assert!(payload.ends_with(&vec![115_u8, 97_u8, 109_u8, 112_u8, 108_u8, 101_u8]));
+    assert!(payload.starts_with(&[98_u8, 105_u8, 110_u8, 97_u8, 114_u8, 121_u8]));
+    assert!(payload.ends_with(&[115_u8, 97_u8, 109_u8, 112_u8, 108_u8, 101_u8]));
     let mut conversion_ok: bool = false;
     let sifr_generated_try_res: Result<(), ParseError> = (|| {
         let as_hex: String = {
@@ -33,7 +33,7 @@ fn main() {
             sifr_generated_hex
         };
         let restored: Vec<u8> = {
-            let s: String = as_hex.to_string();
+            let s: String = as_hex.clone();
             let mut cleaned = String::new();
             for ch in s.chars() {
                 if ch.is_ascii_whitespace() {
@@ -46,7 +46,7 @@ fn main() {
                 }
                 cleaned.push(ch);
             }
-            if cleaned.len() % 2 != 0 {
+            if !cleaned.len().is_multiple_of(2) {
                 return Err(ParseError {
                     message: "fromhex() arg must contain an even number of hexadecimal digits"
                         .to_string(),
@@ -63,20 +63,16 @@ fn main() {
             }
             Ok::<Vec<u8>, ParseError>(result)
         }?;
-        let text: String = ::sifr_runtime::encoding::decode_text(
-            &restored,
-            &"utf-8".to_string(),
-            &"strict".to_string(),
-        )
-        .map_err(|sifr_generated_message| ParseError {
-            message: sifr_generated_message,
-        })?;
+        let text: String = ::sifr_runtime::encoding::decode_text(&restored, "utf-8", "strict")
+            .map_err(|sifr_generated_message| ParseError {
+                message: sifr_generated_message,
+            })?;
         conversion_ok = text == "binary-sample";
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let e = sifr_generated_try_err.clone();
-        let _ = e.message.clone().to_string();
+        let e = sifr_generated_try_err;
+        let _ = e.message;
     }
     assert!(conversion_ok);
 }

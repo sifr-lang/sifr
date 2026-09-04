@@ -26,5 +26,5 @@ fn main() {
     println!("default_values defaults and panic-to-diagnostic conversion demo:");
     println!("{first:?}");
     println!("{second:?}");
-    println!("{:?}", payload.values.clone());
+    println!("{:?}", payload.values);
 }

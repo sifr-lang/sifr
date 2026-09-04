@@ -46,7 +46,8 @@ fn main() {
                 let sifr_generated_index_normalized =
                     sifr_generated_index_raw.normalize_index_or_len(items.len());
                 if let Some(sifr_generated_elem) = items.get_mut(sifr_generated_index_normalized) {
-                    *sifr_generated_elem += sifr_generated_assign_value;
+                    *sifr_generated_elem =
+                        ::std::ops::Add::add(&*sifr_generated_elem, &sifr_generated_assign_value);
                 } else {
                     return Err(IndexError::new("collection index out of range".to_string()));
                 }
@@ -77,7 +78,7 @@ fn main() {
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e = sifr_generated_try_err.clone();
+        let _ = sifr_generated_try_err;
     }
     println!("indexing_rules indexing and semantics parity fixes demo:");
     println!("{items:?}");

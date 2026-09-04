@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "entrypoint_classes": [
-    {"id": "algorithmic-corpus", "command": "algorithmic runner native build", "representative": "verification/areas/algorithmic_compatibility/corpora/leetcode/src/0001_two_sum.sifr", "discoveries": ["algorithmic-sources"]},
-    {"id": "cli-build-project", "command": "sifr build <project entry>", "representative": "demos/additional_modules/main.sifr", "discoveries": ["project-workspace-sources"]},
-    {"id": "cli-build-single", "command": "sifr build <file>", "representative": "demos/codegen_output/main.sifr", "discoveries": ["demo-emitted-companions"]},
-    {"id": "cli-emit-single", "command": "sifr emit <file>", "representative": "demos/codegen_output/main.sifr", "discoveries": ["demo-emitted-companions"]},
-    {"id": "cli-run-single", "command": "sifr run <file>", "representative": "demos/codegen_output/main.sifr", "discoveries": ["e2e-pass-sources"]},
-    {"id": "cli-test-project", "command": "sifr test <project>", "representative": "demos/project_test_discovery/main.sifr", "discoveries": ["project-workspace-sources"]},
-    {"id": "rust-interop-project", "command": "sifr build <interop project>", "representative": "verification/areas/rust_interop/fixtures/direct_crate_matrix/positive/compatible_direct_signatures.sifr", "discoveries": ["rust-interop-positive-sources", "rust-interop-runtime-projects"]},
-    {"id": "static-program", "command": "static program materialization", "representative": "verification/areas/rust_interop/fixtures/static_program_arena_bridge/positive/static_program_constructs_and_projects_arena.sifr", "discoveries": ["rust-interop-positive-sources"]},
-    {"id": "sysroot-project", "command": "installed and source sysroot build", "representative": "verification/areas/sysroot_release/fixtures/stdlib_compile_release_smoke.sifr", "discoveries": ["sysroot-release-sources"]}
+    {"id": "algorithmic-corpus", "command": "algorithmic runner native build", "representative": "verification/areas/algorithmic_compatibility/corpora/leetcode/src/0001_two_sum.sifr", "discoveries": ["algorithmic-sources"], "qualifications": ["algorithmic_compatibility:leetcode-full"]},
+    {"id": "cli-build-project", "command": "sifr build <project entry>", "representative": "demos/additional_modules/main.sifr", "discoveries": ["project-workspace-sources"], "qualifications": ["project_workspace:audit-fixtures"]},
+    {"id": "cli-build-single", "command": "sifr build <file>", "representative": "demos/codegen_output/main.sifr", "discoveries": ["demo-emitted-companions"], "qualifications": ["generated_code_quality:full"]},
+    {"id": "cli-emit-single", "command": "sifr emit <file>", "representative": "demos/codegen_output/main.sifr", "discoveries": ["demo-emitted-companions"], "qualifications": ["generated_code_quality:full"]},
+    {"id": "cli-run-single", "command": "sifr run <file>", "representative": "demos/codegen_output/main.sifr", "discoveries": ["e2e-pass-sources"], "qualifications": ["generated_code_quality:full"]},
+    {"id": "cli-test-project", "command": "sifr test <project>", "representative": "demos/project_test_discovery/main.sifr", "discoveries": ["project-workspace-sources"], "qualifications": ["project_workspace:audit-fixtures"]},
+    {"id": "rust-interop-project", "command": "sifr build <interop project>", "representative": "verification/areas/rust_interop/fixtures/direct_crate_matrix/positive/compatible_direct_signatures.sifr", "discoveries": ["rust-interop-positive-sources", "rust-interop-runtime-projects"], "qualifications": ["rust_interop:matrix"]},
+    {"id": "static-program", "command": "static program materialization", "representative": "verification/areas/rust_interop/fixtures/static_program_arena_bridge/positive/static_program_constructs_and_projects_arena.sifr", "discoveries": ["rust-interop-positive-sources"], "qualifications": ["rust_interop:matrix"]},
+    {"id": "sysroot-project", "command": "installed and source sysroot build", "representative": "verification/areas/sysroot_release/fixtures/stdlib_compile_release_smoke.sifr", "discoveries": ["sysroot-release-sources"], "qualifications": ["sysroot_release:host-installed-stdlib-heavy"]}
   ],
   "discoveries": [
     {"id": "algorithmic-sources", "root": "verification/areas/algorithmic_compatibility/corpora/leetcode", "pattern": "**/*.sifr", "expected_count": 416, "path_set_sha256": "27f4a05a7faf472689ca1e7bf6271b45f85b5979c4985fd3411f4274c47c6bca"},

@@ -1,13 +1,13 @@
 // src/main.rs
-mod sifr_generated_generated_support {
+pub mod sifr_generated_generated_support {
     use crate::Error;
     #[expect(
         clippy::assertions_on_constants,
-        reason = "generated Rust preserves this exact typed Sifr source contract"
+        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
     )]
-    pub(crate) fn assert_ok<T: Clone + 'static>(value: Result<T, Error>) {
+    pub(super) fn assert_ok<T: Clone + 'static>(value: Result<T, Error>) {
         let sifr_generated_try_res: Result<(), Error> = (|| {
-            let _out: T = value?;
+            let _ = value?;
             Ok(())
         })();
         if let Err(_e) = sifr_generated_try_res {
@@ -16,11 +16,11 @@ mod sifr_generated_generated_support {
     }
     #[expect(
         clippy::assertions_on_constants,
-        reason = "generated Rust preserves this exact typed Sifr source contract"
+        reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
     )]
-    pub(crate) fn assert_err<T: Clone + 'static>(value: Result<T, Error>) {
+    pub(super) fn assert_err<T: Clone + 'static>(value: Result<T, Error>) {
         let sifr_generated_try_res: Result<(), Error> = (|| {
-            let _out: T = value?;
+            let _ = value?;
             assert!(false);
             Ok(())
         })();
@@ -60,16 +60,24 @@ mod sifr_generated_project_nominals {
         }
     }
 }
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::{assert_err, assert_ok};
 use ::sifr_runtime::SifrInt;
 use ::sifr_runtime::SifrRange;
 pub use sifr_generated_project_nominals::Error;
 pub use sifr_generated_project_nominals::ValueError;
+#[expect(
+    clippy::needless_pass_by_value,
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+)]
 fn negate(x: SifrInt) -> SifrInt {
-    &SifrInt::from_i64(0) - &x
+    ::std::ops::Sub::sub(&SifrInt::from_i64(0), &x)
 }
+#[expect(
+    clippy::needless_pass_by_value,
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+)]
 fn add(x: SifrInt, y: SifrInt) -> SifrInt {
-    &x + &y
+    ::std::ops::Add::add(&x, &y)
 }
 #[expect(
     clippy::too_many_lines,
@@ -122,32 +130,29 @@ fn main() {
         sifr_generated_sorted_values.sort_by(
             |sifr_generated_sorted_left, sifr_generated_sorted_right| {
                 if sifr_generated_sorted_reverse {
-                    sifr_generated_sorted_right.cmp(&sifr_generated_sorted_left)
+                    sifr_generated_sorted_right.cmp(sifr_generated_sorted_left)
                 } else {
-                    sifr_generated_sorted_left.cmp(&sifr_generated_sorted_right)
+                    sifr_generated_sorted_left.cmp(sifr_generated_sorted_right)
                 }
             },
         );
         sifr_generated_sorted_values
     });
     println!("{:?}", {
-        let sifr_generated_sorted_values = vec![
+        let sifr_generated_sorted_reverse = false;
+        let mut sifr_generated_sorted_pairs = vec![
             SifrInt::from_i64(3),
             SifrInt::from_i64(1),
             SifrInt::from_i64(2),
         ]
         .into_iter()
+        .map(|sifr_generated_sorted_value| {
+            (
+                negate(sifr_generated_sorted_value.clone()),
+                sifr_generated_sorted_value,
+            )
+        })
         .collect::<Vec<_>>();
-        let sifr_generated_sorted_reverse = false;
-        let mut sifr_generated_sorted_pairs = sifr_generated_sorted_values
-            .into_iter()
-            .map(|sifr_generated_sorted_value| {
-                (
-                    negate(sifr_generated_sorted_value.clone()),
-                    sifr_generated_sorted_value,
-                )
-            })
-            .collect::<Vec<_>>();
         sifr_generated_sorted_pairs.sort_by(
             |sifr_generated_sorted_left, sifr_generated_sorted_right| {
                 if sifr_generated_sorted_reverse {
@@ -178,9 +183,9 @@ fn main() {
         sifr_generated_sorted_values.sort_by(
             |sifr_generated_sorted_left, sifr_generated_sorted_right| {
                 if sifr_generated_sorted_reverse {
-                    sifr_generated_sorted_right.cmp(&sifr_generated_sorted_left)
+                    sifr_generated_sorted_right.cmp(sifr_generated_sorted_left)
                 } else {
-                    sifr_generated_sorted_left.cmp(&sifr_generated_sorted_right)
+                    sifr_generated_sorted_left.cmp(sifr_generated_sorted_right)
                 }
             },
         );
@@ -204,7 +209,10 @@ fn main() {
                 .into_iter()
                 .enumerate()
                 .map(|sifr_generated_pair| (
-                    SifrInt::from(sifr_generated_pair.0) + SifrInt::from_i64(10),
+                    ::std::ops::Add::add(
+                        SifrInt::from(sifr_generated_pair.0),
+                        SifrInt::from_i64(10)
+                    ),
                     sifr_generated_pair.1
                 ))
         )

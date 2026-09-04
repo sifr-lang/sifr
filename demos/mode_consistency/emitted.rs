@@ -1,7 +1,7 @@
 // src/main.rs
-mod sifr_generated_generated_support {
-    pub(crate) use ::sifr_runtime::SifrInt;
-    pub(crate) fn floor(x: f64) -> SifrInt {
+pub mod sifr_generated_generated_support {
+    pub(super) use ::sifr_runtime::SifrInt;
+    pub(super) fn floor(x: f64) -> SifrInt {
         ::sifr_stdlib::math::floor(x).into_sifr_int()
     }
 }
@@ -14,13 +14,20 @@ fn main() {
 }
 
 // src/helper.rs
-use crate::sifr_generated_generated_support::*;
+use crate::sifr_generated_generated_support::floor;
 pub use ::sifr_runtime::SifrInt;
 #[must_use]
 pub const fn sifr_generated_const_42415345() -> SifrInt {
     SifrInt::from_i64(5)
 }
 #[must_use]
+#[expect(
+    clippy::needless_pass_by_value,
+    reason = "language necessity: generated Rust preserves this exact typed Sifr source contract; owner Item 12; remove when the Rust ABI can differ without changing Sifr semantics"
+)]
 pub fn value(x: SifrInt) -> SifrInt {
-    &(&sifr_generated_const_42415345() + &floor(2.9_f64)) + &x
+    ::std::ops::Add::add(
+        &::std::ops::Add::add(&sifr_generated_const_42415345(), &floor(2.9_f64)),
+        &x,
+    )
 }

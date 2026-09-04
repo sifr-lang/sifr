@@ -1,18 +1,38 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use quote::quote;
 use syn::punctuated::Punctuated;
 use syn::visit_mut::{self, VisitMut};
 
 mod assignment_cleanup;
+mod borrowed_string_arguments;
+mod clippy_cleanup;
 mod lint_cleanup;
 mod residual_cleanup;
 mod result_control_cleanup;
 mod structured_control_cleanup;
 
-use assignment_cleanup::{
-    expression_is_pure_initializer, expression_uses_identifier, fold_assignment_conditionals,
+use assignment_cleanup::{expression_uses_identifier, fold_assignment_conditionals};
+use borrowed_string_arguments::{
+    collect_borrowed_string_params, collect_owned_string_returns,
+    remove_returned_string_conversion, rewrite_borrowed_string_literal_arguments,
 };
+pub(super) use borrowed_string_arguments::{
+    collect_project_borrowed_string_params, rewrite_project_borrowed_string_literals,
+};
+use clippy_cleanup::{
+    remove_discardable_expression_statements, remove_last_use_clones,
+    remove_last_use_closure_input_clones, remove_needless_collected_length_bindings,
+    replace_unused_underscore_bindings, rewrite_clippy_expression,
+};
+
+pub(super) fn rewrite_owned_string_clones(signature: &syn::Signature, body: &mut syn::Block) {
+    clippy_cleanup::rewrite_owned_string_clones(signature, body);
+}
+
+pub(super) fn remove_last_use_parameter_clones(signature: &syn::Signature, body: &mut syn::Block) {
+    clippy_cleanup::remove_last_use_parameter_clones(signature, body);
+}
 use lint_cleanup::{
     flatten_infallible_result_scaffolding, fold_delayed_initializations, fold_initial_assignments,
     fold_literal_result_bindings, fold_tail_bindings, fold_vec_push_sequences,
@@ -33,11 +53,20 @@ use structured_control_cleanup::{
 };
 
 pub(super) fn canonicalize_idioms(file: &mut syn::File, mutating_methods: &HashSet<String>) {
-    IdiomCleanup { mutating_methods }.visit_file_mut(file);
+    let borrowed_string_params = collect_borrowed_string_params(file);
+    let owned_string_returns = collect_owned_string_returns(file);
+    IdiomCleanup {
+        mutating_methods,
+        borrowed_string_params: &borrowed_string_params,
+        owned_string_returns: &owned_string_returns,
+    }
+    .visit_file_mut(file);
 }
 
 struct IdiomCleanup<'methods> {
     mutating_methods: &'methods HashSet<String>,
+    borrowed_string_params: &'methods HashMap<String, Vec<bool>>,
+    owned_string_returns: &'methods HashSet<String>,
 }
 
 impl VisitMut for IdiomCleanup<'_> {
@@ -76,6 +105,7 @@ impl VisitMut for IdiomCleanup<'_> {
             self.visit_expr_mut(argument);
         }
         flatten_nested_format_argument(&name, &mut arguments);
+        clippy_cleanup::remove_macro_argument_clones(&name, &mut arguments);
         rust_macro.tokens = quote!(#arguments);
         if name == "assert" {
             rewrite_assert_comparison(rust_macro);
@@ -93,6 +123,10 @@ impl VisitMut for IdiomCleanup<'_> {
         fold_assignment_conditionals(&mut block.stmts, self.mutating_methods);
         fold_vec_push_sequences(&mut block.stmts);
         fold_tail_bindings(&mut block.stmts);
+        remove_needless_collected_length_bindings(&mut block.stmts);
+        remove_last_use_clones(&mut block.stmts);
+        replace_unused_underscore_bindings(&mut block.stmts);
+        remove_discardable_expression_statements(&mut block.stmts);
         remove_redundant_else_blocks(&mut block.stmts);
         rewrite_discarded_result_matches(&mut block.stmts);
         rewrite_identity_error_propagation(&mut block.stmts);
@@ -104,8 +138,20 @@ impl VisitMut for IdiomCleanup<'_> {
     fn visit_local_mut(&mut self, local: &mut syn::Local) {
         rewrite_result_match_with_let_else(local);
         visit_mut::visit_local_mut(self, local);
+        rewrite_copy_local_cloned(local);
         rewrite_option_let_else_with_question_mark(local);
         rewrite_result_match_with_let_else(local);
+        clippy_cleanup::add_complex_local_type_expectation(local);
+    }
+
+    fn visit_expr_for_loop_mut(&mut self, for_loop: &mut syn::ExprForLoop) {
+        visit_mut::visit_expr_for_loop_mut(self, for_loop);
+        clippy_cleanup::remove_unnecessary_owned_iteration(for_loop);
+    }
+
+    fn visit_expr_closure_mut(&mut self, closure: &mut syn::ExprClosure) {
+        visit_mut::visit_expr_closure_mut(self, closure);
+        remove_last_use_closure_input_clones(closure);
     }
 
     fn visit_pat_mut(&mut self, pattern: &mut syn::Pat) {
@@ -114,6 +160,16 @@ impl VisitMut for IdiomCleanup<'_> {
         if let Some(factored) = factor_tuple_struct_or_pattern(pattern) {
             *pattern = factored;
         }
+    }
+
+    fn visit_expr_if_mut(&mut self, branch: &mut syn::ExprIf) {
+        visit_mut::visit_expr_if_mut(self, branch);
+        clippy_cleanup::remove_last_use_if_let_clones(branch);
+    }
+
+    fn visit_expr_match_mut(&mut self, match_: &mut syn::ExprMatch) {
+        visit_mut::visit_expr_match_mut(self, match_);
+        clippy_cleanup::remove_owned_generated_error_arm_clones(match_);
     }
 
     fn visit_lit_float_mut(&mut self, literal: &mut syn::LitFloat) {
@@ -133,6 +189,8 @@ impl VisitMut for IdiomCleanup<'_> {
         rewrite_empty_string_comparison(expression);
         rewrite_redundant_borrowed_method_closure(expression);
         rewrite_redundant_method_closure(expression);
+        rewrite_borrowed_string_literal_arguments(expression, self.borrowed_string_params);
+        remove_returned_string_conversion(expression, self.owned_string_returns);
         rewrite_identity_constructor_closure(expression);
         rewrite_immediate_async_closure(expression);
         rewrite_result_identity_match(expression);
@@ -156,7 +214,55 @@ impl VisitMut for IdiomCleanup<'_> {
         factor_shared_if_suffix(expression);
         invert_negative_condition_with_else(expression);
         remove_single_expression_block(expression);
+        rewrite_clippy_expression(expression);
     }
+}
+
+fn rewrite_copy_local_cloned(local: &mut syn::Local) {
+    let syn::Pat::Type(typed) = &local.pat else {
+        return;
+    };
+    if !type_is_option_or_vector_of_copy(&typed.ty) {
+        return;
+    }
+    let Some(init) = &mut local.init else {
+        return;
+    };
+    CopyIteratorRewriter.visit_expr_mut(&mut init.expr);
+}
+
+fn type_is_option_or_vector_of_copy(ty: &syn::Type) -> bool {
+    let syn::Type::Path(path) = ty else {
+        return false;
+    };
+    let Some(segment) = path.path.segments.last() else {
+        return false;
+    };
+    if !matches!(segment.ident.to_string().as_str(), "Option" | "Vec") {
+        return false;
+    }
+    let syn::PathArguments::AngleBracketed(arguments) = &segment.arguments else {
+        return false;
+    };
+    matches!(arguments.args.first(), Some(syn::GenericArgument::Type(syn::Type::Path(inner)))
+        if inner.path.segments.last().is_some_and(|part|
+            matches!(part.ident.to_string().as_str(),
+                "bool" | "char" | "f32" | "f64" | "i8" | "i16" | "i32" | "i64"
+                    | "i128" | "isize" | "u8" | "u16" | "u32" | "u64" | "u128"
+                    | "usize")))
+}
+
+struct CopyIteratorRewriter;
+
+impl VisitMut for CopyIteratorRewriter {
+    fn visit_expr_method_call_mut(&mut self, call: &mut syn::ExprMethodCall) {
+        visit_mut::visit_expr_method_call_mut(self, call);
+        if call.method == "cloned" && call.args.is_empty() {
+            call.method = syn::Ident::new("copied", call.method.span());
+        }
+    }
+
+    fn visit_item_mut(&mut self, _item: &mut syn::Item) {}
 }
 
 fn flatten_nested_format_argument(
@@ -585,7 +691,9 @@ fn make_constant_unwrap_default_eager(expression: &mut syn::Expr) {
     let Some(syn::Expr::Closure(closure)) = call.args.first() else {
         return;
     };
-    if closure.inputs.len() > 1 || !expression_is_pure_initializer(&closure.body) {
+    if closure.inputs.len() > 1
+        || !crate::discardability::syntax_expression_is_discardable(&closure.body)
+    {
         return;
     }
     if closure.inputs.iter().any(|input| match input {

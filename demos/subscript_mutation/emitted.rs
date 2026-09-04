@@ -56,7 +56,7 @@ fn main() {
         Ok(())
     })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
-        let _e = sifr_generated_try_err.clone();
+        let _ = sifr_generated_try_err;
         return;
     }
     println!("{nums:?}");
@@ -70,7 +70,7 @@ fn main() {
         }
     }
     let val: Option<SifrInt> = d.get("b").cloned();
-    if let Some(val) = val.clone() {
+    if let Some(val) = val {
         println!("{val}");
         assert_eq!(val.to_string(), "2");
     }

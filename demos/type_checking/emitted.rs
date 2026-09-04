@@ -1,7 +1,7 @@
 // src/main.rs
 use ::sifr_runtime::SifrInt;
-fn identity(x: SifrInt) -> SifrInt {
-    x.clone()
+const fn identity(x: SifrInt) -> SifrInt {
+    x
 }
 fn main() {
     let value: SifrInt = identity(SifrInt::from_i64(17));
