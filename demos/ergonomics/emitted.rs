@@ -278,22 +278,34 @@ fn demo_chained_comparisons() {
 }
 fn demo_string_multiply() {
     println!("{}", {
+        let sifr_generated_repeat_src: &str = &"=".to_string();
         let sifr_generated_n = SifrInt::from_i64(30);
         if &sifr_generated_n <= &0 {
             String::new()
         } else {
-            "=".to_string()
-                .repeat(::sifr_runtime::to_usize_proven(&sifr_generated_n))
+            let mut sifr_generated_repeat_out = String::new();
+            let mut sifr_generated_repeat_i = SifrInt::from_i64(0);
+            while &sifr_generated_repeat_i < &sifr_generated_n {
+                sifr_generated_repeat_out.push_str(sifr_generated_repeat_src);
+                sifr_generated_repeat_i = &sifr_generated_repeat_i + SifrInt::from_i64(1);
+            }
+            sifr_generated_repeat_out
         }
     });
     println!("  String Multiplication Demo");
     println!("{}", {
+        let sifr_generated_repeat_src: &str = &"-".to_string();
         let sifr_generated_n = SifrInt::from_i64(30);
         if &sifr_generated_n <= &0 {
             String::new()
         } else {
-            "-".to_string()
-                .repeat(::sifr_runtime::to_usize_proven(&sifr_generated_n))
+            let mut sifr_generated_repeat_out = String::new();
+            let mut sifr_generated_repeat_i = SifrInt::from_i64(0);
+            while &sifr_generated_repeat_i < &sifr_generated_n {
+                sifr_generated_repeat_out.push_str(sifr_generated_repeat_src);
+                sifr_generated_repeat_i = &sifr_generated_repeat_i + SifrInt::from_i64(1);
+            }
+            sifr_generated_repeat_out
         }
     });
 }

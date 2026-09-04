@@ -108,7 +108,9 @@ fn main() {
             "alpha,beta,gamma"
                 .to_string()
                 .splitn(
-                    ::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(1) + 1)),
+                    (SifrInt::from_i64(1) + SifrInt::from_i64(1)).clamp_slice_bound(
+                        "alpha,beta,gamma".to_string().len().saturating_add(1usize),
+                    ),
                     ',',
                 )
                 .map(::std::string::ToString::to_string)
@@ -123,7 +125,8 @@ fn main() {
             "aaaa".to_string().replacen(
                 'a',
                 "b",
-                ::sifr_runtime::to_usize_proven(&SifrInt::from_i64(2)),
+                SifrInt::from_i64(2)
+                    .clamp_slice_bound("aaaa".to_string().len().saturating_add(1usize)),
             )
         }
     );

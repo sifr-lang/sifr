@@ -153,13 +153,13 @@ fn main() {
             let sifr_generated_outer_norm =
                 sifr_generated_outer_i.normalize_index_or_len(sifr_generated_outer_list.len());
             sifr_generated_outer_list
-                .get(::sifr_runtime::to_usize_proven(&sifr_generated_outer_norm))
+                .get(sifr_generated_outer_norm)
                 .and_then(|sifr_generated_row_5f5f736966725f726f77| {
                     let sifr_generated_inner_i = SifrInt::from_i64(0);
                     let sifr_generated_inner_norm = sifr_generated_inner_i
                         .normalize_index_or_len(sifr_generated_row_5f5f736966725f726f77.len());
                     sifr_generated_row_5f5f736966725f726f77
-                        .get(::sifr_runtime::to_usize_proven(&sifr_generated_inner_norm))
+                        .get(sifr_generated_inner_norm)
                         .cloned()
                 })
         }
@@ -176,13 +176,13 @@ fn main() {
             let sifr_generated_outer_norm =
                 sifr_generated_outer_i.normalize_index_or_len(sifr_generated_outer_list.len());
             sifr_generated_outer_list
-                .get(::sifr_runtime::to_usize_proven(&sifr_generated_outer_norm))
+                .get(sifr_generated_outer_norm)
                 .and_then(|sifr_generated_row_5f5f736966725f726f77| {
                     let sifr_generated_inner_i = SifrInt::from_i64(1);
                     let sifr_generated_inner_norm = sifr_generated_inner_i
                         .normalize_index_or_len(sifr_generated_row_5f5f736966725f726f77.len());
                     sifr_generated_row_5f5f736966725f726f77
-                        .get(::sifr_runtime::to_usize_proven(&sifr_generated_inner_norm))
+                        .get(sifr_generated_inner_norm)
                         .cloned()
                 })
         }
@@ -199,13 +199,13 @@ fn main() {
             let sifr_generated_outer_norm =
                 sifr_generated_outer_i.normalize_index_or_len(sifr_generated_outer_list.len());
             sifr_generated_outer_list
-                .get(::sifr_runtime::to_usize_proven(&sifr_generated_outer_norm))
+                .get(sifr_generated_outer_norm)
                 .and_then(|sifr_generated_row_5f5f736966725f726f77| {
                     let sifr_generated_inner_i = SifrInt::from_i64(2);
                     let sifr_generated_inner_norm = sifr_generated_inner_i
                         .normalize_index_or_len(sifr_generated_row_5f5f736966725f726f77.len());
                     sifr_generated_row_5f5f736966725f726f77
-                        .get(::sifr_runtime::to_usize_proven(&sifr_generated_inner_norm))
+                        .get(sifr_generated_inner_norm)
                         .cloned()
                 })
         }

@@ -247,7 +247,10 @@ mod sifr_generated_generated_support {
                 i = &i + &SifrInt::from_i64(1);
             }
             if found_insert_at {
-                sorted_blocks.insert(::sifr_runtime::to_usize_proven(&insert_at), block.clone());
+                sorted_blocks.insert(
+                    insert_at.clamp_slice_bound(sorted_blocks.len()),
+                    block.clone(),
+                );
             } else {
                 sorted_blocks.push(block.clone());
             }

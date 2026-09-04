@@ -272,7 +272,7 @@ fn collect_open_actual() -> Vec<bool> {
             let sifr_generated_cmp_norm =
                 sifr_generated_cmp_i.normalize_index_or_len(sifr_generated_cmp_list.len());
             sifr_generated_cmp_list
-                .get(::sifr_runtime::to_usize_proven(&sifr_generated_cmp_norm))
+                .get(sifr_generated_cmp_norm)
                 .map(::std::string::String::as_str)
         } == Some("hello");
         second_ok = &SifrInt::from(lines.len()) >= &SifrInt::from_i64(2) && {
@@ -281,7 +281,7 @@ fn collect_open_actual() -> Vec<bool> {
             let sifr_generated_cmp_norm =
                 sifr_generated_cmp_i.normalize_index_or_len(sifr_generated_cmp_list.len());
             sifr_generated_cmp_list
-                .get(::sifr_runtime::to_usize_proven(&sifr_generated_cmp_norm))
+                .get(sifr_generated_cmp_norm)
                 .map(::std::string::String::as_str)
         } == Some("world");
         eof_ok = &SifrInt::from(lines.len()) == &SifrInt::from_i64(2);
