@@ -39,7 +39,7 @@ pub(crate) struct ModuleSupportDemand {
     directly_used_stdlib_modules: HashSet<String>,
     imported_stdlib_names: HashMap<String, HashSet<String>>,
     suppressed_union_definitions: HashSet<String>,
-    suppressed_error_classes: HashSet<String>,
+    locally_shadowed_error_classes: HashSet<String>,
     referenced_error_classes: HashSet<String>,
     python_error_rust_types: BTreeSet<String>,
     required_features: HashSet<StdlibFeature>,
@@ -74,7 +74,7 @@ impl ModuleSupportDemand {
             directly_used_stdlib_modules: emitter.used_stdlib_modules.clone(),
             imported_stdlib_names: emitter.imported_stdlib_names.clone(),
             suppressed_union_definitions: emitter.union_enums.keys().cloned().collect(),
-            suppressed_error_classes: user_defined_error_classes
+            locally_shadowed_error_classes: user_defined_error_classes
                 .into_iter()
                 .map(str::to_string)
                 .collect(),
@@ -92,7 +92,16 @@ impl ModuleSupportDemand {
         }
     }
 
-    pub(crate) fn merge(&mut self, other: &Self) {
+    /// Merge one named module into a crate-level support owner.
+    ///
+    /// Error-class shadows are deliberately module-local. The shared owner
+    /// must retain builtins required by a sibling module or by compiler-owned
+    /// runtime and stdlib support.
+    pub(crate) fn merge_project_module(&mut self, other: &Self) {
+        assert!(
+            self.locally_shadowed_error_classes.is_empty(),
+            "project support demand must start from the unshadowed aggregate identity"
+        );
         self.runtime.merge(&other.runtime);
         self.runtime_needs.merge(&other.runtime_needs);
         self.intrinsic_functions
@@ -107,8 +116,6 @@ impl ModuleSupportDemand {
         }
         self.suppressed_union_definitions
             .extend(other.suppressed_union_definitions.iter().cloned());
-        self.suppressed_error_classes
-            .extend(other.suppressed_error_classes.iter().cloned());
         self.referenced_error_classes
             .extend(other.referenced_error_classes.iter().cloned());
         self.python_error_rust_types
@@ -138,23 +145,6 @@ impl ModuleSupportDemand {
         }
         features
     }
-
-    pub(crate) fn referenced_error_classes_with_source(
-        &self,
-        source: &str,
-        needs_file_handles: bool,
-    ) -> HashSet<String> {
-        let mut referenced = self.referenced_error_classes.clone();
-        referenced.extend(collect_source_builtin_error_classes(
-            source,
-            BUILTIN_ERROR_CLASSES,
-        ));
-        if needs_file_handles {
-            referenced.insert("IOError".to_string());
-        }
-        referenced.retain(|name| !self.suppressed_error_classes.contains(name));
-        referenced
-    }
 }
 
 pub(crate) struct RenderedSupport {
@@ -179,7 +169,7 @@ pub(crate) fn render_support(
         referenced_error_classes.insert("IOError".to_string());
     }
     add_runtime_error_classes(&demand.runtime, &mut referenced_error_classes);
-    referenced_error_classes.retain(|name| !demand.suppressed_error_classes.contains(name));
+    referenced_error_classes.retain(|name| !demand.locally_shadowed_error_classes.contains(name));
 
     let stdlib_emits_task_context = stdlib.source.contains("__sifr_task_current_context")
         || stdlib.source.contains("__SIFR_TASK_CONTEXT_LABEL");
@@ -603,14 +593,15 @@ fn use_item(path: &[&str]) -> RustItem {
 #[cfg(test)]
 mod tests {
     use super::{ModuleSupportDemand, render_support};
-    use crate::StdlibCode;
+    use crate::{StdlibCode, StdlibRustSource};
+    use std::collections::HashSet;
 
     #[test]
-    fn user_error_classes_suppress_late_runtime_error_demand() {
+    fn item10a_single_file_user_error_suppresses_late_runtime_demand() {
         let mut demand = ModuleSupportDemand::default();
         demand.runtime.task_scope = true;
         demand
-            .suppressed_error_classes
+            .locally_shadowed_error_classes
             .insert("SecondaryError".to_string());
 
         let rendered = render_support(&demand, &StdlibCode::default());
@@ -619,17 +610,32 @@ mod tests {
     }
 
     #[test]
-    fn user_error_classes_suppress_late_source_error_demand() {
-        let mut demand = ModuleSupportDemand::default();
-        demand
-            .suppressed_error_classes
+    fn item10a_project_merge_does_not_promote_a_module_shadow_to_a_crate_veto() {
+        let mut module = ModuleSupportDemand::default();
+        module
+            .locally_shadowed_error_classes
             .insert("ValueError".to_string());
+        module
+            .directly_used_stdlib_modules
+            .insert("sifr.fixture".to_string());
 
-        let referenced = demand.referenced_error_classes_with_source(
-            "fn operation() -> Result<(), ValueError> { Ok(()) }",
-            false,
+        let mut project = ModuleSupportDemand::default();
+        project.merge_project_module(&module);
+
+        let mut stdlib = StdlibCode::default();
+        stdlib.module_rust_code.insert(
+            "sifr.fixture".to_string(),
+            StdlibRustSource {
+                module: "sifr.fixture".to_string(),
+                source_path: "stdlib/sifr/fixture.sifr".to_string(),
+                source_sha256: "item-10a-fixture".to_string(),
+                nominal_types: HashSet::new(),
+                rust: "fn operation() -> Result<(), ValueError> { Ok(()) }\n".to_string(),
+            },
         );
 
-        assert!(!referenced.contains("ValueError"));
+        let rendered = render_support(&project, &stdlib);
+
+        assert!(rendered.source.contains("struct ValueError"));
     }
 }

@@ -37,3 +37,9 @@ pub(crate) const BUILTIN_ERROR_CLASSES: &[&str] = &[
     "WorkerRuntimeError",
     "WorkerError",
 ];
+
+pub(crate) fn builtin_error_identity(name: &str) -> Option<String> {
+    BUILTIN_ERROR_CLASSES
+        .contains(&name)
+        .then(|| format!("sifr.builtin.{name}"))
+}
