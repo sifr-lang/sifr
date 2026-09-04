@@ -6,12 +6,17 @@ fn item10a_single_file_user_error_shadow_keeps_one_local_identity() {
         r#"
 class ValueError(Error):
     message: str
+    detail: str
+
+    def __init__(self, message: str, detail: str):
+        self.message = message
+        self.detail = detail
 
 def message() -> str:
     try:
-        raise ValueError("local")
+        raise ValueError("local", "single-file-detail")
     except ValueError as error:
-        return error.message
+        return error.detail
 "#,
     );
 
@@ -20,5 +25,6 @@ def message() -> str:
         1,
         "{generated}"
     );
-    assert!(generated.contains("Err(ValueError::new(\"local\".to_string()))"));
+    assert!(generated.contains("detail: String"), "{generated}");
+    assert!(generated.contains("\"single-file-detail\".to_string()"));
 }

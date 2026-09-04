@@ -89,7 +89,11 @@ pub(crate) fn relocate_project_stdlib_nominals_owned_by(
     if owned_names.is_empty() {
         return source.to_string();
     }
-    let names = owned_names.iter().map(String::as_str).collect();
+    let relocatable_names = owned_names
+        .iter()
+        .filter(|name| !local_class_rust_names.contains(*name))
+        .collect::<HashSet<_>>();
+    let names = relocatable_names.iter().map(|name| name.as_str()).collect();
     let stripped = strip_relocated_rust_items_by_name(source, &names, local_class_rust_names);
     if crate_root_modules.contains(module_name) {
         return stripped;
@@ -98,6 +102,9 @@ pub(crate) fn relocate_project_stdlib_nominals_owned_by(
     ordered_names.sort();
     let mut imports = String::new();
     for name in ordered_names {
+        if local_class_rust_names.contains(name) {
+            continue;
+        }
         if !rust_source_references_item_name(&stripped, name) {
             continue;
         }
@@ -759,6 +766,17 @@ mod tests {
             paths.get("sifr.builtin.ValueError"),
             Some(&"crate::__sifr_project_nominals::ValueError".to_string())
         );
+
+        let relocated = relocate_project_stdlib_nominals_owned_by(
+            "struct ValueError { message: String, detail: String }\nfn detail(error: ValueError) -> String { error.detail }\n",
+            "shadow",
+            &HashSet::from(["main"]),
+            &HashSet::from(["ValueError".to_string()]),
+            &HashSet::from(["ValueError".to_string()]),
+        );
+        assert!(relocated.contains("struct ValueError"), "{relocated}");
+        assert!(relocated.contains("error.detail"), "{relocated}");
+        assert!(!relocated.contains("use crate::ValueError"), "{relocated}");
     }
 
     #[test]

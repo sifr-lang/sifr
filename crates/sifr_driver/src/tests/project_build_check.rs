@@ -22,12 +22,12 @@ fn item10a_build_project_preserves_module_scoped_builtin_error_shadow_identities
     let build_out = dir.join("build_out");
     std::fs::write(
         &main_file,
-        "from shadow import shadow_message\nfrom builtin_user import builtin_message\n\ndef main():\n    assert shadow_message() == \"shadow\"\n    assert builtin_message() == \"builtin\"\n    print(\"module-error-identities-ok\")\n",
+        "from shadow import shadow_detail\nfrom builtin_user import builtin_message\n\ndef main():\n    assert shadow_detail() == \"shadow-detail\"\n    assert builtin_message() == \"builtin\"\n    print(\"module-error-identities-ok\")\n",
     )
     .expect("main module should be written");
     std::fs::write(
         dir.join("shadow.sifr"),
-        "class ValueError(Error):\n    message: str\n\ndef shadow_message() -> str:\n    try:\n        raise ValueError(\"shadow\")\n    except ValueError as error:\n        return error.message\n",
+        "class ValueError(Error):\n    message: str\n    detail: str\n\n    def __init__(self, message: str, detail: str):\n        self.message = message\n        self.detail = detail\n\ndef shadow_detail() -> str:\n    try:\n        raise ValueError(\"shadow\", \"shadow-detail\")\n    except ValueError as error:\n        return error.detail\n",
     )
     .expect("shadow module should be written");
     std::fs::write(

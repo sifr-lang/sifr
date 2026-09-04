@@ -22,12 +22,12 @@ fn item10a_test_project_preserves_module_scoped_builtin_error_shadow_identities(
     std::fs::create_dir_all(&test_dir).expect("test dir should be created");
     std::fs::write(
         test_dir.join("shadow.sifr"),
-        "class ValueError(Error):\n    message: str\n\ndef shadow_message() -> str:\n    try:\n        raise ValueError(\"shadow\")\n    except ValueError as error:\n        return error.message\n",
+        "class ValueError(Error):\n    message: str\n    detail: str\n\n    def __init__(self, message: str, detail: str):\n        self.message = message\n        self.detail = detail\n\ndef shadow_detail() -> str:\n    try:\n        raise ValueError(\"shadow\", \"shadow-detail\")\n    except ValueError as error:\n        return error.detail\n",
     )
     .expect("shadow support module should be written");
     std::fs::write(
         test_dir.join("test_error_identities.sifr"),
-        "from shadow import shadow_message\n\ndef builtin_message() -> str:\n    try:\n        raise ValueError(\"builtin\")\n    except ValueError as error:\n        return error.message\n\ndef test_module_error_identities():\n    assert shadow_message() == \"shadow\"\n    assert builtin_message() == \"builtin\"\n",
+        "from shadow import shadow_detail\n\ndef builtin_message() -> str:\n    try:\n        raise ValueError(\"builtin\")\n    except ValueError as error:\n        return error.message\n\ndef test_module_error_identities():\n    assert shadow_detail() == \"shadow-detail\"\n    assert builtin_message() == \"builtin\"\n",
     )
     .expect("test module should be written");
 
