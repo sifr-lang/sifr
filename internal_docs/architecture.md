@@ -492,7 +492,17 @@ large-file check and a representative project check.
   is a structured build diagnostic, never an unformatted fallback.
   Materialization repeats this fail-closed check for synthetic namespace and
   bridge files that do not exist at the earlier emit boundary.
-- Both shapes materialize through the same generated-binary-project path and the same Cargo manifest generation helper.
+- Both shapes materialize through the same generated-binary-project path. Native
+  build state uses local sysroot and package paths only while Cargo resolves and
+  builds it. The source-only materialization boundary then replaces that local
+  manifest with exact Git or registry dependencies and rewrites the generated
+  lock to the same portable sources; local Rust interop dependencies that have
+  no publishable source fail closed instead of leaking a host path.
+- Single-file and non-package projects resolve from the immutable sysroot vendor
+  source into a cached lock before compilation. The vendor inventory, rather
+  than a potentially newer development-workspace lock entry, selects available
+  versions; every result must still belong to an authoritative lock or trusted
+  vendor source and remains byte-stable during the Cargo invocation.
 - Rematerialization replaces the generated `src` tree as one owned output set so
   removed support or bridge modules cannot survive from an earlier build. The
   Cargo `target` directory remains outside that replacement boundary and retains

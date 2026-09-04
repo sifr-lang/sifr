@@ -9,14 +9,13 @@ pub(super) fn package_cargo_resolution_policy(
     entrypoint: Option<&PackageEntrypoint>,
     stdlib: &StdlibCompiled,
 ) -> CargoResolutionPolicy {
-    let Some(entrypoint) = entrypoint else {
-        return CargoResolutionPolicy::normal();
-    };
     let mut authoritative_locks = Vec::new();
     let mut trusted_vendor_dirs = Vec::new();
-    if let Some(package) = entrypoint.graph.packages.get(&entrypoint.package_id) {
-        if let Some(lock) = nearest_ancestor_file(&package.package_root, "Cargo.lock") {
-            authoritative_locks.push(lock);
+    if let Some(entrypoint) = entrypoint {
+        if let Some(package) = entrypoint.graph.packages.get(&entrypoint.package_id) {
+            if let Some(lock) = nearest_ancestor_file(&package.package_root, "Cargo.lock") {
+                authoritative_locks.push(lock);
+            }
         }
     }
     if let Some(lock) = stdlib
@@ -38,8 +37,12 @@ pub(super) fn package_cargo_resolution_policy(
         trusted_vendor_dirs.push(vendor_dir);
     }
     CargoResolutionPolicy {
-        lock_mode: entrypoint.lock_mode,
-        cargo_vendor_mode: CargoVendorMode::PackageOwned,
+        lock_mode: entrypoint.map_or(sifr_package::CargoLockMode::Locked, |entrypoint| {
+            entrypoint.lock_mode
+        }),
+        cargo_vendor_mode: entrypoint.map_or(CargoVendorMode::SysrootOnly, |_| {
+            CargoVendorMode::PackageOwned
+        }),
         authoritative_locks,
         trusted_vendor_dirs,
     }

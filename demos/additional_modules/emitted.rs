@@ -129,7 +129,8 @@ mod sifr_generated_generated_support {
                 .collect::<Vec<String>>()
         } else {
             line.splitn(
-                ::sifr_runtime::to_usize_proven(&(SifrInt::from_i64(1) + 1)),
+                (SifrInt::from_i64(1) + SifrInt::from_i64(1))
+                    .clamp_slice_bound(line.len().saturating_add(1usize)),
                 &delimiter_value_894f6deb0b90819a,
             )
             .map(::std::string::ToString::to_string)

@@ -61,6 +61,7 @@ pub(super) fn materialize_binary_project_sources(
     project_name: &str,
     generated_project: GeneratedBinaryProject,
     requested_vendor_mode: CargoVendorMode,
+    cargo_resolution: &CargoResolutionPolicy,
 ) -> Result<PathBuf, Vec<RenderedDiagnostic>> {
     let project_path = output_dir.join(project_name);
     let dependency_plan = try_generate_sysroot_dependency_plan(
@@ -70,13 +71,38 @@ pub(super) fn materialize_binary_project_sources(
         requested_vendor_mode,
     )
     .map_err(|error| vec![build_error(error.boundary_message())])?;
-    materialize_binary_project_files(
-        &project_path,
-        project_name,
-        generated_project,
-        &dependency_plan,
-    )?;
-    Ok(project_path)
+    let interop = generated_project.interop.clone();
+    let local_project_path =
+        super::portable_project::local_resolution_project_path(output_dir, project_name);
+    let result = (|| {
+        materialize_binary_project_files(
+            &local_project_path,
+            project_name,
+            generated_project,
+            &dependency_plan,
+        )?;
+        let cargo_prefix_args = sysroot_cargo_config_args(&dependency_plan);
+        let prepared_resolution =
+            prepare_cargo_resolution(&local_project_path, cargo_resolution, &cargo_prefix_args)?;
+        prepared_resolution.assert_unchanged()?;
+        super::portable_project::prepare_portable_project_metadata(
+            &local_project_path,
+            project_name,
+            &dependency_plan,
+            &interop,
+            cargo_resolution,
+        )?;
+        super::portable_project::publish_portable_project(&local_project_path, &project_path)?;
+        Ok(project_path)
+    })();
+    let cleanup = std::fs::remove_dir_all(&local_project_path);
+    match (result, cleanup) {
+        (Ok(path), Ok(())) => Ok(path),
+        (Ok(_), Err(error)) => Err(vec![build_error(format!(
+            "failed to remove ephemeral local Cargo resolution state: {error}"
+        ))]),
+        (Err(errors), _) => Err(errors),
+    }
 }
 
 pub(super) fn materialize_cached_binary_project_with_report(
@@ -295,8 +321,10 @@ fn canonical_rust_module_path(path: &Path) -> Result<PathBuf, Vec<RenderedDiagno
     let mut canonical = PathBuf::new();
     for component in path.components() {
         let std::path::Component::Normal(component) = component else {
-            canonical.push(component);
-            continue;
+            return Err(vec![build_error(format!(
+                "generated Rust module path must be relative and cannot escape its project: {}",
+                path.display()
+            ))]);
         };
         let component = Path::new(component);
         if component
@@ -559,7 +587,7 @@ mod tests {
     use std::collections::{BTreeMap, BTreeSet, HashSet};
 
     #[test]
-    fn generated_module_paths_use_the_source_identifier_mapping() {
+    fn item11_generated_module_paths_are_relative_and_cannot_escape() {
         let bridge = canonical_rust_module_path(std::path::Path::new("__sifr_bridge/_sifr_fs.rs"));
         assert!(matches!(
             bridge.as_deref(),
@@ -570,6 +598,8 @@ mod tests {
             public.as_deref(),
             Ok(path) if path == std::path::Path::new("public/mod.rs")
         ));
+        assert!(canonical_rust_module_path(std::path::Path::new("../escape.rs")).is_err());
+        assert!(canonical_rust_module_path(std::path::Path::new("/escape.rs")).is_err());
     }
 
     #[test]

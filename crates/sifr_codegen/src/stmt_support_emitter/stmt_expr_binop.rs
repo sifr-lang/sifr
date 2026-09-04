@@ -68,12 +68,23 @@ macro_rules! stmt_expr_binop {
                     _ => return Ok(None),
                 };
                 return Ok(Some(crate::RustExpr::Block {
-                    stmts: vec![crate::RustStmt::Let {
-                        mutable: false,
-                        name: "__n".to_string(),
-                        ty: None,
-                        value: count_expr,
-                    }],
+                    stmts: vec![
+                        crate::RustStmt::Let {
+                            mutable: false,
+                            name: "__sifr_repeat_src".to_string(),
+                            ty: Some(crate::RustType::Named("&str".to_string())),
+                            value: crate::RustExpr::Ref {
+                                mutable: false,
+                                expr: Box::new(crate::RustExpr::Paren(Box::new(string_expr))),
+                            },
+                        },
+                        crate::RustStmt::Let {
+                            mutable: false,
+                            name: "__n".to_string(),
+                            ty: None,
+                            value: count_expr,
+                        },
+                    ],
                     expr: Some(Box::new(crate::RustExpr::If {
                         cond: Box::new(crate::RustExpr::BinOp {
                             left: Box::new(crate::RustExpr::Ident("__n".to_string())),
@@ -87,13 +98,81 @@ macro_rules! stmt_expr_binop {
                             ])),
                             args: vec![],
                         }),
-                        else_expr: Some(Box::new(crate::RustExpr::MethodCall {
-                            receiver: Box::new(crate::RustExpr::Paren(Box::new(string_expr))),
-                            method: "repeat".to_string(),
-                            args: vec![crate::RustExpr::Cast {
-                                expr: Box::new(crate::RustExpr::Ident("__n".to_string())),
-                                ty: crate::RustType::Named("usize".to_string()),
-                            }],
+                        else_expr: Some(Box::new(crate::RustExpr::Block {
+                            stmts: vec![
+                                crate::RustStmt::Let {
+                                    mutable: true,
+                                    name: "__sifr_repeat_out".to_string(),
+                                    ty: None,
+                                    value: crate::RustExpr::FnCall {
+                                        func: Box::new(crate::RustExpr::Path(vec![
+                                            "String".to_string(),
+                                            "new".to_string(),
+                                        ])),
+                                        args: vec![],
+                                    },
+                                },
+                                crate::RustStmt::Let {
+                                    mutable: true,
+                                    name: "__sifr_repeat_i".to_string(),
+                                    ty: None,
+                                    value: crate::RustExpr::FnCall {
+                                        func: Box::new(crate::RustExpr::Path(vec![
+                                            "SifrInt".to_string(),
+                                            "from_i64".to_string(),
+                                        ])),
+                                        args: vec![crate::RustExpr::Literal(
+                                            crate::RustLiteral::Int(0),
+                                        )],
+                                    },
+                                },
+                                crate::RustStmt::While {
+                                    cond: crate::RustExpr::BinOp {
+                                        left: Box::new(crate::RustExpr::Ref {
+                                            mutable: false,
+                                            expr: Box::new(crate::RustExpr::Ident(
+                                                "__sifr_repeat_i".to_string(),
+                                            )),
+                                        }),
+                                        op: "<".to_string(),
+                                        right: Box::new(crate::RustExpr::Ref {
+                                            mutable: false,
+                                            expr: Box::new(crate::RustExpr::Ident(
+                                                "__n".to_string(),
+                                            )),
+                                        }),
+                                    },
+                                    body: vec![
+                                        crate::RustStmt::Expr(crate::RustExpr::MethodCall {
+                                            receiver: Box::new(crate::RustExpr::Ident(
+                                                "__sifr_repeat_out".to_string(),
+                                            )),
+                                            method: "push_str".to_string(),
+                                            args: vec![crate::RustExpr::Ident(
+                                                "__sifr_repeat_src".to_string(),
+                                            )],
+                                        }),
+                                        crate::RustStmt::AugAssign {
+                                            target: crate::RustExpr::Ident(
+                                                "__sifr_repeat_i".to_string(),
+                                            ),
+                                            op: "+".to_string(),
+                                            value: crate::RustExpr::FnCall {
+                                                func: Box::new(crate::RustExpr::Path(vec![
+                                                    "SifrInt".to_string(),
+                                                    "from_i64".to_string(),
+                                                ])),
+                                                args: vec![crate::RustExpr::Literal(
+                                                    crate::RustLiteral::Int(1),
+                                                )],
+                                            },
+                                        },
+                                    ],
+                                },
+                            ],
+                            expr: Some(Box::new(crate::RustExpr::Ident(
+                                "__sifr_repeat_out".to_string(),
+                            ))),
                         })),
                     })),
                 }));
@@ -122,57 +201,6 @@ macro_rules! stmt_expr_binop {
                     (_, (true, true)) => (lowered_right.clone(), lowered_left.clone()),
                     _ => return Ok(None),
                 };
-                if let crate::RustExpr::Vec(items) = &collection_expr {
-                    if let [item] = items.as_slice() {
-                        return Ok(Some(crate::RustExpr::Block {
-                            stmts: vec![crate::RustStmt::Let {
-                                mutable: false,
-                                name: "__sifr_repeat_n".to_string(),
-                                ty: None,
-                                value: count_expr,
-                            }],
-                            expr: Some(Box::new(crate::RustExpr::If {
-                                cond: Box::new(crate::RustExpr::BinOp {
-                                    left: Box::new(crate::RustExpr::Ident(
-                                        "__sifr_repeat_n".to_string(),
-                                    )),
-                                    op: "<=".to_string(),
-                                    right: Box::new(crate::RustExpr::FnCall {
-                                        func: Box::new(crate::RustExpr::Path(vec![
-                                            "SifrInt".to_string(),
-                                            "from_i64".to_string(),
-                                        ])),
-                                        args: vec![crate::RustExpr::Literal(
-                                            crate::RustLiteral::Int(0),
-                                        )],
-                                    }),
-                                }),
-                                then_expr: Box::new(crate::RustExpr::Vec(vec![])),
-                                else_expr: Some(Box::new(crate::RustExpr::MethodCall {
-                                    receiver: Box::new(crate::RustExpr::MethodCall {
-                                        receiver: Box::new(crate::RustExpr::FnCall {
-                                            func: Box::new(crate::RustExpr::Path(vec![
-                                                "std".to_string(),
-                                                "iter".to_string(),
-                                                "repeat".to_string(),
-                                            ])),
-                                            args: vec![item.clone()],
-                                        }),
-                                        method: "take".to_string(),
-                                        args: vec![crate::RustExpr::Cast {
-                                            expr: Box::new(crate::RustExpr::Ident(
-                                                "__sifr_repeat_n".to_string(),
-                                            )),
-                                            ty: crate::RustType::Named("usize".to_string()),
-                                        }],
-                                    }),
-                                    method: "collect::<Vec<_>>".to_string(),
-                                    args: vec![],
-                                })),
-                            })),
-                        }));
-                    }
-                }
                 return Ok(Some(crate::RustExpr::Block {
                     stmts: vec![
                         crate::RustStmt::Let {
@@ -211,18 +239,38 @@ macro_rules! stmt_expr_binop {
                                     ty: None,
                                     value: crate::RustExpr::Vec(vec![]),
                                 },
-                                crate::RustStmt::For {
-                                    var: "_".to_string(),
-                                    iter: crate::RustExpr::Range {
-                                        start: Box::new(crate::RustExpr::Literal(
+                                crate::RustStmt::Let {
+                                    mutable: true,
+                                    name: "__sifr_repeat_i".to_string(),
+                                    ty: None,
+                                    value: crate::RustExpr::FnCall {
+                                        func: Box::new(crate::RustExpr::Path(vec![
+                                            "SifrInt".to_string(),
+                                            "from_i64".to_string(),
+                                        ])),
+                                        args: vec![crate::RustExpr::Literal(
                                             crate::RustLiteral::Int(0),
-                                        )),
-                                        end: Box::new(crate::RustExpr::Ident(
-                                            "__sifr_repeat_n".to_string(),
-                                        )),
+                                        )],
                                     },
-                                    body: vec![crate::RustStmt::Expr(
-                                        crate::RustExpr::MethodCall {
+                                },
+                                crate::RustStmt::While {
+                                    cond: crate::RustExpr::BinOp {
+                                        left: Box::new(crate::RustExpr::Ref {
+                                            mutable: false,
+                                            expr: Box::new(crate::RustExpr::Ident(
+                                                "__sifr_repeat_i".to_string(),
+                                            )),
+                                        }),
+                                        op: "<".to_string(),
+                                        right: Box::new(crate::RustExpr::Ref {
+                                            mutable: false,
+                                            expr: Box::new(crate::RustExpr::Ident(
+                                                "__sifr_repeat_n".to_string(),
+                                            )),
+                                        }),
+                                    },
+                                    body: vec![
+                                        crate::RustStmt::Expr(crate::RustExpr::MethodCall {
                                             receiver: Box::new(crate::RustExpr::Ident(
                                                 "__sifr_repeat_out".to_string(),
                                             )),
@@ -240,8 +288,23 @@ macro_rules! stmt_expr_binop {
                                                 method: "cloned".to_string(),
                                                 args: vec![],
                                             }],
+                                        }),
+                                        crate::RustStmt::AugAssign {
+                                            target: crate::RustExpr::Ident(
+                                                "__sifr_repeat_i".to_string(),
+                                            ),
+                                            op: "+".to_string(),
+                                            value: crate::RustExpr::FnCall {
+                                                func: Box::new(crate::RustExpr::Path(vec![
+                                                    "SifrInt".to_string(),
+                                                    "from_i64".to_string(),
+                                                ])),
+                                                args: vec![crate::RustExpr::Literal(
+                                                    crate::RustLiteral::Int(1),
+                                                )],
+                                            },
                                         },
-                                    )],
+                                    ],
                                 },
                             ],
                             expr: Some(Box::new(crate::RustExpr::Ident(

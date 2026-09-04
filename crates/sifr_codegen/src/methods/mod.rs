@@ -439,7 +439,7 @@ mod tests {
         .expect("list insert lowers");
         assert_eq!(
             render_expr(&list_insert.expr),
-            "xs.insert(::sifr_runtime::to_usize_proven(&SifrInt::from_i64(0)), 1)"
+            "xs.insert(SifrInt::from_i64(0).clamp_slice_bound(xs.len()), 1)"
         );
 
         let list_copy = lower_method(&Type::List(Box::new(Type::Int)), "copy", "xs", &[])

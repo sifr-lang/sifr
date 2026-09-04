@@ -92,7 +92,7 @@ fn option_nested_list_element(
             receiver: Box::new(RustExpr::MethodCall {
                 receiver: Box::new(RustExpr::Ident("__sifr_outer_list".to_string())),
                 method: "get".to_string(),
-                args: vec![usize_cast(RustExpr::Ident("__sifr_outer_norm".to_string()))],
+                args: vec![RustExpr::Ident("__sifr_outer_norm".to_string())],
             }),
             method: "and_then".to_string(),
             args: vec![RustExpr::ClosureBlock {
@@ -120,9 +120,7 @@ fn option_nested_list_element(
                         receiver: Box::new(RustExpr::MethodCall {
                             receiver: Box::new(RustExpr::Ident("__sifr_row".to_string())),
                             method: "get".to_string(),
-                            args: vec![usize_cast(RustExpr::Ident(
-                                "__sifr_inner_norm".to_string(),
-                            ))],
+                            args: vec![RustExpr::Ident("__sifr_inner_norm".to_string())],
                         }),
                         method: projection_method.to_string(),
                         args: vec![],
@@ -132,12 +130,5 @@ fn option_nested_list_element(
                 is_async: false,
             }],
         })),
-    }
-}
-
-fn usize_cast(expr: RustExpr) -> RustExpr {
-    RustExpr::Cast {
-        expr: Box::new(expr),
-        ty: RustType::Named("usize".to_string()),
     }
 }

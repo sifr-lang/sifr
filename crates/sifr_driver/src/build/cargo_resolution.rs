@@ -181,7 +181,11 @@ fn prepare_lockfile_from_authority(
     policy: &CargoResolutionPolicy,
     cargo_prefix_args: &[String],
 ) -> Result<(), Vec<RenderedDiagnostic>> {
-    seed_lockfile_from_authorities(&project_dir.join("Cargo.lock"), &policy.authoritative_locks)?;
+    seed_lockfile_for_resolution(
+        &project_dir.join("Cargo.lock"),
+        &policy.authoritative_locks,
+        cargo_prefix_args,
+    )?;
     let mut command = Command::new("cargo");
     command
         .args(cargo_prefix_args)
@@ -205,6 +209,27 @@ fn prepare_lockfile_from_authority(
         policy.lock_mode.as_str(),
         bounded_excerpt(&stderr)
     ))])
+}
+
+fn seed_lockfile_for_resolution(
+    destination: &Path,
+    authoritative_locks: &[PathBuf],
+    cargo_prefix_args: &[String],
+) -> Result<(), Vec<RenderedDiagnostic>> {
+    if cargo_prefix_args.is_empty() {
+        return seed_lockfile_from_authorities(destination, authoritative_locks);
+    }
+
+    // A release sysroot's vendored source is itself an immutable authority.
+    // Start from an empty lock so Cargo selects only versions actually present
+    // in that source; importing a newer workspace lock can otherwise pin a
+    // package absent from the release vendor directory.
+    std::fs::write(destination, "version = 4\n").map_err(|error| {
+        vec![cargo_resolution_error(format!(
+            "failed to initialize generated Cargo lockfile at '{}': {error}",
+            destination.display()
+        ))]
+    })
 }
 
 fn seed_lockfile_from_authorities(
@@ -326,7 +351,7 @@ fn prepared_lock_path(
     cargo_prefix_args: &[String],
 ) -> Result<PathBuf, Vec<RenderedDiagnostic>> {
     let mut input = Vec::new();
-    push_cache_bytes(&mut input, "sifr-cargo-resolution-v6");
+    push_cache_bytes(&mut input, "sifr-cargo-resolution-v7");
     push_cache_bytes(&mut input, &normalized_manifest_cache_input(project_dir)?);
     for argument in cargo_prefix_args {
         push_cache_bytes(&mut input, argument);
@@ -515,7 +540,8 @@ mod tests {
     use super::{
         CargoResolutionPolicy, CargoVendorMode, PREPARED_LOCK_NONCE,
         normalized_manifest_cache_input, registry_entries, registry_version_compatibility_family,
-        seed_lockfile_from_authorities, validate_authoritative_registry_entries,
+        seed_lockfile_for_resolution, seed_lockfile_from_authorities,
+        validate_authoritative_registry_entries,
     };
     use sifr_package::CargoLockMode;
     use std::collections::BTreeSet;
@@ -532,6 +558,36 @@ mod tests {
             trusted_vendor_dirs: Vec::new(),
         };
         assert!(!package_owned.uses_sysroot_vendor());
+    }
+
+    #[test]
+    fn item11_vendor_resolution_does_not_import_unavailable_workspace_pins() {
+        let root = std::env::temp_dir().join(format!(
+            "sifr_item11_vendor_seed_{}_{}",
+            std::process::id(),
+            PREPARED_LOCK_NONCE.fetch_add(1, Ordering::Relaxed)
+        ));
+        std::fs::create_dir_all(&root).expect("test root should be created");
+        let authority = root.join("authority.lock");
+        let destination = root.join("Cargo.lock");
+        std::fs::write(
+            &authority,
+            "version = 4\n\n[[package]]\nname = \"newer-than-vendor\"\nversion = \"9.9.9\"\n",
+        )
+        .expect("authority should be written");
+
+        seed_lockfile_for_resolution(
+            &destination,
+            &[authority],
+            &["--config".to_string(), "source replacement".to_string()],
+        )
+        .expect("vendor seed should initialize");
+
+        assert_eq!(
+            std::fs::read_to_string(&destination).expect("seed should be readable"),
+            "version = 4\n"
+        );
+        let _ = std::fs::remove_dir_all(root);
     }
 
     #[test]

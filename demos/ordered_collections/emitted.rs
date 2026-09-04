@@ -55,7 +55,7 @@ mod sifr_generated_generated_support {
         hi: Option<SifrInt>,
     ) {
         let pos: SifrInt = bisect_right(a, x, lo.clone(), hi.clone());
-        a.insert(::sifr_runtime::to_usize_proven(&pos), x.clone());
+        a.insert(pos.clamp_slice_bound(a.len()), x.clone());
     }
     pub(crate) fn from_list<T: Clone + ::std::hash::Hash + Eq + 'static>(
         items: &[T],

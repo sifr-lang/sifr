@@ -247,6 +247,7 @@ pub(crate) fn materialize_rooted_entrypoint_rust_project(
     let mode = entrypoint.build_mode();
     let plan = RootedEntrypointPlan::from_entrypoint(entrypoint)?;
     let frontend_diagnostics = plan.frontend_diagnostics();
+    let cargo_resolution = plan.cargo_resolution.clone();
     let generated_project = plan.into_generated_binary_project()?;
     let requested_vendor_mode = super::entrypoint_resolution::requested_vendor_mode_for_build(mode);
     let project_path = materialize_binary_project_sources(
@@ -254,6 +255,7 @@ pub(crate) fn materialize_rooted_entrypoint_rust_project(
         "sifr_output",
         generated_project,
         requested_vendor_mode,
+        &cargo_resolution,
     )?;
     Ok(MaterializedRustProjectReport::new(
         project_path,

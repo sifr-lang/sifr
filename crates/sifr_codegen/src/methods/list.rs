@@ -2,7 +2,7 @@
 
 use crate::{RustExpr, RustParam, RustStmt, RustType, Type};
 
-use super::common::exact_int_to_usize_expr;
+use super::common::exact_int_to_bound_expr;
 
 fn is_already_borrowed_rendered_expr(arg: &RustExpr) -> bool {
     match arg {
@@ -67,7 +67,17 @@ pub(super) fn lower_insert(object: &RustExpr, args: &[RustExpr]) -> Option<RustE
     Some(RustExpr::MethodCall {
         receiver: Box::new(object.clone()),
         method: "insert".to_string(),
-        args: vec![exact_int_to_usize_expr(args[0].clone()), args[1].clone()],
+        args: vec![
+            exact_int_to_bound_expr(
+                args[0].clone(),
+                RustExpr::MethodCall {
+                    receiver: Box::new(object.clone()),
+                    method: "len".to_string(),
+                    args: vec![],
+                },
+            ),
+            args[1].clone(),
+        ],
     })
 }
 

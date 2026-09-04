@@ -187,6 +187,8 @@ pub enum RustInteropResolvedRoot {
         package_id: String,
         dependency_name: String,
         cargo_package_name: String,
+        cargo_version: String,
+        cargo_source: Option<String>,
         cargo_manifest_path: String,
         bridge_roots: Vec<String>,
     },
@@ -570,6 +572,8 @@ fn push_resolved_target(out: &mut String, target: &RustInteropResolvedTarget) {
             package_id,
             dependency_name,
             cargo_package_name,
+            cargo_version,
+            cargo_source,
             cargo_manifest_path,
             bridge_roots,
         } => {
@@ -579,6 +583,10 @@ fn push_resolved_target(out: &mut String, target: &RustInteropResolvedTarget) {
             out.push_str(dependency_name);
             out.push(':');
             out.push_str(cargo_package_name);
+            out.push('@');
+            out.push_str(cargo_version);
+            out.push(':');
+            out.push_str(cargo_source.as_deref().unwrap_or("<path>"));
             out.push(':');
             out.push_str(cargo_manifest_path);
             out.push(':');

@@ -353,6 +353,8 @@ impl<'a> RustInteropResolver<'a> {
                     dependency_name
                 },
                 cargo_package_name: package.cargo_package_name.clone(),
+                cargo_version: package.cargo_version.clone(),
+                cargo_source: package.cargo_source.clone(),
                 cargo_manifest_path: package
                     .package_root
                     .join("Cargo.toml")
