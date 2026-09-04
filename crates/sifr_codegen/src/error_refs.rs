@@ -652,6 +652,15 @@ fn collect_text_error_refs(
     }
 }
 
+pub(crate) fn collect_source_builtin_error_classes(
+    source: &str,
+    builtin_error_classes: &[&str],
+) -> HashSet<String> {
+    let mut referenced = HashSet::new();
+    collect_text_error_refs(source, &mut referenced, builtin_error_classes);
+    referenced
+}
+
 #[cfg(test)]
 mod tests {
     use super::{

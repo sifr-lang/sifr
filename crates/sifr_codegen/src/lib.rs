@@ -7,34 +7,36 @@ pub use lib_modules_and_codegen::*;
 mod builtin_errors;
 pub(crate) use builtin_errors::BUILTIN_ERROR_CLASSES;
 mod discardability;
+mod generated_dependency_metadata;
 mod generated_rust_canonicalizer;
-mod generator_runtime_needs;
+mod generated_visibility;
+pub(crate) use generated_dependency_metadata::retain_generated_dependency_metadata;
 pub use generated_rust_canonicalizer::{
     canonicalize_generated_rust_identifier, canonicalize_generated_rust_source,
     discover_project_const_function_names, finalize_formatted_generated_rust_source,
     finalize_formatted_generated_rust_source_with_project_consts,
 };
+pub(crate) use generated_rust_canonicalizer::{
+    import_generated_support_in_project_nominals,
+    import_project_prelude_bindings_in_generated_support, prune_generated_project_owners,
+};
 mod lib_async_main_cancellation;
 mod lib_native_async_cleanup_needs;
 mod lib_runtime_needs;
-pub(crate) use generator_runtime_needs::build_generator_runtime_items_for_module;
+pub(crate) use generated_visibility::{
+    crate_visible_generated_support_source, publicize_generated_module_source,
+};
 pub(crate) use lib_async_main_cancellation::scope_async_main_cancellation;
 pub(crate) use lib_native_async_cleanup_needs::module_uses_native_async_cleanup;
 pub(crate) use lib_runtime_needs::{
-    annotate_async_main_entrypoint, body_contains_await, module_uses_async_exit_cause_type,
-    module_uses_async_generator_type, module_uses_cancellation_error_type,
+    annotate_async_main_entrypoint, body_contains_await, module_uses_async_generator_type,
     module_uses_failure_type, module_uses_join_set, module_uses_spawn_cpu, module_uses_task_scope,
-    module_uses_task_sleep, module_uses_template, module_uses_timeout_result_type,
-    publicize_generated_module_source, replace_sync_channel_runtime_items,
-    sync_channel_runtime_needed,
+    replace_sync_channel_runtime_items, sync_channel_runtime_needed,
 };
 mod lib_join_set_needs;
 pub(crate) use lib_join_set_needs::module_uses_join_set_spawn_cpu;
 mod lib_task_scope_offload_needs;
-pub(crate) use lib_task_scope_offload_needs::{
-    module_uses_task_scope_offload, module_uses_task_scope_process,
-    module_uses_task_scope_spawn_cpu,
-};
+pub(crate) use lib_task_scope_offload_needs::module_uses_task_scope_spawn_cpu;
 mod lib_project_codegen;
 mod lib_project_signatures;
 mod lib_test_project_codegen;
@@ -47,6 +49,14 @@ mod lib_emitter_state;
 pub use lib_emitter_state::*;
 mod runtime_need_state;
 pub(crate) use runtime_need_state::RuntimeNeeds;
+mod runtime_support_demand;
+pub(crate) use runtime_support_demand::RuntimeSupportDemand;
+#[cfg(test)]
+mod runtime_support_tests;
+mod support_plan;
+pub(crate) use support_plan::{
+    ModuleSupportDemand, add_import_features, render_import_items, render_support,
+};
 mod class_emitter;
 mod class_error_emitter;
 mod class_field_emitter;

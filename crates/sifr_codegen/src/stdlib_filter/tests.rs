@@ -344,7 +344,7 @@ impl std::fmt::Display for Item {
     fn fmt(&self, _f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { Ok(()) }
 }
 "#;
-    let mut emitted = HashSet::new();
+    let mut emitted = RustItemDeduper::default();
     let skip_types = HashSet::new();
     let once = dedup_rust_items(code, &mut emitted, &skip_types);
     let twice = dedup_rust_items(code, &mut emitted, &skip_types);
@@ -366,12 +366,100 @@ trait Marker {}
 impl Marker for Item {}
 impl !Marker for Item {}
 "#;
-    let mut emitted = HashSet::new();
+    let mut emitted = RustItemDeduper::default();
 
     let deduplicated = dedup_rust_items(code, &mut emitted, &HashSet::new());
 
     assert!(deduplicated.contains("impl Marker for Item"));
     assert!(deduplicated.contains("impl !Marker for Item"));
+}
+
+#[test]
+fn dedup_distinguishes_trait_generic_arguments_and_self_type_arguments() {
+    let code = r#"
+struct SourceA;
+struct SourceB;
+struct Target<T>(T);
+
+impl From<SourceA> for Target<i64> {
+    fn from(value: SourceA) -> Self { let _ = value; Target(1) }
+}
+
+impl From<SourceB> for Target<i64> {
+    fn from(value: SourceB) -> Self { let _ = value; Target(2) }
+}
+
+impl From<SourceA> for Target<u64> {
+    fn from(value: SourceA) -> Self { let _ = value; Target(3) }
+}
+"#;
+    let mut emitted = RustItemDeduper::default();
+
+    let deduplicated = dedup_rust_items(code, &mut emitted, &HashSet::new());
+
+    assert_eq!(deduplicated.matches("impl From<").count(), 3);
+}
+
+#[test]
+#[should_panic(expected = "conflicting generated support bodies share canonical key")]
+fn dedup_rejects_conflicting_bodies_for_one_canonical_item() {
+    let mut emitted = RustItemDeduper::default();
+    let skip_types = HashSet::new();
+    let _ = dedup_rust_items("fn shared() -> i64 { 1 }", &mut emitted, &skip_types);
+    let _ = dedup_rust_items("fn shared() -> i64 { 2 }", &mut emitted, &skip_types);
+}
+
+#[test]
+fn dedup_removes_only_a_signature_identical_argument_forwarding_adapter() {
+    let mut emitted = RustItemDeduper::default();
+    let skip_types = HashSet::new();
+    let implementation = dedup_rust_items(
+        "fn exists(path: &str) -> bool { ::sifr_stdlib::fs::exists(path) }",
+        &mut emitted,
+        &skip_types,
+    );
+    let alias = dedup_rust_items(
+        "fn exists(path: &str) -> bool { imported_exists(path) }",
+        &mut emitted,
+        &skip_types,
+    );
+
+    assert!(implementation.contains("sifr_stdlib::fs::exists"));
+    assert!(alias.trim().is_empty());
+}
+
+#[test]
+#[should_panic(expected = "conflicting generated support bodies share canonical key")]
+fn dedup_rejects_forwarders_with_a_different_signature() {
+    let mut emitted = RustItemDeduper::default();
+    let skip_types = HashSet::new();
+    let _ = dedup_rust_items(
+        "fn exists(path: &str) -> bool { ::sifr_stdlib::fs::exists(path) }",
+        &mut emitted,
+        &skip_types,
+    );
+    let _ = dedup_rust_items(
+        "fn exists(path: String) -> bool { imported_exists(path) }",
+        &mut emitted,
+        &skip_types,
+    );
+}
+
+#[test]
+#[should_panic(expected = "conflicting generated support bodies share canonical key")]
+fn dedup_rejects_forwarders_with_additional_behavior() {
+    let mut emitted = RustItemDeduper::default();
+    let skip_types = HashSet::new();
+    let _ = dedup_rust_items(
+        "fn choice(index: i64) -> i64 { imported_choice(index) }",
+        &mut emitted,
+        &skip_types,
+    );
+    let _ = dedup_rust_items(
+        "fn choice(index: i64) -> i64 { if index < 0 { return 0; } imported_choice(index) }",
+        &mut emitted,
+        &skip_types,
+    );
 }
 
 #[test]

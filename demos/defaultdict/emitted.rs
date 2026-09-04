@@ -1,7 +1,7 @@
 // src/main.rs
 mod sifr_generated_project_nominals {
-    pub use ::sifr_runtime::SifrInt;
-    pub use ::std::collections::VecDeque;
+    use ::sifr_runtime::SifrInt;
+    use ::std::collections::VecDeque;
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub struct SifrGeneratedStdlibSifrX2ecollectionsX2edeque<T> {
         pub data: VecDeque<T>,

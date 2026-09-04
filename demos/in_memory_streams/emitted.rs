@@ -1,4 +1,134 @@
 // src/main.rs
+mod sifr_generated_generated_support {
+    use crate::{IOError, SifrGeneratedIoBinaryFileHandle, SifrGeneratedIoNativeFileHandle};
+    pub(crate) use ::sifr_runtime::SifrInt;
+    pub(crate) fn exists(path: &str) -> bool {
+        ::sifr_stdlib::fs::exists(path)
+    }
+    pub(crate) fn sifr_generated_open_file(path: &str, mode: &str) -> Result<String, IOError> {
+        ::sifr_stdlib::fs::open_file(path, mode).map_err(sifr_generated_io_err)
+    }
+    pub(crate) fn sifr_generated_file_close(handle: &str) {
+        ::sifr_stdlib::fs::file_close(handle);
+    }
+    pub(crate) fn sifr_generated_file_read_bytes(
+        handle: &str,
+        size: Option<SifrInt>,
+    ) -> Result<Vec<u8>, IOError> {
+        ::sifr_stdlib::fs::file_read_bytes(
+            handle,
+            size.map(::sifr_runtime::interop::SifrIntBridge::from),
+        )
+        .map_err(sifr_generated_io_err)
+    }
+    pub(crate) fn sifr_generated_file_write_bytes(
+        handle: &str,
+        data: &[u8],
+    ) -> Result<(), IOError> {
+        ::sifr_stdlib::fs::file_write_bytes(handle, data).map_err(sifr_generated_io_err)
+    }
+    pub(crate) fn open_file(
+        path: &str,
+        mode: &str,
+    ) -> Result<SifrGeneratedIoNativeFileHandle, IOError> {
+        let sifr_generated_try_res: Result<
+            Result<SifrGeneratedIoNativeFileHandle, IOError>,
+            IOError,
+        > = (|| {
+            let handle_id: String = sifr_generated_open_file(path, mode)?;
+            Ok(Ok(SifrGeneratedIoNativeFileHandle::new(handle_id)))
+        })();
+        sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
+            let e = sifr_generated_try_err.clone();
+            Err(e)
+        })
+    }
+    pub(crate) fn file_close(handle: &SifrGeneratedIoNativeFileHandle) {
+        sifr_generated_file_close(&handle.id.clone());
+    }
+    pub(crate) fn file_read_bytes(
+        handle: &SifrGeneratedIoNativeFileHandle,
+        size: Option<SifrInt>,
+    ) -> Result<Vec<u8>, IOError> {
+        sifr_generated_file_read_bytes(&handle.id.clone(), size.clone())
+    }
+    pub(crate) fn file_write_bytes(
+        handle: &SifrGeneratedIoNativeFileHandle,
+        data: &[u8],
+    ) -> Result<(), IOError> {
+        sifr_generated_file_write_bytes(&handle.id.clone(), data)
+    }
+    pub(crate) fn remove_file(path: &str) -> Result<(), IOError> {
+        ::sifr_stdlib::fs::remove_file(path).map_err(sifr_generated_io_err)
+    }
+    pub(crate) fn sifr_generated_closed_stream_error() -> String {
+        "I/O operation on closed stream".to_string()
+    }
+    pub(crate) fn sifr_generated_invalid_whence_error(whence: SifrInt) -> String {
+        {
+            let mut sifr_generated_concat: String = String::with_capacity(16usize);
+            sifr_generated_concat.push_str("invalid whence: ");
+            sifr_generated_concat.push_str(whence.to_string().as_str());
+            sifr_generated_concat
+        }
+    }
+    pub(crate) fn sifr_generated_negative_seek_error(offset: SifrInt) -> String {
+        {
+            let mut sifr_generated_concat: String = String::with_capacity(24usize);
+            sifr_generated_concat.push_str("negative seek position: ");
+            sifr_generated_concat.push_str(offset.to_string().as_str());
+            sifr_generated_concat
+        }
+    }
+    pub(crate) fn sifr_generated_mode_is_readable(mode: &str) -> bool {
+        mode.contains(&"r".to_string()) || mode.contains(&"+".to_string())
+    }
+    pub(crate) fn sifr_generated_mode_is_writable(mode: &str) -> bool {
+        mode.contains(&"w".to_string())
+            || mode.contains(&"a".to_string())
+            || mode.contains(&"+".to_string())
+    }
+    pub(crate) fn open_binary(
+        path: &str,
+        mode: &str,
+    ) -> Result<SifrGeneratedIoBinaryFileHandle, IOError> {
+        if !mode.contains(&"b".to_string()) {
+            return Err(IOError::new("open_binary requires binary mode".to_string()));
+        }
+        let sifr_generated_try_res: Result<
+            Result<SifrGeneratedIoBinaryFileHandle, IOError>,
+            IOError,
+        > = (|| {
+            let handle: SifrGeneratedIoNativeFileHandle = open_file(path, mode)?;
+            Ok(Ok(SifrGeneratedIoBinaryFileHandle::new(
+                handle,
+                mode.to_owned(),
+            )))
+        })();
+        sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
+            let e = sifr_generated_try_err.clone();
+            Err(e)
+        })
+    }
+    pub(crate) fn sifr_generated_io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
+        let msg = e.to_string();
+        let kind = {
+            let sifr_generated_io_kind = (&e as &dyn ::std::any::Any)
+                .downcast_ref::<std::io::Error>()
+                .map(::std::io::Error::kind);
+            match sifr_generated_io_kind {
+                Some(::std::io::ErrorKind::NotFound) => "FileNotFound".to_string(),
+                Some(::std::io::ErrorKind::PermissionDenied) => "PermissionDenied".to_string(),
+                Some(::std::io::ErrorKind::AlreadyExists) => "FileExists".to_string(),
+                Some(::std::io::ErrorKind::IsADirectory) => "IsADirectory".to_string(),
+                Some(::std::io::ErrorKind::NotADirectory) => "NotADirectory".to_string(),
+                Some(::std::io::ErrorKind::DirectoryNotEmpty) => "DirectoryNotEmpty".to_string(),
+                _ => "Other".to_string(),
+            }
+        };
+        IOError { message: msg, kind }
+    }
+}
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct SifrGeneratedIoNativeFileHandle {
     pub id: String,
@@ -19,46 +149,8 @@ impl ::std::fmt::Display for SifrGeneratedIoNativeFileHandle {
 }
 mod sifr_generated_project_nominals {
     use crate::SifrGeneratedIoNativeFileHandle;
-    pub use ::sifr_runtime::SifrInt;
-    pub fn sifr_generated_file_close(handle: &str) {
-        ::sifr_stdlib::fs::file_close(handle);
-    }
-    ///# Errors
-    ///Returns the typed error produced by this operation.
-    pub fn sifr_generated_file_read_bytes(
-        handle: &str,
-        size: Option<SifrInt>,
-    ) -> Result<Vec<u8>, IOError> {
-        ::sifr_stdlib::fs::file_read_bytes(
-            handle,
-            size.map(::sifr_runtime::interop::SifrIntBridge::from),
-        )
-        .map_err(sifr_generated_io_err)
-    }
-    ///# Errors
-    ///Returns the typed error produced by this operation.
-    pub fn sifr_generated_file_write_bytes(handle: &str, data: &[u8]) -> Result<(), IOError> {
-        ::sifr_stdlib::fs::file_write_bytes(handle, data).map_err(sifr_generated_io_err)
-    }
-    pub fn file_close(handle: &SifrGeneratedIoNativeFileHandle) {
-        sifr_generated_file_close(&handle.id.clone());
-    }
-    ///# Errors
-    ///Returns the typed error produced by this operation.
-    pub fn file_read_bytes(
-        handle: &SifrGeneratedIoNativeFileHandle,
-        size: Option<SifrInt>,
-    ) -> Result<Vec<u8>, IOError> {
-        sifr_generated_file_read_bytes(&handle.id.clone(), size.clone())
-    }
-    ///# Errors
-    ///Returns the typed error produced by this operation.
-    pub fn file_write_bytes(
-        handle: &SifrGeneratedIoNativeFileHandle,
-        data: &[u8],
-    ) -> Result<(), IOError> {
-        sifr_generated_file_write_bytes(&handle.id.clone(), data)
-    }
+    use crate::sifr_generated_generated_support::*;
+    use ::sifr_runtime::SifrInt;
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SifrGeneratedIoBinaryFileHandle {
         pub handle: SifrGeneratedIoNativeFileHandle,
@@ -448,38 +540,6 @@ mod sifr_generated_project_nominals {
             Ok(self.cursor.clone())
         }
     }
-    #[must_use]
-    pub fn sifr_generated_closed_stream_error() -> String {
-        "I/O operation on closed stream".to_string()
-    }
-    #[must_use]
-    pub fn sifr_generated_invalid_whence_error(whence: SifrInt) -> String {
-        {
-            let mut sifr_generated_concat: String = String::with_capacity(16usize);
-            sifr_generated_concat.push_str("invalid whence: ");
-            sifr_generated_concat.push_str(whence.to_string().as_str());
-            sifr_generated_concat
-        }
-    }
-    #[must_use]
-    pub fn sifr_generated_negative_seek_error(offset: SifrInt) -> String {
-        {
-            let mut sifr_generated_concat: String = String::with_capacity(24usize);
-            sifr_generated_concat.push_str("negative seek position: ");
-            sifr_generated_concat.push_str(offset.to_string().as_str());
-            sifr_generated_concat
-        }
-    }
-    #[must_use]
-    pub fn sifr_generated_mode_is_readable(mode: &str) -> bool {
-        mode.contains(&"r".to_string()) || mode.contains(&"+".to_string())
-    }
-    #[must_use]
-    pub fn sifr_generated_mode_is_writable(mode: &str) -> bool {
-        mode.contains(&"w".to_string())
-            || mode.contains(&"a".to_string())
-            || mode.contains(&"+".to_string())
-    }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct IOError {
         pub message: String,
@@ -500,86 +560,13 @@ mod sifr_generated_project_nominals {
         }
     }
     impl ::std::error::Error for IOError {}
-    #[must_use]
-    pub fn sifr_generated_io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
-        let msg = e.to_string();
-        let kind = {
-            let sifr_generated_io_kind = (&e as &dyn ::std::any::Any)
-                .downcast_ref::<std::io::Error>()
-                .map(::std::io::Error::kind);
-            match sifr_generated_io_kind {
-                Some(::std::io::ErrorKind::NotFound) => "FileNotFound".to_string(),
-                Some(::std::io::ErrorKind::PermissionDenied) => "PermissionDenied".to_string(),
-                Some(::std::io::ErrorKind::AlreadyExists) => "FileExists".to_string(),
-                Some(::std::io::ErrorKind::IsADirectory) => "IsADirectory".to_string(),
-                Some(::std::io::ErrorKind::NotADirectory) => "NotADirectory".to_string(),
-                Some(::std::io::ErrorKind::DirectoryNotEmpty) => "DirectoryNotEmpty".to_string(),
-                _ => "Other".to_string(),
-            }
-        };
-        IOError { message: msg, kind }
-    }
 }
+use crate::sifr_generated_generated_support::*;
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::IOError;
 pub use sifr_generated_project_nominals::SifrGeneratedIoBinaryFileHandle;
 pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2eioX2eBytesIO;
 pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2eioX2eStringIO;
-fn exists(path: &str) -> bool {
-    ::sifr_stdlib::fs::exists(path)
-}
-fn sifr_generated_open_file(path: &str, mode: &str) -> Result<String, IOError> {
-    ::sifr_stdlib::fs::open_file(path, mode).map_err(sifr_generated_io_err)
-}
-fn open_file(path: &str, mode: &str) -> Result<SifrGeneratedIoNativeFileHandle, IOError> {
-    let sifr_generated_try_res: Result<Result<SifrGeneratedIoNativeFileHandle, IOError>, IOError> =
-        (|| {
-            let handle_id: String = sifr_generated_open_file(path, mode)?;
-            Ok(Ok(SifrGeneratedIoNativeFileHandle::new(handle_id)))
-        })();
-    sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-        let e = sifr_generated_try_err.clone();
-        Err(e)
-    })
-}
-fn remove_file(path: &str) -> Result<(), IOError> {
-    ::sifr_stdlib::fs::remove_file(path).map_err(sifr_generated_io_err)
-}
-fn open_binary(path: &str, mode: &str) -> Result<SifrGeneratedIoBinaryFileHandle, IOError> {
-    if !mode.contains(&"b".to_string()) {
-        return Err(IOError::new("open_binary requires binary mode".to_string()));
-    }
-    let sifr_generated_try_res: Result<Result<SifrGeneratedIoBinaryFileHandle, IOError>, IOError> =
-        (|| {
-            let handle: SifrGeneratedIoNativeFileHandle = open_file(path, mode)?;
-            Ok(Ok(SifrGeneratedIoBinaryFileHandle::new(
-                handle,
-                mode.to_owned(),
-            )))
-        })();
-    sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-        let e = sifr_generated_try_err.clone();
-        Err(e)
-    })
-}
-fn sifr_generated_io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
-    let msg = e.to_string();
-    let kind = {
-        let sifr_generated_io_kind = (&e as &dyn ::std::any::Any)
-            .downcast_ref::<std::io::Error>()
-            .map(::std::io::Error::kind);
-        match sifr_generated_io_kind {
-            Some(::std::io::ErrorKind::NotFound) => "FileNotFound".to_string(),
-            Some(::std::io::ErrorKind::PermissionDenied) => "PermissionDenied".to_string(),
-            Some(::std::io::ErrorKind::AlreadyExists) => "FileExists".to_string(),
-            Some(::std::io::ErrorKind::IsADirectory) => "IsADirectory".to_string(),
-            Some(::std::io::ErrorKind::NotADirectory) => "NotADirectory".to_string(),
-            Some(::std::io::ErrorKind::DirectoryNotEmpty) => "DirectoryNotEmpty".to_string(),
-            _ => "Other".to_string(),
-        }
-    };
-    IOError { message: msg, kind }
-}
 fn main() {
     let path: String = "/tmp/sifr_runtime_in_memory_streams.bin".to_string();
     let mut stringio_ok: bool = false;

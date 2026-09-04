@@ -1,8 +1,64 @@
 // src/main.rs
+mod sifr_generated_generated_support {
+    use crate::SifrGeneratedStdlibSifrX2ecollectionsX2eCounter;
+    pub(crate) use ::sifr_runtime::SifrInt;
+    pub(crate) use ::std::collections::HashMap;
+    pub(crate) fn from_list<T: Clone + ::std::hash::Hash + Eq + 'static>(
+        items: &[T],
+    ) -> SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T> {
+        let mut counts: HashMap<T, SifrInt> = HashMap::from([]);
+        for item in items.iter().cloned() {
+            let val: Option<SifrInt> = counts.get(&item).cloned();
+            if let Some(val) = val.clone() {
+                {
+                    let sifr_generated_assign_value = &val + &SifrInt::from_i64(1);
+                    {
+                        let sifr_generated_assign_key = item.clone();
+                        counts.insert(sifr_generated_assign_key, sifr_generated_assign_value);
+                    }
+                }
+            } else {
+                let sifr_generated_assign_value = SifrInt::from_i64(1);
+                {
+                    let sifr_generated_assign_key = item.clone();
+                    counts.insert(sifr_generated_assign_key, sifr_generated_assign_value);
+                }
+            }
+        }
+        SifrGeneratedStdlibSifrX2ecollectionsX2eCounter::new(Some(counts), None)
+    }
+    pub(crate) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
+        assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
+        let mut i: SifrInt = SifrInt::from_i64(0);
+        while &i < &SifrInt::from(actual.len()) {
+            assert_eq!(
+                {
+                    let sifr_generated_condition_list = &actual;
+                    let sifr_generated_condition_index = i.clone();
+                    let sifr_generated_condition_normalized = sifr_generated_condition_index
+                        .normalize_index_or_len(sifr_generated_condition_list.len());
+                    sifr_generated_condition_list
+                        .get(sifr_generated_condition_normalized)
+                        .copied()
+                },
+                {
+                    let sifr_generated_condition_list = &expected;
+                    let sifr_generated_condition_index = i.clone();
+                    let sifr_generated_condition_normalized = sifr_generated_condition_index
+                        .normalize_index_or_len(sifr_generated_condition_list.len());
+                    sifr_generated_condition_list
+                        .get(sifr_generated_condition_normalized)
+                        .copied()
+                }
+            );
+            i = &i + &SifrInt::from_i64(1);
+        }
+    }
+}
 mod sifr_generated_project_nominals {
-    pub use ::sifr_runtime::SifrInt;
-    pub use ::std::collections::HashMap;
-    pub use ::std::collections::VecDeque;
+    use ::sifr_runtime::SifrInt;
+    use ::std::collections::HashMap;
+    use ::std::collections::VecDeque;
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub struct SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T: std::hash::Hash + Eq> {
         pub counts: HashMap<T, SifrInt>,
@@ -499,62 +555,11 @@ mod sifr_generated_project_nominals {
         }
     }
 }
+use crate::sifr_generated_generated_support::*;
 use ::sifr_runtime::SifrInt;
-use ::std::collections::HashMap;
 use ::std::collections::HashSet;
 pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2ecollectionsX2eCounter;
 pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2ecollectionsX2edeque;
-fn from_list<T: Clone + ::std::hash::Hash + Eq + 'static>(
-    items: &[T],
-) -> SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T> {
-    let mut counts: HashMap<T, SifrInt> = HashMap::from([]);
-    for item in items.iter().cloned() {
-        let val: Option<SifrInt> = counts.get(&item).cloned();
-        if let Some(val) = val.clone() {
-            {
-                let sifr_generated_assign_value = &val + &SifrInt::from_i64(1);
-                {
-                    let sifr_generated_assign_key = item.clone();
-                    counts.insert(sifr_generated_assign_key, sifr_generated_assign_value);
-                }
-            }
-        } else {
-            let sifr_generated_assign_value = SifrInt::from_i64(1);
-            {
-                let sifr_generated_assign_key = item.clone();
-                counts.insert(sifr_generated_assign_key, sifr_generated_assign_value);
-            }
-        }
-    }
-    SifrGeneratedStdlibSifrX2ecollectionsX2eCounter::new(Some(counts), None)
-}
-fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
-    assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
-    let mut i: SifrInt = SifrInt::from_i64(0);
-    while &i < &SifrInt::from(actual.len()) {
-        assert_eq!(
-            {
-                let sifr_generated_condition_list = &actual;
-                let sifr_generated_condition_index = i.clone();
-                let sifr_generated_condition_normalized = sifr_generated_condition_index
-                    .normalize_index_or_len(sifr_generated_condition_list.len());
-                sifr_generated_condition_list
-                    .get(sifr_generated_condition_normalized)
-                    .copied()
-            },
-            {
-                let sifr_generated_condition_list = &expected;
-                let sifr_generated_condition_index = i.clone();
-                let sifr_generated_condition_normalized = sifr_generated_condition_index
-                    .normalize_index_or_len(sifr_generated_condition_list.len());
-                sifr_generated_condition_list
-                    .get(sifr_generated_condition_normalized)
-                    .copied()
-            }
-        );
-        i = &i + &SifrInt::from_i64(1);
-    }
-}
 fn collect_set_and_counter_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = Vec::new();
     let left: HashSet<SifrInt> = vec![

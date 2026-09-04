@@ -86,11 +86,14 @@ fn test_generate_rust_multi_with_metadata_preserves_trait_impl_visibility() {
         "support-module functions should be exported"
     );
     assert!(
-        helper_rs.contains("impl ::std::fmt::Display for TOMLDecodeError"),
-        "stdlib trait impls should be preserved in publicized helper modules"
+        result
+            .project_union_prelude
+            .contains("impl ::std::fmt::Display for TOMLDecodeError"),
+        "stdlib trait impls should be preserved in the private project support owner:\n{}",
+        result.project_union_prelude
     );
     assert!(
-        !helper_rs.contains("pub fn fmt("),
-        "trait impl methods must not receive pub visibility during support-module publicization"
+        !result.project_union_prelude.contains("pub(crate) fn fmt("),
+        "trait impl methods must not receive visibility during support publicization"
     );
 }

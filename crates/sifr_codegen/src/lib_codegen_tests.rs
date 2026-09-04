@@ -73,6 +73,8 @@ mod exact_integer_architecture_codegen_tests;
 #[cfg(test)]
 mod generic_inheritance_codegen_tests;
 #[cfg(test)]
+mod item10_support_assembly_codegen_tests;
+#[cfg(test)]
 mod item8_canonical_codegen_tests;
 #[cfg(test)]
 mod item9_emitted_rust_quality_codegen_tests;

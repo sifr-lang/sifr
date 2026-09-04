@@ -55,6 +55,11 @@ fn test_generate_rust_multi_with_metadata_infers_fs_feature_from_private_stdlib_
 
     assert!(
         result
+            .project_union_prelude
+            .contains("::sifr_stdlib::fs::read_text")
+    );
+    assert!(
+        !result
             .rust_files
             .get("main")
             .expect("main module should be generated")
@@ -68,7 +73,7 @@ fn test_generate_rust_multi_with_metadata_infers_fs_feature_from_private_stdlib_
 }
 
 #[test]
-fn test_generate_rust_multi_requires_runtime_for_absolute_private_stdlib_bridge_paths() {
+fn test_generate_rust_multi_omits_runtime_for_unused_private_stdlib_bridge() {
     let main_module = HirModule {
         functions: vec![HirFunction {
             name: "main".to_string(),
@@ -112,11 +117,9 @@ fn test_generate_rust_multi_requires_runtime_for_absolute_private_stdlib_bridge_
 
     let result = generate_rust_multi_with_metadata(&[("main", &main_module)], &stdlib_code);
 
-    assert!(
-        result
-            .required_features
-            .contains(&sifr_stdlib_manifest::StdlibFeature::SifrRuntime)
-    );
+    assert!(result.used_stdlib_modules.is_empty());
+    assert!(result.required_features.is_empty());
+    assert!(!result.project_union_prelude.contains("SifrIntBridge"));
 }
 
 #[test]

@@ -1,5 +1,5 @@
-use crate::{HirModule, ModuleFuncSignatures, module_class_fields, module_func_signatures};
-use sifr_type_system::Type;
+use crate::{HirModule, ModuleFuncSignatures};
+use sifr_type_system::{ParamConvention, Type};
 use std::collections::HashMap;
 
 pub(crate) type ProjectClassFields = HashMap<String, HashMap<String, Vec<(String, Type)>>>;
@@ -83,4 +83,76 @@ pub(crate) fn project_class_fields(modules: &[(&str, &HirModule)]) -> ProjectCla
         }
     }
     fields
+}
+
+fn module_func_signatures(module: &HirModule) -> ModuleFuncSignatures {
+    let mut signatures = HashMap::new();
+    for function in &module.functions {
+        let params = function
+            .params
+            .iter()
+            .map(|param| (param.ty.clone(), param.convention))
+            .collect::<Vec<_>>();
+        signatures.insert(
+            function.name.clone(),
+            (params, function.return_type.clone()),
+        );
+    }
+    for class in &module.classes {
+        let mut has_constructor = false;
+        for method in &class.methods {
+            let params = method
+                .params
+                .iter()
+                .map(|param| {
+                    let convention = if method.name == "new" {
+                        ParamConvention::own()
+                    } else {
+                        param.convention
+                    };
+                    (param.ty.clone(), convention)
+                })
+                .collect::<Vec<_>>();
+            signatures.insert(
+                format!("{}::{}", class.name, method.name),
+                (params, method.return_type.clone()),
+            );
+            has_constructor |= method.name == "new";
+        }
+        if !has_constructor {
+            let params = class
+                .fields
+                .iter()
+                .map(|(_, ty)| (ty.clone(), ParamConvention::own()))
+                .collect();
+            signatures.insert(
+                format!("{}::new", class.name),
+                (
+                    params,
+                    Type::Class {
+                        identity: None,
+                        type_args: class
+                            .type_params
+                            .iter()
+                            .cloned()
+                            .map(Type::TypeVar)
+                            .collect(),
+                        name: class.name.clone(),
+                        fields: class.fields.clone(),
+                        methods: Vec::new(),
+                        parent_class: class.parent_class.clone(),
+                    },
+                ),
+            );
+        }
+    }
+    signatures
+}
+
+fn module_class_fields(module: &HirModule) -> HashMap<String, Vec<(String, Type)>> {
+    module
+        .classes
+        .iter()
+        .map(|class| (class.name.clone(), class.fields.clone()))
+        .collect()
 }

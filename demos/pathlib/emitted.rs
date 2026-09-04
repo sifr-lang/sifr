@@ -1,50 +1,40 @@
 // src/main.rs
-mod sifr_generated_project_nominals {
-    pub use ::sifr_runtime::SifrInt;
-    ///# Errors
-    ///Returns the typed error produced by this operation.
-    pub fn read_text(path: &str) -> Result<String, IOError> {
+mod sifr_generated_generated_support {
+    use crate::IOError;
+    pub(crate) use ::sifr_runtime::SifrInt;
+    pub(crate) fn read_text(path: &str) -> Result<String, IOError> {
         ::sifr_stdlib::fs::read_text(path).map_err(sifr_generated_io_err)
     }
-    ///# Errors
-    ///Returns the typed error produced by this operation.
-    pub fn write_text(path: &str, content: &str) -> Result<(), IOError> {
+    pub(crate) fn write_text(path: &str, content: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::write_text(path, content).map_err(sifr_generated_io_err)
     }
-    #[must_use]
-    pub fn exists(path: &str) -> bool {
+    pub(crate) fn exists(path: &str) -> bool {
         ::sifr_stdlib::fs::exists(path)
     }
-    ///# Errors
-    ///Returns the typed error produced by this operation.
-    pub fn mkdir(path: &str) -> Result<(), IOError> {
+    pub(crate) fn mkdir(path: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::mkdir(path).map_err(sifr_generated_io_err)
     }
-    ///# Errors
-    ///Returns the typed error produced by this operation.
-    pub fn rmdir(path: &str) -> Result<(), IOError> {
+    pub(crate) fn rmdir(path: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::rmdir(path).map_err(sifr_generated_io_err)
     }
-    ///# Errors
-    ///Returns the typed error produced by this operation.
-    pub fn remove_file(path: &str) -> Result<(), IOError> {
+    pub(crate) fn remove_file(path: &str) -> Result<(), IOError> {
         ::sifr_stdlib::fs::remove_file(path).map_err(sifr_generated_io_err)
     }
-    #[must_use]
-    pub fn is_file(path: &str) -> bool {
+    pub(crate) fn is_file(path: &str) -> bool {
         ::sifr_stdlib::fs::is_file(path)
     }
-    ///# Errors
-    ///Returns the typed error produced by this operation.
-    pub fn glob_pattern(dir: &str, pattern: &str) -> Result<Vec<String>, IOError> {
+    pub(crate) fn glob_pattern(dir: &str, pattern: &str) -> Result<Vec<String>, IOError> {
         ::sifr_stdlib::fs::glob_pattern(dir, pattern).map_err(sifr_generated_io_err)
     }
-    pub struct SifrGeneratedYielder<T> {
-        pub slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+    pub(crate) fn getpid() -> SifrInt {
+        ::sifr_stdlib::sys::getpid().into_sifr_int()
     }
-    pub struct SifrGeneratedYieldFuture<T> {
-        pub slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
-        pub value: Option<T>,
+    pub(crate) struct SifrGeneratedYielder<T> {
+        pub(crate) slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+    }
+    pub(crate) struct SifrGeneratedYieldFuture<T> {
+        pub(crate) slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+        pub(crate) value: Option<T>,
     }
     impl<T> Unpin for SifrGeneratedYieldFuture<T> {}
     impl<T> ::std::future::Future for SifrGeneratedYieldFuture<T> {
@@ -62,15 +52,14 @@ mod sifr_generated_project_nominals {
         }
     }
     impl<T> SifrGeneratedYielder<T> {
-        #[must_use]
-        pub fn suspend(&self, value: T) -> SifrGeneratedYieldFuture<T> {
+        pub(crate) fn suspend(&self, value: T) -> SifrGeneratedYieldFuture<T> {
             SifrGeneratedYieldFuture {
                 slot: ::std::sync::Arc::clone(&self.slot),
                 value: Some(value),
             }
         }
     }
-    pub fn sifr_generated_store_suspended<T>(
+    pub(crate) fn sifr_generated_store_suspended<T>(
         slot: &::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
         value: T,
     ) {
@@ -79,8 +68,7 @@ mod sifr_generated_project_nominals {
             Err(poisoned) => *poisoned.into_inner() = Some(value),
         }
     }
-    #[must_use]
-    pub fn sifr_generated_take_suspended<T>(
+    pub(crate) fn sifr_generated_take_suspended<T>(
         slot: &::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
     ) -> Option<T> {
         match slot.lock() {
@@ -88,15 +76,14 @@ mod sifr_generated_project_nominals {
             Err(poisoned) => poisoned.into_inner().take(),
         }
     }
-    pub struct SifrGeneratedGenerator<T> {
-        pub producer:
+    pub(crate) struct SifrGeneratedGenerator<T> {
+        pub(crate) producer:
             Option<::std::pin::Pin<Box<dyn ::std::future::Future<Output = ()> + 'static>>>,
-        pub yielded: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
-        pub complete: bool,
+        pub(crate) yielded: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+        pub(crate) complete: bool,
     }
     impl<T> SifrGeneratedGenerator<T> {
-        #[must_use]
-        pub fn new<
+        pub(crate) fn new<
             F: FnOnce(SifrGeneratedYielder<T>) -> Fut + 'static,
             Fut: ::std::future::Future<Output = ()> + 'static,
         >(
@@ -135,6 +122,188 @@ mod sifr_generated_project_nominals {
             yielded
         }
     }
+    pub(crate) fn join_path(base: &str, child: &str) -> String {
+        let sifr_generated_chars_base: Vec<char> = base.chars().collect::<Vec<char>>();
+        if &SifrInt::from(sifr_generated_chars_base.len()) == &SifrInt::from_i64(0) {
+            return {
+                let mut sifr_generated_concat: String = String::with_capacity(child.len());
+                sifr_generated_concat.push_str(child);
+                sifr_generated_concat.push_str("");
+                sifr_generated_concat
+            };
+        }
+        let last: Option<String> = {
+            let sifr_generated_string_index =
+                SifrInt::from(base.chars().count()) - SifrInt::from_i64(1);
+            let sifr_generated_string_index_normalized =
+                sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_base.len());
+            sifr_generated_chars_base
+                .get(sifr_generated_string_index_normalized)
+                .copied()
+        }
+        .map(|character| character.to_string());
+        if let Some(last) = last
+            && last.as_str() == "/".to_string().as_str()
+        {
+            return {
+                let mut sifr_generated_concat: String =
+                    String::with_capacity(base.len() + child.len());
+                sifr_generated_concat.push_str(base.as_ref());
+                sifr_generated_concat.push_str(child.as_ref());
+                sifr_generated_concat
+            };
+        }
+        {
+            let mut sifr_generated_concat: String =
+                String::with_capacity(base.len() + 1usize + child.len());
+            sifr_generated_concat.push_str(base);
+            sifr_generated_concat.push('/');
+            sifr_generated_concat.push_str(child);
+            sifr_generated_concat
+        }
+    }
+    pub(crate) fn basename(path: &str) -> String {
+        let sifr_generated_chars_path: Vec<char> = path.chars().collect::<Vec<char>>();
+        let mut i: SifrInt =
+            &SifrInt::from(sifr_generated_chars_path.len()) - &SifrInt::from_i64(1);
+        while &i >= &SifrInt::from_i64(0) {
+            let ch: Option<String> = {
+                let sifr_generated_string_index = i.clone();
+                let sifr_generated_string_index_normalized = sifr_generated_string_index
+                    .normalize_index_or_len(sifr_generated_chars_path.len());
+                sifr_generated_chars_path
+                    .get(sifr_generated_string_index_normalized)
+                    .copied()
+            }
+            .map(|character| character.to_string());
+            if let Some(ch) = ch
+                && ch == "/"
+            {
+                return {
+                    let sifr_generated_slice_src = &sifr_generated_chars_path;
+                    let sifr_generated_slice_len = sifr_generated_slice_src.len();
+                    let sifr_generated_slice_start =
+                        (&i + &SifrInt::from_i64(1)).clamp_slice_bound(sifr_generated_slice_len);
+                    let sifr_generated_slice_stop = sifr_generated_slice_len;
+                    String::from_iter(
+                        sifr_generated_slice_src
+                            .iter()
+                            .skip(sifr_generated_slice_start)
+                            .take(
+                                sifr_generated_slice_stop
+                                    .saturating_sub(sifr_generated_slice_start),
+                            )
+                            .copied(),
+                    )
+                };
+            }
+            i = &i - &SifrInt::from_i64(1);
+        }
+        {
+            let mut sifr_generated_concat: String = String::with_capacity(path.len());
+            sifr_generated_concat.push_str(path);
+            sifr_generated_concat.push_str("");
+            sifr_generated_concat
+        }
+    }
+    pub(crate) fn sifr_generated_iter_list_str(
+        entries: Vec<String>,
+    ) -> Box<dyn Iterator<Item = String>> {
+        Box::new(SifrGeneratedGenerator::new(
+            async move |sifr_generated_yielder: SifrGeneratedYielder<String>| {
+                let mut i: SifrInt = SifrInt::from_i64(0);
+                while &i < &SifrInt::from(entries.len()) {
+                    let Some(sifr_generated_checked_value_7) = ({
+                        let sifr_generated_checked_read_collection = &entries;
+                        let sifr_generated_checked_read_index = i.clone();
+                        let sifr_generated_checked_read_normalized =
+                            sifr_generated_checked_read_index.normalize_index_or_len(
+                                sifr_generated_checked_read_collection.len(),
+                            );
+                        sifr_generated_checked_read_collection
+                            .get(sifr_generated_checked_read_normalized)
+                            .cloned()
+                    }) else {
+                        break;
+                    };
+                    sifr_generated_yielder
+                        .suspend(sifr_generated_checked_value_7.clone())
+                        .await;
+                    i = &i + &SifrInt::from_i64(1);
+                }
+            },
+        ))
+    }
+    pub(crate) fn sifr_generated_glob_list(
+        path: &str,
+        pattern: &str,
+    ) -> Result<Vec<String>, IOError> {
+        glob_pattern(path, pattern)
+    }
+    pub(crate) fn sifr_generated_glob_to_iter(
+        path: &str,
+        pattern: &str,
+    ) -> Result<Box<dyn Iterator<Item = String>>, IOError> {
+        let sifr_generated_try_res: Result<
+            Result<Box<dyn Iterator<Item = String>>, IOError>,
+            IOError,
+        > = (|| {
+            let entries: Vec<String> = sifr_generated_glob_list(path, pattern)?;
+            Ok(Ok(sifr_generated_iter_list_str(entries)))
+        })();
+        sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
+            let e = sifr_generated_try_err.clone();
+            Err(e)
+        })
+    }
+    pub(crate) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
+        assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
+        let mut i: SifrInt = SifrInt::from_i64(0);
+        while &i < &SifrInt::from(actual.len()) {
+            assert_eq!(
+                {
+                    let sifr_generated_condition_list = &actual;
+                    let sifr_generated_condition_index = i.clone();
+                    let sifr_generated_condition_normalized = sifr_generated_condition_index
+                        .normalize_index_or_len(sifr_generated_condition_list.len());
+                    sifr_generated_condition_list
+                        .get(sifr_generated_condition_normalized)
+                        .copied()
+                },
+                {
+                    let sifr_generated_condition_list = &expected;
+                    let sifr_generated_condition_index = i.clone();
+                    let sifr_generated_condition_normalized = sifr_generated_condition_index
+                        .normalize_index_or_len(sifr_generated_condition_list.len());
+                    sifr_generated_condition_list
+                        .get(sifr_generated_condition_normalized)
+                        .copied()
+                }
+            );
+            i = &i + &SifrInt::from_i64(1);
+        }
+    }
+    pub(crate) fn sifr_generated_io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
+        let msg = e.to_string();
+        let kind = {
+            let sifr_generated_io_kind = (&e as &dyn ::std::any::Any)
+                .downcast_ref::<std::io::Error>()
+                .map(::std::io::Error::kind);
+            match sifr_generated_io_kind {
+                Some(::std::io::ErrorKind::NotFound) => "FileNotFound".to_string(),
+                Some(::std::io::ErrorKind::PermissionDenied) => "PermissionDenied".to_string(),
+                Some(::std::io::ErrorKind::AlreadyExists) => "FileExists".to_string(),
+                Some(::std::io::ErrorKind::IsADirectory) => "IsADirectory".to_string(),
+                Some(::std::io::ErrorKind::NotADirectory) => "NotADirectory".to_string(),
+                Some(::std::io::ErrorKind::DirectoryNotEmpty) => "DirectoryNotEmpty".to_string(),
+                _ => "Other".to_string(),
+            }
+        };
+        IOError { message: msg, kind }
+    }
+}
+mod sifr_generated_project_nominals {
+    use crate::sifr_generated_generated_support::*;
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SifrGeneratedStdlibSifrX2epathlibX2ePath {
         pub path: String,
@@ -207,56 +376,6 @@ mod sifr_generated_project_nominals {
             write!(f, "Path(_path={})", self.path)
         }
     }
-    #[must_use]
-    pub fn sifr_generated_iter_list_str(entries: Vec<String>) -> Box<dyn Iterator<Item = String>> {
-        Box::new(SifrGeneratedGenerator::new(
-            async move |sifr_generated_yielder: SifrGeneratedYielder<String>| {
-                let mut i: SifrInt = SifrInt::from_i64(0);
-                while &i < &SifrInt::from(entries.len()) {
-                    let Some(sifr_generated_checked_value_7) = ({
-                        let sifr_generated_checked_read_collection = &entries;
-                        let sifr_generated_checked_read_index = i.clone();
-                        let sifr_generated_checked_read_normalized =
-                            sifr_generated_checked_read_index.normalize_index_or_len(
-                                sifr_generated_checked_read_collection.len(),
-                            );
-                        sifr_generated_checked_read_collection
-                            .get(sifr_generated_checked_read_normalized)
-                            .cloned()
-                    }) else {
-                        break;
-                    };
-                    sifr_generated_yielder
-                        .suspend(sifr_generated_checked_value_7.clone())
-                        .await;
-                    i = &i + &SifrInt::from_i64(1);
-                }
-            },
-        ))
-    }
-    ///# Errors
-    ///Returns the typed error produced by this operation.
-    pub fn sifr_generated_glob_list(path: &str, pattern: &str) -> Result<Vec<String>, IOError> {
-        glob_pattern(path, pattern)
-    }
-    ///# Errors
-    ///Returns the typed error produced by this operation.
-    pub fn sifr_generated_glob_to_iter(
-        path: &str,
-        pattern: &str,
-    ) -> Result<Box<dyn Iterator<Item = String>>, IOError> {
-        let sifr_generated_try_res: Result<
-            Result<Box<dyn Iterator<Item = String>>, IOError>,
-            IOError,
-        > = (|| {
-            let entries: Vec<String> = sifr_generated_glob_list(path, pattern)?;
-            Ok(Ok(sifr_generated_iter_list_str(entries)))
-        })();
-        sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-            let e = sifr_generated_try_err.clone();
-            Err(e)
-        })
-    }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct IOError {
         pub message: String,
@@ -268,138 +387,11 @@ mod sifr_generated_project_nominals {
         }
     }
     impl ::std::error::Error for IOError {}
-    #[must_use]
-    pub fn sifr_generated_io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
-        let msg = e.to_string();
-        let kind = {
-            let sifr_generated_io_kind = (&e as &dyn ::std::any::Any)
-                .downcast_ref::<std::io::Error>()
-                .map(::std::io::Error::kind);
-            match sifr_generated_io_kind {
-                Some(::std::io::ErrorKind::NotFound) => "FileNotFound".to_string(),
-                Some(::std::io::ErrorKind::PermissionDenied) => "PermissionDenied".to_string(),
-                Some(::std::io::ErrorKind::AlreadyExists) => "FileExists".to_string(),
-                Some(::std::io::ErrorKind::IsADirectory) => "IsADirectory".to_string(),
-                Some(::std::io::ErrorKind::NotADirectory) => "NotADirectory".to_string(),
-                Some(::std::io::ErrorKind::DirectoryNotEmpty) => "DirectoryNotEmpty".to_string(),
-                _ => "Other".to_string(),
-            }
-        };
-        IOError { message: msg, kind }
-    }
 }
+use crate::sifr_generated_generated_support::*;
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::IOError;
 pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2epathlibX2ePath;
-fn getpid() -> SifrInt {
-    ::sifr_stdlib::sys::getpid().into_sifr_int()
-}
-fn join_path(base: &str, child: &str) -> String {
-    let sifr_generated_chars_base: Vec<char> = base.chars().collect::<Vec<char>>();
-    if &SifrInt::from(sifr_generated_chars_base.len()) == &SifrInt::from_i64(0) {
-        return {
-            let mut sifr_generated_concat: String = String::with_capacity(child.len());
-            sifr_generated_concat.push_str(child);
-            sifr_generated_concat.push_str("");
-            sifr_generated_concat
-        };
-    }
-    let last: Option<String> = {
-        let sifr_generated_string_index =
-            SifrInt::from(base.chars().count()) - SifrInt::from_i64(1);
-        let sifr_generated_string_index_normalized =
-            sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_base.len());
-        sifr_generated_chars_base
-            .get(sifr_generated_string_index_normalized)
-            .copied()
-    }
-    .map(|character| character.to_string());
-    if let Some(last) = last
-        && last.as_str() == "/".to_string().as_str()
-    {
-        return {
-            let mut sifr_generated_concat: String = String::with_capacity(base.len() + child.len());
-            sifr_generated_concat.push_str(base.as_ref());
-            sifr_generated_concat.push_str(child.as_ref());
-            sifr_generated_concat
-        };
-    }
-    {
-        let mut sifr_generated_concat: String =
-            String::with_capacity(base.len() + 1usize + child.len());
-        sifr_generated_concat.push_str(base);
-        sifr_generated_concat.push('/');
-        sifr_generated_concat.push_str(child);
-        sifr_generated_concat
-    }
-}
-fn basename(path: &str) -> String {
-    let sifr_generated_chars_path: Vec<char> = path.chars().collect::<Vec<char>>();
-    let mut i: SifrInt = &SifrInt::from(sifr_generated_chars_path.len()) - &SifrInt::from_i64(1);
-    while &i >= &SifrInt::from_i64(0) {
-        let ch: Option<String> = {
-            let sifr_generated_string_index = i.clone();
-            let sifr_generated_string_index_normalized =
-                sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_path.len());
-            sifr_generated_chars_path
-                .get(sifr_generated_string_index_normalized)
-                .copied()
-        }
-        .map(|character| character.to_string());
-        if let Some(ch) = ch
-            && ch == "/"
-        {
-            return {
-                let sifr_generated_slice_src = &sifr_generated_chars_path;
-                let sifr_generated_slice_len = sifr_generated_slice_src.len();
-                let sifr_generated_slice_start =
-                    (&i + &SifrInt::from_i64(1)).clamp_slice_bound(sifr_generated_slice_len);
-                let sifr_generated_slice_stop = sifr_generated_slice_len;
-                String::from_iter(
-                    sifr_generated_slice_src
-                        .iter()
-                        .skip(sifr_generated_slice_start)
-                        .take(sifr_generated_slice_stop.saturating_sub(sifr_generated_slice_start))
-                        .copied(),
-                )
-            };
-        }
-        i = &i - &SifrInt::from_i64(1);
-    }
-    {
-        let mut sifr_generated_concat: String = String::with_capacity(path.len());
-        sifr_generated_concat.push_str(path);
-        sifr_generated_concat.push_str("");
-        sifr_generated_concat
-    }
-}
-fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
-    assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
-    let mut i: SifrInt = SifrInt::from_i64(0);
-    while &i < &SifrInt::from(actual.len()) {
-        assert_eq!(
-            {
-                let sifr_generated_condition_list = &actual;
-                let sifr_generated_condition_index = i.clone();
-                let sifr_generated_condition_normalized = sifr_generated_condition_index
-                    .normalize_index_or_len(sifr_generated_condition_list.len());
-                sifr_generated_condition_list
-                    .get(sifr_generated_condition_normalized)
-                    .copied()
-            },
-            {
-                let sifr_generated_condition_list = &expected;
-                let sifr_generated_condition_index = i.clone();
-                let sifr_generated_condition_normalized = sifr_generated_condition_index
-                    .normalize_index_or_len(sifr_generated_condition_list.len());
-                sifr_generated_condition_list
-                    .get(sifr_generated_condition_normalized)
-                    .copied()
-            }
-        );
-        i = &i + &SifrInt::from_i64(1);
-    }
-}
 fn collect_path_helpers_actual() -> Vec<bool> {
     vec![
         basename(&"/tmp/demo.txt".to_string()).as_str() == "demo.txt".to_string().as_str(),

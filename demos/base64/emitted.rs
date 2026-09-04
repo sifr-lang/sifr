@@ -1,4 +1,163 @@
 // src/main.rs
+mod sifr_generated_generated_support {
+    use crate::ParseError;
+    pub(crate) use ::sifr_runtime::SifrInt;
+    pub(crate) fn base64_encode(s: &str) -> String {
+        ::sifr_stdlib::base64::base64_encode(s)
+    }
+    pub(crate) fn base64_decode(s: &str) -> Result<String, ParseError> {
+        ::sifr_stdlib::base64::base64_decode(s).map_err(|sifr_generated_bridge_error| ParseError {
+            message: sifr_generated_bridge_error.to_string(),
+        })
+    }
+    pub(crate) fn urlsafe_b64encode(s: &str) -> String {
+        ::sifr_stdlib::base64::urlsafe_b64encode(s)
+    }
+    pub(crate) fn urlsafe_b64decode(s: &str) -> Result<String, ParseError> {
+        ::sifr_stdlib::base64::urlsafe_b64decode(s).map_err(|sifr_generated_bridge_error| {
+            ParseError {
+                message: sifr_generated_bridge_error.to_string(),
+            }
+        })
+    }
+    pub(crate) fn b64encode(s: &str) -> String {
+        base64_encode(s)
+    }
+    pub(crate) fn b64decode(s: &str) -> Result<String, ParseError> {
+        base64_decode(s)
+    }
+    pub(crate) fn b16encode(s: &str) -> Result<String, ParseError> {
+        let sifr_generated_try_res: Result<Result<String, ParseError>, ParseError> = (|| {
+            let data: Vec<u8> = ::sifr_runtime::encoding::encode_bytes(
+                &s,
+                &"utf-8".to_string(),
+                &"strict".to_string(),
+            )
+            .map_err(|sifr_generated_message| ParseError {
+                message: sifr_generated_message,
+            })?;
+            Ok(Ok({
+                let sifr_generated_bytes_receiver: &[u8] = &data;
+                let mut sifr_generated_hex = String::with_capacity(
+                    sifr_generated_bytes_receiver.len().saturating_mul(2_usize),
+                );
+                for sifr_generated_byte in sifr_generated_bytes_receiver {
+                    let _ = ::std::fmt::Write::write_fmt(
+                        &mut sifr_generated_hex,
+                        format_args!("{:02x}", *sifr_generated_byte),
+                    );
+                }
+                sifr_generated_hex
+            }
+            .to_uppercase()))
+        })();
+        sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
+            let e = sifr_generated_try_err.clone();
+            Err(e)
+        })
+    }
+    pub(crate) fn b16decode(s: &str) -> Result<String, ParseError> {
+        let sifr_generated_try_res: Result<Result<String, ParseError>, ParseError> = (|| {
+            let data: Vec<u8> = {
+                let s: String = s.to_string();
+                let mut cleaned = String::new();
+                for ch in s.chars() {
+                    if ch.is_ascii_whitespace() {
+                        continue;
+                    }
+                    if !ch.is_ascii_hexdigit() {
+                        return Err(ParseError {
+                            message: format!("invalid hex character: {ch}"),
+                        });
+                    }
+                    cleaned.push(ch);
+                }
+                if cleaned.len() % 2 != 0 {
+                    return Err(ParseError {
+                        message: "fromhex() arg must contain an even number of hexadecimal digits"
+                            .to_string(),
+                    });
+                }
+                let mut result = Vec::new();
+                for pair in cleaned.as_bytes().chunks(2) {
+                    let pair_str = ::std::str::from_utf8(pair).map_err(|e| ParseError {
+                        message: e.to_string(),
+                    })?;
+                    result.push(u8::from_str_radix(pair_str, 16).map_err(|e| ParseError {
+                        message: e.to_string(),
+                    })?);
+                }
+                Ok::<Vec<u8>, ParseError>(result)
+            }?;
+            Ok(::sifr_runtime::encoding::decode_text(
+                &data,
+                &"utf-8".to_string(),
+                &"strict".to_string(),
+            )
+            .map_err(|sifr_generated_message| ParseError {
+                message: sifr_generated_message,
+            }))
+        })();
+        sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
+            let e = sifr_generated_try_err.clone();
+            Err(e)
+        })
+    }
+    pub(crate) fn assert_vector_eq(actual: &[String], expected: &[String]) {
+        assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
+        let mut i: SifrInt = SifrInt::from_i64(0);
+        while &i < &SifrInt::from(actual.len()) {
+            assert_eq!(
+                {
+                    let sifr_generated_condition_list = &actual;
+                    let sifr_generated_condition_index = i.clone();
+                    let sifr_generated_condition_normalized = sifr_generated_condition_index
+                        .normalize_index_or_len(sifr_generated_condition_list.len());
+                    sifr_generated_condition_list
+                        .get(sifr_generated_condition_normalized)
+                        .cloned()
+                },
+                {
+                    let sifr_generated_condition_list = &expected;
+                    let sifr_generated_condition_index = i.clone();
+                    let sifr_generated_condition_normalized = sifr_generated_condition_index
+                        .normalize_index_or_len(sifr_generated_condition_list.len());
+                    sifr_generated_condition_list
+                        .get(sifr_generated_condition_normalized)
+                        .cloned()
+                }
+            );
+            i = &i + &SifrInt::from_i64(1);
+        }
+    }
+    pub(crate) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
+        assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
+        let mut i: SifrInt = SifrInt::from_i64(0);
+        while &i < &SifrInt::from(actual.len()) {
+            assert_eq!(
+                {
+                    let sifr_generated_condition_list = &actual;
+                    let sifr_generated_condition_index = i.clone();
+                    let sifr_generated_condition_normalized = sifr_generated_condition_index
+                        .normalize_index_or_len(sifr_generated_condition_list.len());
+                    sifr_generated_condition_list
+                        .get(sifr_generated_condition_normalized)
+                        .copied()
+                },
+                {
+                    let sifr_generated_condition_list = &expected;
+                    let sifr_generated_condition_index = i.clone();
+                    let sifr_generated_condition_normalized = sifr_generated_condition_index
+                        .normalize_index_or_len(sifr_generated_condition_list.len());
+                    sifr_generated_condition_list
+                        .get(sifr_generated_condition_normalized)
+                        .copied()
+                }
+            );
+            i = &i + &SifrInt::from_i64(1);
+        }
+    }
+}
 mod sifr_generated_project_nominals {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ParseError {
@@ -11,157 +170,8 @@ mod sifr_generated_project_nominals {
     }
     impl ::std::error::Error for ParseError {}
 }
-use ::sifr_runtime::SifrInt;
+use crate::sifr_generated_generated_support::*;
 pub use sifr_generated_project_nominals::ParseError;
-fn base64_encode(s: &str) -> String {
-    ::sifr_stdlib::base64::base64_encode(s)
-}
-fn base64_decode(s: &str) -> Result<String, ParseError> {
-    ::sifr_stdlib::base64::base64_decode(s).map_err(|sifr_generated_bridge_error| ParseError {
-        message: sifr_generated_bridge_error.to_string(),
-    })
-}
-fn urlsafe_b64encode(s: &str) -> String {
-    ::sifr_stdlib::base64::urlsafe_b64encode(s)
-}
-fn urlsafe_b64decode(s: &str) -> Result<String, ParseError> {
-    ::sifr_stdlib::base64::urlsafe_b64decode(s).map_err(|sifr_generated_bridge_error| ParseError {
-        message: sifr_generated_bridge_error.to_string(),
-    })
-}
-fn b64encode(s: &str) -> String {
-    base64_encode(s)
-}
-fn b64decode(s: &str) -> Result<String, ParseError> {
-    base64_decode(s)
-}
-fn b16encode(s: &str) -> Result<String, ParseError> {
-    let sifr_generated_try_res: Result<Result<String, ParseError>, ParseError> = (|| {
-        let data: Vec<u8> =
-            ::sifr_runtime::encoding::encode_bytes(&s, &"utf-8".to_string(), &"strict".to_string())
-                .map_err(|sifr_generated_message| ParseError {
-                    message: sifr_generated_message,
-                })?;
-        Ok(Ok({
-            let sifr_generated_bytes_receiver: &[u8] = &data;
-            let mut sifr_generated_hex =
-                String::with_capacity(sifr_generated_bytes_receiver.len().saturating_mul(2_usize));
-            for sifr_generated_byte in sifr_generated_bytes_receiver {
-                let _ = ::std::fmt::Write::write_fmt(
-                    &mut sifr_generated_hex,
-                    format_args!("{:02x}", *sifr_generated_byte),
-                );
-            }
-            sifr_generated_hex
-        }
-        .to_uppercase()))
-    })();
-    sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-        let e = sifr_generated_try_err.clone();
-        Err(e)
-    })
-}
-fn b16decode(s: &str) -> Result<String, ParseError> {
-    let sifr_generated_try_res: Result<Result<String, ParseError>, ParseError> = (|| {
-        let data: Vec<u8> = {
-            let s: String = s.to_string();
-            let mut cleaned = String::new();
-            for ch in s.chars() {
-                if ch.is_ascii_whitespace() {
-                    continue;
-                }
-                if !ch.is_ascii_hexdigit() {
-                    return Err(ParseError {
-                        message: format!("invalid hex character: {ch}"),
-                    });
-                }
-                cleaned.push(ch);
-            }
-            if cleaned.len() % 2 != 0 {
-                return Err(ParseError {
-                    message: "fromhex() arg must contain an even number of hexadecimal digits"
-                        .to_string(),
-                });
-            }
-            let mut result = Vec::new();
-            for pair in cleaned.as_bytes().chunks(2) {
-                let pair_str = ::std::str::from_utf8(pair).map_err(|e| ParseError {
-                    message: e.to_string(),
-                })?;
-                result.push(u8::from_str_radix(pair_str, 16).map_err(|e| ParseError {
-                    message: e.to_string(),
-                })?);
-            }
-            Ok::<Vec<u8>, ParseError>(result)
-        }?;
-        Ok(::sifr_runtime::encoding::decode_text(
-            &data,
-            &"utf-8".to_string(),
-            &"strict".to_string(),
-        )
-        .map_err(|sifr_generated_message| ParseError {
-            message: sifr_generated_message,
-        }))
-    })();
-    sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-        let e = sifr_generated_try_err.clone();
-        Err(e)
-    })
-}
-fn assert_vector_eq(actual: &[String], expected: &[String]) {
-    assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
-    let mut i: SifrInt = SifrInt::from_i64(0);
-    while &i < &SifrInt::from(actual.len()) {
-        assert_eq!(
-            {
-                let sifr_generated_condition_list = &actual;
-                let sifr_generated_condition_index = i.clone();
-                let sifr_generated_condition_normalized = sifr_generated_condition_index
-                    .normalize_index_or_len(sifr_generated_condition_list.len());
-                sifr_generated_condition_list
-                    .get(sifr_generated_condition_normalized)
-                    .cloned()
-            },
-            {
-                let sifr_generated_condition_list = &expected;
-                let sifr_generated_condition_index = i.clone();
-                let sifr_generated_condition_normalized = sifr_generated_condition_index
-                    .normalize_index_or_len(sifr_generated_condition_list.len());
-                sifr_generated_condition_list
-                    .get(sifr_generated_condition_normalized)
-                    .cloned()
-            }
-        );
-        i = &i + &SifrInt::from_i64(1);
-    }
-}
-fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
-    assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
-    let mut i: SifrInt = SifrInt::from_i64(0);
-    while &i < &SifrInt::from(actual.len()) {
-        assert_eq!(
-            {
-                let sifr_generated_condition_list = &actual;
-                let sifr_generated_condition_index = i.clone();
-                let sifr_generated_condition_normalized = sifr_generated_condition_index
-                    .normalize_index_or_len(sifr_generated_condition_list.len());
-                sifr_generated_condition_list
-                    .get(sifr_generated_condition_normalized)
-                    .copied()
-            },
-            {
-                let sifr_generated_condition_list = &expected;
-                let sifr_generated_condition_index = i.clone();
-                let sifr_generated_condition_normalized = sifr_generated_condition_index
-                    .normalize_index_or_len(sifr_generated_condition_list.len());
-                sifr_generated_condition_list
-                    .get(sifr_generated_condition_normalized)
-                    .copied()
-            }
-        );
-        i = &i + &SifrInt::from_i64(1);
-    }
-}
 fn encode_b64_or_empty(payload: &str) -> String {
     b64encode(payload)
 }

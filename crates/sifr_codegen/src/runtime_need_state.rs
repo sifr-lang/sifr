@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub(crate) struct RuntimeNeeds {
     flags: HashSet<RuntimeNeed>,
 }
@@ -21,5 +21,9 @@ impl RuntimeNeeds {
 
     pub(crate) fn file_handles(&self) -> bool {
         self.contains(RuntimeNeed::FileHandles)
+    }
+
+    pub(crate) fn merge(&mut self, other: &Self) {
+        self.flags.extend(other.flags.iter().copied());
     }
 }

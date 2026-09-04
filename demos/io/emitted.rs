@@ -1,4 +1,68 @@
 // src/main.rs
+mod sifr_generated_generated_support {
+    use crate::IOError;
+    pub(crate) use ::sifr_runtime::SifrInt;
+    pub(crate) fn read_text(path: &str) -> Result<String, IOError> {
+        ::sifr_stdlib::fs::read_text(path).map_err(sifr_generated_io_err)
+    }
+    pub(crate) fn write_text(path: &str, content: &str) -> Result<(), IOError> {
+        ::sifr_stdlib::fs::write_text(path, content).map_err(sifr_generated_io_err)
+    }
+    pub(crate) fn exists(path: &str) -> bool {
+        ::sifr_stdlib::fs::exists(path)
+    }
+    pub(crate) fn read_lines(path: &str) -> Result<Vec<String>, IOError> {
+        ::sifr_stdlib::fs::read_lines(path).map_err(sifr_generated_io_err)
+    }
+    pub(crate) fn append_text(path: &str, content: &str) -> Result<(), IOError> {
+        ::sifr_stdlib::fs::append_text(path, content).map_err(sifr_generated_io_err)
+    }
+    pub(crate) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
+        assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
+        let mut i: SifrInt = SifrInt::from_i64(0);
+        while &i < &SifrInt::from(actual.len()) {
+            assert_eq!(
+                {
+                    let sifr_generated_condition_list = &actual;
+                    let sifr_generated_condition_index = i.clone();
+                    let sifr_generated_condition_normalized = sifr_generated_condition_index
+                        .normalize_index_or_len(sifr_generated_condition_list.len());
+                    sifr_generated_condition_list
+                        .get(sifr_generated_condition_normalized)
+                        .copied()
+                },
+                {
+                    let sifr_generated_condition_list = &expected;
+                    let sifr_generated_condition_index = i.clone();
+                    let sifr_generated_condition_normalized = sifr_generated_condition_index
+                        .normalize_index_or_len(sifr_generated_condition_list.len());
+                    sifr_generated_condition_list
+                        .get(sifr_generated_condition_normalized)
+                        .copied()
+                }
+            );
+            i = &i + &SifrInt::from_i64(1);
+        }
+    }
+    pub(crate) fn sifr_generated_io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
+        let msg = e.to_string();
+        let kind = {
+            let sifr_generated_io_kind = (&e as &dyn ::std::any::Any)
+                .downcast_ref::<std::io::Error>()
+                .map(::std::io::Error::kind);
+            match sifr_generated_io_kind {
+                Some(::std::io::ErrorKind::NotFound) => "FileNotFound".to_string(),
+                Some(::std::io::ErrorKind::PermissionDenied) => "PermissionDenied".to_string(),
+                Some(::std::io::ErrorKind::AlreadyExists) => "FileExists".to_string(),
+                Some(::std::io::ErrorKind::IsADirectory) => "IsADirectory".to_string(),
+                Some(::std::io::ErrorKind::NotADirectory) => "NotADirectory".to_string(),
+                Some(::std::io::ErrorKind::DirectoryNotEmpty) => "DirectoryNotEmpty".to_string(),
+                _ => "Other".to_string(),
+            }
+        };
+        IOError { message: msg, kind }
+    }
+}
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct SifrGeneratedIoNativeFileHandle {
     pub id: String,
@@ -19,7 +83,6 @@ impl ::std::fmt::Display for SifrGeneratedIoNativeFileHandle {
 }
 mod sifr_generated_project_nominals {
     use crate::SifrGeneratedIoNativeFileHandle;
-    pub use ::sifr_runtime::SifrInt;
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SifrGeneratedStdlibSifrX2eencodingX2eEncoding {
         pub label: String,
@@ -166,239 +229,15 @@ mod sifr_generated_project_nominals {
         }
     }
     impl ::std::error::Error for IOError {}
-    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct Error {
-        pub message: String,
-    }
-    impl Error {
-        #[must_use]
-        pub const fn new(message: String) -> Self {
-            Self { message }
-        }
-    }
-    impl ::std::fmt::Display for Error {
-        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-            ::std::fmt::Display::fmt(&self.message, f)
-        }
-    }
-    impl ::std::error::Error for Error {}
-    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct ParseError {
-        pub message: String,
-    }
-    impl ::std::fmt::Display for ParseError {
-        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-            ::std::fmt::Display::fmt(&self.message, f)
-        }
-    }
-    impl ::std::error::Error for ParseError {}
-    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct ValueError {
-        pub message: String,
-    }
-    impl ::std::fmt::Display for ValueError {
-        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-            ::std::fmt::Display::fmt(&self.message, f)
-        }
-    }
-    impl ::std::error::Error for ValueError {}
-    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct JSONDecodeError {
-        pub message: String,
-        pub line: SifrInt,
-        pub column: SifrInt,
-    }
-    impl ::std::fmt::Display for JSONDecodeError {
-        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-            ::std::fmt::Display::fmt(&self.message, f)
-        }
-    }
-    impl ::std::error::Error for JSONDecodeError {}
-    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct JsonIntegerRangeError {
-        pub message: String,
-        pub path: String,
-        pub profile: String,
-    }
-    impl ::std::fmt::Display for JsonIntegerRangeError {
-        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-            ::std::fmt::Display::fmt(&self.message, f)
-        }
-    }
-    impl ::std::error::Error for JsonIntegerRangeError {}
-    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct JsonLimitError {
-        pub message: String,
-        pub limit: SifrInt,
-    }
-    impl ::std::fmt::Display for JsonLimitError {
-        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-            ::std::fmt::Display::fmt(&self.message, f)
-        }
-    }
-    impl ::std::error::Error for JsonLimitError {}
-    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct TOMLDecodeError {
-        pub message: String,
-        pub line: SifrInt,
-        pub column: SifrInt,
-    }
-    impl ::std::fmt::Display for TOMLDecodeError {
-        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-            ::std::fmt::Display::fmt(&self.message, f)
-        }
-    }
-    impl ::std::error::Error for TOMLDecodeError {}
-    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct RegexError {
-        pub message: String,
-        pub detail: String,
-    }
-    impl ::std::fmt::Display for RegexError {
-        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-            ::std::fmt::Display::fmt(&self.message, f)
-        }
-    }
-    impl ::std::error::Error for RegexError {}
-    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct TimeoutError {
-        pub message: String,
-    }
-    impl ::std::fmt::Display for TimeoutError {
-        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-            ::std::fmt::Display::fmt(&self.message, f)
-        }
-    }
-    impl ::std::error::Error for TimeoutError {}
-    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct ScopeFailure {
-        pub message: String,
-    }
-    impl ::std::fmt::Display for ScopeFailure {
-        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-            ::std::fmt::Display::fmt(&self.message, f)
-        }
-    }
-    impl ::std::error::Error for ScopeFailure {}
-    impl From<IOError> for Error {
-        fn from(err: IOError) -> Self {
-            Self::new(err.message)
-        }
-    }
-    impl From<ParseError> for Error {
-        fn from(err: ParseError) -> Self {
-            Self::new(err.message)
-        }
-    }
-    impl From<ValueError> for Error {
-        fn from(err: ValueError) -> Self {
-            Self::new(err.message)
-        }
-    }
-    impl From<JSONDecodeError> for Error {
-        fn from(err: JSONDecodeError) -> Self {
-            Self::new(err.message)
-        }
-    }
-    impl From<JsonIntegerRangeError> for Error {
-        fn from(err: JsonIntegerRangeError) -> Self {
-            Self::new(err.message)
-        }
-    }
-    impl From<JsonLimitError> for Error {
-        fn from(err: JsonLimitError) -> Self {
-            Self::new(err.message)
-        }
-    }
-    impl From<TOMLDecodeError> for Error {
-        fn from(err: TOMLDecodeError) -> Self {
-            Self::new(err.message)
-        }
-    }
-    impl From<RegexError> for Error {
-        fn from(err: RegexError) -> Self {
-            Self::new(err.message)
-        }
-    }
-    impl From<TimeoutError> for Error {
-        fn from(err: TimeoutError) -> Self {
-            Self::new(err.message)
-        }
-    }
-    impl From<ScopeFailure> for Error {
-        fn from(err: ScopeFailure) -> Self {
-            Self::new(err.message)
-        }
-    }
 }
+use crate::sifr_generated_generated_support::*;
 use ::sifr_runtime::SifrInt;
-pub use sifr_generated_project_nominals::Error;
 pub use sifr_generated_project_nominals::IOError;
 pub use sifr_generated_project_nominals::SifrGeneratedIoBinaryFileHandle;
 pub use sifr_generated_project_nominals::SifrGeneratedIoTextFileHandle;
 pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2eencodingX2eDecodeErrorHandler;
 pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2eencodingX2eEncodeErrorHandler;
 pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2eencodingX2eEncoding;
-fn read_text(path: &str) -> Result<String, IOError> {
-    ::sifr_stdlib::fs::read_text(path).map_err(sifr_generated_io_err)
-}
-fn write_text(path: &str, content: &str) -> Result<(), IOError> {
-    ::sifr_stdlib::fs::write_text(path, content).map_err(sifr_generated_io_err)
-}
-fn exists(path: &str) -> bool {
-    ::sifr_stdlib::fs::exists(path)
-}
-fn read_lines(path: &str) -> Result<Vec<String>, IOError> {
-    ::sifr_stdlib::fs::read_lines(path).map_err(sifr_generated_io_err)
-}
-fn append_text(path: &str, content: &str) -> Result<(), IOError> {
-    ::sifr_stdlib::fs::append_text(path, content).map_err(sifr_generated_io_err)
-}
-fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
-    assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
-    let mut i: SifrInt = SifrInt::from_i64(0);
-    while &i < &SifrInt::from(actual.len()) {
-        assert_eq!(
-            {
-                let sifr_generated_condition_list = &actual;
-                let sifr_generated_condition_index = i.clone();
-                let sifr_generated_condition_normalized = sifr_generated_condition_index
-                    .normalize_index_or_len(sifr_generated_condition_list.len());
-                sifr_generated_condition_list
-                    .get(sifr_generated_condition_normalized)
-                    .copied()
-            },
-            {
-                let sifr_generated_condition_list = &expected;
-                let sifr_generated_condition_index = i.clone();
-                let sifr_generated_condition_normalized = sifr_generated_condition_index
-                    .normalize_index_or_len(sifr_generated_condition_list.len());
-                sifr_generated_condition_list
-                    .get(sifr_generated_condition_normalized)
-                    .copied()
-            }
-        );
-        i = &i + &SifrInt::from_i64(1);
-    }
-}
-fn sifr_generated_io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
-    let msg = e.to_string();
-    let kind = {
-        let sifr_generated_io_kind = (&e as &dyn ::std::any::Any)
-            .downcast_ref::<std::io::Error>()
-            .map(::std::io::Error::kind);
-        match sifr_generated_io_kind {
-            Some(::std::io::ErrorKind::NotFound) => "FileNotFound".to_string(),
-            Some(::std::io::ErrorKind::PermissionDenied) => "PermissionDenied".to_string(),
-            Some(::std::io::ErrorKind::AlreadyExists) => "FileExists".to_string(),
-            Some(::std::io::ErrorKind::IsADirectory) => "IsADirectory".to_string(),
-            Some(::std::io::ErrorKind::NotADirectory) => "NotADirectory".to_string(),
-            Some(::std::io::ErrorKind::DirectoryNotEmpty) => "DirectoryNotEmpty".to_string(),
-            _ => "Other".to_string(),
-        }
-    };
-    IOError { message: msg, kind }
-}
 fn collect_io_roundtrip_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = Vec::new();
     let path: String = "/tmp/sifr_io_io_demo.txt".to_string();

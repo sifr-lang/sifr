@@ -1,165 +1,168 @@
 // src/main.rs
-use ::sifr_runtime::SifrInt;
-const INF: f64 = f64::INFINITY;
-fn log(x: f64) -> f64 {
-    ::sifr_stdlib::math::log(x)
-}
-fn cbrt(x: f64) -> f64 {
-    ::sifr_stdlib::math::cbrt(x)
-}
-fn exp2(x: f64) -> f64 {
-    ::sifr_stdlib::math::exp2(x)
-}
-const fn isnan(x: f64) -> bool {
-    ::sifr_stdlib::math::isnan(x)
-}
-const fn isinf(x: f64) -> bool {
-    ::sifr_stdlib::math::isinf(x)
-}
-fn remainder(x: f64, y: f64) -> f64 {
-    ::sifr_stdlib::math::remainder(x, y)
-}
-fn fma(x: f64, y: f64, z: f64) -> f64 {
-    ::sifr_stdlib::math::fma(x, y, z)
-}
-const fn isnormal(x: f64) -> bool {
-    ::sifr_stdlib::math::isnormal(x)
-}
-fn issubnormal(x: f64) -> bool {
-    ::sifr_stdlib::math::issubnormal(x)
-}
-fn dist_impl(p: Vec<f64>, q: Vec<f64>) -> f64 {
-    ::sifr_stdlib::math::dist(p, q)
-}
-fn fsum_impl(data: Vec<f64>) -> f64 {
-    ::sifr_stdlib::math::fsum(data)
-}
-fn sumprod_impl(p: Vec<f64>, q: Vec<f64>) -> f64 {
-    ::sifr_stdlib::math::sumprod(p, q)
-}
-fn nextafter(x: f64, y: f64) -> f64 {
-    ::sifr_stdlib::math::nextafter(x, y)
-}
-fn ulp(x: f64) -> f64 {
-    ::sifr_stdlib::math::ulp(x)
-}
-fn log_base(x: f64, base: f64) -> f64 {
-    log(x) / log(base)
-}
-fn isclose(a: f64, b: f64, rel_tol: f64, abs_tol: f64) -> bool {
-    if rel_tol < 0.0_f64 {
-        return false;
+mod sifr_generated_generated_support {
+    pub(crate) use ::sifr_runtime::SifrInt;
+    pub(crate) const INF: f64 = f64::INFINITY;
+    pub(crate) fn log(x: f64) -> f64 {
+        ::sifr_stdlib::math::log(x)
     }
-    if abs_tol < 0.0_f64 {
-        return false;
+    pub(crate) fn cbrt(x: f64) -> f64 {
+        ::sifr_stdlib::math::cbrt(x)
     }
-    if a == b {
-        return true;
+    pub(crate) fn exp2(x: f64) -> f64 {
+        ::sifr_stdlib::math::exp2(x)
     }
-    if isnan(a) || isnan(b) {
-        return false;
+    pub(crate) const fn isnan(x: f64) -> bool {
+        ::sifr_stdlib::math::isnan(x)
     }
-    if isinf(a) || isinf(b) {
-        return false;
+    pub(crate) const fn isinf(x: f64) -> bool {
+        ::sifr_stdlib::math::isinf(x)
     }
-    let mut diff: f64 = a - b;
-    if diff < 0.0_f64 {
-        diff = 0.0_f64 - diff;
+    pub(crate) fn remainder(x: f64, y: f64) -> f64 {
+        ::sifr_stdlib::math::remainder(x, y)
     }
-    let mut a_abs: f64 = a;
-    if a_abs < 0.0_f64 {
-        a_abs = 0.0_f64 - a_abs;
+    pub(crate) fn fma(x: f64, y: f64, z: f64) -> f64 {
+        ::sifr_stdlib::math::fma(x, y, z)
     }
-    let mut b_abs_value_a5463241d121f11a: f64 = b;
-    if b_abs_value_a5463241d121f11a < 0.0_f64 {
-        b_abs_value_a5463241d121f11a = 0.0_f64 - b_abs_value_a5463241d121f11a;
+    pub(crate) const fn isnormal(x: f64) -> bool {
+        ::sifr_stdlib::math::isnormal(x)
     }
-    let mut larger_abs: f64 = a_abs;
-    if b_abs_value_a5463241d121f11a > larger_abs {
-        larger_abs = b_abs_value_a5463241d121f11a;
+    pub(crate) fn issubnormal(x: f64) -> bool {
+        ::sifr_stdlib::math::issubnormal(x)
     }
-    let mut rel_bound: f64 = rel_tol * larger_abs;
-    if abs_tol > rel_bound {
-        rel_bound = abs_tol;
+    pub(crate) fn dist_impl(p: Vec<f64>, q: Vec<f64>) -> f64 {
+        ::sifr_stdlib::math::dist(p, q)
     }
-    diff <= rel_bound
+    pub(crate) fn fsum_impl(data: Vec<f64>) -> f64 {
+        ::sifr_stdlib::math::fsum(data)
+    }
+    pub(crate) fn sumprod_impl(p: Vec<f64>, q: Vec<f64>) -> f64 {
+        ::sifr_stdlib::math::sumprod(p, q)
+    }
+    pub(crate) fn nextafter(x: f64, y: f64) -> f64 {
+        ::sifr_stdlib::math::nextafter(x, y)
+    }
+    pub(crate) fn ulp(x: f64) -> f64 {
+        ::sifr_stdlib::math::ulp(x)
+    }
+    pub(crate) fn log_base(x: f64, base: f64) -> f64 {
+        log(x) / log(base)
+    }
+    pub(crate) fn isclose(a: f64, b: f64, rel_tol: f64, abs_tol: f64) -> bool {
+        if rel_tol < 0.0_f64 {
+            return false;
+        }
+        if abs_tol < 0.0_f64 {
+            return false;
+        }
+        if a == b {
+            return true;
+        }
+        if isnan(a) || isnan(b) {
+            return false;
+        }
+        if isinf(a) || isinf(b) {
+            return false;
+        }
+        let mut diff: f64 = a - b;
+        if diff < 0.0_f64 {
+            diff = 0.0_f64 - diff;
+        }
+        let mut a_abs: f64 = a;
+        if a_abs < 0.0_f64 {
+            a_abs = 0.0_f64 - a_abs;
+        }
+        let mut b_abs_value_a5463241d121f11a: f64 = b;
+        if b_abs_value_a5463241d121f11a < 0.0_f64 {
+            b_abs_value_a5463241d121f11a = 0.0_f64 - b_abs_value_a5463241d121f11a;
+        }
+        let mut larger_abs: f64 = a_abs;
+        if b_abs_value_a5463241d121f11a > larger_abs {
+            larger_abs = b_abs_value_a5463241d121f11a;
+        }
+        let mut rel_bound: f64 = rel_tol * larger_abs;
+        if abs_tol > rel_bound {
+            rel_bound = abs_tol;
+        }
+        diff <= rel_bound
+    }
+    pub(crate) fn sifr_generated_copy_float_list(data: &[f64]) -> Vec<f64> {
+        let mut out: Vec<f64> = Vec::new();
+        for value in data.iter().copied() {
+            out.push(value);
+        }
+        out
+    }
+    pub(crate) fn dist(p: &[f64], q: &[f64]) -> f64 {
+        dist_impl(
+            sifr_generated_copy_float_list(p),
+            sifr_generated_copy_float_list(q),
+        )
+    }
+    pub(crate) fn fsum(data: &[f64]) -> f64 {
+        fsum_impl(sifr_generated_copy_float_list(data))
+    }
+    pub(crate) fn sumprod(p: &[f64], q: &[f64]) -> f64 {
+        sumprod_impl(
+            sifr_generated_copy_float_list(p),
+            sifr_generated_copy_float_list(q),
+        )
+    }
+    pub(crate) fn assert_vector_eq(actual: &[String], expected: &[String]) {
+        assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
+        let mut i: SifrInt = SifrInt::from_i64(0);
+        while &i < &SifrInt::from(actual.len()) {
+            assert_eq!(
+                {
+                    let sifr_generated_condition_list = &actual;
+                    let sifr_generated_condition_index = i.clone();
+                    let sifr_generated_condition_normalized = sifr_generated_condition_index
+                        .normalize_index_or_len(sifr_generated_condition_list.len());
+                    sifr_generated_condition_list
+                        .get(sifr_generated_condition_normalized)
+                        .cloned()
+                },
+                {
+                    let sifr_generated_condition_list = &expected;
+                    let sifr_generated_condition_index = i.clone();
+                    let sifr_generated_condition_normalized = sifr_generated_condition_index
+                        .normalize_index_or_len(sifr_generated_condition_list.len());
+                    sifr_generated_condition_list
+                        .get(sifr_generated_condition_normalized)
+                        .cloned()
+                }
+            );
+            i = &i + &SifrInt::from_i64(1);
+        }
+    }
+    pub(crate) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
+        assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
+        let mut i: SifrInt = SifrInt::from_i64(0);
+        while &i < &SifrInt::from(actual.len()) {
+            assert_eq!(
+                {
+                    let sifr_generated_condition_list = &actual;
+                    let sifr_generated_condition_index = i.clone();
+                    let sifr_generated_condition_normalized = sifr_generated_condition_index
+                        .normalize_index_or_len(sifr_generated_condition_list.len());
+                    sifr_generated_condition_list
+                        .get(sifr_generated_condition_normalized)
+                        .copied()
+                },
+                {
+                    let sifr_generated_condition_list = &expected;
+                    let sifr_generated_condition_index = i.clone();
+                    let sifr_generated_condition_normalized = sifr_generated_condition_index
+                        .normalize_index_or_len(sifr_generated_condition_list.len());
+                    sifr_generated_condition_list
+                        .get(sifr_generated_condition_normalized)
+                        .copied()
+                }
+            );
+            i = &i + &SifrInt::from_i64(1);
+        }
+    }
 }
-fn sifr_generated_copy_float_list(data: &[f64]) -> Vec<f64> {
-    let mut out: Vec<f64> = Vec::new();
-    for value in data.iter().copied() {
-        out.push(value);
-    }
-    out
-}
-fn dist(p: &[f64], q: &[f64]) -> f64 {
-    dist_impl(
-        sifr_generated_copy_float_list(p),
-        sifr_generated_copy_float_list(q),
-    )
-}
-fn fsum(data: &[f64]) -> f64 {
-    fsum_impl(sifr_generated_copy_float_list(data))
-}
-fn sumprod(p: &[f64], q: &[f64]) -> f64 {
-    sumprod_impl(
-        sifr_generated_copy_float_list(p),
-        sifr_generated_copy_float_list(q),
-    )
-}
-fn assert_vector_eq(actual: &[String], expected: &[String]) {
-    assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
-    let mut i: SifrInt = SifrInt::from_i64(0);
-    while &i < &SifrInt::from(actual.len()) {
-        assert_eq!(
-            {
-                let sifr_generated_condition_list = &actual;
-                let sifr_generated_condition_index = i.clone();
-                let sifr_generated_condition_normalized = sifr_generated_condition_index
-                    .normalize_index_or_len(sifr_generated_condition_list.len());
-                sifr_generated_condition_list
-                    .get(sifr_generated_condition_normalized)
-                    .cloned()
-            },
-            {
-                let sifr_generated_condition_list = &expected;
-                let sifr_generated_condition_index = i.clone();
-                let sifr_generated_condition_normalized = sifr_generated_condition_index
-                    .normalize_index_or_len(sifr_generated_condition_list.len());
-                sifr_generated_condition_list
-                    .get(sifr_generated_condition_normalized)
-                    .cloned()
-            }
-        );
-        i = &i + &SifrInt::from_i64(1);
-    }
-}
-fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
-    assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
-    let mut i: SifrInt = SifrInt::from_i64(0);
-    while &i < &SifrInt::from(actual.len()) {
-        assert_eq!(
-            {
-                let sifr_generated_condition_list = &actual;
-                let sifr_generated_condition_index = i.clone();
-                let sifr_generated_condition_normalized = sifr_generated_condition_index
-                    .normalize_index_or_len(sifr_generated_condition_list.len());
-                sifr_generated_condition_list
-                    .get(sifr_generated_condition_normalized)
-                    .copied()
-            },
-            {
-                let sifr_generated_condition_list = &expected;
-                let sifr_generated_condition_index = i.clone();
-                let sifr_generated_condition_normalized = sifr_generated_condition_index
-                    .normalize_index_or_len(sifr_generated_condition_list.len());
-                sifr_generated_condition_list
-                    .get(sifr_generated_condition_normalized)
-                    .copied()
-            }
-        );
-        i = &i + &SifrInt::from_i64(1);
-    }
-}
+use crate::sifr_generated_generated_support::*;
 fn collect_positive_actual() -> Vec<String> {
     let mut actual: Vec<String> = vec![
         (cbrt(27.0_f64) == 3.0_f64).to_string(),

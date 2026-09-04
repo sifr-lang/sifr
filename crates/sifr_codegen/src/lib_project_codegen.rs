@@ -1,47 +1,22 @@
 use super::{
-    HashMap, HashSet, HirModule, MultiModuleCodegenResult, Renderer, RustFile, RustItem,
-    StdlibCode, generate_rust, generate_rust_with_stdlib_for_module_with_project_policy,
-    publicize_generated_module_source,
+    HashMap, HashSet, HirModule, ModuleSupportDemand, MultiModuleCodegenResult, Renderer, RustFile,
+    RustItem, StdlibCode, SupportEmission, crate_visible_generated_support_source, generate_rust,
+    generate_rust_with_stdlib_for_module_with_project_policy, publicize_generated_module_source,
+    render_import_items, render_support,
 };
 use crate::lib_project_signatures::{project_class_fields, project_func_signatures};
 use crate::project_stdlib_nominals::{
-    project_stdlib_nominal_plan, relocate_project_stdlib_nominals,
+    extract_project_stdlib_nominal_prelude, project_stdlib_nominal_plan,
+    relocate_project_stdlib_nominals,
 };
 use crate::project_union_prelude::render_project_union_prelude;
 use crate::render_project_structural_record_prelude;
+use crate::stdlib_filter::{rust_source_defined_item_names, rust_source_identifier_names};
 use sifr_stdlib_manifest::{StdlibFeature, try_generated_cargo_dependencies};
 use sifr_type_system::source_class_rust_name;
 
-pub(crate) fn register_imported_union_types(
-    emitter: &mut super::RustEmitter,
-    module: &HirModule,
-    project_code: &StdlibCode,
-) {
-    for import in &module.imports {
-        if import.module.starts_with("sifr.") || import.module.starts_with("_sifr.") {
-            continue;
-        }
-        if let Some(signatures) = project_code.func_signatures.get(&import.module) {
-            for name in &import.names {
-                if let Some((params, return_type)) = signatures.get(name) {
-                    for (param_type, _) in params {
-                        emitter.register_union_type(param_type);
-                    }
-                    emitter.register_union_type(return_type);
-                }
-            }
-        }
-        if let Some(classes) = project_code.module_class_fields.get(&import.module) {
-            for name in &import.names {
-                if let Some(fields) = classes.get(name) {
-                    for (_, field_type) in fields {
-                        emitter.register_union_type(field_type);
-                    }
-                }
-            }
-        }
-    }
-}
+mod imported_unions;
+pub(crate) use imported_unions::register_imported_union_types;
 
 pub(crate) struct ProjectUnionUsage {
     pub(crate) unions: HashMap<String, Vec<sifr_type_system::Type>>,
@@ -347,12 +322,7 @@ pub fn generate_rust_multi_with_metadata(
     } else {
         HashSet::new()
     };
-    let stdlib_nominal_plan = project_stdlib_nominal_plan(
-        &union_usage.unions,
-        stdlib_code,
-        modules,
-        structural_interop_enabled,
-    );
+    let mut stdlib_nominal_plan = project_stdlib_nominal_plan(&union_usage.unions, modules);
     let mut nominal_type_paths = project_nominal_type_paths(modules, &crate_root_modules);
     let structural_identity_expressions = if structural_interop_enabled {
         crate::structural_identity_codegen::class_identity_expressions_for_project(
@@ -364,20 +334,8 @@ pub fn generate_rust_multi_with_metadata(
         HashMap::new()
     };
     nominal_type_paths.extend(stdlib_nominal_plan.registry.rust_paths.clone());
-    let union_prelude = render_project_union_prelude(&union_usage, &nominal_type_paths);
-    let record_prelude = render_project_structural_record_prelude(modules, &project_codegen_code);
-    let project_union_prelude = [
-        stdlib_nominal_plan.prelude.as_str(),
-        union_prelude.as_str(),
-        record_prelude.as_str(),
-    ]
-    .into_iter()
-    .filter(|source| !source.trim().is_empty())
-    .map(str::trim_end)
-    .collect::<Vec<_>>()
-    .join("\n\n");
-    used_stdlib_modules.extend(stdlib_nominal_plan.used_stdlib_modules.iter().cloned());
-    required_features.extend(stdlib_nominal_plan.required_features.iter().copied());
+    let mut project_support_demand = ModuleSupportDemand::default();
+    let mut module_support_demands = HashMap::new();
 
     for (module_name, module) in modules {
         let module_public = *module_name != "main";
@@ -407,13 +365,17 @@ pub fn generate_rust_multi_with_metadata(
             Some(&structural_record_identities),
             structural_layout_location,
             Some(&structural_identity_expressions),
+            SupportEmission::Deferred,
         );
         let local_imports =
             render_local_module_imports(module, &project_modules, &project_codegen_code);
         let union_imports =
             render_project_union_imports(module_name, &used_unions, &crate_root_modules);
+        let module_support_demand = codegen_result.support_demand.clone();
+        project_support_demand.merge(&module_support_demand);
+        module_support_demands.insert((*module_name).to_string(), module_support_demand);
         let mut rust_source = relocate_project_stdlib_nominals(
-            &codegen_result.rust_source,
+            &codegen_result.module_body_source,
             module_name,
             &stdlib_nominal_plan,
             &crate_root_modules,
@@ -443,6 +405,94 @@ pub fn generate_rust_multi_with_metadata(
         used_stdlib_modules.extend(codegen_result.used_stdlib_modules);
         required_features.extend(codegen_result.required_features);
     }
+
+    let rendered_support = render_support(&project_support_demand, stdlib_code);
+    used_stdlib_modules.extend(rendered_support.used_stdlib_modules.iter().cloned());
+    required_features.extend(rendered_support.required_features.iter().copied());
+    let (nominal_prelude, remaining_support) = extract_project_stdlib_nominal_prelude(
+        &rendered_support.source,
+        &union_usage.unions,
+        stdlib_code,
+        &mut stdlib_nominal_plan,
+    );
+    nominal_type_paths.extend(stdlib_nominal_plan.registry.rust_paths.clone());
+    let union_prelude = render_project_union_prelude(&union_usage, &nominal_type_paths);
+    let record_prelude = render_project_structural_record_prelude(modules, &project_codegen_code);
+    let unpruned_project_prelude = [
+        nominal_prelude.as_str(),
+        union_prelude.as_str(),
+        record_prelude.as_str(),
+    ]
+    .into_iter()
+    .filter(|source| !source.trim().is_empty())
+    .map(str::trim_end)
+    .collect::<Vec<_>>()
+    .join("\n\n");
+    let support_imports = Renderer::new().render_file(&RustFile {
+        items: render_import_items(&rendered_support.import_needs),
+    });
+    let support_source = [support_imports.trim(), remaining_support.trim()]
+        .into_iter()
+        .filter(|source| !source.is_empty())
+        .collect::<Vec<_>>()
+        .join("\n\n");
+    let body_consumers = files.values().map(String::as_str).collect::<Vec<_>>();
+    let (mut project_union_prelude, support_source) = crate::prune_generated_project_owners(
+        &unpruned_project_prelude,
+        &support_source,
+        &body_consumers,
+    )
+    .unwrap_or_else(|error| panic!("failed to prune generated project owners: {error}"));
+    if !support_source.trim().is_empty() {
+        let visible_support = crate_visible_generated_support_source(&support_source);
+        let visible_support = crate::import_project_prelude_bindings_in_generated_support(
+            &project_union_prelude,
+            &visible_support,
+        )
+        .unwrap_or_else(|error| {
+            panic!("failed to import project prelude bindings into support: {error}")
+        });
+        let support_names = rust_source_defined_item_names(&visible_support);
+        let prelude_support_refs = crate::stdlib_filter::rust_source_referenced_item_names(
+            &project_union_prelude,
+            &support_names,
+        );
+        if !prelude_support_refs.is_empty() {
+            project_union_prelude =
+                crate::import_generated_support_in_project_nominals(&project_union_prelude)
+                    .unwrap_or_else(|error| {
+                        panic!("failed to import generated project support into nominals: {error}")
+                    });
+        }
+        for (module_name, source) in &mut files {
+            let module_needs_support = module_support_demands
+                .get(module_name)
+                .is_some_and(ModuleSupportDemand::needs_support);
+            let body_names = rust_source_identifier_names(source);
+            if module_needs_support && !support_names.is_disjoint(&body_names) {
+                *source = format!(
+                    "use crate::__sifr_generated_support::*;\n\n{}",
+                    source.trim_start()
+                );
+            }
+        }
+        let support_module = format!(
+            "mod __sifr_generated_support {{\n{}}}\n",
+            visible_support.trim_end()
+        );
+        project_union_prelude = [support_module.trim(), project_union_prelude.trim()]
+            .into_iter()
+            .filter(|source| !source.is_empty())
+            .collect::<Vec<_>>()
+            .join("\n\n");
+    }
+
+    crate::retain_generated_dependency_metadata(
+        std::iter::once(project_union_prelude.as_str()).chain(files.values().map(String::as_str)),
+        &mut used_stdlib_modules,
+        &mut required_features,
+    )
+    .unwrap_or_else(|error| panic!("failed to finalize generated project dependencies: {error}"));
 
     MultiModuleCodegenResult {
         rust_files: files,

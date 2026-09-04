@@ -1,5 +1,7 @@
 use super::dedup_keys::dedup_impl_key;
+use super::item_refs::referenced_item_names_via_ast;
 use proc_macro2::{Group, Ident, TokenStream, TokenTree};
+use quote::ToTokens;
 use sifr_type_system::{is_global_rust_nominal_identity, stdlib_class_rust_name};
 use std::collections::{HashMap, HashSet};
 use syn::visit::{self, Visit};
@@ -281,14 +283,19 @@ pub(crate) fn filter_canonical_stdlib_ir_to_needed(
 ///
 /// The `skip_types` set contains type names (e.g., "`IOError`") for which ALL items
 /// (struct, impl, trait impls) should be unconditionally stripped.
+#[derive(Default)]
+pub(crate) struct RustItemDeduper {
+    fingerprints: HashMap<String, String>,
+}
+
 pub(crate) fn dedup_rust_items(
     rust_code: &str,
-    emitted_items: &mut HashSet<String>,
+    emitted_items: &mut RustItemDeduper,
     skip_types: &HashSet<String>,
 ) -> String {
-    let Ok(parsed) = syn::parse_file(rust_code) else {
-        return rust_code.to_string();
-    };
+    let parsed = syn::parse_file(rust_code).unwrap_or_else(|error| {
+        panic!("failed to parse stdlib support before deduplication: {error}")
+    });
 
     let mut kept_items: Vec<Item> = Vec::new();
     for item in parsed.items {
@@ -298,16 +305,91 @@ pub(crate) fn dedup_rust_items(
             }
 
             let dedup_key = dedup_item_key(&item);
-            if emitted_items.insert(dedup_key) {
+            let fingerprint = item.to_token_stream().to_string();
+            if let Some(previous) = emitted_items.fingerprints.get(&dedup_key) {
+                if previous != &fingerprint {
+                    assert!(
+                        is_redundant_forwarding_adapter(&item, previous),
+                        "conflicting generated support bodies share canonical key `{dedup_key}`"
+                    );
+                }
+            } else {
+                emitted_items.fingerprints.insert(dedup_key, fingerprint);
                 kept_items.push(item);
             }
             continue;
         }
-
-        kept_items.push(item);
+        let fingerprint = item.to_token_stream().to_string();
+        let dedup_key = format!("unnamed:{fingerprint}");
+        if emitted_items
+            .fingerprints
+            .insert(dedup_key, fingerprint)
+            .is_none()
+        {
+            kept_items.push(item);
+        }
     }
 
     render_items(&kept_items)
+}
+
+fn is_redundant_forwarding_adapter(item: &Item, previous: &str) -> bool {
+    let Item::Fn(function) = item else {
+        return false;
+    };
+    let Ok(Item::Fn(previous)) = syn::parse_str::<Item>(previous) else {
+        return false;
+    };
+    if function.sig.to_token_stream().to_string() != previous.sig.to_token_stream().to_string() {
+        return false;
+    }
+    let parameters = function
+        .sig
+        .inputs
+        .iter()
+        .map(|argument| match argument {
+            syn::FnArg::Typed(argument) => match argument.pat.as_ref() {
+                syn::Pat::Ident(ident) if ident.subpat.is_none() => Some(&ident.ident),
+                _ => None,
+            },
+            syn::FnArg::Receiver(_) => None,
+        })
+        .collect::<Option<Vec<_>>>();
+    let Some(parameters) = parameters else {
+        return false;
+    };
+    let [syn::Stmt::Expr(expression, _)] = function.block.stmts.as_slice() else {
+        return false;
+    };
+    let expression = match expression {
+        syn::Expr::Return(return_expr) => return_expr.expr.as_deref(),
+        expression => Some(expression),
+    };
+    let Some(syn::Expr::Call(call)) = expression else {
+        return false;
+    };
+    let syn::Expr::Path(callee) = call.func.as_ref() else {
+        return false;
+    };
+    if callee.qself.is_some()
+        || callee.path.leading_colon.is_some()
+        || callee.path.segments.len() != 1
+        || call.args.len() != parameters.len()
+    {
+        return false;
+    }
+    call.args
+        .iter()
+        .zip(parameters)
+        .all(|(argument, parameter)| match argument {
+            syn::Expr::Path(path) => {
+                path.qself.is_none()
+                    && path.path.leading_colon.is_none()
+                    && path.path.segments.len() == 1
+                    && path.path.segments[0].ident == *parameter
+            }
+            _ => false,
+        })
 }
 
 pub(crate) fn strip_rust_items_by_name(rust_code: &str, names: &HashSet<&str>) -> String {
@@ -656,133 +738,15 @@ pub(super) fn is_shared_use_path(path: &[String]) -> bool {
     )
 }
 
-pub(super) fn referenced_item_names_via_ast(
-    item: &Item,
-    item_names: &HashSet<String>,
-    current_name: &str,
-    global_types: &HashSet<String>,
-) -> HashSet<String> {
-    let mut local_bindings = LocalBindingCollector::default();
-    local_bindings.visit_item(item);
-
-    let mut collector = ItemRefCollector::new(
-        item_names,
-        current_name,
-        global_types,
-        local_bindings.locals,
-    );
-    collector.visit_item(item);
-    collector.refs
-}
-
 #[derive(Default)]
-struct LocalBindingCollector {
-    locals: HashSet<String>,
+pub(super) struct LocalBindingCollector {
+    pub(super) locals: HashSet<String>,
 }
 
 impl<'ast> Visit<'ast> for LocalBindingCollector {
     fn visit_pat_ident(&mut self, node: &'ast syn::PatIdent) {
         self.locals.insert(node.ident.to_string());
         visit::visit_pat_ident(self, node);
-    }
-}
-
-struct ItemRefCollector<'a> {
-    item_names: &'a HashSet<String>,
-    current_name: &'a str,
-    global_types: &'a HashSet<String>,
-    locals: HashSet<String>,
-    refs: HashSet<String>,
-}
-
-impl<'a> ItemRefCollector<'a> {
-    fn new(
-        item_names: &'a HashSet<String>,
-        current_name: &'a str,
-        global_types: &'a HashSet<String>,
-        locals: HashSet<String>,
-    ) -> Self {
-        Self {
-            item_names,
-            current_name,
-            global_types,
-            locals,
-            refs: HashSet::new(),
-        }
-    }
-
-    fn try_insert_ref(&mut self, ident: &str) {
-        if ident == self.current_name {
-            return;
-        }
-        if self.global_types.contains(ident) {
-            return;
-        }
-        if self.item_names.contains(ident) {
-            self.refs.insert(ident.to_string());
-        }
-    }
-
-    fn collect_macro_token_refs(&mut self, macro_tokens: &TokenStream) {
-        let locals = self.locals.clone();
-        collect_macro_token_refs_rec(macro_tokens, &locals, |ident| {
-            self.try_insert_ref(ident);
-        });
-    }
-}
-
-impl<'ast> Visit<'ast> for ItemRefCollector<'_> {
-    fn visit_item_impl(&mut self, node: &'ast syn::ItemImpl) {
-        if let Some((trait_path, _)) = &node.trait_ {
-            if let Some(first) = trait_path.segments.first() {
-                self.try_insert_ref(&first.ident.to_string());
-            }
-        }
-        if let Some(name) = impl_self_type_ident(node.self_ty.as_ref()) {
-            self.try_insert_ref(&name);
-        }
-        visit::visit_item_impl(self, node);
-    }
-
-    fn visit_type_path(&mut self, node: &'ast syn::TypePath) {
-        if let Some(first) = node.path.segments.first() {
-            self.try_insert_ref(&first.ident.to_string());
-        }
-        visit::visit_type_path(self, node);
-    }
-
-    fn visit_path(&mut self, node: &'ast syn::Path) {
-        if let Some(first) = node.segments.first() {
-            let ident = first.ident.to_string();
-            let is_single_local = node.leading_colon.is_none()
-                && node.segments.len() == 1
-                && self.locals.contains(&ident);
-            if !is_single_local {
-                self.try_insert_ref(&ident);
-            }
-        }
-        visit::visit_path(self, node);
-    }
-
-    fn visit_expr_path(&mut self, node: &'ast syn::ExprPath) {
-        if node.qself.is_none() {
-            if let Some(first) = node.path.segments.first() {
-                let ident = first.ident.to_string();
-                let is_single_segment = node.path.segments.len() == 1;
-                if !(is_single_segment && self.locals.contains(&ident)) {
-                    self.try_insert_ref(&ident);
-                }
-            }
-        }
-        visit::visit_expr_path(self, node);
-    }
-
-    fn visit_macro(&mut self, node: &'ast syn::Macro) {
-        if let Some(first) = node.path.segments.first() {
-            self.try_insert_ref(&first.ident.to_string());
-        }
-        self.collect_macro_token_refs(&node.tokens);
-        visit::visit_macro(self, node);
     }
 }
 

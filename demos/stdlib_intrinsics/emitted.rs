@@ -1,6 +1,644 @@
 // src/main.rs
+mod sifr_generated_generated_support {
+    use crate::{
+        ParseError, SifrGeneratedStdlibSifrX2ehashlibX2eHashObject,
+        SifrGeneratedStdlibSifrX2etimeX2estructTime, ValueError,
+    };
+    pub(crate) use ::sifr_runtime::SifrInt;
+    pub(crate) fn b32encode(s: &str) -> String {
+        ::sifr_stdlib::base64::b32encode(s)
+    }
+    pub(crate) fn b32decode(s: &str) -> Result<String, ParseError> {
+        ::sifr_stdlib::base64::b32decode(s).map_err(|sifr_generated_bridge_error| ParseError {
+            message: sifr_generated_bridge_error.to_string(),
+        })
+    }
+    pub(crate) fn sha256_bytes(data: &[u8]) -> Vec<u8> {
+        ::sifr_stdlib::hash::sha256_bytes(data)
+    }
+    pub(crate) fn md5_bytes(data: &[u8]) -> Vec<u8> {
+        ::sifr_stdlib::hash::md5_bytes(data)
+    }
+    pub(crate) fn sha1_bytes(data: &[u8]) -> Vec<u8> {
+        ::sifr_stdlib::hash::sha1_bytes(data)
+    }
+    pub(crate) fn sha224_bytes(data: &[u8]) -> Vec<u8> {
+        ::sifr_stdlib::hash::sha224_bytes(data)
+    }
+    pub(crate) fn sha384_bytes(data: &[u8]) -> Vec<u8> {
+        ::sifr_stdlib::hash::sha384_bytes(data)
+    }
+    pub(crate) fn sha512_bytes(data: &[u8]) -> Vec<u8> {
+        ::sifr_stdlib::hash::sha512_bytes(data)
+    }
+    pub(crate) fn blake2b_bytes(data: &[u8]) -> Vec<u8> {
+        ::sifr_stdlib::hash::blake2b_bytes(data)
+    }
+    pub(crate) fn blake2s_bytes(data: &[u8]) -> Vec<u8> {
+        ::sifr_stdlib::hash::blake2s_bytes(data)
+    }
+    pub(crate) fn disk_usage(path: &str) -> Vec<SifrInt> {
+        ::sifr_stdlib::fs::disk_usage(path)
+            .into_iter()
+            .map(::sifr_runtime::interop::SifrIntBridge::into_sifr_int)
+            .collect()
+    }
+    pub(crate) fn sifr_generated_build_hash(
+        algorithm: &str,
+        data: &[u8],
+    ) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
+        let alg: String = algorithm.to_lowercase();
+        if alg == "md5" {
+            return SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
+                alg,
+                data.to_vec(),
+                "md5".to_string(),
+                SifrInt::from_i64(16),
+                SifrInt::from_i64(64),
+            );
+        } else if alg == "sha1" {
+            return SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
+                alg,
+                data.to_vec(),
+                "sha1".to_string(),
+                SifrInt::from_i64(20),
+                SifrInt::from_i64(64),
+            );
+        } else if alg == "sha224" {
+            return SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
+                alg,
+                data.to_vec(),
+                "sha224".to_string(),
+                SifrInt::from_i64(28),
+                SifrInt::from_i64(64),
+            );
+        } else if alg == "sha256" {
+            return SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
+                alg,
+                data.to_vec(),
+                "sha256".to_string(),
+                SifrInt::from_i64(32),
+                SifrInt::from_i64(64),
+            );
+        } else if alg == "sha384" {
+            return SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
+                alg,
+                data.to_vec(),
+                "sha384".to_string(),
+                SifrInt::from_i64(48),
+                SifrInt::from_i64(128),
+            );
+        } else if alg == "sha512" {
+            return SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
+                alg,
+                data.to_vec(),
+                "sha512".to_string(),
+                SifrInt::from_i64(64),
+                SifrInt::from_i64(128),
+            );
+        } else if alg == "blake2b" {
+            return SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
+                alg,
+                data.to_vec(),
+                "blake2b".to_string(),
+                SifrInt::from_i64(64),
+                SifrInt::from_i64(128),
+            );
+        } else if alg == "blake2s" {
+            return SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
+                alg,
+                data.to_vec(),
+                "blake2s".to_string(),
+                SifrInt::from_i64(32),
+                SifrInt::from_i64(64),
+            );
+        }
+        SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
+            alg,
+            data.to_vec(),
+            "unknown".to_string(),
+            SifrInt::from_i64(0),
+            SifrInt::from_i64(0),
+        )
+    }
+    pub(crate) fn sifr_generated_hash_bytes(algorithm: &str, data: &[u8]) -> Vec<u8> {
+        if algorithm == "md5" {
+            return md5_bytes(data);
+        } else if algorithm == "sha1" {
+            return sha1_bytes(data);
+        } else if algorithm == "sha224" {
+            return sha224_bytes(data);
+        } else if algorithm == "sha256" {
+            return sha256_bytes(data);
+        } else if algorithm == "sha384" {
+            return sha384_bytes(data);
+        } else if algorithm == "sha512" {
+            return sha512_bytes(data);
+        } else if algorithm == "blake2b" {
+            return blake2b_bytes(data);
+        } else if algorithm == "blake2s" {
+            return blake2s_bytes(data);
+        }
+        Vec::new()
+    }
+    pub(crate) fn sifr_generated_hash_hex(algorithm: &str, data: &[u8]) -> String {
+        {
+            let sifr_generated_bytes_receiver: &[u8] = &sifr_generated_hash_bytes(algorithm, data);
+            let mut sifr_generated_hex =
+                String::with_capacity(sifr_generated_bytes_receiver.len().saturating_mul(2_usize));
+            for sifr_generated_byte in sifr_generated_bytes_receiver {
+                let _ = ::std::fmt::Write::write_fmt(
+                    &mut sifr_generated_hex,
+                    format_args!("{:02x}", *sifr_generated_byte),
+                );
+            }
+            sifr_generated_hex
+        }
+    }
+    pub(crate) fn sha224(data: &[u8]) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
+        sifr_generated_build_hash(&"sha224".to_string(), data)
+    }
+    pub(crate) fn sha384(data: &[u8]) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
+        sifr_generated_build_hash(&"sha384".to_string(), data)
+    }
+    pub(crate) fn blake2b(data: &[u8]) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
+        sifr_generated_build_hash(&"blake2b".to_string(), data)
+    }
+    pub(crate) fn blake2s(data: &[u8]) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
+        sifr_generated_build_hash(&"blake2s".to_string(), data)
+    }
+    pub(crate) fn erf(x: f64) -> f64 {
+        ::sifr_stdlib::math::erf(x)
+    }
+    pub(crate) fn erfc(x: f64) -> f64 {
+        ::sifr_stdlib::math::erfc(x)
+    }
+    pub(crate) fn gamma(x: f64) -> f64 {
+        ::sifr_stdlib::math::gamma(x)
+    }
+    pub(crate) fn lgamma(x: f64) -> f64 {
+        ::sifr_stdlib::math::lgamma(x)
+    }
+    pub(crate) fn frexp(x: f64) -> Vec<f64> {
+        ::sifr_stdlib::math::frexp(x)
+    }
+    pub(crate) fn ldexp(m: f64, e: SifrInt) -> f64 {
+        ::sifr_stdlib::math::ldexp(m, ::sifr_runtime::interop::SifrIntBridge::from(e))
+    }
+    pub(crate) fn modf(x: f64) -> Vec<f64> {
+        ::sifr_stdlib::math::modf(x)
+    }
+    pub(crate) fn nextafter(x: f64, y: f64) -> f64 {
+        ::sifr_stdlib::math::nextafter(x, y)
+    }
+    pub(crate) fn ulp(x: f64) -> f64 {
+        ::sifr_stdlib::math::ulp(x)
+    }
+    pub(crate) fn getpid() -> SifrInt {
+        ::sifr_stdlib::sys::getpid().into_sifr_int()
+    }
+    pub(crate) fn cpu_count() -> SifrInt {
+        ::sifr_stdlib::sys::cpu_count().into_sifr_int()
+    }
+    pub(crate) fn platform_system() -> String {
+        ::sifr_stdlib::platform::platform_system()
+    }
+    pub(crate) fn platform_arch() -> String {
+        ::sifr_stdlib::platform::platform_arch()
+    }
+    pub(crate) fn platform_processor() -> String {
+        ::sifr_stdlib::platform::platform_processor()
+    }
+    pub(crate) fn system() -> String {
+        platform_system()
+    }
+    pub(crate) fn machine() -> String {
+        platform_arch()
+    }
+    pub(crate) fn processor() -> String {
+        platform_processor()
+    }
+    pub(crate) fn strptime(s: &str, fmt: &str) -> Result<String, ValueError> {
+        ::sifr_stdlib::time::strptime(s, fmt).map_err(|sifr_generated_bridge_error| ValueError {
+            message: sifr_generated_bridge_error.to_string(),
+        })
+    }
+    pub(crate) fn sifr_generated_gmtime_intrinsic(epoch: f64) -> String {
+        ::sifr_stdlib::time::gmtime(epoch)
+    }
+    pub(crate) fn sifr_generated_localtime_intrinsic(epoch: f64) -> String {
+        ::sifr_stdlib::time::localtime(epoch)
+    }
+    pub(crate) fn sifr_generated_is_leap_year(year: SifrInt) -> bool {
+        &year.floor_mod_known_nonzero(&SifrInt::from_i64(4)) == &SifrInt::from_i64(0)
+            && &year.floor_mod_known_nonzero(&SifrInt::from_i64(100)) != &SifrInt::from_i64(0)
+            || &year.floor_mod_known_nonzero(&SifrInt::from_i64(400)) == &SifrInt::from_i64(0)
+    }
+    pub(crate) fn sifr_generated_days_in_year(year: SifrInt) -> SifrInt {
+        if sifr_generated_is_leap_year(year.clone()) {
+            return SifrInt::from_i64(366);
+        }
+        SifrInt::from_i64(365)
+    }
+    pub(crate) fn sifr_generated_days_in_month(year: SifrInt, month: SifrInt) -> SifrInt {
+        let month_days: Vec<SifrInt> = vec![
+            SifrInt::from_i64(31),
+            SifrInt::from_i64(28),
+            SifrInt::from_i64(31),
+            SifrInt::from_i64(30),
+            SifrInt::from_i64(31),
+            SifrInt::from_i64(30),
+            SifrInt::from_i64(31),
+            SifrInt::from_i64(31),
+            SifrInt::from_i64(30),
+            SifrInt::from_i64(31),
+            SifrInt::from_i64(30),
+            SifrInt::from_i64(31),
+        ];
+        let idx: SifrInt = &month - &SifrInt::from_i64(1);
+        let d: Option<SifrInt> = {
+            let sifr_generated_checked_read_collection = &month_days;
+            let sifr_generated_checked_read_index = idx.clone();
+            let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
+                .normalize_index_or_len(sifr_generated_checked_read_collection.len());
+            sifr_generated_checked_read_collection
+                .get(sifr_generated_checked_read_normalized)
+                .cloned()
+        };
+        if &month == &SifrInt::from_i64(2) && sifr_generated_is_leap_year(year.clone()) {
+            return SifrInt::from_i64(29);
+        }
+        let Some(d) = d.clone() else {
+            return SifrInt::from_i64(0);
+        };
+        d
+    }
+    pub(crate) fn sifr_generated_substring(value: &str, start: SifrInt, end: SifrInt) -> String {
+        let sifr_generated_chars_value: Vec<char> = value.chars().collect::<Vec<char>>();
+        let mut result: String = String::new();
+        let mut i: SifrInt = start.clone();
+        while &i < &end {
+            let ch: Option<String> = {
+                let sifr_generated_string_index = i.clone();
+                let sifr_generated_string_index_normalized = sifr_generated_string_index
+                    .normalize_index_or_len(sifr_generated_chars_value.len());
+                sifr_generated_chars_value
+                    .get(sifr_generated_string_index_normalized)
+                    .copied()
+            }
+            .map(|character| character.to_string());
+            if let Some(ch) = ch {
+                result.push_str(ch.as_str());
+            }
+            i = &i + &SifrInt::from_i64(1);
+        }
+        result
+    }
+    pub(crate) fn sifr_generated_digit_value(ch: &str) -> Option<SifrInt> {
+        if ch == "0" {
+            return Some(SifrInt::from_i64(0));
+        }
+        if ch == "1" {
+            return Some(SifrInt::from_i64(1));
+        }
+        if ch == "2" {
+            return Some(SifrInt::from_i64(2));
+        }
+        if ch == "3" {
+            return Some(SifrInt::from_i64(3));
+        }
+        if ch == "4" {
+            return Some(SifrInt::from_i64(4));
+        }
+        if ch == "5" {
+            return Some(SifrInt::from_i64(5));
+        }
+        if ch == "6" {
+            return Some(SifrInt::from_i64(6));
+        }
+        if ch == "7" {
+            return Some(SifrInt::from_i64(7));
+        }
+        if ch == "8" {
+            return Some(SifrInt::from_i64(8));
+        }
+        if ch == "9" {
+            return Some(SifrInt::from_i64(9));
+        }
+        None
+    }
+    pub(crate) fn sifr_generated_parse_decimal(text: &str) -> Option<SifrInt> {
+        let sifr_generated_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
+        if &SifrInt::from(sifr_generated_chars_text.len()) == &SifrInt::from_i64(0) {
+            return None;
+        }
+        let mut out: SifrInt = SifrInt::from_i64(0);
+        let mut i: SifrInt = SifrInt::from_i64(0);
+        while &i < &SifrInt::from(sifr_generated_chars_text.len()) {
+            let ch_opt: Option<String> = {
+                let sifr_generated_string_index = i.clone();
+                let sifr_generated_string_index_normalized = sifr_generated_string_index
+                    .normalize_index_or_len(sifr_generated_chars_text.len());
+                sifr_generated_chars_text
+                    .get(sifr_generated_string_index_normalized)
+                    .copied()
+            }
+            .map(|character| character.to_string());
+            let ch_opt_value_58c5362056f71db8 = ch_opt?;
+            let ch: String = ch_opt_value_58c5362056f71db8;
+            let digit_opt: Option<SifrInt> = sifr_generated_digit_value(&ch);
+            let digit_opt_value_c39685cb2782ed00 = digit_opt.clone()?;
+            let digit: SifrInt = digit_opt_value_c39685cb2782ed00.clone();
+            out = &(&out * &SifrInt::from_i64(10)) + &digit;
+            i = &i + &SifrInt::from_i64(1);
+        }
+        Some(out)
+    }
+    pub(crate) fn sifr_generated_int_or_negative_one(value: Option<SifrInt>) -> SifrInt {
+        let Some(value) = value.clone() else {
+            return -&SifrInt::from_i64(1);
+        };
+        value.clone()
+    }
+    pub(crate) fn sifr_generated_day_of_year(
+        year: SifrInt,
+        month: SifrInt,
+        day: SifrInt,
+    ) -> SifrInt {
+        let mut yday: SifrInt = SifrInt::from_i64(0);
+        let mut m: SifrInt = SifrInt::from_i64(1);
+        while &m < &month {
+            yday = &yday + &sifr_generated_days_in_month(year.clone(), m.clone());
+            m = &m + &SifrInt::from_i64(1);
+        }
+        &yday + &day
+    }
+    pub(crate) fn sifr_generated_weekday(year: SifrInt, month: SifrInt, day: SifrInt) -> SifrInt {
+        let mut days_since_epoch: SifrInt = SifrInt::from_i64(0);
+        if &year >= &SifrInt::from_i64(1970) {
+            let mut y: SifrInt = SifrInt::from_i64(1970);
+            while &y < &year {
+                days_since_epoch = &days_since_epoch + &sifr_generated_days_in_year(y.clone());
+                y = &y + &SifrInt::from_i64(1);
+            }
+        } else {
+            let mut y: SifrInt = SifrInt::from_i64(1969);
+            while &y >= &year {
+                days_since_epoch = &days_since_epoch - &sifr_generated_days_in_year(y.clone());
+                y = &y - &SifrInt::from_i64(1);
+            }
+        }
+        let mut m: SifrInt = SifrInt::from_i64(1);
+        while &m < &month {
+            days_since_epoch =
+                &days_since_epoch + &sifr_generated_days_in_month(year.clone(), m.clone());
+            m = &m + &SifrInt::from_i64(1);
+        }
+        days_since_epoch = &(&days_since_epoch + &day) - &SifrInt::from_i64(1);
+        let mut wd: SifrInt = (&SifrInt::from_i64(3) + &days_since_epoch)
+            .floor_mod_known_nonzero(&SifrInt::from_i64(7));
+        if &wd < &SifrInt::from_i64(0) {
+            wd = &wd + &SifrInt::from_i64(7);
+        }
+        wd.clone()
+    }
+    pub(crate) fn sifr_generated_valid_date(year: SifrInt, month: SifrInt, day: SifrInt) -> bool {
+        if &year <= &SifrInt::from_i64(0) {
+            return false;
+        }
+        if &month < &SifrInt::from_i64(1) || &month > &SifrInt::from_i64(12) {
+            return false;
+        }
+        let max_day: SifrInt = sifr_generated_days_in_month(year.clone(), month.clone());
+        &day >= &SifrInt::from_i64(1) && &day <= &max_day
+    }
+    pub(crate) fn sifr_generated_invalid_struct_time() -> SifrGeneratedStdlibSifrX2etimeX2estructTime
+    {
+        SifrGeneratedStdlibSifrX2etimeX2estructTime::new(
+            SifrInt::from_i64(0),
+            SifrInt::from_i64(0),
+            SifrInt::from_i64(0),
+            SifrInt::from_i64(0),
+            SifrInt::from_i64(0),
+            SifrInt::from_i64(0),
+            SifrInt::from_i64(0),
+            SifrInt::from_i64(0),
+            SifrInt::from_i64(0),
+        )
+    }
+    #[expect(
+        clippy::too_many_lines,
+        reason = "one generated Rust function preserves one typed Sifr function"
+    )]
+    pub(crate) fn sifr_generated_to_struct_time(
+        rendered: &str,
+    ) -> SifrGeneratedStdlibSifrX2etimeX2estructTime {
+        let sifr_generated_chars_rendered: Vec<char> = rendered.chars().collect::<Vec<char>>();
+        let Some(_checked_value_3) = {
+            let sifr_generated_string_index = SifrInt::from_i64(4);
+            let sifr_generated_string_index_normalized = sifr_generated_string_index
+                .normalize_index_or_len(sifr_generated_chars_rendered.len());
+            sifr_generated_chars_rendered
+                .get(sifr_generated_string_index_normalized)
+                .copied()
+        }
+        .map(|character| character.to_string()) else {
+            return sifr_generated_invalid_struct_time();
+        };
+        let Some(_checked_value_4) = {
+            let sifr_generated_string_index = SifrInt::from_i64(7);
+            let sifr_generated_string_index_normalized = sifr_generated_string_index
+                .normalize_index_or_len(sifr_generated_chars_rendered.len());
+            sifr_generated_chars_rendered
+                .get(sifr_generated_string_index_normalized)
+                .copied()
+        }
+        .map(|character| character.to_string()) else {
+            return sifr_generated_invalid_struct_time();
+        };
+        let Some(_checked_value_5) = {
+            let sifr_generated_string_index = SifrInt::from_i64(10);
+            let sifr_generated_string_index_normalized = sifr_generated_string_index
+                .normalize_index_or_len(sifr_generated_chars_rendered.len());
+            sifr_generated_chars_rendered
+                .get(sifr_generated_string_index_normalized)
+                .copied()
+        }
+        .map(|character| character.to_string()) else {
+            return sifr_generated_invalid_struct_time();
+        };
+        let Some(_checked_value_6) = {
+            let sifr_generated_string_index = SifrInt::from_i64(13);
+            let sifr_generated_string_index_normalized = sifr_generated_string_index
+                .normalize_index_or_len(sifr_generated_chars_rendered.len());
+            sifr_generated_chars_rendered
+                .get(sifr_generated_string_index_normalized)
+                .copied()
+        }
+        .map(|character| character.to_string()) else {
+            return sifr_generated_invalid_struct_time();
+        };
+        let Some(_checked_value_7) = {
+            let sifr_generated_string_index = SifrInt::from_i64(16);
+            let sifr_generated_string_index_normalized = sifr_generated_string_index
+                .normalize_index_or_len(sifr_generated_chars_rendered.len());
+            sifr_generated_chars_rendered
+                .get(sifr_generated_string_index_normalized)
+                .copied()
+        }
+        .map(|character| character.to_string()) else {
+            return sifr_generated_invalid_struct_time();
+        };
+        if {
+            let sifr_generated_string_index = SifrInt::from_i64(4);
+            let sifr_generated_string_index_normalized = sifr_generated_string_index
+                .normalize_index_or_len(sifr_generated_chars_rendered.len());
+            sifr_generated_chars_rendered
+                .get(sifr_generated_string_index_normalized)
+                .copied()
+        }
+        .map(Some)
+            != Some(Some('-'))
+            || {
+                let sifr_generated_string_index = SifrInt::from_i64(7);
+                let sifr_generated_string_index_normalized = sifr_generated_string_index
+                    .normalize_index_or_len(sifr_generated_chars_rendered.len());
+                sifr_generated_chars_rendered
+                    .get(sifr_generated_string_index_normalized)
+                    .copied()
+            }
+            .map(Some)
+                != Some(Some('-'))
+            || {
+                let sifr_generated_string_index = SifrInt::from_i64(10);
+                let sifr_generated_string_index_normalized = sifr_generated_string_index
+                    .normalize_index_or_len(sifr_generated_chars_rendered.len());
+                sifr_generated_chars_rendered
+                    .get(sifr_generated_string_index_normalized)
+                    .copied()
+            }
+            .map(Some)
+                != Some(Some('T'))
+            || {
+                let sifr_generated_string_index = SifrInt::from_i64(13);
+                let sifr_generated_string_index_normalized = sifr_generated_string_index
+                    .normalize_index_or_len(sifr_generated_chars_rendered.len());
+                sifr_generated_chars_rendered
+                    .get(sifr_generated_string_index_normalized)
+                    .copied()
+            }
+            .map(Some)
+                != Some(Some(':'))
+            || {
+                let sifr_generated_string_index = SifrInt::from_i64(16);
+                let sifr_generated_string_index_normalized = sifr_generated_string_index
+                    .normalize_index_or_len(sifr_generated_chars_rendered.len());
+                sifr_generated_chars_rendered
+                    .get(sifr_generated_string_index_normalized)
+                    .copied()
+            }
+            .map(Some)
+                != Some(Some(':'))
+        {
+            return sifr_generated_invalid_struct_time();
+        }
+        let year: SifrInt = sifr_generated_int_or_negative_one(sifr_generated_parse_decimal(
+            &sifr_generated_substring(rendered, SifrInt::from_i64(0), SifrInt::from_i64(4)),
+        ));
+        let month: SifrInt = sifr_generated_int_or_negative_one(sifr_generated_parse_decimal(
+            &sifr_generated_substring(rendered, SifrInt::from_i64(5), SifrInt::from_i64(7)),
+        ));
+        let day: SifrInt = sifr_generated_int_or_negative_one(sifr_generated_parse_decimal(
+            &sifr_generated_substring(rendered, SifrInt::from_i64(8), SifrInt::from_i64(10)),
+        ));
+        let hour: SifrInt = sifr_generated_int_or_negative_one(sifr_generated_parse_decimal(
+            &sifr_generated_substring(rendered, SifrInt::from_i64(11), SifrInt::from_i64(13)),
+        ));
+        let minute: SifrInt = sifr_generated_int_or_negative_one(sifr_generated_parse_decimal(
+            &sifr_generated_substring(rendered, SifrInt::from_i64(14), SifrInt::from_i64(16)),
+        ));
+        let second: SifrInt = sifr_generated_int_or_negative_one(sifr_generated_parse_decimal(
+            &sifr_generated_substring(rendered, SifrInt::from_i64(17), SifrInt::from_i64(19)),
+        ));
+        if &year < &SifrInt::from_i64(0)
+            || &month < &SifrInt::from_i64(0)
+            || &day < &SifrInt::from_i64(0)
+            || &hour < &SifrInt::from_i64(0)
+            || &minute < &SifrInt::from_i64(0)
+            || &second < &SifrInt::from_i64(0)
+        {
+            return sifr_generated_invalid_struct_time();
+        }
+        if !sifr_generated_valid_date(year.clone(), month.clone(), day.clone()) {
+            return sifr_generated_invalid_struct_time();
+        }
+        let wday: SifrInt = sifr_generated_weekday(year.clone(), month.clone(), day.clone());
+        let yday_value_75753d4973d2a3ce: SifrInt =
+            sifr_generated_day_of_year(year.clone(), month.clone(), day.clone());
+        SifrGeneratedStdlibSifrX2etimeX2estructTime::new(
+            year.clone(),
+            month.clone(),
+            day.clone(),
+            hour.clone(),
+            minute.clone(),
+            second.clone(),
+            wday.clone(),
+            yday_value_75753d4973d2a3ce.clone(),
+            SifrInt::from_i64(0),
+        )
+    }
+    pub(crate) fn gmtime_struct(epoch: f64) -> SifrGeneratedStdlibSifrX2etimeX2estructTime {
+        let rendered: String = sifr_generated_gmtime_intrinsic(epoch);
+        sifr_generated_to_struct_time(&rendered)
+    }
+    pub(crate) fn localtime_struct(epoch: f64) -> SifrGeneratedStdlibSifrX2etimeX2estructTime {
+        let rendered: String = sifr_generated_localtime_intrinsic(epoch);
+        sifr_generated_to_struct_time(&rendered)
+    }
+}
 mod sifr_generated_project_nominals {
-    pub use ::sifr_runtime::SifrInt;
+    use crate::sifr_generated_generated_support::*;
+    use ::sifr_runtime::SifrInt;
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
+        pub algorithm: String,
+        pub data: Vec<u8>,
+        pub name: String,
+        pub digest_size: SifrInt,
+        pub block_size: SifrInt,
+    }
+    impl SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
+        #[must_use]
+        pub fn new(
+            algorithm: String,
+            data: Vec<u8>,
+            name: String,
+            digest_size: SifrInt,
+            block_size: SifrInt,
+        ) -> Self {
+            let sifr_generated_field_value_ddb1f39e0a66bbbb_5f616c676f726974686d: String =
+                algorithm;
+            let sifr_generated_field_value_90770dc80a1c57ce_5f64617461: Vec<u8> = data;
+            let sifr_generated_field_value_c4bcadba8e631b86_6e616d65: String = name;
+            let sifr_generated_field_value_6344303e03c9f7c7_6469676573745f73697a65: SifrInt =
+                digest_size.clone();
+            let sifr_generated_field_value_e190162752f8783e_626c6f636b5f73697a65: SifrInt =
+                block_size.clone();
+            Self {
+                algorithm: sifr_generated_field_value_ddb1f39e0a66bbbb_5f616c676f726974686d,
+                data: sifr_generated_field_value_90770dc80a1c57ce_5f64617461,
+                name: sifr_generated_field_value_c4bcadba8e631b86_6e616d65,
+                digest_size: sifr_generated_field_value_6344303e03c9f7c7_6469676573745f73697a65,
+                block_size: sifr_generated_field_value_e190162752f8783e_626c6f636b5f73697a65,
+            }
+        }
+    }
+    impl SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
+        #[must_use]
+        pub fn hexdigest(&self) -> String {
+            sifr_generated_hash_hex(&self.algorithm, &self.data)
+        }
+    }
     #[derive(Debug, Clone)]
     pub struct SifrGeneratedStdlibSifrX2etimeX2estructTime {
         pub tm_year: SifrInt,
@@ -198,630 +836,12 @@ mod sifr_generated_project_nominals {
     }
     impl ::std::error::Error for ValueError {}
 }
+use crate::sifr_generated_generated_support::*;
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::ParseError;
+pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2ehashlibX2eHashObject;
 pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2etimeX2estructTime;
 pub use sifr_generated_project_nominals::ValueError;
-fn b32encode(s: &str) -> String {
-    ::sifr_stdlib::base64::b32encode(s)
-}
-fn b32decode(s: &str) -> Result<String, ParseError> {
-    ::sifr_stdlib::base64::b32decode(s).map_err(|sifr_generated_bridge_error| ParseError {
-        message: sifr_generated_bridge_error.to_string(),
-    })
-}
-fn sha256_bytes(data: &[u8]) -> Vec<u8> {
-    ::sifr_stdlib::hash::sha256_bytes(data)
-}
-fn md5_bytes(data: &[u8]) -> Vec<u8> {
-    ::sifr_stdlib::hash::md5_bytes(data)
-}
-fn sha1_bytes(data: &[u8]) -> Vec<u8> {
-    ::sifr_stdlib::hash::sha1_bytes(data)
-}
-fn sha224_bytes(data: &[u8]) -> Vec<u8> {
-    ::sifr_stdlib::hash::sha224_bytes(data)
-}
-fn sha384_bytes(data: &[u8]) -> Vec<u8> {
-    ::sifr_stdlib::hash::sha384_bytes(data)
-}
-fn sha512_bytes(data: &[u8]) -> Vec<u8> {
-    ::sifr_stdlib::hash::sha512_bytes(data)
-}
-fn blake2b_bytes(data: &[u8]) -> Vec<u8> {
-    ::sifr_stdlib::hash::blake2b_bytes(data)
-}
-fn blake2s_bytes(data: &[u8]) -> Vec<u8> {
-    ::sifr_stdlib::hash::blake2s_bytes(data)
-}
-fn disk_usage(path: &str) -> Vec<SifrInt> {
-    ::sifr_stdlib::fs::disk_usage(path)
-        .into_iter()
-        .map(::sifr_runtime::interop::SifrIntBridge::into_sifr_int)
-        .collect()
-}
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
-    algorithm: String,
-    data: Vec<u8>,
-    name: String,
-    digest_size: SifrInt,
-    block_size: SifrInt,
-}
-impl SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
-    fn new(
-        algorithm: String,
-        data: Vec<u8>,
-        name: String,
-        digest_size: SifrInt,
-        block_size: SifrInt,
-    ) -> Self {
-        let sifr_generated_field_value_ddb1f39e0a66bbbb_5f616c676f726974686d: String = algorithm;
-        let sifr_generated_field_value_90770dc80a1c57ce_5f64617461: Vec<u8> = data;
-        let sifr_generated_field_value_c4bcadba8e631b86_6e616d65: String = name;
-        let sifr_generated_field_value_6344303e03c9f7c7_6469676573745f73697a65: SifrInt =
-            digest_size.clone();
-        let sifr_generated_field_value_e190162752f8783e_626c6f636b5f73697a65: SifrInt =
-            block_size.clone();
-        Self {
-            algorithm: sifr_generated_field_value_ddb1f39e0a66bbbb_5f616c676f726974686d,
-            data: sifr_generated_field_value_90770dc80a1c57ce_5f64617461,
-            name: sifr_generated_field_value_c4bcadba8e631b86_6e616d65,
-            digest_size: sifr_generated_field_value_6344303e03c9f7c7_6469676573745f73697a65,
-            block_size: sifr_generated_field_value_e190162752f8783e_626c6f636b5f73697a65,
-        }
-    }
-}
-impl SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
-    fn hexdigest(&self) -> String {
-        sifr_generated_hash_hex(&self.algorithm, &self.data)
-    }
-}
-fn sifr_generated_build_hash(
-    algorithm: &str,
-    data: &[u8],
-) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
-    let alg: String = algorithm.to_lowercase();
-    if alg == "md5" {
-        return SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
-            alg,
-            data.to_vec(),
-            "md5".to_string(),
-            SifrInt::from_i64(16),
-            SifrInt::from_i64(64),
-        );
-    } else if alg == "sha1" {
-        return SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
-            alg,
-            data.to_vec(),
-            "sha1".to_string(),
-            SifrInt::from_i64(20),
-            SifrInt::from_i64(64),
-        );
-    } else if alg == "sha224" {
-        return SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
-            alg,
-            data.to_vec(),
-            "sha224".to_string(),
-            SifrInt::from_i64(28),
-            SifrInt::from_i64(64),
-        );
-    } else if alg == "sha256" {
-        return SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
-            alg,
-            data.to_vec(),
-            "sha256".to_string(),
-            SifrInt::from_i64(32),
-            SifrInt::from_i64(64),
-        );
-    } else if alg == "sha384" {
-        return SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
-            alg,
-            data.to_vec(),
-            "sha384".to_string(),
-            SifrInt::from_i64(48),
-            SifrInt::from_i64(128),
-        );
-    } else if alg == "sha512" {
-        return SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
-            alg,
-            data.to_vec(),
-            "sha512".to_string(),
-            SifrInt::from_i64(64),
-            SifrInt::from_i64(128),
-        );
-    } else if alg == "blake2b" {
-        return SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
-            alg,
-            data.to_vec(),
-            "blake2b".to_string(),
-            SifrInt::from_i64(64),
-            SifrInt::from_i64(128),
-        );
-    } else if alg == "blake2s" {
-        return SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
-            alg,
-            data.to_vec(),
-            "blake2s".to_string(),
-            SifrInt::from_i64(32),
-            SifrInt::from_i64(64),
-        );
-    }
-    SifrGeneratedStdlibSifrX2ehashlibX2eHashObject::new(
-        alg,
-        data.to_vec(),
-        "unknown".to_string(),
-        SifrInt::from_i64(0),
-        SifrInt::from_i64(0),
-    )
-}
-fn sifr_generated_hash_bytes(algorithm: &str, data: &[u8]) -> Vec<u8> {
-    if algorithm == "md5" {
-        return md5_bytes(data);
-    } else if algorithm == "sha1" {
-        return sha1_bytes(data);
-    } else if algorithm == "sha224" {
-        return sha224_bytes(data);
-    } else if algorithm == "sha256" {
-        return sha256_bytes(data);
-    } else if algorithm == "sha384" {
-        return sha384_bytes(data);
-    } else if algorithm == "sha512" {
-        return sha512_bytes(data);
-    } else if algorithm == "blake2b" {
-        return blake2b_bytes(data);
-    } else if algorithm == "blake2s" {
-        return blake2s_bytes(data);
-    }
-    Vec::new()
-}
-fn sifr_generated_hash_hex(algorithm: &str, data: &[u8]) -> String {
-    {
-        let sifr_generated_bytes_receiver: &[u8] = &sifr_generated_hash_bytes(algorithm, data);
-        let mut sifr_generated_hex =
-            String::with_capacity(sifr_generated_bytes_receiver.len().saturating_mul(2_usize));
-        for sifr_generated_byte in sifr_generated_bytes_receiver {
-            let _ = ::std::fmt::Write::write_fmt(
-                &mut sifr_generated_hex,
-                format_args!("{:02x}", *sifr_generated_byte),
-            );
-        }
-        sifr_generated_hex
-    }
-}
-fn sha224(data: &[u8]) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
-    sifr_generated_build_hash(&"sha224".to_string(), data)
-}
-fn sha384(data: &[u8]) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
-    sifr_generated_build_hash(&"sha384".to_string(), data)
-}
-fn blake2b(data: &[u8]) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
-    sifr_generated_build_hash(&"blake2b".to_string(), data)
-}
-fn blake2s(data: &[u8]) -> SifrGeneratedStdlibSifrX2ehashlibX2eHashObject {
-    sifr_generated_build_hash(&"blake2s".to_string(), data)
-}
-fn erf(x: f64) -> f64 {
-    ::sifr_stdlib::math::erf(x)
-}
-fn erfc(x: f64) -> f64 {
-    ::sifr_stdlib::math::erfc(x)
-}
-fn gamma(x: f64) -> f64 {
-    ::sifr_stdlib::math::gamma(x)
-}
-fn lgamma(x: f64) -> f64 {
-    ::sifr_stdlib::math::lgamma(x)
-}
-fn frexp(x: f64) -> Vec<f64> {
-    ::sifr_stdlib::math::frexp(x)
-}
-fn ldexp(m: f64, e: SifrInt) -> f64 {
-    ::sifr_stdlib::math::ldexp(m, ::sifr_runtime::interop::SifrIntBridge::from(e))
-}
-fn modf(x: f64) -> Vec<f64> {
-    ::sifr_stdlib::math::modf(x)
-}
-fn nextafter(x: f64, y: f64) -> f64 {
-    ::sifr_stdlib::math::nextafter(x, y)
-}
-fn ulp(x: f64) -> f64 {
-    ::sifr_stdlib::math::ulp(x)
-}
-fn getpid() -> SifrInt {
-    ::sifr_stdlib::sys::getpid().into_sifr_int()
-}
-fn cpu_count() -> SifrInt {
-    ::sifr_stdlib::sys::cpu_count().into_sifr_int()
-}
-fn platform_system() -> String {
-    ::sifr_stdlib::platform::platform_system()
-}
-fn platform_arch() -> String {
-    ::sifr_stdlib::platform::platform_arch()
-}
-fn platform_processor() -> String {
-    ::sifr_stdlib::platform::platform_processor()
-}
-fn system() -> String {
-    platform_system()
-}
-fn machine() -> String {
-    platform_arch()
-}
-fn processor() -> String {
-    platform_processor()
-}
-fn strptime(s: &str, fmt: &str) -> Result<String, ValueError> {
-    ::sifr_stdlib::time::strptime(s, fmt).map_err(|sifr_generated_bridge_error| ValueError {
-        message: sifr_generated_bridge_error.to_string(),
-    })
-}
-fn sifr_generated_gmtime_intrinsic(epoch: f64) -> String {
-    ::sifr_stdlib::time::gmtime(epoch)
-}
-fn sifr_generated_localtime_intrinsic(epoch: f64) -> String {
-    ::sifr_stdlib::time::localtime(epoch)
-}
-fn sifr_generated_is_leap_year(year: SifrInt) -> bool {
-    &year.floor_mod_known_nonzero(&SifrInt::from_i64(4)) == &SifrInt::from_i64(0)
-        && &year.floor_mod_known_nonzero(&SifrInt::from_i64(100)) != &SifrInt::from_i64(0)
-        || &year.floor_mod_known_nonzero(&SifrInt::from_i64(400)) == &SifrInt::from_i64(0)
-}
-fn sifr_generated_days_in_year(year: SifrInt) -> SifrInt {
-    if sifr_generated_is_leap_year(year.clone()) {
-        return SifrInt::from_i64(366);
-    }
-    SifrInt::from_i64(365)
-}
-fn sifr_generated_days_in_month(year: SifrInt, month: SifrInt) -> SifrInt {
-    let month_days: Vec<SifrInt> = vec![
-        SifrInt::from_i64(31),
-        SifrInt::from_i64(28),
-        SifrInt::from_i64(31),
-        SifrInt::from_i64(30),
-        SifrInt::from_i64(31),
-        SifrInt::from_i64(30),
-        SifrInt::from_i64(31),
-        SifrInt::from_i64(31),
-        SifrInt::from_i64(30),
-        SifrInt::from_i64(31),
-        SifrInt::from_i64(30),
-        SifrInt::from_i64(31),
-    ];
-    let idx: SifrInt = &month - &SifrInt::from_i64(1);
-    let d: Option<SifrInt> = {
-        let sifr_generated_checked_read_collection = &month_days;
-        let sifr_generated_checked_read_index = idx.clone();
-        let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
-            .normalize_index_or_len(sifr_generated_checked_read_collection.len());
-        sifr_generated_checked_read_collection
-            .get(sifr_generated_checked_read_normalized)
-            .cloned()
-    };
-    if &month == &SifrInt::from_i64(2) && sifr_generated_is_leap_year(year.clone()) {
-        return SifrInt::from_i64(29);
-    }
-    let Some(d) = d.clone() else {
-        return SifrInt::from_i64(0);
-    };
-    d
-}
-fn sifr_generated_substring(value: &str, start: SifrInt, end: SifrInt) -> String {
-    let sifr_generated_chars_value: Vec<char> = value.chars().collect::<Vec<char>>();
-    let mut result: String = String::new();
-    let mut i: SifrInt = start.clone();
-    while &i < &end {
-        let ch: Option<String> = {
-            let sifr_generated_string_index = i.clone();
-            let sifr_generated_string_index_normalized = sifr_generated_string_index
-                .normalize_index_or_len(sifr_generated_chars_value.len());
-            sifr_generated_chars_value
-                .get(sifr_generated_string_index_normalized)
-                .copied()
-        }
-        .map(|character| character.to_string());
-        if let Some(ch) = ch {
-            result.push_str(ch.as_str());
-        }
-        i = &i + &SifrInt::from_i64(1);
-    }
-    result
-}
-fn sifr_generated_digit_value(ch: &str) -> Option<SifrInt> {
-    if ch == "0" {
-        return Some(SifrInt::from_i64(0));
-    }
-    if ch == "1" {
-        return Some(SifrInt::from_i64(1));
-    }
-    if ch == "2" {
-        return Some(SifrInt::from_i64(2));
-    }
-    if ch == "3" {
-        return Some(SifrInt::from_i64(3));
-    }
-    if ch == "4" {
-        return Some(SifrInt::from_i64(4));
-    }
-    if ch == "5" {
-        return Some(SifrInt::from_i64(5));
-    }
-    if ch == "6" {
-        return Some(SifrInt::from_i64(6));
-    }
-    if ch == "7" {
-        return Some(SifrInt::from_i64(7));
-    }
-    if ch == "8" {
-        return Some(SifrInt::from_i64(8));
-    }
-    if ch == "9" {
-        return Some(SifrInt::from_i64(9));
-    }
-    None
-}
-fn sifr_generated_parse_decimal(text: &str) -> Option<SifrInt> {
-    let sifr_generated_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
-    if &SifrInt::from(sifr_generated_chars_text.len()) == &SifrInt::from_i64(0) {
-        return None;
-    }
-    let mut out: SifrInt = SifrInt::from_i64(0);
-    let mut i: SifrInt = SifrInt::from_i64(0);
-    while &i < &SifrInt::from(sifr_generated_chars_text.len()) {
-        let ch_opt: Option<String> = {
-            let sifr_generated_string_index = i.clone();
-            let sifr_generated_string_index_normalized =
-                sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_text.len());
-            sifr_generated_chars_text
-                .get(sifr_generated_string_index_normalized)
-                .copied()
-        }
-        .map(|character| character.to_string());
-        let ch_opt_value_58c5362056f71db8 = ch_opt?;
-        let ch: String = ch_opt_value_58c5362056f71db8;
-        let digit_opt: Option<SifrInt> = sifr_generated_digit_value(&ch);
-        let digit_opt_value_c39685cb2782ed00 = digit_opt.clone()?;
-        let digit: SifrInt = digit_opt_value_c39685cb2782ed00.clone();
-        out = &(&out * &SifrInt::from_i64(10)) + &digit;
-        i = &i + &SifrInt::from_i64(1);
-    }
-    Some(out)
-}
-fn sifr_generated_int_or_negative_one(value: Option<SifrInt>) -> SifrInt {
-    let Some(value) = value.clone() else {
-        return -&SifrInt::from_i64(1);
-    };
-    value.clone()
-}
-fn sifr_generated_day_of_year(year: SifrInt, month: SifrInt, day: SifrInt) -> SifrInt {
-    let mut yday: SifrInt = SifrInt::from_i64(0);
-    let mut m: SifrInt = SifrInt::from_i64(1);
-    while &m < &month {
-        yday = &yday + &sifr_generated_days_in_month(year.clone(), m.clone());
-        m = &m + &SifrInt::from_i64(1);
-    }
-    &yday + &day
-}
-fn sifr_generated_weekday(year: SifrInt, month: SifrInt, day: SifrInt) -> SifrInt {
-    let mut days_since_epoch: SifrInt = SifrInt::from_i64(0);
-    if &year >= &SifrInt::from_i64(1970) {
-        let mut y: SifrInt = SifrInt::from_i64(1970);
-        while &y < &year {
-            days_since_epoch = &days_since_epoch + &sifr_generated_days_in_year(y.clone());
-            y = &y + &SifrInt::from_i64(1);
-        }
-    } else {
-        let mut y: SifrInt = SifrInt::from_i64(1969);
-        while &y >= &year {
-            days_since_epoch = &days_since_epoch - &sifr_generated_days_in_year(y.clone());
-            y = &y - &SifrInt::from_i64(1);
-        }
-    }
-    let mut m: SifrInt = SifrInt::from_i64(1);
-    while &m < &month {
-        days_since_epoch =
-            &days_since_epoch + &sifr_generated_days_in_month(year.clone(), m.clone());
-        m = &m + &SifrInt::from_i64(1);
-    }
-    days_since_epoch = &(&days_since_epoch + &day) - &SifrInt::from_i64(1);
-    let mut wd: SifrInt =
-        (&SifrInt::from_i64(3) + &days_since_epoch).floor_mod_known_nonzero(&SifrInt::from_i64(7));
-    if &wd < &SifrInt::from_i64(0) {
-        wd = &wd + &SifrInt::from_i64(7);
-    }
-    wd.clone()
-}
-fn sifr_generated_valid_date(year: SifrInt, month: SifrInt, day: SifrInt) -> bool {
-    if &year <= &SifrInt::from_i64(0) {
-        return false;
-    }
-    if &month < &SifrInt::from_i64(1) || &month > &SifrInt::from_i64(12) {
-        return false;
-    }
-    let max_day: SifrInt = sifr_generated_days_in_month(year.clone(), month.clone());
-    &day >= &SifrInt::from_i64(1) && &day <= &max_day
-}
-fn sifr_generated_invalid_struct_time() -> SifrGeneratedStdlibSifrX2etimeX2estructTime {
-    SifrGeneratedStdlibSifrX2etimeX2estructTime::new(
-        SifrInt::from_i64(0),
-        SifrInt::from_i64(0),
-        SifrInt::from_i64(0),
-        SifrInt::from_i64(0),
-        SifrInt::from_i64(0),
-        SifrInt::from_i64(0),
-        SifrInt::from_i64(0),
-        SifrInt::from_i64(0),
-        SifrInt::from_i64(0),
-    )
-}
-#[expect(
-    clippy::too_many_lines,
-    reason = "one generated Rust function preserves one typed Sifr function"
-)]
-fn sifr_generated_to_struct_time(rendered: &str) -> SifrGeneratedStdlibSifrX2etimeX2estructTime {
-    let sifr_generated_chars_rendered: Vec<char> = rendered.chars().collect::<Vec<char>>();
-    let Some(_checked_value_3) = {
-        let sifr_generated_string_index = SifrInt::from_i64(4);
-        let sifr_generated_string_index_normalized =
-            sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_rendered.len());
-        sifr_generated_chars_rendered
-            .get(sifr_generated_string_index_normalized)
-            .copied()
-    }
-    .map(|character| character.to_string()) else {
-        return sifr_generated_invalid_struct_time();
-    };
-    let Some(_checked_value_4) = {
-        let sifr_generated_string_index = SifrInt::from_i64(7);
-        let sifr_generated_string_index_normalized =
-            sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_rendered.len());
-        sifr_generated_chars_rendered
-            .get(sifr_generated_string_index_normalized)
-            .copied()
-    }
-    .map(|character| character.to_string()) else {
-        return sifr_generated_invalid_struct_time();
-    };
-    let Some(_checked_value_5) = {
-        let sifr_generated_string_index = SifrInt::from_i64(10);
-        let sifr_generated_string_index_normalized =
-            sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_rendered.len());
-        sifr_generated_chars_rendered
-            .get(sifr_generated_string_index_normalized)
-            .copied()
-    }
-    .map(|character| character.to_string()) else {
-        return sifr_generated_invalid_struct_time();
-    };
-    let Some(_checked_value_6) = {
-        let sifr_generated_string_index = SifrInt::from_i64(13);
-        let sifr_generated_string_index_normalized =
-            sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_rendered.len());
-        sifr_generated_chars_rendered
-            .get(sifr_generated_string_index_normalized)
-            .copied()
-    }
-    .map(|character| character.to_string()) else {
-        return sifr_generated_invalid_struct_time();
-    };
-    let Some(_checked_value_7) = {
-        let sifr_generated_string_index = SifrInt::from_i64(16);
-        let sifr_generated_string_index_normalized =
-            sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_rendered.len());
-        sifr_generated_chars_rendered
-            .get(sifr_generated_string_index_normalized)
-            .copied()
-    }
-    .map(|character| character.to_string()) else {
-        return sifr_generated_invalid_struct_time();
-    };
-    if {
-        let sifr_generated_string_index = SifrInt::from_i64(4);
-        let sifr_generated_string_index_normalized =
-            sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_rendered.len());
-        sifr_generated_chars_rendered
-            .get(sifr_generated_string_index_normalized)
-            .copied()
-    }
-    .map(Some)
-        != Some(Some('-'))
-        || {
-            let sifr_generated_string_index = SifrInt::from_i64(7);
-            let sifr_generated_string_index_normalized = sifr_generated_string_index
-                .normalize_index_or_len(sifr_generated_chars_rendered.len());
-            sifr_generated_chars_rendered
-                .get(sifr_generated_string_index_normalized)
-                .copied()
-        }
-        .map(Some)
-            != Some(Some('-'))
-        || {
-            let sifr_generated_string_index = SifrInt::from_i64(10);
-            let sifr_generated_string_index_normalized = sifr_generated_string_index
-                .normalize_index_or_len(sifr_generated_chars_rendered.len());
-            sifr_generated_chars_rendered
-                .get(sifr_generated_string_index_normalized)
-                .copied()
-        }
-        .map(Some)
-            != Some(Some('T'))
-        || {
-            let sifr_generated_string_index = SifrInt::from_i64(13);
-            let sifr_generated_string_index_normalized = sifr_generated_string_index
-                .normalize_index_or_len(sifr_generated_chars_rendered.len());
-            sifr_generated_chars_rendered
-                .get(sifr_generated_string_index_normalized)
-                .copied()
-        }
-        .map(Some)
-            != Some(Some(':'))
-        || {
-            let sifr_generated_string_index = SifrInt::from_i64(16);
-            let sifr_generated_string_index_normalized = sifr_generated_string_index
-                .normalize_index_or_len(sifr_generated_chars_rendered.len());
-            sifr_generated_chars_rendered
-                .get(sifr_generated_string_index_normalized)
-                .copied()
-        }
-        .map(Some)
-            != Some(Some(':'))
-    {
-        return sifr_generated_invalid_struct_time();
-    }
-    let year: SifrInt = sifr_generated_int_or_negative_one(sifr_generated_parse_decimal(
-        &sifr_generated_substring(rendered, SifrInt::from_i64(0), SifrInt::from_i64(4)),
-    ));
-    let month: SifrInt = sifr_generated_int_or_negative_one(sifr_generated_parse_decimal(
-        &sifr_generated_substring(rendered, SifrInt::from_i64(5), SifrInt::from_i64(7)),
-    ));
-    let day: SifrInt = sifr_generated_int_or_negative_one(sifr_generated_parse_decimal(
-        &sifr_generated_substring(rendered, SifrInt::from_i64(8), SifrInt::from_i64(10)),
-    ));
-    let hour: SifrInt = sifr_generated_int_or_negative_one(sifr_generated_parse_decimal(
-        &sifr_generated_substring(rendered, SifrInt::from_i64(11), SifrInt::from_i64(13)),
-    ));
-    let minute: SifrInt = sifr_generated_int_or_negative_one(sifr_generated_parse_decimal(
-        &sifr_generated_substring(rendered, SifrInt::from_i64(14), SifrInt::from_i64(16)),
-    ));
-    let second: SifrInt = sifr_generated_int_or_negative_one(sifr_generated_parse_decimal(
-        &sifr_generated_substring(rendered, SifrInt::from_i64(17), SifrInt::from_i64(19)),
-    ));
-    if &year < &SifrInt::from_i64(0)
-        || &month < &SifrInt::from_i64(0)
-        || &day < &SifrInt::from_i64(0)
-        || &hour < &SifrInt::from_i64(0)
-        || &minute < &SifrInt::from_i64(0)
-        || &second < &SifrInt::from_i64(0)
-    {
-        return sifr_generated_invalid_struct_time();
-    }
-    if !sifr_generated_valid_date(year.clone(), month.clone(), day.clone()) {
-        return sifr_generated_invalid_struct_time();
-    }
-    let wday: SifrInt = sifr_generated_weekday(year.clone(), month.clone(), day.clone());
-    let yday_value_75753d4973d2a3ce: SifrInt =
-        sifr_generated_day_of_year(year.clone(), month.clone(), day.clone());
-    SifrGeneratedStdlibSifrX2etimeX2estructTime::new(
-        year.clone(),
-        month.clone(),
-        day.clone(),
-        hour.clone(),
-        minute.clone(),
-        second.clone(),
-        wday.clone(),
-        yday_value_75753d4973d2a3ce.clone(),
-        SifrInt::from_i64(0),
-    )
-}
-fn gmtime_struct(epoch: f64) -> SifrGeneratedStdlibSifrX2etimeX2estructTime {
-    let rendered: String = sifr_generated_gmtime_intrinsic(epoch);
-    sifr_generated_to_struct_time(&rendered)
-}
-fn localtime_struct(epoch: f64) -> SifrGeneratedStdlibSifrX2etimeX2estructTime {
-    let rendered: String = sifr_generated_localtime_intrinsic(epoch);
-    sifr_generated_to_struct_time(&rendered)
-}
 fn demo_math() {
     println!("=== math new intrinsics ===");
     let e0: f64 = erf(0.0_f64);

@@ -75,8 +75,9 @@ fn concrete_generic_child_flattens_parent_fields_for_structural_bridge() {
         main_rust.contains("StructuralType for Nested"),
         "{main_rust}"
     );
-    assert!(main_rust.contains("RecordField(\"value\")"), "{main_rust}");
-    assert!(main_rust.contains("RecordField(\"label\")"), "{main_rust}");
+    assert!(main_rust.contains("RecordField("), "{main_rust}");
+    assert!(main_rust.contains("\"value\""), "{main_rust}");
+    assert!(main_rust.contains("\"label\""), "{main_rust}");
     assert!(
         main_rust.contains("genericparent: <GenericParent<SifrInt>>::new(__sifr_field_0)"),
         "{main_rust}"

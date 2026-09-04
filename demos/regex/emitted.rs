@@ -1,4 +1,108 @@
 // src/main.rs
+mod sifr_generated_generated_support {
+    use crate::RegexError;
+    pub(crate) use ::sifr_runtime::SifrInt;
+    pub(crate) fn re_find(pattern: &str, text: &str) -> Result<Option<String>, RegexError> {
+        ::sifr_stdlib::regex::re_find(pattern, text).map_err(|sifr_generated_bridge_error| {
+            RegexError {
+                message: sifr_generated_bridge_error.to_string(),
+                detail: sifr_generated_bridge_error.to_string(),
+            }
+        })
+    }
+    pub(crate) fn re_replace(
+        pattern: &str,
+        replacement: &str,
+        text: &str,
+    ) -> Result<String, RegexError> {
+        ::sifr_stdlib::regex::re_replace(pattern, replacement, text).map_err(
+            |sifr_generated_bridge_error| RegexError {
+                message: sifr_generated_bridge_error.to_string(),
+                detail: sifr_generated_bridge_error.to_string(),
+            },
+        )
+    }
+    pub(crate) fn re_findall(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
+        ::sifr_stdlib::regex::re_findall(pattern, text).map_err(|sifr_generated_bridge_error| {
+            RegexError {
+                message: sifr_generated_bridge_error.to_string(),
+                detail: sifr_generated_bridge_error.to_string(),
+            }
+        })
+    }
+    pub(crate) fn re_split(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
+        ::sifr_stdlib::regex::re_split(pattern, text).map_err(|sifr_generated_bridge_error| {
+            RegexError {
+                message: sifr_generated_bridge_error.to_string(),
+                detail: sifr_generated_bridge_error.to_string(),
+            }
+        })
+    }
+    pub(crate) fn re_find_flags(
+        pattern: &str,
+        text: &str,
+        flags: SifrInt,
+    ) -> Result<Option<String>, RegexError> {
+        ::sifr_stdlib::regex::re_find_flags(
+            pattern,
+            text,
+            ::sifr_runtime::interop::SifrIntBridge::from(flags),
+        )
+        .map_err(|sifr_generated_bridge_error| RegexError {
+            message: sifr_generated_bridge_error.to_string(),
+            detail: sifr_generated_bridge_error.to_string(),
+        })
+    }
+    pub(crate) const fn sifr_generated_const_49474e4f524543415345() -> SifrInt {
+        SifrInt::from_i64(2)
+    }
+    pub(crate) fn search(pattern: &str, text: &str) -> Result<Option<String>, RegexError> {
+        re_find(pattern, text)
+    }
+    pub(crate) fn search_flags(
+        pattern: &str,
+        text: &str,
+        flags: SifrInt,
+    ) -> Result<Option<String>, RegexError> {
+        re_find_flags(pattern, text, flags.clone())
+    }
+    pub(crate) fn sub(pattern: &str, replacement: &str, text: &str) -> Result<String, RegexError> {
+        re_replace(pattern, replacement, text)
+    }
+    pub(crate) fn findall(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
+        re_findall(pattern, text)
+    }
+    pub(crate) fn split(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
+        re_split(pattern, text)
+    }
+    pub(crate) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
+        assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
+        let mut i: SifrInt = SifrInt::from_i64(0);
+        while &i < &SifrInt::from(actual.len()) {
+            assert_eq!(
+                {
+                    let sifr_generated_condition_list = &actual;
+                    let sifr_generated_condition_index = i.clone();
+                    let sifr_generated_condition_normalized = sifr_generated_condition_index
+                        .normalize_index_or_len(sifr_generated_condition_list.len());
+                    sifr_generated_condition_list
+                        .get(sifr_generated_condition_normalized)
+                        .copied()
+                },
+                {
+                    let sifr_generated_condition_list = &expected;
+                    let sifr_generated_condition_index = i.clone();
+                    let sifr_generated_condition_normalized = sifr_generated_condition_index
+                        .normalize_index_or_len(sifr_generated_condition_list.len());
+                    sifr_generated_condition_list
+                        .get(sifr_generated_condition_normalized)
+                        .copied()
+                }
+            );
+            i = &i + &SifrInt::from_i64(1);
+        }
+    }
+}
 mod sifr_generated_project_nominals {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct RegexError {
@@ -21,94 +125,8 @@ mod sifr_generated_project_nominals {
     }
     impl ::std::error::Error for RegexError {}
 }
-use ::sifr_runtime::SifrInt;
+use crate::sifr_generated_generated_support::*;
 pub use sifr_generated_project_nominals::RegexError;
-fn re_find(pattern: &str, text: &str) -> Result<Option<String>, RegexError> {
-    ::sifr_stdlib::regex::re_find(pattern, text).map_err(|sifr_generated_bridge_error| RegexError {
-        message: sifr_generated_bridge_error.to_string(),
-        detail: sifr_generated_bridge_error.to_string(),
-    })
-}
-fn re_replace(pattern: &str, replacement: &str, text: &str) -> Result<String, RegexError> {
-    ::sifr_stdlib::regex::re_replace(pattern, replacement, text).map_err(
-        |sifr_generated_bridge_error| RegexError {
-            message: sifr_generated_bridge_error.to_string(),
-            detail: sifr_generated_bridge_error.to_string(),
-        },
-    )
-}
-fn re_findall(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
-    ::sifr_stdlib::regex::re_findall(pattern, text).map_err(|sifr_generated_bridge_error| {
-        RegexError {
-            message: sifr_generated_bridge_error.to_string(),
-            detail: sifr_generated_bridge_error.to_string(),
-        }
-    })
-}
-fn re_split(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
-    ::sifr_stdlib::regex::re_split(pattern, text).map_err(|sifr_generated_bridge_error| {
-        RegexError {
-            message: sifr_generated_bridge_error.to_string(),
-            detail: sifr_generated_bridge_error.to_string(),
-        }
-    })
-}
-fn re_find_flags(pattern: &str, text: &str, flags: SifrInt) -> Result<Option<String>, RegexError> {
-    ::sifr_stdlib::regex::re_find_flags(
-        pattern,
-        text,
-        ::sifr_runtime::interop::SifrIntBridge::from(flags),
-    )
-    .map_err(|sifr_generated_bridge_error| RegexError {
-        message: sifr_generated_bridge_error.to_string(),
-        detail: sifr_generated_bridge_error.to_string(),
-    })
-}
-const fn sifr_generated_const_49474e4f524543415345() -> SifrInt {
-    SifrInt::from_i64(2)
-}
-fn search(pattern: &str, text: &str) -> Result<Option<String>, RegexError> {
-    re_find(pattern, text)
-}
-fn search_flags(pattern: &str, text: &str, flags: SifrInt) -> Result<Option<String>, RegexError> {
-    re_find_flags(pattern, text, flags.clone())
-}
-fn sub(pattern: &str, replacement: &str, text: &str) -> Result<String, RegexError> {
-    re_replace(pattern, replacement, text)
-}
-fn findall(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
-    re_findall(pattern, text)
-}
-fn split(pattern: &str, text: &str) -> Result<Vec<String>, RegexError> {
-    re_split(pattern, text)
-}
-fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
-    assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
-    let mut i: SifrInt = SifrInt::from_i64(0);
-    while &i < &SifrInt::from(actual.len()) {
-        assert_eq!(
-            {
-                let sifr_generated_condition_list = &actual;
-                let sifr_generated_condition_index = i.clone();
-                let sifr_generated_condition_normalized = sifr_generated_condition_index
-                    .normalize_index_or_len(sifr_generated_condition_list.len());
-                sifr_generated_condition_list
-                    .get(sifr_generated_condition_normalized)
-                    .copied()
-            },
-            {
-                let sifr_generated_condition_list = &expected;
-                let sifr_generated_condition_index = i.clone();
-                let sifr_generated_condition_normalized = sifr_generated_condition_index
-                    .normalize_index_or_len(sifr_generated_condition_list.len());
-                sifr_generated_condition_list
-                    .get(sifr_generated_condition_normalized)
-                    .copied()
-            }
-        );
-        i = &i + &SifrInt::from_i64(1);
-    }
-}
 fn has_match(pattern: &str, text: &str) -> Result<bool, RegexError> {
     let sifr_generated_try_res: Result<Result<bool, RegexError>, RegexError> = (|| {
         let found: Option<String> = search(pattern, text)?;

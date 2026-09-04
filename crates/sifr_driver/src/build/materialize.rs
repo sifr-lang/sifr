@@ -203,7 +203,22 @@ fn materialize_binary_project_files(
     generated_project: GeneratedBinaryProject,
     dependency_plan: &SysrootDependencyPlan,
 ) -> Result<(), Vec<RenderedDiagnostic>> {
+    let bridge_sources = generated_bridge_sources(
+        &generated_project
+            .interop
+            .rust
+            .bridge_contracts
+            .generated_types,
+    )
+    .map_err(|message| vec![build_error(message)])?;
     let src_dir = project_path.join("src");
+    if src_dir.exists() {
+        std::fs::remove_dir_all(&src_dir).map_err(|error| {
+            vec![build_error(format!(
+                "failed to reset generated source directory: {error}"
+            ))]
+        })?;
+    }
     std::fs::create_dir_all(&src_dir).map_err(|error| {
         vec![build_error(format!(
             "failed to create output directory: {error}"
@@ -218,13 +233,6 @@ fn materialize_binary_project_files(
 
     write_project_file(&project_path.join("Cargo.toml"), cargo_toml, "Cargo.toml")?;
 
-    let bridge_sources = generated_bridge_sources(
-        &generated_project
-            .interop
-            .rust
-            .bridge_contracts
-            .generated_types,
-    );
     let main_rs = if bridge_sources.is_empty() {
         generated_project.main_rs
     } else {
@@ -590,6 +598,41 @@ mod tests {
         assert!(main_rs.contains("fn main()"), "{main_rs}");
         assert!(!project_path.join("target").exists());
 
+        let _ = std::fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn rematerialization_removes_stale_generated_sources_but_preserves_target() {
+        let root = std::env::temp_dir().join(format!(
+            "sifr_source_rematerialization_{}_{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .expect("time should move forward")
+                .as_nanos()
+        ));
+        let project_path = root.join("sifr_output");
+        let stale_source = project_path.join("src/obsolete/generated.rs");
+        std::fs::create_dir_all(stale_source.parent().expect("stale source has a parent"))
+            .expect("stale source directory should be writable");
+        std::fs::write(&stale_source, "fn obsolete() {}\n")
+            .expect("stale source should be writable");
+        let target_marker = project_path.join("target/cache-marker");
+        std::fs::create_dir_all(target_marker.parent().expect("target marker has a parent"))
+            .expect("target directory should be writable");
+        std::fs::write(&target_marker, "preserve").expect("target marker should be writable");
+
+        materialize_binary_project_files(
+            &project_path,
+            "sifr_output",
+            base_project(),
+            &test_dependency_plan("fingerprint-a"),
+        )
+        .expect("rematerialization should succeed");
+
+        assert!(!stale_source.exists());
+        assert!(target_marker.is_file());
+        assert!(project_path.join("src/main.rs").is_file());
         let _ = std::fs::remove_dir_all(root);
     }
 

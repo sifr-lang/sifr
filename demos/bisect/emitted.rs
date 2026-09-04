@@ -1,140 +1,144 @@
 // src/main.rs
+mod sifr_generated_generated_support {
+    pub(crate) use ::sifr_runtime::SifrInt;
+    pub(crate) fn bisect_left<T: Clone + 'static + PartialOrd>(
+        a: &[T],
+        x: &T,
+        lo: SifrInt,
+        hi: Option<SifrInt>,
+    ) -> SifrInt {
+        let mut left: SifrInt = lo.clone();
+        if &left < &SifrInt::from_i64(0) {
+            left = SifrInt::from_i64(0);
+        }
+        let mut right: SifrInt = SifrInt::from(a.len());
+        if hi.is_none() {
+            right = SifrInt::from(a.len());
+        } else if let Some(hi) = hi.clone() {
+            if &hi < &SifrInt::from_i64(0) {
+                right = SifrInt::from_i64(0);
+            } else if &hi > &SifrInt::from(a.len()) {
+                right = SifrInt::from(a.len());
+            } else {
+                right = hi;
+            }
+        }
+        while &left < &right {
+            let mid: SifrInt = (&left + &right).floor_div_known_nonzero(&SifrInt::from_i64(2));
+            let val: Option<T> = {
+                let sifr_generated_checked_read_collection = &a;
+                let sifr_generated_checked_read_index = mid.clone();
+                let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
+                    .normalize_index_or_len(sifr_generated_checked_read_collection.len());
+                sifr_generated_checked_read_collection
+                    .get(sifr_generated_checked_read_normalized)
+                    .cloned()
+            };
+            if let Some(val) = val {
+                if val < *x {
+                    left = &mid + &SifrInt::from_i64(1);
+                } else {
+                    right = mid;
+                }
+            } else {
+                left = &mid + &SifrInt::from_i64(1);
+            }
+        }
+        left.clone()
+    }
+    pub(crate) fn bisect_right<T: Clone + 'static + PartialOrd>(
+        a: &[T],
+        x: &T,
+        lo: SifrInt,
+        hi: Option<SifrInt>,
+    ) -> SifrInt {
+        let mut left: SifrInt = lo.clone();
+        if &left < &SifrInt::from_i64(0) {
+            left = SifrInt::from_i64(0);
+        }
+        let mut right: SifrInt = SifrInt::from(a.len());
+        if hi.is_none() {
+            right = SifrInt::from(a.len());
+        } else if let Some(hi) = hi.clone() {
+            if &hi < &SifrInt::from_i64(0) {
+                right = SifrInt::from_i64(0);
+            } else if &hi > &SifrInt::from(a.len()) {
+                right = SifrInt::from(a.len());
+            } else {
+                right = hi;
+            }
+        }
+        while &left < &right {
+            let mid: SifrInt = (&left + &right).floor_div_known_nonzero(&SifrInt::from_i64(2));
+            let val: Option<T> = {
+                let sifr_generated_checked_read_collection = &a;
+                let sifr_generated_checked_read_index = mid.clone();
+                let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
+                    .normalize_index_or_len(sifr_generated_checked_read_collection.len());
+                sifr_generated_checked_read_collection
+                    .get(sifr_generated_checked_read_normalized)
+                    .cloned()
+            };
+            if let Some(val) = val {
+                if *x < val {
+                    right = mid;
+                } else {
+                    left = &mid + &SifrInt::from_i64(1);
+                }
+            } else {
+                left = &mid + &SifrInt::from_i64(1);
+            }
+        }
+        left.clone()
+    }
+    pub(crate) fn insort_left<T: Clone + 'static + PartialOrd>(
+        a: &mut Vec<T>,
+        x: &T,
+        lo: SifrInt,
+        hi: Option<SifrInt>,
+    ) {
+        let pos: SifrInt = bisect_left(a, x, lo.clone(), hi.clone());
+        a.insert(::sifr_runtime::to_usize_proven(&pos), x.clone());
+    }
+    pub(crate) fn insort_right<T: Clone + 'static + PartialOrd>(
+        a: &mut Vec<T>,
+        x: &T,
+        lo: SifrInt,
+        hi: Option<SifrInt>,
+    ) {
+        let pos: SifrInt = bisect_right(a, x, lo.clone(), hi.clone());
+        a.insert(::sifr_runtime::to_usize_proven(&pos), x.clone());
+    }
+    pub(crate) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
+        assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
+        let mut i: SifrInt = SifrInt::from_i64(0);
+        while &i < &SifrInt::from(actual.len()) {
+            assert_eq!(
+                {
+                    let sifr_generated_condition_list = &actual;
+                    let sifr_generated_condition_index = i.clone();
+                    let sifr_generated_condition_normalized = sifr_generated_condition_index
+                        .normalize_index_or_len(sifr_generated_condition_list.len());
+                    sifr_generated_condition_list
+                        .get(sifr_generated_condition_normalized)
+                        .copied()
+                },
+                {
+                    let sifr_generated_condition_list = &expected;
+                    let sifr_generated_condition_index = i.clone();
+                    let sifr_generated_condition_normalized = sifr_generated_condition_index
+                        .normalize_index_or_len(sifr_generated_condition_list.len());
+                    sifr_generated_condition_list
+                        .get(sifr_generated_condition_normalized)
+                        .copied()
+                }
+            );
+            i = &i + &SifrInt::from_i64(1);
+        }
+    }
+}
+use crate::sifr_generated_generated_support::*;
 use ::sifr_runtime::SifrInt;
-fn bisect_left<T: Clone + 'static + PartialOrd>(
-    a: &[T],
-    x: &T,
-    lo: SifrInt,
-    hi: Option<SifrInt>,
-) -> SifrInt {
-    let mut left: SifrInt = lo.clone();
-    if &left < &SifrInt::from_i64(0) {
-        left = SifrInt::from_i64(0);
-    }
-    let mut right: SifrInt = SifrInt::from(a.len());
-    if hi.is_none() {
-        right = SifrInt::from(a.len());
-    } else if let Some(hi) = hi.clone() {
-        if &hi < &SifrInt::from_i64(0) {
-            right = SifrInt::from_i64(0);
-        } else if &hi > &SifrInt::from(a.len()) {
-            right = SifrInt::from(a.len());
-        } else {
-            right = hi;
-        }
-    }
-    while &left < &right {
-        let mid: SifrInt = (&left + &right).floor_div_known_nonzero(&SifrInt::from_i64(2));
-        let val: Option<T> = {
-            let sifr_generated_checked_read_collection = &a;
-            let sifr_generated_checked_read_index = mid.clone();
-            let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
-                .normalize_index_or_len(sifr_generated_checked_read_collection.len());
-            sifr_generated_checked_read_collection
-                .get(sifr_generated_checked_read_normalized)
-                .cloned()
-        };
-        if let Some(val) = val {
-            if val < *x {
-                left = &mid + &SifrInt::from_i64(1);
-            } else {
-                right = mid;
-            }
-        } else {
-            left = &mid + &SifrInt::from_i64(1);
-        }
-    }
-    left.clone()
-}
-fn bisect_right<T: Clone + 'static + PartialOrd>(
-    a: &[T],
-    x: &T,
-    lo: SifrInt,
-    hi: Option<SifrInt>,
-) -> SifrInt {
-    let mut left: SifrInt = lo.clone();
-    if &left < &SifrInt::from_i64(0) {
-        left = SifrInt::from_i64(0);
-    }
-    let mut right: SifrInt = SifrInt::from(a.len());
-    if hi.is_none() {
-        right = SifrInt::from(a.len());
-    } else if let Some(hi) = hi.clone() {
-        if &hi < &SifrInt::from_i64(0) {
-            right = SifrInt::from_i64(0);
-        } else if &hi > &SifrInt::from(a.len()) {
-            right = SifrInt::from(a.len());
-        } else {
-            right = hi;
-        }
-    }
-    while &left < &right {
-        let mid: SifrInt = (&left + &right).floor_div_known_nonzero(&SifrInt::from_i64(2));
-        let val: Option<T> = {
-            let sifr_generated_checked_read_collection = &a;
-            let sifr_generated_checked_read_index = mid.clone();
-            let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
-                .normalize_index_or_len(sifr_generated_checked_read_collection.len());
-            sifr_generated_checked_read_collection
-                .get(sifr_generated_checked_read_normalized)
-                .cloned()
-        };
-        if let Some(val) = val {
-            if *x < val {
-                right = mid;
-            } else {
-                left = &mid + &SifrInt::from_i64(1);
-            }
-        } else {
-            left = &mid + &SifrInt::from_i64(1);
-        }
-    }
-    left.clone()
-}
-fn insort_left<T: Clone + 'static + PartialOrd>(
-    a: &mut Vec<T>,
-    x: &T,
-    lo: SifrInt,
-    hi: Option<SifrInt>,
-) {
-    let pos: SifrInt = bisect_left(a, x, lo.clone(), hi.clone());
-    a.insert(::sifr_runtime::to_usize_proven(&pos), x.clone());
-}
-fn insort_right<T: Clone + 'static + PartialOrd>(
-    a: &mut Vec<T>,
-    x: &T,
-    lo: SifrInt,
-    hi: Option<SifrInt>,
-) {
-    let pos: SifrInt = bisect_right(a, x, lo.clone(), hi.clone());
-    a.insert(::sifr_runtime::to_usize_proven(&pos), x.clone());
-}
-fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
-    assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
-    let mut i: SifrInt = SifrInt::from_i64(0);
-    while &i < &SifrInt::from(actual.len()) {
-        assert_eq!(
-            {
-                let sifr_generated_condition_list = &actual;
-                let sifr_generated_condition_index = i.clone();
-                let sifr_generated_condition_normalized = sifr_generated_condition_index
-                    .normalize_index_or_len(sifr_generated_condition_list.len());
-                sifr_generated_condition_list
-                    .get(sifr_generated_condition_normalized)
-                    .copied()
-            },
-            {
-                let sifr_generated_condition_list = &expected;
-                let sifr_generated_condition_index = i.clone();
-                let sifr_generated_condition_normalized = sifr_generated_condition_index
-                    .normalize_index_or_len(sifr_generated_condition_list.len());
-                sifr_generated_condition_list
-                    .get(sifr_generated_condition_normalized)
-                    .copied()
-            }
-        );
-        i = &i + &SifrInt::from_i64(1);
-    }
-}
 fn collect_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = Vec::new();
     let data: Vec<SifrInt> = vec![

@@ -784,7 +784,7 @@ fn test_generate_rust_multi_skips_stdlib_use_paths_in_non_main_modules() {
 }
 
 #[test]
-fn test_generate_rust_multi_with_metadata_aggregates_reachable_dependency_closure() {
+fn test_generate_rust_multi_with_metadata_omits_unused_dependency_closure() {
     let main_module = HirModule {
         functions: vec![HirFunction {
             name: "main".to_string(),
@@ -859,6 +859,5 @@ fn test_generate_rust_multi_with_metadata_aggregates_reachable_dependency_closur
 
     assert!(result.rust_files.contains_key("main"));
     assert!(result.rust_files.contains_key("helper"));
-    assert!(result.used_stdlib_modules.contains("sifr.statistics"));
-    assert!(result.used_stdlib_modules.contains("sifr.math"));
+    assert!(result.used_stdlib_modules.is_empty());
 }

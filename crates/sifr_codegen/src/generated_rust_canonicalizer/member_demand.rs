@@ -2,6 +2,7 @@ use std::collections::{HashMap, HashSet};
 use syn::visit::{self, Visit};
 use syn::visit_mut::{self, VisitMut};
 
+mod external_demand;
 mod generic_cleanup;
 mod private_field_effects;
 mod wildcards;
@@ -13,12 +14,13 @@ use private_field_effects::{retain_effectful_initializers, type_has_trivial_drop
 use wildcards::rewrite_exhaustive_enum_wildcards;
 
 pub(super) fn prune_unused_members(file: &mut syn::File) {
-    prune_unused_members_in_scope(&mut file.items, &HashSet::new());
+    prune_unused_members_in_scope(&mut file.items, &HashSet::new(), &HashSet::new());
 }
 
 fn prune_unused_members_in_scope(
     items: &mut [syn::Item],
     external_variant_demand: &HashSet<(String, String)>,
+    external_trait_method_demand: &HashSet<String>,
 ) {
     prune_unused_private_fields(items);
     let enum_variants = collect_enum_variants(items);
@@ -53,6 +55,9 @@ fn prune_unused_members_in_scope(
     demand
         .demanded_variants
         .extend(external_variant_demand.iter().cloned());
+    demand
+        .demanded_trait_methods
+        .extend(external_trait_method_demand.iter().cloned());
     let removed_variants = enum_variants
         .iter()
         .flat_map(|(owner, variants)| {
@@ -86,25 +91,50 @@ fn prune_unused_members_in_scope(
             syn::Item::Mod(module) => module.content.as_ref().map(|(_, nested)| {
                 let module_name = module.ident.to_string();
                 let variants = collect_enum_variants(nested);
-                let aliases = collect_module_enum_aliases_for_scope(items, &module_name, &variants);
-                let demand = external_module_variant_demand(
+                let trait_methods = collect_trait_methods(nested);
+                let aliases =
+                    external_demand::enum_aliases_for_scope(items, &module_name, &variants);
+                let variant_demand = external_demand::variant_demand(
                     items,
                     module_index,
                     &module_name,
                     &variants,
                     &aliases,
                 );
-                (module_name, variants, aliases, demand)
+                let trait_method_demand = external_demand::trait_method_demand(
+                    items,
+                    module_index,
+                    &module_name,
+                    &trait_methods,
+                );
+                (
+                    module_name,
+                    variants,
+                    aliases,
+                    variant_demand,
+                    trait_method_demand,
+                )
             }),
             _ => None,
         };
-        let Some((module_name, variants_before, aliases, external_demand)) = module_plan else {
+        let Some((
+            module_name,
+            variants_before,
+            aliases,
+            external_variant_demand,
+            external_trait_method_demand,
+        )) = module_plan
+        else {
             continue;
         };
         let variants_after = if let syn::Item::Mod(module) = &mut items[module_index]
             && let Some((_, nested)) = &mut module.content
         {
-            prune_unused_members_in_scope(nested, &external_demand);
+            prune_unused_members_in_scope(
+                nested,
+                &external_variant_demand,
+                &external_trait_method_demand,
+            );
             collect_enum_variants(nested)
         } else {
             HashMap::new()
@@ -141,139 +171,6 @@ fn prune_unused_members_in_scope(
 
 fn is_generated_union_name(name: &str) -> bool {
     name.starts_with("__SifrUnion") || name.starts_with("SifrGeneratedUnion")
-}
-
-fn external_module_variant_demand(
-    items: &[syn::Item],
-    module_index: usize,
-    module_name: &str,
-    variants: &HashMap<String, HashSet<String>>,
-    aliases: &HashMap<String, String>,
-) -> HashSet<(String, String)> {
-    if variants.is_empty() {
-        return HashSet::new();
-    }
-    let mut collector = ExternalVariantDemandCollector {
-        module_name,
-        variants,
-        aliases,
-        demanded: HashSet::new(),
-    };
-    for (index, item) in items.iter().enumerate() {
-        if index != module_index && !matches!(item, syn::Item::Use(_) | syn::Item::Mod(_)) {
-            collector.visit_item(item);
-        }
-    }
-    collector.demanded
-}
-
-fn collect_module_enum_aliases_for_scope(
-    items: &[syn::Item],
-    module_name: &str,
-    variants: &HashMap<String, HashSet<String>>,
-) -> HashMap<String, String> {
-    let mut aliases = HashMap::new();
-    for item in items {
-        if let syn::Item::Use(use_) = item {
-            collect_module_enum_aliases(&use_.tree, module_name, false, variants, &mut aliases);
-        }
-    }
-    aliases
-}
-
-fn collect_module_enum_aliases(
-    tree: &syn::UseTree,
-    module_name: &str,
-    inside_module: bool,
-    variants: &HashMap<String, HashSet<String>>,
-    aliases: &mut HashMap<String, String>,
-) {
-    match tree {
-        syn::UseTree::Path(path) => collect_module_enum_aliases(
-            &path.tree,
-            module_name,
-            inside_module || path.ident == module_name,
-            variants,
-            aliases,
-        ),
-        syn::UseTree::Name(name)
-            if inside_module && variants.contains_key(&name.ident.to_string()) =>
-        {
-            aliases.insert(name.ident.to_string(), name.ident.to_string());
-        }
-        syn::UseTree::Rename(rename)
-            if inside_module && variants.contains_key(&rename.ident.to_string()) =>
-        {
-            aliases.insert(rename.rename.to_string(), rename.ident.to_string());
-        }
-        syn::UseTree::Group(group) => {
-            for item in &group.items {
-                collect_module_enum_aliases(item, module_name, inside_module, variants, aliases);
-            }
-        }
-        syn::UseTree::Glob(_) if inside_module => {
-            aliases.extend(variants.keys().map(|owner| (owner.clone(), owner.clone())));
-        }
-        syn::UseTree::Name(_) | syn::UseTree::Rename(_) | syn::UseTree::Glob(_) => {}
-    }
-}
-
-struct ExternalVariantDemandCollector<'definitions> {
-    module_name: &'definitions str,
-    variants: &'definitions HashMap<String, HashSet<String>>,
-    aliases: &'definitions HashMap<String, String>,
-    demanded: HashSet<(String, String)>,
-}
-
-impl ExternalVariantDemandCollector<'_> {
-    fn collect_path(&mut self, path: &syn::Path) {
-        let segments = path
-            .segments
-            .iter()
-            .map(|segment| segment.ident.to_string())
-            .collect::<Vec<_>>();
-        for triple in segments.windows(3) {
-            if triple[0] == self.module_name
-                && self
-                    .variants
-                    .get(&triple[1])
-                    .is_some_and(|variants| variants.contains(&triple[2]))
-            {
-                self.demanded.insert((triple[1].clone(), triple[2].clone()));
-            }
-        }
-        for pair in segments.windows(2) {
-            let Some(owner) = self.aliases.get(&pair[0]) else {
-                continue;
-            };
-            if self
-                .variants
-                .get(owner)
-                .is_some_and(|variants| variants.contains(&pair[1]))
-            {
-                self.demanded.insert((owner.clone(), pair[1].clone()));
-            }
-        }
-    }
-}
-
-impl<'ast> Visit<'ast> for ExternalVariantDemandCollector<'_> {
-    fn visit_expr_path(&mut self, expression: &'ast syn::ExprPath) {
-        self.collect_path(&expression.path);
-        visit::visit_expr_path(self, expression);
-    }
-
-    fn visit_pat(&mut self, _pattern: &'ast syn::Pat) {}
-
-    fn visit_macro(&mut self, rust_macro: &'ast syn::Macro) {
-        if let Ok(arguments) = rust_macro.parse_body_with(
-            syn::punctuated::Punctuated::<syn::Expr, syn::Token![,]>::parse_terminated,
-        ) {
-            for argument in &arguments {
-                self.visit_expr(argument);
-            }
-        }
-    }
 }
 
 fn collect_enum_variants(items: &[syn::Item]) -> HashMap<String, HashSet<String>> {

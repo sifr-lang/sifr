@@ -624,14 +624,16 @@ fn test_union_enum_definitions_emit_structured_items() {
 #[test]
 fn test_generate_rust_with_stdlib_assembles_single_rust_file() {
     let lib_src = include_str!("../lib_modules_and_codegen.rs");
+    let assembly_src = include_str!("../lib_modules_and_codegen/deferred_codegen.rs");
     let start = lib_src
         .find("pub fn generate_rust_with_stdlib")
         .expect("generate_rust_with_stdlib should exist");
     let generate_block = &lib_src[start..];
 
-    assert!(generate_block.contains("let file_issues = validate_items(&file_items);"));
-    assert!(generate_block.contains("let rust_file = RustFile { items: file_items };"));
-    assert!(generate_block.contains("Renderer::new().render_file(&rust_file)"));
+    assert!(generate_block.contains("inline_codegen_result("));
+    assert!(assembly_src.contains("let rendered_support = render_support("));
+    assert!(assembly_src.contains("split_leading_imports("));
+    assert!(assembly_src.contains("if let Err(error) = syn::parse_file(&assembled)"));
     assert!(!generate_block.contains("assert_output_drained("));
     assert!(!generate_block.contains("emitter.output"));
 }

@@ -1,8 +1,12 @@
 // src/main.rs
-use ::sifr_runtime::SifrInt;
-fn floor(x: f64) -> SifrInt {
-    ::sifr_stdlib::math::floor(x).into_sifr_int()
+mod sifr_generated_generated_support {
+    pub(crate) use ::sifr_runtime::SifrInt;
+    pub(crate) fn floor(x: f64) -> SifrInt {
+        ::sifr_stdlib::math::floor(x).into_sifr_int()
+    }
 }
+use crate::sifr_generated_generated_support::*;
+use ::sifr_runtime::SifrInt;
 fn add(a: SifrInt, b: SifrInt) -> SifrInt {
     &a + &b
 }

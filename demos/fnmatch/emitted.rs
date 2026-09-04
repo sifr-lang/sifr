@@ -1,101 +1,109 @@
 // src/main.rs
-use ::sifr_runtime::SifrInt;
-fn fnmatch(name: &str, pattern: &str) -> bool {
-    sifr_generated_match(name, SifrInt::from_i64(0), pattern, SifrInt::from_i64(0))
-}
-fn sifr_generated_match(name: &str, mut ni: SifrInt, pattern: &str, mut pi: SifrInt) -> bool {
-    while &pi < &SifrInt::from(pattern.chars().count()) {
-        let pc: Option<String> = {
-            let sifr_generated_string_chars = pattern.chars().collect::<Vec<char>>();
-            let sifr_generated_string_index = pi.clone();
-            let sifr_generated_string_index_normalized = sifr_generated_string_index
-                .normalize_index_or_len(sifr_generated_string_chars.len());
-            sifr_generated_string_chars
-                .get(sifr_generated_string_index_normalized)
-                .copied()
-        }
-        .map(|character| character.to_string());
-        if let Some(pc) = pc {
-            if pc == "*" {
-                pi = &pi + &SifrInt::from_i64(1);
-                if &pi == &SifrInt::from(pattern.chars().count()) {
-                    return true;
-                }
-                let mut j: SifrInt = ni.clone();
-                while &j <= &SifrInt::from(name.chars().count()) {
-                    if sifr_generated_match(name, j.clone(), pattern, pi.clone()) {
+mod sifr_generated_generated_support {
+    pub(crate) use ::sifr_runtime::SifrInt;
+    pub(crate) fn fnmatch(name: &str, pattern: &str) -> bool {
+        sifr_generated_match(name, SifrInt::from_i64(0), pattern, SifrInt::from_i64(0))
+    }
+    pub(crate) fn sifr_generated_match(
+        name: &str,
+        mut ni: SifrInt,
+        pattern: &str,
+        mut pi: SifrInt,
+    ) -> bool {
+        while &pi < &SifrInt::from(pattern.chars().count()) {
+            let pc: Option<String> = {
+                let sifr_generated_string_chars = pattern.chars().collect::<Vec<char>>();
+                let sifr_generated_string_index = pi.clone();
+                let sifr_generated_string_index_normalized = sifr_generated_string_index
+                    .normalize_index_or_len(sifr_generated_string_chars.len());
+                sifr_generated_string_chars
+                    .get(sifr_generated_string_index_normalized)
+                    .copied()
+            }
+            .map(|character| character.to_string());
+            if let Some(pc) = pc {
+                if pc == "*" {
+                    pi = &pi + &SifrInt::from_i64(1);
+                    if &pi == &SifrInt::from(pattern.chars().count()) {
                         return true;
                     }
-                    j = &j + &SifrInt::from_i64(1);
-                }
-                return false;
-            }
-            if &ni >= &SifrInt::from(name.chars().count()) {
-                return false;
-            }
-            if pc != "?" {
-                let nc: Option<String> = {
-                    let sifr_generated_string_chars = name.chars().collect::<Vec<char>>();
-                    let sifr_generated_string_index = ni.clone();
-                    let sifr_generated_string_index_normalized = sifr_generated_string_index
-                        .normalize_index_or_len(sifr_generated_string_chars.len());
-                    sifr_generated_string_chars
-                        .get(sifr_generated_string_index_normalized)
-                        .copied()
-                }
-                .map(|character| character.to_string());
-                if let Some(nc) = nc {
-                    if nc != pc {
-                        return false;
+                    let mut j: SifrInt = ni.clone();
+                    while &j <= &SifrInt::from(name.chars().count()) {
+                        if sifr_generated_match(name, j.clone(), pattern, pi.clone()) {
+                            return true;
+                        }
+                        j = &j + &SifrInt::from_i64(1);
                     }
-                } else {
                     return false;
                 }
+                if &ni >= &SifrInt::from(name.chars().count()) {
+                    return false;
+                }
+                if pc != "?" {
+                    let nc: Option<String> = {
+                        let sifr_generated_string_chars = name.chars().collect::<Vec<char>>();
+                        let sifr_generated_string_index = ni.clone();
+                        let sifr_generated_string_index_normalized = sifr_generated_string_index
+                            .normalize_index_or_len(sifr_generated_string_chars.len());
+                        sifr_generated_string_chars
+                            .get(sifr_generated_string_index_normalized)
+                            .copied()
+                    }
+                    .map(|character| character.to_string());
+                    if let Some(nc) = nc {
+                        if nc != pc {
+                            return false;
+                        }
+                    } else {
+                        return false;
+                    }
+                }
+                ni = &ni + &SifrInt::from_i64(1);
+                pi = &pi + &SifrInt::from_i64(1);
+            } else {
+                return false;
             }
-            ni = &ni + &SifrInt::from_i64(1);
-            pi = &pi + &SifrInt::from_i64(1);
-        } else {
-            return false;
+        }
+        &ni == &SifrInt::from(name.chars().count())
+    }
+    pub(crate) fn filter(names: &[String], pattern: &str) -> Vec<String> {
+        let mut result: Vec<String> = Vec::new();
+        for name in names.iter().cloned() {
+            if fnmatch(&name, pattern) {
+                result.push(name);
+            }
+        }
+        result
+    }
+    pub(crate) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
+        assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
+        let mut i: SifrInt = SifrInt::from_i64(0);
+        while &i < &SifrInt::from(actual.len()) {
+            assert_eq!(
+                {
+                    let sifr_generated_condition_list = &actual;
+                    let sifr_generated_condition_index = i.clone();
+                    let sifr_generated_condition_normalized = sifr_generated_condition_index
+                        .normalize_index_or_len(sifr_generated_condition_list.len());
+                    sifr_generated_condition_list
+                        .get(sifr_generated_condition_normalized)
+                        .copied()
+                },
+                {
+                    let sifr_generated_condition_list = &expected;
+                    let sifr_generated_condition_index = i.clone();
+                    let sifr_generated_condition_normalized = sifr_generated_condition_index
+                        .normalize_index_or_len(sifr_generated_condition_list.len());
+                    sifr_generated_condition_list
+                        .get(sifr_generated_condition_normalized)
+                        .copied()
+                }
+            );
+            i = &i + &SifrInt::from_i64(1);
         }
     }
-    &ni == &SifrInt::from(name.chars().count())
 }
-fn filter(names: &[String], pattern: &str) -> Vec<String> {
-    let mut result: Vec<String> = Vec::new();
-    for name in names.iter().cloned() {
-        if fnmatch(&name, pattern) {
-            result.push(name);
-        }
-    }
-    result
-}
-fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
-    assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
-    let mut i: SifrInt = SifrInt::from_i64(0);
-    while &i < &SifrInt::from(actual.len()) {
-        assert_eq!(
-            {
-                let sifr_generated_condition_list = &actual;
-                let sifr_generated_condition_index = i.clone();
-                let sifr_generated_condition_normalized = sifr_generated_condition_index
-                    .normalize_index_or_len(sifr_generated_condition_list.len());
-                sifr_generated_condition_list
-                    .get(sifr_generated_condition_normalized)
-                    .copied()
-            },
-            {
-                let sifr_generated_condition_list = &expected;
-                let sifr_generated_condition_index = i.clone();
-                let sifr_generated_condition_normalized = sifr_generated_condition_index
-                    .normalize_index_or_len(sifr_generated_condition_list.len());
-                sifr_generated_condition_list
-                    .get(sifr_generated_condition_normalized)
-                    .copied()
-            }
-        );
-        i = &i + &SifrInt::from_i64(1);
-    }
-}
+use crate::sifr_generated_generated_support::*;
 fn collect_match_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = vec![fnmatch(&"hello.txt".to_string(), &"*.txt".to_string())];
     let no_txt_match: bool = !fnmatch(&"hello.py".to_string(), &"*.txt".to_string());

@@ -1,20 +1,34 @@
-use crate::stdlib_filter::strip_rust_items_by_name;
+use crate::stdlib_filter::{
+    filter_stdlib_ir_to_needed, rust_source_defined_item_names, rust_source_identifier_names,
+    strip_rust_items_by_name,
+};
 use std::collections::HashSet;
 
-pub(crate) fn replace_parallel_runtime_items(rust_code: &str) -> String {
-    let strip_names = HashSet::from([
-        "WorkerRuntimeError",
-        "WorkerError",
-        "PoolConfig",
-        "Pool",
-        "map",
-        "try_map",
-    ]);
+pub(crate) fn replace_parallel_runtime_items(
+    rust_code: &str,
+    demanded_runtime_names: &HashSet<String>,
+) -> String {
+    let strip_names = HashSet::from(["WorkerRuntimeError", "WorkerError", "PoolConfig", "Pool"]);
+    let runtime_source = parallel_runtime_rust_code();
+    let runtime_names = rust_source_defined_item_names(runtime_source);
+    let mut demanded = rust_source_defined_item_names(rust_code)
+        .into_iter()
+        .filter(|name| strip_names.contains(name.as_str()))
+        .collect::<HashSet<_>>();
+    demanded.extend(
+        rust_source_identifier_names(rust_code)
+            .into_iter()
+            .filter(|name| runtime_names.contains(name)),
+    );
+    demanded.extend(demanded_runtime_names.iter().cloned());
+    if demanded.is_empty() {
+        return rust_code.to_string();
+    }
     let mut replaced = strip_rust_items_by_name(rust_code, &strip_names);
     if !replaced.trim().is_empty() {
         replaced.push('\n');
     }
-    replaced.push_str(parallel_runtime_rust_code());
+    replaced.push_str(&filter_stdlib_ir_to_needed(runtime_source, &demanded));
     replaced
 }
 
