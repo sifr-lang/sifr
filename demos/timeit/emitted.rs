@@ -1,62 +1,50 @@
 // src/main.rs
-use ::sifr_runtime::SifrInt;
-fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
-    assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
-    let mut i: SifrInt = SifrInt::from_i64(0);
-    while &i < &SifrInt::from(actual.len()) {
-        assert_eq!(
-            {
-                let sifr_generated_condition_list = &actual;
-                let sifr_generated_condition_index = i.clone();
-                let sifr_generated_condition_normalized = sifr_generated_condition_index
-                    .normalize_index_or_len(sifr_generated_condition_list.len());
-                sifr_generated_condition_list
-                    .get(sifr_generated_condition_normalized)
-                    .copied()
-            },
-            {
-                let sifr_generated_condition_list = &expected;
-                let sifr_generated_condition_index = i.clone();
-                let sifr_generated_condition_normalized = sifr_generated_condition_index
-                    .normalize_index_or_len(sifr_generated_condition_list.len());
-                sifr_generated_condition_list
-                    .get(sifr_generated_condition_normalized)
-                    .copied()
-            }
-        );
-        i = &i + &SifrInt::from_i64(1);
+mod sifr_generated_generated_support {
+    pub(crate) use ::sifr_runtime::SifrInt;
+    pub(crate) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
+        assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
+        let mut i: SifrInt = SifrInt::from_i64(0);
+        while &i < &SifrInt::from(actual.len()) {
+            assert_eq!(
+                {
+                    let sifr_generated_condition_list = &actual;
+                    let sifr_generated_condition_index = i.clone();
+                    let sifr_generated_condition_normalized = sifr_generated_condition_index
+                        .normalize_index_or_len(sifr_generated_condition_list.len());
+                    sifr_generated_condition_list
+                        .get(sifr_generated_condition_normalized)
+                        .copied()
+                },
+                {
+                    let sifr_generated_condition_list = &expected;
+                    let sifr_generated_condition_index = i.clone();
+                    let sifr_generated_condition_normalized = sifr_generated_condition_index
+                        .normalize_index_or_len(sifr_generated_condition_list.len());
+                    sifr_generated_condition_list
+                        .get(sifr_generated_condition_normalized)
+                        .copied()
+                }
+            );
+            i = &i + &SifrInt::from_i64(1);
+        }
     }
-}
-fn perf_counter() -> f64 {
-    ::sifr_stdlib::time::perf_counter()
-}
-fn sleep(seconds: f64) {
-    ::sifr_stdlib::time::sleep(seconds);
-}
-fn default_timer() -> f64 {
-    perf_counter()
-}
-fn sifr_generated_elapsed_non_negative(start: f64, end: f64) -> f64 {
-    let elapsed: f64 = end - start;
-    if elapsed < 0.0_f64 {
-        return 0.0_f64;
+    pub(crate) fn perf_counter() -> f64 {
+        ::sifr_stdlib::time::perf_counter()
     }
-    elapsed
-}
-fn timeit(stmt: impl Fn(), number: SifrInt) -> f64 {
-    let start: f64 = perf_counter();
-    let mut i: SifrInt = SifrInt::from_i64(0);
-    while &i < &number {
-        stmt();
-        i = &i + &SifrInt::from_i64(1);
+    pub(crate) fn sleep(seconds: f64) {
+        ::sifr_stdlib::time::sleep(seconds);
     }
-    let end: f64 = perf_counter();
-    sifr_generated_elapsed_non_negative(start, end)
-}
-fn repeat(stmt: impl Fn(), count: SifrInt, number: SifrInt) -> Vec<f64> {
-    let mut results: Vec<f64> = Vec::new();
-    let mut r: SifrInt = SifrInt::from_i64(0);
-    while &r < &count {
+    pub(crate) fn default_timer() -> f64 {
+        perf_counter()
+    }
+    pub(crate) fn sifr_generated_elapsed_non_negative(start: f64, end: f64) -> f64 {
+        let elapsed: f64 = end - start;
+        if elapsed < 0.0_f64 {
+            return 0.0_f64;
+        }
+        elapsed
+    }
+    pub(crate) fn timeit(stmt: impl Fn(), number: SifrInt) -> f64 {
         let start: f64 = perf_counter();
         let mut i: SifrInt = SifrInt::from_i64(0);
         while &i < &number {
@@ -64,12 +52,28 @@ fn repeat(stmt: impl Fn(), count: SifrInt, number: SifrInt) -> Vec<f64> {
             i = &i + &SifrInt::from_i64(1);
         }
         let end: f64 = perf_counter();
-        let elapsed: f64 = sifr_generated_elapsed_non_negative(start, end);
-        results.push(elapsed);
-        r = &r + &SifrInt::from_i64(1);
+        sifr_generated_elapsed_non_negative(start, end)
     }
-    results
+    pub(crate) fn repeat(stmt: impl Fn(), count: SifrInt, number: SifrInt) -> Vec<f64> {
+        let mut results: Vec<f64> = Vec::new();
+        let mut r: SifrInt = SifrInt::from_i64(0);
+        while &r < &count {
+            let start: f64 = perf_counter();
+            let mut i: SifrInt = SifrInt::from_i64(0);
+            while &i < &number {
+                stmt();
+                i = &i + &SifrInt::from_i64(1);
+            }
+            let end: f64 = perf_counter();
+            let elapsed: f64 = sifr_generated_elapsed_non_negative(start, end);
+            results.push(elapsed);
+            r = &r + &SifrInt::from_i64(1);
+        }
+        results
+    }
 }
+use crate::sifr_generated_generated_support::*;
+use ::sifr_runtime::SifrInt;
 fn workload() {
     let mut total: SifrInt = SifrInt::from_i64(0);
     let mut i: SifrInt = SifrInt::from_i64(0);

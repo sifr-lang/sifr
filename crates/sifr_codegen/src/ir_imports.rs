@@ -8,6 +8,23 @@ pub(crate) struct IrImportNeeds {
     pub(crate) referenced_symbols: std::collections::HashSet<String>,
 }
 
+impl IrImportNeeds {
+    pub(crate) fn merge(&mut self, other: &Self) {
+        self.collections.needs_hashmap |= other.collections.needs_hashmap;
+        self.collections.needs_hashset |= other.collections.needs_hashset;
+        self.collections.needs_vecdeque |= other.collections.needs_vecdeque;
+        self.runtime.needs_mutex |= other.runtime.needs_mutex;
+        self.runtime.needs_sifr_int |= other.runtime.needs_sifr_int;
+        self.runtime.needs_sifr_range |= other.runtime.needs_sifr_range;
+        self.runtime.needs_sifr_runtime |= other.runtime.needs_sifr_runtime;
+        self.runtime.numeric.needs_bigint |= other.runtime.numeric.needs_bigint;
+        self.runtime.numeric.needs_decimal |= other.runtime.numeric.needs_decimal;
+        self.runtime.numeric.needs_bigdecimal |= other.runtime.numeric.needs_bigdecimal;
+        self.referenced_symbols
+            .extend(other.referenced_symbols.iter().cloned());
+    }
+}
+
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub(crate) struct IrCollectionImportNeeds {
     pub(crate) needs_hashmap: bool,

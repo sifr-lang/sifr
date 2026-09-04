@@ -116,9 +116,33 @@ fn test_run_tests_support_module_named_main_imports_root_owned_unions() {
     )
     .expect("test module should be written");
 
-    let result = run_tests(&test_dir, &mut DiskSourceProvider::new())
+    let discovered = discover_test_root_modules(&test_dir, &mut DiskSourceProvider::new());
+    let generated =
+        build_test_runner_project(&test_dir, &discovered, &mut DiskSourceProvider::new())
+            .expect("test runner should generate unions and upcasts");
+    assert!(!generated.all_rust_code.contains("read_text"));
+    assert!(!generated.all_rust_code.contains("write_text"));
+    assert!(!generated.all_rust_code.contains("SifrGeneratedGenerator"));
+    assert!(!generated.all_rust_code.contains("sifr_generated_io_err"));
+    assert!(!generated.all_rust_code.contains("__sifr_generated_support"));
+    assert!(
+        generated.all_stdlib_modules.is_empty(),
+        "pruned Path support retained dependencies: modules={:?}, features={:?}",
+        generated.all_stdlib_modules,
+        generated.all_required_features
+    );
+    assert_eq!(
+        generated.all_required_features,
+        HashSet::from([sifr_stdlib_manifest::StdlibFeature::SifrRuntime]),
+        "the retained exact-integer dependency should be the only feature"
+    );
+    assert!(
+        generated.all_rust_code.len() <= 12_000,
+        "Path constructor support exceeded its generated-source budget"
+    );
+    let outcome = execute_test_runner_project(&generated)
         .expect("test runner should compile unions and upcasts");
-    assert!(result, "sifr test run should succeed");
+    assert!(outcome.success, "sifr test run should succeed");
     let _ = std::fs::remove_dir_all(&test_dir);
 }
 

@@ -1,4 +1,88 @@
 // src/main.rs
+mod sifr_generated_generated_support {
+    use crate::IOError;
+    pub(crate) use ::sifr_runtime::SifrInt;
+    pub(crate) fn write_text(path: &str, content: &str) -> Result<(), IOError> {
+        ::sifr_stdlib::fs::write_text(path, content).map_err(sifr_generated_io_err)
+    }
+    pub(crate) fn listdir(path: &str) -> Result<Vec<String>, IOError> {
+        ::sifr_stdlib::fs::listdir(path).map_err(sifr_generated_io_err)
+    }
+    pub(crate) fn mkdir(path: &str) -> Result<(), IOError> {
+        ::sifr_stdlib::fs::mkdir(path).map_err(sifr_generated_io_err)
+    }
+    pub(crate) fn rmdir(path: &str) -> Result<(), IOError> {
+        ::sifr_stdlib::fs::rmdir(path).map_err(sifr_generated_io_err)
+    }
+    pub(crate) fn remove_file(path: &str) -> Result<(), IOError> {
+        ::sifr_stdlib::fs::remove_file(path).map_err(sifr_generated_io_err)
+    }
+    pub(crate) fn stat_size(path: &str) -> Result<SifrInt, IOError> {
+        ::sifr_stdlib::fs::stat_size(path)
+            .map(::sifr_runtime::interop::SifrIntBridge::into_sifr_int)
+            .map_err(sifr_generated_io_err)
+    }
+    pub(crate) fn is_file(path: &str) -> bool {
+        ::sifr_stdlib::fs::is_file(path)
+    }
+    pub(crate) fn is_dir(path: &str) -> bool {
+        ::sifr_stdlib::fs::is_dir(path)
+    }
+    pub(crate) fn run_command(cmd: &str) -> Result<String, IOError> {
+        ::sifr_stdlib::sys::run_command(cmd).map_err(sifr_generated_io_err)
+    }
+    pub(crate) fn getpid() -> SifrInt {
+        ::sifr_stdlib::sys::getpid().into_sifr_int()
+    }
+    pub(crate) fn stat(path: &str) -> Result<SifrInt, IOError> {
+        stat_size(path)
+    }
+    pub(crate) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
+        assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
+        let mut i: SifrInt = SifrInt::from_i64(0);
+        while &i < &SifrInt::from(actual.len()) {
+            assert_eq!(
+                {
+                    let sifr_generated_condition_list = &actual;
+                    let sifr_generated_condition_index = i.clone();
+                    let sifr_generated_condition_normalized = sifr_generated_condition_index
+                        .normalize_index_or_len(sifr_generated_condition_list.len());
+                    sifr_generated_condition_list
+                        .get(sifr_generated_condition_normalized)
+                        .copied()
+                },
+                {
+                    let sifr_generated_condition_list = &expected;
+                    let sifr_generated_condition_index = i.clone();
+                    let sifr_generated_condition_normalized = sifr_generated_condition_index
+                        .normalize_index_or_len(sifr_generated_condition_list.len());
+                    sifr_generated_condition_list
+                        .get(sifr_generated_condition_normalized)
+                        .copied()
+                }
+            );
+            i = &i + &SifrInt::from_i64(1);
+        }
+    }
+    pub(crate) fn sifr_generated_io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
+        let msg = e.to_string();
+        let kind = {
+            let sifr_generated_io_kind = (&e as &dyn ::std::any::Any)
+                .downcast_ref::<std::io::Error>()
+                .map(::std::io::Error::kind);
+            match sifr_generated_io_kind {
+                Some(::std::io::ErrorKind::NotFound) => "FileNotFound".to_string(),
+                Some(::std::io::ErrorKind::PermissionDenied) => "PermissionDenied".to_string(),
+                Some(::std::io::ErrorKind::AlreadyExists) => "FileExists".to_string(),
+                Some(::std::io::ErrorKind::IsADirectory) => "IsADirectory".to_string(),
+                Some(::std::io::ErrorKind::NotADirectory) => "NotADirectory".to_string(),
+                Some(::std::io::ErrorKind::DirectoryNotEmpty) => "DirectoryNotEmpty".to_string(),
+                _ => "Other".to_string(),
+            }
+        };
+        IOError { message: msg, kind }
+    }
+}
 mod sifr_generated_project_nominals {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct IOError {
@@ -12,88 +96,9 @@ mod sifr_generated_project_nominals {
     }
     impl ::std::error::Error for IOError {}
 }
+use crate::sifr_generated_generated_support::*;
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::IOError;
-fn write_text(path: &str, content: &str) -> Result<(), IOError> {
-    ::sifr_stdlib::fs::write_text(path, content).map_err(sifr_generated_io_err)
-}
-fn listdir(path: &str) -> Result<Vec<String>, IOError> {
-    ::sifr_stdlib::fs::listdir(path).map_err(sifr_generated_io_err)
-}
-fn mkdir(path: &str) -> Result<(), IOError> {
-    ::sifr_stdlib::fs::mkdir(path).map_err(sifr_generated_io_err)
-}
-fn rmdir(path: &str) -> Result<(), IOError> {
-    ::sifr_stdlib::fs::rmdir(path).map_err(sifr_generated_io_err)
-}
-fn remove_file(path: &str) -> Result<(), IOError> {
-    ::sifr_stdlib::fs::remove_file(path).map_err(sifr_generated_io_err)
-}
-fn stat_size(path: &str) -> Result<SifrInt, IOError> {
-    ::sifr_stdlib::fs::stat_size(path)
-        .map(::sifr_runtime::interop::SifrIntBridge::into_sifr_int)
-        .map_err(sifr_generated_io_err)
-}
-fn is_file(path: &str) -> bool {
-    ::sifr_stdlib::fs::is_file(path)
-}
-fn is_dir(path: &str) -> bool {
-    ::sifr_stdlib::fs::is_dir(path)
-}
-fn run_command(cmd: &str) -> Result<String, IOError> {
-    ::sifr_stdlib::sys::run_command(cmd).map_err(sifr_generated_io_err)
-}
-fn getpid() -> SifrInt {
-    ::sifr_stdlib::sys::getpid().into_sifr_int()
-}
-fn stat(path: &str) -> Result<SifrInt, IOError> {
-    stat_size(path)
-}
-fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
-    assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
-    let mut i: SifrInt = SifrInt::from_i64(0);
-    while &i < &SifrInt::from(actual.len()) {
-        assert_eq!(
-            {
-                let sifr_generated_condition_list = &actual;
-                let sifr_generated_condition_index = i.clone();
-                let sifr_generated_condition_normalized = sifr_generated_condition_index
-                    .normalize_index_or_len(sifr_generated_condition_list.len());
-                sifr_generated_condition_list
-                    .get(sifr_generated_condition_normalized)
-                    .copied()
-            },
-            {
-                let sifr_generated_condition_list = &expected;
-                let sifr_generated_condition_index = i.clone();
-                let sifr_generated_condition_normalized = sifr_generated_condition_index
-                    .normalize_index_or_len(sifr_generated_condition_list.len());
-                sifr_generated_condition_list
-                    .get(sifr_generated_condition_normalized)
-                    .copied()
-            }
-        );
-        i = &i + &SifrInt::from_i64(1);
-    }
-}
-fn sifr_generated_io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
-    let msg = e.to_string();
-    let kind = {
-        let sifr_generated_io_kind = (&e as &dyn ::std::any::Any)
-            .downcast_ref::<std::io::Error>()
-            .map(::std::io::Error::kind);
-        match sifr_generated_io_kind {
-            Some(::std::io::ErrorKind::NotFound) => "FileNotFound".to_string(),
-            Some(::std::io::ErrorKind::PermissionDenied) => "PermissionDenied".to_string(),
-            Some(::std::io::ErrorKind::AlreadyExists) => "FileExists".to_string(),
-            Some(::std::io::ErrorKind::IsADirectory) => "IsADirectory".to_string(),
-            Some(::std::io::ErrorKind::NotADirectory) => "NotADirectory".to_string(),
-            Some(::std::io::ErrorKind::DirectoryNotEmpty) => "DirectoryNotEmpty".to_string(),
-            _ => "Other".to_string(),
-        }
-    };
-    IOError { message: msg, kind }
-}
 fn collect_runtime_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = Vec::new();
     let mut shell_ok: bool = false;

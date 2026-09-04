@@ -470,6 +470,13 @@ large-file check and a representative project check.
 - Native `sifr.toml` workspace discovery lives in `sifr_driver::workspace`. `[source].root` defines one workspace user-module search root and defaults to `src`; malformed workspace config is a hard build diagnostic rather than a single-file fallback.
 - User module resolution keeps embedded `sifr.*` / `_sifr.*` stdlib registry precedence separate from filesystem lookup. It then searches the entry parent first and the configured workspace source root second. Dotted module IDs such as `helpers.nodes` map to `helpers/nodes.sifr`.
 - Generated Rust preserves canonical dotted module IDs through HIR/codegen and materializes them as nested Rust files, for example `helpers.nodes` -> `src/helpers/nodes.rs` plus `src/helpers/mod.rs`.
+- Code generation records one structured runtime-and-stdlib support demand per
+  HIR module. Single-file emission renders that demand inline once. Project and
+  test-project emission defer every module demand, merge the demands, and render
+  one private crate-root `__sifr_generated_support` owner whose items are visible
+  only inside the generated crate. Canonical item fingerprints reject conflicting
+  support bodies instead of silently selecting one, and Rust interop bridge types
+  use the same exact-deduplication/fail-closed ownership rule.
 - Generated-code simplification is structural at both boundaries. Typed
   `RustItem`/`RustStmt`/`RustExpr` optimization runs before rendering. After
   project metadata, inline stdlib, and bridge fragments have been assembled,
@@ -486,6 +493,10 @@ large-file check and a representative project check.
   Materialization repeats this fail-closed check for synthetic namespace and
   bridge files that do not exist at the earlier emit boundary.
 - Both shapes materialize through the same generated-binary-project path and the same Cargo manifest generation helper.
+- Rematerialization replaces the generated `src` tree as one owned output set so
+  removed support or bridge modules cannot survive from an earlier build. The
+  Cargo `target` directory remains outside that replacement boundary and retains
+  incremental build artifacts.
 - Native binary builds return a `BuildReport` at the driver boundary. The
   report records entrypoint path, compilation mode, target profile, binary
   path, optional binary size, total elapsed time, cache-hit status where

@@ -148,7 +148,7 @@ fn test_project_entrypoint_plan_reports_reachable_frontend_errors() {
 
 #[test]
 #[ignore = "generated build integration coverage runs in full validation profiles"]
-fn test_project_entrypoint_plan_aggregates_reachable_dependency_metadata() {
+fn test_project_entrypoint_plan_retains_final_reachable_dependency_metadata() {
     let dir = mktemp_dir("project_metadata_positive");
     let main_file = dir.join("main.sifr");
     std::fs::write(
@@ -159,11 +159,11 @@ fn test_project_entrypoint_plan_aggregates_reachable_dependency_metadata() {
     std::fs::write(
         dir.join("helper.sifr"),
         concat!(
-            "from sifr.statistics import mean, StatisticsError\n",
+            "from sifr.statistics import stdev, StatisticsError\n",
             "\n",
             "def helper() -> float:\n",
             "    try:\n",
-            "        value: float = mean([1.0, 2.0])\n",
+            "        value: float = stdev([1.0, 2.0])\n",
             "        return value\n",
             "    except StatisticsError as error:\n",
             "        _ = error.message\n",
@@ -182,11 +182,15 @@ fn test_project_entrypoint_plan_aggregates_reachable_dependency_metadata() {
         .expect("project metadata aggregation should succeed");
 
     assert!(
-        generated_project
+        !generated_project
             .used_stdlib_modules
             .contains("sifr.statistics")
     );
-    assert!(generated_project.used_stdlib_modules.contains("sifr.math"));
+    assert!(
+        generated_project.used_stdlib_modules.contains("sifr.math"),
+        "final modules: {:?}",
+        generated_project.used_stdlib_modules
+    );
     let stdlib_features = planned_sifr_stdlib_features(
         &generated_project.used_stdlib_modules,
         &generated_project.required_features,

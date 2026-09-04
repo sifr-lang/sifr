@@ -1,5 +1,49 @@
 // src/main.rs
+mod sifr_generated_generated_support {
+    use crate::Error;
+    #[expect(
+        clippy::assertions_on_constants,
+        reason = "generated Rust preserves this exact typed Sifr source contract"
+    )]
+    pub(crate) fn assert_ok<T: Clone + 'static>(value: Result<T, Error>) {
+        let sifr_generated_try_res: Result<(), Error> = (|| {
+            let _out: T = value?;
+            Ok(())
+        })();
+        if let Err(_e) = sifr_generated_try_res {
+            assert!(false);
+        }
+    }
+    #[expect(
+        clippy::assertions_on_constants,
+        reason = "generated Rust preserves this exact typed Sifr source contract"
+    )]
+    pub(crate) fn assert_err<T: Clone + 'static>(value: Result<T, Error>) {
+        let sifr_generated_try_res: Result<(), Error> = (|| {
+            let _out: T = value?;
+            assert!(false);
+            Ok(())
+        })();
+        let _ = sifr_generated_try_res;
+    }
+}
 mod sifr_generated_project_nominals {
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct Error {
+        pub message: String,
+    }
+    impl Error {
+        #[must_use]
+        pub const fn new(message: String) -> Self {
+            Self { message }
+        }
+    }
+    impl ::std::fmt::Display for Error {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for Error {}
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ValueError {
         pub message: String,
@@ -10,55 +54,17 @@ mod sifr_generated_project_nominals {
         }
     }
     impl ::std::error::Error for ValueError {}
+    impl From<ValueError> for Error {
+        fn from(err: ValueError) -> Self {
+            Self::new(err.message)
+        }
+    }
 }
+use crate::sifr_generated_generated_support::*;
 use ::sifr_runtime::SifrInt;
 use ::sifr_runtime::SifrRange;
+pub use sifr_generated_project_nominals::Error;
 pub use sifr_generated_project_nominals::ValueError;
-#[expect(
-    clippy::assertions_on_constants,
-    reason = "generated Rust preserves this exact typed Sifr source contract"
-)]
-fn assert_ok<T: Clone + 'static>(value: Result<T, Error>) {
-    let sifr_generated_try_res: Result<(), Error> = (|| {
-        let _out: T = value?;
-        Ok(())
-    })();
-    if let Err(_e) = sifr_generated_try_res {
-        assert!(false);
-    }
-}
-#[expect(
-    clippy::assertions_on_constants,
-    reason = "generated Rust preserves this exact typed Sifr source contract"
-)]
-fn assert_err<T: Clone + 'static>(value: Result<T, Error>) {
-    let sifr_generated_try_res: Result<(), Error> = (|| {
-        let _out: T = value?;
-        assert!(false);
-        Ok(())
-    })();
-    let _ = sifr_generated_try_res;
-}
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct Error {
-    message: String,
-}
-impl Error {
-    const fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-impl ::std::fmt::Display for Error {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-impl ::std::error::Error for Error {}
-impl From<ValueError> for Error {
-    fn from(err: ValueError) -> Self {
-        Self::new(err.message)
-    }
-}
 fn negate(x: SifrInt) -> SifrInt {
     &SifrInt::from_i64(0) - &x
 }

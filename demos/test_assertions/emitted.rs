@@ -1,6 +1,65 @@
 // src/main.rs
+mod sifr_generated_generated_support {
+    use crate::Error;
+    pub(crate) const INF: f64 = f64::INFINITY;
+    #[expect(
+        clippy::assertions_on_constants,
+        reason = "generated Rust preserves this exact typed Sifr source contract"
+    )]
+    pub(crate) fn assert_not_almost_eq(actual: f64, expected: f64, tolerance: f64) {
+        assert!(tolerance >= 0.0_f64);
+        if actual == expected {
+            assert!(false);
+        }
+        let mut diff: f64 = actual - expected;
+        if diff < 0.0_f64 {
+            diff = 0.0_f64 - diff;
+        }
+        if diff != diff {
+            return;
+        }
+        assert!(diff > tolerance);
+    }
+    pub(crate) fn assert_ge<T: Clone + 'static + PartialOrd>(a: &T, b: &T) {
+        assert!(*a >= *b);
+    }
+    pub(crate) fn assert_le<T: Clone + 'static + PartialOrd>(a: &T, b: &T) {
+        assert!(*a <= *b);
+    }
+    pub(crate) fn assert_some<T: Clone + 'static>(value: Option<T>) {
+        assert!(value.is_some());
+    }
+    pub(crate) fn assert_none<T: Clone + 'static>(value: Option<T>) {
+        assert!(value.is_none());
+    }
+    #[expect(
+        clippy::assertions_on_constants,
+        reason = "generated Rust preserves this exact typed Sifr source contract"
+    )]
+    pub(crate) fn assert_ok<T: Clone + 'static>(value: Result<T, Error>) {
+        let sifr_generated_try_res: Result<(), Error> = (|| {
+            let _out: T = value?;
+            Ok(())
+        })();
+        if let Err(_e) = sifr_generated_try_res {
+            assert!(false);
+        }
+    }
+    #[expect(
+        clippy::assertions_on_constants,
+        reason = "generated Rust preserves this exact typed Sifr source contract"
+    )]
+    pub(crate) fn assert_err<T: Clone + 'static>(value: Result<T, Error>) {
+        let sifr_generated_try_res: Result<(), Error> = (|| {
+            let _out: T = value?;
+            assert!(false);
+            Ok(())
+        })();
+        let _ = sifr_generated_try_res;
+    }
+}
 mod sifr_generated_project_nominals {
-    pub use ::sifr_runtime::SifrInt;
+    use ::sifr_runtime::SifrInt;
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct IOError {
         pub message: String,
@@ -12,6 +71,22 @@ mod sifr_generated_project_nominals {
         }
     }
     impl ::std::error::Error for IOError {}
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct Error {
+        pub message: String,
+    }
+    impl Error {
+        #[must_use]
+        pub const fn new(message: String) -> Self {
+            Self { message }
+        }
+    }
+    impl ::std::fmt::Display for Error {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::std::fmt::Display::fmt(&self.message, f)
+        }
+    }
+    impl ::std::error::Error for Error {}
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ParseError {
         pub message: String,
@@ -116,139 +191,61 @@ mod sifr_generated_project_nominals {
         }
     }
     impl ::std::error::Error for ScopeFailure {}
+    impl From<IOError> for Error {
+        fn from(err: IOError) -> Self {
+            Self::new(err.message)
+        }
+    }
+    impl From<ParseError> for Error {
+        fn from(err: ParseError) -> Self {
+            Self::new(err.message)
+        }
+    }
+    impl From<ValueError> for Error {
+        fn from(err: ValueError) -> Self {
+            Self::new(err.message)
+        }
+    }
+    impl From<JSONDecodeError> for Error {
+        fn from(err: JSONDecodeError) -> Self {
+            Self::new(err.message)
+        }
+    }
+    impl From<JsonIntegerRangeError> for Error {
+        fn from(err: JsonIntegerRangeError) -> Self {
+            Self::new(err.message)
+        }
+    }
+    impl From<JsonLimitError> for Error {
+        fn from(err: JsonLimitError) -> Self {
+            Self::new(err.message)
+        }
+    }
+    impl From<TOMLDecodeError> for Error {
+        fn from(err: TOMLDecodeError) -> Self {
+            Self::new(err.message)
+        }
+    }
+    impl From<RegexError> for Error {
+        fn from(err: RegexError) -> Self {
+            Self::new(err.message)
+        }
+    }
+    impl From<TimeoutError> for Error {
+        fn from(err: TimeoutError) -> Self {
+            Self::new(err.message)
+        }
+    }
+    impl From<ScopeFailure> for Error {
+        fn from(err: ScopeFailure) -> Self {
+            Self::new(err.message)
+        }
+    }
 }
+use crate::sifr_generated_generated_support::*;
 use ::sifr_runtime::SifrInt;
-pub use sifr_generated_project_nominals::IOError;
-pub use sifr_generated_project_nominals::JSONDecodeError;
-pub use sifr_generated_project_nominals::JsonIntegerRangeError;
-pub use sifr_generated_project_nominals::JsonLimitError;
-pub use sifr_generated_project_nominals::ParseError;
-pub use sifr_generated_project_nominals::RegexError;
-pub use sifr_generated_project_nominals::ScopeFailure;
-pub use sifr_generated_project_nominals::TOMLDecodeError;
-pub use sifr_generated_project_nominals::TimeoutError;
+pub use sifr_generated_project_nominals::Error;
 pub use sifr_generated_project_nominals::ValueError;
-const INF: f64 = f64::INFINITY;
-#[expect(
-    clippy::assertions_on_constants,
-    reason = "generated Rust preserves this exact typed Sifr source contract"
-)]
-fn assert_not_almost_eq(actual: f64, expected: f64, tolerance: f64) {
-    assert!(tolerance >= 0.0_f64);
-    if actual == expected {
-        assert!(false);
-    }
-    let mut diff: f64 = actual - expected;
-    if diff < 0.0_f64 {
-        diff = 0.0_f64 - diff;
-    }
-    if diff != diff {
-        return;
-    }
-    assert!(diff > tolerance);
-}
-fn assert_ge<T: Clone + 'static + PartialOrd>(a: &T, b: &T) {
-    assert!(*a >= *b);
-}
-fn assert_le<T: Clone + 'static + PartialOrd>(a: &T, b: &T) {
-    assert!(*a <= *b);
-}
-fn assert_some<T: Clone + 'static>(value: Option<T>) {
-    assert!(value.is_some());
-}
-fn assert_none<T: Clone + 'static>(value: Option<T>) {
-    assert!(value.is_none());
-}
-#[expect(
-    clippy::assertions_on_constants,
-    reason = "generated Rust preserves this exact typed Sifr source contract"
-)]
-fn assert_ok<T: Clone + 'static>(value: Result<T, Error>) {
-    let sifr_generated_try_res: Result<(), Error> = (|| {
-        let _out: T = value?;
-        Ok(())
-    })();
-    if let Err(_e) = sifr_generated_try_res {
-        assert!(false);
-    }
-}
-#[expect(
-    clippy::assertions_on_constants,
-    reason = "generated Rust preserves this exact typed Sifr source contract"
-)]
-fn assert_err<T: Clone + 'static>(value: Result<T, Error>) {
-    let sifr_generated_try_res: Result<(), Error> = (|| {
-        let _out: T = value?;
-        assert!(false);
-        Ok(())
-    })();
-    let _ = sifr_generated_try_res;
-}
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct Error {
-    message: String,
-}
-impl Error {
-    const fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-impl ::std::fmt::Display for Error {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        ::std::fmt::Display::fmt(&self.message, f)
-    }
-}
-impl ::std::error::Error for Error {}
-impl From<IOError> for Error {
-    fn from(err: IOError) -> Self {
-        Self::new(err.message)
-    }
-}
-impl From<ParseError> for Error {
-    fn from(err: ParseError) -> Self {
-        Self::new(err.message)
-    }
-}
-impl From<ValueError> for Error {
-    fn from(err: ValueError) -> Self {
-        Self::new(err.message)
-    }
-}
-impl From<JSONDecodeError> for Error {
-    fn from(err: JSONDecodeError) -> Self {
-        Self::new(err.message)
-    }
-}
-impl From<JsonIntegerRangeError> for Error {
-    fn from(err: JsonIntegerRangeError) -> Self {
-        Self::new(err.message)
-    }
-}
-impl From<JsonLimitError> for Error {
-    fn from(err: JsonLimitError) -> Self {
-        Self::new(err.message)
-    }
-}
-impl From<TOMLDecodeError> for Error {
-    fn from(err: TOMLDecodeError) -> Self {
-        Self::new(err.message)
-    }
-}
-impl From<RegexError> for Error {
-    fn from(err: RegexError) -> Self {
-        Self::new(err.message)
-    }
-}
-impl From<TimeoutError> for Error {
-    fn from(err: TimeoutError) -> Self {
-        Self::new(err.message)
-    }
-}
-impl From<ScopeFailure> for Error {
-    fn from(err: ScopeFailure) -> Self {
-        Self::new(err.message)
-    }
-}
 fn parse_num(s: &str) -> Result<SifrInt, ValueError> {
     if s == "bad" {
         return Err(ValueError::new("parse failure".to_string()));

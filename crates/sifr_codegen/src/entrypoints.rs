@@ -1,5 +1,6 @@
 use super::{
-    CodegenResult, HashSet, HirModule, Renderer, RustEmitter, RustFile, RustItem, StdlibCode,
+    CodegenResult, HashSet, HirModule, ModuleSupportDemand, Renderer, RustEmitter, RustFile,
+    RustItem, StdlibCode, SupportEmission, render_import_items,
 };
 use crate::ir_imports::collect_import_needs_from_items;
 use crate::ir_optimize::{
@@ -25,6 +26,7 @@ pub fn generate_rust_test(module: &HirModule, module_name: &str) -> CodegenResul
         crate::rust_interop_plan::module_uses_structural_interop(module),
         None,
         None,
+        SupportEmission::Inline,
     )
 }
 
@@ -39,6 +41,7 @@ pub(crate) fn generate_rust_test_with_project_policy(
     structural_interop_enabled: bool,
     project_structural_record_identities: Option<&HashSet<String>>,
     project_structural_identity_expressions: Option<&super::HashMap<String, String>>,
+    support_emission: SupportEmission,
 ) -> CodegenResult {
     let mut emitter = RustEmitter::new();
     emitter.structural_interop_enabled = structural_interop_enabled;
@@ -83,6 +86,7 @@ pub(crate) fn generate_rust_test_with_project_policy(
     emitter.emit_named_module(module, false, true, Some(module_name));
     // Expression lowering can introduce canonical intermediate error unions.
     emitter.generate_enum_definitions();
+    let support_demand = ModuleSupportDemand::from_emitter(module, &emitter);
 
     let mut module_import_items: Vec<RustItem> = Vec::new();
     for import in &module.imports {
@@ -115,26 +119,35 @@ pub(crate) fn generate_rust_test_with_project_policy(
         }
     }
 
+    let original_module_import_items = module_import_items.clone();
+    if support_emission == SupportEmission::Deferred {
+        return deferred_test_codegen_result(
+            module,
+            emitter,
+            support_demand,
+            original_module_import_items,
+        );
+    }
     let mut emitted_items: Vec<RustItem> = Vec::new();
     if !emitter.enum_items.is_empty() {
         emitted_items.extend(emitter.enum_items.clone());
     }
-    let uses_task_scope = super::module_uses_task_scope(module);
-    let uses_join_set = super::module_uses_join_set(module);
-    let uses_async_python =
-        super::python_interop_common::module_uses_async_python_declaration(module);
-    let uses_native_async_cleanup = super::module_uses_native_async_cleanup(module);
-    let uses_join_set_spawn_cpu = super::module_uses_join_set_spawn_cpu(module);
-    let uses_task_scope_offload = super::module_uses_task_scope_offload(module);
-    let uses_task_scope_spawn_cpu = super::module_uses_task_scope_spawn_cpu(module);
-    let uses_spawn_cpu = super::module_uses_spawn_cpu(module);
-    if uses_task_scope || uses_join_set || super::module_uses_failure_type(module) {
+    let runtime_demand = &support_demand.runtime;
+    let uses_task_scope = runtime_demand.task_scope;
+    let uses_join_set = runtime_demand.join_set;
+    let uses_async_python = runtime_demand.async_python;
+    let uses_native_async_cleanup = runtime_demand.native_async_cleanup;
+    let uses_join_set_spawn_cpu = runtime_demand.join_set_spawn_cpu;
+    let uses_task_scope_offload = runtime_demand.task_scope_offload;
+    let uses_task_scope_spawn_cpu = runtime_demand.task_scope_spawn_cpu;
+    let uses_spawn_cpu = runtime_demand.spawn_cpu;
+    if uses_task_scope || uses_join_set || runtime_demand.failure_type {
         emitted_items.extend(super::build_failure_type_items());
     }
-    if uses_task_scope || uses_join_set || super::module_uses_cancellation_error_type(module) {
+    if uses_task_scope || uses_join_set || runtime_demand.cancellation_error_type {
         emitted_items.extend(super::build_cancellation_error_type_items());
     }
-    if super::module_uses_async_exit_cause_type(module) {
+    if runtime_demand.async_exit_cause_type {
         emitted_items.extend(super::build_async_exit_cause_type_items());
     }
     if uses_task_scope || uses_join_set || uses_async_python || uses_native_async_cleanup {
@@ -166,7 +179,7 @@ pub(crate) fn generate_rust_test_with_project_policy(
     if uses_spawn_cpu {
         emitted_items.extend(super::build_cpu_offload_items());
     }
-    if super::module_uses_timeout_result_type(module) && !uses_task_scope && !uses_join_set {
+    if runtime_demand.timeout_result_type && !uses_task_scope && !uses_join_set {
         emitted_items.extend(super::build_timeout_result_type_items());
     }
     if !emitter.body_items.is_empty() {
@@ -258,11 +271,38 @@ pub(crate) fn generate_rust_test_with_project_policy(
     );
     let rust_file = RustFile { items: file_items };
     let rust_source = Renderer::new().render_file(&rust_file);
-    let uses_task_sleep = super::module_uses_task_sleep(module);
+    let mut module_body_items = Vec::new();
+    module_body_items.extend(emitter.enum_items.clone());
+    module_body_items.extend(emitter.body_items.clone());
+    remove_trivial_clones_in_items(&mut module_body_items);
+    simplify_control_flow_in_items(&mut module_body_items);
+    remove_unread_pure_bindings_in_items(&mut module_body_items);
+    remove_unneeded_mutability_in_items(
+        &mut module_body_items,
+        &emitter.protected_mutable_place_roots,
+    );
+    let module_body_import_needs = collect_import_needs_from_items(&module_body_items);
+    let mut module_body_imports = original_module_import_items;
+    module_body_imports.retain(|item| match item {
+        RustItem::Use(path) => path
+            .last()
+            .is_some_and(|name| module_body_import_needs.referenced_symbols.contains(name)),
+        RustItem::UseAlias { alias, .. } => {
+            alias == "_" || module_body_import_needs.referenced_symbols.contains(alias)
+        }
+        _ => true,
+    });
+    module_body_imports.extend(render_import_items(&module_body_import_needs));
+    module_body_imports.extend(module_body_items);
+    let module_body_source = Renderer::new().render_file(&RustFile {
+        items: module_body_imports,
+    });
+    let uses_task_sleep = runtime_demand.task_sleep;
     let needs_python_runtime =
         super::python_interop_common::rust_source_uses_python_runtime(&rust_source);
 
     CodegenResult {
+        module_body_source,
         rust_source,
         static_programs: Vec::new(),
         static_program_structural_owners: std::collections::BTreeSet::new(),
@@ -294,6 +334,61 @@ pub(crate) fn generate_rust_test_with_project_policy(
         interop: crate::rust_interop_plan::interop_build_plan_for_module(module),
         constant_mappings: emitter.module_constants,
         lowering_stats: emitter.lowering_stats,
+        support_demand,
+    }
+}
+
+fn deferred_test_codegen_result(
+    module: &HirModule,
+    mut emitter: RustEmitter,
+    support_demand: ModuleSupportDemand,
+    mut module_import_items: Vec<RustItem>,
+) -> CodegenResult {
+    let mut body_items = emitter.enum_items.clone();
+    body_items.extend(emitter.body_items.clone());
+    remove_trivial_clones_in_items(&mut body_items);
+    simplify_control_flow_in_items(&mut body_items);
+    remove_unread_pure_bindings_in_items(&mut body_items);
+    remove_unneeded_mutability_in_items(&mut body_items, &emitter.protected_mutable_place_roots);
+    let import_needs = collect_import_needs_from_items(&body_items);
+    module_import_items.retain(|item| match item {
+        RustItem::Use(path) => path
+            .last()
+            .is_some_and(|name| import_needs.referenced_symbols.contains(name)),
+        RustItem::UseAlias { alias, .. } => {
+            alias == "_" || import_needs.referenced_symbols.contains(alias)
+        }
+        _ => true,
+    });
+    let mut file_items = render_import_items(&import_needs);
+    file_items.extend(module_import_items);
+    file_items.extend(body_items);
+    let issues = validate_items(&file_items);
+    assert!(
+        issues.is_empty(),
+        "codegen IR validation failed (deferred test file): {}",
+        issues
+            .iter()
+            .map(|issue| issue.message.as_str())
+            .collect::<Vec<_>>()
+            .join(" | ")
+    );
+    let module_body_source = Renderer::new().render_file(&RustFile { items: file_items });
+    let mut required_features = support_demand.base_required_features();
+    crate::add_import_features(&import_needs, &mut required_features);
+
+    CodegenResult {
+        rust_source: module_body_source.clone(),
+        module_body_source,
+        static_programs: Vec::new(),
+        static_program_structural_owners: std::collections::BTreeSet::new(),
+        used_stdlib_modules: support_demand.directly_used_stdlib_modules(),
+        used_intrinsic_modules: std::mem::take(&mut emitter.used_stdlib_modules),
+        required_features,
+        interop: crate::rust_interop_plan::interop_build_plan_for_module(module),
+        constant_mappings: std::mem::take(&mut emitter.module_constants),
+        lowering_stats: emitter.lowering_stats,
+        support_demand,
     }
 }
 

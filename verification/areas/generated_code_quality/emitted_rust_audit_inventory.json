@@ -354,9 +354,9 @@
       "disposition": "confirmed",
       "severity": "blocking",
       "owner_item": 10,
-      "mechanism": "Project/module assembly can concatenate overlapping demanded preambles or bridge bodies, inflating generated crates and producing duplicate dead APIs.",
-      "evidence": ["crates/sifr_codegen/src/lib_project_codegen.rs", "crates/sifr_codegen/src/lib_runtime_needs.rs", "crates/sifr_codegen/src/lib_modules_and_codegen.rs"],
-      "semantic_anchor": {"kind": "text", "revision": "current", "path": "crates/sifr_codegen/src/lib_modules_and_codegen.rs", "contains": "let mut stdlib_preamble = String::new()"},
+      "mechanism": "Project/module assembly must merge typed support demand before one canonical render, reject conflicting bridge bodies, and omit support that has no final consumer.",
+      "evidence": ["crates/sifr_codegen/src/runtime_support_demand.rs", "crates/sifr_codegen/src/support_plan.rs", "crates/sifr_codegen/src/lib_project_codegen.rs", "crates/sifr_codegen/src/lib_modules_and_codegen/deferred_codegen.rs"],
+      "semantic_anchor": {"kind": "text", "revision": "current", "path": "crates/sifr_codegen/src/support_plan.rs", "contains": "pub(crate) fn render_support("},
       "sources": ["internal", "external"]
     },
     {

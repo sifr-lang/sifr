@@ -1,7 +1,578 @@
 // src/main.rs
+mod sifr_generated_generated_support {
+    use crate::SifrGeneratedStdlibSifrX2ecollectionsX2eCounter;
+    pub(crate) use ::sifr_runtime::SifrInt;
+    pub(crate) use ::std::collections::HashMap;
+    pub(crate) fn bisect_left<T: Clone + 'static + PartialOrd>(
+        a: &[T],
+        x: &T,
+        lo: SifrInt,
+        hi: Option<SifrInt>,
+    ) -> SifrInt {
+        let mut left: SifrInt = lo.clone();
+        if &left < &SifrInt::from_i64(0) {
+            left = SifrInt::from_i64(0);
+        }
+        let mut right: SifrInt = SifrInt::from(a.len());
+        if hi.is_none() {
+            right = SifrInt::from(a.len());
+        } else if let Some(hi) = hi.clone() {
+            if &hi < &SifrInt::from_i64(0) {
+                right = SifrInt::from_i64(0);
+            } else if &hi > &SifrInt::from(a.len()) {
+                right = SifrInt::from(a.len());
+            } else {
+                right = hi;
+            }
+        }
+        while &left < &right {
+            let mid: SifrInt = (&left + &right).floor_div_known_nonzero(&SifrInt::from_i64(2));
+            let val: Option<T> = {
+                let sifr_generated_checked_read_collection = &a;
+                let sifr_generated_checked_read_index = mid.clone();
+                let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
+                    .normalize_index_or_len(sifr_generated_checked_read_collection.len());
+                sifr_generated_checked_read_collection
+                    .get(sifr_generated_checked_read_normalized)
+                    .cloned()
+            };
+            if let Some(val) = val {
+                if val < *x {
+                    left = &mid + &SifrInt::from_i64(1);
+                } else {
+                    right = mid;
+                }
+            } else {
+                left = &mid + &SifrInt::from_i64(1);
+            }
+        }
+        left.clone()
+    }
+    pub(crate) fn bisect_right<T: Clone + 'static + PartialOrd>(
+        a: &[T],
+        x: &T,
+        lo: SifrInt,
+        hi: Option<SifrInt>,
+    ) -> SifrInt {
+        let mut left: SifrInt = lo.clone();
+        if &left < &SifrInt::from_i64(0) {
+            left = SifrInt::from_i64(0);
+        }
+        let mut right: SifrInt = SifrInt::from(a.len());
+        if hi.is_none() {
+            right = SifrInt::from(a.len());
+        } else if let Some(hi) = hi.clone() {
+            if &hi < &SifrInt::from_i64(0) {
+                right = SifrInt::from_i64(0);
+            } else if &hi > &SifrInt::from(a.len()) {
+                right = SifrInt::from(a.len());
+            } else {
+                right = hi;
+            }
+        }
+        while &left < &right {
+            let mid: SifrInt = (&left + &right).floor_div_known_nonzero(&SifrInt::from_i64(2));
+            let val: Option<T> = {
+                let sifr_generated_checked_read_collection = &a;
+                let sifr_generated_checked_read_index = mid.clone();
+                let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
+                    .normalize_index_or_len(sifr_generated_checked_read_collection.len());
+                sifr_generated_checked_read_collection
+                    .get(sifr_generated_checked_read_normalized)
+                    .cloned()
+            };
+            if let Some(val) = val {
+                if *x < val {
+                    right = mid;
+                } else {
+                    left = &mid + &SifrInt::from_i64(1);
+                }
+            } else {
+                left = &mid + &SifrInt::from_i64(1);
+            }
+        }
+        left.clone()
+    }
+    pub(crate) fn insort_left<T: Clone + 'static + PartialOrd>(
+        a: &mut Vec<T>,
+        x: &T,
+        lo: SifrInt,
+        hi: Option<SifrInt>,
+    ) {
+        let pos: SifrInt = bisect_left(a, x, lo.clone(), hi.clone());
+        a.insert(::sifr_runtime::to_usize_proven(&pos), x.clone());
+    }
+    pub(crate) fn insort_right<T: Clone + 'static + PartialOrd>(
+        a: &mut Vec<T>,
+        x: &T,
+        lo: SifrInt,
+        hi: Option<SifrInt>,
+    ) {
+        let pos: SifrInt = bisect_right(a, x, lo.clone(), hi.clone());
+        a.insert(::sifr_runtime::to_usize_proven(&pos), x.clone());
+    }
+    pub(crate) fn from_list<T: Clone + ::std::hash::Hash + Eq + 'static>(
+        items: &[T],
+    ) -> SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T> {
+        let mut counts: HashMap<T, SifrInt> = HashMap::from([]);
+        for item in items.iter().cloned() {
+            let val: Option<SifrInt> = counts.get(&item).cloned();
+            if let Some(val) = val.clone() {
+                {
+                    let sifr_generated_assign_value = &val + &SifrInt::from_i64(1);
+                    {
+                        let sifr_generated_assign_key = item.clone();
+                        counts.insert(sifr_generated_assign_key, sifr_generated_assign_value);
+                    }
+                }
+            } else {
+                let sifr_generated_assign_value = SifrInt::from_i64(1);
+                {
+                    let sifr_generated_assign_key = item.clone();
+                    counts.insert(sifr_generated_assign_key, sifr_generated_assign_value);
+                }
+            }
+        }
+        SifrGeneratedStdlibSifrX2ecollectionsX2eCounter::new(Some(counts), None)
+    }
+    #[expect(
+        clippy::too_many_lines,
+        reason = "one generated Rust function preserves one typed Sifr function"
+    )]
+    pub(crate) fn sifr_generated_sift_down<T: Clone + 'static + PartialOrd>(
+        data: &mut Vec<T>,
+        mut pos: SifrInt,
+        n: SifrInt,
+    ) {
+        let mut done: bool = false;
+        while !done {
+            let mut smallest: SifrInt = pos.clone();
+            let left: SifrInt = &(&SifrInt::from_i64(2) * &pos) + &SifrInt::from_i64(1);
+            let right: SifrInt = &(&SifrInt::from_i64(2) * &pos) + &SifrInt::from_i64(2);
+            if &left < &n {
+                let s_val: Option<T> = {
+                    let sifr_generated_checked_read_collection = &data;
+                    let sifr_generated_checked_read_index = smallest.clone();
+                    let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
+                        .normalize_index_or_len(sifr_generated_checked_read_collection.len());
+                    sifr_generated_checked_read_collection
+                        .get(sifr_generated_checked_read_normalized)
+                        .cloned()
+                };
+                let l_val_value_c583c4339eb822b3: Option<T> = {
+                    let sifr_generated_checked_read_collection = &data;
+                    let sifr_generated_checked_read_index = left.clone();
+                    let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
+                        .normalize_index_or_len(sifr_generated_checked_read_collection.len());
+                    sifr_generated_checked_read_collection
+                        .get(sifr_generated_checked_read_normalized)
+                        .cloned()
+                };
+                if let Some(s_val) = s_val
+                    && let Some(l_val) = l_val_value_c583c4339eb822b3
+                    && l_val < s_val
+                {
+                    smallest = left;
+                }
+            }
+            if &right < &n {
+                let s_val2_value_8b32ab056d206424: Option<T> = {
+                    let sifr_generated_checked_read_collection = &data;
+                    let sifr_generated_checked_read_index = smallest.clone();
+                    let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
+                        .normalize_index_or_len(sifr_generated_checked_read_collection.len());
+                    sifr_generated_checked_read_collection
+                        .get(sifr_generated_checked_read_normalized)
+                        .cloned()
+                };
+                let r_val_value_839f97b21b19be35: Option<T> = {
+                    let sifr_generated_checked_read_collection = &data;
+                    let sifr_generated_checked_read_index = right.clone();
+                    let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
+                        .normalize_index_or_len(sifr_generated_checked_read_collection.len());
+                    sifr_generated_checked_read_collection
+                        .get(sifr_generated_checked_read_normalized)
+                        .cloned()
+                };
+                if let Some(s_val2) = s_val2_value_8b32ab056d206424
+                    && let Some(r_val) = r_val_value_839f97b21b19be35
+                    && r_val < s_val2
+                {
+                    smallest = right;
+                }
+            }
+            if &smallest == &pos {
+                done = true;
+            } else {
+                let tmp_pos: Option<T> = {
+                    let sifr_generated_checked_read_collection = &data;
+                    let sifr_generated_checked_read_index = pos.clone();
+                    let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
+                        .normalize_index_or_len(sifr_generated_checked_read_collection.len());
+                    sifr_generated_checked_read_collection
+                        .get(sifr_generated_checked_read_normalized)
+                        .cloned()
+                };
+                let tmp_sm_value_cf4d6d82a6cdd887: Option<T> = {
+                    let sifr_generated_checked_read_collection = &data;
+                    let sifr_generated_checked_read_index = smallest.clone();
+                    let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
+                        .normalize_index_or_len(sifr_generated_checked_read_collection.len());
+                    sifr_generated_checked_read_collection
+                        .get(sifr_generated_checked_read_normalized)
+                        .cloned()
+                };
+                if let Some(tmp_pos) = tmp_pos
+                    && let Some(tmp_sm) = tmp_sm_value_cf4d6d82a6cdd887
+                {
+                    if &SifrInt::from_i64(0) <= &pos && &pos < &SifrInt::from(data.len()) {
+                        {
+                            let sifr_generated_assign_value = tmp_sm.clone();
+                            {
+                                let sifr_generated_index_raw = pos.clone();
+                                let sifr_generated_index_normalized =
+                                    sifr_generated_index_raw.normalize_index_or_len(data.len());
+                                if let Some(sifr_generated_elem) =
+                                    data.get_mut(sifr_generated_index_normalized)
+                                {
+                                    *sifr_generated_elem = sifr_generated_assign_value;
+                                }
+                            }
+                        }
+                    }
+                    if &SifrInt::from_i64(0) <= &smallest && &smallest < &SifrInt::from(data.len())
+                    {
+                        {
+                            let sifr_generated_assign_value = tmp_pos.clone();
+                            {
+                                let sifr_generated_index_raw = smallest.clone();
+                                let sifr_generated_index_normalized =
+                                    sifr_generated_index_raw.normalize_index_or_len(data.len());
+                                if let Some(sifr_generated_elem) =
+                                    data.get_mut(sifr_generated_index_normalized)
+                                {
+                                    *sifr_generated_elem = sifr_generated_assign_value;
+                                }
+                            }
+                        }
+                    }
+                }
+                pos = smallest;
+            }
+        }
+    }
+    pub(crate) fn sifr_generated_sift_up<T: Clone + 'static + PartialOrd>(
+        heap: &mut Vec<T>,
+        mut pos: SifrInt,
+    ) {
+        let mut done: bool = false;
+        while !done {
+            if &pos <= &SifrInt::from_i64(0) {
+                done = true;
+            } else {
+                let parent: SifrInt =
+                    (&pos - &SifrInt::from_i64(1)).floor_div_known_nonzero(&SifrInt::from_i64(2));
+                let p_val: Option<T> = {
+                    let sifr_generated_checked_read_collection = &heap;
+                    let sifr_generated_checked_read_index = parent.clone();
+                    let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
+                        .normalize_index_or_len(sifr_generated_checked_read_collection.len());
+                    sifr_generated_checked_read_collection
+                        .get(sifr_generated_checked_read_normalized)
+                        .cloned()
+                };
+                let c_val_value_6b01c611cd56bc8e: Option<T> = {
+                    let sifr_generated_checked_read_collection = &heap;
+                    let sifr_generated_checked_read_index = pos.clone();
+                    let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
+                        .normalize_index_or_len(sifr_generated_checked_read_collection.len());
+                    sifr_generated_checked_read_collection
+                        .get(sifr_generated_checked_read_normalized)
+                        .cloned()
+                };
+                if let Some(p_val) = p_val {
+                    if let Some(c_val) = c_val_value_6b01c611cd56bc8e {
+                        if c_val < p_val {
+                            if &SifrInt::from_i64(0) <= &parent
+                                && &parent < &SifrInt::from(heap.len())
+                            {
+                                {
+                                    let sifr_generated_assign_value = c_val.clone();
+                                    {
+                                        let sifr_generated_index_raw = parent.clone();
+                                        let sifr_generated_index_normalized =
+                                            sifr_generated_index_raw
+                                                .normalize_index_or_len(heap.len());
+                                        if let Some(sifr_generated_elem) =
+                                            heap.get_mut(sifr_generated_index_normalized)
+                                        {
+                                            *sifr_generated_elem = sifr_generated_assign_value;
+                                        }
+                                    }
+                                }
+                            }
+                            if &SifrInt::from_i64(0) <= &pos && &pos < &SifrInt::from(heap.len()) {
+                                {
+                                    let sifr_generated_assign_value = p_val.clone();
+                                    {
+                                        let sifr_generated_index_raw = pos.clone();
+                                        let sifr_generated_index_normalized =
+                                            sifr_generated_index_raw
+                                                .normalize_index_or_len(heap.len());
+                                        if let Some(sifr_generated_elem) =
+                                            heap.get_mut(sifr_generated_index_normalized)
+                                        {
+                                            *sifr_generated_elem = sifr_generated_assign_value;
+                                        }
+                                    }
+                                }
+                            }
+                            pos = parent;
+                        } else {
+                            done = true;
+                        }
+                    } else {
+                        done = true;
+                    }
+                } else {
+                    done = true;
+                }
+            }
+        }
+    }
+    pub(crate) fn heapify<T: Clone + 'static + PartialOrd>(data: &mut Vec<T>) {
+        "Convert list to a min-heap in-place. O(n) time.".to_string();
+        let n: SifrInt = SifrInt::from(data.len());
+        let mut i: SifrInt =
+            &n.floor_div_known_nonzero(&SifrInt::from_i64(2)) - &SifrInt::from_i64(1);
+        while &i >= &SifrInt::from_i64(0) {
+            sifr_generated_sift_down(data, i.clone(), n.clone());
+            i = &i - &SifrInt::from_i64(1);
+        }
+    }
+    pub(crate) fn heappush<T: Clone + 'static + PartialOrd>(heap: &mut Vec<T>, item: &T) {
+        "Push item onto the heap in-place. O(log n) time.".to_string();
+        heap.push(item.clone());
+        let pos: SifrInt = &SifrInt::from(heap.len()) - &SifrInt::from_i64(1);
+        sifr_generated_sift_up(heap, pos.clone());
+    }
+    pub(crate) fn heappop<T: Clone + 'static + PartialOrd>(heap: &mut Vec<T>) -> Option<T> {
+        "Pop and return the smallest item. Heap is modified in-place. O(log n) time.\n    Returns None if the heap is empty."
+            .to_string();
+        let n: SifrInt = SifrInt::from(heap.len());
+        if &n == &SifrInt::from_i64(0) {
+            return None;
+        }
+        let top: Option<T> = {
+            let sifr_generated_checked_read_collection = &heap;
+            let sifr_generated_checked_read_index = SifrInt::from_i64(0);
+            let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
+                .normalize_index_or_len(sifr_generated_checked_read_collection.len());
+            sifr_generated_checked_read_collection
+                .get(sifr_generated_checked_read_normalized)
+                .cloned()
+        };
+        let last: Option<T> = {
+            let sifr_generated_checked_read_collection = &heap;
+            let sifr_generated_checked_read_index = &n - &SifrInt::from_i64(1);
+            let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
+                .normalize_index_or_len(sifr_generated_checked_read_collection.len());
+            sifr_generated_checked_read_collection
+                .get(sifr_generated_checked_read_normalized)
+                .cloned()
+        };
+        heap.remove(heap.len() - 1_usize);
+        let n2: SifrInt = SifrInt::from(heap.len());
+        if &n2 > &SifrInt::from_i64(0) {
+            if let Some(last) = last {
+                {
+                    let sifr_generated_assign_value = last.clone();
+                    {
+                        let sifr_generated_index_raw = SifrInt::from_i64(0);
+                        let sifr_generated_index_normalized =
+                            sifr_generated_index_raw.normalize_index_or_len(heap.len());
+                        if let Some(sifr_generated_elem) =
+                            heap.get_mut(sifr_generated_index_normalized)
+                        {
+                            *sifr_generated_elem = sifr_generated_assign_value;
+                        }
+                    }
+                }
+            }
+            sifr_generated_sift_down(heap, SifrInt::from_i64(0), n2.clone());
+        }
+        top
+    }
+    pub(crate) fn nsmallest<T: Clone + 'static + PartialOrd>(n: SifrInt, data: &[T]) -> Vec<T> {
+        let mut heap: Vec<T> = data.to_vec();
+        heapify(&mut heap);
+        let mut result: Vec<T> = Vec::new();
+        let mut count: SifrInt = SifrInt::from_i64(0);
+        while &count < &n {
+            if &SifrInt::from(heap.len()) == &SifrInt::from_i64(0) {
+                return result;
+            }
+            let val: Option<T> = heappop(&mut heap);
+            if let Some(val) = val {
+                result.push(val);
+            }
+            count = &count + &SifrInt::from_i64(1);
+        }
+        result
+    }
+    pub(crate) fn nlargest<T: Clone + 'static + PartialOrd>(n: SifrInt, data: &[T]) -> Vec<T> {
+        if &n <= &SifrInt::from_i64(0) {
+            return Vec::new();
+        }
+        if &n >= &SifrInt::from(data.len()) {
+            let mut result: Vec<T> = Vec::new();
+            for val in data.iter().cloned() {
+                result.push(val);
+            }
+            return result;
+        }
+        let mut heap: Vec<T> = data.to_vec();
+        heapify(&mut heap);
+        let mut all_sorted: Vec<T> = Vec::new();
+        while &SifrInt::from(heap.len()) > &SifrInt::from_i64(0) {
+            let val2: Option<T> = heappop(&mut heap);
+            if let Some(val2) = val2 {
+                all_sorted.push(val2);
+            }
+        }
+        let mut result2: Vec<T> = Vec::new();
+        let mut i: SifrInt = &SifrInt::from(all_sorted.len()) - &SifrInt::from_i64(1);
+        let mut count: SifrInt = SifrInt::from_i64(0);
+        while &count < &n {
+            if &i < &SifrInt::from_i64(0) {
+                return result2;
+            }
+            let v: Option<T> = {
+                let sifr_generated_checked_read_collection = &all_sorted;
+                let sifr_generated_checked_read_index = i.clone();
+                let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
+                    .normalize_index_or_len(sifr_generated_checked_read_collection.len());
+                sifr_generated_checked_read_collection
+                    .get(sifr_generated_checked_read_normalized)
+                    .cloned()
+            };
+            if let Some(v) = v {
+                result2.push(v);
+            }
+            i = &i - &SifrInt::from_i64(1);
+            count = &count + &SifrInt::from_i64(1);
+        }
+        result2
+    }
+    pub(crate) struct SifrGeneratedYielder<T> {
+        pub(crate) slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+    }
+    pub(crate) struct SifrGeneratedYieldFuture<T> {
+        pub(crate) slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+        pub(crate) value: Option<T>,
+    }
+    impl<T> Unpin for SifrGeneratedYieldFuture<T> {}
+    impl<T> ::std::future::Future for SifrGeneratedYieldFuture<T> {
+        type Output = ();
+        fn poll(
+            self: ::std::pin::Pin<&mut Self>,
+            _: &mut ::std::task::Context<'_>,
+        ) -> ::std::task::Poll<()> {
+            let state = self.get_mut();
+            let Some(value) = state.value.take() else {
+                return ::std::task::Poll::Ready(());
+            };
+            sifr_generated_store_suspended(&state.slot, value);
+            ::std::task::Poll::Pending
+        }
+    }
+    impl<T> SifrGeneratedYielder<T> {
+        pub(crate) fn suspend(&self, value: T) -> SifrGeneratedYieldFuture<T> {
+            SifrGeneratedYieldFuture {
+                slot: ::std::sync::Arc::clone(&self.slot),
+                value: Some(value),
+            }
+        }
+    }
+    pub(crate) fn sifr_generated_store_suspended<T>(
+        slot: &::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+        value: T,
+    ) {
+        match slot.lock() {
+            Ok(mut state) => *state = Some(value),
+            Err(poisoned) => *poisoned.into_inner() = Some(value),
+        }
+    }
+    pub(crate) fn sifr_generated_take_suspended<T>(
+        slot: &::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+    ) -> Option<T> {
+        match slot.lock() {
+            Ok(mut state) => state.take(),
+            Err(poisoned) => poisoned.into_inner().take(),
+        }
+    }
+    pub(crate) struct SifrGeneratedGenerator<T> {
+        pub(crate) producer:
+            Option<::std::pin::Pin<Box<dyn ::std::future::Future<Output = ()> + 'static>>>,
+        pub(crate) yielded: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
+        pub(crate) complete: bool,
+    }
+    impl<T> SifrGeneratedGenerator<T> {
+        pub(crate) fn new<
+            F: FnOnce(SifrGeneratedYielder<T>) -> Fut + 'static,
+            Fut: ::std::future::Future<Output = ()> + 'static,
+        >(
+            factory: F,
+        ) -> Self {
+            let yielded = ::std::sync::Arc::new(::std::sync::Mutex::new(None));
+            let producer = factory(SifrGeneratedYielder {
+                slot: ::std::sync::Arc::clone(&yielded),
+            });
+            Self {
+                producer: Some(Box::pin(producer)),
+                yielded,
+                complete: false,
+            }
+        }
+    }
+    impl<T> Iterator for SifrGeneratedGenerator<T> {
+        type Item = T;
+        fn next(&mut self) -> Option<T> {
+            if self.complete {
+                return None;
+            }
+            let completed = {
+                let Some(producer) = self.producer.as_mut() else {
+                    self.complete = true;
+                    return None;
+                };
+                let mut context = ::std::task::Context::from_waker(::std::task::Waker::noop());
+                ::std::future::Future::poll(producer.as_mut(), &mut context).is_ready()
+            };
+            let yielded = sifr_generated_take_suspended(&self.yielded);
+            if completed {
+                self.complete = true;
+                self.producer = None;
+            }
+            yielded
+        }
+    }
+    pub(crate) fn chain<T: Clone + 'static>(iterables: &[Vec<T>]) -> Box<dyn Iterator<Item = T>> {
+        let iterables = iterables.to_vec();
+        Box::new(SifrGeneratedGenerator::new(
+            async move |sifr_generated_yielder: SifrGeneratedYielder<T>| {
+                for iterable in iterables.iter().cloned() {
+                    for item in iterable.iter().cloned() {
+                        sifr_generated_yielder.suspend(item.clone()).await;
+                    }
+                }
+            },
+        ))
+    }
+}
 mod sifr_generated_project_nominals {
-    pub use ::sifr_runtime::SifrInt;
-    pub use ::std::collections::HashMap;
+    use ::sifr_runtime::SifrInt;
+    use ::std::collections::HashMap;
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub struct SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T: std::hash::Hash + Eq> {
         pub counts: HashMap<T, SifrInt>,
@@ -353,565 +924,9 @@ mod sifr_generated_project_nominals {
         }
     }
 }
+use crate::sifr_generated_generated_support::*;
 use ::sifr_runtime::SifrInt;
-use ::std::collections::HashMap;
 pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2ecollectionsX2eCounter;
-fn bisect_left<T: Clone + 'static + PartialOrd>(
-    a: &[T],
-    x: &T,
-    lo: SifrInt,
-    hi: Option<SifrInt>,
-) -> SifrInt {
-    let mut left: SifrInt = lo.clone();
-    if &left < &SifrInt::from_i64(0) {
-        left = SifrInt::from_i64(0);
-    }
-    let mut right: SifrInt = SifrInt::from(a.len());
-    if hi.is_none() {
-        right = SifrInt::from(a.len());
-    } else if let Some(hi) = hi.clone() {
-        if &hi < &SifrInt::from_i64(0) {
-            right = SifrInt::from_i64(0);
-        } else if &hi > &SifrInt::from(a.len()) {
-            right = SifrInt::from(a.len());
-        } else {
-            right = hi;
-        }
-    }
-    while &left < &right {
-        let mid: SifrInt = (&left + &right).floor_div_known_nonzero(&SifrInt::from_i64(2));
-        let val: Option<T> = {
-            let sifr_generated_checked_read_collection = &a;
-            let sifr_generated_checked_read_index = mid.clone();
-            let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
-                .normalize_index_or_len(sifr_generated_checked_read_collection.len());
-            sifr_generated_checked_read_collection
-                .get(sifr_generated_checked_read_normalized)
-                .cloned()
-        };
-        if let Some(val) = val {
-            if val < *x {
-                left = &mid + &SifrInt::from_i64(1);
-            } else {
-                right = mid;
-            }
-        } else {
-            left = &mid + &SifrInt::from_i64(1);
-        }
-    }
-    left.clone()
-}
-fn bisect_right<T: Clone + 'static + PartialOrd>(
-    a: &[T],
-    x: &T,
-    lo: SifrInt,
-    hi: Option<SifrInt>,
-) -> SifrInt {
-    let mut left: SifrInt = lo.clone();
-    if &left < &SifrInt::from_i64(0) {
-        left = SifrInt::from_i64(0);
-    }
-    let mut right: SifrInt = SifrInt::from(a.len());
-    if hi.is_none() {
-        right = SifrInt::from(a.len());
-    } else if let Some(hi) = hi.clone() {
-        if &hi < &SifrInt::from_i64(0) {
-            right = SifrInt::from_i64(0);
-        } else if &hi > &SifrInt::from(a.len()) {
-            right = SifrInt::from(a.len());
-        } else {
-            right = hi;
-        }
-    }
-    while &left < &right {
-        let mid: SifrInt = (&left + &right).floor_div_known_nonzero(&SifrInt::from_i64(2));
-        let val: Option<T> = {
-            let sifr_generated_checked_read_collection = &a;
-            let sifr_generated_checked_read_index = mid.clone();
-            let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
-                .normalize_index_or_len(sifr_generated_checked_read_collection.len());
-            sifr_generated_checked_read_collection
-                .get(sifr_generated_checked_read_normalized)
-                .cloned()
-        };
-        if let Some(val) = val {
-            if *x < val {
-                right = mid;
-            } else {
-                left = &mid + &SifrInt::from_i64(1);
-            }
-        } else {
-            left = &mid + &SifrInt::from_i64(1);
-        }
-    }
-    left.clone()
-}
-fn insort_left<T: Clone + 'static + PartialOrd>(
-    a: &mut Vec<T>,
-    x: &T,
-    lo: SifrInt,
-    hi: Option<SifrInt>,
-) {
-    let pos: SifrInt = bisect_left(a, x, lo.clone(), hi.clone());
-    a.insert(::sifr_runtime::to_usize_proven(&pos), x.clone());
-}
-fn insort_right<T: Clone + 'static + PartialOrd>(
-    a: &mut Vec<T>,
-    x: &T,
-    lo: SifrInt,
-    hi: Option<SifrInt>,
-) {
-    let pos: SifrInt = bisect_right(a, x, lo.clone(), hi.clone());
-    a.insert(::sifr_runtime::to_usize_proven(&pos), x.clone());
-}
-fn from_list<T: Clone + ::std::hash::Hash + Eq + 'static>(
-    items: &[T],
-) -> SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T> {
-    let mut counts: HashMap<T, SifrInt> = HashMap::from([]);
-    for item in items.iter().cloned() {
-        let val: Option<SifrInt> = counts.get(&item).cloned();
-        if let Some(val) = val.clone() {
-            {
-                let sifr_generated_assign_value = &val + &SifrInt::from_i64(1);
-                {
-                    let sifr_generated_assign_key = item.clone();
-                    counts.insert(sifr_generated_assign_key, sifr_generated_assign_value);
-                }
-            }
-        } else {
-            let sifr_generated_assign_value = SifrInt::from_i64(1);
-            {
-                let sifr_generated_assign_key = item.clone();
-                counts.insert(sifr_generated_assign_key, sifr_generated_assign_value);
-            }
-        }
-    }
-    SifrGeneratedStdlibSifrX2ecollectionsX2eCounter::new(Some(counts), None)
-}
-#[expect(
-    clippy::too_many_lines,
-    reason = "one generated Rust function preserves one typed Sifr function"
-)]
-fn sifr_generated_sift_down<T: Clone + 'static + PartialOrd>(
-    data: &mut Vec<T>,
-    mut pos: SifrInt,
-    n: SifrInt,
-) {
-    let mut done: bool = false;
-    while !done {
-        let mut smallest: SifrInt = pos.clone();
-        let left: SifrInt = &(&SifrInt::from_i64(2) * &pos) + &SifrInt::from_i64(1);
-        let right: SifrInt = &(&SifrInt::from_i64(2) * &pos) + &SifrInt::from_i64(2);
-        if &left < &n {
-            let s_val: Option<T> = {
-                let sifr_generated_checked_read_collection = &data;
-                let sifr_generated_checked_read_index = smallest.clone();
-                let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
-                    .normalize_index_or_len(sifr_generated_checked_read_collection.len());
-                sifr_generated_checked_read_collection
-                    .get(sifr_generated_checked_read_normalized)
-                    .cloned()
-            };
-            let l_val_value_c583c4339eb822b3: Option<T> = {
-                let sifr_generated_checked_read_collection = &data;
-                let sifr_generated_checked_read_index = left.clone();
-                let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
-                    .normalize_index_or_len(sifr_generated_checked_read_collection.len());
-                sifr_generated_checked_read_collection
-                    .get(sifr_generated_checked_read_normalized)
-                    .cloned()
-            };
-            if let Some(s_val) = s_val
-                && let Some(l_val) = l_val_value_c583c4339eb822b3
-                && l_val < s_val
-            {
-                smallest = left;
-            }
-        }
-        if &right < &n {
-            let s_val2_value_8b32ab056d206424: Option<T> = {
-                let sifr_generated_checked_read_collection = &data;
-                let sifr_generated_checked_read_index = smallest.clone();
-                let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
-                    .normalize_index_or_len(sifr_generated_checked_read_collection.len());
-                sifr_generated_checked_read_collection
-                    .get(sifr_generated_checked_read_normalized)
-                    .cloned()
-            };
-            let r_val_value_839f97b21b19be35: Option<T> = {
-                let sifr_generated_checked_read_collection = &data;
-                let sifr_generated_checked_read_index = right.clone();
-                let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
-                    .normalize_index_or_len(sifr_generated_checked_read_collection.len());
-                sifr_generated_checked_read_collection
-                    .get(sifr_generated_checked_read_normalized)
-                    .cloned()
-            };
-            if let Some(s_val2) = s_val2_value_8b32ab056d206424
-                && let Some(r_val) = r_val_value_839f97b21b19be35
-                && r_val < s_val2
-            {
-                smallest = right;
-            }
-        }
-        if &smallest == &pos {
-            done = true;
-        } else {
-            let tmp_pos: Option<T> = {
-                let sifr_generated_checked_read_collection = &data;
-                let sifr_generated_checked_read_index = pos.clone();
-                let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
-                    .normalize_index_or_len(sifr_generated_checked_read_collection.len());
-                sifr_generated_checked_read_collection
-                    .get(sifr_generated_checked_read_normalized)
-                    .cloned()
-            };
-            let tmp_sm_value_cf4d6d82a6cdd887: Option<T> = {
-                let sifr_generated_checked_read_collection = &data;
-                let sifr_generated_checked_read_index = smallest.clone();
-                let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
-                    .normalize_index_or_len(sifr_generated_checked_read_collection.len());
-                sifr_generated_checked_read_collection
-                    .get(sifr_generated_checked_read_normalized)
-                    .cloned()
-            };
-            if let Some(tmp_pos) = tmp_pos
-                && let Some(tmp_sm) = tmp_sm_value_cf4d6d82a6cdd887
-            {
-                if &SifrInt::from_i64(0) <= &pos && &pos < &SifrInt::from(data.len()) {
-                    {
-                        let sifr_generated_assign_value = tmp_sm.clone();
-                        {
-                            let sifr_generated_index_raw = pos.clone();
-                            let sifr_generated_index_normalized =
-                                sifr_generated_index_raw.normalize_index_or_len(data.len());
-                            if let Some(sifr_generated_elem) =
-                                data.get_mut(sifr_generated_index_normalized)
-                            {
-                                *sifr_generated_elem = sifr_generated_assign_value;
-                            }
-                        }
-                    }
-                }
-                if &SifrInt::from_i64(0) <= &smallest && &smallest < &SifrInt::from(data.len()) {
-                    {
-                        let sifr_generated_assign_value = tmp_pos.clone();
-                        {
-                            let sifr_generated_index_raw = smallest.clone();
-                            let sifr_generated_index_normalized =
-                                sifr_generated_index_raw.normalize_index_or_len(data.len());
-                            if let Some(sifr_generated_elem) =
-                                data.get_mut(sifr_generated_index_normalized)
-                            {
-                                *sifr_generated_elem = sifr_generated_assign_value;
-                            }
-                        }
-                    }
-                }
-            }
-            pos = smallest;
-        }
-    }
-}
-fn sifr_generated_sift_up<T: Clone + 'static + PartialOrd>(heap: &mut Vec<T>, mut pos: SifrInt) {
-    let mut done: bool = false;
-    while !done {
-        if &pos <= &SifrInt::from_i64(0) {
-            done = true;
-        } else {
-            let parent: SifrInt =
-                (&pos - &SifrInt::from_i64(1)).floor_div_known_nonzero(&SifrInt::from_i64(2));
-            let p_val: Option<T> = {
-                let sifr_generated_checked_read_collection = &heap;
-                let sifr_generated_checked_read_index = parent.clone();
-                let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
-                    .normalize_index_or_len(sifr_generated_checked_read_collection.len());
-                sifr_generated_checked_read_collection
-                    .get(sifr_generated_checked_read_normalized)
-                    .cloned()
-            };
-            let c_val_value_6b01c611cd56bc8e: Option<T> = {
-                let sifr_generated_checked_read_collection = &heap;
-                let sifr_generated_checked_read_index = pos.clone();
-                let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
-                    .normalize_index_or_len(sifr_generated_checked_read_collection.len());
-                sifr_generated_checked_read_collection
-                    .get(sifr_generated_checked_read_normalized)
-                    .cloned()
-            };
-            if let Some(p_val) = p_val {
-                if let Some(c_val) = c_val_value_6b01c611cd56bc8e {
-                    if c_val < p_val {
-                        if &SifrInt::from_i64(0) <= &parent && &parent < &SifrInt::from(heap.len())
-                        {
-                            {
-                                let sifr_generated_assign_value = c_val.clone();
-                                {
-                                    let sifr_generated_index_raw = parent.clone();
-                                    let sifr_generated_index_normalized =
-                                        sifr_generated_index_raw.normalize_index_or_len(heap.len());
-                                    if let Some(sifr_generated_elem) =
-                                        heap.get_mut(sifr_generated_index_normalized)
-                                    {
-                                        *sifr_generated_elem = sifr_generated_assign_value;
-                                    }
-                                }
-                            }
-                        }
-                        if &SifrInt::from_i64(0) <= &pos && &pos < &SifrInt::from(heap.len()) {
-                            {
-                                let sifr_generated_assign_value = p_val.clone();
-                                {
-                                    let sifr_generated_index_raw = pos.clone();
-                                    let sifr_generated_index_normalized =
-                                        sifr_generated_index_raw.normalize_index_or_len(heap.len());
-                                    if let Some(sifr_generated_elem) =
-                                        heap.get_mut(sifr_generated_index_normalized)
-                                    {
-                                        *sifr_generated_elem = sifr_generated_assign_value;
-                                    }
-                                }
-                            }
-                        }
-                        pos = parent;
-                    } else {
-                        done = true;
-                    }
-                } else {
-                    done = true;
-                }
-            } else {
-                done = true;
-            }
-        }
-    }
-}
-fn heapify<T: Clone + 'static + PartialOrd>(data: &mut Vec<T>) {
-    "Convert list to a min-heap in-place. O(n) time.".to_string();
-    let n: SifrInt = SifrInt::from(data.len());
-    let mut i: SifrInt = &n.floor_div_known_nonzero(&SifrInt::from_i64(2)) - &SifrInt::from_i64(1);
-    while &i >= &SifrInt::from_i64(0) {
-        sifr_generated_sift_down(data, i.clone(), n.clone());
-        i = &i - &SifrInt::from_i64(1);
-    }
-}
-fn heappush<T: Clone + 'static + PartialOrd>(heap: &mut Vec<T>, item: &T) {
-    "Push item onto the heap in-place. O(log n) time.".to_string();
-    heap.push(item.clone());
-    let pos: SifrInt = &SifrInt::from(heap.len()) - &SifrInt::from_i64(1);
-    sifr_generated_sift_up(heap, pos.clone());
-}
-fn heappop<T: Clone + 'static + PartialOrd>(heap: &mut Vec<T>) -> Option<T> {
-    "Pop and return the smallest item. Heap is modified in-place. O(log n) time.\n    Returns None if the heap is empty."
-        .to_string();
-    let n: SifrInt = SifrInt::from(heap.len());
-    if &n == &SifrInt::from_i64(0) {
-        return None;
-    }
-    let top: Option<T> = {
-        let sifr_generated_checked_read_collection = &heap;
-        let sifr_generated_checked_read_index = SifrInt::from_i64(0);
-        let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
-            .normalize_index_or_len(sifr_generated_checked_read_collection.len());
-        sifr_generated_checked_read_collection
-            .get(sifr_generated_checked_read_normalized)
-            .cloned()
-    };
-    let last: Option<T> = {
-        let sifr_generated_checked_read_collection = &heap;
-        let sifr_generated_checked_read_index = &n - &SifrInt::from_i64(1);
-        let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
-            .normalize_index_or_len(sifr_generated_checked_read_collection.len());
-        sifr_generated_checked_read_collection
-            .get(sifr_generated_checked_read_normalized)
-            .cloned()
-    };
-    heap.remove(heap.len() - 1_usize);
-    let n2: SifrInt = SifrInt::from(heap.len());
-    if &n2 > &SifrInt::from_i64(0) {
-        if let Some(last) = last {
-            {
-                let sifr_generated_assign_value = last.clone();
-                {
-                    let sifr_generated_index_raw = SifrInt::from_i64(0);
-                    let sifr_generated_index_normalized =
-                        sifr_generated_index_raw.normalize_index_or_len(heap.len());
-                    if let Some(sifr_generated_elem) = heap.get_mut(sifr_generated_index_normalized)
-                    {
-                        *sifr_generated_elem = sifr_generated_assign_value;
-                    }
-                }
-            }
-        }
-        sifr_generated_sift_down(heap, SifrInt::from_i64(0), n2.clone());
-    }
-    top
-}
-fn nsmallest<T: Clone + 'static + PartialOrd>(n: SifrInt, data: &[T]) -> Vec<T> {
-    let mut heap: Vec<T> = data.to_vec();
-    heapify(&mut heap);
-    let mut result: Vec<T> = Vec::new();
-    let mut count: SifrInt = SifrInt::from_i64(0);
-    while &count < &n {
-        if &SifrInt::from(heap.len()) == &SifrInt::from_i64(0) {
-            return result;
-        }
-        let val: Option<T> = heappop(&mut heap);
-        if let Some(val) = val {
-            result.push(val);
-        }
-        count = &count + &SifrInt::from_i64(1);
-    }
-    result
-}
-fn nlargest<T: Clone + 'static + PartialOrd>(n: SifrInt, data: &[T]) -> Vec<T> {
-    if &n <= &SifrInt::from_i64(0) {
-        return Vec::new();
-    }
-    if &n >= &SifrInt::from(data.len()) {
-        let mut result: Vec<T> = Vec::new();
-        for val in data.iter().cloned() {
-            result.push(val);
-        }
-        return result;
-    }
-    let mut heap: Vec<T> = data.to_vec();
-    heapify(&mut heap);
-    let mut all_sorted: Vec<T> = Vec::new();
-    while &SifrInt::from(heap.len()) > &SifrInt::from_i64(0) {
-        let val2: Option<T> = heappop(&mut heap);
-        if let Some(val2) = val2 {
-            all_sorted.push(val2);
-        }
-    }
-    let mut result2: Vec<T> = Vec::new();
-    let mut i: SifrInt = &SifrInt::from(all_sorted.len()) - &SifrInt::from_i64(1);
-    let mut count: SifrInt = SifrInt::from_i64(0);
-    while &count < &n {
-        if &i < &SifrInt::from_i64(0) {
-            return result2;
-        }
-        let v: Option<T> = {
-            let sifr_generated_checked_read_collection = &all_sorted;
-            let sifr_generated_checked_read_index = i.clone();
-            let sifr_generated_checked_read_normalized = sifr_generated_checked_read_index
-                .normalize_index_or_len(sifr_generated_checked_read_collection.len());
-            sifr_generated_checked_read_collection
-                .get(sifr_generated_checked_read_normalized)
-                .cloned()
-        };
-        if let Some(v) = v {
-            result2.push(v);
-        }
-        i = &i - &SifrInt::from_i64(1);
-        count = &count + &SifrInt::from_i64(1);
-    }
-    result2
-}
-struct SifrGeneratedYielder<T> {
-    slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
-}
-struct SifrGeneratedYieldFuture<T> {
-    slot: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
-    value: Option<T>,
-}
-impl<T> Unpin for SifrGeneratedYieldFuture<T> {}
-impl<T> ::std::future::Future for SifrGeneratedYieldFuture<T> {
-    type Output = ();
-    fn poll(
-        self: ::std::pin::Pin<&mut Self>,
-        _: &mut ::std::task::Context<'_>,
-    ) -> ::std::task::Poll<()> {
-        let state = self.get_mut();
-        let Some(value) = state.value.take() else {
-            return ::std::task::Poll::Ready(());
-        };
-        sifr_generated_store_suspended(&state.slot, value);
-        ::std::task::Poll::Pending
-    }
-}
-impl<T> SifrGeneratedYielder<T> {
-    fn suspend(&self, value: T) -> SifrGeneratedYieldFuture<T> {
-        SifrGeneratedYieldFuture {
-            slot: ::std::sync::Arc::clone(&self.slot),
-            value: Some(value),
-        }
-    }
-}
-fn sifr_generated_store_suspended<T>(
-    slot: &::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
-    value: T,
-) {
-    match slot.lock() {
-        Ok(mut state) => *state = Some(value),
-        Err(poisoned) => *poisoned.into_inner() = Some(value),
-    }
-}
-fn sifr_generated_take_suspended<T>(
-    slot: &::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
-) -> Option<T> {
-    match slot.lock() {
-        Ok(mut state) => state.take(),
-        Err(poisoned) => poisoned.into_inner().take(),
-    }
-}
-struct SifrGeneratedGenerator<T> {
-    producer: Option<::std::pin::Pin<Box<dyn ::std::future::Future<Output = ()> + 'static>>>,
-    yielded: ::std::sync::Arc<::std::sync::Mutex<Option<T>>>,
-    complete: bool,
-}
-impl<T> SifrGeneratedGenerator<T> {
-    fn new<
-        F: FnOnce(SifrGeneratedYielder<T>) -> Fut + 'static,
-        Fut: ::std::future::Future<Output = ()> + 'static,
-    >(
-        factory: F,
-    ) -> Self {
-        let yielded = ::std::sync::Arc::new(::std::sync::Mutex::new(None));
-        let producer = factory(SifrGeneratedYielder {
-            slot: ::std::sync::Arc::clone(&yielded),
-        });
-        Self {
-            producer: Some(Box::pin(producer)),
-            yielded,
-            complete: false,
-        }
-    }
-}
-impl<T> Iterator for SifrGeneratedGenerator<T> {
-    type Item = T;
-    fn next(&mut self) -> Option<T> {
-        if self.complete {
-            return None;
-        }
-        let completed = {
-            let Some(producer) = self.producer.as_mut() else {
-                self.complete = true;
-                return None;
-            };
-            let mut context = ::std::task::Context::from_waker(::std::task::Waker::noop());
-            ::std::future::Future::poll(producer.as_mut(), &mut context).is_ready()
-        };
-        let yielded = sifr_generated_take_suspended(&self.yielded);
-        if completed {
-            self.complete = true;
-            self.producer = None;
-        }
-        yielded
-    }
-}
-fn chain<T: Clone + 'static>(iterables: &[Vec<T>]) -> Box<dyn Iterator<Item = T>> {
-    let iterables = iterables.to_vec();
-    Box::new(SifrGeneratedGenerator::new(
-        async move |sifr_generated_yielder: SifrGeneratedYielder<T>| {
-            for iterable in iterables.iter().cloned() {
-                for item in iterable.iter().cloned() {
-                    sifr_generated_yielder.suspend(item.clone()).await;
-                }
-            }
-        },
-    ))
-}
 fn demo_heapq() {
     println!("=== Section 1: heapq with mut params ===");
     let mut data: Vec<SifrInt> = vec![

@@ -50,6 +50,7 @@ fn project_identity_with_stdlib_prefix_gets_no_origin_bypass() {
         Some(&supported),
         crate::ProjectStructuralLayoutLocation::Local,
         None,
+        crate::SupportEmission::Inline,
     )
     .rust_source;
 

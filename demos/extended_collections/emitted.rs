@@ -1,7 +1,36 @@
 // src/main.rs
+mod sifr_generated_generated_support {
+    use crate::SifrGeneratedStdlibSifrX2ecollectionsX2eCounter;
+    pub(crate) use ::sifr_runtime::SifrInt;
+    pub(crate) use ::std::collections::HashMap;
+    pub(crate) fn from_list<T: Clone + ::std::hash::Hash + Eq + 'static>(
+        items: &[T],
+    ) -> SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T> {
+        let mut counts: HashMap<T, SifrInt> = HashMap::from([]);
+        for item in items.iter().cloned() {
+            let val: Option<SifrInt> = counts.get(&item).cloned();
+            if let Some(val) = val.clone() {
+                {
+                    let sifr_generated_assign_value = &val + &SifrInt::from_i64(1);
+                    {
+                        let sifr_generated_assign_key = item.clone();
+                        counts.insert(sifr_generated_assign_key, sifr_generated_assign_value);
+                    }
+                }
+            } else {
+                let sifr_generated_assign_value = SifrInt::from_i64(1);
+                {
+                    let sifr_generated_assign_key = item.clone();
+                    counts.insert(sifr_generated_assign_key, sifr_generated_assign_value);
+                }
+            }
+        }
+        SifrGeneratedStdlibSifrX2ecollectionsX2eCounter::new(Some(counts), None)
+    }
+}
 mod sifr_generated_project_nominals {
-    pub use ::sifr_runtime::SifrInt;
-    pub use ::std::collections::HashMap;
+    use ::sifr_runtime::SifrInt;
+    use ::std::collections::HashMap;
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub struct SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T: std::hash::Hash + Eq> {
         pub counts: HashMap<T, SifrInt>,
@@ -224,35 +253,11 @@ mod sifr_generated_project_nominals {
     }
     impl ::std::error::Error for ParseError {}
 }
+use crate::sifr_generated_generated_support::*;
 use ::sifr_runtime::SifrInt;
-use ::std::collections::HashMap;
 use ::std::collections::HashSet;
 pub use sifr_generated_project_nominals::ParseError;
 pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2ecollectionsX2eCounter;
-fn from_list<T: Clone + ::std::hash::Hash + Eq + 'static>(
-    items: &[T],
-) -> SifrGeneratedStdlibSifrX2ecollectionsX2eCounter<T> {
-    let mut counts: HashMap<T, SifrInt> = HashMap::from([]);
-    for item in items.iter().cloned() {
-        let val: Option<SifrInt> = counts.get(&item).cloned();
-        if let Some(val) = val.clone() {
-            {
-                let sifr_generated_assign_value = &val + &SifrInt::from_i64(1);
-                {
-                    let sifr_generated_assign_key = item.clone();
-                    counts.insert(sifr_generated_assign_key, sifr_generated_assign_value);
-                }
-            }
-        } else {
-            let sifr_generated_assign_value = SifrInt::from_i64(1);
-            {
-                let sifr_generated_assign_key = item.clone();
-                counts.insert(sifr_generated_assign_key, sifr_generated_assign_value);
-            }
-        }
-    }
-    SifrGeneratedStdlibSifrX2ecollectionsX2eCounter::new(Some(counts), None)
-}
 #[expect(
     clippy::too_many_lines,
     reason = "one generated Rust function preserves one typed Sifr function"

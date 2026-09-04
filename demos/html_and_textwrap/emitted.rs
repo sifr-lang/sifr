@@ -1,133 +1,26 @@
 // src/main.rs
-mod sifr_generated_project_nominals {
-    pub use ::sifr_runtime::SifrInt;
-    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    #[expect(
-        clippy::struct_excessive_bools,
-        reason = "generated Rust preserves this exact typed Sifr source contract"
-    )]
-    pub struct SifrGeneratedStdlibSifrX2etextwrapX2eTextWrapper {
-        pub width: SifrInt,
-        pub initial_indent: String,
-        pub subsequent_indent: String,
-        pub expand_tabs: bool,
-        pub tabsize: SifrInt,
-        pub replace_whitespace: bool,
-        pub drop_whitespace: bool,
-        pub break_on_hyphens: bool,
-        pub fix_sentence_endings: bool,
-        pub max_lines: Option<SifrInt>,
-        pub placeholder: String,
+mod sifr_generated_generated_support {
+    pub(crate) use ::sifr_runtime::SifrInt;
+    pub(crate) fn html_escape(s: &str) -> String {
+        ::sifr_stdlib::html::html_escape(s)
     }
-    impl SifrGeneratedStdlibSifrX2etextwrapX2eTextWrapper {
-        #[must_use]
-        #[expect(
-            clippy::too_many_arguments,
-            reason = "generated signature preserves the typed Sifr callable contract"
-        )]
-        #[expect(
-            clippy::fn_params_excessive_bools,
-            reason = "generated Rust preserves this exact typed Sifr source contract"
-        )]
-        pub fn new(
-            width: SifrInt,
-            initial_indent: String,
-            subsequent_indent: String,
-            expand_tabs: bool,
-            tabsize: SifrInt,
-            replace_whitespace: bool,
-            drop_whitespace: bool,
-            break_on_hyphens: bool,
-            fix_sentence_endings: bool,
-            max_lines: Option<SifrInt>,
-            placeholder: String,
-        ) -> Self {
-            let sifr_generated_field_value_dbdacd932fd1e9bf_7769647468: SifrInt = width.clone();
-            let sifr_generated_field_value_f1d9debc65d6e532_696e697469616c5f696e64656e74: String = {
-                let mut sifr_generated_concat: String = String::with_capacity(initial_indent.len());
-                sifr_generated_concat.push_str(initial_indent.as_str());
-                sifr_generated_concat.push_str("");
-                sifr_generated_concat
-            };
-            let sifr_generated_field_value_45b636e6527b24bb_73756273657175656e745f696e64656e74: String = {
-                let mut sifr_generated_concat: String = String::with_capacity(
-                    subsequent_indent.len(),
-                );
-                sifr_generated_concat.push_str(subsequent_indent.as_str());
-                sifr_generated_concat.push_str("");
-                sifr_generated_concat
-            };
-            let sifr_generated_field_value_9fdde0a58b2f170e_657870616e645f74616273: bool =
-                expand_tabs;
-            let mut safe_tabsize: SifrInt = tabsize.clone();
-            if &safe_tabsize <= &SifrInt::from_i64(0) {
-                safe_tabsize = SifrInt::from_i64(1);
-            }
-            let sifr_generated_field_value_0f728cbe37fa9025_74616273697a65: SifrInt =
-                safe_tabsize.clone();
-            let sifr_generated_field_value_d659e98074e25261_7265706c6163655f77686974657370616365: bool = replace_whitespace;
-            let sifr_generated_field_value_a317a122f9288b94_64726f705f77686974657370616365: bool =
-                drop_whitespace;
-            let sifr_generated_field_value_acdab20e5253523e_627265616b5f6f6e5f68797068656e73: bool =
-                break_on_hyphens;
-            let sifr_generated_field_value_116e01dc088ea88b_6669785f73656e74656e63655f656e64696e6773: bool = fix_sentence_endings;
-            let sifr_generated_field_value_441854f90b4986e9_6d61785f6c696e6573: Option<SifrInt> =
-                max_lines.clone();
-            let sifr_generated_field_value_615e79d982d9f0fa_706c616365686f6c646572: String = {
-                let mut sifr_generated_concat: String = String::with_capacity(placeholder.len());
-                sifr_generated_concat.push_str(placeholder.as_str());
-                sifr_generated_concat.push_str("");
-                sifr_generated_concat
-            };
-            Self {
-                width: sifr_generated_field_value_dbdacd932fd1e9bf_7769647468,
-                initial_indent: sifr_generated_field_value_f1d9debc65d6e532_696e697469616c5f696e64656e74,
-                subsequent_indent: sifr_generated_field_value_45b636e6527b24bb_73756273657175656e745f696e64656e74,
-                expand_tabs: sifr_generated_field_value_9fdde0a58b2f170e_657870616e645f74616273,
-                tabsize: sifr_generated_field_value_0f728cbe37fa9025_74616273697a65,
-                replace_whitespace: sifr_generated_field_value_d659e98074e25261_7265706c6163655f77686974657370616365,
-                drop_whitespace: sifr_generated_field_value_a317a122f9288b94_64726f705f77686974657370616365,
-                break_on_hyphens: sifr_generated_field_value_acdab20e5253523e_627265616b5f6f6e5f68797068656e73,
-                fix_sentence_endings: sifr_generated_field_value_116e01dc088ea88b_6669785f73656e74656e63655f656e64696e6773,
-                max_lines: sifr_generated_field_value_441854f90b4986e9_6d61785f6c696e6573,
-                placeholder: sifr_generated_field_value_615e79d982d9f0fa_706c616365686f6c646572,
-            }
+    pub(crate) fn html_unescape(s: &str) -> String {
+        ::sifr_stdlib::html::html_unescape(s)
+    }
+    pub(crate) fn escape(s: &str, quote: bool) -> String {
+        let escaped: String = html_escape(s);
+        if quote {
+            return escaped;
         }
+        escaped.replace("&quot;", "\"").replace("&#x27;", "\'")
     }
-    impl SifrGeneratedStdlibSifrX2etextwrapX2eTextWrapper {
-        #[must_use]
-        pub fn wrap(&self, text: &str) -> Vec<String> {
-            if &self.width.clone() <= &SifrInt::from_i64(0) {
-                return Vec::new();
-            }
-            let prepared: String = sifr_generated_prepare_text(
-                text,
-                self.expand_tabs,
-                self.tabsize.clone(),
-                self.replace_whitespace,
-            );
-            let mut lines: Vec<String> = sifr_generated_wrap_with_indents(
-                &prepared,
-                self.width.clone(),
-                &self.initial_indent,
-                &self.subsequent_indent,
-                self.break_on_hyphens,
-                self.drop_whitespace,
-            );
-            if self.fix_sentence_endings {
-                lines = sifr_generated_apply_sentence_endings_lines(&lines);
-            }
-            sifr_generated_apply_max_lines(
-                &lines,
-                self.width.clone(),
-                self.max_lines.clone(),
-                &self.placeholder,
-                self.drop_whitespace,
-            )
-        }
+    pub(crate) fn unescape(s: &str) -> String {
+        html_unescape(s)
     }
-    #[must_use]
-    pub fn sifr_generated_replace_whitespace_chars(text: &str, replace_tabs: bool) -> String {
+    pub(crate) fn sifr_generated_replace_whitespace_chars(
+        text: &str,
+        replace_tabs: bool,
+    ) -> String {
         let normalized: String = text
             .replace('\n', " ")
             .replace('\r', " ")
@@ -138,8 +31,7 @@ mod sifr_generated_project_nominals {
         }
         normalized
     }
-    #[must_use]
-    pub fn sifr_generated_expand_tabs_impl(text: &str, tabsize: SifrInt) -> String {
+    pub(crate) fn sifr_generated_expand_tabs_impl(text: &str, tabsize: SifrInt) -> String {
         let sifr_generated_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
         let mut effective_tabsize: SifrInt = tabsize.clone();
         if &effective_tabsize <= &SifrInt::from_i64(0) {
@@ -189,8 +81,7 @@ mod sifr_generated_project_nominals {
         }
         result
     }
-    #[must_use]
-    pub fn sifr_generated_prepare_text(
+    pub(crate) fn sifr_generated_prepare_text(
         text: &str,
         expand_tabs: bool,
         tabsize: SifrInt,
@@ -210,8 +101,10 @@ mod sifr_generated_project_nominals {
         }
         prepared
     }
-    #[must_use]
-    pub fn sifr_generated_split_word_units(word: &str, break_on_hyphens: bool) -> Vec<String> {
+    pub(crate) fn sifr_generated_split_word_units(
+        word: &str,
+        break_on_hyphens: bool,
+    ) -> Vec<String> {
         if !break_on_hyphens {
             return vec![{
                 let mut sifr_generated_concat: String = String::with_capacity(word.len());
@@ -253,8 +146,7 @@ mod sifr_generated_project_nominals {
         }
         units
     }
-    #[must_use]
-    pub fn sifr_generated_trim_line(line: &str) -> String {
+    pub(crate) fn sifr_generated_trim_line(line: &str) -> String {
         let sifr_generated_chars_line: Vec<char> = line.chars().collect::<Vec<char>>();
         let mut start: SifrInt = SifrInt::from_i64(0);
         while &start < &SifrInt::from(sifr_generated_chars_line.len()) && {
@@ -308,8 +200,7 @@ mod sifr_generated_project_nominals {
             )
         }
     }
-    #[must_use]
-    pub fn sifr_generated_finalize_line(line: &str, drop_whitespace: bool) -> String {
+    pub(crate) fn sifr_generated_finalize_line(line: &str, drop_whitespace: bool) -> String {
         if drop_whitespace {
             return sifr_generated_trim_line(line);
         }
@@ -320,8 +211,10 @@ mod sifr_generated_project_nominals {
             sifr_generated_concat
         }
     }
-    #[must_use]
-    pub fn sifr_generated_effective_content_width(total_width: SifrInt, indent: &str) -> SifrInt {
+    pub(crate) fn sifr_generated_effective_content_width(
+        total_width: SifrInt,
+        indent: &str,
+    ) -> SifrInt {
         let sifr_generated_chars_indent: Vec<char> = indent.chars().collect::<Vec<char>>();
         let available: SifrInt = &total_width - &SifrInt::from(sifr_generated_chars_indent.len());
         if &available <= &SifrInt::from_i64(0) {
@@ -329,7 +222,7 @@ mod sifr_generated_project_nominals {
         }
         available.clone()
     }
-    pub fn sifr_generated_push_current_line(
+    pub(crate) fn sifr_generated_push_current_line(
         result: &mut Vec<String>,
         line: &str,
         indent: &str,
@@ -346,8 +239,7 @@ mod sifr_generated_project_nominals {
             result.push(candidate);
         }
     }
-    #[must_use]
-    pub fn sifr_generated_wrap_with_indents(
+    pub(crate) fn sifr_generated_wrap_with_indents(
         text: &str,
         total_width: SifrInt,
         initial_indent: &str,
@@ -442,8 +334,7 @@ mod sifr_generated_project_nominals {
         }
         result
     }
-    #[must_use]
-    pub fn sifr_generated_apply_sentence_endings_line(text: &str) -> String {
+    pub(crate) fn sifr_generated_apply_sentence_endings_line(text: &str) -> String {
         let sifr_generated_chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
         let mut result: String = String::new();
         let mut i: SifrInt = SifrInt::from_i64(0);
@@ -517,28 +408,25 @@ mod sifr_generated_project_nominals {
         }
         result
     }
-    #[must_use]
-    pub fn sifr_generated_apply_sentence_endings_lines(lines: &[String]) -> Vec<String> {
+    pub(crate) fn sifr_generated_apply_sentence_endings_lines(lines: &[String]) -> Vec<String> {
         let mut result: Vec<String> = Vec::new();
         for line in lines.iter().cloned() {
             result.push(sifr_generated_apply_sentence_endings_line(&line));
         }
         result
     }
-    #[must_use]
-    pub fn sifr_generated_clone_lines(lines: &[String]) -> Vec<String> {
+    pub(crate) fn sifr_generated_clone_lines(lines: &[String]) -> Vec<String> {
         let mut copied: Vec<String> = Vec::new();
         for line in lines.iter().cloned() {
             copied.push(line);
         }
         copied
     }
-    #[must_use]
     #[expect(
         clippy::too_many_lines,
         reason = "one generated Rust function preserves one typed Sifr function"
     )]
-    pub fn sifr_generated_apply_max_lines(
+    pub(crate) fn sifr_generated_apply_max_lines(
         lines: &[String],
         width: SifrInt,
         max_lines: Option<SifrInt>,
@@ -666,24 +554,138 @@ mod sifr_generated_project_nominals {
         result
     }
 }
+mod sifr_generated_project_nominals {
+    use crate::sifr_generated_generated_support::*;
+    use ::sifr_runtime::SifrInt;
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    #[expect(
+        clippy::struct_excessive_bools,
+        reason = "generated Rust preserves this exact typed Sifr source contract"
+    )]
+    pub struct SifrGeneratedStdlibSifrX2etextwrapX2eTextWrapper {
+        pub width: SifrInt,
+        pub initial_indent: String,
+        pub subsequent_indent: String,
+        pub expand_tabs: bool,
+        pub tabsize: SifrInt,
+        pub replace_whitespace: bool,
+        pub drop_whitespace: bool,
+        pub break_on_hyphens: bool,
+        pub fix_sentence_endings: bool,
+        pub max_lines: Option<SifrInt>,
+        pub placeholder: String,
+    }
+    impl SifrGeneratedStdlibSifrX2etextwrapX2eTextWrapper {
+        #[must_use]
+        #[expect(
+            clippy::too_many_arguments,
+            reason = "generated signature preserves the typed Sifr callable contract"
+        )]
+        #[expect(
+            clippy::fn_params_excessive_bools,
+            reason = "generated Rust preserves this exact typed Sifr source contract"
+        )]
+        pub fn new(
+            width: SifrInt,
+            initial_indent: String,
+            subsequent_indent: String,
+            expand_tabs: bool,
+            tabsize: SifrInt,
+            replace_whitespace: bool,
+            drop_whitespace: bool,
+            break_on_hyphens: bool,
+            fix_sentence_endings: bool,
+            max_lines: Option<SifrInt>,
+            placeholder: String,
+        ) -> Self {
+            let sifr_generated_field_value_dbdacd932fd1e9bf_7769647468: SifrInt = width.clone();
+            let sifr_generated_field_value_f1d9debc65d6e532_696e697469616c5f696e64656e74: String = {
+                let mut sifr_generated_concat: String = String::with_capacity(initial_indent.len());
+                sifr_generated_concat.push_str(initial_indent.as_str());
+                sifr_generated_concat.push_str("");
+                sifr_generated_concat
+            };
+            let sifr_generated_field_value_45b636e6527b24bb_73756273657175656e745f696e64656e74: String = {
+                let mut sifr_generated_concat: String = String::with_capacity(
+                    subsequent_indent.len(),
+                );
+                sifr_generated_concat.push_str(subsequent_indent.as_str());
+                sifr_generated_concat.push_str("");
+                sifr_generated_concat
+            };
+            let sifr_generated_field_value_9fdde0a58b2f170e_657870616e645f74616273: bool =
+                expand_tabs;
+            let mut safe_tabsize: SifrInt = tabsize.clone();
+            if &safe_tabsize <= &SifrInt::from_i64(0) {
+                safe_tabsize = SifrInt::from_i64(1);
+            }
+            let sifr_generated_field_value_0f728cbe37fa9025_74616273697a65: SifrInt =
+                safe_tabsize.clone();
+            let sifr_generated_field_value_d659e98074e25261_7265706c6163655f77686974657370616365: bool = replace_whitespace;
+            let sifr_generated_field_value_a317a122f9288b94_64726f705f77686974657370616365: bool =
+                drop_whitespace;
+            let sifr_generated_field_value_acdab20e5253523e_627265616b5f6f6e5f68797068656e73: bool =
+                break_on_hyphens;
+            let sifr_generated_field_value_116e01dc088ea88b_6669785f73656e74656e63655f656e64696e6773: bool = fix_sentence_endings;
+            let sifr_generated_field_value_441854f90b4986e9_6d61785f6c696e6573: Option<SifrInt> =
+                max_lines.clone();
+            let sifr_generated_field_value_615e79d982d9f0fa_706c616365686f6c646572: String = {
+                let mut sifr_generated_concat: String = String::with_capacity(placeholder.len());
+                sifr_generated_concat.push_str(placeholder.as_str());
+                sifr_generated_concat.push_str("");
+                sifr_generated_concat
+            };
+            Self {
+                width: sifr_generated_field_value_dbdacd932fd1e9bf_7769647468,
+                initial_indent: sifr_generated_field_value_f1d9debc65d6e532_696e697469616c5f696e64656e74,
+                subsequent_indent: sifr_generated_field_value_45b636e6527b24bb_73756273657175656e745f696e64656e74,
+                expand_tabs: sifr_generated_field_value_9fdde0a58b2f170e_657870616e645f74616273,
+                tabsize: sifr_generated_field_value_0f728cbe37fa9025_74616273697a65,
+                replace_whitespace: sifr_generated_field_value_d659e98074e25261_7265706c6163655f77686974657370616365,
+                drop_whitespace: sifr_generated_field_value_a317a122f9288b94_64726f705f77686974657370616365,
+                break_on_hyphens: sifr_generated_field_value_acdab20e5253523e_627265616b5f6f6e5f68797068656e73,
+                fix_sentence_endings: sifr_generated_field_value_116e01dc088ea88b_6669785f73656e74656e63655f656e64696e6773,
+                max_lines: sifr_generated_field_value_441854f90b4986e9_6d61785f6c696e6573,
+                placeholder: sifr_generated_field_value_615e79d982d9f0fa_706c616365686f6c646572,
+            }
+        }
+    }
+    impl SifrGeneratedStdlibSifrX2etextwrapX2eTextWrapper {
+        #[must_use]
+        pub fn wrap(&self, text: &str) -> Vec<String> {
+            if &self.width.clone() <= &SifrInt::from_i64(0) {
+                return Vec::new();
+            }
+            let prepared: String = sifr_generated_prepare_text(
+                text,
+                self.expand_tabs,
+                self.tabsize.clone(),
+                self.replace_whitespace,
+            );
+            let mut lines: Vec<String> = sifr_generated_wrap_with_indents(
+                &prepared,
+                self.width.clone(),
+                &self.initial_indent,
+                &self.subsequent_indent,
+                self.break_on_hyphens,
+                self.drop_whitespace,
+            );
+            if self.fix_sentence_endings {
+                lines = sifr_generated_apply_sentence_endings_lines(&lines);
+            }
+            sifr_generated_apply_max_lines(
+                &lines,
+                self.width.clone(),
+                self.max_lines.clone(),
+                &self.placeholder,
+                self.drop_whitespace,
+            )
+        }
+    }
+}
+use crate::sifr_generated_generated_support::*;
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2etextwrapX2eTextWrapper;
-fn html_escape(s: &str) -> String {
-    ::sifr_stdlib::html::html_escape(s)
-}
-fn html_unescape(s: &str) -> String {
-    ::sifr_stdlib::html::html_unescape(s)
-}
-fn escape(s: &str, quote: bool) -> String {
-    let escaped: String = html_escape(s);
-    if quote {
-        return escaped;
-    }
-    escaped.replace("&quot;", "\"").replace("&#x27;", "\'")
-}
-fn unescape(s: &str) -> String {
-    html_unescape(s)
-}
 fn main() {
     let wrapper: SifrGeneratedStdlibSifrX2etextwrapX2eTextWrapper =
         SifrGeneratedStdlibSifrX2etextwrapX2eTextWrapper::new(

@@ -1,4 +1,292 @@
 // src/main.rs
+mod sifr_generated_generated_support {
+    use crate::IOError;
+    pub(crate) use ::sifr_runtime::SifrInt;
+    pub(crate) fn write_text(path: &str, content: &str) -> Result<(), IOError> {
+        ::sifr_stdlib::fs::write_text(path, content).map_err(sifr_generated_io_err)
+    }
+    pub(crate) fn exists(path: &str) -> bool {
+        ::sifr_stdlib::fs::exists(path)
+    }
+    pub(crate) fn mkdir(path: &str) -> Result<(), IOError> {
+        ::sifr_stdlib::fs::mkdir(path).map_err(sifr_generated_io_err)
+    }
+    pub(crate) fn gettempdir() -> String {
+        ::sifr_stdlib::fs::gettempdir()
+    }
+    pub(crate) fn run_command(cmd: &str) -> Result<String, IOError> {
+        ::sifr_stdlib::sys::run_command(cmd).map_err(sifr_generated_io_err)
+    }
+    pub(crate) fn basename(path: &str) -> String {
+        let sifr_generated_chars_path: Vec<char> = path.chars().collect::<Vec<char>>();
+        let mut i: SifrInt =
+            &SifrInt::from(sifr_generated_chars_path.len()) - &SifrInt::from_i64(1);
+        while &i >= &SifrInt::from_i64(0) {
+            let ch: Option<String> = {
+                let sifr_generated_string_index = i.clone();
+                let sifr_generated_string_index_normalized = sifr_generated_string_index
+                    .normalize_index_or_len(sifr_generated_chars_path.len());
+                sifr_generated_chars_path
+                    .get(sifr_generated_string_index_normalized)
+                    .copied()
+            }
+            .map(|character| character.to_string());
+            if let Some(ch) = ch
+                && ch == "/"
+            {
+                return {
+                    let sifr_generated_slice_src = &sifr_generated_chars_path;
+                    let sifr_generated_slice_len = sifr_generated_slice_src.len();
+                    let sifr_generated_slice_start =
+                        (&i + &SifrInt::from_i64(1)).clamp_slice_bound(sifr_generated_slice_len);
+                    let sifr_generated_slice_stop = sifr_generated_slice_len;
+                    String::from_iter(
+                        sifr_generated_slice_src
+                            .iter()
+                            .skip(sifr_generated_slice_start)
+                            .take(
+                                sifr_generated_slice_stop
+                                    .saturating_sub(sifr_generated_slice_start),
+                            )
+                            .copied(),
+                    )
+                };
+            }
+            i = &i - &SifrInt::from_i64(1);
+        }
+        {
+            let mut sifr_generated_concat: String = String::with_capacity(path.len());
+            sifr_generated_concat.push_str(path);
+            sifr_generated_concat.push_str("");
+            sifr_generated_concat
+        }
+    }
+    pub(crate) fn dirname(path: &str) -> String {
+        let sifr_generated_chars_path: Vec<char> = path.chars().collect::<Vec<char>>();
+        let mut i: SifrInt =
+            &SifrInt::from(sifr_generated_chars_path.len()) - &SifrInt::from_i64(1);
+        while &i >= &SifrInt::from_i64(0) {
+            let ch: Option<String> = {
+                let sifr_generated_string_index = i.clone();
+                let sifr_generated_string_index_normalized = sifr_generated_string_index
+                    .normalize_index_or_len(sifr_generated_chars_path.len());
+                sifr_generated_chars_path
+                    .get(sifr_generated_string_index_normalized)
+                    .copied()
+            }
+            .map(|character| character.to_string());
+            if let Some(ch) = ch
+                && ch == "/"
+            {
+                return {
+                    let sifr_generated_slice_src = &sifr_generated_chars_path;
+                    let sifr_generated_slice_len = sifr_generated_slice_src.len();
+                    let sifr_generated_slice_start = 0;
+                    let sifr_generated_slice_stop = i.clamp_slice_bound(sifr_generated_slice_len);
+                    String::from_iter(
+                        sifr_generated_slice_src
+                            .iter()
+                            .skip(sifr_generated_slice_start)
+                            .take(
+                                sifr_generated_slice_stop
+                                    .saturating_sub(sifr_generated_slice_start),
+                            )
+                            .copied(),
+                    )
+                };
+            }
+            i = &i - &SifrInt::from_i64(1);
+        }
+        String::new()
+    }
+    pub(crate) fn random_int(min: SifrInt, max: SifrInt) -> SifrInt {
+        ::sifr_stdlib::random::random_int(
+            ::sifr_runtime::interop::SifrIntBridge::from(min),
+            ::sifr_runtime::interop::SifrIntBridge::from(max),
+        )
+        .into_sifr_int()
+    }
+    pub(crate) fn sifr_generated_random_suffix() -> String {
+        let n: SifrInt = random_int(SifrInt::from_i64(100_000), SifrInt::from_i64(999_999));
+        n.to_string()
+    }
+    pub(crate) fn mktemp_path(prefix: &str) -> String {
+        let suffix: String = sifr_generated_random_suffix();
+        let mut root: String = gettempdir();
+        let sifr_generated_chars_root: Vec<char> = root.chars().collect::<Vec<char>>();
+        if &SifrInt::from(sifr_generated_chars_root.len()) == &SifrInt::from_i64(0) {
+            root = "/tmp".to_string();
+        } else {
+            let last: Option<String> = {
+                let sifr_generated_string_index =
+                    SifrInt::from(root.chars().count()) - SifrInt::from_i64(1);
+                let sifr_generated_string_index_normalized = sifr_generated_string_index
+                    .normalize_index_or_len(sifr_generated_chars_root.len());
+                sifr_generated_chars_root
+                    .get(sifr_generated_string_index_normalized)
+                    .copied()
+            }
+            .map(|character| character.to_string());
+            if let Some(last) = last
+                && last == "/"
+            {
+                return {
+                    let mut sifr_generated_concat: String =
+                        String::with_capacity(root.len() + prefix.len() + suffix.len());
+                    sifr_generated_concat.push_str(root.as_str());
+                    sifr_generated_concat.push_str(prefix);
+                    sifr_generated_concat.push_str(suffix.as_str());
+                    sifr_generated_concat
+                };
+            }
+        }
+        {
+            let mut sifr_generated_concat: String =
+                String::with_capacity(root.len() + 1usize + prefix.len() + suffix.len());
+            sifr_generated_concat.push_str(root.as_str());
+            sifr_generated_concat.push('/');
+            sifr_generated_concat.push_str(prefix);
+            sifr_generated_concat.push_str(suffix.as_str());
+            sifr_generated_concat
+        }
+    }
+    pub(crate) fn sifr_generated_next_candidate(prefix: &str) -> String {
+        mktemp_path(prefix)
+    }
+    pub(crate) fn sifr_generated_collision_message(kind: &str, attempts: SifrInt) -> String {
+        {
+            let mut sifr_generated_concat: String =
+                String::with_capacity(9usize + kind.len() + 37usize + 9usize);
+            sifr_generated_concat.push_str("tempfile.");
+            sifr_generated_concat.push_str(kind);
+            sifr_generated_concat.push_str(": failed to create unique path after ");
+            sifr_generated_concat.push_str(attempts.to_string().as_str());
+            sifr_generated_concat.push_str(" attempts");
+            sifr_generated_concat
+        }
+    }
+    pub(crate) fn mkstemp(prefix: &str) -> Result<String, IOError> {
+        let mut attempts: SifrInt = SifrInt::from_i64(0);
+        let max_attempts: SifrInt = SifrInt::from_i64(64);
+        while &attempts < &max_attempts {
+            let path: String = sifr_generated_next_candidate(prefix);
+            let path_for_check: String = {
+                let mut sifr_generated_concat: String = String::with_capacity(path.len());
+                sifr_generated_concat.push_str(path.as_str());
+                sifr_generated_concat.push_str("");
+                sifr_generated_concat
+            };
+            if exists(&path) {
+                attempts = &attempts + &SifrInt::from_i64(1);
+                continue;
+            }
+            let sifr_generated_try_res: Result<Result<String, IOError>, IOError> = (|| {
+                write_text(&path, &String::new())?;
+                Ok(Ok(path))
+            })();
+            match sifr_generated_try_res {
+                Ok(sifr_generated_ret_val) => {
+                    return sifr_generated_ret_val;
+                }
+                Err(sifr_generated_try_err) => {
+                    let e = sifr_generated_try_err.clone();
+                    if exists(&path_for_check) {
+                        attempts = &attempts + &SifrInt::from_i64(1);
+                        continue;
+                    }
+                    return Err(e);
+                }
+            }
+        }
+        Err(IOError::new(sifr_generated_collision_message(
+            &"mkstemp".to_string(),
+            max_attempts.clone(),
+        )))
+    }
+    pub(crate) fn mkdtemp(prefix: &str) -> Result<String, IOError> {
+        let mut attempts: SifrInt = SifrInt::from_i64(0);
+        let max_attempts: SifrInt = SifrInt::from_i64(64);
+        while &attempts < &max_attempts {
+            let path: String = sifr_generated_next_candidate(prefix);
+            let path_for_check: String = {
+                let mut sifr_generated_concat: String = String::with_capacity(path.len());
+                sifr_generated_concat.push_str(path.as_str());
+                sifr_generated_concat.push_str("");
+                sifr_generated_concat
+            };
+            if exists(&path) {
+                attempts = &attempts + &SifrInt::from_i64(1);
+                continue;
+            }
+            let sifr_generated_try_res: Result<Result<String, IOError>, IOError> = (|| {
+                mkdir(&path)?;
+                Ok(Ok(path))
+            })();
+            match sifr_generated_try_res {
+                Ok(sifr_generated_ret_val) => {
+                    return sifr_generated_ret_val;
+                }
+                Err(sifr_generated_try_err) => {
+                    let e = sifr_generated_try_err.clone();
+                    if exists(&path_for_check) {
+                        attempts = &attempts + &SifrInt::from_i64(1);
+                        continue;
+                    }
+                    return Err(e);
+                }
+            }
+        }
+        Err(IOError::new(sifr_generated_collision_message(
+            &"mkdtemp".to_string(),
+            max_attempts.clone(),
+        )))
+    }
+    pub(crate) fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
+        assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
+        let mut i: SifrInt = SifrInt::from_i64(0);
+        while &i < &SifrInt::from(actual.len()) {
+            assert_eq!(
+                {
+                    let sifr_generated_condition_list = &actual;
+                    let sifr_generated_condition_index = i.clone();
+                    let sifr_generated_condition_normalized = sifr_generated_condition_index
+                        .normalize_index_or_len(sifr_generated_condition_list.len());
+                    sifr_generated_condition_list
+                        .get(sifr_generated_condition_normalized)
+                        .copied()
+                },
+                {
+                    let sifr_generated_condition_list = &expected;
+                    let sifr_generated_condition_index = i.clone();
+                    let sifr_generated_condition_normalized = sifr_generated_condition_index
+                        .normalize_index_or_len(sifr_generated_condition_list.len());
+                    sifr_generated_condition_list
+                        .get(sifr_generated_condition_normalized)
+                        .copied()
+                }
+            );
+            i = &i + &SifrInt::from_i64(1);
+        }
+    }
+    pub(crate) fn sifr_generated_io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
+        let msg = e.to_string();
+        let kind = {
+            let sifr_generated_io_kind = (&e as &dyn ::std::any::Any)
+                .downcast_ref::<std::io::Error>()
+                .map(::std::io::Error::kind);
+            match sifr_generated_io_kind {
+                Some(::std::io::ErrorKind::NotFound) => "FileNotFound".to_string(),
+                Some(::std::io::ErrorKind::PermissionDenied) => "PermissionDenied".to_string(),
+                Some(::std::io::ErrorKind::AlreadyExists) => "FileExists".to_string(),
+                Some(::std::io::ErrorKind::IsADirectory) => "IsADirectory".to_string(),
+                Some(::std::io::ErrorKind::NotADirectory) => "NotADirectory".to_string(),
+                Some(::std::io::ErrorKind::DirectoryNotEmpty) => "DirectoryNotEmpty".to_string(),
+                _ => "Other".to_string(),
+            }
+        };
+        IOError { message: msg, kind }
+    }
+}
 mod sifr_generated_project_nominals {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct IOError {
@@ -21,284 +309,9 @@ mod sifr_generated_project_nominals {
     }
     impl ::std::error::Error for IOError {}
 }
+use crate::sifr_generated_generated_support::*;
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::IOError;
-fn write_text(path: &str, content: &str) -> Result<(), IOError> {
-    ::sifr_stdlib::fs::write_text(path, content).map_err(sifr_generated_io_err)
-}
-fn exists(path: &str) -> bool {
-    ::sifr_stdlib::fs::exists(path)
-}
-fn mkdir(path: &str) -> Result<(), IOError> {
-    ::sifr_stdlib::fs::mkdir(path).map_err(sifr_generated_io_err)
-}
-fn gettempdir() -> String {
-    ::sifr_stdlib::fs::gettempdir()
-}
-fn run_command(cmd: &str) -> Result<String, IOError> {
-    ::sifr_stdlib::sys::run_command(cmd).map_err(sifr_generated_io_err)
-}
-fn basename(path: &str) -> String {
-    let sifr_generated_chars_path: Vec<char> = path.chars().collect::<Vec<char>>();
-    let mut i: SifrInt = &SifrInt::from(sifr_generated_chars_path.len()) - &SifrInt::from_i64(1);
-    while &i >= &SifrInt::from_i64(0) {
-        let ch: Option<String> = {
-            let sifr_generated_string_index = i.clone();
-            let sifr_generated_string_index_normalized =
-                sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_path.len());
-            sifr_generated_chars_path
-                .get(sifr_generated_string_index_normalized)
-                .copied()
-        }
-        .map(|character| character.to_string());
-        if let Some(ch) = ch
-            && ch == "/"
-        {
-            return {
-                let sifr_generated_slice_src = &sifr_generated_chars_path;
-                let sifr_generated_slice_len = sifr_generated_slice_src.len();
-                let sifr_generated_slice_start =
-                    (&i + &SifrInt::from_i64(1)).clamp_slice_bound(sifr_generated_slice_len);
-                let sifr_generated_slice_stop = sifr_generated_slice_len;
-                String::from_iter(
-                    sifr_generated_slice_src
-                        .iter()
-                        .skip(sifr_generated_slice_start)
-                        .take(sifr_generated_slice_stop.saturating_sub(sifr_generated_slice_start))
-                        .copied(),
-                )
-            };
-        }
-        i = &i - &SifrInt::from_i64(1);
-    }
-    {
-        let mut sifr_generated_concat: String = String::with_capacity(path.len());
-        sifr_generated_concat.push_str(path);
-        sifr_generated_concat.push_str("");
-        sifr_generated_concat
-    }
-}
-fn dirname(path: &str) -> String {
-    let sifr_generated_chars_path: Vec<char> = path.chars().collect::<Vec<char>>();
-    let mut i: SifrInt = &SifrInt::from(sifr_generated_chars_path.len()) - &SifrInt::from_i64(1);
-    while &i >= &SifrInt::from_i64(0) {
-        let ch: Option<String> = {
-            let sifr_generated_string_index = i.clone();
-            let sifr_generated_string_index_normalized =
-                sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_path.len());
-            sifr_generated_chars_path
-                .get(sifr_generated_string_index_normalized)
-                .copied()
-        }
-        .map(|character| character.to_string());
-        if let Some(ch) = ch
-            && ch == "/"
-        {
-            return {
-                let sifr_generated_slice_src = &sifr_generated_chars_path;
-                let sifr_generated_slice_len = sifr_generated_slice_src.len();
-                let sifr_generated_slice_start = 0;
-                let sifr_generated_slice_stop = i.clamp_slice_bound(sifr_generated_slice_len);
-                String::from_iter(
-                    sifr_generated_slice_src
-                        .iter()
-                        .skip(sifr_generated_slice_start)
-                        .take(sifr_generated_slice_stop.saturating_sub(sifr_generated_slice_start))
-                        .copied(),
-                )
-            };
-        }
-        i = &i - &SifrInt::from_i64(1);
-    }
-    String::new()
-}
-fn random_int(min: SifrInt, max: SifrInt) -> SifrInt {
-    ::sifr_stdlib::random::random_int(
-        ::sifr_runtime::interop::SifrIntBridge::from(min),
-        ::sifr_runtime::interop::SifrIntBridge::from(max),
-    )
-    .into_sifr_int()
-}
-fn sifr_generated_random_suffix() -> String {
-    let n: SifrInt = random_int(SifrInt::from_i64(100_000), SifrInt::from_i64(999_999));
-    n.to_string()
-}
-fn mktemp_path(prefix: &str) -> String {
-    let suffix: String = sifr_generated_random_suffix();
-    let mut root: String = gettempdir();
-    let sifr_generated_chars_root: Vec<char> = root.chars().collect::<Vec<char>>();
-    if &SifrInt::from(sifr_generated_chars_root.len()) == &SifrInt::from_i64(0) {
-        root = "/tmp".to_string();
-    } else {
-        let last: Option<String> = {
-            let sifr_generated_string_index =
-                SifrInt::from(root.chars().count()) - SifrInt::from_i64(1);
-            let sifr_generated_string_index_normalized =
-                sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_root.len());
-            sifr_generated_chars_root
-                .get(sifr_generated_string_index_normalized)
-                .copied()
-        }
-        .map(|character| character.to_string());
-        if let Some(last) = last
-            && last == "/"
-        {
-            return {
-                let mut sifr_generated_concat: String =
-                    String::with_capacity(root.len() + prefix.len() + suffix.len());
-                sifr_generated_concat.push_str(root.as_str());
-                sifr_generated_concat.push_str(prefix);
-                sifr_generated_concat.push_str(suffix.as_str());
-                sifr_generated_concat
-            };
-        }
-    }
-    {
-        let mut sifr_generated_concat: String =
-            String::with_capacity(root.len() + 1usize + prefix.len() + suffix.len());
-        sifr_generated_concat.push_str(root.as_str());
-        sifr_generated_concat.push('/');
-        sifr_generated_concat.push_str(prefix);
-        sifr_generated_concat.push_str(suffix.as_str());
-        sifr_generated_concat
-    }
-}
-fn sifr_generated_next_candidate(prefix: &str) -> String {
-    mktemp_path(prefix)
-}
-fn sifr_generated_collision_message(kind: &str, attempts: SifrInt) -> String {
-    {
-        let mut sifr_generated_concat: String =
-            String::with_capacity(9usize + kind.len() + 37usize + 9usize);
-        sifr_generated_concat.push_str("tempfile.");
-        sifr_generated_concat.push_str(kind);
-        sifr_generated_concat.push_str(": failed to create unique path after ");
-        sifr_generated_concat.push_str(attempts.to_string().as_str());
-        sifr_generated_concat.push_str(" attempts");
-        sifr_generated_concat
-    }
-}
-fn mkstemp(prefix: &str) -> Result<String, IOError> {
-    let mut attempts: SifrInt = SifrInt::from_i64(0);
-    let max_attempts: SifrInt = SifrInt::from_i64(64);
-    while &attempts < &max_attempts {
-        let path: String = sifr_generated_next_candidate(prefix);
-        let path_for_check: String = {
-            let mut sifr_generated_concat: String = String::with_capacity(path.len());
-            sifr_generated_concat.push_str(path.as_str());
-            sifr_generated_concat.push_str("");
-            sifr_generated_concat
-        };
-        if exists(&path) {
-            attempts = &attempts + &SifrInt::from_i64(1);
-            continue;
-        }
-        let sifr_generated_try_res: Result<Result<String, IOError>, IOError> = (|| {
-            write_text(&path, &String::new())?;
-            Ok(Ok(path))
-        })();
-        match sifr_generated_try_res {
-            Ok(sifr_generated_ret_val) => {
-                return sifr_generated_ret_val;
-            }
-            Err(sifr_generated_try_err) => {
-                let e = sifr_generated_try_err.clone();
-                if exists(&path_for_check) {
-                    attempts = &attempts + &SifrInt::from_i64(1);
-                    continue;
-                }
-                return Err(e);
-            }
-        }
-    }
-    Err(IOError::new(sifr_generated_collision_message(
-        &"mkstemp".to_string(),
-        max_attempts.clone(),
-    )))
-}
-fn mkdtemp(prefix: &str) -> Result<String, IOError> {
-    let mut attempts: SifrInt = SifrInt::from_i64(0);
-    let max_attempts: SifrInt = SifrInt::from_i64(64);
-    while &attempts < &max_attempts {
-        let path: String = sifr_generated_next_candidate(prefix);
-        let path_for_check: String = {
-            let mut sifr_generated_concat: String = String::with_capacity(path.len());
-            sifr_generated_concat.push_str(path.as_str());
-            sifr_generated_concat.push_str("");
-            sifr_generated_concat
-        };
-        if exists(&path) {
-            attempts = &attempts + &SifrInt::from_i64(1);
-            continue;
-        }
-        let sifr_generated_try_res: Result<Result<String, IOError>, IOError> = (|| {
-            mkdir(&path)?;
-            Ok(Ok(path))
-        })();
-        match sifr_generated_try_res {
-            Ok(sifr_generated_ret_val) => {
-                return sifr_generated_ret_val;
-            }
-            Err(sifr_generated_try_err) => {
-                let e = sifr_generated_try_err.clone();
-                if exists(&path_for_check) {
-                    attempts = &attempts + &SifrInt::from_i64(1);
-                    continue;
-                }
-                return Err(e);
-            }
-        }
-    }
-    Err(IOError::new(sifr_generated_collision_message(
-        &"mkdtemp".to_string(),
-        max_attempts.clone(),
-    )))
-}
-fn assert_bool_vector_eq(actual: &[bool], expected: &[bool]) {
-    assert_eq!(SifrInt::from(actual.len()), SifrInt::from(expected.len()));
-    let mut i: SifrInt = SifrInt::from_i64(0);
-    while &i < &SifrInt::from(actual.len()) {
-        assert_eq!(
-            {
-                let sifr_generated_condition_list = &actual;
-                let sifr_generated_condition_index = i.clone();
-                let sifr_generated_condition_normalized = sifr_generated_condition_index
-                    .normalize_index_or_len(sifr_generated_condition_list.len());
-                sifr_generated_condition_list
-                    .get(sifr_generated_condition_normalized)
-                    .copied()
-            },
-            {
-                let sifr_generated_condition_list = &expected;
-                let sifr_generated_condition_index = i.clone();
-                let sifr_generated_condition_normalized = sifr_generated_condition_index
-                    .normalize_index_or_len(sifr_generated_condition_list.len());
-                sifr_generated_condition_list
-                    .get(sifr_generated_condition_normalized)
-                    .copied()
-            }
-        );
-        i = &i + &SifrInt::from_i64(1);
-    }
-}
-fn sifr_generated_io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
-    let msg = e.to_string();
-    let kind = {
-        let sifr_generated_io_kind = (&e as &dyn ::std::any::Any)
-            .downcast_ref::<std::io::Error>()
-            .map(::std::io::Error::kind);
-        match sifr_generated_io_kind {
-            Some(::std::io::ErrorKind::NotFound) => "FileNotFound".to_string(),
-            Some(::std::io::ErrorKind::PermissionDenied) => "PermissionDenied".to_string(),
-            Some(::std::io::ErrorKind::AlreadyExists) => "FileExists".to_string(),
-            Some(::std::io::ErrorKind::IsADirectory) => "IsADirectory".to_string(),
-            Some(::std::io::ErrorKind::NotADirectory) => "NotADirectory".to_string(),
-            Some(::std::io::ErrorKind::DirectoryNotEmpty) => "DirectoryNotEmpty".to_string(),
-            _ => "Other".to_string(),
-        }
-    };
-    IOError { message: msg, kind }
-}
 #[expect(
     clippy::too_many_lines,
     reason = "one generated Rust function preserves one typed Sifr function"

@@ -1,4 +1,5 @@
-use super::{HashMap, HashSet, RustItem};
+use crate::RustItem;
+use std::collections::{HashMap, HashSet};
 
 pub(super) fn structural_layout_import_items(
     record_types: &HashMap<String, sifr_type_system::StructuralRecordType>,

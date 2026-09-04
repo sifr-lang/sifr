@@ -602,7 +602,10 @@ fn test_source_python_error_contract_with_interop_gets_runtime_bridge() {
     };
 
     assert!(rust_source.contains("__sifr_python_error"));
-    assert!(required_features.contains(&sifr_stdlib_manifest::StdlibFeature::PythonRuntime));
+    assert!(
+        required_features.contains(&sifr_stdlib_manifest::StdlibFeature::PythonRuntime),
+        "features={required_features:?}\n{rust_source}"
+    );
 }
 
 #[test]

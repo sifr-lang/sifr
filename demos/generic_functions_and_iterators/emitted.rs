@@ -1,4 +1,18 @@
 // src/main.rs
+mod sifr_generated_generated_support {
+    pub(crate) fn log(x: f64) -> f64 {
+        ::sifr_stdlib::math::log(x)
+    }
+    pub(crate) fn sin(x: f64) -> f64 {
+        ::sifr_stdlib::math::sin(x)
+    }
+    pub(crate) fn cos(x: f64) -> f64 {
+        ::sifr_stdlib::math::cos(x)
+    }
+    pub(crate) fn fabs(x: f64) -> f64 {
+        ::sifr_stdlib::math::fabs(x)
+    }
+}
 mod sifr_generated_project_nominals {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ValueError {
@@ -11,20 +25,9 @@ mod sifr_generated_project_nominals {
     }
     impl ::std::error::Error for ValueError {}
 }
+use crate::sifr_generated_generated_support::*;
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::ValueError;
-fn log(x: f64) -> f64 {
-    ::sifr_stdlib::math::log(x)
-}
-fn sin(x: f64) -> f64 {
-    ::sifr_stdlib::math::sin(x)
-}
-fn cos(x: f64) -> f64 {
-    ::sifr_stdlib::math::cos(x)
-}
-fn fabs(x: f64) -> f64 {
-    ::sifr_stdlib::math::fabs(x)
-}
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Container<T> {
     value: T,

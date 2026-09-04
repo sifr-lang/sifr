@@ -1,11 +1,11 @@
 use crate::hir_analysis::traversal::{self, TraversalConfig, TraversalControl};
-use crate::stdlib_filter::strip_rust_items_by_name;
+use crate::stdlib_filter::{
+    filter_stdlib_ir_to_needed, rust_source_defined_item_names, strip_rust_items_by_name,
+};
 use sifr_ir::{HirExpr, HirFunction, HirModule, HirStmt};
 use std::collections::HashSet;
 
 use super::{RustItem, Type};
-mod template;
-pub(crate) use template::module_uses_template;
 pub(crate) fn sync_channel_runtime_needed(rust_code: &str) -> bool {
     rust_code.contains("struct Channel<")
         || rust_code.contains("struct ChannelSender<")
@@ -22,11 +22,21 @@ pub(crate) fn replace_sync_channel_runtime_items(rust_code: &str) -> String {
         "channel",
         "bounded_channel",
     ]);
+    let demanded = rust_source_defined_item_names(rust_code)
+        .into_iter()
+        .filter(|name| strip_names.contains(name.as_str()))
+        .collect::<HashSet<_>>();
+    if demanded.is_empty() {
+        return rust_code.to_string();
+    }
     let mut replaced = strip_rust_items_by_name(rust_code, &strip_names);
     if !replaced.trim().is_empty() {
         replaced.push('\n');
     }
-    replaced.push_str(sync_channel_runtime_rust_code());
+    replaced.push_str(&filter_stdlib_ir_to_needed(
+        sync_channel_runtime_rust_code(),
+        &demanded,
+    ));
     replaced
 }
 
@@ -831,68 +841,4 @@ pub(crate) fn module_uses_join_set(module: &HirModule) -> bool {
     }
 
     false
-}
-
-pub(crate) fn public_visibility() -> syn::Visibility {
-    syn::Visibility::Public(syn::token::Pub::default())
-}
-
-pub(crate) fn publicize_impl_items(items: &mut [syn::ImplItem]) {
-    for item in items {
-        if let syn::ImplItem::Fn(function) = item
-            && function.sig.ident != "__sifr_with_state"
-        {
-            function.vis = public_visibility();
-        }
-    }
-}
-
-pub(crate) fn publicize_struct_fields(fields: &mut syn::Fields) {
-    match fields {
-        syn::Fields::Named(fields) => {
-            for field in &mut fields.named {
-                field.vis = public_visibility();
-            }
-        }
-        syn::Fields::Unnamed(fields) => {
-            for field in &mut fields.unnamed {
-                field.vis = public_visibility();
-            }
-        }
-        syn::Fields::Unit => {}
-    }
-}
-
-pub(crate) fn publicize_generated_module_source(source: &str) -> String {
-    let mut file = syn::parse_file(source).unwrap_or_else(|error| {
-        panic!("failed to parse generated module for publicization: {error}")
-    });
-    for item in &mut file.items {
-        match item {
-            syn::Item::Const(item) => item.vis = public_visibility(),
-            syn::Item::Enum(item) => item.vis = public_visibility(),
-            syn::Item::Fn(item) => item.vis = public_visibility(),
-            syn::Item::Impl(item) => {
-                if item.trait_.is_none() {
-                    publicize_impl_items(&mut item.items);
-                }
-            }
-            syn::Item::Static(item) => item.vis = public_visibility(),
-            syn::Item::Struct(item) => {
-                item.vis = public_visibility();
-                publicize_struct_fields(&mut item.fields);
-            }
-            syn::Item::Trait(item) => item.vis = public_visibility(),
-            syn::Item::Type(item) => item.vis = public_visibility(),
-            syn::Item::Union(item) => {
-                item.vis = public_visibility();
-                for field in &mut item.fields.named {
-                    field.vis = public_visibility();
-                }
-            }
-            syn::Item::Use(item) => item.vis = public_visibility(),
-            _ => {}
-        }
-    }
-    prettyplease::unparse(&file)
 }

@@ -75,42 +75,6 @@ pub(crate) fn collect_referenced_builtin_error_classes(
     referenced
 }
 
-pub(crate) fn collect_complete_referenced_builtin_error_classes(
-    module: &HirModule,
-    stdlib_preamble: &str,
-    intrinsic_functions: &HashSet<String>,
-    needs_file_handles: bool,
-    builtin_error_classes: &[&str],
-) -> HashSet<String> {
-    let mut referenced = collect_referenced_builtin_error_classes(
-        module,
-        stdlib_preamble,
-        intrinsic_functions,
-        needs_file_handles,
-        builtin_error_classes,
-    );
-    if crate::module_uses_task_scope(module)
-        || crate::module_uses_join_set(module)
-        || crate::module_uses_failure_type(module)
-    {
-        referenced.insert("SecondaryError".to_string());
-    }
-    if crate::module_uses_async_generator_type(module) {
-        referenced.insert("GeneratorCloseError".to_string());
-    }
-    if crate::module_uses_native_async_cleanup(module) {
-        referenced.insert("SecondaryError".to_string());
-    }
-    if crate::module_uses_spawn_cpu(module)
-        || crate::module_uses_join_set_spawn_cpu(module)
-        || crate::module_uses_task_scope_spawn_cpu(module)
-    {
-        referenced.insert("WorkerRuntimeError".to_string());
-        referenced.insert("WorkerError".to_string());
-    }
-    referenced
-}
-
 pub(crate) fn collect_module_intrinsic_function_names(module: &HirModule) -> HashSet<String> {
     fn collect_expr(expr: &HirExpr, names: &mut HashSet<String>) {
         crate::hir_analysis::traversal::walk_expr(expr, &mut |expr| {
@@ -650,6 +614,15 @@ fn collect_text_error_refs(
     if !token.is_empty() && builtin_error_classes.contains(&token.as_str()) {
         referenced.insert(token);
     }
+}
+
+pub(crate) fn collect_source_builtin_error_classes(
+    source: &str,
+    builtin_error_classes: &[&str],
+) -> HashSet<String> {
+    let mut referenced = HashSet::new();
+    collect_text_error_refs(source, &mut referenced, builtin_error_classes);
+    referenced
 }
 
 #[cfg(test)]

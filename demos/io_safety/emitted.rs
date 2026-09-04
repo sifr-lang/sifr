@@ -1,4 +1,61 @@
 // src/main.rs
+mod sifr_generated_generated_support {
+    use crate::IOError;
+    pub(crate) fn read_text(path: &str) -> Result<String, IOError> {
+        ::sifr_stdlib::fs::read_text(path).map_err(sifr_generated_io_err)
+    }
+    pub(crate) fn write_text(path: &str, content: &str) -> Result<(), IOError> {
+        ::sifr_stdlib::fs::write_text(path, content).map_err(sifr_generated_io_err)
+    }
+    pub(crate) fn read_lines(path: &str) -> Result<Vec<String>, IOError> {
+        ::sifr_stdlib::fs::read_lines(path).map_err(sifr_generated_io_err)
+    }
+    pub(crate) fn append_text(path: &str, content: &str) -> Result<(), IOError> {
+        ::sifr_stdlib::fs::append_text(path, content).map_err(sifr_generated_io_err)
+    }
+    pub(crate) fn getcwd() -> Result<String, IOError> {
+        ::sifr_stdlib::fs::getcwd().map_err(sifr_generated_io_err)
+    }
+    pub(crate) fn listdir(path: &str) -> Result<Vec<String>, IOError> {
+        ::sifr_stdlib::fs::listdir(path).map_err(sifr_generated_io_err)
+    }
+    pub(crate) fn mkdir(path: &str) -> Result<(), IOError> {
+        ::sifr_stdlib::fs::mkdir(path).map_err(sifr_generated_io_err)
+    }
+    pub(crate) fn remove_file(path: &str) -> Result<(), IOError> {
+        ::sifr_stdlib::fs::remove_file(path).map_err(sifr_generated_io_err)
+    }
+    pub(crate) fn copy_file(src: &str, dst: &str) -> Result<(), IOError> {
+        ::sifr_stdlib::fs::copy_file(src, dst).map_err(sifr_generated_io_err)
+    }
+    pub(crate) fn rmdir_all(path: &str) -> Result<(), IOError> {
+        ::sifr_stdlib::fs::rmdir_all(path).map_err(sifr_generated_io_err)
+    }
+    pub(crate) fn copy(src: &str, dst: &str) -> Result<(), IOError> {
+        copy_file(src, dst)
+    }
+    pub(crate) fn rmtree(path: &str) -> Result<(), IOError> {
+        rmdir_all(path)
+    }
+    pub(crate) fn sifr_generated_io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
+        let msg = e.to_string();
+        let kind = {
+            let sifr_generated_io_kind = (&e as &dyn ::std::any::Any)
+                .downcast_ref::<std::io::Error>()
+                .map(::std::io::Error::kind);
+            match sifr_generated_io_kind {
+                Some(::std::io::ErrorKind::NotFound) => "FileNotFound".to_string(),
+                Some(::std::io::ErrorKind::PermissionDenied) => "PermissionDenied".to_string(),
+                Some(::std::io::ErrorKind::AlreadyExists) => "FileExists".to_string(),
+                Some(::std::io::ErrorKind::IsADirectory) => "IsADirectory".to_string(),
+                Some(::std::io::ErrorKind::NotADirectory) => "NotADirectory".to_string(),
+                Some(::std::io::ErrorKind::DirectoryNotEmpty) => "DirectoryNotEmpty".to_string(),
+                _ => "Other".to_string(),
+            }
+        };
+        IOError { message: msg, kind }
+    }
+}
 mod sifr_generated_project_nominals {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct IOError {
@@ -12,62 +69,9 @@ mod sifr_generated_project_nominals {
     }
     impl ::std::error::Error for IOError {}
 }
+use crate::sifr_generated_generated_support::*;
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::IOError;
-fn read_text(path: &str) -> Result<String, IOError> {
-    ::sifr_stdlib::fs::read_text(path).map_err(sifr_generated_io_err)
-}
-fn write_text(path: &str, content: &str) -> Result<(), IOError> {
-    ::sifr_stdlib::fs::write_text(path, content).map_err(sifr_generated_io_err)
-}
-fn read_lines(path: &str) -> Result<Vec<String>, IOError> {
-    ::sifr_stdlib::fs::read_lines(path).map_err(sifr_generated_io_err)
-}
-fn append_text(path: &str, content: &str) -> Result<(), IOError> {
-    ::sifr_stdlib::fs::append_text(path, content).map_err(sifr_generated_io_err)
-}
-fn getcwd() -> Result<String, IOError> {
-    ::sifr_stdlib::fs::getcwd().map_err(sifr_generated_io_err)
-}
-fn listdir(path: &str) -> Result<Vec<String>, IOError> {
-    ::sifr_stdlib::fs::listdir(path).map_err(sifr_generated_io_err)
-}
-fn mkdir(path: &str) -> Result<(), IOError> {
-    ::sifr_stdlib::fs::mkdir(path).map_err(sifr_generated_io_err)
-}
-fn remove_file(path: &str) -> Result<(), IOError> {
-    ::sifr_stdlib::fs::remove_file(path).map_err(sifr_generated_io_err)
-}
-fn copy_file(src: &str, dst: &str) -> Result<(), IOError> {
-    ::sifr_stdlib::fs::copy_file(src, dst).map_err(sifr_generated_io_err)
-}
-fn rmdir_all(path: &str) -> Result<(), IOError> {
-    ::sifr_stdlib::fs::rmdir_all(path).map_err(sifr_generated_io_err)
-}
-fn copy(src: &str, dst: &str) -> Result<(), IOError> {
-    copy_file(src, dst)
-}
-fn rmtree(path: &str) -> Result<(), IOError> {
-    rmdir_all(path)
-}
-fn sifr_generated_io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
-    let msg = e.to_string();
-    let kind = {
-        let sifr_generated_io_kind = (&e as &dyn ::std::any::Any)
-            .downcast_ref::<std::io::Error>()
-            .map(::std::io::Error::kind);
-        match sifr_generated_io_kind {
-            Some(::std::io::ErrorKind::NotFound) => "FileNotFound".to_string(),
-            Some(::std::io::ErrorKind::PermissionDenied) => "PermissionDenied".to_string(),
-            Some(::std::io::ErrorKind::AlreadyExists) => "FileExists".to_string(),
-            Some(::std::io::ErrorKind::IsADirectory) => "IsADirectory".to_string(),
-            Some(::std::io::ErrorKind::NotADirectory) => "NotADirectory".to_string(),
-            Some(::std::io::ErrorKind::DirectoryNotEmpty) => "DirectoryNotEmpty".to_string(),
-            _ => "Other".to_string(),
-        }
-    };
-    IOError { message: msg, kind }
-}
 fn demo_safe_read_write() {
     println!("=== Safe File Read/Write ===");
     let sifr_generated_try_res: Result<(), IOError> = (|| {

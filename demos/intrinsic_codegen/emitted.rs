@@ -1,4 +1,22 @@
 // src/main.rs
+mod sifr_generated_generated_support {
+    pub(crate) use ::sifr_runtime::SifrInt;
+    pub(crate) fn sqrt(x: f64) -> f64 {
+        ::sifr_stdlib::math::sqrt(x)
+    }
+    pub(crate) fn floor(x: f64) -> SifrInt {
+        ::sifr_stdlib::math::floor(x).into_sifr_int()
+    }
+    pub(crate) fn ceil(x: f64) -> SifrInt {
+        ::sifr_stdlib::math::ceil(x).into_sifr_int()
+    }
+    pub(crate) fn atan2(y: f64, x: f64) -> f64 {
+        ::sifr_stdlib::math::atan2(y, x)
+    }
+    pub(crate) const fn isfinite(x: f64) -> bool {
+        ::sifr_stdlib::math::isfinite(x)
+    }
+}
 mod sifr_generated_project_nominals {
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct ValueError {
@@ -11,23 +29,9 @@ mod sifr_generated_project_nominals {
     }
     impl ::std::error::Error for ValueError {}
 }
+use crate::sifr_generated_generated_support::*;
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::ValueError;
-fn sqrt(x: f64) -> f64 {
-    ::sifr_stdlib::math::sqrt(x)
-}
-fn floor(x: f64) -> SifrInt {
-    ::sifr_stdlib::math::floor(x).into_sifr_int()
-}
-fn ceil(x: f64) -> SifrInt {
-    ::sifr_stdlib::math::ceil(x).into_sifr_int()
-}
-fn atan2(y: f64, x: f64) -> f64 {
-    ::sifr_stdlib::math::atan2(y, x)
-}
-const fn isfinite(x: f64) -> bool {
-    ::sifr_stdlib::math::isfinite(x)
-}
 #[expect(
     clippy::assertions_on_constants,
     reason = "generated Rust preserves this exact typed Sifr source contract"

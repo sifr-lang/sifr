@@ -23,7 +23,9 @@ fn test_task_group_basic_lowers_to_scope_runtime_substrate() {
     assert!(
         result
             .rust_source
-            .contains("group.__sifr_spawn_infallible(worker());")
+            .contains("group.__sifr_spawn_infallible(worker());"),
+        "{}",
+        result.rust_source
     );
     assert!(
         result

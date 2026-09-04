@@ -1,32 +1,150 @@
 // src/main.rs
-mod sifr_generated_project_nominals {
-    pub use ::sifr_runtime::SifrInt;
-    #[must_use]
-    pub fn random_int(min: SifrInt, max: SifrInt) -> SifrInt {
+mod sifr_generated_generated_support {
+    use crate::IOError;
+    pub(crate) use ::sifr_runtime::SifrInt;
+    pub(crate) fn write_text(path: &str, content: &str) -> Result<(), IOError> {
+        ::sifr_stdlib::fs::write_text(path, content).map_err(sifr_generated_io_err)
+    }
+    pub(crate) fn exists(path: &str) -> bool {
+        ::sifr_stdlib::fs::exists(path)
+    }
+    pub(crate) fn remove_file(path: &str) -> Result<(), IOError> {
+        ::sifr_stdlib::fs::remove_file(path).map_err(sifr_generated_io_err)
+    }
+    pub(crate) fn gettempdir() -> String {
+        ::sifr_stdlib::fs::gettempdir()
+    }
+    pub(crate) fn random_int(min: SifrInt, max: SifrInt) -> SifrInt {
         ::sifr_stdlib::random::random_int(
             ::sifr_runtime::interop::SifrIntBridge::from(min),
             ::sifr_runtime::interop::SifrIntBridge::from(max),
         )
         .into_sifr_int()
     }
-    ///# Errors
-    ///Returns the typed error produced by this operation.
-    pub fn write_text(path: &str, content: &str) -> Result<(), IOError> {
-        ::sifr_stdlib::fs::write_text(path, content).map_err(sifr_generated_io_err)
+    pub(crate) fn sifr_generated_random_suffix() -> String {
+        let n: SifrInt = random_int(SifrInt::from_i64(100_000), SifrInt::from_i64(999_999));
+        n.to_string()
     }
-    #[must_use]
-    pub fn exists(path: &str) -> bool {
-        ::sifr_stdlib::fs::exists(path)
+    pub(crate) fn mktemp_path(prefix: &str) -> String {
+        let suffix: String = sifr_generated_random_suffix();
+        let mut root: String = gettempdir();
+        let sifr_generated_chars_root: Vec<char> = root.chars().collect::<Vec<char>>();
+        if &SifrInt::from(sifr_generated_chars_root.len()) == &SifrInt::from_i64(0) {
+            root = "/tmp".to_string();
+        } else {
+            let last: Option<String> = {
+                let sifr_generated_string_index =
+                    SifrInt::from(root.chars().count()) - SifrInt::from_i64(1);
+                let sifr_generated_string_index_normalized = sifr_generated_string_index
+                    .normalize_index_or_len(sifr_generated_chars_root.len());
+                sifr_generated_chars_root
+                    .get(sifr_generated_string_index_normalized)
+                    .copied()
+            }
+            .map(|character| character.to_string());
+            if let Some(last) = last
+                && last == "/"
+            {
+                return {
+                    let mut sifr_generated_concat: String =
+                        String::with_capacity(root.len() + prefix.len() + suffix.len());
+                    sifr_generated_concat.push_str(root.as_str());
+                    sifr_generated_concat.push_str(prefix);
+                    sifr_generated_concat.push_str(suffix.as_str());
+                    sifr_generated_concat
+                };
+            }
+        }
+        {
+            let mut sifr_generated_concat: String =
+                String::with_capacity(root.len() + 1usize + prefix.len() + suffix.len());
+            sifr_generated_concat.push_str(root.as_str());
+            sifr_generated_concat.push('/');
+            sifr_generated_concat.push_str(prefix);
+            sifr_generated_concat.push_str(suffix.as_str());
+            sifr_generated_concat
+        }
     }
-    ///# Errors
-    ///Returns the typed error produced by this operation.
-    pub fn remove_file(path: &str) -> Result<(), IOError> {
-        ::sifr_stdlib::fs::remove_file(path).map_err(sifr_generated_io_err)
+    pub(crate) fn zip_create(path: &str) -> Result<(), IOError> {
+        ::sifr_stdlib::zipfile::zip_create(path).map_err(sifr_generated_io_err)
     }
-    #[must_use]
-    pub fn gettempdir() -> String {
-        ::sifr_stdlib::fs::gettempdir()
+    pub(crate) fn zip_add_file(zip_path: &str, name: &str, content: &str) -> Result<(), IOError> {
+        ::sifr_stdlib::zipfile::zip_add_file(zip_path, name, content).map_err(sifr_generated_io_err)
     }
+    pub(crate) fn zip_add_file_bytes(
+        zip_path: &str,
+        name: &str,
+        content: &[u8],
+    ) -> Result<(), IOError> {
+        ::sifr_stdlib::zipfile::zip_add_file_bytes(zip_path, name, content)
+            .map_err(sifr_generated_io_err)
+    }
+    pub(crate) fn zip_read_file_bytes(zip_path: &str, name: &str) -> Result<Vec<u8>, IOError> {
+        ::sifr_stdlib::zipfile::zip_read_file_bytes(zip_path, name).map_err(sifr_generated_io_err)
+    }
+    pub(crate) fn zip_namelist(zip_path: &str) -> Result<Vec<String>, IOError> {
+        ::sifr_stdlib::zipfile::zip_namelist(zip_path).map_err(sifr_generated_io_err)
+    }
+    pub(crate) const fn sifr_generated_const_5a49505f53544f524544() -> SifrInt {
+        SifrInt::from_i64(0)
+    }
+    pub(crate) fn sifr_generated_zip_read_only_error() -> String {
+        "zipfile operation requires write or append mode".to_string()
+    }
+    pub(crate) fn sifr_generated_zip_open_mode_error(mode: &str) -> String {
+        {
+            let mut sifr_generated_concat: String = String::with_capacity(48usize + mode.len());
+            sifr_generated_concat.push_str("zipfile open supports read-only mode only, got: ");
+            sifr_generated_concat.push_str(mode);
+            sifr_generated_concat
+        }
+    }
+    pub(crate) fn sifr_generated_closed_stream_error() -> String {
+        "I/O operation on closed stream".to_string()
+    }
+    pub(crate) fn sifr_generated_zip_unimplemented_error(feature: &str) -> String {
+        {
+            let mut sifr_generated_concat: String =
+                String::with_capacity(8usize + feature.len() + 49usize);
+            sifr_generated_concat.push_str("zipfile ");
+            sifr_generated_concat.push_str(feature);
+            sifr_generated_concat.push_str(" is not implemented in this compatibility surface");
+            sifr_generated_concat
+        }
+    }
+    pub(crate) fn is_zipfile(path: &str) -> bool {
+        let sifr_generated_try_res: Result<bool, IOError> = (|| {
+            let _names: Vec<String> = zip_namelist(path)?;
+            Ok(true)
+        })();
+        sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
+            let e = sifr_generated_try_err.clone();
+            let _ = e.message.clone();
+            false
+        })
+    }
+    pub(crate) fn sifr_generated_io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
+        let msg = e.to_string();
+        let kind = {
+            let sifr_generated_io_kind = (&e as &dyn ::std::any::Any)
+                .downcast_ref::<std::io::Error>()
+                .map(::std::io::Error::kind);
+            match sifr_generated_io_kind {
+                Some(::std::io::ErrorKind::NotFound) => "FileNotFound".to_string(),
+                Some(::std::io::ErrorKind::PermissionDenied) => "PermissionDenied".to_string(),
+                Some(::std::io::ErrorKind::AlreadyExists) => "FileExists".to_string(),
+                Some(::std::io::ErrorKind::IsADirectory) => "IsADirectory".to_string(),
+                Some(::std::io::ErrorKind::NotADirectory) => "NotADirectory".to_string(),
+                Some(::std::io::ErrorKind::DirectoryNotEmpty) => "DirectoryNotEmpty".to_string(),
+                _ => "Other".to_string(),
+            }
+        };
+        IOError { message: msg, kind }
+    }
+}
+mod sifr_generated_project_nominals {
+    use crate::sifr_generated_generated_support::*;
+    use ::sifr_runtime::SifrInt;
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SifrGeneratedStdlibSifrX2etempfileX2eNamedTemporaryFile {
         pub path_field: String,
@@ -126,73 +244,6 @@ mod sifr_generated_project_nominals {
                 self.path_field, self.mode_field, self.delete, self.closed, self.cleaned
             )
         }
-    }
-    #[must_use]
-    pub fn sifr_generated_random_suffix() -> String {
-        let n: SifrInt = random_int(SifrInt::from_i64(100_000), SifrInt::from_i64(999_999));
-        n.to_string()
-    }
-    #[must_use]
-    pub fn mktemp_path(prefix: &str) -> String {
-        let suffix: String = sifr_generated_random_suffix();
-        let mut root: String = gettempdir();
-        let sifr_generated_chars_root: Vec<char> = root.chars().collect::<Vec<char>>();
-        if &SifrInt::from(sifr_generated_chars_root.len()) == &SifrInt::from_i64(0) {
-            root = "/tmp".to_string();
-        } else {
-            let last: Option<String> = {
-                let sifr_generated_string_index =
-                    SifrInt::from(root.chars().count()) - SifrInt::from_i64(1);
-                let sifr_generated_string_index_normalized = sifr_generated_string_index
-                    .normalize_index_or_len(sifr_generated_chars_root.len());
-                sifr_generated_chars_root
-                    .get(sifr_generated_string_index_normalized)
-                    .copied()
-            }
-            .map(|character| character.to_string());
-            if let Some(last) = last
-                && last == "/"
-            {
-                return {
-                    let mut sifr_generated_concat: String =
-                        String::with_capacity(root.len() + prefix.len() + suffix.len());
-                    sifr_generated_concat.push_str(root.as_str());
-                    sifr_generated_concat.push_str(prefix);
-                    sifr_generated_concat.push_str(suffix.as_str());
-                    sifr_generated_concat
-                };
-            }
-        }
-        {
-            let mut sifr_generated_concat: String =
-                String::with_capacity(root.len() + 1usize + prefix.len() + suffix.len());
-            sifr_generated_concat.push_str(root.as_str());
-            sifr_generated_concat.push('/');
-            sifr_generated_concat.push_str(prefix);
-            sifr_generated_concat.push_str(suffix.as_str());
-            sifr_generated_concat
-        }
-    }
-    ///# Errors
-    ///Returns the typed error produced by this operation.
-    pub fn zip_create(path: &str) -> Result<(), IOError> {
-        ::sifr_stdlib::zipfile::zip_create(path).map_err(sifr_generated_io_err)
-    }
-    ///# Errors
-    ///Returns the typed error produced by this operation.
-    pub fn zip_add_file(zip_path: &str, name: &str, content: &str) -> Result<(), IOError> {
-        ::sifr_stdlib::zipfile::zip_add_file(zip_path, name, content).map_err(sifr_generated_io_err)
-    }
-    ///# Errors
-    ///Returns the typed error produced by this operation.
-    pub fn zip_add_file_bytes(zip_path: &str, name: &str, content: &[u8]) -> Result<(), IOError> {
-        ::sifr_stdlib::zipfile::zip_add_file_bytes(zip_path, name, content)
-            .map_err(sifr_generated_io_err)
-    }
-    ///# Errors
-    ///Returns the typed error produced by this operation.
-    pub fn zip_read_file_bytes(zip_path: &str, name: &str) -> Result<Vec<u8>, IOError> {
-        ::sifr_stdlib::zipfile::zip_read_file_bytes(zip_path, name).map_err(sifr_generated_io_err)
     }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct SifrGeneratedStdlibSifrX2ezipfileX2eZipReadHandle {
@@ -352,34 +403,6 @@ mod sifr_generated_project_nominals {
             )
         }
     }
-    #[must_use]
-    pub fn sifr_generated_zip_read_only_error() -> String {
-        "zipfile operation requires write or append mode".to_string()
-    }
-    #[must_use]
-    pub fn sifr_generated_zip_open_mode_error(mode: &str) -> String {
-        {
-            let mut sifr_generated_concat: String = String::with_capacity(48usize + mode.len());
-            sifr_generated_concat.push_str("zipfile open supports read-only mode only, got: ");
-            sifr_generated_concat.push_str(mode);
-            sifr_generated_concat
-        }
-    }
-    #[must_use]
-    pub fn sifr_generated_closed_stream_error() -> String {
-        "I/O operation on closed stream".to_string()
-    }
-    #[must_use]
-    pub fn sifr_generated_zip_unimplemented_error(feature: &str) -> String {
-        {
-            let mut sifr_generated_concat: String =
-                String::with_capacity(8usize + feature.len() + 49usize);
-            sifr_generated_concat.push_str("zipfile ");
-            sifr_generated_concat.push_str(feature);
-            sifr_generated_concat.push_str(" is not implemented in this compatibility surface");
-            sifr_generated_concat
-        }
-    }
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     pub struct IOError {
         pub message: String,
@@ -400,72 +423,13 @@ mod sifr_generated_project_nominals {
         }
     }
     impl ::std::error::Error for IOError {}
-    #[must_use]
-    pub fn sifr_generated_io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
-        let msg = e.to_string();
-        let kind = {
-            let sifr_generated_io_kind = (&e as &dyn ::std::any::Any)
-                .downcast_ref::<std::io::Error>()
-                .map(::std::io::Error::kind);
-            match sifr_generated_io_kind {
-                Some(::std::io::ErrorKind::NotFound) => "FileNotFound".to_string(),
-                Some(::std::io::ErrorKind::PermissionDenied) => "PermissionDenied".to_string(),
-                Some(::std::io::ErrorKind::AlreadyExists) => "FileExists".to_string(),
-                Some(::std::io::ErrorKind::IsADirectory) => "IsADirectory".to_string(),
-                Some(::std::io::ErrorKind::NotADirectory) => "NotADirectory".to_string(),
-                Some(::std::io::ErrorKind::DirectoryNotEmpty) => "DirectoryNotEmpty".to_string(),
-                _ => "Other".to_string(),
-            }
-        };
-        IOError { message: msg, kind }
-    }
 }
+use crate::sifr_generated_generated_support::*;
 use ::sifr_runtime::SifrInt;
 pub use sifr_generated_project_nominals::IOError;
 pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2etempfileX2eNamedTemporaryFile;
 pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2ezipfileX2eZipFile;
 pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2ezipfileX2eZipReadHandle;
-fn exists(path: &str) -> bool {
-    ::sifr_stdlib::fs::exists(path)
-}
-fn remove_file(path: &str) -> Result<(), IOError> {
-    ::sifr_stdlib::fs::remove_file(path).map_err(sifr_generated_io_err)
-}
-fn zip_namelist(zip_path: &str) -> Result<Vec<String>, IOError> {
-    ::sifr_stdlib::zipfile::zip_namelist(zip_path).map_err(sifr_generated_io_err)
-}
-const fn sifr_generated_const_5a49505f53544f524544() -> SifrInt {
-    SifrInt::from_i64(0)
-}
-fn is_zipfile(path: &str) -> bool {
-    let sifr_generated_try_res: Result<bool, IOError> = (|| {
-        let _names: Vec<String> = zip_namelist(path)?;
-        Ok(true)
-    })();
-    sifr_generated_try_res.unwrap_or_else(|sifr_generated_try_err| {
-        let e = sifr_generated_try_err.clone();
-        let _ = e.message.clone();
-        false
-    })
-}
-fn sifr_generated_io_err<E: ::std::fmt::Display + 'static>(e: E) -> IOError {
-    let msg = e.to_string();
-    let kind = {
-        let sifr_generated_io_kind = (&e as &dyn ::std::any::Any)
-            .downcast_ref::<std::io::Error>()
-            .map(::std::io::Error::kind);
-        match sifr_generated_io_kind {
-            Some(::std::io::ErrorKind::NotFound) => "FileNotFound".to_string(),
-            Some(::std::io::ErrorKind::PermissionDenied) => "PermissionDenied".to_string(),
-            Some(::std::io::ErrorKind::AlreadyExists) => "FileExists".to_string(),
-            Some(::std::io::ErrorKind::IsADirectory) => "IsADirectory".to_string(),
-            Some(::std::io::ErrorKind::NotADirectory) => "NotADirectory".to_string(),
-            Some(::std::io::ErrorKind::DirectoryNotEmpty) => "DirectoryNotEmpty".to_string(),
-            _ => "Other".to_string(),
-        }
-    };
-    IOError { message: msg, kind }
-}
 fn main() {
     let zip_path: String = "/tmp/sifr_runtime_zipfile_io.zip".to_string();
     let mut demo_ok: bool = false;
