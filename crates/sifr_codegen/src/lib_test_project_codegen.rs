@@ -119,7 +119,7 @@ pub fn generate_rust_test_project_with_metadata(
         .collect::<Vec<_>>()
         .join("\n");
         let module_demand = generated.support_demand.clone();
-        project_support_demand.merge(&module_demand);
+        project_support_demand.merge_project_module(&module_demand);
         support_module_demands.insert((*module_name).to_string(), module_demand);
         let source = if imports.is_empty() {
             generated.module_body_source
@@ -159,7 +159,7 @@ pub fn generate_rust_test_project_with_metadata(
             SupportEmission::Deferred,
         );
         let module_demand = generated.support_demand.clone();
-        project_support_demand.merge(&module_demand);
+        project_support_demand.merge_project_module(&module_demand);
         test_module_demands.insert((*module_name).to_string(), module_demand);
         test_rust_files.insert((*module_name).to_string(), generated.module_body_source);
         used_stdlib_modules.extend(generated.used_stdlib_modules);
@@ -224,7 +224,10 @@ pub fn generate_rust_test_project_with_metadata(
         let prelude_support_traits = crate::stdlib_filter::rust_source_required_trait_names(
             &project_union_prelude,
             &visible_support,
-        );
+        )
+        .unwrap_or_else(|error| {
+            panic!("invalid generated test-project support trait layout: {error}")
+        });
         if !prelude_support_refs.is_empty() || !prelude_support_traits.is_empty() {
             project_union_prelude =
                 crate::import_generated_support_in_project_nominals(&project_union_prelude)
@@ -238,7 +241,10 @@ pub fn generate_rust_test_project_with_metadata(
             let body_support_refs =
                 crate::stdlib_filter::rust_source_referenced_item_names(source, &support_names);
             let body_support_traits =
-                crate::stdlib_filter::rust_source_required_trait_names(source, &visible_support);
+                crate::stdlib_filter::rust_source_required_trait_names(source, &visible_support)
+                    .unwrap_or_else(|error| {
+                        panic!("invalid generated test-project support trait layout: {error}")
+                    });
             if support_module_demands
                 .get(module_name)
                 .is_some_and(ModuleSupportDemand::needs_support)
@@ -254,7 +260,10 @@ pub fn generate_rust_test_project_with_metadata(
             let body_support_refs =
                 crate::stdlib_filter::rust_source_referenced_item_names(source, &support_names);
             let body_support_traits =
-                crate::stdlib_filter::rust_source_required_trait_names(source, &visible_support);
+                crate::stdlib_filter::rust_source_required_trait_names(source, &visible_support)
+                    .unwrap_or_else(|error| {
+                        panic!("invalid generated test-project support trait layout: {error}")
+                    });
             test_module_demands
                 .get(module_name)
                 .is_some_and(ModuleSupportDemand::needs_support)

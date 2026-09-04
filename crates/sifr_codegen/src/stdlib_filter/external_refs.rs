@@ -69,37 +69,62 @@ impl<'ast> Visit<'ast> for ExternalItemRefCollector<'_> {
 pub(crate) fn rust_source_required_trait_names(
     consumer_source: &str,
     support_source: &str,
-) -> HashSet<String> {
-    let (Ok(consumer), Ok(support)) = (
-        syn::parse_file(consumer_source),
-        syn::parse_file(support_source),
-    ) else {
-        return HashSet::new();
-    };
+) -> Result<HashSet<String>, String> {
+    let consumer = syn::parse_file(consumer_source)
+        .map_err(|error| format!("failed to parse generated support consumer: {error}"))?;
+    let support = syn::parse_file(support_source).map_err(|error| {
+        format!("failed to parse generated support while collecting traits: {error}")
+    })?;
     let mut method_traits = HashMap::<String, HashSet<String>>::new();
-    for item in support.items {
-        let syn::Item::Trait(trait_) = item else {
-            continue;
-        };
-        let trait_name = trait_.ident.to_string();
-        for item in trait_.items {
-            if let syn::TraitItem::Fn(method) = item {
-                method_traits
-                    .entry(method.sig.ident.to_string())
-                    .or_default()
-                    .insert(trait_name.clone());
+    for item in &support.items {
+        match item {
+            syn::Item::Trait(trait_) => {
+                let trait_name = trait_.ident.to_string();
+                for item in &trait_.items {
+                    if let syn::TraitItem::Fn(method) = item {
+                        method_traits
+                            .entry(method.sig.ident.to_string())
+                            .or_default()
+                            .insert(trait_name.clone());
+                    }
+                }
             }
+            syn::Item::Mod(module) => {
+                if let Some(trait_name) = nested_trait_name(module) {
+                    return Err(format!(
+                        "generated support trait `{trait_name}` is nested in module `{}`; support traits must be top-level items",
+                        module.ident
+                    ));
+                }
+            }
+            _ => {}
         }
     }
     if method_traits.is_empty() {
-        return HashSet::new();
+        return Ok(HashSet::new());
     }
     let mut collector = MethodCallCollector {
         method_traits: &method_traits,
         required_traits: HashSet::new(),
     };
     collector.visit_file(&consumer);
-    collector.required_traits
+    Ok(collector.required_traits)
+}
+
+fn nested_trait_name(module: &syn::ItemMod) -> Option<String> {
+    let (_, items) = module.content.as_ref()?;
+    for item in items {
+        match item {
+            syn::Item::Trait(trait_) => return Some(trait_.ident.to_string()),
+            syn::Item::Mod(nested) => {
+                if let Some(name) = nested_trait_name(nested) {
+                    return Some(name);
+                }
+            }
+            _ => {}
+        }
+    }
+    None
 }
 
 struct MethodCallCollector<'a> {
@@ -137,8 +162,21 @@ mod tests {
         let required = rust_source_required_trait_names(
             "fn run(value: Wrapper) { value.render(); }",
             "trait RenderSupport { fn render(&self); }",
-        );
+        )
+        .expect("flat support traits should be accepted");
 
         assert_eq!(required, HashSet::from(["RenderSupport".to_string()]));
+    }
+
+    #[test]
+    fn item10a_nested_support_traits_violate_the_flat_owner_invariant() {
+        let error = rust_source_required_trait_names(
+            "fn run(value: Wrapper) { value.render(); }",
+            "mod nested { trait RenderSupport { fn render(&self); } }",
+        )
+        .expect_err("nested support traits must fail closed");
+
+        assert!(error.contains("support traits must be top-level items"));
+        assert!(error.contains("RenderSupport"));
     }
 }

@@ -16,6 +16,48 @@ pub(super) fn mktemp_dir(name: &str) -> std::path::PathBuf {
 }
 
 #[test]
+fn item10a_build_project_preserves_module_scoped_builtin_error_shadow_identities() {
+    let dir = mktemp_dir("module_scoped_builtin_error_shadow");
+    let main_file = dir.join("main.sifr");
+    let build_out = dir.join("build_out");
+    std::fs::write(
+        &main_file,
+        "from shadow import shadow_message\nfrom builtin_user import builtin_message\n\ndef main():\n    assert shadow_message() == \"shadow\"\n    assert builtin_message() == \"builtin\"\n    print(\"module-error-identities-ok\")\n",
+    )
+    .expect("main module should be written");
+    std::fs::write(
+        dir.join("shadow.sifr"),
+        "class ValueError(Error):\n    message: str\n\ndef shadow_message() -> str:\n    try:\n        raise ValueError(\"shadow\")\n    except ValueError as error:\n        return error.message\n",
+    )
+    .expect("shadow module should be written");
+    std::fs::write(
+        dir.join("builtin_user.sifr"),
+        "def builtin_message() -> str:\n    try:\n        raise ValueError(\"builtin\")\n    except ValueError as error:\n        return error.message\n",
+    )
+    .expect("builtin user module should be written");
+
+    let binary = build_project(
+        &main_file,
+        &build_out,
+        &mut sifr_frontend::DiskSourceProvider::new(),
+    )
+    .expect("project with distinct local and builtin ValueError identities should build");
+    let output = std::process::Command::new(&binary)
+        .output()
+        .expect("generated project binary should run");
+
+    assert!(
+        output.status.success(),
+        "generated binary failed: {output:?}"
+    );
+    assert_eq!(
+        String::from_utf8_lossy(&output.stdout).trim(),
+        "module-error-identities-ok"
+    );
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
 fn test_check_project_resolves_valid_local_imports() {
     let dir = mktemp_dir("check_positive");
     std::fs::write(

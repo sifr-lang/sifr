@@ -5,7 +5,7 @@
 mod lib_modules_and_codegen;
 pub use lib_modules_and_codegen::*;
 mod builtin_errors;
-pub(crate) use builtin_errors::BUILTIN_ERROR_CLASSES;
+pub(crate) use builtin_errors::{BUILTIN_ERROR_CLASSES, builtin_error_identity};
 mod discardability;
 mod generated_dependency_metadata;
 mod generated_rust_canonicalizer;

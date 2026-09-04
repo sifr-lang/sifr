@@ -11,7 +11,11 @@ impl RustEmitter {
         if self.project_nominal_type_paths.is_empty() {
             return None;
         }
-        let key = identity.unwrap_or(name);
+        let builtin_identity = identity
+            .is_none()
+            .then(|| crate::builtin_error_identity(name))
+            .flatten();
+        let key = identity.or(builtin_identity.as_deref()).unwrap_or(name);
         if let Some(path) = self.project_nominal_type_paths.get(key) {
             return Some(path);
         }

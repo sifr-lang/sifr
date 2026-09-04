@@ -372,7 +372,7 @@ pub fn generate_rust_multi_with_metadata(
         let union_imports =
             render_project_union_imports(module_name, &used_unions, &crate_root_modules);
         let module_support_demand = codegen_result.support_demand.clone();
-        project_support_demand.merge(&module_support_demand);
+        project_support_demand.merge_project_module(&module_support_demand);
         module_support_demands.insert((*module_name).to_string(), module_support_demand);
         let mut rust_source = relocate_project_stdlib_nominals(
             &codegen_result.module_body_source,
@@ -460,7 +460,8 @@ pub fn generate_rust_multi_with_metadata(
         let prelude_support_traits = crate::stdlib_filter::rust_source_required_trait_names(
             &project_union_prelude,
             &visible_support,
-        );
+        )
+        .unwrap_or_else(|error| panic!("invalid generated project support trait layout: {error}"));
         if !prelude_support_refs.is_empty() || !prelude_support_traits.is_empty() {
             project_union_prelude =
                 crate::import_generated_support_in_project_nominals(&project_union_prelude)
@@ -475,7 +476,10 @@ pub fn generate_rust_multi_with_metadata(
             let body_support_refs =
                 crate::stdlib_filter::rust_source_referenced_item_names(source, &support_names);
             let body_support_traits =
-                crate::stdlib_filter::rust_source_required_trait_names(source, &visible_support);
+                crate::stdlib_filter::rust_source_required_trait_names(source, &visible_support)
+                    .unwrap_or_else(|error| {
+                        panic!("invalid generated project support trait layout: {error}")
+                    });
             if module_needs_support
                 && (!body_support_refs.is_empty() || !body_support_traits.is_empty())
             {

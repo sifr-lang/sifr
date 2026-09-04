@@ -50,7 +50,7 @@ pub(crate) fn prune_generated_support_for_consumers(
         consumer_roots.extend(crate::stdlib_filter::rust_source_required_trait_names(
             source,
             support_source,
-        ));
+        )?);
         let file = syn::parse_file(source)
             .map_err(|error| format!("failed to parse generated support consumer: {error}"))?;
         consumer_items.extend(file.items);

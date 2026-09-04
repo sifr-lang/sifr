@@ -9,6 +9,36 @@ use std::path::PathBuf;
 use std::sync::{Arc, Barrier};
 
 #[test]
+fn item10a_test_project_preserves_module_scoped_builtin_error_shadow_identities() {
+    let unique = format!(
+        "sifr_test_module_error_identity_{}_{}",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .expect("time should move forward")
+            .as_nanos()
+    );
+    let test_dir = std::env::temp_dir().join(unique);
+    std::fs::create_dir_all(&test_dir).expect("test dir should be created");
+    std::fs::write(
+        test_dir.join("shadow.sifr"),
+        "class ValueError(Error):\n    message: str\n\ndef shadow_message() -> str:\n    try:\n        raise ValueError(\"shadow\")\n    except ValueError as error:\n        return error.message\n",
+    )
+    .expect("shadow support module should be written");
+    std::fs::write(
+        test_dir.join("test_error_identities.sifr"),
+        "from shadow import shadow_message\n\ndef builtin_message() -> str:\n    try:\n        raise ValueError(\"builtin\")\n    except ValueError as error:\n        return error.message\n\ndef test_module_error_identities():\n    assert shadow_message() == \"shadow\"\n    assert builtin_message() == \"builtin\"\n",
+    )
+    .expect("test module should be written");
+
+    let result = run_tests(&test_dir, &mut DiskSourceProvider::new())
+        .expect("test project with distinct local and builtin ValueError identities should run");
+
+    assert!(result, "generated Sifr test project should succeed");
+    let _ = std::fs::remove_dir_all(&test_dir);
+}
+
+#[test]
 fn test_run_tests_resolves_local_imports_and_constants() {
     let unique = format!(
         "sifr_test_import_parity_{}_{}",

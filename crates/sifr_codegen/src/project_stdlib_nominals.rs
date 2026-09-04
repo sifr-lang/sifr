@@ -40,6 +40,12 @@ impl ProjectNominalRegistry {
         self.shared_rust_names.remove(&rust_name);
         self.crate_root_rust_names.insert(rust_name);
     }
+
+    fn register_builtin(&mut self, name: &str, rust_name: String) {
+        let identity = crate::builtin_error_identity(name)
+            .expect("project builtin registration requires a builtin error name");
+        self.register_shared(identity, rust_name);
+    }
 }
 
 impl ProjectStdlibNominalPlan {
@@ -115,6 +121,12 @@ pub(crate) fn project_stdlib_nominal_plan(
     }
     for (_, module) in modules {
         collect_module_nominals(module, &mut declarations, &mut builtin_types);
+        let local_error_names = module
+            .classes
+            .iter()
+            .filter(|class| class.is_error_type)
+            .map(|class| class.name.as_str())
+            .collect::<HashSet<_>>();
         let intrinsic_functions =
             crate::error_refs::collect_module_intrinsic_function_names(module);
         for name in crate::error_refs::collect_referenced_builtin_error_classes(
@@ -124,7 +136,9 @@ pub(crate) fn project_stdlib_nominal_plan(
             false,
             crate::BUILTIN_ERROR_CLASSES,
         ) {
-            if sifr_type_system::io_error_kind(&name).is_some() {
+            if local_error_names.contains(name.as_str())
+                || sifr_type_system::io_error_kind(&name).is_some()
+            {
                 continue;
             }
             builtin_types
@@ -154,6 +168,10 @@ pub(crate) fn project_stdlib_nominal_plan(
     }
     for (name, ty) in builtin_types {
         let rust_name = class_rust_name(None, &name);
+        debug_assert!(
+            matches!(&ty, Type::Class { identity, .. } if is_compiler_builtin_error(identity.as_deref(), &name)),
+            "project builtin registry accepted a non-builtin nominal identity"
+        );
         if let Type::Class {
             identity: Some(identity),
             ..
@@ -161,7 +179,7 @@ pub(crate) fn project_stdlib_nominal_plan(
         {
             registry.register_shared(identity.clone(), rust_name.clone());
         }
-        registry.register_shared(name, rust_name);
+        registry.register_builtin(&name, rust_name);
     }
     for identity in SHARED_MODULE_CRATE_ROOT_NOMINAL_IDENTITIES {
         if let Some((_, name)) = identity.rsplit_once('.') {
@@ -308,7 +326,7 @@ fn register_emitted_builtin_nominals(shared_source: &str, registry: &mut Project
         if sifr_type_system::io_error_kind(name).is_some() || !defined_names.contains(*name) {
             continue;
         }
-        registry.register_shared((*name).to_string(), class_rust_name(None, name));
+        registry.register_builtin(name, class_rust_name(None, name));
     }
 }
 
@@ -704,11 +722,43 @@ mod tests {
 
         assert!(registry.shared_rust_names.contains("ParseError"));
         assert_eq!(
-            registry.rust_paths.get("ParseError"),
+            registry.rust_paths.get("sifr.builtin.ParseError"),
             Some(&"crate::__sifr_project_nominals::ParseError".to_string())
         );
+        assert!(!registry.rust_paths.contains_key("ParseError"));
         assert!(!registry.shared_rust_names.contains("FileNotFoundError"));
         assert!(!registry.rust_paths.contains_key("FileNotFoundError"));
+    }
+
+    #[test]
+    fn item10a_builtin_registry_identity_does_not_replace_a_module_qualified_shadow() {
+        let mut paths = HashMap::from([
+            (
+                "shadow.ValueError".to_string(),
+                "crate::shadow::ValueError".to_string(),
+            ),
+            (
+                "ValueError".to_string(),
+                "crate::shadow::ValueError".to_string(),
+            ),
+        ]);
+        let mut registry = ProjectNominalRegistry::default();
+        registry.register_builtin("ValueError", "ValueError".to_string());
+
+        paths.extend(registry.rust_paths);
+
+        assert_eq!(
+            paths.get("shadow.ValueError"),
+            Some(&"crate::shadow::ValueError".to_string())
+        );
+        assert_eq!(
+            paths.get("ValueError"),
+            Some(&"crate::shadow::ValueError".to_string())
+        );
+        assert_eq!(
+            paths.get("sifr.builtin.ValueError"),
+            Some(&"crate::__sifr_project_nominals::ValueError".to_string())
+        );
     }
 
     #[test]
