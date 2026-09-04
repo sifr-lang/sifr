@@ -557,75 +557,50 @@ fn sifr_generated_parse_datetime_iso(
         sifr_generated_chars_value
             .get(sifr_generated_string_index_normalized)
             .copied()
-    } != Some("-").and_then(|sifr_generated_cmp_s| {
-        let mut sifr_generated_cmp_chars = sifr_generated_cmp_s.chars();
-        let sifr_generated_cmp_first = sifr_generated_cmp_chars.next();
-        if sifr_generated_cmp_chars.next().is_some() {
-            None
-        } else {
-            sifr_generated_cmp_first
+    }
+    .map(Some)
+        != Some(Some('-'))
+        || {
+            let sifr_generated_string_index = SifrInt::from_i64(7);
+            let sifr_generated_string_index_normalized = sifr_generated_string_index
+                .normalize_index_or_len(sifr_generated_chars_value.len());
+            sifr_generated_chars_value
+                .get(sifr_generated_string_index_normalized)
+                .copied()
         }
-    }) || {
-        let sifr_generated_string_index = SifrInt::from_i64(7);
-        let sifr_generated_string_index_normalized =
-            sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_value.len());
-        sifr_generated_chars_value
-            .get(sifr_generated_string_index_normalized)
-            .copied()
-    } != Some("-").and_then(|sifr_generated_cmp_s| {
-        let mut sifr_generated_cmp_chars = sifr_generated_cmp_s.chars();
-        let sifr_generated_cmp_first = sifr_generated_cmp_chars.next();
-        if sifr_generated_cmp_chars.next().is_some() {
-            None
-        } else {
-            sifr_generated_cmp_first
+        .map(Some)
+            != Some(Some('-'))
+        || {
+            let sifr_generated_string_index = SifrInt::from_i64(10);
+            let sifr_generated_string_index_normalized = sifr_generated_string_index
+                .normalize_index_or_len(sifr_generated_chars_value.len());
+            sifr_generated_chars_value
+                .get(sifr_generated_string_index_normalized)
+                .copied()
         }
-    }) || {
-        let sifr_generated_string_index = SifrInt::from_i64(10);
-        let sifr_generated_string_index_normalized =
-            sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_value.len());
-        sifr_generated_chars_value
-            .get(sifr_generated_string_index_normalized)
-            .copied()
-    } != Some("T").and_then(|sifr_generated_cmp_s| {
-        let mut sifr_generated_cmp_chars = sifr_generated_cmp_s.chars();
-        let sifr_generated_cmp_first = sifr_generated_cmp_chars.next();
-        if sifr_generated_cmp_chars.next().is_some() {
-            None
-        } else {
-            sifr_generated_cmp_first
+        .map(Some)
+            != Some(Some('T'))
+        || {
+            let sifr_generated_string_index = SifrInt::from_i64(13);
+            let sifr_generated_string_index_normalized = sifr_generated_string_index
+                .normalize_index_or_len(sifr_generated_chars_value.len());
+            sifr_generated_chars_value
+                .get(sifr_generated_string_index_normalized)
+                .copied()
         }
-    }) || {
-        let sifr_generated_string_index = SifrInt::from_i64(13);
-        let sifr_generated_string_index_normalized =
-            sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_value.len());
-        sifr_generated_chars_value
-            .get(sifr_generated_string_index_normalized)
-            .copied()
-    } != Some(":").and_then(|sifr_generated_cmp_s| {
-        let mut sifr_generated_cmp_chars = sifr_generated_cmp_s.chars();
-        let sifr_generated_cmp_first = sifr_generated_cmp_chars.next();
-        if sifr_generated_cmp_chars.next().is_some() {
-            None
-        } else {
-            sifr_generated_cmp_first
+        .map(Some)
+            != Some(Some(':'))
+        || {
+            let sifr_generated_string_index = SifrInt::from_i64(16);
+            let sifr_generated_string_index_normalized = sifr_generated_string_index
+                .normalize_index_or_len(sifr_generated_chars_value.len());
+            sifr_generated_chars_value
+                .get(sifr_generated_string_index_normalized)
+                .copied()
         }
-    }) || {
-        let sifr_generated_string_index = SifrInt::from_i64(16);
-        let sifr_generated_string_index_normalized =
-            sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_value.len());
-        sifr_generated_chars_value
-            .get(sifr_generated_string_index_normalized)
-            .copied()
-    } != Some(":").and_then(|sifr_generated_cmp_s| {
-        let mut sifr_generated_cmp_chars = sifr_generated_cmp_s.chars();
-        let sifr_generated_cmp_first = sifr_generated_cmp_chars.next();
-        if sifr_generated_cmp_chars.next().is_some() {
-            None
-        } else {
-            sifr_generated_cmp_first
-        }
-    }) {
+        .map(Some)
+            != Some(Some(':'))
+    {
         return Err(ValueError::new("invalid datetime string".to_string()));
     }
     let sifr_generated_try_res: Result<
@@ -704,15 +679,10 @@ fn sifr_generated_timezone_offset_from_text(text: &str) -> Result<SifrInt, Value
         sifr_generated_chars_text
             .get(sifr_generated_string_index_normalized)
             .copied()
-    } != Some(":").and_then(|sifr_generated_cmp_s| {
-        let mut sifr_generated_cmp_chars = sifr_generated_cmp_s.chars();
-        let sifr_generated_cmp_first = sifr_generated_cmp_chars.next();
-        if sifr_generated_cmp_chars.next().is_some() {
-            None
-        } else {
-            sifr_generated_cmp_first
-        }
-    }) {
+    }
+    .map(Some)
+        != Some(Some(':'))
+    {
         return Err(ValueError::new("invalid timezone string".to_string()));
     }
     let sifr_generated_try_res: Result<Result<SifrInt, ValueError>, ParseError> = (|| {
@@ -1724,22 +1694,16 @@ fn sifr_generated_trim_line(line: &str) -> String {
     }
     .map(|character| character.to_string())
     .is_some_and(|_checked_value_2| {
-        ({
+        {
             let sifr_generated_string_index = start.clone();
             let sifr_generated_string_index_normalized =
                 sifr_generated_string_index.normalize_index_or_len(sifr_generated_chars_line.len());
             sifr_generated_chars_line
                 .get(sifr_generated_string_index_normalized)
                 .copied()
-        } == Some(" ").and_then(|sifr_generated_cmp_s| {
-            let mut sifr_generated_cmp_chars = sifr_generated_cmp_s.chars();
-            let sifr_generated_cmp_first = sifr_generated_cmp_chars.next();
-            if sifr_generated_cmp_chars.next().is_some() {
-                None
-            } else {
-                sifr_generated_cmp_first
-            }
-        }))
+        }
+        .map(Some)
+            == Some(Some(' '))
     }) {
         start = &start + &SifrInt::from_i64(1);
     }
@@ -1751,15 +1715,10 @@ fn sifr_generated_trim_line(line: &str) -> String {
         sifr_generated_chars_line
             .get(sifr_generated_string_index_normalized)
             .copied()
-    } == Some(" ").and_then(|sifr_generated_cmp_s| {
-        let mut sifr_generated_cmp_chars = sifr_generated_cmp_s.chars();
-        let sifr_generated_cmp_first = sifr_generated_cmp_chars.next();
-        if sifr_generated_cmp_chars.next().is_some() {
-            None
-        } else {
-            sifr_generated_cmp_first
-        }
-    }) {
+    }
+    .map(Some)
+        == Some(Some(' '))
+    {
         end = &end - &SifrInt::from_i64(1);
     }
     {
