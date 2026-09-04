@@ -1,0 +1,50 @@
+def main():
+    text: str = "a🦀z"
+    crab: str = "🦀"
+    empty: str = ""
+    multiple: str = "ab"
+
+    # Valid Unicode scalar, literal and variable comparands, both operand orders.
+    assert text[1] == "🦀"
+    assert "🦀" == text[1]
+    assert text[1] == crab
+    assert crab == text[1]
+    assert not (text[1] != "🦀")
+    assert not (crab != text[1])
+
+    # Present empty and multi-scalar strings never equal a present character.
+    assert text[1] != empty
+    assert empty != text[1]
+    assert text[1] != multiple
+    assert multiple != text[1]
+    assert not (text[1] == "")
+    assert not ("ab" == text[1])
+
+    # Missing positive and negative indices remain distinct from present strings.
+    assert text[99] != empty
+    assert empty != text[99]
+    assert text[99] != multiple
+    assert multiple != text[99]
+    assert text[-99] != ""
+    assert "ab" != text[-99]
+    assert not (text[99] == "")
+    assert not ("ab" == text[-99])
+
+    # Checked string lookups exercise present and absent optional string states.
+    present_empty: list[str] = [""]
+    present_multiple: list[str] = ["ab"]
+    present_crab: list[str] = ["🦀"]
+    missing: list[str] = []
+
+    assert text[1] == present_crab[0]
+    assert present_crab[0] == text[1]
+    assert text[99] != present_empty[0]
+    assert present_empty[0] != text[99]
+    assert text[-99] != present_multiple[0]
+    assert present_multiple[0] != text[-99]
+
+    # Two genuinely absent optional values retain their equality contract.
+    assert text[99] == missing[0]
+    assert missing[0] == text[-99]
+    assert not (text[99] != missing[0])
+    assert not (missing[0] != text[-99])

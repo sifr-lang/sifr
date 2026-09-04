@@ -372,22 +372,16 @@ fn glob(directory: &str, pattern: &str) -> Vec<String> {
         }
         .map(|character| character.to_string())
         .is_some_and(|_checked_value_0| {
-            ({
+            {
                 let sifr_generated_string_index = SifrInt::from_i64(0);
                 let sifr_generated_string_index_normalized = sifr_generated_string_index
                     .normalize_index_or_len(sifr_generated_chars_pattern.len());
                 sifr_generated_chars_pattern
                     .get(sifr_generated_string_index_normalized)
                     .copied()
-            } == Some(".").and_then(|sifr_generated_cmp_s| {
-                let mut sifr_generated_cmp_chars = sifr_generated_cmp_s.chars();
-                let sifr_generated_cmp_first = sifr_generated_cmp_chars.next();
-                if sifr_generated_cmp_chars.next().is_some() {
-                    None
-                } else {
-                    sifr_generated_cmp_first
-                }
-            }))
+            }
+            .map(Some)
+                == Some(Some('.'))
         });
     let mut matches: Vec<String> = Vec::new();
     let sifr_generated_try_res: Result<(), IOError> = (|| {
@@ -407,22 +401,16 @@ fn glob(directory: &str, pattern: &str) -> Vec<String> {
             }
             .map(|character| character.to_string())
             .is_some_and(|_checked_value_1| {
-                ({
+                {
                     let sifr_generated_string_index = SifrInt::from_i64(0);
                     let sifr_generated_string_index_normalized = sifr_generated_string_index
                         .normalize_index_or_len(sifr_generated_chars_entry.len());
                     sifr_generated_chars_entry
                         .get(sifr_generated_string_index_normalized)
                         .copied()
-                } == Some(".").and_then(|sifr_generated_cmp_s| {
-                    let mut sifr_generated_cmp_chars = sifr_generated_cmp_s.chars();
-                    let sifr_generated_cmp_first = sifr_generated_cmp_chars.next();
-                    if sifr_generated_cmp_chars.next().is_some() {
-                        None
-                    } else {
-                        sifr_generated_cmp_first
-                    }
-                }))
+                }
+                .map(Some)
+                    == Some(Some('.'))
             }) {
                 continue;
             }

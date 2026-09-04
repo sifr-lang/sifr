@@ -7,7 +7,11 @@ use crate::{
 
 enum StringCompareValue {
     Char(RustExpr),
-    Str { direct: RustExpr, view: RustExpr },
+    Str {
+        direct: RustExpr,
+        view: RustExpr,
+        comparison_state: Option<RustExpr>,
+    },
     OptionalStr(RustExpr),
 }
 
@@ -33,18 +37,38 @@ impl RustEmitter {
             (StringCompareValue::OptionalStr(left), StringCompareValue::OptionalStr(right)) => {
                 (left, right)
             }
-            (StringCompareValue::Char(left), StringCompareValue::Str { view: right, .. }) => {
-                (left, string_option_to_char_option(some_expr(right)))
-            }
-            (StringCompareValue::Str { view: left, .. }, StringCompareValue::Char(right)) => {
-                (string_option_to_char_option(some_expr(left)), right)
-            }
-            (StringCompareValue::Char(left), StringCompareValue::OptionalStr(right)) => {
-                (left, string_option_to_char_option(right))
-            }
-            (StringCompareValue::OptionalStr(left), StringCompareValue::Char(right)) => {
-                (string_option_to_char_option(left), right)
-            }
+            (
+                StringCompareValue::Char(left),
+                StringCompareValue::Str {
+                    view: right,
+                    comparison_state,
+                    ..
+                },
+            ) => (
+                char_option_to_comparison_state(left),
+                comparison_state
+                    .unwrap_or_else(|| string_option_to_comparison_state(some_expr(right))),
+            ),
+            (
+                StringCompareValue::Str {
+                    view: left,
+                    comparison_state,
+                    ..
+                },
+                StringCompareValue::Char(right),
+            ) => (
+                comparison_state
+                    .unwrap_or_else(|| string_option_to_comparison_state(some_expr(left))),
+                char_option_to_comparison_state(right),
+            ),
+            (StringCompareValue::Char(left), StringCompareValue::OptionalStr(right)) => (
+                char_option_to_comparison_state(left),
+                string_option_to_comparison_state(right),
+            ),
+            (StringCompareValue::OptionalStr(left), StringCompareValue::Char(right)) => (
+                string_option_to_comparison_state(left),
+                char_option_to_comparison_state(right),
+            ),
             (
                 StringCompareValue::Str { view: left, .. },
                 StringCompareValue::OptionalStr(right),
@@ -79,7 +103,11 @@ impl RustEmitter {
             return Ok(Some(StringCompareValue::OptionalStr(value)));
         }
         if let Some((direct, view)) = self.lower_borrowed_string_name_for_compare(expr) {
-            return Ok(Some(StringCompareValue::Str { direct, view }));
+            return Ok(Some(StringCompareValue::Str {
+                direct,
+                view,
+                comparison_state: None,
+            }));
         }
         let HirExpr::StringLiteral(value) = expr else {
             return Ok(None);
@@ -88,6 +116,7 @@ impl RustEmitter {
         Ok(Some(StringCompareValue::Str {
             direct: literal.clone(),
             view: literal,
+            comparison_state: Some(literal_string_comparison_state(value)),
         }))
     }
 
@@ -350,10 +379,29 @@ fn some_expr(value: RustExpr) -> RustExpr {
     }
 }
 
-fn string_option_to_char_option(option: RustExpr) -> RustExpr {
+fn char_option_to_comparison_state(option: RustExpr) -> RustExpr {
     RustExpr::MethodCall {
         receiver: Box::new(option),
-        method: "and_then".to_string(),
+        method: "map".to_string(),
+        args: vec![RustExpr::Path(vec!["Some".to_string()])],
+    }
+}
+
+fn literal_string_comparison_state(value: &str) -> RustExpr {
+    let mut chars = value.chars();
+    let first = chars.next();
+    let single_char = if chars.next().is_none() { first } else { None };
+    let char_state = single_char.map_or_else(
+        || RustExpr::Path(vec!["None".to_string()]),
+        |character| some_expr(RustExpr::Literal(RustLiteral::Char(character))),
+    );
+    some_expr(char_state)
+}
+
+fn string_option_to_comparison_state(option: RustExpr) -> RustExpr {
+    RustExpr::MethodCall {
+        receiver: Box::new(option),
+        method: "map".to_string(),
         args: vec![RustExpr::ClosureBlock {
             params: vec![RustParam::Named {
                 name: "__sifr_cmp_s".to_string(),
