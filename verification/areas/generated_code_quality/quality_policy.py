@@ -545,6 +545,7 @@ def run_debt_self_test(debt: dict[str, Any]) -> None:
     _expect_invalid(malformed_entry, "signature_sha256 must be a lowercase SHA-256")
 
     malformed_clippy = copy.deepcopy(debt)
+    malformed_clippy["clippy"]["lint_owners"]["clippy::arithmetic_side_effects"] = 2
     malformed_clippy["clippy"]["entries"]["self-test"] = {
         "clippy::arithmetic_side_effects": {
             "count": 1,
