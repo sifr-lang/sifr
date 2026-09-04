@@ -185,7 +185,7 @@ It does not broaden the active item.
 | 9 | merged | Algorithmic and Unicode performance | Emission preserves source complexity; string traversal avoids repeated scans/materialization; collection algorithms avoid quadratic clone/front-removal behavior; budgets prevent recurrence. |
 | 9A | merged | Character comparison state disambiguation | Allocation-free character/string comparison keeps an absent indexed character distinct from a present empty or multi-character string in every operand and optionality form. |
 | 10 | merged | Runtime, stdlib bridge, and API deduplication | Each demanded support body and public adapter is assembled once, unused support is absent, and generated crates have one canonical API path per operation. |
-| 10A | pending | Module-scoped builtin error shadow identities | Project support demand preserves user-defined and builtin error identities per module, without crate-wide suppression or dangling generated paths. |
+| 10A | merged | Module-scoped builtin error shadow identities | Project support demand preserves user-defined and builtin error identities per module, without crate-wide suppression or dangling generated paths. |
 | 11 | pending | Portable and secure generated projects | Generated manifests/artifacts are relocatable and reproducible; process arguments preserve boundaries; path, capacity, and resource-limit handling is checked. |
 | 12 | pending | Residual semantic completion and full-corpus qualification | Finish remaining semantic/profile work, remove all governed generated-code debt, regenerate every owned surface, and pass the uncompromising final qualification and applicable one-shot gates. |
 | 12A | pending | Phase closure and whole-phase review | Review the fully merged phase once, reconcile architecture/roadmap/evidence, and archive only when no actionable row remains. |
@@ -521,14 +521,14 @@ repeated. [PR #3668](https://github.com/sifr-lang/sifr/pull/3668) merged as
 
 ### Item 10A: Module-scoped builtin error shadow identities
 
-- [ ] A user-defined error class keeps its exact module-qualified identity.
-- [ ] A builtin error referenced by a sibling module remains present even when
+- [x] A user-defined error class keeps its exact module-qualified identity.
+- [x] A builtin error referenced by a sibling module remains present even when
   another module shadows its bare name.
-- [ ] Late file-derived support demand is module-aware and cannot turn a
+- [x] Late file-derived support demand is module-aware and cannot turn a
   per-module shadow into a crate-wide suppression veto.
-- [ ] Single-file, project, and generated test-project paths share the corrected
+- [x] Single-file, project, and generated test-project paths share the corrected
   identity and demand contract.
-- [ ] The flat generated-support trait invariant is explicit and enforced, and
+- [x] The flat generated-support trait invariant is explicit and enforced, and
   no production-unused error-reference helper remains.
 
 ### Item 11: Portable and secure generated projects
@@ -588,6 +588,7 @@ repeated. [PR #3668](https://github.com/sifr-lang/sifr/pull/3668) merged as
 | 9 | merged | [#3675](https://github.com/sifr-lang/sifr/pull/3675) | `145fc217606bf3ba85d819d0065b80ec29ea6579` | Exact compiler candidate `6ab6adc08f3ad253bcb4d1d080d5f2c5554cae70`: 1,379 codegen tests and every non-E2E Sifr group passed; full E2E passed 725/725; workspace Clippy, formatting, HIR, diff, 3,739-file guardrail, regenerated demo freshness, and the authoritative 262-companion exact-debt audit passed. Generated panic, intrinsic-panic, rustfmt, and determinism modes passed before the final narrow capture-ABI correction, which was then covered by full E2E and all companions. Fresh generated text/i18n corpus and demo builds stopped only in `tinyvec 1.13.0` under Rust 1.98; changing only the temporary lock to `tinyvec 1.11.0` passed, so Item 11 owns dependency-resolution portability. The sole create-PR and merge gates passed all reached guardrails and Rust interop checks, then stopped on the unchanged SQL coverage/taxonomy readiness debt owned by Item 12; neither gate was repeated. | [Initial exact-SHA review](https://github.com/sifr-lang/sifr/pull/3675#issuecomment-5533536041) on `59b8a6e8b0c586c096510d5f461d968dd409cad2` requested six remediations, all implemented. [Sole remediation review](https://github.com/sifr-lang/sifr/pull/3675#issuecomment-5533471365) on `6ab6adc08f3ad253bcb4d1d080d5f2c5554cae70` was NOT SATISFIED after finding a new character-comparison state-collapse mechanism. Under the no-third-review rule it is immediate Item 9A/[#3676](https://github.com/sifr-lang/sifr/issues/3676). | Unicode scan caching, allocation-free character comparison, constant-time deque front operations, key-once stable sorting, memoized body analysis, deduplicated while witnesses, last-use collection moves, statement `setdefault`, generated complexity budgets, and regenerated companions merged. The bounded second-review semantic defect is owned by Item 9A. |
 | 9A | merged | [#3678](https://github.com/sifr-lang/sifr/pull/3678) | `4fde625cf4bd64b712370d8e0515cae97fa58195` | Exact compiler candidate `9f311def58ee809d55f8f12517775c6faedb082d`: 1,380 codegen tests and every non-E2E Sifr group passed; full E2E passed 726/726 with signature `11427061fe6b7498`; the direct native Item 9A and restored `compiler_safety` runs passed; workspace Clippy, formatting, HIR, diff, 3,741-file guardrail, regenerated demo freshness, inventory/self-test, intrinsic panic lint, governed corpus/panic/rustfmt/determinism checks, and the authoritative 262-companion strict audit passed. The fresh text/i18n corpus reproduced only the `tinyvec 1.13.0` Rust 1.98 failure owned by Item 11. The sole create-PR and merge gates passed every reached guardrail and Rust interop check, then stopped on the unchanged SQL coverage/taxonomy readiness debt owned by Item 12; neither gate was repeated. | [Exact-SHA review](https://github.com/sifr-lang/sifr/pull/3678#issuecomment-5534399665) on `9f311def58ee809d55f8f12517775c6faedb082d` was SATISFIED with no blocking findings. Suggestions about literal-typed variable specialization and documenting the demo's intentional discarded callback call are assigned to Item 12. | Nested comparison state now distinguishes absence, present invalid character width, and a present Unicode scalar without one-character allocation; every operand, optionality, index, and comparison-operator form has native and emitted-shape coverage. The `compiler_safety` observable contract is restored and all affected companions are regenerated. |
 | 10 | merged | [#3681](https://github.com/sifr-lang/sifr/pull/3681) | `ddc4a55f126845dfde15f27bf00c8356806a8dba` | Exact compiler candidate `0bb73783b2daf2d0f20b63cbe16407493d4d217a`: 1,404 codegen tests and every non-E2E Sifr group passed; full E2E passed 726/726 with signature `11427061fe6b7498`; workspace Clippy, formatting, HIR, diff, 3,750-file guardrail, regenerated demo freshness, inventory, intrinsic-panic, 84-project corpus, panic, rustfmt, 92-check determinism, companion compilation, and support-size budgets passed. The sole create-PR and merge gates passed every reached guardrail and Rust interop check, then stopped on the unchanged SQL coverage/taxonomy readiness debt owned by Item 12; neither gate was repeated. | [Initial exact-SHA review](https://github.com/sifr-lang/sifr/pull/3681#issuecomment-5537359489) was SATISFIED. The [sole remediation review](https://github.com/sifr-lang/sifr/pull/3681#issuecomment-5537359721) was NOT SATISFIED after finding a new cross-module builtin-error suppression mechanism defect; under the no-third-review rule it is immediate Item 10A/[#3682](https://github.com/sifr-lang/sifr/issues/3682). | One typed support plan now owns runtime and stdlib demand across single-file, project, and test-project generation; aggregate support renders once; bridge bodies conflict-check and deduplicate; final-source pruning removes unconsumed support and reconstructs dependency metadata. The bounded second-review identity defect is owned by Item 10A. |
+| 10A | merged | [#3684](https://github.com/sifr-lang/sifr/pull/3684) | `948c4d47146cdcaf6dbf49705d30c47e11959cc5` | Exact compiler candidate `c9d0fb34331c32fb90342debf1eea28a0c6ee7e1`: all 5 Item 10A codegen tests and both Item 10A driver tests passed, including native project and generated test-project compilation/execution with distinct local and builtin `ValueError` shapes; formatting and the 3,751-file guardrail passed. Per the session instruction, the create-PR gate was skipped because this exact SHA merged in the same session. The sole merge gate passed generated-demo freshness, HIR/file-size/ownership/dependency/resource/stdlib/driver/verification guardrails, and the complete Rust-interop area, then stopped only on unchanged SQL coverage/taxonomy readiness debt already owned by Item 12; the gate was not repeated. | [Exact-SHA review](https://github.com/sifr-lang/sifr/pull/3684#issuecomment-5538828920) on `c9d0fb34331c32fb90342debf1eea28a0c6ee7e1` was SATISFIED with no blocking findings. No remediation review was required. The pre-existing fixture lock failure is [#3685](https://github.com/sifr-lang/sifr/issues/3685); two non-blocking suggestions are assigned to Item 12. | Builtin errors now use canonical `sifr.builtin.*` identities, module shadows never become project-wide support vetoes, relocation preserves colliding local definitions, single-file suppression remains local, generated support traits fail closed outside the flat owner layout, and the unused reference helper is removed. |
 
 ## Deferred Findings
 
@@ -711,30 +712,33 @@ repeated. [PR #3668](https://github.com/sifr-lang/sifr/pull/3668) merged as
 | Item 10 remediation review | The project nominal registry keys builtin and user-defined error classes by bare name, allowing a same-basename user class to be silently replaced by the builtin identity. | Item 10A / [#3682](https://github.com/sifr-lang/sifr/issues/3682) | Separate builtin identity from module-qualified user error identity and compile/run the cross-module collision fixture. |
 | Item 10 remediation review | `referenced_error_classes_with_source` is production-unused, and the flat support-trait ownership assumption is implicit. | Item 10A / [#3682](https://github.com/sifr-lang/sifr/issues/3682) | Remove or integrate the dead helper and encode or enforce the flat generated-support trait invariant. |
 | Item 10 create-PR and merge gates | Both one-shot gates passed every reached Item 10 guardrail and Rust interop check, then stopped on the unchanged unclassified SQL packages/targets and stale SQL milestone taxonomy already owned by Item 12. | Item 12 | Reconcile coverage/profile taxonomy and prove every current SQL package and target is classified before final qualification. |
+| Item 10A exact-SHA review | The static class-adapter negative fixture lock lacks the existing `memchr` dependency and fails `cargo metadata --locked`. | Item 11 / [#3685](https://github.com/sifr-lang/sifr/issues/3685) | Refresh the fixture lock through its owning workflow and prove locked package-compilability. |
+| Item 10A exact-SHA review | Generated support trait-layout errors propagate structurally in project support pruning but become compiler `panic!` calls at four project/test-project assembly sites. | Item 12 | Use one checked compiler-diagnostic propagation contract for support-layout invariant failures. |
+| Item 10A exact-SHA review | An identity-less class whose name matches a builtin error still resolves through the canonical builtin path; the identity-presence invariant is not asserted at lookup. | Item 12 | Enforce or diagnose the project-union nominal identity invariant without changing valid builtin lookup. |
+| Item 10A merge gate | The sole gate passed every reached Item 10A guardrail and the Rust-interop area, then stopped on the unchanged unclassified SQL packages/targets and stale SQL milestone taxonomy already owned by Item 12. | Item 12 | Reconcile coverage/profile taxonomy and prove every current SQL package and target is classified before final qualification. |
 
 New out-of-scope findings must name a concrete active owner before the current
 item can close.
 
 ## Current Handoff
 
-- Item 10 is merged through [PR #3681](https://github.com/sifr-lang/sifr/pull/3681)
-  as `ddc4a55f126845dfde15f27bf00c8356806a8dba`; exact compiler candidate
-  `0bb73783b2daf2d0f20b63cbe16407493d4d217a` passed its complete targeted,
-  E2E, companion, generated-quality, and one-shot gate evidence.
-- The sole Item 10 remediation review found a new module-identity defect. It is
-  recorded as immediate Item 10A/[#3682](https://github.com/sifr-lang/sifr/issues/3682)
-  and receives its own bounded review and gates; Item 10 received no third
-  review.
+- Item 10A is merged through [PR #3684](https://github.com/sifr-lang/sifr/pull/3684)
+  as `948c4d47146cdcaf6dbf49705d30c47e11959cc5`; exact compiler candidate
+  `c9d0fb34331c32fb90342debf1eea28a0c6ee7e1` passed all seven focused tests,
+  formatting, file-size, exact-SHA review, and every relevant check reached by
+  the sole merge gate.
 - Item 11 owns fresh generated-project dependency resolution, including the
-  Rust 1.98/`tinyvec 1.13.0` failure. Item 12 owns `anext` mutation fidelity,
-  conservative `mut` cleanup, checked-read condition fidelity, literal-typed
-  comparison specialization, generated `missing_const_for_fn` debt, final
-  fixture-root hygiene, and the unchanged SQL coverage/taxonomy gate failures.
-- Item 10A module-scoped builtin error shadowing is next. Item 12 is
+  Rust 1.98/`tinyvec 1.13.0` failure and fixture-lock issue
+  [#3685](https://github.com/sifr-lang/sifr/issues/3685). Item 12 owns `anext`
+  mutation fidelity, conservative `mut` cleanup, checked-read condition
+  fidelity, literal-typed comparison specialization, generated
+  `missing_const_for_fn` debt, final fixture-root hygiene, checked
+  support-layout propagation, identity-presence enforcement, and the unchanged
+  SQL coverage/taxonomy gate failures.
+- Item 11 portable and secure generated projects is next. Item 12 is
   implementation/qualification only. Item 12A is closure-only and receives the
   sole whole-phase review.
 - No whole-phase review has been consumed.
-- Next action: merge this record-only update, branch Item 10A from the resulting
-  latest `origin/main`, implement the full module-aware error identity and
-  support-demand correction before testing, and run its own bounded review and
-  gates.
+- Next action: merge this record-only update, close
+  [#3682](https://github.com/sifr-lang/sifr/issues/3682), and start Item 11 only
+  in a new session branched from the resulting latest `origin/main`.
