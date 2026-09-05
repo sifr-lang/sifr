@@ -401,9 +401,9 @@ fn main() {
         Err(error) => println!("path error: {}", error.message),
     }
 
-    let p2 = Path::new("/tmp/myfile.txt");
-    println!("with_suffix = {}", p2.with_suffix(".csv").to_str());
-    println!("with_name = {}", p2.with_name("other.txt").to_str());
+    let file_path = Path::new("/tmp/myfile.txt");
+    println!("with_suffix = {}", file_path.with_suffix(".csv").to_str());
+    println!("with_name = {}", file_path.with_name("other.txt").to_str());
 
     match compile("\\d+") {
         Ok(pattern) => {

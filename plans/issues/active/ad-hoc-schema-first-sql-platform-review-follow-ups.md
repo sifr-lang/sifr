@@ -92,3 +92,8 @@ PR [#3692](https://github.com/sifr-lang/sifr/pull/3692) repeated the create-PR
 gate before opening the PR. The same coverage classifications blocked it
 after all 264 demo freshness checks and reached guardrails passed. No SQL
 changes were made. Log: `target/pr-cleanup/create-pr.log`.
+
+The descriptive-demo-variable follow-up ran its final merge gate on
+2026-09-05. It reproduced the same SQL coverage-classification failures
+after all 264 demo companions passed freshness. No SQL source or coverage
+classification changed. Evidence: `target/demo-name-followup/merge-gate.log`.

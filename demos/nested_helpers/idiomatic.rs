@@ -91,23 +91,27 @@ fn find_root(node: i64, parent: &[i64]) -> i64 {
 }
 
 fn union_nodes(n1: i64, n2: i64, parent: &mut [i64], rank: &mut [i64]) -> bool {
-    let p1 = find_root(n1, parent);
-    let p2 = find_root(n2, parent);
-    if p1 < 0 || p1 >= rank.len() as i64 || p2 < 0 || p2 >= rank.len() as i64 {
+    let left_root = find_root(n1, parent);
+    let right_root = find_root(n2, parent);
+    if left_root < 0
+        || left_root >= rank.len() as i64
+        || right_root < 0
+        || right_root >= rank.len() as i64
+    {
         return false;
     }
-    if p1 == p2 {
+    if left_root == right_root {
         return false;
     }
 
-    let p1 = p1 as usize;
-    let p2 = p2 as usize;
-    if rank[p1] > rank[p2] {
-        parent[p2] = p1 as i64;
-        rank[p1] += rank[p2];
+    let left_root = left_root as usize;
+    let right_root = right_root as usize;
+    if rank[left_root] > rank[right_root] {
+        parent[right_root] = left_root as i64;
+        rank[left_root] += rank[right_root];
     } else {
-        parent[p1] = p2 as i64;
-        rank[p2] += rank[p1];
+        parent[left_root] = right_root as i64;
+        rank[right_root] += rank[left_root];
     }
 
     true
@@ -132,8 +136,5 @@ fn main() {
         "[\"ad\", \"ae\", \"af\", \"bd\", \"be\", \"bf\", \"cd\", \"ce\", \"cf\"]"
     );
     assert_eq!(count_configurations(4), 2);
-    assert_eq!(
-        detect_first_cycle(&[(1, 2), (1, 3), (2, 3)]),
-        vec![2, 3]
-    );
+    assert_eq!(detect_first_cycle(&[(1, 2), (1, 3), (2, 3)]), vec![2, 3]);
 }

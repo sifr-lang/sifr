@@ -38,8 +38,8 @@ def main():
     base: str = "/tmp/sifr_iterator_integration" + str(getpid())
     try:
         _mk: str = run_command("mkdir -p " + base + "/nested")
-        _w1: None = write_text(base + "/a.txt", "a")
-        _w2: None = write_text(base + "/nested/b.txt", "b")
+        _root_file_write: None = write_text(base + "/a.txt", "a")
+        _nested_file_write: None = write_text(base + "/nested/b.txt", "b")
 
         root: Path = Path(base + "")
         entries_it: Iterator[str] = root.iterdir()

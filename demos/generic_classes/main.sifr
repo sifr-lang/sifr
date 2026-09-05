@@ -49,9 +49,9 @@ def main():
     p: Pair[int] = Pair(10, 20)
     print("pair first = " + str(p.first))
     print("pair second = " + str(p.second))
-    p2: Pair[int] = p.swap()
-    print("swapped first = " + str(p2.first))
-    print("swapped second = " + str(p2.second))
+    swapped_pair: Pair[int] = p.swap()
+    print("swapped first = " + str(swapped_pair.first))
+    print("swapped second = " + str(swapped_pair.second))
 
     # --- String pair (swap works for str too) ---
     sp: Pair[str] = Pair("hello", "world")

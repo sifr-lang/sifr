@@ -111,9 +111,9 @@ fn main() {
     let t2 = monotonic_clock();
     println!("{}", t2 >= t1);
 
-    let m1 = monotonic_clock();
-    let m2 = monotonic_clock();
-    println!("{}", m2 >= m1);
+    let monotonic_start = monotonic_clock();
+    let monotonic_end = monotonic_clock();
+    println!("{}", monotonic_end >= monotonic_start);
 
     println!("=== timeit (Callable API) ===");
     println!("{}", default_timer() >= 0.0);

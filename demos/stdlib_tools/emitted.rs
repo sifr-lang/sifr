@@ -748,9 +748,9 @@ fn main() {
     let t1: f64 = perf_counter();
     let t2: f64 = perf_counter();
     println!("{}", t2 >= t1);
-    let m1: f64 = monotonic();
-    let m2: f64 = monotonic();
-    println!("{}", m2 >= m1);
+    let monotonic_start: f64 = monotonic();
+    let monotonic_end: f64 = monotonic();
+    println!("{}", monotonic_end >= monotonic_start);
     println!("=== timeit (Callable API) ===");
     let dt: f64 = default_timer();
     println!("{}", dt >= 0.0_f64);

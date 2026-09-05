@@ -33,8 +33,8 @@ def collect_root_and_handler_actual(base: str) -> list[bool]:
     root_ok: bool = False
     handler_ok: bool = False
     try:
-        _w1: None = write_text(root_log, "")
-        _w2: None = write_text(handler_log, "")
+        _root_log_write: None = write_text(root_log, "")
+        _handler_log_write: None = write_text(handler_log, "")
 
         root: Logger = basicConfig(WARNING)
         root.set_file(root_log)

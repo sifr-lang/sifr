@@ -138,14 +138,14 @@ def main():
 
     # 6. Class destructuring
     print("=== Class Destructuring ===")
-    p1: Point = Point(0, 0)
-    p2: Point = Point(3, 0)
-    p3: Point = Point(0, 4)
-    p4: Point = Point(3, 4)
-    print(classify_point(p1))
-    print(classify_point(p2))
-    print(classify_point(p3))
-    print(classify_point(p4))
+    origin: Point = Point(0, 0)
+    horizontal_point: Point = Point(3, 0)
+    vertical_point: Point = Point(0, 4)
+    diagonal_point: Point = Point(3, 4)
+    print(classify_point(origin))
+    print(classify_point(horizontal_point))
+    print(classify_point(vertical_point))
+    print(classify_point(diagonal_point))
 
     # 7. Tuple patterns
     print("=== Tuple Patterns ===")

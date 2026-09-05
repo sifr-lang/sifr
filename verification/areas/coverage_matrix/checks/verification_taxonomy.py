@@ -66,6 +66,10 @@ ABBREVIATED_DELIVERY_LABEL = (
 ABBREVIATED_DELIVERY_NAME = re.compile(
     r"(?:^|[/_.-])" + ABBREVIATED_DELIVERY_LABEL + r"(?=[/_.-]|$)", re.IGNORECASE
 )
+AMBIGUOUS_DEMO_VARIABLE = re.compile(
+    r"^\s*(?:let\s+(?:mut\s+)?)?(?P<name>_?" + ABBREVIATED_DELIVERY_LABEL
+    + r")\s*(?::|=(?!=))", re.IGNORECASE
+)
 ABBREVIATED_DELIVERY_TEXT = re.compile(
     r"(?<![A-Za-z0-9])" + ABBREVIATED_DELIVERY_LABEL + r"(?=[/_-][A-Za-z_])"
     r"|[A-Za-z][A-Za-z0-9_./-]*[/_.-]" + ABBREVIATED_DELIVERY_LABEL + r"(?=[_\W]|$)"
@@ -383,6 +387,8 @@ def validate_text(path: Path) -> list[Failure]:
     except UnicodeDecodeError:
         return []
     failures: list[Failure] = []
+    if path.is_relative_to(REPO_ROOT / "demos") and path.suffix in {".sifr", ".rs"}:
+        failures.extend(validate_demo_variables(path, text))
     for line_number, line in enumerate(text.splitlines(), start=1):
         if not has_taxonomy_trigger(line):
             continue
@@ -396,6 +402,14 @@ def validate_text(path: Path) -> list[Failure]:
                 )
                 break
     return failures
+
+
+def validate_demo_variables(path: Path, text: str) -> list[Failure]:
+    return [
+        Failure(path, line_number, f"demo variable needs a descriptive name: {match['name']}")
+        for line_number, line in enumerate(text.splitlines(), start=1)
+        if (match := AMBIGUOUS_DEMO_VARIABLE.search(line)) is not None
+    ]
 
 
 def has_taxonomy_trigger(line: str) -> bool:
@@ -658,6 +672,20 @@ def run_self_test(*, quiet: bool = False) -> int:
 
 
 def check_numbered_labels(root: Path) -> None:
+    demo = root / "example.sifr"
+    for source in (
+        "    m12: bool = False", "p2 = origin", "let mut m12 = false;",
+        "_w2: None = write_text(path, text)",
+    ):
+        if not validate_demo_variables(demo, source):
+            raise AssertionError(f"ambiguous demo variable was accepted: {source}")
+    for source in (
+        "digit_match: bool = False", "left_root = find_root(node, parents)",
+        "let monotonic_start = monotonic();", "p95 = latency", 'print("m12")',
+        "# m12 is a sample label", 'grep -F -m1 "matched"',
+    ):
+        if validate_demo_variables(demo, source):
+            raise AssertionError(f"descriptive name or non-variable text was rejected: {source}")
     good = root / "semantic_terms.rs"
     good.write_text(
         'fn contract_error() {}\nlet migration = id("m1");\n'
