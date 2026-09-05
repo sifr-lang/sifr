@@ -192,7 +192,7 @@ It does not broaden the active item.
 | 12B | blocked: Python qualification dependencies | Bounded algorithmic dependency repair | Both reviews passed. Preserve the approved candidate and both failed gates until Items 12G–12J and integration Item 12K resolve qualification. |
 | 12C | incorporated into 12B | Builtin-registration Clippy blocker | No independent item, review, or gate remains. |
 | 12D | recorded, not started | Native corpus emission dependencies | Adjudicate checked-read control flow and the complete native diagnostic inventory before Item 12B closure. |
-| 12G | authorized: next worker | Dependency-checker demo path identity | Repair and qualify the stale DLPack project reference. |
+| 12G | merged | Dependency-checker demo path identity | Authoritative DLPack project path and computed-reference regressions merged in PR #3695; exact-SHA validation and Opus review passed. |
 | 12H | authorized: after 12G handoff | Project-wide generated-field identity | Repair declaration/consumer naming consistency across generated files. |
 | 12I | authorized: after 12H handoff | Macro-defined project support visibility | Repair cancellation task-local visibility without blanket exports. |
 | 12J | authorized: after 12I handoff | Async Python error-channel contract | Resolve the authoritative error contracts and preserve async semantics. |
@@ -609,6 +609,40 @@ Helmholtz is closed. Its candidates, review verdicts, and failed gates remain ev
   Only that closer performs the whole-phase Opus review.
 - Parent performs orchestration and record updates only, not implementation,
   tests, code review, or Sifr gates. User authorization covers the next phase actions.
+
+### Item 12G closure: dependency-checker demo path identity
+
+Closed on 2026-09-05 through [PR #3695](https://github.com/sifr-lang/sifr/pull/3695).
+Reviewed candidate: `1cb24bdd088bddf42077f6e42112e53bba7c3562`.
+Merge SHA: `2b114727441f1adc3ed807adc0c41543ddab5b78`.
+Base: `b475ebdcd37081aa2860d9c348ace4100b546eff`.
+
+The checker selects `demos/python_dlpack` directly. Four focused regressions
+cover computed paths for all audited projects, both authoritative input reads,
+both missing inputs, and the obsolete concatenated-path mutation. Exact versions,
+artifact hashes, package ownership, and missing-input errors remain enforced.
+
+- All three commands registered before testing in the
+  [owner issue](ad-hoc-python-interop-qualification-dependencies.md#item12g-implementation-and-focused-validation-plan)
+  passed on the reviewed candidate: four focused unittests; the named
+  `python_interop:dependency-versions` suite (one variant, zero failures,
+  two projects, 19 packages, two locks, two images, seven negative mutations);
+  and the canonical file-size guardrail (3,754 files).
+- The [single exact-SHA Opus review and validation evidence](https://github.com/sifr-lang/sifr/pull/3695#issuecomment-5554835685)
+  returned **SATISFIED**, no blockers. No remediation review was needed.
+  Raw evidence is under `/tmp/sifr-item12g.B8fCer/`, keyed by candidate SHA.
+- Runner/test/docs-only changes triggered no Sifr gates under the explicit
+  user rules. No Item12B review or failed gate was repeated.
+- Non-blocking regression-discovery/import suggestions are separately owned
+  by Python verification runner maintenance in the owner issue; no new mechanism
+  defect was found. The review's pending status-record suggestion is resolved here.
+- The isolated implementation branch is `codex/emitted-rust-excellence-item-12g`;
+  the record-only branch is `codex/emitted-rust-excellence-item-12g-record`.
+  Worktree: `/tmp/sifr-item12g.B8fCer/sifr`. Parent records were carried forward
+  with main's naming findings preserved. Parent implementation, stash, and
+  Helmholtz's retained candidate/index were not modified.
+- Blocker: none. Item12G is complete. Stop this worker after the record update;
+  the orchestrator may assign Item12H to a fresh worker. No next-item code was written.
 
 ### Item 12B: Bounded algorithmic dependency repair
 
