@@ -266,10 +266,10 @@ fn main() {
                 sifr_generated_mode.to_string(),
             ))
         })()?;
-        wb.write_bytes(&vec![
+        (&mut wb).write_bytes(&vec![
             114_u8, 97_u8, 119_u8, 45_u8, 98_u8, 121_u8, 116_u8, 101_u8, 115_u8,
         ])?;
-        wb.close();
+        (&mut wb).close();
         let mut rb: SifrGeneratedIoFileHandle = (|| {
             let sifr_generated_path = path.to_string();
             let sifr_generated_mode = "rb".to_string();
@@ -284,7 +284,7 @@ fn main() {
             ))
         })()?;
         let payload: Vec<u8> = rb.read_bytes(&None)?;
-        rb.close();
+        (&mut rb).close();
         binary_ok = payload
             == vec![
                 114_u8, 97_u8, 119_u8, 45_u8, 98_u8, 121_u8, 116_u8, 101_u8, 115_u8,

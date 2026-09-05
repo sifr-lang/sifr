@@ -907,8 +907,8 @@ fn main() {
             ]),
             Some(SifrInt::from_i64(4)),
         );
-    queue.rotate(&SifrInt::from_i64(1));
-    queue.appendleft(&SifrInt::from_i64(0));
+    (&mut queue).rotate(&SifrInt::from_i64(1));
+    (&mut queue).appendleft(&SifrInt::from_i64(0));
     println!("{:?}", queue.to_list());
     let mut ordered: Vec<SifrInt> = vec![
         SifrInt::from_i64(1),

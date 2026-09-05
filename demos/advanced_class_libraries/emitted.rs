@@ -479,7 +479,7 @@ mod sifr_generated_generated_support {
         let _chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
         sifr_generated_char_at(
             text,
-            SifrInt::from(text.chars().count()) - SifrInt::from_i64(1),
+            &SifrInt::from(text.chars().count()) - &SifrInt::from_i64(1),
         )
     }
     #[expect(
@@ -2448,7 +2448,7 @@ mod sifr_generated_project_nominals {
                             let e2 = sifr_generated_try_err.clone();
                             let _ = e2.message.clone();
                         }
-                        fh.close();
+                        (&mut fh).close();
                         Ok(())
                     })();
                     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
@@ -2492,7 +2492,7 @@ mod sifr_generated_project_nominals {
                         let e2 = sifr_generated_try_err.clone();
                         let _ = e2.message.clone();
                     }
-                    fh.close();
+                    (&mut fh).close();
                     Ok(())
                 })();
                 if let Err(sifr_generated_try_err) = sifr_generated_try_res {
@@ -2798,10 +2798,10 @@ pub use sifr_generated_project_nominals::SifrGeneratedStdlibSifrX2eregexX2eCompi
 fn main() {
     let mut d: SifrGeneratedStdlibSifrX2ecollectionsX2edeque<SifrInt> =
         SifrGeneratedStdlibSifrX2ecollectionsX2edeque::new(None, Some(SifrInt::from_i64(3)));
-    d.append(&SifrInt::from_i64(1));
-    d.append(&SifrInt::from_i64(2));
-    d.append(&SifrInt::from_i64(3));
-    d.append(&SifrInt::from_i64(4));
+    (&mut d).append(&SifrInt::from_i64(1));
+    (&mut d).append(&SifrInt::from_i64(2));
+    (&mut d).append(&SifrInt::from_i64(3));
+    (&mut d).append(&SifrInt::from_i64(4));
     println!("{}", {
         let mut sifr_generated_concat: String = String::with_capacity(23usize);
         sifr_generated_concat.push_str("deque len (maxlen=3) = ");
@@ -2812,7 +2812,8 @@ fn main() {
         let mut sifr_generated_concat: String = String::with_capacity(16usize);
         sifr_generated_concat.push_str("deque popleft = ");
         sifr_generated_concat.push_str(
-            d.popleft()
+            (&mut d)
+                .popleft()
                 .map_or_else(
                     || "None".to_string(),
                     |sifr_generated_v| sifr_generated_v.to_string(),
@@ -2954,7 +2955,7 @@ fn main() {
         });
     }
     let mut log: SifrGeneratedStdlibSifrX2eloggingX2eLogger = getLogger(&"demo".to_string());
-    log.set_level(&sifr_generated_const_4445425547());
+    (&mut log).set_level(&sifr_generated_const_4445425547());
     log.debug(&"debug message".to_string());
     log.info(&"info message".to_string());
     log.warning(&"warning message".to_string());
@@ -2988,8 +2989,8 @@ fn main() {
     );
     let row1: Vec<String> = vec!["x".to_string(), "y".to_string()];
     let row2_value_a3a6c71ff10a162b: Vec<String> = vec!["1".to_string(), "2".to_string()];
-    w.writerow(&row1);
-    w.writerow(&row2_value_a3a6c71ff10a162b);
+    (&mut w).writerow(&row1);
+    (&mut w).writerow(&row2_value_a3a6c71ff10a162b);
     let out: String = w.getvalue();
     println!("{}", {
         let mut sifr_generated_concat: String = String::with_capacity(20usize + out.len());
@@ -3051,12 +3052,12 @@ fn main() {
             "\n".to_string(),
             SifrInt::from_i64(0),
         );
-    dw.writeheader();
+    (&mut dw).writeheader();
     let row_data: HashMap<String, String> = HashMap::from([
         ("name".to_string(), "charlie".to_string()),
         ("score".to_string(), "91".to_string()),
     ]);
-    dw.writerow(&row_data);
+    (&mut dw).writerow(&row_data);
     let dw_out: String = dw.getvalue();
     println!("{}", {
         let mut sifr_generated_concat: String = String::with_capacity(20usize + dw_out.len());

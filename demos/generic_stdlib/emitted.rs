@@ -1701,9 +1701,9 @@ fn main() {
     println!("=== Generic deque[T] ===");
     let mut d: SifrGeneratedStdlibSifrX2ecollectionsX2edeque<String> =
         SifrGeneratedStdlibSifrX2ecollectionsX2edeque::new(None, None);
-    d.append(&"first".to_string());
-    d.append(&"second".to_string());
-    d.appendleft(&"zero".to_string());
+    (&mut d).append(&"first".to_string());
+    (&mut d).append(&"second".to_string());
+    (&mut d).appendleft(&"zero".to_string());
     let items_d_value_64ad086cd3ff4d9c: Vec<String> = d.to_list();
     println!("{items_d_value_64ad086cd3ff4d9c:?}");
     println!("{}", d.len());

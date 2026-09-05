@@ -301,7 +301,7 @@ mod sifr_generated_generated_support {
         let _chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
         sifr_generated_char_at(
             text,
-            SifrInt::from(text.chars().count()) - SifrInt::from_i64(1),
+            &SifrInt::from(text.chars().count()) - &SifrInt::from_i64(1),
         )
     }
     #[expect(

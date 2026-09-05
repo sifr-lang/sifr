@@ -1464,10 +1464,10 @@ fn main() {
     );
     let mut parser: SifrGeneratedStdlibSifrX2eargparseX2eArgumentParser =
         SifrGeneratedStdlibSifrX2eargparseX2eArgumentParser::new("sifr".to_string());
-    parser.add_subparsers(&"cmd".to_string());
+    (&mut parser).add_subparsers(&"cmd".to_string());
     let mut run_parser: SifrGeneratedStdlibSifrX2eargparseX2eArgumentParser =
         SifrGeneratedStdlibSifrX2eargparseX2eArgumentParser::new("run".to_string());
-    run_parser.add_argument_typed(
+    (&mut run_parser).add_argument_typed(
         &"--strict".to_string(),
         &"strict".to_string(),
         &"store_true".to_string(),
@@ -1475,7 +1475,7 @@ fn main() {
         &"1".to_string(),
         &"str".to_string(),
     );
-    run_parser.add_argument_typed(
+    (&mut run_parser).add_argument_typed(
         &"--level".to_string(),
         &"level".to_string(),
         &"store".to_string(),
@@ -1483,7 +1483,7 @@ fn main() {
         &"1".to_string(),
         &"int".to_string(),
     );
-    run_parser.add_argument_typed(
+    (&mut run_parser).add_argument_typed(
         &"--custom-level".to_string(),
         &"custom_level".to_string(),
         &"store".to_string(),
@@ -1491,7 +1491,7 @@ fn main() {
         &"1".to_string(),
         &"int".to_string(),
     );
-    run_parser.add_argument_typed(
+    (&mut run_parser).add_argument_typed(
         &"targets".to_string(),
         &"targets".to_string(),
         &"store".to_string(),
@@ -1499,7 +1499,7 @@ fn main() {
         &"+".to_string(),
         &"str".to_string(),
     );
-    parser.add_parser(&"run".to_string(), run_parser);
+    (&mut parser).add_parser(&"run".to_string(), run_parser);
     let parsed_value_e06e69d836b17138: SifrGeneratedStdlibSifrX2eargparseX2eNamespace = parser
         .parse_args(&vec![
             "run".to_string(),

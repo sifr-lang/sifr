@@ -615,12 +615,14 @@ fn collect_deque_actual() -> Vec<bool> {
     let mut actual: Vec<bool> = Vec::new();
     let mut d: SifrGeneratedStdlibSifrX2ecollectionsX2edeque<SifrInt> =
         SifrGeneratedStdlibSifrX2ecollectionsX2edeque::new(None, Some(SifrInt::from_i64(2)));
-    d.append(&SifrInt::from_i64(10));
-    d.append(&SifrInt::from_i64(20));
-    d.append(&SifrInt::from_i64(30));
-    actual.push(&d.len() == &SifrInt::from_i64(2) && d.popleft() == Some(SifrInt::from_i64(20)));
-    let _: Option<SifrInt> = d.pop();
-    actual.push(d.pop().is_none());
+    (&mut d).append(&SifrInt::from_i64(10));
+    (&mut d).append(&SifrInt::from_i64(20));
+    (&mut d).append(&SifrInt::from_i64(30));
+    actual.push(
+        &d.len() == &SifrInt::from_i64(2) && (&mut d).popleft() == Some(SifrInt::from_i64(20)),
+    );
+    let _: Option<SifrInt> = (&mut d).pop();
+    actual.push((&mut d).pop().is_none());
     actual
 }
 fn append_all(target: &mut Vec<bool>, values: &[bool]) {

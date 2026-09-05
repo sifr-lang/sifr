@@ -1037,7 +1037,7 @@ mod sifr_generated_project_nominals {
                             let e2 = sifr_generated_try_err.clone();
                             let _ = e2.message.clone();
                         }
-                        fh.close();
+                        (&mut fh).close();
                         Ok(())
                     })();
                     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
@@ -1081,7 +1081,7 @@ mod sifr_generated_project_nominals {
                         let e2 = sifr_generated_try_err.clone();
                         let _ = e2.message.clone();
                     }
-                    fh.close();
+                    (&mut fh).close();
                     Ok(())
                 })();
                 if let Err(sifr_generated_try_err) = sifr_generated_try_res {
@@ -1194,7 +1194,7 @@ fn main() {
             ))
         })()?;
         let text: String = f.read()?;
-        f.close();
+        (&mut f).close();
         println!("{}", {
             let mut sifr_generated_concat: String = String::with_capacity(7usize + text.len());
             sifr_generated_concat.push_str("file = ");
@@ -1218,7 +1218,7 @@ fn main() {
         );
     }
     let mut log: SifrGeneratedStdlibSifrX2eloggingX2eLogger = getLogger(&"codegen".to_string());
-    log.set_level(&SifrInt::from_i64(20));
+    (&mut log).set_level(&SifrInt::from_i64(20));
     log.info(&"preamble logging alive".to_string());
     println!("preamble demo complete");
 }

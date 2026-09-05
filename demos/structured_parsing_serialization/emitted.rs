@@ -392,7 +392,7 @@ mod sifr_generated_generated_support {
         let _chars_text: Vec<char> = text.chars().collect::<Vec<char>>();
         sifr_generated_char_at(
             text,
-            SifrInt::from(text.chars().count()) - SifrInt::from_i64(1),
+            &SifrInt::from(text.chars().count()) - &SifrInt::from_i64(1),
         )
     }
     #[expect(
@@ -1217,7 +1217,7 @@ mod sifr_generated_generated_support {
                 while &consumed < &array_count {
                     let item_result: (SifrGeneratedStdlibSifrX2ejsonX2eJsonValue, SifrInt) =
                         sifr_generated_json_decode_value_at(tokens, next_index.clone())?;
-                    array_value.array_items.push(item_result.0);
+                    array_value.array_items.push(item_result.0.clone());
                     next_index = item_result.1.clone();
                     consumed = &consumed + &SifrInt::from_i64(1);
                 }
@@ -1248,7 +1248,7 @@ mod sifr_generated_generated_support {
                             tokens,
                             &next_index + &SifrInt::from_i64(1),
                         )?;
-                    object_value.object_items.push((key, item_result.0));
+                    object_value.object_items.push((key, item_result.0.clone()));
                     next_index = item_result.1.clone();
                     consumed = &consumed + &SifrInt::from_i64(1);
                 }
@@ -1673,7 +1673,7 @@ mod sifr_generated_generated_support {
                 while &consumed < &array_count {
                     let item_result: (SifrGeneratedStdlibSifrX2etomllibX2eTomlValue, SifrInt) =
                         sifr_generated_decode_toml_value_at(tokens, next_index.clone())?;
-                    array_value.array_items.push(item_result.0);
+                    array_value.array_items.push(item_result.0.clone());
                     next_index = item_result.1.clone();
                     consumed = &consumed + &SifrInt::from_i64(1);
                 }
@@ -1704,7 +1704,7 @@ mod sifr_generated_generated_support {
                             tokens,
                             &next_index + &SifrInt::from_i64(1),
                         )?;
-                    table_value.table_items.push((key, item_result.0));
+                    table_value.table_items.push((key, item_result.0.clone()));
                     next_index = item_result.1.clone();
                     consumed = &consumed + &SifrInt::from_i64(1);
                 }
@@ -3181,8 +3181,8 @@ fn main() {
             "\n".to_string(),
             SifrInt::from_i64(0),
         );
-    dict_writer.writeheader();
-    dict_writer.writerow(&{
+    (&mut dict_writer).writeheader();
+    (&mut dict_writer).writerow(&{
         let mut sifr_generated_dict = HashMap::new();
         sifr_generated_dict.insert("name".to_string(), "alice".to_string());
         sifr_generated_dict.insert("age".to_string(), "30".to_string());
@@ -3202,7 +3202,8 @@ fn main() {
         SifrGeneratedStdlibSifrX2econfigparserX2eConfigParser::new(Some(defaults), false, true);
     let sifr_generated_try_res: Result<(), SifrGeneratedStdlibSifrX2econfigparserX2eParsingError> =
         (|| {
-            parser.read_string(&"[server]\nport = 8080\nenabled = true\nfeature\n".to_string())?;
+            (&mut parser)
+                .read_string(&"[server]\nport = 8080\nenabled = true\nfeature\n".to_string())?;
             Ok(())
         })();
     if let Err(sifr_generated_try_err) = sifr_generated_try_res {
