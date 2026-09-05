@@ -189,7 +189,7 @@ It does not broaden the active item.
 | 11 | merged | Portable and secure generated projects | Reviewed candidate `78c28c1e4c42bd85d685d3a3cffdf132fcdfcc40` is preserved and merged through Item 11A after its consumed gate's stale companions were regenerated. |
 | 11A | merged | Generated-companion freshness and Item 11 integration | The reviewed Item 11 candidate and all 15 compiler-regenerated companions are merged through a separately bounded review and gate without rerunning Item 11's consumed gate. |
 | 12 | blocked: external algorithmic corpus | Residual semantic completion and full-corpus qualification | Finish remaining semantic/profile work, remove all governed generated-code debt, regenerate every owned surface, and pass the uncompromising final qualification and applicable one-shot gates. |
-| 12B | authorized: same worker resuming | External algorithmic corpus source contracts | Repair the external fixtures and update Sifr's corpus pin before Item 12 resumes qualification. |
+| 12B | blocked: compiler mechanism scope | External algorithmic corpus source contracts | Repair the external fixtures and update Sifr's corpus pin before Item 12 resumes qualification. |
 | 12A | pending | Phase closure and whole-phase review | Review the fully merged phase once, reconcile architecture/roadmap/evidence, and archive only when no actionable row remains. |
 
 ## Item Acceptance Contracts
@@ -577,17 +577,27 @@ repeated. [PR #3668](https://github.com/sifr-lang/sifr/pull/3668) merged as
 
 This later item records the blocker from the Item 12 worker. On 2026-09-05, the user authorized its repair by the same worker.
 
-- State: authorized; Helmholtz resumes this dependency item first.
+- State: blocked on native compiler ownership defects after the first source repairs.
 - Owner: `sifr-lang/leetcode`, through the
   [owning issue](ad-hoc-algorithmic-full-corpus-preexisting-failures.md#2026-09-05-emitted-rust-item-12-qualification-blocker).
 - Dependency: satisfied by explicit user authority for external corpus repairs and Sifr's corpus-pin update.
 - Scope: reconcile the reported conversion-error and index-error handling contracts without weakening compiler safety or qualification rules.
 - Required evidence: corrected median and zigzag fixtures pass their original cases, and the complete `leetcode-full` qualification passes.
 - Test commands and approved external write scope are recorded in the owning issue under the qualification blocker.
-- Execution: resolve this dependency, resume Item 12, then delegate the docs-only Item 12A closer after all implementation items merge.
+- Execution: close Item 12B only, then stop. The latest one-item instruction supersedes the earlier multi-item continuation plan.
 - The retained 30 Clippy diagnostics remain Item 12-owned compiler work. They do not belong to this external dependency item.
 - Handoff: Helmholtz returned blocked at candidate `8ad089a9458f35fcfa228e93fe44f4d69731828b`. The same worker resumes with the new authority.
 - The worker committed its evidence record as `77d4a238cab4ec2c44d2bff9b4b1e9745d8d1bac`. No implementation PR, Opus review, or merge gate exists.
+- External checkpoint: `f6db5bd5d363b19a3040afd2a092f44ce32fd5bb` on
+  `sifr-lang/leetcode`, branch `codex/item12b-source-contracts`.
+  This checkpoint preserves median and zigzag source repairs and every original case.
+  Both fixtures pass `check`. Both native runs fail with generated Rust `E0382`.
+  Median moves its integer sentinels before reuse. Zigzag moves `numRows` before
+  its later borrow. These compiler mechanisms belong outside Item 12B.
+- The [owning issue record](ad-hoc-algorithmic-full-corpus-preexisting-failures.md#item-12b-native-qualification-blocker)
+  contains the compiler identity, evidence paths, isolation details, and next action.
+  No PR, review, or merge gate was consumed. Full-corpus qualification remains
+  incomplete. No committed Sifr corpus-pin update exists.
 
 ### Item 12A: Phase closure and whole-phase review
 

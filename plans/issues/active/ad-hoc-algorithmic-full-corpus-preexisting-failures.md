@@ -452,3 +452,58 @@ check and run commands to each additional repaired fixture. Preserve every case.
 Run the file-size guardrail and one exact-SHA merge-profile gate for the Sifr
 gitlink candidate, as required by the delegated item rules. Do not run a second
 gate or change Item 12 code during this dependency item.
+
+#### Item 12B native qualification blocker
+
+The worker preserved the authorized record changes in Sifr commit
+`7193e9bca`. It isolated external repairs from the unmerged Item 12 compiler.
+The external checkpoint is `f6db5bd5d363b19a3040afd2a092f44ce32fd5bb`, based on
+`7fcb9fd1eaf3e0cf9bf51e8858276b7927a83baf`.
+Branch `codex/item12b-source-contracts` is pushed to `sifr-lang/leetcode`.
+
+The checkpoint changes only the median and zigzag Sifr fixtures.
+Their functions propagate typed conversion or index errors.
+Their test entry points reject unexpected errors and retain every original case.
+Both named `check` commands pass. Both named `run` commands fail during native
+compilation with `SIFR-BUILD-0005` and Rust `E0382`.
+
+- Median emission moves `min_sentinel` into two bindings inside a repeated loop.
+  It does the same with `max_sentinel`. Later uses require values that already moved.
+  The retained Rust evidence shows these moves at lines 217, 245, 271, and 301.
+- Zigzag emission moves `numRows` into `sifr_generated_repeat_count` at line 91.
+  The loop then borrows `numRows` at line 127.
+- These failures require compiler ownership-mechanism work, not another source
+  error-handling repair. Item 12B does not authorize that compiler work.
+  The worker added no source workaround and changed no compiler files.
+
+Qualification used `/tmp/sifr-item12-qualified.l0Kpiu/sifr` from Item 12
+candidate `8ad089a9458f35fcfa228e93fe44f4d69731828b`.
+Its verified SHA-256 is
+`06a596d406f5a174a9a6ace72bc6d15919e6e3af5727578a46819479210c8c39`.
+`SIFR_SYSROOT` pointed to the retained Item 12 worktree.
+The independent Sifr worktree remains at base
+`2dc4165fd9e7c34432a9b0d098188dc645aaca55`, with no Item 12 compiler commits.
+
+Evidence in the retained Item 12 worktree is under
+`target/item12b-f6db5bd-evidence/`:
+
+- `median-final-check.log` and `zigzag-final-check.log`: passing checks.
+- `median-typed-run.log` and `zigzag-typed-run.log`: native compiler failures.
+- `median-emitted.rs` and `zigzag-emitted.rs`: compiler-produced Rust evidence.
+- `file-size.log`: canonical guardrail passes for 3,753 files.
+
+The isolated Sifr worktree is `/tmp/sifr-item12b.akguMz/sifr` on branch
+`codex/emitted-rust-excellence-item-12b`. Its external corpus worktree occupies
+`verification/areas/algorithmic_compatibility/corpora/leetcode`.
+The Sifr index does not contain the external checkpoint pin.
+No PR, external review, or merge-profile gate was consumed.
+
+The worker stopped its remaining diagnostic processes after the native failures.
+The incomplete diagnostic sweep under `/tmp/sifr-item12b.akguMz/contracts-diagnostics/`
+is not a complete `leetcode-full` result. Earlier isolation probes also lack
+qualification value. Other source-contract repairs remain unfinished.
+
+Next action: assign and authorize the two compiler ownership defects separately.
+After that correction, resume Item 12B with an identified compiler candidate.
+Finish all affected source contracts and their named tests before review and merge.
+Item 12's retained compiler changes and historical evidence remain untouched.
