@@ -103,5 +103,5 @@ None of these block the wave.
   - No residual `__sifr_build_parallel_pool(__sifr_default_parallel_worker_count())` call at top level.
   - `WorkerRuntimeError` and `WorkerError` are emitted as `#[derive(Debug, Clone)]`, satisfying the cached-clone path.
 
-Pre-existing Codex validations (cargo fmt --check, cargo check -p sifr_codegen, e2e pass runs, file-size and HIR
+Pre-existing agent validations (cargo fmt --check, cargo check -p sifr_codegen, e2e pass runs, file-size and HIR
 guardrails) are not re-run here; they were reported PASS upstream and are consistent with the static review above.

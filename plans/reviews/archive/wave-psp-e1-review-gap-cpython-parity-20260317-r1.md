@@ -2,7 +2,7 @@
 
 **Date**: 2026-03-17
 **Branch**: codex/python-builtin-std-parity-wave-e2
-**Reviewer**: Claude Code
+**Reviewer**: agent
 
 ---
 

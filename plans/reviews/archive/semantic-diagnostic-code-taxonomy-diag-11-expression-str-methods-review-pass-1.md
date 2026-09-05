@@ -1,6 +1,6 @@
 # Review: semantic-diagnostic-code-taxonomy diag-11 expression str-methods (pass 1)
 
-## Reviewer: Claude
+## Reviewer: agent
 
 ## Date: 2026-05-03
 

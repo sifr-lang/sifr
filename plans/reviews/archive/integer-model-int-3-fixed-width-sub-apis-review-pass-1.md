@@ -1,9 +1,9 @@
 # Review: PR #1869 — INT-3 Fixed-Width Subtraction APIs
 
-**Commit**: 69de6e81  
-**PR**: https://github.com/sifr-lang/sifr/pull/1869  
-**Branch**: int-3-fixed-width-sub-apis  
-**Reviewer**: Claude Code  
+**Commit**: 69de6e81
+**PR**: https://github.com/sifr-lang/sifr/pull/1869
+**Branch**: int-3-fixed-width-sub-apis
+**Reviewer**: agent
 **Date**: 2026-05-08
 
 ---

@@ -126,7 +126,7 @@ It does not broaden the active item.
 1. Work one item at a time in the order below.
 2. Implement the complete item before running its tests. Then run focused
    validation, repair failures in scope, and collect exact-SHA evidence.
-3. Each implementation item receives one exact-SHA Claude Opus review and at
+3. Each implementation item receives one exact-SHA agent review and at
    most one remediation review. A second-review mechanism defect becomes a
    later owned item; there is no third review.
 4. Compiler-changing items receive exactly one create-PR gate and one merge
@@ -145,7 +145,7 @@ It does not broaden the active item.
    neither the review nor create-PR gate was repeated. This is not precedent
    for another item or another gate mismatch.
 5. Merge the item, update this record, and start the next unfinished item.
-6. The closure-only final item receives the only whole-phase Opus review.
+6. The closure-only final item receives the only whole-phase agent review.
 7. Before each item starts, rebase its branch point on current `origin/main`
    and re-audit any relevant mechanism that another merged phase changed.
    Unmerged branches are not silently treated as delivered work.
@@ -555,7 +555,7 @@ repeated. [PR #3668](https://github.com/sifr-lang/sifr/pull/3668) merged as
 - [x] `python3 scripts/check_demo_emitted_freshness.py` passes on the exact
   Item 11A candidate, with no hand-edited generated output.
 - [x] Close or supersede draft [#3687](https://github.com/sifr-lang/sifr/pull/3687)
-  only after the integrated candidate receives Item 11A's own exact-SHA Opus
+  only after the integrated candidate receives Item 11A's own exact-SHA agent
   review and sole merge-profile gate. Do not rerun Item 11's consumed gate.
 
 ### Item 12: Residual semantic completion and full-corpus qualification
@@ -574,7 +574,7 @@ repeated. [PR #3668](https://github.com/sifr-lang/sifr/pull/3668) merged as
 
 ### Item 12A: Phase closure and whole-phase review
 
-- [ ] One exact-SHA whole-phase Opus review is satisfied.
+- [ ] One exact-SHA whole-phase agent review is satisfied.
 - [ ] Architecture and roadmap records reflect the delivered architecture.
 - [ ] This issue is archived only after every closure condition is true.
 - [ ] Closure contains no compiler implementation work. If the whole-phase
@@ -608,7 +608,7 @@ repeated. [PR #3668](https://github.com/sifr-lang/sifr/pull/3668) merged as
 | 10 | merged | [#3681](https://github.com/sifr-lang/sifr/pull/3681) | `ddc4a55f126845dfde15f27bf00c8356806a8dba` | Exact compiler candidate `0bb73783b2daf2d0f20b63cbe16407493d4d217a`: 1,404 codegen tests and every non-E2E Sifr group passed; full E2E passed 726/726 with signature `11427061fe6b7498`; workspace Clippy, formatting, HIR, diff, 3,750-file guardrail, regenerated demo freshness, inventory, intrinsic-panic, 84-project corpus, panic, rustfmt, 92-check determinism, companion compilation, and support-size budgets passed. The sole create-PR and merge gates passed every reached guardrail and Rust interop check, then stopped on the unchanged SQL coverage/taxonomy readiness debt owned by Item 12; neither gate was repeated. | [Initial exact-SHA review](https://github.com/sifr-lang/sifr/pull/3681#issuecomment-5537359489) was SATISFIED. The [sole remediation review](https://github.com/sifr-lang/sifr/pull/3681#issuecomment-5537359721) was NOT SATISFIED after finding a new cross-module builtin-error suppression mechanism defect; under the no-third-review rule it is immediate Item 10A/[#3682](https://github.com/sifr-lang/sifr/issues/3682). | One typed support plan now owns runtime and stdlib demand across single-file, project, and test-project generation; aggregate support renders once; bridge bodies conflict-check and deduplicate; final-source pruning removes unconsumed support and reconstructs dependency metadata. The bounded second-review identity defect is owned by Item 10A. |
 | 10A | merged | [#3684](https://github.com/sifr-lang/sifr/pull/3684) | `948c4d47146cdcaf6dbf49705d30c47e11959cc5` | Exact compiler candidate `c9d0fb34331c32fb90342debf1eea28a0c6ee7e1`: all 5 Item 10A codegen tests and both Item 10A driver tests passed, including native project and generated test-project compilation/execution with distinct local and builtin `ValueError` shapes; formatting and the 3,751-file guardrail passed. Per the session instruction, the create-PR gate was skipped because this exact SHA merged in the same session. The sole merge gate passed generated-demo freshness, HIR/file-size/ownership/dependency/resource/stdlib/driver/verification guardrails, and the complete Rust-interop area, then stopped only on unchanged SQL coverage/taxonomy readiness debt already owned by Item 12; the gate was not repeated. | [Exact-SHA review](https://github.com/sifr-lang/sifr/pull/3684#issuecomment-5538828920) on `c9d0fb34331c32fb90342debf1eea28a0c6ee7e1` was SATISFIED with no blocking findings. No remediation review was required. The pre-existing fixture lock failure is [#3685](https://github.com/sifr-lang/sifr/issues/3685); two non-blocking suggestions are assigned to Item 12. | Builtin errors now use canonical `sifr.builtin.*` identities, module shadows never become project-wide support vetoes, relocation preserves colliding local definitions, single-file suppression remains local, generated support traits fail closed outside the flat owner layout, and the unused reference helper is removed. |
 | 11 | merged | [#3689](https://github.com/sifr-lang/sifr/pull/3689) (supersedes closed draft [#3687](https://github.com/sifr-lang/sifr/pull/3687)) | `bbc85bcd3e538e201f7f82fa535c7cef43a5ac6e` | Reviewed Item 11 candidate `78c28c1e4c42bd85d685d3a3cffdf132fcdfcc40` retained its focused passing tests, fixture [#3685](https://github.com/sifr-lang/sifr/issues/3685), formatting, HIR maintainability, and 3,753-file guardrail evidence. Its consumed merge-profile gate found the 15 stale companions later regenerated by Item 11A and was not rerun. | [Initial review](https://github.com/sifr-lang/sifr/pull/3687#issuecomment-5539520805) was NOT SATISFIED; [sole remediation review](https://github.com/sifr-lang/sifr/pull/3687#issuecomment-5539569910) on `78c28c1e4c42bd85d685d3a3cffdf132fcdfcc40` was SATISFIED. Item 11A's [exact-SHA integration review](https://github.com/sifr-lang/sifr/pull/3689#issuecomment-5539747194) confirmed that no accepted mechanism file changed after that candidate. | Portable manifests and dependency resolution, executable/argument boundaries, checked conversions, and the refreshed fixture lock merged through Item 11A. |
-| 11A | merged | [#3689](https://github.com/sifr-lang/sifr/pull/3689) | `bbc85bcd3e538e201f7f82fa535c7cef43a5ac6e` | Exact candidate `ec380f0b221d65516516291018008434c1c1e62a`: the canonical updater changed exactly the 15 item-owned companions, and `python3 scripts/check_demo_emitted_freshness.py --sifr target/debug/sifr` passed with all companions fresh. Per the session instruction, the create-PR gate was skipped because this SHA merged in the same session. The [sole merge-profile gate](https://github.com/sifr-lang/sifr/pull/3689#issuecomment-5539791652) passed Cargo setup, HIR, the 3,753-file guardrail, generated-demo freshness, source/ownership/resource/stdlib/driver/verification guardrails, and all 10 Rust-interop variants, then stopped only on unchanged SQL coverage/taxonomy debt already owned by Item 12; it was not rerun. | [Exact-SHA Opus review](https://github.com/sifr-lang/sifr/pull/3689#issuecomment-5539747194) on `ec380f0b221d65516516291018008434c1c1e62a` was SATISFIED with no blocking findings. No remediation review was required. Its string-receiver evaluation suggestion is assigned to Item 12. | The reviewed Item 11 candidate was integrated without mechanism changes, all 15 stale companions were compiler-regenerated, draft #3687 was closed as superseded, and the integrated candidate merged. |
+| 11A | merged | [#3689](https://github.com/sifr-lang/sifr/pull/3689) | `bbc85bcd3e538e201f7f82fa535c7cef43a5ac6e` | Exact candidate `ec380f0b221d65516516291018008434c1c1e62a`: the canonical updater changed exactly the 15 item-owned companions, and `python3 scripts/check_demo_emitted_freshness.py --sifr target/debug/sifr` passed with all companions fresh. Per the session instruction, the create-PR gate was skipped because this SHA merged in the same session. The [sole merge-profile gate](https://github.com/sifr-lang/sifr/pull/3689#issuecomment-5539791652) passed Cargo setup, HIR, the 3,753-file guardrail, generated-demo freshness, source/ownership/resource/stdlib/driver/verification guardrails, and all 10 Rust-interop variants, then stopped only on unchanged SQL coverage/taxonomy debt already owned by Item 12; it was not rerun. | [Exact-SHA agent review](https://github.com/sifr-lang/sifr/pull/3689#issuecomment-5539747194) on `ec380f0b221d65516516291018008434c1c1e62a` was SATISFIED with no blocking findings. No remediation review was required. Its string-receiver evaluation suggestion is assigned to Item 12. | The reviewed Item 11 candidate was integrated without mechanism changes, all 15 stale companions were compiler-regenerated, draft #3687 was closed as superseded, and the integrated candidate merged. |
 
 ## Deferred Findings
 
@@ -749,7 +749,7 @@ item can close.
   as `bbc85bcd3e538e201f7f82fa535c7cef43a5ac6e`; exact candidate
   `ec380f0b221d65516516291018008434c1c1e62a` preserved reviewed Item 11
   candidate `78c28c1e4c42bd85d685d3a3cffdf132fcdfcc40`, regenerated exactly the
-  15 stale companions through that compiler, passed exact freshness and Opus
+  15 stale companions through that compiler, passed exact freshness and agent
   review, and passed every reached item-owned check in its sole merge-profile
   gate. Closed draft [#3687](https://github.com/sifr-lang/sifr/pull/3687) is
   superseded, and Item 11's consumed gate was not rerun. Item 12 owns `anext`

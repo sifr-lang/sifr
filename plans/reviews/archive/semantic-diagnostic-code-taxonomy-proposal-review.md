@@ -1,6 +1,6 @@
 # Review: Ad-Hoc Phase — Semantic Diagnostic Code Taxonomy and Structured HIR Diagnostics
 
-Reviewer: Claude Opus 4.7
+Reviewer: agent
 Date: 2026-04-29
 Source: `issues/ad-hoc-semantic-diagnostic-code-taxonomy-and-structured-hir-diagnostics.md`
 Repo state at review: branch `main`, commit `38b1f9c9`

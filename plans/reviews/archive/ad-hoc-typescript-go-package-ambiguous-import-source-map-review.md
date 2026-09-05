@@ -1,4 +1,4 @@
-# Claude Review: Package Ambiguous Import Source Map Boundary
+# agent Review: Package Ambiguous Import Source Map Boundary
 
 Date: 2026-05-30
 

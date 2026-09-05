@@ -1,6 +1,6 @@
 # certification_10 (Proc-Macro and Codegen Trust) — Review
 
-Scope confirmed: `HEAD == origin/main == afd25c392`, so the working tree *is* the diff. I excluded `editor_integrations`, `verification/areas/algorithmic_compatibility/corpora/leetcode`, `.cert5probe/`, `.claude/`, the stray `*.webp` files, `plans/phases/43_interoperability.md`, and the `ecosystem_backend_certification` hunk in `rust_interop_compatibility_matrix.json:396-400`. That hunk is textually separate from the `proc_macro_trust` hunk at `:433-444`; the proc_macro_trust promotion is self-contained and valid.
+Scope confirmed: `HEAD == origin/main == afd25c392`, so the working tree *is* the diff. I excluded `editor_integrations`, `verification/areas/algorithmic_compatibility/corpora/leetcode`, `.cert5probe/`, `.agent/`, the stray `*.webp` files, `plans/phases/43_interoperability.md`, and the `ecosystem_backend_certification` hunk in `rust_interop_compatibility_matrix.json:396-400`. That hunk is textually separate from the `proc_macro_trust` hunk at `:433-444`; the proc_macro_trust promotion is self-contained and valid.
 
 ## What I independently confirmed as satisfied
 
@@ -46,7 +46,7 @@ Neither tells the user whether to edit `rust-proc-macros` or `rust-build-scripts
 `package_rust_interop_rejects_untrusted_proc_macro` (direct `native.hash` root, deleted from `rust_interop_tests.rs`) was *replaced* by, not supplemented with, `..._for_local_bridge` (`rust_interop_trust_tests.rs:32-56`). The direct-root proc-macro case now has no unit coverage; the build-script test is the only direct-root trust case left.
 
 ### 6. LOW — tracking artifacts
-- `plans/reviews/active/rust-interop-certification-10-review-round-1.md` and `.claude.log` are **0 bytes** and untracked, and no review round is linked from the certification_10 section. Certifications 6 and 7 link every round (e.g. issue lines 709, 826).
+- `plans/reviews/active/rust-interop-certification-10-review-round-1.md` and `.agent.log` are **0 bytes** and untracked, and no review round is linked from the certification_10 section. Certifications 6 and 7 link every round (e.g. issue lines 709, 826).
 - Issue line 1162: "the five focused package-wide trust tests **and** proc-macro trust cache-identity test" double-counts — `rust_interop_trust_tests.rs` has 5 tests total (4 trust + 1 cache identity).
 - Issue line 1138 remains unchecked, which is correct for the pre-merge state; note the extraction it demands is done for the Python side (`_scenario_checks.py` 891 → 745, new `_scenario_registry.py`/`_scenario_proc_macro.py`), while `crates/sifr_driver/src/build/rust_interop.rs` grew 898 → 899 and now sits one line under the cap.
 

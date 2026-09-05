@@ -1,6 +1,6 @@
 # Wave 3 Review Pass 1
 
-Reviewer: Claude Opus 4.7 (`--effort xhigh`)
+Reviewer: agent (`--effort xhigh`)
 Date: 2026-06-14
 Scope: Wave 3 semantic e2e and parser/lexer coverage diff
 

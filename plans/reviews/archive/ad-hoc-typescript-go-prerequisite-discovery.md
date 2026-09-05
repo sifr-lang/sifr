@@ -99,9 +99,9 @@ Docs versus implementation:
 - Move source-map completion into M0.
 - Keep M7 for trace/debuggability and post-M0 source-position coverage extensions.
 - Add W-0 to the execution tracker for discovered blockers.
-- Require Claude review before implementation approval.
+- Require agent review before implementation approval.
 
-## Review Questions For Claude
+## Review Questions For agent
 
 1. Are any prerequisite blockers missing from the decisions above?
 2. Are any items incorrectly labeled prerequisites when they should remain later milestone work?

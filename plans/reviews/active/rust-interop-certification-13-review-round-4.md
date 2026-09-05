@@ -14,7 +14,7 @@ R3‑2, R3‑3, R3‑5 are correctly and fully resolved.
 
 ## Scope reviewed
 
-Committed delta `origin/main..HEAD` (`b231daf81`, `7a27b7896`, `6ec0742b6`, `0e53989be`, `bfa7f27c6`), 51 files, focused on `bfa7f27c6`. Excluded and not attributed: `editor_integrations`, the leetcode corpora submodule, `.cert5probe/`, `.claude/`, the two stray webp files, `plans/phases/43_interoperability.md`. `plans/reviews/active/rust-interop-certification-13-review-round-4.md` is an untracked empty placeholder; I did not write to it.
+Committed delta `origin/main..HEAD` (`b231daf81`, `7a27b7896`, `6ec0742b6`, `0e53989be`, `bfa7f27c6`), 51 files, focused on `bfa7f27c6`. Excluded and not attributed: `editor_integrations`, the leetcode corpora submodule, `.cert5probe/`, `.agent/`, the two stray webp files, `plans/phases/43_interoperability.md`. `plans/reviews/active/rust-interop-certification-13-review-round-4.md` is an untracked empty placeholder; I did not write to it.
 
 ---
 

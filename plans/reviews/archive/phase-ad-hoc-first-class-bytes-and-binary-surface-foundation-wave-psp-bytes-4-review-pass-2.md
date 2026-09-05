@@ -282,7 +282,7 @@ The implementation satisfies all production-grade requirements:
 ### 7.4 Sign-off
 
 ```
-Reviewer: Claude Code (Agent)
+Reviewer: agent (Agent)
 Date: 2026-03-19
 Outcome: APPROVED FOR PRODUCTION
 ```

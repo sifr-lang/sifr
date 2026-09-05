@@ -1,6 +1,6 @@
 # Wave 4 Diagnostic Baseline Catalog Review Pass 1
 
-Reviewer: Claude Opus 4.7 (`--effort xhigh`)
+Reviewer: agent (`--effort xhigh`)
 Date: 2026-06-14
 Scope: uncommitted Wave 4 diagnostics-baseline catalog slice.
 

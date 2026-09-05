@@ -18,8 +18,8 @@ The PR's own validation claim (`python3 verification/areas/coverage_matrix/check
 `"Remove process, phase, milestone, wave, or problem framing"`,
 and the new wording trips the taxonomy regex it was meant to support. Either the line needs to be rephrased to avoid literal tokens (e.g., bullet list with backticked code-style examples behind a comment, or a placeholder like "delivery-process taxonomy") or the script needs an explicit allowlist for self-referential guidance.
 
-**3. Inconsistency Codex's "passed" report was misleading.**
-The validation log in the PR description should not be trusted as a pre-merge gate without re-running. The merge gate `scripts/run_all_tests.sh` is the right oracle — Codex notes only "representative p95 budget" failures there, but a hand re-run of `verification_taxonomy.py` shows that script also fails. Worth confirming whether `run_all_tests.sh` actually drives this check; if not, the new enforcement is not wired into the gate it needs to live behind.
+**3. Inconsistency agent's "passed" report was misleading.**
+The validation log in the PR description should not be trusted as a pre-merge gate without re-running. The merge gate `scripts/run_all_tests.sh` is the right oracle — agent notes only "representative p95 budget" failures there, but a hand re-run of `verification_taxonomy.py` shows that script also fails. Worth confirming whether `run_all_tests.sh` actually drives this check; if not, the new enforcement is not wired into the gate it needs to live behind.
 
 ### Areas that look clean (no blockers)
 - Verification schemas (`area.schema.json`, `profile.schema.json`, profile JSONs, runner Python) — keys consistent, no stale `contract`/`phase`/`wave`/`milestone` references in active runner code.

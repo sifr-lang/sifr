@@ -1,6 +1,6 @@
 # Review: Wave 4 Package Dependency-Boundary Baselines
 
-Reviewer: Claude Opus 4.7 (`claude --dangerously-skip-permissions --setting-sources project --model claude-opus-4-7 --effort xhigh`)
+Reviewer: agent (`agent --dangerously-skip-permissions --setting-sources project --model agent --effort xhigh`)
 Date: 2026-06-15
 
 ## Verdict

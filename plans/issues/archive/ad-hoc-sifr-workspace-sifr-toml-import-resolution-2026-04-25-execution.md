@@ -195,7 +195,7 @@ Merged: 2026-04-25
 
 ## External Reviews
 
-- historical pass 1: `reviews/sifr-workspace-pyproject-import-resolution-2026-04-25-review-pass1.md` was unavailable because the review runner was invoked outside the `talk-to-claude` uv project.
+- historical pass 1: `reviews/sifr-workspace-pyproject-import-resolution-2026-04-25-review-pass1.md` was unavailable because the review runner was invoked outside the `agent review` uv project.
 - historical pass 2: `reviews/sifr-workspace-pyproject-import-resolution-2026-04-25-review-pass2.md` returned NOT READY; blockers were dotted Rust module materialization and incompatible flat e2e fixture placement.
 - historical pass 3: `reviews/sifr-workspace-pyproject-import-resolution-2026-04-25-review-pass3.md` returned READY for the old pyproject-targeted plan. A fresh review is required after switching this phase to native `sifr.toml`.
 - pass 4: `reviews/sifr-workspace-sifr-toml-import-resolution-2026-04-25-review-pass4.md` returned READY with no blocking findings for the native `sifr.toml` plan.

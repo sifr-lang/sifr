@@ -222,4 +222,4 @@ The wave is eligible for closure. The reviewer pass 1 remediation has been compl
 ---
 
 *Review generated: 2026-03-10*
-*Reviewer: Claude Opus 4.6*
+*Reviewer: agent*

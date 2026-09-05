@@ -10,7 +10,7 @@ validation and review evidence, blockers, deferred follow-up work, and closure.
 ## Status
 
 Architecture proper was approved on draft PR
-[#3014](https://github.com/sifr-lang/sifr/pull/3014). Opus 5 pass 17 returned
+[#3014](https://github.com/sifr-lang/sifr/pull/3014). agent pass 17 returned
 `SATISFIED` and approved `milestone_ps_0`. The architecture, conformance
 inventory, repository boundary, and demo ownership are approved.
 `milestone_ps_1` and `milestone_ps_2` are implemented and merged. The required
@@ -27,29 +27,29 @@ owns that package-neutral release defect.
 
 Review artifacts:
 
-- [`native-pydantic-sifr-architecture-opus5-review-pass-1.md`](../../reviews/archive/native-pydantic-sifr-architecture-opus5-review-pass-1.md)
-- [`native-pydantic-sifr-architecture-opus5-review-pass-2.md`](../../reviews/archive/native-pydantic-sifr-architecture-opus5-review-pass-2.md)
-- [`native-pydantic-sifr-architecture-opus5-review-pass-3.md`](../../reviews/archive/native-pydantic-sifr-architecture-opus5-review-pass-3.md)
-- [`native-pydantic-sifr-architecture-opus5-review-pass-4.md`](../../reviews/archive/native-pydantic-sifr-architecture-opus5-review-pass-4.md)
-- [`native-pydantic-sifr-architecture-opus5-review-pass-5.md`](../../reviews/archive/native-pydantic-sifr-architecture-opus5-review-pass-5.md)
-- [`native-pydantic-sifr-architecture-opus5-review-pass-6.md`](../../reviews/archive/native-pydantic-sifr-architecture-opus5-review-pass-6.md)
-- [`native-pydantic-sifr-architecture-opus5-review-pass-7.md`](../../reviews/archive/native-pydantic-sifr-architecture-opus5-review-pass-7.md)
-- [`native-pydantic-sifr-architecture-opus5-review-pass-8.md`](../../reviews/archive/native-pydantic-sifr-architecture-opus5-review-pass-8.md)
-- [`native-pydantic-sifr-architecture-opus5-review-pass-9.md`](../../reviews/archive/native-pydantic-sifr-architecture-opus5-review-pass-9.md)
-- [`native-pydantic-sifr-architecture-opus5-review-pass-10.md`](../../reviews/archive/native-pydantic-sifr-architecture-opus5-review-pass-10.md)
-- [`native-pydantic-sifr-architecture-opus5-review-pass-11.md`](../../reviews/archive/native-pydantic-sifr-architecture-opus5-review-pass-11.md)
-- [`native-pydantic-sifr-architecture-opus5-review-pass-12.md`](../../reviews/archive/native-pydantic-sifr-architecture-opus5-review-pass-12.md)
-- [`native-pydantic-sifr-architecture-opus5-review-pass-13.md`](../../reviews/archive/native-pydantic-sifr-architecture-opus5-review-pass-13.md)
-- [`native-pydantic-sifr-architecture-opus5-review-pass-14.md`](../../reviews/archive/native-pydantic-sifr-architecture-opus5-review-pass-14.md)
-- [`native-pydantic-sifr-architecture-opus5-review-pass-15.md`](../../reviews/archive/native-pydantic-sifr-architecture-opus5-review-pass-15.md)
-- [`native-pydantic-sifr-architecture-opus5-review-pass-16.md`](../../reviews/archive/native-pydantic-sifr-architecture-opus5-review-pass-16.md)
-- [`native-pydantic-sifr-architecture-opus5-review-pass-17.md`](../../reviews/archive/native-pydantic-sifr-architecture-opus5-review-pass-17.md)
-- [`native-pydantic-sifr-ps2-claude-opus-review-pass-1.md`](../../reviews/archive/native-pydantic-sifr-ps2-claude-opus-review-pass-1.md)
-- [`native-pydantic-sifr-ps2-claude-opus-review-pass-2.md`](../../reviews/archive/native-pydantic-sifr-ps2-claude-opus-review-pass-2.md)
-- [`native-pydantic-sifr-ps2-claude-opus-review-pass-3.md`](../../reviews/archive/native-pydantic-sifr-ps2-claude-opus-review-pass-3.md)
-- [`native-pydantic-sifr-ps3-claude-opus-review-pass-1.md`](../../reviews/archive/native-pydantic-sifr-ps3-claude-opus-review-pass-1.md)
-- [`native-pydantic-sifr-ps3-claude-opus-review-pass-2.md`](../../reviews/archive/native-pydantic-sifr-ps3-claude-opus-review-pass-2.md)
-- [`native-pydantic-sifr-ps3-claude-opus-review-pass-3.md`](../../reviews/archive/native-pydantic-sifr-ps3-claude-opus-review-pass-3.md)
+- [`native-pydantic-sifr-architecture-agent-review-pass-1.md`](../../reviews/archive/native-pydantic-sifr-architecture-agent-review-pass-1.md)
+- [`native-pydantic-sifr-architecture-agent-review-pass-2.md`](../../reviews/archive/native-pydantic-sifr-architecture-agent-review-pass-2.md)
+- [`native-pydantic-sifr-architecture-agent-review-pass-3.md`](../../reviews/archive/native-pydantic-sifr-architecture-agent-review-pass-3.md)
+- [`native-pydantic-sifr-architecture-agent-review-pass-4.md`](../../reviews/archive/native-pydantic-sifr-architecture-agent-review-pass-4.md)
+- [`native-pydantic-sifr-architecture-agent-review-pass-5.md`](../../reviews/archive/native-pydantic-sifr-architecture-agent-review-pass-5.md)
+- [`native-pydantic-sifr-architecture-agent-review-pass-6.md`](../../reviews/archive/native-pydantic-sifr-architecture-agent-review-pass-6.md)
+- [`native-pydantic-sifr-architecture-agent-review-pass-7.md`](../../reviews/archive/native-pydantic-sifr-architecture-agent-review-pass-7.md)
+- [`native-pydantic-sifr-architecture-agent-review-pass-8.md`](../../reviews/archive/native-pydantic-sifr-architecture-agent-review-pass-8.md)
+- [`native-pydantic-sifr-architecture-agent-review-pass-9.md`](../../reviews/archive/native-pydantic-sifr-architecture-agent-review-pass-9.md)
+- [`native-pydantic-sifr-architecture-agent-review-pass-10.md`](../../reviews/archive/native-pydantic-sifr-architecture-agent-review-pass-10.md)
+- [`native-pydantic-sifr-architecture-agent-review-pass-11.md`](../../reviews/archive/native-pydantic-sifr-architecture-agent-review-pass-11.md)
+- [`native-pydantic-sifr-architecture-agent-review-pass-12.md`](../../reviews/archive/native-pydantic-sifr-architecture-agent-review-pass-12.md)
+- [`native-pydantic-sifr-architecture-agent-review-pass-13.md`](../../reviews/archive/native-pydantic-sifr-architecture-agent-review-pass-13.md)
+- [`native-pydantic-sifr-architecture-agent-review-pass-14.md`](../../reviews/archive/native-pydantic-sifr-architecture-agent-review-pass-14.md)
+- [`native-pydantic-sifr-architecture-agent-review-pass-15.md`](../../reviews/archive/native-pydantic-sifr-architecture-agent-review-pass-15.md)
+- [`native-pydantic-sifr-architecture-agent-review-pass-16.md`](../../reviews/archive/native-pydantic-sifr-architecture-agent-review-pass-16.md)
+- [`native-pydantic-sifr-architecture-agent-review-pass-17.md`](../../reviews/archive/native-pydantic-sifr-architecture-agent-review-pass-17.md)
+- [`native-pydantic-sifr-ps2-agent-review-pass-1.md`](../../reviews/archive/native-pydantic-sifr-ps2-agent-review-pass-1.md)
+- [`native-pydantic-sifr-ps2-agent-review-pass-2.md`](../../reviews/archive/native-pydantic-sifr-ps2-agent-review-pass-2.md)
+- [`native-pydantic-sifr-ps2-agent-review-pass-3.md`](../../reviews/archive/native-pydantic-sifr-ps2-agent-review-pass-3.md)
+- [`native-pydantic-sifr-ps3-agent-review-pass-1.md`](../../reviews/archive/native-pydantic-sifr-ps3-agent-review-pass-1.md)
+- [`native-pydantic-sifr-ps3-agent-review-pass-2.md`](../../reviews/archive/native-pydantic-sifr-ps3-agent-review-pass-2.md)
+- [`native-pydantic-sifr-ps3-agent-review-pass-3.md`](../../reviews/archive/native-pydantic-sifr-ps3-agent-review-pass-3.md)
 
 Milestone delivery records:
 
@@ -63,7 +63,7 @@ Milestone delivery records:
   its first Sifr process timed out at 240 seconds under host-wide Cargo contention,
   while the remaining cases passed. The exact timed-out fixture then passed directly
   in 29.6 seconds with canonical output `[7,3,2,4,20]`.
-- Opus review of candidate `5b1601ded66556fe04b9674916153726b341b2c6`
+- agent review of candidate `5b1601ded66556fe04b9674916153726b341b2c6`
   found augmented-assignment token handling and negative integer floor arithmetic
   omissions. Candidate `e23b80d94f67de3d3ced7dbcca7394efdf5ab6c1` corrected both;
   remediation review returned `SATISFIED` with no blocking findings.
@@ -86,7 +86,7 @@ Milestone delivery records:
   execution passed core, diagnostics, package, and stdlib lanes; its aggregate
   Python lane reproduced a host-contention timeout for a scenario that passed
   standalone.
-- Opus reviewed eight published remediation candidates. The final exact-SHA
+- agent reviewed eight published remediation candidates. The final exact-SHA
   round confirmed all prior construction, identity, callback, projection,
   cutover-inventory, ownership, and current-state findings closed and returned
   `SATISFIED` with no blocking findings.
@@ -100,7 +100,7 @@ Milestone delivery records:
   Rust-interop architecture owner without weakening concrete-path or existence
   validation. Taxonomy and compatibility checks/self-tests, all 10 registered
   Rust-interop cases, stable claims, stale drafts, tiers, and file-size/HIR
-  guardrails passed. Opus review round 3 returned `SATISFIED` with no actionable
+  guardrails passed. agent review round 3 returned `SATISFIED` with no actionable
   findings. The create-PR profile then reached the externally owned Python
   readonly/doctor timeout tracked by PR #3110; #3110 was blocked on this taxonomy
   repair, so the fix merged to close the dependency cycle without absorbing its
@@ -122,7 +122,7 @@ Milestone delivery records:
   failures were the externally owned PR #3110 readonly/doctor 120-second timeout
   and the host-sensitive binding-authoring 180-second timeout; the same binding
   path passed in 36.431 seconds with the controlled six-worker allocation.
-- Opus remediation passes closed recursive identity/cache and panic-contract
+- agent remediation passes closed recursive identity/cache and panic-contract
   gaps, restored generic class bounds, and removed duplicate stable-support
   claims. The final exact-candidate review returned `SATISFIED` with no blocking
   findings; per the reviewer skill, that final response remains outside the Git
@@ -134,7 +134,7 @@ Milestone delivery records:
 - The item certifies `opaque_resource_package_core` through a synthetic
   external package. It covers construction, lifecycle, panic redaction,
   direct-construction rejection, alias invalidation, and use after close.
-- The exact-SHA Opus review returned `SATISFIED` with no blocking findings.
+- The exact-SHA agent review returned `SATISFIED` with no blocking findings.
   The one merge gate passed Python 25/25, Rust interop 10/10, generated builds
   70/70, E2E 694/694, and 268 hardening variants with zero failures.
 - `milestone_ps_3` merged in
@@ -148,7 +148,7 @@ Milestone delivery records:
   integers, bytes, collections, records, moved payloads, typed errors, corrupt
   envelopes, invalid indices, cleanup, cache invalidation, and source/installed
   parity. No compatibility layer, fallback, or legacy static-program path exists.
-- Three recorded Opus review passes found and closed unsupported-owner emission,
+- Three recorded agent review passes found and closed unsupported-owner emission,
   duplicate decorator handling, cache-order and cleanup evidence, and nested bytes
   encoding. A fresh exact-integration review then returned `SATISFIED` with no
   blocking or actionable milestone-owned findings; per the reviewer skill, that
@@ -179,14 +179,14 @@ Milestone delivery records:
   nine unavailable dispositions, compositional error declarations, checked
   JSON/input arenas, plan foundations, Python-free jiter, licenses, provenance,
   property tests, two fuzz targets, and a benchmark harness.
-- The final Opus remediation review returned `SATISFIED` with no in-scope
+- The final agent remediation review returned `SATISFIED` with no in-scope
   blocker. The canonical create-PR and authoritative merge gates passed. The
   merge gate ran 4,096 release property cases, compiled both fuzz targets, and
   left only a stale tracked fuzz lockfile from removed production dependencies.
 - The exact one-file lock correction merged in companion-repository
   [PR #2](https://github.com/sifr-lang/pydantic-sifr/pull/2) at merge commit
   `c8200c9ae67e3b504674ea105836b4894413507b`. Its reviewed and gated candidate
-  was `7185f538a57eb54a74f87f9d4d7ae2e8fcbfb387`; Opus returned
+  was `7185f538a57eb54a74f87f9d4d7ae2e8fcbfb387`; agent returned
   `SATISFIED`, both locked fuzz builds passed, and the create-PR and merge gates
   passed with a clean worktree.
 - The released-Sifr round trip binds 689 exact static-program bytes to identity
@@ -208,14 +208,14 @@ Milestone delivery records:
   fail before large numeric allocation. The implementation has no Python,
   compatibility, fallback, or legacy runtime path.
 - Four scalar review rounds, four collection review rounds, and three special
-  scalar review rounds closed all blocking findings. The whole-milestone Opus
+  scalar review rounds closed all blocking findings. The whole-milestone agent
   review of the final candidate returned `SATISFIED` with no blockers. Its
   response remains outside the Git tree at
-  `/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr-claude.CB0DN1/response.md`.
+  `/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr-agent.CB0DN1/response.md`.
 - The canonical create-PR gate and the single authoritative merge gate passed
   on the same candidate. The merge gate included release-mode tests and 1,000
   bounded runs for each scalar, collection, and special validation fuzz target.
-- Opus follow-ups are non-blocking documentation and coverage work: expand the
+- agent follow-ups are non-blocking documentation and coverage work: expand the
   ledger prose for adapted temporal bounds, tuple arity errors, typed numeric
   collection identity, numeric coercion boundaries, and URL measurement; grow
   fuzz coverage beyond the required bounded crash smoke.
@@ -227,7 +227,7 @@ Milestone delivery records:
   structural static-program owner. Non-structural specialization does not add
   a runtime dependency or generated payload. No parser, cache, compatibility
   mode, fallback, legacy path, or versioned active name exists.
-- The final Opus implementation and evidence review returned `SATISFIED` with
+- The final agent implementation and evidence review returned `SATISFIED` with
   no blocker. The unchanged warm create-PR gate passed. The single merge gate
   stopped on one parse-only performance sample at 0.18% more than its limit.
   That benchmark cannot reach the changed path. Five controlled reruns passed
@@ -245,7 +245,7 @@ Milestone delivery records:
 - Generated structural construction and projection now render Rust keyword
   fields through the canonical identifier renderer. The structural wire name
   stays unchanged. A field named `type` proves construction and projection.
-- The exact-candidate Opus review returned `SATISFIED` with no blocker.
+- The exact-candidate agent review returned `SATISFIED` with no blocker.
   Focused structural tests, all 984 codegen tests, codegen clippy, formatting,
   and file-size checks passed. The warm create-PR gate passed Python 19/19,
   Rust 10/10, and E2E 140/140.
@@ -267,7 +267,7 @@ Milestone delivery records:
   use that identity without parsing schema data.
 - Structural bridge demand enables one sysroot `sifr_runtime` identity in the
   probe and final generated crate. Ordinary builds do not enable the feature.
-- The exact-candidate Opus review returned `SATISFIED` with no blocker.
+- The exact-candidate agent review returned `SATISFIED` with no blocker.
   Runtime, codegen, and probe suites passed 71, 984, and 28 tests.
 - A companion integration proof passed specialization, probing, release
   compilation, arena construction, and typed value recovery. The recovered
@@ -293,9 +293,9 @@ Milestone delivery records:
 - Focused validation passed a native two-hop build and run, 459 driver tests,
   66 frontend tests, 976 lowering tests, affected-crate Clippy, formatting,
   maintainability, and file-size checks.
-- The exact-candidate Opus review returned `SATISFIED` with no blocking
+- The exact-candidate agent review returned `SATISFIED` with no blocking
   finding. The response remains outside the Git tree at
-  `/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr-claude.fvHK1U/response.md`.
+  `/var/folders/lq/l19_y_rn76b8vprfvdjn9zch0000gn/T/sifr-agent.fvHK1U/response.md`.
 - The cold create-PR gate was functionally green and exceeded only the known
   generated-artifact cold budget tracked by issue #3134. Its receipt SHA-256
   is `7e3e43028447de5fa4cf4ed842b7530e81a066dbd604da6bcc05bf536e1b497c`.
@@ -320,7 +320,7 @@ Milestone delivery records:
   generation share the required union and nominal imports.
 - A Sifr `main` support module now has an explicit generated test-crate path.
   Native tests cover two error types, `Result` unions, and composite unions.
-- Ten Opus review rounds closed duplicate imports and test-crate root mapping.
+- Ten agent review rounds closed duplicate imports and test-crate root mapping.
   The final whole-diff review returned `SATISFIED` with no blocker.
 - The warm create-PR gate exited zero. Its receipt SHA-256 is
   `4cc51486c1a3ee528f8ce1e44f77a4e3e2ad8374d89d8458430e679f5e09ed83`.
@@ -333,7 +333,7 @@ Milestone delivery records:
   918,238,900 median instructions against a 936,811,698 limit.
 - The unchanged budget checker accepted that fresh receipt. Its SHA-256 is
   `2baf1d90deb12990497132ef9ddd2f71966063dca1cc8fb11d4dbb83b9ae997b`.
-  Opus accepted the combined evidence without a second merge gate.
+  agent accepted the combined evidence without a second merge gate.
 - [Issue #3161](https://github.com/sifr-lang/sifr/issues/3161) owns exact-artifact
   performance isolation. [Issue #3162](https://github.com/sifr-lang/sifr/issues/3162)
   owns non-blocking nominal and test-layout hardening.
@@ -355,7 +355,7 @@ Milestone delivery records:
 - A fresh exact-candidate target measured 925,520,586 median instructions
   against a 936,811,698 limit. Its accepted receipt SHA-256 is
   `dfe27a5f69dfb818a1506ef7f4baa6900fcd01dc05884a3fd42c96058f3b871e`.
-- Exact-SHA Opus implementation review and validation adjudication returned
+- Exact-SHA agent implementation review and validation adjudication returned
   `SATISFIED` with no blocker. The adjudication response SHA-256 is
   `2db609c6aad0be3061f79e1d2b70d2ed4f95f6c0939af67a472773e6e777eae0`.
 - The locked-package authority prerequisite merged in
@@ -370,7 +370,7 @@ Milestone delivery records:
   maintainability, taxonomy, and the transfer guardrail also passed.
 - The unchanged PS6 dependent package passed `fetch --locked` and
   `run --locked` with the candidate compiler.
-- Exact-SHA Opus implementation and remediation reviews returned `SATISFIED`
+- Exact-SHA agent implementation and remediation reviews returned `SATISFIED`
   with no blockers. The final response SHA-256 is
   `662bee48ebf47ce30a28473add6d9ef74fadb3e0f5131ff577ca28ce03dcd30b`.
 - The cold create-PR gate was functionally green. It exceeded only the known
@@ -382,7 +382,7 @@ Milestone delivery records:
 - A fresh exact-candidate helper measured 925,032,774 median instructions
   against the unchanged 936,811,698 limit. The budget checker accepted receipt
   `8eef6f115108db21c7933ab5431d6c788f5a288679c973fd145547f71db59212`.
-- Opus accepted the combined validation evidence without a second merge gate.
+- agent accepted the combined validation evidence without a second merge gate.
   Its adjudication response SHA-256 is
   `5330a6e652cb1cd2d661c22f93ed5236b1601a6baa4a252dffaf3aa2deff878d`.
 - The multiversion lock-authority prerequisite merged in
@@ -397,7 +397,7 @@ Milestone delivery records:
   maintainability, taxonomy, file-size, and transfer guardrails passed.
 - The unchanged PS6 demo passed `fetch --locked` and `run --locked`. Its
   release binary built without an unlocked retry or fallback.
-- Exact-SHA Opus implementation review returned `SATISFIED` with no blocker.
+- Exact-SHA agent implementation review returned `SATISFIED` with no blocker.
   Its response SHA-256 is
   `ad130714c6981f6243de4735f5ccefad1402587db3e8e7b4c95283e576088e5c`.
 - The canonical create-PR gate exited zero. Its receipt SHA-256 is
@@ -407,7 +407,7 @@ Milestone delivery records:
 - A fresh exact-candidate helper measured 925,442,120 median instructions
   against the unchanged 936,811,698 limit. Its accepted receipt SHA-256 is
   `82bec880219baf54c7c3408e45651fee03428db4f813a88ed2e45ed385b82710`.
-- Opus accepted the combined validation evidence. Its adjudication response
+- agent accepted the combined validation evidence. Its adjudication response
   SHA-256 is
   `6ffc165d38afb41b380ac6bf0fbb7d19e080b843ebad9d5be5f8747c9fe13ceb`.
 - `milestone_ps_6` merged in companion-repository
@@ -425,7 +425,7 @@ Milestone delivery records:
   fixture, typed-construction fuzz target, architecture text, and locked CI
   gate are included. All three Cargo graphs use exact Sifr merge
   `89684aecbd2a321c92912a8cee051b9d9a4fc46a`.
-- The final whole-milestone Opus review returned `SATISFIED` with no blockers.
+- The final whole-milestone agent review returned `SATISFIED` with no blockers.
   Its response SHA-256 is
   `f6aea6737e4284f0675c3579212602b89fa7d1e19a7f41940e4342013a45f0d5`.
 - The canonical create-PR profile passed. The single merge gate also passed.
@@ -440,7 +440,7 @@ Milestone delivery records:
   `8ed45b3b14122806d3d992de4c3522e8427264b8`.
 - The prerequisite implements package-neutral enum and union construction and
   projection. It also implements deterministic union ownership and demand gates.
-- The final whole-candidate Opus review returned `SATISFIED` with no blockers.
+- The final whole-candidate agent review returned `SATISFIED` with no blockers.
   Its response SHA-256 is
   `c8bf3a4b223e509e3474a2f2e8b4b1b6268fa43600b07ceed0a6d5837530a4ed`.
 - The canonical warm create-PR gate passed. The single merge gate passed every
@@ -459,7 +459,7 @@ Milestone delivery records:
   `55210678160b1e43f7aab9245fc12bc9c6698f7d`.
 - Project and test-project records now use their module-qualified nominal
   identity. Unnamed single-file records remain unqualified.
-- Three Opus review rounds corrected fixture identities, shape hashes, and
+- Three agent review rounds corrected fixture identities, shape hashes, and
   stale assertions. The final review returned `SATISFIED` with no blockers.
 - The final review response SHA-256 is
   `b6d7c534497f8ebf122a2a18287e56f8a34b51c8b4a4014df96d14c3fd5737ea`.
@@ -496,7 +496,7 @@ Milestone delivery records:
   driver builds, 1,023 codegen tests, 695 E2E fixtures, and 268 hardening variants
   with zero failures. Its receipt SHA-256 is
   `f4cd5b1d22494dd613f21eada04b2a30a30025c24947b89befe456b6fcfec1e8`.
-- The final exact-SHA Opus review returned `SATISFIED` with no blocking findings.
+- The final exact-SHA agent review returned `SATISFIED` with no blocking findings.
   Its response SHA-256 is
   `1edf024c54bb6cfd3812c76567c382aa4410a1875a7ee3d0dd291422685e12f5`.
 - [Issue #3162](https://github.com/sifr-lang/sifr/issues/3162) continues to own
@@ -528,7 +528,7 @@ Milestone delivery records:
 - The single merge gate exited zero. It added release-mode suites and 1,000
   bounded runs for each of four fuzz targets.
 - Four remediation reviews corrected recursive static exactness and nominal
-  union ordering. The final Opus review returned `SATISFIED` with no blockers.
+  union ordering. The final agent review returned `SATISFIED` with no blockers.
   Its response SHA-256 is
   `f9ab19720cdd215d6de5b78e5fbf4c74b51026a3b68dd753bebf358ccafae7b3`.
 - Later PS7 waves own nested sum metadata, typed callback discriminators,
@@ -550,7 +550,7 @@ Milestone delivery records:
 - The canonical create-PR gate and the single merge gate passed. Evidence
   includes 103 workspace tests, release-mode suites, strict Clippy, both locked
   demos, the benchmark smoke test, and four fuzz targets with 1,000 runs each.
-- The exact-SHA Opus review returned `SATISFIED` with no blockers. Its response
+- The exact-SHA agent review returned `SATISFIED` with no blockers. Its response
   SHA-256 is
   `bf42f675e395d2722020142f950360db22758bdfd5169409e88f67f32ce266f3`.
 - A later PS7 hardening wave owns scope propagation through embedded JSON,
@@ -578,7 +578,7 @@ Milestone delivery records:
 - The single authoritative merge gate exited zero. It passed all workspace and
   release foundation tests, six fuzz-target builds, four fuzz targets with
   1,000 runs each, the benchmark smoke test, and all provenance checks.
-- The first exact-SHA Opus review found one flattened `EmbeddedJson` layout
+- The first exact-SHA agent review found one flattened `EmbeddedJson` layout
   blocker. Its response SHA-256 is
   `b3a91367fa7038a208d4cf8a844cb1cd6b2e4472255cce4b09168e7e5ef67608`.
 - The remediation also closed all related static-parity, depth, recursion,
@@ -607,7 +607,7 @@ Milestone delivery records:
   found one incomplete `ValidationOptions` initializer.
 - The correction completed that initializer and preserved strict item checks
   when lazy generators relax only their container kind.
-- A full Opus review then found the strict JSON mapping handoff defect. Its
+- A full agent review then found the strict JSON mapping handoff defect. Its
   response SHA-256 is
   `93ea5cd5d77868d39c65fe05a4b97c931f1b06bd18cf31856f641a38ab7f2cbc`.
 - The exact remediation review returned `SATISFIED` with no blocking findings.
@@ -636,7 +636,7 @@ Milestone delivery records:
   recursion, control composition, recursion limits, and smart-union ranking.
   It binds every upstream-derived row to the pinned PS7 anchor set while keeping
   the two Sifr-native core families on direct local evidence.
-- The exact-SHA Opus review found one documentation omission in the pending API
+- The exact-SHA agent review found one documentation omission in the pending API
   boundary. The remediation names validator, discriminated-union, and
   generic-recursion APIs as pending. The final review returned `SATISFIED` with
   no blockers. Its response SHA-256 is
@@ -647,7 +647,7 @@ Milestone delivery records:
   pinned Sifr source toolchain. The merge gate included both locked demos, all
   workspace and release suites, six fuzz-target builds, and four 1,000-run fuzz
   campaigns.
-- A separate exact-current-state Opus audit confirmed that the fixed-arity
+- A separate exact-current-state agent audit confirmed that the fixed-arity
   call-scoped callback bridge cannot carry the remaining heterogeneous validator
   slots or mutable caller context without prohibited erasure. The next
   package-neutral prerequisite is a static-program-indexed call-scoped typed
@@ -674,7 +674,7 @@ Milestone delivery records:
 - This prerequisite changes const-specialization program identity only. It does
   not change runtime structural or wire identity, emit a callback runtime, or
   add a compiler special case for Pydantic.
-- Two exact-SHA Opus reviews found generic-substitution/operator coverage and
+- Two exact-SHA agent reviews found generic-substitution/operator coverage and
   constructor/async canonicalization blockers. The remediations closed them.
   The final exact-SHA review returned `SATISFIED` with no blockers; its response
   SHA-256 is
@@ -707,7 +707,7 @@ Milestone delivery records:
   metadata, class type parameters, and structural method descriptors. Structural
   method storage and collection are demand-gated, so ordinary programs do not
   pay the imported-shape scan or allocation cost.
-- The final exact-SHA Opus review returned `SATISFIED` with no blocking findings.
+- The final exact-SHA agent review returned `SATISFIED` with no blocking findings.
   Its response SHA-256 is
   `bfbf35dffdfc04b559dccbb74ebb8a838b894f9259aa171e1917542e206ce6d1`.
 - Targeted validation passed 77 frontend tests and 987 lowering tests with one
@@ -747,7 +747,7 @@ Milestone delivery records:
   or thread escape. Generated positive and negative package evidence covers
   dispatch, shared and mutable context, handler escape, and static-program
   envelope verification.
-- The exact-SHA Opus review returned `SATISFIED` with no blocking findings. Its
+- The exact-SHA agent review returned `SATISFIED` with no blocking findings. Its
   response SHA-256 is
   `dbf474cecc17cad6270447dda290dea1fa6abc2a93b965ace72210bef4a10811`.
 - Focused validation passed identity, runtime, frontend, lowering, codegen, and
@@ -782,7 +782,7 @@ Milestone delivery records:
   legal compiler-owned field `sifr_method_slots`. The typed fixture now proves
   that a structural specialization result can declare and return the field.
   No alias, compatibility spelling, fallback, or legacy key remains.
-- The exact-SHA Opus review returned `SATISFIED` with no blocking findings. Its
+- The exact-SHA agent review returned `SATISFIED` with no blocking findings. Its
   response SHA-256 is
   `440da0c5a279dd580d505d5879fc2c3303a6a3f3921ca1d4acc716ffe5299572`.
 - Focused frontend and generated-driver tests, strict frontend Clippy, Rust
@@ -804,7 +804,7 @@ Milestone delivery records:
   an empty list when it has no callbacks. Empty lists emit no method-slot table;
   malformed non-list values still produce `SIFR-RUST-SLOT-0001`. No alias,
   fallback, compatibility form, or Pydantic-specific compiler path was added.
-- The remediation exact-SHA Opus review returned `SATISFIED` with no blocking
+- The remediation exact-SHA agent review returned `SATISFIED` with no blocking
   findings. Its response SHA-256 is
   `76bda413860ef97ff631a3992dc469f8122c44c190845f672f06c928a93abe66`.
 - Focused frontend, driver, Rust-interop, diagnostics, strict Clippy,
@@ -832,7 +832,7 @@ Milestone delivery records:
   the verified owned or static Core Schema. Plans retain the structural shape
   identity, model projection order, and control and collection children without
   retaining a validation arena or introducing another schema compiler.
-- Exact-SHA Opus review returned `SATISFIED` with no blocking findings. Its
+- Exact-SHA agent review returned `SATISFIED` with no blocking findings. Its
   response SHA-256 is
   `e1b8c264806f5a18e495a725da24f48402c1bd515986620b16cc9c7ccad410d8`.
 - Focused plan tests passed 2/2 with strict Clippy and the file-size guard. The
@@ -850,7 +850,7 @@ Milestone delivery records:
   retain a validation arena or build a generic JSON tree. Bytes, temporal
   representations, and integer-profile decisions remain explicit later PS8
   policy work; no fallback, compatibility, or legacy encoding was added.
-- Exact-SHA Opus review returned `SATISFIED` with no blocking findings. Its
+- Exact-SHA agent review returned `SATISFIED` with no blocking findings. Its
   response SHA-256 is
   `4b6c131fc4ebc865b237b97922be2e8961fd8b1bf55c0d932eeaa57a2f174df6`.
 - Focused output and plan tests passed 5/5 with strict Clippy, formatting, and
@@ -869,7 +869,7 @@ Milestone delivery records:
   capture for the active default-bearing field; JSON still does not construct
   a generic value tree. No fallback, compatibility API, or legacy signature
   remains.
-- Exact-SHA Opus review returned `SATISFIED` with no blocking findings. Its
+- Exact-SHA agent review returned `SATISFIED` with no blocking findings. Its
   response SHA-256 is
   `9b5d1a30b86b6ac3427d27d9e68c740e15a160562354d5d8f4558a5abdbd66ee`.
 - The full core suite, focused output and plan tests 7/7, strict Clippy,
@@ -897,7 +897,7 @@ Milestone delivery records:
   violation preserves the typed `JsonIntegerRangeError`, selected profile, and
   recursive model path. No call-time default, fallback, compatibility shim, or
   alternate integer encoder was added.
-- Exact-SHA Opus review returned `SATISFIED` with no blocking findings. Its
+- Exact-SHA agent review returned `SATISFIED` with no blocking findings. Its
   response SHA-256 is
   `903792e47cfe664139aabb841e3cba29611b4369210d603d211e68d78100575c`.
 - Focused serialization tests passed 8/8; the full workspace suite, strict
@@ -945,7 +945,7 @@ Milestone delivery records:
   native, JSON, strings-profile, structural-output, and streaming-JSON calls.
   Its integer JSON profile is selected statically. No call-time default,
   fallback, compatibility layer, or legacy adapter path was added.
-- Exact-SHA Opus review returned `SATISFIED` with no blocking findings. Its
+- Exact-SHA agent review returned `SATISFIED` with no blocking findings. Its
   response SHA-256 is
   `4fa9315c5ea23996dca5e2ecaf5d07114d3421b8c50fae87dcdf4ab78d39ee9f`.
 - Focused adapter tests passed 3/3; the full workspace suite, strict Clippy,
@@ -1005,7 +1005,7 @@ Milestone delivery records:
   alias options, carries string mapping-key constraints through
   `propertyNames`, and fails closed for unsupported alias shapes, key types,
   or mode-specific representations. The legacy mode-only API was removed.
-- Exact-SHA Opus review returned `SATISFIED` with no blocking findings. Its
+- Exact-SHA agent review returned `SATISFIED` with no blocking findings. Its
   response SHA-256 is
   `7d3f60c3becfae6370a274466c2913d2f82eefd78af818335dc7f9fed668ffd2`.
   Eighteen focused JSON Schema tests, the full core suite, strict Clippy,
@@ -1039,7 +1039,7 @@ Milestone delivery records:
   serialization, and specialized numeric validation. The independent pinned
   `jsonschema` test dependency meta-validates and compiles all three documents,
   and repeated generation has a byte-determinism check.
-- Exact-SHA Opus review returned `SATISFIED` with no blocking findings. Its
+- Exact-SHA agent review returned `SATISFIED` with no blocking findings. Its
   response SHA-256 is
   `a22060c44878cae3e6a78fa2e5b16f51e2663850c4afab051b5542e0ac73f634`.
   The exact-pin companion create-PR gate and the single authoritative merge
@@ -1051,7 +1051,7 @@ Milestone delivery records:
 - The public matrix and its machine-readable ledger classify twelve selected
   surfaces as `same`, `adapted`, or `blocked`. The focused unit gate enforces
   complete PS10 anchor-family coverage, local evidence for delivered rows, and
-  owning issue links for blocked rows. Exact-SHA Opus review returned
+  owning issue links for blocked rows. Exact-SHA agent review returned
   `SATISFIED` with no blockers. Its response SHA-256 is
   `2c00d324f3ebfbb10f6deca2a8bbad6a64d0dcefea527c42666e2e9d7e985b08`.
 - The focused unit suite, file-size guard, exact-pin companion create-PR gate,
@@ -1065,7 +1065,7 @@ Milestone delivery records:
   surface, identifies adapted semantics and blocked callback surfaces, and
   gives direct migration examples without compatibility shims or fallback
   paths. Twenty focused documentation-contract tests passed.
-- Exact-SHA Opus review returned `SATISFIED` with no blocking findings. Its
+- Exact-SHA agent review returned `SATISFIED` with no blocking findings. Its
   response SHA-256 is
   `f09f84c79fec512c9cc747c5ed7198f75ac0d2a27fd9613f5bd7aa10d73e7dc7`.
   The file-size guard, exact-pin companion create-PR gate, and the single
@@ -1093,7 +1093,7 @@ Milestone delivery records:
   as four named operations on one representative model. The published report
   binds its measured medians to source commit
   `f8ae63a6069186b0bf811c23649a74cdf5955b96` and records the host, toolchain,
-  workload, and reproduction command. Opus was SATISFIED with no blockers;
+  workload, and reproduction command. agent was SATISFIED with no blockers;
   response SHA-256 is
   `30d76666e7682eea122d38997d90f6c48f7b9aaa1350e9e8501436f7c9887694`.
   The companion create-PR gate and single merge gate passed. No Sifr compiler
@@ -1105,7 +1105,7 @@ Milestone delivery records:
 - `demos/pydantic_sifr_demo.sifr` now exercises valid JSON, aliases, defaults,
   constraints, and a stable public error. Both companion gates copy that exact
   file into a fresh dependent package, format-check it, run it, and compare its
-  complete standard output with the checked snapshot. Opus was SATISFIED with
+  complete standard output with the checked snapshot. agent was SATISFIED with
   no blockers; response SHA-256 is
   `103174097170fc196a30073a6bef53c9d11fd0ac8cf113d4fdc06abf3c589bd3`.
   The companion create-PR gate and single merge gate passed, including the
@@ -1118,7 +1118,7 @@ Milestone delivery records:
   input-profile selection, stable errors, and the certified commands. Both
   dependent applications have focused guides and remain mandatory in both
   companion gates. A unit contract binds the guide, apps, and gate invocations.
-  Opus was SATISFIED with no blockers; response SHA-256 is
+  agent was SATISFIED with no blockers; response SHA-256 is
   `f2b7048b73f4e11ae50bfb49e9ef67f9e5c07afc12134bad8b7a772c72119fb8`.
   The companion create-PR gate and single merge gate passed. No Sifr compiler
   source changed.
@@ -1161,7 +1161,7 @@ Milestone delivery records:
   manifest and the 53-schema-kind, 4-field-kind Core Schema universe. The
   companion now documents exact Pydantic and Sifr revisions, ledger digests,
   and fail-closed update-pin procedures.
-- Exact-SHA Opus review returned `SATISFIED`; its response SHA-256 is
+- Exact-SHA agent review returned `SATISFIED`; its response SHA-256 is
   `eb549e25506a808bb8225dff8f29fce089c5ae7224d7b9deb1dca170ebe26ee9`.
   The focused audits, file-size guard, exact-pin companion create-PR gate, and
   single merge gate passed. No Sifr compiler source changed.
@@ -1203,7 +1203,7 @@ Milestone delivery records:
   [PR #42](https://github.com/sifr-lang/pydantic-sifr/pull/42) at merge commit
   `0c643a676d821b92ce4dfa824a8f6a5b98073d4c`. The exact final gated candidate
   was `7d80cbf3683205237a78ecbdc6c3dd24c5c08f62`.
-- Whole-phase Opus review of companion commit
+- Whole-phase agent review of companion commit
   `31a092bfa608ce832bc8d1b2edfa3d0fabb59220` found missing public
   serialization/schema entry points, split schema authorities, fail-open
   constraint handling, incomplete error overrides, dead legacy authorities,
@@ -1882,7 +1882,7 @@ Implementation checklist:
 - [x] Register passing positive and negative Rust-interop evidence. Update the
   compatibility matrix, fixture matrix, tiers, and durable architecture.
 - [x] Run targeted tests, open the milestone pull request, and obtain an exact
-  candidate `SATISFIED` Opus review before the create-PR and merge gates.
+  candidate `SATISFIED` agent review before the create-PR and merge gates.
 
 Exit gate: the merged and certified structural Rust bridge contract lets a
 synthetic schema executor return a validated arena, construct a typed Sifr

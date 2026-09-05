@@ -1,7 +1,7 @@
 # wave_psp_d1 Review: Gap Analysis and CPython Parity Quality
 
 **Review Date**: 2026-03-16
-**Reviewer**: Claude (Opus 4.6)
+**Reviewer**: agent (agent)
 **Wave**: `wave_psp_d1` - Filesystem, Paths, and Archive Surfaces
 **Branch**: `main` (current)
 

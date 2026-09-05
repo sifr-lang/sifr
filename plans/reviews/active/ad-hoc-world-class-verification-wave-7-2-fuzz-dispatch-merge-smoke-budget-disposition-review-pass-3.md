@@ -15,7 +15,7 @@ The advisory is emitted by `build_advisories` at `verification/runner/sifr_verif
 - Cold run: 1750.45 s vs 1500 s budget → 250.5 s over, fuzz step ~57.280 s. Same conclusion.
 The added merge surface in Wave 7.2 (`fuzz_property:fuzz-smoke` at `verification/profiles/merge.json:206-214` and the new `run_fuzz_property_suites` step at `verification/runner/sifr_verify/profile_runner.py:144,321-337`) is exactly the "deterministic minimized smoke" the Wave 7 phase rule wants kept in merge (`plans/issues/active/ad-hoc-world-class-verification-standard-and-gate-closure.md:1346`). Sustained/broad fuzz execution stays in nightly/release per `verification/areas/fuzz_property/sustained_lane.md:21-25`. The phase rule's prescribed mitigation is already in effect.
 
-**M-budget-3 — No further Opus review round is required before opening the PR.**
+**M-budget-3 — No further agent review round is required before opening the PR.**
 - Pass 2 closed B1/B2 with no remaining code-review blockers.
 - The pass-2 PR-readiness condition was "merge profile run passes and records wall-time evidence." Both runs passed (exit 0, 651/651 e2e, `report_signature` identical at `ee5e5d44306f270c`, fuzz_property variants=25 / hardening variants=234 / blocking_failures=0 on both), and warm/cold wall times are recorded in the tracker.
 - The advisory itself is non-blocking and not attributable to Wave 7.2 (M-budget-1, M-budget-2).
@@ -40,4 +40,4 @@ Recommended placement: an explicit follow-up bullet at the end of the Wave 7.2 t
 
 - **Does the advisory block the PR?** No. The advisory is informational (`reports.py:131-167`), the runner exits 0, and the new merge surface contributes ~58 s out of a ~336 s warm overrun whose dominant contributors pre-date Wave 7.2. The phase-rule remediation (keep only deterministic minimized smoke in merge; broad fuzz in nightly/release) is already in place.
 - **Minimal required mitigation in this PR:** none in code. Required is the PR-note + tracker wording in m-budget-1 and m-budget-2, so the overrun is owned by a follow-up and not silently absorbed into Wave 7.2.
-- **Further Opus review round before PR:** not required.
+- **Further agent review round before PR:** not required.

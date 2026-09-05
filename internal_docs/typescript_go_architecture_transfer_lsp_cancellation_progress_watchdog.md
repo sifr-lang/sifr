@@ -47,7 +47,7 @@ Validation so far:
 - `python3 verification/areas/developer_tooling/check_tooling_readiness.py --self-test` -> PASS
 - `git diff --check` -> PASS
 - `python3 scripts/check_file_size_guardrails.py` -> PASS
-- Claude reviewer pass 1 -> SATISFIED with residual cleanup
-- Claude reviewer pass 2 -> SATISFIED with residual cleanup
-- Claude reviewer pass 3 -> SATISFIED
+- agent reviewer pass 1 -> SATISFIED with residual cleanup
+- agent reviewer pass 2 -> SATISFIED with residual cleanup
+- agent reviewer pass 3 -> SATISFIED
 - `scripts/run_all_tests.sh --profile create-pr` -> PASS, report `target/validation_lane_reports/create-pr.latest.json`, wall time 280.41s, advisory: group skew is high

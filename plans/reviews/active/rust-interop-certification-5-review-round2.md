@@ -1,6 +1,6 @@
 # Rust Interop Certification 5 Review — Round 2
 
-Reviewer: Claude Opus 5 (`--effort medium`)
+Reviewer: agent (`--effort medium`)
 
 Scope: revised uncommitted certification 5 implementation, excluding the
 unrelated `editor_integrations` submodule change.

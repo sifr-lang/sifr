@@ -1,6 +1,6 @@
 # Network HTTP async-network capability Traceability: Async Network Runtime
 
-Status: merged via PR #2495 at `ce5a411f4284404a1a374f77c0176351771e7cb9`; Opus implementation review PASS; local merge-gate validation PASS.
+Status: merged via PR #2495 at `ce5a411f4284404a1a374f77c0176351771e7cb9`; agent implementation review PASS; local merge-gate validation PASS.
 
 | Requirement | network/HTTP baseline capability decision | Acceptance evidence |
 | --- | --- | --- |

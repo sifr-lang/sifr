@@ -1,6 +1,6 @@
 # INT-2A — Large Integer Literal Defaults and Unary Parity — Review Pass 1b
 
-Reviewer: Claude (Opus 4.7), 2026-05-06.
+Reviewer: agent (agent), 2026-05-06.
 Branch: `int-2a-large-literal-defaults-parity`.
 Prior review: [reviews/integer-model-int-2a-large-literal-hir-review-pass-2.md](reviews/integer-model-int-2a-large-literal-hir-review-pass-2.md).
 Issue: [issues/ad-hoc-integer-model-and-fixed-width-numeric-contract.md](issues/ad-hoc-integer-model-and-fixed-width-numeric-contract.md), Milestone INT-2A, follow-up bullet "Carry INT-2A default-argument large-literal parity, negative-large-literal unary coverage…".

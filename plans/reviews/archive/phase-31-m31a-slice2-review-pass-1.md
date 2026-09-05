@@ -1,6 +1,6 @@
 # Phase 31 m31a Slice 2 Review: Same-Sequence Two-Pointer While Guard Narrowing
 
-**Reviewer:** Claude Code
+**Reviewer:** agent
 **Date:** 2026-03-12
 **Slice:** `m31_a_optional_narrowing_core` - slice 2 (two-pointer while guard narrowing)
 **Status:** **NEEDS WORK** - Maintainability regression (exceeds HIR line limit)

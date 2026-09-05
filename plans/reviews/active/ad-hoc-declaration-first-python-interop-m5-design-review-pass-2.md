@@ -20,7 +20,7 @@ Cross-check against substrate: 877/874/758-line files confirmed; 62 `HirStmt::Wi
 - **W4** (closure-outcome codegen + decision table): depends on W1/W2/W3. Activates. Also fits the new `stmt_support_emitter/python_context.rs` inside its own wave per R7.
 - **W5** (matrices + sqlite live demo + combined M5 review + tracker closure): depends on W1–W4.
 
-Each wave has local validation + Opus-to-SATISFIED before merge, and W5 does the combined M5 review — a proper end-of-milestone gate rather than "review once at the end and pray."
+Each wave has local validation + agent-to-SATISFIED before merge, and W5 does the combined M5 review — a proper end-of-milestone gate rather than "review once at the end and pray."
 
 No remaining blocking decision. The only implementation risk worth flagging (non-blocking, W3-internal): the reserved-until-W4 gate for `HirStmt::PythonWith` codegen must land as a hard diagnostic, not a silent fallthrough to `With` codegen — otherwise the ownership guarantees stated in W3 would be quietly nullified for two waves. W3's own local validation is the right place to prove that.
 

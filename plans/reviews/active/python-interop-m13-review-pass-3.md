@@ -37,7 +37,7 @@ Reproduced (scenarios B/C/D/F/H):
 - **Tests**: `python_read_only_cli` 6/6 (uv and `verification/.venv` present — nothing skipped, and skips now `eprintln`), `sifr_package` python 57/57, `sifr_driver --lib` 368 pass including both new probe-policy tests, blocking suite wired in all four delivery profiles.
 - **Demo**: `demos/m13_python_read_only` — `python check` resolved/verified, `doctor` suggestions none, `sifr run` prints `Python read-only check demo: target verified`.
 - **Docs**: `docs/python-interop.mdx` and `internal_docs/python_interop_architecture.md:49–78` now state the single shared resolution outcome, standalone-root resolution via explicit selection *or* uv discovery, deferral only for selection-less/untrusted library sessions, ordinary-check probe execution, and strict build/run — all claims I verified empirically. Plan tracking records passes 1–2 and leaves Wave 4 open, correctly.
-- **third_party/ruff**: absent from the committed diff (`git diff main...HEAD --name-only` has no ruff entry; submodule pointer identical). The `-dirty` marker is uncommitted local working-tree state in the submodule (`crates/ruff_python_parser/src/parser/expression.rs`), plus untracked `.claude-m13-pass3.log` — neither is part of the PR.
+- **third_party/ruff**: absent from the committed diff (`git diff main...HEAD --name-only` has no ruff entry; submodule pointer identical). The `-dirty` marker is uncommitted local working-tree state in the submodule (`crates/ruff_python_parser/src/parser/expression.rs`), plus untracked `.agent-m13-pass3.log` — neither is part of the PR.
 
 ## Non-blocking observations
 

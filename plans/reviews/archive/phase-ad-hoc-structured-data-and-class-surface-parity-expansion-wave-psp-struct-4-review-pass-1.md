@@ -88,6 +88,6 @@ The implementation is minimal but correct:
 
 ---
 
-Reviewer: Claude (external review)
+Reviewer: agent (external review)
 Date: 2026-03-18
 Status: completion-gap pass 1 — approved

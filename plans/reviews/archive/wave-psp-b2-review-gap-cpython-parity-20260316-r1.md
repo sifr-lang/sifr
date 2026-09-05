@@ -1,7 +1,7 @@
 # Wave PSP_B2 Review: CPython Parity Gap Analysis
 
 **Review Date:** 2026-03-16
-**Reviewer:** Codex Agent
+**Reviewer:** agent
 **Wave:** `wave_psp_b2` — Iterators, Functional Helpers, and Randomness
 **Phase:** `ad-hoc-python-source-parity-and-builtin-stdlib-surface`
 

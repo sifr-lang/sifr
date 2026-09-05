@@ -1,6 +1,6 @@
 # Integer Model Phase — Final Whole-Phase Closure Review
 
-Reviewer: Claude Opus 4.7
+Reviewer: agent
 Date: 2026-05-08
 Branch under review: `main` at `01f0eedd` (post INT-8 closure PR #1903)
 Phase tracker: `issues/ad-hoc-integer-model-and-fixed-width-numeric-contract.md`

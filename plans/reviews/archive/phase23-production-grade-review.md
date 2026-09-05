@@ -3,7 +3,7 @@
 **Phase:** 23 - Project Graph and Isolation Correctness
 **Review Type:** Production-Grade Compiler Code Assessment
 **Date:** 2026-03-06
-**Reviewer:** Claude Code
+**Reviewer:** agent
 
 ---
 

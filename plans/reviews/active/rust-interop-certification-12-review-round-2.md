@@ -110,7 +110,7 @@ runner.py                       → variants=10, failures=0, blocking_failures=0
 
 ## Scope isolation proof
 
-Every previously enumerated unrelated change is worktree-only. `git cat-file -e HEAD:<path>` → **absent from HEAD** for all of: `.cert5probe`, `.claude`, `plans/phases/43_interoperability.md`, `logo 06.48.53.webp`, `docs/logo/logo.webp 08-03-09-514.webp`, `plans/reviews/active/rust-interop-certification-12-review-round-2.md`.
+Every previously enumerated unrelated change is worktree-only. `git cat-file -e HEAD:<path>` → **absent from HEAD** for all of: `.cert5probe`, `.agent`, `plans/phases/43_interoperability.md`, `logo 06.48.53.webp`, `docs/logo/logo.webp 08-03-09-514.webp`, `plans/reviews/active/rust-interop-certification-12-review-round-2.md`.
 
 The parallel-agent promotion is unstaged only. HEAD's committed hunk promotes `ecosystem_cli_certification` **and nothing else**; the unstaged worktree hunk (`ecosystem_backend_certification` → `"supported"`, dropping `future_owner`) is confined to `git diff` and is not in the tree I validated. Submodule pointers (`editor_integrations`, leetcode corpora) are **unchanged vs `origin/main`** at HEAD.
 

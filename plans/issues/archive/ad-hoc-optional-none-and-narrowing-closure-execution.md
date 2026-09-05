@@ -15,7 +15,7 @@ Owning phase: `issues/ad-hoc-optional-none-and-narrowing-closure.md`
 - Planning artifact:
   - `issues/optional-none-category-breakdown-2026-03-29.md`
 - Review artifact:
-  - `reviews/optional-none-category-implementation-readiness-claude.md`
+  - `reviews/optional-none-category-implementation-readiness-CLAUDE.md`
 
 ## Wave Status
 
@@ -558,7 +558,7 @@ status: in progress
   - reviewer gate:
     - pass-1 verdict: `not ready` until decomposition/guardrails are explicit (applied in updated plan artifact); implementation wave start is now pending commit/PR of this planning slice.
   - reviewer follow-up:
-    - pass-2 review handoff was launched via `.cursor/skills/talk-to-claude/SKILL.md` with the required 40-minute wait window; reviewer output file is still pending (no artifact emitted yet).
+    - pass-2 review handoff was launched via `agent review` with the required 40-minute wait window; reviewer output file is still pending (no artifact emitted yet).
 - 2026-03-30 local iteration (wave-R3b1 codegen-hardening slice):
   - root cause:
     - residual run errors included direct codegen parity defects independent of frontend semantics:
@@ -681,7 +681,7 @@ status: in progress
       - sequence guard detection recognized direct `len(seq)` anchors but missed len-alias anchors (`n = len(S)` then `i < n`) in compare/false-exit guard paths,
       - no-step slice lowering normalized negative bounds incorrectly by clamping literal bounds before sequence-length normalization.
   - reviewer gate:
-    - review pass-1: `reviews/ad-hoc-optional-none-wave-r3c-review-pass1.md` (`ready-with-guardrails`; recovered from talk-to-claude handoff logs due Claude file-write permission block)
+    - review pass-1: `reviews/ad-hoc-optional-none-wave-r3c-review-pass1.md` (`ready-with-guardrails`; recovered from agent review handoff logs due agent file-write permission block)
   - compiler changes:
     - `crates/sifr_hir/src/lower/empty_collection_refinement.rs` (new):
       - added `refine_empty_list_binding_expr(...)` for method-driven empty-list specialization on `append`/`insert`/`extend`,
@@ -716,7 +716,7 @@ status: in progress
     - `0763`: 2-arg `max()` path accepted optional operands without explicit Optional/type compatibility contract validation.
   - reviewer gate:
     - plan artifact: `issues/ad-hoc-optional-none-and-narrowing-wave-r3d-final-run-error-closure-plan-2026-03-30.md`
-    - review pass-1: `reviews/ad-hoc-optional-none-wave-r3d-review-pass1.md` (`ready-with-guardrails`; talk-to-claude wait loop invoked, no direct file output produced in-window)
+    - review pass-1: `reviews/ad-hoc-optional-none-wave-r3d-review-pass1.md` (`ready-with-guardrails`; agent review wait loop invoked, no direct file output produced in-window)
   - compiler changes:
     - `crates/sifr_hir/src/lower/empty_collection_refinement.rs`:
       - empty list/set refinement now updates declared binding type (`set_type`) in addition to narrowing, so specialization survives loop narrowing restoration.
@@ -747,7 +747,7 @@ status: in progress
     - post-R3d residuals were no longer run-stage compiler defects; both fixtures were check-stage Optional-safety mismatches under current Sifr flow/model contracts.
   - reviewer gate:
     - plan artifact: `issues/ad-hoc-optional-none-and-narrowing-wave-r3e-check-residual-canonicalization-plan-2026-03-30.md`
-    - review pass-1: `reviews/ad-hoc-optional-none-wave-r3e-review-pass1.md` (`ready-with-guardrails`; recovered from talk-to-claude handoff logs due Claude file-write permission block)
+    - review pass-1: `reviews/ad-hoc-optional-none-wave-r3e-review-pass1.md` (`ready-with-guardrails`; recovered from agent review handoff logs due agent file-write permission block)
   - fixture changes:
     - `audits/leetcode/0763_partition_labels.sifr`:
       - canonicalized map read path to explicit total form via `count.get(c, i)` before `max(...)`.

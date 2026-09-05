@@ -82,9 +82,9 @@
 `cluster_optional_sentinel_return_shape`: `1`
 
 ## Reviewer Validation
-- Claude review pass 1: `reviews/optional-none-gap-38-root-cause-breakdown-review-pass1.md`
-- Claude review pass 2: `reviews/optional-none-gap-38-root-cause-breakdown-review-pass2.md` (contained a disputed owner-count claim).
-- Claude review pass 3 reconciliation: `reviews/optional-none-gap-38-root-cause-breakdown-review-pass3.md`.
+- agent review pass 1: `reviews/optional-none-gap-38-root-cause-breakdown-review-pass1.md`
+- agent review pass 2: `reviews/optional-none-gap-38-root-cause-breakdown-review-pass2.md` (contained a disputed owner-count claim).
+- agent review pass 3 reconciliation: `reviews/optional-none-gap-38-root-cause-breakdown-review-pass3.md`.
 - Final reviewer-backed verdict: owner split is `compiler_fix=25`, `both=12`, `sifr_adaptation=1`.
 
 ## Per-Case Decisions

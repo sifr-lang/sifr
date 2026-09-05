@@ -1,6 +1,6 @@
 # Wave 4 stdlib compact baseline — review pass 1
 
-Reviewer: Claude Opus 4.7
+Reviewer: agent
 Branch: codex/wave-4-stdlib-compact-baseline
 Scope: Tenth Wave 4 diagnostics-baseline slice — purpose-built SIFR-STDLIB-0001 compact baseline + tightened SIFR-STDLIB-0003/0004 deferral rationales.
 

@@ -4,7 +4,7 @@ Closeout review for the Python Interop Verification Productionization phase. Fin
 
 ### B1 — Closeout review artifact is empty (missing required closure doc)
 - File: `plans/reviews/active/python-interop-verification-closeout-review-1.md` (0 bytes; 1 line)
-- Milestone `verification_py_area_4` (`plans/issues/active/python-interop-verification-production.md:26-29`) requires "Run Opus review rounds until no blockers remain" for the closeout itself. The cited review-4 (`plans/reviews/active/python-interop-live-examples-review-4.md:1-11`) is scoped to PR3 (the testcontainers live examples), not to the closeout branch's documentation/status edits.
+- Milestone `verification_py_area_4` (`plans/issues/active/python-interop-verification-production.md:26-29`) requires "Run agent review rounds until no blockers remain" for the closeout itself. The cited review-4 (`plans/reviews/active/python-interop-live-examples-review-4.md:1-11`) is scoped to PR3 (the testcontainers live examples), not to the closeout branch's documentation/status edits.
 - Prior phase closeouts followed the pattern of a dedicated final review with content (e.g., `ad-hoc-embedded-python-interop-final-review-4.md`, 2380 bytes). Here the equivalent file exists but is empty.
 - Result: the closeout has no recorded review verdict; "complete" cannot be substantiated against the workflow's review gate.
 

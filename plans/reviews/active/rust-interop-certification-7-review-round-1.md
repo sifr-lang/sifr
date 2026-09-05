@@ -2,7 +2,7 @@
 
 - Reviewed commit: `7fb5c3d6d`
 - Base: `origin/main`
-- Reviewer: Claude Opus 5, medium effort
+- Reviewer: agent, medium effort
 - Verdict: findings; not satisfied
 
 ## Verified

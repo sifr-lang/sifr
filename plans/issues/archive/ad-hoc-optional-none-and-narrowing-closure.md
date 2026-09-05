@@ -52,7 +52,7 @@ The goal is to make intended Sifr Optional semantics precise enough that valid g
 - `issues/ad-hoc-optional-none-and-narrowing-wave-r3d-final-run-error-closure-plan-2026-03-30.md`
 - `issues/ad-hoc-optional-none-and-narrowing-wave-r3e-check-residual-canonicalization-plan-2026-03-30.md`
 - `reviews/optional-none-direct-pass1.md`
-- `reviews/optional-none-category-implementation-readiness-claude.md`
+- `reviews/optional-none-category-implementation-readiness-CLAUDE.md`
 - `reviews/ad-hoc-optional-none-wave7-9-plan-review-pass1.md`
 - `reviews/ad-hoc-optional-none-wave7-9-plan-review-pass2.md`
 - `reviews/ad-hoc-optional-none-wave8b-run-stage-plan-review-pass1.md`

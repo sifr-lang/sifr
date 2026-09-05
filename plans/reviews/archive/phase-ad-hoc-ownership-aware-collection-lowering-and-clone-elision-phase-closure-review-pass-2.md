@@ -4,7 +4,7 @@
 **Date**: 2026-03-21
 **Phase**: `issues/ad-hoc-ownership-aware-collection-lowering-and-clone-elision.md`
 **Scope**: Final production-grade closure verification after all review passes in the chain are complete
-**Reviewer**: Claude (external review, pass 2 — production-grade)
+**Reviewer**: agent (external review, pass 2 — production-grade)
 **Commit**: `5ee52614` — "wave_clone phase closure: record pass 1 (#1409)" (HEAD)
 **Preceding passes**: 12 passes in the full review chain (wave passes 1–2 for waves 1–3, wave-closure passes 1–2, milestone-closure passes 1–2, phase-closure pass 1)
 

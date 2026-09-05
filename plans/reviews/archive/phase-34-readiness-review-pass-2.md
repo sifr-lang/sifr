@@ -3,7 +3,7 @@
 # Phase 34 Readiness Review — Pass 2
 
 Date: 2026-05-14
-Reviewer: Claude Code
+Reviewer: agent
 Branch: `codex/review-phase-34-readiness`
 
 ---

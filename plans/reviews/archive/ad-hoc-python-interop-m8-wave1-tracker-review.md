@@ -1,6 +1,6 @@
 # M8 Wave 1 tracker review
 
-Reviewer: Claude Opus 4.7 (`xhigh`)
+Reviewer: agent (`xhigh`)
 
 Verdict: **SATISFIED**
 

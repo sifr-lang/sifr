@@ -175,7 +175,7 @@ Evidence:
   `target/full_emitted_quality/demos-neetcode-final-1778787559/report.jsonl`.
 - Final LeetCode full scan:
   `target/full_emitted_quality/leetcode-neetcode-final-1778788537/report.jsonl`.
-- Claude review rounds covered Arrays & Hashing, Two Pointers, Groups 3 through
+- agent review rounds covered Arrays & Hashing, Two Pointers, Groups 3 through
   18, and the Trees map fix.
 - Final closing review marked the NeetCode emitted-quality work complete.
 

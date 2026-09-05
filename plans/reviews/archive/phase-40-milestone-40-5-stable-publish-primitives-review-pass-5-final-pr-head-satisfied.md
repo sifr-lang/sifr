@@ -30,7 +30,7 @@ The new bullet's every checkable claim is exact: filename matches the file added
 
 ## Empty active review artifacts
 
-No empty review artifact is tracked *by this PR*. The only tracked 0-byte files under `plans/reviews/active/` are `verification-taxonomy-cleanup-review-round26.md` and `…-round26-retry.md`, both present identically on `origin/main` (pre-existing, out of scope). The pass-5 `.md` and `.claude.log` are untracked and not in the PR. The pass-2/pass-4 zero-byte logs flagged as nonblocking in the pass-4 archive are no longer present.
+No empty review artifact is tracked *by this PR*. The only tracked 0-byte files under `plans/reviews/active/` are `verification-taxonomy-cleanup-review-round26.md` and `…-round26-retry.md`, both present identically on `origin/main` (pre-existing, out of scope). The pass-5 `.md` and `.agent.log` are untracked and not in the PR. The pass-2/pass-4 zero-byte logs flagged as nonblocking in the pass-4 archive are no longer present.
 
 ## Findings
 

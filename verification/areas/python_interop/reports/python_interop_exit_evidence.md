@@ -1,6 +1,6 @@
 # Embedded Python Interop Exit Evidence
 
-Status: documentation, evidence, Opus sign-offs, and local validation are complete. PR #2677 merged on 2026-06-19.
+Status: documentation, evidence, agent sign-offs, and local validation are complete. PR #2677 merged on 2026-06-19.
 
 Additional verification productionization is complete through PR #2683: PR
 #2680 moved the runner into `verification/areas/python_interop`, PR #2681 added
@@ -220,15 +220,15 @@ Latest local validation evidence:
   - advisories: `warm wall-time budget exceeded`; `group skew is high; investigate batching balance or fixture clustering`.
   - project-workspace hardening baselines passed after the manifest-level quiet-run support was added for run baselines with deterministic stdout and intentionally empty stderr.
   - note: earlier local attempts were invalidated by stale overlapping validation work; the recorded gates above are the clean authoritative passes.
-- Opus sign-offs are recorded in the issue tracker review artifacts with no remaining blockers after documented fixes.
+- agent sign-offs are recorded in the issue tracker review artifacts with no remaining blockers after documented fixes.
 - Additional verification productionization validation on 2026-06-19:
   - `scripts/run_all_tests.sh --profile create-pr`: passed with zero failures and advisory `warm wall-time budget exceeded`.
   - `scripts/run_all_tests.sh --profile python-interop-live`: passed; live Sifr source checks passed and service cases reported `structured-skip` because the local Docker daemon was unavailable.
-  - Final Opus review through `plans/reviews/active/python-interop-live-examples-review-4.md`: no blockers.
+  - Final agent review through `plans/reviews/active/python-interop-live-examples-review-4.md`: no blockers.
 - Message callback example validation on 2026-06-19:
   - `scripts/run_all_tests.sh --profile python-interop-live`: passed; Sifr source checks covered Redis, Postgres, Kafka, Pub/Sub-style SNS fanout, SNS, and SQS, then service cases reported `structured-skip` because the local Docker daemon was unavailable.
   - `scripts/run_all_tests.sh --profile create-pr`: passed with zero failures and advisory `warm wall-time budget exceeded`; final e2e pass cache hits were `44/44`.
-  - Opus review through `plans/reviews/active/python-interop-message-callback-examples-review-2.md`: no blockers.
+  - agent review through `plans/reviews/active/python-interop-message-callback-examples-review-2.md`: no blockers.
 
 ## PR Record
 

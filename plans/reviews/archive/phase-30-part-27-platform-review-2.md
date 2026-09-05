@@ -150,6 +150,6 @@ The hardening changes from pass 1 successfully address the identified gaps and t
 
 ---
 
-*Reviewer: Claude Opus 4.6*
+*Reviewer: agent*
 *Date: 2026-03-09*
 *Branch: phase30-part27-platform-review-pass2*

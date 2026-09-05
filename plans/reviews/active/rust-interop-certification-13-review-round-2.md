@@ -8,7 +8,7 @@ Round 1's substantive code defects are genuinely fixed. F1 (trailing comma / `+`
 
 ## Scope reviewed
 
-Full committed delta `origin/main..HEAD` (`b231daf81`, `7a27b7896`, `6ec0742b6`), 46 files, with focus on `6ec0742b6`. The unstaged worktree paths (`editor_integrations`, leetcode corpora, `.cert5probe/`, `.claude/`, two stray webp files, `plans/phases/43_interoperability.md`) were excluded and are not attributed to this milestone. I made no repository modifications; all probes ran in `/tmp` scratch trees and were cleaned up. The untracked `rust/{axum,sqlx,tower_http}/` residue and `target/`+`.DS_Store` under the fixture are empty/ignored working-tree leftovers, absent from the commit.
+Full committed delta `origin/main..HEAD` (`b231daf81`, `7a27b7896`, `6ec0742b6`), 46 files, with focus on `6ec0742b6`. The unstaged worktree paths (`editor_integrations`, leetcode corpora, `.cert5probe/`, `.agent/`, two stray webp files, `plans/phases/43_interoperability.md`) were excluded and are not attributed to this milestone. I made no repository modifications; all probes ran in `/tmp` scratch trees and were cleaned up. The untracked `rust/{axum,sqlx,tower_http}/` residue and `target/`+`.DS_Store` under the fixture are empty/ignored working-tree leftovers, absent from the commit.
 
 ### Independently reproduced
 

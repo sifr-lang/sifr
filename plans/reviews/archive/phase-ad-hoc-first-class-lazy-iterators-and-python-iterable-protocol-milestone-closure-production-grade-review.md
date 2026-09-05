@@ -1,6 +1,6 @@
 # Milestone Closure Production-Grade Review: ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol
 
-**Reviewer**: Claude Code Agent
+**Reviewer**: agent
 **Date**: 2026-03-18
 **Phase Status**: Milestone closure; production-grade review
 **Reference**: `issues/ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol-execution.md`

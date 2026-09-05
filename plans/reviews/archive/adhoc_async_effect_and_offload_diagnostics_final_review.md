@@ -2,7 +2,7 @@
 
 **Phase:** 32.1 — Ad Hoc Async Effect And Offload Diagnostics
 **Date:** 2026-05-12
-**Reviewer:** Claude Code (final phase closure)
+**Reviewer:** agent (final phase closure)
 **Verdict:** APPROVED
 
 ## Review Scope

@@ -1,12 +1,12 @@
 # Rust Interop `certification_3` Review — Round 4
 
-Reviewer: Claude Opus 5 (`medium`)
+Reviewer: agent (`medium`)
 
 Result: **UNSATISFIED**
 
 ## Confirmed round-3 resolutions
 
-Opus confirmed decorator-order-independent effective abort aggregation, ambient
+agent confirmed decorator-order-independent effective abort aggregation, ambient
 release-profile abort rejection, and source-derived `OwnMutable` preservation
 and rejection. It also confirmed that every other convention consumer treats
 `OwnMutable` as owned and that inventory arithmetic remains correct against the

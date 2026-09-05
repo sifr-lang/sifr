@@ -195,7 +195,7 @@ All implementations match CPython behavior as verified by:
 
 ## Review Metadata
 
-- Reviewer: Claude (Code Review Agent)
+- Reviewer: agent (Code Review Agent)
 - Date: 2026-03-16
 - Commit reviewed: d8324970
 - Files reviewed: 4 (argparse.sifr, ipaddress.sifr, uuid.sifr, graphlib.sifr)

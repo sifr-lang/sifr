@@ -118,7 +118,7 @@ Design §4 required splitting six files. Only `cli_lock_modes.rs` (66), `cargo_r
 - **Must exclude** the `ecosystem_backend_certification` hunk in `verification/areas/rust_interop/data/rust_interop_compatibility_matrix.json` (lines ~396-400) from this commit — it promotes a row whose two evidence directions are still `planned`, and it is the sole reason the live checker fails. Preserve it in the worktree.
 - **Must include** `plans/reviews/active/rust-interop-certification-10-review-round-4.md` and `-round-5.md`: both are untracked, and the issue-doc hunk added here links them. Without them the merged doc has dead links.
 - `plans/reviews/active/rust-interop-certification-11-review-round-1.md` is currently a 0-byte placeholder — populate it with this review before opening the PR.
-- **Exclude, no interference observed:** `editor_integrations` submodule pointer, untracked `verification/areas/algorithmic_compatibility/corpora/leetcode`, `.cert5probe/` (cert-5 scratch `.sifr` files), `.claude/`, `"logo 06.48.53.webp"` / `"docs/logo/logo.webp 08-03-09-514.webp"`, `plans/phases/43_interoperability.md`. None touch cert-11 code, data, fixtures, or docs.
+- **Exclude, no interference observed:** `editor_integrations` submodule pointer, untracked `verification/areas/algorithmic_compatibility/corpora/leetcode`, `.cert5probe/` (cert-5 scratch `.sifr` files), `.agent/`, `"logo 06.48.53.webp"` / `"docs/logo/logo.webp 08-03-09-514.webp"`, `plans/phases/43_interoperability.md`. None touch cert-11 code, data, fixtures, or docs.
 - The deletion of `fixtures/cargo_locked_offline/.gitkeep` is correct and in scope (the directory now holds real files).
 
 ## Minimum path to SATISFIED

@@ -44,6 +44,6 @@ Cleanest split:
 - **Apply in this PR (small, low-risk):** findings 1 (lint `supported_constructs` against Table 1 row indices), 2 (either rewrite the fixture to `total = total + value` or add augmented-int assignment to Table 1), 7 (nightly suite cell), 8 (Wave 6.0 Implementation Notes section), 10 (`TimeoutExpired` trap).
 - **Track as Wave 6.1 prerequisites:** findings 3 (structural rephrasing-safe lint), 4 (embed `sys.version` in the result artifact), 5 (runtime value-grammar enforcement once generated programs land), 6 (symmetric Table 3 orphan check).
 
-## Another Opus Review Round Required After Fixes?
+## Another agent Review Round Required After Fixes?
 
-Not required. The findings are mechanical and individually verifiable from the diff; a self-check by the implementer plus the validation commands listed in the tracker slice (`areas check`, `areas run --area cpython_differential --suite policy --suite hand_seeded_merge`, `profiles plan --profile merge`, `--self-test`, `check_file_size_guardrails.py`) is sufficient. Request another Opus round only if findings 1 or 2 are resolved by changing policy semantics rather than tightening the lint or rewriting the fixture.
+Not required. The findings are mechanical and individually verifiable from the diff; a self-check by the implementer plus the validation commands listed in the tracker slice (`areas check`, `areas run --area cpython_differential --suite policy --suite hand_seeded_merge`, `profiles plan --profile merge`, `--self-test`, `check_file_size_guardrails.py`) is sufficient. Request another agent round only if findings 1 or 2 are resolved by changing policy semantics rather than tightening the lint or rewriting the fixture.

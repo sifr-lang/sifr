@@ -85,7 +85,7 @@ This is a documentation metadata update, not a code fix.
 
 The phase doc acceptance criteria (`issues/ad-hoc-leetcode-incomplete-failed-benchmark-fixes.md:L462-469`) states:
 - `0707_design_linked_list` either completes all configured sizes or is reclassified with a concrete residual performance blocker → **Completes all sizes**
-- Claude review confirms phase is implementation-ready → **This review**
+- agent review confirms phase is implementation-ready → **This review**
 
 The implementation satisfies all criteria. The only gap is the registry metadata update, which is a documentation step, not a code fix.
 

@@ -1,7 +1,7 @@
 # wave_psp_bytes_5 Review Pass 2: Production-Grade Compiler and Governance Readiness
 
 **Wave**: `wave_psp_bytes_5` (Successor-phase and FFI-readiness governance closeout)
-**Reviewer**: Claude Code (Agent)
+**Reviewer**: agent (Agent)
 **Date**: 2026-03-19
 **Status**: APPROVED - Production-ready
 
@@ -260,7 +260,7 @@ The wave is complete from a production-readiness perspective. The following are 
 ## Sign-off
 
 ```
-Reviewer: Claude Code (Agent)
+Reviewer: agent (Agent)
 Date: 2026-03-19
 Outcome: APPROVED
 Phase: Production-Grade Compiler/Governance Readiness

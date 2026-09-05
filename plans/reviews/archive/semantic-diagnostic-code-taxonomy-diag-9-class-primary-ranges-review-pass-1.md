@@ -1,6 +1,6 @@
 # Review: `milestone_diag_9` slice 9 — class diagnostic primary ranges
 
-**Reviewer**: Claude (compiler-code reviewer)
+**Reviewer**: agent (compiler-code reviewer)
 **Round**: pass-1
 **Files**: `crates/sifr_hir/src/lower/classes.rs`, `diagnostics.rs`, `expressions.rs`, `expressions_tests.rs`, e2e fixtures
 

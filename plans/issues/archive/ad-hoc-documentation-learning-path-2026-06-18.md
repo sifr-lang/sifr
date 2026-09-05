@@ -1,34 +1,34 @@
 # Ad Hoc: Documentation Learning Path and Python Compatibility Narrative
 
 Status: closed (documentation learning path completed; implementation waves merged in PR #2656, #2657, #2658, and #2659; final phase review approved on 2026-06-18; closure PR #2660)
-Owner: Codex
+Owner: agent
 Review artifacts:
 
 - `plans/reviews/active/ad-hoc-documentation-learning-path-review-pass-1.md`
 - `plans/reviews/active/ad-hoc-documentation-learning-path-review-pass-2.md`
-- `plans/reviews/active/ad-hoc-documentation-learning-path-sonnet-review-pass-1.md`
-- `plans/reviews/active/ad-hoc-documentation-learning-path-sonnet-review-pass-2.md`
-- `plans/reviews/active/ad-hoc-documentation-learning-path-sonnet-reference-review-pass-1.md`
-- `plans/reviews/active/ad-hoc-documentation-learning-path-sonnet-reference-review-pass-2.md`
-- `plans/reviews/active/ad-hoc-documentation-learning-path-sonnet-guides-review-pass-1.md`
-- `plans/reviews/active/ad-hoc-documentation-learning-path-sonnet-guides-review-pass-2.md`
-- `plans/reviews/active/ad-hoc-documentation-learning-path-sonnet-mutability-review-pass-1.md`
-- `plans/reviews/active/ad-hoc-documentation-learning-path-sonnet-mutability-review-pass-2.md`
-- `plans/reviews/active/ad-hoc-documentation-learning-path-sonnet-concurrency-review-pass-1.md`
-- `plans/reviews/active/ad-hoc-documentation-learning-path-sonnet-concurrency-review-pass-2.md`
-- `plans/reviews/active/ad-hoc-documentation-learning-path-implementation-wave-1-sonnet-review-pass-2.md`
-- `plans/reviews/active/ad-hoc-documentation-learning-path-implementation-wave-1-sonnet-review-pass-3.md`
-- `plans/reviews/active/ad-hoc-documentation-learning-path-implementation-wave-2-sonnet-review-pass-1.md`
-- `plans/reviews/active/ad-hoc-documentation-learning-path-implementation-wave-2-sonnet-review-pass-2.md`
-- `plans/reviews/active/ad-hoc-documentation-learning-path-implementation-wave-2-sonnet-review-pass-3.md`
-- `plans/reviews/active/ad-hoc-documentation-learning-path-implementation-wave-3-sonnet-review-pass-1.md`
-- `plans/reviews/active/ad-hoc-documentation-learning-path-implementation-wave-3-sonnet-review-pass-2.md`
-- `plans/reviews/active/ad-hoc-documentation-learning-path-implementation-wave-3-sonnet-review-pass-3.md`
-- `plans/reviews/active/ad-hoc-documentation-learning-path-implementation-wave-4-sonnet-review-pass-1.md`
-- `plans/reviews/active/ad-hoc-documentation-learning-path-implementation-wave-4-sonnet-review-pass-2.md`
-- `plans/reviews/active/ad-hoc-documentation-learning-path-implementation-wave-4-sonnet-review-pass-3.md`
-- `plans/reviews/active/ad-hoc-documentation-learning-path-final-phase-sonnet-review-pass-1.md`
-- `plans/reviews/active/ad-hoc-documentation-learning-path-final-phase-sonnet-review-pass-2.md`
+- `plans/reviews/active/ad-hoc-documentation-learning-path-agent-review-pass-1.md`
+- `plans/reviews/active/ad-hoc-documentation-learning-path-agent-review-pass-2.md`
+- `plans/reviews/active/ad-hoc-documentation-learning-path-agent-reference-review-pass-1.md`
+- `plans/reviews/active/ad-hoc-documentation-learning-path-agent-reference-review-pass-2.md`
+- `plans/reviews/active/ad-hoc-documentation-learning-path-agent-guides-review-pass-1.md`
+- `plans/reviews/active/ad-hoc-documentation-learning-path-agent-guides-review-pass-2.md`
+- `plans/reviews/active/ad-hoc-documentation-learning-path-agent-mutability-review-pass-1.md`
+- `plans/reviews/active/ad-hoc-documentation-learning-path-agent-mutability-review-pass-2.md`
+- `plans/reviews/active/ad-hoc-documentation-learning-path-agent-concurrency-review-pass-1.md`
+- `plans/reviews/active/ad-hoc-documentation-learning-path-agent-concurrency-review-pass-2.md`
+- `plans/reviews/active/ad-hoc-documentation-learning-path-implementation-wave-1-agent-review-pass-2.md`
+- `plans/reviews/active/ad-hoc-documentation-learning-path-implementation-wave-1-agent-review-pass-3.md`
+- `plans/reviews/active/ad-hoc-documentation-learning-path-implementation-wave-2-agent-review-pass-1.md`
+- `plans/reviews/active/ad-hoc-documentation-learning-path-implementation-wave-2-agent-review-pass-2.md`
+- `plans/reviews/active/ad-hoc-documentation-learning-path-implementation-wave-2-agent-review-pass-3.md`
+- `plans/reviews/active/ad-hoc-documentation-learning-path-implementation-wave-3-agent-review-pass-1.md`
+- `plans/reviews/active/ad-hoc-documentation-learning-path-implementation-wave-3-agent-review-pass-2.md`
+- `plans/reviews/active/ad-hoc-documentation-learning-path-implementation-wave-3-agent-review-pass-3.md`
+- `plans/reviews/active/ad-hoc-documentation-learning-path-implementation-wave-4-agent-review-pass-1.md`
+- `plans/reviews/active/ad-hoc-documentation-learning-path-implementation-wave-4-agent-review-pass-2.md`
+- `plans/reviews/active/ad-hoc-documentation-learning-path-implementation-wave-4-agent-review-pass-3.md`
+- `plans/reviews/active/ad-hoc-documentation-learning-path-final-phase-agent-review-pass-1.md`
+- `plans/reviews/active/ad-hoc-documentation-learning-path-final-phase-agent-review-pass-2.md`
 
 Implementation status:
 
@@ -36,7 +36,7 @@ Implementation status:
 - Wave 2: Merged in PR #2657. Scope: core data model pages and dedicated Concurrency concept section. Validation: `cd docs && npx mint@latest validate` passed.
 - Wave 3: Merged in PR #2658. Scope: standard-library module inventory, CLI package/workspace reference, and published one-page-per-code error reference. Validation: `cd docs && npx mint@latest validate` passed with Node 24.
 - Wave 4: Merged in PR #2659. Scope: Python/Rust developer guide paths and language-doc wayfinding. Validation: `cd docs && npx mint@latest validate` passed with Node 24.
-- Final closure: Full Mintlify validation passed with Node 24. Sonnet final phase review pass 1 approved closure with follow-up accuracy notes; pass 2 approved closure after OWN/IMPORT/PACKAGE error-page accuracy fixes. Closure PR #2660.
+- Final closure: Full Mintlify validation passed with Node 24. agent final phase review pass 1 approved closure with follow-up accuracy notes; pass 2 approved closure after OWN/IMPORT/PACKAGE error-page accuracy fixes. Closure PR #2660.
 
 ## Objective
 
@@ -990,7 +990,7 @@ Acceptance:
 - Should the first data model page be a single "Values and Collections" page or several smaller pages?
 - Should we add a short "Generated Rust" page for Rust-curious users, or keep that in CLI `emit` docs?
 
-Current answers after Claude review pass 1:
+Current answers after agent review pass 1:
 
 - `Status` should not live in Get Started; use a bottom Project group or equivalent low-priority placement.
 - `From Python` should come after Quickstart.
@@ -1021,4 +1021,4 @@ For content review:
 - Manually preview the docs and inspect the left sidebar order.
 - Check pages at desktop and mobile widths.
 - Confirm "Ask Assistant" still appears in the expected Mintlify header/panel location.
-- Ask Claude Opus to review the issue and proposed content structure before implementation.
+- Ask agent to review the issue and proposed content structure before implementation.

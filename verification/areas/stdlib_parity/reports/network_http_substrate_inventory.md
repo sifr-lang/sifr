@@ -181,7 +181,7 @@ Platform rules: [platform_rules.md](../platform/platform_rules.md).
 
 ## Error Taxonomy
 
-Post-readiness Fable High amendment, 2026-06-12: the closed implementation exposes flat Sifr error classes with deterministic evidence messages. The unimplemented variant/nested names from earlier planning (`DnsError`, `ConnectError`, `TimeoutError`, `CancelledError`, `TooLargeError`, `NetError::Dns`, `HttpError::Tls`, and similar variant paths) are not shipped API.
+Post-readiness agent High amendment, 2026-06-12: the closed implementation exposes flat Sifr error classes with deterministic evidence messages. The unimplemented variant/nested names from earlier planning (`DnsError`, `ConnectError`, `TimeoutError`, `CancelledError`, `TooLargeError`, `NetError::Dns`, `HttpError::Tls`, and similar variant paths) are not shipped API.
 
 | Error class | Owner | Evidence carried |
 | --- | --- | --- |

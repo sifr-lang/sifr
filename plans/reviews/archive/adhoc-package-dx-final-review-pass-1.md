@@ -214,7 +214,7 @@ The phase is complete. All seven milestones are implemented, reviewed, and merge
 
 ```markdown
 Status: READY
-Reviewed by: Claude (final full-phase review)
+Reviewed by: agent (final full-phase review)
 Date: 2026-05-23
 Milestones reviewed: M1–M7 (PRs #2153–#2159)
 Demo repos reviewed: sifr-demo-json, sifr-demo-http, sifr-demo-test-support, sifr-demo-app, sifr-demo-workspace

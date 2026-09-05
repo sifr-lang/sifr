@@ -215,7 +215,7 @@ None required. The wave is production-ready.
 ---
 
 *Review completed: 2026-03-21*
-*Reviewer: Claude Code*
+*Reviewer: agent*
 *Phase: ad-hoc-stateful-rng-crypto-and-polish-parity-expansion*
 *Wave: wave_psp_rng_2*
 *Pass: 2 (Production-Grade)*

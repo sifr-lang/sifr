@@ -4,7 +4,7 @@ Read-only inspection plus focused re-runs of the record-sensitive validators. Pe
 
 ### Round-6 finding (audit-trail gap) — FIXED, completely and accurately
 
-Round 6's single actionable finding asked for two things in the closeout ledger: (a) an `[Opus round 5]` bullet in the established format, and (b) a record that three canonical-matrix notes and one architecture-doc sentence were restated from stale deferral to scope delegation. `75875b85d` adds both, inside the "Closeout validation evidence on 2026-07-30" section at `certification.md:1814-1829`:
+Round 6's single actionable finding asked for two things in the closeout ledger: (a) an `[agent round 5]` bullet in the established format, and (b) a record that three canonical-matrix notes and one architecture-doc sentence were restated from stale deferral to scope delegation. `75875b85d` adds both, inside the "Closeout validation evidence on 2026-07-30" section at `certification.md:1814-1829`:
 
 - The round-5 bullet records the merge-integration reruns, both findings (three matrix notes + the matching architecture deferral), and the substance of the repair, naming all three delegation targets — this is (a) and (b) in one bullet, so the prose cleanup that round 6 said had "no checklist or evidence home" now has one.
 - The round-6 bullet records what round 6 verified, its `NOT SATISFIED` verdict, and the exact reason for it.

@@ -1,6 +1,6 @@
 # INT-2B — Fixed-width Type Variants — Review Pass 1
 
-Reviewer: Claude (Opus 4.7), 2026-05-06.
+Reviewer: agent (agent), 2026-05-06.
 Branch: `int-2b-fixed-width-type-variants`.
 Validation: `scripts/run_all_tests.sh --profile quick` passed, `report_signature=e1bf653aaa770517`.
 Working tree: 9 modified files, no new files, no submodule changes, no fixture/snapshot churn.

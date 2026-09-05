@@ -1,6 +1,6 @@
 # Async Cancellation Review — Pass 2
 
-**Reviewer:** Claude Code (coherence pass)
+**Reviewer:** agent (coherence pass)
 **Date:** 2026-05-09
 **Scope:** Cancellation semantics only; Python asyncio hiccup surface area; coherence of B1/B2/B3 resolutions from pass 1.
 

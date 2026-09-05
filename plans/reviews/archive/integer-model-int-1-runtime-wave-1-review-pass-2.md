@@ -1,6 +1,6 @@
 # Review: INT-1 Runtime Wave 1 — `sifr_runtime` substrate and codegen plumbing (Pass 2)
 
-Reviewer: Claude Opus 4.7
+Reviewer: agent
 Date: 2026-05-05
 Phase: `issues/ad-hoc-integer-model-and-fixed-width-numeric-contract.md`, milestone INT-1
 Pass-1 artifact: `reviews/integer-model-int-1-runtime-wave-1-review-pass-1.md`

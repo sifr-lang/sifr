@@ -2,7 +2,7 @@
 
 ## Review Metadata
 
-- **Reviewer**: Claude Code (automated review)
+- **Reviewer**: agent (automated review)
 - **Date**: 2026-03-18
 - **Phase Status**: Wave implementation complete, closure review in progress
 - **Reference**: `issues/ad-hoc-first-class-lazy-iterators-and-python-iterable-protocol.md`

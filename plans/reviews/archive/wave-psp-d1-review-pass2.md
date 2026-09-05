@@ -1,6 +1,6 @@
 # wave_psp_d1 Review Pass 2
 
-**Reviewer**: Codex (GPT-5)
+**Reviewer**: agent
 **Date**: 2026-03-16
 **Phase**: Ad Hoc Python Source Parity and Builtin Stdlib Surface Execution
 **Wave**: `wave_psp_d1` - Filesystem, Paths, and Archive Surfaces

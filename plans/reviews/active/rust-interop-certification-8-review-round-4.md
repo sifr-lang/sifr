@@ -41,7 +41,7 @@ All non-blocking; none is an acceptance-criterion violation.
 
 ### Out of scope — preserved unmodified
 
-`editor_integrations` submodule bump, dirty `verification/areas/algorithmic_compatibility/corpora/leetcode` submodule, `plans/phases/43_interoperability.md`, `.cert5probe/` (5 files), `.claude/` (2 files), and the two stray `.webp` files. `git status -uall` otherwise shows exactly the 13 intended scenario files, the new driver test module, and the two checker modules.
+`editor_integrations` submodule bump, dirty `verification/areas/algorithmic_compatibility/corpora/leetcode` submodule, `plans/phases/43_interoperability.md`, `.cert5probe/` (5 files), `.agent/` (2 files), and the two stray `.webp` files. `git status -uall` otherwise shows exactly the 13 intended scenario files, the new driver test module, and the two checker modules.
 
 The refactor is a faithful extraction: identical logic, identical error text, a cache whose only key is a file the checker provably never writes, and both failure modes already pinned by the existing `root lock drift` and baseline self-test cases. I relied on the provided crate-test/E2E/Python-interop evidence for the Rust surface, which is unchanged since round 3, and re-ran the rust_interop area and guardrails myself.
 

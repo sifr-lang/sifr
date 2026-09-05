@@ -1,6 +1,6 @@
 # Rust-Interop `certification_9` (`native_build_script`) — Review
 
-Scope: current worktree (uncommitted branch `agent/rust-interop-certification-9`). Out-of-scope parallel-agent changes (`editor_integrations`, leetcode corpus, `.cert5probe/`, `.claude/`, stray webp files, `plans/phases/43_interoperability.md`, and the `ecosystem_backend_certification` hunk in the compatibility matrix) were excluded from judgement.
+Scope: current worktree (uncommitted branch `agent/rust-interop-certification-9`). Out-of-scope parallel-agent changes (`editor_integrations`, leetcode corpus, `.cert5probe/`, `.agent/`, stray webp files, `plans/phases/43_interoperability.md`, and the `ecosystem_backend_certification` hunk in the compatibility matrix) were excluded from judgement.
 
 ## Independent verification performed
 

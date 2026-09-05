@@ -1,6 +1,6 @@
 # Ad Hoc Optional/None Closure: Wave-R3c Reviewer Pass-1 (2026-03-30)
 
-Reviewer: Claude (talk-to-claude skill; recovered from handoff logs due Claude-side file-write permission block)  
+Reviewer: agent (agent review skill; recovered from handoff logs due agent-side file-write permission block)
 Status: `ready-with-guardrails`
 
 ## Scope Reviewed

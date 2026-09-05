@@ -1,6 +1,6 @@
 # INT-2A — Large Integer Literal HIR Capture — Review Pass 1b
 
-Reviewer: Claude (Opus 4.7), 2026-05-06.
+Reviewer: agent (agent), 2026-05-06.
 
 ## Scope under review
 

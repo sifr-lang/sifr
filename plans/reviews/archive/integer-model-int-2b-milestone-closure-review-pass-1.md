@@ -1,6 +1,6 @@
 # INT-2B Milestone Closure — Review Pass 1
 
-Reviewer: Claude Opus 4.7
+Reviewer: agent
 Date: 2026-05-06
 Branch under review: `main` at `95cf5e67` (post PR #1815, all INT-2B child bullets ticked)
 Phase tracker: [issues/ad-hoc-integer-model-and-fixed-width-numeric-contract.md](issues/ad-hoc-integer-model-and-fixed-width-numeric-contract.md)

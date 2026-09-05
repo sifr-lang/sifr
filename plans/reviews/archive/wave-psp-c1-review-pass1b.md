@@ -1,7 +1,7 @@
 # wave_psp_c1 Structured Parsing and Serialization Parity Review
 
 **Review Date:** 2026-03-16
-**Reviewer:** Claude Code
+**Reviewer:** agent
 **Status:** Implementation Review - Pass 1b
 
 ## Executive Summary

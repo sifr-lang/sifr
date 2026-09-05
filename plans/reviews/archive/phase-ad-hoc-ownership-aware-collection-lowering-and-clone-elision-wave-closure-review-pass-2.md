@@ -4,7 +4,7 @@
 **Date**: 2026-03-21
 **Phase**: `issues/ad-hoc-ownership-aware-collection-lowering-and-clone-elision.md`
 **Scope**: Phase-level production-grade readiness review after wave-closure pass-1
-**Reviewer**: Claude (external review, pass 2)
+**Reviewer**: agent (external review, pass 2)
 **Commit**: `ff678127` — "wave_clone closure: apply review pass 1 closure findings (#1405)"
 **Preceding pass**: `phase-ad-hoc-ownership-aware-collection-lowering-and-clone-elision-wave-closure-review-pass-1.md`
 

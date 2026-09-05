@@ -3,7 +3,7 @@
 **Phase**: ad-hoc-python-source-parity-extension-waiver-reduction
 **Wave**: wave_psp_ext_1 (Builtin Iterator Re-Closure)
 **Review Type**: Production-Grade Review
-**Reviewer**: Claude Code
+**Reviewer**: agent
 **Date**: 2026-03-18
 
 ---

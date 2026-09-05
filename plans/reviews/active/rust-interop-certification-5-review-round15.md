@@ -27,8 +27,8 @@ gap.
 
 ### Low: temporary review prompt — closed
 
-No `.claude-review-prompt-cert5-round14.txt` or other
-`.claude-review-prompt*` file remains.
+No `.agent-review-prompt-cert5-round14.txt` or other
+`.agent-review-prompt*` file remains.
 
 ## Integration result
 

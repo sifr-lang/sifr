@@ -145,7 +145,7 @@ These are small accuracy points I noticed while re-reading the new sections. Non
 
 Merge as-is. The four pass-1 blockers are resolved with new, content-bearing inventory sections; all six pass-1 non-blocking items are resolved; all four pass-1 minors are resolved. The four residual nits above are optional follow-up that fit naturally into `milestone_diag_2b` or `milestone_diag_7` PRs.
 
-The remaining unchecked DoD bullets in the issue ("Claude review for `milestone_diag_3` completed and all actionable findings addressed", "`milestone_diag_3` PR opened and merged") can be flipped once this review is filed and the PR lands.
+The remaining unchecked DoD bullets in the issue ("agent review for `milestone_diag_3` completed and all actionable findings addressed", "`milestone_diag_3` PR opened and merged") can be flipped once this review is filed and the PR lands.
 
 ## Validation
 

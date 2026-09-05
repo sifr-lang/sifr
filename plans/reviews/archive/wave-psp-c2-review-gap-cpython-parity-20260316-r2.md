@@ -1,6 +1,6 @@
 # wave_psp_c2 Review - CPython Parity Gap Analysis (R2)
 
-**Reviewer:** Claude Code
+**Reviewer:** agent
 **Date:** 2026-03-16
 **Scope:** Text, Pattern, and Formatting Modules (`string`, `textwrap`, `base64`, `html`, `fnmatch`, `difflib`, `calendar`)
 **Status:** Production-Grade

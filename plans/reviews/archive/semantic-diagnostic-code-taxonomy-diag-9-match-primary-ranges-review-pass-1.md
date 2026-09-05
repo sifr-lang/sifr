@@ -1,6 +1,6 @@
 # Review: Diag-9 Slice 8 — Match Diagnostic Primary Ranges
 
-**Reviewer**: Claude Code compiler review
+**Reviewer**: agent compiler review
 **Branch**: `codex/diag-9-next-span-slice`
 **Files**: `crates/sifr_hir/src/lower/match_diagnostics.rs`, `match_diagnostics_tests.rs`, `match_lowering.rs`, `statements.rs`, `mod.rs`, + 6 e2e fail fixtures
 

@@ -1,6 +1,6 @@
 # Rust Interop Certification 4 Review — Round 4
 
-Reviewer: Claude Opus 5 (`--effort medium`)
+Reviewer: agent (`--effort medium`)
 
 Verdict: **NOT SATISFIED**
 

@@ -30,8 +30,8 @@ and installed sysroots must certify equivalent behavior and dependency plans.
 - [x] Certify representative retained-intrinsic and migrated-bridge programs
   against both source-tree and installed sysroots, including dependency-plan
   equivalence.
-- [x] Run focused guards/tests, the authoritative create-PR gate, and Claude
-  Opus review rounds until `SATISFIED`.
+- [x] Run focused guards/tests, the authoritative create-PR gate, and agent
+  agent review rounds until `SATISFIED`.
 - [x] Open, review, and merge M6 as
   [PR #2927](https://github.com/sifr-lang/sifr/pull/2927) at merge commit
   `7b40f6936`.
@@ -71,7 +71,7 @@ and installed sysroots must certify equivalent behavior and dependency plans.
   optimization of source-stdlib lowering/type-system bootstrap work and a
   bounded `1200 s` cold installed-smoke timeout consistent with the existing
   heavy boundary certification policy.
-- Claude Opus M6 review round 1 reported no blocking findings and ended
+- agent M6 review round 1 reported no blocking findings and ended
   `SATISFIED`. Its soft blind spots were nevertheless hardened: public
   unsafe/extern functions are now inventoried, structured compiler consumers
   require an exact Rust IR path, and installed/source probe caches are isolated.

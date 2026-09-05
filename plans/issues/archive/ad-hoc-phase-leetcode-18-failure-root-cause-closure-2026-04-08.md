@@ -222,7 +222,7 @@ Language adjustment decision:
 
 ## Reviewer Loop
 
-Reviewer: Claude
+Reviewer: agent
 
 Artifacts:
 

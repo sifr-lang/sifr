@@ -3,7 +3,7 @@
 **Date**: 2026-03-21
 **Phase**: `issues/ad-hoc-ownership-aware-collection-lowering-and-clone-elision.md`
 **Scope**: Phase-level closure readiness after 12-pass review chain (4 waves × 2 passes + 2 wave-closure passes + 2 milestone-closure passes)
-**Reviewer**: Claude (external review, pass 1)
+**Reviewer**: agent (external review, pass 1)
 **Commit**: `420ec2ad` — "wave_clone milestone closure: record pass 2 (#1408)"
 **Preceding passes**: All 11 prior passes in the review chain (wave-level passes 1–2, wave-closure passes 1–2, milestone-closure passes 1–2)
 

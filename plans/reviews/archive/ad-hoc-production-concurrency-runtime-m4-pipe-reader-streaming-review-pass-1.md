@@ -43,7 +43,7 @@ Scope: sync `PipeReader.read(max_bytes)` / `PipeReader.close()` on `sifr.process
    - `verification/stdlib/concurrency_runtime_m4_process_traceability.md:5,15,40,41,48` records the slice's `PipeReader.read(max_bytes)`/`close()` evidence, the partial-handle preservation and EOF close behavior, the explicit-close path, and explicitly defers async pipes and sendability/shareability.
    - `verification/platform/supported_host_matrix.md:20` adds the row for sync PipeReader streaming reads with `host-limited` on Windows and the deterministic-fixture caveat.
    - Both manifests list `process_pipe_reader_streaming` adjacent to the other sync pipe fixtures (`verification/validation_lanes/create_pr_e2e_manifest.json:97`, `verification/validation_lanes/merge_e2e_manifest.json:112`).
-   - The execution ledger records the implementation summary, the targeted local validation list, and the pending Claude review (`issues/ad-hoc-production-concurrency-runtime-platform-substrate-execution.md:430,991-1014`).
+   - The execution ledger records the implementation summary, the targeted local validation list, and the pending agent review (`issues/ad-hoc-production-concurrency-runtime-platform-substrate-execution.md:430,991-1014`).
 
 8. **File-size guardrails.** PASS. Touched hand-maintained files remain under the 900-line cap (`process_child_pipes.rs` 563, `stdlib_filter/implementation.rs` 789, others unchanged in size class).
 

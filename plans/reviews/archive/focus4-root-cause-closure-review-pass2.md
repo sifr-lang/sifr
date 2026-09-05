@@ -1,6 +1,6 @@
 # Review: Focus-4 Root-Cause Closure Package (Pass 2)
 
-Reviewer: Claude Opus 4.6
+Reviewer: agent
 Date: 2026-04-06
 
 ## 1. File Presence and Readability

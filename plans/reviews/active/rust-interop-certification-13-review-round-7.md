@@ -18,7 +18,7 @@ One residual fail-open edge exists (raw-identifier module names), but it is pre-
 
 ## Scope reviewed
 
-Committed delta `origin/main..7c37a86da` (`b231daf81`, `7a27b7896`, `6ec0742b6`, `0e53989be`, `bfa7f27c6`, `96a56b7f1`, `a191d7202`, `7c37a86da`), 56 files, focused on `7c37a86da`. Excluded and not attributed: `editor_integrations`, the leetcode corpora submodule, `.cert5probe/`, `.claude/`, the two stray webp files, `plans/phases/43_interoperability.md`.
+Committed delta `origin/main..7c37a86da` (`b231daf81`, `7a27b7896`, `6ec0742b6`, `0e53989be`, `bfa7f27c6`, `96a56b7f1`, `a191d7202`, `7c37a86da`), 56 files, focused on `7c37a86da`. Excluded and not attributed: `editor_integrations`, the leetcode corpora submodule, `.cert5probe/`, `.agent/`, the two stray webp files, `plans/phases/43_interoperability.md`.
 
 ---
 

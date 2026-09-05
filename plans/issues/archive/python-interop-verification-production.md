@@ -13,7 +13,7 @@ Make embedded Python interop verification authoritative enough to prove real exa
   - Add an area `manifest.json` and root `runner.py`.
   - Wire non-container Python interop suites into validation profiles.
   - Update public/internal docs and exit evidence paths.
-  - Local validation passed with `scripts/run_all_tests.sh --profile create-pr` on 2026-06-19; Opus review `plans/reviews/active/python-interop-area-migration-review-1.md` returned no blockers.
+  - Local validation passed with `scripts/run_all_tests.sh --profile create-pr` on 2026-06-19; agent review `plans/reviews/active/python-interop-area-migration-review-1.md` returned no blockers.
 - [x] `verification_py_area_2`: Container-runtime profile and policy.
   - Add explicit container-runtime resource classification and profile support.
   - Define live Python interop profile semantics, skip rules, and result statuses.
@@ -25,7 +25,7 @@ Make embedded Python interop verification authoritative enough to prove real exa
   - Type-check Sifr examples through the embedded Python interop surface, then run matching Python client examples against live dependency endpoints.
 - [x] `verification_py_area_4`: Final review and closeout.
   - Run local validation gates.
-  - Run Opus review rounds until no blockers remain.
+  - Run agent review rounds until no blockers remain.
   - Record merged PR links and final evidence.
 
 ## Non-Negotiables
@@ -48,7 +48,7 @@ Make embedded Python interop verification authoritative enough to prove real exa
 - Container-runtime/live-profile policy merged in PR #2681.
 - Testcontainers-backed live examples merged in PR #2682.
 - Final closeout-progress PR merged in PR #2683.
-- PR3 Opus reviews reported no blockers through `plans/reviews/active/python-interop-live-examples-review-4.md`.
-- Closeout Opus reviews are tracked in `plans/reviews/active/python-interop-verification-closeout-review-1.md` and `plans/reviews/active/python-interop-verification-closeout-review-2.md`.
+- PR3 agent reviews reported no blockers through `plans/reviews/active/python-interop-live-examples-review-4.md`.
+- Closeout agent reviews are tracked in `plans/reviews/active/python-interop-verification-closeout-review-1.md` and `plans/reviews/active/python-interop-verification-closeout-review-2.md`.
 - Latest local PR gate for the live examples passed on 2026-06-19: `scripts/run_all_tests.sh --profile create-pr` completed with zero failures and advisory `warm wall-time budget exceeded`.
 - Latest live profile evidence on 2026-06-19: `scripts/run_all_tests.sh --profile python-interop-live` passed; Sifr source checks passed, and service cases reported `structured-skip` because the local Docker daemon was unavailable.

@@ -3,7 +3,7 @@
 **Phase**: ad-hoc-python-source-parity-extension-waiver-reduction
 **Wave**: wave_psp_ext_2 (`itertools` Lazy Surface Closure)
 **Review Type**: Completion Gap Review
-**Reviewer**: Claude Code
+**Reviewer**: agent
 **Date**: 2026-03-18
 
 ---

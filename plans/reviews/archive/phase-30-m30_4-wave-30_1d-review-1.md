@@ -341,4 +341,4 @@ The fixtures deviate from the canonical string-vector format specified in `cpyth
 ---
 
 *Review generated: 2026-03-10*
-*Reviewer: Claude Opus 4.6*
+*Reviewer: agent*

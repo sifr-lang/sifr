@@ -48,7 +48,7 @@ have been satisfied.
 | Requested | Delivered |
 |-----------|-----------|
 | Review by NeetCode group, one at a time | Arrays & Hashing, Two Pointers reviewed individually; Groups 3–18 audited sequentially; Trees reviewed post-fix |
-| Consult Claude for reviews | 4 Claude review artifacts: `reviews/phase34-neetcode-group-01-arrays-hashing-review.md`, `phase34-neetcode-group-02-two-pointers-review.md`, `phase34-neetcode-groups-03-through-18-review.md`, `phase34-neetcode-trees-map-fix-review.md` |
+| Consult agent for reviews | 4 agent review artifacts: `reviews/phase34-neetcode-group-01-arrays-hashing-review.md`, `phase34-neetcode-group-02-two-pointers-review.md`, `phase34-neetcode-groups-03-through-18-review.md`, `phase34-neetcode-trees-map-fix-review.md` |
 | Improve generated code quality group-by-group | Trees blocker fixed in `lower_expr.rs`; zero fixed-pattern regressions in all groups |
 | Finish with full scans of demos and LeetCode | Final demos: 261/310 pass; Final LeetCode: 378/411 pass; fixed patterns at zero across both |
 

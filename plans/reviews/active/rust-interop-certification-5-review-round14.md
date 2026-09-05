@@ -35,7 +35,7 @@ record the result in the plan's evidence block.
 
 ### Low: remove the temporary review prompt
 
-`.claude-review-prompt-cert5-round14.txt` was untracked and not ignored.
+`.agent-review-prompt-cert5-round14.txt` was untracked and not ignored.
 Remove it before staging.
 
 ## Readiness

@@ -1,6 +1,6 @@
 # Wave PSP-A2 Review: Gap Analysis and CPython Test Parity Quality
 
-**Reviewer:** Claude Code
+**Reviewer:** agent
 **Date:** 2026-03-17
 **Wave:** `wave_psp_a2` (Core Object Models: list/dict/set/tuple/str)
 **Branch:** `codex/python-builtin-std-parity-wave-e2`

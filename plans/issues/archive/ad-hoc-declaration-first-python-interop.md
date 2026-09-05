@@ -4,12 +4,12 @@
 
 Completed and closure-approved on
 [PR #3000](https://github.com/sifr-lang/sifr/pull/3000). M0-M17 implementation
-is merged through PR #2999; repeated whole-phase Fable High review is satisfied,
+is merged through PR #2999; repeated whole-phase agent High review is satisfied,
 the authoritative merge gate passes on the closure candidate, and M17 Wave 4
 and the phase bookkeeping are complete. The phase defines one complete
 end-state architecture and an
-ordered implementation sequence. Opus High pass 5 approved the complete design;
-a final independent Fable High audit found no blockers and its eight
+ordered implementation sequence. agent High pass 5 approved the complete design;
+a final independent agent High audit found no blockers and its eight
 non-blocking precision refinements are incorporated. M0 through M9 and M10
 Wave 1 are implemented, locally validated, reviewed, and linked below. M10
 Wave 2 is merged; whole-diff review passes 14 through 25 reopened
@@ -24,16 +24,16 @@ Pass-25 remediation is complete, whole-diff review pass 26 is satisfied, and
 PR #2988 is merged. M10 Wave 3 evidence, demo, and documentation closure is
 implemented and locally validated; whole-diff review pass 6 is satisfied and
 the authoritative create-PR gate passes, and PR #2989 is merged. The complete
-merged M10 implementation is in final closure on PR #2990. Codex milestone
+merged M10 implementation is in final closure on PR #2990. agent milestone
 passes 10 through 14 drove exact nominal identity through unions, conversions,
 inheritance, handlers, patterns, generics, operators, merged stdlib
 declarations, imported-parent semantics, exact try-error carriers,
 same-basename Rust bridge records, nested functions, and ordinary unions
-sharing carrier enums. Subsequent Fable High passes 2 through 7 found and
+sharing carrier enums. Subsequent agent High passes 2 through 7 found and
 closed the remaining error-carrier parity, PythonError identity, exact
 catch-all, borrowed-field mutation, nested parameter, and class-method
 mut-argument place gaps. Pass 8 was an invalid timer-only artifact and is not
-review evidence. Fresh Fable High pass 9 independently rechecked the complete
+review evidence. Fresh agent High pass 9 independently rechecked the complete
 candidate and returned **SATISFIED** with no blockers; post-commit closure
 pass 10 confirmed the frozen PR diff and ledger with the same verdict. The
 authoritative merge
@@ -47,7 +47,7 @@ retained-owner integration are merged, publicly active, and milestone-reviewed.
 M11's five Arrow C Data Interface delivery waves are implemented, locally
 validated, and milestone-reviewed in
 [PR #2991](https://github.com/sifr-lang/sifr/pull/2991). Repeated whole-diff
-Fable High review drove ownership, identity, async-move, operator, and
+agent High review drove ownership, identity, async-move, operator, and
 certification remediation through pass 8, which returned **SATISFIED** with no
 blockers or majors; frozen-diff closure pass 9 independently confirmed the same
 verdict. The fresh authoritative merge gate passes every blocking
@@ -56,7 +56,7 @@ lane in `3772.09s`, including E2E `674/674`, Python interop `20/20`, diagnostics
 batch-skew notices are non-blocking advisories. M12's five DLPack delivery waves
 are implemented and locally validated in
 [PR #2992](https://github.com/sifr-lang/sifr/pull/2992). Repeated whole-diff
-Fable High review found and closed shared call-frame cleanup, exact runtime-gate,
+agent High review found and closed shared call-frame cleanup, exact runtime-gate,
 ownership-matrix, empty-reconciliation, and CPU stream-policy gaps; pass 4
 returned **APPROVED** after independently reproducing the critical fixes, and
 final frozen-diff pass 5 independently returned **APPROVED** with no blockers
@@ -73,14 +73,14 @@ implemented, locally validated, milestone-reviewed, and closed in
 [PR #2993](https://github.com/sifr-lang/sifr/pull/2993). M14 binding and
 certification authoring is implemented, locally validated, and
 closure-approved in [PR #2994](https://github.com/sifr-lang/sifr/pull/2994).
-Direct Fable High pass 1 drove delivery-profile, environment-freshness,
+Direct agent High pass 1 drove delivery-profile, environment-freshness,
 mutation-ordering, positional-only, symlink-confinement, cross-module runtime,
 and schema-diagnostic remediation; pass 2 returned **SATISFIED**. Frozen pass
 3 found one additional direct-conversion grammar minor; the root remediation
 and expanded regression evidence passed the authoritative gate, and full pass
 4 returned **SATISFIED** with no blocker, major, or minor findings. M15 is
 implemented, authoritatively validated, and closure-approved on
-[PR #2995](https://github.com/sifr-lang/sifr/pull/2995). Fable High pass 1 validated the
+[PR #2995](https://github.com/sifr-lang/sifr/pull/2995). agent High pass 1 validated the
 shared compiler-plan/driver-probe architecture and identified symbol
 misattribution, live environment-digest, library deferral, graph/trust,
 certification, probe-cache/cancellation, diagnostic-scoping, and evidence
@@ -783,7 +783,7 @@ Delivery waves:
   and asyncio handler captures, including non-send and Python-identity
   exclusion, parallel share safety, same-owner rejection, and unproven callable
   rejection ([PR #2981](https://github.com/sifr-lang/sifr/pull/2981);
-  [GPT-5.6-Sol High review pass 1](../../reviews/active/ad-hoc-declaration-first-python-interop-m9-codex-5-6-sol-high-review-pass-1.md)).
+  [agent High review pass 1](../../reviews/active/ad-hoc-declaration-first-python-interop-m9-agent-high-review-pass-1.md)).
 - [x] Aggregate-review remediation Wave 2 — per-entry asyncio terminal records,
   exact bidirectional cancellation, asynchronous owner cancel/join, rollback
   drain without executor blocking, and retained loop authority for async
@@ -795,8 +795,8 @@ Delivery waves:
   closure, failed context-entry owner reconciliation, terminal provisional
   receiver rollback, and an emitted Rust `!Send`/`!Sync` opaque-identity
   backstop ([PR #2984](https://github.com/sifr-lang/sifr/pull/2984);
-  [GPT-5.6-Sol High review pass 2](../../reviews/active/ad-hoc-declaration-first-python-interop-m9-remediation-wave3-codex-5-6-sol-high-review-pass-2.md),
-  [pass 3 findings](../../reviews/active/ad-hoc-declaration-first-python-interop-m9-remediation-wave3-codex-5-6-sol-high-review-pass-3.md));
+  [agent High review pass 2](../../reviews/active/ad-hoc-declaration-first-python-interop-m9-remediation-wave3-agent-high-review-pass-2.md),
+  [pass 3 findings](../../reviews/active/ad-hoc-declaration-first-python-interop-m9-remediation-wave3-agent-high-review-pass-3.md));
   create-PR `131/131`, signature `7c39b8c1dd4fec7c`, with compiled sync and
   asyncio reconciliation fixtures plus same-loop Python cancellation evidence
   that keeps identity-bearing context values on their owning task. Pass 3
@@ -810,13 +810,13 @@ Delivery waves:
   verification documentation after the complete merged M9 review exposed the
   certification mismatch
   ([PR #2985](https://github.com/sifr-lang/sifr/pull/2985);
-  [GPT-5.6-Sol High complete review pass 1](../../reviews/active/ad-hoc-declaration-first-python-interop-m9-complete-codex-5-6-sol-high-review-pass-1.md),
-  [remediation review pass 1](../../reviews/active/ad-hoc-declaration-first-python-interop-m9-current-dispatch-remediation-codex-5-6-sol-high-review-pass-1.md));
+  [agent High complete review pass 1](../../reviews/active/ad-hoc-declaration-first-python-interop-m9-complete-agent-high-review-pass-1.md),
+  [remediation review pass 1](../../reviews/active/ad-hoc-declaration-first-python-interop-m9-current-dispatch-remediation-agent-high-review-pass-1.md));
   focused callback examples pass all seven compiled binaries and the
   authoritative create-PR gate passes `131/131`, signature
   `7c39b8c1dd4fec7c`; merged as `71087cfd948b226d6fba2868d18ebea88f21214a`.
 - [x] Milestone review — the complete merged M9 implementation passed the
-  [GPT-5.6-Sol High review pass 2](../../reviews/active/ad-hoc-declaration-first-python-interop-m9-complete-codex-5-6-sol-high-review-pass-2.md)
+  [agent High review pass 2](../../reviews/active/ad-hoc-declaration-first-python-interop-m9-complete-agent-high-review-pass-2.md)
   after all pass-1 blockers were remediated and merged.
 
 Acceptance:
@@ -861,10 +861,10 @@ Delivery waves:
   layout validation, lock-free Python operations, bounded typed access, and
   exact-once sealed-resource release
   ([PR #2987](https://github.com/sifr-lang/sifr/pull/2987);
-  [review pass 1](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave1-codex-5-6-sol-high-review-pass-1.md),
-  [pass 2](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave1-codex-5-6-sol-high-review-pass-2.md),
-  [pass 3](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave1-codex-5-6-sol-high-review-pass-3.md),
-  [satisfied pass 4](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave1-codex-5-6-sol-high-review-pass-4.md));
+  [review pass 1](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave1-agent-high-review-pass-1.md),
+  [pass 2](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave1-agent-high-review-pass-2.md),
+  [pass 3](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave1-agent-high-review-pass-3.md),
+  [satisfied pass 4](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave1-agent-high-review-pass-4.md));
   focused buffer tests pass `19/19`, the complete Python runtime suite passes
   `145/145`, and the authoritative create-PR gate passes Python interop `10/10`
   plus E2E `131/131` with signature `7c39b8c1dd4fec7c`.
@@ -876,20 +876,20 @@ Delivery waves:
   native top-level, receiver, bridge, and affine-aggregate examples pass `4/4`
   with zero live resources, and the authoritative create-PR gate passes Python
   interop `11/11`, all enforced lane budgets, runtime platform `28/28`, and E2E
-  `131/131` with signature `7c39b8c1dd4fec7c`. Codex `gpt-5.6-sol` high/fast
-  [review pass 1](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-1.md)
+  `131/131` with signature `7c39b8c1dd4fec7c`. agent high/fast
+  [review pass 1](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-agent-high-review-pass-1.md)
   requested receiver codegen, recursive affine capability, permanent compiled
   evidence, and atomic activation remediation; all four findings are addressed
   and authoritatively validated. Full-diff
-  [review pass 2](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-2.md)
+  [review pass 2](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-agent-high-review-pass-2.md)
   found remaining union/aggregate affine synthesis, receiver-convention, and
   tracking issues; remediation round 2 was implemented and focused validation
   passed. Full-diff
-  [review pass 3](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-3.md)
+  [review pass 3](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-agent-high-review-pass-3.md)
   found residual collection capabilities, constructor/walrus/comprehension
   moves, and exporter-level writable aliasing. Those findings were remediated.
   Full-diff
-  [review pass 4](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-4.md)
+  [review pass 4](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-agent-high-review-pass-4.md)
   then found cross-view writable admission, iterator/generator and conditional
   expression moves, dynamic/generic collection capabilities, missing permanent
   coverage, and stale `PYZC` documentation. Those findings are remediated with
@@ -897,7 +897,7 @@ Delivery waves:
   paths, recursive conditional moves, collection capability checks, permanent
   compiler/runtime regression coverage, and corrected architecture text.
   Full-diff
-  [review pass 5](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-5.md)
+  [review pass 5](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-agent-high-review-pass-5.md)
   cleared those runtime and documentation corrections but found borrowed
   affine escape through owned calls and aggregates, missing `min`/`max` and
   dynamic collection capability checks, and untracked tuple/dict/list-`+=`
@@ -913,7 +913,7 @@ Delivery waves:
   `11/11`, runtime platform `28/28` with one gated skip, and E2E `131/131` with
   signature `7c39b8c1dd4fec7c`. The warm facade completed in `415.80s`; all lane
   budgets passed, with only the non-blocking warm wall-time advisory. Full-diff
-  [review pass 6](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-6.md)
+  [review pass 6](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-agent-high-review-pass-6.md)
   confirmed the runtime lifecycle and prior exact compiler remediations, then
   found list repetition capability gaps, variadic `min`/`max` ordering gaps,
   affine-list self-`+=`, and stale activation evidence. Those paths are now
@@ -929,7 +929,7 @@ Delivery waves:
   `131/131` with signature `7c39b8c1dd4fec7c`. The facade completed in
   `423.95s`; all lane budgets passed, with only the non-blocking warm wall-time
   advisory. Full-diff
-  [review pass 7](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-7.md)
+  [review pass 7](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-agent-high-review-pass-7.md)
   confirmed the prior lifecycle, release, concurrency, overlap-safety,
   declaration, bridge, diagnostic, and retention work, then found recursive
   affine collection/storage transfers, indirect self-`+=`, recursive dynamic
@@ -951,7 +951,7 @@ Delivery waves:
   with one gated skip, and E2E `131/131` with signature
   `7c39b8c1dd4fec7c`; its `445.31s` wall time produced only the non-blocking
   warm wall-time advisory. Full-diff
-  [review pass 8](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-8.md)
+  [review pass 8](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-agent-high-review-pass-8.md)
   confirmed the prior release, bridge, sendability, and recursive capability
   work, then found affine membership, chained/unpack ownership, affine match,
   large-contiguous footprint scaling, exact indirect admission, and activation
@@ -971,7 +971,7 @@ Delivery waves:
   `131/131` with signature `7c39b8c1dd4fec7c`; all step budgets passed and the
   `800.94s` uncached overall wall time produced only the non-blocking warm
   wall-time advisory. Full-diff
-  [review pass 9](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-9.md)
+  [review pass 9](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-agent-high-review-pass-9.md)
   verified all pass-8 runtime admission remediations, then found that the
   compiler still overclaimed recursive equality, borrowed/star-unpack cloning,
   and nested async-generator capture support. Those accepted-invalid paths are
@@ -995,7 +995,7 @@ Delivery waves:
   and E2E `131/131` with signature `7c39b8c1dd4fec7c`. Its `995.68s` wall time
   produced only the expected non-blocking warm-target advisory because all 42
   native E2E groups rebuilt from the empty cache. Full-diff
-  [review pass 10](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-10.md)
+  [review pass 10](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-agent-high-review-pass-10.md)
   then found union equality generation, set/dictionary `Eq + Hash` requirements,
   non-clone chained assignment, unconditional union formatting traits, and
   stale activation evidence. Those accepted-invalid paths are now closed by
@@ -1019,7 +1019,7 @@ Delivery waves:
   groups and completed in `163.68s`; all enforced step budgets passed, while the
   `733.86s` overall wall time produced only non-blocking warm-cache advisories.
   Full-diff
-  [review pass 11](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-11.md)
+  [review pass 11](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-agent-high-review-pass-11.md)
   then found five broader compiler capability defects: a non-optional union
   equality stack overflow; invalid unwrapped union-member membership for lists,
   sets, and dictionaries; child derives that ignored embedded-parent traits;
@@ -1042,7 +1042,7 @@ Delivery waves:
   `7c39b8c1dd4fec7c` and `42/42` cache hits. Its `429.98s` wall time produced only
   the non-blocking warm-wall-time advisory; every enforced step budget passed.
   Full-diff
-  [review pass 12](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-12.md)
+  [review pass 12](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-agent-high-review-pass-12.md)
   confirmed the pass-11 repairs, then found that flattened transitive `NonSend`
   ancestry was not consulted by Clone, equality, hash, and debug capability
   queries, and that specialized generic keys still reached set/dictionary
@@ -1067,7 +1067,7 @@ Delivery waves:
   requested `cargo clean`. Its `615.77s` wall time produced only the
   non-blocking warm-wall-time and cache-hit advisories;
   every enforced step budget passed. Full-diff
-  [review pass 13](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-13.md)
+  [review pass 13](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-agent-high-review-pass-13.md)
   confirmed the transitive `NonSend` and specialized-generic hash repairs, then
   found that dictionary projections and formatting consumers still admitted
   unavailable Rust Clone/Display/Debug traits, `dict(iterable)` did not validate
@@ -1088,7 +1088,7 @@ Delivery waves:
   `7c39b8c1dd4fec7c` and `41/42` cache hits. Its `444.51s` wall time produced
   only the non-blocking warm-target advisory; every enforced step budget
   passed. Full-diff
-  [review pass 14](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-14.md)
+  [review pass 14](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-agent-high-review-pass-14.md)
   confirmed the pass-13 formatting and diagnostic-precedence repairs, then
   found that `sorted()` admitted element and callable-key result types without
   total Rust ordering; generic declarations imposed unconditional bounds while
@@ -1119,7 +1119,7 @@ Delivery waves:
   `28/28` with one gated skip, and E2E `131/131` with signature
   `7c39b8c1dd4fec7c` and `42/42` cache hits. Its `416.20s` wall time produced
   only the non-blocking warm-wall-time advisory. Full-diff
-  [review pass 15](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-15.md)
+  [review pass 15](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-agent-high-review-pass-15.md)
   confirmed ordering, formatting, affine capture/alias, deduplication, and
   file-decomposition repairs, then found that keyed `sorted()` still cloned
   non-Clone comparator elements and generic method/operator bounds still leaked
@@ -1146,7 +1146,7 @@ Delivery waves:
   only the non-blocking warm-wall-time advisory. A fresh whole-diff review of
   the complete remediation remains pending.
   Full-diff
-  [review pass 16](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-16.md)
+  [review pass 16](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-agent-high-review-pass-16.md)
   then found six remaining compiler-wide gaps: emitted generic method
   requirements were not checked at concrete specialization sites; recursive
   equality and `*`, `/`, `%`, and unary operator requirements were incomplete;
@@ -1174,7 +1174,7 @@ Delivery waves:
   skip, and E2E `131/131` with signature `7c39b8c1dd4fec7c` and `42/42` cache
   hits. Its `489.54s` wall time produced only the non-blocking warm-target
   advisory; every enforced step budget passed. Full-diff
-  [review pass 17](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-17.md)
+  [review pass 17](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-agent-high-review-pass-17.md)
   then reproduced six remaining gaps: aliased generic imports lost canonical
   specialization identity; operator consumers skipped conditional impl checks;
   generic ordering ignored the declared `__lt__` body and its `PartialEq`
@@ -1197,7 +1197,7 @@ Delivery waves:
   with signature `7c39b8c1dd4fec7c` and all `42` groups rebuilt. Its `855.62s`
   wall time produced only the expected non-blocking warm-target advisory; every
   enforced step budget passed. Full-diff
-  [review pass 18](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-18.md)
+  [review pass 18](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-agent-high-review-pass-18.md)
   then found four remaining compiler defects plus overstated evidence:
   transitive helper bounds were absent from operator trait impls; user-project
   generic aliases lost their emitted identity and same-name modules collided;
@@ -1220,7 +1220,7 @@ Delivery waves:
   with one gated skip, and E2E `131/131` with signature `7c39b8c1dd4fec7c` and
   `42/42` cache hits. Its `476.95s` wall time produced only the non-blocking
   warm-wall-time advisory. Full-diff
-  [review pass 19](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-19.md)
+  [review pass 19](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-agent-high-review-pass-19.md)
   then found three remaining root-cause gaps: operator helper closure recognized
   only `self` receivers; user-module alias rewriting stopped at imported class
   bodies rather than exported functions and inheritance; and compound inference
@@ -1243,7 +1243,7 @@ Delivery waves:
   `131/131` with signature `7c39b8c1dd4fec7c` and `42/42` cache hits. Its
   `482.54s` wall time produced only the non-blocking warm-wall-time advisory.
   Full-diff
-  [review pass 20](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-20.md)
+  [review pass 20](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-agent-high-review-pass-20.md)
   then found that multi-hop facade re-exports did not localize embedded
   user-class identities and generic class-pattern captures read unspecialized
   declaration fields. Frontend re-exports now localize the complete imported
@@ -1264,7 +1264,7 @@ Delivery waves:
   `131/131` with signature `7c39b8c1dd4fec7c` and `42/42` cache hits. Its
   `532.87s` wall time produced only the non-blocking warm-target advisory. A
   fresh whole-diff review remains pending. Full-diff
-  [review pass 21](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-21.md)
+  [review pass 21](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-agent-high-review-pass-21.md)
   then showed that identity still depended on symbols sharing one facade,
   user-module generic requirements disappeared at the export boundary, and a
   union of two specializations of the same generic class selected its first
@@ -1288,7 +1288,7 @@ Delivery waves:
   `7c39b8c1dd4fec7c` after rebuilding all `42` fixture groups. Its `911.81s`
   wall time produced only the expected non-blocking warm-target advisory after
   `cargo clean`. Full-diff
-  [review pass 22](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-22.md)
+  [review pass 22](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-agent-high-review-pass-22.md)
   then found four remaining generic and identity gaps: nominal assignability
   ignored concrete specializations, imported-parent ancestry stayed
   path-local, user-module imports did not install exported generic-function
@@ -1310,7 +1310,7 @@ Delivery waves:
   capability-gated skip, and E2E `131/131` with signature
   `7c39b8c1dd4fec7c` and `42/42` cache hits. Its only advisory is the
   non-blocking warm wall-time target. Full-diff
-  [review pass 23](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-23.md)
+  [review pass 23](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-agent-high-review-pass-23.md)
   then found two native-codegen boundaries still incomplete: contextual
   zero-argument generic specialization did not survive into emitted Rust, and
   child-to-ancestor assignability had executable coercions only for borrowed
@@ -1329,7 +1329,7 @@ Delivery waves:
   variants with one capability-gated skip, and E2E `131/131` with signature
   `7c39b8c1dd4fec7c` after rebuilding all `42` fixture groups. Its only advisory
   is the expected non-blocking warm-target timing warning. Full-diff
-  [review pass 24](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-24.md)
+  [review pass 24](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-agent-high-review-pass-24.md)
   cleared runtime lifecycle, overlap admission, exact release, and no-panic
   paths, then found four compiler boundaries: nested writable receiver places,
   union/`Result` consuming upcasts, same-basename canonical ancestor selection,
@@ -1349,7 +1349,7 @@ Delivery waves:
   `11/11`, runtime platform `28` variants with one capability-gated skip, and
   E2E `131/131` with signature `7c39b8c1dd4fec7c` and `36/42` cache hits. Its
   warm-time and cache-hit notices are non-blocking advisories. Full-diff
-  [review pass 25](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-25.md)
+  [review pass 25](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-agent-high-review-pass-25.md)
   cleared the pass-24 buffer, writable-place, ancestry-selection, and phantom
   corrections, then found that owned coercion is not recursive across existing
   union/`Result` representations and recursive affine, trait, and sendability
@@ -1369,7 +1369,7 @@ Delivery waves:
   variants with one capability-gated skip, and E2E `131/131` with signature
   `7c39b8c1dd4fec7c` and `42/42` cache hits. Its warm-time notice is a
   non-blocking advisory. Whole-diff
-  [review pass 26](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-codex-5-6-sol-high-review-pass-26.md)
+  [review pass 26](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave2-agent-high-review-pass-26.md)
   independently re-grounded both findings, exercised an additional owned
   `AsyncCallable` structural-upcast build and all `18` Python buffer runtime
   tests, and returned **SATISFIED** with no actionable findings.
@@ -1383,24 +1383,24 @@ Delivery waves:
   and five-binary demo checks pass. The authoritative create-PR gate passes
   Python interop `11/11` and E2E `131/131` with signature
   `7c39b8c1dd4fec7c` after a clean build. Whole-diff
-  [review pass 1](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave3-codex-5-6-sol-high-review-pass-1.md)
+  [review pass 1](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave3-agent-high-review-pass-1.md)
   requested independent pointer/exact-release evidence, a strict evidence
   schema, least-authority generated manifests, and an architecture wording
-  repair. [Review pass 2](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave3-codex-5-6-sol-high-review-pass-2.md)
+  repair. [Review pass 2](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave3-agent-high-review-pass-2.md)
   requested CPython 3.11-compatible exporters, exact owner sets, narrower
   compiled-identity claims, and a consistent phase status. [Review pass
-  3](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave3-codex-5-6-sol-high-review-pass-3.md)
+  3](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave3-agent-high-review-pass-3.md)
   verified the native release and packaging paths, then requested a pinned 3.11
   lane, complete native-negative fixture ownership, and current review
-  tracking. [Review pass 4](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave3-codex-5-6-sol-high-review-pass-4.md)
+  tracking. [Review pass 4](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave3-agent-high-review-pass-4.md)
   then found false-pass paths for zero selected runtime tests and an empty
   compiled-case result. Exact named-test and registered-case validation plus
-  adversarial self-tests remediate those findings. [Review pass 5](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave3-codex-5-6-sol-high-review-pass-5.md)
+  adversarial self-tests remediate those findings. [Review pass 5](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave3-agent-high-review-pass-5.md)
   found duplicate runtime observations were collapsed and the primitive runtime
   owner matrix overstated pointer-width evidence. Observation multiplicity,
   missing/duplicate self-tests, exact raw ownership, and C-level round trips for
   every supported primitive remediate both findings. Whole-diff
-  [review pass 6](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave3-codex-5-6-sol-high-review-pass-6.md)
+  [review pass 6](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-wave3-agent-high-review-pass-6.md)
   re-ran adversarial exactness checks, the pinned CPython 3.11 release tests,
   all eleven primitive-family round trips, the native-format matrix, evidence
   validation, generated least-authority manifest inspection, and integrity
@@ -1412,7 +1412,7 @@ Delivery waves:
   `7c39b8c1dd4fec7c` and `27/42` cache hits. Warm-time and cache-hit notices are
   non-blocking advisories. PR #2989 is merged.
 - [x] Milestone review — complete merged-M10
-  [review pass 1](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-codex-5-6-sol-high-review-pass-1.md)
+  [review pass 1](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-agent-high-review-pass-1.md)
   found writable `Self` owner aliasing and name-only `PythonError` acceptance.
   Remediation rejects writable receiver acquisition until an exclusive owner
   freeze is representable, adds permanent owner-close negative evidence, and
@@ -1427,31 +1427,31 @@ Delivery waves:
   capability-gated skip, and E2E `131/131` with signature
   `7c39b8c1dd4fec7c`. Its `892.55s` wall time and `15/42` cache hit rate produce
   only non-blocking advisories. Full
-  [review pass 2](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-codex-5-6-sol-high-review-pass-2.md)
+  [review pass 2](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-agent-high-review-pass-2.md)
   re-ran the complete focused compiler/runtime/native buffer evidence, confirmed
   the pass-1 ownership and error-channel remediations, and found only a stale
   roadmap reference to the already-merged PR #2988. That ledger reference is
   corrected in PR #2990; final re-review is in progress before closing the
   milestone checkbox. Full
-  [review pass 3](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-codex-5-6-sol-high-review-pass-3.md)
+  [review pass 3](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-agent-high-review-pass-3.md)
   confirmed the compiler remediations and corrected roadmap, then found that
   generic ignore rules omitted checksum-required vendored files from a clean
   checkout, public documentation overstated nominal `PythonError` enforcement,
   and exit evidence still listed active `PYZC` as reserved. PR #2990 now tracks
   all three remediations. Full
-  [review pass 4](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-codex-5-6-sol-high-review-pass-4.md)
+  [review pass 4](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-agent-high-review-pass-4.md)
   confirmed those fixes and the clean-checkout vendor inventory, then found that
   duplicate canonical fields could still pass the structural `PythonError`
   predicate and reach the generated-Rust duplicate-field assertion. The shared
   predicate now requires exactly five canonical fields, and lowering plus driver
   regressions lock check/compile diagnostic parity. Full
-  [review pass 5](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-codex-5-6-sol-high-review-pass-5.md)
+  [review pass 5](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-agent-high-review-pass-5.md)
   confirmed that remediation, then found writable producers could return a
   borrowed opaque/Object parameter while leaving its Sifr owner usable. Writable
   producer parameters that can transitively carry Python identity now require
   `own`, with permanent lowering, compile-fail, documentation, and evidence
   coverage before final re-review. Full
-  [review pass 6](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-codex-5-6-sol-high-review-pass-6.md)
+  [review pass 6](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-agent-high-review-pass-6.md)
   confirmed those ownership fixes, then found that raw Python `Object` still
   used basename matching and that exact `PythonError` validation remained
   buffer-specific. The stdlib export boundary now preserves the originating
@@ -1461,7 +1461,7 @@ Delivery waves:
   duplicate-safe five-field error predicate now guards ordinary, callback,
   context, coroutine, and buffer declarations, with lowering, codegen, stdlib,
   and driver check/compile parity regressions. Full
-  [review pass 7](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-codex-5-6-sol-high-review-pass-7.md)
+  [review pass 7](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-agent-high-review-pass-7.md)
   confirmed those remediations, then reproduced three remaining High-severity
   parity defects: coroutine conversion still selected a local `Object` by
   basename; the canonical stdlib `Object` alias collided with a user record in
@@ -1483,7 +1483,7 @@ Delivery waves:
   one capability-gated skip, and E2E `131/131` with signature
   `7c39b8c1dd4fec7c` and `41/42` cache hits. The warm-time notice is a
   non-blocking advisory after the requested clean rebuild. Full
-  [review pass 8](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-codex-5-6-sol-high-review-pass-8.md)
+  [review pass 8](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-agent-high-review-pass-8.md)
   confirmed the prior identity and error-union fixes, then showed that
   `__SifrPythonObject` itself remained a legal user class name and that
   compiler-special `open()` still resolved text and binary handles through
@@ -1500,7 +1500,7 @@ Delivery waves:
   capability-gated skip, and E2E `131/131` with signature
   `7c39b8c1dd4fec7c` and `42/42` cache hits. Its warm wall-time notice is a
   non-blocking advisory after the requested clean rebuild. Full
-  [review pass 9](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-codex-5-6-sol-high-review-pass-9.md)
+  [review pass 9](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-agent-high-review-pass-9.md)
   confirmed the pass-8 fixes, then proved two remaining generated-Rust identity
   collisions: local `sifr_runtime` shadowed relative external-crate paths, and
   local `FileHandle`/`TextFileHandle` classes collided with canonical inferred
@@ -1527,7 +1527,7 @@ Delivery waves:
   interop `12/12`, runtime platform `28` variants with one capability-gated
   skip, and E2E `131/131` with signature `7c39b8c1dd4fec7c` and `42/42` cache
   hits. Its warm wall-time notice is a non-blocking advisory. Full
-  [review pass 10](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-codex-5-6-sol-high-review-pass-10.md)
+  [review pass 10](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-agent-high-review-pass-10.md)
   then reproduced three remaining generated-Rust collision families: source
   newtypes, enums, and protocols named with compiler prefixes; local `std`
   classes capturing compiler-owned relative paths; and source classes colliding
@@ -1547,7 +1547,7 @@ Delivery waves:
   `12/12`, runtime platform `28` variants with one capability-gated skip, and
   E2E `131/131` with signature `7c39b8c1dd4fec7c` and `42/42` cache hits. The
   warm wall-time notice is a non-blocking advisory. Full
-  [review pass 11](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-codex-5-6-sol-high-review-pass-11.md)
+  [review pass 11](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-agent-high-review-pass-11.md)
   then found that class union keys still omitted canonical identity, several
   synchronous/asynchronous conversion and inheritance paths still emitted raw
   source class names, and the merged-stdlib sealing pass protected only file
@@ -1564,7 +1564,7 @@ Delivery waves:
   interop `12/12`, runtime platform `28` variants with one capability-gated
   skip, and E2E `131/131` with signature `7c39b8c1dd4fec7c` and `42/42` cache
   hits. Its warm wall-time notice is a non-blocking advisory. Full
-  [review pass 12](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-codex-5-6-sol-high-review-pass-12.md)
+  [review pass 12](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-agent-high-review-pass-12.md)
   found four remaining exact-identity gaps: global nominal exemptions used
   basenames, inheritance discarded canonical parent types, match/try paths
   compared alias spellings, and generic/operator self shortcuts were
@@ -1581,7 +1581,7 @@ Delivery waves:
   variants with one capability-gated skip, and E2E `131/131` with signature
   `7c39b8c1dd4fec7c` and `0/42` cold-cache hits. Its warm wall-time notice is a
   non-blocking advisory. Full
-  [review pass 13](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-codex-5-6-sol-high-review-pass-13.md)
+  [review pass 13](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-agent-high-review-pass-13.md)
   then found that imported parents lost exact fields and capabilities, try
   codegen collapsed the recorded error set to one handler type, and Rust bridge
   records collapsed distinct canonical classes sharing a basename. Imported
@@ -1604,7 +1604,7 @@ Delivery waves:
   capability-gated skip, and E2E `131/131` with signature
   `7c39b8c1dd4fec7c`. Its warm-time and cache-hit notices are non-blocking
   advisories. Full
-  [review pass 14](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-codex-5-6-sol-high-review-pass-14.md)
+  [review pass 14](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-agent-high-review-pass-14.md)
   found that nested functions were skipped during synthesized try-carrier
   discovery and that marking a structural union as a carrier globally removed
   equality and hash traits required by ordinary uses of the same enum. Carrier
@@ -1647,29 +1647,29 @@ Delivery waves:
   branch at `1.391s` mean versus `1.563s` for unmodified `main`; a later
   representative run exceeded three absolute latency ceilings while concurrent
   macOS policy/trust services consumed substantial CPU, but retained the branch
-  improvement. Fable High milestone
-  [review pass 2](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-fable-high-review-pass-2.md)
+  improvement. agent High milestone
+  [review pass 2](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-agent-high-review-pass-2-2.md)
   found declared union error channels and Python-error identity parity gaps;
-  [pass 3](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-fable-high-review-pass-3.md)
+  [pass 3](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-agent-high-review-pass-3-2.md)
   narrowed the remaining builtin carrier and alias collision cases;
-  [pass 4](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-fable-high-review-pass-4.md),
-  [pass 5](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-fable-high-review-pass-5.md),
+  [pass 4](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-agent-high-review-pass-4-2.md),
+  [pass 5](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-agent-high-review-pass-5-2.md),
   and
-  [pass 6](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-fable-high-review-pass-6.md)
+  [pass 6](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-agent-high-review-pass-6-2.md)
   drove the borrowed-field mutation fix through direct, nested, class-method,
-  and field-argument shapes. Fable High
-  [pass 7](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-fable-high-review-pass-7.md)
+  and field-argument shapes. agent High
+  [pass 7](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-agent-high-review-pass-7-2.md)
   verified all blockers closed and requested the authoritative merge gate plus
   a separate issue for the pre-existing class-field mutating-receiver clone
   defect. That defect and adjacent fail-closed parity gaps are tracked in
   [`ad-hoc-class-field-mutating-receiver-place-semantics.md`](ad-hoc-class-field-mutating-receiver-place-semantics.md).
   Pass 8 is retained as an explicitly invalid timer-only artifact and is not
-  treated as review evidence. Fresh Fable High
-  [pass 9](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-fable-high-review-pass-9.md)
+  treated as review evidence. Fresh agent High
+  [pass 9](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-agent-high-review-pass-9-2.md)
   independently inspected the complete candidate and adversarially probed the
   mutation, identity, carrier, PythonError, and buffer surfaces, then returned
-  **SATISFIED** with no blocking findings. Post-commit Fable High
-  [pass 10](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-fable-high-review-pass-10.md)
+  **SATISFIED** with no blocking findings. Post-commit agent High
+  [pass 10](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-agent-high-review-pass-10-2.md)
   re-inspected the frozen `origin/main...HEAD` diff, confirmed the final commit
   was documentation-only, and returned **SATISFIED** with no blockers. The
   authoritative merge gate passes
@@ -1719,7 +1719,7 @@ Delivery waves:
 - [x] Align ordinary class-method move parameters with the language-wide
   borrow-by-default rule; escaping or storing one requires explicit `own`, and
   instance, static, and `super()` calls enforce that transfer exactly once.
-- [x] Milestone review — repeated whole-diff Fable High review passes
+- [x] Milestone review — repeated whole-diff agent High review passes
   [1](../../reviews/active/m11-arrow-full-review-pass-1.md),
   [2](../../reviews/active/m11-arrow-full-review-pass-2.md),
   [3b](../../reviews/active/m11-arrow-full-review-pass-3b.md),
@@ -1797,7 +1797,7 @@ Delivery waves:
   transfer across direct, method, constructor, callable, and collection paths.
 - [x] Wave 4 — add CPU/device, malformed-capsule, failure-transition, package,
   PyTorch/TensorFlow, documentation, and delivery-profile evidence.
-- [x] Milestone review — whole-diff Fable High
+- [x] Milestone review — whole-diff agent High
   [pass 1](../../reviews/active/m12-dlpack-full-review-pass1.md) identified
   shared call-frame cleanup, runtime-gate, and ownership-matrix gaps. Pass 2 is
   explicitly invalid and superseded because it contains progress text rather
@@ -1887,7 +1887,7 @@ Python interop `17/17`, create-PR E2E `131/131` with signature
 `7c39b8c1dd4fec7c`, and hardening `6/6`. The warm wall-time notice is a
 non-blocking advisory; every per-step blocking budget passes.
 
-Fable High review pass 1 found one major selected-library parity gap: a
+agent High review pass 1 found one major selected-library parity gap: a
 standalone library with an explicit root `[python]` selection deferred probes
 while ordinary check honored the selection. The remediation now resolves that
 environment on both paths without injecting binary startup into a library,
@@ -1896,7 +1896,7 @@ clarifies the standalone-root/dependency distinction in public and internal
 documentation. The focused CLI, driver, verification, Clippy, file-size,
 driver-maintainability, and transfer-guardrail checks pass after remediation.
 
-Fable High pass 2 reproduced a discovery-based variant and the deeper ordinary
+agent High pass 2 reproduced a discovery-based variant and the deeper ordinary
 check deferral mismatch. The second remediation replaces CLI-side environment
 guessing with the package layer's single `NotRequired` / `Resolved` /
 `DeferredToFinalApplication` decision, consumed by both ordinary check and
@@ -1905,7 +1905,7 @@ standalone environments, strict build/run behavior, targeted doctor hunks, and
 valid/invalid non-mutation cases. Runtime resolution was split into a focused
 CLI module to keep every maintained source file below 900 lines.
 
-Fable High pass 3 reviewed the complete branch and returned `SATISFIED`. It
+agent High pass 3 reviewed the complete branch and returned `SATISFIED`. It
 independently reproduced explicit and uv-discovered standalone resolution,
 bare/trust-only library deferral parity, strict application/build/run errors,
 both one-sided doctor patches, deterministic byte-level non-mutation,
@@ -1924,19 +1924,19 @@ lane in `787.93s`: Python interop `17/17` (read-only evidence
 signature `7c39b8c1dd4fec7c`, and hardening `6/6`. The warm wall-time budget
 notice is advisory; all per-step blocking budgets pass.
 
-Fable High pass 4 reconfirmed the complete behavioral contract but found eight
+agent High pass 4 reconfirmed the complete behavioral contract but found eight
 stale `representative_fixture` paths in the diagnostic code catalog after the
 probe-test split, so it returned `NOT SATISFIED`. The catalog now points to the
 new probe-validation module for `SIFR-PYENV-0004` through `0011`; the complete
 five-case diagnostics rules suite passes after remediation.
 
-Fable High pass 5 confirmed the catalog remediation and the complete runtime
+agent High pass 5 confirmed the catalog remediation and the complete runtime
 contract, then reproduced a parallel-test fixture collision in the new CLI
 suite. Fixture roots now include a process-wide atomic discriminator and use
 collision-detecting root creation. Eight consecutive default-parallel suite
 runs pass `48/48`, exceeding the reviewer's six-run reproduction sample.
 
-Fable High pass 6 returned `SATISFIED`. It independently completed thirteen
+agent High pass 6 returned `SATISFIED`. It independently completed thirteen
 consecutive default-parallel runs (`78/78`), verified the suite within the full
 `sifr_cli_full` merge step, reconfirmed the four-way diagnostic evidence
 consistency, and revalidated every M13 behavioral and safety acceptance item.
@@ -2014,7 +2014,7 @@ blocking lane in `1352.80s`, including Python interop `17/17`, create-PR E2E
 hardening `6/6`. The cold-cache warm wall-time notice is a non-blocking
 advisory; every per-step blocking budget passes.
 
-Direct Fable High review pass 1 returned `NEEDS CHANGES`. It confirmed that the
+Direct agent High review pass 1 returned `NEEDS CHANGES`. It confirmed that the
 new blocking suite was missing from all delivery-profile selections, found two
 authoring-integrity majors (retained bindings could be relabeled after an
 environment change without re-probing, and output could be clobbered before
@@ -2029,20 +2029,20 @@ module at runtime; and parses the certification schema header before the full
 v3 payload. Focused package `61/61`, driver Python `52/52` plus seven expected
 integration ignores, codegen `887/887`, expanded blocking authoring,
 profile-readiness, package/file-size, Clippy, transfer-inventory, and diff
-checks pass after remediation. [Review pass 1](../../reviews/active/ad-hoc-declaration-first-python-interop-m14-fable-high-review-pass-1-direct.md)
+checks pass after remediation. [Review pass 1](../../reviews/active/ad-hoc-declaration-first-python-interop-m14-agent-high-review-pass-1-direct.md)
 
 The fresh post-remediation authoritative `create-pr` profile passes every
 blocking lane in `839.93s`, including Python interop `18/18` with the newly
 selected binding-authoring suite, E2E `131/131` with signature
 `7c39b8c1dd4fec7c`, runtime platform `28/28`, and hardening `6/6`. Every
 per-step blocking budget passes; the warm wall-time notice is a non-blocking
-advisory. Direct Fable High pass 2 independently reran the authoring suite and
+advisory. Direct agent High pass 2 independently reran the authoring suite and
 focused package/driver checks, verified every pass-1 remediation, found no
 remaining blocker, major, or minor issue, and returned **SATISFIED**. Its four
 notes document non-blocking future hardening opportunities without weakening
-the M14 acceptance contract. [Review pass 2](../../reviews/active/ad-hoc-declaration-first-python-interop-m14-fable-high-review-pass-2.md)
+the M14 acceptance contract. [Review pass 2](../../reviews/active/ad-hoc-declaration-first-python-interop-m14-agent-high-review-pass-2.md)
 
-Frozen-candidate Fable High pass 3 revalidated the authoring suite, focused
+Frozen-candidate agent High pass 3 revalidated the authoring suite, focused
 tests, confinement, freshness, certification, and non-mutation properties, but
 returned `NEEDS CHANGES` for one additional actionable minor: token-based
 scaffold validation allowed bare containers, `set[T]`, and non-`str` dict keys
@@ -2052,7 +2052,7 @@ probe and scaffold validator. Separate bare-list, set, and dict-key bind
 attempts now fail before mutation; driver Python `56/56` with seven expected
 integration ignores, workspace Clippy, formatting, maintainability,
 file-size, Python syntax, diff checks, and the expanded blocking
-binding-authoring suite all pass. [Review pass 3](../../reviews/active/ad-hoc-declaration-first-python-interop-m14-fable-high-review-pass-3-frozen.md)
+binding-authoring suite all pass. [Review pass 3](../../reviews/active/ad-hoc-declaration-first-python-interop-m14-agent-high-review-pass-3-frozen.md)
 
 The fresh authoritative `create-pr` profile passes at the committed
 post-remediation candidate in `1205.40s`: Python interop `18/18`, including
@@ -2060,16 +2060,16 @@ the expanded binding-authoring suite with three unsupported-type failures and
 zero mutations; E2E `131/131` with signature `7c39b8c1dd4fec7c`; runtime
 platform `28/28`; and hardening `6/6`. Every blocking step budget passes; the
 wall-time notice reflects a zero-hit E2E rebuild and is non-blocking. Direct
-Fable High pass 4 independently exercised supported recursive grammar and
+agent High pass 4 independently exercised supported recursive grammar and
 twelve adversarial rejection shapes, verified the pass-3 remediation in both
 the probe and scaffold validator, rechecked all earlier findings, found no
-blocker, major, or minor issue, and returned **SATISFIED**. [Review pass 4](../../reviews/active/ad-hoc-declaration-first-python-interop-m14-fable-high-review-pass-4.md)
+blocker, major, or minor issue, and returned **SATISFIED**. [Review pass 4](../../reviews/active/ad-hoc-declaration-first-python-interop-m14-agent-high-review-pass-4.md)
 
-Final frozen-diff Fable High pass 5 reviewed commit `782f35d2e`, reran the
+Final frozen-diff agent High pass 5 reviewed commit `782f35d2e`, reran the
 blocking authoring suite and focused tests, confirmed the final delta was
 closure documentation only, and independently rechecked every remediation and
 ledger claim. It found no blocker, major, or minor issue and returned
-**SATISFIED**. [Frozen closure pass 5](../../reviews/active/ad-hoc-declaration-first-python-interop-m14-fable-high-review-pass-5-frozen.md)
+**SATISFIED**. [Frozen closure pass 5](../../reviews/active/ad-hoc-declaration-first-python-interop-m14-agent-high-review-pass-5-frozen.md)
 
 The fresh authoritative merge profile passes every blocking lane at the frozen
 M14 candidate in `4227.12s`: Python interop `24/24`, E2E `674/674` with
@@ -2142,7 +2142,7 @@ Every per-step blocking budget passes. The overall warm wall-time notice is a
 non-blocking advisory; the first cold attempt also passed all `19` Python
 variants but exceeded that lane's time budget before the successful warm run.
 
-Fable High pass 1 returned **NEEDS CHANGES** after the initial gate. Its seven
+agent High pass 1 returned **NEEDS CHANGES** after the initial gate. Its seven
 findings are covered by focused regressions for same-name and substring symbol
 isolation, declaration-file/range diagnostics, live certification digest drift,
 application trust rejection, library deferral, environment/target cache reuse,
@@ -2157,8 +2157,8 @@ The post-remediation authoritative create-PR gate passes every blocking lane in
 `870.11s`: Python interop `19/19`, LSP `59/59`, analysis `48/48`, package
 `139/139`, runtime-platform `28` variants with zero failures, and E2E `131/131`
 with signature `7c39b8c1dd4fec7c`. Every per-step blocking budget passes; the
-overall warm wall-time notice is a non-blocking advisory. Whole-diff Fable High
-[pass 2](../../reviews/active/ad-hoc-declaration-first-python-interop-m15-fable-high-review-pass-2.md)
+overall warm wall-time notice is a non-blocking advisory. Whole-diff agent High
+[pass 2](../../reviews/active/ad-hoc-declaration-first-python-interop-m15-agent-high-review-pass-2.md)
 confirmed all seven pass-1 findings resolved and returned **SATISFIED**. Its
 five conservative follow-ups are also remediated before closure: hover status
 uses exact semantic function/file identity; shared targets are probed once and
@@ -2178,8 +2178,8 @@ expected generated-build ignores, runtime-platform `28` variants with one
 capability-gated skip, and E2E `131/131` with signature
 `7c39b8c1dd4fec7c`. Every per-step budget passes. The cold E2E cache (`0/42`)
 and overall warm wall-time produce one non-blocking advisory; frozen-diff
-review remains the final Wave 5 closure gate. Whole-diff Fable High
-[pass 3](../../reviews/active/ad-hoc-declaration-first-python-interop-m15-fable-high-review-pass-3.md)
+review remains the final Wave 5 closure gate. Whole-diff agent High
+[pass 3](../../reviews/active/ad-hoc-declaration-first-python-interop-m15-agent-high-review-pass-3.md)
 found two closure regressions and three parity/documentation gaps. The shared
 target probe now conservatively combines every matching declaration's type and
 inspectability constraints; an initial optimization made graph-independent
@@ -2196,8 +2196,8 @@ interop `19/19`, LSP `64/64`, analysis `48/48`, package `139/139`, driver
 variants with one capability-gated skip, and E2E `131/131` with signature
 `7c39b8c1dd4fec7c` and a warm `42/42` cache. Every per-step budget passes; the
 overall warm wall-time is the only non-blocking advisory. Repeated whole-diff
-review remains the final Wave 5 closure gate. Whole-diff Fable High
-[pass 4](../../reviews/active/ad-hoc-declaration-first-python-interop-m15-fable-high-review-pass-4.md)
+review remains the final Wave 5 closure gate. Whole-diff agent High
+[pass 4](../../reviews/active/ad-hoc-declaration-first-python-interop-m15-agent-high-review-pass-4.md)
 confirmed four pass-3 closures but found the lockfile shortcut incomplete and
 anti-conservative. The shortcut is removed: locked packages always use the
 canonical graph, including live bridge discovery and workspace-member Python
@@ -2265,8 +2265,8 @@ Post-pass-5 authoritative create-PR validation passes every blocking lane in
 runtime-platform `28` variants with one capability-gated skip, and E2E `131/131`
 with signature `7c39b8c1dd4fec7c`. Every per-step blocking budget passes. The E2E cache was
 cold (`0/42`), so the overall warm wall-time notice is a non-blocking advisory.
-Whole-diff Fable High
-[pass 6](../../reviews/active/ad-hoc-declaration-first-python-interop-m15-fable-high-review-pass-6.md)
+Whole-diff agent High
+[pass 6](../../reviews/active/ad-hoc-declaration-first-python-interop-m15-agent-high-review-pass-6.md)
 closed both pass-5 minors and independently reproduced the gate, but found one
 new major: a loader-excluded open document could sort first in package
 diagnostic ownership despite being unable to publish, suppressing package errors
@@ -2281,8 +2281,8 @@ and a warm `42/42` cache. Every per-step blocking budget passes; overall warm
 wall time is the only non-blocking advisory. Another frozen whole-diff review
 remains required.
 
-Whole-diff Fable High
-[pass 7](../../reviews/active/ad-hoc-declaration-first-python-interop-m15-fable-high-review-pass-7.md)
+Whole-diff agent High
+[pass 7](../../reviews/active/ad-hoc-declaration-first-python-interop-m15-agent-high-review-pass-7.md)
 verified the pass-6 major closed but found one combined lifecycle minor: full
 publication still scheduled an analysis-excluded document, whose expected
 analysis error aborted the diagnostic drain before the eligible sibling's
@@ -2296,14 +2296,14 @@ expected generated-build ignores, runtime-platform `28` variants with one
 capability-gated skip, and E2E `131/131` with signature `7c39b8c1dd4fec7c`
 and a warm `42/42` cache. Every per-step blocking budget passes; overall warm
 wall time is the only non-blocking advisory. Another frozen whole-diff review
-remains required. Whole-diff Fable High
-[pass 8](../../reviews/active/ad-hoc-declaration-first-python-interop-m15-fable-high-review-pass-8.md)
+remains required. Whole-diff agent High
+[pass 8](../../reviews/active/ad-hoc-declaration-first-python-interop-m15-agent-high-review-pass-8.md)
 independently verified the combined publication predicate by inspection and
 mutation testing, confirmed every prior finding remains closed and both
 acceptance criteria hold, and returned **SATISFIED** with no blocker, major, or
 minor findings. M15 is closure-approved for merge.
-Frozen-ledger Fable High
-[pass 9](../../reviews/active/ad-hoc-declaration-first-python-interop-m15-fable-high-review-pass-9.md)
+Frozen-ledger agent High
+[pass 9](../../reviews/active/ad-hoc-declaration-first-python-interop-m15-agent-high-review-pass-9.md)
 confirmed the exact pushed PR head remains code-identical to the satisfied
 candidate and returned **SATISFIED**.
 
@@ -2313,8 +2313,8 @@ source inside the repository but had no package boundary, so upward discovery
 silently attached it to the complete Sifr workspace; the case reached
 `103.5 MiB` against its `80 MiB` budget after M15 correctly made configured
 package environments validate even without declarations. An attempted
-source-local Python-input shortcut passed the budget but Fable High M16
-[pass 3](../../reviews/active/ad-hoc-declaration-first-python-interop-m16-fable-high-review-pass-3.md)
+source-local Python-input shortcut passed the budget but agent High M16
+[pass 3](../../reviews/active/ad-hoc-declaration-first-python-interop-m16-agent-high-review-pass-3.md)
 proved it anti-conservative for workspace-member requirements and misplaced
 bridge roots. The shortcut is fully removed. LSP benchmarks now declare
 `isolated` or `package` workspace mode: isolated cases execute in a minimal
@@ -2326,13 +2326,13 @@ at `73.1 MiB`, preserving both timing and memory budgets without weakening the
 canonical package-resolution path. Isolated warm/cold cases use that locked
 package boundary; the didOpen diagnostics sync case deliberately retains its
 historical package-less temporary directory and no longer constructs an unused
-second package. Whole-diff Fable High
-[pass 4](../../reviews/active/ad-hoc-declaration-first-python-interop-m16-fable-high-review-pass-4.md)
+second package. Whole-diff agent High
+[pass 4](../../reviews/active/ad-hoc-declaration-first-python-interop-m16-agent-high-review-pass-4.md)
 confirmed the product shortcut was fully removed and the benchmark correction
 is deterministic with unchanged budgets, then requested the didOpen setup
 clarification and durable `workspace_mode` documentation now included in this
-merge unit. Frozen whole-diff Fable High
-[pass 5](../../reviews/active/ad-hoc-declaration-first-python-interop-m16-fable-high-review-pass-5.md)
+merge unit. Frozen whole-diff agent High
+[pass 5](../../reviews/active/ad-hoc-declaration-first-python-interop-m16-agent-high-review-pass-5.md)
 re-verified every prior finding, the complete M16 feature body, and the final
 benchmark routing at the exact pushed head, then returned **SATISFIED** with no
 blocker, major, or minor findings. The fresh authoritative merge-profile gate
@@ -2342,8 +2342,8 @@ performance `8/8`, runtime-platform `30` variants with three capability/tooling
 skips, E2E `674/674` with signature `1f8b1cadc4f48ec8`, and hardening `261`
 variants with zero failures. The cold E2E cache (`0/178`), aggregate warm
 wall-time, and group-skew notices are non-blocking advisories; every lane and
-blocking budget passes. Frozen-ledger Fable High
-[pass 6](../../reviews/active/ad-hoc-declaration-first-python-interop-m16-fable-high-review-pass-6.md)
+blocking budget passes. Frozen-ledger agent High
+[pass 6](../../reviews/active/ad-hoc-declaration-first-python-interop-m16-agent-high-review-pass-6.md)
 reconciled every count, timing, signature, skip, and advisory against the gate
 report, confirmed the post-gate diff is ledger-only, rechecked the complete
 implementation, and returned **SATISFIED** with no findings. M16 is
@@ -2404,13 +2404,13 @@ owners. The authoritative create-PR gate also passes every blocking lane,
 including Python interop `19/19`, the core-language E2E suite `131/131`, and all
 crate, guardrail, diagnostics, tooling, runtime, and generated-code checks. Its
 only advisory is the aggregate warm wall-time target; every blocking per-step
-budget passes. Fable High whole-diff review pass 1 found two minor closure
+budget passes. agent High whole-diff review pass 1 found two minor closure
 defects: polluted async-negative fixtures and a stale architecture status
 paragraph. Both are remediated with exact single-diagnostic checks and the M16
-architecture contract update. Fresh Fable High whole-diff review pass 2 is
+architecture contract update. Fresh agent High whole-diff review pass 2 is
 satisfied with no findings after independently rerunning the native package,
 runtime, demo, diagnostic, and guardrail evidence. The authoritative merge gate
-then exposed the inherited benchmark-scope defect recorded above. Fable High
+then exposed the inherited benchmark-scope defect recorded above. agent High
 pass 3 rejected the first shortcut remediation with two major false negatives;
 canonical resolution is restored, both findings have discriminating regressions,
 and benchmark workspace mode is now explicit. The full representative suite
@@ -2476,7 +2476,7 @@ notice is advisory. All eleven inventoried ordinary examples now execute typed
 declarations backed by package-local hermetic bridges, and the shared runner
 records `compiled-sifr-declaration` evidence while rejecting raw API imports.
 
-Fable High review pass 1 confirmed that all eleven migrations are faithful,
+agent High review pass 1 confirmed that all eleven migrations are faithful,
 deterministic, hermetic, and leak-checked, but returned `NOT SATISFIED` because
 the initial raw-symbol denylist missed `from_value`/`to_value`, method-style raw
 calls, `sifr.python_core`, module imports, and legal whitespace/continuation
@@ -2493,7 +2493,7 @@ signature `7c39b8c1dd4fec7c`, runtime-platform `28` variants with zero failures
 and one declared capability skip, and hardening `6/6`. All per-step blocking
 budgets pass; the warm wall-time notice remains advisory.
 
-Fable High review pass 2 independently re-ran the runner self-test, exercised
+agent High review pass 2 independently re-ran the runner self-test, exercised
 roughly forty adversarial import forms, compiled the remaining theoretical
 bypass candidates against the actual Sifr import policy, and rechecked every
 migration, bridge, marker, and resource assertion. It returned `SATISFIED` with
@@ -2522,8 +2522,8 @@ Python interop `19/19`, create-PR E2E `131/131` with signature
 declared capability skip, and hardening `6/6`. Every per-step blocking budget
 passes; only the aggregate warm wall-time target is advisory.
 
-Whole-diff Fable High
-[review pass 1](../../reviews/active/ad-hoc-declaration-first-python-interop-m17-wave2-fable-high-review-pass-1.md)
+Whole-diff agent High
+[review pass 1](../../reviews/active/ad-hoc-declaration-first-python-interop-m17-wave2-agent-high-review-pass-1.md)
 independently rebuilt and SHA-256 hashed all six binaries, reproduced the six
 Docker-unavailable structured skips, and directly ran the Redis binary against
 an unreachable endpoint to prove embedded-bridge execution, typed error
@@ -2566,8 +2566,8 @@ complete with seven passing capabilities, ten compiled evidence records, and
 four resource-zero records. Every per-step blocking budget passes; only the
 aggregate warm wall-time target is advisory.
 
-Whole-diff Fable High
-[review pass 1](../../reviews/active/ad-hoc-declaration-first-python-interop-m17-wave3-fable-high-review-pass-1.md)
+Whole-diff agent High
+[review pass 1](../../reviews/active/ad-hoc-declaration-first-python-interop-m17-wave3-agent-high-review-pass-1.md)
 confirmed the current-run freshness mechanism, all ten exact bindings, the
 adversarial ledger coverage, and the declaration-first documentation, but
 returned **NOT SATISFIED** with three actionable hardening minors. The
@@ -2583,8 +2583,8 @@ signature `7c39b8c1dd4fec7c`, runtime-platform `28` variants with zero failures
 and one declared capability skip, and hardening `6/6`. All per-step blocking
 budgets pass; the aggregate warm wall-time target remains advisory.
 
-Whole-diff Fable High
-[review pass 2](../../reviews/active/ad-hoc-declaration-first-python-interop-m17-wave3-fable-high-review-pass-2.md)
+Whole-diff agent High
+[review pass 2](../../reviews/active/ad-hoc-declaration-first-python-interop-m17-wave3-agent-high-review-pass-2.md)
 verified all three pass-1 findings closed, then found one remaining
 freshness-chain minor: manifest suite names and command report targets were not
 bound for three owning suites. The ledger now requires every selected owning
@@ -2594,8 +2594,8 @@ argument and proves rejection with `invocation drift`; the exact importlib path,
 runner foundation, and full five-suite `7/10/4` demo pass after remediation.
 
 The first attempted third review exited without a verdict and is not counted as
-closure evidence. The replacement whole-diff Fable High
-[satisfaction pass](../../reviews/active/ad-hoc-declaration-first-python-interop-m17-wave3-fable-high-review-pass-4.md)
+closure evidence. The replacement whole-diff agent High
+[satisfaction pass](../../reviews/active/ad-hoc-declaration-first-python-interop-m17-wave3-agent-high-review-pass-4.md)
 re-probed correct, wrong-suite, extra-report, missing-report, dangling-report,
 empty-case, and malformed-argument forms; it verified every drifted form fails
 before report loading, rescanned the whole milestone, and returned
@@ -2617,8 +2617,8 @@ diagnostic, regression, and ecosystem checks all pass. The aggregate warm-time
 and group-skew notices are non-blocking advisories; the gate exits successfully.
 Whole-phase review and closure-PR merge remain before Wave 4 is complete.
 
-Whole-phase Fable High
-[review pass 1](../../reviews/active/ad-hoc-declaration-first-python-interop-phase-closure-fable-high-review-pass-1.md)
+Whole-phase agent High
+[review pass 1](../../reviews/active/ad-hoc-declaration-first-python-interop-phase-closure-agent-high-review-pass-1.md)
 then exercised the complete M0-M17
 implementation and found one blocker plus seven major findings across stub-body
 validation, callback reentrancy, async error replay, cleanup-capable captures,
@@ -2636,8 +2636,8 @@ failures and one declared capability skip, and hardening `6/6`. Every blocking
 step budget passes; only the aggregate warm-wall target is advisory. A fresh
 whole-phase satisfaction review remains required.
 
-Whole-phase Fable High
-[review pass 2](../../reviews/active/ad-hoc-declaration-first-python-interop-phase-closure-fable-high-review-pass-2.md)
+Whole-phase agent High
+[review pass 2](../../reviews/active/ad-hoc-declaration-first-python-interop-phase-closure-agent-high-review-pass-2.md)
 verified the pass-1 blocker and all seven major findings closed, then found one
 nested-declaration blocker, four new majors, and ten actionable minors. Their
 compiler, runtime, binding-authoring, diagnostic, evidence, and documentation
@@ -2649,10 +2649,10 @@ passes; only the aggregate warm-wall target is advisory. A fresh whole-phase
 review of the committed remediation and an exact-tree authoritative merge gate
 remain required.
 
-Whole-phase Fable High
-[review pass 3](../../reviews/active/ad-hoc-declaration-first-python-interop-phase-closure-fable-high-review-pass-3.md)
+Whole-phase agent High
+[review pass 3](../../reviews/active/ad-hoc-declaration-first-python-interop-phase-closure-agent-high-review-pass-3.md)
 and its requested self-contained replacement
-[review pass 4](../../reviews/active/ad-hoc-declaration-first-python-interop-phase-closure-fable-high-review-pass-4.md)
+[review pass 4](../../reviews/active/ad-hoc-declaration-first-python-interop-phase-closure-agent-high-review-pass-4.md)
 both exited with incomplete interim reports and therefore are not satisfaction
 evidence. They independently confirmed two residuals: canonical worker-error
 identity was still missing from the structured-scope and join-set CPU-offload
@@ -2667,8 +2667,8 @@ with zero failures and one declared capability skip, hardening `6/6`, and E2E
 passes; only the aggregate warm-wall target is advisory. A complete fresh
 whole-phase satisfaction review remains required.
 
-Whole-phase Fable High
-[review pass 5](../../reviews/active/ad-hoc-declaration-first-python-interop-phase-closure-fable-high-review-pass-5.md)
+Whole-phase agent High
+[review pass 5](../../reviews/active/ad-hoc-declaration-first-python-interop-phase-closure-agent-high-review-pass-5.md)
 verified every pass-2 and pass-3/pass-4 finding closed, live-reproduced wrapped
 and indexed Python-rooted decorator rejection across module, method, class, and
 nested surfaces, confirmed canonical CPU-offload error identities and sync/async
@@ -2683,8 +2683,8 @@ structured task-call lowering. The focused IR helper test and the complete
 emitted-pass-fixture safety test pass after remediation. The fresh review and
 exact-tree merge gate that followed are recorded below.
 
-Whole-phase Fable High
-[review pass 6](../../reviews/active/ad-hoc-declaration-first-python-interop-phase-closure-fable-high-review-pass-6.md)
+Whole-phase agent High
+[review pass 6](../../reviews/active/ad-hoc-declaration-first-python-interop-phase-closure-agent-high-review-pass-6.md)
 exhaustively enumerated every reachable dynamic `RustExpr::Ident` construction,
 confirmed every plain and namespaced call target is now represented structurally,
 ran live synchronous, asynchronous, timeout, and structured-task probes, and
@@ -2792,18 +2792,18 @@ architecture in this phase.
 
 Review artifacts:
 
-- `plans/reviews/active/ad-hoc-declaration-first-python-interop-opus-review-pass-1.md`
-- `plans/reviews/active/ad-hoc-declaration-first-python-interop-opus-review-pass-2.md`
-- `plans/reviews/active/ad-hoc-declaration-first-python-interop-opus-review-pass-3.md`
-- `plans/reviews/active/ad-hoc-declaration-first-python-interop-fable-review-final.md`
-- `plans/reviews/active/ad-hoc-declaration-first-python-interop-complete-opus-high-pass-1.md`
-- `plans/reviews/active/ad-hoc-declaration-first-python-interop-complete-opus-high-pass-2.md`
-- `plans/reviews/active/ad-hoc-declaration-first-python-interop-complete-opus-high-pass-3.md`
-- `plans/reviews/active/ad-hoc-declaration-first-python-interop-complete-opus-high-pass-4.md`
-- `plans/reviews/active/ad-hoc-declaration-first-python-interop-complete-opus-high-pass-5.md`
-- `plans/reviews/active/ad-hoc-declaration-first-python-interop-complete-fable-high-final.md`
+- `plans/reviews/active/ad-hoc-declaration-first-python-interop-agent-review-pass-1.md`
+- `plans/reviews/active/ad-hoc-declaration-first-python-interop-agent-review-pass-2.md`
+- `plans/reviews/active/ad-hoc-declaration-first-python-interop-agent-review-pass-3.md`
+- `plans/reviews/active/ad-hoc-declaration-first-python-interop-agent-review-final.md`
+- `plans/reviews/active/ad-hoc-declaration-first-python-interop-complete-agent-high-pass-1.md`
+- `plans/reviews/active/ad-hoc-declaration-first-python-interop-complete-agent-high-pass-2.md`
+- `plans/reviews/active/ad-hoc-declaration-first-python-interop-complete-agent-high-pass-3.md`
+- `plans/reviews/active/ad-hoc-declaration-first-python-interop-complete-agent-high-pass-4.md`
+- `plans/reviews/active/ad-hoc-declaration-first-python-interop-complete-agent-high-pass-5.md`
+- `plans/reviews/active/ad-hoc-declaration-first-python-interop-complete-agent-high-final.md`
 
-Complete-architecture Opus High pass 1 requested changes. It found undefined
+Complete-architecture agent High pass 1 requested changes. It found undefined
 Python exit-cause/suppression semantics, live-exception replay, Arrow evidence
 authoring, async effect sealing, record-expansion ambiguity, DLPack stream
 provenance, raw async-path duplication, callback concurrency, requirement
@@ -2827,7 +2827,7 @@ stream rule, and the async interop effect/`Bodyless` rule explicitly covers
 coroutines, async contexts, and asyncio-dispatched callback handlers.
 Complete-architecture pass 5 rechecked those refinements and the complete
 constraint set, found no actionable issue, and approved the design.
-The final independent Fable High audit re-grounded the design against the
+The final independent agent High audit re-grounded the design against the
 repository and protocol specifications, found no blocker, and approved with
 eight non-blocking precision refinements. Those refinements now close DLPack
 failed-transfer cleanup, entered-object cleanup eligibility, non-`Self`

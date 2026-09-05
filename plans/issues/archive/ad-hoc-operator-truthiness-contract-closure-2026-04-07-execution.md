@@ -22,7 +22,7 @@ Owning phase doc: `issues/ad-hoc-operator-truthiness-contract-closure-2026-04-07
   - disallowed bucket-shift-only closure
   - added regression gates for likely receiving categories
 - 2026-04-07: requested reviewer pass2 on revised phase doc.
-- 2026-04-07: reviewer pass2 via Claude CLI returned `NOT READY` with 3 blockers:
+- 2026-04-07: reviewer pass2 via agent CLI returned `NOT READY` with 3 blockers:
   - missing independent pass2 validation artifact
   - unresolved explicit scope-decision rationale for `0973`/`1514`
   - missing baseline targeted-check evidence linkage

@@ -1,0 +1,58 @@
+All verification is complete. Here is the review.
+
+---
+
+# M16 Frozen Whole-Diff Review — Raw API Ergonomics On Shared Ownership (Pass 2)
+
+**Reviewer:** Independent milestone-closure review (agent High, fresh pass)
+**Range:** `3f974f33b` → `e3377da62` (`feat(python): add typed raw API ergonomics` + `fix(python): address M16 review findings`), PR #2996
+**Scope reviewed:** the entire 51-file diff (+1190/−86) read end to end, plus surrounding sources in `sifr_lowering` (method-call lowering, direct validation, workload annotations, return lowering, regular calls), `sifr_codegen` (declaration converters, runtime exprs, intrinsic registry, emitter macros), `sifr_runtime` (coroutine ops, async runtime, recursive ops), `sifr_stdlib` (object bridge), `sifr_type_system` (sealed contracts, `FunctionType::all_borrow`), `sifr_sysroot`, the plan invariants and M16 section of `plans/issues/active/ad-hoc-declaration-first-python-interop.md`, `internal_docs/architecture.md`, both guardrail TOML inventories, verification metadata/runner, public docs, and the demo. The pass-1 review was read and its findings re-verified against source and behavior, not taken on trust.
+
+## Pass-1 remediation verification
+
+Both pass-1 findings are correctly and completely remediated in `e3377da62`:
+
+- **MINOR-1 (polluted async fail fixtures).** Both fixtures now drop the nonexistent `from sifr.task import sleep` and use the canonical `await task.sleep(0.0)` (`crates/sifr/tests/e2e/fail/python_raw_object_method_requires_offload.sifr:5`, `python_raw_typed_conversion_requires_offload.sifr:5`), exactly as prescribed. I independently compiled both at HEAD: each emits **exactly one** diagnostic — the annotated `SIFR-ASYNC-0003` — at the exact annotated span (e.g. `python_raw_object_method_requires_offload.sifr:7:18` on `get_attr`). No `SIFR-NAME-0004`/`SIFR-NAME-0002` pollution remains.
+- **MINOR-2 (stale architecture status).** `internal_docs/architecture.md:54` now carries the M16 contract sentences: typed `from_value`/`to_value`/`kwarg` through the same declaration conversion authority, compiler-known checked `Object.get_attr`/`get_item`/`call`/`call_method` on the canonical sealed object, ordinary automatic raw-object release, and raw coroutine submission to the application-owned loop. The wording matches the shipped behavior I verified below; the change is documentation-only, inserted at the position pass-1 prescribed.
+
+The remediation commit also updates the M16 status paragraph in the issue plan and checks in the pass-1 review artifact — both appropriate closure bookkeeping.
+
+## Independent verification performed at HEAD (read-only + local tooling)
+
+- Rebuilt the compiler at `e3377da62` and compiled all three fail fixtures: `python_raw_unsupported_generic_conversion.sifr` emits exactly one `SIFR-PYCONV-0001` ("`set[int]` is not in the declaration conversion set"); both async fixtures emit exactly one `SIFR-ASYNC-0003` each, at the annotated lines.
+- Compiled `verification/areas/python_interop/fixtures/primitive_conversion/raw_typed_ergonomics.sifr` — clean, no diagnostics.
+- Edge probes: unannotated `to_value` (unbound `T`) → `SIFR-PYCONV-0001`, never silently untyped; `kwarg` with `set[int]` and `from_value` with `dict[int, str]` → `SIFR-PYCONV-0001` with precise type names; raw `Object` method without the `PythonError` import → the new guidance diagnostic; `f = from_value` (first-class intrinsic reference) → rejected by the pre-existing `SIFR-TYPE-0012` direct-call-only rule, so no validation bypass exists.
+- Ran the runtime suites with `--features python`: raw coroutine **4/4** (owned-loop identity, concurrency, new checked Python-failure test, shutdown cancellation/join), owned-loop async runtime **14/14**, object-ops **6/6** including the new dict-mapping-key regression.
+- Ran the new driver frontend test `test_raw_python_generic_conversion_and_object_methods_share_runtime_bridge` — passes; generated Rust reuses `from_str`, `py_call_attr_keyed`, and `__sifr_declaration_object_result`.
+- Ran **both ignored end-to-end package tests** against local CPython: `typed_raw_api_builds_runs_and_releases_ordinary_objects` (16.2s) and `raw_coroutine_api_builds_and_runs_on_the_owned_loop` (15.8s) — both build native binaries, run them, and pass, including the `live_objects` before/after equality assertions and the `:released` stdout markers.
+- Ran the demo (`demos/m16_raw_api/run.sh`) — it completes with exactly the README-documented output `Python raw API demo: SIFR:9:resources=zero`.
+- Guardrails: `check_hir_maintainability_guardrails.py` PASS; `check_stdlib_manifest_schema.py` PASS (12 surfaces); `check_stdlib_native_intrinsic_allowlist.py` PASS (20 exact intrinsics); `check_stdlib_native_adapter_reachability.py` PASS; `cargo fmt --check` clean; all touched hand-maintained files under the 900-line cap (largest: `methods_lambdas_and_comprehensions.rs` at 864, *reduced* by this diff via the `method_call_arguments` extraction); all three changed verification JSON files parse.
+
+## Invariant assessment (verified against source at HEAD)
+
+- **One conversion authority, no second model.** Lowering validates `from_value`/`kwarg` argument types and the `to_value` ok-type through the exact declaration predicate `is_direct_type` (`crates/sifr_lowering/src/lower/python_interop/direct_validation.rs:9-38`, delegating to `python_interop.rs:688`), whose accepted set (primitives, sealed `Object`, opaque declarations, non-error closed records, lists, tuples, `dict[str, T]`, two-variant options) is precisely what `docs/python-interop.mdx` documents. Codegen (`crates/sifr_codegen/src/python_raw_api_codegen.rs`) generates exclusively through the existing declaration converters `input_conversion`/`output_value_expr` and the runtime helpers `__sifr_declaration_object_argument`/`__sifr_declaration_object_result` — no parallel converter, no new runtime type. The intrinsic registry entries are `(None, None)` so no alternate lowering exists (`crates/sifr_codegen/src/intrinsics/registry.rs:76-78`).
+- **One sealed identity, no exposed handles.** Method-style ops gate on `is_python_object_contract()` (exact identity `_sifr.python.Object`, `crates/sifr_type_system/src/types/python_interop.rs:37`); the four raw methods are a closed compiler-known set (`python_raw_object_methods.rs:59-61`); `kwarg` erases only to the existing `(str, Object)` tuple; the new `py_call_keyed`/`py_call_attr_keyed` adapters (`crates/sifr_stdlib/src/python/object_bridge.rs:132-172`) reuse `python::call_object`/`call_attr` over the same tracked handle store as every prior path, following the exact clone pattern of the pre-existing `py_call`/`py_call_attr`.
+- **Checked errors, five-field contract.** All new surfaces return `Result[…, PythonError]`; codegen maps runtime errors through `bridge_error_expr`; the raw method surface hard-requires the validated `PythonError` contract (`is_python_error_contract`, all five `str` fields) at compile time with actionable guidance when missing. No generated `.unwrap()` on data-dependent paths (the only `unwrap` in the reused converter is `is_some`-guarded, pre-existing declaration behavior).
+- **Ownership and cleanup equivalence.** Raw methods lower as `FunctionType::all_borrow` signatures; codegen passes receivers and arguments by `&`; ordinary automatic drop applies. Verified end to end: both package tests assert `live_objects` equality across success *and* handled-error exits, and the owned-loop test's manual close chain was replaced with automatic release plus a strengthened `:released` assertion.
+- **Owned loop, no per-call loop.** `run_coroutine_blocking` routes through `async_runtime::ensure_started` and the shared submission path (`crates/sifr_runtime/src/python/coroutine_ops.rs:4-11`); success, Python failure (new test), concurrency, cancellation, and shutdown are all covered and pass locally.
+- **Async blocking effects.** The stdlib intrinsics carry `@blocking_io` (standard `SIFR-ASYNC-0003` rejection, fixture-covered); compiler-known `Object` methods get the dedicated `reject_async_direct_raw_python_method` rejection (`workload_annotations.rs:132-150`), fired from `for_call` before lowering, fixture-covered.
+- **Root-cause fixes, not shims.** The `record_field` dict-branch fix (`recursive_ops.rs:154-176`) makes mapping keys win over dict attribute names like `.values` at the runtime root, with a targeted regression test; missing keys produce the exact `missing required record field` conversion error. The Result-ok type-var fallback (`regular_calls.rs:484-489`) and return-position contextual typing (`return_lowering.rs:54-60`) are general, guarded inference improvements — both are exercised by the full E2E gate (131/131 core, 537 fail fixtures) with no regressions.
+- **Guardrails, metadata, docs, demo.** The retained-intrinsics inventory adds the `sifr.python::typed_raw_api` surface covering exactly the three intrinsics; the adapter-reachability inventory covers both keyed adapters with their real consumer file; the capability row upgrades raw-api evidence to concrete named owners including a now-required passing cancellation row (I ran those suites); `docs/python-interop.mdx` accurately describes the closed conversion set, automatic release, and owned-loop coroutines; the demo's asserted and printed output matches its README.
+
+## Findings
+
+None. No BLOCKER, MAJOR, or MINOR findings remain.
+
+## Non-findings (observations, no action required)
+
+- When raw `Object` methods are used without importing `PythonError`, the actionable guidance diagnostic is accompanied by a `SIFR-CLASS-0004` follow-on ("class 'Object' has no method 'get_attr'"). Cascades after a primary hard error are established compiler behavior on erroneous programs (the same pattern pass-1 documented for name-resolution errors), the guidance names the exact fix, and this scenario is not a claimed capability row; not actionable for M16 closure.
+- Duplicate keyword names in raw `call`/`call_method` kwargs resolve last-wins via dict construction — pre-existing raw-path semantics identical to `py_call`, not introduced or worsened here (carried over from pass-1's observation; re-confirmed against `object_bridge.rs`).
+- `raw_typed_ergonomics.sifr` is presence-checked by the interop scaffold (`runner/run.py:134`) with the executable positive owned by the driver package test — the established pattern for every `REQUIRED_SOURCE_FIXTURES` entry; I confirmed both the clean compile and the executable owner passing at HEAD.
+- The M16 milestone checkbox in the plan's milestone list remains unchecked, correctly: Wave 5 closes only after this review and merge. (The plan's M15 checkbox is also unchecked despite M15 being merged — a pre-existing tracking artifact untouched by this diff, out of M16 scope.)
+- The release-profile binary requires `SIFR_SYSROOT` (or an installed layout) because source-tree sysroot discovery is development-gated — pre-existing tooling behavior in `sifr_sysroot`, unrelated to this diff.
+
+## Verdict
+
+Both pass-1 findings are precisely remediated and independently re-verified at the frozen head. The fresh whole-diff inspection and full local re-execution — single conversion authority, sealed identity, checked five-field errors, automatic-release/cleanup equivalence proven end to end in compiled binaries, owned-loop raw coroutines across success/failure/concurrency/cancellation/shutdown, exact single-diagnostic negative fixtures, guardrail inventories, certification metadata, public docs, and the runnable demo — surface no remaining actionable defect at any severity.
+
+VERDICT: SATISFIED

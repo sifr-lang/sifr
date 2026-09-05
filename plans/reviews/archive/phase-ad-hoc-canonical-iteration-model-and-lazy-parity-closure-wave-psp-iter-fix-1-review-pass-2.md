@@ -168,7 +168,7 @@ The implementation correctly enforces the locked contract from `wave_psp_iter_fi
 
 ## Review Metadata
 
-- **Reviewer**: Claude Code
+- **Reviewer**: agent
 - **Review pass**: 2 (production-grade check)
 - **Files examined**:
   - `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md`

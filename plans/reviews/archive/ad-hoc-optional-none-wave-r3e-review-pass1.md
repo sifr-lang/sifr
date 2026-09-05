@@ -23,7 +23,7 @@ Do not add unsound cross-loop dict key-presence propagation or corpus-shaped mat
 
 ## Capture Note
 
-This review was executed via `.cursor/skills/talk-to-claude/SKILL.md`.
-Claude could not persist the requested output file directly because of its session write policy, so this artifact records the reviewer output recovered from:
+This review was executed via `agent review`.
+agent could not persist the requested output file directly because of its session write policy, so this artifact records the reviewer output recovered from:
 
-- `${TMPDIR}/claude-resume-to-desktop-8e3bff74-de0d-4053-8201-aee7442cdd3a.log`
+- `${TMPDIR}/agent-resume-to-desktop-8e3bff74-de0d-4053-8201-aee7442cdd3a.log`

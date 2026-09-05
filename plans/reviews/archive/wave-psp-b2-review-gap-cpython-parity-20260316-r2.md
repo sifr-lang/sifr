@@ -3,7 +3,7 @@
 **Review Date:** 2026-03-16
 **Branch:** codex/python-builtin-std-parity-wave-e2
 **Status:** done (execution ledger)
-**Reviewer:** Claude (Codex)
+**Reviewer:** agent (agent)
 
 ---
 

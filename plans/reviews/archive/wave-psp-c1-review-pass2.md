@@ -1,7 +1,7 @@
 # wave_psp_c1 Review - Pass 2
 
 **Phase**: Structured Parsing and Serialization
-**Reviewer**: Claude Code
+**Reviewer**: agent
 **Date**: 2026-03-16
 
 ## Executive Summary

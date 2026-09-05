@@ -10,12 +10,12 @@ Implementation completed across six reviewed milestones. M1 routes runtime diagn
 private `sifr_stdlib` boundary and is merged in
 [PR #2921](https://github.com/sifr-lang/sifr/pull/2921) after focused
 production-path check/emit/build/run coverage, the create-PR gate, and two
-satisfied Claude Opus review rounds. M2 makes production dependency plans the
+satisfied agent review rounds. M2 makes production dependency plans the
 only E2E dependency authority and is merged in
 [PR #2922](https://github.com/sifr-lang/sifr/pull/2922). Its checked former-rule
 inventory is recorded in
 [`ad-hoc-stdlib-compiler-boundary-m2-inventory.md`](ad-hoc-stdlib-compiler-boundary-m2-inventory.md).
-The implementation has passed three Claude Opus rounds: pass 1 was satisfied,
+The implementation has passed three agent rounds: pass 1 was satisfied,
 pass 2 found and blocked on the 900-line file-size guard, and pass 3 was
 satisfied after responsibility-based cache extraction. The M2 create-PR gate
 passed with every blocking lane green, including
@@ -25,13 +25,13 @@ source-declared retained callables and is merged in
 [PR #2923](https://github.com/sifr-lang/sifr/pull/2923). Its create-PR gate
 passed with crate tests at 130,922 ms / 600,000 ms, runtime-platform suites at
 59,782 ms / 120,000 ms, and 129/129 selected E2E fixtures at
-402,726 ms / 600,000 ms. Three Claude Opus review rounds were satisfied; the
+402,726 ms / 600,000 ms. Three agent review rounds were satisfied; the
 final round verified the local-shadowing correction raised during round 2.
 M4 deletes the dead JSON Counter and serialized defaultdict bridge residue and
 is merged in [PR #2924](https://github.com/sifr-lang/sifr/pull/2924). Its
 create-PR gate passed with crate tests at 126,439 ms / 600,000 ms,
 runtime-platform suites at 58,139 ms / 120,000 ms, and 130/130 selected E2E
-fixtures at 31,402 ms / 600,000 ms. Two Claude Opus review rounds were
+fixtures at 31,402 ms / 600,000 ms. Two agent review rounds were
 satisfied; the final round confirmed restored nested structured-intrinsic
 coverage with retained IDs.
 M5 deletes the fallback-signature crate and every missing-declaration recovery
@@ -43,7 +43,7 @@ permanent guards rejecting restoration of the crate, APIs, placeholders,
 configuration, or manifest schema. The create-PR gate passed with crate tests
 at 163,565 ms / 600,000 ms, runtime-platform suites at
 56,958 ms / 120,000 ms, and 130/130 selected E2E fixtures at
-383,025 ms / 600,000 ms. Two Claude Opus review rounds ended `SATISFIED`; the
+383,025 ms / 600,000 ms. Two agent review rounds ended `SATISFIED`; the
 complete second review reported no findings.
 
 M6 is merged in [PR #2927](https://github.com/sifr-lang/sifr/pull/2927) at
@@ -55,7 +55,7 @@ HIR, dispatch, lowering, codegen, and dependency-feature representations
 exactly; and reject the required negative restorations. The installed and
 source-tree boundary fixture passes with identical behavior and the reviewed
 `sifr_stdlib[bytes]` generated dependency plan. The create-PR gate passes, and
-two Claude Opus milestone review rounds ended `SATISFIED`; the second reported
+two agent milestone review rounds ended `SATISFIED`; the second reported
 no blockers or optional cleanups. Three phase-wide implementation closeout
 review rounds also ended `SATISFIED`; the third reported no remaining issue.
 Two additional corrective closeout reviews ended `SATISFIED` after the final

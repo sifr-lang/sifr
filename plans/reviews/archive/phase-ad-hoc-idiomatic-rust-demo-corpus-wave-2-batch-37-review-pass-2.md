@@ -5,7 +5,7 @@
   - `demos/owned_mutation_parameters_part2/idiomatic.rs`
   - `demos/subscript_mutation/idiomatic.rs`
 - Review method:
-  - External production-grade `claude -p` review run per file.
+  - External production-grade `agent review` review run per file.
   - Prompts were short, behavior-driven, and constrained to a one-line verdict for transport stability.
 
 ### Results

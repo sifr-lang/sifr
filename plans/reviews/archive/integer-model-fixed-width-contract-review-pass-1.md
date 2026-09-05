@@ -1,6 +1,6 @@
 # Review: Ad-Hoc Phase — Integer Model and Fixed-Width Numeric Contract (Pass 1)
 
-Reviewer: Claude Opus 4.7
+Reviewer: agent
 Date: 2026-05-05
 Source: `issues/ad-hoc-integer-model-and-fixed-width-numeric-contract.md`
 

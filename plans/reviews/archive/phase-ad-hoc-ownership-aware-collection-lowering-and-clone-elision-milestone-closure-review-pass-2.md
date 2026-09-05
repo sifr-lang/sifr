@@ -4,7 +4,7 @@
 **Date**: 2026-03-21
 **Phase**: `issues/ad-hoc-ownership-aware-collection-lowering-and-clone-elision.md`
 **Scope**: Milestone-level production-grade readiness after pass-1 milestone-closure actions applied
-**Reviewer**: Claude (external review, pass 2)
+**Reviewer**: agent (external review, pass 2)
 **Commit**: `18784973` — "wave_clone milestone closure: record pass 1 (#1407)"
 **Preceding pass**: `phase-ad-hoc-ownership-aware-collection-lowering-and-clone-elision-milestone-closure-review-pass-1.md`
 

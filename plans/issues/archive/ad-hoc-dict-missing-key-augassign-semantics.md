@@ -75,13 +75,13 @@ returning a wrong value violated Sifr's correctness guarantee.
 
 ## Review Evidence
 
-- [Opus round 1](https://github.com/sifr-lang/sifr/pull/3108#issuecomment-5225915101)
+- [agent round 1](https://github.com/sifr-lang/sifr/pull/3108#issuecomment-5225915101)
   rejected candidate `5742d265a5abdb6a35d1c0460147c58950424bf0`
   because unconditional missing-key effects regressed the guarded pinned
   LeetCode 0438 fixture.
 - Commit `b341b47f9f8e81baa0d7403979eb6551886e5568` added exact-key membership and
   prior-write flow suppression plus focused regressions.
-- [Opus round 2](https://github.com/sifr-lang/sifr/pull/3108#issuecomment-5225915170)
+- [agent round 2](https://github.com/sifr-lang/sifr/pull/3108#issuecomment-5225915170)
   reviewed the complete original-base-to-final-candidate implementation and
   returned `SATISFIED` with no blocking findings.
 - The [final validation note](https://github.com/sifr-lang/sifr/pull/3108#issuecomment-5225972801)

@@ -19,7 +19,7 @@ The only state changes are scoped to the generated dependency and panic/emitted-
 - PR URL `https://github.com/sifr-lang/sifr/pull/2482` ✓
 - Merge commit `727f234511427e4dafa1644b39af4712a9a8c30b` exists in `git log` with subject "Add M7 generated dependency evidence" ✓
 - Timestamp `2026-06-09T05:37:13Z` matches the commit's `2026-06-09 07:37:13 +0200` (CEST = UTC+2) exactly ✓
-- Scope wording is restricted to generated dependency snapshots + integration test, generated-code quality manifest coverage for the seven required demos, the generated parallel `try_map` bound cleanup, the M7 traceability flip for generated dependency and panic/emitted-code quality coverage, validation evidence, and the Opus review artifact — no claim of validation-lane, inventory-closure, or final-review work.
+- Scope wording is restricted to generated dependency snapshots + integration test, generated-code quality manifest coverage for the seven required demos, the generated parallel `try_map` bound cleanup, the M7 traceability flip for generated dependency and panic/emitted-code quality coverage, validation evidence, and the agent review artifact — no claim of validation-lane, inventory-closure, or final-review work.
 
 **5. Docs-only validation wording — present and verified.**
 - Ledger records `Merge-ledger validation: docs-only ledger update; git diff --check -> PASS; python3 scripts/check_file_size_guardrails.py -> PASS.`

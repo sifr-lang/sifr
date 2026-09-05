@@ -93,8 +93,8 @@ The test would now fail if B2 regressed. Evidence binding is genuine.
 
 **Must also stage** the three review docs the issue-doc hunk links, all currently untracked with content: `rust-interop-certification-10-review-round-4.md` (5.5 KB), `-round-5.md` (5.7 KB), `rust-interop-certification-11-review-round-1.md` (18.5 KB — the round-1 0-byte placeholder is now populated). Without them the merged doc has dead links.
 
-**Must exclude:** the `ecosystem_backend_certification` hunk at `rust_interop_compatibility_matrix.json:396-400` (preserve in worktree — I confirmed it is the *sole* reason the live checker fails, and that reverting only it yields exit 0); `editor_integrations` submodule pointer; untracked `verification/areas/algorithmic_compatibility/corpora/leetcode`, `.cert5probe/`, `.claude/`, `"logo 06.48.53.webp"`, `"docs/logo/logo.webp 08-03-09-514.webp"`, `plans/phases/43_interoperability.md`. None touch cert-11 code, data, fixtures, or docs.
+**Must exclude:** the `ecosystem_backend_certification` hunk at `rust_interop_compatibility_matrix.json:396-400` (preserve in worktree — I confirmed it is the *sole* reason the live checker fails, and that reverting only it yields exit 0); `editor_integrations` submodule pointer; untracked `verification/areas/algorithmic_compatibility/corpora/leetcode`, `.cert5probe/`, `.agent/`, `"logo 06.48.53.webp"`, `"docs/logo/logo.webp 08-03-09-514.webp"`, `plans/phases/43_interoperability.md`. None touch cert-11 code, data, fixtures, or docs.
 
 **One item to resolve before opening the PR:** `plans/reviews/active/rust-interop-certification-11-review-round-2.md` is a 0-byte untracked placeholder. Populate it with this verdict or leave it unstaged — do not commit an empty file.
 
-The last issue-doc checkbox (`Run focused and authoritative local gates, complete Opus review rounds…, merge the PR`) is correctly still unchecked; it closes at merge.
+The last issue-doc checkbox (`Run focused and authoritative local gates, complete agent review rounds…, merge the PR`) is correctly still unchecked; it closes at merge.

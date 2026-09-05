@@ -1,6 +1,6 @@
 # Review: Ownership/Mutability Boundary Root-Cause Analysis (Pass 1)
 
-Reviewer: Claude Opus 4.6
+Reviewer: agent
 Date: 2026-04-02
 Report under review: `issues/ownership-mutability-boundary-root-cause-2026-04-02.md`
 

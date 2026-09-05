@@ -6,7 +6,7 @@ Verified each expected-state claim against the live artifacts:
 - `plans/issues/active/ad-hoc-embedded-python-interop.md:3` — "Status: complete. `milestone_py_0` through `milestone_py_12` are merged through PR #2677"
 - `plans/phases/index.md:53` — "complete (py0-py12 merged through PR #2677; py12 docs, diagnostics, reviews, and local validation complete)"
 - `plans/roadmap.md:124` — "complete for the sequence-independent embedded CPython/uv interop lane; py0-py12 are merged through PR #2677..."
-- `verification/python_interop/reports/python_interop_exit_evidence.md:3` — "Status: documentation, evidence, Opus sign-offs, and local validation are complete. PR #2677 merged on 2026-06-19."
+- `verification/python_interop/reports/python_interop_exit_evidence.md:3` — "Status: documentation, evidence, agent sign-offs, and local validation are complete. PR #2677 merged on 2026-06-19."
 
 **PR mapping**
 - Issue tracker `:20` and exit evidence `:97` both record `milestone_py_1` merged via PR #2666.

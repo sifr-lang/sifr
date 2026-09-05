@@ -151,7 +151,7 @@ The following fractures are documented but NOT fixed in wave 0 (by design):
 
 ## Review Metadata
 
-- **Reviewer**: Claude Code
+- **Reviewer**: agent
 - **Review pass**: 2 (production-grade check)
 - **Files examined**:
   - `issues/ad-hoc-canonical-iteration-model-and-lazy-parity-closure.md`

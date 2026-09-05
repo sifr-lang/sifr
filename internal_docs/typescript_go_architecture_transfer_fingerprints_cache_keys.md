@@ -95,4 +95,4 @@ cache-key identity focused validation so far:
 - `scripts/run_all_tests.sh --profile create-pr` -> PASS, report
   `target/validation_lane_reports/create-pr.latest.json`, wall time 338.91s,
   advisories: warm wall-time budget exceeded; group skew is high
-- Claude reviewer pass 7 -> SATISFIED
+- agent reviewer pass 7 -> SATISFIED

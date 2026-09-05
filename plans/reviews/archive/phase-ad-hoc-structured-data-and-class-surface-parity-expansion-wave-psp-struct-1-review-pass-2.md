@@ -2,7 +2,7 @@
 
 **Phase**: `ad-hoc-structured-data-and-class-surface-parity-expansion`
 **Wave**: `wave_psp_struct_1` - Parser and Serialization Surface Expansion
-**Reviewer**: Claude
+**Reviewer**: agent
 **Date**: 2026-03-18
 **Status**: **APPROVED FOR PRODUCTION**
 

@@ -2,7 +2,7 @@
 
 Date: 2026-07-28
 
-Reviewer: Claude Opus 5 (`--effort medium`)
+Reviewer: agent (`--effort medium`)
 
 Reviewed head: `f4403d144`
 

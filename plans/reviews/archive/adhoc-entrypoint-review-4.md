@@ -1,7 +1,7 @@
 # Ad Hoc Phase Review 4: Entrypoint Compilation Unification — Architecture Gap Analysis
 
 **Review Date:** 2026-03-10
-**Reviewer:** Claude Code
+**Reviewer:** agent
 **Focus:** Remaining branch in rooted_entrypoint.rs and codegen reuse adequacy
 
 ---

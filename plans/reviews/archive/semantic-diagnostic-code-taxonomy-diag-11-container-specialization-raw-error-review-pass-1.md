@@ -1,4 +1,4 @@
-# Claude Review: milestone_diag_11 container-specialization raw HIR diagnostic migration
+# agent Review: milestone_diag_11 container-specialization raw HIR diagnostic migration
 
 Status: Approved.
 

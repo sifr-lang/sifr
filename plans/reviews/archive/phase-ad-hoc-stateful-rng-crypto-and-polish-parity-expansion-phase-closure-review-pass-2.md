@@ -4,7 +4,7 @@
 **Execution ledger**: `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-execution.md`
 **Review type**: phase-level closure production-grade check (pass 2)
 **Date**: 2026-03-21
-**Reviewer**: Claude Code
+**Reviewer**: agent
 **Commit under review**: `093d9c65` (phase-closure review pass 1 merged — HEAD)
 
 ---
@@ -338,7 +338,7 @@ All residual waivers are narrow, documented with rationale and revisit rules, an
 ---
 
 *Review completed: 2026-03-21*
-*Reviewer: Claude Code*
+*Reviewer: agent*
 *Phase: ad-hoc-stateful-rng-crypto-and-polish-parity-expansion*
 *Review type: phase-closure-review-pass-2 (production-grade check)*
 *Commit: 093d9c65 (phase-closure review pass 1 — HEAD)*

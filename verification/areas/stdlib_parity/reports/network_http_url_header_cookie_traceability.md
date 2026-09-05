@@ -26,7 +26,7 @@ Status: merged in PR #2497 at `9a3ee4d18a12ab6ddaa9174aebea591a891c4651`.
 | `SIFR_E2E_FIXTURE_MANIFEST=<url_header_cookie_fixtures> SIFR_E2E_CACHE_DIR=target/sifr_e2e_cache/url-header-cookie-focused SIFR_E2E_DISABLE_CACHE=0 cargo test -p sifr --test e2e test_e2e_pass -- --nocapture` | PASS | Selected batch e2e run for `network_http_header_cookie` and `network_http_url_query_percent`; 2 passed, 0 failed, cache hits 0/2 after the IPv6 fixture change. |
 | `cargo test -p sifr_stdlib --test network_http_dependency_snapshots -- --nocapture` | PASS | Verifies generated dependency snapshots through URL/header/cookie readiness, no external cookie crate for cookie-header helpers, and Ring 5 absence from URL/header/cookie production dependencies. |
 | `cargo fmt --check` | PASS | Rust formatting check. |
-| `cargo clippy --workspace -- -D warnings` | PASS | Workspace clippy gate passed after Opus pass-3 remediation. |
+| `cargo clippy --workspace -- -D warnings` | PASS | Workspace clippy gate passed after agent pass-3 remediation. |
 | `verification/runner/e2e/run_e2e_pass.sh` | PASS | Full e2e pass suite completed 138 pass fixtures with 0 failures; report signature `4ede7c71d86f381c`. |
 | `scripts/run_all_tests.sh --profile create-pr` | PASS | Authoritative create-pr validation passed; report `target/validation_lane_reports/create-pr.latest.json`; advisory: warm wall-time budget exceeded. |
 | `scripts/run_all_tests.sh` | PASS | Full merge-gate validation passed after the final review evidence check; report `target/validation_lane_reports/merge.latest.json`; all 14 lane steps passed, wall time 783.02s, hardening failures 0, advisory: high e2e group skew only. |

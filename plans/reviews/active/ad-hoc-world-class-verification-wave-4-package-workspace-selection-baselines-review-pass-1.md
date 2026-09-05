@@ -1,11 +1,11 @@
-# Claude Opus Review: Wave 4 Package Workspace-Selection Baselines
+# agent Review: Wave 4 Package Workspace-Selection Baselines
 
 Date: 2026-06-15
-Reviewer: Claude Opus 4.7 (`claude --dangerously-skip-permissions --setting-sources project --model claude-opus-4-7 --effort xhigh`)
+Reviewer: agent (`agent --dangerously-skip-permissions --setting-sources project --model agent --effort xhigh`)
 
 ## Verdict
 
-No blockers. No additional Claude Opus review round required before create-pr and merge gates.
+No blockers. No additional agent review round required before create-pr and merge gates.
 
 ## Scope Reviewed
 

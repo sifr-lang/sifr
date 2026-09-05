@@ -1,6 +1,6 @@
 # Review Pass 3: recursive_node_and_field_expression_surface (2026-04-04 Rerun)
 
-- **Reviewer**: Claude Opus 4.6 (automated)
+- **Reviewer**: agent (automated)
 - **Date**: 2026-04-04
 - **Scope**: Validate revised phase package for implementation readiness after pass-1 and pass-2 corrections
 - **Input artifacts**:

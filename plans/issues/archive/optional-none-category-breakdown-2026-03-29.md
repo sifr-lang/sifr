@@ -9,7 +9,7 @@ Context:
 
 Supporting artifacts:
 - Live corpus results: `verification/leetcode/full_corpus_current_results_20260329_live.json`
-- Claude pass 1 transcript: `reviews/optional-none-direct-pass1.md`
+- agent pass 1 transcript: `reviews/optional-none-direct-pass1.md`
 
 ## Bottom Line
 

@@ -2,7 +2,7 @@
 
 ## Reviewer
 
-Claude Opus 5 (`--effort medium`), read-only exact-head review of PR
+agent (`--effort medium`), read-only exact-head review of PR
 [#3031](https://github.com/sifr-lang/sifr/pull/3031) at commit `ee10e0c9e`
 against merge base `53fa84b70`.
 

@@ -7,7 +7,7 @@ Source taxonomy artifact: `verification/leetcode/full_corpus_failure_taxonomy_20
 
 ## Reviewer Loop
 
-Reviewer: Claude
+Reviewer: agent
 
 Artifacts:
 
@@ -568,7 +568,7 @@ Reasoning:
 - [x] each adaptation lane is policy-aligned
 - [x] trigger-label vs actual-root-cause mismatches are documented
 - [x] cross-bucket blockers are called out so exit expectations stay realistic
-- [x] Claude review loop completed
+- [x] agent review loop completed
 
 ## Execution Progress
 

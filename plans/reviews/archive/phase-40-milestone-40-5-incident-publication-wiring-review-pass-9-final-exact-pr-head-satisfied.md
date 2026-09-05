@@ -10,7 +10,7 @@
 | Branch / base / state | expected branch → `main`, `OPEN`, `MERGEABLE` | ✓ |
 | Merge base vs `main` | `0f59a48b30160691c6cf047d987d1aeb978724dd` | ✓ |
 | `HEAD` ancestor of `origin/main` tip (`401c53971`) | no — `main` advanced by unrelated Rust-interop merges | non-blocking (obs. 1) |
-| Worktree | clean except this pass's own untracked 0-byte slots (`…pass-9-final-exact-pr-head.md`, `.claude.log`); no active review `.md` tracked | ✓ no implementation drift |
+| Worktree | clean except this pass's own untracked 0-byte slots (`…pass-9-final-exact-pr-head.md`, `.agent.log`); no active review `.md` tracked | ✓ no implementation drift |
 | Diff scope | 64 files, +6343 / −620 vs `0f59a48b3`; `git diff --check` clean | ✓ |
 | Commits | `8776b4dbb`, `341b312f5`, `dabdfec85` | ✓ |
 
@@ -34,7 +34,7 @@ No workflow, script, schema, Python, or fixture byte changed. Verified against t
 | "found no actionable finding" | "## Actionable findings — None." | accurate |
 | "returned `VERDICT: SATISFIED`" | final line | accurate |
 
-Stale-assertion sweep on the delta: the report's self-referential observation #8 ("populate this pass's own artifact slot and archive before merge") is **satisfied by this very commit** — the active slot `…pass-8-exact-pr-head.md` is gone from `plans/reviews/active/` (only its `.claude.log` remains) and the content landed under `archive/`. Its observation #1 (focused selection is 68, not 69) matches my own measurement. Its reference to the "`governance-contracts` variant" is precise: that is the variant label at `verification/areas/distribution_release/runner.py:217`, not a suite filter. The unchecked ledger item `- [ ] Merge the protected rollback and incident roll-forward production wiring.` correctly remains open while the PR is open. **No stale or false assertion found in the delta.**
+Stale-assertion sweep on the delta: the report's self-referential observation #8 ("populate this pass's own artifact slot and archive before merge") is **satisfied by this very commit** — the active slot `…pass-8-exact-pr-head.md` is gone from `plans/reviews/active/` (only its `.agent.log` remains) and the content landed under `archive/`. Its observation #1 (focused selection is 68, not 69) matches my own measurement. Its reference to the "`governance-contracts` variant" is precise: that is the variant label at `verification/areas/distribution_release/runner.py:217`, not a suite filter. The unchecked ledger item `- [ ] Merge the protected rollback and incident roll-forward production wiring.` correctly remains open while the PR is open. **No stale or false assertion found in the delta.**
 
 ## 3. Re-evaluation of the full Phase-40 incident-publication implementation
 

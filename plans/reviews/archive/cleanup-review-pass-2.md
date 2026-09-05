@@ -1,6 +1,6 @@
 # PR #1106 Review: Cleanup of Internal Docs, Audits, and Duplicate Demos (Pass 2)
 
-**Reviewer:** Claude Code
+**Reviewer:** agent
 **Date:** 2026-03-11
 **PR Title:** Clean up internal docs, audits, and duplicate demos
 **Branch:** `codex/cleanup`

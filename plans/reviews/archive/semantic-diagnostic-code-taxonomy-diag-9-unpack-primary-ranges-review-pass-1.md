@@ -2,7 +2,7 @@
 
 **Branch:** `codex/diag-9-unpack-primary-ranges`
 **Date:** 2026-05-03
-**Reviewer:** Claude Code review
+**Reviewer:** agent review
 **Validation passed:** `scripts/run_all_tests.sh --profile quick` (`report_signature=e1bf653aaa770517`, `wall_time=56.42s`)
 
 ## Summary

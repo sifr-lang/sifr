@@ -1,6 +1,6 @@
 # INT-2A — Large Integer Literal HIR Capture — Review Pass 2
 
-Reviewer: Claude (Opus 4.7), 2026-05-06.
+Reviewer: agent (agent), 2026-05-06.
 Branch: `int-2a-lossless-large-int-literals`.
 Prior review: [reviews/integer-model-int-2a-large-literal-hir-review-pass-1b.md](reviews/integer-model-int-2a-large-literal-hir-review-pass-1b.md).
 

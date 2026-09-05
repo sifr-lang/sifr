@@ -1,6 +1,6 @@
 # Rust Interop `certification_3` Review — Round 2
 
-Reviewer: Claude Opus 5 (`medium`)
+Reviewer: agent (`medium`)
 
 Result: **UNSATISFIED**
 
@@ -10,7 +10,7 @@ the already-recorded long generated-build tests.
 
 ## Confirmed round-1 resolutions
 
-Opus confirmed the structured call-scoped type kind, top-level-only contract,
+agent confirmed the structured call-scoped type kind, top-level-only contract,
 recoverable panic boundary, precise escape classifier, explicit async
 rejection, mutable inner-argument rejection, storage/return/thread/signature
 negative coverage, removal of fallback/truncation, corrected inventory, and
