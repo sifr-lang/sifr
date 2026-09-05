@@ -145,6 +145,12 @@ impl RustEmitter {
                     )?;
                 let method_params =
                     self.resolve_registry_method_params(&effective_object_ty, method);
+                self.adapt_owned_mapping_default(
+                    &effective_object_ty,
+                    method,
+                    args,
+                    &mut arg_exprs,
+                );
                 if matches!(
                     crate::resolve_alias_type_for_plain_call(&effective_object_ty),
                     Type::Decimal | Type::BigDecimal

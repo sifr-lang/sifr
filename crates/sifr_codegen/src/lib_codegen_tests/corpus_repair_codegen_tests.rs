@@ -360,7 +360,7 @@ def consume(value: int | None) -> int:
 def probe(a: int, b: int, values: dict[str, int]) -> int:
     first = max(a + b, 0)
     flipped = ~a
-    defaulted = values.get("missing", a)
+    defaulted = max(first, values.get("missing", a))
     used = consume(a)
     return first + flipped + defaulted + used + a + b
 "#,
@@ -388,6 +388,54 @@ def main():
     );
     assert!(!rust.contains("assert_eq!(result, Vec::new())"), "{rust}");
     assert!(!rust.contains("assert_eq!(Vec::new(), result)"), "{rust}");
+}
+
+#[test]
+fn corpus_repair_proven_read_at_optional_call_boundary() {
+    let rust = canonical(
+        r#"
+def accept(value: int | None) -> int:
+    if value is None:
+        return -1
+    return value
+def total(queue: list[int]) -> Result[int, Error]:
+    try:
+        head = 0
+        result = 0
+        while head < len(queue):
+            result += accept(queue[head])
+            head += 1
+        return result
+    except Error as error:
+        raise error
+"#,
+    );
+    assert!(rust.contains("IndexError::new"), "{rust}");
+    assert!(!rust.contains("Some(queue.get"), "{rust}");
+    assert!(!rust.contains(".unwrap()"), "{rust}");
+    assert!(!rust.contains(".expect("), "{rust}");
+}
+
+#[test]
+fn corpus_repair_explicit_optional_nested_mutation_contract() {
+    let rust = canonical(
+        r#"
+def update(mut grid: list[list[int]], pos: list[int]) -> Result[None, Error]:
+    try:
+        row = pos[0]
+        column = pos[1]
+        if row is None or column is None:
+            raise IndexError("position is missing")
+        grid[row][column] = 7
+        return None
+    except Error as error:
+        raise error
+"#,
+    );
+    assert!(rust.contains("get_mut"), "{rust}");
+    assert!(rust.contains("position is missing"), "{rust}");
+    assert!(!rust.contains(".unwrap()"), "{rust}");
+    assert!(!rust.contains(".expect("), "{rust}");
 }
 
 #[test]

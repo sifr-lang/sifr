@@ -279,9 +279,6 @@ impl RustEmitter {
         }
 
         let collection_element_targets = match (object_ty, method) {
-            (Type::Dict(_, value_ty), "get" | "pop" | "remove") if args.len() == 2 => {
-                vec![(1, value_ty.as_ref())]
-            }
             (Type::List(element_ty), "append" | "appendleft") => {
                 vec![(0, element_ty.as_ref())]
             }
@@ -292,6 +289,7 @@ impl RustEmitter {
             }
             _ => Vec::new(),
         };
+        self.adapt_owned_mapping_default(object_ty, method, args, &mut arg_exprs);
         for (index, target_ty) in collection_element_targets {
             if let (Some(argument), Some(lowered_arg)) = (args.get(index), arg_exprs.get_mut(index))
             {
@@ -675,6 +673,14 @@ impl RustEmitter {
         &mut self,
         expr: &HirExpr,
     ) -> Option<crate::RustExpr> {
+        if let HirExpr::Index { object, index, ty } = expr
+            && !crate::helpers::is_option_type(ty)
+            && let Some(lowered) = self
+                .lower_non_option_index_expr_for_ir(object, index)
+                .ok()?
+        {
+            return Some(lowered);
+        }
         if matches!(
             expr,
             HirExpr::ListLiteral { .. }

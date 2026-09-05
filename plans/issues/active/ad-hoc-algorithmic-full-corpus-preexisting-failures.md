@@ -220,6 +220,23 @@ They do not substitute a default or remove an original case.
 
 #### Item 12B integrated-base provenance
 
+The `d13954fd69a0dfb0e203a03cd5124d921d103539` residual native matrix passes 16/19 cases.
+The remaining repairs cover nested mapping-default ownership and proven reads at optional call boundaries.
+Fixture 1260 also requires explicit narrowing of optional position and cell reads before mutation.
+These complete the existing ownership/read and external source-contract scope; no new item is started.
+All existing corpus assertions remain unchanged.
+Focused commands for this batch, recorded before execution:
+
+```bash
+cargo test -p sifr_codegen corpus_repair_repeated_value_ownership_nested_arithmetic_and_defaults
+cargo test -p sifr_codegen corpus_repair_proven_read_at_optional_call_boundary
+cargo test -p sifr_codegen corpus_repair_explicit_optional_nested_mutation_contract
+cargo test -p sifr_codegen corpus_repair_
+```
+
+The final compiler must still pass all 90 repaired fixtures and the full canonical corpus.
+The 16/19 residual pass is not whole-item qualification.
+
 Main advanced to `c83dd7cde8daf54cdc4abd952903e9aa093c4183` through PR #3692.
 Merge `b3d836354` integrates that reviewed base, including its dependency-feature normalization.
 The test-module conflict keeps both new regression modules and main's renamed modules.
