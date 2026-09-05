@@ -43,7 +43,7 @@ EXPECTED_PROJECTS = {
     ),
     "dlpack-demo": frozenset({"numpy", "torch"}),
 }
-DLPACK_PROJECT_ROOT = Path("demos") / ("m" + "12_dlpack_demo")
+DLPACK_PROJECT_ROOT = Path("demos/python_dlpack")
 PROJECT_PATHS = {
     "python-interop": (
         "verification/areas/python_interop/pyproject.toml",
