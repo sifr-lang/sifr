@@ -53,12 +53,12 @@ impl Parse for TaskLocals {
 
 pub(crate) fn declarations(mac: &syn::Macro) -> Option<TaskLocals> {
     let mut segments = mac.path.segments.iter();
-    if !segments
+    if segments
         .next()
-        .is_some_and(|segment| segment.ident == "tokio")
-        || !segments
+        .is_none_or(|segment| segment.ident != "tokio")
+        || segments
             .next()
-            .is_some_and(|segment| segment.ident == "task_local")
+            .is_none_or(|segment| segment.ident != "task_local")
         || segments.next().is_some()
         || mac
             .path
