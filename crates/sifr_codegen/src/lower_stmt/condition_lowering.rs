@@ -322,12 +322,18 @@ pub(crate) fn try_lower_structured_compare_condition_expr(expr: &HirExpr) -> Opt
     if left_is_option && !right_is_option && !matches!(rhs_expr, HirExpr::NoneLiteral) {
         lowered_right = RustExpr::FnCall {
             func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
-            args: vec![lowered_right],
+            args: vec![crate::RustEmitter::clone_non_copy_name_expr_for_ir(
+                rhs_expr,
+                lowered_right,
+            )],
         };
     } else if !left_is_option && right_is_option && !matches!(left.as_ref(), HirExpr::NoneLiteral) {
         lowered_left = RustExpr::FnCall {
             func: Box::new(RustExpr::Path(vec!["Some".to_string()])),
-            args: vec![lowered_left],
+            args: vec![crate::RustEmitter::clone_non_copy_name_expr_for_ir(
+                left,
+                lowered_left,
+            )],
         };
     } else if matches!(
         resolve_alias_type(left.ty()),

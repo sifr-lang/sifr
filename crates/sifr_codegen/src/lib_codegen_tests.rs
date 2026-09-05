@@ -79,6 +79,8 @@ mod item10a_error_identity_codegen_tests;
 #[cfg(test)]
 mod item11_portable_secure_codegen_tests;
 #[cfg(test)]
+mod item12b_corpus_codegen_tests;
+#[cfg(test)]
 mod item12b_ownership_codegen_tests;
 #[cfg(test)]
 mod item8_canonical_codegen_tests;

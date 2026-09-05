@@ -185,9 +185,42 @@ They are not external authority blockers.
 Other failures require control-flow, type-representation, or declaration-demand changes.
 Those mechanisms are not builtin registration or sentinel/repeat reuse.
 
-#### Later Item 12D: Native corpus emission dependencies
+#### Item 12B continuation authority and regression commands
 
-State: recorded for scope adjudication, not started.
+The user authorized all necessary next actions after the complete failure inventory.
+The recorded execution dependencies now form part of the bounded Item 12B repair.
+The previous scope-adjudication stop is superseded.
+This includes checked-read control flow, exception capture and lowering, ownership,
+method retention, assertion typing, and the checked-shift source omission.
+It does not include unrelated Item 12 quality work or Item 12A.
+The original review and single-gate limits remain unchanged.
+
+Additional focused commands, recorded before test execution:
+
+```bash
+cargo test -p sifr_codegen item12b_
+cargo test -p sifr_codegen item12b_exception_capture
+cargo test -p sifr_codegen item12b_checked_read_control_flow
+cargo test -p sifr_codegen item12b_repeated_value_ownership
+cargo test -p sifr_codegen item12b_recursive_optional_mutability
+cargo test -p sifr_codegen item12b_structured_exception
+cargo test -p sifr_codegen item12b_method_retention
+cargo test -p sifr_codegen item12b_empty_collection_assertion
+```
+
+The complete native matrix is the repair checklist, not a new discovery run.
+Each regression must cover the relevant lexical, control-flow, or ownership negative case.
+The new compiler requires new affected-input evidence. Earlier passes retain their recorded provenance.
+
+The source batch also completes two missing checked-value contracts.
+Fixture 2002 receives each checked shift into an explicit integer binding.
+Fixture 0048 tests each optional matrix read before its corresponding write.
+The matrix changes preserve read/write order and raise `IndexError` on absent values.
+They do not substitute a default or remove an original case.
+
+#### Incorporated Item 12D: Native corpus emission dependencies
+
+State: incorporated into Item 12B under the continuation authority.
 Owner: compiler emission, tracked in this issue and the algorithmic issue.
 This item does not reopen Item 12C or request authority for its completed repair.
 

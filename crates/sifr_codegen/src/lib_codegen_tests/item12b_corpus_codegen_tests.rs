@@ -1,0 +1,343 @@
+use super::generate_rust_from_source;
+use quote::ToTokens;
+use syn::visit::Visit;
+
+fn canonical(source: &str) -> String {
+    let raw = generate_rust_from_source(source);
+    assert!(!raw.contains("compile_error!"), "{raw}");
+    crate::generated_rust_canonicalizer::canonicalize_generated_rust_source(&raw)
+        .expect("generated Rust canonicalizes")
+}
+
+fn parameters(rust: &str, target: &str) -> Vec<String> {
+    struct Functions<'a> {
+        target: &'a str,
+        parameters: Vec<String>,
+    }
+    impl<'ast> Visit<'ast> for Functions<'_> {
+        fn visit_item_fn(&mut self, function: &'ast syn::ItemFn) {
+            if function.sig.ident == self.target {
+                self.parameters
+                    .push(function.sig.inputs.to_token_stream().to_string());
+            }
+            syn::visit::visit_item_fn(self, function);
+        }
+    }
+    let mut functions = Functions {
+        target,
+        parameters: Vec::new(),
+    };
+    functions.visit_file(&syn::parse_file(rust).expect("Rust parses"));
+    assert!(!functions.parameters.is_empty(), "missing {target}: {rust}");
+    functions.parameters
+}
+
+#[test]
+fn item12b_exception_capture_handler_is_local() {
+    let rust = generate_rust_from_source(
+        r#"
+def outer(n: int) -> Result[int, Error]:
+    def helper(i: int) -> Result[int, Error]:
+        try:
+            if i == 0:
+                return 0
+            result: int = helper(i - 1)
+            return result + 1
+        except Error as error:
+            raise error
+    try:
+        result: int = helper(n)
+        return result
+    except Error as error:
+        raise error
+"#,
+    );
+    assert!(
+        parameters(&rust, "helper")
+            .iter()
+            .all(|parameters| !parameters.contains("error")),
+        "{rust}"
+    );
+}
+
+#[test]
+fn item12b_exception_capture_keeps_outer_same_name() {
+    let rust = generate_rust_from_source(
+        r#"
+def outer(error: int, n: int) -> Result[int, Error]:
+    def helper(i: int) -> Result[int, Error]:
+        value = error
+        try:
+            if i == 0:
+                return value
+            result: int = helper(i - 1)
+            return result + value
+        except Error as error:
+            raise error
+    try:
+        result: int = helper(n)
+        return result
+    except Error as error:
+        raise error
+"#,
+    );
+    assert!(
+        parameters(&rust, "helper")
+            .iter()
+            .all(|parameters| parameters.contains("error")),
+        "{rust}"
+    );
+}
+
+#[test]
+fn item12b_checked_read_control_flow_disjunction() {
+    let rust = generate_rust_from_source(
+        r#"
+def total(left: list[int], right: list[int]) -> int:
+    result = 0
+    i = 0
+    while i < len(left) or i < len(right):
+        if i < len(left):
+            value = left[i]
+            if value is None:
+                return -1
+            result += value
+        if i < len(right):
+            value = right[i]
+            if value is None:
+                return -2
+            result += value
+        i += 1
+    return result
+"#,
+    );
+    struct Loops;
+    impl<'ast> Visit<'ast> for Loops {
+        fn visit_expr_while(&mut self, loop_: &'ast syn::ExprWhile) {
+            assert!(
+                !matches!(loop_.body.stmts.first(), Some(syn::Stmt::Local(local)) if local.init.as_ref().is_some_and(|init| init.diverge.is_some())),
+                "loop hoisted a branch-only read: {}",
+                loop_.to_token_stream()
+            );
+            syn::visit::visit_expr_while(self, loop_);
+        }
+    }
+    Loops.visit_file(&syn::parse_file(&rust).expect("Rust parses"));
+    assert!(!rust.contains("== None"), "{rust}");
+}
+
+#[test]
+fn item12b_checked_read_control_flow_none_operand_effects() {
+    let rust = generate_rust_from_source(
+        r#"
+def next_value(mut events: list[int]) -> int:
+    events.append(1)
+    return 3
+def probe(mut events: list[int]) -> bool:
+    return next_value(events) is None
+"#,
+    );
+    assert!(
+        rust.split("fn probe")
+            .nth(1)
+            .is_some_and(|body| body.contains("next_value(")),
+        "{rust}"
+    );
+    assert!(!rust.contains("== None"), "{rust}");
+    assert!(!rust.contains("compile_error!"), "{rust}");
+}
+
+#[test]
+fn item12b_repeated_value_ownership_comprehension_bindings() {
+    let rust = generate_rust_from_source(
+        r#"
+def repeat(seed: int, n: int) -> list[list[int]]:
+    return [[seed for j in range(n)] for i in range(n)]
+def fresh(n: int) -> list[int]:
+    return [i for i in range(n)]
+def outer_binding(n: int) -> list[int]:
+    return [i for i in range(n) for j in range(n)]
+"#,
+    );
+    assert!(rust.contains("seed.clone()"), "{rust}");
+    assert!(rust.contains("push(i.clone())"), "{rust}");
+    assert!(rust.contains("push(i)"), "{rust}");
+}
+
+#[test]
+fn item12b_repeated_value_ownership_nested_indices_and_option_comparison() {
+    let rust = generate_rust_from_source(
+        r#"
+def lookup(values: list[list[int]], i: int, j: int) -> int:
+    first: int | None = values[i][j]
+    second: int | None = values[i][j]
+    if first is not None:
+        if first == second:
+            return i + j + first
+    return -1
+"#,
+    );
+    assert!(rust.matches("i.clone()").count() >= 2, "{rust}");
+    assert!(rust.matches("j.clone()").count() >= 2, "{rust}");
+    assert!(rust.contains("Some(first.clone()) == second"), "{rust}");
+    assert!(!rust.contains("if Some(first) =="), "{rust}");
+    syn::parse_file(&rust).expect("Rust parses");
+}
+
+#[test]
+fn item12b_recursive_optional_mutability_preserves_take() {
+    let rust = canonical(
+        r#"
+class Node:
+    value: int
+    next: Node | None
+    def __init__(self, value: int, next: Node | None):
+        self.value = value
+        self.next = next
+def advance(own node: Node | None) -> Node | None:
+    if node is None:
+        return None
+    return node.next
+def main():
+    node = Node(1, Node(2, None))
+    following = advance(node)
+    assert following is not None
+"#,
+    );
+    assert!(rust.contains(".take()"), "{rust}");
+    assert!(
+        rust.contains("let mut node") || rust.contains("Some(mut node)"),
+        "{rust}"
+    );
+}
+
+#[test]
+fn item12b_structured_exception_nested_return_and_field_update() {
+    let rust = generate_rust_from_source(
+        r#"
+class Counter:
+    count: int
+    def __init__(self):
+        self.count = 0
+    def increment(mut self) -> Result[None, Error]:
+        try:
+            self.count += 1
+            return None
+        except Error as error:
+            raise error
+def nested() -> Result[int, Error]:
+    try:
+        values = [[1]]
+        values[0][0] = 2
+        result: int | None = values[0][0]
+        if result is None:
+            raise IndexError("missing result")
+        return result
+    except Error as error:
+        raise error
+"#,
+    );
+    assert!(!rust.contains("compile_error!"), "{rust}");
+    assert!(rust.contains("IndexError"), "{rust}");
+    syn::parse_file(&rust).expect("Rust parses");
+}
+
+#[test]
+fn item12b_method_retention_escaped_keyword_identity() {
+    let rust = canonical(
+        r#"
+class Group:
+    count: int
+    def __init__(self):
+        self.count = 1
+    def union(mut self, value: int) -> int:
+        self.count += value
+        return self.count
+def main():
+    group = Group()
+    assert group.union(2) == 3
+"#,
+    );
+    assert!(rust.contains("fn r#union("), "{rust}");
+    assert!(rust.contains(".r#union("), "{rust}");
+}
+
+#[test]
+fn item12b_empty_collection_assertion_has_element_type() {
+    let rust = generate_rust_from_source(
+        r#"
+def main():
+    values: list[int] = []
+    assert values == []
+    assert [] == values
+"#,
+    );
+    assert!(rust.matches("Vec<SifrInt>").count() >= 3, "{rust}");
+    syn::parse_file(&rust).expect("Rust parses");
+}
+
+#[test]
+fn item12b_structured_exception_proven_nested_read_uses_typed_carrier() {
+    use crate::{HirExpr, RustEmitter, Type};
+    let error = Type::Class {
+        identity: None,
+        type_args: vec![],
+        name: "IndexError".to_string(),
+        fields: vec![("message".to_string(), Type::Str)],
+        methods: vec![],
+        parent_class: None,
+    };
+    let mut emitter = RustEmitter::new();
+    let row = HirExpr::Index {
+        object: Box::new(HirExpr::Name {
+            name: "matrix".to_string(),
+            binding_id: Some(sifr_ir::BindingId(1)),
+            ty: Type::List(Box::new(Type::List(Box::new(Type::Int)))),
+        }),
+        index: Box::new(HirExpr::IntLiteral(0)),
+        ty: Type::List(Box::new(Type::Int)),
+    };
+    assert!(
+        emitter
+            .lower_proven_read_with_error_carrier(&row, &HirExpr::IntLiteral(0))
+            .expect("lowering succeeds")
+            .is_none()
+    );
+    emitter.current_return_type = Some(Type::Result(Box::new(Type::Int), Box::new(error.clone())));
+    let value = emitter
+        .lower_proven_read_with_error_carrier(&row, &HirExpr::IntLiteral(0))
+        .expect("lowering succeeds")
+        .expect("typed carrier supports the read");
+    let rust = crate::render_stmts(&[crate::RustStmt::Expr(value)]);
+    assert_eq!(rust.matches("IndexError::new").count(), 2, "{rust}");
+    assert!(!rust.contains("unwrap"), "{rust}");
+    let Type::Class {
+        mut identity,
+        type_args,
+        name,
+        fields,
+        methods,
+        parent_class,
+    } = error
+    else {
+        unreachable!()
+    };
+    identity.replace("user.IndexError".to_string());
+    emitter.current_return_type = Some(Type::Result(
+        Box::new(Type::Int),
+        Box::new(Type::Class {
+            identity,
+            type_args,
+            name,
+            fields,
+            methods,
+            parent_class,
+        }),
+    ));
+    assert!(
+        emitter
+            .lower_proven_read_with_error_carrier(&row, &HirExpr::IntLiteral(0))
+            .expect("lowering succeeds")
+            .is_none()
+    );
+}

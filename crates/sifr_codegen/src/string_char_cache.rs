@@ -247,6 +247,8 @@ impl RustEmitter {
 
         let lowered_object = self.try_lower_registry_expr_strict(list_object)?;
         let lowered_list_index = self.try_lower_registry_expr_strict(list_index)?;
+        let lowered_list_index =
+            self.materialize_reusable_value_for_ir(list_index, lowered_list_index);
         let lowered_dict_index = self.try_lower_registry_expr_strict(dict_index)?;
         let key_arg = self.list_indexed_dict_lookup_key_arg(dict_index, lowered_dict_index);
         let projection_method = if crate::helpers::is_copy_type_for_codegen(value_ty.as_ref()) {
@@ -327,6 +329,8 @@ impl RustEmitter {
 
         let lowered_object = self.try_lower_registry_expr_strict(list_object)?;
         let lowered_list_index = self.try_lower_registry_expr_strict(list_index)?;
+        let lowered_list_index =
+            self.materialize_reusable_value_for_ir(list_index, lowered_list_index);
         let key_arg = self.list_indexed_dict_lookup_key_arg(element, lowered_element);
         Some(RustExpr::Block {
             stmts: vec![
