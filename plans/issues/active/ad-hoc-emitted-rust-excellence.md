@@ -911,3 +911,24 @@ checks, HIR and file-size guardrails, formatting, Rust interop, and naming
 checks. It then stopped on the unchanged SQL coverage classifications owned
 by `ad-hoc-schema-first-sql-platform-review-follow-ups.md`. This is not
 passing merge evidence. Log: `target/review-remediation/merge-gate.log`.
+
+## Naming cleanup PR qualification (2026-09-05)
+
+PR [#3692](https://github.com/sifr-lang/sifr/pull/3692) contains the cleanup
+and runtime feature fix. Final CLI validation with
+`cargo test -p sifr -- --skip test_e2e_pass` passed: 172 tests, no failures,
+seven ignored tests, and the explicitly excluded positive E2E suite. This
+includes the negative/runtime-failure E2E suites, emission panic-shape scan,
+portable dependency-plan checks, and Python, host-tool, runtime-observability,
+and sysroot integration tests. Log: `target/pr-cleanup/cli-tests.log`.
+
+The create-PR gate passed all 264 companion freshness checks and reached
+guardrails, then reproduced the existing SQL coverage classification
+failures. Its log is `target/pr-cleanup/create-pr.log`; the previously recorded
+merge gate applies to the same implementation. GitHub Actions also rejects
+the unchanged workflow before starting any jobs: the same failure occurs
+on base `2af89e75e` in
+[run 33963698543](https://github.com/sifr-lang/sifr/actions/runs/33963698543).
+Final qualification owns the workflow repair. The diagnostic-baseline
+identity migration and pre-existing quality failures described above remain
+unresolved; these passing CLI results do not qualify the Clippy baseline.

@@ -87,3 +87,8 @@ The naming-review remediation ran its final merge gate once on 2026-09-05.
 It reproduced the same SQL package/target classification failures after all
 264 demo freshness checks and reached guardrails passed. No SQL code or
 classification changed. Evidence: `target/review-remediation/merge-gate.log`.
+
+PR [#3692](https://github.com/sifr-lang/sifr/pull/3692) repeated the create-PR
+gate before opening the PR. The same coverage classifications blocked it
+after all 264 demo freshness checks and reached guardrails passed. No SQL
+changes were made. Log: `target/pr-cleanup/create-pr.log`.
