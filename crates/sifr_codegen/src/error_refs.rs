@@ -505,8 +505,12 @@ fn collect_expr_error_refs(
                 && !crate::helpers::is_option_type(ty)
             {
                 match object.ty().resolve_alias() {
-                    Type::List(_) | Type::Bytes | Type::Str => { referenced.insert("IndexError".to_string()); }
-                    Type::Dict(_, _) => { referenced.insert("KeyError".to_string()); }
+                    Type::List(_) | Type::Bytes | Type::Str => {
+                        referenced.insert("IndexError".to_string());
+                    }
+                    Type::Dict(_, _) => {
+                        referenced.insert("KeyError".to_string());
+                    }
                     _ => {}
                 }
             }

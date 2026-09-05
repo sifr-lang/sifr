@@ -12,21 +12,31 @@ fn accepts_read_failure(ty: &Type, kind: CheckedPlaceFailureKind) -> bool {
         {
             true
         }
-        Type::Union(members) => members.iter().any(|member| accepts_read_failure(member, kind)),
+        Type::Union(members) => members
+            .iter()
+            .any(|member| accepts_read_failure(member, kind)),
         _ => false,
     }
 }
 
 impl RustEmitter {
     pub(crate) fn checked_read_failure_type(&self, kind: CheckedPlaceFailureKind) -> Option<Type> {
-        let carrier = self.try_closure_error_type_info.last().and_then(Option::as_ref)
-            .or_else(|| match self.current_return_type.as_ref()?.resolve_alias() {
-                Type::Result(_, error) => Some(error.as_ref()),
-                _ => None,
-            })?;
+        let carrier = self
+            .try_closure_error_type_info
+            .last()
+            .and_then(Option::as_ref)
+            .or_else(
+                || match self.current_return_type.as_ref()?.resolve_alias() {
+                    Type::Result(_, error) => Some(error.as_ref()),
+                    _ => None,
+                },
+            )?;
         accepts_read_failure(carrier, kind).then(|| Type::Class {
-            identity: None, type_args: Vec::new(), name: kind.error_name().to_string(),
-            fields: vec![("message".to_string(), Type::Str)], methods: Vec::new(),
+            identity: None,
+            type_args: Vec::new(),
+            name: kind.error_name().to_string(),
+            fields: vec![("message".to_string(), Type::Str)],
+            methods: Vec::new(),
             parent_class: Some("Error".to_string()),
         })
     }
@@ -40,7 +50,9 @@ impl RustEmitter {
     ) -> Result<Option<RustExpr>, crate::CodegenError> {
         let kind = if matches!(object.ty().resolve_alias(), Type::Dict(_, _)) {
             CheckedPlaceFailureKind::Key
-        } else { CheckedPlaceFailureKind::Index };
+        } else {
+            CheckedPlaceFailureKind::Index
+        };
         let Some(failure) = self.checked_read_failure_type(kind) else {
             return Ok(None);
         };
@@ -60,9 +72,12 @@ impl RustEmitter {
         let option = if matches!(object.ty().resolve_alias(), Type::Dict(_, _)) {
             RustExpr::MethodCall {
                 receiver: Box::new(RustExpr::MethodCall {
-                    receiver: Box::new(lowered_object), method: "get".to_string(),
+                    receiver: Box::new(lowered_object),
+                    method: "get".to_string(),
                     args: vec![self.checked_dict_key_arg_for_ir(index, lowered_index)],
-                }), method: "cloned".to_string(), args: Vec::new(),
+                }),
+                method: "cloned".to_string(),
+                args: Vec::new(),
             }
         } else if matches!(object.ty().resolve_alias(), Type::Str) {
             self.lower_string_index_option_with_cache(object, lowered_object, lowered_index)
@@ -74,9 +89,7 @@ impl RustEmitter {
             stmts: vec![RustStmt::LetElse {
                 pattern: format!("Some({binding})"),
                 value: option,
-                else_body: vec![
-                    self.checked_place_failure_return(&failure, kind),
-                ],
+                else_body: vec![self.checked_place_failure_return(&failure, kind)],
             }],
             expr: Some(Box::new(RustExpr::Ident(binding))),
         }))

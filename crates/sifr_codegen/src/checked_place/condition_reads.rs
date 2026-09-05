@@ -9,14 +9,25 @@ impl RustEmitter {
         condition: &crate::HirExpr,
     ) -> Result<Option<RustExpr>, crate::CodegenError> {
         let reads = crate::hir_analysis::queries::collection_reads_in_condition(condition);
-        if !reads.is_empty() && reads.iter().all(|read| {
-            let crate::HirExpr::Index { object, ty, .. } = read else { return false; };
-            !crate::helpers::is_option_type(ty) && self.checked_read_failure_type(
-                if matches!(object.ty().resolve_alias(), Type::Dict(_, _)) {
-                    super::CheckedPlaceFailureKind::Key
-                } else { super::CheckedPlaceFailureKind::Index }
-            ).is_some()
-        }) { return Ok(None); }
+        if !reads.is_empty()
+            && reads.iter().all(|read| {
+                let crate::HirExpr::Index { object, ty, .. } = read else {
+                    return false;
+                };
+                !crate::helpers::is_option_type(ty)
+                    && self
+                        .checked_read_failure_type(
+                            if matches!(object.ty().resolve_alias(), Type::Dict(_, _)) {
+                                super::CheckedPlaceFailureKind::Key
+                            } else {
+                                super::CheckedPlaceFailureKind::Index
+                            },
+                        )
+                        .is_some()
+            })
+        {
+            return Ok(None);
+        }
         let mut guards = Vec::new();
         let mut previous_witnesses = Vec::new();
         for read in reads {

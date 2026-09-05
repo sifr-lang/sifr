@@ -744,9 +744,16 @@ impl RustEmitter {
                 }
                 let left_expr = self.try_lower_registry_expr_strict(left)?;
                 let right_expr = self.try_lower_registry_expr_strict(right)?;
-                let borrow_integer = |value| if matches!(ty.resolve_alias(), Type::Int | Type::LiteralInt(_)) {
-                    crate::RustExpr::Ref { mutable: false, expr: Box::new(value) }
-                } else { value };
+                let borrow_integer = |value| {
+                    if matches!(ty.resolve_alias(), Type::Int | Type::LiteralInt(_)) {
+                        crate::RustExpr::Ref {
+                            mutable: false,
+                            expr: Box::new(value),
+                        }
+                    } else {
+                        value
+                    }
+                };
                 Some(crate::RustExpr::BinOp {
                     left: Box::new(borrow_integer(left_expr)),
                     op: if op == "//" {
