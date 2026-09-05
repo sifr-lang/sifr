@@ -188,7 +188,7 @@ It does not broaden the active item.
 | 10A | merged | Module-scoped builtin error shadow identities | Project support demand preserves user-defined and builtin error identities per module, without crate-wide suppression or dangling generated paths. |
 | 11 | merged | Portable and secure generated projects | Reviewed candidate `78c28c1e4c42bd85d685d3a3cffdf132fcdfcc40` is preserved and merged through Item 11A after its consumed gate's stale companions were regenerated. |
 | 11A | merged | Generated-companion freshness and Item 11 integration | The reviewed Item 11 candidate and all 15 compiler-regenerated companions are merged through a separately bounded review and gate without rerunning Item 11's consumed gate. |
-| 12 | in progress | Residual semantic completion and full-corpus qualification | Finish remaining semantic/profile work, remove all governed generated-code debt, regenerate every owned surface, and pass the uncompromising final qualification and applicable one-shot gates. |
+| 12 | blocked: external algorithmic corpus | Residual semantic completion and full-corpus qualification | Finish remaining semantic/profile work, remove all governed generated-code debt, regenerate every owned surface, and pass the uncompromising final qualification and applicable one-shot gates. |
 | 12A | pending | Phase closure and whole-phase review | Review the fully merged phase once, reconcile architecture/roadmap/evidence, and archive only when no actionable row remains. |
 
 ## Item Acceptance Contracts
@@ -811,5 +811,35 @@ item can close.
   merge-profile gate on the final implementation SHA and never repeat it.
   No Item 12 exact-SHA Opus review or merge-profile gate has been consumed.
 - No whole-phase review has been consumed.
-- Next action: finish Item 12's remaining producer repairs,
-  qualify the final compiler, then review and merge Item 12 only.
+- Current qualification checkpoint: `8ad089a9458f35fcfa228e93fe44f4d69731828b`
+  is committed and pushed. No implementation PR exists. No Item 12 review or
+  merge-profile gate was consumed. This candidate is not qualified or merged.
+  The frozen compiler is `/tmp/sifr-item12-qualified.l0Kpiu/sifr`, with SHA-256
+  `06a596d406f5a174a9a6ace72bc6d15919e6e3af5727578a46819479210c8c39`.
+- Exact-candidate full stdlib parity passes in
+  `target/item12-8ad089a94-stdlib-full.json`. Project-mode checks pass in
+  `target/item12-8ad089a94-project-modes.json`. Full-surface inventory passes in
+  `target/sifr_generated_code_quality/evidence/inventory-1788602855-3923.json`.
+- The partial companion audit retains 52 diagnostic pairs and 30 diagnostics:
+  25 `needless_pass_by_value`, three `redundant_clone`, and two `implicit_clone`.
+  Raw evidence is under
+  `target/sifr_generated_code_quality/companions-1788602855-5663/diagnostics/`.
+  These findings remain Item 12-owned producer work, not an external blocker.
+  This partial audit does not replace the earlier complete 91-project audit.
+- Full algorithmic qualification found source-contract failures in the separately
+  owned `sifr-lang/leetcode` submodule. Its pinned commit is
+  `ad116aa8dcae51b7db1bdf0052470456d671d31b`, unchanged from the Item 12 base.
+  The median fixture omits conversion-error handling. The zigzag fixture omits
+  index-error handling. Upstream `main` has the same file tree.
+  The [owning issue](ad-hoc-algorithmic-full-corpus-preexisting-failures.md#2026-09-05-emitted-rust-item-12-qualification-blocker)
+  records the exact diagnostics and evidence paths.
+- The worker stopped only its qualification process trees after it confirmed
+  the external blocker. The partial algorithmic run reports 13 failures among
+  63 completed checks. The full generated-quality and E2E runs also stopped.
+  Their logs remain under `target/item12-8ad089a94-*.log`.
+  None of these interrupted runs is passing qualification evidence.
+  The worker changed no external corpus files, acceptance rules, or Item 12A code.
+- Next action: obtain the external corpus owner's source-contract remediation
+  or explicit authority for separate corpus work. After that dependency clears,
+  finish the retained Item 12 producer diagnostics and qualify the final compiler.
+  Then perform the unused exact-SHA review and single merge-profile gate.

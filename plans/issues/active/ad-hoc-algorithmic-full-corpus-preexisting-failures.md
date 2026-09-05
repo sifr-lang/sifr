@@ -395,3 +395,33 @@ pre-merge table status.
 - The algorithmic runner stopped before corpus execution. This result is an
   environment failure and does not change corpus qualification evidence.
 - The SQL workstream did not initialize the external corpus or run a second gate.
+
+### 2026-09-05: Emitted Rust Item 12 qualification blocker
+
+The Item 12 qualification run found source-contract failures in the initialized
+external corpus. The compiler candidate was
+`8ad089a9458f35fcfa228e93fe44f4d69731828b`. The corpus gitlink was
+`ad116aa8dcae51b7db1bdf0052470456d671d31b`.
+
+- `0004_median_of_two_sorted_arrays.sifr:61`, `:62`, and `:70` use
+  `float(int)` without the required conversion-error handling.
+  The compiler reports `SIFR-TYPE-0002` and `SIFR-TYPE-0005`.
+- `0006_zigzag_conversion.sifr:12` uses augmented subscript assignment without
+  the required `IndexError` handling. The compiler reports `SIFR-RESULT-0001`.
+- The partial `leetcode-full` run completed 63 checks and reported 13 failures.
+  The worker stopped the run after it confirmed the external ownership boundary.
+  This partial run is not full-corpus qualification evidence.
+- The Item 12 base and candidate use the same corpus gitlink.
+  Item 12 changes no frontend implementation or algorithmic fixture.
+  Upstream `main` at `7fcb9fd1eaf3e0cf9bf51e8858276b7927a83baf`
+  has no file-tree changes from the pinned corpus commit.
+
+Evidence remains in the Item 12 worktree under `target/`:
+
+- `item12-8ad089a94-algorithmic-full.log`
+- `item12-8ad089a94-algorithmic-first-failure.log`
+- `item12-8ad089a94-algorithmic-zigzag-failure.log`
+
+The corpus owner must reconcile these source contracts in `sifr-lang/leetcode`.
+Item 12 cannot close until the corrected external corpus passes its required
+qualification. The Item 12 worker changed no external files or acceptance rules.
