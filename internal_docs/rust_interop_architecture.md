@@ -398,7 +398,7 @@ rewrote every remaining version-keyed statement throughout
 surfaces include `docs/packages/manifest.mdx`,
 `docs/rust-interop.mdx`, and the Blake3 and Reqwest interop guides; the other
 architecture surface includes
-`internal_docs/sifr_sysroot_and_stdlib_architecture.md`. Dated review records,
+`internal_docs/sifr_sysroot_and_stdlib_architecture.md`. Dated historical records,
 issue archives, and frozen release-candidate evidence remain immutable history,
 not an active contract or fallback.
 
@@ -689,7 +689,7 @@ pub enum StaticProgramValue {
 
 `StaticProgramValue` is non-exhaustive for downstream Rust consumers. Its
 compiler-owned variant set is closed for this contract revision. A new variant
-requires a structural contract and cache-identity review.
+requires a structural contract and cache-identity validation.
 
 `structural_construct` is the sole public construction entry. It compares
 `source.shape_identity()` with `<T as StructuralType>::shape_identity()` before

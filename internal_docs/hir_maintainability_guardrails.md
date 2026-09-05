@@ -29,7 +29,7 @@ Guardrail enforcement command:
 `run_all_tests.sh` runs this check before unit/e2e validation.
 The CI workflow `.github/workflows/local-first-validation.yml` runs `run_all_tests.sh`, so the guardrail is enforced in CI as well.
 
-## Review Checklist
+## Validation Checklist
 
 Use this checklist for every PR that changes lowering logic.
 

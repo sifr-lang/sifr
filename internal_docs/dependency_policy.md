@@ -10,7 +10,7 @@ Sifr tracks the root `Cargo.lock`. This repository builds a compiler, CLI, runti
 
 Local validation and CI both start from the committed lockfile. The main validation profile runs the same `scripts/run_all_tests.sh` facade locally and in CI, keeping contributor machines and GitHub Actions on the same dependency graph unless a PR intentionally changes it.
 
-Any `Cargo.lock` diff is a contributor-visible dependency change. Review it with the same care as a manifest edit: confirm why the graph changed, whether transitive updates are expected, and whether generated runtime, release, or verification behavior can be affected.
+Any `Cargo.lock` diff is a contributor-visible dependency change. Validate it with the same care as a manifest edit: confirm why the graph changed, whether transitive updates are expected, and whether generated runtime, release, or verification behavior can be affected.
 
 ## Rings
 

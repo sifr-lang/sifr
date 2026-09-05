@@ -1,6 +1,6 @@
 # TypeScript-Go Architecture Transfer: Module Signatures And Dependency Invalidation
 
-status: module-signature invalidation model implementation review
+status: module-signature invalidation model implementation status
 
 module-signature invalidation model makes frontend invalidation dependency-sensitive before structural cache reuse
 exists. `FrontendContext` still owns process-local parse/lower/diagnostic caches,

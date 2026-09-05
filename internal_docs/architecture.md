@@ -7,19 +7,19 @@
 - Iterator architecture execution has two completed stages:
   - stage 1: `first-class-lazy-iterators-and-python-iterable-protocol record` and `first-class-lazy-iterators-and-python-iterable-protocol-execution record`
   - stage 2 corrective continuation: `canonical-iteration-model-and-lazy-parity record` and `canonical-iteration-model-and-lazy-parity-execution record`
-  - stage-2 iterator behavior rules are merged and reviewed, including CPython `itertools` parity sweep/remediation passes.
+  - stage-2 iterator behavior rules are merged and validated, including CPython `itertools` parity sweep/remediation passes.
   - stage-2 rules lock enforces one canonical iteration path from type system through HIR/codegen with explicit capability tracking (single-pass, multi-pass, reversible/double-ended).
 - RNG/crypto continuation is production-grade complete:
   - planning docs: `stateful-rng-crypto-and-polish-parity-expansion record` and `stateful-rng-crypto-and-polish-parity-expansion-execution record`
-  - RNG behavior rules merged with external production-grade review artifacts and second-pass approval
-- Ownership-aware collection lowering continuation is in readiness review:
+  - RNG behavior rules merged with external production-grade validation artifacts and second-pass approval
+- Ownership-aware collection lowering continuation is in readiness validation:
   - planning docs: `ownership-aware-collection-lowering-and-clone-elision record` and `ownership-aware-collection-lowering-and-clone-elision-execution record`
   - completed artifacts:
     - lock/baseline artifact: `verification/areas/stdlib_parity/reports/collection_clone_codegen_traceability.md`
     - iterator/comprehension ownership correction artifact: `verification/areas/stdlib_parity/reports/iterator_clone_codegen_traceability.md`
     - indexing/slicing/star-unpack ownership correction artifact: `verification/areas/stdlib_parity/reports/index_slice_unpack_clone_traceability.md`
     - generic hardening/regression lock artifact: `verification/areas/stdlib_parity/reports/generic_clone_hardening_traceability.md`
-  - active readiness stage: external review cycles after implementation completion
+  - active readiness stage: external validation cycles after implementation completion
   - locked planner rules for implementation passes:
     - value category: `Place | Temporary`
     - source access mode: `Preserve | Consume`
@@ -90,7 +90,7 @@
   maps. Code generation emits a private, move-only carrier for inert runtime
   values. Compiler components consume the typed structure before code generation.
 
-- Python ecosystem integration uses declarations or hermetic typed bridges as the ordinary example path. Live service clients execute from built Sifr binaries, and the schema-2 capability ledger binds current-run compiled callback, async HTTP, buffer, Arrow, and DLPack evidence to exact source, marker, trust, certification, resource-zero, and report-digest provenance. The complete declaration-first phase is closed through PR #3000 after repeated satisfied agent High whole-phase review and an authoritative merge gate covering Python interop 25/25, E2E 674/674, and 261 hardening variants with zero failures.
+- Python ecosystem integration uses declarations or hermetic typed bridges as the ordinary example path. Live service clients execute from built Sifr binaries, and the schema-2 capability ledger binds current-run compiled callback, async HTTP, buffer, Arrow, and DLPack evidence to exact source, marker, trust, certification, resource-zero, and report-digest provenance. The complete declaration-first phase is closed through PR #3000 after repeated satisfied agent High whole-phase validation and an authoritative merge gate covering Python interop 25/25, E2E 674/674, and 261 hardening variants with zero failures.
 
 ## Vision
 
@@ -1349,7 +1349,7 @@ Sifr compiles to Rust source code, which is then compiled by `rustc`. This creat
 **Rules:**
 
 - **Stable Sifr diagnostic codes:** every top-level Sifr compiler diagnostic has a stable family-local code of the form `SIFR-<FAMILY>-dddd`, for example `SIFR-NAME-0001`. Families identify the semantic domain, not merely the compiler stage. Historical `E####`/`W####` and message-embedded pseudo-codes are removed before public stability.
-- **Deterministic documentation URL:** every top-level diagnostic exposes `url = "https://docs.sifr.sh/errors/<CODE>"`. This URL is part of the stable rules and must render in `human` and `json` outputs. `compact` intentionally omits URLs unless a future reviewed verbose compact flag is added.
+- **Deterministic documentation URL:** every top-level diagnostic exposes `url = "https://docs.sifr.sh/errors/<CODE>"`. This URL is part of the stable rules and must render in `human` and `json` outputs. `compact` intentionally omits URLs unless a future documented verbose compact flag is added.
 - **Canonical severity enum:** the shared diagnostic model uses exactly three top-level severities:
   - `Error` -- blocks compilation or the active command
   - `Warning` -- non-blocking but actionable
@@ -1664,7 +1664,7 @@ fn size() {
 
 ### Layer 2: Snapshot Tests (insta crate)
 
-Snapshot testing using the `insta` crate. The compiler produces output that is compared against stored `.snap` files. When behavior changes intentionally, run `cargo insta review` to accept new baselines.
+Snapshot testing using the `insta` crate. The compiler produces output that is compared against stored `.snap` files. When behavior changes intentionally, run `cargo insta accept` to accept new baselines.
 
 **Crate:** `insta` with `glob` feature.
 
@@ -1779,7 +1779,7 @@ cargo test --manifest-path third_party/ruff/Cargo.toml -p ruff_python_parser # P
 cargo test -p sifr_type_system -- mdtest      # Type checker markdown tests
 cargo test -p sifr_codegen                    # Codegen snapshots
 cargo test --test e2e                         # End-to-end tests
-cargo insta review                            # Update snapshots after intentional changes
+cargo insta accept                            # Update snapshots after intentional changes
 cargo test -- corpus --ignored                # Run corpus tests (slower, layer 4)
 cargo fuzz run parser_fuzz -- -max_total_time=300  # Run fuzz tests (layer 5, generics+)
 cargo bench                                   # Run benchmarks (layer 6, generics+)
@@ -1803,9 +1803,9 @@ bound to the exact opaque pre-epoch asset identity and protected approval. The
 user-directed single-maintainer exception for that bootstrap and first GA is
 itself a canonical, expiring governance artifact. It permits only the named
 owner and those three operations, requires a real `stable-release` approval,
-is pinned by digest, prefers a distinct reviewer when one approved, and binds
+is pinned by digest, prefers a distinct approver when one approved, and binds
 the selected approval policy plus initiator into retained evidence; normal and
-incident operations remain distinct-reviewer-only. The
+incident operations remain distinct-approver-only. The
 post-index bootstrap recovery path revalidates the failed mutation and site
 attempts, both protected approvals, the already-live generation-1 bytes, and
 the reproducible site inputs before retrying only site publication and public
@@ -1850,7 +1850,7 @@ When an AI agent adds a new language feature, it must:
 2. **Type checker:** Add markdown test cases in `resources/mdtest/`
 3. **Codegen:** Add `.sifr` fixture files in `resources/codegen/`
 4. **E2E:** Add pass/fail test files in `tests/e2e/`
-5. **Run `cargo insta review`** to accept new snapshots
+5. **Run `cargo insta accept`** to accept new snapshots
 6. **Run `cargo test`** to verify everything passes
 
 This ensures every feature is tested at every layer of the compiler, and any agent can verify the full system by running `cargo test`.

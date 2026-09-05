@@ -267,7 +267,7 @@ On `wasm32` or any 32-bit target, compiler-owned `usize` conversions use the tar
 `bytearray` follows the same element type rule on reads and iteration: elements are `uint8`. Writes require a fitting literal or a `uint8` value. Assigning an arbitrary `int` to a bytearray element requires explicit fallible narrowing through `uint8(value)` so mutation cannot silently truncate.
 
 `array` is a future dtype-bearing surface in this design context; references to `array[int32]` describe the required rules for the data-science work even when the runtime container is not implemented yet.
-The reviewable and test-owned rules artifact for this deferred dtype surface
+The inspectable and test-owned rules artifact for this deferred dtype surface
 is `verification/areas/core_language/data/integer_dtype_rules.md`; the quick
 validation profile runs its sentinel check so future runtime work cannot remove the
 no-silent-wrap and no-implicit-widen requirements by accident.
@@ -347,7 +347,7 @@ encoding, or select `json.exact` with an exact-client policy.
 
 Core rule: Sifr never silently loses integer precision when crossing a boundary. A serializer either preserves the exact integer, proves the target can represent it, or returns a typed error.
 
-The reviewable rules artifact for schema, client, generated serde, and
+The inspectable rules artifact for schema, client, generated serde, and
 storage boundary mappings is
 `verification/areas/core_language/data/integer_model/serialization_boundary_rules.md`.
 Future work on web, ORM, and schema surfaces must update that artifact when

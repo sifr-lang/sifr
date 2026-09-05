@@ -141,7 +141,7 @@ is closed for this contract. It includes `CallableIdentity`, a sealed checked ta
 canonical module, optional owner, symbol, concrete generic arguments, and canonical signature.
 All five components participate in the canonical result and therefore the static-program and cache
 identity. Packages can carry this value through records and collections but cannot construct it
-from strings. A new variant requires a contract and cache-identity review.
+from strings. A new variant requires a contract and cache-identity validation.
 
 The provisional adapter pass accepts `StaticProgram` bounds before attached API selection finishes.
 The final pass still requires a produced program and complete structural support.

@@ -55,6 +55,4 @@ enforces both non-duplication directions.
 - `cargo clippy -p sifr_analysis -p sifr -- -D warnings` -> PASS
 - `python3 scripts/check_file_size_guardrails.py` -> PASS
 - `git diff --check` -> PASS
-- agent reviewer pass 1 -> SATISFIED with residual recommendations
-- agent reviewer pass 2 -> SATISFIED
 - `scripts/run_all_tests.sh --profile create-pr` -> PASS, report `target/validation_lane_reports/create-pr.latest.json`, wall time 279.93s, advisory: group skew is high

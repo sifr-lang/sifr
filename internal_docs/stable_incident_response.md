@@ -10,7 +10,7 @@ release-publication workflow.
 
 - Release owner: `release/distribution`.
 - Incident owner: `release/distribution`.
-- Approval authority: a protected `stable-release` environment reviewer from
+- Approval authority: a protected `stable-release` environment approver from
   `release/distribution` who did not initiate the run. Initial and resume
   attempts require distinct recorded approvals.
 - Acknowledgement target: 30 minutes from a qualifying trigger. This is

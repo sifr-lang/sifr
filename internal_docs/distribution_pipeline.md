@@ -591,7 +591,7 @@ scripts/distribution/run_incident_fixture.py run \
   --affected-plan <fixture-affected-plan> \
   --successor-plan <fixture-target-or-successor-plan> \
   --mode initial \
-  --approver <fixture-reviewer>
+  --approver <fixture-approver>
 ```
 
 It accepts only explicit temporary filesystem fixtures, rejects production
@@ -633,7 +633,7 @@ days, source/profile/toolchain/submodule drift, any changed transported byte,
 supporting report or release-note drift, and a stale live index identity. It
 then emits—without mutation—the exact proposed generation/index, 20 artifact
 identities, Marketplace VSIX binding, site base commit, and evidence/source
-identities for protected-environment review. The summary is immutable for 30
+identities for protected-environment approval. The summary is immutable for 30
 days; its plan, release-report, qualification, live-index, and proposed-index
 digests are explicit reusable-workflow outputs, and the later publish job must
 consume the exact summary digest.
@@ -648,7 +648,7 @@ compressed and uncompressed byte boundaries, and every transported SHA-256.
 The protected revalidation command accepts caller-supplied clean
 evidence/source checkouts, live index and retained snapshots, and refetched
 artifact root. It recomputes the complete stable-prepare summary and requires
-byte-for-byte equality with the reviewer-visible summary. The production
+byte-for-byte equality with the approver-visible summary. The production
 `publish` job invokes it after re-fetching exact evidence and transported
 artifacts, then repeats the live-index/history fetch and revalidation
 immediately before generation reservation.
@@ -692,7 +692,7 @@ waiver under `plans/releases/`. It authorizes only `bootstrap-alpha`,
 pause for a GitHub-recorded `stable-release` approval by the named owner and
 admin bypass remains disabled. Bootstrap evidence and stable sign-off record
 the approval mode and waiver SHA-256. The workflow pins the checked-in waiver
-digest, prefers any distinct environment reviewer over owner self-approval,
+digest, prefers any distinct environment approver over owner self-approval,
 and derives the retained mode from that selected approval set before
 publication. `normal`, `rollback`, and `incident-roll-forward` cannot select
 the waiver.
@@ -740,7 +740,7 @@ the workflow run's GitHub approval history and fails unless it contains an
 authorized environment approver. The default requires a login distinct from
 `GITHUB_TRIGGERING_ACTOR`; the canonical unexpired single-maintainer waiver
 allows the named owner only for the two bootstrap stages. Its checked-in digest
-is pinned by the protected workflow, and any distinct reviewer takes precedence
+is pinned by the protected workflow, and any distinct approver takes precedence
 over the waiver. The final evidence binds the selected approval mode and waiver
 digest, plus the alpha-stage evidence
 digest, run/attempt, initiator, approvers, and prepare-summary digest as well as

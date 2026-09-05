@@ -381,11 +381,11 @@ enum SecondaryError:
     CancellationDuringCleanup(cause: CancellationError)
 ```
 
-`ScopeFailure` intentionally type-erases unobserved child errors to ordinary `Error` evidence. Explicitly awaited child handles preserve their typed `E` through `TaskResult[T, E]`; scope-exit failure is for cases where the child result was not otherwise consumed. Additional `SecondaryError` variants can be added by reviewed model amendment when implementation experience proves a new evidence class is needed.
+`ScopeFailure` intentionally type-erases unobserved child errors to ordinary `Error` evidence. Explicitly awaited child handles preserve their typed `E` through `TaskResult[T, E]`; scope-exit failure is for cases where the child result was not otherwise consumed. Additional `SecondaryError` variants can be added by documented model amendment when implementation experience proves a new evidence class is needed.
 
 ## Core API Signatures
 
-The model uses these shapes unless a future reviewed model amendment changes them.
+The model uses these shapes unless a future documented model amendment changes them.
 
 ```sifr
 # Async function call and spawn
@@ -703,7 +703,7 @@ Async functions must be async for a real reason. The compiler tracks an internal
 - `AsyncResourceWait`: awaiting async context-manager enter/exit, async iterator advancement, or async cleanup.
 - `GeneratorSuspend`: suspension at an async generator `yield`, or an async generator await with a non-empty suspension summary.
 
-`async def` with a `NoSuspend` summary is rejected. The user should write `def` instead. Async protocol conformance may require an async-shaped method with no current suspension, but that must use an explicit reviewed escape hatch with a reason; the compiler must not silently accept fake async functions.
+`async def` with a `NoSuspend` summary is rejected. The user should write `def` instead. Async protocol conformance may require an async-shaped method with no current suspension, but that must use an explicit documented escape hatch with a reason; the compiler must not silently accept fake async functions.
 
 `await` remains valid only for awaitable values. Awaiting a non-awaitable value, including the result of a sync function call, is a hard error. In addition, awaiting a same-task coroutine whose transitive suspension summary is `NoSuspend` is rejected because the callee is async in shape only.
 
@@ -951,7 +951,7 @@ These decisions are part of the first async/concurrency model:
 12. Public selectors, `contextvars`, multiprocessing, process pools, raw event loops, and transport/protocol APIs are deferred.
 13. `ProcessPoolExecutor` is blocked on the future typed IPC/serialization rules.
 14. `@blocking_io` and `@cpu_heavy` are declaration-site workload classification annotations for sync functions. They power diagnostics and offload validation but never trigger implicit scheduling. The stdlib ships with a pre-annotated database of known stdlib functions.
-15. Async functions must have a real suspension effect. `async def` with no suspension is rejected unless an explicit reviewed protocol-conformance escape hatch applies.
+15. Async functions must have a real suspension effect. `async def` with no suspension is rejected unless an explicit documented protocol-conformance escape hatch applies.
 16. Awaiting a same-task coroutine with no transitive suspension effect is rejected.
 17. Direct `@blocking_io` or `@cpu_heavy` sync calls from async code are errors in the sealed model; cheap unannotated sync helper calls remain allowed.
 18. `task.spawn_blocking` requires classified `@blocking_io`, `@cpu_heavy`, stdlib-known, or external-rules-known blocking/CPU-heavy work.

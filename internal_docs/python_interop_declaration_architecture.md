@@ -560,7 +560,7 @@ Checked-in Sifr declarations are the binding contract. Python `.pyi` files,
 `py.typed` inline annotations, and runtime introspection are authoring inputs,
 not proof that runtime values satisfy the hints.
 
-The symbol-selective command generates reviewable declaration scaffolds:
+The symbol-selective command generates inspectable declaration scaffolds:
 
 ```bash
 sifr python bind redis --symbols Redis
