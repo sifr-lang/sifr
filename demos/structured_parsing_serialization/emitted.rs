@@ -2366,7 +2366,7 @@ mod sifr_generated_project_nominals {
     }
     #[derive(Debug, Clone, PartialEq, Eq)]
     pub struct SifrGeneratedStdlibSifrX2ecsvX2eDictReader {
-        pub fieldnames_field: Vec<String>,
+        pub fieldnames: Vec<String>,
         pub rows: Vec<Vec<String>>,
         pub pos: SifrInt,
         pub restkey: String,
@@ -2462,8 +2462,7 @@ mod sifr_generated_project_nominals {
                 restkey: sifr_generated_field_value_d10323292550fbae_726573746b6579,
                 restval: sifr_generated_field_value_e9b6e328a309fdee_7265737476616c,
                 pos: sifr_generated_field_value_e04b9443eebba9b4_5f706f73,
-                fieldnames_field:
-                    sifr_generated_field_value_efdb691f099ff036_5f6669656c646e616d6573,
+                fieldnames: sifr_generated_field_value_efdb691f099ff036_5f6669656c646e616d6573,
                 rows: sifr_generated_field_value_d742ae5cfb4259e3_5f726f7773,
             }
         }
@@ -2477,7 +2476,7 @@ mod sifr_generated_project_nominals {
                     continue;
                 }
                 result.push(sifr_generated_dict_reader_row(
-                    &self.fieldnames_field,
+                    &self.fieldnames,
                     &row,
                     &self.restkey,
                     &self.restval,

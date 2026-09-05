@@ -338,7 +338,7 @@ impl Registry {
             return Ty::Unknown;
         };
         self.field_types
-            .get(&(owner.to_string(), name))
+            .get(&(owner.clone(), name))
             .map_or(Ty::Unknown, |(module, ty)| {
                 let substitutions = self
                     .parameters

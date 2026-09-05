@@ -214,6 +214,28 @@ it does not replace the failed full binding-authoring suite. Final mechanism
 regressions also cover generic member chains, enum payloads, loop shadowing,
 declared method return identities, Result error closures and Err patterns.
 
+### Item12H pre-review qualification receipt
+
+Implementation commit `dba6a8f7075ea071058654c85ed1e46e4d1272fa` passed all
+115 canonicalizer tests (including nine focused field regressions), all 579
+active driver tests (77 existing ignored tests), and the direct native
+cross-module regression (`binding runtime ok`). Logs are keyed by that SHA
+under `/tmp/sifr-item12h.afJDbk/`: `canonicalizer-*.log`, `driver-*.log`,
+`build-*.log`, and `native-*.log`. The earlier restricted driver run is not
+used as final driver evidence.
+
+Compiler-owned companions were regenerated with
+`python3 scripts/check_demo_emitted_freshness.py --sifr target/debug/sifr --update`.
+All 264 emissions succeeded; 18 companion files changed through that generator.
+The changes remove field collision suffixes caused by unrelated nominal types
+(Logger, Random, deque, CSV/ZIP carriers). No Sifr demo or reference Rust source
+changed. Refresh log: `companion-refresh-dba6a8f7075ea071058654c85ed1e46e4d1272fa.log`.
+The only subsequent compiler edit replaces an implicit String clone with
+explicit `.clone()` for Clippy; field resolution and generated output are
+unchanged. Strict Clippy after that repair reports only the inherited Item12C
+failure (`clippy-clone-repair.log`). Exact-final-candidate focused checks and
+review follow; no gate has yet run and the full binding suite remains blocked.
+
 Binding-authoring fails with eight Rust E0560 diagnostics in generated
 `binding_authoring/math_python.rs`: initializers use
 `sifr_generated_python_error`, while the imported nominal declares `python_error`.
