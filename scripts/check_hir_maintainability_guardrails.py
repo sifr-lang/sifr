@@ -14,7 +14,7 @@ BANNED_MONOLITHS = [
 
 CHECKLIST_DOC = Path("internal_docs/hir_maintainability_guardrails.md")
 REQUIRED_CHECKLIST_SNIPPETS = [
-    "## Review Checklist",
+    "## Validation Checklist",
     "- [ ] Lowering logic is placed in the correct file",
     "- [ ] Shared lowering helper extraction was considered before adding duplicate logic",
     "- [ ] Unified file-size guardrail passes locally (`python3 scripts/check_file_size_guardrails.py`)",

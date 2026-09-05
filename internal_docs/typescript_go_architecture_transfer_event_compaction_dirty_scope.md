@@ -1,6 +1,6 @@
 # TypeScript-Go Architecture Transfer: Event Compaction And Dirty Scope
 
-status: event-compaction and dirty-scope model implementation review
+status: event-compaction and dirty-scope model implementation status
 
 event-compaction and dirty-scope model adds the first precise invalidation vocabulary for the serialized compiler
 service. The implementation still runs synchronously, but raw LSP and watcher

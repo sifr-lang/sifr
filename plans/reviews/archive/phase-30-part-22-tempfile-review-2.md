@@ -184,7 +184,7 @@ All pass-1 remediation items have been addressed. The minor code quality observa
 ## Review Metadata
 
 - **Review Round**: 2 (R2) - Pass-1 Remediation Assessment
-- **Reviewer**: Claude Code
+- **Reviewer**: agent
 - **Date**: 2026-03-09
 - **Files Reviewed**:
   - `/Users/yaseralnajjar/work/sifr/codebase/lib/sifr/tempfile.sifr`

@@ -1,7 +1,7 @@
 # INT-8 Closure Hardening and Performance Gates Review
 
 **Branch:** int-8-closure-hardening-gates
-**Reviewer:** Claude Opus 4.7
+**Reviewer:** agent
 **Date:** 2026-05-08
 **Artifacts reviewed:** `verification/integer_model_closure_hardening.md`, `verification/perf/sifr_int_loop.sifr`, `scripts/run_integer_model_closure_perf.py`, `verification/fuzz_property/seeds/integer_external_boundaries_seed.sifr`, `verification/fuzz_property/seeds/integer_fixed_width_helpers_seed.sifr`, `verification/fuzz_property/property_manifest.json`, `verification/fuzz_property/fuzz_smoke_manifest.json`
 **Design:** `internal_docs/integer_model.md`

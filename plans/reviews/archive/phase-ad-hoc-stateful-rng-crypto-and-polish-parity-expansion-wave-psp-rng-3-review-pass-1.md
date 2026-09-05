@@ -167,5 +167,5 @@ The wave_psp_rng_3 implementation is correct, complete, and properly governance-
 
 | Role | Name | Date |
 |------|------|------|
-| Reviewer | Claude | 2026-03-21 |
+| Reviewer | agent | 2026-03-21 |
 | Phase owner | Yaser Al-Najjar | — |

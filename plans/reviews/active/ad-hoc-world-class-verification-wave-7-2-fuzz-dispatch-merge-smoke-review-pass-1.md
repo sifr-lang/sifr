@@ -65,6 +65,6 @@ I have enough to write a thorough review. Let me synthesize the findings.
 
 ### Verdict
 
-Another Opus review round is required after fixes. Two of the blockers (B1 metadata-only diagnostic dispatch, B2 nightly/release double-execution) change the substance of what runs and must be re-reviewed once the harness/profiles are realigned.
+Another agent review round is required after fixes. Two of the blockers (B1 metadata-only diagnostic dispatch, B2 nightly/release double-execution) change the substance of what runs and must be re-reviewed once the harness/profiles are realigned.
 
 A full `scripts/run_all_tests.sh --profile merge` run (not `--emit-plan`) is required for this slice before PR submission, both because Wave 7 is a gate-expanding wave with a phase rule that mandates warm/cold merge wall-time measurement, and because the codegen target's `sifr run` calls and the harness reproduction commands have never been executed end-to-end inside the merge lane. `create-pr` validation alone is not sufficient.

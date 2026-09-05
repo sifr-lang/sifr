@@ -47,7 +47,7 @@ documentation and release notes now advertise the qualified action again.
   editor, release-workflow, format, HIR maintainability, and file-size checks
   passed. The implementation changed 23 paths with 258 insertions and 74
   deletions. Touched first-party source files remained below 900 lines.
-- Milestone reviews and the final exact-head Claude Opus review returned
+- Milestone reviews and the final exact-head agent review returned
   `SATISFIED` with no blocking findings. The final review is recorded on
   [PR #3102](https://github.com/sifr-lang/sifr/pull/3102#issuecomment-5238480275).
 

@@ -51,7 +51,7 @@ The execution tracker review log has:
 
 ```
 - `2026-05-26`: User review required explicit linter CLI decisions. The phase was updated...
-- `2026-05-26`: Claude linter CLI review pass 1 found the CLI contract structurally sound...
+- `2026-05-26`: agent linter CLI review pass 1 found the CLI contract structurally sound...
 ```
 
 Pass 1 is recorded. Pass 2 is documented in `reviews/sifr-linter-cli-parity-review-pass-2.md` but **not yet recorded in the execution tracker**. The pass-2 review is complete (the file exists and is thorough), but its summary line is absent from the phase's review log.
@@ -59,7 +59,7 @@ Pass 1 is recorded. Pass 2 is documented in `reviews/sifr-linter-cli-parity-revi
 **Exact line to add to the execution tracker** (after the pass-1 entry at line 71):
 
 ```
-- `2026-05-26`: Claude linter CLI review pass 2 confirmed all pass-1 precision edits applied, manifest schema and validation obligations complete, all behavioral areas specified, and the plan is implementation-ready with no remaining blockers.
+- `2026-05-26`: agent linter CLI review pass 2 confirmed all pass-1 precision edits applied, manifest schema and validation obligations complete, all behavioral areas specified, and the plan is implementation-ready with no remaining blockers.
 ```
 
 This matches the pass-2 verdict verbatim and fills the tracking gap.

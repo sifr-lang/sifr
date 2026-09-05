@@ -33,7 +33,7 @@ Ruless:
 
 - Seed files are version-controlled under `verification/areas/fuzz_property/seeds/`.
 - Target-specific seed ownership is recorded in `fuzz_smoke_manifest.json` under each target's `seed_files`.
-- Seed updates require reviewable diffs and manifest updates.
+- Seed updates require inspectable diffs and manifest updates.
 - Duplicate equivalent seeds should be removed; dedup decisions are captured in PR notes.
 - Seed corpus must cover control flow, import paths, callable signatures, and string/numeric literal shapes.
 

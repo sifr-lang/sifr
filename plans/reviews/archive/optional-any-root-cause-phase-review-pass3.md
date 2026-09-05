@@ -1,6 +1,6 @@
 # Review: Optional/Any Root-Cause Closure Phase (Pass 3 — Final Audit)
 
-Reviewer: Claude
+Reviewer: agent
 Date: 2026-04-06
 Phase document: `issues/ad-hoc-phase-optional-any-root-cause-closure-2026-04-06.md`
 Execution ledger: `issues/ad-hoc-phase-optional-any-root-cause-closure-2026-04-06-execution.md`

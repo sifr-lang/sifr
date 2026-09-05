@@ -66,11 +66,11 @@ ordinary Sifr expression body.
 | Milestone | Status | Evidence |
 | --- | --- | --- |
 | M0. Contract and Guardrail Documentation | completed | PR #2812 documented the canonical declaration form and validation boundaries. |
-| M1. Lowering Support for Ellipsis Interop Stubs | completed | PR #2813 merged. Lowering implementation and focused tests are complete; Opus M1 pass 2 has no unresolved actionable findings. Validation: `cargo fmt --check`, `cargo test -p sifr_lowering rust_interop`, `cargo test -p sifr -- rust_interop`, `scripts/run_all_tests.sh --profile create-pr` in a clean detached worktree. |
-| M2. Effective Sysroot Panic Policy | completed | PR #2814 merged. Effective panic policy implementation and focused tests are complete; Opus M2 pass 1 has no actionable findings. Validation: `cargo fmt --check`, `cargo test -p sifr_driver -- sysroot_interop`, `cargo test -p sifr_driver -- rust_interop_panic`, `cargo test -p sifr_driver -- rust_interop_tests`, `cargo test -p sifr -- sysroot_interop`, `cargo test -p sifr -- rust_interop_panic`, `python3 scripts/check_hir_maintainability_guardrails.py`, `scripts/run_all_tests.sh --profile create-pr`. |
-| M3. Codegen and Plan Hardening | completed | PR #2816 merged. Bodyless direct/package-bridge/`Self` codegen and package bridge Cargo/cache metadata are complete; Opus M3 final pass is satisfied. Validation: `cargo fmt --check`, `cargo test -p sifr_driver rust_interop_tests`, `cargo test -p sifr_codegen rust_interop_direct`, `cargo test -p sifr_driver sysroot_interop`, `cargo test -p sifr_driver rust_interop_panic`, `cargo test -p sifr_driver generated_cargo_toml_includes_package_bridge_dependency_alias`, `python3 scripts/check_hir_maintainability_guardrails.py`, `python3 scripts/check_file_size_guardrails.py`, `scripts/run_all_tests.sh --profile create-pr`. |
+| M1. Lowering Support for Ellipsis Interop Stubs | completed | PR #2813 merged. Lowering implementation and focused tests are complete; agent M1 pass 2 has no unresolved actionable findings. Validation: `cargo fmt --check`, `cargo test -p sifr_lowering rust_interop`, `cargo test -p sifr -- rust_interop`, `scripts/run_all_tests.sh --profile create-pr` in a clean detached worktree. |
+| M2. Effective Sysroot Panic Policy | completed | PR #2814 merged. Effective panic policy implementation and focused tests are complete; agent M2 pass 1 has no actionable findings. Validation: `cargo fmt --check`, `cargo test -p sifr_driver -- sysroot_interop`, `cargo test -p sifr_driver -- rust_interop_panic`, `cargo test -p sifr_driver -- rust_interop_tests`, `cargo test -p sifr -- sysroot_interop`, `cargo test -p sifr -- rust_interop_panic`, `python3 scripts/check_hir_maintainability_guardrails.py`, `scripts/run_all_tests.sh --profile create-pr`. |
+| M3. Codegen and Plan Hardening | completed | PR #2816 merged. Bodyless direct/package-bridge/`Self` codegen and package bridge Cargo/cache metadata are complete; agent M3 final pass is satisfied. Validation: `cargo fmt --check`, `cargo test -p sifr_driver rust_interop_tests`, `cargo test -p sifr_codegen rust_interop_direct`, `cargo test -p sifr_driver sysroot_interop`, `cargo test -p sifr_driver rust_interop_panic`, `cargo test -p sifr_driver generated_cargo_toml_includes_package_bridge_dependency_alias`, `python3 scripts/check_hir_maintainability_guardrails.py`, `python3 scripts/check_file_size_guardrails.py`, `scripts/run_all_tests.sh --profile create-pr`. |
 | M4. Stdlib Source Migration and Executable Guards | completed | PR #2817 merged. Completed private stdlib `sifr_stdlib.*` declarations now use ellipsis-only stubs without explicit `panic=trusted_no_panic`; the stateless private adapter guard prevents drift. Validation: `cargo fmt --check`, focused stateless private adapter/codegen tests, representative migrated-demo checks, guardrails, and `scripts/run_all_tests.sh --profile create-pr`. |
-| M5. Closeout Validation and Review | completed | Final closeout PR #2818. Create-pr and merge validation passed; Opus pass 2 is satisfied for phase closure. |
+| M5. Closeout Validation and Review | completed | Final closeout PR #2818. Create-pr and merge validation passed; agent pass 2 is satisfied for phase closure. |
 
 ## Affected Inventory
 
@@ -375,7 +375,7 @@ Close the phase only after local validation and external design review agree.
 
 Tasks:
 
-- Run Opus review on the phase, docs, and implementation.
+- Run agent review on the phase, docs, and implementation.
 - Address all actionable review findings or document why they are intentionally
   out of scope.
 - Run the authoritative create-pr validation profile.
@@ -388,7 +388,7 @@ Tasks:
 
 Acceptance:
 
-- Opus review has no unresolved actionable findings.
+- agent review has no unresolved actionable findings.
 - Local validation passes.
 - The phase document records implementation evidence and merged PR link.
 
@@ -426,12 +426,12 @@ Validation:
 ## Closeout Notes
 
 - PR: final closeout PR #2818.
-- Opus review: pass 1 is recorded in
-  `plans/reviews/active/ad-hoc-sysroot-stdlib-interop-declaration-cleanup-m5-opus-review-pass-1.md`;
+- agent review: pass 1 is recorded in
+  `plans/reviews/active/ad-hoc-sysroot-stdlib-interop-declaration-cleanup-m5-agent-review-pass-1.md`;
   pass 2 is recorded in
-  `plans/reviews/active/ad-hoc-sysroot-stdlib-interop-declaration-cleanup-m5-opus-review-pass-2.md`
+  `plans/reviews/active/ad-hoc-sysroot-stdlib-interop-declaration-cleanup-m5-agent-review-pass-2.md`
   and is satisfied for phase closure.
-- Opus pass 1 findings: the reviewer blocked closure until the local lint
+- agent pass 1 findings: the reviewer blocked closure until the local lint
   cleanup is committed with PR #2818 and this closeout record calls out the
   lint-driven changes that are not purely mechanical. The requested doc
   clarifications are recorded here before the follow-up review pass.

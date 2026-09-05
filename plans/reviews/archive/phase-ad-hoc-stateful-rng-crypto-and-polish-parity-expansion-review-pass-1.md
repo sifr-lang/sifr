@@ -223,6 +223,6 @@ After `wave_psp_rng_1` merges:
 ---
 
 *Review completed: 2026-03-21*
-*Reviewer: Claude Code*
+*Reviewer: agent*
 *Phase: ad-hoc-stateful-rng-crypto-and-polish-parity-expansion*
 *Wave: wave_psp_rng_1*

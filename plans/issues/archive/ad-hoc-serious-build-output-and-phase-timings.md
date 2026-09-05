@@ -259,14 +259,14 @@ scripts/run_all_tests.sh
 
 ## Review Log
 
-- Claude Opus planning review pass 1: requested measured-boundary wording, explicit machine-format suppression, `sifr run` and cache-hit decisions, verbose-only best-effort binary size, Cargo `--quiet` policy, and unit-style cleanup.
-- Claude Opus planning review pass 2: implementation-ready; only minor wording polish requested for default alignment, verbose Cargo quiet policy, and cached duration semantics.
+- agent planning review pass 1: requested measured-boundary wording, explicit machine-format suppression, `sifr run` and cache-hit decisions, verbose-only best-effort binary size, Cargo `--quiet` policy, and unit-style cleanup.
+- agent planning review pass 2: implementation-ready; only minor wording polish requested for default alignment, verbose Cargo quiet policy, and cached duration semantics.
 - User follow-up on 2026-06-14: default human output should be the phase-aware summary; `--quiet` is the terse success mode.
-- Claude Opus implementation review pass 1: shippable with recommended fixes for
+- agent implementation review pass 1: shippable with recommended fixes for
   the cached `sifr build` doc contradiction, stale LeetCode benchmark parser,
   and cached-artifact status cleanup; suggested project-mode and
   warning-success machine-format coverage.
-- Claude Opus implementation review pass 2: all pass-1 recommendations and
+- agent implementation review pass 2: all pass-1 recommendations and
   testing gaps addressed; no further review rounds needed before PR validation.
 
 ## Implementation Log

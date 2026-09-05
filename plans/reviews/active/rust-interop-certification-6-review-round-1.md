@@ -2,7 +2,7 @@
 
 Date: 2026-07-28
 
-Reviewer: Claude Opus 5 (`--effort medium`)
+Reviewer: agent (`--effort medium`)
 
 Verdict: **NOT SATISFIED**
 
@@ -40,4 +40,4 @@ scenario mutation self-tests were otherwise sound.
 ## Required outcome
 
 Address every finding, run focused and authoritative validation, and submit the
-exact updated head to another Opus review round.
+exact updated head to another agent review round.

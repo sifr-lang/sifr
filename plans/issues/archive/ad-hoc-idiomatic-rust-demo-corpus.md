@@ -115,7 +115,7 @@ Baseline assumptions for this phase:
 
 - the current demo sweep is green again for the active `run`/`test` contract
 - `idiomatic.rs` exists across the demo tree and now needs Rust-first cleanup, not just coverage
-- current Claude review batches already show two facts:
+- current agent review batches already show two facts:
   - many folders are acceptable with relatively small cleanup
   - the remaining problems cluster in a smaller subset of hand-authored or stdlib-heavy files
 
@@ -124,7 +124,7 @@ Operational baseline:
 - authoritative corpus size:
   - every directory under `demos/` containing `.sifr`
 - current review method:
-  - batch review through Claude CLI using embedded file contents
+  - batch review through agent CLI using embedded file contents
   - Rust-first rubric
 - current review output location:
   - `tmp/idiomatic_review_batches/`
@@ -178,8 +178,8 @@ Each batch must follow this loop:
 2. inspect the current `idiomatic.rs`
 3. rewrite or refine toward a Rust-first solution
 4. run local sanity formatting/checks for the touched files
-5. review the batch with Claude using the Rust-first rubric
-6. apply follow-up fixes if Claude finds real issues
+5. review the batch with agent using the Rust-first rubric
+6. apply follow-up fixes if agent finds real issues
 7. mark the batch complete in the execution ledger
 
 ## Concurrency Rule
@@ -199,7 +199,7 @@ Therefore implementation must:
 For each touched batch:
 
 - `rustfmt <touched idiomatic.rs files>`
-- Claude Rust-first review for that batch
+- agent Rust-first review for that batch
 
 Optional when useful:
 
@@ -244,7 +244,7 @@ Goals:
 
 Priority areas:
 
-- files already flagged by prior Claude review
+- files already flagged by prior agent review
 - stdlib-heavy demonstrations
   - meaning demos whose current `idiomatic.rs` embeds substantial library-like helper code or broad utility surfaces, which makes mechanical/codegen-shaped structure more likely to survive
 - hand-authored files that still retain generated-style structure
@@ -516,7 +516,7 @@ This phase is complete only when:
 
 - over-correcting toward “nice Rust” while drifting from demo behavior
 - under-correcting by leaving emitted-style structure in place
-- treating Claude style suggestions as mandatory even when they do not matter
+- treating agent style suggestions as mandatory even when they do not matter
 - conflicting with concurrent repo edits if patches are too broad
 
 ## Review Notes

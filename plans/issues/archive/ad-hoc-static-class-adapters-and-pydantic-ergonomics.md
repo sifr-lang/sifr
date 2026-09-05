@@ -379,7 +379,7 @@ Validation: `git diff --check`; `python3
 scripts/check_docs_error_code_links.py`; `python3
 scripts/check_file_size_guardrails.py` (`PASS`, 3149 files, 900-line limit).
 Documentation-only item, so Sifr create-PR and merge gates were not run.
-Review evidence: initial exact-SHA Opus review of
+Review evidence: initial exact-SHA agent review of
 `b3c757e8bdd22917501a1bf485522c96f9e41464` reported two blocking omissions
 ([evidence](https://github.com/sifr-lang/sifr/pull/3239#issuecomment-5326156228));
 the one remediation review of final candidate
@@ -446,7 +446,7 @@ spans plus the package note. The diagnostics-area attempt reached both M1
 fixtures, while 142 unrelated cases were replaced by `SIFR-WORKSPACE-0003`
 because the separately owned LeetCode corpus was not initialized in this
 worktree.
-Review evidence: the one exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the one exact-SHA agent review returned `SATISFIED` with no
 blocking findings
 ([evidence](https://github.com/sifr-lang/sifr/pull/3243#issuecomment-5326628275)).
 The create-PR and merge gates were each run once on the unchanged candidate.
@@ -532,7 +532,7 @@ guardrail (`PASS`, 3144 files); `git diff --check`; and direct `sifr check` of
 the four-kind fixture. The broad non-E2E run passed 109 CLI unit tests and 12
 build-output integration tests before its fail corpus reached the separately
 owned pre-v1 `protocol_bound_unknown_forwarded_typevar.sifr`/CFG behavior.
-Review evidence: the one exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the one exact-SHA agent review returned `SATISFIED` with no
 blocking findings
 ([evidence](https://github.com/sifr-lang/sifr/pull/3248#issuecomment-5327488451)).
 The create-PR and merge gates were each run once on the unchanged candidate.
@@ -598,7 +598,7 @@ guardrail (`PASS`, 3146 files); and `git diff --check`. The broad non-E2E
 command passed 109 CLI unit tests, 12 build-output integration tests, and 37
 of 38 E2E harness tests; its only failure was the separately owned pre-v1
 `protocol_bound_unknown_forwarded_typevar.sifr` CFG/diagnostic mismatch.
-Review evidence: the one exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the one exact-SHA agent review returned `SATISFIED` with no
 blocking findings
 ([evidence](https://github.com/sifr-lang/sifr/pull/3252#issuecomment-5328092741)).
 The create-PR and merge gates were each run once on the unchanged candidate.
@@ -674,7 +674,7 @@ ignored. The earlier broad non-E2E command passed 109 CLI unit tests and 12
 build-output tests; its E2E harness passed 37 of 38, with only the separately
 owned pre-v1 `protocol_bound_unknown_forwarded_typevar.sifr` CFG/diagnostic
 mismatch failing.
-Review evidence: the initial exact-SHA Opus review found two blocking omissions
+Review evidence: the initial exact-SHA agent review found two blocking omissions
 in inherited-default index mapping and provider source-span identity
 ([evidence](https://github.com/sifr-lang/sifr/pull/3255#issuecomment-5329040853)).
 Both were remediated in one batch. The one permitted remediation review on the
@@ -751,7 +751,7 @@ thread, and shared-context rejection fixtures; receiver codegen tests;
 workspace clippy; formatting; HIR maintainability; the 900-line file-size
 guardrail (`PASS`, 3153 files); documentation links; and `git diff --check` all
 passed. The known M4 fallback-parent diagnostic test remained excluded and
-unchanged. The exact-SHA Opus review returned `SATISFIED` with no blocking
+unchanged. The exact-SHA agent review returned `SATISFIED` with no blocking
 findings
 ([evidence](https://github.com/sifr-lang/sifr/pull/3258#issuecomment-5329994650)).
 The create-PR and merge gates were each attempted once on the unchanged final
@@ -767,7 +767,7 @@ tracking with opaque-resource move diagnostics; make the intended `Self`
 availability for static and class methods explicit; state and test the
 `@staticmethod` descriptor stacking rule; key adapter-selection lookup by
 class identity rather than a bare name; and make slot identity explicitly
-self-describing for fallibility. These were non-blocking Opus suggestions.
+self-describing for fallibility. These were non-blocking agent suggestions.
 The pre-v1 worktree, task, processes, artifacts, and failures remain entirely
 outside this phase.
 
@@ -818,7 +818,7 @@ diagnostic assertion; the 900-line file-size guardrail (`PASS`, 3158 files);
 and HIR maintainability all passed. M6's rust-interop matrix,
 compatibility-matrix, and stable-candidate checks passed; the aggregate area
 command separately reported the out-of-scope pre-v1 method-slot placeholder.
-The exact-SHA Opus review returned `SATISFIED` with no blocking finding and no
+The exact-SHA agent review returned `SATISFIED` with no blocking finding and no
 remediation round
 ([evidence](https://github.com/sifr-lang/sifr/pull/3262#issuecomment-5331127082)).
 The create-PR and merge gates were each attempted exactly once on the unchanged
@@ -836,7 +836,7 @@ structural implementations; make same-path mapping probe failures structured;
 make local malformed-mapping marking match exported marking; replace the
 stdlib identity-prefix heuristic with explicit origin; document or encode the
 mapped-value `Send`/`Sync` backstop; and preserve file-size headroom in the
-three 899-line modules. These were non-blocking Opus suggestions.
+three 899-line modules. These were non-blocking agent suggestions.
 The pre-v1 worktree, task, processes, artifacts, and failures remain entirely
 outside this phase.
 M7 completed below.
@@ -902,7 +902,7 @@ and [`sifr#3233`](https://github.com/sifr-lang/sifr/issues/3233) was confirmed
 closed. The broad unit command passed 109 CLI unit tests and 12 build-output
 tests before the unrelated existing
 `protocol_bound_unknown_forwarded_typevar.sifr` CFG/diagnostic failure.
-The exact-SHA Opus review found final lowering could retain provisional APIs
+The exact-SHA agent review found final lowering could retain provisional APIs
 for a local owner whose plan selected no set. The one remediation corrected
 that defining-module path with explicit finality and a selected/unselected
 regression test. The remediation review then exposed the imported-owner path
@@ -969,7 +969,7 @@ Validation: all three imported attached-API tests and all 19 early-adapter
 tests passed. The cross-module source package fixture built and ran all six
 modules and printed `attached-contract`. Workspace clippy, formatting, diff,
 HIR maintainability, and the 900-line file-size guardrail passed. The exact-SHA
-Opus review was SATISFIED with no blocker
+agent review was SATISFIED with no blocker
 ([evidence](https://github.com/sifr-lang/sifr/pull/3268#issuecomment-5332717375)).
 The create-PR and merge gates were each attempted exactly once on the final
 candidate. Both stopped in the shared coverage-matrix preflight at the stale
@@ -1035,7 +1035,7 @@ Validation: all 1,028 codegen tests, 10 adapter-default tests, and 19
 early-adapter tests passed. A fresh debug compiler built and ran the
 package-neutral fixture with `attached-contract` and ran the preserved M8 demo
 successfully. Workspace clippy, formatting, diff, HIR maintainability, and the
-900-line file-size guardrail passed. The initial exact-SHA Opus review found a
+900-line file-size guardrail passed. The initial exact-SHA agent review found a
 double union wrapper and an incorrect wider-union `None` return payload. One
 batched remediation corrected both and extended the fixture; the final
 exact-SHA review returned `SATISFIED`
@@ -1097,7 +1097,7 @@ early-adapter tests passed. A fresh debug compiler built the extended
 package-neutral fixture through rustc and ran the preserved M8
 fields-and-configuration demo. Workspace clippy, formatting, diff, HIR
 maintainability, and the unified 900-line file-size guardrail passed. The
-exact-SHA Opus review returned `SATISFIED` with no blocker
+exact-SHA agent review returned `SATISFIED` with no blocker
 ([evidence](https://github.com/sifr-lang/sifr/pull/3276#issuecomment-5333858907)).
 The create-PR and merge gates were each attempted exactly once on the final
 candidate. Coverage readiness passed, but both stopped before compiler tests
@@ -1108,7 +1108,7 @@ Deferred follow-up: M12 owns nested option-represented union-payload hardening,
 per-member assignable conversions, warning-clean `None` bindings, the
 pre-existing `registry_call_callable_with_owned_args` widening gap, structural
 sharing with assignment sequencing, and behavioral presence/absence fixture
-execution. These were non-blocking Opus findings.
+execution. These were non-blocking agent findings.
 The pre-v1 worktree, task, processes, artifacts, and failures remain entirely
 outside this phase.
 Next action: implement M7e structural construction defaults.
@@ -1167,7 +1167,7 @@ records, and generated-local name hygiene. The compiler unit command passed
 109 CLI tests and 37 of 38 harness tests; its only failure was the
 `protocol_bound_unknown_forwarded_typevar.sifr` expectation owned by the
 explicitly out-of-scope pre-v1 work.
-Review: the exact-SHA Opus review returned `SATISFIED` with no blockers
+Review: the exact-SHA agent review returned `SATISFIED` with no blockers
 ([evidence](https://github.com/sifr-lang/sifr/pull/3281#issuecomment-5334456131)).
 The create-PR and merge gates were each attempted exactly once on the reviewed
 candidate. Coverage readiness passed, but both stopped before compiler tests
@@ -1178,7 +1178,7 @@ Deferred follow-up: M12 owns remaining generated-local name hardening, a
 responsibility split before further growth of class-body lowering, a two-sided
 factory-freshness assertion, and explicit documentation or enforcement of
 default evaluation before later required-field rejection. These were
-non-blocking Opus findings.
+non-blocking agent findings.
 The pre-v1 worktree, task, processes, artifacts, and failures remain entirely
 outside this phase.
 Next action: resume the preserved M8 package work.
@@ -1244,7 +1244,7 @@ tests passed. Workspace clippy with warnings denied, formatting, diff checks,
 HIR maintainability, and the unified 900-line file-size guardrail passed. The
 package-neutral static-class-adapter fixture built and ran natively and
 printed `attached-contract`.
-Review: the exact-SHA Opus review returned `SATISFIED` with no blockers
+Review: the exact-SHA agent review returned `SATISFIED` with no blockers
 ([evidence](https://github.com/sifr-lang/sifr/pull/3292#issuecomment-5336116016)).
 The create-PR and merge gates were each attempted exactly once on the reviewed
 candidate. Both stopped in the shared verification-taxonomy preflight owned by
@@ -1254,7 +1254,7 @@ the explicitly out-of-scope parallel pre-v1 work; neither was repeated
 Deferred follow-up: M12 owns speculative emitter-state restoration when an
 `if` branch does not lower, imported mapped-opaque path hardening, parity
 between const-evaluator and codegen `isinstance` target forms, and review of
-the generic-bound lifetime behavior. These were non-blocking Opus findings.
+the generic-bound lifetime behavior. These were non-blocking agent findings.
 The pre-v1 worktree, task, processes, artifacts, and failures remain entirely
 outside this phase.
 Next action: resume M8 on the merged M7f compiler substrate.
@@ -1333,7 +1333,7 @@ That attempt additionally passed the 310-file/12,754-node upstream audit and
 the 53-kind Core Schema audit, then stopped because the local upstream
 `uv --no-sync` environment could not import `pydantic_core`; it was not rerun
 ([evidence](https://github.com/sifr-lang/pydantic-sifr/pull/44#issuecomment-5336509601)).
-Review evidence: the initial exact-SHA Opus review found blocking regressions
+Review evidence: the initial exact-SHA agent review found blocking regressions
 in typed error overrides and exact `Constraints` diagnostic origins
 ([evidence](https://github.com/sifr-lang/pydantic-sifr/pull/44#issuecomment-5336517083)).
 Both were remediated together. The one permitted remediation review on the
@@ -1520,7 +1520,7 @@ warnings denied; formatting; HIR maintainability; the 900-line guardrail; and
 lints outside the changed paths. The one create-PR gate and one merge gate ran
 on the unchanged candidate. Both passed their preceding guards and stopped at
 the shared stale generated-demo freshness boundary. Neither gate was rerun.
-Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the exact-SHA agent review returned `SATISFIED` with no
 blocking findings
 ([evidence](https://github.com/sifr-lang/sifr/pull/3303#issuecomment-5337670461)).
 `main` advanced after the review and gates. Integration merge
@@ -1545,7 +1545,7 @@ Clippy passed with warnings denied; formatting, HIR maintainability, the
 gate and one merge gate ran on the unchanged candidate. Both passed their
 preceding guards and stopped at the shared stale generated-demo freshness
 boundary. Neither gate was rerun.
-Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the exact-SHA agent review returned `SATISFIED` with no
 blocking findings
 ([evidence](https://github.com/sifr-lang/sifr/pull/3306#issuecomment-5338064577)).
 Deferred follow-up: M12 should add a direct ordered-projection regression test
@@ -1568,7 +1568,7 @@ facade that returns `dict[str, JsonValue]`. The later demo execution error was
 inside the package JSON-value bridge. The one create-PR gate and one merge gate
 ran on the unchanged candidate. Both passed their preceding guards and stopped
 at the shared stale generated-demo freshness boundary. Neither gate was rerun.
-Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the exact-SHA agent review returned `SATISFIED` with no
 blocking findings
 ([evidence](https://github.com/sifr-lang/sifr/pull/3309#issuecomment-5338347038)).
 
@@ -1586,7 +1586,7 @@ passed `sifr check` with the exact candidate. The one create-PR gate and one
 merge gate ran on the unchanged candidate. Both passed their preceding guards
 and stopped at the shared stale generated-demo freshness boundary. Neither gate
 was rerun.
-Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the exact-SHA agent review returned `SATISFIED` with no
 blocking findings
 ([evidence](https://github.com/sifr-lang/sifr/pull/3312#issuecomment-5338969453)).
 Deferred follow-up: M12 should align provisional `MethodSlots` attached-owner
@@ -1609,7 +1609,7 @@ create-PR gate and one merge gate ran on the unchanged candidate. Both passed
 all guardrails, verification self-tests, Rust-interop tiers, compatibility,
 stale-draft, and stable-candidate checks before stopping at separately owned
 Rust-interop fixture-matrix inputs. Neither gate was rerun.
-Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the exact-SHA agent review returned `SATISFIED` with no
 blocking findings
 ([evidence](https://github.com/sifr-lang/sifr/pull/3314#issuecomment-5339255712)).
 Deferred follow-up: M12 should strengthen generic-bound assertions to pin both
@@ -1637,7 +1637,7 @@ maintainability, `git diff --check`, and the 900-line guardrail passed. A fresh
 task-owned native demo passed on the pinned compiler merge and covered attached
 plain and serializer-aware dumps, all four `when_used` policies, typed context,
 selection and aliases, callback errors, and nested record results from field
-and computed serializers. The initial exact-SHA Opus review found that nested
+and computed serializers. The initial exact-SHA agent review found that nested
 callback-output policies were rooted incorrectly. One remediation moved field
 and computed output policies below their callback target and added focused and
 native regression coverage. The final exact-SHA review returned `SATISFIED`
@@ -1687,7 +1687,7 @@ record path. The exact candidate's create-PR and merge gates each ran once.
 Both passed their preceding guards and stopped at the same two external
 Rust-interop matrix inputs: one missing negative evidence source and one
 existing empty placeholder class. Neither gate was rerun.
-Review evidence: the initial exact-SHA Opus review found stale generated
+Review evidence: the initial exact-SHA agent review found stale generated
 exports, vacuous opaque-mapping acceptance, and an unrelated `Structural`
 code-generation change
 ([evidence](https://github.com/sifr-lang/sifr/pull/3317#issuecomment-5340373103)).
@@ -1720,7 +1720,7 @@ Sifr formatting, both maintainability guards, file-size, documentation-link,
 and diff guards passed. The exact candidate's create-PR and merge gates each
 ran once. Both passed every preceding guard and stopped at the same two
 external Rust-interop matrix inputs recorded above. Neither gate was rerun.
-Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the exact-SHA agent review returned `SATISFIED` with no
 blocking findings
 ([evidence](https://github.com/sifr-lang/sifr/pull/3319#issuecomment-5340637186)).
 Deferred follow-up: M12 should make the negative fixture independently
@@ -1747,7 +1747,7 @@ passed. An all-targets Clippy attempt found existing test-only lint debt in
 unmodified files. The exact candidate's create-PR and merge gates each ran
 once. Both passed every preceding guard and stopped at the same two external
 Rust-interop matrix inputs recorded above. Neither gate was rerun.
-Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the exact-SHA agent review returned `SATISFIED` with no
 blocking findings
 ([evidence](https://github.com/sifr-lang/sifr/pull/3321#issuecomment-5341032365)).
 The exact gate evidence is recorded on the PR
@@ -1778,7 +1778,7 @@ candidate's create-PR and merge gates each ran once. Both passed every earlier
 guard and stopped at the same two external Rust-interop matrix inputs recorded
 above. Neither gate was rerun
 ([evidence](https://github.com/sifr-lang/sifr/pull/3323#issuecomment-5341731661)).
-Review evidence: the initial exact-SHA Opus review returned `SATISFIED` and
+Review evidence: the initial exact-SHA agent review returned `SATISFIED` and
 identified the imported-alias Rust-codegen risk as follow-up work
 ([evidence](https://github.com/sifr-lang/sifr/pull/3323#issuecomment-5341731673)).
 A focused native build confirmed that risk. One remediation erased generic
@@ -1814,7 +1814,7 @@ passed source checking. Its native build no longer reports missing
 `StaticProgramType`, `Eq`, or `Hash` for `ConcreteEnvelope` and `IntRoot`.
 The remaining six Rust errors are package-owned generic wrapper bounds for the
 next M11 item.
-Review evidence: the initial exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the initial exact-SHA agent review returned `SATISFIED` with no
 blockers
 ([evidence](https://github.com/sifr-lang/sifr/pull/3325#issuecomment-5342294481)).
 The create-PR gate then found two stale generated demo companions. The final
@@ -1850,7 +1850,7 @@ M11 package wrappers. All three affected attached functions now emit
 `StructuralConstruct + StructuralProject`, and the previous six Rust bound
 errors are absent. The package build then stopped at its separate authoritative
 dependency check for the registry package `arrayvec`.
-Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the exact-SHA agent review returned `SATISFIED` with no
 blocking findings
 ([evidence](https://github.com/sifr-lang/sifr/pull/3327#issuecomment-5342683181)).
 Gate evidence: the create-PR and merge gates each ran once on the exact
@@ -1882,7 +1882,7 @@ The generated lock retained the sysroot-authorized `rust_decimal 1.41.0` and
 `arrayvec 0.7.6` versions. The native binary then exposed the next package
 runtime defect: the structural model validation path reports `Input must be an
 object`.
-Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the exact-SHA agent review returned `SATISFIED` with no
 blocking findings
 ([evidence](https://github.com/sifr-lang/sifr/pull/3329#issuecomment-5342895471)).
 Gate evidence: the create-PR and merge gates each ran once on the exact
@@ -1958,7 +1958,7 @@ pin, unit, upstream-manifest, and core-schema exact-set audits, then stopped at
 the same external locked upstream environment because `pydantic_core` was not
 installed. Neither gate was rerun. Compiler files did not change in this item,
 so no Sifr compiler create-PR or merge gate ran.
-Review evidence: the initial exact-SHA Opus review found three stale consumers
+Review evidence: the initial exact-SHA agent review found three stale consumers
 of the removed dummy schema function, invalid byte inputs and error expectation
 for the structural strings profile, and stale quickstart and migration text
 ([evidence](https://github.com/sifr-lang/pydantic-sifr/pull/47#issuecomment-5344234273)).
@@ -2023,7 +2023,7 @@ generated-type-import negative source and the empty method-slot schema
 placeholder. Neither gate was rerun
 ([create-PR evidence](https://github.com/sifr-lang/sifr/pull/3332#issuecomment-5344383649),
 [merge evidence](https://github.com/sifr-lang/sifr/pull/3332#issuecomment-5344410355)).
-Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the exact-SHA agent review returned `SATISFIED` with no
 blocking findings
 ([evidence](https://github.com/sifr-lang/sifr/pull/3332#issuecomment-5344383312)).
 Deferred follow-up: a later M12 compiler item must make generic substitution
@@ -2055,7 +2055,7 @@ passed generated-demo freshness and every preceding guard, then stopped at the
 same two separately owned Rust-interop matrix inputs. Neither gate was rerun
 ([create-PR evidence](https://github.com/sifr-lang/sifr/pull/3334#issuecomment-5344743969),
 [merge evidence](https://github.com/sifr-lang/sifr/pull/3334#issuecomment-5344771178)).
-Review evidence: the initial exact-SHA Opus review returned `SATISFIED` and
+Review evidence: the initial exact-SHA agent review returned `SATISFIED` and
 identified a deeper imported-tail boundary and missing imported-handler
 metadata as non-blocking pre-existing gaps
 ([evidence](https://github.com/sifr-lang/sifr/pull/3334#issuecomment-5344743367)).
@@ -2087,7 +2087,7 @@ demo freshness and every preceding guard. Both gates then stopped at the same
 two separately owned Rust-interop matrix inputs. Neither gate was rerun
 ([create-PR evidence](https://github.com/sifr-lang/sifr/pull/3336#issuecomment-5344928941),
 [merge evidence](https://github.com/sifr-lang/sifr/pull/3336#issuecomment-5344956193)).
-Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the exact-SHA agent review returned `SATISFIED` with no
 blocking findings
 ([evidence](https://github.com/sifr-lang/sifr/pull/3336#issuecomment-5344928638)).
 Deferred follow-up: M12 can document that provider canonicalization repeats
@@ -2115,7 +2115,7 @@ every preceding guard. Both gates then stopped at the same two separately
 owned Rust-interop matrix inputs. Neither gate was rerun
 ([create-PR evidence](https://github.com/sifr-lang/sifr/pull/3338#issuecomment-5345159530),
 [merge evidence](https://github.com/sifr-lang/sifr/pull/3338#issuecomment-5345182888)).
-Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the exact-SHA agent review returned `SATISFIED` with no
 blocking findings
 ([evidence](https://github.com/sifr-lang/sifr/pull/3338#issuecomment-5345159272)).
 Deferred follow-up: M12 must consolidate the legacy and scope-aware type
@@ -2144,7 +2144,7 @@ stopped at the same two separately owned Rust-interop matrix inputs. Neither
 gate was rerun
 ([create-PR evidence](https://github.com/sifr-lang/sifr/pull/3340#issuecomment-5345308429),
 [merge evidence](https://github.com/sifr-lang/sifr/pull/3340#issuecomment-5345337106)).
-Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the exact-SHA agent review returned `SATISFIED` with no
 blocking findings
 ([evidence](https://github.com/sifr-lang/sifr/pull/3340#issuecomment-5345308120)).
 Deferred follow-up: the next M12 item must consolidate the third substitution
@@ -2173,7 +2173,7 @@ freshness and every preceding guard. Both then stopped at the same two
 separately owned Rust-interop matrix inputs. Neither gate was rerun
 ([create-PR evidence](https://github.com/sifr-lang/sifr/pull/3342#issuecomment-5345575655),
 [merge evidence](https://github.com/sifr-lang/sifr/pull/3342#issuecomment-5345600301)).
-Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the exact-SHA agent review returned `SATISFIED` with no
 blocking findings
 ([evidence](https://github.com/sifr-lang/sifr/pull/3342#issuecomment-5345575435)).
 Deferred follow-up: M12 can pass the declaring module to the codegen resolver
@@ -2199,7 +2199,7 @@ preceding guard. Both then stopped at the same two separately owned
 Rust-interop matrix inputs. Neither gate was rerun
 ([create-PR evidence](https://github.com/sifr-lang/sifr/pull/3344#issuecomment-5345727756),
 [merge evidence](https://github.com/sifr-lang/sifr/pull/3344#issuecomment-5345752376)).
-Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the exact-SHA agent review returned `SATISFIED` with no
 blocking findings
 ([evidence](https://github.com/sifr-lang/sifr/pull/3344#issuecomment-5345727504)).
 Deferred follow-up: item 8 must preserve consumer authority when an
@@ -2228,7 +2228,7 @@ freshness and every preceding guard. Both then stopped at the same two
 separately owned Rust-interop matrix inputs. Neither gate was rerun
 ([create-PR evidence](https://github.com/sifr-lang/sifr/pull/3346#issuecomment-5345973128),
 [merge evidence](https://github.com/sifr-lang/sifr/pull/3346#issuecomment-5345998155)).
-Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the exact-SHA agent review returned `SATISFIED` with no
 blocking findings
 ([evidence](https://github.com/sifr-lang/sifr/pull/3346#issuecomment-5345972908)).
 Deferred follow-up: item 9 must select generic parent templates by canonical
@@ -2258,7 +2258,7 @@ freshness and every preceding guard. Both then stopped at the same two
 separately owned Rust-interop matrix inputs. Neither gate was rerun
 ([create-PR evidence](https://github.com/sifr-lang/sifr/pull/3348#issuecomment-5346190473),
 [merge evidence](https://github.com/sifr-lang/sifr/pull/3348#issuecomment-5346214740)).
-Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the exact-SHA agent review returned `SATISFIED` with no
 blocking findings
 ([evidence](https://github.com/sifr-lang/sifr/pull/3348#issuecomment-5346190462)).
 Deferred follow-up: a later item can carry declared parameters directly into
@@ -2286,7 +2286,7 @@ freshness and every preceding guard. Both then stopped at the same two
 separately owned Rust-interop matrix inputs. Neither gate was rerun
 ([create-PR evidence](https://github.com/sifr-lang/sifr/pull/3350#issuecomment-5346368491),
 [merge evidence](https://github.com/sifr-lang/sifr/pull/3350#issuecomment-5346393937)).
-Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the exact-SHA agent review returned `SATISFIED` with no
 blocking findings
 ([evidence](https://github.com/sifr-lang/sifr/pull/3350#issuecomment-5346368518)).
 Deferred follow-up: a later item can make duplicate canonical-identity
@@ -2313,7 +2313,7 @@ guard. Both then stopped at the same two separately owned Rust-interop matrix
 inputs. Neither gate was rerun
 ([create-PR evidence](https://github.com/sifr-lang/sifr/pull/3352#issuecomment-5346515841),
 [merge evidence](https://github.com/sifr-lang/sifr/pull/3352#issuecomment-5346543851)).
-Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the exact-SHA agent review returned `SATISFIED` with no
 blocking findings
 ([evidence](https://github.com/sifr-lang/sifr/pull/3352#issuecomment-5346515908)).
 Deferred follow-up: item 12 must remove the silent empty-binding fallback when
@@ -2339,7 +2339,7 @@ stopped at the same two separately owned Rust-interop matrix inputs. Neither
 gate was rerun
 ([create-PR evidence](https://github.com/sifr-lang/sifr/pull/3354#issuecomment-5346671698),
 [merge evidence](https://github.com/sifr-lang/sifr/pull/3354#issuecomment-5346694759)).
-Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the exact-SHA agent review returned `SATISFIED` with no
 blocking findings
 ([evidence](https://github.com/sifr-lang/sifr/pull/3354#issuecomment-5346671737)).
 Deferred follow-up: a later cleanup can avoid repeating a failed ancestry
@@ -2365,7 +2365,7 @@ generated-demo freshness and every preceding guard. Both then stopped at the
 same two separately owned Rust-interop matrix inputs. Neither gate was rerun
 ([create-PR evidence](https://github.com/sifr-lang/sifr/pull/3356#issuecomment-5346891742),
 [merge evidence](https://github.com/sifr-lang/sifr/pull/3356#issuecomment-5346961000)).
-Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the exact-SHA agent review returned `SATISFIED` with no
 blocking findings
 ([evidence](https://github.com/sifr-lang/sifr/pull/3356#issuecomment-5346935229)).
 Deferred follow-up: item 14 must select generic parent parameter bindings by
@@ -2392,7 +2392,7 @@ generated-demo freshness and every preceding guard. Both then stopped at the
 same two separately owned Rust-interop matrix inputs. Neither gate was rerun
 ([create-PR evidence](https://github.com/sifr-lang/sifr/pull/3358#issuecomment-5347048051),
 [merge evidence](https://github.com/sifr-lang/sifr/pull/3358#issuecomment-5347097702)).
-Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the exact-SHA agent review returned `SATISFIED` with no
 blocking findings
 ([evidence](https://github.com/sifr-lang/sifr/pull/3358#issuecomment-5347071999)).
 Deferred follow-up: item 15 must remove the last bare-name parent-shape
@@ -2420,7 +2420,7 @@ guard. Both then stopped at the same two separately owned Rust-interop matrix
 inputs. Neither gate was rerun
 ([create-PR evidence](https://github.com/sifr-lang/sifr/pull/3360#issuecomment-5347165733),
 [merge evidence](https://github.com/sifr-lang/sifr/pull/3360#issuecomment-5347214214)).
-Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the exact-SHA agent review returned `SATISFIED` with no
 blocking findings
 ([evidence](https://github.com/sifr-lang/sifr/pull/3360#issuecomment-5347189144)).
 Deferred follow-up: item 16 must remove the two unreachable synthetic parent
@@ -2446,7 +2446,7 @@ generated-demo freshness and every preceding guard. Both then stopped at the
 same two separately owned Rust-interop matrix inputs. Neither gate was rerun
 ([create-PR evidence](https://github.com/sifr-lang/sifr/pull/3362#issuecomment-5347289960),
 [merge evidence](https://github.com/sifr-lang/sifr/pull/3362#issuecomment-5347346220)).
-Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the exact-SHA agent review returned `SATISFIED` with no
 blocking findings
 ([evidence](https://github.com/sifr-lang/sifr/pull/3362#issuecomment-5347319539)).
 Deferred follow-up: the remaining compiler audit should make the handler-plan
@@ -2568,7 +2568,7 @@ Changed path: the active phase record and its complete compiler-deferral
 classification.
 Validation: diff hygiene passed. Only documentation changed, so compiler
 tests and compiler gates did not apply.
-Review evidence: the initial exact-SHA Opus review found one omitted M11
+Review evidence: the initial exact-SHA agent review found one omitted M11
 compiler defect
 ([evidence](https://github.com/sifr-lang/sifr/pull/3364#issuecomment-5347468547)).
 The remediation assigned nonliteral attached-default provider localization to
@@ -2594,7 +2594,7 @@ passed. The create-PR and merge gates each ran once on the exact candidate.
 Both passed every preceding guard and stopped at the same two separately owned
 Rust-interop matrix inputs. Neither gate was rerun
 ([evidence](https://github.com/sifr-lang/sifr/pull/3366#issuecomment-5347722502)).
-Review evidence: the exact-SHA Opus review returned `SATISFIED` with no blocking
+Review evidence: the exact-SHA agent review returned `SATISFIED` with no blocking
 findings
 ([evidence](https://github.com/sifr-lang/sifr/pull/3366#issuecomment-5347697151)).
 Deferred follow-up: defensive fail-soft handling for the paired `Self` context,
@@ -2620,7 +2620,7 @@ diff hygiene passed. The create-PR and merge gates each ran once on the exact
 final candidate. Both passed every earlier guard. Both stopped at the same two
 separately owned Rust-interop matrix inputs. Neither gate ran again
 ([evidence](https://github.com/sifr-lang/sifr/pull/3368#issuecomment-5355182112)).
-Review evidence: the initial exact-SHA Opus review found an incorrect
+Review evidence: the initial exact-SHA agent review found an incorrect
 `MappedValue` thread-trait contract and an incomplete test
 ([evidence](https://github.com/sifr-lang/sifr/pull/3368#issuecomment-5355113050)).
 The remediation documented and tested the actual marker behavior. It also
@@ -2651,7 +2651,7 @@ and merge gates each ran once on the exact candidate. Both passed every
 earlier guard. Both stopped at the same two separately owned Rust-interop
 matrix inputs. Neither gate ran again
 ([evidence](https://github.com/sifr-lang/sifr/pull/3371#issuecomment-5355551324)).
-Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the exact-SHA agent review returned `SATISFIED` with no
 blocking findings
 ([evidence](https://github.com/sifr-lang/sifr/pull/3371#issuecomment-5355489839)).
 Deferred follow-up: item 28 owns three raw generic-call lookup sites and one
@@ -2678,7 +2678,7 @@ hygiene passed. The create-PR and merge gates each ran once on the exact
 candidate. Both passed every earlier guard. Both stopped at the same two
 separately owned Rust-interop matrix inputs. Neither gate ran again
 ([evidence](https://github.com/sifr-lang/sifr/pull/3374#issuecomment-5355861831)).
-Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the exact-SHA agent review returned `SATISFIED` with no
 blocking findings
 ([evidence](https://github.com/sifr-lang/sifr/pull/3374#issuecomment-5355806695)).
 Deferred follow-up: item 29 owns the pre-existing non-union option-argument
@@ -2706,7 +2706,7 @@ It then stopped at a separate existing M7f generic clone-bound failure. Item
 candidate. Both passed every earlier guard. Both stopped at the same two
 separately owned Rust-interop matrix inputs. Neither gate ran again
 ([evidence](https://github.com/sifr-lang/sifr/pull/3377#issuecomment-5356030951)).
-Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the exact-SHA agent review returned `SATISFIED` with no
 blocking findings
 ([evidence](https://github.com/sifr-lang/sifr/pull/3377#issuecomment-5355979587)).
 Deferred follow-up: item 23 owns the concrete M7f clone-bound failure. Item 30
@@ -2736,7 +2736,7 @@ hygiene passed. The create-PR and merge gates each ran once on the exact final
 candidate. Both passed every earlier guard. Both stopped at the same two
 separately owned Rust-interop matrix inputs. Neither gate ran again
 ([evidence](https://github.com/sifr-lang/sifr/pull/3380#issuecomment-5356463720)).
-Review evidence: the initial exact-SHA Opus review found that one successful
+Review evidence: the initial exact-SHA agent review found that one successful
 union sibling could leak cache state before another sibling declined. The
 single remediation made each branch and the full attempt transactional. The
 final permitted exact-SHA review returned `SATISFIED` with no blocking finding
@@ -2768,7 +2768,7 @@ once on the exact candidate. Both passed every earlier guard. Both stopped at
 the same two separately owned Rust-interop matrix inputs. Neither gate ran
 again
 ([evidence](https://github.com/sifr-lang/sifr/pull/3383#issuecomment-5357149554)).
-Review evidence: the exact-SHA Opus review returned `SATISFIED` with no blocking
+Review evidence: the exact-SHA agent review returned `SATISFIED` with no blocking
 finding
 ([evidence](https://github.com/sifr-lang/sifr/pull/3383#issuecomment-5357083164)).
 Deferred follow-up: an unreachable legacy missing-value diagnostic, uniform
@@ -2791,7 +2791,7 @@ merge gates each ran once on the exact candidate. Both passed every earlier
 guard. Both stopped at the same two separately owned Rust-interop matrix
 inputs. Neither gate ran again
 ([evidence](https://github.com/sifr-lang/sifr/pull/3386#issuecomment-5357320317)).
-Review evidence: the exact-SHA Opus review returned `SATISFIED` with no blocking
+Review evidence: the exact-SHA agent review returned `SATISFIED` with no blocking
 finding
 ([evidence](https://github.com/sifr-lang/sifr/pull/3386#issuecomment-5357243340)).
 Deferred follow-up: lowering currently sorts generic type parameters, so the
@@ -2822,7 +2822,7 @@ and merge gates each ran once on the exact final candidate. Both passed every
 earlier guard. Both stopped at the same two separately owned Rust-interop
 matrix inputs. Neither gate ran again
 ([evidence](https://github.com/sifr-lang/sifr/pull/3389#issuecomment-5357979689)).
-Review evidence: the initial exact-SHA Opus review found that a child default
+Review evidence: the initial exact-SHA agent review found that a child default
 could be shadowed by its flattened parent default
 ([evidence](https://github.com/sifr-lang/sifr/pull/3389#issuecomment-5357861781)).
 The single remediation replaces the seeded entry at the inherited field index
@@ -2860,7 +2860,7 @@ gate ran once on the exact final candidate. It passed every earlier guard and
 confirmed the inventory fix, then stopped only on the external inputs. Neither
 gate ran again
 ([evidence](https://github.com/sifr-lang/sifr/pull/3392#issuecomment-5358431376)).
-Review evidence: the initial exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the initial exact-SHA agent review returned `SATISFIED` with no
 blocking findings
 ([evidence](https://github.com/sifr-lang/sifr/pull/3392#issuecomment-5358275957)).
 The final permitted review verified the test-location remediation and returned
@@ -2890,7 +2890,7 @@ once on the exact candidate. Both passed every earlier guard and stopped only
 at the same two separately owned Rust-interop matrix inputs. The compatibility
 matrix passed all 40 rows in both gates. Neither gate ran again
 ([evidence](https://github.com/sifr-lang/sifr/pull/3395#issuecomment-5358644857)).
-Review evidence: the one exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the one exact-SHA agent review returned `SATISFIED` with no
 blocking in-scope finding
 ([evidence](https://github.com/sifr-lang/sifr/pull/3395#issuecomment-5358588538)).
 Deferred follow-up: emitted-output coverage for generic imported-project error
@@ -2920,7 +2920,7 @@ every earlier guard and stopped only at the two separately owned Rust-interop
 matrix inputs. The compatibility matrix passed all 40 rows in both gates.
 Neither gate ran again
 ([evidence](https://github.com/sifr-lang/sifr/pull/3398#issuecomment-5358898352)).
-Review evidence: the one exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the one exact-SHA agent review returned `SATISFIED` with no
 blocking in-scope finding
 ([evidence](https://github.com/sifr-lang/sifr/pull/3398#issuecomment-5358845681)).
 Deferred follow-up: a primary-range assertion and a diagnostics fixture are
@@ -2950,7 +2950,7 @@ Both passed every earlier guard and stopped only at the two separately owned
 Rust-interop matrix inputs. The compatibility matrix passed all 40 rows in
 both gates. Neither gate ran again
 ([evidence](https://github.com/sifr-lang/sifr/pull/3401#issuecomment-5359192539)).
-Review evidence: the one exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the one exact-SHA agent review returned `SATISFIED` with no
 blocking in-scope finding
 ([evidence](https://github.com/sifr-lang/sifr/pull/3401#issuecomment-5359119093)).
 Deferred follow-up: aligning the temporary prefix with ordinary constructor
@@ -2978,7 +2978,7 @@ gates each ran once on the exact final candidate. Both passed every earlier
 guard and stopped only at the two separately owned Rust-interop inputs. The
 compatibility matrix passed all 40 rows in both gates. Neither gate ran again
 ([evidence](https://github.com/sifr-lang/sifr/pull/3404#issuecomment-5359634393)).
-Review evidence: the initial exact-SHA Opus review found that the ordinary
+Review evidence: the initial exact-SHA agent review found that the ordinary
 walrus-condition special case bypassed the transaction. It also found two
 separate pre-existing mechanisms
 ([evidence](https://github.com/sifr-lang/sifr/pull/3404#issuecomment-5359413901)).
@@ -3008,7 +3008,7 @@ gates each ran once on the exact candidate. Both passed every earlier guard
 and stopped only at the two separately owned Rust-interop inputs. The
 compatibility matrix passed all 40 rows in both gates. Neither gate ran again
 ([evidence](https://github.com/sifr-lang/sifr/pull/3407#issuecomment-5359763001)).
-Review evidence: the one exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the one exact-SHA agent review returned `SATISFIED` with no
 blocking finding. It confirmed that the base emitted one declaration instead
 of three and that every changed call now restores all outcomes
 ([evidence](https://github.com/sifr-lang/sifr/pull/3407#issuecomment-5359703797)).
@@ -3036,7 +3036,7 @@ earlier guard and stopped only at the two separately owned Rust-interop inputs.
 The compatibility matrix passed all 40 rows in both gates. Neither gate ran
 again
 ([evidence](https://github.com/sifr-lang/sifr/pull/3410#issuecomment-5359989890)).
-Review evidence: the one exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the one exact-SHA agent review returned `SATISFIED` with no
 blocking finding. It verified all 20 reachable body call sites, all outcome
 paths, and for-target sequencing
 ([evidence](https://github.com/sifr-lang/sifr/pull/3410#issuecomment-5359926927)).
@@ -3070,7 +3070,7 @@ compatibility rows, then stopped only at the two separately owned Rust-interop
 inputs. Neither gate ran again
 ([create-PR evidence](https://github.com/sifr-lang/sifr/pull/3413#issuecomment-5360750282),
 [merge evidence](https://github.com/sifr-lang/sifr/pull/3413#issuecomment-5360775439)).
-Review evidence: the initial exact-SHA Opus review found one stale CLI sysroot
+Review evidence: the initial exact-SHA agent review found one stale CLI sysroot
 skeleton
 ([evidence](https://github.com/sifr-lang/sifr/pull/3413#issuecomment-5360722988)).
 The single remediation added the required workspace member and minimal crate,
@@ -3096,7 +3096,7 @@ file-size guard, and diff hygiene passed. The documentation area stopped on
 the missing external `editor_integrations/vscode/package.json` input before it
 checked these files. Only documentation changed, so compiler tests and gates
 did not apply.
-Review evidence: the one exact-SHA Opus review returned `SATISFIED`; every
+Review evidence: the one exact-SHA agent review returned `SATISFIED`; every
 added inventory entry matched the item 34 archive builder, verifier, installer,
 and `SysrootPaths` implementation
 ([evidence](https://github.com/sifr-lang/sifr/pull/3416#issuecomment-5360830792)).
@@ -3121,7 +3121,7 @@ exact candidate. Both passed every earlier guard and all 40 compatibility
 rows, then stopped only at the two separately owned Rust-interop inputs.
 Neither gate ran again
 ([gate evidence](https://github.com/sifr-lang/sifr/pull/3419#issuecomment-5361219748)).
-Review evidence: the one exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the one exact-SHA agent review returned `SATISFIED` with no
 blocking findings. It verified path-role identity, both planners, retained
 mapping resolution and trust checks, equal-path deduplication, and the
 `Mapping: StructuralMapping<Value>` obligation
@@ -3150,7 +3150,7 @@ then stopped at the absent external `.upstream/pydantic` checkout. Neither
 gate ran again
 ([evidence](https://github.com/sifr-lang/pydantic-sifr/pull/49#issuecomment-5361504594)).
 No Sifr compiler gate applied because no compiler file changed.
-Review evidence: the one exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the one exact-SHA agent review returned `SATISFIED` with no
 blocking findings. It verified that each negative emits only its intended
 diagnostic, the positive demo retains behavior, the M9 classmethod demo still
 runs, and no stale static-method sequence remains
@@ -3180,7 +3180,7 @@ and all unit tests, then stopped at the absent external `.upstream/pydantic`
 checkout. Neither gate ran again
 ([evidence](https://github.com/sifr-lang/pydantic-sifr/pull/51#issuecomment-5362011251)).
 No Sifr compiler gate applied because no compiler file changed.
-Review evidence: the one exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the one exact-SHA agent review returned `SATISFIED` with no
 blocking findings. It verified byte preservation, source and installed
 equality, temporary project completeness, exact compiler selection, cleanup,
 failure propagation, and identity cardinality
@@ -3207,7 +3207,7 @@ passed file size, the pin check, and all unit tests. Both then stopped at the
 absent external `.upstream/pydantic` checkout and did not run again. No Sifr
 compiler gate applies because no compiler file changed
 ([evidence](https://github.com/sifr-lang/pydantic-sifr/pull/53#issuecomment-5362814909)).
-Review evidence: the initial whole-phase exact-SHA Opus review found four
+Review evidence: the initial whole-phase exact-SHA agent review found four
 blocking record omissions
 ([evidence](https://github.com/sifr-lang/sifr/pull/3423#issuecomment-5362702377)).
 The remediation removes the stale serializer statement, documents
@@ -3243,7 +3243,7 @@ Both then stopped at the absent external `.upstream/pydantic` checkout and did
 not run again
 ([evidence](https://github.com/sifr-lang/pydantic-sifr/pull/55#issuecomment-5362872876)).
 No Sifr compiler gate applies because no compiler file changed.
-Review evidence: the one focused exact-SHA Opus review returned `SATISFIED`
+Review evidence: the one focused exact-SHA agent review returned `SATISFIED`
 with no blockers
 ([evidence](https://github.com/sifr-lang/pydantic-sifr/pull/55#issuecomment-5362870698)).
 This later item does not trigger a third item 39 or whole-phase review.

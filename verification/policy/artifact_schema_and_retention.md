@@ -31,4 +31,4 @@ Producer:
 - latest run artifact is overwritten at the canonical path above.
 - rerun and flake transitions are embedded directly in the suite records.
 - failures may emit supporting local artifacts under `target/verification/actual/`.
-- reviewable rules artifacts remain checked in under `verification/` (manifests, indices, policies, baselines).
+- inspectable rules artifacts remain checked in under `verification/` (manifests, indices, policies, baselines).

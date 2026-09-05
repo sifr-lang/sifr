@@ -184,7 +184,7 @@ Implementation checklist:
   execution-kind, and locked-crate counts.
 - [x] Run the focused provenance/checker gates, create-PR profile, full merge
   profile, Clippy, rustfmt, maintainability, file-size, and diff-hygiene gates.
-- [x] Run Opus review rounds to satisfaction, merge the PR, and unblock only
+- [x] Run agent review rounds to satisfaction, merge the PR, and unblock only
   `certification_1`.
 
 Post-item inventory:
@@ -289,7 +289,7 @@ Implementation checklist:
   retain the existing unsupported-container diagnostic evidence.
 - [x] Promote only `bridge_type_matrix` in both matrices, structured stable
   claims, public docs, architecture docs, fixture provenance, and counts.
-- [x] Run focused and authoritative local gates, Opus review rounds to
+- [x] Run focused and authoritative local gates, agent review rounds to
   satisfaction, merge the PR, and unblock only `certification_2`.
 
 Post-item inventory:
@@ -307,7 +307,7 @@ Post-item inventory:
 
 Review and gate evidence:
 
-- Opus rounds 1 through 3 requested corrections for ordering claims, lock
+- agent rounds 1 through 3 requested corrections for ordering claims, lock
   hermeticity, recursive composite conversion, inventory counts, and escaped
   user identifiers; [round 4](../../reviews/active/rust-interop-certification-1-review-round4.md)
   and the final PR-level
@@ -349,7 +349,7 @@ Implementation checklist:
 - [x] Bind both evidence directions to mandatory merge-lane tests, promote only
   `panic_boundary_wrapper_emission`, and update structured claims, public and
   architecture docs, provenance, and inventory counts.
-- [x] Run focused and authoritative local gates, Opus review rounds to
+- [x] Run focused and authoritative local gates, agent review rounds to
   satisfaction, merge the PR, and unblock only `certification_3`.
 
 Post-item inventory:
@@ -379,7 +379,7 @@ Focused implementation evidence:
 
 Review and gate evidence:
 
-- Opus review rounds
+- agent review rounds
   [1](../../reviews/active/rust-interop-certification-2-review-round1.md),
   [2](../../reviews/active/rust-interop-certification-2-review-round2.md),
   [3](../../reviews/active/rust-interop-certification-2-review-round3.md),
@@ -400,7 +400,7 @@ Review and gate evidence:
   host load. The same five-sample runner reproduced all three misses with a
   retained compiler binary that predates both `certification_1` merge and all
   `certification_2` commits; that control was slower than the PR head on the
-  arithmetic case. Opus independently verified that the fixtures contain no
+  arithmetic case. agent independently verified that the fixtures contain no
   Rust interop, terminate before codegen/bridge planning, and demonstrate
   environmental timing drift rather than a PR-attributable regression.
 - `scripts/run_all_tests.sh --profile create-pr` passes every blocking lane:
@@ -408,7 +408,7 @@ Review and gate evidence:
   all crate smoke suites, generated-code quality `5/5`, and create-PR E2E
   `131/131`.
 - [PR #3031](https://github.com/sifr-lang/sifr/pull/3031) merged as
-  `d6f41ac499`; exact-new-head Opus confirmation was `SATISFIED`.
+  `d6f41ac499`; exact-new-head agent confirmation was `SATISFIED`.
 
 #### certification_3: Call-Scoped Callback Runtime
 
@@ -430,7 +430,7 @@ Implementation checklist:
   redacted callback panic mapping, and storage/return/thread escape rejection.
 - [x] Promote only `callbacks_call_scoped` in both matrices, structured stable
   claims, public and architecture docs, fixture provenance, and counts.
-- [x] Run focused and authoritative local gates, Opus review rounds to
+- [x] Run focused and authoritative local gates, agent review rounds to
   satisfaction, merge the PR, record the Native Pydantic-Sifr prerequisite,
   and unblock only `certification_4`.
 
@@ -458,7 +458,7 @@ Focused implementation evidence:
   `SIFR-RUST-CB-0001` before the package can run.
 - focused callback/codegen/driver tests, Clippy, fixture-matrix checks,
   maintainability guardrails, file-size guardrails, and generated positive and
-  negative package builds pass; working-tree Opus review round 5 and exact PR
+  negative package builds pass; working-tree agent review round 5 and exact PR
   [#3033](https://github.com/sifr-lang/sifr/pull/3033) review round 2 report
   `SATISFIED`;
 - the warmed `create-pr` lane passes every step through Python interop. Its
@@ -501,7 +501,7 @@ Implementation checklist:
 - [x] Bind both evidence directions to mandatory generated-build tests, promote
   only `async_runtime_reqwest`, update structured claims/docs/provenance/counts,
   and preserve all later future-owned rows.
-- [x] Run focused and authoritative local gates, Opus review rounds to
+- [x] Run focused and authoritative local gates, agent review rounds to
   satisfaction, merge the PR, and unblock only `certification_5`.
 
 Post-item inventory:
@@ -531,7 +531,7 @@ Focused implementation evidence:
   manifest, and the paired generated-build test rejects the undeclared link;
 - all three generated-build tests, focused Rust interop tests, Clippy,
   formatting, matrix self-tests, maintainability guardrails, and file-size
-  guardrails pass; working-tree Opus review
+  guardrails pass; working-tree agent review
   [round 13](../../reviews/active/rust-interop-certification-4-review-round13.md)
   reports `SATISFIED`, the
   [exact-PR review](https://github.com/sifr-lang/sifr/pull/3036#issuecomment-5094639600)
@@ -576,7 +576,7 @@ Implementation checklist:
 - [x] Bind both evidence directions to distinct mandatory generated-build
   tests, promote only `opaque_resource_matrix`, and update structured stable
   claims, public/internal docs, provenance, counts, and validator self-tests.
-- [x] Run focused and authoritative local gates, Opus review rounds to
+- [x] Run focused and authoritative local gates, agent review rounds to
   satisfaction, merge the PR, and unblock only `certification_6`.
 
 Post-item inventory:
@@ -664,7 +664,7 @@ Implementation checklist:
 - [x] Bind both evidence directions to distinct mandatory generated-build
   tests, promote only `callback_subscription_ecosystem`, and update structured
   claims, public/internal docs, provenance, counts, and validator self-tests.
-- [x] Run focused and authoritative local gates, Opus review rounds to
+- [x] Run focused and authoritative local gates, agent review rounds to
   satisfaction, merge the PR, and unblock only `certification_7`.
 
 Post-item inventory:
@@ -700,7 +700,7 @@ Focused implementation evidence:
   bind both directions to distinct merge-profile test names and mutation-test
   the locked dependency policy, callback policy, foreign-thread observation,
   and subscription cleanup guardrails.
-- Opus review round 1 found eight actionable gaps. The follow-up makes callback
+- agent review round 1 found eight actionable gaps. The follow-up makes callback
   policy parsing canonical in the IR and rejects malformed policy before
   codegen, rejects retained callbacks under explicit or profile-level abort
   strategy, covers function and method attachment captures plus generated
@@ -708,7 +708,7 @@ Focused implementation evidence:
   policy, cancels a real scheduled callback delivery before invocation, and
   splits callback bridges out of the saturated runtime module. The mandatory
   positive and negative generated-build tests pass together after these fixes.
-- [Opus review round 2](../../reviews/active/rust-interop-certification-6-review-round-2.md)
+- [agent review round 2](../../reviews/active/rust-interop-certification-6-review-round-2.md)
   confirmed all round-1 findings closed and found four deeper attachment
   gaps. The follow-up emits verified nested retained handlers as owning
   `move` closures, traverses sibling nested-function captures transitively,
@@ -717,7 +717,7 @@ Focused implementation evidence:
   bridge-signature lookup. Focused regressions cover each path, and the
   mandatory positive generated package now builds and executes a nested
   handler with a verified local capture.
-- [Opus review round 3](../../reviews/active/rust-interop-certification-6-review-round-3.md)
+- [agent review round 3](../../reviews/active/rust-interop-certification-6-review-round-3.md)
   confirmed the round-2 attachment, metadata, and panic-strategy findings
   closed, then exposed raw-rustc failures for blanket-moving non-`Copy`
   captures and accepting callable values with unknown captures. The follow-up
@@ -727,7 +727,7 @@ Focused implementation evidence:
   `SIFR-RUST-CB-0001`, and teaches structured loop bodies to emit retained
   nested handlers. Focused lowering, codegen, and both mandatory generated
   package directions cover the corrected contract.
-- [Opus review round 4](../../reviews/active/rust-interop-certification-6-review-round-4.md)
+- [agent review round 4](../../reviews/active/rust-interop-certification-6-review-round-4.md)
   confirmed every earlier high-severity raw-rustc gap closed, then found that
   reusing the generated handler binding itself could still reach rustc
   `E0382`, and that declaration-time capture snapshot semantics were unstated.
@@ -735,7 +735,7 @@ Focused implementation evidence:
   move, diagnoses second attachment and direct invocation with
   `SIFR-OWN-0001`, diagnoses outer-loop reuse with `SIFR-OWN-0004`, and pins
   declaration-time snapshots in codegen and the runtime-observed package.
-- [Opus review round 5](../../reviews/active/rust-interop-certification-6-review-round-5.md)
+- [agent review round 5](../../reviews/active/rust-interop-certification-6-review-round-5.md)
   independently closed every prior finding, then found false rejection of
   attribute/method-derived locals whose capture type remained inference-time
   `Unknown`, plus an `FnMut` escape through direct or transitive `nonlocal`
@@ -744,7 +744,7 @@ Focused implementation evidence:
   diagnostic, records mutated nested captures, and rejects direct and
   transitive `FnMut` handlers before Cargo. Both mandatory generated-package
   directions exercise the corrected contract.
-- [Opus review round 6](../../reviews/active/rust-interop-certification-6-review-round-6.md)
+- [agent review round 6](../../reviews/active/rust-interop-certification-6-review-round-6.md)
   confirmed every round-1 through round-5 remediation, then found that the
   test-body decomposition broke negative-evidence provenance and that
   assignment-target-only capture mutation could still reach raw rustc
@@ -754,7 +754,7 @@ Focused implementation evidence:
   flow and sibling functions, covers collection-mutating methods, and prefers
   lowered lexical types over builtin-name inference. The unresolved-type
   branch now has a direct regression.
-- [Opus review round 7](../../reviews/active/rust-interop-certification-6-review-round-7.md)
+- [agent review round 7](../../reviews/active/rust-interop-certification-6-review-round-7.md)
   confirmed all earlier findings and the real area gates, then found that a
   function nested inside the retained handler could hide both `FnMut` and
   `NonSend` capture use. It also found name-only `write` classification falsely
@@ -764,7 +764,7 @@ Focused implementation evidence:
   receiver types for collection mutation, adds generated positive `RwLock`
   evidence and four generated negative nested-helper directions, and rejects
   `nonlocal` walrus with `SIFR-FLOW-0003`.
-- [Opus review round 8](../../reviews/active/rust-interop-certification-6-review-round-8.md)
+- [agent review round 8](../../reviews/active/rust-interop-certification-6-review-round-8.md)
   revalidated every earlier finding and both mandatory packages, then found
   capture and mutation traversal gaps in interpolated strings, lambdas, slice
   bounds, starred expressions, and comprehensions, plus incomplete nested
@@ -772,7 +772,7 @@ Focused implementation evidence:
   preserves comprehension/lambda lexical scope, strips every parameter kind,
   adds focused regressions for each escape, and extends the generated positive
   f-string clone evidence and negative hidden-capture diagnostics.
-- [Opus review round 9](../../reviews/active/rust-interop-certification-6-review-round-9.md)
+- [agent review round 9](../../reviews/active/rust-interop-certification-6-review-round-9.md)
   independently reproduced every prior finding and expression escape, passed
   both mandatory generated packages, 1,901 affected tests, the full
   Rust-interop area, Clippy, formatting, and all guardrails, recomputed the
@@ -807,7 +807,7 @@ Implementation checklist:
 - [x] Bind both evidence directions to distinct mandatory generated-build
   tests, promote only `zero_copy_runtime_matrix`, and update structured
   claims, public/internal docs, provenance, counts, and validator self-tests.
-- [x] Run focused and authoritative local gates, Opus review rounds to
+- [x] Run focused and authoritative local gates, agent review rounds to
   satisfaction, merge the PR, and unblock only `certification_8`.
 
 Post-item inventory:
@@ -825,7 +825,7 @@ Post-item inventory:
 
 Focused implementation evidence:
 
-- [Opus review round 1](../../reviews/active/rust-interop-certification-7-review-round-1.md)
+- [agent review round 1](../../reviews/active/rust-interop-certification-7-review-round-1.md)
   independently passed the mandatory packages, the full Rust-interop area,
   Clippy, formatting, and maintainability checks, then found six actionable
   gaps. The remediation replaces substring matching with exact Ok-slot opaque
@@ -835,14 +835,14 @@ Focused implementation evidence:
   and the catalog, reinterprets a mutated sealed mmap through bytemuck and
   zerocopy, expands scenario mutations, and decomposes scenario/probe tests so
   all maintained files remain below the 900-line cap.
-- [Opus review round 2](../../reviews/active/rust-interop-certification-7-review-round-2.md)
+- [agent review round 2](../../reviews/active/rust-interop-certification-7-review-round-2.md)
   confirmed every round-1 finding closed and all focused gates green, then
   found one diagnostic-ordering regression and two robustness gaps. The
   follow-up preserves the bridge-type diagnostic for propagated unsupported
   Result slots, asserts the actual Send/Sync probe invocations, and moves
   callback/resource token inventories into their scenario-owned modules to
   restore durable file-size headroom.
-- [Opus review round 3](../../reviews/active/rust-interop-certification-7-review-round-3.md)
+- [agent review round 3](../../reviews/active/rust-interop-certification-7-review-round-3.md)
   confirmed all earlier findings closed, then exposed full-driver regressions
   from applying opaque-handle identity to contract-only generated records, a
   new Clippy violation, and duplicated canonical target rendering. The
@@ -850,7 +850,7 @@ Focused implementation evidence:
   preserving generated-record metadata validation, reuses codegen's canonical
   handle renderer, adds a generated-record regression, and uses the
   Clippy-approved diagnostic note branch.
-- [Opus review round 4](../../reviews/active/rust-interop-certification-7-review-round-4.md)
+- [agent review round 4](../../reviews/active/rust-interop-certification-7-review-round-4.md)
   reproduced the full driver and area gates and confirmed all earlier findings
   closed, then found two supported positive fixture sources still returned
   `bytes` instead of their declared opaque views and that the driver locally
@@ -858,36 +858,36 @@ Focused implementation evidence:
   bound tests lower and validate those exact checked-in fixtures, gives both
   fixtures opaque handle returns, and moves canonical/legacy generated-path
   recognition and its malformed-path regressions into codegen.
-- [Opus review round 5](../../reviews/active/rust-interop-certification-7-review-round-5.md)
+- [agent review round 5](../../reviews/active/rust-interop-certification-7-review-round-5.md)
   confirmed the positive fixture and shared codegen-policy fixes, then found
   both contract-only negative provenance tests still used synthetic sources;
   the bytes fixture also omitted the copy-fallback contract it advertised.
   The follow-up gives that fixture a complete paired opaque view with explicit
   `copy_fallback=True` and makes both manifest-bound tests lower and validate
   their exact checked-in negative sources.
-- [Opus review round 6](../../reviews/active/rust-interop-certification-7-review-round-6.md)
+- [agent review round 6](../../reviews/active/rust-interop-certification-7-review-round-6.md)
   confirmed direct provenance for all four contract-only directions and every
   earlier remediation, then found the copy-fallback test could not distinguish
   that key from any other unsupported key. The follow-up includes the exact
   rejected key in zero-copy and view diagnostics and pins the `copy_fallback`
   and legacy `mutable` assertions to their source tokens.
-- [Opus review round 7](../../reviews/active/rust-interop-certification-7-review-round-7.md)
+- [agent review round 7](../../reviews/active/rust-interop-certification-7-review-round-7.md)
   independently reproduced the full driver, all three mandatory generated
   builds, Clippy, the Rust-interop area, guardrails, counts, and safe-Rust
   audit; confirmed every round-1 through round-6 remediation and unrelated-
   path preservation; and reported `SATISFIED` with no actionable finding.
-- [Integrated-head Opus review round 8](../../reviews/active/rust-interop-certification-7-review-round-8.md)
+- [Integrated-head agent review round 8](../../reviews/active/rust-interop-certification-7-review-round-8.md)
   verified the current-main merge changed no Rust or Rust-interop file, the
   authoritative create-PR failure's three transfer-inventory anchors now match
   the exact probe reads and both transfer gates pass, all earlier findings
   remain closed, and the exact head is `SATISFIED`.
-- [Integrated-head Opus review round 9](../../reviews/active/rust-interop-certification-7-review-round-9.md)
+- [Integrated-head agent review round 9](../../reviews/active/rust-interop-certification-7-review-round-9.md)
   confirmed the implementation remained sound after the next Phase 40
   integration, then found one low-severity import-order/spacing regression and
   required fresh exact-head lane evidence before closure. The follow-up
   restores the scenario-check module boundary and discards every stale lane
   report after the shared target was cleaned.
-- [Integrated-head Opus review round 10](../../reviews/active/rust-interop-certification-7-review-round-10.md)
+- [Integrated-head agent review round 10](../../reviews/active/rust-interop-certification-7-review-round-10.md)
   independently rebuilt all three mandatory zero-copy packages, passed the
   full driver and codegen Rust-interop suites, the complete Rust-interop area,
   Clippy, formatting, file-size and maintainability guardrails, confirmed all
@@ -930,7 +930,7 @@ Implementation checklist:
   tests, promote only `advanced_data_runtime_matrix`, retain all three
   narrower contract-only rows, and update structured claims, public/internal
   docs, provenance, counts, and mutation-tested scenario policy.
-- [x] Run focused and authoritative local gates, Opus review rounds to
+- [x] Run focused and authoritative local gates, agent review rounds to
   satisfaction, merge the PR, and unblock only `certification_9`.
 
 Review and validation notes:
@@ -1049,7 +1049,7 @@ Implementation checklist:
   package tests, promote only `native_build_script`, and update structured
   claims, public/internal docs, provenance, counts, and mutation-tested
   scenario policy.
-- [x] Run focused and authoritative local gates, Opus review rounds to
+- [x] Run focused and authoritative local gates, agent review rounds to
   satisfaction, merge the PR, and unblock only `certification_10`.
 
 Expected post-item inventory:
@@ -1067,7 +1067,7 @@ Expected post-item inventory:
 
 Review and validation notes:
 
-- [Opus round 1](../../reviews/active/rust-interop-certification-9-review-round-1.md)
+- [agent round 1](../../reviews/active/rust-interop-certification-9-review-round-1.md)
   independently reproduced the locked graph, deterministic artifacts,
   sentinel effectiveness, native-link envelope, area inventory, and safety
   constraints. It reported two medium and nine low findings before returning
@@ -1078,7 +1078,7 @@ Review and validation notes:
   literal mutation coverage, and checked `probe.c` identity. Documentation
   now scopes the claim to the Apple/GNU arm64/x86_64 host envelope and records
   the C/C++ compiler plus libclang prerequisites.
-- [Opus round 2](../../reviews/active/rust-interop-certification-9-review-round-2.md)
+- [agent round 2](../../reviews/active/rust-interop-certification-9-review-round-2.md)
   independently reran both mandatory tests, all area inventories, pin
   agreement, suite binding, lint, formatting, and guardrails; re-inspected all
   eleven round-1 findings; and reported `SATISFIED` with no actionable
@@ -1141,7 +1141,7 @@ Implementation checklist:
   public/internal docs, provenance, counts, cache-identity assertions, and
   mutation-tested scenario policy.
 - [x] Extract scenario dispatch before growing the current 891-line module,
-  run focused and authoritative local gates, complete Opus review rounds to
+  run focused and authoritative local gates, complete agent review rounds to
   satisfaction, merge the PR, and unblock only `certification_11`.
 
 Expected post-item inventory:
@@ -1183,7 +1183,7 @@ Validation evidence to date:
   changes in `sifr_stdlib_manifest`, `sifr_ipc`, `sifr_lowering`, and existing
   `sifr_driver` test-only lint findings. The production `sifr_driver` library
   and this scenario pass `-D warnings`.
-- [Opus round 1](../../reviews/active/rust-interop-certification-10-review-round-1.md)
+- [agent round 1](../../reviews/active/rust-interop-certification-10-review-round-1.md)
   independently reproduced exact pins, both mandatory tests, deterministic
   codegen, sentinel behavior, package-wide trust, inventories, claims, and
   guardrails. It reported one medium and five low findings before returning
@@ -1195,7 +1195,7 @@ Validation evidence to date:
   direct-root and local-bridge proc-macro unit coverage. Evidence now labels
   upstream `serde_derive` compilation separately from execution of the
   wrapper's `SifrGenerated` macro.
-- [Opus round 2](../../reviews/active/rust-interop-certification-10-review-round-2.md)
+- [agent round 2](../../reviews/active/rust-interop-certification-10-review-round-2.md)
   independently re-ran both mandatory tests, all 432 non-generated driver
   tests, the 184 mutation cases, inventories, claims, lint, formatting, and
   guardrails; re-inspected every round-1 finding; and returned `SATISFIED`
@@ -1246,7 +1246,7 @@ Implementation checklist:
 - [x] Add exact scenario-policy and mutation coverage for flags, lock identity,
   feature policy, network denial, cache evidence, and each negative drift
   direction without growing a maintained module past the file-size cap.
-- [x] Run focused and authoritative local gates, complete Opus review rounds to
+- [x] Run focused and authoritative local gates, complete agent review rounds to
   satisfaction, merge the PR, and unblock only `certification_12`.
 
 Validation evidence to date:
@@ -1285,7 +1285,7 @@ Validation evidence to date:
 - The exact lock-argument, combined locked/offline normalization, Cargo failure
   classification, package-owned source selection, formatting, stable-claim,
   and 900-line file-size guards pass.
-- [Opus round 1](../../reviews/active/rust-interop-certification-11-review-round-1.md)
+- [agent round 1](../../reviews/active/rust-interop-certification-11-review-round-1.md)
   reproduced the mandatory paths and core architecture, then returned
   `NOT SATISFIED` for lint failures, entry-file lexical classification, and a
   negative test that asserted a directly invoked classifier rather than the
@@ -1301,7 +1301,7 @@ Validation evidence to date:
   Production `sifr`, `sifr_package`, and `sifr_driver` Clippy, 142 package
   tests, 435 non-generated driver tests, rustfmt, HIR maintainability,
   TypeScript-Go transfer inventory, file-size, and diff-hygiene gates pass.
-- [Opus round 2](../../reviews/active/rust-interop-certification-11-review-round-2.md)
+- [agent round 2](../../reviews/active/rust-interop-certification-11-review-round-2.md)
   independently re-ran both mandatory tests, package/driver tests, workspace
   and production Clippy, every Rust-interop inventory, formatting, transfer,
   maintainability, file-size, and diff-hygiene gates. It re-inspected B1-B3
@@ -1358,7 +1358,7 @@ Implementation checklist:
   `env-filter` feature, bridge dependency ownership, positive/negative
   provenance, and the supported-through-bridge contract without weakening the
   preserved backend row.
-- [x] Run focused and authoritative local gates, complete Opus review rounds
+- [x] Run focused and authoritative local gates, complete agent review rounds
   to satisfaction, merge the PR, and unblock only `certification_13`.
 
 Validation evidence to date:
@@ -1389,13 +1389,13 @@ Validation evidence to date:
   planned. The staged certification-12 tree retains that row as future-owned
   and passes the fixture, compatibility, tier, and 35-claim stable-support
   checkers.
-- [Opus round 1](../../reviews/active/rust-interop-certification-12-review-round-1.md)
+- [agent round 1](../../reviews/active/rust-interop-certification-12-review-round-1.md)
   reproduced the full CLI/tooling contract and both mandatory tests, then
   returned `NOT SATISFIED` because the generic fixture checker had grown from
   899 to 904 lines. The correction moved fixture-specific binding-token policy
   into `_binding_helpers.py`, restored the checker to the hard cap, and
   added load-bearing exclusion plus direct-binding policy mutations.
-- [Opus round 2](../../reviews/active/rust-interop-certification-12-review-round-2.md)
+- [agent round 2](../../reviews/active/rust-interop-certification-12-review-round-2.md)
   audited integrated head
   `e2c321a788142bdf0da02967efee076c985a3d7c`, proved the certification patch
   survived the current-main merge byte-for-byte, re-ran both mandatory tests
@@ -1461,7 +1461,7 @@ Implementation checklist:
   bridge ownership, loopback/middleware execution, offline environment,
   metadata identity, both negative directions, evidence provenance, and the
   supported-through-bridge contract without weakening earlier rows.
-- [x] Run focused and authoritative local gates, complete Opus review rounds
+- [x] Run focused and authoritative local gates, complete agent review rounds
   to satisfaction, merge the PR, and unblock only `certification_14`.
 
 Expected post-item inventory:
@@ -1518,7 +1518,7 @@ Validation evidence to date:
   passed immediately on isolation, including protocol shutdown, marker corpus,
   transcript replay, and all self-tests. Workspace Clippy passes with warnings
   denied.
-- [Opus round 1](../../reviews/active/rust-interop-certification-13-review-round-1.md)
+- [agent round 1](../../reviews/active/rust-interop-certification-13-review-round-1.md)
   independently reproduced both mandatory generated-package tests, all driver
   tests, the 10/10 Rust-interop area, 229 mutation cases, the real dependency
   graph, matrix/claim counts, validator transitions, lint, formatting, and
@@ -1541,7 +1541,7 @@ Validation evidence to date:
   non-generated driver tests, the 10/10 Rust-interop area, 229 mutation cases,
   workspace Clippy, file-size/driver maintainability, the TypeScript-Go
   inventory, and the zero-deferral resource gate pass.
-- [Opus round 2](../../reviews/active/rust-interop-certification-13-review-round-2.md)
+- [agent round 2](../../reviews/active/rust-interop-certification-13-review-round-2.md)
   confirmed the round-1 parser, macro-family, dependency-table, traversal,
   naming, file-headroom, and diagnostic-classifier fixes, and independently
   reproduced 446/65 driver tests, both mandatory tests, the 10/10 area, all
@@ -1566,7 +1566,7 @@ Validation evidence to date:
   and the real `.env`-armed missing/stale negative passed in 44.78 seconds.
   Nine focused SQLx tests, 932 codegen tests, 446 non-generated driver tests,
   and all 229 fixture mutations pass.
-- [Opus round 3](../../reviews/active/rust-interop-certification-13-review-round-3.md)
+- [agent round 3](../../reviews/active/rust-interop-certification-13-review-round-3.md)
   confirmed every round-2 required fix, including the load-bearing `.env`
   sentinel counterfactual, workspace-root metadata lookup, multi-backend
   final-build cache identity, dedicated SQLx digest field, SQLx-compatible
@@ -1591,7 +1591,7 @@ Validation evidence to date:
   formatting, file-size, TypeScript-Go inventory, resource-gate, and diff
   checks pass. The cold `.env`-armed negative test, including its cfg-gated
   regression, passed in 195.61 seconds.
-- [Opus round 4](../../reviews/active/rust-interop-certification-13-review-round-4.md)
+- [agent round 4](../../reviews/active/rust-interop-certification-13-review-round-4.md)
   confirmed the inline cfg fix, ambient offline-directory behavior, sentinel
   attribution, and current direct-read inventory, and independently reproduced
   447/65 driver tests, both mandatory tests, the 10/10 area, lint, formatting,
@@ -1625,7 +1625,7 @@ Validation evidence to date:
   TypeScript-Go inventory, resource gate/self-test, and diff checks pass. The
   SQLx implementation remains responsibility-split across offline policy,
   cfg-aware visitation, and module-graph traversal.
-- [Opus round 5](../../reviews/active/rust-interop-certification-13-review-round-5.md)
+- [agent round 5](../../reviews/active/rust-interop-certification-13-review-round-5.md)
   confirmed every round-4 blocker and optional hardening fix, independently
   reproduced 448/65 driver tests, both mandatory tests, the 10/10 area, all
   lint/format/guardrail gates, active/gated/orphan module layouts, and the
@@ -1646,7 +1646,7 @@ Validation evidence to date:
   tests passed with 65 generated-build tests intentionally ignored. The
   implementation was responsibility-split at 665 lines for offline policy,
   219 for cfg-aware visitation, and 200 for module-graph traversal.
-- [Opus round 6](../../reviews/active/rust-interop-certification-13-review-round-6.md)
+- [agent round 6](../../reviews/active/rust-interop-certification-13-review-round-6.md)
   confirmed the literal round-5 inline-path fix and all optional hardening,
   independently reproduced 449/65 driver tests, both mandatory tests, the
   10/10 area, and every lint/guardrail gate. It returned `NOT SATISFIED`
@@ -1665,7 +1665,7 @@ Validation evidence to date:
   tests remain intentionally ignored. The implementation remains
   responsibility-split at 665 lines for offline policy, 219 for cfg-aware
   visitation, and 235 for module-graph traversal.
-- [Opus round 7](../../reviews/active/rust-interop-certification-13-review-round-7.md)
+- [agent round 7](../../reviews/active/rust-interop-certification-13-review-round-7.md)
   returned `SATISFIED` with no blocking finding. It compared the two-state
   resolver with rustc 1.94 across 11 module layouts, reproduced all three
   round-6 layouts in both directions on the real backend fixture, and
@@ -1678,7 +1678,7 @@ Validation evidence to date:
   directory precisely and older validation bullets are explicitly historical.
   The final production split is 665 lines for offline policy, 219 for
   cfg-aware visitation, and 240 for module-graph traversal.
-- [Opus round 8](../../reviews/active/rust-interop-certification-13-review-round-8.md)
+- [agent round 8](../../reviews/active/rust-interop-certification-13-review-round-8.md)
   reconfirmed the round-7 implementation verdict, independently matched raw
   flat, inline, non-keyword, and nested-module layouts against rustc 1.94,
   passed 450/65 driver tests, both mandatory tests, the 10/10 area, and all
@@ -1687,7 +1687,7 @@ Validation evidence to date:
 - The round-8 documentation fix restores the exact statement that workspace
   Clippy passed with warnings denied; no implementation or test behavior
   changed after the complete round-8 validation.
-- [Opus round 9](../../reviews/active/rust-interop-certification-13-review-round-9.md)
+- [agent round 9](../../reviews/active/rust-interop-certification-13-review-round-9.md)
   returned `SATISFIED` with no finding. It verified the wording repair is
   byte-identical to the pre-regression sentence, confirmed the round-8
   chronology is exact and non-contradictory, found no non-Markdown change
@@ -1701,7 +1701,7 @@ Validation evidence to date:
   including 450/65 driver tests, runtime platform passed in 69.87/120 seconds,
   and the E2E suite passed 131/131 fixtures in 399.17/600 seconds. Only the
   lane's nonblocking aggregate warm-time advisory remained.
-- [Published-head Opus round 10](../../reviews/active/rust-interop-certification-13-review-round-10.md)
+- [Published-head agent round 10](../../reviews/active/rust-interop-certification-13-review-round-10.md)
   independently audited exact PR head
   `f8ab7080cbec82f651476801e989c66449c6c939`, directly reproduced both
   mandatory backend tests, all 450 non-generated driver tests, the full 10/10
@@ -1734,7 +1734,7 @@ merged.
   and re-home controlled baseline recapture, host-variance investigation, and
   budget-policy recalibration to the named active performance-stability
   follow-up. Do not bless shared-host samples into reference baselines.
-- [x] Pass the authoritative create-PR and merge lanes, complete final Opus
+- [x] Pass the authoritative create-PR and merge lanes, complete final agent
   review rounds to satisfaction at the published head, merge the closeout PR,
   and record its immutable PR and merge identities.
 
@@ -1792,26 +1792,26 @@ Closeout validation evidence on 2026-07-30:
   controlled measurement conditions. Its explicit policy forbids changing
   baselines or waivers merely to make this shared host pass, so this closeout
   changes no performance baseline or threshold.
-- [Opus round 1](../../reviews/active/rust-interop-certification-14-review-round-1.md)
+- [agent round 1](../../reviews/active/rust-interop-certification-14-review-round-1.md)
   reproduced all focused gates and found that the first repair over-declared
   three transitive proc macros that the compiler does not require. The final
   repair retains only the four necessary direct build-script grants and gives
   each one an adversarial mutation.
-- [Opus round 2](../../reviews/active/rust-interop-certification-14-review-round-2.md)
+- [agent round 2](../../reviews/active/rust-interop-certification-14-review-round-2.md)
   proved those four grants individually necessary and jointly sufficient,
   independently passed all 31 ignored Rust-interop generated builds, the full
   driver and area suites, and every inventory/static gate, then found the
   historical performance retrospective had not been explicitly closed.
-- [Opus round 3](../../reviews/active/rust-interop-certification-14-review-round-3.md)
+- [agent round 3](../../reviews/active/rust-interop-certification-14-review-round-3.md)
   verified the named performance-stability re-homing, Phase 40 dependency
   boundary, durable review artifacts, trust-policy scope, complete Track A
   ledger, and all gates. It returned `SATISFIED`; two remaining low editorial
   cleanups aligned the re-homing sentence exactly with the follow-up DoD and
   marked `certification_7`'s historical merge checklist complete.
-- [Opus round 4](../../reviews/active/rust-interop-certification-14-review-round-4.md)
+- [agent round 4](../../reviews/active/rust-interop-certification-14-review-round-4.md)
   confirmed both post-verdict edits, artifact durability, and the complete
   closeout record with no actionable issue, returning `SATISFIED`.
-- [Integrated-head Opus round 5](../../reviews/active/rust-interop-certification-14-review-round-5.md)
+- [Integrated-head agent round 5](../../reviews/active/rust-interop-certification-14-review-round-5.md)
   re-ran the focused Rust-interop, driver, static, and resource gates after
   merging current `origin/main`, then found three stale present-tense
   `future-owned` notes in the canonical compatibility matrix and the matching
@@ -1820,20 +1820,20 @@ Closeout validation evidence on 2026-07-30:
   ecosystem evidence to `opaque_resource_matrix`, `async_runtime_reqwest`, and
   `callback_subscription_ecosystem`; the architecture uses the same completed
   resource wording.
-- [Integrated-head Opus round 6](../../reviews/active/rust-interop-certification-14-review-round-6.md)
+- [Integrated-head agent round 6](../../reviews/active/rust-interop-certification-14-review-round-6.md)
   confirmed all four stale-deferral corrections, independently checked every
   referenced row and the repository-wide remaining `future-owned` vocabulary,
   and found no implementation or scope issue. It returned `NOT SATISFIED`
   solely because this closeout ledger had not yet recorded round 5 or its
   corrections; this bullet and the preceding round-5 record close that
   artifact-traceability finding.
-- [Integrated-head Opus round 7](../../reviews/active/rust-interop-certification-14-review-round-7.md)
+- [Integrated-head agent round 7](../../reviews/active/rust-interop-certification-14-review-round-7.md)
   verified the round-5 and round-6 ledger records against their artifacts,
   re-ran every record-sensitive matrix, claims, resource, stale-draft, and
   guardrail validator, found no surviving false present-tense deferral, and
   returned `SATISFIED` with no actionable implementation, validation, scope,
   or tracking issue.
-- [Merge-readiness Opus round 8](../../reviews/active/rust-interop-certification-14-review-round-8.md)
+- [Merge-readiness agent round 8](../../reviews/active/rust-interop-certification-14-review-round-8.md)
   independently verified the exact performance samples, proved the unchanged
   failures non-attributable through the branch diff and a same-host unrelated
   branch control, and accepted the result as the governed `PERF-HOST`
@@ -1843,19 +1843,19 @@ Closeout validation evidence on 2026-07-30:
   summaries lacked durable output. Those findings are closed by the corrected
   wording, the performance-ledger incident, and the checked-in
   [merge-continuation evidence](../../reviews/active/rust-interop-certification-14-merge-continuation-evidence.md).
-- [Merge-readiness Opus round 9](../../reviews/active/rust-interop-certification-14-review-round-9.md)
+- [Merge-readiness agent round 9](../../reviews/active/rust-interop-certification-14-review-round-9.md)
   verified the singular lock-wait correction and every durable project,
   generated-build, and E2E rerun, then found that the performance ledger had
   omitted the unrelated control's 4132.029 ms JSON-diagnostic sample and
   consequently misaligned the LSP values. The ledger now records all four
   cases and the separate LSP p95 exactly.
-- [Merge-readiness Opus round 10](../../reviews/active/rust-interop-certification-14-review-round-10.md)
+- [Merge-readiness agent round 10](../../reviews/active/rust-interop-certification-14-review-round-10.md)
   verified the corrected control mapping, durable continuation evidence,
   round-9 ledger entry, and complete current diff. It found no actionable
   implementation, validation, evidence, performance-policy, or tracking issue
   and returned `SATISFIED`, explicitly approving publication and merge subject
   to exact PR-head review.
-- [Published-head Opus round 11](../../reviews/active/rust-interop-certification-14-review-round-11.md)
+- [Published-head agent round 11](../../reviews/active/rust-interop-certification-14-review-round-11.md)
   independently recomputed every inventory, re-ran the complete Rust-interop
   area and its self-tests, verified all prior findings closed, accepted the
   governed `PERF-HOST` exception, and returned `SATISFIED`. Its two
@@ -1863,7 +1863,7 @@ Closeout validation evidence on 2026-07-30:
   any extra build-script trust entry with a dedicated mutation, and the
   already-passing package-management offline merge smoke is explicitly
   preserved in the merge-continuation evidence.
-- [Published-head Opus round 12](../../reviews/active/rust-interop-certification-14-review-round-12.md)
+- [Published-head agent round 12](../../reviews/active/rust-interop-certification-14-review-round-12.md)
   proved both round-11 hardening changes effective, independently reproduced
   234 fixture mutations and the 2/2 package-management smoke, and found no
   implementation, inventory, stable-claim, resource, performance-policy, or
@@ -1872,26 +1872,26 @@ Closeout validation evidence on 2026-07-30:
   line, and the artifact preamble still described only its original three
   reruns. The evidence now reproduces both literal `ok` lines and distinguishes
   the three recovered outputs from the separately preserved coverage step.
-- [Published-head Opus round 13](../../reviews/active/rust-interop-certification-14-review-round-13.md)
+- [Published-head agent round 13](../../reviews/active/rust-interop-certification-14-review-round-13.md)
   reproduced both corrected literal output lines and the repaired evidence
   accounting, verified the round-12 artifact and ledger entry, re-ran the full
   Rust-interop area and package-management smoke, rechecked all carried
   invariants and non-Markdown hunks, found no actionable issue, and returned
   `SATISFIED`.
 - The
-  [final immutable-head Opus review](https://github.com/sifr-lang/sifr/pull/3083#issuecomment-5133537029)
+  [final immutable-head agent review](https://github.com/sifr-lang/sifr/pull/3083#issuecomment-5133537029)
   audited the published PR head
   `df04bcb83cc0804b4f12a678882992f3586dd777` after the round-13 artifact and
   ledger commit, independently reproduced the carried invariants, found no
   actionable issue, and returned `SATISFIED`. PR #3083 merged on 2026-07-30 as
   `ad205a2bb11d84a3a60e43c0e8c579a93365fca8`, completing Track A.
-- [Whole-phase Opus closeout round 1](../../reviews/active/rust-interop-track-a-phase-closure-review-round-1.md)
+- [Whole-phase agent closeout round 1](../../reviews/active/rust-interop-track-a-phase-closure-review-round-1.md)
   audited verification hardening and every certification from 0 through 14,
   independently reconstructed the 36-row contract and all current gates,
   checked cross-milestone safety, trust, hermeticity, stable-claim,
   performance-policy, identity, and dormant-Track-B boundaries, found no
   actionable issue, and returned `SATISFIED`.
-- [Whole-phase published-head Opus round 2](../../reviews/active/rust-interop-track-a-phase-closure-review-round-2.md)
+- [Whole-phase published-head agent round 2](../../reviews/active/rust-interop-track-a-phase-closure-review-round-2.md)
   independently reproduced the complete inventory, validator and profile
   enforcement, execution-strength, safety, trust, stable-claim, performance,
   identity, validation, and dormant-Track-B checks on PR #3084 head
@@ -1937,7 +1937,7 @@ Closeout validation evidence on 2026-07-30:
   complete closeout from `agent/rust-interop-certification-14`. Its first
   published head was
   `a344d1187575d9f5cb16055e161edd5c2a9763d1`, mergeable and exactly current
-  with `origin/main`; the required published-head Opus review follows after
+  with `origin/main`; the required published-head agent review follows after
   this immutable PR identity is part of the closeout ledger.
 - The exact integrated head `017c1df411f78ffb786775fdf4bd60e52424f839`
   ran the authoritative merge profile on 2026-07-30. Coverage, all core and
@@ -2059,7 +2059,7 @@ Implementation checklist:
 - [x] Pass both focused provenance tests, all Rust-interop checks and self-tests,
   the full area runner, formatting, Clippy, maintainability, file-size, and diff
   hygiene.
-- [x] Pass the create-PR gate, the one final merge gate, and Opus review rounds
+- [x] Pass the create-PR gate, the one final merge gate, and agent review rounds
   to `SATISFIED`; merge and record the immutable identities before unblocking
   Native Pydantic-Sifr `milestone_ps_3`.
 
@@ -2069,7 +2069,7 @@ Closure evidence:
   `c6f5748870471ba6baa7dcddbbadc1b627576140`.
 - The exact reviewed and gated candidate was
   `ad9e73fc6c589c9d25a8177b734b6d820ef63d9a`.
-- Claude Opus 5 returned `SATISFIED` with no blocking findings for that
+- agent returned `SATISFIED` with no blocking findings for that
   candidate. The response remains outside the reviewed Git tree.
 - Focused validation passed lowering 974/974, codegen 977/977, the two native
   package-resource tests, workspace Clippy, formatting, and all Rust-interop

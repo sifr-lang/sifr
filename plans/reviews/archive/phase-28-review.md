@@ -1,7 +1,7 @@
 # Phase 28 Review: Decimal Types and Exact Numeric Semantics
 
 **Review Date:** 2026-03-07
-**Reviewer:** Claude Code
+**Reviewer:** agent
 **Scope:** Merged PRs #910-#914 (Parts 1-5)
 
 ---

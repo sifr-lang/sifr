@@ -21,5 +21,5 @@ Network/HTTP baseline readiness is complete only after:
 
 - the inventory has no `open` terminal states;
 - every network/HTTP implementation capability has a traceability document and concrete evidence records;
-- the reviewer loop returns `PASS`;
+- the validation loop returns `PASS`;
 - local validation for the network/HTTP baseline PR is recorded in `issues/production-network-http-platform-substrate-execution.md`.

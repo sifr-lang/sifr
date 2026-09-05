@@ -10,7 +10,7 @@ This document defines canonical baseline governance for compiler-facing verifica
   - `cargo test -p sifr_codegen`
 - Bless baselines:
   - `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite baselines --bless`
-  - `cargo insta review -p sifr_codegen` for intentional codegen snapshot changes
+  - `cargo insta accept -p sifr_codegen` for intentional codegen snapshot changes
 
 Only explicit `--bless` updates checked-in baseline files.
 
@@ -44,15 +44,15 @@ Baseline comparison and bless write-path use canonical normalization:
 - Canonical sort is applied where ordering is intentionally unordered.
 - Unavoidable nondeterministic fields must be removed or normalized before baseline write.
 
-## Review Rules
+## Validation Rules
 
-- Baseline diffs are first-class review artifacts.
+- Baseline diffs are first-class validation artifacts.
 - Incidental baseline updates are not allowed.
 - Any baseline change must be justified by an intentional rules change.
 - Diagnostics baseline changes must update `baseline_metadata.json`, preserve
   source hashes, and pass `diagnostics:rules`; stale, unused, incomplete, or
   metadata-less baseline files are blocking failures.
-- `sifr_codegen` snapshot blesses must be reviewed with the corresponding generated-Rust
+- `sifr_codegen` snapshot blesses must be validated with the corresponding generated-Rust
   rules change, and `cargo test -p sifr_codegen` must pass before the bless is accepted.
 
 ## Suggestion/Autofix Boundary (Verification Hardening)

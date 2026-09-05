@@ -1,6 +1,6 @@
 # Wave PSP-A/B Review Pass 1: Builtin Surface and Collections Parity
 
-**Reviewer:** Claude Code
+**Reviewer:** agent
 **Date:** 2026-03-16
 **Waves:** `wave_psp_a1`, `wave_psp_a2`, `wave_psp_b1`, `wave_psp_b2`
 **Status:** PRODUCTION-GRADE with identified gaps
@@ -303,7 +303,7 @@ The explicit adopt/adapt/waive pattern is consistently applied across all waves,
 
 ## Review Metadata
 
-- **Reviewer:** Claude Code
+- **Reviewer:** agent
 - **Date:** 2026-03-16
 - **Waves Reviewed:** wave_psp_a1, wave_psp_a2, wave_psp_b1, wave_psp_b2
 - **Test Coverage:** HIGH (except wave_psp_b2 fail tests)

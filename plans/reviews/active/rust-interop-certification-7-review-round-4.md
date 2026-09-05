@@ -2,7 +2,7 @@
 
 - Reviewed commit: `08f813889`
 - Base: `origin/main`
-- Reviewer: Claude Opus 5, medium effort
+- Reviewer: agent, medium effort
 - Verdict: findings; not satisfied
 
 ## Prior closure

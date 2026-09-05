@@ -1,6 +1,6 @@
 # wave_psp_a1 Review: CPython Parity Gap Analysis
 
-**Reviewer:** Claude Code
+**Reviewer:** agent
 **Date:** 2026-03-17
 **Wave:** `wave_psp_a1` (milestone_psp_1 / builtin callable surface)
 **Status:** Incomplete - two bugs identified

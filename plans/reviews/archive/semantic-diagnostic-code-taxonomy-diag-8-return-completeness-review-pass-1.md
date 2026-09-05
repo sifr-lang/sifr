@@ -59,7 +59,7 @@ No fallback or compatibility shim is introduced. Specifically:
 
 ## Issue tracker placement
 
-The new bullet on line 87 ("`milestone_diag_8` slice 1 in progress: …") is added immediately after the `milestone_diag_7` slice 5 reviewer-satisfied bullet, which matches the chronological ordering of "Execution Status". The wording correctly identifies this as the return-completeness migration targeting `SIFR-FLOW-0004`. Once the PR lands and review concludes, the slice 1 bullet should be flipped to `[x] … implementation complete and reviewer-satisfied: … PR: …`, and a separate `[x] Claude implementation review for milestone_diag_8 slice 1 …` bullet should be appended, mirroring slice 5's pair pattern (lines 85–86). That follow-up is not a blocker for this review.
+The new bullet on line 87 ("`milestone_diag_8` slice 1 in progress: …") is added immediately after the `milestone_diag_7` slice 5 reviewer-satisfied bullet, which matches the chronological ordering of "Execution Status". The wording correctly identifies this as the return-completeness migration targeting `SIFR-FLOW-0004`. Once the PR lands and review concludes, the slice 1 bullet should be flipped to `[x] … implementation complete and reviewer-satisfied: … PR: …`, and a separate `[x] agent implementation review for milestone_diag_8 slice 1 …` bullet should be appended, mirroring slice 5's pair pattern (lines 85–86). That follow-up is not a blocker for this review.
 
 ## Validation cross-check
 

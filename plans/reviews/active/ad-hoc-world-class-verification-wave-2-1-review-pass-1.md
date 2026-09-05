@@ -1,6 +1,6 @@
 # Ad-Hoc World-Class Verification — Wave 2.1 Review (Pass 1)
 
-Reviewer: code-review (Opus 4.7)
+Reviewer: code-review (agent)
 Date: 2026-06-14
 Scope: close all 20 `proposed_pr_slice: 2.1` stale-expectation rows in the `sifr_codegen` red-blocker inventory.
 

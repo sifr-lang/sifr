@@ -67,7 +67,7 @@ The slice description and the author confirm that "cannot mutate through immutab
 
 ### F6 — tracker close-out row (post-merge step)
 
-[issues/ad-hoc-semantic-diagnostic-code-taxonomy-and-structured-hir-diagnostics.md:50](issues/ad-hoc-semantic-diagnostic-code-taxonomy-and-structured-hir-diagnostics.md:50) still has the in-progress `[ ] ... PR: pending` line; once this slice merges, the standard `[x] Claude implementation review for milestone_diag_4a slice 2b.15 completed ...` row needs to be appended (matching the format used for slices 2b.13/2b.14). No action required from this review — flagging only.
+[issues/ad-hoc-semantic-diagnostic-code-taxonomy-and-structured-hir-diagnostics.md:50](issues/ad-hoc-semantic-diagnostic-code-taxonomy-and-structured-hir-diagnostics.md:50) still has the in-progress `[ ] ... PR: pending` line; once this slice merges, the standard `[x] agent implementation review for milestone_diag_4a slice 2b.15 completed ...` row needs to be appended (matching the format used for slices 2b.13/2b.14). No action required from this review — flagging only.
 
 ## Re-confirmed from pass 1
 

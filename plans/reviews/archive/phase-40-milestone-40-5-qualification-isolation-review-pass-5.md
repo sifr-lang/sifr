@@ -27,7 +27,7 @@ I cannot cryptographically attest "verbatim" against a copy held outside the tre
 - `self_update_metadata_source.rs:19-23` dry-run rejection ✓; `:34-41` `symlink_metadata` + `file_type().is_file()` ✓; `self_update_cli.rs:89` `fetch_channel_metadata(args.dry_run)`, strictly before `resolve_update_plan` ✓ (single call site repo-wide).
 - `runner.py:18-20` sys.path insert ✓; `self_update_certification.py` exactly 190 lines ✓; gate row `self-update-metadata-source` with `activation_boundary: stable-qualification` ✓.
 - `distribution_pipeline.md:383-390`, `docs/self_update.md:16-19`, `b09845a86`, `21bd64d7c` = `#3038` ✓.
-- Filename/location convention correct: reports archive to `plans/reviews/archive/`, `.claude.log` slots stay in `active/` (34 logs in `active/`, 0 in `archive/`) — matches the pass‑3 `.claude.log` at 01:31.
+- Filename/location convention correct: reports archive to `plans/reviews/archive/`, `.agent.log` slots stay in `active/` (34 logs in `active/`, 0 in `archive/`) — matches the pass‑3 `.agent.log` at 01:31.
 
 Pass‑4's sole finding is closed: the pass‑3 report exists in the archive and the ledger now carries a pass‑3 bullet.
 
@@ -41,7 +41,7 @@ Pass‑4's sole finding is closed: the pass‑3 report exists in the archive and
 `headRefOid` is still `d78cfb756`, and that commit does not touch `internal_docs/typescript_go_architecture_transfer_guardrails.md` (see `git show --stat d78cfb756`). Running `validate_direct_fs_inventory()` against the committed doc version yields the two failures quoted above, so the create-PR profile is red at the pushed head. The guardrail fix, the ledger update, and the pass‑3/pass‑4 archives all exist only in the working tree. They must be committed and pushed before merge — the green profile run I just completed applies to the working tree, not to what a reviewer sees on GitHub.
 
 **2. LOW — the PR description is stale and understates both the change and the review record.**
-`gh pr view 3039 --json body`: the Summary says the PR *"archive[s] two Claude Opus review rounds ending `VERDICT: SATISFIED`"* and the Review section covers only passes 1–2. Once finding 1 is addressed the PR will carry four archived rounds, one of which returned `NOT SATISFIED`. The Summary also omits the source-provider inventory classification entirely, which is now a substantive part of the diff and the reason the first create-PR gate failed. Update the Summary bullet to name the direct-read inventory exception, and the Review section to record rounds 3–5 including the superseded pass‑3 approval.
+`gh pr view 3039 --json body`: the Summary says the PR *"archive[s] two agent review rounds ending `VERDICT: SATISFIED`"* and the Review section covers only passes 1–2. Once finding 1 is addressed the PR will carry four archived rounds, one of which returned `NOT SATISFIED`. The Summary also omits the source-provider inventory classification entirely, which is now a substantive part of the diff and the reason the first create-PR gate failed. Update the Summary bullet to name the direct-read inventory exception, and the Review section to record rounds 3–5 including the superseded pass‑3 approval.
 
 ## Non-blocking observations
 

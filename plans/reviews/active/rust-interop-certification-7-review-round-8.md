@@ -2,7 +2,7 @@
 
 - Reviewed commit: `7d849021f`
 - Base: `origin/main` at `8a23f90869`
-- Reviewer: Claude Opus 5, medium effort
+- Reviewer: agent, medium effort
 - Verdict: **SATISFIED**
 
 ## Integrated-head closure

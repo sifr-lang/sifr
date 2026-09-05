@@ -1,7 +1,7 @@
 # wave_psp_e2 Review: Implementation Gaps and CPython Parity Quality
 
 **Date:** 2026-03-17
-**Reviewer:** Claude (Opus 4.6)
+**Reviewer:** agent (agent)
 **Status:** CRITICAL GAPS IDENTIFIED - Regression from main
 
 ---

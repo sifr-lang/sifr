@@ -24,8 +24,8 @@
     {"ruff_surface": "`--preview`", "sifr_spelling": "`--preview`", "classification": "supported", "required_fixture": "fmt_cli_preview_flags"},
     {"ruff_surface": "`--no-preview`", "sifr_spelling": "`--no-preview`", "classification": "supported", "required_fixture": "fmt_cli_preview_flags"},
     {"ruff_surface": "`--range <range>`", "sifr_spelling": "`--range <range>`", "classification": "supported", "required_fixture": "fmt_cli_single_file_range"},
-    {"ruff_surface": "global `--config <file-or-override>`", "sifr_spelling": "`--config <file-or-override>` or reviewed Sifr equivalent", "classification": "adapted", "required_fixture": "fmt_cli_config_override_precedence"},
-    {"ruff_surface": "global `--isolated`", "sifr_spelling": "`--isolated` or reviewed Sifr equivalent", "classification": "adapted", "required_fixture": "fmt_cli_isolated_ignores_config"},
+    {"ruff_surface": "global `--config <file-or-override>`", "sifr_spelling": "`--config <file-or-override>` or supported Sifr equivalent", "classification": "adapted", "required_fixture": "fmt_cli_config_override_precedence"},
+    {"ruff_surface": "global `--isolated`", "sifr_spelling": "`--isolated` or supported Sifr equivalent", "classification": "adapted", "required_fixture": "fmt_cli_isolated_ignores_config"},
     {"ruff_surface": "global logging flags used by formatter summaries", "sifr_spelling": "Sifr diagnostic/logging equivalent", "classification": "adapted", "required_fixture": "fmt_cli_summary_and_error_streams"}
   ]
 }

@@ -6,7 +6,7 @@
 - **Wave Under Review**: `wave_psp_rng_1` (Deterministic RNG State and Object Model)
 - **Review Pass**: 2
 - **Date**: 2026-03-21
-- **Reviewer**: Claude (automated assessment)
+- **Reviewer**: agent (automated assessment)
 
 ## Executive Summary
 

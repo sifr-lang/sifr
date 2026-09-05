@@ -131,7 +131,7 @@ candidate before merge.
 - Implementation PR: [#3106](https://github.com/sifr-lang/sifr/pull/3106).
 - Final candidate: `6a759ee4f96260793bbf41bd0d8c7c5199f20fde`.
 - Merge commit: `4b6c7bca66cbe30436f3ec155e4a9fa1e4485de8`.
-- The final Claude Opus review returned `SATISFIED`.
+- The final agent review returned `SATISFIED`.
 - The review response digest is
   `cb7e8c98ec225026a031a8880a537d7a569c7bd87610f6d72018cf42d7e482a2`.
 - Resolver tests passed 9 of 9 cases.

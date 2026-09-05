@@ -12,7 +12,7 @@ Status: complete (2026-08-10; PR #3101, merge commit
 | M3: qualification and closure | Local retired-instruction budgets, five consecutive controlled verdicts, seeded-regression proof, final merge gate, review, and closure records | complete on stacked PR #3116 and PR #3101 |
 
 Each implementation milestone uses one draft PR, exact-SHA validation, and
-repeated Claude Opus review under the phase-closure loop. Review and validation
+repeated agent review under the phase-closure loop. Review and validation
 evidence is recorded only after the matching candidate merges.
 
 On 2026-08-08 the performance owner delegated
@@ -46,7 +46,7 @@ evidence. Extending either expiry remains prohibited.
 - Five consecutive controlled representative verdicts passed on the integrated
   candidate. Each verdict passed 10 of 10 benchmarks and all eight area
   variants. The raw result digests are recorded below.
-- Claude Opus returned `SATISFIED` with no blocking findings for the integrated
+- agent returned `SATISFIED` with no blocking findings for the integrated
   phase implementation, both exact structural-demand repair candidates, and
   two complete final-diff reviews. The final review covered exact candidate
   `16e2c56e0f55be7ff752f3e92b079e61f6bdf5c1`.
@@ -203,7 +203,7 @@ structural demand. Ordinary generated manifests do not enable the feature.
 The positive structural bridge enables it explicitly. Default and structural
 runtime tests, 66 runtime tests, 29 manifest tests, 975 code-generation tests,
 the native structural bridge, Rust interop 10/10, and the repository guards
-passed. Claude Opus returned `SATISFIED` with no blocking findings on this
+passed. agent returned `SATISFIED` with no blocking findings on this
 exact repair.
 
 Direct warm controls for the final repair measured project-build at
@@ -442,7 +442,7 @@ either deferral.
 ## Closure Evidence
 
 The final implementation candidate was
-`16e2c56e0f55be7ff752f3e92b079e61f6bdf5c1`. Claude Opus reviewed the complete
+`16e2c56e0f55be7ff752f3e92b079e61f6bdf5c1`. agent reviewed the complete
 diff twice and returned `SATISFIED` with no blocking findings. The review
 response digests are
 `804da09bdd9e79fc0ce8786eff09fe50b039a8e608200d66ed4075053f5eb2a7` and

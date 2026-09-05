@@ -1,6 +1,6 @@
 # Wave PSP-A/B Review Pass 4: Post-Remediation Production-Grade Status
 
-**Reviewer:** Claude Code
+**Reviewer:** agent
 **Date:** 2026-03-16
 **Waves Reviewed:** `wave_psp_a1`, `wave_psp_a2`, `wave_psp_b1`, `wave_psp_b2`
 **Status:** Final production-grade assessment

@@ -38,6 +38,6 @@ None actionable.
 - The `.source.commit // .source_commit` output binding (`release-publication-prepare.yml:424`) legitimately spans the stable and preview summary shapes rather than being a dead fallback — a short comment would prevent a future reader reading it as one.
 - CLI surface is still split three ways (`prepare-stable-publication` as a `release_governance.py` subcommand; allocation and revalidation as standalone scripts); worth unifying in the wiring wave.
 - The nine legacy `scripts/distribution/*.py` still prepend `AREA_ROOT` and import top-level `governance`, so a process loading both families gets two `GovernanceError` identities. The three new scripts are consistently qualified (I confirmed the single identity by mutation).
-- `plans/reviews/active/…publish-primitives-review-pass-2.claude.log`, `…pass-4-frozen-pr-head.md`, and `…pass-4-frozen-pr-head.claude.log` are 0 bytes in the working tree (untracked, not in the PR); the pass-4 file should carry this review before the archive update.
+- `plans/reviews/active/…publish-primitives-review-pass-2.agent.log`, `…pass-4-frozen-pr-head.md`, and `…pass-4-frozen-pr-head.agent.log` are 0 bytes in the working tree (untracked, not in the PR); the pass-4 file should carry this review before the archive update.
 
 VERDICT: SATISFIED

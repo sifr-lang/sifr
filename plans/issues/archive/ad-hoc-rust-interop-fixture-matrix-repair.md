@@ -53,7 +53,7 @@ Validation:
 - HIR maintainability, diff, and file-size checks passed.
 - The touched Rust test file contains 799 lines.
 
-Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the exact-SHA agent review returned `SATISFIED` with no
 blocking finding. The evidence is in the
 [#3480 review comment](https://github.com/sifr-lang/sifr/pull/3480#issuecomment-5382310262).
 

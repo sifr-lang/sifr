@@ -136,7 +136,7 @@ Based on my review of all 13 files, here are my findings ordered by severity:
 
 ### L-2: Review log is comprehensive enough
 
-**Finding:** The review log shows three Claude review passes plus subsystem reviews covering6 areas. Hidden Python semantic dependencies were a primary review target. The three-pass review structure (boundary sound → revised strategy sound → code cross-check) is robust and catches the key failure mode (Python rule semantic leakage).
+**Finding:** The review log shows three agent review passes plus subsystem reviews covering6 areas. Hidden Python semantic dependencies were a primary review target. The three-pass review structure (boundary sound → revised strategy sound → code cross-check) is robust and catches the key failure mode (Python rule semantic leakage).
 
 **Verdict:** Review coverage is adequate. None of the review artifacts surface unresolved hidden decisions.
 

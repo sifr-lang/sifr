@@ -4,7 +4,7 @@ PR: [#3033](https://github.com/sifr-lang/sifr/pull/3033)
 
 Reviewed head: `8fedbbb9f`
 
-Reviewer: Claude Opus 5, medium effort
+Reviewer: agent, medium effort
 
 Verdict: `SATISFIED`
 

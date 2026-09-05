@@ -45,7 +45,7 @@ I checked whether this milestone caused it: at the merge-base the doc already sa
 
 ### Out of scope — preserved unmodified, must not enter the PR
 
-`editor_integrations` submodule bump, dirty `verification/areas/algorithmic_compatibility/corpora/leetcode` submodule, `plans/phases/43_interoperability.md`, `.cert5probe/` (5 files), `.claude/` (2 files), and the two stray `.webp` files. `.DS_Store` and the fixture's `target/` are correctly gitignored; `git status -uall` shows exactly the 13 intended new scenario files plus the new driver test module and checker.
+`editor_integrations` submodule bump, dirty `verification/areas/algorithmic_compatibility/corpora/leetcode` submodule, `plans/phases/43_interoperability.md`, `.cert5probe/` (5 files), `.agent/` (2 files), and the two stray `.webp` files. `.DS_Store` and the fixture's `target/` are correctly gitignored; `git status -uall` shows exactly the 13 intended new scenario files plus the new driver test module and checker.
 
 Round 2's B4 is genuinely closed and the replacement wording is accurate in every clause I could check against the manifest, the enforcement code, and the pinned build script. The one remaining doc inaccuracy is conservative, unvalidated, and pre-dates this milestone.
 

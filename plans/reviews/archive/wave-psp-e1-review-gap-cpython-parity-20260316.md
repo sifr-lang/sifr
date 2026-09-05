@@ -2,7 +2,7 @@
 
 **Date**: 2026-03-16
 **Branch**: main
-**Reviewer**: Claude Code
+**Reviewer**: agent
 
 ---
 

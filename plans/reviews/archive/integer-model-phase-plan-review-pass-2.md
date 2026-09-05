@@ -321,7 +321,7 @@ adds "Integer/float comparisons" as a row
 
 ### G6. Review history gate — Acceptable as-is
 
-INT-0 acceptance now reads "Review history names the most recent Claude
+INT-0 acceptance now reads "Review history names the most recent agent
 review artifact and a human/codex acknowledgement that blocking findings
 were addressed"
 ([issues:73](../issues/ad-hoc-integer-model-and-fixed-width-numeric-contract.md#L73)),

@@ -87,7 +87,7 @@ I found **no overstatement**. Notably, the body does not claim a green `create-p
 
 - Committed backend row remains `future-owned-by-separate-phase`, `future_owner` set, **both** evidence directions `planned`. The promotion exists only in `git diff`, never in `HEAD`.
 - Only `ecosystem_cli_certification` is promoted: `supported-through-bridge`, both directions `passing`. It is the single row that changed category.
-- Absent from HEAD: `.cert5probe`, `.claude`, `plans/phases/43_interoperability.md`, `logo 06.48.53.webp`, `docs/logo/logo.webp 08-03-09-514.webp`, `verification/areas/algorithmic_compatibility/corpora/leetcode`, and any round-5 artifact.
+- Absent from HEAD: `.cert5probe`, `.agent`, `plans/phases/43_interoperability.md`, `logo 06.48.53.webp`, `docs/logo/logo.webp 08-03-09-514.webp`, `verification/areas/algorithmic_compatibility/corpora/leetcode`, and any round-5 artifact.
 - Submodule pointers (`editor_integrations`, `verification/areas/algorithmic_compatibility`) byte-identical to base despite showing ` M` live.
 - Only `plans/phases/39_rust_interop.md` is touched; no root `Cargo.toml`/`Cargo.lock`/`scripts/` changes; all `verification/` changes are inside `areas/rust_interop/`.
 

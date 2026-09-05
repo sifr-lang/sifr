@@ -2,7 +2,7 @@
 
 Date: 2026-07-28
 
-Reviewer: Claude Opus 5 (`--effort medium`)
+Reviewer: agent (`--effort medium`)
 
 Pull request: [#3046](https://github.com/sifr-lang/sifr/pull/3046)
 

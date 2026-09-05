@@ -11,7 +11,7 @@ Owning phase: `issues/ad-hoc-idiomatic-rust-demo-corpus.md`
 - Working artifact:
   - `idiomatic.rs` in each in-scope demo directory
 - Review method:
-  - Claude CLI
+  - agent CLI
   - embedded file-content prompts
   - Rust-first review question:
     - “If an experienced Rust engineer wanted the same observable result as the Sifr code, would this be a strong, idiomatic Rust solution?”
@@ -27,7 +27,7 @@ Owning phase: `issues/ad-hoc-idiomatic-rust-demo-corpus.md`
 ## Priority Definitions
 
 - `prior-review-flagged`:
-  - any folder already called out in a Claude review artifact as `Issues Found`
+  - any folder already called out in a agent review artifact as `Issues Found`
 - `stdlib-heavy`:
   - a folder whose `idiomatic.rs` includes substantial helper/runtime/library-like code instead of a small direct demo translation
 - `hand-authored-generated-shape`:
@@ -104,8 +104,8 @@ status: accepted_after_pass_1_and_pass_2
     - `demos/logging/idiomatic.rs`: added `FileHandler::set_level` and used it in the handler sample to keep the API surface symmetric and the standalone compile path warning-free
   - no remaining accepted blockers after pass 2
 - reviewer tooling note:
-  - the `claude_resume_to_desktop.sh` wrapper hung before producing a file in this workspace
-  - external review artifacts were produced via direct `claude -p --dangerously-skip-permissions ...` runs and then written into the recorded review files
+  - the `desktop agent review handoff` wrapper hung before producing a file in this workspace
+  - external review artifacts were produced via direct `agent review ...` runs and then written into the recorded review files
 
 ### wave_2_runnable_demo_corpus_pass
 
@@ -244,8 +244,8 @@ status: accepted_after_pass_1_and_pass_2
   - pass 1 observations about the `fs2` dependency and fully streaming CSV object surfaces were not accepted as blockers for this demo companion because the current shape already matches the demo-visible behavior with clear Rust-first code
   - pass 2 reported no actionable issues
 - reviewer tooling note:
-  - direct shell-session `claude -p` launches stalled without producing review files during this batch
-  - review artifacts were captured successfully by running `claude -p --no-session-persistence --dangerously-skip-permissions ...` through a short Python subprocess wrapper and writing the returned stdout into the recorded review files
+  - direct shell-session `agent review` launches stalled without producing review files during this batch
+  - review artifacts were captured successfully by running `agent review ...` through a short Python subprocess wrapper and writing the returned stdout into the recorded review files
 
 #### batch_04_uuid_platform_os
 
@@ -294,7 +294,7 @@ status: accepted_after_pass_1_and_pass_2
   - pass 1 observations about including stderr on successful commands, surfacing `uname` fallback failures, and replacing the malformed-constructor `version() == -1` sentinel were not accepted as blockers because those behaviors are intentional for the current demo contract
   - pass 2 reported no actionable issues
 - reviewer tooling note:
-  - batch 04 continued using the Python subprocess capture path for `claude -p --no-session-persistence --dangerously-skip-permissions ...` because that remained the stable external-review transport after the shell-session launcher stalled on batch 03
+  - batch 04 continued using the Python subprocess capture path for `agent review ...` because that remained the stable external-review transport after the shell-session launcher stalled on batch 03
 
 #### batch_05_base64_hashlib_bytes_module
 
@@ -332,7 +332,7 @@ status: accepted_after_pass_1_and_pass_2
   - pass 1 reported no actionable issues
   - pass 2 reported no actionable issues
 - reviewer tooling note:
-  - batch 05 continued using the Python subprocess capture path for `claude -p --no-session-persistence --dangerously-skip-permissions ...` because it remained the stable external-review transport for embedded-file batch reviews in this workspace
+  - batch 05 continued using the Python subprocess capture path for `agent review ...` because it remained the stable external-review transport for embedded-file batch reviews in this workspace
 
 #### batch_06_collections_itertools_heapq
 
@@ -381,7 +381,7 @@ status: accepted_after_pass_1_and_pass_2
   - pass 1 observations about `heapq` temporary-vector allocation in `nsmallest` and `nlargest` were not accepted as blockers because they are a small-scope tradeoff that does not weaken the demo behavior or the Rust-first design
   - pass 2 reported no actionable issues
 - reviewer tooling note:
-  - batch 06 continued using the Python subprocess capture path for `claude -p --no-session-persistence --dangerously-skip-permissions ...` because it remained the stable external-review transport for embedded-file batch reviews in this workspace
+  - batch 06 continued using the Python subprocess capture path for `agent review ...` because it remained the stable external-review transport for embedded-file batch reviews in this workspace
 
 #### batch_07_string_textwrap_fnmatch
 
@@ -420,7 +420,7 @@ status: accepted_after_pass_1_and_pass_2
   - pass 2 observations about distinguishing `fnmatch` from `fnmatchcase` using platform-dependent case-folding and about preferring iterator-style matching over indexed `Vec<char>` traversal were not accepted as blockers because the approved phase-30 scope already treats deterministic case-sensitive `fnmatch` behavior as an intentional diff from CPython's platform normalization rules, and the current matcher is already compact and readable for this demo
   - no code changes were applied after pass 2
 - reviewer tooling note:
-  - batch 07 continued using the Python subprocess capture path for `claude -p --no-session-persistence --dangerously-skip-permissions ...` because it remained the stable external-review transport for embedded-file batch reviews in this workspace
+  - batch 07 continued using the Python subprocess capture path for `agent review ...` because it remained the stable external-review transport for embedded-file batch reviews in this workspace
 
 #### batch_08_bisect_defaultdict_max_heap
 
@@ -458,7 +458,7 @@ status: accepted_after_pass_1_and_pass_2
   - pass 2 reported only a non-blocking note that `defaultdict` takes keys by value and therefore re-allocates repeated owned keys in the demo; this was not accepted as a blocker because it reflects an honest Rust API tradeoff rather than a behavior or readability failure in the approved demo scope
   - `max_heap` passed both reviews without issue
 - reviewer tooling note:
-  - batch 08 first attempted the `.cursor/skills/talk-to-claude` desktop-handoff path, but because that handoff stalled before producing the requested review file, the final pass-1/pass-2 artifacts were generated with the stable Python subprocess capture path for `claude -p --no-session-persistence --dangerously-skip-permissions ...`
+  - batch 08 first attempted the `agent review` desktop-handoff path, but because that handoff stalled before producing the requested review file, the final pass-1/pass-2 artifacts were generated with the stable Python subprocess capture path for `agent review ...`
 
 #### batch_09_binary_files_binary_hashing_binary_storage
 
@@ -507,7 +507,7 @@ status: accepted_after_pass_1_and_pass_2
   - pass 1 observation that the digest checks validate length rather than a fixed SHA-256 value was not accepted as a blocker because the demo contract is API-shape and round-trip behavior rather than cryptographic test-vector verification
   - pass 2 reported no actionable issues
 - reviewer tooling note:
-  - batch 09 used the stable Python subprocess capture path for `claude -p --no-session-persistence --dangerously-skip-permissions ...` for both review passes
+  - batch 09 used the stable Python subprocess capture path for `agent review ...` for both review passes
 
 #### batch_10_bytes_basics_bytes_constructors_bytes_roundtrip
 
@@ -544,7 +544,7 @@ status: accepted_after_pass_1_and_pass_2
   - pass 1 reported no actionable issues
   - pass 2 reported no actionable issues
 - reviewer tooling note:
-  - batch 10 used the stable Python subprocess capture path for `claude -p --no-session-persistence --dangerously-skip-permissions ...` for both review passes
+  - batch 10 used the stable Python subprocess capture path for `agent review ...` for both review passes
 
 #### batch_11_subprocess_tempfile_zipfile_io
 
@@ -589,7 +589,7 @@ status: accepted_after_pass_1_and_pass_2
     - `demos/subprocess/idiomatic.rs`: changed `check_call` to return `0` on success instead of the child exit code value so the helper matches the demo's intended semantics more closely
   - pass 2 observations about `ZipFile::open` rejecting `"rb"` and about explicit cleanup requirements in `NamedTemporaryFile` were not accepted as blockers because both behaviors are deliberate parts of the approved demo scope
 - reviewer tooling note:
-  - batch 11 used the stable Python subprocess capture path for `claude -p --no-session-persistence --dangerously-skip-permissions ...` for both review passes
+  - batch 11 used the stable Python subprocess capture path for `agent review ...` for both review passes
 
 #### batch_12_readonly_bytes_tempfiles_and_zip_filesystem_and_archives
 
@@ -632,7 +632,7 @@ status: accepted_after_pass_1_and_pass_2
   - pass 1 reported no actionable issues
   - pass 2 reported no actionable issues
 - reviewer tooling note:
-  - batch 12 used the stable Python subprocess capture path for `claude -p --no-session-persistence --dangerously-skip-permissions ...` for both review passes after the desktop review handoff had already proven unreliable in this phase
+  - batch 12 used the stable Python subprocess capture path for `agent review ...` for both review passes after the desktop review handoff had already proven unreliable in this phase
 
 #### batch_13_bytes_errors_bytes_file_io_bytes_iteration
 
@@ -669,7 +669,7 @@ status: accepted_after_pass_1_and_pass_2
   - pass 1 reported no actionable issues
   - pass 2 reported one claimed `bytes_file_io` path-name mismatch, but no change was accepted because `demos/bytes_file_io/main.sifr` itself uses the `ad_hoc_bytes_wave3` reference and the rewritten `/tmp/sifr_ad_hoc_bytes_wave3_demo.bin` path already matches that source-visible naming
 - reviewer tooling note:
-  - batch 13 used the stable Python subprocess capture path for `claude -p --no-session-persistence --dangerously-skip-permissions ...` for both review passes after the unbounded direct invocation again proved unreliable
+  - batch 13 used the stable Python subprocess capture path for `agent review ...` for both review passes after the unbounded direct invocation again proved unreliable
 
 #### batch_14_file_streams_in_memory_streams_text_and_bytes
 
@@ -907,7 +907,7 @@ status: accepted_after_pass_1_and_pass_2
   - pass 1's note about `randbits` distribution was not accepted because the current bit-by-bit implementation already yields a uniform value in `0..2^bits` without changing the demo-visible behavior
   - pass 2 reported no accepted blockers; its RNG-state note was rejected because repeated `thread_rng()` handles still draw from the same thread-local RNG state, and its `compare_digest` note was treated as non-blocking because the helper already avoids early-exit comparison
 - reviewer tooling note:
-  - batch 18 used direct `claude -p --no-session-persistence --dangerously-skip-permissions ...` runs redirected into the recorded review files, and both passes completed successfully in that form
+  - batch 18 used direct `agent review ...` runs redirected into the recorded review files, and both passes completed successfully in that form
 
 #### batch_19_env_regex_regex_and_filesystem
 
@@ -944,7 +944,7 @@ status: accepted_after_pass_1_and_pass_2
   - pass 1 reported no actionable issues
   - pass 2 reported no actionable issues
 - reviewer tooling note:
-  - the full-batch `claude -p` review prompt repeatedly stalled in this workspace, so batch 19 used stable per-file external review prompts and then consolidated their results into the recorded batch review artifacts
+  - the full-batch `agent review` review prompt repeatedly stalled in this workspace, so batch 19 used stable per-file external review prompts and then consolidated their results into the recorded batch review artifacts
 
 #### batch_20_iter_and_next_cloned_iterators_lazy_iterators
 
@@ -2007,7 +2007,7 @@ status: accepted_after_pass_1_and_pass_2
   - pass 1 reported no accepted blockers
   - pass 2 produced one `system_tools` note about `.message` error propagation that was not accepted because its cited lines did not match the claim, the current Rust code already surfaces `io::Error` via `Display`, and the follow-up rereview appended contradictory non-file-local notes after an `OK` verdict
 - reviewer tooling note:
-  - batch 44 used compact per-file external review prompts and direct `claude -p` output capture because the desktop handoff wrapper and longer embedded-file prompts were unreliable in this workspace
+  - batch 44 used compact per-file external review prompts and direct `agent review` output capture because the desktop handoff wrapper and longer embedded-file prompts were unreliable in this workspace
 
 #### batch_45_generic_classes_generics_impl_forward_refs
 
@@ -2139,7 +2139,7 @@ status: accepted_after_pass_1_and_pass_2
   - pass 2 on `error_safety` returned `OK`
   - pass 2 on `io_safety` returned `OK`
 - reviewer tooling note:
-  - batch 54 again used bounded per-file `claude -p` prompts with embedded `main.sifr` and `idiomatic.rs` sources
+  - batch 54 again used bounded per-file `agent review` prompts with embedded `main.sifr` and `idiomatic.rs` sources
   - unlike some of the larger earlier batches, this safety slice did not suffer reviewer transport timeouts; the only repeated notes were the non-blocking `ParseError` wrapper complaints on `safety_basics`
 
 #### batch_53_utility_classes_uuid_and_datetime_fixed_timezones
@@ -2182,7 +2182,7 @@ status: accepted_after_pass_1_and_pass_2
   - pass 2 on `uuid_and_datetime` explicitly confirmed the exercised behavior and reported no actionable issues
   - pass 2 on `fixed_timezones` returned `OK`
 - reviewer tooling note:
-  - batch 53 again used bounded per-file `claude -p` prompts with embedded `main.sifr` and `idiomatic.rs` sources because that remains the most reliable review shape in this workspace
+  - batch 53 again used bounded per-file `agent review` prompts with embedded `main.sifr` and `idiomatic.rs` sources because that remains the most reliable review shape in this workspace
   - both `utility_classes` review passes still timed out despite the narrowed prompts, so those transport failures are recorded explicitly instead of being treated as blockers
 
 #### batch_52_structured_parsing_serialization_parse_safety_no_runtime_panics
@@ -2227,7 +2227,7 @@ status: accepted_after_pass_1_and_pass_2
   - pass 2 on `parse_safety` timed out again without returning a usable verdict
   - pass 2 on `no_runtime_panics` again raised only implementation-strategy preferences rather than demo-visible mismatches, so those notes were not accepted
 - reviewer tooling note:
-  - batch 52 used bounded per-file `claude -p` prompts with embedded `main.sifr` and `idiomatic.rs` sources because larger batch prompts have repeatedly stalled in this workspace
+  - batch 52 used bounded per-file `agent review` prompts with embedded `main.sifr` and `idiomatic.rs` sources because larger batch prompts have repeatedly stalled in this workspace
   - even with that narrower shape, both `parse_safety` review passes timed out and the other two files still returned stale/generated-shape commentary, so the artifacts record those transport-quality issues explicitly rather than fabricating clean verdicts
 
 #### batch_51_stdlib_fixes_pure_stdlib_generic_stdlib
@@ -2278,7 +2278,7 @@ status: accepted_after_pass_1_and_pass_2
   - pass 2 on `pure_stdlib` again returned stale/generated-shape claims and was not accepted
   - pass 2 on `generic_stdlib` stalled and did not return a usable verdict
 - reviewer tooling note:
-  - batch 51 again used direct per-file `claude -p --tools Read` prompts because that has been the most reliable review transport in this workspace
+  - batch 51 again used direct per-file `agent review` prompts because that has been the most reliable review transport in this workspace
   - `stdlib_fixes` pass 1 and `generic_stdlib` pass 2 still stalled despite the narrower prompt shape, so those transport failures are recorded explicitly instead of being treated as blockers
 
 #### batch_55_stdlib_intrinsics_stdlib_ownership_stdlib_tools
@@ -2331,7 +2331,7 @@ status: accepted_after_pass_1_and_pass_2
   - pass 2 on `stdlib_tools` likewise drifted back into Sifr-surface/type-shape parity notes about `TomlValue`, `Vec`, and `run_command`, and none were accepted because the paired demo-visible behavior already matched under all validation lanes
   - pass 2 on `stdlib_ownership` stalled without a usable verdict and was carried as a transport note rather than treated as a blocker
 - reviewer tooling note:
-  - batch 55 used direct per-file `claude -p --allowedTools Read` prompts because the `talk-to-claude` skill referenced by the phase-loop skill is not available in this session
+  - batch 55 used direct per-file `agent review` prompts because the `agent review` skill referenced by the phase-loop skill is not available in this session
   - an embedded-source retry was also used for `stdlib_ownership` pass 1 after the initial direct prompt returned only `OK`; that narrower retry found the heap/lazy-chain issues that were actually worth fixing
   - `stdlib_ownership` pass 2 still stalled without output after repeated polls, so the artifact records that transport issue explicitly rather than inventing a clean verdict
 
@@ -2378,7 +2378,7 @@ status: accepted_after_pass_1_and_pass_2
   - pass 1 notes claiming `12.3400` canonicalization was lost and that message-shape consistency was a blocker were not accepted because the validated output already preserved `12.3400` and only the exercised bigdecimal out-of-range message is user-visible in this demo
   - all three pass-2 review prompts stalled without a usable verdict after repeated retries, so the batch carries those as reviewer-transport notes rather than accepted blockers
 - reviewer tooling note:
-  - batch 66 used direct per-file `claude -p --no-session-persistence --dangerously-skip-permissions` prompts with embedded Sifr and Rust file contents
+  - batch 66 used direct per-file `agent review` prompts with embedded Sifr and Rust file contents
   - the pass-2 review lane stalled repeatedly on all three decimal files after the accepted `decimal_conversions` fix, so the artifact records those stalls explicitly instead of inventing clean verdicts
 
 #### batch_67_import_forms_imports_external_modules
@@ -2417,7 +2417,7 @@ status: accepted_after_pass_1_and_pass_2
   - all three pass-1 reviews returned `OK`
   - all three pass-2 reviews returned `OK`
 - reviewer tooling note:
-  - batch 67 used direct per-file `claude -p --no-session-persistence --dangerously-skip-permissions` prompts with embedded Sifr and Rust file contents
+  - batch 67 used direct per-file `agent review` prompts with embedded Sifr and Rust file contents
   - the initial pass-1 `import_forms` reviewer response lagged behind the other two files, but it completed cleanly without requiring any retry or code change
 
 #### batch_68_borrow_exclusivity_borrow_lowering_compiler_safety
@@ -2456,7 +2456,7 @@ status: accepted_after_pass_1_and_pass_2
   - all three pass-1 reviews returned `OK`
   - all three pass-2 reviews returned `OK`
 - reviewer tooling note:
-  - batch 68 used direct per-file `claude -p --no-session-persistence --dangerously-skip-permissions` prompts with compact observed-output-plus-Rust-file prompts
+  - batch 68 used direct per-file `agent review` prompts with compact observed-output-plus-Rust-file prompts
   - the first embedded-source reviewer processes stalled, so I reran the review with shorter prompts focused on observable behavior and the final Rust companions; those returned clean `OK` verdicts
 
 #### batch_69_branch_paths_cargo_manifest_cli_modes
@@ -2495,7 +2495,7 @@ status: accepted_after_pass_1_and_pass_2
   - all three pass-1 reviews returned `OK`
   - all three pass-2 reviews returned `OK`
 - reviewer tooling note:
-  - batch 69 used direct per-file `claude -p --no-session-persistence --dangerously-skip-permissions` prompts with compact observed-output-plus-Rust-file prompts
+  - batch 69 used direct per-file `agent review` prompts with compact observed-output-plus-Rust-file prompts
   - no review retries or code changes were needed after the initial authored companions landed
 
 #### batch_70_module_ordering_module_assembly_module_cycle_diagnostics
@@ -2535,7 +2535,7 @@ status: accepted_after_pass_1_and_pass_2
   - pass 1 on `module_assembly` surfaced one cleanup note about the nested-module import path; I accepted that and changed the import to `crate::{a_provider, z_provider}`
   - all three pass-2 reviews returned `OK`
 - reviewer tooling note:
-  - batch 70 used direct per-file `claude -p --no-session-persistence --dangerously-skip-permissions` prompts with compact observed-output-plus-Rust-file prompts
+  - batch 70 used direct per-file `agent review` prompts with compact observed-output-plus-Rust-file prompts
   - `module_assembly` needed a shorter retry prompt in pass 2 after the longer prompt stalled repeatedly, but the final retry returned `OK`
 
 #### batch_71_project_build_project_check_project_entrypoint
@@ -2574,7 +2574,7 @@ status: accepted_after_pass_1_and_pass_2
   - all three pass-1 reviews returned `OK`
   - all three pass-2 reviews returned `OK`
 - reviewer tooling note:
-  - batch 71 used direct per-file `claude -p --no-session-persistence --dangerously-skip-permissions` prompts with compact observed-output-plus-Rust-file prompts
+  - batch 71 used direct per-file `agent review` prompts with compact observed-output-plus-Rust-file prompts
   - no review retries or code changes were needed after the initial authored companions landed
 
 #### batch_72_decimal_diagnostics_decimal_verification_dependency_manifest
@@ -2615,7 +2615,7 @@ status: accepted_after_pass_1_and_pass_2
   - all three pass-2 reviews returned `OK`
   - no code changes were needed after the initial authored companions landed
 - reviewer tooling note:
-  - batch 72 used direct per-file `claude -p --no-session-persistence --dangerously-skip-permissions` prompts through short Python subprocess wrappers with explicit timeouts
+  - batch 72 used direct per-file `agent review` prompts through short Python subprocess wrappers with explicit timeouts
   - `decimal_diagnostics` needed shorter retry prompts in both passes after the longer prompt shape stalled, but both retry reviews returned `OK`
 
 #### batch_73_diagnostic_exit_codes_diagnostic_options_diagnostic_schema
@@ -2655,7 +2655,7 @@ status: accepted_after_pass_1_and_pass_2
   - all three pass-2 reviews returned `OK`
   - no follow-up code changes were needed after the initial `diagnostic_exit_codes` authoring step
 - reviewer tooling note:
-  - batch 73 used direct per-file `claude -p --no-session-persistence --dangerously-skip-permissions` prompts through short Python subprocess wrappers with explicit timeouts
+  - batch 73 used direct per-file `agent review` prompts through short Python subprocess wrappers with explicit timeouts
   - the initial combined pass-2 runner stalled, so pass 2 was finalized with separate per-file retries that each returned `OK`
 
 #### batch_74_reachable_imports_project_test_discovery_graph_isolation
@@ -2695,7 +2695,7 @@ status: accepted_after_pass_1_and_pass_2
   - all three pass-2 reviews returned `OK`
   - no follow-up code changes were needed after the initial authoring step
 - reviewer tooling note:
-  - batch 74 used direct per-file `claude -p --no-session-persistence --dangerously-skip-permissions` prompts through short Python subprocess wrappers with explicit timeouts
+  - batch 74 used direct per-file `agent review` prompts through short Python subprocess wrappers with explicit timeouts
   - the initial combined pass-1 runner stalled, and `graph_isolation` needed a shorter retry in pass 1; the separate per-file retries then returned `OK`
 
 #### batch_75_mode_consistency_project_graph_ecosystem_validation
@@ -2735,7 +2735,7 @@ status: accepted_after_pass_1_and_pass_2
   - all three pass-2 reviews returned `OK`
   - no follow-up code changes were needed after the initial authoring step
 - reviewer tooling note:
-  - batch 75 used direct per-file `claude -p --no-session-persistence --dangerously-skip-permissions` prompts through short Python subprocess wrappers with explicit timeouts
+  - batch 75 used direct per-file `agent review` prompts through short Python subprocess wrappers with explicit timeouts
   - the initial combined runners stalled, and `mode_consistency` in pass 1 plus `project_graph` in pass 2 needed shorter retries before returning `OK`
 
 #### batch_76_nested_function_part1_nested_function_part2_nested_function_part3
@@ -2775,7 +2775,7 @@ status: accepted_after_pass_1_and_pass_2
   - all three pass-2 reviews returned `OK`
   - no follow-up code changes were needed after the initial cleanup
 - reviewer tooling note:
-  - batch 76 used direct per-file `claude -p --no-session-persistence --dangerously-skip-permissions` prompts through short Python subprocess wrappers with explicit timeouts
+  - batch 76 used direct per-file `agent review` prompts through short Python subprocess wrappers with explicit timeouts
   - the initial combined runner stalled, and `nested_function_part1` needed a shorter retry in pass 1 before returning `OK`
 
 #### batch_77_recursive_type_part1_recursive_type_part2_recursive_type_part3
@@ -3099,7 +3099,7 @@ status: accepted_after_pass_1_and_pass_2
   - `codegen_structural_passes` and `intrinsic_codegen` also returned `OK` in pass 2
   - the initial `codegen_preamble` pass-2 response raised false-positive concerns about the final print path and error-shaping; those were not accepted because the final print is outside the `match`, the unreachable error assertion is not part of the observed success-path behavior, and a targeted retry returned `OK`
 - reviewer tooling note:
-  - batch 65 used direct per-file `claude -p --no-session-persistence --dangerously-skip-permissions` prompts with embedded Sifr and Rust file contents
+  - batch 65 used direct per-file `agent review` prompts with embedded Sifr and Rust file contents
   - `codegen_preamble` needed a short pass-2 retry after the first response misread the actual Rust control flow
 
 #### batch_64_code_generation_codegen_output_compiler_api
@@ -3139,7 +3139,7 @@ status: accepted_after_pass_1_and_pass_2
   - pass 1 on `codegen_output` raised two notes that were not accepted as blockers: one incorrectly claimed that `let _timer = Timer::new("work")` drops at the end of the statement rather than at scope end in Rust, and the other objected only to inlining `"World"` inside a `format!` call even though the paired Sifr demo's observable behavior is just the final greeting output
   - all three pass-2 reviews returned `OK`
 - reviewer tooling note:
-  - batch 64 used direct per-file `claude -p --no-session-persistence --dangerously-skip-permissions` prompts with embedded Sifr and Rust file contents
+  - batch 64 used direct per-file `agent review` prompts with embedded Sifr and Rust file contents
 
 #### batch_63_enums_ergonomics_constants_classmethods_arithmetic
 
@@ -3184,7 +3184,7 @@ status: accepted_after_pass_1_and_pass_2
   - pass 1 notes about loop-else and string method surface differences were not accepted as blockers because Rust lacks those exact surface forms and the current helpers already preserve the observed behavior idiomatically
   - all three pass-2 reviews returned `OK`
 - reviewer tooling note:
-  - batch 63 used direct per-file `claude -p --tools Read` prompts
+  - batch 63 used direct per-file `agent review` prompts
   - `ergonomics` pass 2 needed a short retry prompt after the initial full prompt stalled, but the retry returned a clean verdict on the final code state
 
 #### batch_62_control_flow_control_flow_paths_compiled_expressions
@@ -3233,7 +3233,7 @@ status: accepted_after_pass_1_and_pass_2
   - pass 1 on `compiled_expressions` returned `OK`
   - all three pass-2 reviews returned `OK`
 - reviewer tooling note:
-  - batch 62 used direct per-file `claude -p --tools Read` prompts
+  - batch 62 used direct per-file `agent review` prompts
   - both accepted pass-1 notes were narrow and local, so a single post-fix revalidation sweep was sufficient before the clean pass-2 run
 
 #### batch_61_core_language_core_libraries_iterator_integration
@@ -3281,7 +3281,7 @@ status: accepted_after_pass_1_and_pass_2
   - pass 2 returned `OK` for `core_language` and `core_libraries`
   - pass 2 on `iterator_integration` stalled on both the direct prompt and a shorter retry after the laziness fix, so it was carried as a transport note rather than treated as a blocker
 - reviewer tooling note:
-  - batch 61 used direct per-file `claude -p --tools Read` prompts
+  - batch 61 used direct per-file `agent review` prompts
   - `iterator_integration` needed an accepted pass-1 fix and then stalled in pass 2, so the artifacts record both the accepted laziness change and the final transport issue explicitly
 
 #### batch_60_auto_detection_auto_init_default_values
@@ -3327,7 +3327,7 @@ status: accepted_after_pass_1_and_pass_2
   - pass 2 returned `OK` for `auto_init` and `default_values`
   - the final `auto_detection` pass-2 note was rejected because it claimed `floor(3.9)` should preserve `3.9`, which directly contradicted the paired Sifr demo output already validated in this workspace
 - reviewer tooling note:
-  - batch 60 used direct per-file `claude -p --tools Read` prompts
+  - batch 60 used direct per-file `agent review` prompts
   - all three pass-2 prompts initially stalled, but two resolved cleanly on the final polling window and the remaining `auto_detection` response was explicitly recorded as a non-blocking incorrect verdict
 
 #### batch_59_ordering_rules_operators_and_assignment_collection_comprehensions
@@ -3368,7 +3368,7 @@ status: accepted_after_pass_1_and_pass_2
   - pass 2 returned `OK` for `operators_and_assignment` and `ordering_rules`
   - pass 2 on `collection_comprehensions` stalled without a usable verdict and was carried as a transport note rather than treated as a blocker
 - reviewer tooling note:
-  - batch 59 used direct per-file `claude -p --tools Read` prompts
+  - batch 59 used direct per-file `agent review` prompts
   - `collection_comprehensions` pass 2 stalled after the pass-1 false-positive note, so the artifact records that transport issue explicitly instead of fabricating a clean verdict
 
 #### batch_58_nested_functions_nested_helpers_nested_recursive_helpers
@@ -3410,7 +3410,7 @@ status: accepted_after_pass_1_and_pass_2
   - pass 2 returned `OK` for `nested_functions` and `nested_recursive_helpers`
   - pass 2 on `nested_helpers` stalled again on the shorter retry prompt and was likewise carried as a transport note
 - reviewer tooling note:
-  - batch 58 used direct per-file `claude -p --tools Read` prompts
+  - batch 58 used direct per-file `agent review` prompts
   - `nested_helpers` stalled in both passes despite a shorter retry prompt, so the artifacts record that transport issue explicitly instead of fabricating a clean verdict
 
 #### batch_57_extended_collections_extended_itertools_itertools_iterables
@@ -3457,7 +3457,7 @@ status: accepted_after_pass_1_and_pass_2
   - pass 2 returned `OK` for `extended_itertools` and `itertools_iterables`
   - the final `extended_collections` pass-2 response was not accepted because it inverted the Rust/Sifr file roles, analyzed the wrong source shape, and therefore did not identify a real blocker relative to the already-validated companion
 - reviewer tooling note:
-  - batch 57 used direct per-file `claude -p --tools Read` prompts
+  - batch 57 used direct per-file `agent review` prompts
   - `extended_collections` pass 2 stalled before eventually returning an inverted file-role analysis, so that response was recorded explicitly rather than treated as authoritative
 
 #### batch_56_stdlib_classes_stdlib_error_types_pure_sifr_stdlib
@@ -3506,7 +3506,7 @@ status: accepted_after_pass_1_and_pass_2
   - pass 2 on `pure_sifr_stdlib` returned `OK`
   - pass 2 on `stdlib_classes` and `stdlib_error_types` both stalled without usable verdicts and were carried as transport notes rather than treated as blockers
 - reviewer tooling note:
-  - batch 56 used direct per-file `claude -p --allowedTools Read` prompts because that has remained the most reliable review transport in this workspace
+  - batch 56 used direct per-file `agent review` prompts because that has remained the most reliable review transport in this workspace
   - `stdlib_classes` and `stdlib_error_types` pass-2 prompts still stalled without output after repeated polls, so the artifacts record those transport failures explicitly instead of fabricating clean verdicts
 
 #### batch_50_stdlib_stdlib_expansion_stdlib_aliases
@@ -3551,7 +3551,7 @@ status: accepted_after_pass_1_and_pass_2
   - pass 2 returned `OK: no issues` for `stdlib_expansion`
   - pass 2 on `stdlib_aliases` raised notes about exact platform string spellings and internal helper error typing, but neither was accepted because the paired demo only checks that the platform strings are non-empty and the helper error representation is not observable in the exercised paths
 - reviewer tooling note:
-  - batch 50 again used direct per-file `claude -p --tools Read` prompts because that has been the most reliable reviewer transport in this workspace
+  - batch 50 again used direct per-file `agent review` prompts because that has been the most reliable reviewer transport in this workspace
   - the pass-1 `stdlib` and `stdlib_expansion` responses still degraded into stale/generated-shape commentary despite the smaller prompt, so those artifacts record the unusable verdicts explicitly rather than fabricating clean pass-1 approvals
 
 #### batch_49_core_stdlib_extended_stdlib_additional_modules
@@ -3594,7 +3594,7 @@ status: accepted_after_pass_1_and_pass_2
   - pass 2 repeated the same `extended_stdlib` internal helper-name note and it was again not accepted as a blocker because the file already matched the paired Sifr behavior under temp-Cargo execution, targeted demo execution, and the full repository validation lane
   - pass 2 for `additional_modules` returned an unusable mixed response that inverted the Sifr/Rust file roles and ended with contradictory text; it was recorded explicitly and not treated as a blocker because the file had already passed temp-Cargo execution, targeted demo execution, and the full repository validation lane
 - reviewer tooling note:
-  - batch 49 used direct per-file `claude -p --tools Read` prompts with `main.sifr` and `idiomatic.rs` file-path references because that smaller prompt shape has been more reliable than embedded-source prompts in this workspace
+  - batch 49 used direct per-file `agent review` prompts with `main.sifr` and `idiomatic.rs` file-path references because that smaller prompt shape has been more reliable than embedded-source prompts in this workspace
   - the `additional_modules` pass-2 response still degraded into a stale file-role inversion despite the narrower source-of-truth instruction, so the artifact records that transport-quality issue explicitly instead of fabricating a clean verdict
 
 #### batch_48_class_libraries_advanced_class_libraries_inheritance
@@ -3644,7 +3644,7 @@ status: accepted_after_pass_1_and_pass_2
   - pass 2 returned `OK: no issues` for `inheritance`
   - pass 2 reviewer transport stalled for `class_libraries` and `advanced_class_libraries`; those stalls were recorded explicitly and not treated as blockers because both files had already passed local `rustc`, targeted Sifr demo execution, and the full repository validation lane, and `advanced_class_libraries` had also come back clean in pass 1
 - reviewer tooling note:
-  - batch 48 used direct per-file `claude -p` prompts with `Read` access because the class-library companions were too large for reliable embedded-source prompts in this workspace
+  - batch 48 used direct per-file `agent review` prompts with `Read` access because the class-library companions were too large for reliable embedded-source prompts in this workspace
   - the production-review prompts for the two larger files stalled without returning usable output, so the review artifacts record that transport issue explicitly
 
 #### batch_47_builtin_functions_builtin_callables_stdlib_functions
@@ -3689,8 +3689,8 @@ status: accepted_after_pass_1_and_pass_2
   - pass 1 reported no accepted blockers; `builtin_functions` came back clean, `builtin_callables` reviewer transport stalled without producing a usable verdict, and the `stdlib_functions` notes about negative `factorial` handling and the `batched` error string were rejected because those paths are not exercised by the paired demo
   - pass 2 reported no accepted blockers; `builtin_functions` and `stdlib_functions` both returned `OK: no issues`, while `builtin_callables` again had to be carried with a transport note after multiple prompt variants stalled in this workspace
 - reviewer tooling note:
-  - the desktop `claude_resume_to_desktop.sh` handoff stalled without writing the pass-1 artifact
-  - batch 47 therefore used direct per-file `claude -p --tools ''` prompts for the responsive files and recorded the `builtin_callables` reviewer stall explicitly rather than fabricating a verdict
+  - the desktop `desktop agent review handoff` handoff stalled without writing the pass-1 artifact
+  - batch 47 therefore used direct per-file `agent review` prompts for the responsive files and recorded the `builtin_callables` reviewer stall explicitly rather than fabricating a verdict
 
 ### wave_3_fixture_and_negative_case_normalization
 

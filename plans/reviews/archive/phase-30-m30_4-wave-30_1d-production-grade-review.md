@@ -184,4 +184,4 @@ The quick profile test suite shows 1 failure in `test_emit_pass_fixtures_do_not_
 ---
 
 *Review generated: 2026-03-10*
-*Reviewer: Claude Opus 4.6*
+*Reviewer: agent*

@@ -1,6 +1,6 @@
 # Review: Ad Hoc Signature-Invalid Fixture Adaptation Plan
 
-Reviewer: Claude (pass 1)
+Reviewer: agent (pass 1)
 Date: 2026-03-31
 Source: `issues/ad-hoc-signature-invalid-fixture-adaptation-plan-2026-03-31.md`
 

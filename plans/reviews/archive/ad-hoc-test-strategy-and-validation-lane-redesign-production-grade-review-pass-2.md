@@ -3,7 +3,7 @@
 **Document:** `issues/ad-hoc-test-strategy-and-validation-lane-redesign.md`
 **Status:** Ad hoc planning phase
 **Review pass:** 2 (production-grade assessment)
-**Assessor:** Claude Code
+**Assessor:** agent
 
 ---
 

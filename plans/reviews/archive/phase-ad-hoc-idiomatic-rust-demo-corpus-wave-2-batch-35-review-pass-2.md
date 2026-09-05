@@ -5,7 +5,7 @@
   - `demos/dict_membership/idiomatic.rs`
   - `demos/ordered_collections/idiomatic.rs`
 - Review method:
-  - External production-grade `claude -p` review run per file.
+  - External production-grade `agent review` review run per file.
   - Prompts were kept concise and behavior-driven because full paired-source prompts have been less reliable in this workspace.
 
 ### Results

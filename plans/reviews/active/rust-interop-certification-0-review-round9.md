@@ -7,7 +7,7 @@
 > explicit and resolves the apparent self-reference without changing the
 > reviewer's findings or verdict.
 
-Read-only. I modified nothing in the repository; every command above was a check, a report read, or a diff. `plans/reviews/active/rust-interop-certification-0-review-round9.md` does not exist during this audit (only the out-of-tree `.claude.log` companion), so no writer race is possible.
+Read-only. I modified nothing in the repository; every command above was a check, a report read, or a diff. `plans/reviews/active/rust-interop-certification-0-review-round9.md` does not exist during this audit (only the out-of-tree `.agent.log` companion), so no writer race is possible.
 
 ## Evidence-integrity re-check (rounds 1–8): coherent
 

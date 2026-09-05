@@ -1,6 +1,6 @@
 # Phase 35 Readiness Review: Performance Benchmarking, Shared Analysis Query Architecture, and Budgets
 
-**Reviewer:** Claude Code review agent
+**Reviewer:** agent review agent
 **Date:** 2026-05-15
 **Phase Document:** `internal_docs/phases/35_performance_benchmarking_and_budgets.md`
 **Status:** NOT READY

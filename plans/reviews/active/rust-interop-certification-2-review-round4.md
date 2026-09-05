@@ -2,7 +2,7 @@
 
 ## Reviewer
 
-Claude Opus 5 (`--effort medium`), read-only full working-tree review against
+agent (`--effort medium`), read-only full working-tree review against
 base commit `f76a99046`.
 
 ## Verdict
@@ -35,5 +35,5 @@ sweeps, minimal scenario trust, and production-classifier coverage.
 - Route each Rayon per-item catch through the shared silent runtime boundary
   and add cross-thread behavioral coverage.
 - Assert generated scenario stderr excludes private panic payloads.
-- Remove the dead mapping arm/helper, rerun full validation, and repeat Opus
+- Remove the dead mapping arm/helper, rerun full validation, and repeat agent
   review.

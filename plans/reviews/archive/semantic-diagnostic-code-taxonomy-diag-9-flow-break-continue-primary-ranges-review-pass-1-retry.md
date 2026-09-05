@@ -1,7 +1,7 @@
 # Review: semantic-diagnostic-code-taxonomy diag-9 slice 5
 ## milestone_diag_9 — FLOW break/continue primary ranges
 
-**Reviewer:** Claude Code review pass 1 retry
+**Reviewer:** agent review pass 1 retry
 **Status:** SATISFIED — no blockers
 
 ---

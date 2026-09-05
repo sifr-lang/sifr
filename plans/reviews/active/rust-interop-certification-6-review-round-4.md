@@ -2,7 +2,7 @@
 
 Date: 2026-07-28
 
-Reviewer: Claude Opus 5 (`--effort medium`)
+Reviewer: agent (`--effort medium`)
 
 Reviewed head: `9527ec367`
 
@@ -35,7 +35,7 @@ Treat a valid directly declared retained handler attachment as an ownership
 move so every later use is rejected by Sifr before Cargo probing. Cover second
 attachment, direct post-attachment invocation, and outer-loop attachment.
 Define the capture snapshot point explicitly and pin it in generated/runtime
-evidence, correct the claims, validate, and repeat the exact Opus review.
+evidence, correct the claims, validate, and repeat the exact agent review.
 
 ## Resolution
 

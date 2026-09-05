@@ -1,12 +1,12 @@
 # Rust Interop `certification_3` Review — Round 3
 
-Reviewer: Claude Opus 5 (`medium`)
+Reviewer: agent (`medium`)
 
 Result: **UNSATISFIED**
 
 ## Confirmed round-2 resolutions
 
-Opus confirmed explicit `panic=abort` rejection, removal of contradictory
+agent confirmed explicit `panic=abort` rejection, removal of contradictory
 mutable-inner codegen, scenario execution of safe/error/panic modes, owned
 argument documentation, and the completed probe diagnostic split.
 

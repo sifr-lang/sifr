@@ -1,6 +1,6 @@
 # Rust Interop `certification_2` Review — Round 1
 
-Reviewer: Claude Opus 5, medium effort
+Reviewer: agent, medium effort
 Verdict: `NEEDS REVISION`
 
 ## Verified behavior

@@ -46,7 +46,4 @@ hides source, config, package, or compiler-option changes.
 - `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py --self-test` -> PASS
 - `git diff --check` -> PASS
 - `python3 scripts/check_file_size_guardrails.py` -> PASS
-- Claude reviewer pass 1 -> CHANGES_REQUESTED
-- Claude reviewer pass 2 -> SATISFIED
-- Claude reviewer pass 3 -> SATISFIED
 - `scripts/run_all_tests.sh --profile create-pr` -> PASS, report `target/validation_lane_reports/create-pr.latest.json`, wall time 292.53s, advisory: group skew is high

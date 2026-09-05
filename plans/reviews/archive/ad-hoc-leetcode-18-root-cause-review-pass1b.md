@@ -1,6 +1,6 @@
 # Review — Ad-hoc Phase: LeetCode 18-Failure Root-Cause Closure (pass1b)
 
-Reviewer: Claude
+Reviewer: agent
 Source docs reviewed:
 - `issues/ad-hoc-phase-leetcode-18-failure-root-cause-closure-2026-04-08.md`
 - `issues/ad-hoc-phase-execution-leetcode-18-failure-root-cause-closure-2026-04-08.md`

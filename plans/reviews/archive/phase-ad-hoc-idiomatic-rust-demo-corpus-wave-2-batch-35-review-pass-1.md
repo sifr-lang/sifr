@@ -5,7 +5,7 @@
   - `demos/dict_membership/idiomatic.rs`
   - `demos/ordered_collections/idiomatic.rs`
 - Review method:
-  - External `claude -p` review run per file.
+  - External `agent review` review run per file.
   - Prompts were constrained to actionable correctness bugs, semantic mismatches, or misleading reference patterns.
   - For this batch, concise per-file behavior summaries were more reliable than embedding the full paired Sifr file contents.
 

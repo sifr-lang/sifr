@@ -2,7 +2,7 @@ All independent verification is complete. Both mandatory tests pass on this host
 
 # Rust-Interop `certification_9` (`native_build_script`) — Review Round 2
 
-Scope: current worktree on `agent/rust-interop-certification-9`. Excluded from judgement exactly as specified: `editor_integrations`, the leetcode corpus submodule, `.cert5probe/`, `.claude/`, the two stray `*.webp` files, `plans/phases/43_interoperability.md`, `*.claude.log`, and the `ecosystem_backend_certification` `category`/`future_owner` hunk in `rust_interop_compatibility_matrix.json:396-400`. No files were modified by this review.
+Scope: current worktree on `agent/rust-interop-certification-9`. Excluded from judgement exactly as specified: `editor_integrations`, the leetcode corpus submodule, `.cert5probe/`, `.agent/`, the two stray `*.webp` files, `plans/phases/43_interoperability.md`, `*.agent.log`, and the `ecosystem_backend_certification` `category`/`future_owner` hunk in `rust_interop_compatibility_matrix.json:396-400`. No files were modified by this review.
 
 ## Independent verification performed
 

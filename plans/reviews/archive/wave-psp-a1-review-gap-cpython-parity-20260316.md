@@ -1,6 +1,6 @@
 # wave_psp_a1 Review: CPython Parity Gap Analysis
 
-**Reviewer:** Claude Code
+**Reviewer:** agent
 **Date:** 2026-03-16
 **Wave:** `wave_psp_a1` (milestone_psp_1 / ad-hoc Python source parity)
 **Status:** PRODUCTION-READY - No actionable implementation gaps remaining

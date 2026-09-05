@@ -2,8 +2,8 @@
 
 ## SATISFIED
 
-**Reviewer:** Claude Opus Code Review  
-**Branch:** `phase36-m36-4-editor-query-layer`  
+**Reviewer:** agent Code Review
+**Branch:** `phase36-m36-4-editor-query-layer`
 **Scope:** Full Editor Query Layer through `sifr_analysis`, parity manifest/snapshots, completion quality, and query behavior coverage.
 
 ---
@@ -33,66 +33,66 @@ The m36.4 implementation delivers the complete token-backed editor query layer t
 
 ### Code Review Findings
 
-**Severity: Informational**  
-**File:** `crates/sifr_analysis/src/symbols.rs:119`  
+**Severity: Informational**
+**File:** `crates/sifr_analysis/src/symbols.rs:119`
 **Finding:** `unique_symbol_named` silently returns `None` for zero matches. This is defensible for a symbol that must be unambiguously resolvable, but the behavior is implicit rather than explicit.
 
-**Severity: Low**  
-**File:** `crates/sifr_analysis/src/host.rs:368-390`  
+**Severity: Low**
+**File:** `crates/sifr_analysis/src/host.rs:368-390`
 **Finding:** The code action suppression helper uses hardcoded `"trailing-whitespace"` rule id and `"SIFR-LINT-0004"` diagnostic id. The hardcoded lint rule id is a known limitation documented in m36.3 review as informational. This is acceptable for m36.4 since policy suppression code actions are correctly gated behind the `SIFR-LINT-` prefix check.
 
-**Severity: Informational**  
-**File:** `crates/sifr_analysis/src/symbols.rs:124-132`  
+**Severity: Informational**
+**File:** `crates/sifr_analysis/src/symbols.rs:124-132`
 **Finding:** `symbol_kind_label` has an incomplete `match` — `Variable` and `Parameter` are not covered. Symbols without a known kind label will panic at runtime if the frontend emits unrecognized `SymbolKind` variants. Current `SymbolKind` variants in `sifr_frontend` are `Function`, `Class`, `Constant`, `Import`, which are all covered.
 
-**Severity: Informational**  
-**File:** `crates/sifr_analysis/src/host.rs:1175-1179`  
+**Severity: Informational**
+**File:** `crates/sifr_analysis/src/host.rs:1175-1179`
 **Finding:** The inlay hint assertion in the test `"inlay hints should expose annotation-backed hints"` may fail for inputs without `: ` annotations after identifiers. The fixture source does not contain annotation patterns, so the assertion may produce false negatives. This is a test coverage gap, not a behavior defect — the method correctly returns empty when no hints are found.
 
-**Severity: Informational**  
-**File:** `verification/tooling/run_tooling_parity.py:88-106`  
+**Severity: Informational**
+**File:** `verification/tooling/run_tooling_parity.py:88-106`
 **Finding:** The parity runner executes cargo tests sequentially. For future scalability, parallel execution or batched execution would be beneficial, but this is not blocking for m36.4.
 
 ---
 
 ### Contract Compliance
 
-**Split-brain safety:** PASS  
+**Split-brain safety:** PASS
 - `sifr_analysis` derives editor tokens through `FrontendContext::parse_module` — no raw parser path.
 - `check_analysis_split_brain.py` updated to specifically allow `sifr_format::format_range` (ALLOWED_SNIPPETS) and `sifr_syntax::parse_module` (the frontend/formatter handoff path), while rejecting `parse_unchecked`, `lower_module`, `HirModule`, `ty_python_semantic`, and `ty_project`.
 - `generated_rust_preview` uses `sifr_driver::compile_with_metadata` — the canonical compiler handoff.
 - No HIR traversal for semantic answers.
 
-**Query API completeness:** PASS  
+**Query API completeness:** PASS
 All 26 editor query methods from the Phase 36 contract are implemented with correct `AnalysisQueryKind` metadata:
 - `all_editor_query_methods_expose_current_revision_metadata` test covers every method.
 
-**Stale-version rejection:** PASS  
+**Stale-version rejection:** PASS
 - `update_document` enforces monotonic document versions.
 - `AnalysisSnapshot::ensure_snapshot_current` rejects stale snapshots with graph/source revision diff in error message.
 
-**Generated Rust preview:** PASS  
+**Generated Rust preview:** PASS
 - Uses `sifr_driver::compile_with_metadata` for source-mapped codegen.
 - Returns structured `GeneratedRustPreview` with `unavailable_reason` when compilation fails.
 - Proper `sifr_driver` dependency added to `Cargo.toml`.
 
-**Code actions:** PASS  
+**Code actions:** PASS
 - Correctly gated behind `SIFR-LINT-` prefix check.
 - Offers explicit suppression edit for policy lint diagnostics only (not hard correctness diagnostics).
 
-**Diagnostics:** PASS  
+**Diagnostics:** PASS
 - Combines canonical frontend hard diagnostics with `sifr_lint` policy diagnostics.
 
-**Semantic tokens:** PASS  
+**Semantic tokens:** PASS
 - Token-backed via `EditorFacts::semantic_tokens`.
 - Keyword, string, number, operator, type, variable, and mutable modifiers correctly identified.
 
-**Parity infrastructure:** PASS  
+**Parity infrastructure:** PASS
 - `parity_manifest.json` validates all required queries.
 - `run_tooling_parity.py` has working self-test that fails on malformed manifests.
 - Completion quality fixtures have 1.0 minimum pass rate threshold.
 
-**Documentation:** PASS  
+**Documentation:** PASS
 - Phase file, tooling docs, and execution tracker correctly updated with m36.4 status.
 
 ---

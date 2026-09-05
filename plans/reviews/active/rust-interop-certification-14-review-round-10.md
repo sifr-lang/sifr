@@ -16,7 +16,7 @@ Four cases + a separate p95 — now structurally parallel to the preceding close
 
 **Tracking state — consistent and honestly open.** `certification_14` row is `in progress` (line 163), the final checklist box at line 1738 is unchecked, and the roadmap row reads "Track A closeout in progress". Nothing claims completion ahead of the merge.
 
-The working tree carries unrelated dirt (`editor_integrations` and `leetcode` submodule pointers, `.claude/`, stray webp files, an untracked `plans/phases/43_interoperability.md` and a `round-10` file). None of it is in the branch commits; it must not be staged when publishing.
+The working tree carries unrelated dirt (`editor_integrations` and `leetcode` submodule pointers, `.agent/`, stray webp files, an untracked `plans/phases/43_interoperability.md` and a `round-10` file). None of it is in the branch commits; it must not be staged when publishing.
 
 No actionable implementation, validation, evidence, performance-policy, or tracking issue remains.
 

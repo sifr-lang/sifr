@@ -24,5 +24,5 @@ None.
 - **Hardcoded `">=3.11"` in `validate_python_version`** is brittle if `requires-python` ever moves. Either parse the version constraint or add a code comment pointing at the policy source of truth.
 - **"compile-error" bucket is Sifr-only by construction** (`error_presence` only emits it when `runtime == "Sifr"` and stderr contains `error[`). Worth a one-line comment in the function so future readers know CPython will never report it.
 
-## Another Opus round required
+## Another agent round required
 **No.** Fix the deadline/build-ordering bug (item 1) and the `tomllib` import order (item 2), then proceed to PR. The rest is incremental cleanup that fits a Wave 6.2 follow-up.

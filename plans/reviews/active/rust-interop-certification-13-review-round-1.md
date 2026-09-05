@@ -8,7 +8,7 @@ The certification substance is real and largely excellent — genuine crates.io 
 
 ## Scope reviewed
 
-Full committed delta `origin/main..HEAD` (`b231daf81`, `7a27b7896`), 43 files. The listed unstaged worktree paths (`editor_integrations`, leetcode corpora, `.cert5probe/`, `.claude/`, stray webp, `plans/phases/43_interoperability.md`) were excluded and are not attributed to this milestone.
+Full committed delta `origin/main..HEAD` (`b231daf81`, `7a27b7896`), 43 files. The listed unstaged worktree paths (`editor_integrations`, leetcode corpora, `.cert5probe/`, `.agent/`, stray webp, `plans/phases/43_interoperability.md`) were excluded and are not attributed to this milestone.
 
 ### Independently executed
 

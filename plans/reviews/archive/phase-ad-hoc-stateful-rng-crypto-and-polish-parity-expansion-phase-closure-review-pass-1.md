@@ -5,7 +5,7 @@
 **Review type**: phase-level closure (milestone-level closure passes 1/2 complete; phase-level closure is the remaining work)
 **Review pass**: 1
 **Date**: 2026-03-21
-**Reviewer**: Claude Code
+**Reviewer**: agent
 **Commit under review**: `0584acad` (milestone closure pass 2 merged)
 
 ---
@@ -368,7 +368,7 @@ All validation gates pass. No regressions in the entire phase PR chain.
 ---
 
 *Review completed: 2026-03-21*
-*Reviewer: Claude Code*
+*Reviewer: agent*
 *Phase: ad-hoc-stateful-rng-crypto-and-polish-parity-expansion*
 *Review type: phase-closure-review-pass-1*
 *Commit: 0584acad (milestone closure pass 2 — HEAD)*

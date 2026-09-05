@@ -46,7 +46,7 @@ The traceability now asserts "lazy private default pool reuse through generated 
 `__sifr_pool_map`/`__sifr_pool_try_map` (`parallel_runtime.rs:199, 231`) also call `__sifr_with_silent_parallel_panic_hook`, so configured-Pool work serializes against top-level parallel work via the new mutex. This is consistent and correct, but the traceability row for `Pool`/`PoolConfig` doesn't mention it — readers may be surprised that two independent configured Pools cannot run their bodies concurrently from different threads.
 
 **8 — Low: review artifact is a 0-byte placeholder.**
-`reviews/ad-hoc-production-concurrency-runtime-m3-closeout-review-pass-1.md` is empty (0 bytes). The ledger references it implicitly via "Pending Claude Opus implementation review" but commits an empty file. Either populate it (this review fills the role) or remove the empty file before opening the PR.
+`reviews/ad-hoc-production-concurrency-runtime-m3-closeout-review-pass-1.md` is empty (0 bytes). The ledger references it implicitly via "Pending agent implementation review" but commits an empty file. Either populate it (this review fills the role) or remove the empty file before opening the PR.
 
 ### Soundness of the closeout's actual source change
 

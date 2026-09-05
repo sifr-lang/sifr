@@ -540,7 +540,7 @@ status: completed
 - PR [#1953](https://github.com/sifr-lang/sifr/pull/1953) race secondary-evidence slice: `task.race([...])` now drains losing child observations after cancelling losers and attaches loser failure or cancellation evidence to a failure-like winning result.
 - PR [#1955](https://github.com/sifr-lang/sifr/pull/1955) select secondary-evidence slice: `task.select(a, b)` now awaits the losing child after cancellation, attaches loser failure or cancellation evidence to a failure-like selected result, and leaves explicit failure-like loser results visible to scope exit when the selected result is successful.
 - PR [#2011](https://github.com/sifr-lang/sifr/pull/2011) structured cancellation cleanup validation slice: `try/finally` now remains a HIR cleanup boundary so timeout cancellation runs finalbody before propagating `TimeoutError`, and the remaining milestone_async_3 gather secondary-evidence and cancellation cleanup fixtures are in the create-pr validation lane.
-- PR [#2013](https://github.com/sifr-lang/sifr/pull/2013) milestone_async_3 closure slice: marked structured concurrency and cancellation semantics completed after verifying all positive, negative, runtime-failure, and demo artifacts, running the structured concurrency demo, passing the create-pr validation lane, and receiving satisfied Opus milestone review.
+- PR [#2013](https://github.com/sifr-lang/sifr/pull/2013) milestone_async_3 closure slice: marked structured concurrency and cancellation semantics completed after verifying all positive, negative, runtime-failure, and demo artifacts, running the structured concurrency demo, passing the create-pr validation lane, and receiving satisfied agent milestone review.
 
 ---
 

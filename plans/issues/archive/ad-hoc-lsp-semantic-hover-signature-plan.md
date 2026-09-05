@@ -119,8 +119,8 @@ low-risk, or leave explicit follow-up notes.
 
 ## Review Disposition
 
-- Claude implementation review artifact: `plans/reviews/active/lsp_semantic_hover_implementation_review_4.md`.
+- agent implementation review artifact: `plans/reviews/active/lsp_semantic_hover_implementation_review_4.md`.
 - Position encoding risk addressed with a UTF-16 corpus case containing non-ASCII text before the hover target.
 - The supplementary AST walk is constrained to frontend semantic view construction and uses the frontend callable signature table; analysis and LSP do not infer or render semantics. It fills source call ranges for lowered constructs whose HIR statement pairing is transformed, without adding a fallback answer path.
 - Incremental rebuild risk is covered by post-change semantic corpus checks; requests use the current `WorkspaceSession` analysis view and no shared mutable semantic cache is added outside frontend query caching.
-- Remaining Claude suggestions for keyword/named-argument active-parameter behavior, recursive callable signatures, and memory sizing are useful follow-up coverage, but not blocking for this root-cause fix.
+- Remaining agent suggestions for keyword/named-argument active-parameter behavior, recursive callable signatures, and memory sizing are useful follow-up coverage, but not blocking for this root-cause fix.

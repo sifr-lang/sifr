@@ -4,7 +4,7 @@ Branch: `codex/diag-11-raw-hir-module-classes`
 
 Date: 2026-05-03
 
-Reviewer: Claude (`.cursor/skills/talk-to-claude`)
+Reviewer: agent (`agent review`)
 
 ## Scope
 
@@ -51,4 +51,4 @@ The reviewer found test and docs coverage complete:
 
 Approved / satisfied.
 
-Claude note: the review completed successfully, but the reviewer process could not write this file directly due to permission restrictions. The review output reported no required fixes.
+agent note: the review completed successfully, but the reviewer process could not write this file directly due to permission restrictions. The review output reported no required fixes.

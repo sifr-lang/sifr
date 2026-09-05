@@ -1,7 +1,7 @@
 # wave_psp_b1 Review: Collections Objects and Ordered Helpers
 
 **Review Date**: 2026-03-16
-**Reviewer**: Claude (Codex)
+**Reviewer**: agent (agent)
 **Branch Reviewed**: main (codex/python-builtin-std-parity-wave-e2)
 **Previous Wave**: wave_psp_b1 is marked as **done** in execution ledger
 

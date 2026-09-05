@@ -1,7 +1,7 @@
 # M7 Review — Pass 3
 
 Branch: `sifr-sysroot-stdlib-m7-lsp-tooling`
-Reviewer: Opus 4.7
+Reviewer: agent
 Scope: Verify pass-2 remaining blockers B1 and B2 are resolved via explicit M7b deferral.
 
 ## Verdict: PASS

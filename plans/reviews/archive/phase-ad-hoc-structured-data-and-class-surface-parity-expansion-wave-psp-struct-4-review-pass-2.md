@@ -133,6 +133,6 @@ This wave completes the structured-data and class-surface parity expansion phase
 
 ---
 
-Reviewer: Claude (external production-grade review)
+Reviewer: agent (external production-grade review)
 Date: 2026-03-18
 Status: production-grade pass 2 — approved

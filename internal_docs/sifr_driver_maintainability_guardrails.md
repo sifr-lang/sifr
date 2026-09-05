@@ -42,7 +42,7 @@ Use these placement rules when changing the driver:
 - `test_runner/`: test-runner-specific orchestration, generated test lib composition, test-runner Cargo manifest generation, test execution
 - `tests/`: focused crate-level regression suites grouped by concern
 
-## Review Checklist
+## Validation Checklist
 
 - [ ] New driver logic is placed in the correct module subtree.
 - [ ] `crates/sifr_driver/src/lib.rs` stays crate wiring plus re-exports only.

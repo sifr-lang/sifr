@@ -276,7 +276,7 @@ Decide whether the contract is "always present, possibly null" (requires schema 
 
 ### 21. Roadmap row `31.7` is `in_progress` but the issue still has the review checkbox unchecked
 
-`internal_docs/roadmap.md` row `31.7` is "in_progress" pointing at the issue. The issue's `Execution Status` correctly marks the Claude review as `[ ]` (blocked) and the PR as `[ ]`. That's consistent.
+`internal_docs/roadmap.md` row `31.7` is "in_progress" pointing at the issue. The issue's `Execution Status` correctly marks the agent review as `[ ]` (blocked) and the PR as `[ ]`. That's consistent.
 
 However, the issue claims `cargo clippy -p sifr_diagnostics -- -D warnings` passed (line 27). With workspace `unwrap_used = "warn"` and `expect_used = "warn"`, the `.unwrap()` calls inside `#[cfg(test)]` modules in `render/mod.rs` (lines 361, 383, 416, 441) and `source_map/mod.rs` (line 248 `.unwrap_err()`) should normally fire those lints unless they're allowed in tests. There is no `#[allow(clippy::unwrap_used)]` and the workspace doesn't carve out tests. Either:
 

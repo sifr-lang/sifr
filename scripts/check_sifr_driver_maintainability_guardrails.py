@@ -21,7 +21,7 @@ BANNED_MONOLITHS = [
 ]
 
 REQUIRED_CHECKLIST_SNIPPETS = [
-    "## Review Checklist",
+    "## Validation Checklist",
     "- [ ] New driver logic is placed in the correct module subtree",
     "- [ ] `crates/sifr_driver/src/lib.rs` stays crate wiring plus re-exports only",
     "- [ ] Test coverage lives in focused `crates/sifr_driver/src/tests/` modules or beside the extracted concern",

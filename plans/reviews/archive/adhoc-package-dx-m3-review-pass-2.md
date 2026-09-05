@@ -1,6 +1,6 @@
 ## Code Review: milestone_adhoc_pkg_3 — Second Pass
 
-**Reviewer:** Claude (second pass)
+**Reviewer:** agent (second pass)
 **Date:** 2026-05-23
 **Prior review:** `reviews/adhoc-package-dx-m3-review-pass-1.md` reported `CHANGES_REQUESTED` for two findings.
 

@@ -1,6 +1,6 @@
 # INT-2A — Large Literal Boundary Diagnostics — Review Pass 1
 
-Reviewer: Claude (Opus 4.7), 2026-05-06.
+Reviewer: agent (agent), 2026-05-06.
 Branch: `int-2a-large-literal-boundary-diagnostics`.
 Prior review: [reviews/integer-model-int-2a-large-literal-defaults-parity-review-pass-1b.md](reviews/integer-model-int-2a-large-literal-defaults-parity-review-pass-1b.md).
 Issue: [issues/ad-hoc-integer-model-and-fixed-width-numeric-contract.md](issues/ad-hoc-integer-model-and-fixed-width-numeric-contract.md), Milestone INT-2A, follow-up bullet "Carry INT-2A malformed/over-budget literal diagnostics and parsed/constructed HIR parity in the next INT-2A slice."

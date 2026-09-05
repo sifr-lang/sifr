@@ -1,7 +1,7 @@
 # Review: Wave-R3b2 Codegen Data-Shape Plan (Pass 2)
 
-Date: 2026-03-30  
-Reviewer channel: talk-to-claude skill (inline response; artifact persisted by Codex)  
+Date: 2026-03-30
+Reviewer channel: agent review skill (inline response; artifact persisted by agent)
 Plan under review: `issues/ad-hoc-optional-none-and-narrowing-wave-r3b2-codegen-data-shape-plan-2026-03-30.md`
 
 ## Verdict

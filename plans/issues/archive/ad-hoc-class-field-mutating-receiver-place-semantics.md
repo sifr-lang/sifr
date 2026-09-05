@@ -17,13 +17,13 @@ compatibility snapshots merged in
 The first whole-phase review found missing structured `binding` arguments on
 `SIFR-OWN-0002` diagnostics and duplicated inherited-field storage rerooting.
 Both were closed in [#3087](https://github.com/sifr-lang/sifr/pull/3087), whose
-exact-head Claude Opus review returned `SATISFIED` with zero actionable
+exact-head agent review returned `SATISFIED` with zero actionable
 findings. Later whole-phase reviews found and closed unsupported-field
 footprint gaps in [#3090](https://github.com/sifr-lang/sifr/pull/3090),
 callable-field precision in [#3092](https://github.com/sifr-lang/sifr/pull/3092),
 and nested index/slice footprint traversal in
 [#3094](https://github.com/sifr-lang/sifr/pull/3094). Each remediation reached
-a terminal zero-finding Opus review before merge.
+a terminal zero-finding agent review before merge.
 
 Whole-phase review pass 5 then found missing structured arguments for
 `SIFR-PROTO-0005`, `SIFR-PROTO-0006`, and the phase-adopted
@@ -33,7 +33,7 @@ merged in [#3096](https://github.com/sifr-lang/sifr/pull/3096) after terminal
 implementation and exact-record reviews both returned `SATISFIED`. Its
 diagnostics-baseline prerequisite merged in
 [#3095](https://github.com/sifr-lang/sifr/pull/3095) after five review rounds
-closed every finding and the terminal Opus verdict returned `SATISFIED` with
+closed every finding and the terminal agent verdict returned `SATISFIED` with
 zero actionable findings. All phase-owned implementation and diagnostic
 remediation is therefore merged on `main`. Closure PR
 [#3088](https://github.com/sifr-lang/sifr/pull/3088) contains only the archived
@@ -518,7 +518,7 @@ in production and test-module assembly.
 ### Item 1: Canonical receiver metadata and inference
 
 Status: **Merged** in
-[#3065](https://github.com/sifr-lang/sifr/pull/3065). Claude Opus review pass 1
+[#3065](https://github.com/sifr-lang/sifr/pull/3065). agent review pass 1
 returned `NOT SATISFIED`; all material findings were addressed, and pass 2
 returned `SATISFIED`. The create-PR gate passed with 131/131 E2E fixtures.
 
@@ -559,7 +559,7 @@ footprint traversal merged in
 [#3094](https://github.com/sifr-lang/sifr/pull/3094), and final structured
 diagnostic/guardrail closure merged in
 [#3096](https://github.com/sifr-lang/sifr/pull/3096). Every focused remediation
-reached a terminal zero-finding Opus review before merge.
+reached a terminal zero-finding agent review before merge.
 
 1. Add the canonical `Place`/projection extractor, argument footprint
    collector, prefix-overlap check, and receiver/argument validation.
@@ -875,7 +875,7 @@ Closure validation evidence:
   signature `7c39b8c1dd4fec7c`. Its default-gate functional lanes passed; only
   three representative timing thresholds missed during concurrent host load.
 - Item 2 merged as `fbbb69328ae6fe1e733ce25cb6e710aab75990dc`
-  after Claude Opus exact-head review pass 12 returned `SATISFIED` with zero
+  after agent exact-head review pass 12 returned `SATISFIED` with zero
   actionable findings.
 - The complete corpus candidate passed `407/411`; the four remaining failures
   reproduced identically on the untouched Item 2 base compiler. The LRU and
@@ -890,7 +890,7 @@ Closure validation evidence:
   `131/131` with report signature `7c39b8c1dd4fec7c`. Every blocking step and
   timing budget passed.
 - Remediation PR #3087 merged as
-  `a7a5df414b985cc95a9ad23c5b006caa84101f0d` after exact-head Claude Opus
+  `a7a5df414b985cc95a9ad23c5b006caa84101f0d` after exact-head agent
   review returned `SATISFIED` with zero actionable findings.
 - Overlap-remediation exact implementation head
   `92b38be705138643b23c37a425892df767beee5d` passed the create-PR gate,
@@ -901,7 +901,7 @@ Closure validation evidence:
 - The post-review manifest lane passed `138/138`, signature
   `4ede7c71d86f381c`, after adding the seventh native phase pass fixture.
 - Remediation PR #3090 merged as
-  `44ab8ad38544fa5225d8d4f09ad3b5026d485c25` after five Opus review rounds;
+  `44ab8ad38544fa5225d8d4f09ad3b5026d485c25` after five agent review rounds;
   exact-head pass 5 returned `SATISFIED` with no blocking or non-blocking
   findings.
 - Callable-invocation remediation implementation/test head
@@ -920,7 +920,7 @@ Closure validation evidence:
   `28` variants with one declared capability skip, and E2E `139/139` with
   signature `3313b4a3ff3d952c`.
 - Remediation PR #3092 merged as
-  `9c99ef43b1aad12fcafe6b6d3742ce9afd24e475` after four Opus review rounds;
+  `9c99ef43b1aad12fcafe6b6d3742ce9afd24e475` after four agent review rounds;
   exact integration-head pass 4 returned `SATISFIED` with no blocking or
   non-blocking findings.
 - Index/slice-footprint remediation implementation/test head
@@ -937,7 +937,7 @@ Closure validation evidence:
   failure was a transient LSP exit timeout; the focused official retry passed
   `6/6`, and the same case passed inside the authoritative full retry.
 - Remediation PR #3094 merged as
-  `b1b2bb23f47c854e74836bcb98bbb7f33ce3f4cc` after seven Opus rounds;
+  `b1b2bb23f47c854e74836bcb98bbb7f33ce3f4cc` after seven agent rounds;
   terminal published-head pass 7 returned `SATISFIED` with no blocking or
   non-blocking findings.
 - The first fully integrated default merge-profile attempt at closure head
@@ -1037,60 +1037,60 @@ Closure validation evidence:
 ## Review ledger
 
 - M10 originating review:
-  [`ad-hoc-declaration-first-python-interop-m10-milestone-fable-high-review-pass-7.md`](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-fable-high-review-pass-7.md)
+  [`ad-hoc-declaration-first-python-interop-m10-milestone-agent-high-review-pass-7-2.md`](../../reviews/active/ad-hoc-declaration-first-python-interop-m10-milestone-agent-high-review-pass-7-2.md)
   identified the silent receiver clone and adjacent same-call/index parity
   gaps.
-- Claude Opus implementation-readiness pass 2:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-claude-opus-review-pass-2.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-claude-opus-review-pass-2.md)
+- agent implementation-readiness pass 2:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-agent-review-pass-2.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-agent-review-pass-2.md)
   returned `NOT SATISFIED`; this revision addresses its 15 material findings.
-- Claude Opus implementation-readiness pass 3:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-claude-opus-review-pass-3.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-claude-opus-review-pass-3.md)
+- agent implementation-readiness pass 3:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-agent-review-pass-3.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-agent-review-pass-3.md)
   returned `NOT SATISFIED`; the next revision added concrete binding identity
   and scope-fact retention, class/function pass ordering, non-class resolution,
   protected local mutability, protocol/type emitter coverage, reachable
   diagnostic fixtures, normalized receiver parameter alignment, and complete
   near-cap decomposition.
-- Claude Opus implementation-readiness pass 4:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-claude-opus-review-pass-4.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-claude-opus-review-pass-4.md)
+- agent implementation-readiness pass 4:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-agent-review-pass-4.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-agent-review-pass-4.md)
   returned `NOT SATISFIED`; the next revision made receiver convention part of
   protocol conformance with `SIFR-PROTO-0005`, classified ephemeral bindings
   as unsupported mutable roots with `SIFR-OWN-0014`, completed counter-site
   ownership, corrected internal-diagnostic ownership, and budgeted read-only
   receiver snapshot churn.
-- Claude Opus implementation-readiness pass 5:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-claude-opus-review-pass-5.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-claude-opus-review-pass-5.md)
+- agent implementation-readiness pass 5:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-agent-review-pass-5.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-agent-review-pass-5.md)
   returned `NOT SATISFIED`; the next revision preserved stable `with`,
   exception, tuple-unpack, and chained-assignment locals, narrowed ephemeral
   rejection to iteration/comprehension elements and match captures, and added
   the fixed-operator receiver contract with `SIFR-PROTO-0006`.
-- Claude Opus implementation-readiness pass 6:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-claude-opus-review-pass-6.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-claude-opus-review-pass-6.md)
+- agent implementation-readiness pass 6:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-agent-review-pass-6.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-agent-review-pass-6.md)
   returned `NOT SATISFIED`; the next revision extended the fixed Rust trait
   receiver contract and `SIFR-PROTO-0006` to `__str__`/`__repr__` Display
   bridges and added their class-emitter/test coverage.
-- Claude Opus implementation-readiness pass 7:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-claude-opus-review-pass-7.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-claude-opus-review-pass-7.md)
+- agent implementation-readiness pass 7:
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-agent-review-pass-7.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-agent-review-pass-7.md)
   returned `SATISFIED`; no material semantic/design ambiguity, infeasible
   sequencing, silent fallback, unchecked fixed-receiver or method-call path,
   diagnostic mismatch, or acceptance/test contradiction remains.
 - Item 1 implementation review pass 1:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-item1-claude-opus-review-pass-1.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-item1-claude-opus-review-pass-1.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-item1-agent-review-pass-1.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-item1-agent-review-pass-1.md)
   returned `NOT SATISFIED`; the implementation was corrected for owned-local
   clone preservation, source-range alignment, non-class receiver contracts,
   protocol consistency, final HIR verification, and missing coverage.
 - Item 1 implementation review pass 2:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-item1-claude-opus-review-pass-2.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-item1-claude-opus-review-pass-2.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-item1-agent-review-pass-2.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-item1-agent-review-pass-2.md)
   returned `SATISFIED`; Item 1 merged in
   [#3065](https://github.com/sifr-lang/sifr/pull/3065).
 - Item 2 implementation review pass 1:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-review-pass-1.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-review-pass-1.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-item2-agent-review-pass-1.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-item2-agent-review-pass-1.md)
   returned `NOT SATISFIED`; remediation addresses shared-receiver clone
   regressions, transitive fixed-trait mutation, conditional and chained owned
   temporaries, full-gate evidence, operator protocol traversal, mutable borrow
   flow effects, optimizer fallback scope, tracking state, and the retained
   plain file-handle fixture.
 - Item 2 implementation review pass 2:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-review-pass-2.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-review-pass-2.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-item2-agent-review-pass-2.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-item2-agent-review-pass-2.md)
   returned `NOT SATISFIED`; remediation closes shared-receiver/mutable-argument
   overlap, rejects re-materialized module constants as mutable roots, accepts
   fresh slice temporaries while explicitly rejecting walrus bindings, deletes
@@ -1105,7 +1105,7 @@ Closure validation evidence:
   fail lane exits successfully. Item 2 neither introduced nor widened that
   masked internal error; it remains separate compiler-health debt.
 - Item 2 implementation review pass 3:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-review-pass-3.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-review-pass-3.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-item2-agent-review-pass-3.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-item2-agent-review-pass-3.md)
   returned `NOT SATISFIED`; remediation makes constructor `self` a checked
   fresh mutable root and materializes a synthetic post-initialization Rust
   instance, ships the LRU migration through upstream corpus
@@ -1115,12 +1115,12 @@ Closure validation evidence:
   and restores the full compiler-generated optimizer fallback union with
   unprotected `write`/`append` coverage.
 - LRU corpus milestone review pass 1:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-lru-corpus-pr-40-claude-opus-review-pass-1.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-lru-corpus-pr-40-claude-opus-review-pass-1.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-lru-corpus-pr-40-agent-review-pass-1.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-lru-corpus-pr-40-agent-review-pass-1.md)
   returned `SATISFIED`; the exact reviewed head merged in
   [sifr-lang/leetcode#40](https://github.com/sifr-lang/leetcode/pull/40), and
   this Item 2 tree records merged corpus pointer `7772857`.
 - Item 2 implementation review pass 4:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-review-pass-4.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-review-pass-4.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-item2-agent-review-pass-4.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-item2-agent-review-pass-4.md)
   returned `NOT SATISFIED`; remediation replaces the constructor statement
   partition with a source-order materialization boundary, evaluates field
   initializers at their source positions, preserves dependencies and effects
@@ -1128,20 +1128,20 @@ Closure validation evidence:
   roots as well as expression roots, and rejects receiver use before complete
   own/inherited storage with check-time `SIFR-OWN-0014`.
 - Item 2 implementation review pass 5:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-review-pass-5.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-review-pass-5.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-item2-agent-review-pass-5.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-item2-agent-review-pass-5.md)
   returned `SATISFIED`; both pass-4 blocking findings are closed, all claimed
   validation evidence was independently reproduced, and no material
   correctness, ownership, constructor-initialization, codegen, optimizer,
   diagnostic, submodule, or test gap remains.
 - Item 2 exact-head PR review pass 6:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-pr-review-pass-6.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-pr-review-pass-6.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-item2-agent-pr-review-pass-6.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-item2-agent-pr-review-pass-6.md)
   returned `NOT SATISFIED`; remediation corrects the validation ledger and
   sample counts, gives constructor `SIFR-OWN-0014` a structured `place=self`
   argument with source-facing field/parent guidance and the first offending
   statement span, and keeps same-named constructor parameters available as
   materialization seeds even when an explicit field assignment appears later.
 - Item 2 exact-head PR review pass 7:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-pr-review-pass-7.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-pr-review-pass-7.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-item2-agent-pr-review-pass-7.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-item2-agent-pr-review-pass-7.md)
   returned `NOT SATISFIED`; pass-6 findings 1 and 2 were independently closed,
   but the parameter-seed remediation had also removed explicit-initializer
   deduplication. The follow-up keeps parameter seeds and first explicit
@@ -1149,7 +1149,7 @@ Closure validation evidence:
   complete storage now reports check-time `SIFR-OWN-0014` instead of leaking
   Rust `E0063`, with focused lowering and annotated fail-fixture coverage.
 - Item 2 exact-head PR review pass 8:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-pr-review-pass-8.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-pr-review-pass-8.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-item2-agent-pr-review-pass-8.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-item2-agent-pr-review-pass-8.md)
   returned `SATISFIED` with zero actionable findings. The reviewer
   independently reproduced the parameter-seed/explicit-initializer matrix,
   repeated-field rejection before complete storage, acceptance after complete
@@ -1157,7 +1157,7 @@ Closure validation evidence:
   fail-corpus results, and the wider checked-place/optimizer/protocol
   invariants.
 - Item 2 exact-published-head PR review pass 9:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-pr-review-pass-9.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-pr-review-pass-9.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-item2-agent-pr-review-pass-9.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-item2-agent-pr-review-pass-9.md)
   returned `NOT SATISFIED`. Its corpus sweep found that
   `0189_rotate_array.sifr` still read `len(nums)` in the same call that mutably
   borrowed `nums`. The follow-up full runner also exposed a distinct
@@ -1168,27 +1168,27 @@ Closure validation evidence:
   verification consume the lexical proof metadata already attached during
   lowering instead of a same-spelling global signature.
 - Rotate Array corpus milestone review pass 1:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-rotate-corpus-pr-41-claude-opus-review-pass-1.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-rotate-corpus-pr-41-claude-opus-review-pass-1.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-rotate-corpus-pr-41-agent-review-pass-1.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-rotate-corpus-pr-41-agent-review-pass-1.md)
   returned `NOT SATISFIED`: the code change was correct and independently
   matched Python across edge cases, but the PR body attributed the local
   verifier-fixed `407/411` sweep to clean published parent head `581b363aa`.
   The evidence was corrected to separate the clean-head `406/411` result from
   the pending Item 2 candidate's `407/411` result.
 - Rotate Array corpus milestone review pass 2:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-rotate-corpus-pr-41-claude-opus-review-pass-2.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-rotate-corpus-pr-41-claude-opus-review-pass-2.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-rotate-corpus-pr-41-agent-review-pass-2.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-rotate-corpus-pr-41-agent-review-pass-2.md)
   returned `SATISFIED` with zero actionable findings. Exact reviewed corpus
   head `4fdb439` merged in
   [sifr-lang/leetcode#41](https://github.com/sifr-lang/leetcode/pull/41) as
   merge commit `e75af095`.
 - Item 2 exact-head PR review pass 10:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-pr-review-pass-10.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-pr-review-pass-10.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-item2-agent-pr-review-pass-10.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-item2-agent-pr-review-pass-10.md)
   returned `SATISFIED` with zero actionable findings. It independently
   confirmed the merged corpus pin, lexical plain-call verifier correction,
   checked-place fail-closed behavior, constructor materialization,
   protocol/optimizer contracts, full library counts, and candidate-versus-base
   corpus attribution.
 - Item 2 final merge-evidence review pass 11:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-pr-review-pass-11.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-pr-review-pass-11.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-item2-agent-pr-review-pass-11.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-item2-agent-pr-review-pass-11.md)
   returned `NOT SATISFIED`. It accepted the representative benchmark misses
   as host variance, but correctly found that upstream PR #3081 made the branch
   unmergeable in the defaultdict mutable-bucket path and that the lowering
@@ -1200,7 +1200,7 @@ Closure validation evidence:
   target, and only the explicitly materialized `extend`/set-update family may
   evaluate same-map arguments before taking the bucket borrow.
 - Item 2 terminal exact-head review pass 12:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-pr-review-pass-12.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-item2-claude-opus-pr-review-pass-12.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-item2-agent-pr-review-pass-12.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-item2-agent-pr-review-pass-12.md)
   returned `SATISFIED` with zero actionable findings. It independently
   reproduced the lowering/codegen counts, exact create-PR gate, complete
   checked-place and diagnostic matrix, corpus ancestry, upstream
@@ -1208,12 +1208,12 @@ Closure validation evidence:
   [#3082](https://github.com/sifr-lang/sifr/pull/3082) as
   `fbbb69328ae6fe1e733ce25cb6e710aab75990dc`.
 - Final whole-phase review pass 1:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-1.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-1.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-agent-review-pass-1.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-agent-review-pass-1.md)
   returned `NOT SATISFIED`. The implementation semantics were correct, but
   `SIFR-OWN-0002` omitted its required structured `binding` argument,
   inherited-field rerooting was duplicated, and the phase tracker was stale.
 - Whole-phase remediation review pass 1:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-remediation-claude-opus-pr-review-pass-1.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-remediation-claude-opus-pr-review-pass-1.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-remediation-agent-pr-review-pass-1.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-remediation-agent-pr-review-pass-1.md)
   returned `SATISFIED` with zero actionable findings. It independently
   verified all four same-call diagnostic paths, canonical nested-place
   metadata, shared inherited-field storage rerooting, value-read clone
@@ -1222,7 +1222,7 @@ Closure validation evidence:
   [#3087](https://github.com/sifr-lang/sifr/pull/3087) as
   `a7a5df414b985cc95a9ad23c5b006caa84101f0d`.
 - Final whole-phase review pass 2:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-2.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-2.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-agent-review-pass-2.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-agent-review-pass-2.md)
   returned `NOT SATISFIED` after finding that
   unsupported callable/recursive field values could bypass footprint
   collection and leak raw Rust borrow/move errors, that the fifth
@@ -1231,13 +1231,13 @@ Closure validation evidence:
   [#3090](https://github.com/sifr-lang/sifr/pull/3090) as
   `44ab8ad38544fa5225d8d4f09ad3b5026d485c25`.
 - Overlap-remediation PR review pass 1:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-overlap-remediation-claude-opus-pr-review-pass-1.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-overlap-remediation-claude-opus-pr-review-pass-1.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-overlap-remediation-agent-pr-review-pass-1.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-overlap-remediation-agent-pr-review-pass-1.md)
   returned `NOT SATISFIED`: the first conservative fallback closed the missed
   diagnostics but collapsed all fields under a root and rejected legal
   callable/recursive sibling fields. The follow-up retains precise
   `FieldIdentity` projections when the base place resolves statically.
 - Overlap-remediation PR review pass 2:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-overlap-remediation-claude-opus-pr-review-pass-2.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-overlap-remediation-claude-opus-pr-review-pass-2.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-overlap-remediation-agent-pr-review-pass-2.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-overlap-remediation-agent-pr-review-pass-2.md)
   returned `NOT SATISFIED` on documentation of record only. It independently
   accepted the corrected implementation, ran 21 targeted lowering tests,
   reproduced both fail fixtures as structured `SIFR-OWN-0002`, and inspected
@@ -1245,7 +1245,7 @@ Closure validation evidence:
   `92b38be705138643b23c37a425892df767beee5d`; this revision aligns the overlap
   rule and status/review ledger before pass 3.
 - Overlap-remediation PR review pass 3:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-overlap-remediation-claude-opus-pr-review-pass-3.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-overlap-remediation-claude-opus-pr-review-pass-3.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-overlap-remediation-agent-pr-review-pass-3.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-overlap-remediation-agent-pr-review-pass-3.md)
   returned `SATISFIED` with no blocking findings. The reviewer independently
   reproduced the callable/recursive overlap failures as structured
   `SIFR-OWN-0002`, accepted disjoint sibling fields, verified the async
@@ -1261,7 +1261,7 @@ Closure validation evidence:
   overlap-analysis regressions; they remain follow-up compiler debt rather than
   hidden closure exceptions for this phase.
 - Overlap-remediation PR review pass 4:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-overlap-remediation-claude-opus-pr-review-pass-4.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-overlap-remediation-claude-opus-pr-review-pass-4.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-overlap-remediation-agent-pr-review-pass-4.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-overlap-remediation-agent-pr-review-pass-4.md)
   returned `SATISFIED` with no blocking findings after independently rerunning
   the full lowering, codegen, diagnostics, and fail suites; the targeted
   unsupported-field matrix; formatting, clippy, docs, HIR, and file-size
@@ -1272,45 +1272,45 @@ Closure validation evidence:
   evidence remains the independently verified `138/138` create-PR lane, and
   the full pass corpus remains assigned to the integrated closure merge gate.
 - Overlap-remediation exact-head record review pass 5:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-overlap-remediation-claude-opus-pr-review-pass-5.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-overlap-remediation-claude-opus-pr-review-pass-5.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-overlap-remediation-agent-pr-review-pass-5.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-overlap-remediation-agent-pr-review-pass-5.md)
   returned `SATISFIED` with no blocking or non-blocking findings. It confirmed
   that the stale `680/680` figure is absent, the pass-4 artifact and ledger
   entry match the review that occurred, and the exact reviewed documentation
   head `94acb685ccc53a40755683a74cda0c6baec91e8f` is internally consistent.
 - Final whole-phase review pass 3:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-3.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-3.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-agent-review-pass-3.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-agent-review-pass-3.md)
   returned `NOT SATISFIED`. It found that callable-field invocation inside a
   same-call argument retained only the parent object footprint, causing a
   root-only rejection of legal disjoint sibling fields. The focused correction
   merged in [#3092](https://github.com/sifr-lang/sifr/pull/3092). Its
   non-blocking record finding is closed by restoring the pass-2 artifact above.
 - Callable-invocation remediation PR review pass 1:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-callable-invocation-remediation-claude-opus-pr-review-pass-1.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-callable-invocation-remediation-claude-opus-pr-review-pass-1.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-callable-invocation-remediation-agent-pr-review-pass-1.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-callable-invocation-remediation-agent-pr-review-pass-1.md)
   returned `SATISFIED` with no blocking findings after independently running
   15 probes across synchronous/async, inherited, generic, nested, dynamic,
   actual-method-shadowing, and mutable-argument shapes. Its two low
   test-coverage observations were addressed with focused lowering regressions.
 - Callable-invocation remediation PR review pass 2:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-callable-invocation-remediation-claude-opus-pr-review-pass-2.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-callable-invocation-remediation-claude-opus-pr-review-pass-2.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-callable-invocation-remediation-agent-pr-review-pass-2.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-callable-invocation-remediation-agent-pr-review-pass-2.md)
   mutation-verified that each added regression uniquely fails when its
   corresponding implementation guard is removed and reran the lowering,
   fail, Clippy, formatting, HIR, and file-size checks. The round ended without
   the requested verdict after mistaking an unrelated corpus process for this
   PR's gate, so it is retained as evidence but not treated as approval.
 - Callable-invocation remediation PR review pass 3:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-callable-invocation-remediation-claude-opus-pr-review-pass-3.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-callable-invocation-remediation-claude-opus-pr-review-pass-3.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-callable-invocation-remediation-agent-pr-review-pass-3.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-callable-invocation-remediation-agent-pr-review-pass-3.md)
   returned `SATISFIED` with no blocking or non-blocking findings on exact
   implementation/test head
   `fb37126923131b51070548b0c6de05ea2e36271c`.
 - Callable-invocation remediation integration-head review pass 4:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-callable-invocation-remediation-claude-opus-pr-review-pass-4.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-callable-invocation-remediation-claude-opus-pr-review-pass-4.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-callable-invocation-remediation-agent-pr-review-pass-4.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-callable-invocation-remediation-agent-pr-review-pass-4.md)
   returned `SATISFIED` with no blocking or non-blocking findings. It verified
   the #3091 main merge was a disjoint clean union, the implementation remained
   byte-identical to the pass-3-approved head, every recorded count/hash was
   exact, and the authoritative create-PR gate passed at
   `36c1be77fa2a7a74c4b8441178eaf9902ba259c7`.
 - Final whole-phase review pass 4:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-4.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-4.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-agent-review-pass-4.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-agent-review-pass-4.md)
   returned `NOT SATISFIED`. It found that `Index` and `Slice` footprint
   collection did not traverse an unresolvable object base, so a nested call,
   read, or move could disappear and leak a Rust borrow/move error instead of
@@ -1320,36 +1320,36 @@ Closure validation evidence:
   from the pre-#3092 performance record, which is corrected in the validation
   ledger above.
 - Index/slice-footprint remediation PR review pass 1:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-claude-opus-pr-review-pass-1.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-claude-opus-pr-review-pass-1.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-agent-pr-review-pass-1.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-agent-pr-review-pass-1.md)
   returned `NOT SATISFIED`; the follow-up added accept-side controls for
   disjoint unresolved index and slice bases plus a native E2E fixture.
 - Index/slice-footprint remediation PR review pass 2:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-claude-opus-pr-review-pass-2.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-claude-opus-pr-review-pass-2.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-agent-pr-review-pass-2.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-agent-pr-review-pass-2.md)
   returned `NOT SATISFIED`; the follow-up pinned nested-index object traversal
   in both reject and accept directions.
 - Index/slice-footprint remediation PR review pass 3:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-claude-opus-pr-review-pass-3.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-claude-opus-pr-review-pass-3.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-agent-pr-review-pass-3.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-agent-pr-review-pass-3.md)
   returned `NOT SATISFIED`; the follow-up made the slice accept control live
   under a mutable receiver and added an independent nested-slice rejection.
 - Index/slice-footprint remediation PR review pass 4:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-claude-opus-pr-review-pass-4.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-claude-opus-pr-review-pass-4.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-agent-pr-review-pass-4.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-agent-pr-review-pass-4.md)
   returned `SATISFIED` with zero actionable findings on exact implementation
   head `a813b9971c8d2c20a5eb352e37f89b62adf33c37`.
 - Index/slice-footprint remediation evidence review pass 5:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-claude-opus-pr-review-pass-5.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-claude-opus-pr-review-pass-5.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-agent-pr-review-pass-5.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-agent-pr-review-pass-5.md)
   returned `NOT SATISFIED` on two record-only findings: the PR body still
   called the gate/review pending, and the pass-4 lowering count was stale.
 - Index/slice-footprint remediation record review pass 6:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-claude-opus-pr-review-pass-6.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-claude-opus-pr-review-pass-6.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-agent-pr-review-pass-6.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-agent-pr-review-pass-6.md)
   verified both pass-5 findings closed and returned `NOT SATISFIED` only for
   two stale file-line counts in that review record; both were corrected.
 - Index/slice-footprint remediation terminal review pass 7:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-claude-opus-pr-review-pass-7.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-claude-opus-pr-review-pass-7.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-agent-pr-review-pass-7.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-index-slice-footprint-remediation-agent-pr-review-pass-7.md)
   returned `SATISFIED` with no blocking or non-blocking findings, verified all
   prior findings closed, and confirmed PR #3094's implementation and gate
   evidence remained exact through its published record-only head.
 - Final whole-phase review pass 5:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-5.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-5.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-agent-review-pass-5.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-agent-review-pass-5.md)
   returned `NOT SATISFIED`. In addition to carrying the non-green integrated
   merge gate, it found that `SIFR-PROTO-0005`, `SIFR-PROTO-0006`, and
   `SIFR-OWN-0005` omitted their declared structured arguments, that no
@@ -1363,7 +1363,7 @@ Closure validation evidence:
   retained here alongside the other pre-existing value-codegen/CFG debts
   rather than treated as a closure exception.
 - Diagnostic-contract remediation review pass 1:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-claude-opus-pr-review-pass-1.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-claude-opus-pr-review-pass-1.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-agent-pr-review-pass-1.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-agent-pr-review-pass-1.md)
   independently verified that the pass-5 structured-argument findings and the
   five-code receiver/place emission guardrail were substantively closed, and
   agreed that the many pre-existing unrelated source-fixture argument gaps
@@ -1377,7 +1377,7 @@ Closure validation evidence:
   value, narrows the impossible missing-root fallback to `SIFR-OWN-0014`, and
   records the guardrail scope and explicit test command.
 - Diagnostic-contract remediation review pass 2:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-claude-opus-pr-review-pass-2.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-claude-opus-pr-review-pass-2.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-agent-pr-review-pass-2.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-agent-pr-review-pass-2.md)
   verified every pass-1 finding closed and found no new Rust correctness,
   recovery, or maintainability defect. It returned `NOT SATISFIED` because the
   widened `SIFR-PROTO-0006` message left one compact diagnostics baseline
@@ -1389,13 +1389,13 @@ Closure validation evidence:
 - Diagnostics-baseline prerequisite
   [#3095](https://github.com/sifr-lang/sifr/pull/3095) corrected the unrelated
   stale bare-`defaultdict` expectation already present on `origin/main`. The
-  terminal pass-5 Opus review returned `SATISFIED` with zero actionable
+  terminal pass-5 agent review returned `SATISFIED` with zero actionable
   findings. After integrating that merge, the authoritative diagnostics
   baselines suite passes all `150` cases / `178` variants with zero failures,
   including both the prerequisite fixture and the widened `SIFR-PROTO-0006`
   class-identity message.
 - Diagnostic-contract remediation review pass 3:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-claude-opus-pr-review-pass-3.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-claude-opus-pr-review-pass-3.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-agent-pr-review-pass-3.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-agent-pr-review-pass-3.md)
   returned `SATISFIED` with zero actionable findings. The reviewer independently
   reran the full lowering suite (`957` passed, `1` ignored), annotated fail
   suite, both rendered-envelope guardrails, all `178` diagnostics baseline
@@ -1424,7 +1424,7 @@ Closure validation evidence:
   by `0.55%` and `0.26%`. No receiver-place source or test failed, and no
   performance policy was changed for closure.
 - Diagnostic-contract remediation published-head review pass 4:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-claude-opus-pr-review-pass-4.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-claude-opus-pr-review-pass-4.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-agent-pr-review-pass-4.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-agent-pr-review-pass-4.md)
   independently verified the implementation, exact published head, tests,
   prerequisite isolation, taxonomy correction, PR metadata, and validation
   record. It returned `NOT SATISFIED` only because the exact count previously
@@ -1432,7 +1432,7 @@ Closure validation evidence:
   reproducible at this head. The response removes that brittle count from code
   and tracking while retaining the verified separate-migration rationale.
 - Diagnostic-contract remediation terminal review pass 5:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-claude-opus-pr-review-pass-5.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-claude-opus-pr-review-pass-5.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-agent-pr-review-pass-5.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-agent-pr-review-pass-5.md)
   returned `SATISFIED` with zero actionable findings. It verified the pass-4
   correction, exact published head and PR metadata, every earlier diagnostic
   contract conclusion, and prerequisite isolation. The reviewer independently
@@ -1440,12 +1440,12 @@ Closure validation evidence:
   entrypoint tests, all `178` diagnostics baseline variants, registry/docs
   checks, formatting, workspace clippy, and both maintainability guardrails.
 - Diagnostic-contract remediation exact-record review pass 6:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-claude-opus-pr-review-pass-6.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-claude-opus-pr-review-pass-6.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-agent-pr-review-pass-6.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-diagnostic-contract-remediation-agent-pr-review-pass-6.md)
   returned `SATISFIED` with zero actionable findings on exact PR head
   `5451d2434`; PR [#3096](https://github.com/sifr-lang/sifr/pull/3096) then
   merged as `0cf948ed1095fb3efe60975e1968143350c2e9b2`.
 - Final whole-phase review pass 6:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-6.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-6.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-agent-review-pass-6.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-agent-review-pass-6.md)
   found zero implementation defects after independently rerunning `62`
   lowering receiver/place/footprint tests, `42` codegen receiver/place tests,
   both receiver E2E entrypoints, guardrails, formatting, and live semantic
@@ -1454,7 +1454,7 @@ Closure validation evidence:
   revision publishes the reconciled closure head and the explicit independent
   performance-task boundary before exact-head review.
 - Final whole-phase published-head review pass 7:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-7.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-7.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-agent-review-pass-7.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-agent-review-pass-7.md)
   verified both pass-6 findings closed on published head `b42ed2aba`: #3096 is
   integrated, #3088 is cleanly mergeable, and its body matches the independent
   performance-task boundary. It returned `NOT SATISFIED` only because two
@@ -1462,7 +1462,7 @@ Closure validation evidence:
   performance run as a live #3088 prerequisite; this record-only revision
   converts them to historical evidence and names the active performance owner.
 - Final whole-phase terminal published-head review pass 8:
-  [`ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-8.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-claude-opus-review-pass-8.md)
+  [`ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-agent-review-pass-8.md`](../../reviews/active/ad-hoc-class-field-mutating-receiver-place-semantics-final-whole-phase-agent-review-pass-8.md)
   returned `SATISFIED` with zero actionable findings on exact published head
   `0663e5488`. It verified every pass-7 finding closed, #3096 ancestry, clean
   mergeability, PR body/archive consistency, link and whitespace integrity,

@@ -173,7 +173,7 @@ Allowed review references in active docs:
 Disallowed active-tree material:
 
 - per-pass review logs
-- `.claude.log` files
+- `.agent.log` files
 - stale transcript path lists
 - validation evidence copied as long prose when a generated report exists
 
@@ -224,19 +224,19 @@ authoritative public facade and now delegates directly to
 | Runner foundation | `scripts/run_all_tests.sh` | `verification/runner/sifr_verify/`, `verification/schemas/`, `verification/policy/`, `verification/pyproject.toml`, `verification/uv.lock` | Thin bash facade over `uv run --project verification --locked python -m sifr_verify profiles run --profile <profile>` | `uv lock --project verification --check`; `uv run --project verification --locked python -m sifr_verify --self-test`; `scripts/run_all_tests.sh --profile create-pr`; `scripts/run_all_tests.sh` | Foundation and facade cutover merged; profile execution and lane reports now owned by `profile_runner.py` in PR #2539 |
 | Profiles | Deleted `verification/validation_lanes/manifest.json`; moved former `verification/validation_lanes/*_e2e_manifest.json` to `verification/areas/core_language/data/` | `verification/profiles/{create-pr,merge,nightly,release}.json` | `uv run --project verification --locked python -m sifr_verify profiles run --profile <profile>`; `profiles shell` remains an inspection helper | `uv run --project verification --locked python -m sifr_verify profiles check`; create-pr profile execution through the thin facade; merge profile execution through the thin facade | Merged in PR 7; execution facade cut over in PR #2539; e2e fixture manifest ownership closed in PR #2549 |
 | `diagnostics` | Deleted diagnostics row from `verification/suites/manifest.json`; moved diagnostic sync/coverage/hygiene scripts and `crates/sifr/tests/verification/diagnostics/` fixtures | `verification/areas/diagnostics/` | `uv run --project verification --locked python -m sifr_verify areas run --area diagnostics --suite contracts`; merge/nightly/release hardening dispatches diagnostics baselines through `--suite baselines` | `uv run --project verification --locked python -m sifr_verify areas check`; diagnostics contracts and baselines area execution; legacy facade `scripts/run_all_tests.sh --profile create-pr` | Merged in PR 8; diagnostics source cut over, presentation synthetic baselines validated by diagnostics contract checker |
-| `project_workspace` | Deleted project row from `verification/suites/manifest.json`; moved `crates/sifr/tests/verification/project/` fixtures; deleted project/workspace contract shell wrappers | `verification/areas/project_workspace/` | `uv run --project verification --locked python -m sifr_verify areas run --area project_workspace --suite baselines`; `uv run --project verification --locked python -m sifr_verify areas run --area project_workspace --suite frontend_mode_parity --suite phase23_graph_isolation`; merge/nightly/release hardening dispatches project baselines through this area | Area schema validation, project area baseline execution, exact project workspace contract suite execution, legacy hardening dispatch equivalence; `scripts/run_all_tests.sh --profile create-pr`; Opus PASS after exact-suite filter review | Baselines merged in PR 9; exact contract suite migration merged in PR 10 |
-| `core_language` | Moved `scripts/run_e2e_pass.sh` to `verification/runner/e2e/run_e2e_pass.sh`; moved create-pr/merge e2e fixture manifests to `verification/areas/core_language/data/`; core contract rows and `verification/validation_contracts/` already moved | `verification/areas/core_language/`; runner-owned e2e execution under `verification/runner/e2e/` | `uv run --project verification --locked python -m sifr_verify areas run --area core_language --suite integer_dtype_contract --suite phase24_hir_analysis --suite phase25_cfg_flow`; profile execution calls the runner-owned e2e pass script with area-owned fixture manifests | Exact core language contract suite execution; profile/facade contract dispatch through `sifr_verify areas run`; Opus PASS after exact-suite filter review; e2e script path swept in PR #2543; fixture manifests swept in PR #2549 | Contract matrix source cut over in PR 10; e2e pass runner moved out of `scripts/` in PR #2543; fixture manifest ownership closed in PR #2549 |
-| `regression` | Deleted `verification/fixedbugs/index.json`, `verification/crashes/index.json`, and crate-local crash reproducers; moved shared hardening implementation out of `scripts/` | `verification/areas/regression/`; hardening support in `verification/runner/sifr_verify/hardening/` | `uv run --project verification --locked python -m sifr_verify areas run --area regression --suite fixedbugs --suite crashes`; merge/nightly/release hardening dispatches these suites through the regression area | Area schema validation, fixedbugs/crashes area execution, runner hardening dispatch equivalence; `scripts/run_all_tests.sh --profile create-pr`; Opus PASS | Merged in PR 11; hardening implementation swept in PR #2543 |
-| `fuzz_property` | Deleted `verification/fuzz_property/` and `scripts/run_smoke_fuzz_property.sh`; moved shared hardening implementation out of `scripts/` | `verification/areas/fuzz_property/`; hardening support in `verification/runner/sifr_verify/hardening/` | `uv run --project verification --locked python -m sifr_verify areas run --area fuzz_property --suite cargo-smoke --suite property --suite fuzz-smoke`; nightly/release hardening dispatches property/fuzz-smoke through the fuzz/property area | Area schema validation, cargo smoke/property/fuzz-smoke area execution, runner hardening dispatch equivalence; `scripts/run_all_tests.sh --profile create-pr`; Opus PASS | Merged in PR 12; hardening implementation swept in PR #2543 |
-| `generated_code_quality` | Deleted `verification/generated_code_quality/` and shell wrappers | `verification/areas/generated_code_quality/` | `uv run --project verification --locked python -m sifr_verify areas run --area generated_code_quality --suite smoke`; `--suite representative`; `--suite full`; generated-code profile dispatch in `scripts/run_all_tests.sh` uses the area runner | Area schema validation, generated-code quality area smoke/representative execution, legacy facade dispatch equivalence; `scripts/run_all_tests.sh --profile create-pr`; Opus PASS | Merged in PR 13 |
-| `performance` | Deleted `verification/performance/`; moved `verification/perf/sifr_int_loop.sifr`; routed performance budget and frontend/syntax guardrails through the performance area | `verification/areas/performance/` | `uv run --project verification --locked python -m sifr_verify areas run --area performance --suite frontend-syntax-guardrails`; `--suite smoke`; `--suite representative`; `--suite full`; profile facade dispatches performance budgets through this area | Area schema validation, frontend/syntax guardrails, contracts, smoke, representative, profile check, `scripts/run_all_tests.sh --profile create-pr`; Opus PASS after doc/metadata cleanup review | Merged in PR 14 |
-| `developer_tooling` | Deleted `verification/tooling/`; moved the large LSP corpus submodule and wrapper under `verification/areas/developer_tooling/corpora/`; routed tooling, TypeScript-Go, and diagnostic tooling contracts through the developer tooling area | `verification/areas/developer_tooling/` | `uv run --project verification --locked python -m sifr_verify areas run --area developer_tooling --suite typescript-go-m1`; `--suite diagnostic-contracts`; profile facade dispatches `static`, `formatter`, `analysis`, `lsp-smoke`, `editor-release`, `lsp-stress`, `phase-closeout`, and `full` through this area | Area schema validation; TypeScript-Go, diagnostic contracts, static/lsp-smoke, formatter, analysis, editor-release, lsp-stress, phase-closeout suites; `scripts/run_all_tests.sh --profile create-pr`; Opus PASS | Merged in PR 15 |
-| `runtime_platform` | Deleted `verification/platform/` and `scripts/run_platform_golden.sh`; routed platform golden fixtures through the runtime platform area | `verification/areas/runtime_platform/` | `uv run --project verification --locked python -m sifr_verify areas run --area runtime_platform --suite platform-golden`; `--suite platform-contract`; profile facade dispatches platform golden through this area | Area schema validation, platform contract/golden area execution, `scripts/run_all_tests.sh --profile create-pr`; Opus PASS | Merged in PR 16 |
-| `distribution_release` | Deleted `verification/distribution/`, `scripts/run_distribution_validation.sh`, and `scripts/distribution/validate_self_update_metadata.sh`; moved distribution validation cases, schema, and metadata validator under the distribution release area | `verification/areas/distribution_release/` | `uv run --project verification --locked python -m sifr_verify areas run --area distribution_release --suite representative`; `--suite full`; profile facade dispatches distribution validation through this area | Area schema validation; representative and full distribution area execution; `scripts/run_all_tests.sh --profile create-pr`; Opus PASS | Merged in PR 17 |
-| `package_management` | Deleted `verification/package_management/`, `crates/sifr/tests/verification/package/`, and `scripts/check_package_manager_guardrails.py`; moved package data, demo repository corpora, package fixtures, and guardrail tool under the package management area | `verification/areas/package_management/` | `uv run --project verification --locked python -m sifr_verify areas run --area package_management --suite guardrails`; profile facade dispatches package-manager guardrails through this area | Area schema validation, package guardrail area execution, diagnostic contract consumer coverage, `cargo test -p sifr_package`, `scripts/run_all_tests.sh --profile create-pr`; Opus PASS | Merged in PR 18 |
-| `stdlib_parity` | Deleted `verification/stdlib/`, `scripts/run_stdlib_namespace_corpus_validation.py`, `scripts/check_phase30_complexity_resource_inventory.py`, and `scripts/generate_concurrency_runtime_inventory.py`; moved stdlib parity data, reports, corpus validation, inventory guardrails, and generator tooling under the stdlib parity area | `verification/areas/stdlib_parity/` | `uv run --project verification --locked python -m sifr_verify areas run --area stdlib_parity --suite complexity-resource`; `--suite namespace-demos-check`; `--suite namespace-leetcode-check`; profile facade dispatches the fast stdlib inventory guardrail through this area | Area schema validation; stdlib complexity-resource, namespace demos check, and namespace LeetCode check area execution; `cargo test -p sifr_stdlib` snapshot consumers; generator idempotence; `scripts/run_all_tests.sh --profile create-pr`; Opus PASS | Merged in PR 19 |
-| `algorithmic_compatibility` | Moved LeetCode submodule corpus and full-corpus taxonomy script | `verification/areas/algorithmic_compatibility/` | `uv run --project verification --locked python -m sifr_verify areas run --area algorithmic_compatibility --suite taxonomy-smoke`; `--suite leetcode-check` | Area schema validation, taxonomy smoke, LeetCode corpus check, stdlib namespace LeetCode check, `scripts/run_all_tests.sh --profile create-pr`; Opus PASS | Merged in PR #2535 |
-| `ecosystem_compatibility` | Moved OSS manifests, local projects, and gate policy | `verification/areas/ecosystem_compatibility/` plus `verification/policy/ecosystem_compatibility.md` | `uv run --project verification --locked python -m sifr_verify areas run --area ecosystem_compatibility --suite oss-curated`; `--suite ecosystem-broader` | Area schema validation, curated and broader ecosystem suite execution, merge-profile hardening dispatch through the ecosystem area, path-stable pinned revision validation, `scripts/run_all_tests.sh --profile create-pr`, `scripts/run_all_tests.sh`; Opus PASS after squash-stable pin review | Merged in PR #2537 |
+| `project_workspace` | Deleted project row from `verification/suites/manifest.json`; moved `crates/sifr/tests/verification/project/` fixtures; deleted project/workspace contract shell wrappers | `verification/areas/project_workspace/` | `uv run --project verification --locked python -m sifr_verify areas run --area project_workspace --suite baselines`; `uv run --project verification --locked python -m sifr_verify areas run --area project_workspace --suite frontend_mode_parity --suite phase23_graph_isolation`; merge/nightly/release hardening dispatches project baselines through this area | Area schema validation, project area baseline execution, exact project workspace contract suite execution, legacy hardening dispatch equivalence; `scripts/run_all_tests.sh --profile create-pr`; agent PASS after exact-suite filter review | Baselines merged in PR 9; exact contract suite migration merged in PR 10 |
+| `core_language` | Moved `scripts/run_e2e_pass.sh` to `verification/runner/e2e/run_e2e_pass.sh`; moved create-pr/merge e2e fixture manifests to `verification/areas/core_language/data/`; core contract rows and `verification/validation_contracts/` already moved | `verification/areas/core_language/`; runner-owned e2e execution under `verification/runner/e2e/` | `uv run --project verification --locked python -m sifr_verify areas run --area core_language --suite integer_dtype_contract --suite phase24_hir_analysis --suite phase25_cfg_flow`; profile execution calls the runner-owned e2e pass script with area-owned fixture manifests | Exact core language contract suite execution; profile/facade contract dispatch through `sifr_verify areas run`; agent PASS after exact-suite filter review; e2e script path swept in PR #2543; fixture manifests swept in PR #2549 | Contract matrix source cut over in PR 10; e2e pass runner moved out of `scripts/` in PR #2543; fixture manifest ownership closed in PR #2549 |
+| `regression` | Deleted `verification/fixedbugs/index.json`, `verification/crashes/index.json`, and crate-local crash reproducers; moved shared hardening implementation out of `scripts/` | `verification/areas/regression/`; hardening support in `verification/runner/sifr_verify/hardening/` | `uv run --project verification --locked python -m sifr_verify areas run --area regression --suite fixedbugs --suite crashes`; merge/nightly/release hardening dispatches these suites through the regression area | Area schema validation, fixedbugs/crashes area execution, runner hardening dispatch equivalence; `scripts/run_all_tests.sh --profile create-pr`; agent PASS | Merged in PR 11; hardening implementation swept in PR #2543 |
+| `fuzz_property` | Deleted `verification/fuzz_property/` and `scripts/run_smoke_fuzz_property.sh`; moved shared hardening implementation out of `scripts/` | `verification/areas/fuzz_property/`; hardening support in `verification/runner/sifr_verify/hardening/` | `uv run --project verification --locked python -m sifr_verify areas run --area fuzz_property --suite cargo-smoke --suite property --suite fuzz-smoke`; nightly/release hardening dispatches property/fuzz-smoke through the fuzz/property area | Area schema validation, cargo smoke/property/fuzz-smoke area execution, runner hardening dispatch equivalence; `scripts/run_all_tests.sh --profile create-pr`; agent PASS | Merged in PR 12; hardening implementation swept in PR #2543 |
+| `generated_code_quality` | Deleted `verification/generated_code_quality/` and shell wrappers | `verification/areas/generated_code_quality/` | `uv run --project verification --locked python -m sifr_verify areas run --area generated_code_quality --suite smoke`; `--suite representative`; `--suite full`; generated-code profile dispatch in `scripts/run_all_tests.sh` uses the area runner | Area schema validation, generated-code quality area smoke/representative execution, legacy facade dispatch equivalence; `scripts/run_all_tests.sh --profile create-pr`; agent PASS | Merged in PR 13 |
+| `performance` | Deleted `verification/performance/`; moved `verification/perf/sifr_int_loop.sifr`; routed performance budget and frontend/syntax guardrails through the performance area | `verification/areas/performance/` | `uv run --project verification --locked python -m sifr_verify areas run --area performance --suite frontend-syntax-guardrails`; `--suite smoke`; `--suite representative`; `--suite full`; profile facade dispatches performance budgets through this area | Area schema validation, frontend/syntax guardrails, contracts, smoke, representative, profile check, `scripts/run_all_tests.sh --profile create-pr`; agent PASS after doc/metadata cleanup review | Merged in PR 14 |
+| `developer_tooling` | Deleted `verification/tooling/`; moved the large LSP corpus submodule and wrapper under `verification/areas/developer_tooling/corpora/`; routed tooling, TypeScript-Go, and diagnostic tooling contracts through the developer tooling area | `verification/areas/developer_tooling/` | `uv run --project verification --locked python -m sifr_verify areas run --area developer_tooling --suite typescript-go-m1`; `--suite diagnostic-contracts`; profile facade dispatches `static`, `formatter`, `analysis`, `lsp-smoke`, `editor-release`, `lsp-stress`, `phase-closeout`, and `full` through this area | Area schema validation; TypeScript-Go, diagnostic contracts, static/lsp-smoke, formatter, analysis, editor-release, lsp-stress, phase-closeout suites; `scripts/run_all_tests.sh --profile create-pr`; agent PASS | Merged in PR 15 |
+| `runtime_platform` | Deleted `verification/platform/` and `scripts/run_platform_golden.sh`; routed platform golden fixtures through the runtime platform area | `verification/areas/runtime_platform/` | `uv run --project verification --locked python -m sifr_verify areas run --area runtime_platform --suite platform-golden`; `--suite platform-contract`; profile facade dispatches platform golden through this area | Area schema validation, platform contract/golden area execution, `scripts/run_all_tests.sh --profile create-pr`; agent PASS | Merged in PR 16 |
+| `distribution_release` | Deleted `verification/distribution/`, `scripts/run_distribution_validation.sh`, and `scripts/distribution/validate_self_update_metadata.sh`; moved distribution validation cases, schema, and metadata validator under the distribution release area | `verification/areas/distribution_release/` | `uv run --project verification --locked python -m sifr_verify areas run --area distribution_release --suite representative`; `--suite full`; profile facade dispatches distribution validation through this area | Area schema validation; representative and full distribution area execution; `scripts/run_all_tests.sh --profile create-pr`; agent PASS | Merged in PR 17 |
+| `package_management` | Deleted `verification/package_management/`, `crates/sifr/tests/verification/package/`, and `scripts/check_package_manager_guardrails.py`; moved package data, demo repository corpora, package fixtures, and guardrail tool under the package management area | `verification/areas/package_management/` | `uv run --project verification --locked python -m sifr_verify areas run --area package_management --suite guardrails`; profile facade dispatches package-manager guardrails through this area | Area schema validation, package guardrail area execution, diagnostic contract consumer coverage, `cargo test -p sifr_package`, `scripts/run_all_tests.sh --profile create-pr`; agent PASS | Merged in PR 18 |
+| `stdlib_parity` | Deleted `verification/stdlib/`, `scripts/run_stdlib_namespace_corpus_validation.py`, `scripts/check_phase30_complexity_resource_inventory.py`, and `scripts/generate_concurrency_runtime_inventory.py`; moved stdlib parity data, reports, corpus validation, inventory guardrails, and generator tooling under the stdlib parity area | `verification/areas/stdlib_parity/` | `uv run --project verification --locked python -m sifr_verify areas run --area stdlib_parity --suite complexity-resource`; `--suite namespace-demos-check`; `--suite namespace-leetcode-check`; profile facade dispatches the fast stdlib inventory guardrail through this area | Area schema validation; stdlib complexity-resource, namespace demos check, and namespace LeetCode check area execution; `cargo test -p sifr_stdlib` snapshot consumers; generator idempotence; `scripts/run_all_tests.sh --profile create-pr`; agent PASS | Merged in PR 19 |
+| `algorithmic_compatibility` | Moved LeetCode submodule corpus and full-corpus taxonomy script | `verification/areas/algorithmic_compatibility/` | `uv run --project verification --locked python -m sifr_verify areas run --area algorithmic_compatibility --suite taxonomy-smoke`; `--suite leetcode-check` | Area schema validation, taxonomy smoke, LeetCode corpus check, stdlib namespace LeetCode check, `scripts/run_all_tests.sh --profile create-pr`; agent PASS | Merged in PR #2535 |
+| `ecosystem_compatibility` | Moved OSS manifests, local projects, and gate policy | `verification/areas/ecosystem_compatibility/` plus `verification/policy/ecosystem_compatibility.md` | `uv run --project verification --locked python -m sifr_verify areas run --area ecosystem_compatibility --suite oss-curated`; `--suite ecosystem-broader` | Area schema validation, curated and broader ecosystem suite execution, merge-profile hardening dispatch through the ecosystem area, path-stable pinned revision validation, `scripts/run_all_tests.sh --profile create-pr`, `scripts/run_all_tests.sh`; agent PASS after squash-stable pin review | Merged in PR #2537 |
 
 ## Cursor Cleanup
 
@@ -257,9 +257,9 @@ Rules:
 - No tracked `.DS_Store` or local editor files.
 - Commands target the new `plans/issues/active/`, `plans/phases/`, and `plans/reviews/active/` layout only after the planning tree exists.
 - Review skills write to `plans/reviews/active/` by default.
-- Keep `.cursor/skills/talk-to-claude-opus/` as the single Claude/Fable review workflow.
-- Remove the other Claude review skill variants once their useful instructions are folded into `talk-to-claude-opus`.
-- Do not introduce additional model-branded review skill variants; `talk-to-claude-opus` remains the existing workflow contract.
+- Keep `agent review` as the single agent/agent review workflow.
+- Remove the other agent review skill variants once their useful instructions are folded into `agent review`.
+- Do not introduce additional model-branded review skill variants; `agent review` remains the existing workflow contract.
 - Remove `.cursor/.rules/`.
 - Move useful `.cursor/plans/` content into `plans/`; delete embedded Obsidian/local state and obsolete workflow notes.
 
@@ -739,7 +739,7 @@ Tracked top-level entries discovered:
 
 | Current entry | Tracked state | Final disposition |
 | --- | ---: | --- |
-| `.cursor/` | 19 files | Keep as portable workflow assets after deleting `.cursor/.rules/` and extra Claude skill variants. |
+| `.cursor/` | 19 files | Keep as portable workflow assets after deleting `.cursor/.rules/` and extra agent skill variants. |
 | `.github/` | 2 files | Keep; retarget validation vocabulary from lane to profile. |
 | `.gitignore` | 1 file | Keep; edit for `Cargo.lock`, bytecode/cache/editor-state hygiene, and generated-artifact exclusions. |
 | `.gitmodules` | 1 file | Keep; update atomically with submodule moves. |
@@ -758,7 +758,7 @@ Ignored local/generated top-level material discovered and not to be tracked:
 
 | Current entry | Final disposition |
 | --- | --- |
-| `.DS_Store`, `.claude/`, `.claude.log`, `.obsidian/`, `.sifr_cache/`, `sifr_output/`, `target/`, `tmp/`, `tmp_*` | Delete locally when encountered; keep ignored. |
+| `.DS_Store`, `.agent/`, `.agent.log`, `.obsidian/`, `.sifr_cache/`, `sifr_output/`, `target/`, `tmp/`, `tmp_*` | Delete locally when encountered; keep ignored. |
 | `scripts/__pycache__/`, `verification/**/__pycache__/`, `*.pyc` | Delete locally when encountered; guard against tracking. |
 
 Cursor exact disposition:
@@ -769,8 +769,8 @@ Cursor exact disposition:
 | `.cursor/commands/*.md` | Keep and retarget from `plans/issues/`, `reviews/`, and `plans/phases/` to `plans/...` after the planning tree exists. |
 | `.cursor/references/*.md` | Keep only portable templates/references; remove local path assumptions. |
 | `.cursor/skills/project-workflow/`, `.cursor/skills/phase-closure-loop/`, `.cursor/skills/sifr-demo-authoring/` | Keep after replacing personal paths and old planning paths. |
-| `.cursor/skills/talk-to-claude-opus/` | Keep as the single Claude/Fable review workflow; make output default to `plans/reviews/active/`. |
-| `.cursor/skills/talk-to-claude-default/`, `.cursor/skills/talk-to-claude-gui-review/` | Delete after folding any useful wording into `talk-to-claude-opus`. |
+| `agent review` | Keep as the single agent/agent review workflow; make output default to `plans/reviews/active/`. |
+| `agent review`, `agent review` | Delete after folding any useful wording into `agent review`. |
 | `.cursor/plans/.obsidian/` and other local state | Delete; no embedded Obsidian or local planning state is tracked. |
 
 Verification exact disposition by current path:
@@ -851,7 +851,7 @@ Stale reference cleanup discovered:
 | `validation_lane`, `validation_lanes`, and user-facing `lane` validation wording in `.github/`, `scripts/`, `README.md`, `AGENTS.md`, `internal_docs/`, and `verification/` | Replace with `profile` vocabulary except where `lane` refers to compiler/LSP worker lanes. |
 | `plans/phases/` references in `AGENTS.md`, `README.md`, Cursor commands, scripts, and phase gate checks | Retarget to `plans/phases/`. |
 | Root `plans/issues/` references in roadmap, Cursor commands, archive scripts, and active docs | Retarget to `plans/issues/{active,archive}`. |
-| Root `reviews/` references and `.claude.log` paths | Retarget retained summaries to `plans/reviews/`; delete log/transcript references that are not retained artifacts. |
+| Root `reviews/` references and `.agent.log` paths | Retarget retained summaries to `plans/reviews/`; delete log/transcript references that are not retained artifacts. |
 | `/Users/yaseralnajjar/...` references in `.cursor/skills/*` and `verification/distribution/common.sh` | Replace with environment variables or repo-relative paths; fail guardrail on future personal paths. |
 | `verification/validation_lanes/*` references in scripts and inventories | Replace with `verification/profiles/*` and area-owned suite references. |
 
@@ -866,7 +866,7 @@ The audit scope is tracked repository material plus currently discovered generat
 | Current path | Classification | Destination or deletion rationale | Gate consumed | Doc referenced | Validation required after changing | Reference-compiler lesson |
 | --- | --- | --- | --- | --- | --- | --- |
 | `.github/` | keep | CI workflows remain top-level repo automation; retarget lane vocabulary to profiles. | Yes | Yes | local facade plus workflow syntax review | CPython keeps CI policy outside source and test data. |
-| `.cursor/` | keep | Portable workflow assets only after local state, `.rules`, and extra Claude variants are removed. | Yes | Yes | Cursor hygiene guardrail and create-pr validation | Mature repos keep contributor workflow metadata portable. |
+| `.cursor/` | keep | Portable workflow assets only after local state, `.rules`, and extra agent variants are removed. | Yes | Yes | Cursor hygiene guardrail and create-pr validation | Mature repos keep contributor workflow metadata portable. |
 | `.gitignore` | keep | Root hygiene contract; edit for tracked lockfile, bytecode, editor state, and generated reports. | Yes | Yes | git status and hygiene guardrails | Rust treats generated build output as untracked. |
 | `.gitmodules` | keep | Submodule ownership registry; update atomically with corpus and integration moves. | Yes | Yes | `git submodule status --recursive` | TypeScript and Rust keep external inputs explicit. |
 | `AGENTS.md` | keep | Contributor automation contract; retarget to `plans/` and profiles as moves land. | Yes | Yes | link/reference checks and create-pr validation | CPython separates maintainer guidance from implementation. |
@@ -899,9 +899,9 @@ The audit scope is tracked repository material plus currently discovered generat
 | `.cursor/skills/project-workflow/` | keep | Retain workflow skill with `plans/` paths after planning tree exists. | Yes | Yes | workflow reference checks | CPython keeps contributor process docs concise. |
 | `.cursor/skills/phase-closure-loop/` | keep | Retain closure loop after replacing absolute Telegram and review-skill assumptions. | Yes | Yes | personal-path guardrail | Workflow automation must be portable. |
 | `.cursor/skills/sifr-demo-authoring/` | keep | Retain demo authoring guidance and ensure paths stay repo-relative. | Yes | Yes | demo validation | Demos are product examples, not validation logs. |
-| `.cursor/skills/talk-to-claude-opus/` | keep | Single retained Claude/Fable review workflow; retarget output to `plans/reviews/active/`. | Yes | Yes | reviewer handoff smoke check | One review workflow contract avoids process forks. |
-| `.cursor/skills/talk-to-claude-default/` | delete | Delete after useful content is folded into the Opus workflow. | Yes | Yes | no duplicate Claude skill guardrail | Avoid model-branded workflow variants. |
-| `.cursor/skills/talk-to-claude-gui-review/` | delete | Delete after useful GUI wording is folded into the Opus workflow if needed. | Yes | Yes | no duplicate Claude skill guardrail | Workflow variants should not encode obsolete review paths. |
+| `agent review` | keep | Single retained agent/agent review workflow; retarget output to `plans/reviews/active/`. | Yes | Yes | reviewer handoff smoke check | One review workflow contract avoids process forks. |
+| `agent review` | delete | Delete after useful content is folded into the agent workflow. | Yes | Yes | no duplicate agent skill guardrail | Avoid model-branded workflow variants. |
+| `agent review` | delete | Delete after useful GUI wording is folded into the agent workflow if needed. | Yes | Yes | no duplicate agent skill guardrail | Workflow variants should not encode obsolete review paths. |
 | `.cursor/.rules/` | delete | Remove obsolete Cursor rules tree. | Yes | No | Cursor hygiene guardrail | Portable repo metadata should be minimal. |
 | `.cursor/plans/.obsidian/` | delete | Local Obsidian state is not repo material. | No | No | local-state guardrail | Local editor state belongs outside source control. |
 | `.cursor/.DS_Store` | delete | Local macOS artifact. | No | No | local-state guardrail | Generated/editor artifacts are not active tree material. |
@@ -1029,7 +1029,7 @@ The audit scope is tracked repository material plus currently discovered generat
 | `plans/issues/active/ad-hoc-serious-build-output-and-phase-timings.md` | move | Active status keeps the plan in `plans/issues/active/`; completed plans move to `plans/issues/archive/`. | No | Yes | issue index checks | Issue lifecycle should be explicit. |
 | `issues/archive/` | move | Move to `plans/issues/archive/`. | No | Yes | archive link checks | Historical plans should not sit at root. |
 | `reviews/*.md` | move | Retain active summaries under `plans/reviews/active/`; archive historical value under `archive/`. | No | Yes | review path reference checks | Review artifacts belong with plans. |
-| `reviews/*.claude.log`, `reviews/**/*.stderr.log` | delete | Point-in-time process logs are not active repo material. | No | Yes | no log references | Logs are generated artifacts. |
+| `reviews/*.agent.log`, `reviews/**/*.stderr.log` | delete | Point-in-time process logs are not active repo material. | No | Yes | no log references | Logs are generated artifacts. |
 | `reviews/archive/` | move | Move retained archival reviews to `plans/reviews/archive/`. | No | Yes | archive link checks | Archives should not be top-level surfaces. |
 | `internal_docs/verification/artifact_schema_and_retention.md` | move | Move to `verification/policy/artifact_schema_and_retention.md`. | Yes | Yes | policy link checks | Runner artifact policy belongs under verification. |
 | `internal_docs/verification/baseline_governance.md` | move | Move to `verification/policy/baseline_governance.md`. | Yes | Yes | policy link checks | Baseline governance is verification policy. |
@@ -1102,11 +1102,11 @@ Remove local-machine assumptions from `.cursor/` without retargeting commands to
 Scope:
 
 - remove personal absolute paths
-- replace the external `talk-to-claude` absolute path with `TALK_TO_CLAUDE_PROJECT` and a fail-fast message when unset
+- replace the external `agent review` absolute path with `agent review configuration` and a fail-fast message when unset
 - remove `.cursor/.rules/`
 - remove `.DS_Store`, Obsidian state, and local editor artifacts
-- consolidate Claude/Fable review workflow into `.cursor/skills/talk-to-claude-opus/`
-- remove the other Claude review skill variants after folding in useful instructions
+- consolidate agent/agent review workflow into `agent review`
+- remove the other agent review skill variants after folding in useful instructions
 - disposition `.cursor/plans/` content as move-later inventory or delete-obsolete local state
 
 Validation:
@@ -1119,7 +1119,7 @@ Validation:
 
 Move intentionally retained review artifacts under `plans/reviews/active/` or `plans/reviews/archive/`. Delete review artifacts that have no ongoing planning value and replace direct transcript ledgers in active docs with concise summaries.
 
-This PR creates `plans/reviews/{active,archive}/` and retargets `.cursor/skills/talk-to-claude-opus/` to write new review artifacts to `plans/reviews/active/` before deleting the root `reviews/` tree.
+This PR creates `plans/reviews/{active,archive}/` and retargets `agent review` to write new review artifacts to `plans/reviews/active/` before deleting the root `reviews/` tree.
 
 Validation:
 
@@ -1256,12 +1256,12 @@ profile guardrails so verification implementation does not drift back into
 
 Review evidence:
 
-- Opus review round 1 found a local-first workflow still calling deleted
+- agent review round 1 found a local-first workflow still calling deleted
   `scripts/run_smoke_fuzz_property.sh`; fixed by routing through
   `sifr_verify areas run`.
-- Opus review round 2 found the replacement workflow only ran `cargo-smoke`;
+- agent review round 2 found the replacement workflow only ran `cargo-smoke`;
   fixed by running `cargo-smoke`, `property`, and `fuzz-smoke`.
-- Opus review round 3 passed with no blocking findings.
+- agent review round 3 passed with no blocking findings.
 
 Validation evidence:
 
@@ -1292,9 +1292,9 @@ Status: merged in PR #2545.
 
 Review:
 
-- Opus round 1 found profile-wiring and generated-code panic-lint coverage
+- agent round 1 found profile-wiring and generated-code panic-lint coverage
   blockers; both were fixed before the PR.
-- Opus round 2 reported no blockers and was satisfied for the milestone PR to
+- agent round 2 reported no blockers and was satisfied for the milestone PR to
   open.
 
 Validation:
@@ -1335,8 +1335,8 @@ Status:
 
 Review:
 
-- Opus review:
-  `plans/reviews/archive/arch-cleanup-internal-docs-relevance-opus-review-1.md`.
+- agent review:
+  `plans/reviews/archive/arch-cleanup-internal-docs-relevance-agent-review-1.md`.
 - Verdict: satisfied; no blockers.
 
 Validation evidence:
@@ -1376,9 +1376,9 @@ Status:
 
 Review:
 
-- Opus round 1 found stale generated inventory/report wording and remaining
+- agent round 1 found stale generated inventory/report wording and remaining
   validation-lane prose; both blockers were fixed before PR open.
-- Opus round 2 reported no blockers and was satisfied.
+- agent round 2 reported no blockers and was satisfied.
 
 Validation evidence:
 
@@ -1428,7 +1428,7 @@ Status:
 
 Review:
 
-- Final whole-phase Opus review found the residual top-level verification
+- Final whole-phase agent review found the residual top-level verification
   paths and root integer-model markdown artifacts as blockers. This milestone
   addresses those findings directly rather than weakening the acceptance
   criteria.
@@ -1484,7 +1484,7 @@ Status: complete after PR #2549, PR #2550, and final verification residue cleanu
 
 ## Review Notes
 
-This plan was reviewed with the Fable high model. The main findings incorporated here were:
+This plan was reviewed with the agent high model. The main findings incorporated here were:
 
 - the top-level contract must include load-bearing entries such as `lib/`, `.github/`, `sifr.toml`, and `logo.webp`
 - corpus migration and submodule migration must be explicit PRs, not risks hidden inside script movement
@@ -1502,5 +1502,5 @@ This plan was reviewed with the Fable high model. The main findings incorporated
 - profile normalization must rewrite facade profile resolution before deleting the legacy validation-lane manifest
 - the verification runner needs schema-level `toolchain` and `guardrail` step kinds so cargo tests, fmt/clippy, and repo guardrails stay in validation without raw shell in profiles
 - `uv` needs explicit bootstrap, minimum-version, Python-version, and CI installation policy
-- review-tree normalization must retarget `talk-to-claude-opus` before deleting the root `reviews/` tree
-- final Fable review pass 4 returned `PASS` after these blockers were incorporated
+- review-tree normalization must retarget `agent review` before deleting the root `reviews/` tree
+- final agent review pass 4 returned `PASS` after these blockers were incorporated

@@ -1,6 +1,6 @@
 # Text/I18n Substrate Inventory
 
-Status: capability complete; inventory classifications are terminal and final validation/review evidence is attached.
+Status: capability complete; inventory classifications are terminal and final validation evidence is attached.
 
 Platform rules: [platform_rules.md](../platform/platform_rules.md)
 
@@ -134,7 +134,7 @@ Existing coverage also records in-memory `StringIO`/`BytesIO` seek/tell and use-
 | Unicode segmentation capability | Add grapheme and word segmentation iterators/boundaries using `unicode-segmentation`. |
 | URL/HTTP primitives | Add `LocaleId`, canonicalization, read-only `host_locale`, object-scoped number/date/plural/collation APIs using ICU4X compiled data. |
 | HTTP transport | Add native translation bundle/translator API, `.mo` parser, safe plural-expression parser, fallbacks, contexts, plural lookup, missing-key fallback, and missing-path errors. |
-| handoff | Add public/internal docs, demos, dependency snapshots, panic scans, final inventory readiness, final review, and full validation. |
+| handoff | Add public/internal docs, demos, dependency snapshots, panic scans, final inventory readiness, and merge-gate validation. |
 
 ## Readiness Evidence
 
@@ -146,5 +146,5 @@ Existing coverage also records in-memory `StringIO`/`BytesIO` seek/tell and use-
 | Dependency snapshots | `verification/areas/stdlib_parity/data/text_i18n_dependency_snapshots.json` records generated Cargo dependency snapshots for each text/i18n module and every pairwise/full module combination; `crates/sifr_stdlib_manifest/src/features.rs::text_i18n_feature_dependency_snapshots_cover_feature_combinations` locks the same combinations in unit tests. |
 | Panic/emitted-code scans | `verification/areas/generated_code_quality/data/corpus_manifest.json` includes `demos/text_i18n/main.sifr` plus representative encoding, Unicode, segmentation, locale, and translation e2e fixtures. |
 | E2E fixture manifests | `verification/areas/core_language/data/create_pr_e2e_manifest.json` and `verification/areas/core_language/data/merge_e2e_manifest.json` include all representative text/i18n implementation fixtures. |
-| External review | `reviews/production-text-i18n-readiness-implementation-review-pass-1.md`, `reviews/production-text-i18n-readiness-implementation-review-pass-2.md`, `reviews/production-text-i18n-readiness-implementation-review-pass-3.md`, and `reviews/production-text-i18n-final-implementation-review-pass-1.md` returned `PASS`; no re-review required. |
+| External validation | `PASS`; no additional validation required. |
 | Reference readiness | `verification/areas/stdlib_parity/reports/text_i18n_reference_matrix.md` maps CPython codecs, encodings, unicodedata, locale, and gettext families to terminal Sifr dispositions and fixtures. |

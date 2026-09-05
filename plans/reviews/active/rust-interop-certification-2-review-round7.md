@@ -2,7 +2,7 @@
 
 ## Reviewer
 
-Claude Opus 5 (`--effort medium`), read-only review of the exact working tree
+agent (`--effort medium`), read-only review of the exact working tree
 against base commit `f76a99046`.
 
 ## Verdict

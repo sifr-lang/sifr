@@ -18,4 +18,4 @@ The implementation is correct and well-scoped. All five verification criteria pa
 
 5. **Fixtures are precise**: Each fixture exercises exactly one specific condition and expects the correct diagnostic. No over-broad rejections.
 
-Review artifacts (`.claude.log`, `.md` in `reviews/`) are untracked and not staged — confirmed clean.
+Review artifacts (`.agent.log`, `.md` in `reviews/`) are untracked and not staged — confirmed clean.

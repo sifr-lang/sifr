@@ -52,7 +52,7 @@ This is accurate — it's a validation slice, not implementation, and correctly 
 ### Note on review artifacts
 Two untracked files exist in the working directory as expected:
 - `reviews/phase-32-milestone-async-3-gather-collection-consumed-review-pass-1.md`
-- `reviews/phase-32-milestone-async-3-gather-collection-consumed-review-pass-1.claude.log`
+- `reviews/phase-32-milestone-async-3-gather-collection-consumed-review-pass-1.agent.log`
 
 These are properly untracked and do not affect the PR slice.
 

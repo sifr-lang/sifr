@@ -1,6 +1,6 @@
 # Review Pass 2: milestone_diag_9 Call diagnostic primary-range slice
 
-**Reviewer:** Claude (automated pass-2 review)
+**Reviewer:** agent (automated pass-2 review)
 **Date:** 2026-05-03
 **Branch:** codex/diag-9-call-primary-ranges
 **Validation results:** All quick-profile checks passed prior to review.

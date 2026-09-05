@@ -1,7 +1,7 @@
 # Ad Hoc Phase Review: Production-Grade Sifr Linter — Pass 2
 
 Date: 2026-05-26
-Reviewer: Claude phase review
+Reviewer: agent phase review
 Phase: `issues/ad-hoc-production-grade-sifr-linter.md`
 Execution: `issues/ad-hoc-production-grade-sifr-linter-execution.md`
 Pass 1 blockers:

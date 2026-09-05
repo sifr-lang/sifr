@@ -10,7 +10,7 @@ I did not modify any files. Full review below.
 | `gh pr view 3053 --json headRefOid` | `ef90613c95…` — exact match; state `OPEN`, `mergeable: MERGEABLE`, `mergeStateStatus: CLEAN` |
 | PR file/line counts | GitHub 53 files / +2116 / −206 = local `git diff origin/main...HEAD` |
 
-Unrelated working-tree paths preserved and untouched: `editor_integrations` (submodule at `a980835e6`, committed pointer `d7577d49`) and untracked `.cert5probe/`. Also present and untouched: untracked `plans/reviews/active/rust-interop-certification-7-review-round-11.md` (empty placeholder) plus gitignored `*.claude.log` files. None appear in the PR diff.
+Unrelated working-tree paths preserved and untouched: `editor_integrations` (submodule at `a980835e6`, committed pointer `d7577d49`) and untracked `.cert5probe/`. Also present and untouched: untracked `plans/reviews/active/rust-interop-certification-7-review-round-11.md` (empty placeholder) plus gitignored `*.agent.log` files. None appear in the PR diff.
 
 ## Checks I ran (read-only, focused — no create-pr/merge/release profiles)
 

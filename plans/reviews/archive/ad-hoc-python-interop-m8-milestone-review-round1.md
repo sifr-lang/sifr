@@ -1,6 +1,6 @@
 # Python Interop M8 Milestone Review — Round 1
 
-Reviewer: Claude Opus 4.7 (milestone-level, post-merge). Scope: all M8 code and history reachable from `main` HEAD `5aa9d4b86` (`feat(python): activate typed async contexts (#2972)`) plus prior substrate at `dd88ebf49` (PR #2970). No repo modifications. Branch `codex/python-interop-m8-closure`; the two untracked files (`plans/reviews/active/ad-hoc-python-interop-m8-milestone-review-round1.md` and `…-wave2-pr2972-review-round2.md`) are review artifacts, not source deltas.
+Reviewer: agent (milestone-level, post-merge). Scope: all M8 code and history reachable from `main` HEAD `5aa9d4b86` (`feat(python): activate typed async contexts (#2972)`) plus prior substrate at `dd88ebf49` (PR #2970). No repo modifications. Branch `codex/python-interop-m8-closure`; the two untracked files (`plans/reviews/active/ad-hoc-python-interop-m8-milestone-review-round1.md` and `…-wave2-pr2972-review-round2.md`) are review artifacts, not source deltas.
 
 ## Spec-to-code coverage
 

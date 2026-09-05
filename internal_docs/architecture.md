@@ -1,56 +1,21 @@
 # Sifr Compiler -- Architecture
 
-## Planning Source of Truth
+## Architecture Scope
 
-- Current sequencing for compiler execution lives in the project planning index, from the production compiler plan through the web-framework architecture.
-- Entry/exit criteria, future-work quality checks, and mandatory local validation commands live in staged planning files under `## Quality Rules`.
-- Iterator architecture execution has two completed stages:
-  - stage 1: `first-class-lazy-iterators-and-python-iterable-protocol record` and `first-class-lazy-iterators-and-python-iterable-protocol-execution record`
-  - stage 2 corrective continuation: `canonical-iteration-model-and-lazy-parity record` and `canonical-iteration-model-and-lazy-parity-execution record`
-  - stage-2 iterator behavior rules are merged and reviewed, including CPython `itertools` parity sweep/remediation passes.
-  - stage-2 rules lock enforces one canonical iteration path from type system through HIR/codegen with explicit capability tracking (single-pass, multi-pass, reversible/double-ended).
-- RNG/crypto continuation is production-grade complete:
-  - planning docs: `stateful-rng-crypto-and-polish-parity-expansion record` and `stateful-rng-crypto-and-polish-parity-expansion-execution record`
-  - RNG behavior rules merged with external production-grade review artifacts and second-pass approval
-- Ownership-aware collection lowering continuation is in readiness review:
-  - planning docs: `ownership-aware-collection-lowering-and-clone-elision record` and `ownership-aware-collection-lowering-and-clone-elision-execution record`
-  - completed artifacts:
-    - lock/baseline artifact: `verification/areas/stdlib_parity/reports/collection_clone_codegen_traceability.md`
-    - iterator/comprehension ownership correction artifact: `verification/areas/stdlib_parity/reports/iterator_clone_codegen_traceability.md`
-    - indexing/slicing/star-unpack ownership correction artifact: `verification/areas/stdlib_parity/reports/index_slice_unpack_clone_traceability.md`
-    - generic hardening/regression lock artifact: `verification/areas/stdlib_parity/reports/generic_clone_hardening_traceability.md`
-  - active readiness stage: external review cycles after implementation completion
-  - locked planner rules for implementation passes:
-    - value category: `Place | Temporary`
-    - source access mode: `Preserve | Consume`
-    - yield mode: `Copy | Clone | Move | Borrow`
-    - conservative generic handling remains mandatory for `TypeVar`/`Any`/move unions
-  - canonical ownership-aware collection lowering rule:
-    - classify source expression as `ValueCategory::Place` or `ValueCategory::Temporary`
-    - derive source access rules as `SourceAccessMode::Preserve` or `SourceAccessMode::Consume`
-    - resolve element ownership as `Some(Copy | Move)` or `None` when ownership is conservative/unknown
-    - choose `YieldMode` from planner rules:
-      - `Preserve + Some(Copy)` -> `Copy` (`.iter().copied()` or equivalent copy-out)
-      - `Preserve + Some(Move)` -> `Clone` (`.iter().cloned()` where owned element materialization is required)
-      - `Preserve + None` -> `Borrow` (no forced copy/clone lowering)
-      - `Consume` (or iterator source) -> `Move` (consume source directly, no pre-clone shim)
-    - emit Rust lowering from this plan only; do not bypass planner with one-off clone heuristics
-  - residual boundary lock:
-    - this continuation removes unnecessary clone-heavy lowering patterns for targeted surfaces
-    - it does not claim full CPython parity for move-heavy runtime representations that depend on broader runtime/model changes
-  - traceability artifacts:
-    - `verification/areas/stdlib_parity/reports/collection_clone_codegen_traceability.md`
-    - `verification/areas/stdlib_parity/reports/iterator_clone_codegen_traceability.md`
-    - `verification/areas/stdlib_parity/reports/index_slice_unpack_clone_traceability.md`
-    - `verification/areas/stdlib_parity/reports/generic_clone_hardening_traceability.md`
-- Integer model amendment source of truth:
-  - `internal_docs/integer_model.md` defines the canonical semantic rules and replaces the historical machine-integer/separate user-facing `bigint` design before production.
-  - `integer-model-and-fixed-width-numeric-rules record` tracks the implementation work breakdown for that semantic rules.
+- Iterator lowering uses one canonical path from the type system through HIR and code generation, with explicit single-pass, multi-pass, and reversible/double-ended capability tracking.
+- RNG and cryptographic behavior follow the production semantic rules.
+- Ownership-aware collection lowering uses these planner rules:
+  - value category: `Place | Temporary`
+  - source access mode: `Preserve | Consume`
+  - yield mode: `Copy | Clone | Move | Borrow`
+  - generic `TypeVar`, `Any`, and move unions use conservative ownership handling.
+  - sources are classified as `ValueCategory::Place` or `ValueCategory::Temporary`, then mapped to `SourceAccessMode::Preserve` or `SourceAccessMode::Consume`.
+  - `Preserve + Some(Copy)` yields `Copy`; `Preserve + Some(Move)` yields `Clone`; `Preserve + None` yields `Borrow`; and `Consume` or iterator sources yield `Move`.
+  - Rust lowering follows this plan and does not use one-off clone heuristics.
+- The integer model is defined by `internal_docs/integer_model.md`:
   - Target source semantics: `int` is an exact signed arbitrary-precision value-semantic scalar backed by inline-small `SifrInt`; explicit fixed-width `int8`/`int16`/`int32`/`int64` and `uint8`/`uint16`/`uint32`/`uint64` are for storage, dtypes, binary formats, and FFI.
   - Ordinary fixed-width scalar arithmetic promotes to exact `int`; fixed-width array/tensor/dataframe arithmetic preserves dtype and exposes checked/wrapping/saturating/overflowing policies explicitly.
   - The compiler now uses `SifrInt` as the single emitted representation for source `int` values across storage, calls, aggregates, unions, Rust/Python bridges, and lazy `SifrRange` iteration. Exact floor/modulo, bounded power/shift, integer-to-float conversion, and true division lower through checked runtime operations with typed source errors when static proof is unavailable.
-- Historical references in this architecture document may mention legacy sequencing from earlier planning versions.
-- When numbered-record conflicts exist, follow the project planning index and the matching staged planning files.
 - Network/TLS/URL/HTTP substrate architecture is tracked in [`network_http_architecture.md`](./network_http_architecture.md). The public boundary is `sifr.net`, `sifr.tls`, `sifr.url`, and `sifr.http`; CPython-shaped networking modules remain unsupported diagnostics or rejected surfaces.
 - Embedded CPython interop is production-grade complete as a separate lane from Rust-backed packages, raw C ABI interop, and CPython source-parity adaptation. The declaration-first continuation now includes synchronous declarations, opaque lifecycle, synchronous and asynchronous contexts, hermetic package-local bridges, one application-owned asyncio loop, typed coroutine declarations with terminally ordered native cancellation, consuming async close, typed current-thread, foreign-thread, and asyncio callbacks with retained-owner shutdown, the compiler-known affine non-send `python.Buffer[T]` contract with exclusive writable borrowing and exact-once release, five certified affine Arrow C Data Interface resources with structural capsule validation and owned transfer, and affine `python.DlpackTensor[T]`/`python.DlpackStream` resources with versioned one-shot acquisition, exact device/stream matching, no-copy enforcement, and exact-once deleter cleanup. Symbol-selective `sifr python bind` authors checked-in typed declarations from deterministic override/stub/inline/introspection precedence and rejects untyped boundaries; frozen `bind --check` and ordinary package operations validate environment, typing-source, and generated-source fingerprints. General `sifr python certify` authoring and read-only rechecks cover both Arrow and DLPack executable evidence. The analysis host exposes the compiler-owned Python interop plan to the language server, whose completion, hover, navigation, diagnostics, target status, protocol help, cancellation, and cache invalidation reuse compiler/driver queries and package-selected inputs. Editor attribution uses exact declaration file/symbol identity; diagnostics retain declaration spans and package-wide failures have one deterministic document owner. LSP environment status goes through the same Cargo package graph, root trust, final-application deferral, live environment digest, binding/certification, and protocol-certification decisions as package checking. Source edits retain cached raw inspections for unchanged targets, while watcher/external-input invalidation clears environment and target caches; cancellation is checked between target probes. The raw API exposes typed `from_value`, `to_value`, and `kwarg` conversion through the same declaration conversion authority, plus compiler-known checked `Object.get_attr`, `get_item`, `call`, and `call_method` operations on the canonical sealed object. Raw objects use ordinary automatic release, and raw coroutine execution submits to the same application-owned loop rather than creating a per-call loop. The raw Python handle is selected by its canonical stdlib declaration identity rather than the `Object` basename, and every declaration family validates the exact five-field `PythonError` runtime contract before code generation. Package metadata records Python environment selection, inferred and manual import roots, and root-owned Python trust; the package layer resolves one environment and validates canonical CPython probe JSON before runtime embedding consumes it. Ordinary package checking and `sifr python check` consume that same typed environment decision, while `sifr python doctor` reports deterministic manifest patches without mutating source, trust, locks, or environments; build and run remain strict at final application resolution. Runtime lifecycle, GIL/refcount ownership, blocking/offload, callbacks, resources, and zero-copy rules are documented in [`python_interop_architecture.md`](./python_interop_architecture.md), with verification under [`verification/areas/python_interop/`](../verification/areas/python_interop/).
 - Rust interop is designed as declaration-level Cargo integration, not a runtime `dlopen` layer or Rust ABI FFI surface. Rust-backed Sifr packages expose normal Sifr declarations annotated with `@rust(...)`, direct Cargo bindings are allowed only for checked bridge-compatible signatures, and package-local/shared bridge crates own adaptation. The source of truth is [`rust_interop_architecture.md`](./rust_interop_architecture.md). <!-- rust-interop-rejected -->
@@ -90,7 +55,7 @@
   maps. Code generation emits a private, move-only carrier for inert runtime
   values. Compiler components consume the typed structure before code generation.
 
-- Python ecosystem integration uses declarations or hermetic typed bridges as the ordinary example path. Live service clients execute from built Sifr binaries, and the schema-2 capability ledger binds current-run compiled callback, async HTTP, buffer, Arrow, and DLPack evidence to exact source, marker, trust, certification, resource-zero, and report-digest provenance. The complete declaration-first phase is closed through PR #3000 after repeated satisfied Fable High whole-phase review and an authoritative merge gate covering Python interop 25/25, E2E 674/674, and 261 hardening variants with zero failures.
+- Python ecosystem integration uses declarations or hermetic typed bridges as the ordinary example path. Live service clients execute from built Sifr binaries, and the schema-2 capability ledger binds current-run compiled callback, async HTTP, buffer, Arrow, and DLPack evidence to exact source, marker, trust, certification, resource-zero, and report-digest provenance.
 
 ## Vision
 
@@ -1349,7 +1314,7 @@ Sifr compiles to Rust source code, which is then compiled by `rustc`. This creat
 **Rules:**
 
 - **Stable Sifr diagnostic codes:** every top-level Sifr compiler diagnostic has a stable family-local code of the form `SIFR-<FAMILY>-dddd`, for example `SIFR-NAME-0001`. Families identify the semantic domain, not merely the compiler stage. Historical `E####`/`W####` and message-embedded pseudo-codes are removed before public stability.
-- **Deterministic documentation URL:** every top-level diagnostic exposes `url = "https://docs.sifr.sh/errors/<CODE>"`. This URL is part of the stable rules and must render in `human` and `json` outputs. `compact` intentionally omits URLs unless a future reviewed verbose compact flag is added.
+- **Deterministic documentation URL:** every top-level diagnostic exposes `url = "https://docs.sifr.sh/errors/<CODE>"`. This URL is part of the stable rules and must render in `human` and `json` outputs. `compact` intentionally omits URLs unless a future documented verbose compact flag is added.
 - **Canonical severity enum:** the shared diagnostic model uses exactly three top-level severities:
   - `Error` -- blocks compilation or the active command
   - `Warning` -- non-blocking but actionable
@@ -1664,7 +1629,7 @@ fn size() {
 
 ### Layer 2: Snapshot Tests (insta crate)
 
-Snapshot testing using the `insta` crate. The compiler produces output that is compared against stored `.snap` files. When behavior changes intentionally, run `cargo insta review` to accept new baselines.
+Snapshot testing using the `insta` crate. The compiler produces output that is compared against stored `.snap` files. When behavior changes intentionally, run `cargo insta accept` to accept new baselines.
 
 **Crate:** `insta` with `glob` feature.
 
@@ -1779,7 +1744,7 @@ cargo test --manifest-path third_party/ruff/Cargo.toml -p ruff_python_parser # P
 cargo test -p sifr_type_system -- mdtest      # Type checker markdown tests
 cargo test -p sifr_codegen                    # Codegen snapshots
 cargo test --test e2e                         # End-to-end tests
-cargo insta review                            # Update snapshots after intentional changes
+cargo insta accept                            # Update snapshots after intentional changes
 cargo test -- corpus --ignored                # Run corpus tests (slower, layer 4)
 cargo fuzz run parser_fuzz -- -max_total_time=300  # Run fuzz tests (layer 5, generics+)
 cargo bench                                   # Run benchmarks (layer 6, generics+)
@@ -1803,9 +1768,9 @@ bound to the exact opaque pre-epoch asset identity and protected approval. The
 user-directed single-maintainer exception for that bootstrap and first GA is
 itself a canonical, expiring governance artifact. It permits only the named
 owner and those three operations, requires a real `stable-release` approval,
-is pinned by digest, prefers a distinct reviewer when one approved, and binds
+is pinned by digest, prefers a distinct approval when one is available, and binds
 the selected approval policy plus initiator into retained evidence; normal and
-incident operations remain distinct-reviewer-only. The
+incident operations require distinct approval. The
 post-index bootstrap recovery path revalidates the failed mutation and site
 attempts, both protected approvals, the already-live generation-1 bytes, and
 the reproducible site inputs before retrying only site publication and public
@@ -1842,18 +1807,9 @@ raw host observations stay in content-addressed target evidence. This replaces
 expired freshness or metadata deferrals with measured evidence without
 weakening the blocking budget baseline.
 
-### Adding Tests for New Features (Agent Workflow)
+### Test Placement
 
-When an AI agent adds a new language feature, it must:
-
-1. **Parser:** Add `.sifr` fixture files in `resources/valid/` and `resources/invalid/`
-2. **Type checker:** Add markdown test cases in `resources/mdtest/`
-3. **Codegen:** Add `.sifr` fixture files in `resources/codegen/`
-4. **E2E:** Add pass/fail test files in `tests/e2e/`
-5. **Run `cargo insta review`** to accept new snapshots
-6. **Run `cargo test`** to verify everything passes
-
-This ensures every feature is tested at every layer of the compiler, and any agent can verify the full system by running `cargo test`.
+Language features have parser fixtures in `resources/valid/` and `resources/invalid/`, type-checker cases in `resources/mdtest/`, code-generation fixtures in `resources/codegen/`, and end-to-end cases in `tests/e2e/`. Snapshot baselines are maintained with `cargo insta accept`.
 
 ---
 

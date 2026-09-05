@@ -41,7 +41,7 @@ Validation:
 - [x] `cargo test -p sifr_package`
 - [x] `scripts/run_all_tests.sh --profile quick`
   - Final post-fix run passed with advisories only: warm wall-time budget exceeded (`2098.66s`) and e2e group skew high (`9.5x`); e2e `67/67`, `cache_hits=12/12`, no failures.
-- [x] Claude follow-up review final READY
+- [x] agent follow-up review final READY
   - Review artifacts: `reviews/phase37-demo-subrepos-review-pass-1.md`, `reviews/phase37-demo-subrepos-review-pass-2.md`, `reviews/phase37-demo-subrepos-review-pass-3.md`
   - Verdict: READY; no blockers.
 
@@ -73,7 +73,7 @@ Validation:
 - [x] `cargo test -p sifr_package`
 - [x] `scripts/run_all_tests.sh --profile quick`
   - Passed with advisories only: warm wall-time budget exceeded (`1870.35s`) and e2e group skew high (`9.5x`); no failures.
-- [x] Claude follow-up review final READY
+- [x] agent follow-up review final READY
   - Review artifacts: `reviews/phase37-demo-repositories-review-pass-1.md`, `reviews/phase37-demo-repositories-review-pass-2.md`
   - Verdict: READY; no blockers.
 
@@ -114,8 +114,8 @@ Validation:
 
 Reviews:
 
-- [x] Claude milestone review pass 1: `reviews/phase37-m37-1-review-pass-1.md`
-- [x] Claude milestone review final READY
+- [x] agent milestone review pass 1: `reviews/phase37-m37-1-review-pass-1.md`
+- [x] agent milestone review final READY
 
 PR:
 
@@ -149,8 +149,8 @@ Validation:
 
 Reviews:
 
-- [x] Claude milestone review pass 1: `reviews/phase37-m37-2-review-pass-1.md`
-- [x] Claude milestone review final READY
+- [x] agent milestone review pass 1: `reviews/phase37-m37-2-review-pass-1.md`
+- [x] agent milestone review final READY
 
 PR:
 
@@ -183,8 +183,8 @@ Validation:
 
 Reviews:
 
-- [x] Claude milestone review pass 1: `reviews/phase37-m37-3-review-pass-1.md`
-- [x] Claude milestone review final READY
+- [x] agent milestone review pass 1: `reviews/phase37-m37-3-review-pass-1.md`
+- [x] agent milestone review final READY
 
 PR:
 
@@ -217,8 +217,8 @@ Validation:
 
 Reviews:
 
-- [x] Claude milestone review pass 1: `reviews/phase37-m37-4-review-pass-1.md`
-- [x] Claude milestone review final READY
+- [x] agent milestone review pass 1: `reviews/phase37-m37-4-review-pass-1.md`
+- [x] agent milestone review final READY
 
 PR:
 
@@ -251,8 +251,8 @@ Validation:
 
 Reviews:
 
-- [x] Claude milestone review pass 1: `reviews/phase37-m37-5-review-pass-1.md`
-- [x] Claude milestone review final READY
+- [x] agent milestone review pass 1: `reviews/phase37-m37-5-review-pass-1.md`
+- [x] agent milestone review final READY
 
 PR:
 
@@ -285,8 +285,8 @@ Validation:
 
 Reviews:
 
-- [x] Claude milestone review pass 1: `reviews/phase37-m37-6-review-pass-1.md`
-- [x] Claude milestone review final READY
+- [x] agent milestone review pass 1: `reviews/phase37-m37-6-review-pass-1.md`
+- [x] agent milestone review final READY
 
 PR:
 
@@ -323,11 +323,11 @@ Validation:
 
 Reviews:
 
-- [x] Claude milestone review pass 1
-- [x] Claude milestone review final READY
+- [x] agent milestone review pass 1
+- [x] agent milestone review final READY
   - Review artifacts: `reviews/phase37-m37-7-review-pass-1.md`, `reviews/phase37-m37-7-review-pass-2.md`
   - Verdict: READY; no blocking findings.
-- [x] Claude full Phase 37 implementation review final READY
+- [x] agent full Phase 37 implementation review final READY
   - Review artifact: `reviews/phase37-full-implementation-review-pass-1.md`
   - Verdict: READY; no blocking findings.
 

@@ -1,7 +1,7 @@
 # wave_psp_d1 Review: CPython Parity Gap Analysis (R4)
 
 **Review Date:** 2026-03-17
-**Reviewer:** Claude Code
+**Reviewer:** agent
 **Wave Scope:** filesystem, paths, archives (io, pathlib, glob, shutil, tempfile, gzip, zipfile)
 **Status:** FINAL
 

@@ -3,7 +3,7 @@
 This review covers the docs-only working-tree diff on branch
 `codex/concurrency-runtime-m7-final-ledger` that records the merged final
 implementation/review/validation gate (PR #2488) and closes the M7 milestone
-and phase 36.4. The live target review artifact and its `.claude.log` are
+and phase 36.4. The live target review artifact and its `.agent.log` are
 ignored per command scope.
 
 ## Result
@@ -32,7 +32,7 @@ Total diff: 4 files, +17 / -9, docs-only.
   subject "Close M7 final validation gate" with commit time
   `2026-06-09T09:29:51+02:00` (= `2026-06-09T07:29:51Z`), matching the merge
   timestamp recorded in the ledger entry.
-- Final implementation/review/validation Opus `PASS` artifact is present:
+- Final implementation/review/validation agent `PASS` artifact is present:
   `reviews/ad-hoc-production-concurrency-runtime-m7-final-closeout-review-pass-1.md`
   begins with `PASS — M7 final closeout implementation/review/validation gate`
   and is referenced from both the M7 final-review ledger entry and the M7
@@ -48,7 +48,7 @@ Total diff: 4 files, +17 / -9, docs-only.
 This ledger is allowed to mark M7 and phase 36.4 complete only because PR
 #2488 — the final implementation/review/validation-gate PR — is already
 merged on `origin/main` and carries the full local merge-gate PASS plus the
-Opus `PASS` artifact. That precondition holds (verified above), so the four
+agent `PASS` artifact. That precondition holds (verified above), so the four
 status flips below are legitimate retrospective ledger updates and not
 overclaims:
 
@@ -69,7 +69,7 @@ overclaims:
      gates closed with PR #2488 plus recorded local validation and final
      review evidence.
    - L25: "Final external review" gate flipped from `pending-pr` to `closed`,
-     pointing at the Opus `PASS` artifact merged with PR #2488.
+     pointing at the agent `PASS` artifact merged with PR #2488.
    - L49: "Final review and merge gate" slice flipped from `pending-pr` to
      `complete`.
 
@@ -97,7 +97,7 @@ merged, so the heading is a stable section anchor rather than a stale claim.
   and execution ledger both record completion on 2026-06-09; execution
   ledger merge-ledger entry records PR #2488 with the same merge commit and
   timestamp that `git show` confirms at HEAD; the M7 traceability "Final
-  external review" row cites the same Opus `PASS` artifact that the
+  external review" row cites the same agent `PASS` artifact that the
   execution ledger references at L1660-1664. The four files agree on
   scope, date, PR, commit, timestamp, and the location of the final review.
 - The new merge-ledger entry correctly scopes its local validation claim to

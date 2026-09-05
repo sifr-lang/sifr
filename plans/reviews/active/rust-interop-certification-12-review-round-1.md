@@ -21,7 +21,7 @@ Candidate = `git write-tree` → `c69c7a1256bfa6d277b4ca9e2f1fd13dbc41d3ec` (37 
 | `ecosystem_backend_certification` → `supported` promotion | **No** | The only unstaged content hunk; `git diff` shows it worktree-only. Staged row remains `"category": "future-owned-by-separate-phase"` with `future_owner` intact (compat matrix `:396-402`). |
 | `editor_integrations` submodule | **No** | unstaged `M` only |
 | `leetcode` corpora submodule | **No** | untracked only; absent from `git diff --cached --name-status HEAD` |
-| `.cert5probe/`, `.claude/` | **No** | untracked |
+| `.cert5probe/`, `.agent/` | **No** | untracked |
 | `logo*.webp` images | **No** | untracked |
 | `plans/phases/43_interoperability.md` | **No** | untracked |
 

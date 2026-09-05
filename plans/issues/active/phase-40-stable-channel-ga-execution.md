@@ -152,28 +152,28 @@ Review and upstream coordination ledger:
   `273fd5d3ebc958124c3151647e2b61136a3ddb06`. Package review pass 1 requested
   package cleanup and metadata corrections; pass 2 approved the exact package
   head. Both reports are archived as
-  `plans/reviews/archive/phase-40-milestone-40-4-vscode-package-claude-opus-review-pass-{1,2}.md`.
+  `plans/reviews/archive/phase-40-milestone-40-4-vscode-package-agent-review-pass-{1,2}.md`.
 - `sifr-lang/editor-integrations`
   [PR #10](https://github.com/sifr-lang/editor-integrations/pull/10) merged as
   `d7577d49274b97fdf508b7fa16b6d9bdb51b4acd`. Pointer review pass 1 requested
   exact consumer binding corrections; pass 2 approved the paired pointer and
   main-repository consumer head. Both reports are archived as
-  `plans/reviews/archive/phase-40-milestone-40-4-editor-pointer-claude-opus-review-pass-{1,2}.md`.
-- Main-repository Claude Opus review pass 1 is archived at
-  `plans/reviews/archive/phase-40-milestone-40-4-claude-opus-review-pass-1.md`.
+  `plans/reviews/archive/phase-40-milestone-40-4-editor-pointer-agent-review-pass-{1,2}.md`.
+- Main-repository agent review pass 1 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-4-agent-review-pass-1.md`.
   Its eight findings are remediated: the GA sweep covers every public doc;
   Marketplace evidence is a truthful protected-workflow plan; rollback is a
   governed qualification input; the packaged generated-Rust limitation is
   public and evidence-based; qualification fixtures have headroom;
   unsupported target additions fail; and exact candidate commands preserve
   paths containing spaces.
-- Main-repository Claude Opus review pass 2 is archived at
-  `plans/reviews/archive/phase-40-milestone-40-4-claude-opus-review-pass-2.md`.
+- Main-repository agent review pass 2 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-4-agent-review-pass-2.md`.
   It verified the substantive pass-1 closures and withheld approval only for
   fixture headroom, semantic preview-claim patterns, import ordering, and this
   review ledger. All four observations are remediated before pass 3.
-- Main-repository Claude Opus review pass 3 is archived at
-  `plans/reviews/archive/phase-40-milestone-40-4-claude-opus-review-pass-3.md`.
+- Main-repository agent review pass 3 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-4-agent-review-pass-3.md`.
   Its three findings are remediated before pass 4: the rollback input is bound
   to the editor workflow step and protected by a structural contract; the LSP
   guide installs the qualified VSIX until protected Marketplace activation;
@@ -181,16 +181,16 @@ Review and upstream coordination ledger:
   review observations are also closed with positive target allowlisting,
   an operator command for documentation qualification, truthful VSIX package
   smoke naming, and governance self-test headroom.
-- Main-repository Claude Opus review pass 4 is archived at
-  `plans/reviews/archive/phase-40-milestone-40-4-claude-opus-review-pass-4.md`.
+- Main-repository agent review pass 4 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-4-agent-review-pass-4.md`.
   Its three cross-surface findings are remediated before pass 5: the LSP guide
   uses the contributed `sifr.lsp.path` setting and the protected Marketplace
   acquisition path; the GA docs contract binds those exact facts; and
   self-update help names `alpha|beta|stable` plus an immutable governed
   version. The target detector also covers non-`aarch64`/`x86_64`
   architectures.
-- Main-repository Claude Opus review pass 5 is archived at
-  `plans/reviews/archive/phase-40-milestone-40-4-claude-opus-review-pass-5.md`.
+- Main-repository agent review pass 5 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-4-agent-review-pass-5.md`.
   It re-ran the milestone gates, verified every finding from passes 1–4, found
   no remaining actionable issue, and approved the implementation.
 - The rebased create-PR lane passed its coverage-matrix, core-guardrail, and
@@ -212,14 +212,14 @@ Review and upstream coordination ledger:
   one-sided timestamp skew while the workflow contract still requires
   `retention-days: 30`; the real six-container replay produces and validates
   the complete canonical 20-row index.
-- Claude Opus collector-repair review pass 1 is archived at
-  `plans/reviews/archive/phase-40-milestone-40-4-collector-repair-claude-opus-review-pass-1.md`.
+- agent collector-repair review pass 1 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-4-collector-repair-agent-review-pass-1.md`.
   It verified the API-path binding, one-sided timestamp bound, and real
   six-container replay, then requested an explicit over-retention mutation.
   The repair now rejects both a 61-second shortfall and one second beyond 30
   days; its error also records the observed timestamps and interval.
-- Claude Opus collector-repair review pass 2 is archived at
-  `plans/reviews/archive/phase-40-milestone-40-4-collector-repair-claude-opus-review-pass-2.md`.
+- agent collector-repair review pass 2 is archived at
+  `plans/reviews/archive/phase-40-milestone-40-4-collector-repair-agent-review-pass-2.md`.
   It independently reproduced the live API semantics and 509 MB artifact
   replay, mutation-tested both retention bounds and the workflow-path binding,
   found no remaining actionable issue, and approved the repair.
@@ -230,15 +230,15 @@ Review and upstream coordination ledger:
   follow-up remediated those failures without a baseline or exclusion and
   removed the temporary release divergence by restoring `leetcode-full` plus
   taxonomy smoke to release qualification.
-- Claude Opus algorithm-scope review passes 1 through 3 are archived at
-  `plans/reviews/archive/phase-40-algorithm-scope-claude-opus-review-pass-{1,2,3}.md`.
+- agent algorithm-scope review passes 1 through 3 are archived at
+  `plans/reviews/archive/phase-40-algorithm-scope-agent-review-pass-{1,2,3}.md`.
   Their findings are closed by exact release-suite/profile agreement,
   profile-derived divergence detection independent of the assignment matrix,
   indexed-record and expiry validation, mutation coverage for deletion and
   under-declaration paths, truthful policy/docs attribution, and restoration
   criteria in the ad hoc issue.
-- Claude Opus algorithm-scope review pass 4 is archived at
-  `plans/reviews/archive/phase-40-algorithm-scope-claude-opus-review-pass-4.md`.
+- agent algorithm-scope review pass 4 is archived at
+  `plans/reviews/archive/phase-40-algorithm-scope-agent-review-pass-4.md`.
   It independently re-ran the focused gates and 24 negative cases, found no
   remaining actionable issue, and approved the correction.
 - The authoritative `create-pr` profile passed every blocking step, including
@@ -247,20 +247,20 @@ Review and upstream coordination ledger:
   negative cases, formatting, diff hygiene, and the 900-line file-size
   guardrail also passed. The only lane advisory was the unchanged warm
   wall-time budget while isolated e2e caches rebuilt.
-- Exact pushed-head Claude Opus review pass 5 is archived at
-  `plans/reviews/archive/phase-40-algorithm-scope-claude-opus-review-pass-5-pr-head.md`.
+- Exact pushed-head agent review pass 5 is archived at
+  `plans/reviews/archive/phase-40-algorithm-scope-agent-review-pass-5-pr-head.md`.
   It independently reviewed commit `99c847705`, mutation-tested every
   deletion and under-declaration path raised in earlier passes, verified the
   nightly corpus and release subsets remain blocking, and returned `APPROVED`
   with no actionable findings.
-- Final PR-head Claude Opus review pass 6 is archived at
-  `plans/reviews/archive/phase-40-algorithm-scope-claude-opus-review-pass-6-final-pr-head.md`.
+- Final PR-head agent review pass 6 is archived at
+  `plans/reviews/archive/phase-40-algorithm-scope-agent-review-pass-6-final-pr-head.md`.
   It found one evidence-attribution error: the assignment-matrix checker, not
   both checkers, owns the PAM under-declaration mutation. The underlying
   readiness gate remains fail-closed because both checks are blocking; the
   archived pass-5 table and conclusion now state that division accurately.
-- Final PR-head Claude Opus review pass 7 is archived at
-  `plans/reviews/archive/phase-40-algorithm-scope-claude-opus-review-pass-7-final-pr-head.md`.
+- Final PR-head agent review pass 7 is archived at
+  `plans/reviews/archive/phase-40-algorithm-scope-agent-review-pass-7-final-pr-head.md`.
   It independently reproduced the corrected checker attribution, re-ran the
   mutation matrix, found no remaining actionable issue, and approved exact PR
   head `95d5e2bbb`.
@@ -394,7 +394,7 @@ Review and upstream coordination ledger:
   per-step budget passed; only the indexed nonblocking warm wall-time advisory
   remained. No timeout, threshold, baseline, waiver, or profile selection
   changed.
-- Milestone evidence-closure Claude Opus review passes 1 through 4 are archived
+- Milestone evidence-closure agent review passes 1 through 4 are archived
   at
   `plans/reviews/archive/phase-40-milestone-40-4-evidence-closure-review-pass-{1,2,3,4}.md`.
   The first three rounds found and closed bootstrap ownership, public-network
@@ -421,7 +421,7 @@ Review and upstream coordination ledger:
   network state while retaining separate protected public-endpoint smoke.
 - Qualification-isolation wave validation passed the complete installed
   release smoke from a schema-v2 fixture, including self-update dry run,
-  doctor, emit, LSP, and path-leakage checks. Claude Opus review pass 1 is
+  doctor, emit, LSP, and path-leakage checks. agent review pass 1 is
   archived at
   `plans/reviews/archive/phase-40-milestone-40-5-qualification-isolation-review-pass-1.md`.
   Its findings are remediated before pass 2: the override is dry-run-only,
@@ -670,7 +670,7 @@ Review and upstream coordination ledger:
   concurrency slot; the standalone rollback redispatch above succeeded.
 - [PR #3056](https://github.com/sifr-lang/sifr/pull/3056) merged the protected
   drill evidence as
-  `edb7d302a7b145787b1762180654671637de0123`. Its exact-head Opus review is
+  `edb7d302a7b145787b1762180654671637de0123`. Its exact-head agent review is
   archived at
   `plans/reviews/archive/phase-40-protected-drill-evidence-review-pass-1-satisfied.md`;
   it independently reconciled all four workflow runs, the three retained
@@ -699,7 +699,7 @@ Review and upstream coordination ledger:
   isolated in the non-blocking ad hoc follow-up rather than weakening future
   stable releases.
 - The exception is under review in
-  [PR #3060](https://github.com/sifr-lang/sifr/pull/3060). Claude Opus review
+  [PR #3060](https://github.com/sifr-lang/sifr/pull/3060). agent review
   pass 1 is archived at
   `plans/reviews/archive/phase-40-single-maintainer-approval-review-pass-1-not-satisfied.md`.
   Its five findings are remediated before pass 2: the branch is rebased on
@@ -720,14 +720,14 @@ Review and upstream coordination ledger:
   evidence is recorded in
   [`adhoc_performance_budget_host_variance.md`](./adhoc_performance_budget_host_variance.md);
   no timeout, threshold, waiver, baseline, or Phase 40 source was changed.
-- Exact PR-head Opus review pass 2 is archived at
+- Exact PR-head agent review pass 2 is archived at
   `plans/reviews/archive/phase-40-single-maintainer-approval-review-pass-2-satisfied.md`.
   At remote head `2b2f613fd522184c65ce1cc4bce755406ac8b360`,
   it independently reran the complete distribution area 125/125, the release
   runner self-test, and the file-size guardrail; verified all five pass-1
   findings closed; found the PR cleanly based on current `main`; and returned
   `SATISFIED` with no actionable finding.
-- Final exact-head Opus review pass 3 is archived at
+- Final exact-head agent review pass 3 is archived at
   `plans/reviews/archive/phase-40-single-maintainer-approval-review-pass-3-final-satisfied.md`.
   It reviewed remote head `36a71dc467ae1bc2a82c7bce33348edec5d7dbc5`,
   proved the pass-2 archive/ledger delta was tracking-only, independently
@@ -815,7 +815,7 @@ Review and upstream coordination ledger:
 - Exact implementation-head recovery review pass 2 is archived at
   `plans/reviews/archive/phase-40-schema-bootstrap-recovery-review-pass-2-satisfied.md`.
   At pushed PR head
-  `ddcd7e3d656e39a2b00727a7ce6ac775fa823f1e`, Opus independently reran
+  `ddcd7e3d656e39a2b00727a7ce6ac775fa823f1e`, agent independently reran
   the bootstrap self-test, workflow contract, 67-variant distribution `full`
   suite, YAML/shell and file-size checks; compared the durable summary
   byte-for-byte with the original artifact; checked the live failed run log
@@ -831,7 +831,7 @@ Review and upstream coordination ledger:
 - Final exact-PR-head review pass 4 is archived at
   `plans/reviews/archive/phase-40-schema-bootstrap-recovery-review-pass-4-final-satisfied.md`.
   At local, remote, and PR head
-  `cd92c820611d0f7c3fcd657ccdd46b05283057b7`, Opus verified pass 3's sole
+  `cd92c820611d0f7c3fcd657ccdd46b05283057b7`, agent verified pass 3's sole
   ledger finding closed, independently reran both the filtered 67-variant
   `full` suite and complete unfiltered distribution area at 125/125, rechecked
   the full recovery boundary and live generation-1 state, and returned
@@ -840,7 +840,7 @@ Review and upstream coordination ledger:
   schema-bootstrap recovery implementation as
   `3ce906c8445569039ebd762de0f346587464742a`.
 - The tracking-only [PR #3062](https://github.com/sifr-lang/sifr/pull/3062)
-  merged as `637dd0c0b06ecb7d5e5d7e2fa26cbb7c094128b1`. Exact-head Opus review is
+  merged as `637dd0c0b06ecb7d5e5d7e2fa26cbb7c094128b1`. Exact-head agent review is
   archived at
   `plans/reviews/archive/phase-40-schema-bootstrap-recovery-tracking-review-pass-1-satisfied.md`;
   it verified remote head
@@ -850,7 +850,7 @@ Review and upstream coordination ledger:
   actionable finding.
 - The recovery-tracking closeout
   [PR #3063](https://github.com/sifr-lang/sifr/pull/3063) merged as
-  `cef1c55bdd63215704d8564e764fe876508b4b8b`. Its exact-head Opus reviews
+  `cef1c55bdd63215704d8564e764fe876508b4b8b`. Its exact-head agent reviews
   are archived at
   `plans/reviews/archive/phase-40-bootstrap-recovery-closeout-review-pass-1-not-satisfied.md`
   and
@@ -871,7 +871,7 @@ Review and upstream coordination ledger:
   report.
 - Stable-prepare review pass 1 is satisfied and archived at
   `plans/reviews/archive/phase-40-milestone-40-5-stable-prepare-review-pass-1-satisfied.md`.
-  Opus re-read every file after the in-review hardening, reproduced the
+  agent re-read every file after the in-review hardening, reproduced the
   stable-prepare, governance, runner, combined 60-variant distribution,
   coverage, workflow-contract, diff, and file-size gates, and found no
   actionable correctness, provenance, extraction, schema, permission, or
@@ -1181,7 +1181,7 @@ Review and upstream coordination ledger:
 ## Final Phase Closure
 
 - [ ] Every milestone PR is merged and linked below.
-- [ ] Full implementation receives repeated Claude Opus review until approved.
+- [ ] Full implementation receives repeated agent review until approved.
 - [ ] Release profile and all Phase 40 suites pass on the final source commit.
 - [ ] Phase, roadmap, architecture, distribution, and execution docs record the
   final state.
@@ -1198,46 +1198,46 @@ occur at milestone 40.1 before qualification and did not block this
 architecture/gate lock PR.
 
 - Review pass 1:
-  `plans/reviews/archive/phase-40-milestone-40-0-claude-opus-review-pass-1.md`
+  `plans/reviews/archive/phase-40-milestone-40-0-agent-review-pass-1.md`
   requested corrections to CAS, provenance, custody, downgrade protection,
   release-report coverage, source decomposition, and exact scope.
 - Review pass 2:
-  `plans/reviews/archive/phase-40-milestone-40-0-claude-opus-review-pass-2.md`
+  `plans/reviews/archive/phase-40-milestone-40-0-agent-review-pass-2.md`
   requested conditional-field, schema parity, producer/consumer, documentation,
   and tracking corrections.
 - Review pass 3:
-  `plans/reviews/archive/phase-40-milestone-40-0-claude-opus-review-pass-3.md`
+  `plans/reviews/archive/phase-40-milestone-40-0-agent-review-pass-3.md`
   confirmed every pass-2 finding was resolved, then requested a central
   fail-closed enum primitive, governed timestamp errors, stricter rejection
   assertions, and removal of the duplicate documentation-suite authority. A
   fourth pass after remediation.
 - Review pass 4:
-  `plans/reviews/archive/phase-40-milestone-40-0-claude-opus-review-pass-4.md`
+  `plans/reviews/archive/phase-40-milestone-40-0-agent-review-pass-4.md`
   verified the fail-closed fixes with exhaustive corruption and differential
   schema/validator sweeps, then found one remaining plan-identity divergence
   plus three mutation/dead-branch cleanup items. A fifth pass is required after
   remediation.
 - Review pass 5:
-  `plans/reviews/archive/phase-40-milestone-40-0-claude-opus-review-pass-5.md`
+  `plans/reviews/archive/phase-40-milestone-40-0-agent-review-pass-5.md`
   confirmed plan identity and expiry parity, then found the final
   `sysroot_schema_version` schema/validator mismatch and one stale workflow
   diagnostic. A sixth pass is required after remediation.
 - Review pass 6:
-  `plans/reviews/archive/phase-40-milestone-40-0-claude-opus-review-pass-6.md`
+  `plans/reviews/archive/phase-40-milestone-40-0-agent-review-pass-6.md`
   confirmed receipt/CLI schema parity and found two remaining weak-validator
   fields: release sign-off version class and qualification artifact identifier
   shape. A seventh pass is required after remediation.
 - Review pass 7:
-  `plans/reviews/archive/phase-40-milestone-40-0-claude-opus-review-pass-7.md`
+  `plans/reviews/archive/phase-40-milestone-40-0-agent-review-pass-7.md`
   found no local defects after broadened raw-exception and
   schema/validator-differential sweeps. Milestone 40.0 was locally approved
   before its final upstream rebase and capability-based demo rename.
 - Review pass 8:
-  `plans/reviews/archive/phase-40-milestone-40-0-claude-opus-review-pass-8.md`
+  `plans/reviews/archive/phase-40-milestone-40-0-agent-review-pass-8.md`
   independently re-ran 17,682 adversarial schema/validator cases with no unsafe
   divergence, then requested two naming/ownership consistency corrections.
 - Review pass 9:
-  `plans/reviews/archive/phase-40-milestone-40-0-claude-opus-review-pass-9.md`
+  `plans/reviews/archive/phase-40-milestone-40-0-agent-review-pass-9.md`
   verified both corrections, the capability-based demo convention, and the
   fail-closed 40.1 qualification boundary, then returned `APPROVED`.
 - Passing local evidence:
@@ -1270,7 +1270,7 @@ through
 modifying its Rust-interop implementation.
 
 - Review pass 1:
-  `plans/reviews/archive/phase-40-milestone-40-1-claude-opus-review-pass-1.md`
+  `plans/reviews/archive/phase-40-milestone-40-1-agent-review-pass-1.md`
   requested exact artifact-id and path custody, end-to-end planner
   materialization and drift tests, immutable-installer identity binding,
   deterministic VSIX evidence, the governed locked build path, verified
@@ -1278,7 +1278,7 @@ modifying its Rust-interop implementation.
   capability demo. Those findings are remediated and await the next review
   pass.
 - Review pass 2:
-  `plans/reviews/archive/phase-40-milestone-40-1-claude-opus-review-pass-2.md`
+  `plans/reviews/archive/phase-40-milestone-40-1-agent-review-pass-2.md`
   verified all pass-1 product-path corrections, then found a confounded
   digest-sensitivity fixture, a symlinked-container custody escape, incomplete
   artifact-id-to-target/container binding, and a test-order flaw in the
@@ -1288,7 +1288,7 @@ modifying its Rust-interop implementation.
   exercises the output guard with valid evidence, and derives the 30-day
   retention interval from API timestamps. A third review pass is required.
 - Review pass 3:
-  `plans/reviews/archive/phase-40-milestone-40-1-claude-opus-review-pass-3.md`
+  `plans/reviews/archive/phase-40-milestone-40-1-agent-review-pass-3.md`
   confirmed the pass-2 corrections, then found raw non-UTF-8 evidence
   tracebacks, an unbound dispatch-workflow commit, loose editor/documentation
   report shapes, and missing mismatched-ref coverage. Remediation now converts
@@ -1297,7 +1297,7 @@ modifying its Rust-interop implementation.
   shapes, adds binary-evidence and mismatched-ref negatives, and makes fresh
   fixture commit identities deterministic. A fourth review pass is required.
 - Review pass 4:
-  `plans/reviews/archive/phase-40-milestone-40-1-claude-opus-review-pass-4.md`
+  `plans/reviews/archive/phase-40-milestone-40-1-agent-review-pass-4.md`
   verified the pass-3 corrections, then found sibling non-UTF-8 read sites,
   alternate shell assignments that could evade installer identity parsing,
   and a collector-side symlink-container gap. Remediation now governs every
@@ -1306,7 +1306,7 @@ modifying its Rust-interop implementation.
   the collector, and permanently covers those cases. A fifth review pass is
   required.
 - Review pass 5:
-  `plans/reviews/archive/phase-40-milestone-40-1-claude-opus-review-pass-5.md`
+  `plans/reviews/archive/phase-40-milestone-40-1-agent-review-pass-5.md`
   verified the pass-4 collector and most text-custody corrections, then found
   the archive verifier's earlier non-UTF-8 sysroot decode, further shell forms
   that evade assignment parsing, and a one-claim fixture that could not test
@@ -1315,27 +1315,27 @@ modifying its Rust-interop implementation.
   byte-for-byte equality instead of parsing shell, and exercises a two-claim
   fixture plus an order-reversal negative. A sixth review pass is required.
 - Review pass 6:
-  `plans/reviews/archive/phase-40-milestone-40-1-claude-opus-review-pass-6.md`
+  `plans/reviews/archive/phase-40-milestone-40-1-agent-review-pass-6.md`
   independently closed every pass-5 correctness finding and found one durable
   architecture-documentation omission. Remediation now documents the pinned
   governed-producer regeneration and byte-equality binding, and the workflow
   contract pins the exact production invocation that must remain identical to
   planner regeneration. A seventh review pass is required.
 - Review pass 7:
-  `plans/reviews/archive/phase-40-milestone-40-1-claude-opus-review-pass-7.md`
+  `plans/reviews/archive/phase-40-milestone-40-1-agent-review-pass-7.md`
   verified the architecture documentation but found that the new workflow
   contract literal ended before the closing output-path quote. Remediation
   anchors the full four-line invocation, including its closing quote and
   newline, so appended arguments or an altered output path cannot satisfy the
   contract. An eighth review pass is required.
 - Review pass 8:
-  `plans/reviews/archive/phase-40-milestone-40-1-claude-opus-review-pass-8.md`
+  `plans/reviews/archive/phase-40-milestone-40-1-agent-review-pass-8.md`
   independently verified the full invocation anchor, all earlier correctness
   closures, the capability-named demo and surfaces, durable documentation, and
   the milestone tracker. The reviewer returned `APPROVED` with no actionable
   findings.
 - Final PR-head review pass 9:
-  `plans/reviews/archive/phase-40-milestone-40-1-claude-opus-review-pass-9.md`
+  `plans/reviews/archive/phase-40-milestone-40-1-agent-review-pass-9.md`
   verified ready PR #3028 at exact head `aeff4d07a`, all eight earlier review
   closures, the three tracker-only follow-up commits, the authoritative
   create-PR evidence, and the complete milestone diff. The reviewer returned
@@ -1457,7 +1457,7 @@ resumes from the merged Item 13 result.
   PR #3030 now requires an independent full-diff review at its pushed
   documentation-inclusive head.
 - Exact PR-head review pass 8:
-  `plans/reviews/archive/phase-40-milestone-40-2-claude-opus-review-pass-8.md`
+  `plans/reviews/archive/phase-40-milestone-40-2-agent-review-pass-8.md`
   independently reproduced the preview planner against the real pinned site
   checkout, reverified the live protected tag/ruleset/workflow identities,
   closed all six pass-7 findings, ran the focused milestone checks, and
@@ -1479,7 +1479,7 @@ resumes from the merged Item 13 result.
   drafts 8/8, Rust stable-candidate 2/2, and documentation structure 1/1.
   These commands made no tracked-file changes.
 - Exact PR-head review pass 9:
-  `plans/reviews/archive/phase-40-milestone-40-2-claude-opus-review-pass-9.md`
+  `plans/reviews/archive/phase-40-milestone-40-2-agent-review-pass-9.md`
   reverified the complete 86-file PR diff, reproduced the milestone contract
   counts, independently accepted the indexed `PERF-HOST` result as
   non-prerequisite host variance, and returned `APPROVED` with no finding at
@@ -1524,8 +1524,8 @@ resumes from the merged Item 13 result.
   nine-scenario recovery module; `demos/stable_incident_recovery_demo.sh`
   demonstrates burned-generation resume, forced rollback recovery through both
   client paths, immutable-installer execution, and first-GA roll-forward.
-- Claude Opus review pass 1 was not approved and is archived at
-  `plans/reviews/archive/phase-40-milestone-40-3-claude-opus-review-pass-1.md`.
+- agent review pass 1 was not approved and is archived at
+  `plans/reviews/archive/phase-40-milestone-40-3-agent-review-pass-1.md`.
   Its five findings are remediated: canonical incident custody now uses
   `plans/releases/incidents/` and is called by the evidence-custody repository
   check; the sole-first-GA rollback rejection has a direct acceptance test;
@@ -1541,31 +1541,31 @@ resumes from the merged Item 13 result.
   unrelated host variance is recorded in
   `plans/issues/active/adhoc_performance_budget_host_variance.md` and is not a Phase
   40 prerequisite; no baseline or waiver changed.
-- Claude Opus review pass 2 was not approved and is archived at
-  `plans/reviews/archive/phase-40-milestone-40-3-claude-opus-review-pass-2.md`.
+- agent review pass 2 was not approved and is archived at
+  `plans/reviews/archive/phase-40-milestone-40-3-agent-review-pass-2.md`.
   Its three findings are remediated: a focused incident-index mutation module
   now directly tests atomic withdrawal, channel isolation, rollback/roll-forward
   version sets, and retained-release byte preservation; the shared self-test's
   top-level separator is restored; and custody explicitly allows the release
   README only for candidate evidence while incident evidence remains an exact
   request-plus-withdrawal-evidence commit.
-- Claude Opus review pass 3 was not approved and is archived at
-  `plans/reviews/archive/phase-40-milestone-40-3-claude-opus-review-pass-3.md`.
+- agent review pass 3 was not approved and is archived at
+  `plans/reviews/archive/phase-40-milestone-40-3-agent-review-pass-3.md`.
   It cleared every implementation and prior-review finding; its sole new
   documentation finding is remediated by making the adjacent release-evidence
   README require the digest-bound `withdrawal-evidence.txt` beside every
   incident request.
-- Claude Opus review pass 4 is approved with no actionable findings and is
+- agent review pass 4 is approved with no actionable findings and is
   archived at
-  `plans/reviews/archive/phase-40-milestone-40-3-claude-opus-review-pass-4.md`.
+  `plans/reviews/archive/phase-40-milestone-40-3-agent-review-pass-4.md`.
   It re-ran the nine incident scenarios, combined 55-variant distribution
   selection, coverage/profile assignment, runner self-tests, the capability
   demo, file-size guardrails, custody-layout reproduction, stale-path sweep,
   and a fresh full definition-of-done review against exact implementation head
   `cc87f1e79a2d11c2f2cd1fba8b99d470741c82da`.
-- Exact PR-head Claude Opus review pass 5 is approved with no actionable
+- Exact PR-head agent review pass 5 is approved with no actionable
   findings and is archived at
-  `plans/reviews/archive/phase-40-milestone-40-3-claude-opus-review-pass-5-pr-head.md`.
+  `plans/reviews/archive/phase-40-milestone-40-3-agent-review-pass-5-pr-head.md`.
   It reverified the complete merge candidate and the pass-4 tracking-only
   delta at exact remote head
   `e42bb9a3d4fb48ae3ba50fc9209aa2e8cd5c10d7`.
@@ -1622,7 +1622,7 @@ resumes from the merged Item 13 result.
   merged as `7034c4c69bf3fa7e2c36ddc002f6389d6f3511a9`.
 - The documentation-only closeout
   [PR #3052](https://github.com/sifr-lang/sifr/pull/3052) merged as
-  `c9d611fb7c7c5d05421d784d53a2b78c1a7dcae9`. Its independent Opus review is
+  `c9d611fb7c7c5d05421d784d53a2b78c1a7dcae9`. Its independent agent review is
   archived at
   `plans/reviews/archive/phase-40-canonical-evidence-closeout-review-pass-1-satisfied.md`;
   it returned `SATISFIED` with no actionable finding.
@@ -1679,7 +1679,7 @@ resumes from the merged Item 13 result.
   `15c384d958340d7545370f9249d58ac46e202797`.
 - The documentation-only final-qualification closeout
   [PR #3055](https://github.com/sifr-lang/sifr/pull/3055) merged as
-  `476a2983003f9fec74ac15584a576f79495f7482`. Its exact-head Opus review is
+  `476a2983003f9fec74ac15584a576f79495f7482`. Its exact-head agent review is
   archived at
   `plans/reviews/archive/phase-40-final-qualification-closeout-review-pass-1-satisfied.md`;
   it returned `VERDICT: SATISFIED` with no actionable finding.
@@ -1694,7 +1694,7 @@ resumes from the merged Item 13 result.
   `95176b5937b4ed0e1c9843ef6c3896969f6336431bc8a0d08350cc2db9b9555e`.
   The 7,976.92-second wall time produced the same two nonblocking advisories:
   the warm wall-time target and fixture-group skew.
-- Release-note Opus review pass 1 found seven missing or over-broad public
+- Release-note agent review pass 1 found seven missing or over-broad public
   claims covering receipt integrity, platform floors, install-time
   verification, install/update commands, generated-Rust scope, Rust-interop
   evidence scope, and preview-channel context. The corrected notes closed all
@@ -1708,7 +1708,7 @@ resumes from the merged Item 13 result.
   distribution area passed 125/125; canonical plan, release-report, and
   qualification-index validation passed; and the source checkout remained
   clean at `c9d611fb7c7c5d05421d784d53a2b78c1a7dcae9`.
-- Exact-head Opus review of candidate
+- Exact-head agent review of candidate
   [PR #3070](https://github.com/sifr-lang/sifr/pull/3070) is archived at
   `plans/reviews/archive/phase-40-canonical-candidate-evidence-pr-3070-review-pass-1-satisfied.md`.
   At head `74c5dd02f1ca692c0fb1f9c8b50004827028cdfb`, it independently
@@ -1720,14 +1720,14 @@ resumes from the merged Item 13 result.
   `2e203136f864f132499095d7d68884c3ecc1ec2e`.
 - Candidate-evidence tracking
   [PR #3072](https://github.com/sifr-lang/sifr/pull/3072) merged as
-  `b5f4d0673e8c77ae9fcebe47f377f9d45ae3c842`. Its two exact-head Opus reviews
+  `b5f4d0673e8c77ae9fcebe47f377f9d45ae3c842`. Its two exact-head agent reviews
   are archived at
   `plans/reviews/archive/phase-40-candidate-evidence-closeout-pr-3072-review-pass-1-satisfied.md`
   and
   `plans/reviews/archive/phase-40-candidate-evidence-closeout-pr-3072-review-pass-2-final-satisfied.md`;
   the second confirmed the pass-1 wording observation was closed and returned
   no actionable finding.
-- The pre-GA full-implementation Opus audit is archived at
+- The pre-GA full-implementation agent audit is archived at
   `plans/reviews/archive/phase-40-pre-ga-full-implementation-review-pass-1-satisfied.md`.
   It independently reproduced distribution release 125/125, documentation
   2/2, evidence custody, workflow shell parsing, file-size guardrails, all
@@ -1749,7 +1749,7 @@ resumes from the merged Item 13 result.
 - Pre-GA audit closeout
   [PR #3073](https://github.com/sifr-lang/sifr/pull/3073) merged exact reviewed
   head `1d4a5c59f5cd15f898f9057edf3e94a9707d2611` as
-  `16cc34eb9eccebc183554fc7aa471024eaef7636`. Its exact-head Opus review is
+  `16cc34eb9eccebc183554fc7aa471024eaef7636`. Its exact-head agent review is
   archived at
   `plans/reviews/archive/phase-40-pre-ga-audit-closeout-pr-3073-review-pass-1-satisfied.md`.
   The reviewer independently reran distribution release 125/125,

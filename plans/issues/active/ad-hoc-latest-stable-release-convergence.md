@@ -42,14 +42,14 @@ Every item follows this sequence:
 3. Change only the active item's owned surfaces.
 4. Run focused validation and the file-size guardrail.
 5. Open one draft implementation PR.
-6. Request one read-only Claude Opus review of the exact base and candidate
+6. Request one read-only agent review of the exact base and candidate
    SHAs. The prompt includes changed paths, scope, acceptance criteria, and
    focused validation evidence.
 7. Apply all valid blocking findings in one batch. At most one remediation
    review is allowed. A new mechanism defect found on review two is recorded as
    a later item; there is no third review.
 8. If compiler inputs changed, run one create-PR gate and one merge gate on the
-   same final, Opus-approved candidate SHA. Do not rerun either gate. If
+   same final, agent-approved candidate SHA. Do not rerun either gate. If
    compiler inputs did not change, do not run either Sifr gate.
 9. Merge the implementation PR only when its exact evidence is satisfied.
 10. Merge a record-only PR that updates this document with the implementation
@@ -66,7 +66,7 @@ editor-submodule-pointer-only changes do not trigger the Sifr create-PR or
 merge gates unless they also change one of those compiler inputs.
 
 Review evidence is posted outside the reviewed Git tree, keyed by candidate
-SHA, normally as a PR comment. A failed or incomplete Opus request is retried
+SHA, normally as a PR comment. A failed or incomplete agent request is retried
 at most twice with fresh temporary directories and never counts as approval.
 
 ## Audited Baseline
@@ -169,7 +169,7 @@ Only the first incomplete row may be active.
 
 | Item | State | Scope | Acceptance criteria |
 | --- | --- | --- | --- |
-| 0 | complete | Phase and inventory lock | This active record and roadmap entry merge after exact-SHA Opus satisfaction; all maintained surfaces, compatibility units, gate rules, and closure rules are owned. |
+| 0 | complete | Phase and inventory lock | This active record and roadmap entry merge after exact-SHA agent satisfaction; all maintained surfaces, compatibility units, gate rules, and closure rules are owned. |
 | 1 | complete | Rust 1.98 toolchain | Local and CI compiler selection is reproducibly 1.98; the latest-only policy replaces the 1.93 floor; edition remains 2021. |
 | 2 | complete | Rust edition 2024 | Every maintained manifest/template uses edition 2024; `gen` and other reserved syntax are correctly emitted/escaped; generated Rust compiles. |
 | 3 | complete | uv 0.12 | uv and setup policy are current; all affected locks are reproducible under the new resolver. |
@@ -204,7 +204,7 @@ Only the first incomplete row may be active.
 | 32 | pending | Packaging and Hatchling | Packaging is current, Hatchling is explicitly pinned, and builds/locks are reproducible. |
 | 33 | pending | VS Code extension toolchain | Node types, VS Code types/engine, TypeScript, package locks, VSIX qualification, and the three-repository pointer chain merge in order. |
 | 34 | pending | Mint exact pin | Documentation tooling uses a tested exact latest-stable Mint release and documentation checks pass. |
-| 35 | pending | Final registry audit and phase closure | Official-source audit finds no stale maintained surface; all item records are complete; one exact-SHA whole-phase Opus review is satisfied; closure docs merge and the record is archived. |
+| 35 | pending | Final registry audit and phase closure | Official-source audit finds no stale maintained surface; all item records are complete; one exact-SHA whole-phase agent review is satisfied; closure docs merge and the record is archived. |
 
 ### Item 0 record
 
@@ -225,11 +225,11 @@ Validation: `git diff --check` passed, the active record path resolved, and
 the 900-line first-party source limit. Only Markdown planning files changed,
 so the user-authorized Sifr create-PR and merge gates did not apply.
 
-Review evidence: the one exact-candidate Claude Opus review returned
+Review evidence: the one exact-candidate agent review returned
 `SATISFIED` with no blocking findings. The response is retained in the
 [#3489 review comment](https://github.com/sifr-lang/sifr/pull/3489#issuecomment-5385394818).
 
-Deferred follow-up: Opus suggested making the Rust surface count mechanically
+Deferred follow-up: agent suggested making the Rust surface count mechanically
 derivable and naming the `dtolnay/rust-toolchain` action owner more explicitly.
 The already-locked Item 24 and Item 35 graph audits own count reconciliation;
 Item 6 owns maintained third-party action SHAs. Neither suggestion identified a
@@ -276,14 +276,14 @@ The cold run took 6,508.96 seconds and exceeded only the advisory warm-cache
 time budget; it exited zero with no test failure. Full evidence is retained in
 the [#3491 final validation comment](https://github.com/sifr-lang/sifr/pull/3491#issuecomment-5386064589).
 
-Review evidence: the one exact-candidate Claude Opus review returned
+Review evidence: the one exact-candidate agent review returned
 `SATISFIED` with no blocking findings. The response is retained in the
 [#3491 review comment](https://github.com/sifr-lang/sifr/pull/3491#issuecomment-5385475087).
 The candidate did not change after review, so no remediation review applied.
 
 Deferred follow-up: Item 6 owns replacing the temporary mutable
 `dtolnay/rust-toolchain@1.98.0` selections with reviewed immutable action SHAs.
-Opus also noted a cosmetic `sort_by_key` allocation and the pre-existing
+agent also noted a cosmetic `sort_by_key` allocation and the pre-existing
 nightly sanitizer lane; neither is an Item 1 mechanism defect.
 
 Next action: implement Item 2 Rust edition 2024 convergence from the Item 1
@@ -331,7 +331,7 @@ required private-target cleanup, took 6,797.57 seconds, and reported only the
 non-blocking warm-time and group-skew advisories. Evidence is retained in the
 [#3493 final validation comment](https://github.com/sifr-lang/sifr/pull/3493#issuecomment-5387964099).
 
-Review evidence: the final forward-only exact-SHA Claude Opus review returned
+Review evidence: the final forward-only exact-SHA agent review returned
 `SATISFIED` with no blocking findings for candidate
 `833124c367f712814471a57cf6f1e623632f71c9`; see the
 [#3493 review comment](https://github.com/sifr-lang/sifr/pull/3493#issuecomment-5387069404).
@@ -342,7 +342,7 @@ remediation review returned `SATISFIED` for the final candidate; see the
 Deferred follow-up: Item 35 owns a negative resolver-2/absent-resolver sysroot
 test, reconciliation of stale historical environment-mutation descriptions,
 explicit ambient-missing environment fixture setup, and replacement of one
-vacuous parity assertion. Opus classified these as non-blocking and found no
+vacuous parity assertion. agent classified these as non-blocking and found no
 new mechanism defect on the remediation review. A crate-wide test-module
 layout unification remains optional cosmetic work outside this phase.
 
@@ -445,7 +445,7 @@ suite, workspace Clippy and formatting, verification self-tests, profile and
 area checks, doctor, maintainability checks, diff checks, and the file-size
 guardrail passed.
 
-Review evidence: the initial exact-SHA Claude Opus review returned `SATISFIED`
+Review evidence: the initial exact-SHA agent review returned `SATISFIED`
 for candidate `2fd344776aae2364da6b0f2730e7d5bc74b3e3a1` with no blocking finding and
 three valid follow-ups were applied. The one permitted remediation review of
 `0c2ccec2a92924d0a2089ebacf6f4444d9139da2` found only two stale documentation
@@ -526,7 +526,7 @@ qualification, protected publication, YAML, developer-tooling, Bash, diff,
 and file-size checks passed. The complete distribution-release representative
 suite passed 57/57.
 
-Review evidence: the one exact-SHA Claude Opus review returned `SATISFIED` for
+Review evidence: the one exact-SHA agent review returned `SATISFIED` for
 the final candidate with no blocking findings. It independently confirmed all
 three workflow consumers, publication checkout ordering, automatic contract
 discovery, exact metadata agreement, the sequential pointer chain, and the
@@ -543,7 +543,7 @@ selections. Item 33 owns the Node 24 type declarations and the extension's
 three existing high-severity dependency advisories. Item 35 owns final
 reconciliation of the explicit Node/npm bundled-major invariant and clearer
 diagnostics when the demo uses a mismatched ambient toolchain or the nested
-extension checkout is absent. Opus classified each as non-blocking; none is an
+extension checkout is absent. agent classified each as non-blocking; none is an
 Item 5 mechanism defect.
 
 Next action: implement Item 6 GitHub Actions convergence from the Item 5 record
@@ -607,7 +607,7 @@ runner self-tests, all profiles, all area manifests, Ruff check and format,
 Bash syntax, diff checks, and the file-size guardrail passed. The final-state
 distribution-release representative suite passed 58/58.
 
-Review evidence: the one exact-SHA Claude Opus review returned `SATISFIED` for
+Review evidence: the one exact-SHA agent review returned `SATISFIED` for
 the final candidate with no blocking findings. It independently confirmed all
 56 refs, exact policy agreement, ten fail-closed download steps, complete
 maintained-workflow inventory, automatic case discovery, contract literals,
@@ -619,7 +619,7 @@ Gate evidence: only workflows, workflow verification, documentation, and
 editor gitlinks changed. No compiler input changed, so the phase rules
 prohibited the Sifr create-PR and merge gates.
 
-Deferred follow-up: Opus confirmed a pre-existing step-splitting defect in the
+Deferred follow-up: agent confirmed a pre-existing step-splitting defect in the
 submodule ownership guardrail. Item 35 owns replacing that parser with a
 YAML-based step boundary and defining an explicit policy for evidence-only
 checkouts. Item 7 owns the Ruff fork's internal workflow audit while it replays
@@ -670,14 +670,14 @@ tests, 556 active driver tests with 76 expected slow ignores, workspace
 Clippy with warnings denied, formatting, HIR maintainability, diff checks, and
 the 3,243-file first-party size guardrail.
 
-Review evidence: the initial exact-SHA Opus review is retained in the
+Review evidence: the initial exact-SHA agent review is retained in the
 [#3503 review comment](https://github.com/sifr-lang/sifr/pull/3503#issuecomment-5389964080).
 Its blocking findings were repaired together, and the permitted remediation
 review returned `SATISFIED` in the
 [#3503 remediation comment](https://github.com/sifr-lang/sifr/pull/3503#issuecomment-5390161266).
 The first compiler gate then exposed stale `Vec<Stmt>` test-only boundaries
 outside the reviewed diff. With the user's explicit exception authorization,
-the repaired exact candidate received one final read-only Opus review; it
+the repaired exact candidate received one final read-only agent review; it
 returned `SATISFIED` with no blocker in the
 [#3503 final review comment](https://github.com/sifr-lang/sifr/pull/3503#issuecomment-5391225255).
 
@@ -766,7 +766,7 @@ LeetCode cases and every module/dependency-tree check. Its only demo failure,
 `demos/m16_raw_api/src/main.sifr`, is the pre-existing canonical-requirement
 defect already owned by Item 13 of the pre-v1 compatibility-removal phase.
 
-Review evidence: the one exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the one exact-SHA agent review returned `SATISFIED` with no
 blocking finding in the
 [#3505 review comment](https://github.com/sifr-lang/sifr/pull/3505#issuecomment-5393608119).
 No remediation review was needed.
@@ -844,7 +844,7 @@ LeetCode cases and every module, dependency, and audit check. Its only demo
 failure was the pre-existing `m16_raw_api` Python-math canonical requirement
 already recorded by Item 8 and owned outside this item.
 
-Review evidence: the one exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the one exact-SHA agent review returned `SATISFIED` with no
 blocking finding in the
 [#3507 review comment](https://github.com/sifr-lang/sifr/pull/3507#issuecomment-5395780334).
 No remediation review was needed.
@@ -937,7 +937,7 @@ diagnostics in generated Unicode, Python ABI, TLS, and existing HTTP
 signatures; canonical workspace Clippy passed, and Item 10 did not absorb that
 separate backlog.
 
-Review evidence: the initial exact-SHA Opus review returned `SATISFIED` with
+Review evidence: the initial exact-SHA agent review returned `SATISFIED` with
 no blocking finding in the
 [#3509 review comment](https://github.com/sifr-lang/sifr/pull/3509#issuecomment-5398353457).
 Its non-blocking suggestion asked the new H2 frame budget to be exercised
@@ -1023,7 +1023,7 @@ fixtures, vendor checksums, diff hygiene, and the 3,243-file size guardrail
 also passed. `crates/sifr_runtime/src/tls.rs` remains below the limit at 860
 lines.
 
-The exact-SHA Opus review returned `SATISFIED` with no blocking finding. The
+The exact-SHA agent review returned `SATISFIED` with no blocking finding. The
 full review is in the
 [#3511 review comment](https://github.com/sifr-lang/sifr/pull/3511#issuecomment-5400449823).
 Its seven notes were non-blocking coverage, documentation, and maintenance
@@ -1099,7 +1099,7 @@ including `demos/text_i18n`. Its sole failure was the recorded pre-existing
 `demos/m16_raw_api` dependency on canonical Python `math`; Item 12 did not
 absorb that separately owned issue.
 
-The initial Opus review of exact SHA
+The initial agent review of exact SHA
 `cf22e08a5320999a80ff6b0c40a31549495eb589` returned `SATISFIED` with no
 blocking finding. Its non-blocking maintenance notes produced one consolidated
 refinement. The evidence is in the
@@ -1173,7 +1173,7 @@ variants.
 Workspace Clippy denied all warnings. Formatting, HIR maintainability, diff
 hygiene, vendor verification, and the first-party file-size guardrail passed.
 
-The initial Opus review of exact SHA
+The initial agent review of exact SHA
 `7e5cb3609dac1efd74f7b2d82e2a028fba298ead` returned `SATISFIED`. Its evidence
 is in the [#3515 initial review comment](https://github.com/sifr-lang/sifr/pull/3515#issuecomment-5402953717).
 The one allowed remediation review of exact SHA
@@ -1243,7 +1243,7 @@ Workspace Clippy denied all warnings. The changed certification test also
 passed targeted Clippy. Formatting, HIR maintainability, diff hygiene, vendor
 verification, and the 3,247-file first-party size guard passed.
 
-The initial Opus review of exact SHA
+The initial agent review of exact SHA
 `e31728a4a91911b0ec9fe7d2609bf9f31151e097` found two blocking omissions. The
 primary vendor replacement removed a required 0.22.1 package. The certification
 also did not prove full Base64 vendor coverage. The evidence is in the
@@ -1318,7 +1318,7 @@ Workspace Clippy denied all warnings. Formatting, HIR maintainability, diff
 hygiene, snapshot equality, advanced lock metadata, coverage readiness, and
 the first-party file-size guard passed.
 
-The initial Opus review of exact SHA
+The initial agent review of exact SHA
 `037b24c64c5ac5ac516efbac6d86b3e0c3154a0b` returned `SATISFIED`. Its evidence
 is in the [#3519 exact-SHA review comment](https://github.com/sifr-lang/sifr/pull/3519#issuecomment-5405668574).
 No remediation review ran.
@@ -1385,7 +1385,7 @@ Workspace Clippy denied all warnings. Formatting, HIR maintainability, diff
 hygiene, snapshot equality, coverage readiness, and the 3,249-file first-party
 size guard passed.
 
-The initial Opus review of exact SHA
+The initial agent review of exact SHA
 `797d5be4501821adaa52b40aa1fcd2dd4bd2177d` returned `SATISFIED`. It found no
 blocking finding. The evidence is in the
 [#3521 exact-SHA review comment](https://github.com/sifr-lang/sifr/pull/3521#issuecomment-5407626475).
@@ -1448,7 +1448,7 @@ Workspace Clippy denied all warnings. Production LSP Clippy and certification
 Clippy also passed. Formatting, HIR maintainability, diff hygiene, vendor
 checksums, and the 3,250-file first-party size guard passed.
 
-The initial Opus review of exact SHA
+The initial agent review of exact SHA
 `42f0dcf15048171376ccdd4124001b1b215dfa09` returned `SATISFIED`. It found no
 blocking finding. The evidence is in the
 [#3523 exact-SHA review comment](https://github.com/sifr-lang/sifr/pull/3523#issuecomment-5409418083).
@@ -1526,7 +1526,7 @@ two opaque-runtime tests passed. Both demos passed locked checks.
 The driver library passed 557 tests with 76 expected ignored tests. Formatting,
 Clippy, HIR maintainability, links, checksums, and file-size checks passed.
 
-The initial Opus review of exact SHA
+The initial agent review of exact SHA
 `f465070e6432e2c4210d335c95b3f6a4d49534d0` returned `SATISFIED`. It found no
 blocking finding. The evidence is in the
 [#3525 exact-SHA review comment](https://github.com/sifr-lang/sifr/pull/3525#issuecomment-5411848269).
@@ -1601,7 +1601,7 @@ The generated lifecycle and alias-rejection runtimes passed. Package,
 coverage, offline metadata, locked fixture, feature-tree, formatting, Clippy,
 documentation-link, HIR, and file-size checks passed.
 
-The initial Opus review of exact SHA
+The initial agent review of exact SHA
 `dd1e9b55c88ae60d21fea4335f155fe08cde53b4` returned `SATISFIED`. It found no
 blocking finding. The evidence is in the
 [#3527 exact-SHA review comment](https://github.com/sifr-lang/sifr/pull/3527#issuecomment-5414072098).
@@ -1677,7 +1677,7 @@ Focused SQLx, backend, scanner, manifest, policy, formatting, Clippy,
 maintainability, and file-size checks passed. The broader Sifr test suite also
 passed before the one-shot gates.
 
-The initial Opus review of exact SHA
+The initial agent review of exact SHA
 `fa88364ba1e39186d2af70a929d7c5df205c9144` found that the fixture allowed
 active patch-version drift for Chacha20, Getrandom, and Whoami. The finding is
 in the [initial review comment](https://github.com/sifr-lang/sifr/pull/3529#issuecomment-5416597745).
@@ -1760,7 +1760,7 @@ file-size, and diff checks passed. An extra all-targets Clippy probe found only
 pre-existing warnings in untouched test files; it was not an item-owned
 failure.
 
-The initial Opus review of exact SHA
+The initial agent review of exact SHA
 `946a9cfcce5767a09ff5d269f647d73f8e9b27e1` returned `SATISFIED`. It found no
 blocking finding. It independently confirmed both vendor trees, their
 checksums, the feature graph, and the absence of a dangling first-party
@@ -1837,7 +1837,7 @@ Rust-interop, and focused Python Arrow suites passed. The broad non-pass Sifr
 test suite, workspace Clippy, formatting, HIR maintainability, file-size,
 offline-fetch, and diff checks also passed.
 
-The one exact-SHA Opus review returned `SATISFIED` with no blocking finding.
+The one exact-SHA agent review returned `SATISFIED` with no blocking finding.
 It independently confirmed the two lock families, checksums, new API, error
 propagation, and absence of an Item 22 compatibility path. The evidence is in
 the [#3533 review comment](https://github.com/sifr-lang/sifr/pull/3533#issuecomment-5419899447).
@@ -1903,7 +1903,7 @@ mismatch cases, the five-variant coverage area, and the focused Python Arrow
 and runtime tests. The broad non-pass Sifr suite, workspace Clippy, formatting,
 HIR maintainability, file-size, offline-fetch, and diff checks also passed.
 
-The one exact-SHA Opus review returned `SATISFIED` with no blocking finding.
+The one exact-SHA agent review returned `SATISFIED` with no blocking finding.
 It independently confirmed the exact release, coherent locks, live sortedness
 observation, typed error propagation, and absence of compatibility behavior.
 The evidence is in the
@@ -1973,7 +1973,7 @@ Redis runtime tests, the broad non-pass Sifr suite, workspace Clippy,
 formatting, HIR maintainability, the 3,258-file size guard, JSON, offline-lock,
 coverage-matrix, and diff checks passed.
 
-The first exact-SHA Opus review found two in-scope omissions: the new test
+The first exact-SHA agent review found two in-scope omissions: the new test
 targets lacked coverage-matrix classifications, and two canonical feature
 policy lines still named the old Redis feature set. The remediation added both
 classifications and updated both policy lines. The single remediation review
@@ -2061,7 +2061,7 @@ membership checks, HIR maintainability, file-size, and diff checks also passed.
 No compiler input changed, so the phase rules prohibited the Sifr create-PR
 and merge gates.
 
-The first exact-SHA Opus review found one in-scope omission. The new stable
+The first exact-SHA agent review found one in-scope omission. The new stable
 audit and feature suites were absent from all four delivery profiles. The
 remediation added both suites to create-PR, merge, nightly, and release.
 The one permitted remediation review returned `SATISFIED` with no blocking
@@ -2117,7 +2117,7 @@ callback, and compiled library suites. Direct feature probes also passed.
 Ruff, JSON, lock, profile, HIR maintainability, file-size, and diff checks
 passed. No compiler input changed, so no Sifr gate ran.
 
-The one exact-SHA Opus review returned `SATISFIED` with no blocking finding.
+The one exact-SHA agent review returned `SATISFIED` with no blocking finding.
 The evidence is in the
 [#3541 review comment](https://github.com/sifr-lang/sifr/pull/3541#issuecomment-5426226282).
 No remediation review was needed.
@@ -2164,7 +2164,7 @@ library, feature, environment, dependency, tier-one, and HTTPX2 suites passed.
 Ruff, JSON, documentation, HIR, coverage, taxonomy, file-size, and diff checks
 also passed.
 
-The first exact-SHA Opus review found three documentation omissions. The
+The first exact-SHA agent review found three documentation omissions. The
 remediation corrected the mutation count and two stale HTTPX client names.
 The permitted remediation review returned `SATISFIED` with no blocking finding.
 The evidence is in the
@@ -2241,7 +2241,7 @@ Runner self-tests, profile schema checks, Ruff, JSON, HIR, coverage, taxonomy,
 file-size, and diff checks passed. Official PyPI hashes and the Redis image
 digest matched the recorded values.
 
-The first exact-SHA Opus review found one blocking mechanism. The offline
+The first exact-SHA agent review found one blocking mechanism. The offline
 feature suite constructed a Docker client and therefore depended on the host.
 The remediation changed it to inspect stable class APIs without construction.
 The suite then passed with an intentionally unreachable Docker socket.
@@ -2306,7 +2306,7 @@ environment checks, stable audit, feature suite, dataframe suite, buffer suite,
 Arrow capsule suite, and DLPack suite passed. Ruff, JSON, HIR, profile schema,
 coverage, taxonomy, file-size, and diff checks also passed.
 
-The one exact-SHA Opus review returned `SATISFIED`. It verified both lock
+The one exact-SHA agent review returned `SATISFIED`. It verified both lock
 owners, negative mutation coverage, real copy-on-write behavior, exact hashes,
 and the public Pandas module identity. No remediation review ran. The evidence
 is in the
@@ -2374,7 +2374,7 @@ Item 4 deleted the old Python 3.11 lane. Item 30 did not recreate it. The
 maintained Python 3.14 lane passed both the affine transfer mechanism and the
 compiled examples.
 
-The one exact-SHA Opus review returned `SATISFIED`. It verified the release and
+The one exact-SHA agent review returned `SATISFIED`. It verified the release and
 wheel hash, lock and audit ownership, compiled new API use, real Arrow
 behavior, Rust certification, and the absence of fallback code. No remediation
 review ran. The evidence is in the
@@ -2440,7 +2440,7 @@ The phase closes only when:
   remains;
 - the last compiler-changing candidate has exactly one passing create-PR gate
   and one passing merge gate on its exact approved SHA; and
-- the Item 35 whole-phase exact-SHA Opus review returns `SATISFIED` with no
+- the Item 35 whole-phase exact-SHA agent review returns `SATISFIED` with no
   blocking finding.
 
 ## Current Handoff
@@ -2448,7 +2448,7 @@ The phase closes only when:
 Current state: Items 0-30 are complete. Item 31 implementation
 [PR #3551](https://github.com/sifr-lang/sifr/pull/3551) remains draft. Its exact
 candidate is `dbdbd42915dd45fe0255681c224266dd08f453ea`, based on
-`2808a84cda557623a278703d6ae59223b172879d`. Its one exact-SHA Opus review
+`2808a84cda557623a278703d6ae59223b172879d`. Its one exact-SHA agent review
 returned `SATISFIED` with no blocking finding.
 
 Kafka Python 3.0.11 is locked with its audited wheel hash. The old 2.x

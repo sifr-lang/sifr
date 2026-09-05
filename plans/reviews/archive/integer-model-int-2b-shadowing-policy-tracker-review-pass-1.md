@@ -1,6 +1,6 @@
 # Review: INT-2B — Tracker update for reserved-width shadowing policy slice (post PR #1810)
 
-Reviewer: Claude Opus 4.7
+Reviewer: agent
 Date: 2026-05-06
 Branch: `int-2b-shadowing-policy-tracker`
 Phase: [issues/ad-hoc-integer-model-and-fixed-width-numeric-contract.md](issues/ad-hoc-integer-model-and-fixed-width-numeric-contract.md), milestone INT-2B

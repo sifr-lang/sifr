@@ -1,7 +1,7 @@
 # Phase 31 Review Pass 2: sifr_driver Decomposition and Boundary Hardening
 
 **Review Date:** 2026-03-11
-**Reviewer:** Claude Code
+**Reviewer:** agent
 **Phase:** codex/phase31-review-pass-2
 **Commit:** 1eea7c06 (Phase 31 review pass 1: clean driver warning debt)
 

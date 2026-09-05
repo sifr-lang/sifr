@@ -41,7 +41,7 @@ Cross-checked against the upstream pass-4 N4 ([pass-4 review:98-100](reviews/int
 
 The breadcrumb is accurate, scoped, and addresses pass-1 N1 directly. ✓
 
-### 2. Review history accurately records the satisfied Claude review artifact for #1814
+### 2. Review history accurately records the satisfied agent review artifact for #1814
 
 The added line at [issues/ad-hoc-integer-model-and-fixed-width-numeric-contract.md:417](issues/ad-hoc-integer-model-and-fixed-width-numeric-contract.md:417) reads:
 

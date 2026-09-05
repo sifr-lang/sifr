@@ -1,7 +1,7 @@
 # Phase 28 Production-Grade Review 2: Decimal Types and Exact Numeric Semantics
 
 **Review Date:** 2026-03-07
-**Reviewer:** Claude Code
+**Reviewer:** agent
 **Scope:** Post-PR #917 assessment (post-review-pass-2-remediation)
 **Branch:** main (commit 841ff2fa)
 

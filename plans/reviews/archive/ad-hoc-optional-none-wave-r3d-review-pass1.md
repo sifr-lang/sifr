@@ -1,6 +1,6 @@
 # Ad Hoc Optional/None Closure: Wave-R3d Reviewer Pass-1 (2026-03-30)
 
-Reviewer workflow: `talk-to-claude` skill was invoked and wait loop was run for the requested output artifact path (`tmp/ad-hoc-optional-none-wave-r3d-review-pass1.md`), but no file was produced within the active implementation window.
+Reviewer workflow: `agent review` skill was invoked and wait loop was run for the requested output artifact path (`tmp/ad-hoc-optional-none-wave-r3d-review-pass1.md`), but no file was produced within the active implementation window.
 
 Status: `ready-with-guardrails`  
 Decision basis: direct root-cause replay + pre-apply reviewer prompts + post-implementation validation evidence.

@@ -28,7 +28,7 @@ The phase is complete only when:
   - `crates/sifr_codegen/src/lib_codegen_tests/collections_and_stdlib_codegen_tests.rs`
   - `crates/sifr_codegen/src/lib_codegen_tests/performance_nested_mutation_codegen_tests.rs`
 - Additional scan base: `8ef347e1e70207240b0a3db2bb991d6ece354b0a`.
-- Claude plan review: `reviews/compiler-test-leetcode-refactor-plan-review.md`.
+- agent plan review: `reviews/compiler-test-leetcode-refactor-plan-review.md`.
 
 ## Non-Goals
 
@@ -302,12 +302,12 @@ Expected remaining matches:
 ## Review Log
 
 - `2026-06-01`: Initial discovery completed against current tree and commit `8ef347e1e70207240b0a3db2bb991d6ece354b0a`.
-- `2026-06-01`: Claude Opus plan review recorded in `reviews/compiler-test-leetcode-refactor-plan-review.md`; accepted recommendations to include e2e file renames, manifest updates, and demo companion regeneration.
+- `2026-06-01`: agent plan review recorded in `reviews/compiler-test-leetcode-refactor-plan-review.md`; accepted recommendations to include e2e file renames, manifest updates, and demo companion regeneration.
 - `2026-06-01`: User naming discussion resolved: use traditional data-structure names where appropriate, but avoid LeetCode-specific helper conventions and problem function names.
-- `2026-06-01`: Claude Opus implementation-readiness review recorded in `reviews/compiler-test-fixture-deleetcode-phase-readiness-review.md`; accepted recommendations to lock `LinkedNode`/`TreeNode`/`helpers.nodes`, enumerate manifest renames, and make `collect_budget_routes` replacement explicit.
-- `2026-06-01`: Claude Opus implementation review round 1 recorded in `reviews/compiler-test-fixture-deleetcode-implementation-review-1.md`; addressed the remaining `BinaryNode`, stale diagnostic inventory, stale branch traversal test name, and `tree_sum` naming findings.
-- `2026-06-01`: Claude Opus implementation review round 2 recorded in `reviews/compiler-test-fixture-deleetcode-implementation-review-2.md`; accepted the finding that `two_pointer_guard_narrowing.sifr` needed to restore post-move index reads.
-- `2026-06-01`: Claude Opus implementation review round 3 recorded in `reviews/compiler-test-fixture-deleetcode-implementation-review-3.md`; reviewer verdict: no further review iteration required.
+- `2026-06-01`: agent implementation-readiness review recorded in `reviews/compiler-test-fixture-deleetcode-phase-readiness-review.md`; accepted recommendations to lock `LinkedNode`/`TreeNode`/`helpers.nodes`, enumerate manifest renames, and make `collect_budget_routes` replacement explicit.
+- `2026-06-01`: agent implementation review round 1 recorded in `reviews/compiler-test-fixture-deleetcode-implementation-review-1.md`; addressed the remaining `BinaryNode`, stale diagnostic inventory, stale branch traversal test name, and `tree_sum` naming findings.
+- `2026-06-01`: agent implementation review round 2 recorded in `reviews/compiler-test-fixture-deleetcode-implementation-review-2.md`; accepted the finding that `two_pointer_guard_narrowing.sifr` needed to restore post-move index reads.
+- `2026-06-01`: agent implementation review round 3 recorded in `reviews/compiler-test-fixture-deleetcode-implementation-review-3.md`; reviewer verdict: no further review iteration required.
 
 ## Closure Notes
 

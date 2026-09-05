@@ -51,7 +51,7 @@ I did not re-run the compile-bound suites (driver tests, mandatory backend tests
 
 ## Diff hygiene and checklist honesty
 
-Whitespace clean across the whole branch. No stray artifacts entered the commit; the excluded working-tree items remain untracked/unstaged and outside the delta. The `certification_13` checklist is unchanged: six items `[x]`, all substantiated by round 8's independent reproduction, and the final "focused and authoritative local gates, Opus review rounds, merge" item correctly still `[ ]` at line 1460. Marking that item is the author's PR-lane step, which is exactly what round 9 unblocks.
+Whitespace clean across the whole branch. No stray artifacts entered the commit; the excluded working-tree items remain untracked/unstaged and outside the delta. The `certification_13` checklist is unchanged: six items `[x]`, all substantiated by round 8's independent reproduction, and the final "focused and authoritative local gates, agent review rounds, merge" item correctly still `[ ]` at line 1460. Marking that item is the author's PR-lane step, which is exactly what round 9 unblocks.
 
 ## Findings
 

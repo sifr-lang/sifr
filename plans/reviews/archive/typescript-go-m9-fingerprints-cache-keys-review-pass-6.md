@@ -62,9 +62,9 @@ The test compares `(None, None)` vs `(Some, None)`. It does not exercise `(None,
 
 ## Doc Gaps
 
-### D1. MD validation section still cites "Claude reviewer pass 4" (internal_docs/typescript_go_architecture_transfer_m9_fingerprints_cache_keys.md)
+### D1. MD validation section still cites "agent reviewer pass 4" (internal_docs/typescript_go_architecture_transfer_m9_fingerprints_cache_keys.md)
 The `## Validation` block ends with:
-> Claude reviewer pass 4 -> SATISFIED (`reviews/typescript-go-m9-fingerprints-cache-keys-review-pass-4.md`)
+> agent reviewer pass 4 -> SATISFIED (`reviews/typescript-go-m9-fingerprints-cache-keys-review-pass-4.md`)
 
 This is pass 6. Either the validation list should be updated to reference the current pass (and any newly run validation commands), or the pass-N line should be moved out of `## Validation` into a separate `## Review History` section so it can grow without polluting the "what we ran" list. **Update before merge.**
 

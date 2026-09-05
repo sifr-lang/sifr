@@ -1,7 +1,7 @@
 # Review: Wave-R3 Run-Error Majority Plan (Pass 1)
 
 Date: 2026-03-30
-Reviewer channel: Claude via `talk-to-claude` handoff flow
+Reviewer channel: agent via `agent review` handoff flow
 Status: **not ready** (corrections required before implementation)
 
 ## Reviewer Workflow Note

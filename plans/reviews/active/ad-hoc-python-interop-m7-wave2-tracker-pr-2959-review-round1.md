@@ -5,7 +5,7 @@ I've reviewed PR #2959 against the criteria. Verification results:
 - **M7 Wave 2 checkbox and PR link**: Line 521 flips Wave 2 ("Add the application-owned asyncio runtime and raw submission path") to `[x]` linked to PR #2958. Confirmed via `gh` that PR #2958 is merged (state=MERGED, mergedAt=2026-07-13T04:29:44Z). ✓
 - **Wave 3 and later**: Lines 533, 546, 556, 567, 574 remain `[ ]` (cooperative-cancellation carrier, supervisor/shutdown substrate, typed async wrappers, async-close lifecycle, activation-and-close). ✓
 - **M7 top-level milestone**: Line 141 keeps `[ ] M7 owned asyncio runtime and async declarations` unchecked, correctly reflecting that M7 overall is still in progress. ✓
-- **Contract wording preserved**: Complete-design language ("Opus High pass 5 approved the complete design"), Non-Goals, Delivery Rule (lines 116–128), and Milestones section headings are untouched. The "In progress" preamble was refined without weakening any contract. ✓
+- **Contract wording preserved**: Complete-design language ("agent High pass 5 approved the complete design"), Non-Goals, Delivery Rule (lines 116–128), and Milestones section headings are untouched. The "In progress" preamble was refined without weakening any contract. ✓
 - **Prior Wave 1 entry**: Line 507 already carried `[x]` with PR #2956 from the earlier tracker commit — this PR does not re-touch it, avoiding churn. ✓
 
 **PR shape:**

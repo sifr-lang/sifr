@@ -250,7 +250,7 @@ The wave closure production-grade review (`reviews/phase-ad-hoc-python-source-pa
 
 ## Review Metadata
 
-- **Reviewer:** Claude Code (milestone-closure completion review)
+- **Reviewer:** agent (milestone-closure completion review)
 - **Artifacts reviewed:**
   - Phase planning: `issues/ad-hoc-python-source-parity-extension-waiver-reduction.md`
   - Execution checklist: `issues/ad-hoc-python-source-parity-extension-waiver-reduction-execution.md`

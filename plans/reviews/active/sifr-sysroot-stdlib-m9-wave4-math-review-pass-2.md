@@ -1,4 +1,4 @@
-# M9 Wave 4 (Math Migration) — Opus Review Pass 3 Findings
+# M9 Wave 4 (Math Migration) — agent Review Pass 3 Findings
 
 ## Severity legend
 - **High** = behavior bug, leakage of private API, or panic vector

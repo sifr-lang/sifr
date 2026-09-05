@@ -1,6 +1,6 @@
 # wave_psp_a1 Review Pass 2: Builtin Constructors and Callable Surface
 
-**Reviewer:** Claude Code
+**Reviewer:** agent
 **Date:** 2026-03-15
 **Wave:** `wave_psp_a1` (milestone_psp_1)
 **Status:** Production-ready with one confirmed bug

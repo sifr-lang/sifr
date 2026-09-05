@@ -1,7 +1,7 @@
 # LeetCode Audit Helper Extraction Report
 
 Status: implementation complete, external review addressed
-Owner: Codex
+Owner: agent
 Created: 2026-04-25
 Related:
 - `issues/sifr-workspace-pyproject-import-resolution-2026-04-25.md` (workspace resolver — landed)

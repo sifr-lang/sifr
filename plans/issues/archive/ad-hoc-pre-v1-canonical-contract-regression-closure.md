@@ -29,7 +29,7 @@ The source phase is
 [`ad-hoc-pre-v1-compatibility-removal.md`](./ad-hoc-pre-v1-compatibility-removal.md).
 That phase closed on 2026-08-19.
 
-Codex task `01a01407-6090-7a53-8ebc-c1c8f8cf0eec` executed that phase. Its
+agent task `01a01407-6090-7a53-8ebc-c1c8f8cf0eec` executed that phase. Its
 final implementation merge was `2256180742e82d52686e6eda622d05b4afdbf716`.
 
 The initial corrective plan used repository head
@@ -355,7 +355,7 @@ Validation: the unchanged rebaseline evidence was reused. Document links,
 code fences, item numbering, terminology, and diff checks passed. No compiler
 file changed, so the Sifr gates did not apply.
 
-Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the exact-SHA agent review returned `SATISFIED` with no
 blocking finding. The evidence is in the
 [#3425 review comment](https://github.com/sifr-lang/sifr/pull/3425#issuecomment-5376641794).
 
@@ -403,7 +403,7 @@ focused driver compatibility guard passed. Rust formatting, diff checks, and
 the first-party file-size guardrail passed. No compiler file changed, so the
 Sifr create-PR and merge gates did not apply.
 
-Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the exact-SHA agent review returned `SATISFIED` with no
 blocking finding. The evidence is in the
 [#3427 review comment](https://github.com/sifr-lang/sifr/pull/3427#issuecomment-5376679974).
 
@@ -455,7 +455,7 @@ performance rules runner passed its manifest, runner, and budget variants. Its
 two trend-policy variants stopped only on the stale manifest hash assigned to
 Item 3. No compiler file changed, so the Sifr gates did not apply.
 
-Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the exact-SHA agent review returned `SATISFIED` with no
 blocking finding. The evidence is in the
 [#3429 review comment](https://github.com/sifr-lang/sifr/pull/3429#issuecomment-5376741902).
 
@@ -516,7 +516,7 @@ all earlier checks and stopped at the Rust-interop matrix. The matrix reported
 only linked delivery A's missing negative fixture and Item 10's empty
 method-slot fixture. The item did not change or waive either later delivery.
 
-Review evidence: the exact-SHA Opus review returned `SATISFIED`. No
+Review evidence: the exact-SHA agent review returned `SATISFIED`. No
 remediation review was used. The evidence is in the
 [#3432 review comment](https://github.com/sifr-lang/sifr/pull/3432#issuecomment-5377265347).
 
@@ -569,7 +569,7 @@ all earlier checks and stopped at the Rust-interop matrix. The matrix reported
 only linked delivery A's missing negative fixture and Item 10's empty
 method-slot fixture.
 
-Review evidence: the exact-SHA Opus review returned `SATISFIED`. No
+Review evidence: the exact-SHA agent review returned `SATISFIED`. No
 remediation review was used. The evidence is in the
 [#3434 review comment](https://github.com/sifr-lang/sifr/pull/3434#issuecomment-5377332955).
 
@@ -694,7 +694,7 @@ Rust-interop matrix rows. Linked delivery A owns the missing shared-bridge
 negative source path. Item 10 owns the empty method-slot declaration. Neither
 gate was repeated.
 
-Review evidence: the exact-SHA Opus review returned `APPROVED`. It confirmed
+Review evidence: the exact-SHA agent review returned `APPROVED`. It confirmed
 that lowering no longer treats child handlers as parent coverage, codegen no
 longer makes the last named kind unconditional, and the type system owns the
 single I/O-error kind registry. No remediation review was used. The evidence
@@ -844,7 +844,7 @@ inputs. Linked delivery A owns the missing shared-bridge negative source.
 Item 10 owns the empty method-slot declaration. The gate evidence is in the
 [#3442 gate comment](https://github.com/sifr-lang/sifr/pull/3442#issuecomment-5379842007).
 
-Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the exact-SHA agent review returned `SATISFIED` with no
 blocking finding. The evidence is in the
 [#3442 review comment](https://github.com/sifr-lang/sifr/pull/3442#issuecomment-5379820829).
 
@@ -912,7 +912,7 @@ inputs. Linked delivery A owns the missing shared-bridge source. Item 10 owns
 the empty method-slot declaration. The gate evidence is in the
 [#3444 gate comment](https://github.com/sifr-lang/sifr/pull/3444#issuecomment-5379944267).
 
-Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the exact-SHA agent review returned `SATISFIED` with no
 blocking finding. The evidence is in the
 [#3444 review comment](https://github.com/sifr-lang/sifr/pull/3444#issuecomment-5379927019).
 
@@ -974,7 +974,7 @@ diagnostic in its intended family. The full lowering suite passed 1,029 tests,
 with 1 ignored. All 567 broad fail fixtures passed. Lowering Clippy passed with
 warnings denied. Format, diff, HIR maintainability, and file-size checks passed.
 
-Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the exact-SHA agent review returned `SATISFIED` with no
 blocking finding. The evidence is in the
 [#3446 review comment](https://github.com/sifr-lang/sifr/pull/3446#issuecomment-5379972805).
 
@@ -1068,7 +1068,7 @@ HIR maintainability, and file-size checks passed.
 The full fixture matrix no longer reports the method-slot row. It stops only at
 linked delivery A's missing shared-bridge source.
 
-Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the exact-SHA agent review returned `SATISFIED` with no
 blocking finding. The evidence is in the
 [#3448 review comment](https://github.com/sifr-lang/sifr/pull/3448#issuecomment-5380018372).
 
@@ -1136,7 +1136,7 @@ proved that all three reported Rust diagnostics existed at the base SHA. They
 reduce to two compiler mechanisms: moved continuation state and non-total
 return emission. Items 10B and 10C own those mechanisms.
 
-Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the exact-SHA agent review returned `SATISFIED` with no
 blocking finding. The evidence is in the
 [#3450 review comment](https://github.com/sifr-lang/sifr/pull/3450#issuecomment-5380279698).
 
@@ -1146,7 +1146,7 @@ delivery A. The evidence and base-failure classification are in the
 [#3450 gate comment](https://github.com/sifr-lang/sifr/pull/3450#issuecomment-5380405067)
 and its linked validation comment.
 
-Deferred follow-up: Opus suggested comparing the computed Rust definition name
+Deferred follow-up: agent suggested comparing the computed Rust definition name
 directly and adding another integration assertion. These are optional
 hardening. Items 10B and 10C own the newly classified base defects.
 
@@ -1201,7 +1201,7 @@ Validation: all 1,107 code-generation tests passed. Ten focused sequential
 config-parser and TLS loopback fixtures ran. Demo freshness, Clippy, format,
 diff, HIR maintainability, and file-size checks passed.
 
-Review evidence: the first exact-SHA Opus review found that assignment-target
+Review evidence: the first exact-SHA agent review found that assignment-target
 liveness was incomplete. The remediation covered every canonical assignment
 target form. The second and final review returned `SATISFIED`. The evidence is
 in the [#3452 review comment](https://github.com/sifr-lang/sifr/pull/3452#issuecomment-5380564471).
@@ -1268,7 +1268,7 @@ E0308. Demo freshness, affected-crate Clippy, format, HIR maintainability,
 file-size, and diff checks passed. The union fixtures still stop before this
 mechanism at the Item 10F-owned imported-union nominal-path panic.
 
-Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the exact-SHA agent review returned `SATISFIED` with no
 blocking finding. The evidence is in the
 [#3454 review comment](https://github.com/sifr-lang/sifr/pull/3454#issuecomment-5380707838).
 
@@ -1280,7 +1280,7 @@ stale Rust-interop evidence path. The evidence is in the
 Deferred follow-up: Item 10G owns residual propagation for unmatched
 conditional handlers. Item 10H owns nested `try/finally` propagation inside a
 non-return-capturing `try` closure. Item 10I owns the Item 3 diagnostic-harness
-strict-Clippy warning. Opus also suggested consolidating duplicated handler
+strict-Clippy warning. agent also suggested consolidating duplicated handler
 match construction and strengthening the focused Rust-typing assertion. Those
 are optional hardening because native fixture validation covers the diagnostic.
 
@@ -1336,12 +1336,12 @@ all preceding guardrails and stopped only at linked delivery A's stale
 Rust-interop evidence path. Neither gate was repeated. The evidence is in the
 [#3456 gate comment](https://github.com/sifr-lang/sifr/pull/3456#issuecomment-5380890047).
 
-Review evidence: the exact-SHA Opus review returned `SATISFIED`. No
+Review evidence: the exact-SHA agent review returned `SATISFIED`. No
 remediation review was used. The evidence is in the
 [#3456 review comment](https://github.com/sifr-lang/sifr/pull/3456#issuecomment-5380889932).
 
 Deferred follow-up: Item 10E owns the canonical nested-function traversal and
-parameter-shadowing rule. Opus confirmed that the current general reference
+parameter-shadowing rule. agent confirmed that the current general reference
 query can otherwise request a dead declaration for a shadowing parameter.
 Linked delivery A retains its stale Rust-interop evidence path.
 
@@ -1393,7 +1393,7 @@ all preceding checks and stopped only at linked delivery A's stale
 Rust-interop evidence path. Neither gate was repeated. The evidence is in the
 [#3458 gate comment](https://github.com/sifr-lang/sifr/pull/3458#issuecomment-5381103242).
 
-Review evidence: the first exact-SHA Opus review returned `BLOCKED`. It found
+Review evidence: the first exact-SHA agent review returned `BLOCKED`. It found
 that explicit keyword values could be replaced by defaults and that tuple
 rebinding retained function provenance. The one permitted remediation review
 on the final candidate returned `SATISFIED`. No third review ran. The evidence
@@ -1454,7 +1454,7 @@ all preceding checks and stopped only at linked delivery A's stale
 Rust-interop evidence path. Neither gate was repeated. The evidence is in the
 [#3460 gate comment](https://github.com/sifr-lang/sifr/pull/3460#issuecomment-5381213927).
 
-Review evidence: the one exact-SHA Opus review returned `SATISFIED`. No
+Review evidence: the one exact-SHA agent review returned `SATISFIED`. No
 remediation review ran. It confirmed that the fix uses canonical identity and
 adds no basename lookup, duplicate nominal, or fallback path. The evidence is
 in the [#3460 review comment](https://github.com/sifr-lang/sifr/pull/3460#issuecomment-5381213928).
@@ -1514,7 +1514,7 @@ all preceding checks and stopped only at linked delivery A's stale
 Rust-interop evidence path. Neither gate was repeated. The evidence is in the
 [#3462 gate comment](https://github.com/sifr-lang/sifr/pull/3462#issuecomment-5381428950).
 
-Review evidence: the first exact-SHA Opus review returned `BLOCKED`. It found
+Review evidence: the first exact-SHA agent review returned `BLOCKED`. It found
 that branchless carrier members had no residual and that lowering try state
 leaked into nested functions. The one permitted remediation review returned
 `SATISFIED`. No third review ran. The evidence is in the
@@ -1575,7 +1575,7 @@ all preceding checks and stopped only at linked delivery A's stale
 Rust-interop evidence path. Neither gate was repeated. The evidence is in the
 [#3464 gate comment](https://github.com/sifr-lang/sifr/pull/3464#issuecomment-5381486206).
 
-Review evidence: the one exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the one exact-SHA agent review returned `SATISFIED` with no
 blocking findings. The evidence is in the
 [#3464 review comment](https://github.com/sifr-lang/sifr/pull/3464#issuecomment-5381467719).
 
@@ -1627,7 +1627,7 @@ all preceding checks and stopped only at linked delivery A's stale
 Rust-interop evidence path. Neither gate was repeated. The evidence is in the
 [#3466 gate comment](https://github.com/sifr-lang/sifr/pull/3466#issuecomment-5381524255).
 
-Review evidence: the one exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the one exact-SHA agent review returned `SATISFIED` with no
 blocking findings. The evidence is in the
 [#3466 review comment](https://github.com/sifr-lang/sifr/pull/3466#issuecomment-5381506805).
 
@@ -1685,7 +1685,7 @@ Rust-interop evidence path. Neither gate was repeated. The evidence is in the
 and the
 [#3468 merge gate comment](https://github.com/sifr-lang/sifr/pull/3468#issuecomment-5381747251).
 
-Review evidence: the first exact-SHA Opus review found two blocking defects.
+Review evidence: the first exact-SHA agent review found two blocking defects.
 The remediation changed every remaining raw statement-block caller to use the
 scoped code-generation helper. It also made variadic inference preserve
 container shape. The second and final exact-SHA review returned `SATISFIED`.
@@ -1749,7 +1749,7 @@ repeated. The evidence is in the
 and the
 [#3470 merge gate comment](https://github.com/sifr-lang/sifr/pull/3470#issuecomment-5381856507).
 
-Review evidence: the one exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the one exact-SHA agent review returned `SATISFIED` with no
 blocking finding. It confirmed exact user-class selection, generic child
 support, multi-module parent imports, and coherent parent ownership. The
 evidence is in the
@@ -1807,7 +1807,7 @@ evidence path. Neither gate was repeated. The evidence is in the
 and the
 [#3472 merge gate comment](https://github.com/sifr-lang/sifr/pull/3472#issuecomment-5381953728).
 
-Review evidence: the one exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the one exact-SHA agent review returned `SATISFIED` with no
 blocking finding. It confirmed shared lowering and code-generation ancestry,
 exact nominal identity, handler ordering, checked binding conversion, and
 residual ownership. The evidence is in the
@@ -1865,7 +1865,7 @@ evidence path. Neither gate was repeated. The evidence is in the
 and the
 [#3474 merge gate comment](https://github.com/sifr-lang/sifr/pull/3474#issuecomment-5382116316).
 
-Review evidence: the first exact-SHA Opus review returned `BLOCKED` because
+Review evidence: the first exact-SHA agent review returned `BLOCKED` because
 the original regressions did not exercise the state leak. The one permitted
 remediation review returned `SATISFIED` after the regressions used direct
 sync and async raises and proved failure under the controlled mutation. No
@@ -1929,7 +1929,7 @@ evidence path. Neither gate was repeated. The evidence is in the
 and the
 [#3476 merge gate comment](https://github.com/sifr-lang/sifr/pull/3476#issuecomment-5382209257).
 
-Review evidence: the one exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the one exact-SHA agent review returned `SATISFIED` with no
 blocking finding. It confirmed that lexical call resolution, checked mutable
 places, receiver analysis, and code generation now use one per-call authority.
 It also confirmed that no legitimate module-function mutation signal was lost.
@@ -1992,7 +1992,7 @@ evidence path. Neither gate was repeated. The evidence is in the
 and the
 [#3478 merge gate comment](https://github.com/sifr-lang/sifr/pull/3478#issuecomment-5382282423).
 
-Review evidence: the one exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the one exact-SHA agent review returned `SATISFIED` with no
 blocking finding. It confirmed scope isolation, local nested discovery,
 carrier priority, unit fallback reachability, and sync and async parity. The
 evidence is in the
@@ -2077,7 +2077,7 @@ the focused freshness check passed. The one merge gate ran on the final
 candidate and passed every validation step, including 698 E2E pass fixtures.
 The warm-time budget overrun was advisory and came from cold generated caches.
 
-Review evidence: the one exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the one exact-SHA agent review returned `SATISFIED` with no
 blocking finding. The evidence is in the
 [#3483 review comment](https://github.com/sifr-lang/sifr/pull/3483#issuecomment-5382669592).
 
@@ -2133,7 +2133,7 @@ source from `negative/src/` to
 README now name that same source. No fallback or old-path reader remains.
 
 The configured full matrix passed both variants. The focused negative Cargo
-probe passed. The exact-SHA Opus review returned `SATISFIED` with no blocking
+probe passed. The exact-SHA agent review returned `SATISFIED` with no blocking
 finding. Item 11 consumes this merged SHA and validation evidence.
 
 ## Qualification Rule B: Read-only Python Doctor
@@ -2233,7 +2233,7 @@ No Sifr create-PR or merge gate applies to this qualification record because
 it changes no compiler file. The validation above reuses the one final Item
 10P merge gate. Its implementation inputs are unchanged.
 
-Review evidence: the exact-SHA Opus review returned `SATISFIED` with no
+Review evidence: the exact-SHA agent review returned `SATISFIED` with no
 blocking finding. It verified the identical implementation tree, linked-
 delivery ancestry, profile scoping, and every recorded result. The evidence is
 in the
@@ -2319,13 +2319,13 @@ implementation merge gate from Item 10P at
 `3d9f26a9b3018957b5f09b4c275e444d815af076`. Items 11 and 12 did not change
 the implementation tree.
 
-Review evidence: the one whole-phase exact-SHA Opus review returned
+Review evidence: the one whole-phase exact-SHA agent review returned
 `SATISFIED` with no blocking finding. The review covered the 15-row
 reconciliation, guard enforcement, curated fixtures, no-twin decision, gate
 applicability, and ownership record. The evidence is in the
 [#3487 review comment](https://github.com/sifr-lang/sifr/pull/3487#issuecomment-5383233814).
 
-Deferred follow-up: Opus recorded only non-blocking guard-maintenance
+Deferred follow-up: agent recorded only non-blocking guard-maintenance
 suggestions. It found no new mechanism defect and no unowned failure. No
 deferred work remains in this phase.
 

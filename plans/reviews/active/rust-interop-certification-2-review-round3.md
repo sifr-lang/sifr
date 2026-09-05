@@ -2,7 +2,7 @@
 
 ## Reviewer
 
-Claude Opus 5 (`--effort medium`), read-only full working-tree review against
+agent (`--effort medium`), read-only full working-tree review against
 base commit `f76a99046`.
 
 ## Verdict
@@ -47,5 +47,5 @@ name.
   boundary.
 - Update phase tracking, replace the test proxy with production classification,
   remove unnecessary trust, and narrow error mapping to error ancestry.
-- Re-run all focused/generated/evidence/guardrail checks and another full Opus
+- Re-run all focused/generated/evidence/guardrail checks and another full agent
   review.

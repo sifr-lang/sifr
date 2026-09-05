@@ -161,7 +161,7 @@ default; live suites must declare their own `network_mode` and resource classes.
 Runner output is written under `target/verification/areas/python_interop/` by
 the area and profile runners. Reports use
 deterministic JSON with selected filters, matrix counts, fixture coverage, and
-package-certification status so interop evidence can be reviewed before live
+package-certification status so interop evidence can be validated before live
 package execution gates exist.
 
 Dataframe examples are offline but executable. The `dataframe-examples` case

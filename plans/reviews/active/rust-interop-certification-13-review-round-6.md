@@ -18,7 +18,7 @@ This is one finding, narrow, and the same two-state fix closes all three cases. 
 
 ## Scope reviewed
 
-Committed delta `origin/main..a191d7202` (`b231daf81`, `7a27b7896`, `6ec0742b6`, `0e53989be`, `bfa7f27c6`, `96a56b7f1`, `a191d7202`), 55 files, focused on `a191d7202`. Excluded and not attributed: `editor_integrations`, the leetcode corpora submodule, `.cert5probe/`, `.claude/`, the two stray webp files, `plans/phases/43_interoperability.md`.
+Committed delta `origin/main..a191d7202` (`b231daf81`, `7a27b7896`, `6ec0742b6`, `0e53989be`, `bfa7f27c6`, `96a56b7f1`, `a191d7202`), 55 files, focused on `a191d7202`. Excluded and not attributed: `editor_integrations`, the leetcode corpora submodule, `.cert5probe/`, `.agent/`, the two stray webp files, `plans/phases/43_interoperability.md`.
 
 ---
 

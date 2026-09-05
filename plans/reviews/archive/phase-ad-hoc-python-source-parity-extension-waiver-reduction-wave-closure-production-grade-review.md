@@ -269,7 +269,7 @@ All exit gate criteria from the phase planning document are satisfied. The wave 
 
 ## Review Metadata
 
-- **Reviewer:** Claude Code (production-grade wave-closure review)
+- **Reviewer:** agent (production-grade wave-closure review)
 - **Artifacts reviewed:**
   - Wave pass-2 reviews: `wave_psp_ext_{1,2,3,4}-review-pass-2.md`
   - Governance inventory: `verification/stdlib/milestone_psp_7_parity_governance_inventory.md`

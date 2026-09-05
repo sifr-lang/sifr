@@ -1,7 +1,7 @@
 # wave_psp_d2 Review: Implementation Gaps and CPython Parity Quality
 
 **Review Date:** 2026-03-17
-**Reviewer:** Claude Code
+**Reviewer:** agent
 **Scope:** wave_psp_d2 (process, runtime, platform modules)
 
 ---

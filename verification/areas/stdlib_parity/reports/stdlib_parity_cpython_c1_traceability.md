@@ -2,7 +2,7 @@
 
 CPython family references below indicate upstream source families used for adapted subset porting in this implementation pass; they are not claims of full family parity.
 
-## Reviewed upstream families
+## Validationed upstream families
 
 | CPython family | Surface | Local regression/demo | State | Notes |
 | --- | --- | --- | --- | --- |

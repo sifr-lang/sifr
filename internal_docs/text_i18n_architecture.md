@@ -47,4 +47,4 @@ Empty translated forms are treated as missing so explicit fallback chains can co
 
 ## Panic-Free Rules
 
-Generated code quality and runtime reviews scan encoding, Unicode, segmentation, locale, formatting, and translation paths for user-data-dependent `.unwrap(`, `.expect(`, `panic!`, `todo!`, `unimplemented!`, and `unsafe`. Fallible behavior maps to `DecodeError`, `EncodeError`, `UnicodeDataError`, `LocaleIdError`, `FormatError`, `PluralRulesError`, `CatalogError`, or `TranslationError`.
+Generated code quality and runtime checks scan encoding, Unicode, segmentation, locale, formatting, and translation paths for user-data-dependent `.unwrap(`, `.expect(`, `panic!`, `todo!`, `unimplemented!`, and `unsafe`. Fallible behavior maps to `DecodeError`, `EncodeError`, `UnicodeDataError`, `LocaleIdError`, `FormatError`, `PluralRulesError`, `CatalogError`, or `TranslationError`.

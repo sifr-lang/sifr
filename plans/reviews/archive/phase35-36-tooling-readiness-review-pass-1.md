@@ -2,7 +2,7 @@
 
 ## Review Context
 
-- Reviewer: Claude (automated tooling readiness audit)
+- Reviewer: agent (automated tooling readiness audit)
 - Date: 2026-05-16
 - Branch: `codex/phase-35-readiness-review`
 - Target phases: `35_performance_benchmarking_and_budgets.md`, `36_developer_tooling_and_ecosystem_hooks.md`

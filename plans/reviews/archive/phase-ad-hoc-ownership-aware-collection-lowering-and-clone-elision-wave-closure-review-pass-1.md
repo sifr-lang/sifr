@@ -3,7 +3,7 @@
 **Date**: 2026-03-21
 **Phase**: `issues/ad-hoc-ownership-aware-collection-lowering-and-clone-elision.md`
 **Scope**: `wave_clone_0` through `wave_clone_3` — all four waves, root-cause closure, documentation, and phase-level readiness
-**Reviewer**: Claude (external review, pass 1)
+**Reviewer**: agent (external review, pass 1)
 **Commit**: `398a2dd8` — "wave_clone_3: record production-grade review pass 2 (#1404)"
 
 ---

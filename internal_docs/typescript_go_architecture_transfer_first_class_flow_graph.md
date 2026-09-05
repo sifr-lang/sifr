@@ -22,7 +22,7 @@ Each `FlowGraph` exposes:
 - an entry and exit node id;
 - an effect iterator;
 - `shape_fingerprint()` for stable snapshot identity;
-- `debug_trace()` for reviewable trace output.
+- `debug_trace()` for inspectable trace output.
 
 Effects use the existing type model directly. A narrowing to `None` is recorded
 as `FlowEffect::Narrow` with `narrowed_type = Type::None`; flow graph does not introduce
@@ -77,16 +77,12 @@ flow graph focused validation so far:
 - `scripts/run_all_tests.sh --profile create-pr` -> PASS, report
   `target/validation_lane_reports/create-pr.latest.json`, wall time 306.27s,
   advisories: warm wall-time budget exceeded; group skew is high
-- Claude reviewer pass 3 -> SATISFIED
 - Loop-else validation: `cargo fmt --check`,
   `cargo test -p sifr_lowering flow_graph -- --nocapture`,
   `cargo clippy -p sifr_lowering -- -D warnings`
-- Claude reviewer loop-else pass 1 -> SATISFIED
 - flow graph readiness create-pr validation: `scripts/run_all_tests.sh --profile create-pr` ->
   PASS, report `target/validation_lane_reports/create-pr.latest.json`, wall time
   280.58s, advisory: group skew is high
-- Claude reviewer readiness pass 1 -> SATISFIED
 - flow graph loop-else validation: `cargo fmt --check`,
   `cargo test -p sifr_lowering flow_graph -- --nocapture`,
   `cargo clippy -p sifr_lowering -- -D warnings`
-- Claude reviewer loop-else pass 1 -> SATISFIED

@@ -1,6 +1,6 @@
 # Review: Any/Unknown Typing And Container Specialization Root-Cause Analysis
 
-**Reviewer:** Claude (Pass 1)
+**Reviewer:** agent (Pass 1)
 **Date:** 2026-03-31
 **Document under review:** `issues/any-unknown-container-specialization-root-cause-2026-03-31.md`
 

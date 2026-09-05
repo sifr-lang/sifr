@@ -1,7 +1,7 @@
 # Phase 31 Review: sifr_driver Decomposition and Boundary Hardening
 
 **Review Date:** 2026-03-11
-**Reviewer:** Claude Code
+**Reviewer:** agent
 **Phase:** codex/phase31-review-pass-1
 **Commit:** 569ff371 (Milestone 6: add driver maintainability guardrails)
 

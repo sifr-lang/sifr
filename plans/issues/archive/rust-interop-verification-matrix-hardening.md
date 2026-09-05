@@ -2,7 +2,7 @@
 
 ## Status
 
-Completed and archived on 2026-07-26 after final Opus review and all local
+Completed and archived on 2026-07-26 after final agent review and all local
 closure gates passed.
 
 This issue is an entry prerequisite for
@@ -230,7 +230,7 @@ One documentation/review PR after `hardening_1` through `hardening_4`:
 - records merged PRs and final row/schema counts here;
 - confirms the runtime certification issue's entry criteria are unblocked;
 - updates Phase 39 and roadmap follow-up links/status;
-- runs a final Opus implementation-readiness review to satisfaction; and
+- runs a final agent implementation-readiness review to satisfaction; and
 - archives this issue only after all gates below pass.
 
 ## Implementation Progress
@@ -238,10 +238,10 @@ One documentation/review PR after `hardening_1` through `hardening_4`:
 | Item | Status | Evidence |
 | --- | --- | --- |
 | `hardening_1` | merged | [PR #3018](https://github.com/sifr-lang/sifr/pull/3018), with the profile-evidence correction in [PR #3019](https://github.com/sifr-lang/sifr/pull/3019) |
-| `hardening_2` | merged | [PR #3020](https://github.com/sifr-lang/sifr/pull/3020); final Opus review approved in round 7 |
-| `hardening_3` | merged | [PR #3022](https://github.com/sifr-lang/sifr/pull/3022); all 34 fixture manifests are schema v2; all 47 passing evidence directions have distinct structured Rust-test provenance; Opus round 8 satisfied; merge lane passed |
-| `hardening_4` | merged | [PR #3023](https://github.com/sifr-lang/sifr/pull/3023); exact rejected fences and suffix-specific inline markers replaced lexical inference; all 20 scanner self-tests, the create-PR lane, and the merge lane passed; Opus pass 3 satisfied |
-| `hardening_5` | complete | [PR #3024](https://github.com/sifr-lang/sifr/pull/3024); closeout inventory and successor-entry audit complete; final implementation-readiness Opus review satisfied in round 2, post-archive round 3, and post-PR round 4; create-PR and merge lanes passed; clippy, rustfmt, HIR maintainability, file-size, and diff-hygiene gates passed; issue archived |
+| `hardening_2` | merged | [PR #3020](https://github.com/sifr-lang/sifr/pull/3020); final agent review approved in round 7 |
+| `hardening_3` | merged | [PR #3022](https://github.com/sifr-lang/sifr/pull/3022); all 34 fixture manifests are schema v2; all 47 passing evidence directions have distinct structured Rust-test provenance; agent round 8 satisfied; merge lane passed |
+| `hardening_4` | merged | [PR #3023](https://github.com/sifr-lang/sifr/pull/3023); exact rejected fences and suffix-specific inline markers replaced lexical inference; all 20 scanner self-tests, the create-PR lane, and the merge lane passed; agent pass 3 satisfied |
+| `hardening_5` | complete | [PR #3024](https://github.com/sifr-lang/sifr/pull/3024); closeout inventory and successor-entry audit complete; final implementation-readiness agent review satisfied in round 2, post-archive round 3, and post-PR round 4; create-PR and merge lanes passed; clippy, rustfmt, HIR maintainability, file-size, and diff-hygiene gates passed; issue archived |
 
 ## Closeout Inventory
 

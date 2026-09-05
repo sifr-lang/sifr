@@ -295,7 +295,7 @@ All exit gate criteria from the phase planning document are satisfied. The miles
 
 ## Review Metadata
 
-- **Reviewer:** Claude Code (milestone-closure production-grade review)
+- **Reviewer:** agent (milestone-closure production-grade review)
 - **Artifacts reviewed:**
   - Phase planning: `issues/ad-hoc-python-source-parity-extension-waiver-reduction.md`
   - Execution checklist: `issues/ad-hoc-python-source-parity-extension-waiver-reduction-execution.md`

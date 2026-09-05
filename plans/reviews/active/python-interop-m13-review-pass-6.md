@@ -31,7 +31,7 @@ All four surfaces agree on `crates/sifr_package/src/python/probe_validation_test
 ## Non-blocking notes
 
 - `cargo clippy --workspace --all-targets -- -D warnings` (a stricter variant than any documented or gate-mirrored command) fails with 27 pedantic lints in `sifr_lowering` lib tests — a crate untouched by this branch, so pre-existing and outside every gate; worth a separate cleanup ticket.
-- The untracked zero-byte `plans/reviews/active/python-interop-m13-review-pass-6.md` and `.claude-m13-pass6.log` are local placeholders, not in the diff.
+- The untracked zero-byte `plans/reviews/active/python-interop-m13-review-pass-6.md` and `.agent-m13-pass6.log` are local placeholders, not in the diff.
 - Carried from passes 3–5 as M14 candidates: the defensive `(false, true)` doctor arm and the dead `PythonInteropCheckReport.environment` CLI fields.
 
 The pass-5 structural flakiness is eliminated at its root cause, the milestone's evidence suite now participates reliably in the authoritative merge gate, and every other contract item reproduces independently at HEAD.

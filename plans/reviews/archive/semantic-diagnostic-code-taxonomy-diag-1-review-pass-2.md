@@ -288,7 +288,7 @@ Either is fine; both keep the chain of evidence intact while making the canonica
 The Execution Status checklist at [issue lines 17-19](issues/ad-hoc-semantic-diagnostic-code-taxonomy-and-structured-hir-diagnostics.md:17) still has:
 
 ```
-- [ ] Claude review for milestone_diag_1 completed and all actionable findings addressed.
+- [ ] agent review for milestone_diag_1 completed and all actionable findings addressed.
 - [ ] milestone_diag_1 PR opened and merged.
 ```
 

@@ -1,7 +1,7 @@
 # wave_psp_d2 Review: Implementation Gaps and CPython Test Parity
 
 **Review Date:** 2026-03-16
-**Reviewer:** Claude Code (Agent)
+**Reviewer:** agent (Agent)
 **Status:** COMPLETE
 
 ---

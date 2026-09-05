@@ -1,6 +1,6 @@
 # wave_psp_a2 Review: Implementation Gaps and CPython Test Parity
 
-**Reviewer:** Claude Code
+**Reviewer:** agent
 **Date:** 2026-03-16
 **Wave:** `wave_psp_a2` (milestone_psp_2)
 **Branch:** Merged to main (commits f685e4847, 9049349ac, 2cd04f085)

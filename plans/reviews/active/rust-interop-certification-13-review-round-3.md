@@ -10,7 +10,7 @@ All three round‑2 required fixes are genuinely and correctly implemented — I
 
 ## Scope reviewed
 
-Committed delta `origin/main..HEAD` (`b231daf81`, `7a27b7896`, `6ec0742b6`, `0e53989be`), 50 files, focused on `0e53989be`. Excluded and not attributed to this milestone: `editor_integrations`, the leetcode corpora submodule, `.cert5probe/`, `.claude/`, the two stray webp files, and `plans/phases/43_interoperability.md`. `plans/reviews/active/rust-interop-certification-13-review-round-3.md` exists as an empty untracked placeholder; per instructions I did not write to it.
+Committed delta `origin/main..HEAD` (`b231daf81`, `7a27b7896`, `6ec0742b6`, `0e53989be`), 50 files, focused on `0e53989be`. Excluded and not attributed to this milestone: `editor_integrations`, the leetcode corpora submodule, `.cert5probe/`, `.agent/`, the two stray webp files, and `plans/phases/43_interoperability.md`. `plans/reviews/active/rust-interop-certification-13-review-round-3.md` exists as an empty untracked placeholder; per instructions I did not write to it.
 
 ---
 

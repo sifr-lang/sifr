@@ -3,7 +3,7 @@
 **Date**: 2026-03-21
 **Commit range**: `b4ae56cb` — "wave_clone_3: harden generic iterator ownership and tuple copy semantics (#1402)" through `c19f9c4d` — "wave_clone_3: apply review pass 1 invariants doc note (#1403)"
 **Phase**: `ad-hoc-ownership-aware-collection-lowering-and-clone-elision`
-**Reviewer**: Claude (external review, pass 2)
+**Reviewer**: agent (external review, pass 2)
 
 ---
 

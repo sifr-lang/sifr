@@ -4,7 +4,7 @@
 **Execution ledger**: `issues/ad-hoc-stateful-rng-crypto-and-polish-parity-expansion-execution.md`
 **Review type**: post-closure CPython adaptation pass — missing/unadapted test gap analysis
 **Date**: 2026-03-21
-**Reviewer**: Claude Code
+**Reviewer**: agent
 **Commit under review**: `f2df08d6` (post-closure CPython adaptation coverage added)
 **Phase status**: Production-grade closed; post-closure CPython adaptation pass completed
 
@@ -449,7 +449,7 @@ Full gate: `scripts/run_all_tests.sh --profile quick` — PASS at `f2df08d6`.
 ---
 
 *Review completed: 2026-03-21*
-*Reviewer: Claude Code*
+*Reviewer: agent*
 *Phase: ad-hoc-stateful-rng-crypto-and-polish-parity-expansion*
 *Review type: post-closure-cpython-review-pass-1*
 *Commit: f2df08d6*

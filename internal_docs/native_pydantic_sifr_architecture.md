@@ -196,7 +196,7 @@ issue and the compatibility matrix.
 This repository boundary is part of the architecture, not merely source-tree
 organization. `sifr-lang/sifr` supplies and releases the general compiler,
 sysroot, package, and native-interop capabilities first. The resulting
-`pydantic` Sifr package is then developed, tested, reviewed, released, and
+`pydantic` Sifr package is then developed, tested, validated, released, and
 consumed as an external package from its own
 [`sifr-lang/pydantic-sifr`](https://github.com/sifr-lang/pydantic-sifr) GitHub
 repository.
@@ -1917,14 +1917,14 @@ It never changes Sifr behavior or fixtures automatically.
 
 ### Upstream pin updates
 
-An upstream revision changes only in a dedicated reviewed compatibility PR:
+An upstream revision changes only in a dedicated approved compatibility PR:
 
 1. update the sole Pydantic compatibility commit and regenerate the complete
    sorted ledgers for its API and in-tree Core test roots;
 2. fail on every added, removed, renamed, skipped, or newly `xfail` node until
-   its manifest disposition and evidence owner are reviewed;
+   its manifest disposition and evidence owner are validated;
 3. regenerate only the affected neutral fixtures and differential snapshots;
-4. review semantic deltas, provenance, licenses, and benchmark/fuzz seeds;
+4. assess semantic deltas, provenance, licenses, and benchmark/fuzz seeds;
 5. reject automatic behavior changes—an intentional contract change requires
    its own design decision and public compatibility entry; and
 6. merge the new pin only when the ledger has exact set equality, every
