@@ -1,4 +1,3 @@
-# Reference: regex
 from sifr.re import search, sub, findall, split, search_flags, IGNORECASE
 
 def has_match(pattern: str, text: str) -> Result[bool, RegexError]:

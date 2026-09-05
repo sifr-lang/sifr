@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_iter_fix_7_user_defined_iterable_protocol
+# User defined iterables.
 from sifr.test import assert_bool_vector_eq
 
 

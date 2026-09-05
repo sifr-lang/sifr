@@ -1,4 +1,3 @@
-# Reference: mut_sorti
 # `mut` parameters should support in-place list sorting.
 
 def sort_values(own mut values: list[int]) -> list[int]:

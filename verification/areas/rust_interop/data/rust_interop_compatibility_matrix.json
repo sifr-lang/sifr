@@ -1,12 +1,12 @@
 {
-  "schema_version": 1,
-  "phase": "39_rust_interop",
+  "schema_version": 2,
+  "area": "rust_interop",
   "source_fixture_matrix": "verification/areas/rust_interop/data/rust_interop_fixture_matrix.json",
   "categories": {
     "supported": "Supported by passing positive and negative fixture evidence for the stated execution kind.",
     "supported-through-bridge": "Supported when the package author exposes an explicit local or shared bridge contract; direct binding is not implied.",
     "unsupported-by-design": "Rejected intentionally with passing diagnostic evidence; no fallback path is provided.",
-    "future-owned-by-separate-phase": "Documented separately because at least one required evidence direction is not passing."
+    "tracked-unsupported": "Documented separately because at least one required evidence direction is not passing."
   },
   "rows": [
     {

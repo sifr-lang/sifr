@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_a2_dict_setdefault_invalid_default
+# Dict setdefault invalid default.
 def main():
     data: dict[str, int] = {"x": 1}
     data.setdefault("y", "bad")

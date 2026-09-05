@@ -1,5 +1,3 @@
-# Reference: rng_text_and_statistics
-# Reference: stateful-rng-crypto-and-polish-parity-expansion
 from sifr.html import escape
 from sifr.statistics import StatisticsError, median_grouped
 from sifr.textwrap import TextWrapper

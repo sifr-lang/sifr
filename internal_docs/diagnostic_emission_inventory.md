@@ -269,7 +269,7 @@ Warnings and notes are part of the same diagnostic stream and cannot remain unco
 
 | Surface | Current sites | Current behavior | Target code / owner |
 | --- | ---: | --- | --- |
-| retired arithmetic overflow warning | no producer remains after exact-integer lowering | no warning is emitted; checked operations use typed error channels | retired `SIFR-TYPE-0901`; Item 8 removed its dead IR, registry, renderer, catalog, and docs paths |
+| retired arithmetic overflow warning | no producer remains after exact-integer lowering | no warning is emitted; checked operations use typed error channels | retired `SIFR-TYPE-0901`; Error-flow cleanup removed its dead IR, registry, renderer, catalog, and docs paths |
 | `ctx.warn(...)` unreachable statement | 1 in `lower/statements.rs` | warning string when a statement after guaranteed exit is ignored | `SIFR-FLOW-0901` warning |
 | `ctx.warn(...)` exhaustive-return validation panic recovery | 1 in `lower/typing_and_functions.rs` | warning string after `catch_unwind` skips control-flow validation | wrong-layer internal boundary; route as `SIFR-INTERNAL-0001` or eliminate panic path rather than keeping a user warning |
 | `ctx.reveal_types` | `reveal_type(...)` in `lower/builtin_calls.rs`; guarded-index reveal propagation in `lower/guarded_index.rs` | note-like developer output currently stored as strings | `SIFR-TYPE-0902` note with `revealed_type` arg and recovery-cap participation |

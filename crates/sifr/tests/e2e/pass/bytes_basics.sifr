@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_bytes_1_core_type_support
+# Bytes basics.
 def sum_bytes(data: bytes) -> int:
     total: int = 0
     for value in data:

@@ -1,4 +1,3 @@
-# Reference: auto_init
 # Source issue: 192-auto_init.md
 # Demo: auto_init
 # Demonstrates auto-generated constructors, __eq__, and __str__ for classes

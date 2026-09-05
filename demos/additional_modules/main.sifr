@@ -1,5 +1,3 @@
-# Reference: new_modules
-# Reference: compiler-feature-history
 # new_modules_demo.sifr
 # Demonstrates selected modules added in new_modules:
 # operator, calendar, html, sys, configparser, gzip, zipfile

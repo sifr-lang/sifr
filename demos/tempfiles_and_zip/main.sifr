@@ -1,5 +1,3 @@
-# Reference: runtime_tempfiles_and_zip
-# Reference: runtime-and-file-object-parity-expansion
 from sifr.tempfile import mkstemp, mkdtemp
 from sifr.io import write_text, exists
 from sifr.zipfile import ZipFile

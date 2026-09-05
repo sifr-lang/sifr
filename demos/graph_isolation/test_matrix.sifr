@@ -1,4 +1,3 @@
-# Reference: graph_isolation
 from helper import value
 
 def test_matrix():

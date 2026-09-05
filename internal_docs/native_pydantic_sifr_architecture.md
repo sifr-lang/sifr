@@ -1139,7 +1139,7 @@ def load_user(payload: bytes) -> Result[User, ValidationError]:
     return User.model_validate_json(payload)
 ```
 
-The example uses the `json.exact` integer profile. The phase record uses the
+The example uses the `json.exact` integer profile. The design record uses the
 same canonical example.
 
 Sifr does not turn validation failures into exceptions. Familiar operations

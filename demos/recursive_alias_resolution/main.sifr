@@ -1,0 +1,12 @@
+# Resolve forward references between type aliases.
+
+type Payload = Response
+type Response = list[int]
+type Json = None | bool | int | float | str | list[Json] | dict[str, Json]
+
+def payload_size(data: Payload) -> int:
+    return len(data)
+
+def main():
+    print(payload_size([1, 2, 3]))
+    print("recursive alias names resolved")

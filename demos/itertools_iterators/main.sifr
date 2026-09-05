@@ -1,5 +1,3 @@
-# Reference: iter_itertools_iterators
-# Reference: first-class-lazy-iterators-and-python-iterable-protocol
 from sifr.itertools import chain, repeat, islice, count
 
 # iterator Iterator behavior demo: itertools subset now returns Iterator[T].

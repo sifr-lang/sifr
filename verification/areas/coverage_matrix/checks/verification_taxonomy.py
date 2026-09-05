@@ -33,13 +33,18 @@ ACTIVE_ROOTS = (
     REPO_ROOT / "docs",
     REPO_ROOT / "editor_integrations",
     REPO_ROOT / "internal_docs",
-    REPO_ROOT / "lib",
+    REPO_ROOT / "stdlib",
+    REPO_ROOT / "README.md",
+    REPO_ROOT / "Cargo.toml",
+    REPO_ROOT / "sifr.toml",
     REPO_ROOT / "scripts",
 )
 
 TEXT_EXTENSIONS = {
     ".json",
     ".md",
+    ".mdx",
+    ".sh",
     ".py",
     ".rs",
     ".sifr",
@@ -48,13 +53,27 @@ TEXT_EXTENSIONS = {
     ".yaml",
 }
 
-SKIP_DIR_NAMES = {".git", ".venv", "__pycache__", "node_modules", "target", "third_party"}
-EXCLUDED_FILES = {
-    REPO_ROOT / "verification" / "compatibility" / "retained_compatibility_contracts.json",
-    REPO_ROOT / "verification" / "areas" / "developer_tooling" / "check_no_pre_v1_compatibility.py",
-}
+SKIP_DIR_NAMES = {".git", ".venv", "__pycache__", "node_modules", "target", "third_party", "vendor", "skills"}
+
+NUMBERED_DELIVERY_NAME = re.compile(
+    r"(?:^|[/_.-])(?:item|part|phase|milestone|wave|sprint|workstream)[_-]?\d+[a-z]?(?=[/_.-]|$)",
+    re.IGNORECASE,
+)
+NUMBERED_DELIVERY_TEXT = re.compile(
+    r"(?<![A-Za-z0-9_])(?:item|phase|milestone|wave|sprint)[_-]?\d+[a-z]?(?=[_\W]|$)"
+    r"|\b(?:items?|parts?|phases?|milestones?|waves?|sprints?)\s+\d+\b"
+    r"|(?:^|[/_.-])(?:part|item)[_-]?\d+[a-z]?(?=/|\.(?:rs|sifr|mdx?|json)\b|$)",
+    re.IGNORECASE,
+)
+DELIVERY_METADATA = re.compile(
+    r"\b(?:implementation_items|owner_items?|closure_item)\b"
+    r'|["\'](?:phase|milestone|wave)["\']\s*:\s*["\']?\d'
+    r"|^\s*# Reference: (?!https?://|(?:\.\.?/)?(?:docs|internal_docs)/)",
+    re.IGNORECASE,
+)
 
 FILENAME_PATTERNS = (
+    NUMBERED_DELIVERY_NAME,
     re.compile(r"(^|[-_])(?:" + "|".join(DELIVERY_TERMS) + r")([-_]|$)", re.IGNORECASE),
     re.compile(r"(^|[-_])work[-_]item([-_]|$)", re.IGNORECASE),
     re.compile(r"(^|[-_])m\d+([._-]|$)", re.IGNORECASE),
@@ -63,11 +82,11 @@ FILENAME_PATTERNS = (
 ALLOW_TEXT_PATTERNS = (
     re.compile(r"\b(?:WorkspaceTracePhase|SingleOwnerCompilerPhase|LintPhase|PhaseExecution|ProgressPhase)\b"),
     re.compile(r"\b(?:phase_plan|empty_phase_plan|phase_has_enabled_rules|mark_phase_readonly)\b"),
-    re.compile(r"\b(?:record_compiler_phase_trace|build phase|compiler phase|trace phases|phase=)\b", re.IGNORECASE),
+    re.compile(r"\b(?:record_compiler_phase_trace|build phase|compiler phase|trace phases|phase-aware|phase=)\b", re.IGNORECASE),
     re.compile(r"\b" + "exp" + r"_m1\b"),
     re.compile(r"\bstable-token-m6\b"),
-    re.compile(r"\b(?:contract_config|contract_field|contract_types|contract_for_identity)\b"),
-    re.compile(r"\bPhase 40\b"),
+    re.compile(r"\b(?:contract_config|contract_field|contract_types|contract_for_identity|contract_error)\b"),
+    re.compile(r'\bid\("m\d+"\)'),
     re.compile(
         r"\b(?:"
         + RULES_ALIAS
@@ -132,6 +151,8 @@ LEGACY_FIELD_PATTERNS = (
 )
 
 TEXT_PATTERNS = (
+    NUMBERED_DELIVERY_TEXT,
+    DELIVERY_METADATA,
     re.compile(
         r"(?:^|[^A-Za-z0-9])(?:"
         + DELIVERY_BATCH
@@ -173,7 +194,6 @@ TEXT_PATTERNS = (
         re.IGNORECASE,
     ),
     re.compile(r"\bPhase\s+ad-hoc\b", re.IGNORECASE),
-    re.compile(r"\bad\s+hoc\b", re.IGNORECASE),
     re.compile(
         r"\bSource issue:\s+(?:revised compiler "
         + DELIVERY_MAP
@@ -200,7 +220,7 @@ TEXT_PATTERNS = (
     re.compile(r"\b(?:later|future) phases\b", re.IGNORECASE),
     re.compile(r"\bcapabilities?\s+\d+\s+(?:through|to)\s+\d+\b", re.IGNORECASE),
     re.compile(
-        r"\b[a-z][a-z0-9/-]*\s+capability\s+"
+        r"\b(?!and\b|or\b|the\b)[a-z][a-z0-9/-]*\s+capability\s+"
         r"(?:evidence|fixtures|implementation|public|subprocess|readiness|supported|owned|text/process|legacy)\b",
         re.IGNORECASE,
     ),
@@ -324,8 +344,6 @@ def walk_text_candidates(root: Path) -> list[Path]:
 
 
 def should_skip(path: Path) -> bool:
-    if path.resolve() in EXCLUDED_FILES:
-        return True
     parts = set(path.relative_to(REPO_ROOT).parts) if path.is_relative_to(REPO_ROOT) else set(path.parts)
     if parts & SKIP_DIR_NAMES:
         return True
@@ -333,11 +351,11 @@ def should_skip(path: Path) -> bool:
 
 
 def validate_filename(path: Path) -> list[Failure]:
-    name = path.name
+    name = path.relative_to(REPO_ROOT).as_posix() if path.is_relative_to(REPO_ROOT) else path.as_posix()
     return [
         Failure(path, None, f"filename contains delivery-plan taxonomy: {name}")
         for pattern in FILENAME_PATTERNS
-        if pattern.search(name)
+        if any(pattern.search(component) for component in Path(name).parts)
     ]
 
 
@@ -366,7 +384,12 @@ def validate_text(path: Path) -> list[Failure]:
 
 def has_taxonomy_trigger(line: str) -> bool:
     lower = line.lower()
-    return any(term in lower for term in TEXT_TRIGGER_TERMS) or M_TOKEN_TRIGGER.search(line) is not None
+    return (
+        any(term in lower for term in TEXT_TRIGGER_TERMS)
+        or M_TOKEN_TRIGGER.search(line) is not None
+        or NUMBERED_DELIVERY_TEXT.search(line) is not None
+        or DELIVERY_METADATA.search(line) is not None
+    )
 
 
 def run_self_test(*, quiet: bool = False) -> int:
@@ -455,11 +478,6 @@ def run_self_test(*, quiet: bool = False) -> int:
         bad_ad_hoc_phase_label = DELIVERY_STAGE.capitalize() + " " + "ad-hoc"
         bad_ad_hoc_phase.write_text(
             f"{bad_ad_hoc_phase_label} should not rename delivery work.\n", encoding="utf-8"
-        )
-        bad_spaced_ad_hoc = root / "spaced_ad_hoc_taxonomy.md"
-        bad_spaced_ad_hoc_label = "ad " + "hoc"
-        bad_spaced_ad_hoc.write_text(
-            f"{bad_spaced_ad_hoc_label} should not rename delivery work.\n", encoding="utf-8"
         )
         bad_source_issue = root / "source_issue_taxonomy.sifr"
         bad_source_issue_label = "Source issue: revised compiler " + DELIVERY_MAP + " record"
@@ -556,6 +574,7 @@ def run_self_test(*, quiet: bool = False) -> int:
         bad_path_marker = root / "path_marker_taxonomy.sifr"
         bad_path_marker_label = "/m" + "4/http1"
         bad_path_marker.write_text(f'assert request[1] == "{bad_path_marker_label}"\n', encoding="utf-8")
+        check_numbered_labels(root)
         failures = collect_failures((root,))
     rendered = "\n".join(failure.render() for failure in failures)
     if (
@@ -580,7 +599,6 @@ def run_self_test(*, quiet: bool = False) -> int:
         or bad_surface_alias_label not in rendered
         or bad_alias_record_label not in rendered
         or bad_ad_hoc_phase_label not in rendered
-        or bad_spaced_ad_hoc_label not in rendered
         or bad_source_issue_label not in rendered
         or bad_ad_hoc_issue_label not in rendered
         or bad_numbered_slice_label not in rendered
@@ -620,6 +638,44 @@ def run_self_test(*, quiet: bool = False) -> int:
     if not quiet:
         print("verification taxonomy self-test ok")
     return 0
+
+
+def check_numbered_labels(root: Path) -> None:
+    good = root / "semantic_terms.rs"
+    good.write_text(
+        'fn contract_error() {}\nlet migration = id("m1");\n'
+        'let part2_value = parts.next();\n'
+        'let __sifr_bridge_item_1 = value;\n'
+        '// compiler phase; collection item; slice step; ad hoc expressions\n'
+        '// PostgreSQL DDL and capability evidence\n',
+        encoding="utf-8",
+    )
+    if validate_text(good) or validate_filename(good):
+        raise AssertionError("technical terminology was rejected")
+    for label in ("item8", "item_10h", "part6", "phase40", "wave_2", "sprint3"):
+        directory = root / ("example_" + label)
+        directory.mkdir()
+        source = directory / "main.sifr"
+        source.write_text("def main(): pass\n", encoding="utf-8")
+        if not validate_filename(source):
+            raise AssertionError(f"numbered directory label was accepted: {label}")
+    for suffix in (".rs", ".sifr", ".json", ".mdx", ".sh"):
+        source = root / ("numbered_label" + suffix)
+        for line in (
+            "fn item8_cleanup() {}", '# Part 3: captures',
+            '{"owner_item": 3}', '{"phase": "39_rust_interop"}',
+            '# Reference: compiler-feature-history',
+            'let migration = id("m1"); // Item 8',
+            'fn contract_error() {} // Phase 4',
+        ):
+            source.write_text(line + "\n", encoding="utf-8")
+            if should_skip(source) or not validate_text(source):
+                raise AssertionError(f"numbered delivery label was accepted: {line}")
+    skipped = root / "skills" / "example"
+    skipped.mkdir(parents=True)
+    (skipped / "SKILL.md").write_text("Phase 99\n", encoding="utf-8")
+    if collect_failures((root / "skills",)):
+        raise AssertionError("skill files entered the codebase scan")
 
 
 def repo_path(path: Path) -> str:

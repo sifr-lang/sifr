@@ -1,5 +1,3 @@
-# Reference: codegen_stmt_expr_ratio_gate
-# Reference: compiler-feature-history
 # Demo: stmt/expr structured-lowering ratio gate corpus
 # This mirrors the curated gate fixture used by the e2e ratio test.
 

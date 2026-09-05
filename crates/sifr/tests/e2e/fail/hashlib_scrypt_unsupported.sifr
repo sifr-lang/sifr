@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_rng_2_hashlib_scrypt_unsupported
+# Hashlib scrypt unsupported.
 from sifr.hashlib import scrypt
 
 

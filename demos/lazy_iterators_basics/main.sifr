@@ -1,5 +1,3 @@
-# Reference: iter_fix_lazy_iterators_basics
-# Reference: canonical-iteration-model-and-lazy-parity-readiness
 from sifr.itertools import chain, count
 
 # Behavior Group 0 lock demo for canonical iteration continuation.

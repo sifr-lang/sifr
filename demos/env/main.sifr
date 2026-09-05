@@ -1,4 +1,3 @@
-# Reference: env
 # Read-only environment access demo.
 from sifr.env import getenv, getenv_opt, keys, values, items
 from sifr.test import assert_bool_vector_eq

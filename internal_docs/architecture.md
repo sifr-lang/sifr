@@ -127,7 +127,7 @@ When adapting CPython behavior to Sifr, apply these rules:
 
 ### Safety Testing Rules
 
-Every workstream that implements built-in functions, data structure methods, or stdlib modules must include a **safety test layer** that verifies:
+Every change that implements built-in functions, data structure methods, or stdlib modules must include a **safety test layer** that verifies:
 
 1. **Behavioral parity with CPython:** for each function/method, write tests that match CPython's expected output for valid inputs. Use `Lib/test/test_<module>.py` as the specification.
 2. **Safe error handling:** for each CPython operation that raises an exception, verify that Sifr returns the correct `Result::Err` or `Option::None` instead.
@@ -271,7 +271,7 @@ error before emission for unsupported types.
 
 The retained-contract registry locks the external and current product behavior
 excluded from broad compatibility scans. It includes DLPack capsule
-requirements, the LSP UTF-16 default, Phase 40 release bootstrap `legacy-index`
+requirements, the LSP UTF-16 default, release bootstrap `legacy-index`
 evidence, and `RuleStatus::Deprecated` lint lifecycle metadata.
 
 ### API Naming Divergences
@@ -560,7 +560,7 @@ Sifr uses **borrow-by-default** semantics for function parameters. Move-type arg
   signatures, `HirFunction`, and every resolved method call. Protocol checking,
   codegen, and flow analysis consume the declaration and do not infer or
   reinterpret it from the method body, delegation, fields, generics, protocols,
-  or inheritance. The pre-v1 compatibility-removal phase owns deletion of the
+  or inheritance. The active compatibility-removal issue tracks deletion of the
   current inference implementation before this contract is considered closed.
   Constructor `self` is
   fresh mutable storage even though the Rust constructor is a static `new`
@@ -867,7 +867,7 @@ except DbError as e:
 
 ### 4. Package Resolver and Reproducibility (import semantics work/CLI semantics work/package-management work)
 
-These rules are split across three workstreams: import semantics work
+These rules have three owners: import semantics work
 (multi-file compilation and import semantics), CLI semantics work (structural
 workspace-boundary selection), and package-management work (package management
 with dependency resolution). Import semantics work maps to import semantics

@@ -1,3 +1,2 @@
-# Reference: temp_workspace_isolation
 def value() -> int:
     return 22

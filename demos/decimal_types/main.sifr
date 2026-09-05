@@ -1,4 +1,3 @@
-# Reference: decimal_types
 def main():
     d: decimal = Decimal("12.50")
     b: bigdecimal = BigDecimal("3.25")

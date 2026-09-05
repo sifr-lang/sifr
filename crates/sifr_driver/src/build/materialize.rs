@@ -587,7 +587,7 @@ mod tests {
     use std::collections::{BTreeMap, BTreeSet, HashSet};
 
     #[test]
-    fn item11_generated_module_paths_are_relative_and_cannot_escape() {
+    fn generated_module_paths_are_relative_and_cannot_escape() {
         let bridge = canonical_rust_module_path(std::path::Path::new("__sifr_bridge/_sifr_fs.rs"));
         assert!(matches!(
             bridge.as_deref(),

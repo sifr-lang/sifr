@@ -57,7 +57,7 @@ REQUIRED_CONTRACT_IDS = {
     "retained-translation-fallbacks",
     "retained-vendored-compatibility",
     "retained-external-file-formats",
-    "retained-phase40-legacy-index",
+    "retained-release-bootstrap-legacy-index",
     "retained-lint-deprecated-status",
 }
 ALLOWED_CONTRACT_KINDS = {

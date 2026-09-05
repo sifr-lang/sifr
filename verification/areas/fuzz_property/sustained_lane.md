@@ -6,7 +6,7 @@ Purpose:
 - feed issue triage and regression corpus updates
 
 Status:
-- non-blocking for merge decisions in the verification hardening workstream
+- non-blocking for merge decisions during verification hardening
 - outputs are informational and signal-queue-oriented
 
 Operational note:

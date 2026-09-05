@@ -20,7 +20,7 @@ MATRIX_PATH = (
 )
 MANIFEST_PATH = REPO_ROOT / "internal_docs" / "stdlib_retained_compiler_intrinsics.toml"
 CERTIFICATION_ISSUE = "plans/issues/archive/rust-interop-runtime-ecosystem-certification.md"
-FUTURE_OWNED = "future-owned-by-separate-phase"
+FUTURE_OWNED = "tracked-unsupported"
 SUPPORTED = "supported"
 SUPPORTED_STDLIB_CORE_ROWS = frozenset(
     {"async_runtime_core", "callback_subscription_core", "opaque_resource_core"}

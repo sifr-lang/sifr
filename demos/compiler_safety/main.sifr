@@ -1,5 +1,3 @@
-# Reference: compiler hardening work
-# Reference: compiler-feature-history
 # Demo: compiler hardening work — Import Errors, Context Managers, Callable Fix
 # This demo showcases the three compiler correctness improvements.
 

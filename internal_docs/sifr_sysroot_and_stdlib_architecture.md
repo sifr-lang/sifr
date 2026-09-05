@@ -202,7 +202,7 @@ executable evidence, not just adapter code.
 `scripts/check_sysroot_stdlib_resource_certification_gate.py` enforces this
 boundary during validation by pinning each resource-sensitive stdlib surface to
 its required Rust interop compatibility matrix rows. Broad ecosystem rows are
-not handed off wholesale. The stdlib native boundary phase splits and owns only
+not handed off wholesale. The stdlib native boundary owns only
 the narrow stdlib-blocking core rows it proves, such as
 `opaque_resource_core`, `async_runtime_core`, `callback_subscription_core`, and
 possibly `callbacks_call_scoped_core`. Call-scoped callback runtime behavior is

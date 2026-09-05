@@ -16,7 +16,7 @@ RECORD = ROOT / "verification/areas/sql_platform/data/sqlite_qualification.json"
 
 def validate(data: dict[str, Any]) -> list[str]:
     errors: list[str] = []
-    if data.get("schema_version") != 1 or data.get("milestone") != "sql_17_sqlite_provider":
+    if data.get("schema_version") != 2 or data.get("provider") != "sqlite":
         errors.append("SQLite qualification identity is invalid")
     libraries = data.get("supported_libraries", [])
     if libraries != [{"version": "3.53.2", "version_number": 3053002, "compile_flags": []}]:

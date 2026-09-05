@@ -1,4 +1,3 @@
-# Reference: mode_consistency
 from sifr.math import floor
 
 BASE: int = 5

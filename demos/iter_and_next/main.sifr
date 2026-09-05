@@ -1,5 +1,3 @@
-# Reference: iter_iter_and_next
-# Reference: first-class-lazy-iterators-and-python-iterable-protocol
 def main():
     values: list[int] = [1, 2, 3, 4]
     it: Iterator[int] = iter(values)

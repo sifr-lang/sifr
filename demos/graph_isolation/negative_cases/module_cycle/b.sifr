@@ -1,4 +1,3 @@
-# Reference: graph_isolation
 from c import value_c
 
 def value_b() -> int:

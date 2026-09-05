@@ -1,4 +1,4 @@
-# Reference: borrow_default
+# Borrowed parameters.
 # Borrow-by-default: function args are borrowed, caller retains ownership
 def get_length(items: list[int]) -> int:
     return len(items)

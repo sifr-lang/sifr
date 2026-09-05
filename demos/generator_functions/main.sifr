@@ -1,5 +1,3 @@
-# Reference: iter_generator_functions
-# Reference: first-class-lazy-iterators-and-python-iterable-protocol
 # iterator Iterator behavior demo
 # Verifies generator functions are typed as Iterator[T] and list materialization is explicit.
 

@@ -765,3 +765,65 @@ item can close.
 - No whole-phase review has been consumed.
 - Next action: start Item 12 in a new session and stop after its own merge or
   blocker.
+
+## Naming cleanup validation findings (2026-09-05)
+
+The repository naming cleanup changes test names, demo paths, comments, and
+verification metadata. It does not change list-repetition lowering. The full
+codegen unit suite reports 1,406 passing tests and these two failures in
+unchanged tests and implementation:
+
+- `lib_codegen_tests::collections_and_stdlib_codegen_tests::test_list_repeat_lowers_without_vec_mul_shape`
+- `lib_codegen_tests::performance_codegen_tests::single_element_list_repeat_uses_std_repeat_not_extend_loop`
+
+Both expect `std::iter::repeat(SifrInt::from_i64(0))`; current emission uses an
+explicit loop that extends the output from the repeated source list. These
+failures remain owned by this emitted-Rust quality issue. Local evidence:
+`target/naming-cleanup/codegen-tests.log`.
+
+The full emitted-Rust audit validator also rejects the existing `ERQ-032`
+current-source anchor in `crates/sifr_codegen/src/methods/list.rs`: its recorded
+`exact_int_to_usize_expr` argument expression is absent. The naming cleanup
+preserves this anchor and its enforcement. The new ownership schema passes the
+validator mutation suite when that unrelated anchor is replaced by a valid
+metric in an in-memory test copy. Local evidence:
+`target/naming-cleanup/audit-tests.log`.
+
+The full 92-program Clippy corpus also blocks quality-signature migration.
+Restoring every pre-rename corpus identity in the captured diagnostics still
+fails the original exact baseline (`selection-54c4863d30438d64`). The mismatch
+therefore exceeds an identity-only rename. The run reports unowned
+`clippy::missing_const_for_fn`, `clippy::redundant_pub_crate`,
+`clippy::wildcard_imports`, `dead_code`, and `unused_imports`; its existing lint
+counts and signatures also drift. Evidence:
+`target/naming-cleanup/corpus-clippy.log`,
+`target/naming-cleanup/clippy-diagnostics.json`, and
+`target/naming-cleanup/quality-blocker.json`.
+
+No lint allowance, owner exception, or diagnostic signature was refreshed to
+accept that drift. Selection IDs and source-path inventory fingerprints were
+migrated to the descriptive names; the exact diagnostic-signature migration
+remains blocked. The independent full companion Clippy run was stopped when
+this blocker was established. All 261 checked-in emitted companions had
+already passed the complete freshness check. Resume the signature migration
+only after this issue restores the authoritative quality baseline, then run
+the required final gates for the completed candidate.
+
+The cleanup invoked `scripts/run_all_tests.sh` once. It exited with a failure
+in coverage-matrix readiness because SQL Cargo packages and test targets lack
+classification (plus one stale PostgreSQL library-target classification).
+Cargo cache setup, HIR, file-size, full demo freshness, Rust interop checks,
+and taxonomy passed. The SQL blocker is recorded in
+`plans/issues/active/ad-hoc-schema-first-sql-platform-review-follow-ups.md`.
+This is not passing merge evidence. Log: `target/naming-cleanup/merge-gate.log`.
+
+Cleanup-specific checks passed: taxonomy and mutation tests, surface inventory
+and mutation tests, quality ownership/completion mutation tests, Rust interop
+matrix/support checks, SQL qualification mutations, compatibility checks,
+regression metadata, all 261 emitted companion freshness checks, all three
+changed compact diagnostic outputs and their metadata coverage, the two
+renamed E2E fixtures, the portable generated-project E2E test, four driver
+portability tests, two driver error-identity tests, the process-argument stdlib
+test, formatting, shell syntax, file-size and HIR guardrails, and diff checks.
+All 534 edited Sifr source files retain their non-comment content, and every
+fixture expectation remains in its original order.

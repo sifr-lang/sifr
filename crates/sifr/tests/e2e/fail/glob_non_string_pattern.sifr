@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_d1_glob_non_string_pattern
+# Glob non string pattern.
 from sifr.glob import glob
 
 

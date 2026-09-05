@@ -1,5 +1,3 @@
-# Reference: rng_random_state
-# Reference: stateful-rng-crypto-and-polish-parity-expansion
 from sifr.random import Random, RandomState, getstate, randint, random, seed, setstate
 
 

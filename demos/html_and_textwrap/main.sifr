@@ -1,5 +1,3 @@
-# Reference: struct_html_and_textwrap
-# Reference: structured-data-and-class-surface-parity-expansion
 from sifr.textwrap import TextWrapper
 from sifr.html import escape, unescape
 

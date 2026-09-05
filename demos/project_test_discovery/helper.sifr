@@ -1,4 +1,3 @@
-# Reference: project_test_discovery
 from shared import BASE
 
 def value() -> int:

@@ -649,7 +649,7 @@ serde_json = { version = "1.0.151", features = ["preserve_order"] }
     }
 
     #[test]
-    fn item11_portable_manifest_replaces_host_paths_with_exact_sources() {
+    fn portable_manifest_replaces_host_paths_with_exact_sources() {
         let mut dependency_plan = test_dependency_plan(
             CargoVendorMode::SysrootOnly,
             PathBuf::from("/host/sysroot/vendor"),

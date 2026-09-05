@@ -1,5 +1,3 @@
-# Reference: io_safety
-# Reference: compiler-feature-history
 # Demo: io_safety
 # File I/O operations now return Result[T, IOError] instead of panicking.
 # All error paths are handled via try/except with proper IOError types.

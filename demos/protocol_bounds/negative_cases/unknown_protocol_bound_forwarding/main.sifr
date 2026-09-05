@@ -1,4 +1,3 @@
-# Reference: protocol_bounds
 def take_missing[T: MissingBound](x: T) -> T:
     return x
 

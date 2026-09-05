@@ -1,4 +1,3 @@
-# Reference: hir_analysis_behavior
 def evaluate(n: int) -> int:
     if n > 0:
         if n > 10:

@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_c1_structured_parsing_serialization
+# Structured data formats.
 from sifr.csv import (
     QUOTE_ALL,
     DictReader,

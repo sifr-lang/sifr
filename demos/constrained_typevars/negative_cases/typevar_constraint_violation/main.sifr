@@ -1,4 +1,3 @@
-# Reference: constrained_typevars
 from typing import TypeVar
 
 T = TypeVar("T", int, str)

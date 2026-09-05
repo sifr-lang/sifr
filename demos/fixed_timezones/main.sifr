@@ -1,5 +1,3 @@
-# Reference: struct_fixed_timezones
-# Reference: structured-data-and-class-surface-parity-expansion
 from sifr.datetime import datetime, timezone, now
 
 

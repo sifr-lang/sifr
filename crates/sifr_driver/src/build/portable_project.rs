@@ -391,9 +391,9 @@ mod tests {
     use std::collections::BTreeSet;
 
     #[test]
-    fn item11_portable_lock_rewrites_local_sysroot_packages_to_exact_git_sources() {
+    fn portable_lock_rewrites_local_sysroot_packages_to_exact_git_sources() {
         let root = std::env::temp_dir().join(format!(
-            "sifr_item11_portable_lock_{}_{}",
+            "sifr_portable_lock_{}_{}",
             std::process::id(),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
@@ -450,7 +450,7 @@ mod tests {
     }
 
     #[test]
-    fn item11_git_lock_sources_match_the_portable_exact_revision_manifest() {
+    fn git_lock_sources_match_the_portable_exact_revision_manifest() {
         let revision = "0123456789abcdef0123456789abcdef01234567";
         let source = format!("git+https://example.com/dependency.git?branch=main#{revision}");
 

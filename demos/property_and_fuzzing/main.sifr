@@ -1,4 +1,3 @@
-# Reference: property_and_fuzzing
 # property_and_fuzzing demo: fuzz and property operationalization rules.
 
 def main():

@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_runtime_0_spooled_tempfile_unsupported
+# Spooled tempfile unsupported.
 from sifr.tempfile import SpooledTemporaryFile
 
 

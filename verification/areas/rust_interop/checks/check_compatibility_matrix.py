@@ -22,10 +22,10 @@ VALID_CATEGORIES = {
     "supported",
     "supported-through-bridge",
     "unsupported-by-design",
-    "future-owned-by-separate-phase",
+    "tracked-unsupported",
 }
 CLAIMED_SUPPORT_CATEGORIES = {"supported", "supported-through-bridge", "unsupported-by-design"}
-OPTIONAL_EMPTY_CATEGORIES = {"future-owned-by-separate-phase"}
+OPTIONAL_EMPTY_CATEGORIES = {"tracked-unsupported"}
 FUTURE_OWNER_PREFIXES = ("plans/issues/active/", "plans/phases/")
 FUTURE_OWNER_PATHS = {"internal_docs/rust_interop_architecture.md"}
 
@@ -44,10 +44,10 @@ def main(argv: list[str] | None = None) -> int:
     fixture_manifests = load_fixture_manifests(FIXTURES_ROOT, failures)
     profiles = load_profiles(REPO_ROOT)
 
-    if compatibility_matrix.get("schema_version") != 1:
-        failures.append("compatibility matrix schema_version must be 1")
-    if compatibility_matrix.get("phase") != fixture_matrix.get("phase"):
-        failures.append("compatibility matrix phase must match fixture matrix phase")
+    if compatibility_matrix.get("schema_version") != 2:
+        failures.append("compatibility matrix schema_version must be 2")
+    if compatibility_matrix.get("area") != fixture_matrix.get("area"):
+        failures.append("compatibility matrix area must match fixture matrix area")
     if compatibility_matrix.get("source_fixture_matrix") != str(
         FIXTURE_MATRIX_PATH.relative_to(REPO_ROOT)
     ):
@@ -169,7 +169,7 @@ def _validate_row(
             repo_root,
             used_evidence_tests,
         )
-    if category == "future-owned-by-separate-phase":
+    if category == "tracked-unsupported":
         if (positive_status, negative_status) == ("passing", "passing"):
             failures.append(f"{row_id}: future-owned row already has passing positive and negative evidence")
         future_owner = row.get("future_owner")
@@ -432,7 +432,7 @@ def _run_self_test() -> int:
         future_row = {
             **future_fixture,
             "fixture": "diagnostic_fixture",
-            "category": "future-owned-by-separate-phase",
+            "category": "tracked-unsupported",
             "notes": "future-owned diagnostic behavior",
         }
         future_owner_cases = (

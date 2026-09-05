@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_struct_3_uuid_datetime_expansion
+# Uuid and datetime.
 from sifr.uuid import (
     UUID,
     NAMESPACE_DNS,

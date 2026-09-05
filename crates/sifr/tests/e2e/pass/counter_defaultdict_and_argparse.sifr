@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_struct_2_collections_argparse_expansion
+# Counter defaultdict and argparse.
 from sifr.collections import Counter, defaultdict
 from sifr.argparse import ArgumentParser, Namespace
 

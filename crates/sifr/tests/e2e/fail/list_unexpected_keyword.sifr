@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_a2_list_unexpected_keyword
+# List unexpected keyword.
 def main():
     nums: list[int] = [1]
     nums.append(value=2)

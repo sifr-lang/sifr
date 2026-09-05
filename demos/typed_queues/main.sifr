@@ -1,4 +1,3 @@
-# Reference: typed_queues
 # Typed queues should support simple pop-front and append flows.
 
 def drain_queue(mut queue: list[str]) -> list[str]:

@@ -1,5 +1,3 @@
-# Reference: runtime_subprocess
-# Reference: runtime-and-file-object-parity-expansion
 from sifr.os import run_command
 
 

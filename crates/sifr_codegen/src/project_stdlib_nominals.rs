@@ -738,7 +738,7 @@ mod tests {
     }
 
     #[test]
-    fn item10a_builtin_registry_identity_does_not_replace_a_module_qualified_shadow() {
+    fn builtin_registry_identity_does_not_replace_a_module_qualified_shadow() {
         let mut paths = HashMap::from([
             (
                 "shadow.ValueError".to_string(),

@@ -1,4 +1,4 @@
-# Reference: codegen_structured_ratio_gate
+# Statement expression lowering.
 # Structured-lowering ratio gate corpus for structured stmt/expr migration.
 # The goal is to exercise migrated simple stmt/expr paths with minimal fallback noise.
 

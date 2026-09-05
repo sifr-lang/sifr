@@ -1,4 +1,3 @@
-# Reference: generator_break_else
 # generator_break_else yield/loop-path coverage demo
 # Demonstrates lazy generator iteration through break/else paths.
 

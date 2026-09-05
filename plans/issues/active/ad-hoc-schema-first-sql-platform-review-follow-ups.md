@@ -52,3 +52,21 @@ remediation review. These findings do not reopen the completed platform phase.
 - The archived phase record contains the complete validation, review, gate, and
   merge evidence.
 
+
+## Coverage registry blocker observed during naming cleanup (2026-09-05)
+
+The repository naming cleanup ran `scripts/run_all_tests.sh` once. The gate
+failed in coverage-matrix readiness with nine unclassified SQL packages,
+unclassified SQL/host-tool test targets, an unclassified PostgreSQL `rlib`,
+and a stale PostgreSQL `lib` classification. The naming cleanup changes no
+SQL Cargo packages, targets, or coverage classifications.
+
+Examples include `sifr_sql_mysql`, `sifr_sql_mysql_runtime`,
+`sifr_sql_postgresql_runtime`, `sifr_sql_sqlite`, `sifr_sql_tool`,
+`test:host_tool_cli`, `test:sql_migrations`, and `test:runtime_policies`.
+The complete failure list is in `target/naming-cleanup/merge-gate.log` and
+`target/verification/areas/coverage-matrix-merge-results.json`.
+
+This issue owns reconciling the coverage registry with the existing SQL
+package and target graph. No classification or coverage requirement was
+weakened during naming cleanup. The merge gate was not repeated.

@@ -1,4 +1,3 @@
-# Reference: auto_detection
 # the repository-root sifr.toml selects project mode structurally; neither this
 # stdlib-only import nor the unreachable invalid scratch.sifr sibling selects it
 from sifr.math import floor

@@ -1,4 +1,3 @@
-# Reference: stable_codegen
 # stable_codegen analysis/emission boundary hardening demo
 # Demonstrates stable emission while semantic facts are supplied by canonical analysis queries.
 

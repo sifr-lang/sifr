@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_d1_io_open_non_string_mode
+# Io open non string mode.
 from sifr.io import read_text
 
 

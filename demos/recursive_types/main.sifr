@@ -1,5 +1,3 @@
-# Reference: recursive_types
-# Reference: compiler-feature-history
 # feature surface: Recursive Types Demo
 # Showcases self-referential types with automatic Box<T> wrapping
 

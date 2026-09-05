@@ -1,5 +1,3 @@
-# Reference: zero_panic_gate
-# Reference: compiler-feature-history
 from sifr.io import read_text
 from sifr.json import JsonValue, loads
 from sifr.re import search

@@ -1,4 +1,3 @@
-# Reference: hir_analysis_behavior
 # hir analysis consolidation regression matrix demo
 # Exercises nested conditionals and early-return paths used in consolidation parity checks.
 

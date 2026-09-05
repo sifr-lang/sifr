@@ -561,9 +561,9 @@ mod tests {
     }
 
     #[test]
-    fn item11_vendor_resolution_does_not_import_unavailable_workspace_pins() {
+    fn vendor_resolution_does_not_import_unavailable_workspace_pins() {
         let root = std::env::temp_dir().join(format!(
-            "sifr_item11_vendor_seed_{}_{}",
+            "sifr_vendor_seed_{}_{}",
             std::process::id(),
             PREPARED_LOCK_NONCE.fetch_add(1, Ordering::Relaxed)
         ));

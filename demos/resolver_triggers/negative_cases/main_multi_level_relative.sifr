@@ -1,4 +1,3 @@
-# Reference: resolver_triggers
 from ..helper import value
 
 def main():

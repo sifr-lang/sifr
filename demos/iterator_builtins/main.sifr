@@ -1,5 +1,3 @@
-# Reference: iter_fix_iterator_builtins
-# Reference: canonical-iteration-model-and-lazy-parity-readiness
 # Iterator behavior demo: builtin lazy/eager boundary cleanup.
 
 

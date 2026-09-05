@@ -1,4 +1,3 @@
-# Reference: while_else
 # negative guard: else branch must not execute after break
 
 def main():

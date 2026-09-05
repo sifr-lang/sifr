@@ -1,4 +1,3 @@
-# Reference: diagnostic_options
 # negative path:
 # repeated diagnostics must stay deterministic in compact mode with stable grouping.
 

@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_d1_filesystem_paths_archives
+# Filesystem paths and archives.
 from sifr.io import read_lines, read_text, write_text, exists
 from sifr.pathlib import Path
 from sifr.glob import glob

@@ -1,4 +1,3 @@
-# Reference: verification_reliability
 # verification_reliability demo: deterministic scale, flake control, and structured evidence.
 
 def main():

@@ -1,4 +1,3 @@
-# Reference: entrypoint-compilation-unification-and-dependency-metadata-readiness
 # Feature demo:
 # support-module-required crates must flow into the generated Cargo manifest.
 from helper import render

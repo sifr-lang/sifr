@@ -1,3 +1,2 @@
-# Reference: run_and_build
 def msg() -> str:
     return "aligned"

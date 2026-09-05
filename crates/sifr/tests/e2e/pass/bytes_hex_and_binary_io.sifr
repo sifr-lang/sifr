@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_bytes_4_raw_backend_and_lowering_separation
+# Bytes hex and binary io.
 from sifr.io import exists
 from sifr.os import remove_file
 

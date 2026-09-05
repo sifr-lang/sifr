@@ -1,5 +1,3 @@
-# Reference: borrow_codegen_fixes
-# Reference: compiler-feature-history
 # Feature Demo: Borrow-by-Default Codegen Fixes Demo
 # =================================================
 # This demo showcases the codegen fixes for borrow-by-default regressions:

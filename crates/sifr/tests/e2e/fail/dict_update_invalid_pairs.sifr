@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_a2_dict_update_invalid_pairs
+# Dict update invalid pairs.
 def main():
     data: dict[str, int] = {}
     data.update([1, 2, 3])

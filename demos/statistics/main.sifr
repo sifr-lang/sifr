@@ -1,4 +1,3 @@
-# Reference: statistics
 # statistics parity demo
 from sifr.statistics import (
     mean, median, variance, stdev,

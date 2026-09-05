@@ -1,4 +1,3 @@
-# Reference: datetime
 from sifr.datetime import timedelta, datetime, now, from_timestamp, timezone
 from sifr.test import assert_bool_vector_eq
 

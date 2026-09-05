@@ -11,7 +11,7 @@
       "reproducer_fixture": "verification/areas/regression/fixtures/crashes/CR-0001_cfg_invariant_minimized.sifr",
       "promotion_target_suite": "fixedbugs",
       "promoted_fixedbug_id": "FB-0004",
-      "note": "Item 8 made one-arm match CFG construction valid and changed CFG validation to return a typed invariant error."
+      "note": "One-arm match CFG construction is valid, and CFG validation returns a typed invariant error."
     },
     {
       "id": "CR-0002",

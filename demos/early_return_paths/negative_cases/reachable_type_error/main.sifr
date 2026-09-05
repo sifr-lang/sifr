@@ -1,4 +1,3 @@
-# Reference: early_return_paths
 # early_return_paths negative case
 # Reachable non-exiting branch must still fail narrowing-sensitive return checks.
 

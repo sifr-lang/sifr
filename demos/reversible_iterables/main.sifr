@@ -1,5 +1,3 @@
-# Reference: iter_fix_reversible_iterables
-# Reference: canonical-iteration-model-and-lazy-parity-readiness
 # canonical-iteration Iterator behavior demo
 # Verifies capability-aware reversible typing and homogeneous tuple iteration readiness.
 

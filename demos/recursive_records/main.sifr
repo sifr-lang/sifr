@@ -1,4 +1,3 @@
-# Reference: recursive_recordse
 # Recursive record fields should stay typed through nested construction and access.
 
 class Entry:

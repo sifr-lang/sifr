@@ -1,4 +1,3 @@
-# Reference: temp_workspace_isolation
 # negative path: reachable parse errors still fail with isolated workspaces.
 
 from helper import value

@@ -1,5 +1,3 @@
-# Reference: codegen_preamble_migration
-# Reference: compiler-feature-history
 # Demo: codegen_preamble_migration
 # Exercises IR-emitted preamble pieces:
 # - IOError + file handle infrastructure via open/read/close

@@ -1,5 +1,3 @@
-# Reference: cpython_tests
-# Reference: compiler-feature-history
 # Demo: cpython_tests — CPython Test Parity
 # This demo showcases a representative sample of the 500 ported CPython assertions
 # across 14 test modules, validating Sifr's stdlib parity with CPython.

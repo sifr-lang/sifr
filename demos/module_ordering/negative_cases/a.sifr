@@ -1,4 +1,3 @@
-# Reference: module_ordering
 from b import value_b
 
 def value_a() -> int:

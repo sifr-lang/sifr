@@ -1,4 +1,3 @@
-# Reference: valid_control_flow
 # valid_control_flow negative case
 # Reachable return type mismatch remains a hard failure.
 

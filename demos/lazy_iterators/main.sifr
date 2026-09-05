@@ -1,5 +1,3 @@
-# Reference: lazy_iterators
-# Reference: compiler-feature-history
 # lazy_iterators demo
 # Demonstrates lazy iterator support for generator functions
 # Generators now use std::iter::from_fn instead of eager Vec collection
@@ -16,7 +14,7 @@ def fibonacci(n: int) -> Iterator[int]:
         count = count + 1
 
 # ============================================================
-# Part 2: Generator collected into a list (squares)
+# Generator collected into a list (squares)
 # ============================================================
 
 def squares(n: int) -> Iterator[int]:
@@ -26,7 +24,7 @@ def squares(n: int) -> Iterator[int]:
         i = i + 1
 
 # ============================================================
-# Part 3: Conditional yield (filter pattern — evens)
+# Conditional yield (filter pattern — evens)
 # ============================================================
 
 def evens(limit: int) -> Iterator[int]:
@@ -37,7 +35,7 @@ def evens(limit: int) -> Iterator[int]:
         i = i + 1
 
 # ============================================================
-# Part 4: Simple count generator
+# Simple count generator
 # ============================================================
 
 def count_up(n: int) -> Iterator[int]:
@@ -64,22 +62,22 @@ def format_int_list(values: list[int]) -> str:
 def main():
     output: list[str] = []
 
-    # Part 1: Lazy iteration — for loop consumes one value at a time
+    # Lazy iteration — for loop consumes one value at a time
     output.append("=== Fibonacci (lazy for loop) ===")
     for fib in fibonacci(8):
         output.append(str(fib))
 
-    # Part 2: Collect into a list
+    # Collect into a list
     output.append("=== Squares (collected) ===")
     sq: list[int] = list(squares(5))
     output.append(format_int_list(sq))
 
-    # Part 3: Conditional yield — only even numbers
+    # Conditional yield — only even numbers
     output.append("=== Evens (conditional yield) ===")
     for e in evens(10):
         output.append(str(e))
 
-    # Part 4: Simple count — both lazy and collected
+    # Simple count — both lazy and collected
     output.append("=== Count (lazy) ===")
     for c in count_up(3):
         output.append(str(c))

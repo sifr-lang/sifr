@@ -1,4 +1,3 @@
-# Reference: cli_modes
 # cli-modes-sample demo
 # CLI rules is regression-protected by resolver tests in crates/sifr/src/main.rs.
 

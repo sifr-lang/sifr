@@ -1,4 +1,3 @@
-# Reference: temp_workspace_isolation
 # temp_workspace_isolation invocation-scoped temp workspace isolation demo
 
 from helper import value

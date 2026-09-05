@@ -1,5 +1,3 @@
-# Reference: syntax_expansion
-# Reference: compiler-feature-history
 # Production runtime audit: Syntax Expansion Demo
 # Showcases bitwise operators, unary operators, augmented assignment, and chained assignment
 

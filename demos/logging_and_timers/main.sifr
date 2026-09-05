@@ -1,5 +1,3 @@
-# Reference: runtime_logging_and_timers
-# Reference: runtime-and-file-object-parity-expansion
 from sifr.logging import getLogger, Logger, FileHandler, Formatter, INFO
 from sifr.time import gmtime_struct, mktime, struct_time, TIMEZONE, TZNAME
 from sifr.timeit import Timer

@@ -1,5 +1,3 @@
-# Reference: runtime_in_memory_streams
-# Reference: runtime-and-file-object-parity-expansion
 from sifr.io import StringIO, BytesIO, BinaryFileHandle, open_binary, exists
 from sifr.os import remove_file
 

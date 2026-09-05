@@ -1,4 +1,3 @@
-# Reference: diagnostic_schema
 # diagnostic_schema span and diagnostic schema quality demo
 #
 # Positive path: source compiles successfully while the CLI can render diagnostics

@@ -1,4 +1,3 @@
-# Reference: run_and_build
 from helper import msg
 
 def main():

@@ -1,5 +1,3 @@
-# Reference: subscript_mutation
-# Reference: compiler-feature-history
 # subscript_mutation Demo
 
 def main():

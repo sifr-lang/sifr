@@ -2068,7 +2068,7 @@ Compatibility categories are:
   explicit local or shared bridge contract; direct binding is not implied.
 - `unsupported-by-design`: passing diagnostics for a rejected surface with no
   fallback path.
-- `future-owned-by-separate-phase`: documented separately because at least one
+- `tracked-unsupported`: documented separately because at least one
   evidence direction is not passing. Future-owned rows must reference a concrete
   delivery plan or the exact durable architecture that reserves the contract.
   There are no current future-owned rows.

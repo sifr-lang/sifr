@@ -1,4 +1,3 @@
-# Reference: tuple_assignmentb
 # Tuple assignment should work for locals, attributes, and simple running state.
 
 class Pair:

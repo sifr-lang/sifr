@@ -9,7 +9,7 @@ use std::path::PathBuf;
 use std::sync::{Arc, Barrier};
 
 #[test]
-fn item10a_test_project_preserves_module_scoped_builtin_error_shadow_identities() {
+fn test_project_preserves_module_scoped_builtin_error_shadow_identities() {
     let unique = format!(
         "sifr_test_module_error_identity_{}_{}",
         std::process::id(),

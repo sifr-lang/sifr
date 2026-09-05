@@ -1,5 +1,3 @@
-# Reference: structured-parsing-sample
-# Reference: python-source-parity-and-builtin-stdlib-surface
 from sifr.csv import DictReader, DictWriter, Dialect, QUOTE_ALL, format_row
 from sifr.io import write_text
 from sifr.json import JsonValue, dumps, from_array, from_bool, from_int, from_object, from_str, load

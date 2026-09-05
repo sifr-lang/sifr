@@ -1,5 +1,3 @@
-# Reference: error_safety
-# Reference: compiler-feature-history
 # error_safety demo
 # Showcases: Built-in error classes, Result[T, E] enforcement,
 #            exhaustiveness checking, raise enforcement, custom errors

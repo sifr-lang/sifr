@@ -1,4 +1,3 @@
-# Reference: range_aliasing
 # driver/package architecture / range_aliasing behavior group 7 demo: range bounds inferred through len(...) aliases.
 
 def sum_forward(nums: list[int]) -> int:

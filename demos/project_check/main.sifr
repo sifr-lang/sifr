@@ -1,4 +1,3 @@
-# Reference: project_check
 # project_check project-aware check parity demo
 # Valid local imports in a multi-file project should pass in `sifr check` and `sifr run`.
 

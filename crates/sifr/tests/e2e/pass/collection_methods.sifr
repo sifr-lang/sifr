@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_a2_core_object_model_surface
+# Collection methods.
 def main():
     nums: list[int] = [1, 2, 3, 2]
     assert nums.index(2, start=1, stop=4) == 1

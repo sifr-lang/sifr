@@ -1,3 +1,2 @@
-# Reference: module_ordering
 def provided() -> int:
     return 19
