@@ -864,3 +864,50 @@ the generated-project integration evidence; no fixture lockfile or dependency
 was changed during naming cleanup. Evidence:
 `target/abbreviation-cleanup/structural-runtime.log` and
 `target/abbreviation-cleanup/original-structural-metadata.log`.
+
+## Naming cleanup review remediation (2026-09-05)
+
+The newly enrolled runtime-observability companion failed to build because
+dependency pruning compared the Cargo feature `runtime-observability` with
+the Rust namespace `runtime_observability`. The compiler now normalizes
+hyphenated feature names before matching generated paths. A regression test
+checks retention of runtime demand, rejection of unrelated JSON demand, and
+pruning when the generated paths disappear. All four dependency-metadata
+tests passed, and `demos/runtime_observability_boundary/main.sifr` built and
+ran successfully. Astra high reviewed this fix without actionable findings.
+
+The identity-dependent Clippy signature migration remains blocked by this
+issue's pre-existing baseline provenance gap. The tracked baseline stores
+aggregate hashes rather than their contributing per-entry diagnostics. Its
+`baseline_commit` predates later aggregate updates. Replaying the historical
+compiler and fixtures at `6ab6adc08` and the earlier complexity fixture at
+`59b8a6e8` did not reproduce all old aggregates. Matching historical sysroots
+also did not recover the baseline. Existing run evidence in other local
+worktrees was inspected read-only; none matched the required aggregates.
+
+An identity-only migration must first reproduce the old aggregates exactly
+from original per-entry records. It must then apply renames and duplicate
+consolidation, account separately for the three added companions, and
+recompute selection IDs and diagnostic signatures together. Replacing the
+baseline with current or reconstructed diagnostics would also accept
+unrelated compiler drift. No such baseline refresh or lint allowance was
+made. An experimental consistency validator was removed because requiring
+unavailable baseline evidence would leave the repository's loader broken.
+
+The three added companions emitted unchanged Rust and compiled through
+Clippy without Rust compilation errors after binding their temporary Cargo
+manifests to the local runtime and standard-library crates. They exposed
+76 lint diagnostics; this is not a passing strict-Clippy gate or accepted
+debt. Their unmodified exported manifests reference this unpublished
+branch revision through Git, which prevented dependency resolution.
+Final qualification owns that separate materialization/gate integration
+problem. Evidence is under `target/review-remediation/`, including
+`dependency-tests.log`, `observability-run.log`,
+`new-companion-diagnostics.json`, `historical-complexity.log`, and
+`rebound-companions.log`.
+
+The remediation's sole merge gate passed all 264 emitted-companion freshness
+checks, HIR and file-size guardrails, formatting, Rust interop, and naming
+checks. It then stopped on the unchanged SQL coverage classifications owned
+by `ad-hoc-schema-first-sql-platform-review-follow-ups.md`. This is not
+passing merge evidence. Log: `target/review-remediation/merge-gate.log`.

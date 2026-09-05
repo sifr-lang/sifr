@@ -82,3 +82,8 @@ It reproduced the SQL package/target classification failures above. Demo
 freshness, Rust interop matrix checks, naming checks, HIR, and file-size checks
 passed. No SQL classification or dependency changed. Evidence:
 `target/abbreviation-cleanup/merge-gate.log`.
+
+The naming-review remediation ran its final merge gate once on 2026-09-05.
+It reproduced the same SQL package/target classification failures after all
+264 demo freshness checks and reached guardrails passed. No SQL code or
+classification changed. Evidence: `target/review-remediation/merge-gate.log`.
