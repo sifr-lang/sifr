@@ -139,6 +139,48 @@ same declaration mapping. External fields retain their spelling. Unknown
 generated-field receivers fail with a compiler diagnostic rather than a guessed
 global replacement. No PythonError-specific naming rule is introduced.
 
+### Item12H terminal handoff (2026-09-06)
+
+**Blocked; reviewed implementation preserved, not merged.**
+
+- PR: [#3697](https://github.com/sifr-lang/sifr/pull/3697), remains draft/open.
+  Reviewed/final implementation SHA: `9b52ac20094608c8a31f252db99e49ef7c963384`.
+  Merge SHA: none. Branch/worktree ownership above is unchanged.
+- [Final Opus remediation review](https://github.com/sifr-lang/sifr/pull/3697#issuecomment-5555345800):
+  **SATISFIED**, no blockers. Exactly one initial and one remediation review
+  were used. No further implementation or review is performed after this verdict.
+- Final evidence: exact-SHA focused tests 3/3, final-source driver tests 581/581
+  active (77 existing ignored), unchanged-codegen canonicalizer tests 115/115,
+  and native binding execution (`binding runtime ok`). Formatting, file-size
+  and HIR guardrails pass. All 264 demo emissions/freshness checks pass; 21
+  generated companions differ from base. Full binding-authoring and strict
+  Clippy remain incomplete/failed as recorded below; they are not pass evidence.
+- One exact-clean-SHA merge-profile gate failed after 362.20s at
+  `coverage_matrix:readiness/coverage_matrix_readiness`: nine unclassified SQL
+  packages, 13 unclassified targets, and one stale PostgreSQL library target.
+  The three other coverage variants passed; Rust interop passed 10 variants.
+  Later Python-area, crate and E2E gate stages were not reached. No create-PR
+  gate, second merge gate, or qualification bypass was used.
+- This reproduces the existing
+  [SQL coverage registry blocker](ad-hoc-schema-first-sql-platform-review-follow-ups.md#coverage-registry-blocker-observed-during-naming-cleanup-2026-09-05).
+  **Concrete additional 12K dependency:** SQL compiler/schema-tool verification
+  must reconcile the existing package/target classifications and qualify that
+  repair. 12H changes none of those inputs. The inherited Item12B/12C compiler
+  checks and clean-environment Python bytecode failure remain separate 12K inputs.
+- [Published exact-SHA evidence](https://github.com/sifr-lang/sifr/pull/3697#issuecomment-5555393502).
+  Preserved files under `/tmp/sifr-item12h.afJDbk/`:
+  `merge-9b52ac20094608c8a31f252db99e49ef7c963384.log` and `.json`,
+  `coverage-matrix-9b52ac20094608c8a31f252db99e49ef7c963384.json`,
+  `rust-interop-9b52ac20094608c8a31f252db99e49ef7c963384.json`,
+  `validation-9b52ac20094608c8a31f252db99e49ef7c963384.md`, and the focused/native
+  logs below. The full binding failure report was separately preserved before
+  the gate. Do not reuse any failed or incomplete receipt as a pass.
+- Stop after the record-only update. No12I/12J code was implemented and no next
+  item was started.12K must establish passing integrated evidence before merge;
+  this handoff does not reset any exhausted review or gate allowance.
+
+### Item12H validation history
+
 Exact validation commands registered before test execution:
 
 ```bash
@@ -309,6 +351,15 @@ review/gate iteration:
   first generic argument. A map needs its value argument instead; qualify this
   against actual emitted map access and owner-local collision variants before
   changing the mechanism. No runtime base reproduction was claimed by this review.
+- **12H-F4, pre-existing bridge layout:** the remediation reviewer flagged the
+  bridge module name `mod` as a potential alias of the root `mod.rs` path.
+  Qualify reserved-word handling and physical path identity when bridge layout
+  is next touched; the item-level module-identity check is not a path registry.
+  This was classified as pre-existing, not a new blocking field mechanism defect.
+- **12H-F5, single-source API coverage:** review consolidation of the
+  single-source canonicalization convenience wrapper now that production uses
+  the project entry point. Preserve actual public API requirements and equivalent
+  focused coverage if a later owner changes it; no API is removed here.
 
 The duplicate per-file field pass suggestion is resolved as part of the required
 bridge correction: materialization now only formats already canonical sources.

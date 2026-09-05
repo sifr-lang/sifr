@@ -193,7 +193,7 @@ It does not broaden the active item.
 | 12C | incorporated into 12B | Builtin-registration Clippy blocker | No independent item, review, or gate remains. |
 | 12D | recorded, not started | Native corpus emission dependencies | Adjudicate checked-read control flow and the complete native diagnostic inventory before Item 12B closure. |
 | 12G | merged | Dependency-checker demo path identity | Authoritative DLPack project path and computed-reference regressions merged in PR #3695; exact-SHA validation and Opus review passed. |
-| 12H | implemented; qualification in progress | Project-wide generated-field identity | Shared nominal/module field registry implemented; inherited compiler qualification and clean-environment bytecode blockers recorded for 12K. |
+| 12H | blocked: external qualification; reviewed candidate preserved | Project-wide generated-field identity | Opus remediation approved `9b52ac200`; the one merge gate fails existing SQL coverage classifications. Preserve draft PR #3697 for 12K with compiler/Python qualification blockers. |
 | 12I | authorized: after 12H handoff | Macro-defined project support visibility | Repair cancellation task-local visibility without blanket exports. |
 | 12J | authorized: after 12I handoff | Async Python error-channel contract | Resolve the authoritative error contracts and preserve async semantics. |
 | 12K | authorized: integration after dependency qualification | Item 12B and Python dependency integration | Qualify the integrated candidate and merge the preserved work; do not reset Item 12B review history. |
@@ -657,6 +657,42 @@ test failures and the Item12C builtin-registration Clippy failure require 12K
 integration with preserved Item12B. A newly reached clean-environment bytecode
 immutability failure belongs to Python build/verification and also blocks 12K.
 No assertion, dependency, bytecode rule, or Item12I/12J mechanism was changed.
+
+**Terminal handoff (2026-09-06): blocked, not merged.**
+
+- Preserve [draft PR #3697](https://github.com/sifr-lang/sifr/pull/3697), reviewed
+  implementation `9b52ac20094608c8a31f252db99e49ef7c963384`. Merge SHA: none.
+- The [initial review](https://github.com/sifr-lang/sifr/pull/3697#issuecomment-5555203238)
+  found late bridge generation outside the shared registry. The one remediation
+  batch brings bridge declarations/consumers into the same pass, prevents module
+  identity overwrite, includes bridge sources in cache identity, and removes
+  independent per-file field canonicalization. The
+  [remediation review](https://github.com/sifr-lang/sifr/pull/3697#issuecomment-5555345800)
+  is **SATISFIED**, no blocking findings. Two reviews used; no third review.
+- Evidence: exact-SHA focused driver tests 3/3; final-source driver tests
+  581 passed, 77 existing ignored; unchanged-codegen canonicalizer tests
+  115 passed; rebuilt native binding case prints `binding runtime ok`.
+  Formatting, HIR and file-size guardrails pass. All 264 demo companions pass
+  freshness in the exact-SHA gate; 21 compiler-regenerated companions differ
+  from base. No Sifr demo or reference Rust source changed.
+- The one `scripts/run_all_tests.sh --profile merge` invocation on that clean
+  SHA failed (exit 1, 362.20s) at coverage-matrix readiness: nine unclassified SQL
+  packages, 13 unclassified targets, one stale PostgreSQL `lib` classification.
+  Reached guardrails and Rust interop (10 variants, zero failures) passed.
+  Later Python-area, crate, and E2E qualification was not reached. This is not
+  a merge pass. No create-PR gate or second merge gate ran.
+- [Exact-SHA validation and gate receipt](https://github.com/sifr-lang/sifr/pull/3697#issuecomment-5555393502).
+  Raw logs and copied JSON reports are preserved under `/tmp/sifr-item12h.afJDbk/`.
+  The existing [SQL coverage registry owner](ad-hoc-schema-first-sql-platform-review-follow-ups.md#coverage-registry-blocker-observed-during-naming-cleanup-2026-09-05)
+  records this reproduced failure. Its qualified repair is an additional 12K
+  input alongside the already recorded Item12B/12C and Python build/verification
+  dependencies. No SQL classification or gate requirement was weakened here.
+- Field-resolution suggestions and pre-existing bridge-layout/API maintenance
+  are recorded as unimplemented 12H-F1–F5 in the Python owner issue. The final
+  review found no new blocking mechanism defect. Only record files change after
+  the reviewed/gated SHA; no further tests, reviews or gates are required for
+  this record update. Parent state and preserved Item12B/corpus candidates remain
+  untouched. Stop this worker; no next item is started.
 
 ### Item 12B: Bounded algorithmic dependency repair
 
