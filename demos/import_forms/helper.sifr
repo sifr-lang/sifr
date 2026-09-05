@@ -1,3 +1,2 @@
-# Reference: import_forms
 def value() -> int:
     return 17

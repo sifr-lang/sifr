@@ -1,4 +1,3 @@
-# Reference: external_modules
 # non-main module importing stdlib and exporting a local function
 from sifr.math import floor
 

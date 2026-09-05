@@ -1,4 +1,3 @@
-# Reference: project_check
 # negative path: project-aware check must fail on frontend type errors in imported modules.
 
 from helper import area_like

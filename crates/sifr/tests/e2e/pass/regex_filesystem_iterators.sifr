@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_ext_3_regex_filesystem_iterators
+# Regex filesystem iterators.
 from sifr.re import finditer, compile, Match, Pattern
 from sifr.glob import iglob
 from sifr.pathlib import Path

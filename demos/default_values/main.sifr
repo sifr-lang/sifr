@@ -1,4 +1,3 @@
-# Reference: default_values
 # default_values defaults and panic-to-diagnostic conversion demo
 #
 # Positive path: non-literal defaults (list/dict literals) are preserved and list

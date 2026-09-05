@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_struct_0_json_dynamic_hooks_unsupported
+# Json dynamic hooks unsupported.
 from sifr.json import loads
 
 

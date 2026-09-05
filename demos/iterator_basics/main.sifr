@@ -1,5 +1,3 @@
-# Reference: iter_iterator_basics
-# Reference: first-class-lazy-iterators-and-python-iterable-protocol
 from sifr.itertools import chain, repeat, islice, count, combinations, product
 
 # iterator Iterator behavior demo: closure behavior snapshot.

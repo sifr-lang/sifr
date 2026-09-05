@@ -1,4 +1,3 @@
-# Reference: max_heap
 from sifr.heapq import _heapify_max, _heappop_max, _heapreplace_max
 
 def drain(mut heap: list[int]) -> list[int]:

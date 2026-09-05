@@ -1,5 +1,3 @@
-# Reference: ordering_remediation
-# Reference: compiler-feature-history
 # Feature Demo: Ordering Remediation Demo
 # Fixes three gaps caused by out-of-order feature-set sequencing in stdlib parity architecture.
 

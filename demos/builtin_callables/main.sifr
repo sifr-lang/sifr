@@ -1,5 +1,3 @@
-# Reference: source_parity_builtin_callables
-# Reference: python-source-parity-and-builtin-stdlib-surface
 # Builtin constructors and callable surface demo
 # Shows Python-shaped source forms for builtin callable lowering.
 

@@ -1,5 +1,3 @@
-# Reference: clone_slice_unpacking
-# Reference: ownership-aware-collection-lowering-and-clone-elision
 def main():
     nums: list[int] = [3, 6, 9, 12]
     print(nums[0])

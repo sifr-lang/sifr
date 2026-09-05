@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_e1_statistics_mean_non_float_list
+# Statistics mean non float list.
 from sifr.statistics import mean
 
 

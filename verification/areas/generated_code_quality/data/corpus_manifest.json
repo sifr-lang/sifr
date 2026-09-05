@@ -535,9 +535,9 @@
       "evidence_category": "network-http-http-primitives"
     },
     {
-      "id": "e2e-060-emitted-rust-item9-complexity",
+      "id": "e2e-060-emitted-rust-complexity",
       "group": "e2e-pass-representative",
-      "source_path": "crates/sifr/tests/e2e/pass/emitted_rust_item9_complexity.sifr",
+      "source_path": "crates/sifr/tests/e2e/pass/emitted_rust_complexity.sifr",
       "expected_command": "build",
       "evidence_category": "generated-code-complexity"
     },

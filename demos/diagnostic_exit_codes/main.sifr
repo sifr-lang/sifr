@@ -1,4 +1,3 @@
-# Reference: diagnostic_exit_codes
 # diagnostic_exit_codes cross-mode diagnostic and exit behavior demo
 # Use with `check`, `build`, and `run` to validate frontend diagnostic parity.
 

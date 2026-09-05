@@ -47,10 +47,10 @@ impl GeneratedDependencyPaths {
             .rsplit_once('.')
             .map_or(module, |(_, suffix)| suffix)
             .trim_start_matches('_');
-        module_features
-            .iter()
-            .any(|feature| self.sifr_stdlib_namespaces.contains(*feature))
-            || self.sifr_stdlib_namespaces.contains(module_suffix)
+        module_features.iter().any(|feature| {
+            self.sifr_stdlib_namespaces
+                .contains(&feature.replace('-', "_"))
+        }) || self.sifr_stdlib_namespaces.contains(module_suffix)
     }
 
     fn direct_features(&self) -> HashSet<StdlibFeature> {
@@ -204,5 +204,36 @@ mod tests {
                 StdlibFeature::RustDecimal,
             ])
         );
+    }
+
+    #[test]
+    fn retains_hyphenated_stdlib_features_for_rust_module_paths() {
+        let mut modules = HashSet::from([
+            "sifr.runtime".to_string(),
+            "_sifr.runtime".to_string(),
+            "sifr.json".to_string(),
+        ]);
+        let mut features = HashSet::new();
+
+        retain_generated_dependency_metadata(
+            ["fn emit() { let _ = ::sifr_stdlib::runtime_observability::emit_diagnostic(\"info\", \"demo\", \"event\", \"message\"); }"],
+            &mut modules,
+            &mut features,
+        )
+        .expect("observability bridge should parse");
+
+        assert_eq!(
+            modules,
+            HashSet::from(["sifr.runtime".to_string(), "_sifr.runtime".to_string()])
+        );
+        assert_eq!(
+            planned_sifr_stdlib_features(&modules, &features),
+            std::collections::BTreeSet::from(["runtime-observability"])
+        );
+
+        retain_generated_dependency_metadata(["fn main() {}"], &mut modules, &mut features)
+            .expect("empty program should parse");
+        assert!(modules.is_empty());
+        assert!(features.is_empty());
     }
 }

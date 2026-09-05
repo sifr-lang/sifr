@@ -1,5 +1,3 @@
-# Reference: bytes_bytes_roundtrip
-# Reference: first-class-bytes-and-binary-surface-foundation
 
 
 def main() -> None:

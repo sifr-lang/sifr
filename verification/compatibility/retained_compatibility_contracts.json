@@ -79,9 +79,9 @@
       "evidence": ["stdlib", "crates/sifr_runtime", "docs/stdlib"]
     },
     {
-      "id": "retained-phase40-legacy-index",
+      "id": "retained-release-bootstrap-legacy-index",
       "kind": "current-product",
-      "owner": "contract:phase40-release-governance",
+      "owner": "contract:release-bootstrap-governance",
       "contract": "The governed release-channel bootstrap asset and its legacy-index digest and size inputs",
       "evidence": ["scripts/distribution/materialize_schema_bootstrap_evidence.py", "verification/areas/distribution_release/governance/schema_bootstrap.py", "plans/phases/40_stable_channel_ga_promotion_and_release_governance.md"]
     },

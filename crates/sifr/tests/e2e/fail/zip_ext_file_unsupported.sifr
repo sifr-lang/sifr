@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_runtime_2_zip_ext_file_unsupported
+# Zip ext file unsupported.
 from sifr.zipfile import ZipExtFile
 
 

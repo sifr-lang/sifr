@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_runtime_1_io_in_memory_stream_hierarchy
+# In memory streams.
 from sifr.io import StringIO, BytesIO, BinaryFileHandle, open_binary, exists, write_text
 from sifr.os import remove_file
 from sifr.test import assert_bool_vector_eq

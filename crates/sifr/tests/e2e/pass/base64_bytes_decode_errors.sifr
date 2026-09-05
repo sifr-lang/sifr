@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_rng_2_base64_invalid_bytes_decode_boundary
+# Base64 bytes decode errors.
 from sifr.base64 import b64decode_bytes, urlsafe_b64decode_bytes
 from sifr.test import assert_true
 

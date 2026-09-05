@@ -1,4 +1,3 @@
-# Reference: guarded_sequence_index
 # driver/package architecture / guarded_sequence_index behavior group 1 demo: guarded sequence indexes narrow to definite values
 
 def collect_vowels(text: str) -> str:

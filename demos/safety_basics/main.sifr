@@ -1,5 +1,3 @@
-# Reference: safety_basics
-# Reference: safety-basics-history
 # Safety basics demo: parity foundation safety + harness baseline
 from sifr.base64 import b64encode
 from sifr.test import assert_vector_eq

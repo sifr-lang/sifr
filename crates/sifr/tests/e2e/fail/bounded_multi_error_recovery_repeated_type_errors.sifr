@@ -1,4 +1,4 @@
-# Reference: diagnostic_recovery_rules
+# Bounded multi error recovery repeated type errors.
 # Source issue: runtime-safety-and-diagnostics-execution.md
 # expect-error: SIFR-TYPE-0002
 # expect-error: SIFR-TYPE-0002

@@ -1,3 +1,3 @@
-# Reference: stdlib_parity_bytes_2_constructor_non_int
+# Bytes constructor non int.
 def main() -> None:
     _bad: bytes = bytes("4")

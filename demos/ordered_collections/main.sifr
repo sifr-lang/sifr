@@ -1,5 +1,3 @@
-# Reference: ordered-collections-sample
-# Reference: python-source-parity-and-builtin-stdlib-surface
 from sifr.collections import Counter, deque, from_list
 from sifr.bisect import bisect_right, insort_right
 from sifr.heapq import heapify, heappushpop, heapreplace

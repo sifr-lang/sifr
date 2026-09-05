@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_e2_graphlib_add_non_int_predecessor
+# Graphlib add non int predecessor.
 from sifr.graphlib import TopologicalSorter
 
 

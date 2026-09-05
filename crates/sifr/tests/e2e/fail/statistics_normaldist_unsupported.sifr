@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_rng_3_statistics_normaldist_unsupported
+# Statistics normaldist unsupported.
 from sifr.statistics import NormalDist
 
 

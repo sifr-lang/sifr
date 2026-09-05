@@ -768,17 +768,17 @@ fn collect_use_bindings(tree: &syn::UseTree, bindings: &mut BTreeSet<String>) ->
 mod tests;
 
 #[cfg(test)]
-#[path = "generated_rust_canonicalizer_item8_tests.rs"]
-mod item8_tests;
+#[path = "generated_rust_canonicalizer_transforms_tests.rs"]
+mod transforms_tests;
 
 #[cfg(test)]
-#[path = "generated_rust_canonicalizer_item8a_tests.rs"]
-mod item8a_tests;
+#[path = "generated_rust_canonicalizer_effects_tests.rs"]
+mod effects_tests;
 
 #[cfg(test)]
-#[path = "generated_rust_canonicalizer_item8_remediation_tests.rs"]
-mod item8_remediation_tests;
+#[path = "generated_rust_canonicalizer_semantics_tests.rs"]
+mod semantics_tests;
 
 #[cfg(test)]
-#[path = "generated_rust_canonicalizer_item10_tests.rs"]
-mod item10_tests;
+#[path = "generated_rust_canonicalizer_support_demand_tests.rs"]
+mod support_demand_tests;

@@ -1,5 +1,3 @@
-# Reference: struct_config_json_csv
-# Reference: structured-data-and-class-surface-parity-expansion
 from sifr.json import JSONEncoder, JSONDecoder, JsonValue, from_int, from_object, from_str
 from sifr.configparser import ConfigParser, ParsingError
 from sifr.csv import Dialect, DialectRegistry, dialect_registry, reader

@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_bytes_0_architecture_lock
+# Bytes helpers.
 
 
 class BytesFactory:

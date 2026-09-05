@@ -1,4 +1,3 @@
-# Reference: early_return_paths
 # early_return_paths cfg integration behavior demo
 # Validates that CFG-backed always-exits detection is active in lowering.
 

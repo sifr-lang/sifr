@@ -1,5 +1,3 @@
-# Reference: borrow_default
-# Reference: borrow-default
 # Feature Demo: Borrow-by-Default Parameter Passing Demo
 # ====================================================
 # This demo showcases the new borrow-by-default ownership model in Sifr.

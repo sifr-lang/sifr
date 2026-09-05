@@ -1,5 +1,3 @@
-# Reference: iter_fix_iterator_integration
-# Reference: canonical-iteration-model-and-lazy-parity-readiness
 from sifr.re import finditer, Match
 from sifr.pathlib import Path
 from sifr.io import write_text

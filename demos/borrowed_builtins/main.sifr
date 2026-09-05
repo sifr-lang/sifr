@@ -1,5 +1,3 @@
-# Reference: borrowed-builtins-surface
-# Reference: compiler-feature-history
 # borrowed-builtins-surface Demo
 # Values can now be used after printing and passing to builtins
 

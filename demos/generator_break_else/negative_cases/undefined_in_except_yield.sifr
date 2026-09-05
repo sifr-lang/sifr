@@ -1,4 +1,3 @@
-# Reference: generator_break_else
 # negative path: except branch yield should be typechecked and diagnosed
 
 def gen() -> list[int]:

@@ -1,4 +1,3 @@
-# Reference: module_cycle_diagnostics
 # negative path: cycle diagnostics must be explicit and deterministic.
 
 from a import value_a

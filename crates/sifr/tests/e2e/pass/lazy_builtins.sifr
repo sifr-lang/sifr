@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_iter_fix_5_builtin_surface_cleanup
+# Lazy builtins.
 # Lazy builtin positive fixture: builtin lazy/eager boundary cleanup and iterable-input parity.
 
 

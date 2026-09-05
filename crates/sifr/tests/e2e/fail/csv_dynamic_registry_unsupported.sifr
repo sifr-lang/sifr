@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_struct_0_csv_dynamic_registry_unsupported
+# Csv dynamic registry unsupported.
 from sifr.csv import register_dialect
 
 

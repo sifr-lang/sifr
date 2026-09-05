@@ -1,3 +1,2 @@
-# Reference: decimal_verification
 def main():
     d: decimal = Decimal(1.5)

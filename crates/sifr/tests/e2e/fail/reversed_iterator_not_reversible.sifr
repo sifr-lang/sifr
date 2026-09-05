@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_iter_fix_1_reversed_iterator_not_reversible
+# Reversed iterator not reversible.
 # expect-error: SIFR-PROTO-0001
 def main() -> None:
     nums: list[int] = [1, 2, 3]

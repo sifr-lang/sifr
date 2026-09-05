@@ -1,4 +1,4 @@
-# Reference: decimal_verification_corpus_determinism
+# Decimal runtime operations.
 from sifr.json import dumps
 
 def main():

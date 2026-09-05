@@ -1,4 +1,3 @@
-# Reference: decimal_types
 # expect-error: SIFR-DECIMAL-0005
 def main():
     x: decimal = Decimal(1.5)

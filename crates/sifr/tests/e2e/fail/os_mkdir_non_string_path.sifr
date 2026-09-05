@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_d2_os_mkdir_non_string_path
+# Os mkdir non string path.
 from sifr.os import mkdir
 
 

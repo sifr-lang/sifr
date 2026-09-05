@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_struct_0_datetime_tzinfo_zoneinfo_unsupported
+# Datetime tzinfo zoneinfo unsupported.
 from sifr.datetime import tzinfo
 
 

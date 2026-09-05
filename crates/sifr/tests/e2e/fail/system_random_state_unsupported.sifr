@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_rng_1_system_random_state_unsupported
+# System random state unsupported.
 from sifr.random import RandomState, SystemRandom
 
 

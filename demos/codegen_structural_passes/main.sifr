@@ -1,5 +1,3 @@
-# Reference: codegen_structural_passes
-# Reference: compiler-feature-history
 # Demo: codegen_structural_passes (RawCode-zero slice for datetime intrinsics)
 from sifr.datetime import now, today, from_timestamp, datetime
 

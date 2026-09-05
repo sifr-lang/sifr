@@ -1,4 +1,3 @@
-# Reference: variance_rules
 def accepts_mixed(values: list[int | str]) -> int:
     return len(values)
 

@@ -1,4 +1,4 @@
-# Reference: zero_panic_gate
+# Panic free stdlib errors.
 
 # Comprehensive E2E test: every fallible stdlib function with invalid input
 # Must compile and run without panicking, handling all errors via try/except

@@ -1,4 +1,3 @@
-# Reference: unreachable_returns
 # unreachable_returns negative case
 # Reachable frontend diagnostics should remain deterministic and strict.
 

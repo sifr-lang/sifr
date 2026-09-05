@@ -765,3 +765,170 @@ item can close.
 - No whole-phase review has been consumed.
 - Next action: start Item 12 in a new session and stop after its own merge or
   blocker.
+
+## Naming cleanup validation findings (2026-09-05)
+
+The repository naming cleanup changes test names, demo paths, comments, and
+verification metadata. It does not change list-repetition lowering. The full
+codegen unit suite reports 1,406 passing tests and these two failures in
+unchanged tests and implementation:
+
+- `lib_codegen_tests::collections_and_stdlib_codegen_tests::test_list_repeat_lowers_without_vec_mul_shape`
+- `lib_codegen_tests::performance_codegen_tests::single_element_list_repeat_uses_std_repeat_not_extend_loop`
+
+Both expect `std::iter::repeat(SifrInt::from_i64(0))`; current emission uses an
+explicit loop that extends the output from the repeated source list. These
+failures remain owned by this emitted-Rust quality issue. Local evidence:
+`target/naming-cleanup/codegen-tests.log`.
+
+The full emitted-Rust audit validator also rejects the existing `ERQ-032`
+current-source anchor in `crates/sifr_codegen/src/methods/list.rs`: its recorded
+`exact_int_to_usize_expr` argument expression is absent. The naming cleanup
+preserves this anchor and its enforcement. The new ownership schema passes the
+validator mutation suite when that unrelated anchor is replaced by a valid
+metric in an in-memory test copy. Local evidence:
+`target/naming-cleanup/audit-tests.log`.
+
+The full 92-program Clippy corpus also blocks quality-signature migration.
+Restoring every pre-rename corpus identity in the captured diagnostics still
+fails the original exact baseline (`selection-54c4863d30438d64`). The mismatch
+therefore exceeds an identity-only rename. The run reports unowned
+`clippy::missing_const_for_fn`, `clippy::redundant_pub_crate`,
+`clippy::wildcard_imports`, `dead_code`, and `unused_imports`; its existing lint
+counts and signatures also drift. Evidence:
+`target/naming-cleanup/corpus-clippy.log`,
+`target/naming-cleanup/clippy-diagnostics.json`, and
+`target/naming-cleanup/quality-blocker.json`.
+
+No lint allowance, owner exception, or diagnostic signature was refreshed to
+accept that drift. Selection IDs and source-path inventory fingerprints were
+migrated to the descriptive names; the exact diagnostic-signature migration
+remains blocked. The independent full companion Clippy run was stopped when
+this blocker was established. All 261 checked-in emitted companions had
+already passed the complete freshness check. Resume the signature migration
+only after this issue restores the authoritative quality baseline, then run
+the required final gates for the completed candidate.
+
+The cleanup invoked `scripts/run_all_tests.sh` once. It exited with a failure
+in coverage-matrix readiness because SQL Cargo packages and test targets lack
+classification (plus one stale PostgreSQL library-target classification).
+Cargo cache setup, HIR, file-size, full demo freshness, Rust interop checks,
+and taxonomy passed. The SQL blocker is recorded in
+`plans/issues/active/ad-hoc-schema-first-sql-platform-review-follow-ups.md`.
+This is not passing merge evidence. Log: `target/naming-cleanup/merge-gate.log`.
+
+Cleanup-specific checks passed: taxonomy and mutation tests, surface inventory
+and mutation tests, quality ownership/completion mutation tests, Rust interop
+matrix/support checks, SQL qualification mutations, compatibility checks,
+regression metadata, all 261 emitted companion freshness checks, all three
+changed compact diagnostic outputs and their metadata coverage, the two
+renamed E2E fixtures, the portable generated-project E2E test, four driver
+portability tests, two driver error-identity tests, the process-argument stdlib
+test, formatting, shell syntax, file-size and HIR guardrails, and diff checks.
+All 534 edited Sifr source files retain their non-comment content, and every
+fixture expectation remains in its original order.
+
+## Demo directory follow-up (2026-09-05)
+
+The three remaining standalone Sifr demos now have `main.sifr`, `emitted.rs`,
+and `idiomatic.rs` companions. Their Sifr sources are byte-identical to the
+previous commit. The companion inventory now contains 264 programs. Its
+Clippy selection identifier changed to `selection-ee7a2285bedf4da8`; existing
+debt counts and signatures were preserved. The quality-baseline reconciliation
+described above must cover this expanded selection.
+
+All three idiomatic references compiled and ran. The dependency-plan and typed
+compiler-boundary Sifr demos also ran. Native execution of the runtime
+observability demo fails with `SIFR-BUILD-0005` / Rust `E0433`: the generated
+Cargo project does not enable `sifr_stdlib`'s `runtime-observability` feature.
+The same failure reproduces with the original source from commit `79e04636d`.
+This issue owns the generated-project dependency-feature correction; no
+compiler or feature-selection workaround was added during the directory move.
+Evidence: `target/demo-layout/runtime_observability_boundary.log` and
+`target/demo-layout/original-runtime.log`.
+
+## Abbreviated-label cleanup validation (2026-09-05)
+
+The naming follow-up replaced opaque sysroot fixture module names, the mapped
+token label in the structural bridge fixture and its expected output, and an
+environment-test key. Six sysroot interop unit tests and the environment E2E
+fixture passed. The taxonomy check now rejects abbreviated delivery labels in
+paths, identifiers, metadata, and comments while preserving technical uses
+such as percentile metrics, point variables, math functions, and migration IDs.
+
+The ignored `test_build_structural_bridge_runtime` integration test fails before
+compilation because `cargo metadata --locked --offline` rejects the copied
+fixture's lockfile. Replacing the copied Sifr source with its original bytes
+from `d1fb93d46` reproduces the same metadata failure. This issue owns restoring
+the generated-project integration evidence; no fixture lockfile or dependency
+was changed during naming cleanup. Evidence:
+`target/abbreviation-cleanup/structural-runtime.log` and
+`target/abbreviation-cleanup/original-structural-metadata.log`.
+
+## Naming cleanup review remediation (2026-09-05)
+
+The newly enrolled runtime-observability companion failed to build because
+dependency pruning compared the Cargo feature `runtime-observability` with
+the Rust namespace `runtime_observability`. The compiler now normalizes
+hyphenated feature names before matching generated paths. A regression test
+checks retention of runtime demand, rejection of unrelated JSON demand, and
+pruning when the generated paths disappear. All four dependency-metadata
+tests passed, and `demos/runtime_observability_boundary/main.sifr` built and
+ran successfully. Astra high reviewed this fix without actionable findings.
+
+The identity-dependent Clippy signature migration remains blocked by this
+issue's pre-existing baseline provenance gap. The tracked baseline stores
+aggregate hashes rather than their contributing per-entry diagnostics. Its
+`baseline_commit` predates later aggregate updates. Replaying the historical
+compiler and fixtures at `6ab6adc08` and the earlier complexity fixture at
+`59b8a6e8` did not reproduce all old aggregates. Matching historical sysroots
+also did not recover the baseline. Existing run evidence in other local
+worktrees was inspected read-only; none matched the required aggregates.
+
+An identity-only migration must first reproduce the old aggregates exactly
+from original per-entry records. It must then apply renames and duplicate
+consolidation, account separately for the three added companions, and
+recompute selection IDs and diagnostic signatures together. Replacing the
+baseline with current or reconstructed diagnostics would also accept
+unrelated compiler drift. No such baseline refresh or lint allowance was
+made. An experimental consistency validator was removed because requiring
+unavailable baseline evidence would leave the repository's loader broken.
+
+The three added companions emitted unchanged Rust and compiled through
+Clippy without Rust compilation errors after binding their temporary Cargo
+manifests to the local runtime and standard-library crates. They exposed
+76 lint diagnostics; this is not a passing strict-Clippy gate or accepted
+debt. Their unmodified exported manifests reference this unpublished
+branch revision through Git, which prevented dependency resolution.
+Final qualification owns that separate materialization/gate integration
+problem. Evidence is under `target/review-remediation/`, including
+`dependency-tests.log`, `observability-run.log`,
+`new-companion-diagnostics.json`, `historical-complexity.log`, and
+`rebound-companions.log`.
+
+The remediation's sole merge gate passed all 264 emitted-companion freshness
+checks, HIR and file-size guardrails, formatting, Rust interop, and naming
+checks. It then stopped on the unchanged SQL coverage classifications owned
+by `ad-hoc-schema-first-sql-platform-review-follow-ups.md`. This is not
+passing merge evidence. Log: `target/review-remediation/merge-gate.log`.
+
+## Naming cleanup PR qualification (2026-09-05)
+
+PR [#3692](https://github.com/sifr-lang/sifr/pull/3692) contains the cleanup
+and runtime feature fix. Final CLI validation with
+`cargo test -p sifr -- --skip test_e2e_pass` passed: 172 tests, no failures,
+seven ignored tests, and the explicitly excluded positive E2E suite. This
+includes the negative/runtime-failure E2E suites, emission panic-shape scan,
+portable dependency-plan checks, and Python, host-tool, runtime-observability,
+and sysroot integration tests. Log: `target/pr-cleanup/cli-tests.log`.
+
+The create-PR gate passed all 264 companion freshness checks and reached
+guardrails, then reproduced the existing SQL coverage classification
+failures. Its log is `target/pr-cleanup/create-pr.log`; the previously recorded
+merge gate applies to the same implementation. GitHub Actions also rejects
+the unchanged workflow before starting any jobs: the same failure occurs
+on base `2af89e75e` in
+[run 33963698543](https://github.com/sifr-lang/sifr/actions/runs/33963698543).
+Final qualification owns the workflow repair. The diagnostic-baseline
+identity migration and pre-existing quality failures described above remain
+unresolved; these passing CLI results do not qualify the Clippy baseline.

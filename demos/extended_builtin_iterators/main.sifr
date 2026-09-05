@@ -1,5 +1,3 @@
-# Reference: parity_ext_extended_builtin_iterators
-# Reference: python-source-parity-extension-waiver-reduction
 # Iterator behavior demo for parity extension APIs.
 # Builtin iterator re-closure: reversed/enumerate/zip/map all return Iterator[...] with explicit list(...) materialization.
 

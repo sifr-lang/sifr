@@ -293,7 +293,7 @@
     },
     {
       "bless_reason": "Ruff 0.16.4 parser recovery convergence.",
-      "bless_reference": "latest-stable-item-7-ruff-0.16.4",
+      "bless_reference": "stable-ruff-0.16.4",
       "fixture_id": "parser_invalid_layout",
       "normalizers": [
         "workspace-path",
@@ -308,7 +308,7 @@
     },
     {
       "bless_reason": "Ruff 0.16.4 parser recovery convergence.",
-      "bless_reference": "latest-stable-item-7-ruff-0.16.4",
+      "bless_reference": "stable-ruff-0.16.4",
       "fixture_id": "parser_invalid_layout",
       "normalizers": [
         "workspace-path",
@@ -324,7 +324,7 @@
     },
     {
       "bless_reason": "Ruff 0.16.4 parser recovery convergence.",
-      "bless_reference": "latest-stable-item-7-ruff-0.16.4",
+      "bless_reference": "stable-ruff-0.16.4",
       "fixture_id": "parser_invalid_layout",
       "normalizers": [
         "workspace-path",
@@ -431,7 +431,7 @@
     },
     {
       "bless_reason": "Ruff 0.16.4 parser recovery convergence.",
-      "bless_reference": "latest-stable-item-7-ruff-0.16.4",
+      "bless_reference": "stable-ruff-0.16.4",
       "fixture_id": "parser_multi_error_recovery",
       "normalizers": [
         "workspace-path",
@@ -446,7 +446,7 @@
     },
     {
       "bless_reason": "Ruff 0.16.4 parser recovery convergence.",
-      "bless_reference": "latest-stable-item-7-ruff-0.16.4",
+      "bless_reference": "stable-ruff-0.16.4",
       "fixture_id": "parser_multi_error_recovery",
       "normalizers": [
         "workspace-path",
@@ -462,7 +462,7 @@
     },
     {
       "bless_reason": "Ruff 0.16.4 parser recovery convergence.",
-      "bless_reference": "latest-stable-item-7-ruff-0.16.4",
+      "bless_reference": "stable-ruff-0.16.4",
       "fixture_id": "parser_multi_error_recovery",
       "normalizers": [
         "workspace-path",
@@ -1202,7 +1202,7 @@
       ],
       "owner": "compiler/core-language",
       "renderer": "compact",
-      "source_hash": "sha256:91e4960684be752584ff750f434a39edf06b66510489118df51e8bf90bab0fb5",
+      "source_hash": "sha256:ed4d52094b68c6a37a9233356e631dbc00ab0204fb9d110cf631288deb8dea6b",
       "suite": "baselines"
     },
     {
@@ -1697,7 +1697,7 @@
       ],
       "owner": "compiler/core-language",
       "renderer": "compact",
-      "source_hash": "sha256:983a2d774c716933357383763a5016dd71c8f70492a164039d2f1aea2abefadd",
+      "source_hash": "sha256:7a069fec3763f55ed3c025a6ba80c86db964a93ad8a72f31815ad1b29f6dc1a6",
       "suite": "baselines"
     },
     {
@@ -1892,7 +1892,7 @@
       ],
       "owner": "compiler/core-language",
       "renderer": "compact",
-      "source_hash": "sha256:5b966e184dacc8d19a31af0225d924fc167d27b718d07101c24b795f444a779a",
+      "source_hash": "sha256:0ed6c5fb7905d4f643c67fd19bc27d918e63168cb0f6f9efbe4b2d8b09112f64",
       "suite": "baselines"
     },
     {

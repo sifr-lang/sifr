@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_runtime_3_logging_time_timeit_object_surface
+# Logging time and timers.
 from sifr.logging import getLogger, Logger, Handler, StreamHandler, FileHandler, NullHandler, Formatter
 from sifr.logging import DEBUG, INFO, ERROR
 from sifr.time import gmtime_struct, localtime_struct, mktime, struct_time, TIMEZONE, ALTZONE, DAYLIGHT, TZNAME

@@ -1,4 +1,3 @@
-# Reference: module_ordering
 from provider import provided
 
 def value() -> int:

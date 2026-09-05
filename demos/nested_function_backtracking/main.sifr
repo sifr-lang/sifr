@@ -1,0 +1,40 @@
+# Use recursive helpers with mutable collection captures for backtracking.
+
+def collect_value_groups(items: list[int], limit: int) -> list[list[int]]:
+    result = []
+
+    def dfs(i, cur, total):
+        if total == limit:
+            result.append(cur.copy())
+            return
+        if i < 0 or i >= len(items) or total > limit:
+            return
+
+        cur.append(items[i])
+        dfs(i, cur, total + items[i])
+        cur.pop()
+        dfs(i + 1, cur, total)
+
+    dfs(0, [], 0)
+    return result
+
+def collect_prefixes(nums: list[int]) -> list[list[int]]:
+    result = []
+    subset = []
+
+    def dfs(i):
+        if i < 0 or i >= len(nums):
+            result.append(subset.copy())
+            return
+
+        dfs(i + 1)
+        subset.append(nums[i])
+        dfs(i + 1)
+        subset.pop()
+
+    dfs(0)
+    return result
+
+def main():
+    assert str(collect_value_groups([1, 2, 4], 4)) == '[[1, 1, 1, 1], [1, 1, 2], [2, 2], [4]]'
+    assert str(collect_prefixes([1, 2, 3])) == '[[], [3], [2], [2, 3], [1], [1, 3], [1, 2], [1, 2, 3]]'

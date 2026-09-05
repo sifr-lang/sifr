@@ -1,4 +1,3 @@
-# Reference: project_check
 from sifr.math import pi
 
 def area_like(r: float) -> float:

@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_iter_fix_0_itertools_groupby_unsupported
+# Itertools groupby unsupported.
 from sifr.itertools import groupby
 
 

@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_struct_0_html_package_parser_unsupported
+# Html package parser unsupported.
 from sifr.html import parser
 
 

@@ -466,7 +466,7 @@ mod tests {
     }
 
     #[test]
-    fn item11_process_arguments_remain_distinct_without_implicit_shell_parsing() {
+    fn process_arguments_remain_distinct_without_implicit_shell_parsing() {
         let payload = "$(printf injected); spaced * argument".to_string();
         let args = vec!["%s".to_string(), payload.clone()];
         let handle = process_output_text("printf", &args, &empty(), "", false, b"", false, "utf-8")

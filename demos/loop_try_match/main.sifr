@@ -1,4 +1,3 @@
-# Reference: loop_try_match
 # loop_try_match canonical traversal layer behavior demo
 # Exercises loop-else, try/except, and match arms in one executable flow.
 

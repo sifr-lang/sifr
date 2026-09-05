@@ -135,8 +135,7 @@ the representative subset as its bounded local signal; that subset pins the
 complete corpus size and preserves coverage across every declared algorithm
 category.
 
-The failure inventory and remediation evidence are tracked from the phase
-index. No fixture was removed from the corpus, re-baselined, hidden, or
+The failure inventory and remediation evidence are tracked in the regression inventory. No fixture was removed from the corpus, re-baselined, hidden, or
 reclassified to restore the full release surface. The shipped-guarantee
 registry's combined `nightly_release_surface` is authoritative for both broad
 profiles.

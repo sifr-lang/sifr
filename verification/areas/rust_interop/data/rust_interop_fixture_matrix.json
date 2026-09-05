@@ -1,6 +1,6 @@
 {
-  "schema_version": 1,
-  "phase": "39_rust_interop",
+  "schema_version": 2,
+  "area": "rust_interop",
   "architecture": "internal_docs/rust_interop_architecture.md",
   "diagnostic_families": {
     "SIFR-RUST-ASYNC-0001": "invalid Rust async/thread-affinity contract",

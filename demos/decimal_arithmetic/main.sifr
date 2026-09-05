@@ -1,4 +1,3 @@
-# Reference: decimal_arithmetic
 def main():
     print("decimal_arithmetic deterministic arithmetic and context demo")
 

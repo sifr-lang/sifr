@@ -1,4 +1,3 @@
-# Reference: glob
 from sifr.glob import glob
 from sifr.io import write_text
 from sifr.os import run_command, getpid

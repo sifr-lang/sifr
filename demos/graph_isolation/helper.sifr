@@ -1,3 +1,2 @@
-# Reference: graph_isolation
 def value() -> int:
     return 55

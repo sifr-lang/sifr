@@ -1,4 +1,4 @@
-# Reference: narrowing_two_pointer_while_guard_narrowing
+# Two pointer guard narrowing.
 # Same-sequence two-pointer `while` loops should narrow safe index reads.
 
 def paired_edge_difference(readings: list[int]) -> int:

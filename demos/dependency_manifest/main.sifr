@@ -1,4 +1,3 @@
-# Reference: entrypoint-compilation-unification-and-dependency-metadata-readiness
 # Feature demo:
 # dependency closure from a reachable support module must flow into the manifest.
 from helper import render

@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_rng_2_hashlib_pbkdf2_hmac_unsupported
+# Hashlib pbkdf2 hmac unsupported.
 from sifr.hashlib import pbkdf2_hmac
 
 

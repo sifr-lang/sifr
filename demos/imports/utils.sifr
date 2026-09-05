@@ -1,5 +1,3 @@
-# Reference: import semantics work
-# Reference: imports
 # utils.sifr - Utility functions
 
 def greet(name: str) -> str:

@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_b2_itertools_starmap_non_binary_callable
+# Itertools starmap non binary callable.
 from sifr.itertools import starmap
 
 

@@ -1,4 +1,3 @@
-# Reference: dict_membership
 # driver/package architecture / dict_membership behavior group 6 demo: dict membership guards narrow indexed reads.
 
 def guarded_lookup(table: dict[int, int], key: int) -> int:

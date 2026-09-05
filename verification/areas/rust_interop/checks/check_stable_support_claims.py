@@ -117,7 +117,7 @@ def _validate(
     runtime_deferral_ids = {
         row_id
         for row_id, row in compatibility_by_id.items()
-        if row.get("category") == "future-owned-by-separate-phase"
+        if row.get("category") == "tracked-unsupported"
         and row.get("execution_kind") == "runtime-observed"
     }
     compile_scope_ids = {
@@ -164,7 +164,7 @@ def _validate(
         if row is None:
             failures.append(f"{claim_id}: stable claim has no compatibility row")
             continue
-        if row.get("category") == "future-owned-by-separate-phase":
+        if row.get("category") == "tracked-unsupported":
             failures.append(f"{claim_id}: future-owned rows cannot be stable claims")
         for field in ("category", "execution_kind", "capability"):
             if claim.get(field) != row.get(field):
@@ -389,7 +389,7 @@ def _run_self_test() -> int:
             },
             {
                 "id": "future",
-                "category": "future-owned-by-separate-phase",
+                "category": "tracked-unsupported",
                 "execution_kind": "runtime-observed",
                 "capability": "future behavior",
             },
@@ -447,7 +447,7 @@ def _run_self_test() -> int:
                 "claims": [
                     {
                         "id": "future",
-                        "category": "future-owned-by-separate-phase",
+                        "category": "tracked-unsupported",
                         "execution_kind": "runtime-observed",
                         "capability": "future behavior",
                     }
@@ -457,7 +457,7 @@ def _run_self_test() -> int:
                 [
                     {
                         "id": "future",
-                        "category": "future-owned-by-separate-phase",
+                        "category": "tracked-unsupported",
                         "execution_kind": "runtime-observed",
                     }
                 ]

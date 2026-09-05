@@ -49,6 +49,10 @@ mod async_runtime_codegen_tests;
 #[cfg(test)]
 mod async_task_runtime_codegen_tests;
 #[cfg(test)]
+mod canonical_codegen_tests;
+#[cfg(test)]
+mod character_comparison_codegen_tests;
+#[cfg(test)]
 mod checked_place_read_codegen_tests;
 #[cfg(test)]
 mod class_trait_codegen_tests;
@@ -67,23 +71,15 @@ mod defaultdict_augassign_codegen_tests;
 #[cfg(test)]
 mod defaultdict_order_independent_codegen_tests;
 #[cfg(test)]
+mod emitted_rust_quality_codegen_tests;
+#[cfg(test)]
 mod empty_plain_dict_codegen_tests;
+#[cfg(test)]
+mod error_identity_codegen_tests;
 #[cfg(test)]
 mod exact_integer_architecture_codegen_tests;
 #[cfg(test)]
 mod generic_inheritance_codegen_tests;
-#[cfg(test)]
-mod item10_support_assembly_codegen_tests;
-#[cfg(test)]
-mod item10a_error_identity_codegen_tests;
-#[cfg(test)]
-mod item11_portable_secure_codegen_tests;
-#[cfg(test)]
-mod item8_canonical_codegen_tests;
-#[cfg(test)]
-mod item9_emitted_rust_quality_codegen_tests;
-#[cfg(test)]
-mod item9a_character_comparison_codegen_tests;
 #[cfg(test)]
 mod iterators_and_generators_codegen_tests;
 #[cfg(test)]
@@ -102,6 +98,8 @@ mod performance_codegen_tests;
 mod performance_collection_borrow_codegen_tests;
 #[cfg(test)]
 mod performance_nested_mutation_codegen_tests;
+#[cfg(test)]
+mod portable_secure_codegen_tests;
 #[cfg(test)]
 mod receiver_codegen_tests;
 #[cfg(test)]
@@ -134,6 +132,8 @@ mod structured_intrinsic_codegen_tests;
 mod structured_lowering_codegen_tests;
 #[cfg(test)]
 mod structured_path_codegen_tests;
+#[cfg(test)]
+mod support_assembly_codegen_tests;
 #[cfg(test)]
 mod task_spawn_ownership_codegen_tests;
 #[cfg(test)]

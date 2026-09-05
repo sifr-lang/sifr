@@ -1,4 +1,3 @@
-# Reference: decimal_diagnostics
 def main():
     print("decimal_diagnostics decimal diagnostics behavior demo")
 

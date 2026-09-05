@@ -1,4 +1,3 @@
-# Reference: entrypoint-compilation-unification-and-dependency-metadata-readiness
 # Feature demo:
 # rooted entrypoint compilation still follows the reachable local import closure.
 from helper import render

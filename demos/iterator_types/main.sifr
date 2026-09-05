@@ -1,5 +1,3 @@
-# Reference: iter_iterator_types
-# Reference: first-class-lazy-iterators-and-python-iterable-protocol
 # iterator Iterator behavior demo
 # Verifies first-class type-system support for Iterable[T] / Iterator[T].
 

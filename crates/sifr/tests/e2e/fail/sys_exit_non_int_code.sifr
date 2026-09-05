@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_d2_sys_exit_non_int_code
+# Sys exit non int code.
 from sifr.sys import exit
 
 

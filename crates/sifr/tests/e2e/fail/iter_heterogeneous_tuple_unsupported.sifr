@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_iter_fix_1_iter_heterogeneous_tuple_unsupported
+# Iter heterogeneous tuple unsupported.
 # expect-error: SIFR-TYPE-0008
 def main() -> None:
     values: tuple[int, str] = (1, "x")

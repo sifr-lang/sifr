@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_a2_set_update_non_iterable
+# Set update non iterable.
 def main():
     seen: set[int] = {1}
     seen.update(2)

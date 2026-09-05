@@ -1,3 +1,2 @@
-# Reference: decimal_conversions
 def main():
     x: bigdecimal = BigDecimal(1.25)

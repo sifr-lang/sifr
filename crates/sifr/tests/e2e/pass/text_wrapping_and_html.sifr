@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_struct_4_text_surface_governance_readiness
+# Text wrapping and html.
 from sifr.textwrap import TextWrapper, wrap, fill
 from sifr.html import escape, unescape
 

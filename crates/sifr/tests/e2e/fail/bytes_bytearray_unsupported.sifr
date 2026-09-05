@@ -1,3 +1,3 @@
-# Reference: stdlib_parity_bytes_0_bytearray_unsupported
+# Bytes bytearray unsupported.
 def main() -> None:
     _ = bytearray([1, 2, 3])

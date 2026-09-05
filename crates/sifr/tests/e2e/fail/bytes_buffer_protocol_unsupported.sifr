@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_bytes_0_buffer_protocol_unsupported
+# Bytes buffer protocol unsupported.
 
 
 class ByteLike:

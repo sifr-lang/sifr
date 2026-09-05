@@ -1,4 +1,3 @@
-# Reference: heap_option_drain
 # `heapq` push/pop should expose ordered values and `None` on exhaustion.
 
 from sifr.heapq import heappush, heappop

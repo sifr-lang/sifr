@@ -1,4 +1,3 @@
-# Reference: stdlib_modules
 # stdlib-modules-sample negative-path demo
 # Direct _sifr imports must remain rejected for user code.
 

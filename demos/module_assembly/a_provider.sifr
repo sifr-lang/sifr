@@ -1,3 +1,2 @@
-# Reference: module_assembly
 def a() -> str:
     return "A"

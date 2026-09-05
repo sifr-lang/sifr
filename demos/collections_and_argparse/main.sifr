@@ -1,5 +1,3 @@
-# Reference: struct_collections_and_argparse
-# Reference: structured-data-and-class-surface-parity-expansion
 from sifr.collections import Counter, defaultdict
 from sifr.argparse import ArgumentParser
 

@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_e1_re_search_non_string_pattern
+# Re search non string pattern.
 from sifr.re import search
 
 

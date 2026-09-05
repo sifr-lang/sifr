@@ -1,0 +1,71 @@
+# Combine higher-order helpers, nonlocal updates, and recursive backtracking.
+
+def apply_twice(f: Callable[[int], int], value: int) -> int:
+    return f(f(value))
+
+
+def score(base: int) -> int:
+    offset: int = 3
+
+    def add_offset(x: int) -> int:
+        return x + offset
+
+    def amplify(x: int) -> int:
+        return x * 2
+
+    adjusted: int = apply_twice(add_offset, base)
+    return amplify(adjusted)
+
+
+def accumulate(values: list[int]) -> int:
+    total = 0
+
+    def apply() -> None:
+        nonlocal total
+        for value in values:
+            total += value
+
+    apply()
+    return total
+
+
+def collect_prefixes(nums: list[int]) -> list[list[int]]:
+    res = []
+    subset = []
+
+    def dfs(i):
+        if i < 0 or i >= len(nums):
+            res.append(subset.copy())
+            return
+        subset.append(nums[i])
+        dfs(i + 1)
+        subset.pop()
+        dfs(i + 1)
+
+    dfs(0)
+    return res
+
+
+def collect_value_groups(items: list[int], limit: int) -> list[list[int]]:
+    res = []
+
+    def dfs(i, cur, total):
+        if total == limit:
+            res.append(cur.copy())
+            return
+        if i < 0 or i >= len(items) or total > limit:
+            return
+        cur.append(items[i])
+        dfs(i, cur, total + items[i])
+        cur.pop()
+        dfs(i + 1, cur, total)
+
+    dfs(0, [], 0)
+    return res
+
+
+def main():
+    assert score(4) == 20
+    assert accumulate([2, 7, 1, 8]) == 18
+    assert str(collect_prefixes([1, 2, 3])) == '[[1, 2, 3], [1, 2], [1, 3], [1], [2, 3], [2], [3], []]'
+    assert str(collect_value_groups([1, 2, 4], 4)) == '[[1, 1, 1, 1], [1, 1, 2], [2, 2], [4]]'

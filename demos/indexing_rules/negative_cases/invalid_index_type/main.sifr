@@ -1,4 +1,3 @@
-# Reference: indexing_rules
 # negative path: invalid index type must fail with a deterministic diagnostic.
 
 def main():

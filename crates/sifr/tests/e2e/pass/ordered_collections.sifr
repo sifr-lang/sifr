@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_b1_collections_ordered_helpers
+# Ordered collections.
 from sifr.collections import Counter, deque, from_list
 from sifr.bisect import bisect_right, bisect_left, insort_right
 from sifr.heapq import (

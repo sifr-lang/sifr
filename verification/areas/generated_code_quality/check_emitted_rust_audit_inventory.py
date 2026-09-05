@@ -13,6 +13,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from quality_owners import QUALITY_OWNERS
+
 AREA_ROOT = Path(__file__).resolve().parent
 REPO_ROOT = AREA_ROOT.parents[2]
 DEFAULT_INVENTORY = AREA_ROOT / "emitted_rust_audit_inventory.json"
@@ -36,23 +38,23 @@ def load_inventory(path: Path) -> dict[str, Any]:
 
 def validate_inventory(payload: dict[str, Any]) -> list[str]:
     errors: list[str] = []
-    if payload.get("schema_version") != 1:
-        errors.append("schema_version must equal 1")
+    if payload.get("schema_version") != 2:
+        errors.append("schema_version must equal 2")
     baseline_commit = payload.get("baseline_commit")
     if not isinstance(baseline_commit, str) or SHA_RE.fullmatch(baseline_commit) is None:
         errors.append("baseline_commit must be a lowercase 40-character SHA")
-    raw_items = payload.get("implementation_items")
-    if not isinstance(raw_items, list) or not raw_items:
-        errors.append("implementation_items must be a non-empty list")
-        items: set[int] = set()
+    raw_owners = payload.get("owners")
+    if not isinstance(raw_owners, list) or not raw_owners:
+        errors.append("owners must be a non-empty list")
+        owners: set[str] = set()
     else:
-        if any(not isinstance(item, int) or isinstance(item, bool) for item in raw_items):
-            errors.append("implementation_items must contain integers only")
-        items = {item for item in raw_items if isinstance(item, int) and not isinstance(item, bool)}
-        if len(items) != len(raw_items):
-            errors.append("implementation_items must be unique")
-        if sorted(items) != list(range(1, 12)):
-            errors.append("implementation_items must be exactly Items 1 through 11")
+        if any(not isinstance(owner, str) for owner in raw_owners):
+            errors.append("owners must contain component names only")
+        owners = {owner for owner in raw_owners if isinstance(owner, str)}
+        if len(owners) != len(raw_owners):
+            errors.append("owners must be unique")
+        if owners != QUALITY_OWNERS:
+            errors.append("owners must name the exact quality component set")
 
     baseline = payload.get("baseline")
     if not isinstance(baseline, dict) or not baseline:
@@ -77,7 +79,7 @@ def validate_inventory(payload: dict[str, Any]) -> list[str]:
         return errors
 
     seen_ids: set[str] = set()
-    covered_items: set[int] = set()
+    covered_owners: set[str] = set()
     for index, raw_finding in enumerate(raw_findings):
         label = f"findings[{index}]"
         if not isinstance(raw_finding, dict):
@@ -130,16 +132,15 @@ def validate_inventory(payload: dict[str, Any]) -> list[str]:
         severity = raw_finding.get("severity")
         if severity not in SEVERITIES:
             errors.append(f"{finding_label}.severity is invalid")
-        owner_item = raw_finding.get("owner_item")
+        owner = raw_finding.get("owner")
         if disposition in ACTIONABLE_DISPOSITIONS:
             if (
-                not isinstance(owner_item, int)
-                or isinstance(owner_item, bool)
-                or owner_item not in items
+                not isinstance(owner, str)
+                or owner not in owners
             ):
                 errors.append(f"{finding_label} must name one valid implementation owner")
             else:
-                covered_items.add(owner_item)
+                covered_owners.add(owner)
             if severity != "blocking":
                 errors.append(f"{finding_label} actionable findings must be blocking")
             if disposition == "partially_confirmed":
@@ -147,7 +148,7 @@ def validate_inventory(payload: dict[str, Any]) -> list[str]:
                 if not isinstance(qualification, str) or not qualification.strip():
                     errors.append(f"{finding_label} partially confirmed findings need qualification")
         elif disposition == "rejected":
-            if owner_item is not None:
+            if owner is not None:
                 errors.append(f"{finding_label} rejected findings cannot have an owner")
             if severity != "informational":
                 errors.append(f"{finding_label} rejected findings must be informational")
@@ -155,10 +156,10 @@ def validate_inventory(payload: dict[str, Any]) -> list[str]:
             if not isinstance(rejection_reason, str) or not rejection_reason.strip():
                 errors.append(f"{finding_label} rejected findings need a rejection_reason")
 
-    missing_owners = sorted(items - covered_items)
+    missing_owners = sorted(owners - covered_owners)
     if missing_owners:
         errors.append(
-            "implementation items without an actionable finding: "
+            "quality components without an actionable finding: "
             + ", ".join(str(item) for item in missing_owners)
         )
     return errors
@@ -330,28 +331,28 @@ def run_self_test(payload: dict[str, Any]) -> None:
     expect_invalid(duplicate, "duplicate finding id")
 
     invalid_schema = copy.deepcopy(payload)
-    invalid_schema["schema_version"] = 2
-    expect_invalid(invalid_schema, "schema_version must equal 1")
+    invalid_schema["schema_version"] = 3
+    expect_invalid(invalid_schema, "schema_version must equal 2")
 
     invalid_sha = copy.deepcopy(payload)
     invalid_sha["baseline_commit"] = "not-a-sha"
     expect_invalid(invalid_sha, "baseline_commit must be a lowercase 40-character SHA")
 
-    invalid_item_type = copy.deepcopy(payload)
-    invalid_item_type["implementation_items"][0] = True
-    expect_invalid(invalid_item_type, "implementation_items must contain integers only")
+    invalid_owner_type = copy.deepcopy(payload)
+    invalid_owner_type["owners"][0] = True
+    expect_invalid(invalid_owner_type, "owners must contain component names only")
 
-    empty_items = copy.deepcopy(payload)
-    empty_items["implementation_items"] = []
-    expect_invalid(empty_items, "implementation_items must be a non-empty list")
+    empty_owners = copy.deepcopy(payload)
+    empty_owners["owners"] = []
+    expect_invalid(empty_owners, "owners must be a non-empty list")
 
-    duplicate_item = copy.deepcopy(payload)
-    duplicate_item["implementation_items"][1] = 1
-    expect_invalid(duplicate_item, "implementation_items must be unique")
+    duplicate_owner = copy.deepcopy(payload)
+    duplicate_owner["owners"][1] = "corpus-governance"
+    expect_invalid(duplicate_owner, "owners must be unique")
 
-    invalid_item_range = copy.deepcopy(payload)
-    invalid_item_range["implementation_items"][-1] = 12
-    expect_invalid(invalid_item_range, "implementation_items must be exactly Items 1 through 11")
+    unknown_owner = copy.deepcopy(payload)
+    unknown_owner["owners"][-1] = "unknown-component"
+    expect_invalid(unknown_owner, "owners must name the exact quality component set")
 
     invalid_baseline = copy.deepcopy(payload)
     invalid_baseline["baseline"]["demo_emitted_rs_files"] = -1
@@ -505,15 +506,15 @@ def run_self_test(payload: dict[str, Any]) -> None:
     expect_invalid(invalid_sources, ".sources must contain internal and/or external")
 
     missing_owner = copy.deepcopy(payload)
-    missing_owner["findings"][0]["owner_item"] = None
+    missing_owner["findings"][0]["owner"] = None
     expect_invalid(missing_owner, "must name one valid implementation owner")
 
     invalid_owner = copy.deepcopy(payload)
-    invalid_owner["findings"][0]["owner_item"] = 12
+    invalid_owner["findings"][0]["owner"] = "unknown-component"
     expect_invalid(invalid_owner, "must name one valid implementation owner")
 
     boolean_owner = copy.deepcopy(payload)
-    boolean_owner["findings"][0]["owner_item"] = True
+    boolean_owner["findings"][0]["owner"] = True
     expect_invalid(boolean_owner, "must name one valid implementation owner")
 
     invalid_disposition = copy.deepcopy(payload)
@@ -535,7 +536,7 @@ def run_self_test(payload: dict[str, Any]) -> None:
 
     rejected_with_owner = copy.deepcopy(payload)
     rejected = find_disposition(rejected_with_owner, "rejected")
-    rejected["owner_item"] = 1
+    rejected["owner"] = "corpus-governance"
     expect_invalid(rejected_with_owner, "rejected findings cannot have an owner")
 
     rejected_blocking = copy.deepcopy(payload)
@@ -548,12 +549,12 @@ def run_self_test(payload: dict[str, Any]) -> None:
     partial.pop("qualification")
     expect_invalid(partial_without_qualification, "need qualification")
 
-    missing_item_coverage = copy.deepcopy(payload)
-    missing_item_coverage["findings"] = [
-        finding for finding in missing_item_coverage["findings"]
-        if finding.get("owner_item") != 10
+    missing_owner_coverage = copy.deepcopy(payload)
+    missing_owner_coverage["findings"] = [
+        finding for finding in missing_owner_coverage["findings"]
+        if finding.get("owner") != "support-assembly"
     ]
-    expect_invalid(missing_item_coverage, "implementation items without an actionable finding: 10")
+    expect_invalid(missing_owner_coverage, "quality components without an actionable finding: support-assembly")
 
     print("emitted Rust audit inventory self-test: PASS")
 

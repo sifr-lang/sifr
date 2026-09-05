@@ -1,5 +1,3 @@
-# Reference: runtime_zipfile_io
-# Reference: runtime-and-file-object-parity-expansion
 from sifr.tempfile import NamedTemporaryFile
 from sifr.zipfile import ZipFile, ZipReadHandle, is_zipfile, ZIP_STORED
 from sifr.io import exists

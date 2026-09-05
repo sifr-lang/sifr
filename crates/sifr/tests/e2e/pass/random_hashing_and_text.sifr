@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_rng_0_architecture_lock
+# Random hashing and text.
 from sifr.random import choice, randrange
 from sifr.hashlib import new, HashObject
 from sifr.base64 import b64encode, b64decode

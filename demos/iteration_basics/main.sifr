@@ -1,5 +1,3 @@
-# Reference: iteration-basics-surface
-# Reference: compiler-feature-history
 # iteration-basics-surface Demo
 
 from typing import Dict

@@ -1,6 +1,6 @@
 {
-  "schema_version": 1,
-  "milestone": "sql_17_sqlite_provider",
+  "schema_version": 2,
+  "provider": "sqlite",
   "provider": "sqlite",
   "supported_libraries": [
     {"version": "3.53.2", "version_number": 3053002, "compile_flags": []}

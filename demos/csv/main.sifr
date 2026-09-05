@@ -1,4 +1,3 @@
-# Reference: csv
 from sifr.csv import parse_row, format_csv, reader, writer, reader_from_path, writer_to_path
 from sifr.test import assert_bool_vector_eq
 

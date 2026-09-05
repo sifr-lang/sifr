@@ -26,7 +26,7 @@ the originating `WorkspaceSnapshotId` plus graph/source `AnalysisRevision`.
 Resolving a handle against a different snapshot returns `StaleSnapshot`.
 
 These handles are not exported from `sifr_analysis`; they prepare the compiler
-API shape without exposing a public compiler API in this workstream.
+API shape without exposing a public compiler API in this implementation.
 
 ## Package Diagnostics
 

@@ -1,4 +1,3 @@
-# Reference: reachable_imports
 # reachable_imports import-closure discovery demo
 # Only modules reachable from this entrypoint should participate in frontend analysis.
 

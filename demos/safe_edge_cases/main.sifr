@@ -1,5 +1,3 @@
-# Reference: edge_case_safety
-# Reference: compiler-feature-history
 # edge_case_safety demo
 # Showcases: Input validation for edge cases that previously panicked
 # or produced undefined behavior. All error paths return Result[T, E]

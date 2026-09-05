@@ -1,4 +1,3 @@
-# Reference: local_imports
 from sifr.math import floor, pi
 
 def main():

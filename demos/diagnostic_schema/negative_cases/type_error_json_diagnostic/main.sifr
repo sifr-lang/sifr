@@ -1,4 +1,3 @@
-# Reference: diagnostic_schema
 # negative path: this type error should render through the canonical json diagnostic schema.
 
 def main():

@@ -1,4 +1,3 @@
-# Reference: shutil
 from sifr.shutil import copy, move_file, rmtree, which, disk_usage
 from sifr.io import write_text, read_text, exists
 from sifr.os import mkdir, run_command

@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_a1_tuple_dynamic_list_shape
+# Tuple dynamic list shape.
 # expect-error[col=20]: SIFR-STDLIB-0001
 
 def main():

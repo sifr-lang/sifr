@@ -1,0 +1,7 @@
+# Preserve recursive alias identity and generic arguments.
+
+type Json = None | bool | int | float | str | list[Json] | dict[str, Json]
+type Node[T] = T | list[Node[T]]
+
+def main():
+    print("recursive type representation preserved")

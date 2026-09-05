@@ -1,4 +1,4 @@
-# Reference: narrowing_guarded_sequence_index_narrowing
+# Guarded index narrowing.
 # Test: guarded sequence index narrowing yields definite values when flow proves bounds safety
 
 def collect_vowels(text: str) -> str:

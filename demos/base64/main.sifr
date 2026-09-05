@@ -1,4 +1,3 @@
-# Reference: base64
 # base64 base64 parity demo
 from sifr.base64 import (
     b64encode, b64decode,

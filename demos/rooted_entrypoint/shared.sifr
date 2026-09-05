@@ -1,3 +1,2 @@
-# Reference: entrypoint-compilation-unification-and-dependency-metadata-readiness
 def label() -> str:
     return "rooted entrypoint demo: pass"

@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_ext_2_itertools_materialization_required
+# Itertools materialization required.
 from sifr.itertools import accumulate
 
 

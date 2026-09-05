@@ -1,4 +1,3 @@
-# Reference: hashlib
 # hashlib hashlib parity demo
 from sifr.hashlib import (
     sha256, md5,

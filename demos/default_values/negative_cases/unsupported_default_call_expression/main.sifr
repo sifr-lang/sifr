@@ -1,4 +1,3 @@
-# Reference: default_values
 # negative path: unsupported default call-expression should emit a deterministic diagnostic.
 
 def seed() -> int:

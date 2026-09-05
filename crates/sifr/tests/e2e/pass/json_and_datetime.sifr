@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_struct_0_architecture_lock
+# Json and datetime.
 from sifr.json import JsonValue, from_array, from_bool, from_int, from_object, from_str, dumps, loads
 from sifr.datetime import datetime, timezone, now
 

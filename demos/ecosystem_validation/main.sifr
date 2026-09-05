@@ -1,4 +1,3 @@
-# Reference: ecosystem_validation
 # ecosystem_validation demo: curated OSS gate and broader ecosystem lane rules.
 
 def main():

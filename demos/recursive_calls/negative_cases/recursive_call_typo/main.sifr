@@ -1,4 +1,3 @@
-# Reference: recursive_calls
 # recursive_calls negative case
 # Reachable typo inside recursive path must fail during semantic analysis.
 

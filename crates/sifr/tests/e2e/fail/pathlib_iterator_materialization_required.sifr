@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_ext_3_pathlib_iterator_materialization_required
+# Pathlib iterator materialization required.
 from sifr.pathlib import Path
 
 

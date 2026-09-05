@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_bytes_3_read_bytes_not_list
+# Bytes read bytes not list.
 from sifr.io import write_text
 
 

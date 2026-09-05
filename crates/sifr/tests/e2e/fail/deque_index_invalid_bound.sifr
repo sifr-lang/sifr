@@ -1,4 +1,4 @@
-# Reference: stdlib_parity_b1_deque_index_invalid_bound
+# Deque index invalid bound.
 from sifr.collections import deque
 
 def main():

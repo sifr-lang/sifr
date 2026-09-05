@@ -1,4 +1,3 @@
-# Reference: test_imports_and_constants
 # import-constants-sample demo test module
 from helper import BASE, plus_one
 

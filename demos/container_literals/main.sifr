@@ -1,4 +1,3 @@
-# Reference: container_literals
 # Feature demo: empty dict literal specialization from typed writes/reads.
 
 def frequency_score(nums: list[int]) -> int:

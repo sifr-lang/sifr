@@ -1,5 +1,3 @@
-# Reference: utility-classes-sample
-# Reference: python-source-parity-and-builtin-stdlib-surface
 from sifr.argparse import ArgumentParser
 from sifr.ipaddress import ip_address, IPv4Address, AddressValueError
 from sifr.uuid import uuid4_obj, uuid_from_hex, UUID

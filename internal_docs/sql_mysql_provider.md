@@ -154,7 +154,7 @@ columns, SQL modes, `INSERT IGNORE`, `REPLACE`, and
 `ON DUPLICATE KEY UPDATE`.
 
 Portable schema requirements use the same MySQL schema component. The common
-Milestone 15 harness normalizes the provider DDL, proves the required schema
+The DDL qualification harness normalizes the provider DDL, proves the required schema
 objects and capabilities, specializes the query, and validates the closed
 signature. No PostgreSQL artifact is reused as MySQL evidence.
 

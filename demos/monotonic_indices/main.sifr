@@ -1,4 +1,3 @@
-# Reference: monotonic_indices
 # `range(len(seq))` loops should keep indexed access definite.
 
 def active_indices(flags: list[bool]) -> list[int]:

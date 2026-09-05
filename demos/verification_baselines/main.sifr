@@ -1,4 +1,3 @@
-# Reference: verification_baselines
 # verification_baselines demo: suite taxonomy and baseline governance rules.
 
 def main():

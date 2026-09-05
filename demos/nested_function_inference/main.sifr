@@ -1,0 +1,21 @@
+# Infer recursive helper types from calls and body usage.
+
+def power_two(exp: int) -> int:
+    def helper(n):
+        if n == 0:
+            return 1
+        return 2 * helper(n - 1)
+
+    return helper(exp)
+
+def sum_to(limit: int) -> int:
+    def helper(i, acc):
+        if i > limit:
+            return acc
+        return helper(i + 1, acc + i)
+
+    return helper(1, 0)
+
+def main():
+    assert power_two(10) == 1024
+    assert sum_to(10) == 55

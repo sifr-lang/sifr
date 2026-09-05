@@ -1,4 +1,3 @@
-# Reference: bytes_module
 # bytes_module bytes parity demo
 from sifr.test import assert_vector_eq, assert_bool_vector_eq
 
