@@ -15,13 +15,19 @@ pub(crate) fn canonicalize_project_fields<'a>(
     modules: impl IntoIterator<Item = (&'a String, &'a mut String)>,
 ) -> Result<(), Vec<RenderedDiagnostic>> {
     let modules = modules.into_iter().collect::<Vec<_>>();
-    let sources = std::iter::once((String::new(), root.clone()))
-        .chain(
-            modules
-                .iter()
-                .map(|(module, source)| (module.replace('.', "::"), (**source).clone())),
-        )
-        .collect();
+    let mut sources = std::collections::BTreeMap::from([(String::new(), root.clone())]);
+    for (module, source) in &modules {
+        let identity = module.replace('.', "::");
+        if sources
+            .insert(identity.clone(), (**source).clone())
+            .is_some()
+        {
+            return Err(vec![diagnostic_with_code(
+                format!("duplicate generated project module identity: {identity}"),
+                DiagnosticCode::BUILD_RUSTC_OR_CARGO_FAILURE,
+            )]);
+        }
+    }
     let canonical =
         sifr_codegen::canonicalize_generated_rust_project(&sources).map_err(|message| {
             vec![diagnostic_with_code(
@@ -36,11 +42,8 @@ pub(crate) fn canonicalize_project_fields<'a>(
     Ok(())
 }
 
-pub(crate) fn format_generated_rust(
-    source: &str,
-    label: &str,
-) -> Result<String, Vec<RenderedDiagnostic>> {
-    let executable = std::env::var_os("RUSTFMT").unwrap_or_else(|| OsString::from("rustfmt"));
+#[cfg(test)]
+fn format_generated_rust(source: &str, label: &str) -> Result<String, Vec<RenderedDiagnostic>> {
     let canonicalize = |source: &str| {
         sifr_codegen::canonicalize_generated_rust_source(source).map_err(|message| {
             vec![diagnostic_with_code(
@@ -50,13 +53,21 @@ pub(crate) fn format_generated_rust(
         })
     };
     let canonical = canonicalize(source)?;
-    let formatted =
-        format_generated_rust_with(&executable, &canonical, label).map_err(|message| {
-            vec![diagnostic_with_code(
-                message,
-                DiagnosticCode::BUILD_RUSTC_OR_CARGO_FAILURE,
-            )]
-        })?;
+    format_canonical_generated_rust(&canonical, label)
+}
+
+/// Layout and API cleanup only: project owners have already fixed field identity.
+pub(crate) fn format_canonical_generated_rust(
+    source: &str,
+    label: &str,
+) -> Result<String, Vec<RenderedDiagnostic>> {
+    let executable = std::env::var_os("RUSTFMT").unwrap_or_else(|| OsString::from("rustfmt"));
+    let formatted = format_generated_rust_with(&executable, source, label).map_err(|message| {
+        vec![diagnostic_with_code(
+            message,
+            DiagnosticCode::BUILD_RUSTC_OR_CARGO_FAILURE,
+        )]
+    })?;
     let final_canonical = sifr_codegen::finalize_formatted_generated_rust_source(&formatted)
         .map_err(|message| {
             vec![diagnostic_with_code(
@@ -98,7 +109,7 @@ pub(crate) fn format_generated_rust_with_project_consts(
             DiagnosticCode::BUILD_RUSTC_OR_CARGO_FAILURE,
         )]
     })?;
-    format_generated_rust(&finalized, label)
+    format_canonical_generated_rust(&finalized, label)
 }
 
 fn format_generated_rust_with(
@@ -167,9 +178,11 @@ mod tests {
             )]);
             super::canonicalize_project_fields(&mut root, &mut modules)
                 .expect("shared project field registry");
-            let root = format_generated_rust(&root, "root.rs").expect("root formatting");
-            let declaration = format_generated_rust(&modules["records"], "records.rs")
-                .expect("module formatting");
+            let root =
+                super::format_canonical_generated_rust(&root, "root.rs").expect("root formatting");
+            let declaration =
+                super::format_canonical_generated_rust(&modules["records"], "records.rs")
+                    .expect("module formatting");
             assert!(declaration.contains("pub payload: i64"), "{declaration}");
             assert!(root.contains("value.payload"), "{root}");
             assert!(!root.contains("sifr_generated_payload"), "{root}");

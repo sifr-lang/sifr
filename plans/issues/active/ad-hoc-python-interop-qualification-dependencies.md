@@ -216,6 +216,61 @@ declared method return identities, Result error closures and Err patterns.
 
 ### Item12H pre-review qualification receipt
 
+Initial Opus review of `405e3d3c2adcf018044a2f733ac64ec942f01967` returned
+NOT SATISFIED: generated Rust bridge modules were assembled after the shared
+field pass. The one remediation batch moves their generation into project
+assembly, includes root/child bridge module identities in the registry and cache,
+and writes finalized files without independent field canonicalization. Record
+and error bridges with an underscore field, a same-owner public-name collision,
+an imported consumer, a pattern, and native execution are covered together.
+
+Remediation validation registered before execution (no new broad gate allowance):
+
+```bash
+cargo test -p sifr_driver project_field_identity
+cargo test -p sifr_driver
+cargo clippy -p sifr_codegen -p sifr_driver --all-targets -- -D warnings
+cargo fmt --check
+python3 scripts/check_file_size_guardrails.py
+python3 scripts/check_hir_maintainability_guardrails.py
+cargo build --locked -p sifr
+# cwd: target/verification/areas/python_interop/binding-authoring
+/tmp/sifr-item12h.afJDbk/sifr/target/debug/sifr run src/main.sifr --frozen
+python3 scripts/check_demo_emitted_freshness.py --sifr target/debug/sifr --update
+```
+
+Canonicalizer compiler code is unchanged, so its 115-test evidence is reused.
+The previously failed clean-environment binding suite is not rerun warm as a
+substitute pass. The single merge-profile gate remains reserved for the exact
+final reviewed implementation SHA. The only permitted remediation review follows
+this batch. Initial review suggestions about future macro/inference coverage and
+map key/value receiver identities are deferred to generated-field maintenance;
+they are not implemented as a second mechanism in this batch.
+
+The first remediation refresh exposed listing-only expansion (all pre-existing
+bridge carriers were being appended to every demo). That incidental output
+expansion is removed before review: the source-listing boundary stays unchanged,
+all bridge sources still enter the shared registry before formatting, and only
+the field-free native root module declaration is added at materialization.
+The registered driver/focused/native commands and companion generator are rerun
+for this changed assembly input; the inherited strict-Clippy failure is reused.
+
+Final remediation source inputs pass all 581 active driver tests (77 existing
+ignored tests), including the two new bridge materialization/namespace cases;
+`driver-remediation-final.log`. The rebuilt CLI passes native binding execution
+again (`native-remediation-final.log`, `binding runtime ok`). Formatting, the
+3,758-file size guardrail and HIR guardrail pass. Additional interop contract
+test files only initialize the new generated-project bridge-module collection;
+no async, callback, or other contract behavior is changed. The strict-Clippy
+receipt remains `clippy-remediation.log` (inherited Item12C failure, no pass).
+The final compiler-owned refresh succeeds for all 264 demos. Relative to the
+initial reviewed candidate, only five companions change: `advanced_class_libraries`,
+`csv`, `regex_and_filesystem`, `stdlib_expansion`, and
+`structured_parsing_serialization`. These remove redundant identifier escaping
+from the independent per-file pass and induced reflow; the temporary bridge
+listing expansion is absent. There are 21 changed companions overall relative
+to the item base. Log: `companion-refresh-remediation-final.log`.
+
 Implementation commit `dba6a8f7075ea071058654c85ed1e46e4d1272fa` passed all
 115 canonicalizer tests (including nine focused field regressions), all 579
 active driver tests (77 existing ignored tests), and the direct native
@@ -236,7 +291,34 @@ unchanged. Strict Clippy after that repair reports only the inherited Item12C
 failure (`clippy-clone-repair.log`). Exact-final-candidate focused checks and
 review follow; no gate has yet run and the full binding suite remains blocked.
 
-Binding-authoring fails with eight Rust E0560 diagnostics in generated
+### Item12H deferred maintenance (not implemented)
+
+The [initial exact-candidate Opus review](https://github.com/sifr-lang/sifr/pull/3697#issuecomment-5555203238)
+classified these as suggestions, not blocking findings. Owner: generated-Rust
+field-resolution maintenance after the current dependency/integration sequence.
+They require their own bounded implementation and evidence, not another 12H
+review/gate iteration:
+
+- **12H-F1, macro syntax coverage:** non-expression-list macros other than
+  `vec![element; count]` are not traversed by field cleanup. Require explicit
+  field handling before an emitter adds such field-bearing macro syntax.
+- **12H-F2, receiver inference coverage:** casts, async/unsafe/loop expressions,
+  and additional iterator adapters need typed coverage before expanding emitted
+  receiver forms; unresolved generated-field receivers currently diagnose.
+- **12H-F3, map receiver identity:** the general index-element rule selects the
+  first generic argument. A map needs its value argument instead; qualify this
+  against actual emitted map access and owner-local collision variants before
+  changing the mechanism. No runtime base reproduction was claimed by this review.
+
+The duplicate per-file field pass suggestion is resolved as part of the required
+bridge correction: materialization now only formats already canonical sources.
+The initial review's infrastructure attribution to PyO3 is not stronger evidence
+than the suspected-cause provenance above; the clean-environment failure remains
+unqualified and externally owned.
+
+### Original Item12H diagnostic provenance
+
+Before this implementation, binding-authoring fails with eight Rust E0560 diagnostics in generated
 `binding_authoring/math_python.rs`: initializers use
 `sifr_generated_python_error`, while the imported nominal declares `python_error`.
 

@@ -403,8 +403,11 @@ Generated Rust field cleanup runs before identifier and layout cleanup. One
 registry resolves module-qualified nominal declarations, imports and re-exports,
 and typed field receivers across the complete generated project. Field spelling
 and collisions belong to that nominal owner; shorthand pattern/value bindings
-retain their separate local identities. Binary and test-project materialization
-use the same registry. External fields are not renamed, and an unresolved
+retain their separate local identities. Binary bridge sources are generated and
+registered alongside main and support modules before this pass; their finalized
+sources also participate in the artifact cache identity. Binary and test-project
+materialization use the same registry and do not repeat field canonicalization
+while formatting individual files. External fields are not renamed, and an unresolved
 generated-field receiver is a code-generation diagnostic.
 
 The production Sifr formatter is Ruff-backed and in-process. `.sifr` source

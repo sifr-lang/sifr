@@ -1,5 +1,5 @@
 use super::execution::execute_test_runner_project;
-use crate::build::format_generated_rust;
+use crate::build::format_canonical_generated_rust;
 use crate::diagnostics::{RenderedDiagnostic, run_codegen_with_boundary, write_stderr_line};
 use crate::project::{
     DiscoveryDiagnosticStyle, ModuleResolver, ParsedProjectModule,
@@ -166,9 +166,9 @@ pub(crate) fn build_test_runner_project(
     )?;
     for (module_name, source) in &mut generated.support_rust_files {
         let label = format!("test support module {module_name}");
-        *source = format_generated_rust(source, &label)?;
+        *source = format_canonical_generated_rust(source, &label)?;
     }
-    all_rust_code = format_generated_rust(&all_rust_code, "test runner lib.rs body")?;
+    all_rust_code = format_canonical_generated_rust(&all_rust_code, "test runner lib.rs body")?;
 
     Ok(GeneratedTestRunnerProject {
         cache_scope: test_dir.to_path_buf(),

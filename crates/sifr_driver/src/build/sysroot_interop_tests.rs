@@ -330,6 +330,7 @@ fn base_project() -> GeneratedBinaryProject {
         required_features: HashSet::new(),
         interop: InteropBuildPlan::default(),
         cache_key_fragment: None,
+        bridge_modules: Default::default(),
         python_runtime: None,
     }
 }
