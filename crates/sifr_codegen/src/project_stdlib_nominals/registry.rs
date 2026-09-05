@@ -35,7 +35,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn item12b_builtin_registration_preserves_identity() {
+    fn corpus_repair_builtin_registration_preserves_identity() {
         let mut registry = ProjectNominalRegistry::default();
         registry.register_crate_root("shadow.ValueError".to_string(), "ShadowError".to_string());
         for builtin in BuiltinError::all() {
@@ -57,7 +57,7 @@ mod tests {
     }
 
     #[test]
-    fn item12b_builtin_registration_rejects_nonbuiltin_names() {
+    fn corpus_repair_builtin_registration_rejects_nonbuiltin_names() {
         for name in ["CustomError", "shadow.ValueError", "ValueErrorExtra", ""] {
             assert!(BuiltinError::from_name(name).is_none(), "{name}");
         }

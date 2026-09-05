@@ -33,7 +33,7 @@ fn parameters(rust: &str, target: &str) -> Vec<String> {
 }
 
 #[test]
-fn item12b_exception_capture_handler_is_local() {
+fn corpus_repair_exception_capture_handler_is_local() {
     let rust = generate_rust_from_source(
         r#"
 def outer(n: int) -> Result[int, Error]:
@@ -61,7 +61,7 @@ def outer(n: int) -> Result[int, Error]:
 }
 
 #[test]
-fn item12b_exception_capture_keeps_outer_same_name() {
+fn corpus_repair_exception_capture_keeps_outer_same_name() {
     let rust = generate_rust_from_source(
         r#"
 def outer(error: int, n: int) -> Result[int, Error]:
@@ -90,7 +90,7 @@ def outer(error: int, n: int) -> Result[int, Error]:
 }
 
 #[test]
-fn item12b_checked_read_control_flow_disjunction() {
+fn corpus_repair_checked_read_control_flow_disjunction() {
     let rust = generate_rust_from_source(
         r#"
 def total(left: list[int], right: list[int]) -> int:
@@ -127,7 +127,7 @@ def total(left: list[int], right: list[int]) -> int:
 }
 
 #[test]
-fn item12b_checked_read_control_flow_none_operand_effects() {
+fn corpus_repair_checked_read_control_flow_none_operand_effects() {
     let rust = generate_rust_from_source(
         r#"
 def next_value(mut events: list[int]) -> int:
@@ -148,7 +148,7 @@ def probe(mut events: list[int]) -> bool:
 }
 
 #[test]
-fn item12b_repeated_value_ownership_comprehension_bindings() {
+fn corpus_repair_repeated_value_ownership_comprehension_bindings() {
     let rust = generate_rust_from_source(
         r#"
 def repeat(seed: int, n: int) -> list[list[int]]:
@@ -165,7 +165,7 @@ def outer_binding(n: int) -> list[int]:
 }
 
 #[test]
-fn item12b_repeated_value_ownership_nested_indices_and_option_comparison() {
+fn corpus_repair_repeated_value_ownership_nested_indices_and_option_comparison() {
     let rust = generate_rust_from_source(
         r#"
 def lookup(values: list[list[int]], i: int, j: int) -> int:
@@ -185,7 +185,7 @@ def lookup(values: list[list[int]], i: int, j: int) -> int:
 }
 
 #[test]
-fn item12b_recursive_optional_mutability_preserves_take() {
+fn corpus_repair_recursive_optional_mutability_preserves_take() {
     let rust = canonical(
         r#"
 class Node:
@@ -212,7 +212,7 @@ def main():
 }
 
 #[test]
-fn item12b_structured_exception_nested_return_and_field_update() {
+fn corpus_repair_structured_exception_nested_return_and_field_update() {
     let rust = generate_rust_from_source(
         r#"
 class Counter:
@@ -243,7 +243,7 @@ def nested() -> Result[int, Error]:
 }
 
 #[test]
-fn item12b_method_retention_escaped_keyword_identity() {
+fn corpus_repair_method_retention_escaped_keyword_identity() {
     let rust = canonical(
         r#"
 class Group:
@@ -264,7 +264,7 @@ def main():
 }
 
 #[test]
-fn item12b_checked_read_control_flow_short_circuit_assignment() {
+fn corpus_repair_checked_read_control_flow_short_circuit_assignment() {
     let rust = canonical(
         r#"
 def probe() -> Result[bool, Error]:
@@ -286,7 +286,7 @@ def probe() -> Result[bool, Error]:
 }
 
 #[test]
-fn item12b_structured_exception_root_error_and_dictionary_reads() {
+fn corpus_repair_structured_exception_root_error_and_dictionary_reads() {
     let rust = canonical(
         r#"
 def read(values: list[list[int]]) -> Result[int, Error]:
@@ -312,7 +312,7 @@ def read(values: list[list[int]]) -> Result[int, Error]:
 }
 
 #[test]
-fn item12b_structured_exception_nested_while_checked_comparison() {
+fn corpus_repair_structured_exception_nested_while_checked_comparison() {
     let rust = canonical(
         r#"
 def count(values: list[int]) -> Result[int, Error]:
@@ -333,7 +333,7 @@ def count(values: list[int]) -> Result[int, Error]:
 }
 
 #[test]
-fn item12b_repeated_value_ownership_condition_and_branch() {
+fn corpus_repair_repeated_value_ownership_condition_and_branch() {
     let rust = generate_rust_from_source(
         r#"
 def child(edges: list[dict[str, int]], node: int, key: str) -> int:
@@ -352,7 +352,7 @@ def child(edges: list[dict[str, int]], node: int, key: str) -> int:
 }
 
 #[test]
-fn item12b_repeated_value_ownership_nested_arithmetic_and_defaults() {
+fn corpus_repair_repeated_value_ownership_nested_arithmetic_and_defaults() {
     let rust = generate_rust_from_source(
         r#"
 def consume(value: int | None) -> int:
@@ -372,7 +372,7 @@ def probe(a: int, b: int, values: dict[str, int]) -> int:
 }
 
 #[test]
-fn item12b_empty_collection_assertion_in_exception_carrier() {
+fn corpus_repair_empty_collection_assertion_in_exception_carrier() {
     let rust = canonical(
         r#"
 def values() -> Result[list[int], Error]:
@@ -391,7 +391,7 @@ def main():
 }
 
 #[test]
-fn item12b_empty_collection_assertion_has_element_type() {
+fn corpus_repair_empty_collection_assertion_has_element_type() {
     let rust = generate_rust_from_source(
         r#"
 def main():
@@ -405,7 +405,7 @@ def main():
 }
 
 #[test]
-fn item12b_structured_exception_proven_nested_read_uses_typed_carrier() {
+fn corpus_repair_structured_exception_proven_nested_read_uses_typed_carrier() {
     use crate::{HirExpr, RustEmitter, Type};
     let error = Type::Class {
         identity: None,

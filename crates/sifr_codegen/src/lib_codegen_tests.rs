@@ -67,6 +67,8 @@ mod collections_and_stdlib_codegen_tests;
 #[cfg(test)]
 mod control_flow_codegen_tests;
 #[cfg(test)]
+mod corpus_repair_codegen_tests;
+#[cfg(test)]
 mod defaultdict_augassign_codegen_tests;
 #[cfg(test)]
 mod defaultdict_order_independent_codegen_tests;
@@ -80,10 +82,6 @@ mod error_identity_codegen_tests;
 mod exact_integer_architecture_codegen_tests;
 #[cfg(test)]
 mod generic_inheritance_codegen_tests;
-#[cfg(test)]
-mod item12b_corpus_codegen_tests;
-#[cfg(test)]
-mod item12b_ownership_codegen_tests;
 #[cfg(test)]
 mod iterators_and_generators_codegen_tests;
 #[cfg(test)]
@@ -110,6 +108,8 @@ mod receiver_codegen_tests;
 mod recursive_node_codegen_tests;
 #[cfg(test)]
 mod resumable_generator_codegen_tests;
+#[cfg(test)]
+mod reusable_value_codegen_tests;
 #[cfg(test)]
 mod sequential_try_binding_codegen_tests;
 #[cfg(test)]

@@ -1,7 +1,7 @@
 use super::generate_rust_from_source;
 
 #[test]
-fn item12b_loop_sentinel_reuse() {
+fn corpus_repair_loop_sentinel_reuse() {
     let rust = generate_rust_from_source(
         r#"
 def sentinels(limit: int) -> int:
@@ -26,7 +26,7 @@ def sentinels(limit: int) -> int:
 }
 
 #[test]
-fn item12b_loop_sentinel_reuse_nested_control_flow() {
+fn corpus_repair_loop_sentinel_reuse_nested_control_flow() {
     let rust = generate_rust_from_source(
         r#"
 def nested(limit: int) -> int:
@@ -50,7 +50,7 @@ def nested(limit: int) -> int:
 }
 
 #[test]
-fn item12b_repeat_count_reuse() {
+fn corpus_repair_repeat_count_reuse() {
     let rust = generate_rust_from_source(
         r#"
 def repeat(count: int) -> int:
@@ -67,7 +67,7 @@ def repeat(count: int) -> int:
 }
 
 #[test]
-fn item12b_repeat_count_reuse_effectful_and_nested() {
+fn corpus_repair_repeat_count_reuse_effectful_and_nested() {
     let rust = generate_rust_from_source(
         r#"
 class Counter:

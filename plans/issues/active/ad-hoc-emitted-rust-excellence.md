@@ -793,6 +793,27 @@ Fixture 0048 tests each optional matrix read before its corresponding write.
 The matrix changes preserve read/write order and raise `IndexError` on absent values.
 They do not substitute a default or remove an original case.
 
+#### Item 12B integrated-base provenance
+
+Main advanced to `c83dd7cde8daf54cdc4abd952903e9aa093c4183` through PR #3692.
+Merge `b3d836354` integrates that reviewed base, including its dependency-feature normalization.
+The test-module conflict keeps both new regression modules and main's renamed modules.
+No retained Item 12 implementation was imported.
+
+The merged naming policy forbids numbered planning labels in source names.
+The new tests therefore use mechanism-oriented module names and the `corpus_repair_` filter.
+This is a mechanical identity change; every case and assertion remains present.
+The exact replacement focused command is recorded before execution:
+
+```bash
+cargo test -p sifr_codegen corpus_repair_
+```
+
+Main records unresolved SQL coverage classifications in
+`ad-hoc-schema-first-sql-platform-review-follow-ups.md`.
+They remain externally owned and are not absorbed into this dependency repair.
+The single-gate limit is unchanged.
+
 #### Item 12B continuation implementation evidence
 
 The complete `7b50a83a91ce65dc17d91d73e54c14dcd1b67901` qualification has 411/411 canonical checks.
