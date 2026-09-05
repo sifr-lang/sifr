@@ -591,7 +591,7 @@ scripts/distribution/run_incident_fixture.py run \
   --affected-plan <fixture-affected-plan> \
   --successor-plan <fixture-target-or-successor-plan> \
   --mode initial \
-  --approver <fixture-approver>
+  --approver <fixture-reviewer>
 ```
 
 It accepts only explicit temporary filesystem fixtures, rejects production
@@ -648,7 +648,7 @@ compressed and uncompressed byte boundaries, and every transported SHA-256.
 The protected revalidation command accepts caller-supplied clean
 evidence/source checkouts, live index and retained snapshots, and refetched
 artifact root. It recomputes the complete stable-prepare summary and requires
-byte-for-byte equality with the approver-visible summary. The production
+byte-for-byte equality with the reviewer-visible summary. The production
 `publish` job invokes it after re-fetching exact evidence and transported
 artifacts, then repeats the live-index/history fetch and revalidation
 immediately before generation reservation.
@@ -692,7 +692,7 @@ waiver under `plans/releases/`. It authorizes only `bootstrap-alpha`,
 pause for a GitHub-recorded `stable-release` approval by the named owner and
 admin bypass remains disabled. Bootstrap evidence and stable sign-off record
 the approval mode and waiver SHA-256. The workflow pins the checked-in waiver
-digest, prefers any distinct environment approver over owner self-approval,
+digest, prefers any distinct environment reviewer over owner self-approval,
 and derives the retained mode from that selected approval set before
 publication. `normal`, `rollback`, and `incident-roll-forward` cannot select
 the waiver.
@@ -712,7 +712,7 @@ workflow with the exact canonical stable-site-facts digest, verifies the public
 stable installer/update/asset/Marketplace and withdrawal-documentation facts,
 and exercises both working-client and out-of-band recovery. Roll-forward also
 emits the exact stable release sign-off; both operations emit a schema-v2
-incident sign-off correlated to the protected approver, site run, deployed
+incident sign-off correlated to the protected reviewer, site run, deployed
 commit, smoke evidence, and optional release sign-off. Resume either finishes a
 pending attempt with a newly allocated non-reused generation or proves the
 approved mutation is already live and performs no second index replacement.
@@ -737,10 +737,10 @@ migration, or fallback is retained.
 
 Both bootstrap stages run in the `stable-release` environment. Publish reads
 the workflow run's GitHub approval history and fails unless it contains an
-authorized environment approver. The default requires a login distinct from
+authorized environment reviewer. The default requires a login distinct from
 `GITHUB_TRIGGERING_ACTOR`; the canonical unexpired single-maintainer waiver
 allows the named owner only for the two bootstrap stages. Its checked-in digest
-is pinned by the protected workflow, and any distinct approver takes precedence
+is pinned by the protected workflow, and any distinct reviewer takes precedence
 over the waiver. The final evidence binds the selected approval mode and waiver
 digest, plus the alpha-stage evidence
 digest, run/attempt, initiator, approvers, and prepare-summary digest as well as
