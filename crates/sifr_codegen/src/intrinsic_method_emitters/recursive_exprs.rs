@@ -752,10 +752,7 @@ impl RustEmitter {
                 let right_expr = self.try_lower_registry_expr_strict(right)?;
                 let borrow_integer = |value| {
                     if matches!(ty.resolve_alias(), Type::Int | Type::LiteralInt(_)) {
-                        crate::RustExpr::Ref {
-                            mutable: false,
-                            expr: Box::new(value),
-                        }
+                        self.coerce_expr_to_sifr_int_comparison_operand(value)
                     } else {
                         value
                     }

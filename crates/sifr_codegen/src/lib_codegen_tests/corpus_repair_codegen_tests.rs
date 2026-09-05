@@ -439,6 +439,26 @@ def update(mut grid: list[list[int]], pos: list[int]) -> Result[None, Error]:
 }
 
 #[test]
+fn corpus_repair_nested_arithmetic_preserves_borrowed_parameter() {
+    let rust = canonical(
+        r#"
+class Cursor:
+    position: int
+    def __init__(self):
+        self.position = 0
+    def advance(mut self, steps: int) -> int:
+        self.position = min(self.position + steps, 100)
+        self.position = max(self.position - steps, 0)
+        return self.position + steps
+"#,
+    );
+    assert!(rust.contains("steps: &SifrInt"), "{rust}");
+    assert!(!rust.contains("&steps"), "{rust}");
+    assert!(rust.contains("+ steps"), "{rust}");
+    assert!(rust.contains("- steps"), "{rust}");
+}
+
+#[test]
 fn corpus_repair_empty_collection_assertion_has_element_type() {
     let rust = generate_rust_from_source(
         r#"

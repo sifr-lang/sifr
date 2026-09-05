@@ -220,6 +220,19 @@ They do not substitute a default or remove an original case.
 
 #### Item 12B integrated-base provenance
 
+The complete `7f3930ab4b05cd5ab50edb897be6a56329ab43f6` native matrix passes 89/90 repaired fixtures.
+All three previous residuals pass. Fixture 1472 exposes a nested arithmetic double borrow of an existing borrowed parameter.
+The correction uses the existing binding-aware exact-integer operand adapter, not a new cloning rule.
+Its exact focused command is recorded before execution:
+
+```bash
+cargo test -p sifr_codegen corpus_repair_nested_arithmetic_preserves_borrowed_parameter
+```
+
+Main PR #3693 (`b475ebdcd37081aa2860d9c348ace4100b546eff`) was integrated at `8d5afcb0c12a6115c54aadccee0e3fa87f478db0`.
+Its naming-only changes leave compiler and algorithmic qualification inputs unchanged.
+Only its changed demo inputs required regeneration; the canonical merge freshness check remains required.
+
 The `d13954fd69a0dfb0e203a03cd5124d921d103539` residual native matrix passes 16/19 cases.
 The remaining repairs cover nested mapping-default ownership and proven reads at optional call boundaries.
 Fixture 1260 also requires explicit narrowing of optional position and cell reads before mutation.
