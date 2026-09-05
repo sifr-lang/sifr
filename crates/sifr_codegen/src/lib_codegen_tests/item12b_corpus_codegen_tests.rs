@@ -260,6 +260,116 @@ def main():
     );
     assert!(rust.contains("fn r#union("), "{rust}");
     assert!(rust.contains(".r#union("), "{rust}");
+    assert!(rust.contains("let mut group"), "{rust}");
+}
+
+#[test]
+fn item12b_checked_read_control_flow_short_circuit_assignment() {
+    let rust = canonical(r#"
+def probe() -> Result[bool, Error]:
+    try:
+        matrix: list[list[bool]] = [[True]]
+        for i in range(1):
+            matrix[i][i] = matrix[i][i] or (i + 1 < len(matrix) and matrix[i + 1][i])
+        return matrix[0][0]
+    except Error as error:
+        raise error
+"#);
+    assert!(rust.contains("||"), "{rust}");
+    assert!(!rust.contains("break;"), "{rust}");
+    assert!(rust.contains("IndexError::new"), "{rust}");
+}
+
+#[test]
+fn item12b_structured_exception_root_error_and_dictionary_reads() {
+    let rust = canonical(r#"
+def read(values: list[list[int]]) -> Result[int, Error]:
+    try:
+        size = len(values)
+        if size == 0:
+            return 0
+        row = values[0]
+        if row is None:
+            return 0
+        memo: dict[int, int] = {}
+        memo[0] = len(row)
+        cached = memo[0]
+        if cached is None:
+            raise KeyError("missing cache")
+        return cached
+    except Error as error:
+        raise error
+"#);
+    assert!(rust.contains("IndexError::new"), "{rust}");
+    assert!(rust.contains("KeyError::new"), "{rust}");
+}
+
+#[test]
+fn item12b_structured_exception_nested_while_checked_comparison() {
+    let rust = canonical(r#"
+def count(values: list[int]) -> Result[int, Error]:
+    try:
+        left, right = 0, 0
+        while right < len(values):
+            while right + 1 < len(values) and values[right] == values[right + 1]:
+                right += 1
+            left += 1
+            right += 1
+        return left
+    except Error as error:
+        raise error
+"#);
+    assert!(rust.contains("while"), "{rust}");
+    assert!(rust.contains("&&"), "{rust}");
+}
+
+#[test]
+fn item12b_repeated_value_ownership_condition_and_branch() {
+    let rust = generate_rust_from_source(r#"
+def child(edges: list[dict[str, int]], node: int, key: str) -> int:
+    if key in edges[node]:
+        value: int | None = edges[node][key]
+        if value is not None:
+            return value
+    return -1
+"#);
+    assert!(!rust.contains("let __idx_raw = node;"), "{rust}");
+    assert!(rust.contains("node.clone()"), "{rust}");
+}
+
+#[test]
+fn item12b_repeated_value_ownership_nested_arithmetic_and_defaults() {
+    let rust = generate_rust_from_source(r#"
+def consume(value: int | None) -> int:
+    return 0
+def probe(a: int, b: int, values: dict[str, int]) -> int:
+    first = max(a + b, 0)
+    flipped = ~a
+    defaulted = values.get("missing", a)
+    used = consume(a)
+    return first + flipped + defaulted + used + a + b
+"#);
+    assert!(!rust.contains("!a"), "{rust}");
+    assert!(!rust.contains("a + b"), "{rust}");
+    assert!(!rust.contains("unwrap_or(a)"), "{rust}");
+    assert!(!rust.contains("Some(a)"), "{rust}");
+}
+
+#[test]
+fn item12b_empty_collection_assertion_in_exception_carrier() {
+    let rust = canonical(r#"
+def values() -> Result[list[int], Error]:
+    return []
+def main():
+    try:
+        result: list[int] = values()
+        assert result == []
+        assert [] == result
+    except Error:
+        assert False
+"#);
+    assert!(!rust.contains("assert_eq!(result, Vec::new())"), "{rust}");
+    assert!(!rust.contains("assert_eq!(Vec::new(), result)"), "{rust}");
 }
 
 #[test]

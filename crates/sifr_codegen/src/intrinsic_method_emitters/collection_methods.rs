@@ -279,6 +279,9 @@ impl RustEmitter {
         }
 
         let collection_element_targets = match (object_ty, method) {
+            (Type::Dict(_, value_ty), "get" | "pop" | "remove") if args.len() == 2 => {
+                vec![(1, value_ty.as_ref())]
+            }
             (Type::List(element_ty), "append" | "appendleft") => {
                 vec![(0, element_ty.as_ref())]
             }

@@ -501,6 +501,15 @@ fn collect_expr_error_refs(
         } => {
             collect_expr_error_refs(object, referenced, builtin_error_classes);
             collect_expr_error_refs(index, referenced, builtin_error_classes);
+            if let HirExpr::Index { ty, .. } = expr
+                && !crate::helpers::is_option_type(ty)
+            {
+                match object.ty().resolve_alias() {
+                    Type::List(_) | Type::Bytes | Type::Str => { referenced.insert("IndexError".to_string()); }
+                    Type::Dict(_, _) => { referenced.insert("KeyError".to_string()); }
+                    _ => {}
+                }
+            }
         }
         HirExpr::MethodCall { object, args, .. } => {
             collect_expr_error_refs(object, referenced, builtin_error_classes);

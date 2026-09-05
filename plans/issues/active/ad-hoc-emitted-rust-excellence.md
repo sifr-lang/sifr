@@ -795,6 +795,25 @@ They do not substitute a default or remove an original case.
 
 #### Item 12B continuation implementation evidence
 
+The complete `7b50a83a91ce65dc17d91d73e54c14dcd1b67901` qualification has 411/411 canonical checks.
+Its repaired-fixture matrix has 90/90 checks and 71/90 native passes.
+The 19 native failures remain qualification failures, not a partial pass claim.
+Raw evidence: `leetcode-full-continuation.log` and `native-continuation/diagnostic_inventory.json` under the owned temporary root.
+The follow-up batch repairs those same mechanism paths: expression-local checked reads,
+child-scope last-use accounting, owned argument adaptation, imported mutable receivers,
+and empty assertions inside exception carriers. No unrelated Item 12 work is included.
+
+Additional exact regression commands, recorded before execution:
+
+```bash
+cargo test -p sifr_codegen item12b_checked_read_control_flow_short_circuit_assignment
+cargo test -p sifr_codegen item12b_structured_exception_root_error_and_dictionary_reads
+cargo test -p sifr_codegen item12b_structured_exception_nested_while_checked_comparison
+cargo test -p sifr_codegen item12b_repeated_value_ownership_condition_and_branch
+cargo test -p sifr_codegen item12b_repeated_value_ownership_nested_arithmetic_and_defaults
+cargo test -p sifr_codegen item12b_empty_collection_assertion_in_exception_carrier
+```
+
 Compiler implementation `580e3374c3aac2aa669ad06354fba02c618e0942` completes the recorded dependency batch.
 Commit `18ab9bd969e70876a99875d8c719ad8b8d4daeb3` updates the existing union-rendering test expectation.
 External candidate `0ef88e8b4f4906e410a3b2e9216248c11149b247` completes the two remaining source contracts.

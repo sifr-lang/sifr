@@ -443,6 +443,8 @@ impl RustEmitter {
         stmt: &crate::HirStmt,
     ) -> Result<Option<Vec<RustStmt>>, crate::CodegenError> {
         if self.checked_place_atomic_guard_suppressed
+            || self.checked_read_failure_type(CheckedPlaceFailureKind::Index).is_some()
+            || self.checked_read_failure_type(CheckedPlaceFailureKind::Key).is_some()
             || self.loop_else_stack.is_empty()
             || self.stmt_uses_checked_option_target(stmt)
             || matches!(

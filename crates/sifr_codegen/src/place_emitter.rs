@@ -104,7 +104,7 @@ impl RustEmitter {
         match convention {
             Some(ReceiverConvention::MutableBorrow) => match target {
                 Some(MutableReceiverTarget::Place(place)) => {
-                    Ok(self.emit_checked_place(object, place))
+                    Ok(self.emit_checked_place(object, place).map(|lowered| self.explicit_class_receiver_borrow(object, lowered)))
                 }
                 Some(MutableReceiverTarget::OwnedTemporary) => self.lower_stmt_expr_for_ir(object),
                 Some(MutableReceiverTarget::SpecializedIndexedStorage(_)) => Ok(None),
@@ -178,7 +178,7 @@ impl RustEmitter {
     ) -> Option<RustExpr> {
         match convention {
             Some(ReceiverConvention::MutableBorrow) => match target {
-                Some(MutableReceiverTarget::Place(place)) => self.emit_checked_place(object, place),
+                Some(MutableReceiverTarget::Place(place)) => self.emit_checked_place(object, place).map(|lowered| self.explicit_class_receiver_borrow(object, lowered)),
                 Some(MutableReceiverTarget::OwnedTemporary) => {
                     self.try_lower_registry_expr_strict(object)
                 }
@@ -241,6 +241,17 @@ impl RustEmitter {
         } else {
             lowered
         }
+    }
+
+    // Imported methods have no declaration in the consumer's Rust file. Keep
+    // the resolved mutable receiver contract explicit across that boundary.
+    fn explicit_class_receiver_borrow(&self, source: &HirExpr, lowered: RustExpr) -> RustExpr {
+        if !matches!(source.ty().resolve_alias(), Type::Class { .. }) { return lowered; }
+        let borrowed = matches!(source, HirExpr::Name { name, .. }
+            if name == "self" || self.mut_borrowed_params.contains(name));
+        RustExpr::Ref { mutable: true, expr: Box::new(if borrowed {
+            RustExpr::Deref(Box::new(lowered))
+        } else { lowered }) }
     }
 
     pub(crate) fn lower_field_storage_access(
