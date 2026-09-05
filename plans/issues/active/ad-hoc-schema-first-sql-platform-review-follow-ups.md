@@ -17,6 +17,27 @@ Required checks: coverage_matrix_readiness.py, its existing negative self-tests,
 profile_assignment_matrix.py, verification_taxonomy.py, and the complete canonical
 coverage_matrix readiness suite. Item 12B records the full qualification commands.
 
+## Item12B SQL coverage repair qualified (2026-09-05)
+
+The user authorized this bounded classification dependency and one replacement
+merge gate. Candidate `a3198ab9f936986b5ca1f9ce3fa73d36ac9ab74d` classifies
+the nine missing SQL packages and their real targets, fills omitted integration
+tests, corrects PostgreSQL's primary target kind, and gives MySQL/SQLite compiler
+crates real ordinary-profile test membership. No SQL/Cargo behavior or checker
+requirement changed. The three added negative cases bring self-test coverage to 27.
+
+Standalone and replacement-gate coverage readiness both pass all four variants,
+including taxonomy. Both Item12B reviews are SATISFIED. The replacement gate
+still failed later on five Python-interop variants; see
+`ad-hoc-python-interop-qualification-dependencies.md`. No overall gate pass or
+merge is claimed, and later crate-test stages were not reached.
+Evidence: `/tmp/sifr-item12b.akguMz/coverage-remediation-results.json` and
+`/tmp/sifr-item12b.akguMz/replacement-a319-coverage-results.json`.
+
+Non-blocking reviewer suggestion: confirm whether `sqlite-runtime-probe` is
+intended to remain SQLite-only. Its test-fixture classification is accurate;
+no other provider defect or implementation requirement is asserted.
+
 ## Item 12B merge-gate reproduction (2026-09-05)
 
 Sifr PR [#3694](https://github.com/sifr-lang/sifr/pull/3694) ran its one
