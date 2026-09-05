@@ -55,6 +55,84 @@ Main's intervening changes rename demo variables and a regex test; they do not c
 Native qualification was rerun in full with the corrected compiler.
 The retained Item 12 compiler candidate is not used as qualification evidence.
 
+#### Item 12B terminal checkpoint: review approved; merge gate blocked
+
+State on 2026-09-05: **not merged and not closed**. This checkpoint supersedes
+the historical authentication and scope-adjudication stops below.
+
+- Reviewed Sifr candidate: `6ce83824e0315e5f89383fc666344b99431e1e76`,
+  base `b475ebdcd37081aa2860d9c348ace4100b546eff`,
+  [PR #3694](https://github.com/sifr-lang/sifr/pull/3694).
+- Reviewed corpus candidate: `da4a0e8680c6b50c5544d77bfb92e9e4cddf1ab1`,
+  base `7fcb9fd1eaf3e0cf9bf51e8858276b7927a83baf`,
+  [PR #48](https://github.com/sifr-lang/leetcode/pull/48).
+- The resumed initial Opus review returned **SATISFIED**, with no blocking findings.
+  [Sifr review](https://github.com/sifr-lang/sifr/pull/3694#issuecomment-5554250479)
+  and [corpus review](https://github.com/sifr-lang/leetcode/pull/48#issuecomment-5554250666).
+  Earlier OAuth failures were not review verdicts. One successful initial review
+  is consumed; no remediation review has run.
+- Review artifact, outside Git:
+  `/tmp/sifr-item12b.akguMz/opus-6ce83824e0315e5f89383fc666344b99431e1e76.UxSZXC/response.md`.
+- Passing implementation evidence remains unchanged: 90/90 repaired fixtures pass
+  check and native execution with compiler source `8c5bfefb32ccefbd8d925c14c554d3be1eb361d2`,
+  digest `d47774bba160db3903b9143071352af3b3001d6ec16173731cad5811b4b7abad`;
+  1,435 codegen tests (all 26 focused regressions), strict codegen Clippy, fmt,
+  file-size/HIR checks, and 264-companion freshness pass.
+  The 411/411 canonical check result remains explicitly attributed to
+  `7f3930ab4b05cd5ab50edb897be6a56329ab43f6` and reused only by unchanged
+  frontend/corpus input identity. No tests were repeated merely for this resumption.
+
+The **one** merge-profile gate ran on exact Sifr candidate `6ce83824e0315e5f89383fc666344b99431e1e76`:
+
+```bash
+SIFR_SYSROOT=/tmp/sifr-item12b.akguMz/sifr scripts/run_all_tests.sh --profile merge
+```
+
+It exited 1 after 173.63 seconds. All preceding reached steps passed, including
+264-companion freshness and Rust interop. Coverage readiness had two failing variants:
+
+1. **Pre-existing external blocker:** 23 SQL package/target classification diagnostics
+   (nine missing package classifications, missing targets, and stale PostgreSQL
+   `lib` versus `rlib`). The candidate changes no SQL Cargo or coverage-registry
+   inputs. Owner: `ad-hoc-schema-first-sql-platform-review-follow-ups.md`.
+2. **In-scope omission:** 428 verification-taxonomy diagnostics on newly introduced
+   corpus `contract_result_*` locals. These are Item 12B fixture naming failures,
+   not SQL failures and not waived by the passing semantic tests or Opus review.
+   Example: `src/1396_design_underground_system.sifr:54`.
+   Repair requires descriptive semantic names, preserving every assertion,
+   typed receiving contract, and evaluation order; do not weaken the checker.
+
+Immutable gate evidence under `/tmp/sifr-item12b.akguMz/`:
+`merge-6ce83824e0315e5f89383fc666344b99431e1e76.log`,
+`merge-6ce83824e-coverage-results.json`, and
+`merge-6ce83824e-lane-report.json`.
+No create-PR gate, duplicate merge gate, or merge occurred. Both PRs remain draft.
+Later checkpoint commits update records only; they do not turn the failed gate
+into a pass or transfer review approval to changed implementation.
+
+Exact next action: resolve the separately owned SQL coverage blocker and adjudicate
+the conflict between the exhausted single-gate budget and exact-final-SHA qualification
+after the required corpus naming correction. Then correct the in-scope names,
+refresh the corpus pin and affected named evidence, and use at most the one remaining
+remediation review. A replacement gate needs an explicit exception to the no-second-gate
+rule; no such exception is inferred from routine continuation authority.
+The isolated worktree and both candidates remain preserved. Retained Item 12
+compiler `8ad089a9458f35fcfa228e93fe44f4d69731828b` remains separate.
+Do not start Item 12 or 12A.
+
+#### Deferred review findings (not Item 12B implementation)
+
+- Existing Item 12 owns the correctness-motivated clone residue and consistency of
+  explicit imported mutable receiver borrowing. The review identified these as suggestions,
+  not new Item 12B acceptance criteria.
+- **Later Item 12E: integer field augmented-assignment qualification.** Not started.
+  Confirm the frontend/lowering contract for integer field `/=` and `%=`, both
+  outside and inside try closures. Opus noted the pre-existing gap at
+  `crates/sifr_codegen/src/stmt_support_emitter/stmt_block_helpers.rs:495`:
+  the simple path admits these operators while `SifrInt` has no corresponding
+  assignment traits. This is an unconfirmed follow-up, not a reproduced Item 12B
+  failure. Any repair and tests require its own bounded item; no code was added here.
+
 #### Item 12B terminal checkpoint: external review authentication blocker
 
 State: blocked before review and merge; Item 12B is not closed.

@@ -4,6 +4,27 @@ Status: active, non-blocking
 
 Owner: SQL compiler, schema tools, and verification
 
+## Item 12B merge-gate reproduction (2026-09-05)
+
+Sifr PR [#3694](https://github.com/sifr-lang/sifr/pull/3694) ran its one
+merge-profile gate on `6ce83824e0315e5f89383fc666344b99431e1e76`.
+The gate exited 1 after 173.63 seconds and reproduced 23 pre-existing SQL
+package/target classification diagnostics: nine missing package classifications,
+missing SQL/host-tool targets, and stale PostgreSQL `lib` versus `rlib`.
+The candidate changes no SQL Cargo packages, target declarations, or coverage
+registry inputs. This issue retains ownership of that blocker; no SQL code,
+classification, or safety requirement was changed by Item 12B.
+
+The same run also found 428 corpus naming diagnostics in a separate taxonomy
+variant. Those newly introduced `contract_result_*` names belong to Item 12B,
+not this SQL issue. Neither failing variant was waived. Both implementation
+PRs remain unmerged, and the gate was not repeated.
+
+Evidence:
+`/tmp/sifr-item12b.akguMz/merge-6ce83824e0315e5f89383fc666344b99431e1e76.log`,
+`/tmp/sifr-item12b.akguMz/merge-6ce83824e-coverage-results.json`, and
+`/tmp/sifr-item12b.akguMz/merge-6ce83824e-lane-report.json`.
+
 ## Objective
 
 Resolve the new mechanism findings from the final schema-first SQL platform
