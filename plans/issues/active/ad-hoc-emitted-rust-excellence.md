@@ -189,8 +189,8 @@ It does not broaden the active item.
 | 11 | merged | Portable and secure generated projects | Reviewed candidate `78c28c1e4c42bd85d685d3a3cffdf132fcdfcc40` is preserved and merged through Item 11A after its consumed gate's stale companions were regenerated. |
 | 11A | merged | Generated-companion freshness and Item 11 integration | The reviewed Item 11 candidate and all 15 compiler-regenerated companions are merged through a separately bounded review and gate without rerunning Item 11's consumed gate. |
 | 12 | pending | Residual semantic completion and full-corpus qualification | Finish remaining semantic/profile work, remove all governed generated-code debt, regenerate every owned surface, and pass the uncompromising final qualification and applicable one-shot gates. |
-| 12B | blocked: Item 12C | Bounded algorithmic dependency repair | Preserve both repository candidates; complete qualification after the unrelated builtin-registration Clippy repair. |
-| 12C | recorded only | Builtin-registration Clippy blocker | Preserve builtin-error registration invariants and remove the pre-existing strict-Clippy failure. |
+| 12B | in progress | Bounded algorithmic dependency repair | Complete corpus contracts, ownership fixes, the incorporated builtin-registration repair, and exact-candidate qualification. |
+| 12C | incorporated into 12B | Builtin-registration Clippy blocker | No independent item, review, or gate remains. |
 | 12A | pending | Phase closure and whole-phase review | Review the fully merged phase once, reconcile architecture/roadmap/evidence, and archive only when no actionable row remains. |
 
 ## Item Acceptance Contracts
@@ -683,9 +683,18 @@ Then resume Item 12B qualification on the identified candidate inputs.
 Complete every required fixture run and the canonical full corpus before review.
 The exact-SHA review allowance and the single merge-profile gate remain unused.
 
-#### Deferred Item 12C: Pre-existing builtin-registration Clippy blocker
+#### Incorporated Item 12C: Builtin-registration scope amendment
 
-- State: recorded only; not started.
+- State: incorporated into Item 12B by explicit user authority on 2026-09-05.
+- The earlier exclusion of this mechanism is superseded.
+- This repair has no separate item, review, or gate.
+- The implementation preserves both repository checkpoints and unrelated Item 12 work.
+- Registration must consume validated builtin identity without a fallback,
+  diagnostic suppression, or replacement panic.
+- Focused command, recorded before execution:
+  `cargo test -p sifr_codegen item12b_builtin_registration`.
+- The regressions cover canonical identities, module shadows, and rejected non-builtin names.
+- After this repair, resume the remaining Item 12B validation and closure steps.
 - Owner: compiler builtin-error registration.
 - Defect: `crates/sifr_codegen/src/project_stdlib_nominals.rs:45` fails strict
   Clippy with `clippy::expect_used`.
