@@ -29,7 +29,7 @@ fn test_build_structural_bridge_runtime() {
     );
     assert_eq!(
         run_built_package(&source_entrypoint),
-        "records=3;sequences=1;optionals=1;strings=input,x,input-box;construction=root/a,b/boxed/tail;callback=typed;sums=sum/WAITING;mapped=stable-token-m6;output=mapped-output"
+        "records=3;sequences=1;optionals=1;strings=input,x,input-box;construction=root/a,b/boxed/tail;callback=typed;sums=sum/WAITING;mapped=stable-mapped-token;output=mapped-output"
     );
 
     install_evidence_source(&package_root, STRUCTURAL_BRIDGE_EVIDENCE);

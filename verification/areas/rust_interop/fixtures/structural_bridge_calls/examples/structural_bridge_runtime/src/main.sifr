@@ -212,11 +212,11 @@ def verify_structural_bridge_runtime() -> Result[str, StructuralBridgeError | Ru
         sum_value: SumPayload = structural_roundtrip(sum_source, sum_input)
         assert str(sum_value.choice) == "sum"
         assert sum_value.status == Status.WAITING
-        mapped: MappedToken = construct_mapped("stable-token-m6")
+        mapped: MappedToken = construct_mapped("stable-mapped-token")
         mapped_value: str = mapped.value()
-        assert mapped_value == "stable-token-m6"
+        assert mapped_value == "stable-mapped-token"
         mapped_projection: str = observe_structural(mapped)
-        assert mapped_projection == "records=1;sequences=0;optionals=0;strings=stable-token-m6"
+        assert mapped_projection == "records=1;sequences=0;optionals=0;strings=stable-mapped-token"
         invalid_rejected: bool = False
         try:
             _invalid: MappedToken = construct_mapped("invalid")
@@ -232,13 +232,13 @@ def verify_structural_bridge_runtime() -> Result[str, StructuralBridgeError | Ru
         if output_name is not None:
             assert output_name.as_str() == "mapped-output"
         consumed: str = consume_mapped(mapped)
-        assert consumed == "stable-token-m6;drops=1"
+        assert consumed == "stable-mapped-token;drops=1"
         drops: uint32 = token_drop_count()
         expected_drops: uint32 = 1
         assert drops == expected_drops
         cleanup_source: StructuralArena = open_structural_arena()
         closed: None = cleanup_source.close()
-        return projection + ";construction=root/a,b/boxed/tail;callback=typed;sums=sum/WAITING;mapped=stable-token-m6;output=mapped-output"
+        return projection + ";construction=root/a,b/boxed/tail;callback=typed;sums=sum/WAITING;mapped=stable-mapped-token;output=mapped-output"
     except StructuralBridgeError as error:
         raise error
     except RustPanicError as error:

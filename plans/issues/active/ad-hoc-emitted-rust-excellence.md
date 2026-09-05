@@ -846,3 +846,21 @@ This issue owns the generated-project dependency-feature correction; no
 compiler or feature-selection workaround was added during the directory move.
 Evidence: `target/demo-layout/runtime_observability_boundary.log` and
 `target/demo-layout/original-runtime.log`.
+
+## Abbreviated-label cleanup validation (2026-09-05)
+
+The naming follow-up replaced opaque sysroot fixture module names, the mapped
+token label in the structural bridge fixture and its expected output, and an
+environment-test key. Six sysroot interop unit tests and the environment E2E
+fixture passed. The taxonomy check now rejects abbreviated delivery labels in
+paths, identifiers, metadata, and comments while preserving technical uses
+such as percentile metrics, point variables, math functions, and migration IDs.
+
+The ignored `test_build_structural_bridge_runtime` integration test fails before
+compilation because `cargo metadata --locked --offline` rejects the copied
+fixture's lockfile. Replacing the copied Sifr source with its original bytes
+from `d1fb93d46` reproduces the same metadata failure. This issue owns restoring
+the generated-project integration evidence; no fixture lockfile or dependency
+was changed during naming cleanup. Evidence:
+`target/abbreviation-cleanup/structural-runtime.log` and
+`target/abbreviation-cleanup/original-structural-metadata.log`.

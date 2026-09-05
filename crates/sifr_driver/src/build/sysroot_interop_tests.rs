@@ -23,8 +23,9 @@ use std::path::PathBuf;
 
 #[test]
 fn private_stdlib_interop_resolves_sysroot_crate_target() {
-    let interop =
-        private_stdlib_interop("@rust(sifr_stdlib.m8.noop)\ndef noop() -> None:\n    pass\n");
+    let interop = private_stdlib_interop(
+        "@rust(sifr_stdlib.test_bridge.noop)\ndef noop() -> None:\n    pass\n",
+    );
 
     let (generated, context) = attach_stdlib_rust_interop(base_project(), None, &interop);
     let generated =
@@ -47,15 +48,16 @@ fn private_stdlib_interop_resolves_sysroot_crate_target() {
     );
     assert_eq!(
         generated.interop.rust.trust_requirements[0].required_entry,
-        "sifr_stdlib.m8.noop"
+        "sifr_stdlib.test_bridge.noop"
     );
     assert!(generated.interop.rust.cargo_inputs.is_some());
 }
 
 #[test]
 fn private_stdlib_interop_rejects_omitted_policy_for_runtime_target() {
-    let interop =
-        private_stdlib_interop("@rust(sifr_runtime.m8.noop)\ndef noop() -> None:\n    pass\n");
+    let interop = private_stdlib_interop(
+        "@rust(sifr_runtime.test_bridge.noop)\ndef noop() -> None:\n    pass\n",
+    );
 
     let (generated, context) = attach_stdlib_rust_interop(base_project(), None, &interop);
     let diagnostics = match apply_package_rust_interop_metadata(generated, context) {
@@ -74,7 +76,7 @@ fn private_stdlib_interop_rejects_omitted_policy_for_runtime_target() {
 #[test]
 fn private_stdlib_interop_rejects_non_sysroot_target_root() {
     let interop = private_stdlib_interop(
-        "@rust(user_backend.m8.noop, panic=trusted_no_panic)\ndef noop() -> None:\n    pass\n",
+        "@rust(user_backend.test_bridge.noop, panic=trusted_no_panic)\ndef noop() -> None:\n    pass\n",
     );
 
     let (generated, context) = attach_stdlib_rust_interop(base_project(), None, &interop);
@@ -87,14 +89,15 @@ fn private_stdlib_interop_rejects_non_sysroot_target_root() {
     assert!(diagnostics[0].message.contains("canonical sysroot crate"));
     assert_eq!(
         diagnostics[0].spans[0].file.as_deref(),
-        Some("/opt/sifr/stdlib/_sifr/m8.sifr")
+        Some("/opt/sifr/stdlib/_sifr/test_bridge.sifr")
     );
 }
 
 #[test]
 fn sysroot_interop_dependency_plan_keeps_sysroot_vendor_mode() {
-    let interop =
-        private_stdlib_interop("@rust(sifr_stdlib.m8.noop)\ndef noop() -> None:\n    pass\n");
+    let interop = private_stdlib_interop(
+        "@rust(sifr_stdlib.test_bridge.noop)\ndef noop() -> None:\n    pass\n",
+    );
     let (generated, context) = attach_stdlib_rust_interop(base_project(), None, &interop);
     let generated =
         apply_package_rust_interop_metadata(generated, context).expect("sysroot interop resolves");
@@ -125,7 +128,7 @@ fn sysroot_interop_dependency_plan_keeps_sysroot_vendor_mode() {
         .find(|requirement| requirement.kind == RustInteropTrustRequirementKind::NoPanic)
         .expect("implicit sysroot policy records no-panic trust");
     assert!(trust.trusted);
-    assert_eq!(trust.required_entry, "sifr_stdlib.m8.noop");
+    assert_eq!(trust.required_entry, "sifr_stdlib.test_bridge.noop");
 
     let cargo_toml =
         generate_dependency_cargo_toml_with_interop("sifr_output", &plan, &generated.interop);
@@ -136,7 +139,7 @@ fn sysroot_interop_dependency_plan_keeps_sysroot_vendor_mode() {
 #[test]
 fn merged_user_and_private_stdlib_interop_both_resolve() {
     let stdlib_interop = private_stdlib_interop(
-        "@rust(sifr_stdlib.m8.noop, panic=trusted_no_panic)\ndef noop() -> None:\n    pass\n",
+        "@rust(sifr_stdlib.test_bridge.noop, panic=trusted_no_panic)\ndef noop() -> None:\n    pass\n",
     );
     let mut generated = base_project();
     generated.interop = user_interop(
@@ -176,7 +179,7 @@ fn merged_user_and_private_stdlib_interop_both_resolve() {
 #[test]
 fn merged_user_and_private_stdlib_interop_keeps_user_trust_separate() {
     let stdlib_interop = private_stdlib_interop(
-        "@rust(sifr_stdlib.m8.noop, panic=trusted_no_panic)\ndef noop() -> None:\n    pass\n",
+        "@rust(sifr_stdlib.test_bridge.noop, panic=trusted_no_panic)\ndef noop() -> None:\n    pass\n",
     );
     let mut generated = base_project();
     generated.interop = user_interop(
@@ -209,24 +212,27 @@ fn merged_user_and_private_stdlib_interop_keeps_user_trust_separate() {
 }
 
 fn private_stdlib_interop(source: &str) -> StdlibRustInterop {
-    let parsed = sifr_syntax::parse_module_raw(source, Some("/opt/sifr/stdlib/_sifr/m8.sifr"))
-        .expect("private declaration parses");
+    let parsed =
+        sifr_syntax::parse_module_raw(source, Some("/opt/sifr/stdlib/_sifr/test_bridge.sifr"))
+            .expect("private declaration parses");
     assert!(parsed.has_valid_syntax());
     let lowered = sifr_lowering::lower_module_sysroot_private_declaration_with_externals(
         parsed.suite(),
         &sifr_lowering::ExternalDefs::default(),
     )
     .expect("private declaration lowers");
-    let plan =
-        sifr_codegen::interop_build_plan_for_named_modules([(Some("_sifr.m8"), &lowered.module)]);
+    let plan = sifr_codegen::interop_build_plan_for_named_modules([(
+        Some("_sifr.test_bridge"),
+        &lowered.module,
+    )]);
     assert_eq!(plan.rust.declarations.len(), 1);
     StdlibRustInterop {
         plan,
         module_sources: HashMap::from([(
-            "_sifr.m8".to_string(),
+            "_sifr.test_bridge".to_string(),
             StdlibRustInteropModuleSource {
                 source: source.to_string(),
-                display_path: "/opt/sifr/stdlib/_sifr/m8.sifr".to_string(),
+                display_path: "/opt/sifr/stdlib/_sifr/test_bridge.sifr".to_string(),
             },
         )]),
         sysroot: Some(fake_sysroot()),

@@ -59,6 +59,21 @@ NUMBERED_DELIVERY_NAME = re.compile(
     r"(?:^|[/_.-])(?:item|part|phase|milestone|wave|sprint|workstream)[_-]?\d+[a-z]?(?=[/_.-]|$)",
     re.IGNORECASE,
 )
+# Percentiles are measurement names, not abbreviated delivery labels.
+ABBREVIATED_DELIVERY_LABEL = (
+    r"(?:m|ms|p(?!(?:50|90|95|99)(?:[_\W]|$))|ph|pt|w)\d+[a-z]?(?:[._-]\d+)*"
+)
+ABBREVIATED_DELIVERY_NAME = re.compile(
+    r"(?:^|[/_.-])" + ABBREVIATED_DELIVERY_LABEL + r"(?=[/_.-]|$)", re.IGNORECASE
+)
+ABBREVIATED_DELIVERY_TEXT = re.compile(
+    r"(?<![A-Za-z0-9])" + ABBREVIATED_DELIVERY_LABEL + r"(?=[/_-][A-Za-z_])"
+    r"|[A-Za-z][A-Za-z0-9_./-]*[/_.-]" + ABBREVIATED_DELIVERY_LABEL + r"(?=[_\W]|$)"
+    r"|['\"]/?" + ABBREVIATED_DELIVERY_LABEL + r"(?:\s+[A-Za-z][^'\"]*)?['\"]"
+    r"|\b(?:TODO\(|Reference:\s*)" + ABBREVIATED_DELIVERY_LABEL + r"\b"
+    r"|(?:^\s*#+|//)\s*" + ABBREVIATED_DELIVERY_LABEL + r"\b",
+    re.IGNORECASE,
+)
 NUMBERED_DELIVERY_TEXT = re.compile(
     r"(?<![A-Za-z0-9_])(?:item|phase|milestone|wave|sprint)[_-]?\d+[a-z]?(?=[_\W]|$)"
     r"|\b(?:items?|parts?|phases?|milestones?|waves?|sprints?)\s+\d+\b"
@@ -74,9 +89,9 @@ DELIVERY_METADATA = re.compile(
 
 FILENAME_PATTERNS = (
     NUMBERED_DELIVERY_NAME,
+    ABBREVIATED_DELIVERY_NAME,
     re.compile(r"(^|[-_])(?:" + "|".join(DELIVERY_TERMS) + r")([-_]|$)", re.IGNORECASE),
     re.compile(r"(^|[-_])work[-_]item([-_]|$)", re.IGNORECASE),
-    re.compile(r"(^|[-_])m\d+([._-]|$)", re.IGNORECASE),
 )
 
 ALLOW_TEXT_PATTERNS = (
@@ -84,9 +99,9 @@ ALLOW_TEXT_PATTERNS = (
     re.compile(r"\b(?:phase_plan|empty_phase_plan|phase_has_enabled_rules|mark_phase_readonly)\b"),
     re.compile(r"\b(?:record_compiler_phase_trace|build phase|compiler phase|trace phases|phase-aware|phase=)\b", re.IGNORECASE),
     re.compile(r"\b" + "exp" + r"_m1\b"),
-    re.compile(r"\bstable-token-m6\b"),
     re.compile(r"\b(?:contract_config|contract_field|contract_types|contract_for_identity|contract_error)\b"),
     re.compile(r'\bid\("m\d+"\)'),
+    re.compile(r"\bsifr\.sql\.migration\.state\.m\d+\b"),
     re.compile(
         r"\b(?:"
         + RULES_ALIAS
@@ -152,6 +167,7 @@ LEGACY_FIELD_PATTERNS = (
 
 TEXT_PATTERNS = (
     NUMBERED_DELIVERY_TEXT,
+    ABBREVIATED_DELIVERY_TEXT,
     DELIVERY_METADATA,
     re.compile(
         r"(?:^|[^A-Za-z0-9])(?:"
@@ -387,6 +403,7 @@ def has_taxonomy_trigger(line: str) -> bool:
     return (
         any(term in lower for term in TEXT_TRIGGER_TERMS)
         or M_TOKEN_TRIGGER.search(line) is not None
+        or ABBREVIATED_DELIVERY_TEXT.search(line) is not None
         or NUMBERED_DELIVERY_TEXT.search(line) is not None
         or DELIVERY_METADATA.search(line) is not None
     )
@@ -646,13 +663,22 @@ def check_numbered_labels(root: Path) -> None:
         'fn contract_error() {}\nlet migration = id("m1");\n'
         'let part2_value = parts.next();\n'
         'let __sifr_bridge_item_1 = value;\n'
+        'let p1 = Point::new(0, 0); let m1 = pattern_matches("a", "a");\n'
+        'assert_eq!(p1.x, p2.x); let parent = p1.clone();\n'
+        'let mean = m1; let growth = value.exp_m1();\n'
+        'let state = "sifr.sql.migration.state.m1.baseline.0.aaaa";\n'
+        'let p95_ms = 5; let p99_ms = 10; let P50_MAX = 20;\n'
+        'grep -F -m1 "matched"\n'
         '// compiler phase; collection item; slice step; ad hoc expressions\n'
         '// PostgreSQL DDL and capability evidence\n',
         encoding="utf-8",
     )
     if validate_text(good) or validate_filename(good):
         raise AssertionError("technical terminology was rejected")
-    for label in ("item8", "item_10h", "part6", "phase40", "wave_2", "sprint3"):
+    for label in (
+        "item8", "item_10h", "part6", "phase40", "wave_2", "sprint3",
+        "m1", "p1", "ms2", "pt3", "ph4", "w5", "M8", "P2", "m1_2",
+    ):
         directory = root / ("example_" + label)
         directory.mkdir()
         source = directory / "main.sifr"
@@ -667,10 +693,21 @@ def check_numbered_labels(root: Path) -> None:
             '# Reference: compiler-feature-history',
             'let migration = id("m1"); // Item 8',
             'fn contract_error() {} // Phase 4',
+            '@rust(sifr_stdlib.m8.noop)',
+            '"/opt/sifr/stdlib/_sifr/p1.sifr"',
+            '"stable-token-m6"', '"SIFR_ENV_P30_MISSING"',
+            'fn lower_p1_captures() {}', 'fn m2_lowering() {}',
+            '# p1: captures', '# Reference: pt2', '// TODO(ph3)',
+            '{"owner": "w2"}', '{"stage": "p1 lowering"}',
+            'let migration = id("m1"); // p1: captures',
+            'let p95_ms = 5; // p1: captures',
         ):
             source.write_text(line + "\n", encoding="utf-8")
             if should_skip(source) or not validate_text(source):
                 raise AssertionError(f"numbered delivery label was accepted: {line}")
+    for name in ("budget_p95_regression_result.json", "p50_latency.rs", "p99_latency.rs"):
+        if validate_filename(root / name):
+            raise AssertionError(f"percentile filename was rejected: {name}")
     skipped = root / "skills" / "example"
     skipped.mkdir(parents=True)
     (skipped / "SKILL.md").write_text("Phase 99\n", encoding="utf-8")

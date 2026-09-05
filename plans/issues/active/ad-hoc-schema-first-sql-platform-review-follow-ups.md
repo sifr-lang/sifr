@@ -76,3 +76,9 @@ The subsequent demo directory follow-up ran its own final merge gate once on
 All 264 demo emitted companions passed freshness, along with the file-size,
 HIR, Rust interop, and naming checks. No SQL classifications changed.
 Evidence: `target/demo-layout/merge-gate.log`.
+
+The abbreviated-label cleanup also ran its final merge gate once on 2026-09-05.
+It reproduced the SQL package/target classification failures above. Demo
+freshness, Rust interop matrix checks, naming checks, HIR, and file-size checks
+passed. No SQL classification or dependency changed. Evidence:
+`target/abbreviation-cleanup/merge-gate.log`.
