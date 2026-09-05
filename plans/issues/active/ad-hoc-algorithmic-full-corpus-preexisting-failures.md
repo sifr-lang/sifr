@@ -1,5 +1,74 @@
 # Ad Hoc Issue: Algorithmic Full-Corpus Pre-Existing Failures
 
+### Item 12B: Bounded algorithmic dependency repair
+
+On 2026-09-05, the user authorized the same worker to repair both repositories.
+
+- Scope: repair external conversion and index-error source contracts, plus the
+  compiler ownership mechanisms required to compile and execute those fixtures.
+- Compiler scope includes loop sentinel reuse, repeat-count reuse, directly
+  necessary same-mechanism corrections, and focused regression coverage.
+- External source changes preserve every original case and algorithm behavior.
+- The item includes the external PR/merge and the Sifr compiler/gitlink PR/merge.
+- Earlier restrictions against these compiler changes are superseded.
+  Unrelated Item 12 generated-quality work remains separate.
+- Implementation starts from Sifr base
+  `2dc4165fd9e7c34432a9b0d098188dc645aaca55` on the isolated Item 12B branch.
+  Any prerequisite from retained Item 12 work requires explicit path-level provenance.
+- External checkpoint `f6db5bd5d363b19a3040afd2a092f44ce32fd5bb`,
+  Sifr handoff `1efb8720fa827f3bf19de17c7f010e3009f0e484`, and retained
+  compiler candidate `8ad089a9458f35fcfa228e93fe44f4d69731828b` remain preserved.
+- Qualification uses a newly built compiler from the isolated candidate.
+  The retained frozen compiler is historical diagnostic evidence only.
+- Review: one exact-SHA Opus review identifies both repository candidates.
+  At most one remediation review is permitted. No whole-phase review is permitted.
+- Gate: one merge-profile gate covers the exact final Sifr candidate.
+  Skip create-PR. Do not repeat the merge gate.
+- Close Item 12B and update its records, then stop. Do not start Item 12 or 12A.
+
+#### Item 12B required tests
+
+These commands run from the isolated Sifr worktree after the bounded implementation.
+The focused regression names are fixed before test execution.
+
+```bash
+cargo build -p sifr
+cargo test -p sifr_codegen item12b_loop_sentinel_reuse
+cargo test -p sifr_codegen item12b_repeat_count_reuse
+cargo test -p sifr_codegen
+target/debug/sifr check verification/areas/algorithmic_compatibility/corpora/leetcode/src/0004_median_of_two_sorted_arrays.sifr
+target/debug/sifr run verification/areas/algorithmic_compatibility/corpora/leetcode/src/0004_median_of_two_sorted_arrays.sifr
+target/debug/sifr check verification/areas/algorithmic_compatibility/corpora/leetcode/src/0006_zigzag_conversion.sifr
+target/debug/sifr run verification/areas/algorithmic_compatibility/corpora/leetcode/src/0006_zigzag_conversion.sifr
+uv run --project verification --locked python -m sifr_verify areas run --area algorithmic_compatibility --suite leetcode-full
+cargo fmt --check
+cargo clippy -p sifr_codegen -- -D warnings
+python3 scripts/check_file_size_guardrails.py
+python3 scripts/check_hir_maintainability_guardrails.py
+scripts/run_all_tests.sh
+```
+
+Apply the same `check` and `run` commands to every repaired corpus fixture.
+Record the compiler SHA and binary digest for focused and full-corpus evidence.
+Include relevant additional changed crates in the Clippy command.
+Loop regressions cover repeated iterations, branch paths, and later sentinel uses.
+Repeat-count regressions cover later uses, nested scopes, and effectful counts.
+
+#### Item 12B implementation provenance
+
+The compiler changes start from the merged base, not the retained Item 12 candidate.
+The existing ownership materializer now serves integer local bindings and repeat counts.
+Its rename does not change the other callers.
+The repeat producer preserves operand order for both operand positions.
+Singleton repetition uses the existing exact-integer range without a host-sized cast.
+This correction also satisfies the two existing singleton-repeat codegen tests.
+
+The median fixture adds native loop, branch, sentinel-reuse, and large-integer assertions.
+The zigzag fixture adds native repeat-count, operand-order, and single-evaluation assertions.
+Both fixtures retain every original case.
+External repairs propagate checked errors through explicit receiving contexts.
+Reassignments retain their original binding identity and statement order.
+
 ## Status
 
 Closeout in progress for the non-blocking follow-up created from the Rust-interop

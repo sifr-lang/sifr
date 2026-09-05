@@ -55,6 +55,7 @@ mod python_context;
 mod recursive_constructor_args;
 pub(crate) use recursive_constructor_args::RecursiveOptionConstructorArgContext;
 mod result_type_helpers;
+mod singleton_repeat;
 mod statement_output;
 mod stmt_block;
 mod stmt_block_helpers;

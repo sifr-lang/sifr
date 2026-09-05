@@ -148,7 +148,8 @@ impl RustEmitter {
             crate::resolve_alias_type_for_plain_call(target_ty),
             Type::Int | Type::LiteralInt(_)
         ) {
-            return Ok(self.coerce_typed_expr_to_sifr_int_value(lowered_value, value_ty));
+            let owned_value = self.materialize_reusable_value_for_ir(value, lowered_value);
+            return Ok(self.coerce_typed_expr_to_sifr_int_value(owned_value, value_ty));
         }
         if matches!(
             crate::resolve_alias_type_for_plain_call(target_ty),

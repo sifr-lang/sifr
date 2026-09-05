@@ -192,7 +192,7 @@ impl RustEmitter {
                                 };
                             }
                         }
-                        arg_exprs[0] = self.clone_owned_append_arg_expr_for_ir(&args[0], adjusted);
+                        arg_exprs[0] = self.materialize_reusable_value_for_ir(&args[0], adjusted);
                     }
                 }
                 if effective_object_ty.callable_field_type(method).is_some() {
@@ -795,7 +795,7 @@ impl RustEmitter {
                         } else {
                             lowered
                         };
-                        Some(self.clone_owned_append_arg_expr_for_ir(element, lowered))
+                        Some(self.materialize_reusable_value_for_ir(element, lowered))
                     })
                     .collect::<Option<Vec<_>>>()?;
                 if matches!(list_ty, Type::Bytes) {
@@ -814,7 +814,7 @@ impl RustEmitter {
                     .iter()
                     .map(|element| {
                         let lowered = self.try_lower_registry_expr_strict(element)?;
-                        Some(self.clone_owned_append_arg_expr_for_ir(element, lowered))
+                        Some(self.materialize_reusable_value_for_ir(element, lowered))
                     })
                     .collect::<Option<Vec<_>>>()?;
                 if crate::homogeneous_large_tuple_backing_array(ty).is_some() {
