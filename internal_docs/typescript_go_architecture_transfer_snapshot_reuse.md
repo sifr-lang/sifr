@@ -1,7 +1,5 @@
 # TypeScript-Go Architecture Transfer: Snapshot Reuse And Structural Replacement
 
-status: merged via [#2251](https://github.com/sifr-lang/sifr/pull/2251)
-
 snapshot-reuse surface introduces the first process-local reuse storage after snapshot-reuse surface locked cache
 identity. `sifr_frontend` now keeps ref-counted cache entries for parse trees,
 source-map file views, lowered HIR, module diagnostics, and module symbol
@@ -39,22 +37,3 @@ Current limitations:
 - graph/source-map view reuse is conservative when metadata changes
 - package graph, lint, format, and flow graph reuse remain future work even
   though snapshot-reuse surface defines their key identities
-
-Validation so far:
-
-- `cargo test -p sifr_frontend ref_counted_module_caches_reuse_identity_on_hits`
-- `cargo test -p sifr_frontend structural_one_module_replacement_reuses_unchanged_cache_entries`
-- `cargo test -p sifr_frontend document_version_only_update_recaches_source_file_view`
-- `cargo test -p sifr_frontend reverse_dependent_invalidation_reuses_unchanged_parse_entry`
-- `cargo test -p sifr_frontend dunder_method_signature_update_invalidates_reverse_dependents`
-- `cargo test -p sifr_frontend single_underscore_method_signature_update_invalidates_reverse_dependents`
-- `cargo test -p sifr_frontend class_decorator_update_invalidates_reverse_dependents`
-- `cargo test -p sifr_frontend leading_whitespace_edit_preserves_export_signature_scope`
-- `cargo test -p sifr_frontend public_constant_value_update_invalidates_reverse_dependents`
-- `cargo test -p sifr_frontend` -> PASS, 38 tests
-- `cargo check --workspace`
-- `cargo fmt --check`
-- `cargo clippy -p sifr_frontend -- -D warnings`
-- `git diff --check`
-- `python3 scripts/check_file_size_guardrails.py`
-- `scripts/run_all_tests.sh --profile create-pr` -> PASS, report `target/validation_lane_reports/create-pr.latest.json`, wall time 330.61s, advisories: warm wall-time budget exceeded; group skew is high

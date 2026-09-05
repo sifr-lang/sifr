@@ -1,7 +1,5 @@
 # TypeScript-Go Architecture Transfer: Analysis Snapshot
 
-status: analysis snapshot implementation status
-
 analysis snapshot migrates editor-facing analysis from revision-token snapshots to captured
 `WorkspaceSnapshot` handles while preserving serialized execution. The
 `AnalysisHost` now owns a `WorkspaceSession`; `AnalysisSnapshot` carries the
@@ -37,24 +35,3 @@ conservative placeholder:
 
 Later dirty-scope work still owns event compaction and precise dirty-scope classification. This slice only
 ensures the report is part of the captured snapshot shape consumed by analysis.
-
-## Validation
-
-analysis snapshot focused validation so far:
-
-- `cargo fmt --check`
-- `git diff --check`
-- `cargo test -p sifr_frontend`
-- `cargo test -p sifr_analysis`
-- `cargo test -p sifr_lsp`
-- `cargo test -p sifr -- --skip test_e2e_pass`
-- `cargo clippy -p sifr_analysis -p sifr_lsp -p sifr_frontend -- -D warnings`
-- `cargo clippy --workspace -- -D warnings`
-- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py`
-- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py --self-test`
-- `python3 scripts/check_file_size_guardrails.py`
-- `python3 verification/areas/package_management/tools/check_package_manager_guardrails.py`
-- `scripts/run_all_tests.sh --profile create-pr` -> PASS, report
-  `target/validation_lane_reports/create-pr.latest.json`, wall time 234.97s
-
-The full create-pr validation gate has passed for the analysis snapshot implementation branch.

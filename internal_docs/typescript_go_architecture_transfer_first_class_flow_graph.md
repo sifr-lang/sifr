@@ -1,7 +1,5 @@
 # TypeScript-Go Architecture Transfer: First-Class Flow Graph
 
-status: flow graph merged
-
 This work adds a first-class HIR flow graph alongside the existing control-flow graph.
 The CFG remains responsible for structural reachability and return facts. The
 new flow graph records data-flow effects that later cache and query surfaces
@@ -57,32 +55,3 @@ facts attached to the same HIR snapshot that codegen and analysis inspect.
 This work stops at HIR and driver propagation. Analysis/LSP display of the flow graph
 fingerprints and traces is intentionally left to the later tracing and debug
 status surfaces so editor APIs do not expose an unstable graph rules early.
-
-## Validation
-
-flow graph focused validation so far:
-
-- `cargo fmt --check`
-- `git diff --check`
-- `cargo test -p sifr_lowering flow_graph -- --nocapture`
-- `cargo test -p sifr_lowering`
-- `cargo test -p sifr_driver`
-- `cargo test -p sifr_frontend -p sifr_analysis -p sifr_lsp`
-- `python3 scripts/check_file_size_guardrails.py`
-- `python3 verification/areas/package_management/tools/check_package_manager_guardrails.py`
-- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py`
-- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py --self-test`
-- `cargo test -p sifr -- --skip test_e2e_pass`
-- `cargo clippy --workspace -- -D warnings`
-- `scripts/run_all_tests.sh --profile create-pr` -> PASS, report
-  `target/validation_lane_reports/create-pr.latest.json`, wall time 306.27s,
-  advisories: warm wall-time budget exceeded; group skew is high
-- Loop-else validation: `cargo fmt --check`,
-  `cargo test -p sifr_lowering flow_graph -- --nocapture`,
-  `cargo clippy -p sifr_lowering -- -D warnings`
-- flow graph readiness create-pr validation: `scripts/run_all_tests.sh --profile create-pr` ->
-  PASS, report `target/validation_lane_reports/create-pr.latest.json`, wall time
-  280.58s, advisory: group skew is high
-- flow graph loop-else validation: `cargo fmt --check`,
-  `cargo test -p sifr_lowering flow_graph -- --nocapture`,
-  `cargo clippy -p sifr_lowering -- -D warnings`

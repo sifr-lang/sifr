@@ -1,7 +1,5 @@
 # TypeScript-Go Architecture Transfer: Module Signatures And Dependency Invalidation
 
-status: module-signature invalidation model implementation status
-
 module-signature invalidation model makes frontend invalidation dependency-sensitive before structural cache reuse
 exists. `FrontendContext` still owns process-local parse/lower/diagnostic caches,
 but source updates now classify the change by import and export signature before
@@ -57,27 +55,3 @@ dependency-sensitive invalidation report.
 Class member export signatures include public method declaration shape and
 public field shape, not method bodies. A private implementation edit inside a
 method should therefore stay local when the class surface is unchanged.
-
-## Validation
-
-module-signature invalidation model focused validation so far:
-
-- `cargo fmt --check`
-- `git diff --check`
-- `cargo test -p sifr_frontend`
-- `cargo test -p sifr_analysis`
-- `cargo test -p sifr_lsp`
-- `cargo clippy -p sifr_frontend -p sifr_analysis -p sifr_lsp -- -D warnings`
-- `python3 scripts/check_file_size_guardrails.py`
-- `python3 verification/areas/package_management/tools/check_package_manager_guardrails.py`
-- `cargo test -p sifr -- --skip test_e2e_pass`
-- `python3 verification/areas/developer_tooling/lsp_protocol_smoke.py`
-- `python3 verification/areas/developer_tooling/lsp_protocol_smoke.py --self-test`
-- `python3 verification/areas/developer_tooling/lsp_protocol_stress.py`
-- `python3 verification/areas/developer_tooling/lsp_protocol_stress.py --self-test`
-- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py`
-- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py --self-test`
-- `cargo clippy --workspace -- -D warnings`
-- `scripts/run_all_tests.sh --profile create-pr` -> PASS, report
-  `target/validation_lane_reports/create-pr.latest.json`, wall time 254.29s,
-  advisory: group skew is high

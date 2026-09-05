@@ -1,7 +1,5 @@
 # TypeScript-Go Architecture Transfer: LSP Latency Budgets
 
-status: in progress
-
 LSP latency budget replaces aggregate-only LSP performance evidence with protocol-level
 per-request editor latency budgets. The existing
 `lsp-query-001-request-families` benchmark remains in the manifest, but it is
@@ -50,21 +48,3 @@ latency on top of those APIs. A frontend-query regression usually points at
 compiler-service or cache behavior; an LSP regression can also come from
 protocol conversion, request scheduling, stdio dispatch, diagnostics
 publication, or command handling.
-
-Validation so far:
-
-- `python3 verification/areas/performance/run_benchmarks.py --validate-only` -> PASS, 65 cases
-- `python3 verification/areas/performance/check_budgets.py` -> PASS
-- `python3 verification/areas/performance/run_benchmarks.py --self-test` -> PASS
-- `python3 verification/areas/performance/check_budgets.py --self-test` -> PASS
-- `python3 verification/areas/performance/run_benchmarks.py --groups lsp-query --json-out target/performance/lsp_query_budget_run.json` -> PASS, evidence `target/performance/evidence/bench-1780400105-94623.json`
-- `python3 verification/areas/performance/run_benchmarks.py --groups lsp-query --sample-scale smoke --json-out target/performance/lsp_query_budget_smoke.json` -> PASS, evidence `target/performance/evidence/bench-1780400215-529.json`
-- `python3 verification/areas/performance/check_budgets.py --results target/performance/lsp_query_budget_run.json --allow-subset` -> PASS
-- `python3 verification/areas/performance/check_budgets.py --results target/performance/lsp_query_budget_smoke.json --allow-subset` -> PASS
-- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py` -> PASS
-- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py --self-test` -> PASS
-- `python3 verification/areas/developer_tooling/check_tooling_readiness.py` -> PASS
-- `python3 verification/areas/developer_tooling/check_tooling_readiness.py --self-test` -> PASS
-- `python3 -m py_compile verification/areas/performance/lsp_query_bench.py verification/areas/performance/check_budgets.py verification/areas/performance/run_benchmarks.py verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py` -> PASS
-- `git diff --check` -> PASS
-- `python3 scripts/check_file_size_guardrails.py` -> PASS

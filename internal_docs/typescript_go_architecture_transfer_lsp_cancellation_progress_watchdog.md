@@ -1,7 +1,5 @@
 # TypeScript-Go Architecture Transfer: LSP Cancellation, Progress, And Watchdog
 
-status: in progress
-
 LSP cancellation/progress/watchdog makes LSP work operationally bounded while keeping execution serialized.
 The server now creates an explicit `CancellationToken` for the active request and
 tracks cancellation separately for queued and in-flight requests: queued
@@ -31,20 +29,3 @@ into the server options. The watchdog checks parent liveness at message
 boundaries and cancels the server loop if the parent process is gone. On
 non-Unix targets the option is accepted but currently treated as a no-op until a
 platform-specific process liveness API is wired.
-
-Validation so far:
-
-- `cargo fmt --check` -> PASS
-- `cargo build -p sifr` -> PASS
-- `cargo test -p sifr_lsp` -> PASS, 23 tests
-- `cargo clippy -p sifr_lsp -p sifr -- -D warnings` -> PASS
-- `python3 -m py_compile verification/areas/developer_tooling/lsp_protocol.py verification/areas/developer_tooling/lsp_protocol_smoke.py verification/areas/developer_tooling/lsp_protocol_stress.py` -> PASS
-- `python3 verification/areas/developer_tooling/lsp_protocol_smoke.py` -> PASS
-- `python3 verification/areas/developer_tooling/lsp_protocol_stress.py` -> PASS
-- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py` -> PASS
-- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py --self-test` -> PASS
-- `python3 verification/areas/developer_tooling/check_tooling_readiness.py` -> PASS
-- `python3 verification/areas/developer_tooling/check_tooling_readiness.py --self-test` -> PASS
-- `git diff --check` -> PASS
-- `python3 scripts/check_file_size_guardrails.py` -> PASS
-- `scripts/run_all_tests.sh --profile create-pr` -> PASS, report `target/validation_lane_reports/create-pr.latest.json`, wall time 280.41s, advisory: group skew is high

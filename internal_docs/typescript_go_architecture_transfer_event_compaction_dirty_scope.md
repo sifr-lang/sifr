@@ -1,7 +1,5 @@
 # TypeScript-Go Architecture Transfer: Event Compaction And Dirty Scope
 
-status: event-compaction and dirty-scope model implementation status
-
 event-compaction and dirty-scope model adds the first precise invalidation vocabulary for the serialized compiler
 service. The implementation still runs synchronously, but raw LSP and watcher
 events now collapse into compact summaries before they update analysis state.
@@ -51,26 +49,3 @@ Report merging uses a conservative priority order. Higher-severity scopes win;
 same-path module or reverse-dependency reports stay narrow; incompatible
 module-level reports degrade to graph structure so the report never claims a
 single-file invalidation when multiple unrelated files contributed reasons.
-
-## Validation
-
-event-compaction and dirty-scope model focused validation so far:
-
-- `cargo test -p sifr_frontend workspace_session`
-- `cargo test -p sifr_lsp`
-- `cargo fmt --check`
-- `cargo test -p sifr_frontend`
-- `cargo test -p sifr_analysis`
-- `python3 verification/areas/developer_tooling/lsp_protocol_smoke.py`
-- `python3 verification/areas/developer_tooling/lsp_protocol_smoke.py --self-test`
-- `python3 verification/areas/developer_tooling/lsp_protocol_stress.py`
-- `python3 verification/areas/developer_tooling/lsp_protocol_stress.py --self-test`
-- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py`
-- `python3 verification/areas/developer_tooling/check_typescript_go_transfer_guardrails.py --self-test`
-- `cargo clippy --workspace -- -D warnings`
-- `cargo test -p sifr -- --skip test_e2e_pass`
-- `git diff --check`
-- `python3 scripts/check_file_size_guardrails.py`
-- `python3 verification/areas/package_management/tools/check_package_manager_guardrails.py`
-- `scripts/run_all_tests.sh --profile create-pr` -> PASS, report
-  `target/validation_lane_reports/create-pr.latest.json`, wall time 227.48s
