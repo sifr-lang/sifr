@@ -630,6 +630,61 @@ Main's intervening changes rename demo variables and a regex test; they do not c
 Native qualification was rerun in full with the corrected compiler.
 The retained Item 12 compiler candidate is not used as qualification evidence.
 
+#### Item 12B continuation amendment: naming and SQL coverage dependency
+
+On 2026-09-05 the user explicitly authorized both remaining repairs and **one
+replacement merge-profile gate**. This supersedes the prior stop below, not its
+failed evidence. The first gate on `6ce83824e0315e5f89383fc666344b99431e1e76`
+remains failed. No create-PR gate is permitted.
+
+- Replace all 428 corpus taxonomy occurrences with descriptive, collision-free
+  semantic local names. Preserve assertions, typed receiving contracts, scope,
+  call order, and evaluation count.
+- Reconcile authoritative Cargo coverage classifications with the actual SQL
+  packages, target kinds, and test targets (23 recorded diagnostics), coordinating
+  through `ad-hoc-schema-first-sql-platform-review-follow-ups.md`.
+  Do not alter package semantics, weaken checkers, exclude targets, suppress
+  diagnostics, or rebase accepted debt.
+- Keep the reviewed candidates and record checkpoints in history.
+- Use the one remaining exact-SHA Opus remediation review for both corrected
+  repository candidates and this SQL metadata dependency. No third review.
+- After satisfactory review run exactly one replacement merge gate on the final
+  candidate, then merge both PRs and update records. Do not start Item 12 or 12A.
+
+Additional/affected named validation, fixed before execution:
+
+```bash
+python3 /tmp/sifr-item12b.akguMz/verify_semantic_renames.py
+python3 verification/areas/coverage_matrix/checks/coverage_matrix_readiness.py
+python3 verification/areas/coverage_matrix/checks/coverage_matrix_readiness_self_test.py
+python3 verification/areas/coverage_matrix/checks/profile_assignment_matrix.py
+python3 verification/areas/coverage_matrix/checks/verification_taxonomy.py
+uv run --project verification --locked python -m sifr_verify areas run --area coverage_matrix --suite readiness
+python3 /tmp/sifr-item12b.akguMz/native_qualification.py /tmp/sifr-item12b.akguMz/native-naming-qualified
+uv run --project verification --locked python -m sifr_verify areas run --area algorithmic_compatibility --suite leetcode-full
+cargo fmt --check
+python3 scripts/check_file_size_guardrails.py
+python3 scripts/check_hir_maintainability_guardrails.py
+scripts/run_all_tests.sh --profile merge
+```
+
+Coverage readiness includes new negative cases `wrong_component_target_kind`
+(both missing rlib and stale lib findings) and `missing_sql_test_target`.
+The canonical readiness suite executes all four listed coverage scripts, so those
+checks need not be repeated as standalone commands. Use its uv environment.
+MySQL and SQLite compiler crates now join the ordinary profile crate-test
+membership, matching PostgreSQL; this executes their existing tests rather than
+misclassifying compiler packages to evade required membership.
+
+The native helper will run check AND native execution for all 90 repaired fixtures
+with the identified compiler (exact helper invocation recorded before execution).
+The rename proof compares token streams against corpus `da4a0e8680c6b50c5544d77bfb92e9e4cddf1ab1`,
+allowing only an injective local identifier mapping; string literals, assertions,
+types, and all other tokens must remain identical.
+Compiler-source/binary, codegen regression, and crate Clippy evidence may be
+reused only if their inputs remain unchanged, with original SHA attribution.
+Fresh full-corpus evidence will use the corrected corpus pin.
+
 #### Item 12B terminal checkpoint: review approved; merge gate blocked
 
 State on 2026-09-05: **not merged and not closed**. This checkpoint supersedes

@@ -4,6 +4,19 @@ Status: active, non-blocking
 
 Owner: SQL compiler, schema tools, and verification
 
+## Approved Item 12B qualification dependency (2026-09-05)
+
+The user explicitly authorized the Item 12B owner to repair the 23 recorded
+SQL package/target classification diagnostics in authoritative coverage metadata.
+This is a bounded dependency of PR #3694, not permission to change SQL runtime
+or compiler semantics. Preserve actual Cargo target kinds and package roles;
+do not weaken readiness, exclude tests, or add accepted debt. The earlier failed
+gate remains failed. One replacement exact-SHA merge gate is authorized after
+the sole remaining Opus remediation review of both repository candidates.
+Required checks: coverage_matrix_readiness.py, its existing negative self-tests,
+profile_assignment_matrix.py, verification_taxonomy.py, and the complete canonical
+coverage_matrix readiness suite. Item 12B records the full qualification commands.
+
 ## Item 12B merge-gate reproduction (2026-09-05)
 
 Sifr PR [#3694](https://github.com/sifr-lang/sifr/pull/3694) ran its one
