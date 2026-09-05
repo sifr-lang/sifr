@@ -452,6 +452,95 @@ On 2026-09-05, the user authorized the same worker to repair both repositories.
   Skip create-PR. Do not repeat the merge gate.
 - Close Item 12B and update its records, then stop. Do not start Item 12 or 12A.
 
+#### Item 12B terminal checkpoint: remediation approved; replacement gate blocked
+
+State on 2026-09-05: **not merged, not closed**. This supersedes earlier
+authentication, corpus-naming, SQL-classification, and gate-authorization stops.
+
+The user authorized the 428 corpus naming corrections, the 23 SQL coverage
+classification corrections, and one replacement merge gate. Those repairs are
+implemented, pushed, and approved; neither checker requirements nor safety were weakened.
+
+- Reviewed/gated Sifr implementation candidate:
+  `a3198ab9f936986b5ca1f9ce3fa73d36ac9ab74d`,
+  [PR #3694](https://github.com/sifr-lang/sifr/pull/3694), base
+  `b475ebdcd37081aa2860d9c348ace4100b546eff`.
+- Corpus candidate and exact gitlink:
+  `8bcbe7ab7939e5c8362c10f61a80e368022cc372`,
+  [PR #48](https://github.com/sifr-lang/leetcode/pull/48), base
+  `7fcb9fd1eaf3e0cf9bf51e8858276b7927a83baf`.
+- Both initial and sole remediation Opus reviews returned **SATISFIED**, no blockers.
+  [Remediation review](https://github.com/sifr-lang/sifr/pull/3694#issuecomment-5554470254)
+  and [corpus review](https://github.com/sifr-lang/leetcode/pull/48#issuecomment-5554470481).
+  No third review is permitted under current limits.
+- Review artifact:
+  `/tmp/sifr-item12b.akguMz/opus-a3198ab9f936986b5ca1f9ce3fa73d36ac9ab74d.2yceHO/response.md`.
+- Fresh qualification on corrected inputs: **90/90** repaired fixtures pass check
+  AND native execution; **411/411** canonical leetcode-full checks pass; coverage
+  readiness **4/4** passes, including all **27** negative cases and whole taxonomy.
+  The rename proof verifies **257** injective local renames across **78** files
+  (428 changed declaration/reference lines), preserving every other token.
+  Fmt, file-size, and HIR checks pass.
+- Compiler source remains `8c5bfefb32ccefbd8d925c14c554d3be1eb361d2`;
+  SHA256 `d47774bba160db3903b9143071352af3b3001d6ec16173731cad5811b4b7abad`
+  was verified before/after qualification and after the replacement gate.
+  Reused source8c5 evidence: **1,435** codegen tests, all **26** focused regressions,
+  strict codegen Clippy, and **264** fresh companions. No retained Item12 compiler
+  was used, and no unchanged-input test was repeated solely for resumption.
+
+The authorized replacement `scripts/run_all_tests.sh --profile merge` ran once
+on exact Sifr `a3198ab9f` and exited **1** after **1,839.46s**.
+Reached HIR/file-size/demo freshness, Rust interop (10 variants), coverage
+readiness (4), core language (5), and CPython differential (2) passed.
+Python interop completed **30 variants: 25 pass, 5 blocking failures**:
+
+| Variant | Recorded cause |
+| --- | --- |
+| dependency-versions | Removed DLPack demo path remains in dependency checker (later Item12G). |
+| binding-authoring | Imported PythonError field initializer disagrees with its declaration, Rust E0560 (later Item12H). |
+| callback-examples | Three async examples cannot access the support-owned cancellation task-local, Rust E0425 (later Item12I). |
+| async-declaration-examples | PythonError propagation incompatible with Result[None, Error], SIFR-RESULT-0003 (later Item12J). |
+| async-context-examples | Same error-channel failure as Item12J. |
+
+The warm wall-time budget was also exceeded (advisory); no host-sensitive
+performance pass is claimed. Later profile stages were not reached.
+The first gate at `6ce83824e` remains failed; the replacement is also failed.
+No create-PR gate, third gate, third review, or merge occurred. Both PRs remain draft.
+These Python dependencies are recorded in
+`ad-hoc-python-interop-qualification-dependencies.md`; no repair was started.
+
+Evidence root: `/tmp/sifr-item12b.akguMz/`.
+Current qualification: `native-naming-qualified/matrix.json`,
+`leetcode-full-naming-results.json`, `leetcode-full-naming.log`,
+`coverage-remediation-results.json`, `coverage-remediation.log`,
+`semantic-renames-proof.json`, and `naming-final-*.log`.
+Replacement gate: `merge-replacement-a3198ab9f936986b5ca1f9ce3fa73d36ac9ab74d.log`,
+`replacement-a319-lane-report.json`, `replacement-a319-python-results.json`,
+`replacement-a319-coverage-results.json`, and
+`replacement-a319-{callback,async-declaration,async-context}-examples.json`.
+[Published qualification](https://github.com/sifr-lang/sifr/pull/3694#issuecomment-5554449846)
+preserves the complete/partial distinctions.
+
+Exact next action: resolve/adjudicate the four separately recorded Python
+dependencies and the exhausted review/gate limits before resuming closure.
+Current continuation authority does not permit a third review or another gate.
+Preserve these candidates and the record-only checkpoint commits; do not merge
+without required qualification. Retained Item12 implementation
+`8ad089a9458f35fcfa228e93fe44f4d69731828b` is unchanged. Do not start Item12/12A.
+
+#### Deferred remediation-review suggestions
+
+- Later Item12F (not started): rename the 16 pre-existing
+  `updated_contract_value_*` locals in corpus `0202_happy_number.sifr` and
+  `0212_word_search_ii.sifr`. Opus classified this as a non-blocking naming
+  follow-up outside the enumerated 428-occurrence remediation, not a new
+  mechanism defect. No checker weakening or third review was used.
+- The SQL issue retains the non-blocking suggestion to confirm whether
+  `sqlite-runtime-probe` should remain SQLite-only. Its current classification
+  is accurate; no missing MySQL/PostgreSQL implementation is claimed.
+- Earlier Item12 clone/receiver suggestions and unconfirmed Item12E integer
+  field augmented-assignment qualification remain deferred.
+
 #### Item 12B terminal checkpoint: review approved; merge gate blocked
 
 State on 2026-09-05: **not merged and not closed**. This checkpoint supersedes
